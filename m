@@ -1,548 +1,343 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post
- Queue (RDPQ) Array support
-Date: Wed, 30 Jul 2014 20:25:14 +0530
-Message-ID: <CAK=zhgoEhW7fT7SV6ZkzgFa_A49W9quzWOgXb=DH3D_CrMAdDw@mail.gmail.com>
-References: <20140625103445.GA12943@avagotech.com>
-	<yq1zjg2m6lu.fsf@sermon.lab.mkp.net>
-	<CAK=zhgoQt5J=jh4jShAy5rBXNz34sN-tqf=uZDkY4zQJ9XhM5g@mail.gmail.com>
-	<yq18unklvda.fsf@sermon.lab.mkp.net>
-	<CAK=zhgpDWJLBMBB1mV-7u+o_UC86PiOCAp4vi4-UAn_hXHtF2A@mail.gmail.com>
-	<yq1r41bkgdp.fsf@sermon.lab.mkp.net>
-	<CAK=zhgp_v_sdt+VLDs1Mxxi8Cg4nZNnzgQ=d228h+Ht2EpdEqw@mail.gmail.com>
-	<yq138dpgr6z.fsf@sermon.lab.mkp.net>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [RFC] hpsa: work in progress "lockless monster" patches
+Date: Wed, 30 Jul 2014 16:55:57 +0200
+Message-ID: <53D9077D.8000406@redhat.com>
+References: <20140725192859.GU14599@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq138dpgr6z.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58668 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753151AbaG3O5q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 10:57:46 -0400
+In-Reply-To: <20140725192859.GU14599@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org
+Cc: jbottomley@parallels.com, martin.petersen@oracle.com, hare@suse.de, hch@infradead.org, bvanassche@acm.org, axboe@kernel.dk, elliott@hp.com, scott.teel@hp.com, webbnh@hp.com, joseph.t.handzik@hp.com, justin.lindley@hp.com
 
-Hi Martin,
+On 07/25/2014 09:28 PM, scameron@beardog.cce.hp.com wrote:
+>
+> hpsa: Work In Progress: "lockless monster" patches
+>
+> To be clear, I am not suggesting that these patches be merged at this time.
+>
+> This patchset is vs. Christoph Hellwig's scsi-mq.4 branch which
+> may be found here: git://git.infradead.org/users/hch/scsi.git
+>
+> We've been working for a long time on a patchset for hpsa to remove
+> all the locks from the main i/o path in pursuit of high IOPS.  Some
+> of that work is already upstream, but a lot more of it is not quite
+> yet ready to be merged.  However, I think we've "gone dark" for a bit
+> too long on this, and even though the patches aren't really ready to
+> be merged just yet, I thought I should let other people who might be
+> interested have a look anyway, as things are starting to be at least
+> more stable than unstable.  Be warned though, there are still some
+> problems, esp. around error recovery.
+>
+> That being said, with the right hardware (fast SAS SSDs, recent Smart
+> Arrays e.g. P430, with up-to-date firmware, attached to recent disk enclosures)
+> with these patches and the scsi-mq patches, it is possible to get around
+> ~970k IOPS from a single logical drive on a single controller.
+>
+> There are about 150 patches in this set.  Rather than bomb the list
+> with that, here is a link to a tarball of the patches in the form of
+> an stgit patch series:
 
-Sorry for the delay as I was on vacation.
+Hi Stephen,
+I've looked only at the alloc functions - I'm not sure if I got it right,
+it seems it uses the same cmd_pool for both alloc function,
+from (0 - reserved_cmds) it's cmd_alloc and above that it's handled
+by cmd_tagged_alloc.
+The logic in both functions seems to be valid for me.
 
-Here are the change set when compared to the initial patch
+In cmd_tagged_alloc "Thus, there should never be a collision here between
+two requests" if this is true you don't need the refcount and just a simple
+flag were sufficient for your other needs. (And maybe you get to ~971k IOPS..)
 
-1. Declared the following functions at the beginning of the
-mpt2sas_base.c file instead of moving all these functions before
-mpt2sas_base_map_resources() function
-        a. _base_wait_for_doorbell_int()
-        b. _base_wait_for_doorbell_ack()
-        c. _base_wait_for_doorbell_not_used()
-        d. _base_handshake_req_reply_wait()
-        e. _base_get_ioc_facts()
+cmd_alloc some minor changes are possible 
+- try to find free entries only to reserved_cmds
+  (the bitmap might be shorter too)
+- next thread should start + 1 from the last result
 
-2. Initially set the consistent DMA mask to 32 bit and then change it
-to 64 bit mask after allocating RDPQ pools by calling the function
-_base_change_consistent_dma_mask. This is to ensure that all the upper
-32 bits of RDPQ entries's base address to be same. Also allocated the
-RDPQ pools first and then allocated remaining pools such as request
-pool, sense buffer pools etc. Also this patch takes care to set the
-consistent DMA mask to 64 bit (if it supports) even after resume
-operation from hibernation.
-
-3. Reduced the redundancy between the RDPQ and non-RDPQ support in
-these following functions
-        a. _base_release_memory_pools()
-        b. _base_allocate_memory_pools()
-        c. _base_send_ioc_init()
-        d. _base_make_ioc_operational()
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 6b2a79e..d81230a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -92,6 +92,22 @@ static int disable_discovery = -1;
- module_param(disable_discovery, int, 0);
- MODULE_PARM_DESC(disable_discovery, " disable discovery ");
-
-+static int dma_mask;
-+
-+static int
-+_base_wait_for_doorbell_int(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+                int sleep_flag);
-+static int
-+_base_wait_for_doorbell_ack(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+                int sleep_flag);
-+static int
-+_base_wait_for_doorbell_not_used(struct MPT2SAS_ADAPTER *ioc, int timeout,
-+                 int sleep_flag);
-+static int
-+_base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
-+    u32 *request, int reply_bytes, u16 *reply, int timeout, int sleep_flag);
-+static int
-+_base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag);
- /**
-  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
-  *
-@@ -1179,17 +1195,22 @@ static int
- _base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
- {
-     struct sysinfo s;
--    char *desc = NULL;
-+    u64 consistent_dma_mask;
-+
-+    if (dma_mask)
-+        consistent_dma_mask = DMA_BIT_MASK(64);
-+    else
-+        consistent_dma_mask = DMA_BIT_MASK(32);
-
-     if (sizeof(dma_addr_t) > 4) {
-         const uint64_t required_mask =
-             dma_get_required_mask(&pdev->dev);
-         if ((required_mask > DMA_BIT_MASK(32)) && !pci_set_dma_mask(pdev,
-             DMA_BIT_MASK(64)) && !pci_set_consistent_dma_mask(pdev,
--            DMA_BIT_MASK(64))) {
-+            consistent_dma_mask)) {
-             ioc->base_add_sg_single = &_base_add_sg_single_64;
-             ioc->sge_size = sizeof(Mpi2SGESimple64_t);
--            desc = "64";
-+            dma_mask = 64;
-             goto out;
-         }
-     }
-@@ -1198,18 +1219,29 @@ _base_config_dma_addressing(struct
-MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
-         && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
-         ioc->base_add_sg_single = &_base_add_sg_single_32;
-         ioc->sge_size = sizeof(Mpi2SGESimple32_t);
--        desc = "32";
-+        dma_mask = 32;
-     } else
-         return -ENODEV;
-
-  out:
-     si_meminfo(&s);
--    printk(MPT2SAS_INFO_FMT "%s BIT PCI BUS DMA ADDRESSING SUPPORTED, "
--        "total mem (%ld kB)\n", ioc->name, desc, convert_to_kb(s.totalram));
-+    printk(MPT2SAS_INFO_FMT
-+        "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
-+        ioc->name, dma_mask, convert_to_kb(s.totalram));
-
-     return 0;
+- when nr_cmds is read from hw it should be tested (nr_cmds > reserved_cmds)
+- what is the correct pronunciation of benignhly?
+@@ -5634,7 +5634,8 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 
+ 	offset = h->last_allocation; /* benighly racy */
+ 	for (;;) {
+-		i = find_next_zero_bit(h->cmd_pool_bits, h->nr_cmds, offset);
++		offset %=  h->reserved_cmds;
++		i = find_next_zero_bit(h->cmd_pool_bits, h->reserved_cmds, offset);
+ 		if (unlikely(i >= h->reserved_cmds)) {
+ 			offset = 0;
+ 			continue;
+@@ -5642,15 +5643,16 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 		c = h->cmd_pool + i;
+ 		refcount = atomic_inc_return(&c->refcount);
+ 		if (unlikely(refcount > 1)) {
+-			cmd_free(h, c); /* already in use */
+-			offset = (i + 1) % h->nr_cmds;
++			atomic_dec(&c->refcount); /* already in use, since we
++			 don't own the command just decrease the refcount */
++			offset = i + 1;
+ 			continue;
+ 		}
+ 		set_bit(i & (BITS_PER_LONG - 1),
+ 			h->cmd_pool_bits + (i / BITS_PER_LONG));
+ 		break; /* it's ours now. */
+ 	}
+-	h->last_allocation = i; /* benignly racy */
++	h->last_allocation = i + 1; /* benignly racy */
+ 	hpsa_cmd_partial_init(h, i, c);
+ 	return c;
  }
-
-+static int
-+_base_change_consistent_dma_mask(struct MPT2SAS_ADAPTER *ioc,
-+                  struct pci_dev *pdev)
-+{
-+    if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
-+        if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
-+            return -ENODEV;
-+    }
-+    return 0;
-+}
- /**
-  * _base_check_enable_msix - checks MSIX capabable.
-  * @ioc: per adapter object
-@@ -1424,6 +1456,9 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
-     ioc->reply_queue_count = min_t(int, ioc->cpu_count,
-         ioc->msix_vector_count);
-
-+    if (!ioc->rdpq_array_enable && max_msix_vectors == -1)
-+        max_msix_vectors = 8;
-+
-     if (max_msix_vectors > 0) {
-         ioc->reply_queue_count = min_t(int, max_msix_vectors,
-             ioc->reply_queue_count);
-@@ -1552,6 +1587,16 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
-     }
-
-     _base_mask_interrupts(ioc);
-+
-+    r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-+    if (r)
-+        goto out_fail;
-+
-+    if (!ioc->rdpq_array_enable_assigned) {
-+        ioc->rdpq_array_enable = ioc->rdpq_array_capable;
-+        ioc->rdpq_array_enable_assigned = 1;
-+    }
-+
-     r = _base_enable_msix(ioc);
-     if (r)
-         goto out_fail;
-@@ -2349,7 +2394,8 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
- static void
- _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
- {
--    int i;
-+    int i = 0;
-+    struct reply_post_struct *rps;
-
-     dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-         __func__));
-@@ -2390,15 +2436,25 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
-         ioc->reply_free = NULL;
-     }
-
--    if (ioc->reply_post_free) {
--        pci_pool_free(ioc->reply_post_free_dma_pool,
--            ioc->reply_post_free, ioc->reply_post_free_dma);
-+    if (ioc->reply_post) {
-+        do {
-+            rps = &ioc->reply_post[i];
-+            if (rps->reply_post_free) {
-+                pci_pool_free(
-+                    ioc->reply_post_free_dma_pool,
-+                    rps->reply_post_free,
-+                    rps->reply_post_free_dma);
-+                dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+                    "reply_post_free_pool(0x%p): free\n",
-+                    ioc->name, rps->reply_post_free));
-+                rps->reply_post_free = NULL;
-+            }
-+        } while (ioc->rdpq_array_enable &&
-+               (++i < ioc->reply_queue_count));
-+
-         if (ioc->reply_post_free_dma_pool)
-             pci_pool_destroy(ioc->reply_post_free_dma_pool);
--        dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
--            "reply_post_free_pool(0x%p): free\n", ioc->name,
--            ioc->reply_post_free));
--        ioc->reply_post_free = NULL;
-+        kfree(ioc->reply_post);
-     }
-
-     if (ioc->config_page) {
-@@ -2541,6 +2597,69 @@ _base_allocate_memory_pools(struct
-MPT2SAS_ADAPTER *ioc,  int sleep_flag)
-         ioc->max_sges_in_chain_message, ioc->shost->sg_tablesize,
-         ioc->chains_needed_per_io));
-
-+    /* reply post queue, 16 byte align */
-+    reply_post_free_sz = ioc->reply_post_queue_depth *
-+        sizeof(Mpi2DefaultReplyDescriptor_t);
-+    if (ioc->rdpq_array_enable)
-+        sz = reply_post_free_sz;
-+    else {
-+        if (_base_is_controller_msix_enabled(ioc))
-+            sz = reply_post_free_sz * ioc->reply_queue_count;
-+        else
-+            sz = reply_post_free_sz;
-+    }
-+
-+    ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
-+        (ioc->reply_queue_count):1,
-+        sizeof(struct reply_post_struct), GFP_KERNEL);
-+
-+    if (!ioc->reply_post) {
-+        printk(MPT2SAS_ERR_FMT "reply_post_free pool: kcalloc failed\n",
-+            ioc->name);
-+        goto out;
-+    }
-+    ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
-+        ioc->pdev, sz, 16, 0);
-+    if (!ioc->reply_post_free_dma_pool) {
-+        printk(MPT2SAS_ERR_FMT
-+         "reply_post_free pool: pci_pool_create failed\n",
-+         ioc->name);
-+        goto out;
-+    }
-+    i = 0;
-+    do {
-+        ioc->reply_post[i].reply_post_free =
-+            pci_pool_alloc(ioc->reply_post_free_dma_pool,
-+            GFP_KERNEL,
-+            &ioc->reply_post[i].reply_post_free_dma);
-+        if (!ioc->reply_post[i].reply_post_free) {
-+            printk(MPT2SAS_ERR_FMT
-+            "reply_post_free pool: pci_pool_alloc failed\n",
-+            ioc->name);
-+            goto out;
-+        }
-+        memset(ioc->reply_post[i].reply_post_free, 0, sz);
-+        dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+            "reply post free pool (0x%p): depth(%d),"
-+            "element_size(%d), pool_size(%d kB)\n", ioc->name,
-+            ioc->reply_post[i].reply_post_free,
-+            ioc->reply_post_queue_depth, 8, sz/1024));
-+        dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
-+            "reply_post_free_dma = (0x%llx)\n", ioc->name,
-+            (unsigned long long)
-+            ioc->reply_post[i].reply_post_free_dma));
-+        total_sz += sz;
-+    } while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
-+
-+    if (dma_mask == 64) {
-+        if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
-+            printk(MPT2SAS_WARN_FMT
-+                "no suitable consistent DMA mask for %s\n",
-+                ioc->name, pci_name(ioc->pdev));
-+            goto out;
-+        }
-+    }
-+
-     ioc->scsiio_depth = ioc->hba_queue_depth -
-         ioc->hi_priority_depth - ioc->internal_depth;
-
-@@ -2752,37 +2871,6 @@ chain_done:
-         "(0x%llx)\n", ioc->name, (unsigned long long)ioc->reply_free_dma));
-     total_sz += sz;
-
--    /* reply post queue, 16 byte align */
--    reply_post_free_sz = ioc->reply_post_queue_depth *
--        sizeof(Mpi2DefaultReplyDescriptor_t);
--    if (_base_is_controller_msix_enabled(ioc))
--        sz = reply_post_free_sz * ioc->reply_queue_count;
--    else
--        sz = reply_post_free_sz;
--    ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
--        ioc->pdev, sz, 16, 0);
--    if (!ioc->reply_post_free_dma_pool) {
--        printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_create "
--            "failed\n", ioc->name);
--        goto out;
--    }
--    ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
--        GFP_KERNEL, &ioc->reply_post_free_dma);
--    if (!ioc->reply_post_free) {
--        printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_alloc "
--            "failed\n", ioc->name);
--        goto out;
--    }
--    memset(ioc->reply_post_free, 0, sz);
--    dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply post free pool"
--        "(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
--        ioc->name, ioc->reply_post_free, ioc->reply_post_queue_depth, 8,
--        sz/1024));
--    dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_post_free_dma = "
--        "(0x%llx)\n", ioc->name, (unsigned long long)
--        ioc->reply_post_free_dma));
--    total_sz += sz;
--
-     ioc->config_page_sz = 512;
-     ioc->config_page = pci_alloc_consistent(ioc->pdev,
-         ioc->config_page_sz, &ioc->config_page_dma);
-@@ -3454,6 +3542,9 @@ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc,
-int sleep_flag)
-     facts->IOCCapabilities = le32_to_cpu(mpi_reply.IOCCapabilities);
-     if ((facts->IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID))
-         ioc->ir_firmware = 1;
-+    if ((facts->IOCCapabilities &
-+          MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE))
-+        ioc->rdpq_array_capable = 1;
-     facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
-     facts->IOCRequestFrameSize =
-         le16_to_cpu(mpi_reply.IOCRequestFrameSize);
-@@ -3489,9 +3580,12 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER
-*ioc, int sleep_flag)
- {
-     Mpi2IOCInitRequest_t mpi_request;
-     Mpi2IOCInitReply_t mpi_reply;
--    int r;
-+    int i, r = 0;
-     struct timeval current_time;
-     u16 ioc_status;
-+    u32 reply_post_free_array_sz = 0;
-+    Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
-+    dma_addr_t reply_post_free_array_dma;
-
-     dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-         __func__));
-@@ -3520,9 +3614,31 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER
-*ioc, int sleep_flag)
-         cpu_to_le64((u64)ioc->request_dma);
-     mpi_request.ReplyFreeQueueAddress =
-         cpu_to_le64((u64)ioc->reply_free_dma);
--    mpi_request.ReplyDescriptorPostQueueAddress =
--        cpu_to_le64((u64)ioc->reply_post_free_dma);
-
-+    if (ioc->rdpq_array_enable) {
-+        reply_post_free_array_sz = ioc->reply_queue_count *
-+            sizeof(Mpi2IOCInitRDPQArrayEntry);
-+        reply_post_free_array = pci_alloc_consistent(ioc->pdev,
-+            reply_post_free_array_sz, &reply_post_free_array_dma);
-+        if (!reply_post_free_array) {
-+            printk(MPT2SAS_ERR_FMT
-+            "reply_post_free_array: pci_alloc_consistent failed\n",
-+            ioc->name);
-+            r = -ENOMEM;
-+            goto out;
-+        }
-+        memset(reply_post_free_array, 0, reply_post_free_array_sz);
-+        for (i = 0; i < ioc->reply_queue_count; i++)
-+            reply_post_free_array[i].RDPQBaseAddress =
-+                cpu_to_le64(
-+                (u64)ioc->reply_post[i].reply_post_free_dma);
-+        mpi_request.MsgFlags = MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE;
-+        mpi_request.ReplyDescriptorPostQueueAddress =
-+            cpu_to_le64((u64)reply_post_free_array_dma);
-+    } else {
-+        mpi_request.ReplyDescriptorPostQueueAddress =
-+            cpu_to_le64((u64)ioc->reply_post[0].reply_post_free_dma);
-+    }
-
-     /* This time stamp specifies number of milliseconds
-      * since epoch ~ midnight January 1, 1970.
-@@ -3550,7 +3666,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc,
-int sleep_flag)
-     if (r != 0) {
-         printk(MPT2SAS_ERR_FMT "%s: handshake failed (r=%d)\n",
-             ioc->name, __func__, r);
--        return r;
-+        goto out;
-     }
-
-     ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-@@ -3560,7 +3676,12 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER
-*ioc, int sleep_flag)
-         r = -EIO;
-     }
-
--    return 0;
-+out:
-+    if (reply_post_free_array)
-+        pci_free_consistent(ioc->pdev, reply_post_free_array_sz,
-+                    reply_post_free_array,
-+                    reply_post_free_array_dma);
-+    return r;
+@@ -5670,6 +5672,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ 		clear_bit(i & (BITS_PER_LONG - 1),
+ 			  h->cmd_pool_bits + (i / BITS_PER_LONG));
+ 	}
++	else ; /*BUG ? or just atomic_dec and no if */
  }
+------------------------------------------------------------------------
 
- /**
-@@ -4093,7 +4214,7 @@ _base_make_ioc_operational(struct
-MPT2SAS_ADAPTER *ioc, int sleep_flag)
-     u8 hide_flag;
-     struct adapter_reply_queue *reply_q;
-     long reply_post_free;
--    u32 reply_post_free_sz;
-+    u32 reply_post_free_sz, index = 0;
+And please have a look at "[PATCH] hpsa: refine the pci enble/disable handling"
+I posted in June and add it to your series or review in the list.
 
-     dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-         __func__));
-@@ -4164,19 +4285,27 @@ _base_make_ioc_operational(struct
-MPT2SAS_ADAPTER *ioc, int sleep_flag)
-         _base_assign_reply_queues(ioc);
+Thanks,
+Tomas
 
-     /* initialize Reply Post Free Queue */
--    reply_post_free = (long)ioc->reply_post_free;
-     reply_post_free_sz = ioc->reply_post_queue_depth *
-         sizeof(Mpi2DefaultReplyDescriptor_t);
-+    reply_post_free = (long)ioc->reply_post[index].reply_post_free;
-     list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-         reply_q->reply_post_host_index = 0;
-         reply_q->reply_post_free = (Mpi2ReplyDescriptorsUnion_t *)
-             reply_post_free;
-         for (i = 0; i < ioc->reply_post_queue_depth; i++)
-             reply_q->reply_post_free[i].Words =
--                            cpu_to_le64(ULLONG_MAX);
-+                             cpu_to_le64(ULLONG_MAX);
-         if (!_base_is_controller_msix_enabled(ioc))
-             goto skip_init_reply_post_free_queue;
--        reply_post_free += reply_post_free_sz;
-+        /*
-+         * If RDPQ is enabled, switch to the next allocation.
-+         * Otherwise advance within the contiguous region.
-+         */
-+        if (ioc->rdpq_array_enable)
-+            reply_post_free = (long)
-+                ioc->reply_post[++index].reply_post_free;
-+        else
-+            reply_post_free += reply_post_free_sz;
-     }
-  skip_init_reply_post_free_queue:
 
-@@ -4304,6 +4433,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
-         }
-     }
-
-+    ioc->rdpq_array_enable_assigned = 0;
-     r = mpt2sas_base_map_resources(ioc);
-     if (r)
-         goto out_free_resources;
-@@ -4664,6 +4794,16 @@ mpt2sas_base_hard_reset_handler(struct
-MPT2SAS_ADAPTER *ioc, int sleep_flag,
-         r = -EFAULT;
-         goto out;
-     }
-+
-+    r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-+    if (r)
-+        goto out;
-+
-+    if (ioc->rdpq_array_enable && !ioc->rdpq_array_capable)
-+        panic("%s: Issue occurred with flashing controller firmware."
-+              "Please reboot the system and ensure that the correct"
-+              "firmware version is running\n", ioc->name);
-+
-     r = _base_make_ioc_operational(ioc, sleep_flag);
-     if (!r)
-         _base_reset_handler(ioc, MPT2_IOC_DONE_RESET);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
-b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index be2ae90..5f85002 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -636,6 +636,11 @@ struct mpt2sas_port_facts {
-     u16            MaxPostedCmdBuffers;
- };
-
-+struct reply_post_struct {
-+    Mpi2ReplyDescriptorsUnion_t    *reply_post_free;
-+    dma_addr_t            reply_post_free_dma;
-+};
-+
- /**
-  * enum mutex_type - task management mutex type
-  * @TM_MUTEX_OFF: mutex is not required becuase calling function is
-acquiring it
-@@ -779,8 +784,11 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct
-MPT2SAS_ADAPTER *ioc);
-  * @reply_free_dma_pool:
-  * @reply_free_host_index: tail index in pool to insert free replys
-  * @reply_post_queue_depth: reply post queue depth
-- * @reply_post_free: pool for reply post (64bit descriptor)
-- * @reply_post_free_dma:
-+ * @reply_post_struct: struct for reply_post_free physical & virt address
-+ * @rdpq_array_capable: FW supports multiple reply queue addresses in ioc_init
-+ * @rdpq_array_enable: rdpq_array support is enabled in the driver
-+ * @rdpq_array_enable_assigned: this ensures that rdpq_array_enable flag
-+ *                is assigned only ones
-  * @reply_queue_count: number of reply queue's
-  * @reply_queue_list: link list contaning the reply queue info
-  * @reply_post_host_index: head index in the pool where FW completes IO
-@@ -972,8 +980,10 @@ struct MPT2SAS_ADAPTER {
-
-     /* reply post queue */
-     u16         reply_post_queue_depth;
--    Mpi2ReplyDescriptorsUnion_t *reply_post_free;
--    dma_addr_t    reply_post_free_dma;
-+    struct reply_post_struct *reply_post;
-+    u8        rdpq_array_capable;
-+    u8        rdpq_array_enable;
-+    u8        rdpq_array_enable_assigned;
-     struct dma_pool *reply_post_free_dma_pool;
-     u8        reply_queue_count;
-     struct list_head reply_queue_list;
-
-On Sat, Jul 26, 2014 at 1:13 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 >
-> Sreekanth,
+> https://github.com/smcameron/hpsa-lockless-patches-work-in-progress/blob/master/hpsa-lockless-vs-hch-scsi-mq.4-2014-07-25-1415CDT.tar.bz2?raw=true
 >
-> Sreekanth> Following are the changes that I have done in this patch over
-> Sreekanth> the first RDPQ support patch,
+> In some cases, I have probably erred on the side of having too many too
+> small patches, on the theory that it is easier to bake a cake than to 
+> unbake a cake.  Before these are submitted "for reals", there will be
+> some squashing of patches, along with other cleaning up.
 >
-> Please, please do the function moves in a different patch. Or use a
-> simple prototype declaration like I did to avoid moving the code around
-> in the first place.
+> There are some patches in this set which are already upstream in
+> James's tree which do not happen to be in Christoph's tree
+> (most of which are named "*_sent_to_james").  There are also
+> quite a few patches which are strictly for debugging and are not
+> ever intended to be merged. 
 >
-> Sreekanth> 2. Set pci_set_consistent_dma_mask() to
-> Sreekanth>    DMA_BIT_MASK(32). still I am analysing whether this change
-> Sreekanth>    may affect on any other things or not?
 >
-> I think you're done allocating things by the time this is called. But to
-> be sure you can call _base_config_dma_addressing() after you're done
-> with the RDPQ allocations (or rearrange the code so you allocate RDPQ
-> before the DMA mask is upped in general).
+> Here is a list of all the patches sorted by author:
+>
+> Arnd Bergmann (1):
+>   [SCSI] hpsa: fix non-x86 builds
+>
+> Christoph Hellwig (1):
+>   reserve block tags in scsi host
+>
+> Joe Handzik (9):
+>   hpsa: add masked physical devices into h->dev[] array
+>   hpsa: add hpsa_bmic_id_physical_device function
+>   hpsa: get queue depth for physical devices
+>   hpsa: use ioaccel2 path to submit IOs to physical drives in HBA mode.
+>   hpsa: Get queue depth from identify physical bmic for physical disks.
+>   hpsa: add ioaccel sg chaining for the ioaccel2 path
+>   Set the phys_disk value for a CommandList structure that is
+>     submitted. Squash
+>   hpsa: unmap ioaccel2 commands before, not after adding to resubmit
+>     workqueue
+>   hpsa: add more ioaccel2 error handling, including underrun statuses.
+>
+> Nicholas Bellinger (1):
+>   hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
+>
+> Robert Elliott (44):
+>   Change scsi.c scsi_log_completion() to print strings for QUEUED,
+>   Set scsi_logging_level to be more verbose to get better messages
+>   hpsa: do not unconditionally copy sense data
+>   hpsa: optimize cmd_alloc function by remembering last allocation
+>   From a154642aeed291c7cfe4b9ea9da932156030f7d1 Mon Sep 17 00:00:00
+>     2001
+>   hpsa: Clean up host, channel, target, lun prints
+>   hpsa: do not check cmd_alloc return value - it cannnot return NULL
+>   hpsa: return -1 rather than -ENOMEM in hpsa_get_raid_map if fill_cmd
+>     fails
+>   hpsa: return -ENOMEM not 1 from ioaccel2_alloc_cmds_and_bft on
+>     allocation failure
+>   hpsa: return -ENOMEM not 1 from hpsa_alloc_ioaccel_cmd_and_bft on
+>     allocation failure
+>   hpsa: return -ENOMEM not -EFAULT from hpsa_passthru_ioctl on kmalloc
+>     failure
+>   hpsa: pass error from pci_set_consistent_dma_mask intact from
+>     hpsa_message
+>   hpsa: detect and report failures changing controller transport modes
+>   hpsa: add hpsa_disable_interrupt_mode
+>   hpsa: rename free_irqs to hpsa_free_irqs and move before
+>     hpsa_request_irq
+>   hpsa: rename hpsa_request_irq to hpsa_request_irqs
+>   hpsa: on failure of request_irq, free the irqs that we did get
+>   hpsa: make hpsa_pci_init disable interrupts and pci_disable_device on
+>     critical failures
+>   hpsa: fix a string constant broken into two lines
+>   hpsa: avoid unneccesary calls to resource freeing functions in
+>     hpsa_init_one
+>   hpsa: add hpsa_free_cfgtables function to undo what
+>     hpsa_find_cfgtables does
+>   hpsa: report failure to ioremap config table
+>   hpsa: add hpsa_free_pci_init function
+>   hpsa: clean up error handling in hpsa_pci_init
+>   hpsa: make hpsa_remove_one use hpsa_pci_free_init
+>   hpsa: rename hpsa_alloc_ioaccel_cmd_and_bft to
+>     hpsa_alloc_ioaccel1_cmd_and_bft
+>   hpsa: rename hpsa_allocate_cmd_pool to hpsa_alloc_cmd_pool
+>   hpsa: rename ioaccel2_alloc_cmds_and_bft to
+>     hpsa_alloc_ioaccel2_cmd_and_bft
+>   hpsa: fix memory leak in hpsa_alloc_cmd_pool
+>   hpsa: return status not void from hpsa_put_ctlr_into_performant_mode
+>   hpsa: clean up error handling in hpsa_init_one
+>   hpsa: report allocation failures while allocating SG chain blocks
+>   hpsa: rename hpsa_allocate_sg_chain_blocks to
+>     hpsa_alloc_sg_chain_blocks
+>   hpsa: improve allocation failure messages from hpsa_init_one
+>   hpsa: fix minor if-statement style issue in hpsa_init_one
+>   hpsa: fix wrong indent level in hpsa_init_one
+>   Add hpsa_free_performant_mode and call it from hpsa_init_one
+>   hpsa: shorten the wait for the CISS doorbell mode change
+>     acknowledgement
+>   hpsa: clean up some error reporting output in abort handler
+>   hpsa: try to detect controller lockup in abort handler
+>   hpsa: Return DID_NO_CONNECT rather than DID_ERR on lockup
+>   hpsa: check for lockup on all simple_cmd submissions
+>   hpsa: Support 64-bit lun values in printks
+>   hpsa: do not print ioaccel2 warning messages about unusual
+>     completions.
+>
+> Stephen M. Cameron (95):
+>   scsi: break from queue depth adjusting loops when device found
+>   hpsa: remove online devices from offline device list
+>   hpsa: fix bad -ENOMEM return value in hpsa_big_passthru_ioctl
+>   hpsa: make hpsa_init_one return -ENOMEM if allocation of
+>     h->lockup_detected fails
+>   hpsa: fix 6-byte READ/WRITE with 0 length data xfer
+>   hpsa: remove spin lock around command allocation
+>   hpsa: use atomics for commands_outstanding instead of spin locks
+>   hpsa: reserve some commands for use by driver
+>   hpsa: get rid of cmd_special_alloc and cmd_special_free
+>   hpsa: do not queue commands internally in driver
+>   hpsa: remove unused interrupt handler code
+>   hpsa: remove direct lookup bit from command tags
+>   hpsa: fix race between abort handler and main i/o path
+>   hpsa: allow lockup detector to be turned off
+>   hpsa: do not request device rescan on every ioaccel path error
+>   hpsa: factor out hpsa_ciss_submit function
+>   hpsa: use workqueue to resubmit failed ioaccel commands
+>   hpsa: use driver instead of system work queue for command
+>     resubmission
+>   hpsa: remove 'action required' phrasing
+>   hpsa: Count passthru cmds with atomics, not a spin locked int
+>   hpsa: remove unused fifo_full function
+>   hpsa: slightly optimize SA5_performant_completed
+>   hpsa: do not check for msi(x) in interrupt_pending
+>   hpsa: fix fail_all_outstanding_cmds to use reference counting
+>   hpsa: fix endianness issue with scatter gather elements
+>   hpsa: get rid of type/attribute/direction bit field where possible
+>   hpsa: do not use function pointers in fast path command submission
+>   hpsa: do not wait for aborted commands to complete after abort
+>   hpsa: fix hpsa_drain_accel_commands to use reference counting instead
+>     of bitmap
+>   hpsa: fix race when updating raid map data.
+>   hpsa: allow commands to be completed on specified reply queue
+>   hpsa: fix completion race in abort handler
+>   hpsa: fix aborting of reused commands
+>   hpsa: lay groundwork for handling driver initiated command timeouts
+>   hpsa: do not free command twice in hpsa_get_raid_map
+>   hpsa: do not send aborts to logical devices that do not support
+>     aborts
+>   hpsa: remember whether devices support aborts across rescans
+>   hpsa: do not send two aborts with swizzled tags.
+>   hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
+>   hpsa: flush work queue hpsa_wq in fail_all_outstanding_cmds
+>   hpsa: use per controller not per driver work queue for command
+>     resubmission
+>   hpsa: fix allocation sizes for CISS_REPORT_LUNs commands
+>   hpsa: always use extended report physical LUNs for physical devices
+>   hpsa: prevent manually adding masked physical devices
+>   hpsa: fix values for expose status
+>   hpsa: avoid unnecessary io in hpsa_get_pdisk_of_ioaccel2()
+>   hpsa: do not be so noisy about check conditions
+>   hpsa: handle descriptor format sense data where needed
+>   hpsa: print CDBs instead of kernel virtual addresses for uncommon
+>     errors
+>   hpsa: handle Command Status TMF function status
+>   hpsa: do not use a void pointer for scsi_cmd field of struct
+>     CommandList
+>   hpsa: return FAILED from abort handler if controller locked up.
+>   hpsa: if controller locked up return failed from device reset handler
+>   hpsa: check for ctlr lockup after command allocation in main io path
+>   hpsa: mark masked devices as masked in output
+>   hpsa: limit number of concurrent abort requests
+>   hpsa: separate lockup detection and device rescanning
+>   hpsa: factor out hpsa_init_cmd function
+>   hpsa: reinitialize commands on resubmitting failed ioaccel commands
+>   hpsa: fully initialize commands once at driver load not every time
+>   hpsa: change driver version to 3.4.6
+>   hpsa: allow lockup detected to be viewed via sysfs
+>   hpsa: do not ignore return value of hpsa_register_scsi
+>   hpsa: DEBUG ONLY - allow triggering command resubmitting via sysfs
+>   hpsa: try resubmitting down raid path on task set full
+>   hpsa: factor out hpsa_ioaccel_submit function
+>   hpsa: try resubmitting down ioaccelerated path on task set full
+>   hpsa: honor queue depth of physical devices
+>   hpsa: use cancel_delayed_work_sync where needed
+>   hpsa: clean up queue depth getting code
+>   hpsa: try to fix ioaccel command accounting code
+>   hpsa: fix hpsa_figure_phys_disk_ptrs to handle layout_map_count other
+>     than 1
+>   hpsa: close race in ioaccel_cmds_out accounting
+>   hpsa: guard against overflowing raid map array
+>   hpsa: test ioaccel_cmds_out vs. queue depth earlier to avoid wasting
+>     time
+>   hpsa: DEBUG ONLY - fix missing atomic-dec of ioaccel_cmds_out in
+>     debug command resubmission code
+>   hpsa: fix missing atomic_dec of dev->ioaccel_cmds_out
+>   hpsa: do not ack controller events on controllers that do not support
+>     it
+>   hpsa: fix code that updates h->dev[]->phys_disk[]
+>   hpsa: remove bug-on that triggers in hba mode by mistake
+>   hpsa: remove unused temp64 variable from hpsa_cmd_init
+>   hpsa bump driver version again
+>   hpsa break hpsa_free_irqs_and_disable_msix into two functions
+>   separate hpsa_free_cmd_pool into three separate function
+>   hpsa: fix missing return in hpsa_command_resubmit_worker
+>   hpsa: fix command leaks in hpsa_resubmit_command_worker
+>   hpsa: fix bad interpretations of hpsa_ioaccel_submit return value
+>   hpsa: do not touch phys_disk[] for ioaccel enabled logical drives
+>     during rescan
+>   hpsa: add change_queue_type function
+>   hpsa: make hpsa_change_queue_depth handle reason SCSI_QDEPTH_QFULL
+>   hpsa: initialize queue depth of logical drives reasonably
+>   hpsa: attempt to fix queue depth calculations for logical drives
+>   hpsa: add support sending aborts to physical devices via the ioaccel2
+>     path
+>   hpsa: fix problem with abort support checking happening too early
+>   hpsa: remove incorrect bug on in hpsa_scsi_ioaccel_raid_map
+>
+> Webb Scales (3):
+>   Initialize reference counts to zero on initial command entry
+>     allocation
+>   hpsa: make hpsa_send_reset_as_abort_ioaccel2() use the specified
+>     reply queue.
+>   hpsa:  use block layer tag for command allocation
+>
+>  drivers/scsi/hpsa.c       | 3642 ++++++++++++++++++++++++++++-----------------
+>  drivers/scsi/hpsa.h       |  103 +-
+>  drivers/scsi/hpsa_cmd.h   |  222 +++-
+>  drivers/scsi/scsi.c       |   64 +-
+>  drivers/scsi/scsi_error.c |    2 +
+>  drivers/scsi/scsi_lib.c   |    1 +
+>  include/scsi/scsi_host.h  |    9 +
+>  7 files changed, 2561 insertions(+), 1482 deletions(-)
+>
+> -- steve
 >
 > --
-> Martin K. Petersen      Oracle Linux Engineering
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
