@@ -1,271 +1,63 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 1/3] pm8001: fix pm8001_store_update_fw
-Date: Wed, 30 Jul 2014 18:42:22 +0530
-Message-ID: <1406725942-5829-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 4/4] scsi: pm8001: fix pm8001_store_update_fw
+Date: Wed, 30 Jul 2014 15:13:22 +0200
+Message-ID: <53D8EF72.7080208@redhat.com>
+References: <1404746401-25229-4-git-send-email-thenzl@redhat.com> <20140710064301.GA18156@infradead.org> <53BE9578.3060902@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47546 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750985AbaG3NNF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 09:13:05 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:60457 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751059AbaG3NNs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2014 09:13:48 -0400
+In-Reply-To: <53BE9578.3060902@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@pmcs.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com
 
-From: Tomas Henzl <thenzl@redhat.com>
+On 07/10/2014 03:30 PM, Tomas Henzl wrote:
+> On 07/10/2014 08:43 AM, Christoph Hellwig wrote:
+>> On Mon, Jul 07, 2014 at 05:20:01PM +0200, Tomas Henzl wrote:
+>>> The current implementation may mix the negative value returned
+>>> from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
+>>> as bytes programmed, this patch fixes it.
+>> This still doesn;t look correct to me as err mixes up the driver
+>> internal FAIL_* codes with Linux error codes.  It seems like for the
+>> FAIL_* codes should only go into ->fw_status and the return value
+>> should be a proper Linux error code.
+> And the fw_status might be later used to show error strings in pm8001_show_update_fw,
+> if it is so it depends on the flash utility but it seems likely. 
+>
+>> Funny fact: the FAIL_* / FLASH_IN_PROGRESS codes seems to be the same
+>> between aic94xx and pm8001.
+> And similar story there too - asd_store_update_bios -...- asd_poll_flash(might return -ENOENT)
+>
+> Maybe the flash utility ignores the return value or it has never happened.
+> ---------------------
+>
+> I'll try to find what seems to be the most probable way and post it in few days.
 
-The current implementation may mix the negative value returned
-from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
-as bytes programmed, this patch fixes it.
+Christoph,
+from few days it is three weeks and the patch has been just replaced
+by "[PATCH 1/3] pm8001: fix pm8001_store_update_fw" sent by Suresh,
+so you can drop this patch.
+(I've asked Suresh off-list to test it, I didn't want to brick my card by testing
+fw flashes.)
+Thanks,
+Tomas
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c |  137 +++++++++++++++++++-------------------
- drivers/scsi/pm8001/pm8001_hwi.c |    4 +-
- 2 files changed, 70 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index d3a08ae..69aedea 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -526,18 +526,19 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
- {
- 	struct pm8001_ioctl_payload	*payload;
- 	DECLARE_COMPLETION_ONSTACK(completion);
--	u8		*ioctlbuffer = NULL;
--	u32		length = 0;
--	u32		ret = 0;
-+	u8		*ioctlbuffer;
-+	u32		ret;
-+	u32		length = 1024 * 5 + sizeof(*payload) - 1;
-+
-+	if (pm8001_ha->fw_image->size > 4096) {
-+		pm8001_ha->fw_status = FAIL_FILE_SIZE;
-+		return -EFAULT;
-+	}
- 
--	length = 1024 * 5 + sizeof(*payload) - 1;
- 	ioctlbuffer = kzalloc(length, GFP_KERNEL);
--	if (!ioctlbuffer)
-+	if (!ioctlbuffer) {
-+		pm8001_ha->fw_status = FAIL_OUT_MEMORY;
- 		return -ENOMEM;
--	if ((pm8001_ha->fw_image->size <= 0) ||
--	    (pm8001_ha->fw_image->size > 4096)) {
--		ret = FAIL_FILE_SIZE;
--		goto out;
- 	}
- 	payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
- 	memcpy((u8 *)&payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
-@@ -547,6 +548,10 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
- 	payload->minor_function = 0x1;
- 	pm8001_ha->nvmd_completion = &completion;
- 	ret = PM8001_CHIP_DISP->set_nvmd_req(pm8001_ha, payload);
-+	if (ret) {
-+		pm8001_ha->fw_status = FAIL_OUT_MEMORY;
-+		goto out;
-+	}
- 	wait_for_completion(&completion);
- out:
- 	kfree(ioctlbuffer);
-@@ -557,26 +562,25 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- {
- 	struct pm8001_ioctl_payload	*payload;
- 	DECLARE_COMPLETION_ONSTACK(completion);
--	u8		*ioctlbuffer = NULL;
--	u32		length = 0;
-+	u8		*ioctlbuffer;
- 	struct fw_control_info	*fwControl;
--	u32		loopNumber, loopcount = 0;
--	u32		sizeRead = 0;
- 	u32		partitionSize, partitionSizeTmp;
--	u32		ret = 0;
--	u32		partitionNumber = 0;
-+	u32		loopNumber, loopcount;
- 	struct pm8001_fw_image_header *image_hdr;
-+	u32		sizeRead = 0;
-+	u32		ret = 0;
-+	u32		length = 1024 * 16 + sizeof(*payload) - 1;
- 
--	length = 1024 * 16 + sizeof(*payload) - 1;
-+	if (pm8001_ha->fw_image->size < 28) {
-+		pm8001_ha->fw_status = FAIL_FILE_SIZE;
-+		return -EFAULT;
-+	}
- 	ioctlbuffer = kzalloc(length, GFP_KERNEL);
--	image_hdr = (struct pm8001_fw_image_header *)pm8001_ha->fw_image->data;
--	if (!ioctlbuffer)
-+	if (!ioctlbuffer) {
-+		pm8001_ha->fw_status = FAIL_OUT_MEMORY;
- 		return -ENOMEM;
--	if (pm8001_ha->fw_image->size < 28) {
--		ret = FAIL_FILE_SIZE;
--		goto out;
- 	}
--
-+	image_hdr = (struct pm8001_fw_image_header *)pm8001_ha->fw_image->data;
- 	while (sizeRead < pm8001_ha->fw_image->size) {
- 		partitionSizeTmp =
- 			*(u32 *)((u8 *)&image_hdr->image_length + sizeRead);
-@@ -617,18 +621,18 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 
- 		pm8001_ha->nvmd_completion = &completion;
- 		ret = PM8001_CHIP_DISP->fw_flash_update_req(pm8001_ha, payload);
--		if (ret)
--			break;
-+		if (ret) {
-+			pm8001_ha->fw_status = FAIL_OUT_MEMORY;
-+			goto out;
-+		}
- 		wait_for_completion(&completion);
- 		if (fwControl->retcode > FLASH_UPDATE_IN_PROGRESS) {
--			ret = fwControl->retcode;
--			break;
-+			pm8001_ha->fw_status = fwControl->retcode;
-+			ret = -EFAULT;
-+			goto out;
-+		}
- 		}
- 	}
--	if (ret)
--		break;
--	partitionNumber++;
--}
- out:
- 	kfree(ioctlbuffer);
- 	return ret;
-@@ -643,22 +647,29 @@ static ssize_t pm8001_store_update_fw(struct device *cdev,
- 	char *cmd_ptr, *filename_ptr;
- 	int res, i;
- 	int flash_command = FLASH_CMD_NONE;
--	int err = 0;
-+	int ret;
-+
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	cmd_ptr = kzalloc(count*2, GFP_KERNEL);
-+	/* this test protects us from running two flash processes at once,
-+	 * so we should start with this test */
-+	if (pm8001_ha->fw_status == FLASH_IN_PROGRESS)
-+		return -EINPROGRESS;
-+	pm8001_ha->fw_status = FLASH_IN_PROGRESS;
- 
-+	cmd_ptr = kzalloc(count*2, GFP_KERNEL);
- 	if (!cmd_ptr) {
--		err = FAIL_OUT_MEMORY;
--		goto out;
-+		pm8001_ha->fw_status = FAIL_OUT_MEMORY;
-+		return -ENOMEM;
- 	}
- 
- 	filename_ptr = cmd_ptr + count;
- 	res = sscanf(buf, "%s %s", cmd_ptr, filename_ptr);
- 	if (res != 2) {
--		err = FAIL_PARAMETERS;
--		goto out1;
-+		pm8001_ha->fw_status = FAIL_PARAMETERS;
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
- 	for (i = 0; flash_command_table[i].code != FLASH_CMD_NONE; i++) {
-@@ -669,50 +680,38 @@ static ssize_t pm8001_store_update_fw(struct device *cdev,
- 		}
- 	}
- 	if (flash_command == FLASH_CMD_NONE) {
--		err = FAIL_PARAMETERS;
--		goto out1;
-+		pm8001_ha->fw_status = FAIL_PARAMETERS;
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
--	if (pm8001_ha->fw_status == FLASH_IN_PROGRESS) {
--		err = FLASH_IN_PROGRESS;
--		goto out1;
--	}
--	err = request_firmware(&pm8001_ha->fw_image,
-+	ret = request_firmware(&pm8001_ha->fw_image,
- 			       filename_ptr,
- 			       pm8001_ha->dev);
- 
--	if (err) {
-+	if (ret) {
- 		PM8001_FAIL_DBG(pm8001_ha,
--			pm8001_printk("Failed to load firmware image file %s,"
--			" error %d\n", filename_ptr, err));
--		err = FAIL_OPEN_BIOS_FILE;
--		goto out1;
-+			pm8001_printk(
-+			"Failed to load firmware image file %s,	error %d\n",
-+			filename_ptr, ret));
-+		pm8001_ha->fw_status = FAIL_OPEN_BIOS_FILE;
-+		goto out;
- 	}
- 
--	switch (flash_command) {
--	case FLASH_CMD_UPDATE:
--		pm8001_ha->fw_status = FLASH_IN_PROGRESS;
--		err = pm8001_update_flash(pm8001_ha);
--		break;
--	case FLASH_CMD_SET_NVMD:
--		pm8001_ha->fw_status = FLASH_IN_PROGRESS;
--		err = pm8001_set_nvmd(pm8001_ha);
--		break;
--	default:
--		pm8001_ha->fw_status = FAIL_PARAMETERS;
--		err = FAIL_PARAMETERS;
--		break;
--	}
-+	if (FLASH_CMD_UPDATE == flash_command)
-+		ret = pm8001_update_flash(pm8001_ha);
-+	else
-+		ret = pm8001_set_nvmd(pm8001_ha);
-+
- 	release_firmware(pm8001_ha->fw_image);
--out1:
--	kfree(cmd_ptr);
- out:
--	pm8001_ha->fw_status = err;
-+	kfree(cmd_ptr);
- 
--	if (!err)
--		return count;
--	else
--		return -err;
-+	if (ret)
-+		return ret;
-+
-+	pm8001_ha->fw_status = FLASH_OK;
-+	return count;
- }
- 
- static ssize_t pm8001_show_update_fw(struct device *cdev,
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 1738310..dd12c6f 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4824,7 +4824,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
- 	if (rc) {
- 		kfree(fw_control_context);
--		return rc;
-+		return -EBUSY;
- 	}
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	ccb->fw_control_context = fw_control_context;
-@@ -4946,7 +4946,7 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
- 	if (rc) {
- 		kfree(fw_control_context);
--		return rc;
-+		return -EBUSY;
- 	}
- 	ccb = &pm8001_ha->ccb_info[tag];
- 	ccb->fw_control_context = fw_control_context;
--- 
-1.7.1
+> This patch is not related to the patches 1-3/4, so just wait with this one.
+>
+> Thanks, Tomas
+>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
