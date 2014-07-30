@@ -1,47 +1,101 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 2/3] pm8001: Fix erratic calculation in update_flash
-Date: Wed, 30 Jul 2014 18:44:24 +0530
-Message-ID: <1406726064-5875-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:47780 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751463AbaG3NPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 09:15:07 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Boaz Harrosh <boaz@plexistor.com>
+Subject: [PATCH 1/2] brd: Fix the partitions BUG
+Date: Wed, 30 Jul 2014 17:15:59 +0300
+Message-ID: <53D8FE1F.1060009@plexistor.com>
+References: <53D7CDDD.1000302@gmail.com> <1406654379.2767.1.camel@rzwisler-mobl1.amr.corp.intel.com> <53D8D2C4.1030101@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53D8D2C4.1030101@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nick Piggin <npiggin@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-From: Tomas Henzl <thenzl@redhat.com>
 
-The loopcount is calculated by using some weird magic.
-Use instead a boring macro
+With current code after a call to:
+	bdev = blkdev_get_by_path(dev_name, mode, fs_type);
+	size = i_size_read(bdev->bd_inode);
+	part_size  = bdev->bd_part->nr_sects << 9;
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+I get the following bad results:
+dev_name == /dev/ram0
+  foo: [foo_mount:880] size=0x40000000 bdev=ffff88003dc24340 \
+	bd_inode=ffff88003dc24430 bd_part=ffff88003ca22848 part_size=0x40000000
+dev_name == /dev/ram0p1
+  foo: [foo_mount:880] size=0x40000000 bdev=ffff88003d2f6d80 \
+	bd_inode=ffff88003d2f6e70 bd_part=ffff88003ca22848 part_size=0x40000000
+dev_name == /dev/ram0p2
+  foo: [foo_mount:880] size=0x40000000 bdev=ffff88003dc24680 \
+	bd_inode=ffff88003dc24770 bd_part=ffff88003ca22848 part_size=0x40000000
+Note how all three bdev(s) point to the same bd_part.
+
+This is do to a single bad clubber in brd_probe() which is
+removed in this patch:
+-	*part = 0;
+
+because of this all 3 bdev(s) above get to point to the same bd_part[0]
+
+While at it fix/rename brd_init_one() since all devices are created on
+load of driver, brd_probe() will never be called with a new un-created
+device.
+brd_init_one() is now renamed to brd_find() which is what it does.
+
+TODO: There is one more partitions BUG regarding
+      brd_direct_access() which is fixed on the next patch.
+
+Signed-off-by: Boaz Harrosh <boaz@plexistor.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/block/brd.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 69aedea..7abbf28 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -585,11 +585,8 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 		partitionSizeTmp =
- 			*(u32 *)((u8 *)&image_hdr->image_length + sizeRead);
- 		partitionSize = be32_to_cpu(partitionSizeTmp);
--		loopcount = (partitionSize + HEADER_LEN)/IOCTL_BUF_SIZE;
--		if (loopcount % IOCTL_BUF_SIZE)
--			loopcount++;
--		if (loopcount == 0)
--			loopcount++;
-+		loopcount = DIV_ROUND_UP(partitionSize + HEADER_LEN,
-+					IOCTL_BUF_SIZE);
- 		for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
- 			payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
- 			payload->length = 1024*16;
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index c7d138e..92334f6 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -523,22 +523,20 @@ static void brd_free(struct brd_device *brd)
+ 	kfree(brd);
+ }
+ 
+-static struct brd_device *brd_init_one(int i)
++static struct brd_device *brd_find(int i)
+ {
+ 	struct brd_device *brd;
+ 
+ 	list_for_each_entry(brd, &brd_devices, brd_list) {
+ 		if (brd->brd_number == i)
+-			goto out;
++			return brd;
+ 	}
+ 
+-	brd = brd_alloc(i);
+-	if (brd) {
+-		add_disk(brd->brd_disk);
+-		list_add_tail(&brd->brd_list, &brd_devices);
+-	}
+-out:
+-	return brd;
++	/* brd always allocates all its devices at load time, therefor
++	 * brd_probe will never be called with a new brd_number
++	 */
++	printk(KERN_EROR "brd: brd_find unexpected device %d\n", i);
++	return NULL;
+ }
+ 
+ static void brd_del_one(struct brd_device *brd)
+@@ -554,11 +552,10 @@ static struct kobject *brd_probe(dev_t dev, int *part, void *data)
+ 	struct kobject *kobj;
+ 
+ 	mutex_lock(&brd_devices_mutex);
+-	brd = brd_init_one(MINOR(dev) >> part_shift);
++	brd = brd_find(MINOR(dev) >> part_shift);
+ 	kobj = brd ? get_disk(brd->brd_disk) : NULL;
+ 	mutex_unlock(&brd_devices_mutex);
+ 
+-	*part = 0;
+ 	return kobj;
+ }
+ 
 -- 
-1.7.1
-
+1.9.3
