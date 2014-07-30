@@ -1,39 +1,38 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 3/3] pm8001: Update MAINTAINERS list
-Date: Wed, 30 Jul 2014 17:37:43 +0530
-Message-ID: <1406722063-4683-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] pm8001: fix pm8001_store_update_fw
+Date: Wed, 30 Jul 2014 16:10:08 +0400
+Message-ID: <1406722208.4865.57.camel@jarvis>
+References: <1406721810-4591-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:34212 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752412AbaG3MIZ (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44576 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752428AbaG3MKM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 08:08:25 -0400
+	Wed, 30 Jul 2014 08:10:12 -0400
+In-Reply-To: <1406721810-4591-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
+To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Cc: linux-scsi@vger.kernel.org, xjtuwjp@gmail.com, thenzl@redhat.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+On Wed, 2014-07-30 at 17:33 +0530, Suresh Thiagarajan wrote:
+> From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+> 
+> The current implementation may mix the negative value returned
+> from pm8001_set_nvmd with with count. -(-ENOMEM) could be interpreted
+> as bytes programmed, this patch fixes it.
+> 
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-Update pmcs mail list for pm8001 driver support
+This author and signoff chain doesn't make sense.  Is the patch from
+Tomas Henzl?  In which case the From: field is wrong; it should read
 
-Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
----
- MAINTAINERS |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+From: Tomas Henzl <thenzl@redhat.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3f2e171..a63259c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6987,6 +6987,7 @@ F:	drivers/scsi/pmcraid.*
- PMC SIERRA PM8001 DRIVER
- M:	xjtuwjp@gmail.com
- M:	lindar_liu@usish.com
-+L:	pmchba@pmcs.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/pm8001/
--- 
-1.7.1
+James
+
 
