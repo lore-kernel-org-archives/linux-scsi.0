@@ -1,156 +1,43 @@
-From: Nilesh Javali <nilesh.javali@qlogic.com>
-Subject: RE: [PATCH] qla4xxx: check the return value of dma_alloc_coherent()
-Date: Wed, 30 Jul 2014 06:27:38 +0000
-Message-ID: <058691E078642A44B7C96BB0B1DB4F2446C29A37@avmb2.qlogic.org>
-References: <1406552127-9405-1-git-send-email-mlombard@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 4/4] sd: Optionally attach to ZBC devices
+Date: Wed, 30 Jul 2014 08:41:55 +0200
+Message-ID: <53D893B3.6020407@suse.de>
+References: <1406645117-53088-1-git-send-email-hare@suse.de> <1406645117-53088-5-git-send-email-hare@suse.de> <20140729171414.GA1060@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_058691E078642A44B7C96BB0B1DB4F2446C29A37avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:29010 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932084AbaG3G1l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 02:27:41 -0400
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s6U6Rfl1021621
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 23:27:41 -0700
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1negur96y8-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2014 23:27:40 -0700
-In-Reply-To: <1406552127-9405-1-git-send-email-mlombard@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140729171414.GA1060@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hsh@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hch@lst.de" <hch@lst.de>
 
---_000_058691E078642A44B7C96BB0B1DB4F2446C29A37avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 07/29/2014 07:14 PM, Christoph Hellwig wrote:
+> On Tue, Jul 29, 2014 at 04:45:17PM +0200, Hannes Reinecke wrote:
+>> ZBC drives are close to disk devices, so sd.c is well
+>> suited as a testbed for ZBC devices.
+>> This patch introduces a module option 'attach_zbc' to
+>> sd which will make the sd driver accept ZBC
+>> devices as normal disk drives.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>
+> Looks reasonable to me.
+>
+> I'd also really like a sysfs file that tells us if we're dealing
+> with a host aware device, as those report as TYPE_SBC.
+>
+Yes, eventually. But can't we defer that to a next patchset?
+I'd really like to have this one in, as it makes dealing with ZAC=20
+devices _so much_ easier ...
 
-Acked-By: Nilesh Javali <nilesh.javali@qlogic.com>
+Cheers,
 
-
------Original Message-----
-From: Maurizio Lombardi [mailto:mlombard@redhat.com]=20
-Sent: Monday, July 28, 2014 6:25 PM
-To: Vikas Chaudhary
-Cc: Dept-Eng iSCSI Driver; linux-scsi; James.Bottomley@HansenPartnership.co=
-m; hch@lst.de
-Subject: [PATCH] qla4xxx: check the return value of dma_alloc_coherent()
-
-the qla4xxx_alloc_fw_dump() calls dma_alloc_coherent() but does not
-check its return value.
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/scsi/qla4xxx/ql4_init.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_ini=
-t.c
-index 6f12f85..4180d6d 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -334,6 +334,12 @@ void qla4xxx_alloc_fw_dump(struct scsi_qla_host *ha)
- 	/* Allocate memory for saving the template */
- 	md_tmp =3D dma_alloc_coherent(&ha->pdev->dev, ha->fw_dump_tmplt_size,
- 				    &md_tmp_dma, GFP_KERNEL);
-+	if (!md_tmp) {
-+		ql4_printk(KERN_INFO, ha,
-+			   "scsi%ld: Failed to allocate DMA memory\n",
-+			   ha->host_no);
-+		return;
-+	}
-=20
- 	/* Request template */
- 	status =3D  qla4xxx_get_minidump_template(ha, md_tmp_dma);
+Hannes
 --=20
-Maurizio Lombardi
-
-
---_000_058691E078642A44B7C96BB0B1DB4F2446C29A37avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IklOAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEUwOTI0MTIy
-NzVDOTk3NDlBQkQxNTA0MkQ3RkQyRjU4ABsHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HBwAeAAYA
-GwAmAAMAVAEBIIADAA4AAADeBwcAHgAGABsAJgADAFQBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEQAAABSRTogW1BBVENIXSBxbGE0eHh4OiBjaGVjayB0aGUgcmV0dXJu
-IHZhbHVlIG9mIGRtYV9hbGxvY19jb2hlcmVudCgpAIIXAQOQBgDADwAAQAAAAAIBfwABAAAAPAAA
-ADwwNTg2OTFFMDc4NjQyQTQ0QjdDOTZCQjBCMURCNEYyNDQ2QzI5QTM3QGF2bWIyLnFsb2dpYy5v
-cmc+AAsAHw4BAAAAAgEJEAEAAABzBAAAbwQAAFIHAABMWkZ14TScfmEACmZiaWQEAABjY8BwZzEy
-NTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkO
-wL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0
-fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQ
-ACAgQk1fQuBFR0lOfQr8AfEL8RAgQWNrCYAtQnkOOgewAxAHkGggSmFidgdAaSA8AwEicS5SaiLD
-QHEJAGcOUC7xBaBtPlwi8BhQCoEk29otJhJPBRAkQG4HQAXQuQeQc2EYMCYTJMVGA2EJIiBNYQhx
-emlvINpMA3BiCxEjAFsAwAMQ2RiQOm0JACkzQAlxEdD6dCRyXQMwJNQGYAIwKGEhAiBkYXksIqB1
-bDB5IDI4LKAB0DE0iCA2Og6gIFBNJMWCVCoAIFZpa2EEIEpDEdB1KtFyeSTFQ5JjIiBEZQUwLUUZ
-wMAgaVNDU0kwUAUQxRoyICTRdXgtBPAAkMcxsCKwB4EuQm8CQANwsR5weUBIAHEJ8FAfgV8YUSKA
-BSAkcjGwaBHAQBpsH2AuAQArdnViagMFkCwRW1BBVENI4ytQJBBhNHg3YCIgEcCtBZBrHMA3wCAJ
-cHQIcJcDoCLRClAgGTAgZADA5l8HQAkAY18FoDfACXB5AjAoKSTMOBI3JTmFZsB3X2R1bXA6cBvQ
-jzmRBCA5XzphIGJ1BUB0ZG8HkW4zACTFN7Rp1nQEIDhaLiTMUyaAGFDjIeAZMGYtYiIRKI8jEJ8q
-LySYJ4g9gDFjcy8yMuYvNyVHoTRfC4BAcCRwZCB8LZAgK0kjRmYx7xxwIlE3oRmyZCygSQALgM8S
-AAAgKOAAgCgrOo0N4J0BICAmECRABUBhL0bv/Uf9Yk2fR+0kxR2xEDAtkAEAQDJmODUuLjRgMTgw
-ZDYcYB6RNvw0NCWoTX9QryTFSSFPnxNVryTFQEBNEDMzNC4sSQFaIg6QIFnhdm9PDdA7rzy0H2By
-dTZgIGUyMl83IV9oGRAFQCqPEdA6hgMwAZEgLyohkP85ohiAGeAHgARgL5AccAWx/ycgHWAwwTgS
-ECA84AtgX9GEKi9ee21kX3Q84CwgPT2POlEmEdAtPvpwAQB2ZNBlASygZLI8lYtjAingXwCQemUs
-Xnr1Z5ogaJImYuQ8sADALKAAR0ZQX0tFUk54RUwpFiBWxV7zBpAg7CghYuQ9EFwAAGqJXvNNSDJw
-BRACMGsoafJfeSAgRk9lgmcGbKdoViLRMjIlbGQiIEYpwRxRRxiQVJBfhkRNQV/1XHhcbiJuz2hW
-ZLJd4l/fP3BqXF7zOFRqbFwgQF6G8V6NUmVxClBeAWFvXtV/H2E4cAQgY1BbdxgwZqBt90hxZhR5
-5ShuoWLVaVJqVz9UcSTFQ18kzBVCghAAHwBCAAEAAAAcAAAATgBpAGwAZQBzAGgAIABKAGEAdgBh
-AGwAaQAAAB8AZQABAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHAAAAAAAAAAgSsf
-pL6jEBmdbgDdAQ9UAgAAAIBOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAUwBNAFQAUAAAAG4A
-aQBsAGUAcwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAAy
-AAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A
-5V8BAAAAOgAAAHMAaQBwADoAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAAAB8AGgwBAAAAHAAAAE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAAAfAB8M
-AQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEP
-VAIAAACATgBpAGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAu
-AGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAMgAAAG4AaQBsAGUA
-cwBoAC4AagBhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAABwAAABO
-AGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAHwAjQAEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEA
-dgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
-AAIB+T8BAAAAcAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAASgBhAHYA
-YQBsAGkAAABTAE0AVABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAldAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAA
-AB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAA
-AgELMAEAAAAQAAAA4JJBInXJl0mr0VBC1/0vWAMAFwABAAAAQAA5AABpi1u/q88BQAAIME3ND1y/
-q88BCwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAA
-dABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAA
-AAAAAEYAAAAABoUAAAAAAAAfADcAAQAAAIgAAABSAEUAOgAgAFsAUABBAFQAQwBIAF0AIABxAGwA
-YQA0AHgAeAB4ADoAIABjAGgAZQBjAGsAIAB0AGgAZQAgAHIAZQB0AHUAcgBuACAAdgBhAGwAdQBl
-ACAAbwBmACAAZABtAGEAXwBhAGwAbABvAGMAXwBjAG8AaABlAHIAZQBuAHQAKAApAAAAHwA9AAEA
-AAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAbgAAADwAMQA0ADAANgA1
-ADUAMgAxADIANwAtADkANAAwADUALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0A
-bQBsAG8AbQBiAGEAcgBkAEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAACAXEAAQAAABsAAAAB
-Ac+qYzo4/JlihxB0RZ1LEvcq8+D3m7gptXAAHwBwAAEAAACAAAAAWwBQAEEAVABDAEgAXQAgAHEA
-bABhADQAeAB4AHgAOgAgAGMAaABlAGMAawAgAHQAaABlACAAcgBlAHQAdQByAG4AIAB2AGEAbAB1
-AGUAIABvAGYAIABkAG0AYQBfAGEAbABsAG8AYwBfAGMAbwBoAGUAcgBlAG4AdAAoACkAAAAfADUQ
-AQAAAHgAAAA8ADAANQA4ADYAOQAxAEUAMAA3ADgANgA0ADIAQQA0ADQAQgA3AEMAOQA2AEIAQgAw
-AEIAMQBEAEIANABGADIANAA0ADYAQwAyADkAQQAzADcAQABhAHYAbQBiADIALgBxAGwAbwBnAGkA
-YwAuAG8AcgBnAD4AAAAfADkQAQAAAG4AAAA8ADEANAAwADYANQA1ADIAMQAyADcALQA5ADQAMAA1
-AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAG0AbABvAG0AYgBhAHIAZABAAHIA
-ZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAD
-hQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcwbXhFW7+r
-zwELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYzts
-PUFWTUIyLTE0MDczMDA2MjczOFotMzczMzAAAAACARAwAQAAAEYAAAAAAAAAgqc0rY6x/kS2Wxuo
-6bh73AcAzTs2Ijp7n0Cm/muqxOLaYQAAAGx4FQAAdI0nmS6jZkyYdyYbqJkFWwB0fThicgAAAAAf
-APo/AQAAABwAAABOAGkAbABlAHMAaAAgAEoAYQB2AGEAbABpAAAAAwAJWQEAAAADAACACCAGAAAA
-AADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAA
-AAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAA
-AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0A
-YQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAt
-AG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4A
-MQAwAF0AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAA
-AAAAAQAAAA4AAABiAHkAcABhAHMAcwAAAAAAbik=
-
---_000_058691E078642A44B7C96BB0B1DB4F2446C29A37avmb2qlogicorg_--
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
