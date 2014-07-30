@@ -1,13 +1,13 @@
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH 2/3] pm8001: Fix erratic calculation in update_flash
-Date: Wed, 30 Jul 2014 17:36:40 +0530
-Message-ID: <1406722000-4647-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+Subject: [PATCH 3/3] pm8001: Update MAINTAINERS list
+Date: Wed, 30 Jul 2014 17:37:43 +0530
+Message-ID: <1406722063-4683-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:41418 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752282AbaG3MHW (ORCPT
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:34212 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752412AbaG3MIZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2014 08:07:22 -0400
+	Wed, 30 Jul 2014 08:08:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -15,33 +15,25 @@ Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiag
 
 From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 
-The loopcount is calculated by using some weird magic.
-Use instead a boring macro
+Update pmcs mail list for pm8001 driver support
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ MAINTAINERS |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 69aedea..7abbf28 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -585,11 +585,8 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 		partitionSizeTmp =
- 			*(u32 *)((u8 *)&image_hdr->image_length + sizeRead);
- 		partitionSize = be32_to_cpu(partitionSizeTmp);
--		loopcount = (partitionSize + HEADER_LEN)/IOCTL_BUF_SIZE;
--		if (loopcount % IOCTL_BUF_SIZE)
--			loopcount++;
--		if (loopcount == 0)
--			loopcount++;
-+		loopcount = DIV_ROUND_UP(partitionSize + HEADER_LEN,
-+					IOCTL_BUF_SIZE);
- 		for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
- 			payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
- 			payload->length = 1024*16;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3f2e171..a63259c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6987,6 +6987,7 @@ F:	drivers/scsi/pmcraid.*
+ PMC SIERRA PM8001 DRIVER
+ M:	xjtuwjp@gmail.com
+ M:	lindar_liu@usish.com
++L:	pmchba@pmcs.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/pm8001/
 -- 
 1.7.1
 
