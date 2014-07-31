@@ -1,59 +1,62 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] scsi: 3w-9xxx.c: Cleaning up missing null-terminate in
- conjunction with strncpy
-Date: Thu, 31 Jul 2014 15:19:01 -0700
-Message-ID: <CAHtARFFmUJ5_mnJu=yLb8bGXcMNza8oHsThHPb3_QgE-pq4BGg@mail.gmail.com>
-References: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/4] iscsi class: fix get_host_stats error handling
+Date: Thu, 31 Jul 2014 17:32:21 -0500
+Message-ID: <53DAC3F5.5070108@cs.wisc.edu>
+References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu> <53D8EA2F.8040505@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:53576 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081AbaGaWTC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2014 18:19:02 -0400
-In-Reply-To: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48201 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751759AbaGaWcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2014 18:32:31 -0400
+In-Reply-To: <53D8EA2F.8040505@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Jul 27, 2014 at 8:11 AM, Rickard Strandqvist
-<rickard_strandqvist@spectrumdigital.se> wrote:
-> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
-> And use the sizeof on the to string rather than strlen on the from string.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/scsi/3w-9xxx.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index 0a73253..f4d2331 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -621,7 +621,8 @@ static int twa_check_srl(TW_Device_Extension *tw_dev, int *flashed)
->         }
->
->         /* Load rest of compatibility struct */
-> -       strncpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION, strlen(TW_DRIVER_VERSION));
-> +       strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
-> +               sizeof(tw_dev->tw_compat_info.driver_version));
->         tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
->         tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
->         tw_dev->tw_compat_info.driver_build_high = TW_CURRENT_DRIVER_BUILD;
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+On 07/30/2014 07:50 AM, Hannes Reinecke wrote:
+> On 07/12/2014 10:51 PM, michaelc@cs.wisc.edu wrote:
+>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>
+>> iscsi_get_host_stats was dropping the error code returned
+>> by drivers like qla4xxx.
+>>
+>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>> ---
+>>   drivers/scsi/scsi_transport_iscsi.c |    4 ++++
+>>   1 files changed, 4 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+>> b/drivers/scsi/scsi_transport_iscsi.c
+>> index b481e62..14bfa53 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -3467,6 +3467,10 @@ iscsi_get_host_stats(struct iscsi_transport
+>> *transport, struct nlmsghdr *nlh)
+>>           memset(buf, 0, host_stats_size);
+>>
+>>           err = transport->get_host_stats(shost, buf, host_stats_size);
+>> +        if (err) {
+>> +            kfree(skbhost_stats);
+>> +            goto exit_host_stats;
+>> +        }
+>>
+>>           actual_size = nlmsg_total_size(sizeof(*ev) + host_stats_size);
+>>           skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
+>>
+> What happens with the skbhost_stats allocated earlier? Shouldn't it be
+> freed here, too?
+> 
 
-Rickard,
+You mean for this success path right. It is not freed here by the iscsi
+code on purpose. For the code path here where we have successfully
+called into the driver then a couple lines below we will do
 
-This patch looks fine.
+iscsi_multicast_skb() -> nlmsg_multicast()
 
-Acked-by: Adam Radford <aradford@gmail.com>
+which will pass the skbhost_stats skb to the netlink layer. The
+netlink/socket/skb code then frees it when it is done with it.
 
--Adam
