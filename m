@@ -1,69 +1,66 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [PATCH 3/3] pm8001: Update MAINTAINERS list
-Date: Thu, 31 Jul 2014 15:13:27 +0200
-Message-ID: <CAD+HZHWYi-wYVMgJpZZbTvh0+MQwvJyjEEyWAXMVgU_MPVr0Qg@mail.gmail.com>
-References: <1406722063-4683-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-	<1406722354.4865.58.camel@jarvis>
-	<CE2C58F938F4C44EA74FFF880BAA7E5E49DC8B32@BBYEXM02.pmc-sierra.internal>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.16-rc7
+Date: Thu, 31 Jul 2014 17:26:17 +0400
+Message-ID: <1406813177.6957.26.camel@jarvis>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:43888 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbaGaNN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2014 09:13:28 -0400
-Received: by mail-ie0-f173.google.com with SMTP id tr6so3669973ieb.32
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2014 06:13:27 -0700 (PDT)
-In-Reply-To: <CE2C58F938F4C44EA74FFF880BAA7E5E49DC8B32@BBYEXM02.pmc-sierra.internal>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51673 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750978AbaGaN0X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2014 09:26:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "thenzl@redhat.com" <thenzl@redhat.com>, Viswas G <Viswas.G@pmcs.com>, "pmchba@pmcs.com" <pmchba@pmcs.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-If it works, then I'm fine with this, thanks.
+This is a potential data corruption fix: If we get an error sending down
+a barrier, we simply ignore it meaning the barrier semantics get
+violated without anyone being any the wiser.  If the system crashes at
+this point, the filesystem potentially becomes corrupt.  Fix is to
+report errors on failed barriers.
 
-Please add my ack if needed:
+The patch is available here:
 
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-2014-07-31 14:53 GMT+02:00 Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>:
->
->
-> On Wed, Jul 30, 2014 at 5:42 PM, James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
->> On Wed, 2014-07-30 at 17:37 +0530, Suresh Thiagarajan wrote:
->>> From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->>>
->>> Update pmcs mail list for pm8001 driver support
->>>
->>> Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
->>> ---
->>>  MAINTAINERS |    1 +
->>>  1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/MAINTAINERS b/MAINTAINERS
->>> index 3f2e171..a63259c 100644
->>> --- a/MAINTAINERS
->>> +++ b/MAINTAINERS
->>> @@ -6987,6 +6987,7 @@ F:      drivers/scsi/pmcraid.*
->>>  PMC SIERRA PM8001 DRIVER
->>>  M:   xjtuwjp@gmail.com
->>>  M:   lindar_liu@usish.com
->>> +L:   pmchba@pmcs.com
->>
->> This list doesn't appear to work:
->
-> This is fixed now. My apologies for the inconvenience.
->
-> -Suresh
->>
->> <pmchba@pmcs.com>: host smtp.pmc-sierra.com[216.241.235.148] said: 550 5.1.1
->>     <pmchba@pmcs.com>: Recipient address rejected: User unknown in local
->>     recipient table (in reply to RCPT TO command)
->>
->> James
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The short changelog is:
+
+James Bottomley (1):
+      scsi: handle flush errors properly
+
+And the diffstat:
+
+ drivers/scsi/scsi_lib.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+Full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f7e3163..3f50dfc 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -733,6 +733,14 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			scsi_next_command(cmd);
+ 			return;
+ 		}
++	} else if (blk_rq_bytes(req) == 0 && result && !sense_deferred) {
++		/*
++		 * Certain non BLOCK_PC requests are commands that don't
++		 * actually transfer anything (FLUSH), so cannot use
++		 * good_bytes != blk_rq_bytes(req) as the signal for an error.
++		 * This sets the error explicitly for the problem case.
++		 */
++		error = __scsi_error_from_host_byte(cmd, result);
+ 	}
+ 
+ 	/* no bidi support for !REQ_TYPE_BLOCK_PC yet */
+
+
+
