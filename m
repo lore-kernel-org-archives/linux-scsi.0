@@ -1,46 +1,45 @@
-From: seyba jean <seybaj2000@yahoo.com.au>
-Subject: Hello
-Date: Thu, 31 Jul 2014 14:53:11 +0200
-Message-ID: <CAGVrLO51HtmxSh8LQiP3ANf7Sv4nfgtLK-tECF+=+vdkDvEaJg@mail.gmail.com>
-Reply-To: seybaj2000@yahoo.com.au
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: WARNING: CPU: 1 PID: 495 at mm/slab_common.c:69
+	kmem_cache_create+0x1a9/0x330()
+Date: Thu, 31 Jul 2014 17:02:19 +0400
+Message-ID: <1406811739.6957.20.camel@jarvis>
+References: <53C8DF7F.5060707@gmail.com> <53C8FD95.5020302@gmail.com>
+	<20140718132104.GK27940@esperanza> <20140718141747.GA23272@lst.de>
+	<53C97D34.5040707@gmail.com>
+	<1405714046.30262.10.camel@dabdike.int.hansenpartnership.com>
+	<20140719164454.GA24530@lst.de> <53CCDFC3.5010802@gmail.com>
+	<20140726162102.GA7126@lst.de> <53D929C3.3040709@cs.wisc.edu>
+	<20140730175958.GA30976@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f65.google.com ([209.85.215.65]:52514 "EHLO
-	mail-la0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768AbaGaMxN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jul 2014 08:53:13 -0400
-Received: by mail-la0-f65.google.com with SMTP id ty20so629961lab.4
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2014 05:53:11 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+In-Reply-To: <20140730175958.GA30976-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
+List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
+List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
+Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello
-
-I am Mr Seyba Jean, a staff of BANK BICIA-B here in Burkina Faso. I am
-very sorry about this sudden mail as I know it might come as a
-surprise banging into your private life especially when we have not
-met before. It was an urgent need for a foreign partner, which has
-pushed me to send you this proposal. I know we have not met before,
-but I am very optimistic that we might be able to establish the
-necessary trust needed to execute this project.
-
-I just need your services in a confidential matter regarding (fund) in
-my bank.This requires a private arrangement.
-
-You will receive these funds under legitimate arrangement that will
-protect both of us. All legal documents will be carefully worked out
-to ensure a risk free transfer. 50% of the total sum would be your own
-portion at the end of this deal.
-
-The said sum is the profit / interest my branch realized during a
-period of 10 banking years. Further details will be sent to you as
-soon as possible.
-
-So if you are willing to assist, please get back to me soonest.
-
-Thanks as I expect to hear from you soon.
-
-My dearest regards.
-
-Seyba Jean
+T24gV2VkLCAyMDE0LTA3LTMwIGF0IDE5OjU5ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToKPiBPbiBXZWQsIEp1bCAzMCwgMjAxNCBhdCAxMjoyMjoxMVBNIC0wNTAwLCBNaWtlIENocmlz
+dGllIHdyb3RlOgo+ID4gU29tZSBkcml2ZXJzIGxpa2UgcWxhMnh4eCBkbyBub3Qgc2V0IHByb2Nf
+bmFtZS4gSSB0aGluayBpZiAyIGRyaXZlcnMKPiA+IGxpa2UgdGhhdCBhcmUgbG9hZGVkIHRoZW4g
+eW91IHdpbGwgaGl0IHNvbWUgb3RoZXIgd2FybnMvYnVncyBpbiB0aGUga21lbQo+ID4gY2FjaGUg
+c2V0dXAgY29kZSByaWdodD8KPiAKPiBEcml2ZXJzIGhhdmUgdG8gb3B0IGludG8gdXNpbmcgdGhl
+aXIgb3duIGNhY2hlcyBieSBzZXR0aW5nIC5jbWRfc2l6ZQo+IGluIHRoZSBob3N0IHRlbXBsYXRl
+LiAgV2UgY291bGQgZW5mb3JjZSB0aGV5IHNldCAtPnByb2NfbmFtZSBmb3IgdGhlbSwKPiBidXQg
+SSdkIHJhdGhlciBrZWVwIHRoZSBhbW91bnQgb2Ygc2FuaXR5IGNoZWNrcyBsb3cgdW5sZXNzIHRo
+ZXJlJ3MgYSByZWFsCj4gbmVlZC4KCk9LLCBzbyBsZXRzIHNlbmQgdGhpcyB0aHJvdWdoIG5vcm1h
+bCBtZXJnZSB3aW5kb3cgdGhlbiB3ZSBnZXQgdGltZSB0bwpzZWUgaWYgdGhlcmUncyBhIHByb2Js
+ZW0gYmVmb3JlIHRoZSBiYWNrcG9ydCB0byBzdGFibGUgaGFwcGVucy4KCkphbWVzCgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Ka2VybmVsIG1haWxpbmcg
+bGlzdAprZXJuZWxAbGlzdHMuZmVkb3JhcHJvamVjdC5vcmcKaHR0cHM6Ly9hZG1pbi5mZWRvcmFw
+cm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2tlcm5lbA==
