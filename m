@@ -1,67 +1,50 @@
-From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-Subject: [PATCH v5 0/3] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
-Date: Fri,  1 Aug 2014 23:07:15 +0530
-Message-ID: <1406914638-24721-1-git-send-email-stripathi@apm.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>, Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v5 1/3] ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
+Date: Fri,  1 Aug 2014 23:07:16 +0530
+Message-ID: <1406914638-24721-2-git-send-email-stripathi@apm.com>
+References: <1406914638-24721-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:45981 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755699AbaHARiw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2014 13:38:52 -0400
+In-Reply-To: <1406914638-24721-1-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch set contains a couple of fixes related to APM X-Gene SATA
-controller driver.
+This patch removes the NCQ support from the APM X-Gene SoC AHCI
+Host Controller driver as it doesn't support it.
 
-v2 Change:
-   1. Drop the Link down retry patch from this patch set.
-
-v4 Change:
-   1. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   2. Add the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters.
-   3. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver.
-   4. Add the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node.
-
-v5 Change :
-   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
-   2. Drop the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node as it breaks
-     with old firmware.
-   3. Add the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   4. Add the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   5. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
-     for-3.17 kernel.
-   6. Drop the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters as it is already applied to
-     3.16/for-3.17 branch by the maintainer.
-   7. Drop the patch to fix the watermark threshold as it is
-     already applied to 3.16/for-3.17 branch by the maintainer.
-
-Signed-off-by: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
+ drivers/ata/ahci_xgene.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Suman Tripathi (3):
-  ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA
-    Host Controller driver.
-  arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS
-    node.
-  ahci_xgene: Skip the PHY and clock initialization if already
-    configured by the firmware.
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 1cfbdca..f416495 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -344,7 +344,7 @@ static struct ata_port_operations xgene_ahci_ops = {
+ };
 
- arch/arm64/boot/dts/apm-storm.dtsi |  5 +----
- drivers/ata/ahci_xgene.c           | 21 +++++++++++++++++++--
- 2 files changed, 20 insertions(+), 6 deletions(-)
+ static const struct ata_port_info xgene_ahci_port_info = {
+-	.flags = AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.flags = AHCI_FLAG_COMMON,
+ 	.pio_mask = ATA_PIO4,
+ 	.udma_mask = ATA_UDMA6,
+ 	.port_ops = &xgene_ahci_ops,
+@@ -481,7 +481,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	/* Configure the host controller */
+ 	xgene_ahci_hw_init(hpriv);
 
+-	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
++	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+
+ 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+ 				     hflags, 0, 0);
 --
 1.8.2.1
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
