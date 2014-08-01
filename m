@@ -1,203 +1,107 @@
-From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Subject: Re: [PATCH] lpfc: Avoid to disable pci_dev twice
-Date: Fri, 01 Aug 2014 10:16:44 +0800
-Message-ID: <53DAF88C.50008@linux.vnet.ibm.com>
-References: <1405578751-14164-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Oops in scsi_put_host_cmd_pool
+Date: Fri, 01 Aug 2014 07:41:44 +0200
+Message-ID: <53DB2898.10103@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1405578751-14164-1-git-send-email-qiudayu@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, james.smart@emulex.com, JBottomley@parallels.com
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/17/2014 02:32 PM, Mike Qiu wrote:
+During test of Xen pvSCSI frontend module I found the following issue:
+
+When unplugging a passed-through SCSI-device the SCSI Host is removed.
+When calling the final scsi_host_put() from the driver an Oops is
+happening:
+
+[  219.816292] (file=drivers/scsi/xen-scsifront.c, line=808) 
+scsifront_remove: device/vscsi/1 removed
+[  219.816371] BUG: unable to handle kernel NULL pointer dereference at 
+0000000000000010
+[  219.816380] IP: [<ffffffff805fdcf8>] scsi_put_host_cmd_pool+0x38/0xb0
+[  219.816390] PGD 3bd60067 PUD 3d353067 PMD 0
+[  219.816396] Oops: 0000 [#1] SMP
+[  219.816400] Modules linked in: nls_utf8 sr_mod cdrom xen_scsifront 
+xt_pkttype xt_LOG xt_limit af_packet ip6t_REJECT xt_tcpudp 
+nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_raw ipt_REJECT iptable_raw 
+xt_CT iptable_filter ip6table_mangle nf_conntrack_netbios_ns 
+nf_conntrack_broadcast nf_conntrack_ipv4 nf_defrag_ipv4 ip_tables 
+xt_conntrack nf_conntrack ip6table_filter ip6_tables x_tables 
+x86_pkg_temp_thermal thermal_sys coretemp hwmon crc32_pclmul 
+crc32c_intel ghash_clmulni_intel aesni_intel ablk_helper cryptd lrw 
+gf128mul glue_helper aes_x86_64 microcode pcspkr sg dm_mod autofs4 
+scsi_dh_alua scsi_dh_emc scsi_dh_rdac scsi_dh_hp_sw scsi_dh xen_blkfront 
+xen_netfront
+[  219.816458] CPU: 0 PID: 23 Comm: xenwatch Not tainted 
+3.16.0-rc6-11-xen+ #66
+[  219.816463] task: ffff88003da985d0 ti: ffff88003da9c000 task.ti: 
+ffff88003da9c000
+[  219.816467] RIP: e030:[<ffffffff805fdcf8>]  [<ffffffff805fdcf8>] 
+scsi_put_host_cmd_pool+0x38/0xb0
+[  219.816474] RSP: e02b:ffff88003da9fc20  EFLAGS: 00010202
+[  219.816477] RAX: ffffffffa01a50c0 RBX: 0000000000000000 RCX: 
+0000000000000003
+[  219.816481] RDX: 0000000000000240 RSI: ffff88003d242b80 RDI: 
+ffffffff80c708c0
+[  219.816485] RBP: ffff88003da9fc38 R08: 4f7e974a31ed0290 R09: 
+0000000000000000
+[  219.816488] R10: 0000000000007ff0 R11: 0000000000000001 R12: 
+ffff8800038f8000
+[  219.816491] R13: ffffffffa01a50c0 R14: 0000000000000000 R15: 
+0000000000000000
+[  219.816498] FS:  00007fe2e2eeb700(0000) GS:ffff88003f800000(0000) 
+knlGS:0000000000000000
+[  219.816502] CS:  e033 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  219.816505] CR2: 0000000000000010 CR3: 000000003d20c000 CR4: 
+0000000000042660
+[  219.816509] Stack:
+[  219.816511]  ffff8800038f8000 ffff8800038f8030 ffff880003ae3400 
+ffff88003da9fc58
+[  219.816516]  ffffffff805fe78b ffff8800038f8000 ffff88003bb82c40 
+ffff88003da9fc80
+[  219.816521]  ffffffff805ff587 ffff8800038f81a0 ffff8800038f8190 
+ffff880003ae3400
+[  219.816527] Call Trace:
+[  219.816533]  [<ffffffff805fe78b>] scsi_destroy_command_freelist+0x5b/0x60
+[  219.816538]  [<ffffffff805ff587>] scsi_host_dev_release+0x97/0xe0
+[  219.816543]  [<ffffffff805dd71d>] device_release+0x2d/0xa0
+[  219.816548]  [<ffffffff804dbec7>] kobject_cleanup+0x77/0x1b0
+[  219.816553]  [<ffffffff804dbd70>] kobject_put+0x30/0x60
+[  219.816556]  [<ffffffff805dd9e2>] put_device+0x12/0x20
+[  219.816560]  [<ffffffff805ff490>] scsi_host_put+0x10/0x20
+[  219.816565]  [<ffffffffa01a2042>] scsifront_free+0x42/0x90 
+[xen_scsifront]
+[  219.816569]  [<ffffffffa01a20ad>] scsifront_remove+0x1d/0x50 
+[xen_scsifront]
+[  219.816576]  [<ffffffff805a4ee0>] xenbus_dev_remove+0x50/0xa0
+[  219.816580]  [<ffffffff805e1a8a>] __device_release_driver+0x7a/0xf0
+[  219.816584]  [<ffffffff805e1b1e>] device_release_driver+0x1e/0x30
+[  219.816588]  [<ffffffff805e1440>] bus_remove_device+0x100/0x180
+[  219.816593]  [<ffffffff805ddef1>] device_del+0x121/0x1b0
+[  219.816596]  [<ffffffff805ddf99>] device_unregister+0x19/0x60
+[  219.816601]  [<ffffffff805a56be>] xenbus_dev_changed+0x9e/0x1e0
+[  219.816606]  [<ffffffff8079d695>] ? _raw_spin_unlock_irqrestore+0x25/0x50
+[  219.816611]  [<ffffffff805a41d0>] ? unregister_xenbus_watch+0x200/0x200
+[  219.816615]  [<ffffffff805a7420>] frontend_changed+0x20/0x50
+[  219.816619]  [<ffffffff805a426f>] xenwatch_thread+0x9f/0x160
+[  219.816624]  [<ffffffff802a50f0>] ? prepare_to_wait_event+0xf0/0xf0
+[  219.816628]  [<ffffffff8028485d>] kthread+0xcd/0xf0
+[  219.816633]  [<ffffffff80284790>] ? kthread_create_on_node+0x170/0x170
+[  219.816638]  [<ffffffff8079dcbc>] ret_from_fork+0x7c/0xb0
+[  219.816642]  [<ffffffff80284790>] ? kthread_create_on_node+0x170/0x170
+[  219.816645] Code: 8b af c0 00 00 00 48 c7 c7 c0 08 c7 80 e8 d1 e0 19 
+00 49 8b 84 24 c0 00 00 00 8b 90 48 01 00 00 85 d2 74 2f 48 8b 98 50 01 
+00 00 <8b> 43 10 85 c0 74 68 83 e8 01 85 c0 89 43 10 74 37 48 c7 c7 c0
+[  219.816732] RIP  [<ffffffff805fdcf8>] scsi_put_host_cmd_pool+0x38/0xb0
+[  219.816747]  RSP <ffff88003da9fc20>
+[  219.816750] CR2: 0000000000000010
+[  219.816753] ---[ end trace c6915ea21a3d05f7 ]---
+
+I should mention I've specified .cmd_len in the scsi_host_template. The
+only other driver doing this seems to be virtio_scsi.c, so I assume the
+same problem could occur with passed-through SCSI devices under KVM...
 
 
-Hi, all
-
-How about this patch ?
-
-Any idea ?
-
-> In IBM Power servers, when hardware error occurs during probe
-> state, EEH subsystem will call driver's error_detected interface,
-> which will call pci_disable_device(). But driver's probe function also
-> call pci_disable_device() in this situation.
->
-> So pci_dev will be disabled twice:
->
-> Device lpfc disabling already-disabled device
-> ------------[ cut here ]------------
-> WARNING: at drivers/pci/pci.c:1407
-> CPU: 0 PID: 8744 Comm: kworker/0:0 Tainted: G        W    3.10.42-2002.pkvm2_1_1.6.ppc64 #1
-> Workqueue: events .work_for_cpu_fn
-> task: c00000274e3f5400 ti: c0000027d3958000 task.ti: c0000027d3958000
-> NIP: c000000000471b8c LR: c000000000471b88 CTR: c00000000043ebe0
-> REGS: c0000027d395b650 TRAP: 0700   Tainted: G        W     (3.10.42-2002.pkvm2_1_1.6.ppc64)
-> MSR: 9000000100029032 <SF,HV,EE,ME,IR,DR,RI>  CR: 28b52b44  XER: 20000000
-> CFAR: c000000000879ab8 SOFTE: 1
-> ...
-> NIP .pci_disable_device+0xcc/0xe0
-> LR  .pci_disable_device+0xc8/0xe0
-> Call Trace:
-> .pci_disable_device+0xc8/0xe0 (unreliable)
-> .lpfc_disable_pci_dev+0x50/0x80 [lpfc]
-> .lpfc_pci_probe_one+0x870/0x21a0 [lpfc]
-> .local_pci_probe+0x68/0xb0
-> .work_for_cpu_fn+0x38/0x60
-> .process_one_work+0x1a4/0x4d0
-> .worker_thread+0x37c/0x490
-> .kthread+0xf0/0x100
-> .ret_from_kernel_thread+0x5c/0x80
->
-> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-> ---
->   drivers/scsi/lpfc/lpfc.h      |  1 +
->   drivers/scsi/lpfc/lpfc_init.c | 59 +++++++++++++++++++++++++++++++++++++++----
->   2 files changed, 55 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 434e903..0c7bad9 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -813,6 +813,7 @@ struct lpfc_hba {
->   #define VPD_MASK            0xf         /* mask for any vpd data */
->
->   	uint8_t soft_wwn_enable;
-> +	uint8_t probe_done;
->
->   	struct timer_list fcp_poll_timer;
->   	struct timer_list eratt_poll;
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 06f9a5b..c2e67ae 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -9519,6 +9519,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, const struct pci_device_id *pid)
->   		}
->   	}
->
-> +	/* Set the probe flag */
-> +	phba->probe_done = 1;
-> +
->   	/* Perform post initialization setup */
->   	lpfc_post_init_setup(phba);
->
-> @@ -9795,6 +9798,9 @@ lpfc_sli_prep_dev_for_recover(struct lpfc_hba *phba)
->   static void
->   lpfc_sli_prep_dev_for_reset(struct lpfc_hba *phba)
->   {
-> +	if (phba)
-> +		return;
-> +
->   	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
->   			"2710 PCI channel disable preparing for reset\n");
->
-> @@ -9812,7 +9818,8 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_hba *phba)
->
->   	/* Disable interrupt and pci device */
->   	lpfc_sli_disable_intr(phba);
-> -	pci_disable_device(phba->pcidev);
-> +	if (phba->probe_done && phba->pcidev)
-> +		pci_disable_device(phba->pcidev);
->   }
->
->   /**
-> @@ -10282,6 +10289,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
->   		goto out_disable_intr;
->   	}
->
-> +	/* Set probe_done flag */
-> +	phba->probe_done = 1;
-> +
->   	/* Log the current active interrupt mode */
->   	phba->intr_mode = intr_mode;
->   	lpfc_log_intr_mode(phba, intr_mode);
-> @@ -10544,6 +10554,9 @@ lpfc_sli4_prep_dev_for_recover(struct lpfc_hba *phba)
->   static void
->   lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
->   {
-> +	if (!phba)
-> +		return;
-> +
->   	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
->   			"2826 PCI channel disable preparing for reset\n");
->
-> @@ -10562,7 +10575,9 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
->   	/* Disable interrupt and pci device */
->   	lpfc_sli4_disable_intr(phba);
->   	lpfc_sli4_queue_destroy(phba);
-> -	pci_disable_device(phba->pcidev);
-> +
-> +	if (phba->probe_done && phba->pcidev)
-> +		pci_disable_device(phba->pcidev);
->   }
->
->   /**
-> @@ -10893,9 +10908,21 @@ static pci_ers_result_t
->   lpfc_io_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
->   {
->   	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-> -	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +	struct lpfc_hba *phba;
->   	pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
->
-> +	if (!shost)
-> +		/* Run here means it may during probe state and
-> +		 * Scsi_Host has not been created and We can do nothing
-> +		 * in this state so call for hotplug*/
-> +		return PCI_ERS_RESULT_NONE;
-> +
-> +	phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +
-> +	if (!phba || !phba->probe_done)
-> +		/* Run here means it may during probe state */
-> +		return PCI_ERS_RESULT_NONE;
-> +
->   	switch (phba->pci_dev_grp) {
->   	case LPFC_PCI_DEV_LP:
->   		rc = lpfc_io_error_detected_s3(pdev, state);
-> @@ -10930,9 +10957,20 @@ static pci_ers_result_t
->   lpfc_io_slot_reset(struct pci_dev *pdev)
->   {
->   	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-> -	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +	struct lpfc_hba *phba;
->   	pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
->
-> +	if (!shost)
-> +		/* Run here means it may during probe state and
-> +		 * Scsi_Host has not been created */
-> +		return PCI_ERS_RESULT_NONE;
-> +
-> +	phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +
-> +	if (!phba || !phba->probe_done)
-> +		/* Run here means it may during probe state */
-> +		return PCI_ERS_RESULT_NONE;
-> +
->   	switch (phba->pci_dev_grp) {
->   	case LPFC_PCI_DEV_LP:
->   		rc = lpfc_io_slot_reset_s3(pdev);
-> @@ -10963,7 +11001,18 @@ static void
->   lpfc_io_resume(struct pci_dev *pdev)
->   {
->   	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-> -	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +	struct lpfc_hba *phba;
-> +
-> +	if (!shost)
-> +		/* Run here means it may during probe state and
-> +		 * Scsi_Host has not been created */
-> +		return;
-> +
-> +	phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-> +
-> +	if (!phba || !phba->probe_done)
-> +		/* Run here means it may during probe state */
-> +		return;
->
->   	switch (phba->pci_dev_grp) {
->   	case LPFC_PCI_DEV_LP:
+Juergen
