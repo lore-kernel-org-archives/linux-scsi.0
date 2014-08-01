@@ -1,106 +1,87 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v1.3 4/18] arcmsr: limit max. number of SCSI command request
-Date: Fri, 01 Aug 2014 16:39:49 +0800
-Message-ID: <1406882389.10378.46.camel@Centos6.3-64>
+Subject: [PATCH v1.3 5/18] arcmsr: bugfix - return status of abort command
+Date: Fri, 01 Aug 2014 16:43:33 +0800
+Message-ID: <1406882613.10378.50.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:38419 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628AbaHAInn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2014 04:43:43 -0400
+Received: by mail-pd0-f182.google.com with SMTP id fp1so5192725pdb.13
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Aug 2014 01:43:43 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-This patch limits the max. number of SCSI command request to avoid command overflow.
+This patch fixes the wrong return status of abort command.
 
-Signed-off-by: Ching<ching2048@areca.com.tw>
+Singed-off-by: Ching<ching2048@areca.com.tw>
 ---
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:24:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:22:36.000000000 +0800
-@@ -45,11 +45,12 @@
- #include <linux/interrupt.h>
- struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
--#define ARCMSR_MAX_OUTSTANDING_CMD						256
- #ifdef CONFIG_XEN
- 	#define ARCMSR_MAX_FREECCB_NUM	160
-+#define ARCMSR_MAX_OUTSTANDING_CMD	155
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
-+#define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
- #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
-@@ -598,6 +599,7 @@ struct AdapterControlBlock
- 				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
- 	atomic_t			ante_token_value;
-+	uint32_t	maxOutstanding;
- 	int		msix_vector_count;
- };/* HW_DEVICE_EXTENSION */
- /*
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:04:28.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:05:44.000000000 +0800
-@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
-+	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
-@@ -697,7 +697,7 @@ static int arcmsr_probe(struct pci_dev *
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
- 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
--	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
-+	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
-@@ -2220,8 +2220,7 @@ static int arcmsr_queue_command_lck(stru
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (atomic_read(&acb->ccboutstandingcount) >=
--			ARCMSR_MAX_OUTSTANDING_CMD)
-+	if (atomic_read(&acb->ccboutstandingcount) >= acb->maxOutstanding)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
-@@ -2432,12 +2431,26 @@ static bool arcmsr_get_hbc_config(struct
- }
- static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
- {
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
--		return arcmsr_get_hba_config(acb);
--	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
--		return arcmsr_get_hbb_config(acb);
-+	bool rtn = false;
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:05:44.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:06:34.000000000 +0800
+@@ -2482,7 +2482,7 @@ static int arcmsr_polling_hba_ccbdone(st
+ 		}
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
+ 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
++		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
+ 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
+ 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
+ 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
+@@ -2546,7 +2546,7 @@ static int arcmsr_polling_hbb_ccbdone(st
+ 		/* check if command done with no error*/
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb << 5));
+ 		ccb = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
++		poll_ccb_done |= (ccb == poll_ccb) ? 1 : 0;
+ 		if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
+ 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb == poll_ccb)) {
+ 				printk(KERN_NOTICE "arcmsr%d: scsi id = %d lun = %d ccb = '0x%p'"
+@@ -2602,7 +2602,7 @@ polling_hbc_ccb_retry:
+ 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
+ 		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + ccb_cdb_phy);/*frame must be 32 bytes aligned*/
+ 		pCCB = container_of(arcmsr_cdb, struct CommandControlBlock, arcmsr_cdb);
+-		poll_ccb_done = (pCCB == poll_ccb) ? 1 : 0;
++		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
+ 		/* check ifcommand done with no error*/
+ 		if ((pCCB->acb != acb) || (pCCB->startdone != ARCMSR_CCB_START)) {
+ 			if (pCCB->startdone == ARCMSR_CCB_ABORTED) {
+@@ -3204,6 +3204,8 @@ static int arcmsr_abort(struct scsi_cmnd
+ 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
+ 	int i = 0;
+ 	int rtn = FAILED;
++	uint32_t intmask_org;
 +
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		rtn = arcmsr_get_hba_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_B:
-+		rtn = arcmsr_get_hbb_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_C:
-+		rtn = arcmsr_get_hbc_config(acb);
-+		break;
-+	default:
-+		break;
+ 	printk(KERN_NOTICE
+ 		"arcmsr%d: abort device command of scsi id = %d lun = %d \n",
+ 		acb->host->host_no, cmd->device->id, (u32)cmd->device->lun);
+@@ -3215,9 +3217,12 @@ static int arcmsr_abort(struct scsi_cmnd
+ 	** we need to handle it as soon as possible and exit
+ 	************************************************
+ 	*/
+-	if (!atomic_read(&acb->ccboutstandingcount))
++	if (!atomic_read(&acb->ccboutstandingcount)) {
++		acb->acb_flags &= ~ACB_F_ABORT;
+ 		return rtn;
 +	}
-+	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
-+		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
- 	else
--		return arcmsr_get_hbc_config(acb);
-+		acb->maxOutstanding = acb->firm_numbers_queue - 1;
-+	return rtn;
+ 
++	intmask_org = arcmsr_disable_outbound_ints(acb);
+ 	for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
+ 		struct CommandControlBlock *ccb = acb->pccb_pool[i];
+ 		if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd) {
+@@ -3227,6 +3232,7 @@ static int arcmsr_abort(struct scsi_cmnd
+ 		}
+ 	}
+ 	acb->acb_flags &= ~ACB_F_ABORT;
++	arcmsr_enable_outbound_ints(acb, intmask_org);
+ 	return rtn;
  }
  
- static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+
+
