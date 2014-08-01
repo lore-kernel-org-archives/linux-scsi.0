@@ -1,37 +1,38 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH v1.3 2/18] arcmsr: Add code to support MSI-X, MSI
- interrupt
-Date: Fri, 1 Aug 2014 13:49:13 +0300
-Message-ID: <20140801104913.GM4804@mwanda>
-References: <1406881989.10378.39.camel@Centos6.3-64>
- <20140801084616.GA26695@dhcp-26-207.brq.redhat.com>
- <1406889528.10378.145.camel@Centos6.3-64>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Save command pool address of Scsi_Host
+Date: Fri, 1 Aug 2014 05:03:01 -0700
+Message-ID: <20140801120301.GA27198@infradead.org>
+References: <1406874425-3528-1-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1406889528.10378.145.camel@Centos6.3-64>
+In-Reply-To: <1406874425-3528-1-git-send-email-jgross@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ching Huang <ching2048@areca.com.tw>
-Cc: Alexander Gordeev <agordeev@redhat.com>, hch@infradead.org, jbottomley@parallels.com, thenzl@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgross@suse.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 01, 2014 at 06:38:48PM +0800, Ching Huang wrote:
-> Hi Alexander,
+On Fri, Aug 01, 2014 at 08:27:05AM +0200, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
 > 
-> Thanks for your advice.
-> This patch was revised according to your comment.
+> If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
+> private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
+> scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
 > 
-> Signed-off-by: Ching<ching2048@areca.com.tw>
+> This will result in an access error when the host is removed.
+> 
+> Avoid the problem by saving the address of a new allocated command pool where
+> it is expected.
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
 
-This patch is something that can't be applied at all.  There is no
-changelog.  Apply the patch with `cat email.txt | git am` and review
-the changelog using the `git log` command.
+Looks good, but minor nitpick below:
 
-https://www.google.com/search?q=how+to+send+a+v2+patch
+> +	if (shost->hostt->cmd_size)
+> +		shost->hostt->cmd_pool = pool;
+> +
 
-Also the Signed-off-by line is wrong.  It should have your full name.
-There needs to be a space between the name and the email address.
 
-regards,
-dan carpenter
+We already have a local hostt variable for the host template in this
+function, please use it.
