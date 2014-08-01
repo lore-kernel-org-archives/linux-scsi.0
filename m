@@ -1,44 +1,88 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V2 2/4] Introduce xen-scsifront module
-Date: Fri, 01 Aug 2014 15:06:04 +0200
-Message-ID: <53DB90BC.8000302@suse.com>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>	<1406288253-13293-3-git-send-email-jgross@suse.com>	<20140729135300.GA20415@infradead.org> <53D7B65C.8030701@suse.com>	<53D87A67.8050005@suse.com> <20140801120847.GB17864@infradead.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] iscsi class: fix get_host_stats error handling
+Date: Fri, 01 Aug 2014 15:31:46 +0200
+Message-ID: <53DB96C2.1070701@suse.de>
+References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu> <53D8EA2F.8040505@suse.de> <53DAC3F5.5070108@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140801120847.GB17864@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54938 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932296AbaHANbs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Aug 2014 09:31:48 -0400
+In-Reply-To: <53DAC3F5.5070108@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On 08/01/2014 02:08 PM, Christoph Hellwig wrote:
-> On Wed, Jul 30, 2014 at 06:53:59AM +0200, Juergen Gross wrote:
->> Hmm, I looked into scsi_add_device(). It seems as if the caller can't
->> distinguish between a new created and an already existing device. Am I
->> missing something?
+On 08/01/2014 12:32 AM, Mike Christie wrote:
+> On 07/30/2014 07:50 AM, Hannes Reinecke wrote:
+>> On 07/12/2014 10:51 PM, michaelc@cs.wisc.edu wrote:
+>>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>>
+>>> iscsi_get_host_stats was dropping the error code returned
+>>> by drivers like qla4xxx.
+>>>
+>>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>>> ---
+>>>    drivers/scsi/scsi_transport_iscsi.c |    4 ++++
+>>>    1 files changed, 4 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+>>> b/drivers/scsi/scsi_transport_iscsi.c
+>>> index b481e62..14bfa53 100644
+>>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>>> @@ -3467,6 +3467,10 @@ iscsi_get_host_stats(struct iscsi_transport
+>>> *transport, struct nlmsghdr *nlh)
+>>>            memset(buf, 0, host_stats_size);
+>>>
+>>>            err =3D transport->get_host_stats(shost, buf, host_stats=
+_size);
+>>> +        if (err) {
+>>> +            kfree(skbhost_stats);
+>>> +            goto exit_host_stats;
+>>> +        }
+>>>
+>>>            actual_size =3D nlmsg_total_size(sizeof(*ev) + host_stat=
+s_size);
+>>>            skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
+>>>
+>> What happens with the skbhost_stats allocated earlier? Shouldn't it =
+be
+>> freed here, too?
+>>
 >
-> That's right.  If you need that I still think it's better to add a
-> variant of scsi_add_device helping you with that.
-
-I'm open to that solution.
-
-Do you have preferences how to do it (IOW: can you give me a hint)?
-
->> The race is not existing: scsi_add_device() (and scsi_remove_device()
->> as well) for this scsi_host is called in scsifront_do_lun_hotplug()
->> only, and this function is always called in the same thread (xenbus
->> watch). A comment seems to be a good idea.
+> You mean for this success path right. It is not freed here by the isc=
+si
+> code on purpose. For the code path here where we have successfully
+> called into the driver then a couple lines below we will do
 >
-> Do you disable scanning through procfs and sysfs as well?
+> iscsi_multicast_skb() -> nlmsg_multicast()
+>
+> which will pass the skbhost_stats skb to the netlink layer. The
+> netlink/socket/skb code then frees it when it is done with it.
+>
+No, I meant the failure path.
 
-No, I don't.
+You do an alloc_skb above, then get_host_stats failed, and you exit=20
+the function without freeing the skb.
+Or do I miss something?
 
-OTOH I don't think I see the problem. What could go wrong? Either
-scsi_device_lookup() does find an existing device, then I refuse to add
-it again. If I don't find it, it will be added. I can't see how any harm
-would be done in either case when the device is added/removed between
-the check and the action. What am I missing?
 
-Juergen
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
