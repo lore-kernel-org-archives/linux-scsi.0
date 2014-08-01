@@ -1,33 +1,74 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Xen-devel] [PATCH V2 2/4] Introduce xen-scsifront module
-Date: Fri, 1 Aug 2014 06:41:29 -0700
-Message-ID: <20140801134129.GA14525@infradead.org>
-References: <1406288253-13293-1-git-send-email-jgross@suse.com>
- <1406288253-13293-3-git-send-email-jgross@suse.com>
- <20140729135300.GA20415@infradead.org>
- <53D7B65C.8030701@suse.com>
- <53D87A67.8050005@suse.com>
- <20140801120847.GB17864@infradead.org>
- <53DB90BC.8000302@suse.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/4] iscsi class: fix get_host_stats error handling
+Date: Fri, 01 Aug 2014 11:10:26 -0500
+Message-ID: <53DBBBF2.3090009@cs.wisc.edu>
+References: <1405198311-64449-1-git-send-email-michaelc@cs.wisc.edu> <1405198311-64449-2-git-send-email-michaelc@cs.wisc.edu> <53D8EA2F.8040505@suse.de> <53DAC3F5.5070108@cs.wisc.edu> <53DB96C2.1070701@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53DB90BC.8000302@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>
-Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:54119 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750886AbaHAQKf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Aug 2014 12:10:35 -0400
+In-Reply-To: <53DB96C2.1070701@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 01, 2014 at 03:06:04PM +0200, Juergen Gross wrote:
-> >That's right.  If you need that I still think it's better to add a
-> >variant of scsi_add_device helping you with that.
+On 08/01/2014 08:31 AM, Hannes Reinecke wrote:
+> On 08/01/2014 12:32 AM, Mike Christie wrote:
+>> On 07/30/2014 07:50 AM, Hannes Reinecke wrote:
+>>> On 07/12/2014 10:51 PM, michaelc@cs.wisc.edu wrote:
+>>>> From: Mike Christie <michaelc@cs.wisc.edu>
+>>>>
+>>>> iscsi_get_host_stats was dropping the error code returned
+>>>> by drivers like qla4xxx.
+>>>>
+>>>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>>>> ---
+>>>>    drivers/scsi/scsi_transport_iscsi.c |    4 ++++
+>>>>    1 files changed, 4 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+>>>> b/drivers/scsi/scsi_transport_iscsi.c
+>>>> index b481e62..14bfa53 100644
+>>>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>>>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>>>> @@ -3467,6 +3467,10 @@ iscsi_get_host_stats(struct iscsi_transport
+>>>> *transport, struct nlmsghdr *nlh)
+>>>>            memset(buf, 0, host_stats_size);
+>>>>
+>>>>            err = transport->get_host_stats(shost, buf,
+>>>> host_stats_size);
+>>>> +        if (err) {
+>>>> +            kfree(skbhost_stats);
+>>>> +            goto exit_host_stats;
+>>>> +        }
+>>>>
+>>>>            actual_size = nlmsg_total_size(sizeof(*ev) +
+>>>> host_stats_size);
+>>>>            skb_trim(skbhost_stats, NLMSG_ALIGN(actual_size));
+>>>>
+>>> What happens with the skbhost_stats allocated earlier? Shouldn't it be
+>>> freed here, too?
+>>>
+>>
+>> You mean for this success path right. It is not freed here by the iscsi
+>> code on purpose. For the code path here where we have successfully
+>> called into the driver then a couple lines below we will do
+>>
+>> iscsi_multicast_skb() -> nlmsg_multicast()
+>>
+>> which will pass the skbhost_stats skb to the netlink layer. The
+>> netlink/socket/skb code then frees it when it is done with it.
+>>
+> No, I meant the failure path.
 > 
-> I'm open to that solution.
-> 
-> Do you have preferences how to do it (IOW: can you give me a hint)?
+> You do an alloc_skb above, then get_host_stats failed, and you exit the
+> function without freeing the skb.
 
-I thought about it a bit more and came to the conclusion that we
-shouldn't bother.  Why do you care if the scsi_add_device actually
-added the device?  Any per-device setup should be done in
-->slave_configure anyway.
+Ah, actually I am freeing it, but I now realize with the wrong function,
+so I think that is why I was confused by your comment.  Above I added a
+kfree() of the skb. I should be using kfree_skb. Will fix it up. Thanks.
