@@ -1,26 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v1.3 4/18] arcmsr: limit max. number of SCSI command
- request
-Date: Fri, 1 Aug 2014 05:35:52 -0700
-Message-ID: <20140801123552.GB30397@infradead.org>
-References: <1406882389.10378.46.camel@Centos6.3-64>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: jgross@suse.com
+Subject: [V2 PATCH] Save command pool address of Scsi_Host
+Date: Fri,  1 Aug 2014 14:46:30 +0200
+Message-ID: <1406897190-28427-1-git-send-email-jgross@suse.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1406882389.10378.46.camel@Centos6.3-64>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ching Huang <ching2048@areca.com.tw>
-Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org
+Cc: Juergen Gross <jgross@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> @@ -2220,8 +2220,7 @@ static int arcmsr_queue_command_lck(stru
->  		arcmsr_handle_virtual_command(acb, cmd);
->  		return 0;
->  	}
-> -	if (atomic_read(&acb->ccboutstandingcount) >=
-> -			ARCMSR_MAX_OUTSTANDING_CMD)
-> +	if (atomic_read(&acb->ccboutstandingcount) >= acb->maxOutstanding)
->  		return SCSI_MLQUEUE_HOST_BUSY;
+From: Juergen Gross <jgross@suse.com>
 
-The scsi midlayer already takes care of this check for you.
+If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
+private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
+scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
+
+This will result in an access error when the host is removed.
+
+Avoid the problem by saving the address of a new allocated command pool where
+it is expected.
+
+Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/scsi/scsi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 88d46fe..e8e8428 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
+ 		pool->slab_flags |= SLAB_CACHE_DMA;
+ 		pool->gfp_mask = __GFP_DMA;
+ 	}
++
++	if (hostt->cmd_size)
++		hostt->cmd_pool = pool;
++
+ 	return pool;
+ }
+ 
+-- 
+1.8.4.5
