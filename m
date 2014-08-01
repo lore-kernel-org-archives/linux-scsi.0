@@ -1,27 +1,33 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [scsi/net-next] Pulling in net-next changes
-Date: Fri, 1 Aug 2014 06:39:34 -0700
-Message-ID: <20140801133934.GA13140@infradead.org>
-References: <1406835608-17908-1-git-send-email-anish@chelsio.com>
+Subject: Re: [Xen-devel] [PATCH V2 2/4] Introduce xen-scsifront module
+Date: Fri, 1 Aug 2014 06:41:29 -0700
+Message-ID: <20140801134129.GA14525@infradead.org>
+References: <1406288253-13293-1-git-send-email-jgross@suse.com>
+ <1406288253-13293-3-git-send-email-jgross@suse.com>
+ <20140729135300.GA20415@infradead.org>
+ <53D7B65C.8030701@suse.com>
+ <53D87A67.8050005@suse.com>
+ <20140801120847.GB17864@infradead.org>
+ <53DB90BC.8000302@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48090 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876AbaHANjg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2014 09:39:36 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1406835608-17908-1-git-send-email-anish@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <53DB90BC.8000302@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, target-devel@vger.kernel.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, xen-devel@lists.xen.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>
-Cc: linux-scsi@vger.kernel.org, hch@infradead.org, michaelc@cs.wisc.edu, jbottomley@parallels.com, kxie@chelsio.com
 
-Hi Anish,
+On Fri, Aug 01, 2014 at 03:06:04PM +0200, Juergen Gross wrote:
+> >That's right.  If you need that I still think it's better to add a
+> >variant of scsi_add_device helping you with that.
+> 
+> I'm open to that solution.
+> 
+> Do you have preferences how to do it (IOW: can you give me a hint)?
 
-Linus plans to do the 3.16 release this weekend, so unless you have
-really urgent fixes that require changes from the scsi and net tree I'd
-rather avoid the whole issue but waiting for the next merge window.
-
-Can you wait another week or two for these updates?
-
+I thought about it a bit more and came to the conclusion that we
+shouldn't bother.  Why do you care if the scsi_add_device actually
+added the device?  Any per-device setup should be done in
+->slave_configure anyway.
