@@ -1,70 +1,67 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 3/3] ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
-Date: Fri,  1 Aug 2014 23:07:18 +0530
-Message-ID: <1406914638-24721-4-git-send-email-stripathi@apm.com>
-References: <1406914638-24721-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:45970 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755640AbaHARis (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2014 13:38:48 -0400
-In-Reply-To: <1406914638-24721-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH v5 0/3] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
+Date: Fri,  1 Aug 2014 23:07:15 +0530
+Message-ID: <1406914638-24721-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>, Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch implements the feature to skip the PHY and clock
-initialization if it is already configured by the firmware.
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+v2 Change:
+   1. Drop the Link down retry patch from this patch set.
+
+v4 Change:
+   1. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   2. Add the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters.
+   3. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver.
+   4. Add the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node.
+
+v5 Change :
+   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
+   2. Drop the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node as it breaks
+     with old firmware.
+   3. Add the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   4. Add the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   5. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
+     for-3.17 kernel.
+   6. Drop the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters as it is already applied to
+     3.16/for-3.17 branch by the maintainer.
+   7. Drop the patch to fix the watermark threshold as it is
+     already applied to 3.16/for-3.17 branch by the maintainer.
+
+Signed-off-by: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 ---
- drivers/ata/ahci_xgene.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index f416495..0a87f2e 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -145,6 +145,16 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- 	return rc;
- }
+Suman Tripathi (3):
+  ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA
+    Host Controller driver.
+  arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS
+    node.
+  ahci_xgene: Skip the PHY and clock initialization if already
+    configured by the firmware.
 
-+static int xgene_ahci_is_memram_inited(struct xgene_ahci_context *ctx)
-+{
-+	void __iomem *diagcsr = ctx->csr_diag;
-+
-+	if (readl(diagcsr + CFG_MEM_RAM_SHUTDOWN) == 0 &&
-+	    readl(diagcsr + BLOCK_MEM_RDY) == 0xFFFFFFFF)
-+		return 1;
-+	return 0;
-+}
-+
- /**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-@@ -468,6 +478,11 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
+ arch/arm64/boot/dts/apm-storm.dtsi |  5 +----
+ drivers/ata/ahci_xgene.c           | 21 +++++++++++++++++++--
+ 2 files changed, 20 insertions(+), 6 deletions(-)
 
-+	if (xgene_ahci_is_memram_inited(ctx)) {
-+		dev_info(dev, "skip clock and PHY initialization\n");
-+		goto skip_clk_phy;
-+	}
-+
- 	/* Due to errata, HW requires full toggle transition */
- 	rc = ahci_platform_enable_clks(hpriv);
- 	if (rc)
-@@ -481,6 +496,8 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
-
-+skip_clk_phy:
-+
- 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
 --
 1.8.2.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
