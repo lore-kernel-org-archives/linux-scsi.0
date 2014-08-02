@@ -1,39 +1,56 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [scsi/net-next] Pulling in net-next changes
-Date: Sat, 2 Aug 2014 00:44:59 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D8566A79@nice.asicdesigners.com>
-References: <1406835608-17908-1-git-send-email-anish@chelsio.com>,<20140801133934.GA13140@infradead.org>
+From: Mehul <mis06ec@yahoo.co.in>
+Subject: Query regarding data transfer in UFS
+Date: Sat, 2 Aug 2014 03:22:15 +0000 (UTC)
+Message-ID: <loom.20140802T052135-709@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:10525
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750997AbaHBAqT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Aug 2014 20:46:19 -0400
-In-Reply-To: <20140801133934.GA13140@infradead.org>
-Content-Language: en-US
+Received: from plane.gmane.org ([80.91.229.3]:33086 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750734AbaHBEaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Aug 2014 00:30:10 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1XDQxJ-0000kK-0r
+	for linux-scsi@vger.kernel.org; Sat, 02 Aug 2014 06:30:05 +0200
+Received: from 103.255.224.90 ([103.255.224.90])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2014 06:30:05 +0200
+Received: from mis06ec by 103.255.224.90 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2014 06:30:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "jbottomley@parallels.com" <jbottomley@parallels.com>, Karen Xie <kxie@chelsio.com>
+To: linux-scsi@vger.kernel.org
 
-Christoph,
-       Sure, we can wait for some time, not a problem. No urgent fixes are required
--Anish
-________________________________________
-From: Christoph Hellwig [hch@infradead.org]
-Sent: Friday, August 01, 2014 6:39 AM
-To: Anish Bhatt
-Cc: linux-scsi@vger.kernel.org; hch@infradead.org; michaelc@cs.wisc.edu; jbottomley@parallels.com; Karen Xie
-Subject: Re: [scsi/net-next] Pulling in net-next changes
+Hello,
 
-Hi Anish,
+I am new to UFS. I have few queries in it,
 
-Linus plans to do the 3.16 release this weekend, so unless you have
-really urgent fixes that require changes from the scsi and net tree I'd
-rather avoid the whole issue but waiting for the next merge window.
+(1) As per UFS specification, WRITE(6,10,16) command is used to transfer 
+logical blocks and WRITE BUFFER is used to transfer data in terms of bytes.
+So, here my query is, what is the difference between those two commands as in 
+both case data is transferred?  
 
-Can you wait another week or two for these updates?
+(2) In WRITE(6, 10, 16) and WRITE BUFFER command, both buffer and cache memory 
+will be written? If yes, then how to control data length in WRITE BUFFER as 
+host is transmitting in terms of bytes while cache will be controlled through 
+logical block?
+
+(3) Does below arch. is correct?
+UFS_HOST => UFS_DEVICE => BUFFER => CACHE_RAM
+i.e. UFS host transfers command to UFS device. For data transmission, UFS 
+device will send RTT based on buffer size. Then UFS host sends DATA OUT 
+command and UFS device will first store it into buffer. Then it will be 
+written into cache memory.
+
+(4) In write command, host is driving logical address. But in Ready-to-
+transfer and DATA OUT/DATA IN command, data buffer offset is provided. Then, 
+how the device will handle this data for storing as logical block at 
+particular logical address?
+
+Thank you,
+Mehul
 
