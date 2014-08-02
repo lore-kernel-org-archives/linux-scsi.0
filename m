@@ -1,58 +1,48 @@
-From: Ari Sundholm <asundhol@cs.hut.fi>
-Subject: [PATCH] scsi/arcmsr: Add timeout module parameter
-Date: Sat, 2 Aug 2014 22:42:06 +0300 (EEST)
-Message-ID: <alpine.GSO.2.00.1408022058560.609@hutcs>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: ibmvscsi: ibmvstgt.c:  Cleaning up missing null-terminate in conjunction with strncpy
+Date: Sun,  3 Aug 2014 01:23:57 +0200
+Message-ID: <1407021837-28525-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.hut.fi ([130.233.192.7]:41167 "EHLO mail.cs.hut.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754735AbaHBTwP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Aug 2014 15:52:15 -0400
-Received: from hutcs (hutcs.cs.hut.fi [130.233.192.10])
-	by mail.cs.hut.fi (Postfix) with ESMTPS id C2608308A76
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Aug 2014 22:42:06 +0300 (EEST)
+Received: from mail-we0-f177.google.com ([74.125.82.177]:58716 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbaHBXW3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Aug 2014 19:22:29 -0400
+Received: by mail-we0-f177.google.com with SMTP id w62so5878005wes.22
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2014 16:22:28 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Grant Likely <grant.likely@linaro.org>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Rob Herring <robh+dt@kernel.org>, Michael Opdenacker <michael.opdenacker@free-electrons.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-From: Ari Sundholm <asundhol@cs.hut.fi>
+Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
 
-Backported from Areca's current version of the driver.
-
-Signed-off-by: Ari Sundholm <asundhol@cs.hut.fi>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 652b41b..e79b62b 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -79,6 +79,9 @@ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
- #define	ARCMSR_RETRYCOUNT	12
+diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
+index 56f8a86..5c16d17 100644
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c
++++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -340,7 +340,7 @@ int send_adapter_info(struct iu_entry *iue,
+ 	memset(info, 0, sizeof(*info));
  
- wait_queue_head_t wait_q;
-+static int timeout;
-+module_param(timeout, int, 0644);
-+MODULE_PARM_DESC(timeout, " scsi cmd timeout value (0 - 120 sec.)");
- static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 					struct scsi_cmnd *cmd);
- static int arcmsr_iop_confirm(struct AdapterControlBlock *acb);
-@@ -1151,6 +1154,14 @@ static int arcmsr_build_ccb(struct AdapterControlBlock *acb,
- 	if (pcmd->sc_data_direction == DMA_TO_DEVICE)
- 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
- 	ccb->arc_cdb_size = arccdbsize;
-+
-+	if (timeout) {
-+		pcmd->request->deadline = jiffies + timeout * HZ;
-+		if (pcmd->device->request_queue->timeout.function)
-+			mod_timer(&pcmd->device->request_queue->timeout,
-+			          pcmd->request->deadline);
-+	}
-+
- 	return SUCCESS;
- }
+ 	strcpy(info->srp_version, "16.a");
+-	strncpy(info->partition_name, partition_name,
++	strlcpy(info->partition_name, partition_name,
+ 		sizeof(info->partition_name));
+ 	info->partition_number = partition_number;
+ 	info->mad_version = 1;
+@@ -938,7 +938,7 @@ static int get_system_info(void)
  
+ 	name = of_get_property(rootdn, "ibm,partition-name", NULL);
+ 	if (name)
+-		strncpy(partition_name, name, sizeof(partition_name));
++		strlcpy(partition_name, name, sizeof(partition_name));
+ 
+ 	num = of_get_property(rootdn, "ibm,partition-no", NULL);
+ 	if (num)
 -- 
-1.9.1
+1.7.10.4
+
