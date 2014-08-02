@@ -1,56 +1,58 @@
-From: Mehul <mis06ec@yahoo.co.in>
-Subject: Query regarding data transfer in UFS
-Date: Sat, 2 Aug 2014 03:22:15 +0000 (UTC)
-Message-ID: <loom.20140802T052135-709@post.gmane.org>
+From: Ari Sundholm <asundhol@cs.hut.fi>
+Subject: [PATCH] scsi/arcmsr: Add timeout module parameter
+Date: Sat, 2 Aug 2014 22:42:06 +0300 (EEST)
+Message-ID: <alpine.GSO.2.00.1408022058560.609@hutcs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:33086 "EHLO plane.gmane.org"
+Received: from mail.cs.hut.fi ([130.233.192.7]:41167 "EHLO mail.cs.hut.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734AbaHBEaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Aug 2014 00:30:10 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1XDQxJ-0000kK-0r
-	for linux-scsi@vger.kernel.org; Sat, 02 Aug 2014 06:30:05 +0200
-Received: from 103.255.224.90 ([103.255.224.90])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2014 06:30:05 +0200
-Received: from mis06ec by 103.255.224.90 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Aug 2014 06:30:05 +0200
+	id S1754735AbaHBTwP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Aug 2014 15:52:15 -0400
+Received: from hutcs (hutcs.cs.hut.fi [130.233.192.10])
+	by mail.cs.hut.fi (Postfix) with ESMTPS id C2608308A76
+	for <linux-scsi@vger.kernel.org>; Sat,  2 Aug 2014 22:42:06 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello,
+From: Ari Sundholm <asundhol@cs.hut.fi>
 
-I am new to UFS. I have few queries in it,
+Backported from Areca's current version of the driver.
 
-(1) As per UFS specification, WRITE(6,10,16) command is used to transfer 
-logical blocks and WRITE BUFFER is used to transfer data in terms of bytes.
-So, here my query is, what is the difference between those two commands as in 
-both case data is transferred?  
+Signed-off-by: Ari Sundholm <asundhol@cs.hut.fi>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-(2) In WRITE(6, 10, 16) and WRITE BUFFER command, both buffer and cache memory 
-will be written? If yes, then how to control data length in WRITE BUFFER as 
-host is transmitting in terms of bytes while cache will be controlled through 
-logical block?
-
-(3) Does below arch. is correct?
-UFS_HOST => UFS_DEVICE => BUFFER => CACHE_RAM
-i.e. UFS host transfers command to UFS device. For data transmission, UFS 
-device will send RTT based on buffer size. Then UFS host sends DATA OUT 
-command and UFS device will first store it into buffer. Then it will be 
-written into cache memory.
-
-(4) In write command, host is driving logical address. But in Ready-to-
-transfer and DATA OUT/DATA IN command, data buffer offset is provided. Then, 
-how the device will handle this data for storing as logical block at 
-particular logical address?
-
-Thank you,
-Mehul
-
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 652b41b..e79b62b 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -79,6 +79,9 @@ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
+ #define	ARCMSR_RETRYCOUNT	12
+ 
+ wait_queue_head_t wait_q;
++static int timeout;
++module_param(timeout, int, 0644);
++MODULE_PARM_DESC(timeout, " scsi cmd timeout value (0 - 120 sec.)");
+ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 					struct scsi_cmnd *cmd);
+ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb);
+@@ -1151,6 +1154,14 @@ static int arcmsr_build_ccb(struct AdapterControlBlock *acb,
+ 	if (pcmd->sc_data_direction == DMA_TO_DEVICE)
+ 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
+ 	ccb->arc_cdb_size = arccdbsize;
++
++	if (timeout) {
++		pcmd->request->deadline = jiffies + timeout * HZ;
++		if (pcmd->device->request_queue->timeout.function)
++			mod_timer(&pcmd->device->request_queue->timeout,
++			          pcmd->request->deadline);
++	}
++
+ 	return SUCCESS;
+ }
+ 
+-- 
+1.9.1
