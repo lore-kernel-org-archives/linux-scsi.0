@@ -1,48 +1,25 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V3 1/4] Add XEN pvSCSI protocol description
-Date: Mon, 04 Aug 2014 12:39:58 +0200
-Message-ID: <53DF62FE.7030007@suse.com>
-References: <1407140870-542-1-git-send-email-jgross@suse.com>	<1407140870-542-2-git-send-email-jgross@suse.com> <53DF78290200007800028E39@mail.emea.novell.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: use correct formats in printk()
+Date: Mon, 4 Aug 2014 03:59:58 -0700
+Message-ID: <20140804105958.GA18025@infradead.org>
+References: <1407142117-23140-1-git-send-email-martink@posteo.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <53DF78290200007800028E39@mail.emea.novell.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Jan Beulich <JBeulich@suse.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:44267 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427AbaHDLAD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2014 07:00:03 -0400
+Content-Disposition: inline
+In-Reply-To: <1407142117-23140-1-git-send-email-martink@posteo.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Martin Kepplinger <martink@posteo.de>
+Cc: ballabio_dario@emc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>
 
-On 08/04/2014 12:10 PM, Jan Beulich wrote:
->>>> On 04.08.14 at 10:27, <JGross@suse.com> wrote:
->> +/* Requests from the frontend to the backend */
->> +
->> +/*
->> + * Request a SCSI operation specified via a CDB in vscsiif_request.cmnd.
->> + * The target is specified via channel, id and lun.
->> + */
->> +#define VSCSIIF_ACT_SCSI_CDB		1
->> +
->> +/*
->> + * Request abort of a running operation for the specified target given by
->> + * channel, id, lun and the operation's rqid in ref_rqid.
->> + */
->> +#define VSCSIIF_ACT_SCSI_ABORT		2
->> +
->> +/*
->> + * Request a device reset of the specified target (channel and id).
->> + */
->> +#define VSCSIIF_ACT_SCSI_RESET		3
->
-> While I realize you don't want to support it, leaving out
-> VSCSIIF_ACT_SCSI_SG_PRESET altogether from this header may
-> lead people to the false impression that its number is available for
-> other use. I would generally recommend the Linux headers to not
-> deviate from the master ones more than absolutely necessary,
-> keeping what isn't needed/wanted by Linux at least in commented
-> out form.
+On Mon, Aug 04, 2014 at 10:48:37AM +0200, Martin Kepplinger wrote:
+> Use %llu for u64 and %u for int. Not the other way round.
 
-Okay. I'll re-add the #define
+I've already queued up an equivalent fix in my core-for-3.17 branch,
+I just need James to pull it into the scsi for-next tree.
 
-
-Juergen
