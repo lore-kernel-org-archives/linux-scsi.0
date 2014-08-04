@@ -1,67 +1,67 @@
-From: jgross@suse.com
-Subject: [PATCH V5] Save command pool address of Scsi_Host
-Date: Mon,  4 Aug 2014 13:30:02 +0200
-Message-ID: <1407151802-27198-1-git-send-email-jgross@suse.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [ANNOUNCE] scsi patch queue tree updated
+Date: Mon, 4 Aug 2014 21:30:59 +1000
+Message-ID: <20140804213059.32fd25d5@canb.auug.org.au>
+References: <20140708134003.GA7790@infradead.org>
+	<20140801122042.GA10771@infradead.org>
+	<1406925121.2654.21.camel@jarvis>
+	<20140804111147.GA29148@infradead.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/S2m_v7CTfu.nspbtMti_29+"; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140804111147.GA29148@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Juergen Gross <jgross@suse.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Juergen Gross <jgross@suse.com>
+--Sig_/S2m_v7CTfu.nspbtMti_29+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
-private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
-scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
+Hi Christoph,
 
-This will result in an access error when the host is removed.
+On Mon, 4 Aug 2014 04:11:47 -0700 Christoph Hellwig <hch@infradead.org> wro=
+te:
+>
+> On Fri, Aug 01, 2014 at 04:32:01PM -0400, James Bottomley wrote:
+> > On Fri, 2014-08-01 at 05:20 -0700, Christoph Hellwig wrote:
+> > > I've pushed out updates to both the core-for-3.17 and drivers-for-3.17
+> > > branches.
+> >=20
+> > So I'm afraid we missed the last -next build on these, so they can't go
+> > in with the early SCSI pull.  I'm open to doing one mid merge window,
+> > but Linus tends not to like that.
 
-Avoid the problem by saving the address of a new allocated command pool where
-it is expected.
+You realise that neither of these in linux-next as the scsi-core and
+scsi-drivers trees had for-3.16 branches in the last round.  I assume I
+should just drop these trees completely from linux-next?
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- drivers/scsi/scsi.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 88d46fe..b0cef5b 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
- 		pool->slab_flags |= SLAB_CACHE_DMA;
- 		pool->gfp_mask = __GFP_DMA;
- 	}
-+
-+	if (hostt->cmd_size)
-+		hostt->cmd_pool = pool;
-+
- 	return pool;
- }
- 
-@@ -424,8 +428,10 @@ out:
- out_free_slab:
- 	kmem_cache_destroy(pool->cmd_slab);
- out_free_pool:
--	if (hostt->cmd_size)
-+	if (hostt->cmd_size) {
- 		scsi_free_host_cmd_pool(pool);
-+		hostt->cmd_pool = NULL;
-+	}
- 	goto out;
- }
- 
-@@ -447,8 +453,10 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
- 	if (!--pool->users) {
- 		kmem_cache_destroy(pool->cmd_slab);
- 		kmem_cache_destroy(pool->sense_slab);
--		if (hostt->cmd_size)
-+		if (hostt->cmd_size) {
- 			scsi_free_host_cmd_pool(pool);
-+			hostt->cmd_pool = NULL;
-+		}
- 	}
- 	mutex_unlock(&host_cmd_pool_mutex);
- }
--- 
-1.8.4.5
+--Sig_/S2m_v7CTfu.nspbtMti_29+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJT3275AAoJEMDTa8Ir7ZwVYQgP/13DQel5TjiFqhV1jhqQWk/b
+5ejgNVJFVMScQsQZoLfxhpn43uj+x4m1ihWPAj50Ou3W4oIQLyE5uQqpaf1mRC+o
+CiMngaKahIje9WPYODjYzAvi5j5hu9YeUtrk4pgBjwcUmfsS6basNrmvnJu20VEl
+6s39WiDHgRa01Bc7yx8ks0r9W4K47lxD8m8GQ8/j12GdA74leeB2NRQM5ttpoubk
+oUJu0viVbZ86dPEIiJaPle7fJJNhBCJId/vuIjvEEI1lRrzSl02wtk0Wn8Egtf+Q
+Mu1tvm+f83EXeG5AQa+zOQTLaDmm0QWOR5y2SFvZUU+0ODSgUGM6fROaVATfjKfq
+9OVqBxaCwD2CZYy2gLR27Cs/JRO8m437kzDwH+SVCwHevR1t1uenIa+8fp0SJGlp
+ykuGJlGc7z8gsCpsyv/yg5/dWnQuO/cu3cfgpfFZ+wVzrfqrOPmVf+wZdMRv/t+1
+fAsiQ8mT+PU6HxXCWHA3ywH2ZjEorVCllkpnP3has8I0TdYMKAffJWxesioVynZx
+00z06RShec1bUhux9DrTI4d4qurMs6kjQsFVR9z4dhdLyZVqnYF5kYkE3N9BvdYG
+cgLVC1+707ANpetqSueDuE/Q6oF6PH1JKsbUVDvdpY/UdMpLgac5/jzbfJWc6VeV
+nYD3834HeBjIVG2QVr5P
+=rotR
+-----END PGP SIGNATURE-----
+
+--Sig_/S2m_v7CTfu.nspbtMti_29+--
