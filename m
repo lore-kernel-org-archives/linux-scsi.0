@@ -1,83 +1,79 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [ANNOUNCE] scsi patch queue tree updated
-Date: Mon, 4 Aug 2014 21:39:02 +1000
-Message-ID: <20140804213902.070f32a1@canb.auug.org.au>
-References: <20140708134003.GA7790@infradead.org>
-	<20140801122042.GA10771@infradead.org>
-	<1406925121.2654.21.camel@jarvis>
-	<20140804111147.GA29148@infradead.org>
-	<20140804213059.32fd25d5@canb.auug.org.au>
-	<20140804113404.GA11377@infradead.org>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: Re: [PATCH V5] Save command pool address of Scsi_Host
+Date: Mon, 04 Aug 2014 14:49:53 +0300
+Message-ID: <53DF7361.7000103@gmail.com>
+References: <1407151802-27198-1-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/aDy=zM=hbrVmTB/dtWAwXT+"; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:49427 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbaHDLjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Aug 2014 07:39:09 -0400
-In-Reply-To: <20140804113404.GA11377@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1407151802-27198-1-git-send-email-jgross@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgross@suse.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
---Sig_/aDy=zM=hbrVmTB/dtWAwXT+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 08/04/2014 02:30 PM, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
+> 
+> If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
+> private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
+> scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
+> 
+> This will result in an access error when the host is removed.
+> 
+> Avoid the problem by saving the address of a new allocated command pool where
+> it is expected.
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> ---
+>  drivers/scsi/scsi.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 88d46fe..b0cef5b 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
+>  		pool->slab_flags |= SLAB_CACHE_DMA;
+>  		pool->gfp_mask = __GFP_DMA;
+>  	}
+> +
+> +	if (hostt->cmd_size)
+> +		hostt->cmd_pool = pool;
+> +
+>  	return pool;
+>  }
+>  
+> @@ -424,8 +428,10 @@ out:
+>  out_free_slab:
+>  	kmem_cache_destroy(pool->cmd_slab);
+>  out_free_pool:
+> -	if (hostt->cmd_size)
+> +	if (hostt->cmd_size) {
+>  		scsi_free_host_cmd_pool(pool);
 
-Hi Christoph,
+I disagree I liked the V4 version better. It is much nicer on the review
+that we NULL the same one we pass in with no need for context that's outside
+of this scope
 
-On Mon, 4 Aug 2014 04:34:04 -0700 Christoph Hellwig <hch@infradead.org> wro=
-te:
->
-> On Mon, Aug 04, 2014 at 09:30:59PM +1000, Stephen Rothwell wrote:
-> > You realise that neither of these in linux-next as the scsi-core and
-> > scsi-drivers trees had for-3.16 branches in the last round.  I assume I
-> > should just drop these trees completely from linux-next?
->=20
-> Well, they get pulled in through James, so you can drop them for now.
+Just my $0.017
+Boaz
 
-Will do.
-
-> I mostly put you on Cc so you could comment wether there are any hard
-> rules on how long even those simple fixes should be in linux-next.  I
-> know you've put up stats for a few of the last merge windows about
-> patches that weren't in linux-next, so there's been some tracking of it
-> for sure.
-
-If they are simple, clear fixes, then maybe a day or two just for build
-coverage, but it is very much up to the maintainer.  There are always a
-few poatches that get through late (quote a few of which I suspect have
-been "in train", just not yet published in the maintainer's tree).
-
-And, of course, real fixes go in just about anytime ...
-
-I don't think we believe in hard rules for anything :-)
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Sig_/aDy=zM=hbrVmTB/dtWAwXT+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJT33DbAAoJEMDTa8Ir7ZwVsiwQAIs28kv/fhdztzi96vbYbER2
-cbSkeseQHJ2ln3BCP44z8q0KYt8RKFneSoEhGkieIAqweaYfaZRicH3ZJVVCNALe
-kdQkotxFynpiip0j01PfeEFs/Csjv++cPIWto29pxYXSCRhnKVs/iIqLYsi9odwp
-5Syz6jzjyoJUs7gs+Cm48JVi1EbhNmwMfIxO/7j+lt50V7L5QmY2bYSP4HGFTAMX
-/bnxm2Hv5ZuXe/d6gdxDyGMAFRHvjH4pV6GO5ENUUPyyop3KrDx73mV16p7s89ee
-G3x9zHfmwxllUZrDC1D8QOxbKYOVsiYqnvdh2jmQBG+EHgYPG8eY6gzuzBu1HHph
-zqBSqKSfljUyvuU0Pl7FHZzjUYn0vNyAOyCIxUu2yIjgroL3NxVeYrcUfGfiNUkb
-GWKTI59FZhBX0b7cwmMgHBymOGeaOJd33NkFc5ZU6Xg37sBdTMkY9cMSZGC4vodc
-xeekYIRWdbaHXqsogIkR2h246RGDhUGDerZzbUqfAUAJDSzUpdkvisxFFp2HfnEG
-iPcSLY8O0sjluniYFDqxxG4C4LGKAAPcse6ExOunediI51plqo/H6PCN79XmVa+C
-XCFqJ2vEYADAtkd3XV9mu1qExLvLAhebtkB5BMyoOTeGnvpCno/4g48PvbPetCg4
-QFGYd92qB5OXwjeFxZDv
-=GJUb
------END PGP SIGNATURE-----
-
---Sig_/aDy=zM=hbrVmTB/dtWAwXT+--
+> +		hostt->cmd_pool = NULL;
+> +	}
+>  	goto out;
+>  }
+>  
+> @@ -447,8 +453,10 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
+>  	if (!--pool->users) {
+>  		kmem_cache_destroy(pool->cmd_slab);
+>  		kmem_cache_destroy(pool->sense_slab);
+> -		if (hostt->cmd_size)
+> +		if (hostt->cmd_size) {
+>  			scsi_free_host_cmd_pool(pool);
+> +			hostt->cmd_pool = NULL;
+> +		}
+>  	}
+>  	mutex_unlock(&host_cmd_pool_mutex);
+>  }
+> 
