@@ -1,42 +1,43 @@
-From: jgross@suse.com
-Subject: [PATCH V3 4/4] add xen pvscsi maintainer
-Date: Mon,  4 Aug 2014 10:27:50 +0200
-Message-ID: <1407140870-542-5-git-send-email-jgross@suse.com>
-References: <1407140870-542-1-git-send-email-jgross@suse.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1407140870-542-1-git-send-email-jgross@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com
-Cc: Juergen Gross <jgross@suse.com>
+From: Martin Kepplinger <martink@posteo.de>
+Subject: [PATCH] scsi: use correct formats in printk()
+Date: Mon,  4 Aug 2014 10:48:37 +0200
+Message-ID: <1407142117-23140-1-git-send-email-martink@posteo.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ballabio_dario@emc.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Martin Kepplinger <martink@posteo.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Juergen Gross <jgross@suse.com>
+Use %llu for u64 and %u for int. Not the other way round.
 
-Add myself as maintainer for the Xen pvSCSI stuff.
-
-Signed-off-by: Juergen Gross <jgross@suse.com>
+Signed-off-by: Martin Kepplinger <martink@posteo.de>
 ---
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+applies to -next20140801
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c2066f4..d020bfd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10046,6 +10046,14 @@ S:	Supported
- F:	arch/x86/pci/*xen*
- F:	drivers/pci/*xen*
+ drivers/scsi/u14-34f.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
+index 4e76fe8..d8dcf36 100644
+--- a/drivers/scsi/u14-34f.c
++++ b/drivers/scsi/u14-34f.c
+@@ -1006,7 +1006,7 @@ static int port_detect \
+           sh[j]->irq, dma_name, sh[j]->sg_tablesize, sh[j]->can_queue);
  
-+XEN PVSCSI DRIVERS
-+M:	Juergen Gross <jgross@suse.com>
-+L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
-+S:	Supported
-+F:	drivers/scsi/xen-scsifront.c
-+F:	drivers/xen/xen-scsiback.c
-+F:	include/xen/interface/io/vscsiif.h
-+
- XEN SWIOTLB SUBSYSTEM
- M:	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
- L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
+    if (sh[j]->max_id > 8 || sh[j]->max_lun > 8)
+-      printk("%s: wide SCSI support enabled, max_id %u, max_lun %u.\n",
++      printk("%s: wide SCSI support enabled, max_id %u, max_lun %llu.\n",
+              BN(j), sh[j]->max_id, sh[j]->max_lun);
+ 
+    for (i = 0; i <= sh[j]->max_channel; i++)
+@@ -1285,7 +1285,7 @@ static int u14_34f_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct
+    cpp->cpp_index = i;
+    SCpnt->host_scribble = (unsigned char *) &cpp->cpp_index;
+ 
+-   if (do_trace) printk("%s: qcomm, mbox %d, target %d.%d:%llu.\n",
++   if (do_trace) printk("%s: qcomm, mbox %d, target %d.%d:%u.\n",
+                         BN(j), i, SCpnt->device->channel, SCpnt->device->id,
+                         (u8)SCpnt->device->lun);
+ 
 -- 
-1.8.4.5
+1.7.10.4
