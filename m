@@ -1,25 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: use correct formats in printk()
-Date: Mon, 4 Aug 2014 03:59:58 -0700
-Message-ID: <20140804105958.GA18025@infradead.org>
-References: <1407142117-23140-1-git-send-email-martink@posteo.de>
+Subject: Re: [PATCH] Save command pool address of Scsi_Host
+Date: Mon, 4 Aug 2014 04:03:10 -0700
+Message-ID: <20140804110310.GA19109@infradead.org>
+References: <1406874425-3528-1-git-send-email-jgross@suse.com>
+ <20140801120301.GA27198@infradead.org>
+ <1406924674.2654.19.camel@jarvis>
+ <53DF0AA3.2040209@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44267 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427AbaHDLAD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2014 07:00:03 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1407142117-23140-1-git-send-email-martink@posteo.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <53DF0AA3.2040209@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Kepplinger <martink@posteo.de>
-Cc: ballabio_dario@emc.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>
 
-On Mon, Aug 04, 2014 at 10:48:37AM +0200, Martin Kepplinger wrote:
-> Use %llu for u64 and %u for int. Not the other way round.
+On Mon, Aug 04, 2014 at 06:22:59AM +0200, Juergen Gross wrote:
+> OTOH it would be possible to just delete .cmd_pool in the template when
+> deleting the pool. I'll send a patch doing this and you can decide
+> whether to take it or to use the other solution.
+> 
+> I'm not sure which to prefer: the init/remove version is simple, while
+> the dynamic version requires no changes in the driver's source and the
+> pool's resources are allocated only when really needed.
 
-I've already queued up an equivalent fix in my core-for-3.17 branch,
-I just need James to pull it into the scsi for-next tree.
-
+the init/remove version needs the driver to call a per-host template
+function/method from module_init/exit, something we've avoided
+successfully for the last 10 years.
