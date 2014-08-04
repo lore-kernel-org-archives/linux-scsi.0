@@ -1,39 +1,46 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 1/15] block copy: initial XCOPY offload support
-Date: Mon, 4 Aug 2014 16:09:25 +0200
-Message-ID: <20140804140925.GA24261@amd.pavel.ucw.cz>
-References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.1407151534180.14632@file01.intranet.prod.int.rdu2.redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [ANNOUNCE] scsi patch queue tree updated
+Date: Mon, 04 Aug 2014 07:20:04 -0700
+Message-ID: <1407162004.4243.1.camel@jarvis.lan>
+References: <20140708134003.GA7790@infradead.org>
+	 <20140801122042.GA10771@infradead.org> <1406925121.2654.21.camel@jarvis>
+	 <20140804111147.GA29148@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1407151534180.14632@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <20140804111147.GA29148@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue 2014-07-15 15:34:47, Mikulas Patocka wrote:
-> This is Martin Petersen's xcopy patch
-> (https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8)
-> with some bug fixes, ported to the current kernel.
+On Mon, 2014-08-04 at 04:11 -0700, Christoph Hellwig wrote:
+> On Fri, Aug 01, 2014 at 04:32:01PM -0400, James Bottomley wrote:
+> > On Fri, 2014-08-01 at 05:20 -0700, Christoph Hellwig wrote:
+> > > I've pushed out updates to both the core-for-3.17 and drivers-for-3.17
+> > > branches.
+> > 
+> > So I'm afraid we missed the last -next build on these, so they can't go
+> > in with the early SCSI pull.  I'm open to doing one mid merge window,
+> > but Linus tends not to like that.
 > 
-> This patch makes it possible to use the SCSI XCOPY command.
+> I don't think there are any hard and fast rules.
+
+True, but the hardest of our semi-liquid rules is nothing in the merge
+window that wasn't in -next first.
+
+> The core-for-3.17 commit is a trivial printk specifier regression fix for
+> something introduced in the 3.17 merge window, so pulling it in is
+> an absolute non-brainer.
 > 
-> We create a bio that has REQ_COPY flag in bi_rw and a bi_copy structure
-> that defines the source device. The target device is defined in the
-> bi_bdev and bi_iter.bi_sector.
-> 
-> There is a new BLKCOPY ioctl that makes it possible to use XCOPY from
-> userspace. The ioctl argument is a pointer to an array of four uint64_t
-> values.
+> The drivers side are a bunch of smaller fixes for iscsi and pm8001 which
+> never have been a problem to put in near the end of the merge window,
+> especially if they have a few more days linux-next exposure in
+> Linux-next even after the 3.16 release.  They absolutely would be
+> candidates for a second pull even if they'd miss the first pull.
 
-But it is there only for block devices, right?
+OK, since I have to do a second pull anyway we might as well follow the
+rules.
 
-Is there plan to enable tools such as /bin/cp to use XCOPY?
-
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+James
