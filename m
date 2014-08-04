@@ -1,94 +1,70 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH V5] Save command pool address of Scsi_Host
-Date: Mon, 04 Aug 2014 14:01:04 +0200
-Message-ID: <53DF7600.70400@suse.com>
-References: <1407151802-27198-1-git-send-email-jgross@suse.com> <53DF7361.7000103@gmail.com>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH V3 2/4] Introduce xen-scsifront module
+Date: Mon, 4 Aug 2014 13:16:09 +0100
+Message-ID: <53DF7989.8040603@citrix.com>
+References: <1407140870-542-1-git-send-email-jgross@suse.com> <1407140870-542-3-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53DF7361.7000103@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <openosd@gmail.com>, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1407140870-542-3-git-send-email-jgross@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: jgross@suse.com, xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/04/2014 01:49 PM, Boaz Harrosh wrote:
-> On 08/04/2014 02:30 PM, jgross@suse.com wrote:
->> From: Juergen Gross <jgross@suse.com>
->>
->> If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
->> private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
->> scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
->>
->> This will result in an access error when the host is removed.
->>
->> Avoid the problem by saving the address of a new allocated command pool where
->> it is expected.
->>
->> Signed-off-by: Juergen Gross <jgross@suse.com>
->> ---
->>   drivers/scsi/scsi.c | 12 ++++++++++--
->>   1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->> index 88d46fe..b0cef5b 100644
->> --- a/drivers/scsi/scsi.c
->> +++ b/drivers/scsi/scsi.c
->> @@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
->>   		pool->slab_flags |= SLAB_CACHE_DMA;
->>   		pool->gfp_mask = __GFP_DMA;
->>   	}
->> +
->> +	if (hostt->cmd_size)
->> +		hostt->cmd_pool = pool;
->> +
->>   	return pool;
->>   }
->>
->> @@ -424,8 +428,10 @@ out:
->>   out_free_slab:
->>   	kmem_cache_destroy(pool->cmd_slab);
->>   out_free_pool:
->> -	if (hostt->cmd_size)
->> +	if (hostt->cmd_size) {
->>   		scsi_free_host_cmd_pool(pool);
->
-> I disagree I liked the V4 version better. It is much nicer on the review
-> that we NULL the same one we pass in with no need for context that's outside
-> of this scope
+On 04/08/14 09:27, jgross@suse.com wrote:
+> 
+> +
+> +static void scsifront_backend_changed(struct xenbus_device *dev,
+> +				      enum xenbus_state backend_state)
+> +{
+> +	struct vscsifrnt_info *info = dev_get_drvdata(&dev->dev);
+> +
+> +	DPRINTK("%p %u %u\n", dev, dev->state, backend_state);
+> +
+> +	switch (backend_state) {
+> +	case XenbusStateUnknown:
+> +	case XenbusStateInitialising:
+> +	case XenbusStateInitWait:
+> +	case XenbusStateInitialised:
+> +		break;
+> +
+> +	case XenbusStateConnected:
+> +		scsifront_read_backend_params(dev, info);
+> +		if (xenbus_read_driver_state(dev->nodename) ==
+> +			XenbusStateInitialised) {
+> +			scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_ADD_LUN);
+> +		}
+> +
+> +		if (dev->state != XenbusStateConnected)
+> +			xenbus_switch_state(dev, XenbusStateConnected);
+> +		break;
+> +
+> +	case XenbusStateClosed:
+> +		if (dev->state == XenbusStateClosed)
+> +			break;
+> +		/* Missed the backend's Closing state -- fallthrough */
+> +	case XenbusStateClosing:
+> +		scsifront_disconnect(info);
+> +		break;
+> +
+> +	case XenbusStateReconfiguring:
+> +		scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_DEL_LUN);
+> +		xenbus_switch_state(dev, XenbusStateReconfiguring);
+> +		break;
+> +
+> +	case XenbusStateReconfigured:
+> +		scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_ADD_LUN);
+> +		xenbus_switch_state(dev, XenbusStateConnected);
+> +		break;
+> +	}
+> +}
 
-:-)
+I would like to see this state machine in common code but I'm not going
+to insist on it since this is a existing driver.
 
-I'm fine with either version.
+Xen related parts:
 
-Juergen
+Acked-by: David Vrabel <david.vrabel@citrix.com>
 
->
-> Just my $0.017
-> Boaz
->
->> +		hostt->cmd_pool = NULL;
->> +	}
->>   	goto out;
->>   }
->>
->> @@ -447,8 +453,10 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
->>   	if (!--pool->users) {
->>   		kmem_cache_destroy(pool->cmd_slab);
->>   		kmem_cache_destroy(pool->sense_slab);
->> -		if (hostt->cmd_size)
->> +		if (hostt->cmd_size) {
->>   			scsi_free_host_cmd_pool(pool);
->> +			hostt->cmd_pool = NULL;
->> +		}
->>   	}
->>   	mutex_unlock(&host_cmd_pool_mutex);
->>   }
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+David
