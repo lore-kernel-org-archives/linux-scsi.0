@@ -1,40 +1,48 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v1.3 18/18] arcmsr: replace flush_scheduled_work() by
- flush_work()
-Date: Mon, 04 Aug 2014 18:31:41 +0800
-Message-ID: <1407148301.4756.117.camel@Centos6.3-64>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V3 1/4] Add XEN pvSCSI protocol description
+Date: Mon, 04 Aug 2014 12:39:58 +0200
+Message-ID: <53DF62FE.7030007@suse.com>
+References: <1407140870-542-1-git-send-email-jgross@suse.com>	<1407140870-542-2-git-send-email-jgross@suse.com> <53DF78290200007800028E39@mail.emea.novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:61667 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbaHDKbs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Aug 2014 06:31:48 -0400
-Received: by mail-pd0-f169.google.com with SMTP id y10so9439968pdj.28
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Aug 2014 03:31:48 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <53DF78290200007800028E39@mail.emea.novell.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Jan Beulich <JBeulich@suse.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Ching Huang <ching2048@areca.com.tw>
+On 08/04/2014 12:10 PM, Jan Beulich wrote:
+>>>> On 04.08.14 at 10:27, <JGross@suse.com> wrote:
+>> +/* Requests from the frontend to the backend */
+>> +
+>> +/*
+>> + * Request a SCSI operation specified via a CDB in vscsiif_request.cmnd.
+>> + * The target is specified via channel, id and lun.
+>> + */
+>> +#define VSCSIIF_ACT_SCSI_CDB		1
+>> +
+>> +/*
+>> + * Request abort of a running operation for the specified target given by
+>> + * channel, id, lun and the operation's rqid in ref_rqid.
+>> + */
+>> +#define VSCSIIF_ACT_SCSI_ABORT		2
+>> +
+>> +/*
+>> + * Request a device reset of the specified target (channel and id).
+>> + */
+>> +#define VSCSIIF_ACT_SCSI_RESET		3
+>
+> While I realize you don't want to support it, leaving out
+> VSCSIIF_ACT_SCSI_SG_PRESET altogether from this header may
+> lead people to the false impression that its number is available for
+> other use. I would generally recommend the Linux headers to not
+> deviate from the master ones more than absolutely necessary,
+> keeping what isn't needed/wanted by Linux at least in commented
+> out form.
 
-To prevent flushing entire workqueue, replace flush_scheduled_work() by flush_work().
-
-Signed-off-by: Ching Huang <ching2048@areca.com.tw>
----
-
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-04 16:47:02.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-04 16:47:12.000000000 +0800
-@@ -841,7 +841,7 @@ static int arcmsr_suspend(struct pci_dev
- 	intmask_org = arcmsr_disable_outbound_ints(acb);
- 	arcmsr_free_irq(pdev, acb);
- 	del_timer_sync(&acb->eternal_timer);
--	flush_scheduled_work();
-+	flush_work(&acb->arcmsr_do_message_isr_bh);
- 	arcmsr_stop_adapter_bgrb(acb);
- 	arcmsr_flush_adapter_cache(acb);
- 	arcmsr_enable_outbound_ints(acb, intmask_org);
+Okay. I'll re-add the #define
 
 
+Juergen
