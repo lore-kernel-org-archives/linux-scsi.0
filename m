@@ -1,92 +1,65 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH 3/3] scsi_debug: bump inquiry version to SPC-4, update version
- descriptors
-Date: Tue, 05 Aug 2014 12:21:53 +0200
-Message-ID: <53E0B041.2050009@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/1] iscsi class: Fix freeing of skb in get host error
+ path
+Date: Tue, 05 Aug 2014 14:52:49 +0200
+Message-ID: <53E0D3A1.3050505@suse.de>
+References: <1407109072-3351-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070006050605070601020101"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:32825 "EHLO smtp.infotech.no"
+Received: from cantor2.suse.de ([195.135.220.15]:48441 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753513AbaHEKVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2014 06:21:55 -0400
+	id S1753041AbaHEMwv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Aug 2014 08:52:51 -0400
+In-Reply-To: <1407109072-3351-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070006050605070601020101
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+On 08/04/2014 01:37 AM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+>
+> If get_host_stats failes we are using kfree to free the
+> skb. We should be using kfree_skb.
+>
+> This patch was made over Christoph's scsi-queue drivers-for-3.17 bran=
+ch.
+>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>   drivers/scsi/scsi_transport_iscsi.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_=
+transport_iscsi.c
+> index 534d3fb..67d43e3 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -3468,7 +3468,7 @@ iscsi_get_host_stats(struct iscsi_transport *tr=
+ansport, struct nlmsghdr *nlh)
+>
+>   		err =3D transport->get_host_stats(shost, buf, host_stats_size);
+>   		if (err) {
+> -			kfree(skbhost_stats);
+> +			kfree_skb(skbhost_stats);
+>   			goto exit_host_stats;
+>   		}
+>
+>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Since a lot of functionality from SPC-4 is supported by this
-driver (e.g. LBP and PI) then bump the default INQUIRY version
-from SPC-3 to SPC-4. Also update the INQUIRY version
-descriptors.
+Cheers,
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
-
---------------070006050605070601020101
-Content-Type: text/x-patch;
- name="0003-up-inquiry-version-to-SPC-4-update-version-descripto.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0003-up-inquiry-version-to-SPC-4-update-version-descripto.pa";
- filename*1="tch"
-
----
- drivers/scsi/scsi_debug.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 693f2fa..1c475e9 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -123,7 +123,7 @@ static const char *scsi_debug_version_date = "20140706";
- #define DEF_PHYSBLK_EXP 0
- #define DEF_PTYPE   0
- #define DEF_REMOVABLE false
--#define DEF_SCSI_LEVEL   5    /* INQUIRY, byte2 [5->SPC-3] */
-+#define DEF_SCSI_LEVEL   6    /* INQUIRY, byte2 [6->SPC-4] */
- #define DEF_SECTOR_SIZE 512
- #define DEF_TAGGED_QUEUING 0 /* 0 | MSG_SIMPLE_TAG | MSG_ORDERED_TAG */
- #define DEF_UNMAP_ALIGNMENT 0
-@@ -1056,15 +1056,15 @@ static int resp_inquiry(struct scsi_cmnd *scp, int target,
- 	memcpy(&arr[16], inq_product_id, 16);
- 	memcpy(&arr[32], inq_product_rev, 4);
- 	/* version descriptors (2 bytes each) follow */
--	arr[58] = 0x0; arr[59] = 0x77; /* SAM-3 ANSI */
--	arr[60] = 0x3; arr[61] = 0x14;  /* SPC-3 ANSI */
-+	arr[58] = 0x0; arr[59] = 0xa2;  /* SAM-5 rev 4 */
-+	arr[60] = 0x4; arr[61] = 0x68;  /* SPC-4 rev 37 */
- 	n = 62;
- 	if (scsi_debug_ptype == 0) {
--		arr[n++] = 0x3; arr[n++] = 0x3d; /* SBC-2 ANSI */
-+		arr[n++] = 0x4; arr[n++] = 0xc5; /* SBC-4 rev 36 */
- 	} else if (scsi_debug_ptype == 1) {
--		arr[n++] = 0x3; arr[n++] = 0x60; /* SSC-2 no version */
-+		arr[n++] = 0x5; arr[n++] = 0x25; /* SSC-4 rev 3 */
- 	}
--	arr[n++] = 0xc; arr[n++] = 0xf;  /* SAS-1.1 rev 10 */
-+	arr[n++] = 0x20; arr[n++] = 0xe6;  /* SPL-3 rev 7 */
- 	ret = fill_from_dev_buffer(scp, arr,
- 			    min(alloc_len, SDEBUG_LONG_INQ_SZ));
- 	kfree(arr);
-@@ -3205,7 +3205,7 @@ MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err...
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
- MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
--MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
-+MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=6[SPC-4])");
- MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
- MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
- MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
--- 
-1.9.1
-
-
-
---------------070006050605070601020101--
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
