@@ -1,102 +1,152 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] eata: remove driver_lock
-Date: Tue, 05 Aug 2014 17:20:47 +0200
-Message-ID: <53E0F64F.3050008@suse.de>
-References: <1405326393-18559-1-git-send-email-hch@lst.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [RESEND][PATCH 7/8][SCSI]mpt3sas: Added Reply Descriptor Post
+ Queue (RDPQ) Array support
+Date: Tue, 05 Aug 2014 17:24:20 +0200
+Message-ID: <53E0F724.7070500@redhat.com>
+References: <20140625104135.GA13038@avagotech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51229 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754957AbaHEPU4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2014 11:20:56 -0400
-In-Reply-To: <1405326393-18559-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140625104135.GA13038@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>, jejb@kernel.org, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 07/14/2014 10:26 AM, Christoph Hellwig wrote:
-> port_detect is only called from the module_init routine and thus impl=
-icitly
-> serialized, so remove the driver lock which was held over potentially
-> sleeping function calls.
+On 06/25/2014 12:41 PM, Reddy, Sreekanth wrote:
+> Up to now, Driver allocates a single contiguous block of memory
+> pool for all reply queues and passes down a single address in the
+> ReplyDescriptorPostQueueAddress field of the IOC Init Request
+> Message to the firmware.
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Arthur Marsh <arthur.marsh@internode.on.net>
-> Tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
+> When firmware receives this address, it will program each of the
+> Reply Descriptor Post Queue registers, as each reply queue has its
+> own register. Thus the firmware, starting from a base address it
+> determines the starting address of the subsequent reply queues
+> through some simple arithmetic calculations.
+>
+> The size of this contiguous block of memory pool is directly proportional
+> to number of MSI-X vectors and the HBA queue depth. For example higher
+> MSIX vectors requires larger contiguous block of memory pool.
+>
+> But some of the OS kernels are unable to allocate this larger
+> contiguous block of memory pool.
+>
+> So, the proposal is to allocate memory independently for each
+> Reply Queue and pass down all of the addresses to the firmware.
+> Then the firmware will just take each address and program the value
+> into the correct register.
+>
+> When HBAs with older firmware(i.e. without RDPQ capability) is used
+> with this new driver then the max_msix_vectors value would be set
+> to 8 by default.
+>
+> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 > ---
->   drivers/scsi/eata.c | 9 ---------
->   1 file changed, 9 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.c |  916 ++++++++++++++++++++---------------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h |   19 +-
+>  2 files changed, 543 insertions(+), 392 deletions(-)
 >
-> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-> index 03372cf..980898e 100644
-> --- a/drivers/scsi/eata.c
-> +++ b/drivers/scsi/eata.c
-> @@ -837,7 +837,6 @@ struct hostdata {
->   static struct Scsi_Host *sh[MAX_BOARDS];
->   static const char *driver_name =3D "EATA";
->   static char sha[MAX_BOARDS];
-> -static DEFINE_SPINLOCK(driver_lock);
->
->   /* Initialize num_boards so that ihdlr can work while detect is in =
-progress */
->   static unsigned int num_boards =3D MAX_BOARDS;
-> @@ -1097,8 +1096,6 @@ static int port_detect(unsigned long port_base,=
- unsigned int j,
->   		goto fail;
->   	}
->
-> -	spin_lock_irq(&driver_lock);
-> -
->   	if (do_dma(port_base, 0, READ_CONFIG_PIO)) {
->   #if defined(DEBUG_DETECT)
->   		printk("%s: detect, do_dma failed at 0x%03lx.\n", name,
-> @@ -1265,10 +1262,7 @@ static int port_detect(unsigned long port_base=
-, unsigned int j,
->   	}
->   #endif
->
-> -	spin_unlock_irq(&driver_lock);
->   	sh[j] =3D shost =3D scsi_register(tpnt, sizeof(struct hostdata));
-> -	spin_lock_irq(&driver_lock);
-> -
->   	if (shost =3D=3D NULL) {
->   		printk("%s: unable to register host, detaching.\n", name);
->   		goto freedma;
-> @@ -1345,8 +1339,6 @@ static int port_detect(unsigned long port_base,=
- unsigned int j,
->   	else
->   		sprintf(dma_name, "DMA %u", dma_channel);
->
-> -	spin_unlock_irq(&driver_lock);
-> -
->   	for (i =3D 0; i < shost->can_queue; i++)
->   		ha->cp[i].cp_dma_addr =3D pci_map_single(ha->pdev,
->   							  &ha->cp[i],
-> @@ -1439,7 +1431,6 @@ static int port_detect(unsigned long port_base,=
- unsigned int j,
->         freeirq:
->   	free_irq(irq, &sha[j]);
->         freelock:
-> -	spin_unlock_irq(&driver_lock);
->   	release_region(port_base, REGION_SIZE);
->         fail:
->   	return 0;
->
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+...
+> +static int
+> +_base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+> +	u32 *request, int reply_bytes, u16 *reply, int timeout, int sleep_flag)
+> +{
+> +	MPI2DefaultReply_t *default_reply = (MPI2DefaultReply_t *)reply;
+> +	int i;
+> +	u8 failed;
+> +	u16 dummy;
+> +	__le32 *mfp;
+> +
+> +	/* make sure doorbell is not in use */
+> +	if ((readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
+
+	if (readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED) {
+I think it's equal and better looking with less parentheses, but 
+it's a personal preference so you can ignore it.
+
+> +		pr_err(MPT3SAS_FMT "doorbell is in use (line=%d)\n",
+> +		    ioc->name, __LINE__);
+> +		return -EFAULT;
+> +	}
+> +
+> +	/* clear pending doorbell interrupts from previous state changes */
+> +	if (readl(&ioc->chip->HostInterruptStatus) &
+> +	    MPI2_HIS_IOC2SYS_DB_STATUS)
+> +		writel(0, &ioc->chip->HostInterruptStatus);
+> +
+> +	/* send message to ioc */
+> +	writel(((MPI2_FUNCTION_HANDSHAKE<<MPI2_DOORBELL_FUNCTION_SHIFT) |
+> +	    ((request_bytes/4)<<MPI2_DOORBELL_ADD_DWORDS_SHIFT)),
+> +	    &ioc->chip->Doorbell);
+> +
+> +	if ((_base_wait_for_doorbell_int(ioc, 5, NO_SLEEP))) {
+
+Most likely not a problem, but why NO_SLEEP and not the sleep_flag ?
+
+> +		pr_err(MPT3SAS_FMT "doorbell handshake int failed (line=%d)\n",
+> +		   ioc->name, __LINE__);
+> +		return -EFAULT;
+> +	}
+> +	writel(0, &ioc->chip->HostInterruptStatus);
+> +
+> +	if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag))) {
+> +		pr_err(MPT3SAS_FMT "doorbell handshake ack failed (line=%d)\n",
+> +		    ioc->name, __LINE__);
+> +		return -EFAULT;
+> +	}
+> +
+> +	/* send message 32-bits at a time */
+> +	for (i = 0, failed = 0; i < request_bytes/4 && !failed; i++) {
+> +		writel(cpu_to_le32(request[i]), &ioc->chip->Doorbell);
+> +		if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag)))
+> +			failed = 1;
+> +	}
+...
+
+@@ -2945,39 +3307,82 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+ 		ioc->name, (unsigned long long)ioc->reply_free_dma));
+ 	total_sz += sz;
+ 
+-	/* reply post queue, 16 byte align */
+-	reply_post_free_sz = ioc->reply_post_queue_depth *
+-	    sizeof(Mpi2DefaultReplyDescriptor_t);
+-	if (_base_is_controller_msix_enabled(ioc))
+-		sz = reply_post_free_sz * ioc->reply_queue_count;
+-	else
++	if (ioc->rdpq_array_enable) {
++		ioc->reply_post = kcalloc(ioc->reply_queue_count,
++		sizeof(struct reply_post_struct), GFP_KERNEL);
++		/* reply post queue, 16 byte align */
++		reply_post_free_sz = ioc->reply_post_queue_depth *
++		sizeof(Mpi2DefaultReplyDescriptor_t);
+ 		sz = reply_post_free_sz;
+-	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
+-	    ioc->pdev, sz, 16, 0);
+-	if (!ioc->reply_post_free_dma_pool) {
+-		pr_err(MPT3SAS_FMT
+-			"reply_post_free pool: pci_pool_create failed\n",
+-			ioc->name);
+-		goto out;
+-	}
+-	ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
+-	    GFP_KERNEL, &ioc->reply_post_free_dma);
+-	if (!ioc->reply_post_free) {
+-		pr_err(MPT3SAS_FMT
+-			"reply_post_free pool: pci_pool_alloc failed\n",
+-			ioc->name);
+-		goto out;
++		ioc->reply_post_free_dma_pool =
++			pci_pool_create("reply_post_free pool", ioc->pdev, sz,
++			16, 2147483648);
+
+Few lines below with older firmware you don't need this rather
+high boundary of 2^31, why is it needed here?
+
+Besides that, checkpatch shows 11 warnings and some of them might be functional - 
+"WARNING: msleep < 20ms can sleep for up to 20ms; see Documentation/timers/timers"
+please clean your patch next time.
 
 Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomas
