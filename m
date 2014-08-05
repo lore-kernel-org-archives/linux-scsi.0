@@ -1,152 +1,107 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [RESEND][PATCH 7/8][SCSI]mpt3sas: Added Reply Descriptor Post
- Queue (RDPQ) Array support
-Date: Tue, 05 Aug 2014 17:24:20 +0200
-Message-ID: <53E0F724.7070500@redhat.com>
-References: <20140625104135.GA13038@avagotech.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+Date: Tue, 05 Aug 2014 14:46:38 -0400
+Message-ID: <yq161i6epv5.fsf@sermon.lab.mkp.net>
+References: <20140625103445.GA12943@avagotech.com>
+	<yq1zjg2m6lu.fsf@sermon.lab.mkp.net>
+	<CAK=zhgoQt5J=jh4jShAy5rBXNz34sN-tqf=uZDkY4zQJ9XhM5g@mail.gmail.com>
+	<yq18unklvda.fsf@sermon.lab.mkp.net>
+	<CAK=zhgpDWJLBMBB1mV-7u+o_UC86PiOCAp4vi4-UAn_hXHtF2A@mail.gmail.com>
+	<yq1r41bkgdp.fsf@sermon.lab.mkp.net>
+	<CAK=zhgp_v_sdt+VLDs1Mxxi8Cg4nZNnzgQ=d228h+Ht2EpdEqw@mail.gmail.com>
+	<yq138dpgr6z.fsf@sermon.lab.mkp.net>
+	<CAK=zhgoEhW7fT7SV6ZkzgFa_A49W9quzWOgXb=DH3D_CrMAdDw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140625104135.GA13038@avagotech.com>
+In-Reply-To: <CAK=zhgoEhW7fT7SV6ZkzgFa_A49W9quzWOgXb=DH3D_CrMAdDw@mail.gmail.com>
+	(Sreekanth Reddy's message of "Wed, 30 Jul 2014 20:25:14 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>, jejb@kernel.org, JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/25/2014 12:41 PM, Reddy, Sreekanth wrote:
-> Up to now, Driver allocates a single contiguous block of memory
-> pool for all reply queues and passes down a single address in the
-> ReplyDescriptorPostQueueAddress field of the IOC Init Request
-> Message to the firmware.
->
-> When firmware receives this address, it will program each of the
-> Reply Descriptor Post Queue registers, as each reply queue has its
-> own register. Thus the firmware, starting from a base address it
-> determines the starting address of the subsequent reply queues
-> through some simple arithmetic calculations.
->
-> The size of this contiguous block of memory pool is directly proportional
-> to number of MSI-X vectors and the HBA queue depth. For example higher
-> MSIX vectors requires larger contiguous block of memory pool.
->
-> But some of the OS kernels are unable to allocate this larger
-> contiguous block of memory pool.
->
-> So, the proposal is to allocate memory independently for each
-> Reply Queue and pass down all of the addresses to the firmware.
-> Then the firmware will just take each address and program the value
-> into the correct register.
->
-> When HBAs with older firmware(i.e. without RDPQ capability) is used
-> with this new driver then the max_msix_vectors value would be set
-> to 8 by default.
->
-> Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c |  916 ++++++++++++++++++++---------------
->  drivers/scsi/mpt3sas/mpt3sas_base.h |   19 +-
->  2 files changed, 543 insertions(+), 392 deletions(-)
->
-...
-> +static int
-> +_base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
-> +	u32 *request, int reply_bytes, u16 *reply, int timeout, int sleep_flag)
-> +{
-> +	MPI2DefaultReply_t *default_reply = (MPI2DefaultReply_t *)reply;
-> +	int i;
-> +	u8 failed;
-> +	u16 dummy;
-> +	__le32 *mfp;
-> +
-> +	/* make sure doorbell is not in use */
-> +	if ((readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-	if (readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED) {
-I think it's equal and better looking with less parentheses, but 
-it's a personal preference so you can ignore it.
+Sreekanth,
 
-> +		pr_err(MPT3SAS_FMT "doorbell is in use (line=%d)\n",
-> +		    ioc->name, __LINE__);
-> +		return -EFAULT;
-> +	}
-> +
-> +	/* clear pending doorbell interrupts from previous state changes */
-> +	if (readl(&ioc->chip->HostInterruptStatus) &
-> +	    MPI2_HIS_IOC2SYS_DB_STATUS)
-> +		writel(0, &ioc->chip->HostInterruptStatus);
-> +
-> +	/* send message to ioc */
-> +	writel(((MPI2_FUNCTION_HANDSHAKE<<MPI2_DOORBELL_FUNCTION_SHIFT) |
-> +	    ((request_bytes/4)<<MPI2_DOORBELL_ADD_DWORDS_SHIFT)),
-> +	    &ioc->chip->Doorbell);
-> +
-> +	if ((_base_wait_for_doorbell_int(ioc, 5, NO_SLEEP))) {
+Patch was mangled and I had to apply every single hunk by hand. Please
+use git send-email.
 
-Most likely not a problem, but why NO_SLEEP and not the sleep_flag ?
++static int dma_mask;
++
++static int
++_base_wait_for_doorbell_int(struct MPT2SAS_ADAPTER *ioc, int timeout,
++                int sleep_flag);
++static int
++_base_wait_for_doorbell_ack(struct MPT2SAS_ADAPTER *ioc, int timeout,
++                int sleep_flag);
++static int
++_base_wait_for_doorbell_not_used(struct MPT2SAS_ADAPTER *ioc, int timeout,
++                 int sleep_flag);
++static int
++_base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
++    u32 *request, int reply_bytes, u16 *reply, int timeout, int sleep_flag);
++static int
++_base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag);
 
-> +		pr_err(MPT3SAS_FMT "doorbell handshake int failed (line=%d)\n",
-> +		   ioc->name, __LINE__);
-> +		return -EFAULT;
-> +	}
-> +	writel(0, &ioc->chip->HostInterruptStatus);
-> +
-> +	if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag))) {
-> +		pr_err(MPT3SAS_FMT "doorbell handshake ack failed (line=%d)\n",
-> +		    ioc->name, __LINE__);
-> +		return -EFAULT;
-> +	}
-> +
-> +	/* send message 32-bits at a time */
-> +	for (i = 0, failed = 0; i < request_bytes/4 && !failed; i++) {
-> +		writel(cpu_to_le32(request[i]), &ioc->chip->Doorbell);
-> +		if ((_base_wait_for_doorbell_ack(ioc, 5, sleep_flag)))
-> +			failed = 1;
-> +	}
-...
+Are you sure you need all these? _base_get_ioc_facts was the only one
+that needed to be declared in my original patch.
 
-@@ -2945,39 +3307,82 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
- 		ioc->name, (unsigned long long)ioc->reply_free_dma));
- 	total_sz += sz;
- 
--	/* reply post queue, 16 byte align */
--	reply_post_free_sz = ioc->reply_post_queue_depth *
--	    sizeof(Mpi2DefaultReplyDescriptor_t);
--	if (_base_is_controller_msix_enabled(ioc))
--		sz = reply_post_free_sz * ioc->reply_queue_count;
--	else
-+	if (ioc->rdpq_array_enable) {
-+		ioc->reply_post = kcalloc(ioc->reply_queue_count,
-+		sizeof(struct reply_post_struct), GFP_KERNEL);
-+		/* reply post queue, 16 byte align */
-+		reply_post_free_sz = ioc->reply_post_queue_depth *
-+		sizeof(Mpi2DefaultReplyDescriptor_t);
- 		sz = reply_post_free_sz;
--	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
--	    ioc->pdev, sz, 16, 0);
--	if (!ioc->reply_post_free_dma_pool) {
--		pr_err(MPT3SAS_FMT
--			"reply_post_free pool: pci_pool_create failed\n",
--			ioc->name);
--		goto out;
--	}
--	ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
--	    GFP_KERNEL, &ioc->reply_post_free_dma);
--	if (!ioc->reply_post_free) {
--		pr_err(MPT3SAS_FMT
--			"reply_post_free pool: pci_pool_alloc failed\n",
--			ioc->name);
--		goto out;
-+		ioc->reply_post_free_dma_pool =
-+			pci_pool_create("reply_post_free pool", ioc->pdev, sz,
-+			16, 2147483648);
++    if (ioc->rdpq_array_enable)
++        sz = reply_post_free_sz;
++    else {
++        if (_base_is_controller_msix_enabled(ioc))
++            sz = reply_post_free_sz * ioc->reply_queue_count;
++        else
++            sz = reply_post_free_sz;
++    }
 
-Few lines below with older firmware you don't need this rather
-high boundary of 2^31, why is it needed here?
+sz = reply_post_free_sz;
+if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
+   sz *= ioc->reply_queue_count;
 
-Besides that, checkpatch shows 11 warnings and some of them might be functional - 
-"WARNING: msleep < 20ms can sleep for up to 20ms; see Documentation/timers/timers"
-please clean your patch next time.
++    ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
++        (ioc->reply_queue_count):1,
++        sizeof(struct reply_post_struct), GFP_KERNEL);
 
-Cheers,
-Tomas
+You're special casing the !rdpq code path again. Why don't you just make
+sure reply_queue_count is always correct?
+
++    do {
++        ioc->reply_post[i].reply_post_free =
++            pci_pool_alloc(ioc->reply_post_free_dma_pool,
++            GFP_KERNEL,
++            &ioc->reply_post[i].reply_post_free_dma);
++        if (!ioc->reply_post[i].reply_post_free) {
++            printk(MPT2SAS_ERR_FMT
++            "reply_post_free pool: pci_pool_alloc failed\n",
++            ioc->name);
++            goto out;
++        }
++        memset(ioc->reply_post[i].reply_post_free, 0, sz);
++        dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
++            "reply post free pool (0x%p): depth(%d),"
++            "element_size(%d), pool_size(%d kB)\n", ioc->name,
++            ioc->reply_post[i].reply_post_free,
++            ioc->reply_post_queue_depth, 8, sz/1024));
++        dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
++            "reply_post_free_dma = (0x%llx)\n", ioc->name,
++            (unsigned long long)
++            ioc->reply_post[i].reply_post_free_dma));
++        total_sz += sz;
++    } while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
+
+Same thing. I think:
+
+     for (i = 0; i < ioc->reply_queue_count ; i++) {
+
+was much clearer.
+
+If reply_queue_count is ever inconsistent wrt. ioc->rdpq_array_enable
+and _base_is_controller_msix_enabled(ioc) then that's an orthogonal
+problem that you should address directly instead of working around it
+several places in the code.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
