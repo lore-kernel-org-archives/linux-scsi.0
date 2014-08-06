@@ -1,62 +1,31 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 1/1] dpt_i2o: delete unnecessary null test on array
-Date: Wed,  6 Aug 2014 12:39:11 +0200
-Message-ID: <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>
-References: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: [PATCH 1/3] libsas: modify SATA error handler
+Date: Wed, 6 Aug 2014 03:50:07 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D5944CE8C71@SC-VEXCH4.marvell.com>
+References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
+	<CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
+	<F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
+ <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-
-Delete NULL test on array (always false).
-
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-type T;
-T [] e;
-position p;
-@@
-e ==@p NULL
-
-@ disable fld_to_ptr@
-expression e;
-identifier f;
-position r.p;
-@@
-* e.f ==@p NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-I don't know if this is the correct change, or if some other test was
-intended.  But the code has been this way since at least 2.4.20, so it
-would seem that no one has been bothered by the lack of whatever this was
-supposed to test for.
-
- drivers/scsi/dpt_i2o.c |    5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 67283ef..62e276b 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1169,11 +1169,6 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
- 	if(chan < 0 || chan >= MAX_CHANNEL)
- 		return NULL;
- 	
--	if( pHba->channel[chan].device == NULL){
--		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
--		return NULL;
--	}
--
- 	d = pHba->channel[chan].device[id];
- 	if(!d || d->tid == 0) {
- 		return NULL;
+SGksIERhbiAmIEphbWVzDQpIb3cgYWJvdXQgdGhlIHBhdGNoZXMgYWJvdXQgc3VwcG9ydCBmb3Ig
+UE0/IA0KVHdvIG1vbnRocyBoYWQgcGFzc2VkIHNpbmNlIEkgc3VibWl0dGVkIHRoZSBwYXRjaGVz
+Lg0KVGhhbmtzIQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBEYW4gV2ls
+bGlhbXMgW21haWx0bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dIA0KU2VudDogMjAxNOW5tDbm
+nIg05pelIDA6MDUNClRvOiBYaWFuZ2xpYW5nIFl1DQpDYzogdGpAa2VybmVsLm9yZzsgSkJvdHRv
+bWxleUBwYXJhbGxlbHMuY29tOyB0b2RkLmUuYnJhbmR0QGludGVsLmNvbTsgbHVrYXN6LmRvcmF1
+QGludGVsLmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFU
+Q0ggMS8zXSBsaWJzYXM6IG1vZGlmeSBTQVRBIGVycm9yIGhhbmRsZXINCg0KT24gVHVlLCBKdW4g
+MywgMjAxNCBhdCAxMjoxMyBBTSwgWGlhbmdsaWFuZyBZdSA8eXV4aWFuZ2xAbWFydmVsbC5jb20+
+IHdyb3RlOg0KPiBIaSwNCj4NCj4gSG93IGFib3V0IHRoZSBwYXRjaD8NCj4NCg0KSSdsbCB0YWtl
+IGEgbG9vayB0b2RheS4gIFNvcnJ5IGZvciB0aGUgbGF0ZW5jeS4NCg==
