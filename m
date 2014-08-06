@@ -1,55 +1,234 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] [SCSI] Make scsi_transfer_length take a scsi_data_buffer
- argument
-Date: Wed, 06 Aug 2014 16:09:14 +0300
-Message-ID: <53E228FA.6060901@dev.mellanox.co.il>
-References: <20140713113715.GA26031@infradead.org> <1406318419-7273-1-git-send-email-martin.petersen@oracle.com> <53E21BA7.5000703@dev.mellanox.co.il>
+Subject: Re: [PATCH 02/14] block: Replace bi_integrity with bi_special
+Date: Wed, 06 Aug 2014 16:15:04 +0300
+Message-ID: <53E22A58.3040009@dev.mellanox.co.il>
+References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com> <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:40485 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbaHFNJR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 09:09:17 -0400
-Received: by mail-wi0-f171.google.com with SMTP id hi2so8884027wib.10
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Aug 2014 06:09:16 -0700 (PDT)
-In-Reply-To: <53E21BA7.5000703@dev.mellanox.co.il>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:36406 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753233AbaHFNPH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 09:15:07 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hi2so3225457wib.11
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Aug 2014 06:15:06 -0700 (PDT)
+In-Reply-To: <1406320469-29352-3-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@infradead.org>
 
-On 8/6/2014 3:12 PM, Sagi Grimberg wrote:
-
-<SNIP>
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index f2db82beb646..fdea8c1527d4 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -391,7 +391,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct
->> iscsi_task *task)
->>       if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
->>           task->protected = true;
->>
->> -    transfer_length = scsi_transfer_length(sc);
->> +    transfer_length = scsi_transfer_length(sc, scsi_out(sc));
+On 7/25/2014 11:34 PM, Martin K. Petersen wrote:
+> For commands like REQ_COPY we need a way to pass extra information along
+> with each bio. Like integrity metadata this information must be
+> available at the bottom of the stack so bi_private does not suffice.
 >
-> If we go down this road we should return to the in_len/out_len
-> approach that was used before since taking scsi_out(sc) doesn't make
-> sense for READs (although it would work).
+> Rename the existing bi_integrity field to bi_special and make it a union
+> so we can have different bio extensions for each class of command.
 >
+> We previously used bi_integrity != NULL as a way to identify whether a
+> bio had integrity metadata or not. Introduce a REQ_INTEGRITY to be the
+> indicator now that bi_special can contain different things.
+>
+> In addition, bio_integrity(bio) will now return a pointer to the
+> integrity payload (when applicable).
+>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>   Documentation/block/data-integrity.txt | 10 +++++-----
+>   block/bio-integrity.c                  | 19 ++++++++++---------
+>   drivers/scsi/sd_dif.c                  |  8 ++++----
+>   include/linux/bio.h                    | 11 +++++++++--
+>   include/linux/blk_types.h              |  8 ++++++--
+>   include/linux/blkdev.h                 |  7 ++-----
+>   6 files changed, 36 insertions(+), 27 deletions(-)
+>
+> diff --git a/Documentation/block/data-integrity.txt b/Documentation/block/data-integrity.txt
+> index b4eacf48053c..4d4de8b09530 100644
+> --- a/Documentation/block/data-integrity.txt
+> +++ b/Documentation/block/data-integrity.txt
+> @@ -129,11 +129,11 @@ interface for this is being worked on.
+>   4.1 BIO
+>
+>   The data integrity patches add a new field to struct bio when
+> -CONFIG_BLK_DEV_INTEGRITY is enabled.  bio->bi_integrity is a pointer
+> -to a struct bip which contains the bio integrity payload.  Essentially
+> -a bip is a trimmed down struct bio which holds a bio_vec containing
+> -the integrity metadata and the required housekeeping information (bvec
+> -pool, vector count, etc.)
+> +CONFIG_BLK_DEV_INTEGRITY is enabled.  bio_integrity(bio) returns a
+> +pointer to a struct bip which contains the bio integrity payload.
+> +Essentially a bip is a trimmed down struct bio which holds a bio_vec
+> +containing the integrity metadata and the required housekeeping
+> +information (bvec pool, vector count, etc.)
+>
+>   A kernel subsystem can enable data integrity protection on a bio by
+>   calling bio_integrity_alloc(bio).  This will allocate and attach the
+> diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+> index 6818c251e937..78d8312a6528 100644
+> --- a/block/bio-integrity.c
+> +++ b/block/bio-integrity.c
+> @@ -77,6 +77,7 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
+>   	bip->bip_slab = idx;
+>   	bip->bip_bio = bio;
+>   	bio->bi_integrity = bip;
+> +	bio->bi_rw |= REQ_INTEGRITY;
+>
+>   	return bip;
+>   err:
+> @@ -94,7 +95,7 @@ EXPORT_SYMBOL(bio_integrity_alloc);
+>    */
+>   void bio_integrity_free(struct bio *bio)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>   	struct bio_set *bs = bio->bi_pool;
+>
+>   	if (bip->bip_owns_buf)
+> @@ -134,7 +135,7 @@ static inline unsigned int bip_integrity_vecs(struct bio_integrity_payload *bip)
+>   int bio_integrity_add_page(struct bio *bio, struct page *page,
+>   			   unsigned int len, unsigned int offset)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>   	struct bio_vec *iv;
+>
+>   	if (bip->bip_vcnt >= bip_integrity_vecs(bip)) {
+> @@ -235,7 +236,7 @@ EXPORT_SYMBOL(bio_integrity_tag_size);
+>   static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
+>   			     int set)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>   	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+>   	unsigned int nr_sectors;
+>
+> @@ -310,12 +311,12 @@ static int bio_integrity_generate_verify(struct bio *bio, int operate)
+>   	struct bio_vec *bv;
+>   	sector_t sector;
+>   	unsigned int sectors, ret = 0, i;
+> -	void *prot_buf = bio->bi_integrity->bip_buf;
+> +	void *prot_buf = bio_integrity(bio)->bip_buf;
+>
+>   	if (operate)
+>   		sector = bio->bi_iter.bi_sector;
+>   	else
+> -		sector = bio->bi_integrity->bip_iter.bi_sector;
+> +		sector = bio_integrity(bio)->bip_iter.bi_sector;
+>
+>   	bix.disk_name = bio->bi_bdev->bd_disk->disk_name;
+>   	bix.sector_size = bi->sector_size;
+> @@ -511,7 +512,7 @@ static void bio_integrity_verify_fn(struct work_struct *work)
+>    */
+>   void bio_integrity_endio(struct bio *bio, int error)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>
+>   	BUG_ON(bip->bip_bio != bio);
+>
+> @@ -542,7 +543,7 @@ EXPORT_SYMBOL(bio_integrity_endio);
+>    */
+>   void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>   	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+>   	unsigned bytes = bio_integrity_bytes(bi, bytes_done >> 9);
+>
+> @@ -564,7 +565,7 @@ EXPORT_SYMBOL(bio_integrity_advance);
+>   void bio_integrity_trim(struct bio *bio, unsigned int offset,
+>   			unsigned int sectors)
+>   {
+> -	struct bio_integrity_payload *bip = bio->bi_integrity;
+> +	struct bio_integrity_payload *bip = bio_integrity(bio);
+>   	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
+>
+>   	bio_integrity_advance(bio, offset << 9);
+> @@ -583,7 +584,7 @@ EXPORT_SYMBOL(bio_integrity_trim);
+>   int bio_integrity_clone(struct bio *bio, struct bio *bio_src,
+>   			gfp_t gfp_mask)
+>   {
+> -	struct bio_integrity_payload *bip_src = bio_src->bi_integrity;
+> +	struct bio_integrity_payload *bip_src = bio_integrity(bio_src);
+>   	struct bio_integrity_payload *bip;
+>
+>   	BUG_ON(bip_src == NULL);
+> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+> index a7a691d0af7d..29f0477a8708 100644
+> --- a/drivers/scsi/sd_dif.c
+> +++ b/drivers/scsi/sd_dif.c
+> @@ -383,9 +383,9 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+>   		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
+>   			break;
+>
+> -		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
+> +		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
+>
+> -		bip_for_each_vec(iv, bio->bi_integrity, iter) {
+> +		bip_for_each_vec(iv, bio_integrity(bio), iter) {
+>   			sdt = kmap_atomic(iv.bv_page)
+>   				+ iv.bv_offset;
+>
+> @@ -434,9 +434,9 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+>   		struct bio_vec iv;
+>   		struct bvec_iter iter;
+>
+> -		virt = bio->bi_integrity->bip_iter.bi_sector & 0xffffffff;
+> +		virt = bio_integrity(bio)->bip_iter.bi_sector & 0xffffffff;
+>
+> -		bip_for_each_vec(iv, bio->bi_integrity, iter) {
+> +		bip_for_each_vec(iv, bio_integrity(bio), iter) {
+>   			sdt = kmap_atomic(iv.bv_page)
+>   				+ iv.bv_offset;
+>
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index f11dd9efd3d9..1c608a0cbd8e 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -293,6 +293,15 @@ static inline unsigned bio_segments(struct bio *bio)
+>   #define bio_get(bio)	atomic_inc(&(bio)->bi_cnt)
+>
+>   #if defined(CONFIG_BLK_DEV_INTEGRITY)
+> +
+> +static inline struct bio_integrity_payload *bio_integrity(struct bio *bio)
+> +{
+> +	if (bio->bi_rw & REQ_INTEGRITY)
+> +		return bio->bi_integrity;
+> +
+> +	return NULL;
+> +}
+> +
+>   /*
+>    * bio integrity payload
+>    */
+> @@ -660,8 +669,6 @@ struct biovec_slab {
+>   	for_each_bio(_bio)						\
+>   		bip_for_each_vec(_bvl, _bio->bi_integrity, _iter)
+>
+> -#define bio_integrity(bio) (bio->bi_integrity != NULL)
+> -
+>   extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, unsigned int);
+>   extern void bio_integrity_free(struct bio *);
+>   extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index 66c2167f04a9..0b7084f7c136 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -78,9 +78,11 @@ struct bio {
+>   	struct io_context	*bi_ioc;
+>   	struct cgroup_subsys_state *bi_css;
+>   #endif
+> +	union {
+>   #if defined(CONFIG_BLK_DEV_INTEGRITY)
+> -	struct bio_integrity_payload *bi_integrity;  /* data integrity */
+> +		struct bio_integrity_payload *bi_integrity; /* data integrity */
+>   #endif
+> +	};
 
-On second thought, since the transfer length is always the
-command scsi data buffer length, why not keep it as is and
-if at any point in the future DIF will co-exist with bidi,
-we can add scsi_bidi_transfer_length which will calculate
-the bidi in length.
+So I take it that we settled on a nameless union...
 
-In this case, an iSCSI bidi transaction will do:
-hdr->data_length = scsi_transfer_legnth(sg);
-rlen_ahdr->read_length = scsi_bidi_transfer_length(sc);
-
-
+Looks good to me.
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
 
 Sagi.
