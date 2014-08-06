@@ -1,80 +1,46 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: Re: [PATCH] drivers: message: fusion: Simplify rounding
-Date: Wed, 06 Aug 2014 11:11:30 +0200
-Message-ID: <87y4v29e4d.fsf@rasmusvillemoes.dk>
-References: <1404219380-2712-1-git-send-email-linux@rasmusvillemoes.dk>
-	<alpine.DEB.2.02.1407031300280.9641@jlaw-desktop.mno.stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 0/1] delete unnecessary null test on array
+Date: Wed,  6 Aug 2014 12:39:10 +0200
+Message-ID: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1407031300280.9641@jlaw-desktop.mno.stratus.com>
-	(Joe Lawrence's message of "Thu, 3 Jul 2014 13:49:29 -0400")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Joe Lawrence <joe.lawrence@stratus.com> writes:
+Delete NULL test on array.  The complete semantic patch that finds this
+problem is as follows: (http://coccinelle.lip6.fr/)
 
-> On Tue, 1 Jul 2014, Rasmus Villemoes wrote:
->
->> Rounding up to a multiple of 4 should be done using the ALIGN
->> macro. As a bonus, this also makes the generated code smaller.
->> 
->> In GetIocFacts(), sz is assigned to a few lines below without being
->> read in the meantime, so it is ok that it doesn't end up with the same
->> value as facts->FWImageSize.
->> 
->> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
->> ---
->>  drivers/message/fusion/mptbase.c | 7 +------
->>  drivers/message/fusion/mptctl.c  | 7 +------
->>  2 files changed, 2 insertions(+), 12 deletions(-)
->> 
->> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
->> index ebc0af7..10b16a1 100644
->> --- a/drivers/message/fusion/mptbase.c
->> +++ b/drivers/message/fusion/mptbase.c
->> @@ -3175,12 +3175,7 @@ GetIocFacts(MPT_ADAPTER *ioc, int sleepFlag, int reason)
->>  			facts->FWImageSize = le32_to_cpu(facts->FWImageSize);
->>  		}
->>  
->> -		sz = facts->FWImageSize;
->> -		if ( sz & 0x01 )
->> -			sz += 1;
->> -		if ( sz & 0x02 )
->> -			sz += 2;
->> -		facts->FWImageSize = sz;
->> +		facts->FWImageSize = ALIGN(facts->FWImageSize, 4);
->>  
->>  		if (!facts->RequestFrameSize) {
->>  			/*  Something is wrong!  */
->> diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
->> index 8a050e8..1004392 100644
->> --- a/drivers/message/fusion/mptctl.c
->> +++ b/drivers/message/fusion/mptctl.c
->> @@ -1749,12 +1749,7 @@ mptctl_replace_fw (unsigned long arg)
->>  
->>  	/* Allocate memory for the new FW image
->>  	 */
->> -	newFwSize = karg.newImageSize;
->> -
->> -	if (newFwSize & 0x01)
->> -		newFwSize += 1;
->> -	if (newFwSize & 0x02)
->> -		newFwSize += 2;
->> +	newFwSize = ALIGN(karg.newImageSize, 4);
->>  
->>  	mpt_alloc_fw_memory(ioc, newFwSize);
->>  	if (ioc->cached_fw == NULL)
->
-> ALIGN is certainly more readable to me.
->
-> Reviewed-by: Joe Lawrence <joe.lawrence@stratus.com>
->
-> -- Joe
+// <smpl>
+@r@
+type T;
+T [] e;
+position p;
+@@
 
-Did anyone pick this up?
+(
+ e ==@p NULL
+|
+ e !=@p NULL
+|
+ !@p e
+)
 
-Thanks,
-Rasmus
+@ disable fld_to_ptr@
+expression e;
+identifier f;
+position r.p;
+@@
+
+(
+* (e.f) ==@p NULL
+|
+* (e.f) !=@p NULL
+|
+* !@p(e.f)
+)
+// </smpl>
+
+For best results, this semantic patch requires lots of type information,
+and should be used with the options --recursive-includes and
+--relax-include-path.  This may take a long time to run.
