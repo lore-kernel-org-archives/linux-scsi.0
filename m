@@ -1,31 +1,75 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 1/3] libsas: modify SATA error handler
-Date: Wed, 6 Aug 2014 03:50:07 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D5944CE8C71@SC-VEXCH4.marvell.com>
-References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
-	<CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
- <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH] [SCSI] Make scsi_transfer_length take a scsi_data_buffer
+ argument
+Date: Wed, 06 Aug 2014 15:12:23 +0300
+Message-ID: <53E21BA7.5000703@dev.mellanox.co.il>
+References: <20140713113715.GA26031@infradead.org> <1406318419-7273-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:47375 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbaHFMM0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 08:12:26 -0400
+Received: by mail-we0-f173.google.com with SMTP id q58so2603626wes.4
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Aug 2014 05:12:25 -0700 (PDT)
+In-Reply-To: <1406318419-7273-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@infradead.org>
 
-SGksIERhbiAmIEphbWVzDQpIb3cgYWJvdXQgdGhlIHBhdGNoZXMgYWJvdXQgc3VwcG9ydCBmb3Ig
-UE0/IA0KVHdvIG1vbnRocyBoYWQgcGFzc2VkIHNpbmNlIEkgc3VibWl0dGVkIHRoZSBwYXRjaGVz
-Lg0KVGhhbmtzIQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBEYW4gV2ls
-bGlhbXMgW21haWx0bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dIA0KU2VudDogMjAxNOW5tDbm
-nIg05pelIDA6MDUNClRvOiBYaWFuZ2xpYW5nIFl1DQpDYzogdGpAa2VybmVsLm9yZzsgSkJvdHRv
-bWxleUBwYXJhbGxlbHMuY29tOyB0b2RkLmUuYnJhbmR0QGludGVsLmNvbTsgbHVrYXN6LmRvcmF1
-QGludGVsLmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIu
-a2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFU
-Q0ggMS8zXSBsaWJzYXM6IG1vZGlmeSBTQVRBIGVycm9yIGhhbmRsZXINCg0KT24gVHVlLCBKdW4g
-MywgMjAxNCBhdCAxMjoxMyBBTSwgWGlhbmdsaWFuZyBZdSA8eXV4aWFuZ2xAbWFydmVsbC5jb20+
-IHdyb3RlOg0KPiBIaSwNCj4NCj4gSG93IGFib3V0IHRoZSBwYXRjaD8NCj4NCg0KSSdsbCB0YWtl
-IGEgbG9vayB0b2RheS4gIFNvcnJ5IGZvciB0aGUgbGF0ZW5jeS4NCg==
+On 7/25/2014 11:00 PM, Martin K. Petersen wrote:
+> For bidirectional commands we need to be able to distinguish between the
+> in and out scsi_data_buffers when calculating the wire transfer length.
+> Make scsi_transfer_length() take a scsi_data_buffer argument so the
+> caller can choose which I/O direction the calculation should apply to.
+>
+
+Hey Martin, Christoph,
+
+Sorry for the late response, I was on vacation.
+Some comments below.
+
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Sagi Grimberg <sagig@mellanox.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> ---
+>   drivers/scsi/libiscsi.c            | 2 +-
+>   drivers/target/loopback/tcm_loop.c | 2 +-
+>   include/scsi/scsi_cmnd.h           | 5 +++--
+>   3 files changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index f2db82beb646..fdea8c1527d4 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -391,7 +391,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+>   	if (scsi_get_prot_op(sc) != SCSI_PROT_NORMAL)
+>   		task->protected = true;
+>
+> -	transfer_length = scsi_transfer_length(sc);
+> +	transfer_length = scsi_transfer_length(sc, scsi_out(sc));
+
+If we go down this road we should return to the in_len/out_len
+approach that was used before since taking scsi_out(sc) doesn't make
+sense for READs (although it would work).
+
+>   	hdr->data_length = cpu_to_be32(transfer_length);
+>   	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+>   		struct iscsi_r2t_info *r2t = &task->unsol_r2t;
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index 340de9d92b15..c50453df555a 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -213,7 +213,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
+>
+>   	}
+>
+> -	transfer_length = scsi_transfer_length(sc);
+> +	transfer_length = scsi_transfer_length(sc, scsi_out(sc));
+
+Again, this will work but it implies out direction.
+
+Sagi.
