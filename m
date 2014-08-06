@@ -1,44 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] bnx2fc: Set no_async_abort to 1 in SCSI host template.
-Date: Wed, 6 Aug 2014 21:17:15 +0200
-Message-ID: <20140806191715.GB2642@lst.de>
-References: <1407267953-26618-1-git-send-email-chad.dupuis@qlogic.com> <CAHdzE-8o94d4d-tJ2j3iUbR7oCO9QYioAqbtRLbGKonR5UK9ZQ@mail.gmail.com> <alpine.OSX.2.00.1408051656410.2178@administrators-macbook-pro.local>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
+ and there's not way to prevent the kernel from using the 2nd cdb byte for
+ the LUN
+Date: Wed, 6 Aug 2014 12:32:33 -0700
+Message-ID: <20140806193233.GA11451@infradead.org>
+References: <bug-80711-11613@https.bugzilla.kernel.org/>
+ <bug-80711-11613-Y5RedyvzAB@https.bugzilla.kernel.org/>
+ <53E22DCB.2070407@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33679 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756249AbaHFTRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Aug 2014 15:17:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:54111 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932357AbaHFTch (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 15:32:37 -0400
 Content-Disposition: inline
-In-Reply-To: <alpine.OSX.2.00.1408051656410.2178@administrators-macbook-pro.local>
+In-Reply-To: <53E22DCB.2070407@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Venkatesh Srinivas <venkateshs@google.com>, linux-scsi@vger.kernel.org, hch@lst.de, giridhar.malavali@qlogic.com
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Tue, Aug 05, 2014 at 05:02:46PM -0400, Chad Dupuis wrote:
->
->
-> On Tue, 5 Aug 2014, Venkatesh Srinivas wrote:
->
->> On Tue, Aug 5, 2014 at 12:45 PM, Chad Dupuis <chad.dupuis@qlogic.com> wrote:
->>> Set this to 1 for now as we've observed crashes when this is set to the default
->>> value of 0.
->>
->> What sorts of crashes have you seen with no_async_abort=0 (default)?
->> At which kernel versions?
->
-> We've seen a crash where we use a request that has already been used else 
-> where when requeuing a SCSI command:
+On Wed, Aug 06, 2014 at 03:29:47PM +0200, Douglas Gilbert wrote:
+> If not and since I'm told black lists and the like won't
+> work, my advice for the record is to use FreeBSD or Windows
+> for tools that need this capability.
 
-What kernel version is this one?  The last issues we saw in this area
-were before we pulled fixes for these scenarios in:
+I doubt either of them forces users to hack up flags for these cases.
 
-d555a2abf3481f81303d835046a5ec2c4fb3ca8e
-644373a4219add42123df69c8b7ce6a918475ccd
-7daf480483e60898f30e0a2a84fecada7a7cfac0
-c69e6f812bab0d5442b40e2f1bfbca48d40bc50b
-8922a908908ff947f1f211e07e2e97f1169ad3cb
-a33c070bced8b283e22e8dbae35177a033b810bf
+At least for windows I suspect it just never sends the LUN encoded
+in the CDB and treats USB devices special instead of our insistance
+on pretending they are SCSI-2.
+
+Maybe some of the USB people have on the wire traces or access to
+device or windows documentation on this?
 
