@@ -1,36 +1,68 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 05/14] block: Deprecate the use of the term sector in
- the context of block integrity
-Date: Wed, 06 Aug 2014 16:32:14 +0300
-Message-ID: <53E22E5E.3060107@dev.mellanox.co.il>
-References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com> <1406320469-29352-6-git-send-email-martin.petersen@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented and
+ there's not way to prevent the kernel from using the 2nd cdb byte for the LUN
+Date: Wed, 06 Aug 2014 13:37:03 +0000
+Message-ID: <bug-80711-11613-StYrFquorR@https.bugzilla.kernel.org/>
+References: <bug-80711-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:33556 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbaHFNcS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 09:32:18 -0400
-Received: by mail-wg0-f42.google.com with SMTP id l18so2612891wgh.13
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Aug 2014 06:32:17 -0700 (PDT)
-In-Reply-To: <1406320469-29352-6-git-send-email-martin.petersen@oracle.com>
+Received: from mail.kernel.org ([198.145.19.201]:56216 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750901AbaHFNhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Aug 2014 09:37:08 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 63E9720160
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Aug 2014 13:37:07 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4A30420138
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Aug 2014 13:37:05 +0000 (UTC)
+In-Reply-To: <bug-80711-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 7/25/2014 11:34 PM, Martin K. Petersen wrote:
-> The protection interval is not necessarily tied to the logical block
-> size of a block device. Stop using the terms "sector" and "sectors".
+https://bugzilla.kernel.org/show_bug.cgi?id=80711
+
+--- Comment #4 from d gilbert <dgilbert@interlog.com> ---
+On 14-07-29 05:57 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=80711
 >
-> Going forward we will use the term "seed" to describe the initial
-> reference tag value for a given I/O. "Interval" will be used to describe
-> the portion of the data buffer that a given piece of protection
-> information is associated with.
+> Alan <alan@lxorguk.ukuu.org.uk> changed:
 >
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+>             What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                   CC|                            |alan@lxorguk.ukuu.org.uk
+>              Summary|SG_FLAG_LUN_INHIBIT is no   |[PATCH]SG_FLAG_LUN_INHIBIT
+>                     |longer implemented and      |is no longer implemented
+>                     |there's not way to prevent  |and there's not way to
+>                     |the kernel from using the   |prevent the kernel from
+>                     |2nd cdb byte for the LUN    |using the 2nd cdb byte for
+>                     |                            |the LUN
+>
+> --- Comment #3 from Alan <alan@lxorguk.ukuu.org.uk> ---
+> Patches need to go to the mailing list and/or maintainers. See
+> Documentation/SubmittingPatches.
 
-Looks good to me,
+In my original rework of the sg driver (1998) it did what
+was being requested in this patch. Then around 10 years ago
+changes were added to the SCSI subsystem to strip this
+capability from the sg driver. Since then about 5 attempts (my
+guess) have been made to re-instate this capability, this
+being the most recent.
 
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+The use case is almost always the same: specialized USB
+storage devices. USB is not going away. Does anyone see
+a change in "company" policy in this regard?
 
+
+If not and since I'm told black lists and the like won't
+work, my advice for the record is to use FreeBSD or Windows
+for tools that need this capability.
+
+Doug Gilbert
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
