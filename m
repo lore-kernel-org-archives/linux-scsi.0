@@ -1,378 +1,95 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 03/14] block: Remove integrity tagging functions
-Date: Wed, 06 Aug 2014 16:16:58 +0300
-Message-ID: <53E22ACA.9000500@dev.mellanox.co.il>
-References: <1406320469-29352-1-git-send-email-martin.petersen@oracle.com> <1406320469-29352-4-git-send-email-martin.petersen@oracle.com>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: Re: [PATCH v2 2/3] libiscsi, iser: Adjust data_length to include
+ protection information
+Date: Wed, 06 Aug 2014 16:25:58 +0300
+Message-ID: <53E22CE6.9070202@gmail.com>
+References: <1402477799-24610-1-git-send-email-sagig@mellanox.com> <1402477799-24610-3-git-send-email-sagig@mellanox.com> <53D4CFAB.3040804@gmail.com> <53E22300.3090907@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:47724 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaHFNRD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Aug 2014 09:17:03 -0400
-Received: by mail-wi0-f169.google.com with SMTP id n3so9497606wiv.4
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Aug 2014 06:17:01 -0700 (PDT)
-In-Reply-To: <1406320469-29352-4-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <53E22300.3090907@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Sagi Grimberg <sagig@mellanox.com>, michaelc@cs.wisc.edu, martin.petersen@oracle.com, nab@linux-iscsi.org, roland@kernel.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-rdma@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On 7/25/2014 11:34 PM, Martin K. Petersen wrote:
-> None of the filesystems appear interested in using the integrity tagging
-> feature. Potentially because very few storage devices actually permit
-> using the application tag space.
->
-> Remove the tagging functions.
->
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->   Documentation/block/data-integrity.txt | 34 ------------
->   block/bio-integrity.c                  | 94 +---------------------------------
->   block/blk-integrity.c                  |  2 -
->   drivers/scsi/sd_dif.c                  | 65 -----------------------
->   include/linux/bio.h                    |  3 --
->   include/linux/blkdev.h                 |  4 --
->   6 files changed, 1 insertion(+), 201 deletions(-)
->
-> diff --git a/Documentation/block/data-integrity.txt b/Documentation/block/data-integrity.txt
-> index 4d4de8b09530..f56ec97f0d14 100644
-> --- a/Documentation/block/data-integrity.txt
-> +++ b/Documentation/block/data-integrity.txt
-> @@ -206,36 +206,6 @@ will require extra work due to the application tag.
->         bio_integrity_enabled() returned 1.
->
->
-> -    int bio_integrity_tag_size(bio);
-> -
-> -      If the filesystem wants to use the application tag space it will
-> -      first have to find out how much storage space is available.
-> -      Because tag space is generally limited (usually 2 bytes per
-> -      sector regardless of sector size), the integrity framework
-> -      supports interleaving the information between the sectors in an
-> -      I/O.
-> -
-> -      Filesystems can call bio_integrity_tag_size(bio) to find out how
-> -      many bytes of storage are available for that particular bio.
-> -
-> -      Another option is bdev_get_tag_size(block_device) which will
-> -      return the number of available bytes per hardware sector.
-> -
-> -
-> -    int bio_integrity_set_tag(bio, void *tag_buf, len);
-> -
-> -      After a successful return from bio_integrity_prep(),
-> -      bio_integrity_set_tag() can be used to attach an opaque tag
-> -      buffer to a bio.  Obviously this only makes sense if the I/O is
-> -      a WRITE.
-> -
-> -
-> -    int bio_integrity_get_tag(bio, void *tag_buf, len);
-> -
-> -      Similarly, at READ I/O completion time the filesystem can
-> -      retrieve the tag buffer using bio_integrity_get_tag().
-> -
-> -
->   5.3 PASSING EXISTING INTEGRITY METADATA
->
->       Filesystems that either generate their own integrity metadata or
-> @@ -288,8 +258,6 @@ will require extra work due to the application tag.
->               .name                   = "STANDARDSBODY-TYPE-VARIANT-CSUM",
->               .generate_fn            = my_generate_fn,
->          	    .verify_fn              = my_verify_fn,
-> -       	    .get_tag_fn             = my_get_tag_fn,
-> -       	    .set_tag_fn             = my_set_tag_fn,
->   	    .tuple_size             = sizeof(struct my_tuple_size),
->   	    .tag_size               = <tag bytes per hw sector>,
->           };
-> @@ -311,7 +279,5 @@ will require extra work due to the application tag.
->         are available per hardware sector.  For DIF this is either 2 or
->         0 depending on the value of the Control Mode Page ATO bit.
->
-> -      See 6.2 for a description of get_tag_fn and set_tag_fn.
-> -
->   ----------------------------------------------------------------------
->   2007-12-24 Martin K. Petersen <martin.petersen@oracle.com>
-> diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-> index 78d8312a6528..2c4bbc0aaa93 100644
-> --- a/block/bio-integrity.c
-> +++ b/block/bio-integrity.c
-> @@ -216,90 +216,6 @@ static inline unsigned int bio_integrity_bytes(struct blk_integrity *bi,
->   }
->
->   /**
-> - * bio_integrity_tag_size - Retrieve integrity tag space
-> - * @bio:	bio to inspect
-> - *
-> - * Description: Returns the maximum number of tag bytes that can be
-> - * attached to this bio. Filesystems can use this to determine how
-> - * much metadata to attach to an I/O.
-> - */
-> -unsigned int bio_integrity_tag_size(struct bio *bio)
-> -{
-> -	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-> -
-> -	BUG_ON(bio->bi_iter.bi_size == 0);
-> -
-> -	return bi->tag_size * (bio->bi_iter.bi_size / bi->sector_size);
-> -}
-> -EXPORT_SYMBOL(bio_integrity_tag_size);
-> -
-> -static int bio_integrity_tag(struct bio *bio, void *tag_buf, unsigned int len,
-> -			     int set)
-> -{
-> -	struct bio_integrity_payload *bip = bio_integrity(bio);
-> -	struct blk_integrity *bi = bdev_get_integrity(bio->bi_bdev);
-> -	unsigned int nr_sectors;
-> -
-> -	BUG_ON(bip->bip_buf == NULL);
-> -
-> -	if (bi->tag_size == 0)
-> -		return -1;
-> -
-> -	nr_sectors = bio_integrity_hw_sectors(bi,
-> -					DIV_ROUND_UP(len, bi->tag_size));
-> -
-> -	if (nr_sectors * bi->tuple_size > bip->bip_iter.bi_size) {
-> -		printk(KERN_ERR "%s: tag too big for bio: %u > %u\n", __func__,
-> -		       nr_sectors * bi->tuple_size, bip->bip_iter.bi_size);
-> -		return -1;
-> -	}
-> -
-> -	if (set)
-> -		bi->set_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-> -	else
-> -		bi->get_tag_fn(bip->bip_buf, tag_buf, nr_sectors);
-> -
-> -	return 0;
-> -}
-> -
-> -/**
-> - * bio_integrity_set_tag - Attach a tag buffer to a bio
-> - * @bio:	bio to attach buffer to
-> - * @tag_buf:	Pointer to a buffer containing tag data
-> - * @len:	Length of the included buffer
-> - *
-> - * Description: Use this function to tag a bio by leveraging the extra
-> - * space provided by devices formatted with integrity protection.  The
-> - * size of the integrity buffer must be <= to the size reported by
-> - * bio_integrity_tag_size().
-> - */
-> -int bio_integrity_set_tag(struct bio *bio, void *tag_buf, unsigned int len)
-> -{
-> -	BUG_ON(bio_data_dir(bio) != WRITE);
-> -
-> -	return bio_integrity_tag(bio, tag_buf, len, 1);
-> -}
-> -EXPORT_SYMBOL(bio_integrity_set_tag);
-> -
-> -/**
-> - * bio_integrity_get_tag - Retrieve a tag buffer from a bio
-> - * @bio:	bio to retrieve buffer from
-> - * @tag_buf:	Pointer to a buffer for the tag data
-> - * @len:	Length of the target buffer
-> - *
-> - * Description: Use this function to retrieve the tag buffer from a
-> - * completed I/O. The size of the integrity buffer must be <= to the
-> - * size reported by bio_integrity_tag_size().
-> - */
-> -int bio_integrity_get_tag(struct bio *bio, void *tag_buf, unsigned int len)
-> -{
-> -	BUG_ON(bio_data_dir(bio) != READ);
-> -
-> -	return bio_integrity_tag(bio, tag_buf, len, 0);
-> -}
-> -EXPORT_SYMBOL(bio_integrity_get_tag);
-> -
-> -/**
->    * bio_integrity_generate_verify - Generate/verify integrity metadata for a bio
->    * @bio:	bio to generate/verify integrity metadata for
->    * @operate:	operate number, 1 for generate, 0 for verify
-> @@ -361,14 +277,6 @@ static void bio_integrity_generate(struct bio *bio)
->   	bio_integrity_generate_verify(bio, 1);
->   }
->
-> -static inline unsigned short blk_integrity_tuple_size(struct blk_integrity *bi)
-> -{
-> -	if (bi)
-> -		return bi->tuple_size;
-> -
-> -	return 0;
-> -}
-> -
->   /**
->    * bio_integrity_prep - Prepare bio for integrity I/O
->    * @bio:	bio to prepare
-> @@ -399,7 +307,7 @@ int bio_integrity_prep(struct bio *bio)
->   	sectors = bio_integrity_hw_sectors(bi, bio_sectors(bio));
->
->   	/* Allocate kernel buffer for protection data */
-> -	len = sectors * blk_integrity_tuple_size(bi);
-> +	len = sectors * bi->tuple_size;
->   	buf = kmalloc(len, GFP_NOIO | q->bounce_gfp);
->   	if (unlikely(buf == NULL)) {
->   		printk(KERN_ERR "could not allocate integrity buffer\n");
-> diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-> index 7fbab84399e6..7ac17160ab69 100644
-> --- a/block/blk-integrity.c
-> +++ b/block/blk-integrity.c
-> @@ -418,8 +418,6 @@ int blk_integrity_register(struct gendisk *disk, struct blk_integrity *template)
->   		bi->generate_fn = template->generate_fn;
->   		bi->verify_fn = template->verify_fn;
->   		bi->tuple_size = template->tuple_size;
-> -		bi->set_tag_fn = template->set_tag_fn;
-> -		bi->get_tag_fn = template->get_tag_fn;
->   		bi->tag_size = template->tag_size;
->   	} else
->   		bi->name = bi_unsupported_name;
-> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-> index 29f0477a8708..38a7778631be 100644
-> --- a/drivers/scsi/sd_dif.c
-> +++ b/drivers/scsi/sd_dif.c
-> @@ -128,39 +128,10 @@ static int sd_dif_type1_verify_ip(struct blk_integrity_exchg *bix)
->   	return sd_dif_type1_verify(bix, sd_dif_ip_fn);
->   }
->
-> -/*
-> - * Functions for interleaving and deinterleaving application tags
-> - */
-> -static void sd_dif_type1_set_tag(void *prot, void *tag_buf, unsigned int sectors)
-> -{
-> -	struct sd_dif_tuple *sdt = prot;
-> -	u8 *tag = tag_buf;
-> -	unsigned int i, j;
-> -
-> -	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-> -		sdt->app_tag = tag[j] << 8 | tag[j+1];
-> -		BUG_ON(sdt->app_tag == 0xffff);
-> -	}
-> -}
-> -
-> -static void sd_dif_type1_get_tag(void *prot, void *tag_buf, unsigned int sectors)
-> -{
-> -	struct sd_dif_tuple *sdt = prot;
-> -	u8 *tag = tag_buf;
-> -	unsigned int i, j;
-> -
-> -	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-> -		tag[j] = (sdt->app_tag & 0xff00) >> 8;
-> -		tag[j+1] = sdt->app_tag & 0xff;
-> -	}
-> -}
-> -
->   static struct blk_integrity dif_type1_integrity_crc = {
->   	.name			= "T10-DIF-TYPE1-CRC",
->   	.generate_fn		= sd_dif_type1_generate_crc,
->   	.verify_fn		= sd_dif_type1_verify_crc,
-> -	.get_tag_fn		= sd_dif_type1_get_tag,
-> -	.set_tag_fn		= sd_dif_type1_set_tag,
->   	.tuple_size		= sizeof(struct sd_dif_tuple),
->   	.tag_size		= 0,
->   };
-> @@ -169,8 +140,6 @@ static struct blk_integrity dif_type1_integrity_ip = {
->   	.name			= "T10-DIF-TYPE1-IP",
->   	.generate_fn		= sd_dif_type1_generate_ip,
->   	.verify_fn		= sd_dif_type1_verify_ip,
-> -	.get_tag_fn		= sd_dif_type1_get_tag,
-> -	.set_tag_fn		= sd_dif_type1_set_tag,
->   	.tuple_size		= sizeof(struct sd_dif_tuple),
->   	.tag_size		= 0,
->   };
-> @@ -245,42 +214,10 @@ static int sd_dif_type3_verify_ip(struct blk_integrity_exchg *bix)
->   	return sd_dif_type3_verify(bix, sd_dif_ip_fn);
->   }
->
-> -static void sd_dif_type3_set_tag(void *prot, void *tag_buf, unsigned int sectors)
-> -{
-> -	struct sd_dif_tuple *sdt = prot;
-> -	u8 *tag = tag_buf;
-> -	unsigned int i, j;
-> -
-> -	for (i = 0, j = 0 ; i < sectors ; i++, j += 6, sdt++) {
-> -		sdt->app_tag = tag[j] << 8 | tag[j+1];
-> -		sdt->ref_tag = tag[j+2] << 24 | tag[j+3] << 16 |
-> -			tag[j+4] << 8 | tag[j+5];
-> -	}
-> -}
-> -
-> -static void sd_dif_type3_get_tag(void *prot, void *tag_buf, unsigned int sectors)
-> -{
-> -	struct sd_dif_tuple *sdt = prot;
-> -	u8 *tag = tag_buf;
-> -	unsigned int i, j;
-> -
-> -	for (i = 0, j = 0 ; i < sectors ; i++, j += 2, sdt++) {
-> -		tag[j] = (sdt->app_tag & 0xff00) >> 8;
-> -		tag[j+1] = sdt->app_tag & 0xff;
-> -		tag[j+2] = (sdt->ref_tag & 0xff000000) >> 24;
-> -		tag[j+3] = (sdt->ref_tag & 0xff0000) >> 16;
-> -		tag[j+4] = (sdt->ref_tag & 0xff00) >> 8;
-> -		tag[j+5] = sdt->ref_tag & 0xff;
-> -		BUG_ON(sdt->app_tag == 0xffff || sdt->ref_tag == 0xffffffff);
-> -	}
-> -}
-> -
->   static struct blk_integrity dif_type3_integrity_crc = {
->   	.name			= "T10-DIF-TYPE3-CRC",
->   	.generate_fn		= sd_dif_type3_generate_crc,
->   	.verify_fn		= sd_dif_type3_verify_crc,
-> -	.get_tag_fn		= sd_dif_type3_get_tag,
-> -	.set_tag_fn		= sd_dif_type3_set_tag,
->   	.tuple_size		= sizeof(struct sd_dif_tuple),
->   	.tag_size		= 0,
->   };
-> @@ -289,8 +226,6 @@ static struct blk_integrity dif_type3_integrity_ip = {
->   	.name			= "T10-DIF-TYPE3-IP",
->   	.generate_fn		= sd_dif_type3_generate_ip,
->   	.verify_fn		= sd_dif_type3_verify_ip,
-> -	.get_tag_fn		= sd_dif_type3_get_tag,
-> -	.set_tag_fn		= sd_dif_type3_set_tag,
->   	.tuple_size		= sizeof(struct sd_dif_tuple),
->   	.tag_size		= 0,
->   };
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 1c608a0cbd8e..f8b09d7020ef 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -361,7 +361,6 @@ extern struct bio *bio_clone_fast(struct bio *, gfp_t, struct bio_set *);
->   extern struct bio *bio_clone_bioset(struct bio *, gfp_t, struct bio_set *bs);
->
->   extern struct bio_set *fs_bio_set;
-> -unsigned int bio_integrity_tag_size(struct bio *bio);
->
->   static inline struct bio *bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
->   {
-> @@ -673,8 +672,6 @@ extern struct bio_integrity_payload *bio_integrity_alloc(struct bio *, gfp_t, un
->   extern void bio_integrity_free(struct bio *);
->   extern int bio_integrity_add_page(struct bio *, struct page *, unsigned int, unsigned int);
->   extern bool bio_integrity_enabled(struct bio *bio);
-> -extern int bio_integrity_set_tag(struct bio *, void *, unsigned int);
-> -extern int bio_integrity_get_tag(struct bio *, void *, unsigned int);
->   extern int bio_integrity_prep(struct bio *);
->   extern void bio_integrity_endio(struct bio *, int);
->   extern void bio_integrity_advance(struct bio *, unsigned int);
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index c462b5b0d67f..84a0fa90cdad 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1476,14 +1476,10 @@ struct blk_integrity_exchg {
->
->   typedef void (integrity_gen_fn) (struct blk_integrity_exchg *);
->   typedef int (integrity_vrfy_fn) (struct blk_integrity_exchg *);
-> -typedef void (integrity_set_tag_fn) (void *, void *, unsigned int);
-> -typedef void (integrity_get_tag_fn) (void *, void *, unsigned int);
->
->   struct blk_integrity {
->   	integrity_gen_fn	*generate_fn;
->   	integrity_vrfy_fn	*verify_fn;
-> -	integrity_set_tag_fn	*set_tag_fn;
-> -	integrity_get_tag_fn	*get_tag_fn;
->
->   	unsigned short		flags;
->   	unsigned short		tuple_size;
->
+On 08/06/2014 03:43 PM, Sagi Grimberg wrote:
+> Hi Boaz,
+> 
+<>
+>>
+>> I hate that you introduced this new transfer_length variable. It does
+>> not exist. In BIDI supporting driver there is out_len and in_len just
+>> as original code.
+> 
+> Effectively, out_len and in_len are the same except for the bidi case.
+> Moreover, the hdr->data_length is exactly the command scsi data buffer
+> length, the bidi length is taken from scsi_in when we build the AHS for
+> bidi (rlen_ahdr->read_length).
+> 
+> So to me it is correct and makes sense. But I'm don't feel so strong
+> about it...
+> 
+> Mike what's your take on this?
+> 
 
-Looks good to me.
+I have a patch to clean all that, will send tomorrow. 
 
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+What I mean is that this is on the out-path only the in path is different.
+See the code this variable is only used in the if (== DMA_TO_DEVICE) case and
+should be local to that scope. This is my clean up
+
+<>
+>> this particular driver puts them together in the same payload. There can be
+>> other DIFF supporting drivers that put the DIFF payload on another stream / another
+>> SG list, like the sata one, right?
+> 
+> I think that DIF specification says that on the wire the data and
+> protection are interleaved i.e. Block1, DIF1, Block2, DIF2...
+> 
+
+No it does not. This is a per transport, and actually per device host
+driver. Yes in iSCSI_tcp they are inline in HW cards they might come as
+two different SGs (Like the Linux model). Even with iscsi-offload they might
+want to be two SG-lists.
+
+> So I do think that the transfer length should always include
+> data_length + protection_length.
+> 
+
+This is at the iscsi level. But the scsi_transfer_length() is on the scsi
+level which keeps them separate. So I think the proper API should be
+	scsi_proto_length()
+
+And for LLDs that want them together they can do scsi_bufflen() + scsi_proto_length()
+and for other drivers they can do it separately. Don't infect iscsi level assumptions
+on the generic layer API.
+
+Again my patch fixes this.
+
+>> And this
+>>
+>> This print is correct as it covers all cases. If you want to print the adjusted
+>> length then OK, you'd need to store this I guess, but store it as a different
+>> variable like proto_length and print it as an additional variable.
+> 
+> But it is the transfer length that is sent in iSCSI header. Why do you
+> want to print it as additional info? 
+
+I want to see what was the length the app/FS sent, then as added
+info how much was added for DIFF, your way there is lost information.
+
+> for transactions that include DIF
+> the length is the data + protection.
+> 
+> It is still one-to-one isn't it?
+> 
+
+No! the original submitted length is lost from the print
+
+> Sagi.
+> 
+
+Shalom
+Boaz
