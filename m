@@ -1,48 +1,63 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH 1/15] block copy: initial XCOPY offload support
-Date: Tue, 5 Aug 2014 18:45:47 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1408051844070.23986@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1407151531140.14632@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.1407151534180.14632@file01.intranet.prod.int.rdu2.redhat.com> <20140804140925.GA24261@amd.pavel.ucw.cz>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16421 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752936AbaHEWq0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2014 18:46:26 -0400
-In-Reply-To: <20140804140925.GA24261@amd.pavel.ucw.cz>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans Wennborg <hans@hanshq.net>
+Subject: [PATCH 10/15] scsi: fix decimal printf format specifiers prefixed with 0x
+Date: Tue,  5 Aug 2014 21:43:29 -0700
+Message-ID: <1407300209-32745-1-git-send-email-hans@hanshq.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Hans Wennborg <hans@hanshq.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+The prefix suggests the number should be printed in hex, so use
+the %x specifier to do that.
 
+Found by using regex suggested by Joe Perches.
 
-On Mon, 4 Aug 2014, Pavel Machek wrote:
+Signed-off-by: Hans Wennborg <hans@hanshq.net>
+---
+ drivers/scsi/cxgbi/libcxgbi.c     | 2 +-
+ drivers/scsi/nsp32.c              | 2 +-
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-> On Tue 2014-07-15 15:34:47, Mikulas Patocka wrote:
-> > This is Martin Petersen's xcopy patch
-> > (https://git.kernel.org/cgit/linux/kernel/git/mkp/linux.git/commit/?h=xcopy&id=0bdeed274e16b3038a851552188512071974eea8)
-> > with some bug fixes, ported to the current kernel.
-> > 
-> > This patch makes it possible to use the SCSI XCOPY command.
-> > 
-> > We create a bio that has REQ_COPY flag in bi_rw and a bi_copy structure
-> > that defines the source device. The target device is defined in the
-> > bi_bdev and bi_iter.bi_sector.
-> > 
-> > There is a new BLKCOPY ioctl that makes it possible to use XCOPY from
-> > userspace. The ioctl argument is a pointer to an array of four uint64_t
-> > values.
-> 
-> But it is there only for block devices, right?
-> 
-> Is there plan to enable tools such as /bin/cp to use XCOPY?
-> 
-> 									Pavel
-
-It is interesting idea, but it would be far from simple. You could make 
-sendfile (or maybe splice) use XCOPY, but it needs to interact with page 
-cache.
-
-Mikulas
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index d65df6d..4cc9787 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1807,7 +1807,7 @@ static void csk_return_rx_credits(struct cxgbi_sock *csk, int copied)
+ 	u32 credits;
+ 
+ 	log_debug(1 << CXGBI_DBG_PDU_RX,
+-		"csk 0x%p,%u,0x%lu,%u, seq %u, wup %u, thre %u, %u.\n",
++		"csk 0x%p,%u,0x%lx,%u, seq %u, wup %u, thre %u, %u.\n",
+ 		csk, csk->state, csk->flags, csk->tid, csk->copied_seq,
+ 		csk->rcv_wup, cdev->rx_credit_thres,
+ 		cdev->rcv_win);
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 50b086a..198f754 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -915,7 +915,7 @@ static int nsp32_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct s
+ 	int ret;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND,
+-		  "enter. target: 0x%x LUN: 0x%llu cmnd: 0x%x cmndlen: 0x%x "
++		  "enter. target: 0x%x LUN: 0x%llx cmnd: 0x%x cmndlen: 0x%x "
+ 		  "use_sg: 0x%x reqbuf: 0x%lx reqlen: 0x%x",
+ 		  SCpnt->device->id, SCpnt->device->lun, SCpnt->cmnd[0], SCpnt->cmd_len,
+ 		  scsi_sg_count(SCpnt), scsi_sglist(SCpnt), scsi_bufflen(SCpnt));
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index e632e14..aebe62c 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2503,7 +2503,7 @@ qlt_handle_dif_error(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd,
+ 	    "iocb(s) %p Returned STATUS.\n", sts);
+ 
+ 	ql_dbg(ql_dbg_tgt, vha, 0xf075,
+-	    "dif check TGT cdb 0x%x lba 0x%llu: [Actual|Expected] Ref Tag[0x%x|0x%x], App Tag [0x%x|0x%x], Guard [0x%x|0x%x]\n",
++	    "dif check TGT cdb 0x%x lba 0x%llx: [Actual|Expected] Ref Tag[0x%x|0x%x], App Tag [0x%x|0x%x], Guard [0x%x|0x%x]\n",
+ 	    cmd->atio.u.isp24.fcp_cmnd.cdb[0], lba,
+ 	    a_ref_tag, e_ref_tag, a_app_tag, e_app_tag, a_guard, e_guard);
+ 
+-- 
+2.0.0.526.g5318336
