@@ -1,35 +1,41 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 1/3] libsas: modify SATA error handler
-Date: Wed, 6 Aug 2014 18:50:48 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D5944CE8DCE@SC-VEXCH4.marvell.com>
-References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
-	<CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
-	<CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D5944CE8C71@SC-VEXCH4.marvell.com>
- <CAPcyv4jSr7O2Qxe-ac9anJUT4KksbdNuCGd=iBFy2CJF8G5Mkw@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature support
+Date: Wed, 06 Aug 2014 21:25:42 -0500
+Message-ID: <53E2E3A6.7010402@cs.wisc.edu>
+References: <1407364668-20931-1-git-send-email-anish@chelsio.com> <1407364668-20931-2-git-send-email-anish@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4jSr7O2Qxe-ac9anJUT4KksbdNuCGd=iBFy2CJF8G5Mkw@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "tj@kernel.org" <tj@kernel.org>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42358 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754524AbaHGC0e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Aug 2014 22:26:34 -0400
+In-Reply-To: <1407364668-20931-2-git-send-email-anish@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, jbottomley@parallels.com, kxie@chelsio.com, manojmalviya@chelsio.com
 
-SGksIERhbg0KSSBoYXZlbid0IHJlY2VpdmUgeW91ciByZXZpZXcgY29tbWVudHMsIGNvdWxkIHlv
-dSBzZW5kIGl0IHRvIG1lIGFnYWluLCB0aGFua3MhDQpQUzogSSBjYW4ndCBsb2dpbiBteSBnbWFp
-bCwgc28gcGxlYXNlIHNlbmQgbWFpbCB0byB0aGlzIGNvdW50Lg0KDQoNCi0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQpGcm9tOiBEYW4gV2lsbGlhbXMgW21haWx0bzpkYW4uai53aWxsaWFtc0Bp
-bnRlbC5jb21dIA0KU2VudDogMjAxNOW5tDjmnIg35pelIDE6MjINClRvOiBYaWFuZ2xpYW5nIFl1
-DQpDYzogSkJvdHRvbWxleUBwYXJhbGxlbHMuY29tOyB0akBrZXJuZWwub3JnOyB0b2RkLmUuYnJh
-bmR0QGludGVsLmNvbTsgbHVrYXN6LmRvcmF1QGludGVsLmNvbTsgbGludXgtaWRlQHZnZXIua2Vy
-bmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtl
-cm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8zXSBsaWJzYXM6IG1vZGlmeSBTQVRBIGVy
-cm9yIGhhbmRsZXINCg0KT24gV2VkLCBBdWcgNiwgMjAxNCBhdCAzOjUwIEFNLCBYaWFuZ2xpYW5n
-IFl1IDx5dXhpYW5nbEBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+IEhpLCBEYW4gJiBKYW1lcw0KPiBI
-b3cgYWJvdXQgdGhlIHBhdGNoZXMgYWJvdXQgc3VwcG9ydCBmb3IgUE0/DQo+IFR3byBtb250aHMg
-aGFkIHBhc3NlZCBzaW5jZSBJIHN1Ym1pdHRlZCB0aGUgcGF0Y2hlcy4NCj4gVGhhbmtzIQ0KPg0K
-DQpEaWQgeW91IGFkZHJlc3MgbXkgcmV2aWV3IGNvbW1lbnRzPw0K
+ On 08/06/2014 05:37 PM, Anish Bhatt wrote
+> @@ -436,12 +473,12 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+>  			/* No unsolicit Data-Out's */
+>  			hdr->flags |= ISCSI_FLAG_CMD_FINAL;
+>  	} else {
+> +		unsigned in_len = iscsi_scsi_in_total_length(sc);
+>  		hdr->flags |= ISCSI_FLAG_CMD_FINAL;
+>  		zero_data(hdr->dlength);
+> -		hdr->data_length = cpu_to_be32(scsi_in(sc)->length);
+> -
+>  		if (sc->sc_data_direction == DMA_FROM_DEVICE)
+>  			hdr->flags |= ISCSI_FLAG_CMD_READ;
+> +		hdr->data_length = cpu_to_be32(in_len);
+>  	}
+>  
+
+What tree and branch did you make these over? Have you seen the patches
+from Sagi for iser and libiscsi support?
+
+Could you rebuild this over Christoph's tree which has his patches:
+
+git://git.infradead.org/users/hch/scsi-queue.git
