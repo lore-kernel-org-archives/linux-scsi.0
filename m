@@ -1,148 +1,68 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v1.3 3/18] arcmsr: Add code to support system hibernation
-Date: Thu, 07 Aug 2014 15:17:35 +0200
-Message-ID: <53E37C6F.6090201@redhat.com>
-References: <1406882173.10378.42.camel@Centos6.3-64>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
+ and there's not way to prevent the kernel from using the 2nd cdb byte for
+ the LUN
+Date: Thu, 7 Aug 2014 11:58:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1408071149100.912-100000@iolanthe.rowland.org>
+References: <20140807063910.GB8151@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1406882173.10378.42.camel@Centos6.3-64>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:56766 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757509AbaHGP6i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2014 11:58:38 -0400
+In-Reply-To: <20140807063910.GB8151@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tiziano Bacocco <tiziano.bacocco@gmail.com>, Douglas Gilbert <dgilbert@interlog.com>, bugzilla-daemon@bugzilla.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On 08/01/2014 10:36 AM, Ching Huang wrote:
-> This patch adds code to support system hibernation.
->
-> Signed-off-by: Ching<ching2048@areca.com.tw>
-> ---
->
-> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:03:00.000000000 +0800
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 11:04:28.000000000 +0800
-> @@ -89,11 +89,15 @@ static int arcmsr_bios_param(struct scsi
->  static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
->  static int arcmsr_probe(struct pci_dev *pdev,
->  				const struct pci_device_id *id);
-> +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
-> +static int arcmsr_resume(struct pci_dev *pdev);
->  static void arcmsr_remove(struct pci_dev *pdev);
->  static void arcmsr_shutdown(struct pci_dev *pdev);
->  static void arcmsr_iop_init(struct AdapterControlBlock *acb);
->  static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);
->  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock *acb);
-> +static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,
-> +	u32 intmask_org);
->  static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
->  static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
->  static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
-> @@ -167,6 +171,8 @@ static struct pci_driver arcmsr_pci_driv
->  	.id_table			= arcmsr_device_id_table,
->  	.probe			= arcmsr_probe,
->  	.remove			= arcmsr_remove,
-> +	.suspend		= arcmsr_suspend,
-> +	.resume			= arcmsr_resume,
->  	.shutdown		= arcmsr_shutdown,
->  };
->  /*
-> @@ -776,6 +782,77 @@ static void arcmsr_free_irq(struct pci_d
->  		free_irq(pdev->irq, acb);
->  }
->  
-> +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
-> +{
-> +	uint32_t intmask_org;
-> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
-> +	struct AdapterControlBlock *acb =
-> +		(struct AdapterControlBlock *)host->hostdata;
-> +
-> +	intmask_org = arcmsr_disable_outbound_ints(acb);
-> +	arcmsr_free_irq(pdev, acb);
-> +	del_timer_sync(&acb->eternal_timer);
-> +	flush_scheduled_work();
-> +	arcmsr_stop_adapter_bgrb(acb);
-> +	arcmsr_flush_adapter_cache(acb);
-> +	arcmsr_enable_outbound_ints(acb, intmask_org);
-> +	pci_set_drvdata(pdev, host);
-> +	pci_save_state(pdev);
-> +	pci_disable_device(pdev);
-> +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
-> +	return 0;
+On Wed, 6 Aug 2014, Christoph Hellwig wrote:
 
-its' probably better to disable interrupts on card (arcmsr_enable_outbound_ints) and after that
-deregister the isr functions (arcmsr_free_irq)
- 
+> On Wed, Aug 06, 2014 at 04:02:22PM -0400, Alan Stern wrote:
+> > > I doubt either of them forces users to hack up flags for these cases.
+> > 
+> > Why was this change needed in the first place?  There's no explanation 
+> > in the patch itself.
+> 
+> Which chance?  The one to not support SG_FLAG_LUN_INHIBIT?
 
-> +}
-> +
-> +static int arcmsr_resume(struct pci_dev *pdev)
-> +{
-> +	int error;
-> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
-> +	struct AdapterControlBlock *acb =
-> +		(struct AdapterControlBlock *)host->hostdata;
-> +
-> +	pci_set_power_state(pdev, PCI_D0);
-> +	pci_enable_wake(pdev, PCI_D0, 0);
-> +	pci_restore_state(pdev);
-> +	if (pci_enable_device(pdev)) {
-> +		pr_warn("%s: pci_enable_device error\n", __func__);
-> +		return -ENODEV;
-> +	}
+No, the patch that started this Bugzilla entry.  Tiziano says it is 
+needed in order to send vendor-specific commands that use the LUN bits 
+in CDB[1].
 
-a significant part of this code is equal to what is done in arcmsr_probe
-is it possible to do it in an special function in one place ? 
+> > > At least for windows I suspect it just never sends the LUN encoded
+> > > in the CDB and treats USB devices special instead of our insistance
+> > > on pretending they are SCSI-2.
+> > 
+> > We no longer pretend that USB mass-storage devices have any particular 
+> > SCSI level.  See commit 09b6b51b0b6c.
+> 
+> So the origina reported device must report SCSI-2 all by itself if he's
+> running a recent kernel, ok.
+> 
+> > > Maybe some of the USB people have on the wire traces or access to
+> > > device or windows documentation on this?
+> > 
+> > Most likely it varies with the version of Windows and the INQUIRY data
+> > returned by the device.
+> > 
+> > I can obtain hardware traces for the kinds of devices and computers 
+> > lying around here.  But what sort of combinations should I test?
+> 
+> I'd mostly be interested to see if it actualy encodes the LUN in the CDB
+> for any USB multi-LUN device.
 
-> +	error = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-> +	if (error) {
-> +		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-> +		if (error) {
-> +			pr_warn("scsi%d: No suitable DMA mask available\n",
-> +			       host->host_no);
-> +			goto controller_unregister;
-> +		}
-> +	}
-> +	pci_set_master(pdev);
-> +	if (arcmsr_request_irq(pdev, acb) == ARC_FAILURE)
-> +		goto controller_stop;
-> +	arcmsr_iop_init(acb);
-> +	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
-> +	atomic_set(&acb->rq_map_token, 16);
-> +	atomic_set(&acb->ante_token_value, 16);
-> +	acb->fw_flag = FW_NORMAL;
-> +	init_timer(&acb->eternal_timer);
-> +	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
-> +	acb->eternal_timer.data = (unsigned long) acb;
-> +	acb->eternal_timer.function = &arcmsr_request_device_map;
-> +	add_timer(&acb->eternal_timer);
-> +	return 0;
-> +controller_stop:
-> +	arcmsr_stop_adapter_bgrb(acb);
-> +	arcmsr_flush_adapter_cache(acb);
-> +controller_unregister:
-> +	scsi_remove_host(host);
-> +	arcmsr_free_ccb_pool(acb);
-> +	arcmsr_unmap_pciregion(acb);
-> +	pci_release_regions(pdev);
-> +	scsi_host_put(host);
-> +	pci_disable_device(pdev);
-> +	return -ENODEV;
-> +}
-> +
->  static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
->  {
->  	struct MessageUnit_A __iomem *reg = acb->pmuA;
+I tried connecting a Linux mass-storage gadget with two logical units
+to a host PC running Windows 7.  The host scanned the first logical
+unit and completely ignored the second!  Didn't even send an INQUIRY 
+command.
 
-If you will repost a new version of this patch, please merge the
-"[PATCH v1.3 18/18] arcmsr: replace flush_scheduled_work() by flush_work()"
-into this one, there is no reason for having it separated.
+So the question remains unanswered...
 
---tms
+Can someone tell me if anything special is needed to make Windows
+recognize logical units beyond the first?
 
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
