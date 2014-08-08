@@ -1,46 +1,206 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v6 1/2] ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Fri,  8 Aug 2014 21:44:25 +0530
-Message-ID: <1407514466-25312-2-git-send-email-stripathi@apm.com>
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH v6 2/2] arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI SATA Host controller dts node.
+Date: Fri,  8 Aug 2014 21:44:26 +0530
+Message-ID: <1407514466-25312-3-git-send-email-stripathi@apm.com>
 References: <1407514466-25312-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1407514466-25312-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1407514466-25312-1-git-send-email-stripathi-qTEPVZfXA3Y@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>, Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes the NCQ support from the APM X-Gene SoC AHCI
-Host Controller driver as it doesn't support it.
+This patch removes all clocks and PHY references from the APM X-Gene
+SoC AHCI SATA host controller and PHY DTS nodes. The clock and PHY
+are no longer needed as they are handled by the firmware. By removing
+only the reference is not enough as any un-used clock entry will get
+disabled by the clock framework. This patch also updates the APM X-Gene
+SOC AHCI SATA Host controller clock and PHY bindings as optional
+properties.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 ---
- drivers/ata/ahci_xgene.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/ata/apm-xgene.txt          | 10 +--
+ arch/arm64/boot/dts/apm-storm.dtsi                 | 93 ----------------------
+ 2 files changed, 5 insertions(+), 98 deletions(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 1cfbdca..f416495 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -344,7 +344,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- };
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+index a668f0e..4cd32c2 100644
+--- a/Documentation/devicetree/bindings/ata/apm-xgene.txt
++++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+@@ -17,16 +17,16 @@ Required properties:
+ 			  5th optional memory resource shall be the host
+ 			  controller MUX memory resource if required.
+ - interrupts		: Interrupt-specifier for SATA host controller IRQ.
+-- clocks		: Reference to the clock entry.
+-- phys			: A list of phandles + phy-specifiers, one for each
+-			  entry in phy-names.
+-- phy-names		: Should contain:
+-  * "sata-phy" for the SATA 6.0Gbps PHY
 
- static const struct ata_port_info xgene_ahci_port_info = {
--	.flags = AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
-+	.flags = AHCI_FLAG_COMMON,
- 	.pio_mask = ATA_PIO4,
- 	.udma_mask = ATA_UDMA6,
- 	.port_ops = &xgene_ahci_ops,
-@@ -481,7 +481,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
+ Optional properties:
+ - dma-coherent		: Present if dma operations are coherent
+ - status		: Shall be "ok" if enabled or "disabled" if disabled.
+ 			  Default is "ok".
++- clocks		: Reference to the clock entry.
++- phys			: A list of phandles + phy-specifiers, one for each
++			  entry in phy-names.
++- phy-names		: Should contain:
++  * "sata-phy" for the SATA 6.0Gbps PHY
 
--	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-+	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+ Example:
+ 		sataclk: sataclk {
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index 40aa96c..4a56bcf 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -177,87 +177,6 @@
+ 				clock-output-names = "eth8clk";
+ 			};
 
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
- 				     hflags, 0, 0);
+-			sataphy1clk: sataphy1clk@1f21c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f21c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sataphy1clk";
+-				status = "disabled";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x00>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x06>;
+-			};
+-
+-			sataphy2clk: sataphy1clk@1f22c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f22c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sataphy2clk";
+-				status = "ok";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x3a>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x06>;
+-			};
+-
+-			sataphy3clk: sataphy1clk@1f23c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f23c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sataphy3clk";
+-				status = "ok";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x3a>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x06>;
+-			};
+-
+-			sata01clk: sata01clk@1f21c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f21c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sata01clk";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x05>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x39>;
+-			};
+-
+-			sata23clk: sata23clk@1f22c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f22c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sata23clk";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x05>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x39>;
+-			};
+-
+-			sata45clk: sata45clk@1f23c000 {
+-				compatible = "apm,xgene-device-clock";
+-				#clock-cells = <1>;
+-				clocks = <&socplldiv2 0>;
+-				reg = <0x0 0x1f23c000 0x0 0x1000>;
+-				reg-names = "csr-reg";
+-				clock-output-names = "sata45clk";
+-				csr-offset = <0x4>;
+-				csr-mask = <0x05>;
+-				enable-offset = <0x0>;
+-				enable-mask = <0x39>;
+-			};
+-
+ 			rtcclk: rtcclk@17000000 {
+ 				compatible = "apm,xgene-device-clock";
+ 				#clock-cells = <1>;
+@@ -320,7 +239,6 @@
+ 			compatible = "apm,xgene-phy";
+ 			reg = <0x0 0x1f21a000 0x0 0x100>;
+ 			#phy-cells = <1>;
+-			clocks = <&sataphy1clk 0>;
+ 			status = "disabled";
+ 			apm,tx-boost-gain = <30 30 30 30 30 30>;
+ 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
+@@ -330,7 +248,6 @@
+ 			compatible = "apm,xgene-phy";
+ 			reg = <0x0 0x1f22a000 0x0 0x100>;
+ 			#phy-cells = <1>;
+-			clocks = <&sataphy2clk 0>;
+ 			status = "ok";
+ 			apm,tx-boost-gain = <30 30 30 30 30 30>;
+ 			apm,tx-eye-tuning = <1 10 10 2 10 10>;
+@@ -340,7 +257,6 @@
+ 			compatible = "apm,xgene-phy";
+ 			reg = <0x0 0x1f23a000 0x0 0x100>;
+ 			#phy-cells = <1>;
+-			clocks = <&sataphy3clk 0>;
+ 			status = "ok";
+ 			apm,tx-boost-gain = <31 31 31 31 31 31>;
+ 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
+@@ -356,9 +272,6 @@
+ 			interrupts = <0x0 0x86 0x4>;
+ 			dma-coherent;
+ 			status = "disabled";
+-			clocks = <&sata01clk 0>;
+-			phys = <&phy1 0>;
+-			phy-names = "sata-phy";
+ 		};
+
+ 		sata2: sata@1a400000 {
+@@ -371,9 +284,6 @@
+ 			interrupts = <0x0 0x87 0x4>;
+ 			dma-coherent;
+ 			status = "ok";
+-			clocks = <&sata23clk 0>;
+-			phys = <&phy2 0>;
+-			phy-names = "sata-phy";
+ 		};
+
+ 		sata3: sata@1a800000 {
+@@ -385,9 +295,6 @@
+ 			interrupts = <0x0 0x88 0x4>;
+ 			dma-coherent;
+ 			status = "ok";
+-			clocks = <&sata45clk 0>;
+-			phys = <&phy3 0>;
+-			phy-names = "sata-phy";
+ 		};
+
+ 		rtc: rtc@10510000 {
 --
 1.8.2.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
