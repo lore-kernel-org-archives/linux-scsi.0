@@ -1,84 +1,145 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
- error messages on trace
-Date: Fri, 08 Aug 2014 15:07:07 +0200
-Message-ID: <53E4CB7B.7020705@interlog.com>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
-Reply-To: dgilbert@interlog.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v2 3/17] arcmsr: Add code to support system hibernation
+Date: Fri, 08 Aug 2014 16:23:45 +0200
+Message-ID: <53E4DD71.4050203@redhat.com>
+References: <1407499546.5099.8.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:33568 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755969AbaHHNHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2014 09:07:12 -0400
-In-Reply-To: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1407499546.5099.8.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-On 14-08-08 01:50 PM, Yoshihiro YUNOMAE wrote:
-> Hi All,
+On 08/08/2014 02:05 PM, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
 >
-> This patch set introduces new traceevents in order to output continuous error
-> messages. Current SCSI printk messages in upstream kernel can be divided by and
-> mixed with other messages. Even if each error message has its device id,
-> sometimes we can easily be lost in mixed logs because the message's device id
-> is separated from it's body. To avoid it, I'd like to use traceevents to
-> store error messages into the ftrace or perf buuffer, because traceevents
-> are atomically commited to the buffer.
+> This patch adds code to support system hibernation.
 >
-> In this patch set, all printk messages are removed based on a local
-> discussion with Hannes, but I think printk messages should be kept because all
-> users don't enable traceevents and rsyslog can store as files.
->
-> However, if printk of logging branch is kept, the messages are duplicate and
-> it can induce stack overflow by using local buffer(*1).
->
->   (*1) https://lkml.org/lkml/2014/5/20/742
->
-> So, my suggestion is follows:
->
-> 1) printk
-> Keeps current implemntation of upstream kernel.
-> The messages are divided and can be mixed, but all users can check the error
-> messages without any settings.
->
-> 2) traceevents
-> To get the complete messages, we can use ftrace or perf (or something on them).
-> Users can always understand correct messages, but they need to set up the
-> tracers.
->
-> This patch set is based on Hannes' logging branch:
-> http://git.kernel.org/cgit/linux/kernel/git/hare/scsi-devel.git/log/?h=logging
->
-> [1/10] ~  [6/10]: just cleanup for logging branch
-> [7/10] ~ [10/10]: introduce new traceevents
->
-> Any comments are welcome!
+> Changes in v2 of 3/17:
+> * merge patch 18/18 to this patch
 
-In sg3_utils there are now string yielding equivalents
-to the sense buffer "print" functions. They take a form
-like this:
-   char * get_sense_str(const unsigned char * sense_buffer,
-                        int sb_len, int blen, char * b);
+Thanks, and please mark the the 18/18 as obsolete - add a comment there 
 
-So this just does the hard work of decoding the sense buffer
-(or saying it is invalid) the result of which it places in
-buffer 'b'. And 'b' is returned (so this function can be in
-the arguments of a driver's printing function).
+In my previous response were other comments too, you haven't probably 
+noticed them. I could be wrong with my comments, but if you want a review
+you should explain why the code is ok as it is.
 
-Adding such string functions would give other parts of the
-SCSI subsystem the capability of tailoring their own
-messages that include sense data information.
-
-
-Existing sense buffer "print" function could be kept and
-implemented using the newer "_str" variants. Would that
-be worth the trouble?
-
-Doug Gilbert
-
-
+>
+> Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> ---
+>
+> Thanks to Tomas's advice.
+>
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 17:54:46.000000000 +0800
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
+> @@ -89,11 +89,15 @@ static int arcmsr_bios_param(struct scsi
+>  static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+>  static int arcmsr_probe(struct pci_dev *pdev,
+>  				const struct pci_device_id *id);
+> +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
+> +static int arcmsr_resume(struct pci_dev *pdev);
+>  static void arcmsr_remove(struct pci_dev *pdev);
+>  static void arcmsr_shutdown(struct pci_dev *pdev);
+>  static void arcmsr_iop_init(struct AdapterControlBlock *acb);
+>  static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);
+>  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock *acb);
+> +static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,
+> +	u32 intmask_org);
+>  static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
+>  static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
+>  static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
+> @@ -167,6 +171,8 @@ static struct pci_driver arcmsr_pci_driv
+>  	.id_table			= arcmsr_device_id_table,
+>  	.probe			= arcmsr_probe,
+>  	.remove			= arcmsr_remove,
+> +	.suspend		= arcmsr_suspend,
+> +	.resume			= arcmsr_resume,
+>  	.shutdown		= arcmsr_shutdown,
+>  };
+>  /*
+> @@ -772,6 +778,76 @@ static void arcmsr_free_irq(struct pci_d
+>  		free_irq(pdev->irq, acb);
+>  }
+>  
+> +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
+> +{
+> +	uint32_t intmask_org;
+> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> +	struct AdapterControlBlock *acb =
+> +		(struct AdapterControlBlock *)host->hostdata;
+> +
+> +	intmask_org = arcmsr_disable_outbound_ints(acb);
+> +	arcmsr_free_irq(pdev, acb);
+> +	del_timer_sync(&acb->eternal_timer);
+> +	flush_work(&acb->arcmsr_do_message_isr_bh);
+> +	arcmsr_stop_adapter_bgrb(acb);
+> +	arcmsr_flush_adapter_cache(acb);
+> +	pci_set_drvdata(pdev, host);
+> +	pci_save_state(pdev);
+> +	pci_disable_device(pdev);
+> +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+> +	return 0;
+> +}
+> +
+> +static int arcmsr_resume(struct pci_dev *pdev)
+> +{
+> +	int error;
+> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> +	struct AdapterControlBlock *acb =
+> +		(struct AdapterControlBlock *)host->hostdata;
+> +
+> +	pci_set_power_state(pdev, PCI_D0);
+> +	pci_enable_wake(pdev, PCI_D0, 0);
+> +	pci_restore_state(pdev);
+> +	if (pci_enable_device(pdev)) {
+> +		pr_warn("%s: pci_enable_device error\n", __func__);
+> +		return -ENODEV;
+> +	}
+> +	error = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+> +	if (error) {
+> +		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+> +		if (error) {
+> +			pr_warn("scsi%d: No suitable DMA mask available\n",
+> +			       host->host_no);
+> +			goto controller_unregister;
+> +		}
+> +	}
+> +	pci_set_master(pdev);
+> +	if (arcmsr_request_irq(pdev, acb) == FAILED)
+> +		goto controller_stop;
+> +	arcmsr_iop_init(acb);
+> +	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
+> +	atomic_set(&acb->rq_map_token, 16);
+> +	atomic_set(&acb->ante_token_value, 16);
+> +	acb->fw_flag = FW_NORMAL;
+> +	init_timer(&acb->eternal_timer);
+> +	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
+> +	acb->eternal_timer.data = (unsigned long) acb;
+> +	acb->eternal_timer.function = &arcmsr_request_device_map;
+> +	add_timer(&acb->eternal_timer);
+> +	return 0;
+> +controller_stop:
+> +	arcmsr_stop_adapter_bgrb(acb);
+> +	arcmsr_flush_adapter_cache(acb);
+> +controller_unregister:
+> +	scsi_remove_host(host);
+> +	arcmsr_free_ccb_pool(acb);
+> +	arcmsr_unmap_pciregion(acb);
+> +	pci_release_regions(pdev);
+> +	scsi_host_put(host);
+> +	pci_disable_device(pdev);
+> +	return -ENODEV;
+> +}
+> +
+>  static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
+>  {
+>  	struct MessageUnit_A __iomem *reg = acb->pmuA;
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
