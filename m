@@ -1,42 +1,37 @@
 From: jgross@suse.com
-Subject: [PATCH V4 3/4] add xen pvscsi maintainer
-Date: Fri,  8 Aug 2014 09:43:59 +0200
-Message-ID: <1407483840-31436-4-git-send-email-jgross@suse.com>
-References: <1407483840-31436-1-git-send-email-jgross@suse.com>
+Subject: Add XEN pvSCSI support
+Date: Fri,  8 Aug 2014 09:43:56 +0200
+Message-ID: <1407483840-31436-1-git-send-email-jgross@suse.com>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1407483840-31436-1-git-send-email-jgross@suse.com>
 Sender: target-devel-owner@vger.kernel.org
 To: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com
-Cc: Juergen Gross <jgross@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Juergen Gross <jgross@suse.com>
+This series adds XEN pvSCSI support. With pvSCSI it is possible to use physical
+SCSI devices from a XEN domain.
 
-Add myself as maintainer for the Xen pvSCSI stuff.
+The support consists of a backend in the privileged Domain-0 doing the real
+I/O and a frontend in the unprivileged domU passing I/O-requests to the backend.
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+The code is taken (and adapted) from the original pvSCSI implementation done
+for Linux 2.6 in 2008 by Fujitsu.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c2066f4..d020bfd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10046,6 +10046,14 @@ S:	Supported
- F:	arch/x86/pci/*xen*
- F:	drivers/pci/*xen*
- 
-+XEN PVSCSI DRIVERS
-+M:	Juergen Gross <jgross@suse.com>
-+L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
-+S:	Supported
-+F:	drivers/scsi/xen-scsifront.c
-+F:	drivers/xen/xen-scsiback.c
-+F:	include/xen/interface/io/vscsiif.h
-+
- XEN SWIOTLB SUBSYSTEM
- M:	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
- L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
--- 
-1.8.4.5
+[PATCH V2 1/4] Add XEN pvSCSI protocol description
+[PATCH V2 2/4] Introduce xen-scsifront module
+[PATCH V2 3/4] Introduce XEN scsiback module
+[PATCH V2 4/4] add xen pvscsi maintainer
+
+Changes in V4:
+- Re-add define for VSCSIIF_ACT_SCSI_SG_PRESET to vscsiif.h to indicate this
+  action value should not be used in future enhancements
+
+Changes in V3:
+- added some comments to the protocol header file
+- removed the CDB emulation from xen-scsiback, handled by core target
+  infrastructure
+- several changes in xen-scsifront after comments from Christoph Hellwig
+
+Changes in V2:
+- use core target infrastructure by backend instead of pure SCSI passthrough
+- add support for larger SG lists by putting them in grant page(s)
+- add command abort capability
