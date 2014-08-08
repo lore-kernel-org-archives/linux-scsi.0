@@ -1,121 +1,84 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v2 4/17] arcmsr: limit max. number of SCSI command request
-Date: Fri, 08 Aug 2014 20:17:59 +0800
-Message-ID: <1407500279.5099.21.camel@Centos6.3-64>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
+ error messages on trace
+Date: Fri, 08 Aug 2014 15:07:07 +0200
+Message-ID: <53E4CB7B.7020705@interlog.com>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:34516 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755989AbaHHMSJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 08:18:09 -0400
-Received: by mail-pd0-f176.google.com with SMTP id y10so6919880pdj.7
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2014 05:18:09 -0700 (PDT)
+Received: from smtp.infotech.no ([82.134.31.41]:33568 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755969AbaHHNHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2014 09:07:12 -0400
+In-Reply-To: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-From: Ching Huang <ching2048@areca.com.tw>
+On 14-08-08 01:50 PM, Yoshihiro YUNOMAE wrote:
+> Hi All,
+>
+> This patch set introduces new traceevents in order to output continuous error
+> messages. Current SCSI printk messages in upstream kernel can be divided by and
+> mixed with other messages. Even if each error message has its device id,
+> sometimes we can easily be lost in mixed logs because the message's device id
+> is separated from it's body. To avoid it, I'd like to use traceevents to
+> store error messages into the ftrace or perf buuffer, because traceevents
+> are atomically commited to the buffer.
+>
+> In this patch set, all printk messages are removed based on a local
+> discussion with Hannes, but I think printk messages should be kept because all
+> users don't enable traceevents and rsyslog can store as files.
+>
+> However, if printk of logging branch is kept, the messages are duplicate and
+> it can induce stack overflow by using local buffer(*1).
+>
+>   (*1) https://lkml.org/lkml/2014/5/20/742
+>
+> So, my suggestion is follows:
+>
+> 1) printk
+> Keeps current implemntation of upstream kernel.
+> The messages are divided and can be mixed, but all users can check the error
+> messages without any settings.
+>
+> 2) traceevents
+> To get the complete messages, we can use ftrace or perf (or something on them).
+> Users can always understand correct messages, but they need to set up the
+> tracers.
+>
+> This patch set is based on Hannes' logging branch:
+> http://git.kernel.org/cgit/linux/kernel/git/hare/scsi-devel.git/log/?h=logging
+>
+> [1/10] ~  [6/10]: just cleanup for logging branch
+> [7/10] ~ [10/10]: introduce new traceevents
+>
+> Any comments are welcome!
 
-This patch limits the max. number of SCSI command request to avoid command overflow.
+In sg3_utils there are now string yielding equivalents
+to the sense buffer "print" functions. They take a form
+like this:
+   char * get_sense_str(const unsigned char * sense_buffer,
+                        int sb_len, int blen, char * b);
 
-Changes in v2 4/17:
-* set the correct host->can_queue value after read adapter's limitation.
+So this just does the hard work of decoding the sense buffer
+(or saying it is invalid) the result of which it places in
+buffer 'b'. And 'b' is returned (so this function can be in
+the arguments of a driver's printing function).
 
-Signed-off-by: Ching Huang <ching2048@areca.com.tw>
----
+Adding such string functions would give other parts of the
+SCSI subsystem the capability of tailoring their own
+messages that include sense data information.
 
-Thanks to Tomas's advice.
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:24:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:22:36.000000000 +0800
-@@ -45,11 +45,12 @@
- #include <linux/interrupt.h>
- struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
--#define ARCMSR_MAX_OUTSTANDING_CMD						256
- #ifdef CONFIG_XEN
- 	#define ARCMSR_MAX_FREECCB_NUM	160
-+#define ARCMSR_MAX_OUTSTANDING_CMD	155
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
-+#define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
- #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
-@@ -598,6 +599,7 @@ struct AdapterControlBlock
- 				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
- 	atomic_t			ante_token_value;
-+	uint32_t	maxOutstanding;
- 	int		msix_vector_count;
- };/* HW_DEVICE_EXTENSION */
- /*
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:35:46.000000000 +0800
-@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
-+	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
-@@ -693,7 +693,7 @@ static int arcmsr_probe(struct pci_dev *
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
- 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
--	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
-+	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
-@@ -2215,9 +2215,6 @@ static int arcmsr_queue_command_lck(stru
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (atomic_read(&acb->ccboutstandingcount) >=
--			ARCMSR_MAX_OUTSTANDING_CMD)
--		return SCSI_MLQUEUE_HOST_BUSY;
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -2427,12 +2424,27 @@ static bool arcmsr_get_hbc_config(struct
- }
- static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
- {
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
--		return arcmsr_get_hba_config(acb);
--	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
--		return arcmsr_get_hbb_config(acb);
-+	bool rtn = false;
-+
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		rtn = arcmsr_get_hba_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_B:
-+		rtn = arcmsr_get_hbb_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_C:
-+		rtn = arcmsr_get_hbc_config(acb);
-+		break;
-+	default:
-+		break;
-+	}
-+	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
-+		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
- 	else
--		return arcmsr_get_hbc_config(acb);
-+		acb->maxOutstanding = acb->firm_numbers_queue - 1;
-+	acb->host->can_queue = acb->maxOutstanding;
-+	return rtn;
- }
- 
- static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+Existing sense buffer "print" function could be kept and
+implemented using the newer "_str" variants. Would that
+be worth the trouble?
+
+Doug Gilbert
 
 
