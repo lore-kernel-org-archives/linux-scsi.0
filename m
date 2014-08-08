@@ -1,86 +1,75 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH 1/1] dpt_i2o: delete unnecessary null test on array
-Date: Fri, 08 Aug 2014 16:38:21 +0200
-Message-ID: <53E4E0DD.2020901@bfs.de>
-References: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr> <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>
-Reply-To: wharms@bfs.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v6 0/2] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
+Date: Fri,  8 Aug 2014 21:44:24 +0530
+Message-ID: <1407514466-25312-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx01-fr.bfs.de ([193.174.231.67]:4896 "EHLO mx01-fr.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757134AbaHHOic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2014 10:38:32 -0400
-In-Reply-To: <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46533 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756020AbaHHQPh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 12:15:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
 
+v2 Change:
+   1. Drop the Link down retry patch from this patch set.
 
-Am 06.08.2014 12:39, schrieb Julia Lawall:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> Delete NULL test on array (always false).
-> 
-> A simplified version of the semantic match that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r@
-> type T;
-> T [] e;
-> position p;
-> @@
-> e ==@p NULL
-> 
-> @ disable fld_to_ptr@
-> expression e;
-> identifier f;
-> position r.p;
-> @@
-> * e.f ==@p NULL
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
-> I don't know if this is the correct change, or if some other test was
-> intended.  But the code has been this way since at least 2.4.20, so it
-> would seem that no one has been bothered by the lack of whatever this was
-> supposed to test for.
-> 
->  drivers/scsi/dpt_i2o.c |    5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> index 67283ef..62e276b 100644
-> --- a/drivers/scsi/dpt_i2o.c
-> +++ b/drivers/scsi/dpt_i2o.c
-> @@ -1169,11 +1169,6 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
->  	if(chan < 0 || chan >= MAX_CHANNEL)
->  		return NULL;
->  	
+v4 Change:
+   1. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   2. Add the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters.
+   3. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver.
+   4. Add the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node.
 
-chan is u32 and u32 < 0 ?
-for the next round.
+v5 Change :
+   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
+   2. Drop the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node as it breaks
+     with old firmware.
+   3. Add the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   4. Add the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   5. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
+     for-3.17 kernel.
+   6. Drop the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters as it is already applied to
+     3.16/for-3.17 branch by the maintainer.
+   7. Drop the patch to fix the watermark threshold as it is
+     already applied to 3.16/for-3.17 branch by the maintainer.
 
-re,
- wh
+v6 change :
+   1. Drop the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   2. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   3. Add the remove the clock and PHY node patch as it
+     fixes the dropped patches together. This patch works with
+     old and new firmware as well.
 
-> -	if( pHba->channel[chan].device == NULL){
-> -		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
-> -		return NULL;
-> -	}
-> -
->  	d = pHba->channel[chan].device[id];
->  	if(!d || d->tid == 0) {
->  		return NULL;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+
+Suman Tripathi (2):
+  ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA
+    Host Controller driver.
+  arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI
+    SATA Host controller dts node.
+
+ .../devicetree/bindings/ata/apm-xgene.txt          | 10 +--
+ arch/arm64/boot/dts/apm-storm.dtsi                 | 93 ----------------------
+ drivers/ata/ahci_xgene.c                           |  4 +-
+ 3 files changed, 7 insertions(+), 100 deletions(-)
+
+--
+1.8.2.1
+
