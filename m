@@ -1,29 +1,21 @@
 From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Subject: [RFC PATCH 06/10] scsi/sd: Delete extra scsi_show_extd_sense() in
- sd_print_sense_hdr()
-Date: Fri, 08 Aug 2014 11:50:19 +0000
-Message-ID: <20140808115019.6768.99063.stgit@yuno-kbuild.novalocal>
+Subject: [RFC PATCH 03/10] scsi/constants: Cleanup printk message in
+ __scsi_print_command()
+Date: Fri, 08 Aug 2014 11:50:12 +0000
+Message-ID: <20140808115012.6768.44952.stgit@yuno-kbuild.novalocal>
 References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail9.hitachi.co.jp ([133.145.228.44]:45784 "EHLO
-	mail9.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756563AbaHHLuY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 07:50:24 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
-sd_print_sense_hdr() calls scsi_show_extd_sense(),
-but scsi_print_sense_hdr() also calls scsi_show_extd_sense().
-We can get same result, so we delete it.
-
-Note:
-Calling scsi_show_extd_sense() is introduced in fdd8b297.
+All bytes in CDB should be output after linebuf is filled because
+"[%s] CDB: %s\n" message is output many times in loop.
 
 Signed-off-by: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
 Cc: Hannes Reinecke <hare@suse.de>
@@ -34,20 +26,21 @@ Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>
 Cc: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
 ---
- drivers/scsi/sd.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/constants.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8d7204a..22dd214 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3286,8 +3286,6 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
- 			       struct scsi_sense_hdr *sshdr)
- {
- 	scsi_print_sense_hdr(sdkp->device, sdkp->disk->disk_name, sshdr);
--	scsi_show_extd_sense(sdkp->device, sdkp->disk->disk_name,
--			     sshdr->asc, sshdr->ascq);
- }
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 9c38b8d..5956d4d 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -413,9 +413,8 @@ void __scsi_print_command(struct scsi_device *sdev, const char *prefix,
  
- static void sd_print_result(struct scsi_disk *sdkp, int result)
-
+ 		hex_dump_to_buffer(cdb + i, linelen, 16, 1,
+ 				   linebuf, sizeof(linebuf), false);
+-		sdev_printk(KERN_INFO, sdev, "[%s] CDB: %s\n",
+-			    prefix, linebuf);
+ 	}
++	sdev_printk(KERN_INFO, sdev, "[%s] CDB: %s\n", prefix, linebuf);
+ }
+ EXPORT_SYMBOL(__scsi_print_command);
+ 
