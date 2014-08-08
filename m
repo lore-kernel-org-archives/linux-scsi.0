@@ -1,88 +1,121 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 2/2] qla2xxx: Remove restriction on starting remote device discovery on port update.
-Date: Fri, 8 Aug 2014 07:38:09 -0400
-Message-ID: <1407497889-4814-3-git-send-email-chad.dupuis@qlogic.com>
-References: <1407497889-4814-1-git-send-email-chad.dupuis@qlogic.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH v2 4/17] arcmsr: limit max. number of SCSI command request
+Date: Fri, 08 Aug 2014 20:17:59 +0800
+Message-ID: <1407500279.5099.21.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:46434 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756187AbaHHMKW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 08:10:22 -0400
-In-Reply-To: <1407497889-4814-1-git-send-email-chad.dupuis@qlogic.com>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:34516 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989AbaHHMSJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 08:18:09 -0400
+Received: by mail-pd0-f176.google.com with SMTP id y10so6919880pdj.7
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Aug 2014 05:18:09 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, hch@lst.de
-Cc: giridhar.malavali@qlogic.com
+To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Limiting which port update events will allow the driver to kick off a
-name server scan has been problematic in some corner cases so remove the
-restriction and restore the previous semantic. Also move the link
-up/down informational messages to the LOOP_UP and LOOP_DOWN events.
+From: Ching Huang <ching2048@areca.com.tw>
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+This patch limits the max. number of SCSI command request to avoid command overflow.
+
+Changes in v2 4/17:
+* set the correct host->can_queue value after read adapter's limitation.
+
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |  2 +-
- drivers/scsi/qla2xxx/qla_isr.c | 10 ++++------
- 2 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c72ee97b..41117b3 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -34,7 +34,7 @@
-  * |                              |                    | 0x5047,0x5052  |
-  * |                              |                    | 0x5084,0x5075	|
-  * |                              |                    | 0x503d,0x5044  |
-- * |                              |                    | 0x507b		|
-+ * |                              |                    | 0x507b,0x505f	|
-  * | Timer Routines               |       0x6012       |                |
-  * | User Space Interactions      |       0x70e2       | 0x7018,0x702e  |
-  * |				  |		       | 0x7020,0x7024  |
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 550a4a3..d89e3c4 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -730,7 +730,7 @@ skip_rio:
- 		else
- 			ha->link_data_rate = mb[1];
+Thanks to Tomas's advice.
+
+diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+--- a/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:24:06.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:22:36.000000000 +0800
+@@ -45,11 +45,12 @@
+ #include <linux/interrupt.h>
+ struct device_attribute;
+ /*The limit of outstanding scsi command that firmware can handle*/
+-#define ARCMSR_MAX_OUTSTANDING_CMD						256
+ #ifdef CONFIG_XEN
+ 	#define ARCMSR_MAX_FREECCB_NUM	160
++#define ARCMSR_MAX_OUTSTANDING_CMD	155
+ #else
+ 	#define ARCMSR_MAX_FREECCB_NUM	320
++#define ARCMSR_MAX_OUTSTANDING_CMD	255
+ #endif
+ #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
+ #define ARCMSR_SCSI_INITIATOR_ID						255
+@@ -598,6 +599,7 @@ struct AdapterControlBlock
+ 				#define	FW_DEADLOCK	0x0010
+ 	atomic_t 			rq_map_token;
+ 	atomic_t			ante_token_value;
++	uint32_t	maxOutstanding;
+ 	int		msix_vector_count;
+ };/* HW_DEVICE_EXTENSION */
+ /*
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:35:46.000000000 +0800
+@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
+ 	.eh_bus_reset_handler	= arcmsr_bus_reset,
+ 	.bios_param		= arcmsr_bios_param,
+ 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
+-	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
++	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
+ 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
+ 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
+ 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
+@@ -693,7 +693,7 @@ static int arcmsr_probe(struct pci_dev *
+ 	host->max_lun = ARCMSR_MAX_TARGETLUN;
+ 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
+ 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
+-	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
++	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
+ 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
+ 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
+ 	host->unique_id = (bus << 8) | dev_fun;
+@@ -2215,9 +2215,6 @@ static int arcmsr_queue_command_lck(stru
+ 		arcmsr_handle_virtual_command(acb, cmd);
+ 		return 0;
+ 	}
+-	if (atomic_read(&acb->ccboutstandingcount) >=
+-			ARCMSR_MAX_OUTSTANDING_CMD)
+-		return SCSI_MLQUEUE_HOST_BUSY;
+ 	ccb = arcmsr_get_freeccb(acb);
+ 	if (!ccb)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -2427,12 +2424,27 @@ static bool arcmsr_get_hbc_config(struct
+ }
+ static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
+ {
+-	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
+-		return arcmsr_get_hba_config(acb);
+-	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
+-		return arcmsr_get_hbb_config(acb);
++	bool rtn = false;
++
++	switch (acb->adapter_type) {
++	case ACB_ADAPTER_TYPE_A:
++		rtn = arcmsr_get_hba_config(acb);
++		break;
++	case ACB_ADAPTER_TYPE_B:
++		rtn = arcmsr_get_hbb_config(acb);
++		break;
++	case ACB_ADAPTER_TYPE_C:
++		rtn = arcmsr_get_hbc_config(acb);
++		break;
++	default:
++		break;
++	}
++	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
++		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
+ 	else
+-		return arcmsr_get_hbc_config(acb);
++		acb->maxOutstanding = acb->firm_numbers_queue - 1;
++	acb->host->can_queue = acb->maxOutstanding;
++	return rtn;
+ }
  
--		ql_dbg(ql_dbg_async, vha, 0x500a,
-+		ql_log(ql_log_info, vha, 0x500a,
- 		    "LOOP UP detected (%s Gbps).\n",
- 		    qla2x00_get_link_speed_str(ha, ha->link_data_rate));
- 
-@@ -743,7 +743,7 @@ skip_rio:
- 			? RD_REG_WORD(&reg24->mailbox4) : 0;
- 		mbx = (IS_P3P_TYPE(ha)) ? RD_REG_WORD(&reg82->mailbox_out[4])
- 			: mbx;
--		ql_dbg(ql_dbg_async, vha, 0x500b,
-+		ql_log(ql_log_info, vha, 0x500b,
- 		    "LOOP DOWN detected (%x %x %x %x).\n",
- 		    mb[1], mb[2], mb[3], mbx);
- 
-@@ -908,7 +908,8 @@ skip_rio:
- 		 * it.  Otherwise ignore it and Wait for RSCN to come in.
- 		 */
- 		atomic_set(&vha->loop_down_timer, 0);
--		if (mb[1] != 0xffff || (mb[2] != 0x6 && mb[2] != 0x4)) {
-+		if (atomic_read(&vha->loop_state) != LOOP_DOWN &&
-+		    atomic_read(&vha->loop_state) != LOOP_DEAD) {
- 			ql_dbg(ql_dbg_async, vha, 0x5011,
- 			    "Asynchronous PORT UPDATE ignored %04x/%04x/%04x.\n",
- 			    mb[1], mb[2], mb[3]);
-@@ -920,9 +921,6 @@ skip_rio:
- 		ql_dbg(ql_dbg_async, vha, 0x5012,
- 		    "Port database changed %04x %04x %04x.\n",
- 		    mb[1], mb[2], mb[3]);
--		ql_log(ql_log_warn, vha, 0x505f,
--		    "Link is operational (%s Gbps).\n",
--		    qla2x00_get_link_speed_str(ha, ha->link_data_rate));
- 
- 		/*
- 		 * Mark all devices as missing so we will login again.
--- 
-1.8.5.2
+ static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+
 
