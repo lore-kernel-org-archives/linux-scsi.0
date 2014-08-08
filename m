@@ -1,55 +1,38 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 1/1] dpt_i2o: delete unnecessary null test on array
-Date: Fri, 8 Aug 2014 19:16:52 +0200 (CEST)
-Message-ID: <alpine.DEB.2.10.1408081916280.2348@hadrien>
-References: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>   <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>  <1407517179.2044.13.camel@jarvis.lan>  <alpine.DEB.2.10.1408081902400.2348@hadrien>
- <1407518045.1686.0.camel@HansenPartnership.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/5] be2iscsi: Update to 10.4.74.0
+Date: Fri, 08 Aug 2014 13:55:14 -0500
+Message-ID: <53E51D12.5030002@cs.wisc.edu>
+References: <1407474003-26220-1-git-send-email-jkallickal@emulex.com> <1407474003-26220-6-git-send-email-jkallickal@emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:20968
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752978AbaHHRRW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2014 13:17:22 -0400
-In-Reply-To: <1407518045.1686.0.camel@HansenPartnership.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56964 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932346AbaHHSzc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2014 14:55:32 -0400
+In-Reply-To: <1407474003-26220-6-git-send-email-jkallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
+To: Jay Kallickal <jayamohank@gmail.com>
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-On Fri, 8 Aug 2014, James Bottomley wrote:
+On 08/08/2014 12:00 AM, Jay Kallickal wrote:
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> 
+>  This patchset updates be2iscsi driver to 10.4.74.0
+> 
+> These patches are based on for-next branch of scsi.git.
+> 
+> 0001 - Fix the sparse warning  
+> 0002 - Update the copyright year
+> 0003 - Fix updating the boot enteries in sysfs
+> 0004 - Fix processing CQE before freeing connection resources
+> 0005 - Bump the driver version
+> 
 
-> On Fri, 2014-08-08 at 19:03 +0200, Julia Lawall wrote:
-> > > > diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> > > > index 67283ef..62e276b 100644
-> > > > --- a/drivers/scsi/dpt_i2o.c
-> > > > +++ b/drivers/scsi/dpt_i2o.c
-> > > > @@ -1169,11 +1169,6 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
-> > > >  	if(chan < 0 || chan >= MAX_CHANNEL)
-> > > >  		return NULL;
-> > > >
-> > > > -	if( pHba->channel[chan].device == NULL){
-> > > > -		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
-> > > > -		return NULL;
-> > > > -	}
-> > >
-> > > dpt_i2o is always weirdly fun, but I think, based on the message, this
-> > > check is supposed to be
-> > >
-> > > if( pHba->channel[chan].device[id] == NULL){
-> > >
-> > > Since device is an array of device pointers which are allocated by
-> > > parsing data.
-> >
-> > That seems to be already checked immediately below:
-> >
-> >         d = pHba->channel[chan].device[id];
-> > 	if(!d || d->tid == 0) {
-> >                 return NULL;
->
-> Yes, I know, but no message is emitted.  The message seems to be for a
-> violation of the state machine which device[id] = NULL implies.
+Patches look ok to me. I am still behind on working on another fix for
+4/5 which is more invasive, so that is ok with me.
 
-OK, if the message seems helpful, then I can split up the tests.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-julia
