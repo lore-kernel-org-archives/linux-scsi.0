@@ -1,82 +1,86 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 1/1] dpt_i2o: delete unnecessary null test on array
-Date: Sat, 9 Aug 2014 08:26:04 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1408090825250.2016@localhost6.localdomain6>
-References: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>   <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>  <1407517179.2044.13.camel@jarvis.lan>  <alpine.DEB.2.10.1408081902400.2348@hadrien>
- <1407518045.1686.0.camel@HansenPartnership.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred
+	probe from init
+Date: Sat, 9 Aug 2014 18:41:19 +0200
+Message-ID: <20140809164119.GI21930@wotan.suse.de>
+References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com> <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com> <20140730.151107.1328294951387764830.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:23258
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750939AbaHIG0K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2014 02:26:10 -0400
-In-Reply-To: <1407518045.1686.0.camel@HansenPartnership.com>
+Received: from cantor2.suse.de ([195.135.220.15]:42494 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751900AbaHIQlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Aug 2014 12:41:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20140730.151107.1328294951387764830.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
+To: David Miller <davem@davemloft.net>, gregkh@linuxfoundation.org
+Cc: mcgrof@do-not-panic.com, tiwai@suse.de, linux-kernel@vger.kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, joseph.salisbury@canonical.com, kay@vrfy.org, gnomes@lxorguk.ukuu.org.uk, tim.gardner@canonical.com, pierre-fersing@pierref.org, akpm@linux-foundation.org, oleg@redhat.com, bpoirier@suse.de, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, hariprasad@chelsio.com, santosh@chelsio.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
->From nobody Sat Aug  9 08:17:15 CEST 2014
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>,linux-scsi@vger.kernel.org,linux-kernel@vger.kernel.org
-Subject: [PATCH] dpt_i2o: delete unnecessary null test on array
+On Wed, Jul 30, 2014 at 03:11:07PM -0700, David Miller wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> Date: Mon, 28 Jul 2014 11:28:28 -0700
+> 
+> > Tetsuo bisected and found that commit 786235ee "kthread: make
+> > kthread_create() killable" modified kthread_create() to bail as
+> > soon as SIGKILL is received. This is causing some issues with
+> > some drivers and at times boot. Joseph then found that failures
+> > occur as the systemd-udevd process sends SIGKILL to modprobe if
+> > probe on a driver takes over 30 seconds. When this happens probe
+> > will fail on any driver, its why booting on some system will fail
+> > if the driver happens to be a storage related driver. Some folks
+> > have suggested fixing this by modifying kthread_create() to not
+> > leave upon SIGKILL [3], upon review Oleg rejected this change and
+> > the discussion was punted out to systemd to see if the default
+> > timeout could be increased from 30 seconds to 120. The opinion of
+> > the systemd maintainers is that the driver's behavior should
+> > be fixed [4]. Linus seems to agree [5], however more recently even
+> > networking drivers have been reported to fail on probe since just
+> > writing the firmware to a device and kicking it can take easy over
+> > 60 seconds [6]. Benjamim was able to trace the issues recently
+> > reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
+> > 
+> > This is an alternative solution which enables drivers that are
+> > known to take long to use deferred probe workqueue. This avoids
+> > the 30 second timeout and lets us annotate drivers with long
+> > init sequences.
+> > 
+> > As drivers determine a component is not yet available and needs
+> > to defer probe you'll be notified this happen upon init for each
+> > device but now with a message such as:
+> > 
+> > pci 0000:03:00.0: Driver cxgb4 requests probe deferral on init
+> > 
+> > You should see one of these per struct device probed.
+> 
+> It seems we're still discussing this.
+> 
+> I think I understand all of the underlying issues, and what I'll say
+> is that perhaps we should use what Greg KH requested but via a helper
+> that is easy to grep for.
+> 
+> I don't care if it's something like "module_long_probe_init()" and
+> "module_long_probe_exit()", but it just needs to be some properly
+> named interface which does the whole kthread or whatever bit.
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+I've tested the alternative kthread_run() proposal but unfortunately it
+does not help resolve the issue, the timeout is still hit and a SIGKILL
+still kills the driver probe. Please let me know how you'd all like us
+to proceed, these defer probe patches do help cure the issue though.
 
-Convert a NULL test on an array to a NULL test on its element.  Delete a
-redundant test and clean up the code a little.
+I should also note that these work around patches can only be done once we
+already know a driver fails to go over the timeout, root causing and
+associating driver issues to the timeout has been very difficult with a few
+drivers already, for this reason I've submitted a change for systemd to issue a
+warning instead of killing kmod usage on udev after a timeout, that would make
+this regression non-fatal, and let us more easily then hunt drivers that need
+fixing much easily [0] [1]. As noted we'd still want to have drivers easily
+annotated which require fixing, this orignal series would allow us to do that
+by hunting for delay_probe. If there alternative and preferred strategies
+please let me know.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+[0] http://lists.freedesktop.org/archives/systemd-devel/2014-August/021812.html
+[1] http://lists.freedesktop.org/archives/systemd-devel/2014-August/021821.html
 
-// <smpl>
-@r@
-type T;
-T [] e;
-position p;
-@@
-e ==@p NULL
-
-@ disable fld_to_ptr@
-expression e;
-identifier f;
-position r.p;
-@@
-* e.f ==@p NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-v2: Test instead the array element, and clean up the code a bit.
-
- drivers/scsi/dpt_i2o.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 67283ef..4647c93 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1169,15 +1169,14 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
- 	if(chan < 0 || chan >= MAX_CHANNEL)
- 		return NULL;
- 	
--	if( pHba->channel[chan].device == NULL){
--		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
-+	d = pHba->channel[chan].device[id];
-+	if (!d) {
-+		printk(KERN_DEBUG "Adaptec I2O RAID: Trying to find device before they are allocated\n");
- 		return NULL;
- 	}
- 
--	d = pHba->channel[chan].device[id];
--	if(!d || d->tid == 0) {
-+	if (d->tid == 0)
- 		return NULL;
--	}
- 
- 	/* If it is the only lun at that address then this should match*/
- 	if(d->scsi_lun == lun){
-
+  Luis
