@@ -1,74 +1,82 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature
- support
-Date: Fri, 8 Aug 2014 22:01:05 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D859D323@nice.asicdesigners.com>
-References: <1407364668-20931-1-git-send-email-anish@chelsio.com>
- <1407364668-20931-2-git-send-email-anish@chelsio.com>,<53E2E3A6.7010402@cs.wisc.edu>,<525DB349B3FB5444AE057A887CB2A8D859BA06@nice.asicdesigners.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH 1/1] dpt_i2o: delete unnecessary null test on array
+Date: Sat, 9 Aug 2014 08:26:04 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1408090825250.2016@localhost6.localdomain6>
+References: <1407321551-27479-1-git-send-email-Julia.Lawall@lip6.fr>   <1407321551-27479-2-git-send-email-Julia.Lawall@lip6.fr>  <1407517179.2044.13.camel@jarvis.lan>  <alpine.DEB.2.10.1408081902400.2348@hadrien>
+ <1407518045.1686.0.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:20549
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758243AbaHHWCY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2014 18:02:24 -0400
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D859BA06@nice.asicdesigners.com>
-Content-Language: en-US
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:23258
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750939AbaHIG0K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Aug 2014 02:26:10 -0400
+In-Reply-To: <1407518045.1686.0.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
 
-Mike, I presume you meant the
-8846bab
-    scsi_cmnd: Introduce scsi_transfer_length helper
-d77e653
-libiscsi, iser: Adjust data_length to include protection information
+>From nobody Sat Aug  9 08:17:15 CEST 2014
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>,linux-scsi@vger.kernel.org,linux-kernel@vger.kernel.org
+Subject: [PATCH] dpt_i2o: delete unnecessary null test on array
 
- & Martin's fix after that 
-5616b0
-use the scsi data buffer length to extract transfer size
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-I see the commits in the branches, but not in master. Do the patches need to be
- rebased onto drivers-for-3.17 then ?
--Anish
-________________________________________
-From: Anish Bhatt
-Sent: Wednesday, August 06, 2014 7:35 PM
-To: Mike Christie
-Cc: linux-scsi@vger.kernel.org; hch@infradead.org; jbottomley@parallels.com; Karen Xie; Manoj Malviya
-Subject: RE: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature support
+Convert a NULL test on an array to a NULL test on its element.  Delete a
+redundant test and clean up the code a little.
 
-This patch was made over scsi-devel/master, I'll rebase it to Christoph's tree
--Anish
-________________________________________
-From: Mike Christie [michaelc@cs.wisc.edu]
-Sent: Wednesday, August 06, 2014 7:25 PM
-To: Anish Bhatt
-Cc: linux-scsi@vger.kernel.org; hch@infradead.org; jbottomley@parallels.com; Karen Xie; Manoj Malviya
-Subject: Re: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature support
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
- On 08/06/2014 05:37 PM, Anish Bhatt wrote
-> @@ -436,12 +473,12 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
->                       /* No unsolicit Data-Out's */
->                       hdr->flags |= ISCSI_FLAG_CMD_FINAL;
->       } else {
-> +             unsigned in_len = iscsi_scsi_in_total_length(sc);
->               hdr->flags |= ISCSI_FLAG_CMD_FINAL;
->               zero_data(hdr->dlength);
-> -             hdr->data_length = cpu_to_be32(scsi_in(sc)->length);
-> -
->               if (sc->sc_data_direction == DMA_FROM_DEVICE)
->                       hdr->flags |= ISCSI_FLAG_CMD_READ;
-> +             hdr->data_length = cpu_to_be32(in_len);
->       }
->
+// <smpl>
+@r@
+type T;
+T [] e;
+position p;
+@@
+e ==@p NULL
 
-What tree and branch did you make these over? Have you seen the patches
-from Sagi for iser and libiscsi support?
+@ disable fld_to_ptr@
+expression e;
+identifier f;
+position r.p;
+@@
+* e.f ==@p NULL
+// </smpl>
 
-Could you rebuild this over Christoph's tree which has his patches:
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-git://git.infradead.org/users/hch/scsi-queue.git
+---
+v2: Test instead the array element, and clean up the code a bit.
+
+ drivers/scsi/dpt_i2o.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 67283ef..4647c93 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1169,15 +1169,14 @@ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u6
+ 	if(chan < 0 || chan >= MAX_CHANNEL)
+ 		return NULL;
+ 	
+-	if( pHba->channel[chan].device == NULL){
+-		printk(KERN_DEBUG"Adaptec I2O RAID: Trying to find device before they are allocated\n");
++	d = pHba->channel[chan].device[id];
++	if (!d) {
++		printk(KERN_DEBUG "Adaptec I2O RAID: Trying to find device before they are allocated\n");
+ 		return NULL;
+ 	}
+ 
+-	d = pHba->channel[chan].device[id];
+-	if(!d || d->tid == 0) {
++	if (d->tid == 0)
+ 		return NULL;
+-	}
+ 
+ 	/* If it is the only lun at that address then this should match*/
+ 	if(d->scsi_lun == lun){
+
