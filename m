@@ -1,54 +1,26 @@
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred probefrom init
-Date: Sun, 10 Aug 2014 22:42:26 +0900
-Message-ID: <201408102242.FGG43287.FMFFLQJVOHOOSt@I-love.SAKURA.ne.jp>
-References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
-	<1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
-	<20140730.151107.1328294951387764830.davem@davemloft.net>
-	<20140809164119.GI21930@wotan.suse.de>
-	<20140810124331.GE30451@kroah.com>
+From: "ST CHANG" <info@net.com.net>
+Subject: ATTN:::  PROPOSAL
+Date: Sun, 10 Aug 2014 07:02:52 -0700
+Message-ID: <20140810134824.83299C10A30@webmail.ricethailand.go.th>
+Reply-To: stchang10001@Safe-mail.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140810124331.GE30451@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, mcgrof@suse.com
-Cc: davem@davemloft.net, mcgrof@do-not-panic.com, tiwai@suse.de, linux-kernel@vger.kernel.org, joseph.salisbury@canonical.com, kay@vrfy.org, gnomes@lxorguk.ukuu.org.uk, tim.gardner@canonical.com, pierre-fersing@pierref.org, akpm@linux-foundation.org, oleg@redhat.com, bpoirier@suse.de, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, hariprasad@chelsio.com, santosh@chelsio.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [122.155.210.5] ([122.155.210.5]:58061 "EHLO
+	webmail.ricethailand.go.th" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751065AbaHJOkr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Aug 2014 10:40:47 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <info@net.com.net>
 
-Greg KH wrote:
-> Why doesn't it work?  Doesn't modprobe come right back and the init
-> sequence still takes a while to run?  What exactly fails?
+China Steel Corporation (CSAC), is in urgent need of a reputable company,/firm
+ or individual to serve as our financial coordinator in Canada, America, Europe,
+ Uk. It's a part time job and pays well. If you are interested in working with us
+ please reply: stchang1113011@Safe-mail.net.  
 
-I guess ...
-
-> @@ -5429,9 +5429,19 @@ mptsas_init(void)
->  	return error;
->  }
->  
-> +static struct task_struct *init_thread;
-> +
-> +static int __init
-> +mptsas_init(void)
-> +{
-> +	init_thread = kthread_run(mptsas_real_init, NULL, "mptsas_init");
-> +	return 0;
-> +}
-> +
->  static void __exit
->  mptsas_exit(void)
->  {
-> +	kthread_stop(init_thread);
->  	pci_unregister_driver(&mptsas_driver);
->  	sas_release_transport(mptsas_transport_template);
->  
-> 
-
-kthread_run() can fail. sas_attach_transport() and/or pci_register_driver()
-in mptsas_real_init() can fail. Caller process may fail to continue if
-sas_attach_transport() and pci_register_driver() in mptsas_real_init() has
-not completed yet.
-
-kthread_stop() must not be called when kthread_run() failed.
-pci_unregister_driver() and/or sas_release_transport() must not be called
-when mptsas_real_init() did not return 0 (or has not returned 0 yet).
+Thank you very much.
+S T CHANG
