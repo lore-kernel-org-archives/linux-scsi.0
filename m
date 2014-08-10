@@ -1,77 +1,63 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred probe
- from init
-Date: Sun, 10 Aug 2014 20:43:31 +0800
-Message-ID: <20140810124331.GE30451@kroah.com>
-References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
- <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
- <20140730.151107.1328294951387764830.davem@davemloft.net>
- <20140809164119.GI21930@wotan.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140809164119.GI21930@wotan.suse.de>
-Sender: netdev-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: David Miller <davem@davemloft.net>, mcgrof@do-not-panic.com, tiwai@suse.de, linux-kernel@vger.kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, joseph.salisbury@canonical.com, kay@vrfy.org, gnomes@lxorguk.ukuu.org.uk, tim.gardner@canonical.com, pierre-fersing@pierref.org, akpm@linux-foundation.org, oleg@redhat.com, bpoirier@suse.de, nagalakshmi.nandigama@avagotech.com, praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, hariprasad@chelsio.com, santosh@chelsio.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH] scsi: Fix qemu boot hang problem
+Date: Sun, 10 Aug 2014 05:54:25 -0700
+Message-ID: <1407675265-29192-1-git-send-email-linux@roeck-us.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:65249 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbaHJMyb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Aug 2014 08:54:31 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Webb Scales <webbnh@hp.com>, Jens Axboe <axboe@kernel.dk>
 
-On Sat, Aug 09, 2014 at 06:41:19PM +0200, Luis R. Rodriguez wrote:
-> On Wed, Jul 30, 2014 at 03:11:07PM -0700, David Miller wrote:
-> > From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> > Date: Mon, 28 Jul 2014 11:28:28 -0700
-> > 
-> > > Tetsuo bisected and found that commit 786235ee "kthread: make
-> > > kthread_create() killable" modified kthread_create() to bail as
-> > > soon as SIGKILL is received. This is causing some issues with
-> > > some drivers and at times boot. Joseph then found that failures
-> > > occur as the systemd-udevd process sends SIGKILL to modprobe if
-> > > probe on a driver takes over 30 seconds. When this happens probe
-> > > will fail on any driver, its why booting on some system will fail
-> > > if the driver happens to be a storage related driver. Some folks
-> > > have suggested fixing this by modifying kthread_create() to not
-> > > leave upon SIGKILL [3], upon review Oleg rejected this change and
-> > > the discussion was punted out to systemd to see if the default
-> > > timeout could be increased from 30 seconds to 120. The opinion of
-> > > the systemd maintainers is that the driver's behavior should
-> > > be fixed [4]. Linus seems to agree [5], however more recently even
-> > > networking drivers have been reported to fail on probe since just
-> > > writing the firmware to a device and kicking it can take easy over
-> > > 60 seconds [6]. Benjamim was able to trace the issues recently
-> > > reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
-> > > 
-> > > This is an alternative solution which enables drivers that are
-> > > known to take long to use deferred probe workqueue. This avoids
-> > > the 30 second timeout and lets us annotate drivers with long
-> > > init sequences.
-> > > 
-> > > As drivers determine a component is not yet available and needs
-> > > to defer probe you'll be notified this happen upon init for each
-> > > device but now with a message such as:
-> > > 
-> > > pci 0000:03:00.0: Driver cxgb4 requests probe deferral on init
-> > > 
-> > > You should see one of these per struct device probed.
-> > 
-> > It seems we're still discussing this.
-> > 
-> > I think I understand all of the underlying issues, and what I'll say
-> > is that perhaps we should use what Greg KH requested but via a helper
-> > that is easy to grep for.
-> > 
-> > I don't care if it's something like "module_long_probe_init()" and
-> > "module_long_probe_exit()", but it just needs to be some properly
-> > named interface which does the whole kthread or whatever bit.
-> 
-> I've tested the alternative kthread_run() proposal but unfortunately it
-> does not help resolve the issue, the timeout is still hit and a SIGKILL
-> still kills the driver probe. Please let me know how you'd all like us
-> to proceed, these defer probe patches do help cure the issue though.
+The latest kernel fails to boot qemu arm images when using scsi
+for disk access. Boot gets stuck after the following messages.
 
-Why doesn't it work?  Doesn't modprobe come right back and the init
-sequence still takes a while to run?  What exactly fails?
+brd: module loaded
+sym53c8xx 0000:00:0c.0: enabling device (0100 -> 0103)
+sym0: <895a> rev 0x0 at pci 0000:00:0c.0 irq 93
+sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi host0: sym-2.2.3
 
-thanks,
+Bisect points to commit 71e75c97f97a ("scsi: convert device_busy to
+atomic_t"). Code inspection shows the following suspicious change
+in scsi_request_fn.
 
-greg k-h
+out_delay:
+-       if (sdev->device_busy == 0 && !scsi_device_blocked(sdev))
++       if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
+		blk_delay_queue(q, SCSI_QUEUE_DELAY);
+	}
+
+'sdev->device_busy == 0' was replaced with 'atomic_read(&sdev->device_busy)',
+meaning the logic was reversed. Changing this expression to
+'!atomic_read(&sdev->device_busy)' fixes the problem.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Webb Scales <webbnh@hp.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9c44392..ce62e87 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1774,7 +1774,7 @@ static void scsi_request_fn(struct request_queue *q)
+ 	blk_requeue_request(q, req);
+ 	atomic_dec(&sdev->device_busy);
+ out_delay:
+-	if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
++	if (!atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
+ 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
+ }
+ 
+-- 
+1.9.1
+
