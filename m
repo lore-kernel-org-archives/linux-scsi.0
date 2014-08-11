@@ -1,78 +1,56 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RFC 0/2] percpu_tags: Prototype implementation
-Date: Mon, 11 Aug 2014 13:57:45 -0700
-Message-ID: <1407790665.334.5.camel@haakon3.risingtidesystems.com>
-References: <cover.1405678629.git.agordeev@redhat.com>
-	 <20140811201744.GD8397@lenovo-rd230-04.lab.bos.redhat.com>
-	 <1407790341.334.2.camel@haakon3.risingtidesystems.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+Date: Tue, 12 Aug 2014 06:53:32 +0800
+Message-ID: <20140811225332.GA10721@kroah.com>
+References: <1407743966-25325-1-git-send-email-sanjeev_sharma@mentor.com>
+ <20140811082811.GC1422@kroah.com>
+ <FDC088D3B5555644AE135ED28A7ABDE94DF2B2AE@EU-MBX-02.mgc.mentorg.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1407790341.334.2.camel@haakon3.risingtidesystems.com>
+Content-Disposition: inline
+In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE94DF2B2AE@EU-MBX-02.mgc.mentorg.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nicholas Bellinger <nab@daterainc.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, Kent Overstreet <kmo@daterainc.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>
+To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Cc: "hdegoede@redhat.com" <hdegoede@redhat.com>, "kraxel@redhat.com" <kraxel@redhat.com>, "mdharm-usb@one-eyed-alien.net" <mdharm-usb@one-eyed-alien.net>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2014-08-11 at 13:52 -0700, Nicholas A. Bellinger wrote:
-> (Responding again without gmail, as the last email hit a failure when
-> responding to the lists..)
+On Mon, Aug 11, 2014 at 11:56:17AM +0000, Sharma, Sanjeev wrote:
+> Hi Greg,
 > 
-> On Mon, 2014-08-11 at 16:17 -0400, Alexander Gordeev wrote:
-> > On Fri, Jul 18, 2014 at 12:20:56PM +0200, Alexander Gordeev wrote:
-> > > The performance test is not decent, though. I used "fio" random
-> > > read against a "null_blk" device sitting on top of "percpu_tags",
-> > > which is not exactly how "percpu_ida" is used. This is another
-> > > reason I am posting - an advice on how to properly test is very
-> > > appreciated.
-> > 
-> > Hi Nicholas et al,
-> > 
-> > I expect the best possible performance test for percpu_ida/percpu_tags
-> > would be to stress drivers/vhost/scsi.c vhost_scsi_get_tag() function.
-> > 
-> > I tried to make such test by attaching ramdisk to a virtual machine
-> > (similar to https://lkml.org/lkml/2012/8/10/347) but ultimately failed
-> > to configure the necessary environment - the stock qemu does not have
-> > -vhost-scsi parameter.
-> > 
-> > Could you please advice how to make this configuration exposed to guests?
-> > 
-> > o- / ..................................................................... [...]
-> >   o- backstores .......................................................... [...]
-> >   | o- block .............................................. [Storage Objects: 0]
-> >   | o- fileio ............................................. [Storage Objects: 0]
-> >   | o- pscsi .............................................. [Storage Objects: 0]
-> >   | o- ramdisk ............................................ [Storage Objects: 1]
-> >   |   o- rda .............................................. [(1.0GiB) activated]
-> >   o- iscsi ........................................................ [Targets: 0]
-> >   o- loopback ..................................................... [Targets: 0]
-> >   o- vhost ........................................................ [Targets: 1]
-> >     o- naa.5001405b171ee405 .......................................... [TPGs: 1]
-> >       o- tpg1 .............................. [naa.5001405983a5b1a4, no-gen-acls]
-> >         o- acls ...................................................... [ACLs: 0]
-> >         o- luns ...................................................... [LUNs: 1]
-> >           o- lun0 ................................................ [ramdisk/rda]
-> > 
-> 
-> So qemu expects '-device vhost-scsi-pci' with the following syntax:
-> 
->    -device vhost-scsi-pci,wwpn=naa.5001405b171ee405,num_queues=1,cmd_per_lun=64
-> 
-> For best results I'd recommend setting the IRQ affinity for each of the
-> virtio*_request MSI-X vectors to a dedicated vCPU in KVM guest.
-> 
-> Also, I've been using the scsi-mq prototype for small block I/O
-> performance testing in order to push vhost-scsi and avoid the legacy
-> scsi_request_fn() bottleneck(s) with virtio-scsi, and now that hch's
-> scsi-mq work (CC'ed) has been merged upstream in v3.17-rc0, it would be
-> a good time for a scsi-mq + virtio-scsi + vhost-scsi performance
-> checkpoint.  ;)
-> 
+> Please find my comment in line.
 
-Oh yeah, for performance testing you'll want to use the rd_nullio=1 flag
-when creating RAMDISK backends, to avoid the normal fast-path memcpys
-between ramdisk + per I/O descriptor memory.
+As it should, but where is it, your quoting is all messed up...
 
---nab
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org] 
+> Sent: Monday, August 11, 2014 1:58 PM
+> To: Sharma, Sanjeev
+> Cc: hdegoede@redhat.com; kraxel@redhat.com; mdharm-usb@one-eyed-alien.net; linux-usb@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+> 
+> On Mon, Aug 11, 2014 at 01:29:26PM +0530, Sanjeev Sharma wrote:
+> > spin_is_locked() always return false in uniprocessor configuration
+> 
+> Really?  On what processor type?  I don't see that being the case on a few processors, but I didn't check them all, or I might be totally confused with all of the arch_spin_is_locked() definitions in the tree.
+> 
+> specially in case of mips and powerpc but we can configure our kernel to uniprocessor configuration for specific processor and in that case we should be extra cautious. Please check spinlock_up.h
+
+Shouldn't you just fix your .h file to not do this?  x86 is not this
+way, nor is ARM, right?
+
+> > and therefore it
+> > would be advise to repalce with assert_spin_locked().
+> 
+> This implies that all uses of this function is wrong and should be replaced and removed, right?
+> 
+> Yes and there are only few places in driver for which I am submitting patches which need to be change and at other places it has been already taken care. Please have an look into the
+> Old discussion for more details.
+> 
+> http://linux-kernel.2935.n7.nabble.com/Is-spin-is-locked-safe-to-use-with-BUG-ON-WARN-ON-td654800.html#a921802
+
+Ok, just remove all the tests, it doesn't help anyone :)
+
+thanks,
+
+greg k-h
