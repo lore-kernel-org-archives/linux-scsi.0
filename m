@@ -1,63 +1,98 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Xen-devel] [PATCH V4 2/4] Introduce xen-scsifront module
-Date: Mon, 11 Aug 2014 10:50:42 -0700
-Message-ID: <20140811175042.GA6078@infradead.org>
-References: <1407484194-31876-1-git-send-email-jgross@suse.com>
- <1407484194-31876-3-git-send-email-jgross@suse.com>
- <20140811095424.GB5952@infradead.org>
- <53E89A91.20203@suse.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH v2 RESEND 21/23] qla2xxx: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Date: Mon, 11 Aug 2014 14:07:52 -0400
+Message-ID: <alpine.OSX.2.00.1408111407050.1722@administrators-macbook-pro.local>
+References: <cover.1405533479.git.agordeev@redhat.com> <cf38d1596543fd61c099bc0b834c2ea7a11f8b28.1405533479.git.agordeev@redhat.com> <20140811085709.GM16504@dhcp-27-160.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59167 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbaHKRun (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2014 13:50:43 -0400
-Content-Disposition: inline
-In-Reply-To: <53E89A91.20203@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20140811085709.GM16504@dhcp-27-160.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-On Mon, Aug 11, 2014 at 12:27:29PM +0200, Juergen Gross wrote:
-> What do you mean with "unusual"? You mean transferring the EH action to
-> Dom0?
 
-Yes.  Note that hyperv tries something similar and they've run into
-timeout issues, you might want to read up the recent thread on that.
 
-> >>+				} else {
-> >>+					xenbus_printf(XBT_NIL, dev->nodename,
-> >>+						      state_str, "%d",
-> >>+						      XenbusStateConnected);
-> >>+				}
-> >
-> >Just print this message in ->slave_configure.
-> 
-> This is calling for problems, I think. xenbus_printf() is not just a
-> printing function, but it changes an entry in the xenstore. And this
-> requires locking, switching threads, ...
-> 
-> I doubt doing this while holding SCSI-internal locks is a good idea.
+On Mon, 11 Aug 2014, Alexander Gordeev wrote:
 
-Oh, I thought xenbus_printf was just a logging wrapper.
+> On Wed, Jul 16, 2014 at 08:05:25PM +0200, Alexander Gordeev wrote:
+>> As result of deprecation of MSI-X/MSI enablement functions
+>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>> using these two interfaces need to be updated to use the
+>> new pci_enable_msi_range()  or pci_enable_msi_exact()
+>> and pci_enable_msix_range() or pci_enable_msix_exact()
+>> interfaces.
+>>
+>> Log message code 0x00c6 preserved, although it is reported
+>> after successful call to pci_enable_msix_range(), not before
+>> possibly unsuccessful call to pci_enable_msix(). Consumers
+>> of the error code should not notice the difference.
+>
+> Hello,
+>
+> Please, anyone (from QLogic especially) review this patch.
+>
+> Thanks!
 
-Doing major work in the slave_* callouts is not a problem, that's what
-they were designed for.
+Looks good.
 
-For the successful case the xenbus_printf should be done in
-->slave_configure.  For the failure case you probably want to do it
-from ->slave_destroy based on the absence of a flag set in ->slave_configure,
-e.g. in slave_configure:
+Ack-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-	sdev->hostdata = (void *)1UL;
-
-and in ->slave_destroy:
-
-	if (!sdev->hostdata)
-		...
-
-although you might see something like this based on external scanning
-through procfs/sysfs as mentioned earlier, so please take a look at
-how all these corner cases could effect you.
+>
+>> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>> Cc: qla2xxx-upstream@qlogic.com
+>> Cc: linux-scsi@vger.kernel.org
+>> Cc: linux-pci@vger.kernel.org
+>> ---
+>>  drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+>>  1 files changed, 11 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+>> index a56825c..52d420f 100644
+>> --- a/drivers/scsi/qla2xxx/qla_isr.c
+>> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+>> @@ -2923,27 +2923,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+>>  	for (i = 0; i < ha->msix_count; i++)
+>>  		entries[i].entry = i;
+>>
+>> -	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+>> -	if (ret) {
+>> -		if (ret < MIN_MSIX_COUNT)
+>> -			goto msix_failed;
+>> -
+>> +	ret = pci_enable_msix_range(ha->pdev,
+>> +				    entries, MIN_MSIX_COUNT, ha->msix_count);
+>> +	if (ret < 0) {
+>> +		ql_log(ql_log_fatal, vha, 0x00c7,
+>> +		    "MSI-X: Failed to enable support, "
+>> +		    "giving   up -- %d/%d.\n",
+>> +		    ha->msix_count, ret);
+>> +		goto msix_out;
+>> +	} else if (ret < ha->msix_count) {
+>>  		ql_log(ql_log_warn, vha, 0x00c6,
+>>  		    "MSI-X: Failed to enable support "
+>>  		    "-- %d/%d\n Retry with %d vectors.\n",
+>>  		    ha->msix_count, ret, ret);
+>> -		ha->msix_count = ret;
+>> -		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+>> -		if (ret) {
+>> -msix_failed:
+>> -			ql_log(ql_log_fatal, vha, 0x00c7,
+>> -			    "MSI-X: Failed to enable support, "
+>> -			    "giving   up -- %d/%d.\n",
+>> -			    ha->msix_count, ret);
+>> -			goto msix_out;
+>> -		}
+>> -		ha->max_rsp_queues = ha->msix_count - 1;
+>>  	}
+>> +	ha->msix_count = ret;
+>> +	ha->max_rsp_queues = ha->msix_count - 1;
+>>  	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+>>  				ha->msix_count, GFP_KERNEL);
+>>  	if (!ha->msix_entries) {
+>> --
+>> 1.7.7.6
+>>
+>
