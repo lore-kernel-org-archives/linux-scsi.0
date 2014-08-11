@@ -1,76 +1,65 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: RE: [PATCH v2 RESEND 10/23] isci: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Mon, 11 Aug 2014 16:55:24 +0000
-Message-ID: <112A412BB11A1242B37129D931BCE534694E0716@fmsmsx116.amr.corp.intel.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <24a4bb34f5a8b5ca964fb063688c24549e8a3b5d.1405533479.git.agordeev@redhat.com>
- <718e4066d6294033a7590659cf0f3c4d@fmsmsx106.amr.corp.intel.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH net-next 2/2] random32: do not feed jiffies as seed from
+ lpfc driver
+Date: Mon, 11 Aug 2014 13:07:15 -0400
+Message-ID: <282a2dc3-6381-42d6-ac34-81ceb56f1534@CMEXHTCAS2.ad.emulex.com>
+References: <1406837317-13648-1-git-send-email-dborkman@redhat.com>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <718e4066d6294033a7590659cf0f3c4d@fmsmsx106.amr.corp.intel.com>
-Content-Language: en-US
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
-Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, "Patelczyk, Maciej" <maciej.patelczyk@intel.com>, intel-linux-scu <intel-linux-scu@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:13884 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465AbaHKRHw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2014 13:07:52 -0400
+In-Reply-To: <1406837317-13648-1-git-send-email-dborkman@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Daniel Borkmann <dborkman@redhat.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, "Smart, James" <James.Smart@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> Sent: Monday, August 11, 2014 12:57 AM
-> To: intel-linux-scu; Paszkiewicz, Artur; Jiang, Dave
-> Cc: Dorau, Lukasz; Patelczyk, Maciej; intel-linux-scu; linux-
-> scsi@vger.kernel.org; linux-pci@vger.kernel.org; Christoph Hellwig
-> Subject: Re: [PATCH v2 RESEND 10/23] isci: Use pci_enable_msix_exact()
-> instead of pci_enable_msix()
-> 
-> On Wed, Jul 16, 2014 at 08:05:14PM +0200, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers using these
-> > two interfaces need to be updated to use the new
-> > pci_enable_msi_range()  or pci_enable_msi_exact() and
-> > pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-> 
-> Artur, Dave,
-> 
-> Could you please review isci patches in this series?
-> 
-> Thanks!
+Acked-by:  James Smart  <james.smart@emulex.com>
 
-Sorry. For some reason my spam filter decided to pick this up. 
+-- james  s
 
-Acked-by: Dave Jiang <dave.jiang@intel.com>
 
- 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-> > Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-> > Cc: Dave Jiang <dave.jiang@intel.com>
-> > Cc: intel-linux-scu@intel.com
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> > ---
-> >  drivers/scsi/isci/init.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c index
-> > 695b34e..4198e45 100644
-> > --- a/drivers/scsi/isci/init.c
-> > +++ b/drivers/scsi/isci/init.c
-> > @@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev
-> *pdev)
-> >  	for (i = 0; i < num_msix; i++)
-> >  		pci_info->msix_entries[i].entry = i;
-> >
-> > -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-> > +	err = pci_enable_msix_exact(pdev, pci_info->msix_entries,
-> num_msix);
-> >  	if (err)
-> >  		goto intx;
-> >
-> > --
-> > 1.7.7.6
-> >
+
+On 7/31/2014 4:08 PM, Daniel Borkmann wrote:
+> In prandom we have already reseeding mechanisms that trigger
+> periodically from a much better entropy source than just
+> feeding in jiffies through lpfc_mbx_cmpl_fcf_scan_read_fcf_rec()
+> [what a function name 8-)]. Therefore, just remove this.
+>
+> Signed-off-by: Daniel Borkmann <dborkman@redhat.com>
+> Cc: James Bottomley <JBottomley@Parallels.com>
+> Cc: James Smart <james.smart@emulex.com>
+> ---
+>   This can also go via James, how you prefer it.
+>
+>   drivers/scsi/lpfc/lpfc_hbadisc.c | 4 ----
+>   1 file changed, 4 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> index 2a17e31..5072bb2 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -2146,7 +2146,6 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+>   	uint16_t fcf_index, next_fcf_index;
+>   	struct lpfc_fcf_rec *fcf_rec = NULL;
+>   	uint16_t vlan_id;
+> -	uint32_t seed;
+>   	bool select_new_fcf;
+>   	int rc;
+>   
+> @@ -2383,9 +2382,6 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+>   		phba->fcf.fcf_flag |= FCF_AVAILABLE;
+>   		/* Setup initial running random FCF selection count */
+>   		phba->fcf.eligible_fcf_cnt = 1;
+> -		/* Seeding the random number generator for random selection */
+> -		seed = (uint32_t)(0xFFFFFFFF & jiffies);
+> -		prandom_seed(seed);
+>   	}
+>   	spin_unlock_irq(&phba->hbalock);
+>   	goto read_next_fcf;
+
