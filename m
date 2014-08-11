@@ -1,153 +1,52 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH v2 3/17] arcmsr: Add code to support system hibernation
-Date: Mon, 11 Aug 2014 19:09:55 +0800
-Message-ID: <1407755395.4803.10.camel@Centos6.3-64>
-References: <1407499546.5099.8.camel@Centos6.3-64>
-	 <53E4DD71.4050203@redhat.com>
+From: "Sharma, Sanjeev" <Sanjeev_Sharma-nmGgyN9QBj3QT0dZR+AlfA@public.gmane.org>
+Subject: RE: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+Date: Mon, 11 Aug 2014 11:56:17 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2B2AE@EU-MBX-02.mgc.mentorg.com>
+References: <1407743966-25325-1-git-send-email-sanjeev_sharma@mentor.com>
+ <20140811082811.GC1422@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53E4DD71.4050203@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140811082811.GC1422-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Content-Language: en-US
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: "hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org" <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Yes. 18/18 is obsolete.
-Thanks to Tomas's advice.
+Hi Greg,
 
-Ching
-On Fri, 2014-08-08 at 16:23 +0200, Tomas Henzl wrote:
-> On 08/08/2014 02:05 PM, Ching Huang wrote:
-> > From: Ching Huang <ching2048@areca.com.tw>
-> >
-> > This patch adds code to support system hibernation.
-> >
-> > Changes in v2 of 3/17:
-> > * merge patch 18/18 to this patch, so 18/18 is obsolete.
-> 
-> Thanks, and please mark the the 18/18 as obsolete - add a comment there 
-> 
-> In my previous response were other comments too, you haven't probably 
-> noticed them. I could be wrong with my comments, but if you want a review
-> you should explain why the code is ok as it is.
-> 
-> >
-> > Signed-off-by: Ching Huang <ching2048@areca.com.tw>
-> > ---
-> >
-> > Thanks to Tomas's advice.
-> >
-> > diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-> > --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 17:54:46.000000000 +0800
-> > +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
-> > @@ -89,11 +89,15 @@ static int arcmsr_bios_param(struct scsi
-> >  static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
-> >  static int arcmsr_probe(struct pci_dev *pdev,
-> >  				const struct pci_device_id *id);
-> > +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
-> > +static int arcmsr_resume(struct pci_dev *pdev);
-> >  static void arcmsr_remove(struct pci_dev *pdev);
-> >  static void arcmsr_shutdown(struct pci_dev *pdev);
-> >  static void arcmsr_iop_init(struct AdapterControlBlock *acb);
-> >  static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);
-> >  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock *acb);
-> > +static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,
-> > +	u32 intmask_org);
-> >  static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
-> >  static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
-> >  static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
-> > @@ -167,6 +171,8 @@ static struct pci_driver arcmsr_pci_driv
-> >  	.id_table			= arcmsr_device_id_table,
-> >  	.probe			= arcmsr_probe,
-> >  	.remove			= arcmsr_remove,
-> > +	.suspend		= arcmsr_suspend,
-> > +	.resume			= arcmsr_resume,
-> >  	.shutdown		= arcmsr_shutdown,
-> >  };
-> >  /*
-> > @@ -772,6 +778,76 @@ static void arcmsr_free_irq(struct pci_d
-> >  		free_irq(pdev->irq, acb);
-> >  }
-> >  
-> > +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
-> > +{
-> > +	uint32_t intmask_org;
-> > +	struct Scsi_Host *host = pci_get_drvdata(pdev);
-> > +	struct AdapterControlBlock *acb =
-> > +		(struct AdapterControlBlock *)host->hostdata;
-> > +
-> > +	intmask_org = arcmsr_disable_outbound_ints(acb);
-> > +	arcmsr_free_irq(pdev, acb);
-> > +	del_timer_sync(&acb->eternal_timer);
-> > +	flush_work(&acb->arcmsr_do_message_isr_bh);
-> > +	arcmsr_stop_adapter_bgrb(acb);
-> > +	arcmsr_flush_adapter_cache(acb);
-> > +	pci_set_drvdata(pdev, host);
-> > +	pci_save_state(pdev);
-> > +	pci_disable_device(pdev);
-> > +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
-> > +	return 0;
-> > +}
-> > +
-> > +static int arcmsr_resume(struct pci_dev *pdev)
-> > +{
-> > +	int error;
-> > +	struct Scsi_Host *host = pci_get_drvdata(pdev);
-> > +	struct AdapterControlBlock *acb =
-> > +		(struct AdapterControlBlock *)host->hostdata;
-> > +
-> > +	pci_set_power_state(pdev, PCI_D0);
-> > +	pci_enable_wake(pdev, PCI_D0, 0);
-> > +	pci_restore_state(pdev);
-> > +	if (pci_enable_device(pdev)) {
-> > +		pr_warn("%s: pci_enable_device error\n", __func__);
-> > +		return -ENODEV;
-> > +	}
-> > +	error = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-> > +	if (error) {
-> > +		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-> > +		if (error) {
-> > +			pr_warn("scsi%d: No suitable DMA mask available\n",
-> > +			       host->host_no);
-> > +			goto controller_unregister;
-> > +		}
-> > +	}
-> > +	pci_set_master(pdev);
-> > +	if (arcmsr_request_irq(pdev, acb) == FAILED)
-> > +		goto controller_stop;
-> > +	arcmsr_iop_init(acb);
-> > +	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
-> > +	atomic_set(&acb->rq_map_token, 16);
-> > +	atomic_set(&acb->ante_token_value, 16);
-> > +	acb->fw_flag = FW_NORMAL;
-> > +	init_timer(&acb->eternal_timer);
-> > +	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
-> > +	acb->eternal_timer.data = (unsigned long) acb;
-> > +	acb->eternal_timer.function = &arcmsr_request_device_map;
-> > +	add_timer(&acb->eternal_timer);
-> > +	return 0;
-> > +controller_stop:
-> > +	arcmsr_stop_adapter_bgrb(acb);
-> > +	arcmsr_flush_adapter_cache(acb);
-> > +controller_unregister:
-> > +	scsi_remove_host(host);
-> > +	arcmsr_free_ccb_pool(acb);
-> > +	arcmsr_unmap_pciregion(acb);
-> > +	pci_release_regions(pdev);
-> > +	scsi_host_put(host);
-> > +	pci_disable_device(pdev);
-> > +	return -ENODEV;
-> > +}
-> > +
-> >  static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
-> >  {
-> >  	struct MessageUnit_A __iomem *reg = acb->pmuA;
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Please find my comment in line.
+
+-----Original Message-----
+From: Greg KH [mailto:gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org] 
+Sent: Monday, August 11, 2014 1:58 PM
+To: Sharma, Sanjeev
+Cc: hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org; kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org; mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org; linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Subject: Re: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+
+On Mon, Aug 11, 2014 at 01:29:26PM +0530, Sanjeev Sharma wrote:
+> spin_is_locked() always return false in uniprocessor configuration
+
+Really?  On what processor type?  I don't see that being the case on a few processors, but I didn't check them all, or I might be totally confused with all of the arch_spin_is_locked() definitions in the tree.
+
+specially in case of mips and powerpc but we can configure our kernel to uniprocessor configuration for specific processor and in that case we should be extra cautious. Please check spinlock_up.h
+
+> and therefore it
+> would be advise to repalce with assert_spin_locked().
+
+This implies that all uses of this function is wrong and should be replaced and removed, right?
+
+Yes and there are only few places in driver for which I am submitting patches which need to be change and at other places it has been already taken care. Please have an look into the
+Old discussion for more details.
+
+http://linux-kernel.2935.n7.nabble.com/Is-spin-is-locked-safe-to-use-with-BUG-ON-WARN-ON-td654800.html#a921802
+
+thanks,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
