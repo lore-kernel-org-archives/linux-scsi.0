@@ -1,82 +1,80 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V4 4/4] Save command pool address of Scsi_Host
-Date: Mon, 11 Aug 2014 02:44:08 -0700
-Message-ID: <20140811094408.GA5952@infradead.org>
-References: <1407483840-31436-1-git-send-email-jgross@suse.com>
- <1407483840-31436-5-git-send-email-jgross@suse.com>
+Subject: Re: [PATCH V4 2/4] Introduce xen-scsifront module
+Date: Mon, 11 Aug 2014 02:54:24 -0700
+Message-ID: <20140811095424.GB5952@infradead.org>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>
+ <1407484194-31876-3-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1407483840-31436-5-git-send-email-jgross@suse.com>
+In-Reply-To: <1407484194-31876-3-git-send-email-jgross@suse.com>
 Sender: target-devel-owner@vger.kernel.org
 To: jgross@suse.com
-Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ewan Milne <emilne@redhat.com>
+Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com
 List-Id: linux-scsi@vger.kernel.org
 
-Any chance to get a review for this once so I can queued it up for 3.17?
+> +	BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
+> +
+> +	if (sc->cmd_len)
 
-On Fri, Aug 08, 2014 at 09:44:00AM +0200, jgross@suse.com wrote:
-> From: Juergen Gross <jgross@suse.com>
-> 
-> If a scsi host driver specifies .cmd_len in it's scsi_host_template, a driver's
-> private command pool is needed. scsi_find_host_cmd_pool() will locate it, but
-> scsi_alloc_host_cmd_pool() isn't saving the pool address in the host template.
-> 
-> This will result in an access error when the host is removed.
-> 
-> Avoid the problem by saving the address of a new allocated command pool where
-> it is expected.
-> 
-> Signed-off-by: Juergen Gross <jgross@suse.com>
-> ---
->  drivers/scsi/scsi.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 88d46fe..b0cef5b 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
->  		pool->slab_flags |= SLAB_CACHE_DMA;
->  		pool->gfp_mask = __GFP_DMA;
->  	}
-> +
-> +	if (hostt->cmd_size)
-> +		hostt->cmd_pool = pool;
-> +
->  	return pool;
->  }
->  
-> @@ -424,8 +428,10 @@ out:
->  out_free_slab:
->  	kmem_cache_destroy(pool->cmd_slab);
->  out_free_pool:
-> -	if (hostt->cmd_size)
-> +	if (hostt->cmd_size) {
->  		scsi_free_host_cmd_pool(pool);
-> +		hostt->cmd_pool = NULL;
+I can't see how you can get a zero cmd_len here.
+
+> +static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+
+Please add a comment explaining your unusual EH strategy here.
+
+> +static void scsifront_free(struct vscsifrnt_info *info)
+> +{
+> +	if (info->host && info->host_active) {
+> +		/* Scsi_host not yet removed */
+> +		scsi_remove_host(info->host);
+> +		info->host_active = 0;
 > +	}
->  	goto out;
->  }
->  
-> @@ -447,8 +453,10 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
->  	if (!--pool->users) {
->  		kmem_cache_destroy(pool->cmd_slab);
->  		kmem_cache_destroy(pool->sense_slab);
-> -		if (hostt->cmd_size)
-> +		if (hostt->cmd_size) {
->  			scsi_free_host_cmd_pool(pool);
-> +			hostt->cmd_pool = NULL;
-> +		}
->  	}
->  	mutex_unlock(&host_cmd_pool_mutex);
->  }
-> -- 
-> 1.8.4.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+> +
+> +	if (info->ring_ref != GRANT_INVALID_REF) {
+> +		gnttab_end_foreign_access(info->ring_ref, 0,
+> +					  (unsigned long)info->ring.sring);
+> +		info->ring_ref = GRANT_INVALID_REF;
+> +		info->ring.sring = NULL;
+> +	}
+> +
+> +	if (info->irq)
+> +		unbind_from_irqhandler(info->irq, info);
+> +	info->irq = 0;
+> +	info->evtchn = 0;
+> +
+> +	if (info->host)
+> +		scsi_host_put(info->host);
+> +}
+
+I don't think most of the ifs should be here, just use proper symmetric
+goto unwinding in the initialization error path instead.
+
+The way this function can be called from different levels of the
+callstack on init failure is very confusing.
+
+> +		switch (op) {
+> +		case VSCSIFRONT_OP_ADD_LUN:
+> +			if (device_state == XenbusStateInitialised) {
+> +				sdev = __scsi_add_device(info->host, chn, tgt,
+> +							lun, NULL);
+> +				err = (IS_ERR(sdev) || !sdev->hostdata);
+> +				if (!IS_ERR(sdev)) {
+> +					sdev->hostdata = NULL;
+> +					scsi_device_put(sdev);
+> +				}
+
+Given that you put the device immediatly you should be using
+scsi_add_device instead of __scsi_add_device.  Also all the messing
+with ->hostdata from ->slave_alloc looks wrong.  For one thing every
+setup done ->slave_alloc should be paired with teardown in
+->slave_destroy.  Second I don't see any need for that.
+
+> +				} else {
+> +					xenbus_printf(XBT_NIL, dev->nodename,
+> +						      state_str, "%d",
+> +						      XenbusStateConnected);
+> +				}
+
+Just print this message in ->slave_configure. 
