@@ -1,34 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 3/17] arcmsr: Add code to support system hibernation
-Date: Mon, 11 Aug 2014 06:11:44 -0700
-Message-ID: <20140811131144.GA23466@infradead.org>
-References: <1407499546.5099.8.camel@Centos6.3-64>
- <53E4DD71.4050203@redhat.com>
- <1407755395.4803.10.camel@Centos6.3-64>
- <20140811130731.GK11899@mwanda>
+Subject: Re: [PATCH v2 6/18] arcmsr: precise checking adapter ID
+Date: Mon, 11 Aug 2014 06:13:20 -0700
+Message-ID: <20140811131320.GA23810@infradead.org>
+References: <1407142512.4756.54.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46521 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbaHKNLt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2014 09:11:49 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140811130731.GK11899@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1407142512.4756.54.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Ching Huang <ching2048@areca.com.tw>, Tomas Henzl <thenzl@redhat.com>, jbottomley@parallels.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Aug 11, 2014 at 04:07:31PM +0300, Dan Carpenter wrote:
-> On Mon, Aug 11, 2014 at 07:09:55PM +0800, Ching Huang wrote:
-> > Yes. 18/18 is obsolete.
-> > Thanks to Tomas's advice.
-> > 
+On Mon, Aug 04, 2014 at 04:55:12PM +0800, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
 > 
-> There is no way to keep track of all the patches because they aren't
-> in an email thread.  Could you resend everything using git-format-patch
-> to send them as one thread?
+> This patch rewrites the arcmsr_define_adapter_type function to precisely check Areca adapter's ID.
+> This can prevent an unknown adapter being used as a default adapter type by driver.
+> 
+> Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> ---
+> 
+> Thanks for Christoph advice.
 
-Agreed.  Also try to use git-send-email to get the threading right.
-
+This still doesn't use the private_data field in the pci device table.
