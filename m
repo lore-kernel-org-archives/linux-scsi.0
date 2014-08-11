@@ -1,67 +1,62 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 RESEND 20/23] pmcraid: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-Date: Mon, 11 Aug 2014 09:44:38 +0200
-Message-ID: <20140811074437.GC16504@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <0d3b343a9a1e2146add1dcf51791c4e5914d5612.1405533479.git.agordeev@redhat.com>
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Subject: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+Date: Mon, 11 Aug 2014 13:29:26 +0530
+Message-ID: <1407743966-25325-1-git-send-email-sanjeev_sharma@mentor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0d3b343a9a1e2146add1dcf51791c4e5914d5612.1405533479.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: hdegoede@redhat.com, kraxel@redhat.com, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sanjeev Sharma <sanjeev_sharma@mentor.com>, Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2014 at 08:05:24PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+spin_is_locked() always return false in uniprocessor configuration and therefore it
+would be advise to repalce with assert_spin_locked().
 
-Hi Christoph,
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+ drivers/usb/storage/uas.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-This device's maintainer mail <anil_ravindranath@pmc-sierra.com>
-does not seem exist anymore.
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/pmcraid.c |   13 ++-----------
->  1 files changed, 2 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-> index c06af7f..6d0f208 100644
-> --- a/drivers/scsi/pmcraid.c
-> +++ b/drivers/scsi/pmcraid.c
-> @@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
->  		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
->  			entries[i].entry = i;
->  
-> -		rc = pci_enable_msix(pdev, entries, num_hrrq);
-> -		if (rc < 0)
-> +		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-> +		if (num_hrrq < 0)
->  			goto pmcraid_isr_legacy;
->  
-> -		/* Check how many MSIX vectors are allocated and register
-> -		 * msi-x handlers for each of them giving appropriate buffer
-> -		 */
-> -		if (rc > 0) {
-> -			num_hrrq = rc;
-> -			if (pci_enable_msix(pdev, entries, num_hrrq))
-> -				goto pmcraid_isr_legacy;
-> -		}
-> -
->  		for (i = 0; i < num_hrrq; i++) {
->  			pinstance->hrrq_vector[i].hrrq_id = i;
->  			pinstance->hrrq_vector[i].drv_inst = pinstance;
-> -- 
-> 1.7.7.6
-> 
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 3f42785..8e5877d 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+ 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+ 
+ 	uas_log_cmd_state(cmnd, caller);
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	assert_spin_locked(&devinfo->lock);
+ 	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+ 	cmdinfo->state |= COMMAND_ABORTED;
+ 	cmdinfo->state &= ~IS_IN_WORK_LIST;
+@@ -181,7 +181,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+ 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+ 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	assert_spin_locked(&devinfo->lock);
+ 	cmdinfo->state |= IS_IN_WORK_LIST;
+ 	schedule_work(&devinfo->work);
+ }
+@@ -283,7 +283,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+ 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	assert_spin_locked(&devinfo->lock);
+ 	if (cmdinfo->state & (COMMAND_INFLIGHT |
+ 			      DATA_IN_URB_INFLIGHT |
+ 			      DATA_OUT_URB_INFLIGHT |
+@@ -622,7 +622,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 	struct urb *urb;
+ 	int err;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	assert_spin_locked(&devinfo->lock);
+ 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+ 		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
+ 		if (!urb)
+-- 
+1.7.11.7
