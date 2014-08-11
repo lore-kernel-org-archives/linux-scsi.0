@@ -1,80 +1,103 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V4 2/4] Introduce xen-scsifront module
-Date: Mon, 11 Aug 2014 02:54:24 -0700
-Message-ID: <20140811095424.GB5952@infradead.org>
-References: <1407484194-31876-1-git-send-email-jgross@suse.com>
- <1407484194-31876-3-git-send-email-jgross@suse.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V4 2/4] Introduce xen-scsifront module
+Date: Mon, 11 Aug 2014 12:27:29 +0200
+Message-ID: <53E89A91.20203@suse.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-3-git-send-email-jgross@suse.com> <20140811095424.GB5952@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1407484194-31876-3-git-send-email-jgross@suse.com>
+In-Reply-To: <20140811095424.GB5952@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: jgross@suse.com
-Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 List-Id: linux-scsi@vger.kernel.org
 
-> +	BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
-> +
-> +	if (sc->cmd_len)
+On 08/11/2014 11:54 AM, Christoph Hellwig wrote:
+>> +	BUG_ON(sc->cmd_len > VSCSIIF_MAX_COMMAND_SIZE);
+>> +
+>> +	if (sc->cmd_len)
+>
+> I can't see how you can get a zero cmd_len here.
 
-I can't see how you can get a zero cmd_len here.
+Ahh, thanks for spotting this. In a previous version it could be zero
+in case of reset.
 
-> +static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+>> +static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+>
+> Please add a comment explaining your unusual EH strategy here.
 
-Please add a comment explaining your unusual EH strategy here.
+What do you mean with "unusual"? You mean transferring the EH action to
+Dom0?
 
-> +static void scsifront_free(struct vscsifrnt_info *info)
-> +{
-> +	if (info->host && info->host_active) {
-> +		/* Scsi_host not yet removed */
-> +		scsi_remove_host(info->host);
-> +		info->host_active = 0;
-> +	}
-> +
-> +	if (info->ring_ref != GRANT_INVALID_REF) {
-> +		gnttab_end_foreign_access(info->ring_ref, 0,
-> +					  (unsigned long)info->ring.sring);
-> +		info->ring_ref = GRANT_INVALID_REF;
-> +		info->ring.sring = NULL;
-> +	}
-> +
-> +	if (info->irq)
-> +		unbind_from_irqhandler(info->irq, info);
-> +	info->irq = 0;
-> +	info->evtchn = 0;
-> +
-> +	if (info->host)
-> +		scsi_host_put(info->host);
-> +}
+>
+>> +static void scsifront_free(struct vscsifrnt_info *info)
+>> +{
+>> +	if (info->host && info->host_active) {
+>> +		/* Scsi_host not yet removed */
+>> +		scsi_remove_host(info->host);
+>> +		info->host_active = 0;
+>> +	}
+>> +
+>> +	if (info->ring_ref != GRANT_INVALID_REF) {
+>> +		gnttab_end_foreign_access(info->ring_ref, 0,
+>> +					  (unsigned long)info->ring.sring);
+>> +		info->ring_ref = GRANT_INVALID_REF;
+>> +		info->ring.sring = NULL;
+>> +	}
+>> +
+>> +	if (info->irq)
+>> +		unbind_from_irqhandler(info->irq, info);
+>> +	info->irq = 0;
+>> +	info->evtchn = 0;
+>> +
+>> +	if (info->host)
+>> +		scsi_host_put(info->host);
+>> +}
+>
+> I don't think most of the ifs should be here, just use proper symmetric
+> goto unwinding in the initialization error path instead.
+>
+> The way this function can be called from different levels of the
+> callstack on init failure is very confusing.
 
-I don't think most of the ifs should be here, just use proper symmetric
-goto unwinding in the initialization error path instead.
+Okay, I'll look into making it easier to understand.
 
-The way this function can be called from different levels of the
-callstack on init failure is very confusing.
+>
+>> +		switch (op) {
+>> +		case VSCSIFRONT_OP_ADD_LUN:
+>> +			if (device_state == XenbusStateInitialised) {
+>> +				sdev = __scsi_add_device(info->host, chn, tgt,
+>> +							lun, NULL);
+>> +				err = (IS_ERR(sdev) || !sdev->hostdata);
+>> +				if (!IS_ERR(sdev)) {
+>> +					sdev->hostdata = NULL;
+>> +					scsi_device_put(sdev);
+>> +				}
+>
+> Given that you put the device immediatly you should be using
+> scsi_add_device instead of __scsi_add_device.  Also all the messing
+> with ->hostdata from ->slave_alloc looks wrong.  For one thing every
+> setup done ->slave_alloc should be paired with teardown in
+> ->slave_destroy.  Second I don't see any need for that.
 
-> +		switch (op) {
-> +		case VSCSIFRONT_OP_ADD_LUN:
-> +			if (device_state == XenbusStateInitialised) {
-> +				sdev = __scsi_add_device(info->host, chn, tgt,
-> +							lun, NULL);
-> +				err = (IS_ERR(sdev) || !sdev->hostdata);
-> +				if (!IS_ERR(sdev)) {
-> +					sdev->hostdata = NULL;
-> +					scsi_device_put(sdev);
-> +				}
+The problem is I have to take different actions depending on the device
+being new or not.
 
-Given that you put the device immediatly you should be using
-scsi_add_device instead of __scsi_add_device.  Also all the messing
-with ->hostdata from ->slave_alloc looks wrong.  For one thing every
-setup done ->slave_alloc should be paired with teardown in
-->slave_destroy.  Second I don't see any need for that.
+>
+>> +				} else {
+>> +					xenbus_printf(XBT_NIL, dev->nodename,
+>> +						      state_str, "%d",
+>> +						      XenbusStateConnected);
+>> +				}
+>
+> Just print this message in ->slave_configure.
 
-> +				} else {
-> +					xenbus_printf(XBT_NIL, dev->nodename,
-> +						      state_str, "%d",
-> +						      XenbusStateConnected);
-> +				}
+This is calling for problems, I think. xenbus_printf() is not just a
+printing function, but it changes an entry in the xenstore. And this
+requires locking, switching threads, ...
 
-Just print this message in ->slave_configure. 
+I doubt doing this while holding SCSI-internal locks is a good idea.
+
+
+Juergen
