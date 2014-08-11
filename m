@@ -1,30 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH net-next 2/2] random32: do not feed jiffies as seed from
- lpfc driver
-Date: Mon, 11 Aug 2014 11:18:41 -0700
-Message-ID: <20140811181841.GA29747@infradead.org>
-References: <1406837317-13648-1-git-send-email-dborkman@redhat.com>
- <282a2dc3-6381-42d6-ac34-81ceb56f1534@CMEXHTCAS2.ad.emulex.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH] uas: replace WARN_ON_ONCE() with assert_spin_locked().
+Date: Mon, 11 Aug 2014 11:19:05 -0700
+Message-ID: <20140811181905.GA25727@roeck-us.net>
+References: <1407743966-25325-1-git-send-email-sanjeev_sharma@mentor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45005 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236AbaHKSSm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Aug 2014 14:18:42 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <282a2dc3-6381-42d6-ac34-81ceb56f1534@CMEXHTCAS2.ad.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1407743966-25325-1-git-send-email-sanjeev_sharma@mentor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Cc: gregkh@linuxfoundation.org, hdegoede@redhat.com, kraxel@redhat.com, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net, netdev@vger.kernel.org, James Bottomley <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 11, 2014 at 01:07:15PM -0400, James Smart wrote:
-> Acked-by:  James Smart  <james.smart@emulex.com>
+On Mon, Aug 11, 2014 at 01:29:26PM +0530, Sanjeev Sharma wrote:
+> spin_is_locked() always return false in uniprocessor configuration and therefore it
+> would be advise to repalce with assert_spin_locked().
+> 
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> ---
+>  drivers/usb/storage/uas.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 3f42785..8e5877d 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+>  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+>  
+>  	uas_log_cmd_state(cmnd, caller);
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	assert_spin_locked(&devinfo->lock);
 
-Can you jsut queue this up (and the pci fix as well) together with
-anything else you have pending for 3.18?
+Seems to me that replacing WARN_ON_ONCE (which may be annoying but only
+creates a traceback, and only once) with assert_spin_locked (which
+crashes the kernel) is a bit drastic.
 
-I'd really like to move towards a model where maintainers of driver
-collect everything for their area to spread work a bit better.
-
+Guenter
