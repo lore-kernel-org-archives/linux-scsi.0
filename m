@@ -1,86 +1,84 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH] pm8001: Update nvmd response data to request buffer
-Date: Mon, 11 Aug 2014 11:50:35 +0530
-Message-ID: <1407738035-3327-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:34681 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752284AbaHKGVR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2014 02:21:17 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Date: Mon, 11 Aug 2014 09:39:02 +0200
+Message-ID: <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, thenzl@redhat.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-Instead of using the virt_ptr use request buffer for copying
-back the nvmd response data and use the same in request function also
+On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
 
-Signed-off-by: Suresh Thiagarajan <suresh.thiagarajan@pmcs.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c |    4 +---
- drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++++++
- 2 files changed, 9 insertions(+), 3 deletions(-)
+Anil, Sudarsana,
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index d3a08ae..e871a14 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -385,7 +385,6 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
- 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
- 	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
- 	char *str = buf;
--	void *virt_addr;
- 	int bios_index;
- 	DECLARE_COMPLETION_ONSTACK(completion);
- 	struct pm8001_ioctl_payload payload;
-@@ -402,11 +401,10 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
- 		return -ENOMEM;
- 	}
- 	wait_for_completion(&completion);
--	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
- 	for (bios_index = BIOSOFFSET; bios_index < BIOS_OFFSET_LIMIT;
- 		bios_index++)
- 		str += sprintf(str, "%c",
--			*((u8 *)((u8 *)virt_addr+bios_index)));
-+			*(payload.func_specific+bios_index));
- 	kfree(payload.func_specific);
- 	return str - buf;
- }
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 1738310..fd4f507 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3132,6 +3132,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- void
- pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
-+	struct fw_control_ex    *fw_control_context;
- 	struct get_nvm_data_resp *pPayload =
- 		(struct get_nvm_data_resp *)(piomb + 4);
- 	u32 tag = le32_to_cpu(pPayload->tag);
-@@ -3140,6 +3141,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	u32 ir_tds_bn_dps_das_nvm =
- 		le32_to_cpu(pPayload->ir_tda_bn_dps_das_nvm);
- 	void *virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
-+	fw_control_context = ccb->fw_control_context;
- 
- 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Get nvm data complete!\n"));
- 	if ((dlen_status & NVMD_STAT) != 0) {
-@@ -3180,6 +3182,12 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("Get NVMD success, IR=0, dataLen=%d\n",
- 			(dlen_status & NVMD_LEN) >> 24));
- 	}
-+	/* Though fw_control_context is freed below, usrAddr still needs
-+	 * to be updated as this holds the response to the request function
-+	 */
-+	memcpy(fw_control_context->usrAddr,
-+		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
-+		fw_control_context->len);
- 	kfree(ccb->fw_control_context);
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
--- 
-1.7.1
+Could you please review bfa patches in this series?
 
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Anil Gurumurthy <agurumur@brocade.com>
+> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> ---
+>  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
+>  1 files changed, 6 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+> index c18279f..e90a374 100644
+> --- a/drivers/scsi/bfa/bfad.c
+> +++ b/drivers/scsi/bfa/bfad.c
+> @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
+>  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+>  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+>  
+> -		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
+> +		error = pci_enable_msix_exact(bfad->pcidev,
+> +					      msix_entries, bfad->nvec);
+>  		/* In CT1 & CT2, try to allocate just one vector */
+> -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
+> +		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+>  			printk(KERN_WARNING "bfa %s: trying one msix "
+>  			       "vector failed to allocate %d[%d]\n",
+>  			       bfad->pci_name, bfad->nvec, error);
+>  			bfad->nvec = 1;
+> -			error = pci_enable_msix(bfad->pcidev,
+> -						msix_entries, bfad->nvec);
+> +			error = pci_enable_msix_exact(bfad->pcidev,
+> +						      msix_entries, 1);
+>  		}
+>  
+> -		/*
+> -		 * Only error number of vector is available.
+> -		 * We don't have a mechanism to map multiple
+> -		 * interrupts into one vector, so even if we
+> -		 * can try to request less vectors, we don't
+> -		 * know how to associate interrupt events to
+> -		 *  vectors. Linux doesn't duplicate vectors
+> -		 * in the MSIX table for this case.
+> -		 */
+>  		if (error) {
+>  			printk(KERN_WARNING "bfad%d: "
+> -			       "pci_enable_msix failed (%d), "
+> +			       "pci_enable_msix_exact failed (%d), "
+>  			       "use line based.\n",
+>  				bfad->inst_no, error);
+>  			goto line_based;
+> -- 
+> 1.7.7.6
+> 
