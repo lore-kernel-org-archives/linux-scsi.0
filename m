@@ -1,93 +1,205 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] pm8001: Update nvmd response data to request buffer
-Date: Mon, 11 Aug 2014 12:59:39 +0200
-Message-ID: <53E8A21B.8030906@redhat.com>
-References: <1407738035-3327-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Subject: RE: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+Date: Mon, 11 Aug 2014 11:02:56 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
+ <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64589 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402AbaHKK7u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2014 06:59:50 -0400
-In-Reply-To: <1407738035-3327-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_"
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
+Content-Language: en-US
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>, linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-On 08/11/2014 08:20 AM, Suresh Thiagarajan wrote:
-> Instead of using the virt_ptr use request buffer for copying
-> back the nvmd response data and use the same in request function also
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Patch looks good to me
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-> Signed-off-by: Suresh Thiagarajan <suresh.thiagarajan@pmcs.com>
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+-----Original Message-----
+From: Alexander Gordeev [mailto:agordeev@redhat.com]=20
+Sent: 11 August 2014 13:09
+To: linux-kernel
+Cc: Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci; Anil Gurumu=
+rthy; Sudarsana Kalluru
+Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() inste=
+ad of pci_enable_msix()
+
+On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these=20
+> two interfaces need to be updated to use the new=20
+> pci_enable_msi_range()  or pci_enable_msi_exact() and=20
+> pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
+
+Anil, Sudarsana,
+
+Could you please review bfa patches in this series?
+
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Anil Gurumurthy <agurumur@brocade.com>
+> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c |    4 +---
->  drivers/scsi/pm8001/pm8001_hwi.c |    8 ++++++++
->  2 files changed, 9 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index d3a08ae..e871a14 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -385,7 +385,6 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
->  	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
->  	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
->  	char *str = buf;
-> -	void *virt_addr;
->  	int bios_index;
->  	DECLARE_COMPLETION_ONSTACK(completion);
->  	struct pm8001_ioctl_payload payload;
-> @@ -402,11 +401,10 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
->  		return -ENOMEM;
->  	}
->  	wait_for_completion(&completion);
-> -	virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
->  	for (bios_index = BIOSOFFSET; bios_index < BIOS_OFFSET_LIMIT;
->  		bios_index++)
->  		str += sprintf(str, "%c",
-> -			*((u8 *)((u8 *)virt_addr+bios_index)));
-> +			*(payload.func_specific+bios_index));
->  	kfree(payload.func_specific);
->  	return str - buf;
->  }
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 1738310..fd4f507 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3132,6 +3132,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  void
->  pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  {
-> +	struct fw_control_ex    *fw_control_context;
->  	struct get_nvm_data_resp *pPayload =
->  		(struct get_nvm_data_resp *)(piomb + 4);
->  	u32 tag = le32_to_cpu(pPayload->tag);
-> @@ -3140,6 +3141,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  	u32 ir_tds_bn_dps_das_nvm =
->  		le32_to_cpu(pPayload->ir_tda_bn_dps_das_nvm);
->  	void *virt_addr = pm8001_ha->memoryMap.region[NVMD].virt_ptr;
-> +	fw_control_context = ccb->fw_control_context;
->  
->  	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Get nvm data complete!\n"));
->  	if ((dlen_status & NVMD_STAT) != 0) {
-> @@ -3180,6 +3182,12 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  			pm8001_printk("Get NVMD success, IR=0, dataLen=%d\n",
->  			(dlen_status & NVMD_LEN) >> 24));
->  	}
-> +	/* Though fw_control_context is freed below, usrAddr still needs
-> +	 * to be updated as this holds the response to the request function
-> +	 */
-> +	memcpy(fw_control_context->usrAddr,
-> +		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
-> +		fw_control_context->len);
->  	kfree(ccb->fw_control_context);
->  	ccb->task = NULL;
->  	ccb->ccb_tag = 0xFFFFFFFF;
+>  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
+>  1 files changed, 6 insertions(+), 14 deletions(-)
+>=20
+> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index=20
+> c18279f..e90a374 100644
+> --- a/drivers/scsi/bfa/bfad.c
+> +++ b/drivers/scsi/bfa/bfad.c
+> @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
+>  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+>  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+> =20
+> -		error =3D pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
+> +		error =3D pci_enable_msix_exact(bfad->pcidev,
+> +					      msix_entries, bfad->nvec);
+>  		/* In CT1 & CT2, try to allocate just one vector */
+> -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
+> +		if (error =3D=3D -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+>  			printk(KERN_WARNING "bfa %s: trying one msix "
+>  			       "vector failed to allocate %d[%d]\n",
+>  			       bfad->pci_name, bfad->nvec, error);
+>  			bfad->nvec =3D 1;
+> -			error =3D pci_enable_msix(bfad->pcidev,
+> -						msix_entries, bfad->nvec);
+> +			error =3D pci_enable_msix_exact(bfad->pcidev,
+> +						      msix_entries, 1);
+>  		}
+> =20
+> -		/*
+> -		 * Only error number of vector is available.
+> -		 * We don't have a mechanism to map multiple
+> -		 * interrupts into one vector, so even if we
+> -		 * can try to request less vectors, we don't
+> -		 * know how to associate interrupt events to
+> -		 *  vectors. Linux doesn't duplicate vectors
+> -		 * in the MSIX table for this case.
+> -		 */
+>  		if (error) {
+>  			printk(KERN_WARNING "bfad%d: "
+> -			       "pci_enable_msix failed (%d), "
+> +			       "pci_enable_msix_exact failed (%d), "
+>  			       "use line based.\n",
+>  				bfad->inst_no, error);
+>  			goto line_based;
+> --
+> 1.7.7.6
+>=20
 
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+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
+dQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBU
+AFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUA
+cgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0A
+dQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAQQBuAGkAbAAg
+AEcAdQByAHUAbQB1AHIAdABoAHkAAAAfACNAAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUA
+cgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
+AAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUAcgB1AG0A
+dQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBs
+AG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQA
+aAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAw
+QAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6
+AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAL1ILGyVxNE+hZskOsGcS+QMAFwABAAAAQAA5AAAw/81T
+tc8BQAAIMI6Bi85Ttc8BCwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
+AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
+gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAALQAAABSAEUAOgAgAFsAUABBAFQA
+QwBIACAAdgAyACAAUgBFAFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAg
+AHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQA
+ZQBhAGQAIABvAGYAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfAD0AAQAA
+AAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAABoAAAAPAAyADAAMQA0ADAA
+OAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAw
+AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAACAAAAABAc+hISUFTX80
+05F1Samxct+djBtUm8uhugD//8OMoB8AcAABAAAArAAAAFsAUABBAFQAQwBIACAAdgAyACAAUgBF
+AFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEA
+YgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABw
+AGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfADUQAQAAAHQAAAA8ADIAMABCADEA
+QQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBG
+AEEAMABDAEYANgBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA
+WgEAADwAYwBvAHYAZQByAC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBk
+AGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAAPABiAGMAMQAzAGQAZABmADEANwBkADAA
+MwA1ADkAMgAxAGQAZQA5ADkANABkADIAZgA4AGEANQAyADkAMAAyAGUAMABhADUAZAAxAGEANgAw
+AC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQA
+aABhAHQALgBjAG8AbQA+ACAAPAAyADAAMQA0ADAAOAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2
+ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAwAC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMA
+bwBtAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAG
+AAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////QAAHMO5Ig81Ttc8BCwACAAEAAAADACYA
+AAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA4MTEx
+MTAyNTZaLTUwOTczAAAAAgEQMAEAAABGAAAAAAAAAKX2ulj4lJxAl6rmQzpEVr8HACCxo8vZjzhF
+s/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kAS3qmF6AAAAAAHwD6PwEAAAAgAAAAQQBu
+AGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADA
+AAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAHwAAgAgg
+BgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8A
+AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
+aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
+AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAA
+AGIAeQBwAGEAcwBzAAAAAAB9rg==
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_--
