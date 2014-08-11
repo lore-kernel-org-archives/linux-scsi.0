@@ -1,139 +1,178 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH v2 RESEND 12/23] lpfc: Use pci_enable_msix_range() instead
- of pci_enable_msix()
-Date: Mon, 11 Aug 2014 13:14:54 -0400
-Message-ID: <dfd59266-71ff-4112-8e11-835a08d7a94d@CMEXHTCAS2.ad.emulex.com>
-References: <cover.1405533479.git.agordeev@redhat.com> <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com> <20140726082227.GF21129@agordeev.usersys.redhat.com> <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
-Reply-To: <james.smart@emulex.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v2 2/4] driver core: enable drivers to use deferred probe
+ from init
+Date: Mon, 11 Aug 2014 13:20:18 -0400
+Message-ID: <CAB=NE6UyDvog3Hx2JG5hNO0VpoYttD5opukTgqY18BN998-M3g@mail.gmail.com>
+References: <1406572110-26823-1-git-send-email-mcgrof@do-not-panic.com>
+ <1406572110-26823-3-git-send-email-mcgrof@do-not-panic.com>
+ <20140730.151107.1328294951387764830.davem@davemloft.net> <20140809164119.GI21930@wotan.suse.de>
+ <20140810124331.GE30451@kroah.com> <20140810145802.GJ21930@wotan.suse.de> <s5hr40n9hd5.wl%tiwai@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
+In-Reply-To: <s5hr40n9hd5.wl%tiwai@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, "Smart, James" <James.Smart@Emulex.Com>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Greg KH <gregkh@linuxfoundation.org>, David Miller <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad Shenai <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.comLinux SCSI List <lin>
 List-Id: linux-scsi@vger.kernel.org
 
-Alexander,
-
-I haven't looked too deeply, but it's clear it doesn't jive with what 
-we've discussed in the past. Your original patches missed several other 
-similar sections for revision. I had sent a revised set of patches.
-
-I was also unclear as to the merge path the patches were taking, as it 
-was mod'ing areas that have already changed in the scsi misc tree, but 
-the misc tree didn' have the pci mods.  I take it this is heading to 
-Christoph's tree ?  and that it has picked up the pci mods ?
-
--- james s
-
-
-
-On 8/11/2014 4:01 AM, Alexander Gordeev wrote:
-> On Sat, Jul 26, 2014 at 09:22:27AM +0100, Alexander Gordeev wrote:
->> On Wed, Jul 16, 2014 at 08:05:16PM +0200, Alexander Gordeev wrote:
->>> As result of deprecation of MSI-X/MSI enablement functions
->>> pci_enable_msix() and pci_enable_msi_block() all drivers
->>> using these two interfaces need to be updated to use the
->>> new pci_enable_msi_range()  or pci_enable_msi_exact()
->>> and pci_enable_msix_range() or pci_enable_msix_exact()
->>> interfaces.
->> Hi James,
+On Mon, Aug 11, 2014 at 11:27 AM, Takashi Iwai <tiwai@suse.de> wrote:
+> Luis R. Rodriguez wrote:
 >>
->> Could you please review this patch?
-> James?
->
->> Thanks!
+>> On Sun, Aug 10, 2014 at 08:43:31PM +0800, Greg KH wrote:
+>> > On Sat, Aug 09, 2014 at 06:41:19PM +0200, Luis R. Rodriguez wrote:
+>> > > On Wed, Jul 30, 2014 at 03:11:07PM -0700, David Miller wrote:
+>> > > > From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+>> > > > Date: Mon, 28 Jul 2014 11:28:28 -0700
+>> > > >
+>> > > > > Tetsuo bisected and found that commit 786235ee "kthread: make
+>> > > > > kthread_create() killable" modified kthread_create() to bail as
+>> > > > > soon as SIGKILL is received. This is causing some issues with
+>> > > > > some drivers and at times boot. Joseph then found that failures
+>> > > > > occur as the systemd-udevd process sends SIGKILL to modprobe if
+>> > > > > probe on a driver takes over 30 seconds. When this happens probe
+>> > > > > will fail on any driver, its why booting on some system will fail
+>> > > > > if the driver happens to be a storage related driver. Some folks
+>> > > > > have suggested fixing this by modifying kthread_create() to not
+>> > > > > leave upon SIGKILL [3], upon review Oleg rejected this change and
+>> > > > > the discussion was punted out to systemd to see if the default
+>> > > > > timeout could be increased from 30 seconds to 120. The opinion of
+>> > > > > the systemd maintainers is that the driver's behavior should
+>> > > > > be fixed [4]. Linus seems to agree [5], however more recently even
+>> > > > > networking drivers have been reported to fail on probe since just
+>> > > > > writing the firmware to a device and kicking it can take easy over
+>> > > > > 60 seconds [6]. Benjamim was able to trace the issues recently
+>> > > > > reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
+>> > > > >
+>> > > > > This is an alternative solution which enables drivers that are
+>> > > > > known to take long to use deferred probe workqueue. This avoids
+>> > > > > the 30 second timeout and lets us annotate drivers with long
+>> > > > > init sequences.
+>> > > > >
+>> > > > > As drivers determine a component is not yet available and needs
+>> > > > > to defer probe you'll be notified this happen upon init for each
+>> > > > > device but now with a message such as:
+>> > > > >
+>> > > > > pci 0000:03:00.0: Driver cxgb4 requests probe deferral on init
+>> > > > >
+>> > > > > You should see one of these per struct device probed.
+>> > > >
+>> > > > It seems we're still discussing this.
+>> > > >
+>> > > > I think I understand all of the underlying issues, and what I'll say
+>> > > > is that perhaps we should use what Greg KH requested but via a helper
+>> > > > that is easy to grep for.
+>> > > >
+>> > > > I don't care if it's something like "module_long_probe_init()" and
+>> > > > "module_long_probe_exit()", but it just needs to be some properly
+>> > > > named interface which does the whole kthread or whatever bit.
+>> > >
+>> > > I've tested the alternative kthread_run() proposal but unfortunately it
+>> > > does not help resolve the issue, the timeout is still hit and a SIGKILL
+>> > > still kills the driver probe. Please let me know how you'd all like us
+>> > > to proceed, these defer probe patches do help cure the issue though.
+>> >
+>> > Why doesn't it work?  Doesn't modprobe come right back and the init
+>> > sequence still takes a while to run?  What exactly fails?
 >>
->>> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->>> Cc: James Smart <james.smart@emulex.com>
->>> Cc: linux-scsi@vger.kernel.org
->>> Cc: linux-pci@vger.kernel.org
->>> ---
->>>   drivers/scsi/lpfc/lpfc_init.c |   38 +++++++++++++++++---------------------
->>>   1 files changed, 17 insertions(+), 21 deletions(-)
->>>
->>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
->>> index a5769a9..d9caed9 100644
->>> --- a/drivers/scsi/lpfc/lpfc_init.c
->>> +++ b/drivers/scsi/lpfc/lpfc_init.c
->>> @@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
->>>    * @phba: pointer to lpfc hba data structure.
->>>    *
->>>    * This routine is invoked to enable the MSI-X interrupt vectors to device
->>> - * with SLI-3 interface specs. The kernel function pci_enable_msix() is
->>> - * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
->>> - * invoked, enables either all or nothing, depending on the current
->>> + * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
->>> + * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
->>> + * once invoked, enables either all or nothing, depending on the current
->>>    * availability of PCI vector resources. The device driver is responsible
->>>    * for calling the individual request_irq() to register each MSI-X vector
->>>    * with a interrupt handler, which is done in this function. Note that
->>> @@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
->>>   		phba->msix_entries[i].entry = i;
->>>   
->>>   	/* Configure MSI-X capability structure */
->>> -	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
->>> -				ARRAY_SIZE(phba->msix_entries));
->>> +	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
->>> +				   ARRAY_SIZE(phba->msix_entries));
->>>   	if (rc) {
->>>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->>>   				"0420 PCI enable MSI-X failed (%d)\n", rc);
->>> @@ -8775,15 +8775,13 @@ out:
->>>    * @phba: pointer to lpfc hba data structure.
->>>    *
->>>    * This routine is invoked to enable the MSI-X interrupt vectors to device
->>> - * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
->>> - * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
->>> - * enables either all or nothing, depending on the current availability of
->>> - * PCI vector resources. The device driver is responsible for calling the
->>> - * individual request_irq() to register each MSI-X vector with a interrupt
->>> - * handler, which is done in this function. Note that later when device is
->>> - * unloading, the driver should always call free_irq() on all MSI-X vectors
->>> - * it has done request_irq() on before calling pci_disable_msix(). Failure
->>> - * to do so results in a BUG_ON() and a device will be left with MSI-X
->>> + * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
->>> + * is called to enable the MSI-X vectors. The device driver is responsible
->>> + * for calling the individual request_irq() to register each MSI-X vector
->>> + * with a interrupt handler, which is done in this function. Note that later
->>> + * when device is unloading, the driver should always call free_irq() on all
->>> + * MSI-X vectors it has done request_irq() on before calling pci_disable_msix()
->>> + * Failure to do so results in a BUG_ON() and a device will be left with MSI-X
->>>    * enabled and leaks its vectors.
->>>    *
->>>    * Return codes
->>> @@ -8805,18 +8803,16 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
->>>   		phba->sli4_hba.msix_entries[index].entry = index;
->>>   		vectors++;
->>>   	}
->>> -enable_msix_vectors:
->>> -	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
->>> -			     vectors);
->>> -	if (rc > 1) {
->>> -		vectors = rc;
->>> -		goto enable_msix_vectors;
->>> -	} else if (rc) {
->>> +
->>> +	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
->>> +				   2, vectors);
->>> +	if (rc < 0) {
->>>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->>>   				"0484 PCI enable MSI-X failed (%d)\n", rc);
->>>   		goto vec_fail_out;
->>>   	}
->>>   
->>> +	vectors = rc;
->>>   	/* Log MSI-X vector assignment */
->>>   	for (index = 0; index < vectors; index++)
->>>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->>> -- 
->>> 1.7.7.6
->>>
->> -- 
->> Regards,
->> Alexander Gordeev
->> agordeev@redhat.com
+>> systemd uses kmod kmod_module_probe_insert_module(), what I see is that using
+>> kthread_run() as a work around still causes probe to fail on a driver that
+>> otherwise would work fine if all you do is sprinkle ssleep(33) (seconds) on the
+>> init sequence. To see the issue you can test this on any of your network
+>> drivers that get loaded automatically, I did my testing with iwlwifi by
+>> purposely breaking it and then using the work around. It seems the probe
+>> somehow still gets killed as before, I haven't debugged this further.
+>>
+>> For example by breaking and fixing iwlwifi this yields:
+>>
+>> ergon:~ # journalctl -b -0 -u systemd-udevd
+>>
+>> -- Logs begin at Mon 2014-08-04 21:55:28 EDT, end at Sun 2014-08-10 10:50:14 EDT. --
+>> Aug 10 10:48:49 ergon systemd-udevd[257]: specified group 'input' unknown
+>> Aug 10 10:48:55 ergon mtp-probe[493]: checking bus 3, device 2: "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-7"
+>> Aug 10 10:48:55 ergon mtp-probe[492]: checking bus 3, device 4: "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-12"
+>> Aug 10 10:49:24 ergon systemd-udevd[465]: seq 1755 '/devices/pci0000:00/0000:00:1c.1/0000:03:00.0' killed
+>>
+>> ergon:~ # dmesg | grep iwlwifi
+>> [   10.315538] iwlwifi Going to sleep for 33 seconds
+>> [   43.323958] iwlwifi Done sleeping
+>> [   43.324400] iwlwifi 0000:03:00.0: irq 50 for MSI/MSI-X
+>> [   43.324534] iwlwifi 0000:03:00.0: Error allocating IRQ 50
+>> [   43.326951] iwlwifi: probe of 0000:03:00.0 failed with error -4
+>>
+>> The patch used:
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+>> index 610dbcb..65e0ab2 100644
+>> --- a/drivers/net/wireless/iwlwifi/mvm/ops.c
+>> +++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+>> @@ -63,6 +63,7 @@
+>>  #include <linux/module.h>
+>>  #include <linux/vmalloc.h>
+>>  #include <net/mac80211.h>
+>> +#include <linux/kthread.h>
+>>
+>>  #include "iwl-notif-wait.h"
+>>  #include "iwl-trans.h"
+>> @@ -111,7 +112,7 @@ MODULE_PARM_DESC(power_scheme,
+>>  /*
+>>   * module init and exit functions
+>>   */
+>> -static int __init iwl_mvm_init(void)
+>> +static int iwl_mvm_init_real(void *arg)
+>>  {
+>>       int ret;
+>>
+>> @@ -130,12 +131,21 @@ static int __init iwl_mvm_init(void)
+>>
+>>       return ret;
+>>  }
+>> +
+>> +static struct task_struct *init_thread;
+>> +
+>> +static int __init iwl_mvm_init(void)
+>> +{
+>> +     init_thread = kthread_run(iwl_mvm_init_real, NULL, "iwl_mvm_init");
+>> +     return 0;
+>> +}
+>>  module_init(iwl_mvm_init);
+>>
+>>  static void __exit iwl_mvm_exit(void)
+>>  {
+>>       iwl_opmode_deregister("iwlmvm");
+>>       iwl_mvm_rate_control_unregister();
+>> +     kthread_stop(init_thread);
+>>  }
+>>  module_exit(iwl_mvm_exit);
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+>> index 98950e4..c1f2823 100644
+>> --- a/drivers/net/wireless/iwlwifi/pcie/drv.c
+>> +++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+>> @@ -489,6 +489,10 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>       struct iwl_trans_pcie *trans_pcie;
+>>       int ret;
+>>
+>> +     printk("iwlwifi Going to sleep for 33 seconds\n");
+>> +     ssleep(33);
+>> +     printk("iwlwifi Done sleeping\n");
+>> +
+>>       iwl_trans = iwl_trans_pcie_alloc(pdev, ent, cfg);
+>>       if (IS_ERR(iwl_trans))
+>>               return PTR_ERR(iwl_trans);
+>>
 >
+> I guess that the problem is that you moved the init stuff into kthread
+> for iwlmvm module, but the stall happens in a different module,
+> iwlwifi.  So iwlwifi is killed as expected.  You had to put the
+> kthread hack into pcie/drv.c instead.
+
+Indeed, will work on a general solution next, thanks!
+
+> (Actually, it's interesting how the SIGKILL error is reported back;
+>  it failed at request_threaded_irq().  If this were the normal irq
+>  handler, it might have worked :)
+
+:)
+
+  Luis
