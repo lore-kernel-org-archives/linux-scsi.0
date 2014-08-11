@@ -1,62 +1,32 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 RESEND 16/23] mpt3sas: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Mon, 11 Aug 2014 10:13:15 +0200
-Message-ID: <20140811081315.GJ16504@dhcp-27-160.brq.redhat.com>
+Subject: Re: [PATCH v2 RESEND 17/23] pm8001: Fix invalid return when
+ request_irq() failed
+Date: Mon, 11 Aug 2014 10:14:15 +0200
+Message-ID: <20140811081415.GK16504@dhcp-27-160.brq.redhat.com>
 References: <cover.1405533479.git.agordeev@redhat.com>
- <76ec123596e05dcbcd8957f00ad5f8d4627a32d0.1405533479.git.agordeev@redhat.com>
+ <5ecd9b80f705545c3dc85b2a4ae63a8ac3df8105.1405533479.git.agordeev@redhat.com>
+ <53D79DE2.9000702@redhat.com>
+ <20140729132020.GA7714@infradead.org>
+ <53D7A62D.2090709@redhat.com>
+ <20140729135641.GA14378@infradead.org>
+ <20140729141544.GA18029@dhcp-26-207.brq.redhat.com>
+ <20140729142403.GA13589@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <76ec123596e05dcbcd8957f00ad5f8d4627a32d0.1405533479.git.agordeev@redhat.com>
+In-Reply-To: <20140729142403.GA13589@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tomas Henzl <thenzl@redhat.com>, linux-kernel@vger.kernel.org, xjtuwjp@gmail.com, lindar_liu@usish.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2014 at 08:05:20PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-
-Hi Nagalakshmi, Praveen, Sreekanth and Abhijit,
-
-Could you please review mpt2/mpt3 patches in this series?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+On Tue, Jul 29, 2014 at 07:24:03AM -0700, Christoph Hellwig wrote:
+> On Tue, Jul 29, 2014 at 04:15:45PM +0200, Alexander Gordeev wrote:
+> > Hmm.. 18/23 applies with a minor fuzz against
+> > git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.17
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 0cf4f70..7b65ec2 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -1747,10 +1747,10 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
->  	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
->  		a->entry = i;
->  
-> -	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-> +	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
->  	if (r) {
->  		dfailprintk(ioc, pr_info(MPT3SAS_FMT
-> -			"pci_enable_msix failed (r=%d) !!!\n",
-> +			"pci_enable_msix_exact failed (r=%d) !!!\n",
->  			ioc->name, r));
->  		kfree(entries);
->  		goto try_ioapic;
-> -- 
-> 1.7.7.6
+> Okay, it was just git-am being goofy then.  I'll take care of it.
 > 
+
+Anything I can help with?
