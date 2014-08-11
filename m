@@ -1,205 +1,153 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact()
- instead of pci_enable_msix()
-Date: Mon, 11 Aug 2014 11:02:56 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
- <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH v2 3/17] arcmsr: Add code to support system hibernation
+Date: Mon, 11 Aug 2014 19:09:55 +0800
+Message-ID: <1407755395.4803.10.camel@Centos6.3-64>
+References: <1407499546.5099.8.camel@Centos6.3-64>
+	 <53E4DD71.4050203@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_"
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
-Content-Language: en-US
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53E4DD71.4050203@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Yes. 18/18 is obsolete.
+Thanks to Tomas's advice.
 
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-
-
------Original Message-----
-From: Alexander Gordeev [mailto:agordeev@redhat.com]=20
-Sent: 11 August 2014 13:09
-To: linux-kernel
-Cc: Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci; Anil Gurumu=
-rthy; Sudarsana Kalluru
-Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() inste=
-ad of pci_enable_msix()
-
-On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers using these=20
-> two interfaces need to be updated to use the new=20
-> pci_enable_msi_range()  or pci_enable_msi_exact() and=20
-> pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-
-Anil, Sudarsana,
-
-Could you please review bfa patches in this series?
-
-Thanks!
-
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Anil Gurumurthy <agurumur@brocade.com>
-> Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-> ---
->  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
->  1 files changed, 6 insertions(+), 14 deletions(-)
->=20
-> diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index=20
-> c18279f..e90a374 100644
-> --- a/drivers/scsi/bfa/bfad.c
-> +++ b/drivers/scsi/bfa/bfad.c
-> @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
->  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
->  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
-> =20
-> -		error =3D pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-> +		error =3D pci_enable_msix_exact(bfad->pcidev,
-> +					      msix_entries, bfad->nvec);
->  		/* In CT1 & CT2, try to allocate just one vector */
-> -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-> +		if (error =3D=3D -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
->  			printk(KERN_WARNING "bfa %s: trying one msix "
->  			       "vector failed to allocate %d[%d]\n",
->  			       bfad->pci_name, bfad->nvec, error);
->  			bfad->nvec =3D 1;
-> -			error =3D pci_enable_msix(bfad->pcidev,
-> -						msix_entries, bfad->nvec);
-> +			error =3D pci_enable_msix_exact(bfad->pcidev,
-> +						      msix_entries, 1);
->  		}
-> =20
-> -		/*
-> -		 * Only error number of vector is available.
-> -		 * We don't have a mechanism to map multiple
-> -		 * interrupts into one vector, so even if we
-> -		 * can try to request less vectors, we don't
-> -		 * know how to associate interrupt events to
-> -		 *  vectors. Linux doesn't duplicate vectors
-> -		 * in the MSIX table for this case.
-> -		 */
->  		if (error) {
->  			printk(KERN_WARNING "bfad%d: "
-> -			       "pci_enable_msix failed (%d), "
-> +			       "pci_enable_msix_exact failed (%d), "
->  			       "use line based.\n",
->  				bfad->inst_no, error);
->  			goto line_based;
-> --
-> 1.7.7.6
->=20
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IsYsAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADJGNTIwQjFC
-MjU3MTM0NEZBMTY2QzkwRUIwNjcxMkY5AAQHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HCAALAAsA
-AgA4AAEAPgEBIIADAA4AAADeBwgACwALAAIAOAABAD4BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFoAAABSRTogW1BBVENIIHYyIFJFU0VORCAwNC8yM10gYmZhOiBVc2Ug
-cGNpX2VuYWJsZV9tc2l4X2V4YWN0KCkgaW5zdGVhZCBvZiBwY2lfZW5hYmxlX21zaXgoKQBBHQED
-kAYAFBQAAEAAAAACAX8AAQAAADoAAAA8MjBCMUEzQ0JEOThGMzg0NUIzRjVGNTZEODU5N0VGNTlG
-QTBDRjZAYXZtYjIucWxvZ2ljLm9yZz4AAAALAB8OAQAAAAIBCRABAAAASAcAAEQHAACADwAATFpG
-dSw+hadhAApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMA
-UBFNMgqABrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGA
-IEV4EcFuGDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1
-HVME8AdADRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EQIEFjawmALWJ5ljohkAMC
-RwhwdW0IcGB0aHkgPABwAxAuUmcip0BxCQBnDlAuoQWgbT5cbAuAZQqBtSUbLSZSTwUQJIBuB0Bz
-BdAHkHNhGDAmUyUFRvcDYSIhHnB4AHAEgSKABbDhAQBldiBbAMADEBiQtjoncCl0QAlxEdB0JLI+
-XQMwJRQGYAIwIiAxMS0hkHUjoB9gIAHQMTShLHAzOjA5JQVUKkBiICURdXgtIcAEoGUTCVAlFENj
-Ii87IFagaWpheWEF0G8ZofEigXZ2YTDQLnQE8ACQGTIWcGMywS/vU3Vk9xHhAHAxQEsHQApAIrAr
-tph1YmoFkCxRUmUvwABbUEFUQ0ggdgIyB/BFU0VORCAgMDQvMjMrkGJmqmEvwFUSACAzUV8J8NMB
-oB5wX20AkHg5QCjwMTaAKCkgC4AfYGVhXxxgGTA5DjpgJQxPA6BXIQmALCBKdQMgMTavPZAtIxiA
-OAA4LZA1LZBAOFBNICswAdAwsz2QKM8gdwNgECA6JQXuPiGQBCAJcHM9wAVAOxHNAQBwCXAeUHRp
-AiA7AqEF4EktWC9DoSA5VOcHgAIwHHB1bjaAQzEOAF9BZjtPPnAdwDkNXwJgb/8hsEcCNXBCoAUQ
-GjEEICzgdQuAZxzAaAeQGeBBV3Tcd286gRuhOJBjB5EYUM8cURiQOHAZ4HVwNNAcQv9MMSzgGeBK
-AUvRB+BFj0f1/xhwGcE6YTsABcBHfToWRzK/Tg85lk+GUB85+ktWLiUMtyJCPZA0tywlDAhRbBxg
-7nkIYFQgHnBhOOEJcB1i/zhyVCAYgBHAB5ELgEnxBACmIBIACIFzPyUMVBmh7R9QISUMQcBTJsAY
-UCHg/RkwZiH0P+8jQCp/JOdBwOcvryMTI6VAYgNgHlABAO9hvzDvMfAjMHYEYBmhZG+TYkcyOEB2
-GDByLi7U+i4FsGdofzMzae9BZyG/vyLPI99h6SfIQcBJFi8ykpYvOIFzUmQksCB8T/B/LRE/UHSD
-JlN053H4LJBm7wMQB5EZlD2BNjqCG4FFQvgoKyk9kC1BAQAecHfk/i08RkHAQVcN4AEgcbEkgO8F
-QHOAcp9zpWJ7X3OWHbEDEDBKWGMxODI3OQBmLi5lOTBhM8Y3LVEeoDY0NHE6ez8fc3dBV3SBfN+C
-vyBAQINxsA6QMzQsMjk/UG+GdCyQhjFzol8SAUyQX3lLMXIoH2Bu4DaAh6UgfipzonloAzABkTqA
-OyAo+ig4gV9Z8A5QiFCH4DaAzGMoTKApsC0+jEEOUMJlOnAmJiAhOcMN4edUkzaAOnB8fIn9dCGL
-LKZijC+NPmIpOnBcAAB/ighxRwyEirEEkANgBcA9/0YPc6KQ4DNRkLE9kDnEiHHPXBE9kJZUG2Fj
-KRYgg1f/lE9UPzojlluY352Lj2J0IQ+XP5hPinSKky8qIEm5A6BDVCyQkZCiMDI9kD+IgG9QTDE1
-YWfRECAgap8s4gIgGeCYgRiSKi+Tr/+KxJoEQcASMJGBiz+QupLLK5lopjg9mmAtN9BPU/xQQ6cP
-qB+S3J3qQtBLMQFIoEtFUk5fV0EjsBAgIEcgIlqiJXP/blCi4UnCpDI5wrCwrh+eSj+wsKR1OJB2
-kUwTo1clZIJbtfBdXFxuIpyo97L/j2KWV18m8AeAn8o9kN+aA6CPmYaf6JpRMZjIlDf/mb+Vn5w/
-vau3S58PoB+dPL++f5sPwD+dL7dvwwwxup/9iqJcIECTH5QpodDOX49R+6HgPTBsb1DGFC6QBtAb
-sfc7EaR1W7FhMfADEFSSVlbv0B09YEKgAiAnBUAR0Bow/z5wwvAFkBmhBAAcsUsQAMD+cMLwQkEF
-IB5w05/Qs0sz/27gBTBbQkwxpDg9kBkgRDD3GjADoIrhd9d/0KQeUFtx+6L0CXBxClAs8XahBCCk
-dB/DsdtQ1RTbf9Cza25v/QfgaODhoyIEEEiABzCjsX/Y59rD2WEYkN9v0LPeRi68IEwugtURB5DV
-QmRMkH8lEKOT3lXjX9iVTXNDoVj/HMBUkhxwBbFbkx5QEgDTj3/Qo6T4oTimN63fru+v/2R/tfBu
-ULJYvayz1sadtLYo/7XweFGyWMU88s9UyvQ/7i//s5pNQiUSOHBZ8XPQtl/KDfeWVDqSuRBvui/u
-jWDQTDEfJRJIUPvivQlx6DEuNx0DUTZ5fhVCBPAfAEIAAQAAACAAAABBAG4AaQBsACAARwB1AHIA
-dQBtAHUAcgB0AGgAeQAAAB8AZQABAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEA
-AAB4AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABo
-AHkAAABTAE0AVABQAAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAHwACXQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAOVfAQAAAD4AAABzAGkAcAA6AGEAbgBpAGwALgBnAHUA
-cgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAaDAEAAAAgAAAAQQBu
-AGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfAB8MAQAAADYAAABBAG4AaQBsAC4ARwB1AHIA
-dQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBU
-AFAAAAAAAAIBGQwBAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUA
-cgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0A
-dQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAgAAAAQQBuAGkAbAAg
-AEcAdQByAHUAbQB1AHIAdABoAHkAAAAfACNAAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUA
-cgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAA
-AAIB+T8BAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEEAbgBpAGwAIABHAHUAcgB1AG0A
-dQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQA
-aAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAw
-QAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6
-AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAL1ILGyVxNE+hZskOsGcS+QMAFwABAAAAQAA5AAAw/81T
-tc8BQAAIMI6Bi85Ttc8BCwApAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4A
-AABhAGMAYwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAA
-gAggBgAAAAAAwAAAAAAAAEYAAAAABoUAAAAAAAAfADcAAQAAALQAAABSAEUAOgAgAFsAUABBAFQA
-QwBIACAAdgAyACAAUgBFAFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAg
-AHAAYwBpAF8AZQBuAGEAYgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQA
-ZQBhAGQAIABvAGYAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfAD0AAQAA
-AAoAAABSAEUAOgAgAAAAAAADADYAAAAAAAMALgAAAAAAHwBCEAEAAABoAAAAPAAyADAAMQA0ADAA
-OAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAw
-AC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMAbwBtAD4AAAACAXEAAQAAACAAAAABAc+hISUFTX80
-05F1Samxct+djBtUm8uhugD//8OMoB8AcAABAAAArAAAAFsAUABBAFQAQwBIACAAdgAyACAAUgBF
-AFMARQBOAEQAIAAwADQALwAyADMAXQAgAGIAZgBhADoAIABVAHMAZQAgAHAAYwBpAF8AZQBuAGEA
-YgBsAGUAXwBtAHMAaQB4AF8AZQB4AGEAYwB0ACgAKQAgAGkAbgBzAHQAZQBhAGQAIABvAGYAIABw
-AGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeAAoACkAAAAfADUQAQAAAHQAAAA8ADIAMABCADEA
-QQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBGADUANgBEADgANQA5ADcARQBGADUAOQBG
-AEEAMABDAEYANgBAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA
-WgEAADwAYwBvAHYAZQByAC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBk
-AGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAAPABiAGMAMQAzAGQAZABmADEANwBkADAA
-MwA1ADkAMgAxAGQAZQA5ADkANABkADIAZgA4AGEANQAyADkAMAAyAGUAMABhADUAZAAxAGEANgAw
-AC4AMQA0ADAANQA1ADMAMwA0ADcAOQAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQA
-aABhAHQALgBjAG8AbQA+ACAAPAAyADAAMQA0ADAAOAAxADEAMAA3ADMAOQAwADIALgBHAEIAMQA2
-ADUAMAA0AEAAZABoAGMAcAAtADIANwAtADEANgAwAC4AYgByAHEALgByAGUAZABoAGEAdAAuAGMA
-bwBtAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAG
-AAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////QAAHMO5Ig81Ttc8BCwACAAEAAAADACYA
-AAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMi0xNDA4MTEx
-MTAyNTZaLTUwOTczAAAAAgEQMAEAAABGAAAAAAAAAKX2ulj4lJxAl6rmQzpEVr8HACCxo8vZjzhF
-s/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kAS3qmF6AAAAAAHwD6PwEAAAAgAAAAQQBu
-AGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAAAAAAAABG
-AAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAGAAAAAADA
-AAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAAHwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8A
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
-aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
-AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAA
-AGIAeQBwAGEAcwBzAAAAAAB9rg==
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6avmb2qlogicorg_--
+Ching
+On Fri, 2014-08-08 at 16:23 +0200, Tomas Henzl wrote:
+> On 08/08/2014 02:05 PM, Ching Huang wrote:
+> > From: Ching Huang <ching2048@areca.com.tw>
+> >
+> > This patch adds code to support system hibernation.
+> >
+> > Changes in v2 of 3/17:
+> > * merge patch 18/18 to this patch, so 18/18 is obsolete.
+> 
+> Thanks, and please mark the the 18/18 as obsolete - add a comment there 
+> 
+> In my previous response were other comments too, you haven't probably 
+> noticed them. I could be wrong with my comments, but if you want a review
+> you should explain why the code is ok as it is.
+> 
+> >
+> > Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> > ---
+> >
+> > Thanks to Tomas's advice.
+> >
+> > diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+> > --- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-01 17:54:46.000000000 +0800
+> > +++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
+> > @@ -89,11 +89,15 @@ static int arcmsr_bios_param(struct scsi
+> >  static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+> >  static int arcmsr_probe(struct pci_dev *pdev,
+> >  				const struct pci_device_id *id);
+> > +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
+> > +static int arcmsr_resume(struct pci_dev *pdev);
+> >  static void arcmsr_remove(struct pci_dev *pdev);
+> >  static void arcmsr_shutdown(struct pci_dev *pdev);
+> >  static void arcmsr_iop_init(struct AdapterControlBlock *acb);
+> >  static void arcmsr_free_ccb_pool(struct AdapterControlBlock *acb);
+> >  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock *acb);
+> > +static void arcmsr_enable_outbound_ints(struct AdapterControlBlock *acb,
+> > +	u32 intmask_org);
+> >  static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
+> >  static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
+> >  static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
+> > @@ -167,6 +171,8 @@ static struct pci_driver arcmsr_pci_driv
+> >  	.id_table			= arcmsr_device_id_table,
+> >  	.probe			= arcmsr_probe,
+> >  	.remove			= arcmsr_remove,
+> > +	.suspend		= arcmsr_suspend,
+> > +	.resume			= arcmsr_resume,
+> >  	.shutdown		= arcmsr_shutdown,
+> >  };
+> >  /*
+> > @@ -772,6 +778,76 @@ static void arcmsr_free_irq(struct pci_d
+> >  		free_irq(pdev->irq, acb);
+> >  }
+> >  
+> > +static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
+> > +{
+> > +	uint32_t intmask_org;
+> > +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> > +	struct AdapterControlBlock *acb =
+> > +		(struct AdapterControlBlock *)host->hostdata;
+> > +
+> > +	intmask_org = arcmsr_disable_outbound_ints(acb);
+> > +	arcmsr_free_irq(pdev, acb);
+> > +	del_timer_sync(&acb->eternal_timer);
+> > +	flush_work(&acb->arcmsr_do_message_isr_bh);
+> > +	arcmsr_stop_adapter_bgrb(acb);
+> > +	arcmsr_flush_adapter_cache(acb);
+> > +	pci_set_drvdata(pdev, host);
+> > +	pci_save_state(pdev);
+> > +	pci_disable_device(pdev);
+> > +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+> > +	return 0;
+> > +}
+> > +
+> > +static int arcmsr_resume(struct pci_dev *pdev)
+> > +{
+> > +	int error;
+> > +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> > +	struct AdapterControlBlock *acb =
+> > +		(struct AdapterControlBlock *)host->hostdata;
+> > +
+> > +	pci_set_power_state(pdev, PCI_D0);
+> > +	pci_enable_wake(pdev, PCI_D0, 0);
+> > +	pci_restore_state(pdev);
+> > +	if (pci_enable_device(pdev)) {
+> > +		pr_warn("%s: pci_enable_device error\n", __func__);
+> > +		return -ENODEV;
+> > +	}
+> > +	error = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+> > +	if (error) {
+> > +		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+> > +		if (error) {
+> > +			pr_warn("scsi%d: No suitable DMA mask available\n",
+> > +			       host->host_no);
+> > +			goto controller_unregister;
+> > +		}
+> > +	}
+> > +	pci_set_master(pdev);
+> > +	if (arcmsr_request_irq(pdev, acb) == FAILED)
+> > +		goto controller_stop;
+> > +	arcmsr_iop_init(acb);
+> > +	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
+> > +	atomic_set(&acb->rq_map_token, 16);
+> > +	atomic_set(&acb->ante_token_value, 16);
+> > +	acb->fw_flag = FW_NORMAL;
+> > +	init_timer(&acb->eternal_timer);
+> > +	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
+> > +	acb->eternal_timer.data = (unsigned long) acb;
+> > +	acb->eternal_timer.function = &arcmsr_request_device_map;
+> > +	add_timer(&acb->eternal_timer);
+> > +	return 0;
+> > +controller_stop:
+> > +	arcmsr_stop_adapter_bgrb(acb);
+> > +	arcmsr_flush_adapter_cache(acb);
+> > +controller_unregister:
+> > +	scsi_remove_host(host);
+> > +	arcmsr_free_ccb_pool(acb);
+> > +	arcmsr_unmap_pciregion(acb);
+> > +	pci_release_regions(pdev);
+> > +	scsi_host_put(host);
+> > +	pci_disable_device(pdev);
+> > +	return -ENODEV;
+> > +}
+> > +
+> >  static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
+> >  {
+> >  	struct MessageUnit_A __iomem *reg = acb->pmuA;
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
