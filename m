@@ -1,87 +1,80 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X
- re-initialization failed
-Date: Mon, 11 Aug 2014 10:07:16 +0200
-Message-ID: <20140811080714.GH16504@dhcp-27-160.brq.redhat.com>
+Subject: Re: [PATCH v2 RESEND 14/23] megaraid: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Date: Mon, 11 Aug 2014 10:09:42 +0200
+Message-ID: <20140811080941.GI16504@dhcp-27-160.brq.redhat.com>
 References: <cover.1405533479.git.agordeev@redhat.com>
- <3d2402ebfad625e508bb13257e1560abf92594cd.1405533479.git.agordeev@redhat.com>
- <20140726082408.GG21129@agordeev.usersys.redhat.com>
- <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
+ <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3b7c554551d306e2f58f5e09dc171db2@mail.gmail.com>
+In-Reply-To: <57071ec862e6e0cf6b1c9f7fa5c1d3b9fa97d087.1405533479.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Neela Syam Kolli <megaraidlinux@avagotech.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 28, 2014 at 11:26:13AM +0530, Kashyap Desai wrote:
-> > -----Original Message-----
-> > From: Alexander Gordeev [mailto:agordeev@redhat.com]
-> > Sent: Saturday, July 26, 2014 1:54 PM
-> > To: linux-kernel@vger.kernel.org; Neela Syam Kolli
-> > Subject: Re: [PATCH v2 RESEND 13/23] megaraid: Fail resume if MSI-X re-
-> > initialization failed
-> >
-> > On Wed, Jul 16, 2014 at 08:05:17PM +0200, Alexander Gordeev wrote:
-> > > Currently the driver fails to analize MSI-X re-enablement status on
-> > > resuming and always assumes the success. This update checks the MSI-X
-> > > initialization result and fails to resume if MSI-Xs re-enablement
-> > > failed.
-> >
-> > Hi Neela,
-> >
-> > Could you please review megaraid patches in this series?
-> >
-> > Thanks!
-> Please consider this patch Acked by Me.
+On Wed, Jul 16, 2014 at 08:05:18PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+
+Kashyap, Neela,
+
+Could you please reveiw this patch?
+
+Thanks!
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
+>  1 files changed, 7 insertions(+), 13 deletions(-)
 > 
-> Acked-by: Kashyap Desai <Kashyap.desai@avagotech.com>
-
-Christoph,
-
-I guess, this patch could be picked?
-
-> >
-> > > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > > ---
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c |    8 +++++---
-> > >  1 files changed, 5 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > index 112799b..ba06102 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > @@ -5134,9 +5134,10 @@ megasas_resume(struct pci_dev *pdev)
-> > >  		goto fail_ready_state;
-> > >
-> > >  	/* Now re-enable MSI-X */
-> > > -	if (instance->msix_vectors)
-> > > -		pci_enable_msix(instance->pdev, instance->msixentry,
-> > > -				instance->msix_vectors);
-> > > +	if (instance->msix_vectors &&
-> > > +	    pci_enable_msix(instance->pdev, instance->msixentry,
-> > > +			    instance->msix_vectors))
-> > > +		goto fail_reenable_msix;
-> > >
-> > >  	switch (instance->pdev->device) {
-> > >  	case PCI_DEVICE_ID_LSI_FUSION:
-> > > @@ -5245,6 +5246,7 @@ fail_init_mfi:
-> > >
-> > >  fail_set_dma_mask:
-> > >  fail_ready_state:
-> > > +fail_reenable_msix:
-> > >
-> > >  	pci_disable_device(pdev);
-> > >
-> > > --
-> > > 1.7.7.6
-> > >
-> >
-> > --
-> > Regards,
-> > Alexander Gordeev
-> > agordeev@redhat.com
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index ba06102..7a4e75e 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -4105,17 +4105,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+>  					     (unsigned int)num_online_cpus());
+>  		for (i = 0; i < instance->msix_vectors; i++)
+>  			instance->msixentry[i].entry = i;
+> -		i = pci_enable_msix(instance->pdev, instance->msixentry,
+> -				    instance->msix_vectors);
+> -		if (i >= 0) {
+> -			if (i) {
+> -				if (!pci_enable_msix(instance->pdev,
+> -						     instance->msixentry, i))
+> -					instance->msix_vectors = i;
+> -				else
+> -					instance->msix_vectors = 0;
+> -			}
+> -		} else
+> +		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
+> +					  1, instance->msix_vectors);
+> +		if (i)
+> +			instance->msix_vectors = i;
+> +		else
+>  			instance->msix_vectors = 0;
+>  
+>  		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+> @@ -5135,8 +5129,8 @@ megasas_resume(struct pci_dev *pdev)
+>  
+>  	/* Now re-enable MSI-X */
+>  	if (instance->msix_vectors &&
+> -	    pci_enable_msix(instance->pdev, instance->msixentry,
+> -			    instance->msix_vectors))
+> +	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
+> +				  instance->msix_vectors))
+>  		goto fail_reenable_msix;
+>  
+>  	switch (instance->pdev->device) {
+> -- 
+> 1.7.7.6
+> 
