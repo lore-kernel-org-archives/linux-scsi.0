@@ -1,48 +1,55 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V4 3/4] Introduce XEN scsiback module
-Date: Tue, 12 Aug 2014 14:52:17 +0200
-Message-ID: <53EA0E01.2060409@suse.com>
-References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-4-git-send-email-jgross@suse.com>	<20140811181436.GA14313@infradead.org> <53EA08BC.90809@suse.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [RFC PATCH 01/10] scsi/constants: Cleanup printk message in
+ __scsi_print_sense()
+Date: Tue, 12 Aug 2014 14:51:42 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958BE5A76@G9W0745.americas.hpqcorp.net>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
+ <20140808115006.6768.5118.stgit@yuno-kbuild.novalocal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35402 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406AbaHLMwT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2014 08:52:19 -0400
-In-Reply-To: <53EA08BC.90809@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140808115006.6768.5118.stgit@yuno-kbuild.novalocal>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-On 08/12/2014 02:29 PM, Juergen Gross wrote:
-> On 08/11/2014 08:14 PM, Christoph Hellwig wrote:
->>> +static void scsiback_notify_work(struct vscsibk_info *info)
->>> +{
->>> +    info->waiting_reqs = 1;
->>> +    wake_up(&info->wq);
->>> +}
->>> +
->>> +static irqreturn_t scsiback_intr(int irq, void *dev_id)
->>> +{
->>> +    scsiback_notify_work((struct vscsibk_info *)dev_id);
->>> +    return IRQ_HANDLED;
->>> +}
->>
->> Seems like this driver should get the same threaded irq treatment as
->> the initiator side?
->
-> Indeed.
-
-Turns out to be hard. The interrupt is allocated via
-bind_interdomain_evtchn_to_irqhandler() which is not capable of threaded
-irq handling. The underlying bind_interdomain_evtchn_to_irq() is not
-exported, so I can't use it.
-
-I'll try to change this, but until then I have to leave the irq handling
-more or less the same.
-
-
-Juergen
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBZb3NoaWhpcm8gWVVOT01BRQ0KPiBTZW50OiBGcmlkYXksIDA4
+IEF1Z3VzdCwgMjAxNCA2OjUwIEFNDQouLi4NCj4gU3ViamVjdDogW1JGQyBQQVRDSCAwMS8xMF0g
+c2NzaS9jb25zdGFudHM6IENsZWFudXAgcHJpbnRrIG1lc3NhZ2UgaW4NCj4gX19zY3NpX3ByaW50
+X3NlbnNlKCkNCj4gDQo+IEEgZGV2aWNlIG5hbWUgaXMgb3V0cHV0IGxpa2UgInNkYTogU2Vuc2Ug
+S2V5IDogTWVkaXVtIEVycm9yIFtjdXJyZW50XSINCj4gaW4gX19zY3NpX3ByaW50X3NlbnNlKCks
+IGJ1dCBpdCBzaG91bGQgYmUgIltzZGFdIFNlbnNlIEtleSA6IE1lZGl1bSBFcnJvcg0KPiBbY3Vy
+cmVudF0iIGJlY2F1c2Ugb3RoZXIgcHJpbnRrIG1lc3NhZ2VzIG91dHB1dCBhIGRldmljZSBuYW1l
+IGxpa2UgIltzZGFdDQo+IGZvby4iDQo+IA0KLi4uDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvY29uc3RhbnRzLmMgYi9kcml2ZXJzL3Njc2kvY29uc3RhbnRzLmMNCj4gaW5kZXggYzZhN2E0
+YS4uYTBlODE1OSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2NvbnN0YW50cy5jDQo+ICsr
+KyBiL2RyaXZlcnMvc2NzaS9jb25zdGFudHMuYw0KPiBAQCAtMTQ3MCw3ICsxNDcwLDcgQEAgdm9p
+ZCBfX3Njc2lfcHJpbnRfc2Vuc2Uoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LA0KPiBjb25zdCBj
+aGFyICpuYW1lLA0KPiAgCQlyZXR1cm47DQo+ICAJfQ0KPiANCj4gLQlzZGV2X3ByaW50ayhLRVJO
+X0lORk8sIHNkZXYsICIlczogU2Vuc2UgS2V5IDogJXMgJXMlc1xuIiwgbmFtZSwNCj4gKwlzZGV2
+X3ByaW50ayhLRVJOX0lORk8sIHNkZXYsICJbJXNdIFNlbnNlIEtleSA6ICVzICVzJXNcbiIsIG5h
+bWUsDQo+ICAJICAgICAgIHNjc2lfc2Vuc2Vfa2V5X3N0cmluZyhzc2hkci5zZW5zZV9rZXkpLA0K
+PiAgCSAgICAgICBzY3NpX3NlbnNlX3R5cGVfc3RyaW5nKCZzc2hkciksDQo+ICAJICAgICAgIHNj
+c2lfc2Vuc2VfZm9ybWF0X3N0cmluZygmc3NoZHIpKTsNCj4gDQoNCg0KVGhlIGNhbGxlcnMgb2Yg
+X19zY3NpX3ByaW50X3NlbnNlIGRvIG5vdCBhbHdheXMgcGFzcyBpbiBhIG5hbWUNCmxpa2UgInNk
+YSIuICBJbiBmYWN0LCBzZC5jIGRvZXNuJ3QgZXZlbiBjYWxsIHRoYXQgZnVuY3Rpb247IGl0cw0K
+c2RfcHJpbnRfc2Vuc2VfaGRyIGNhbGxzIHNkX3ByaW50ayAod2hpY2ggcHJpbnRzIG5hbWUgYXMg
+Ilslc10iKQ0KYW5kIHNjc2lfc2hvd19zZW5zZV9oZHIuDQoNClRoZXJlIGFyZSBqdXN0IDMga2Vy
+bmVsIGZpbGVzIHRoYXQgY2FsbCB0aGlzIGZ1bmN0aW9uOg0Kb3NzdC5jOiAgICAgICAgICAgICAg
+ICAgX19zY3NpX3ByaW50X3NlbnNlKCJvc3N0ICIsIFNScG50LT5zZW5zZSwgU0NTSV9TRU5TRV9C
+VUZGRVJTSVpFKTsNCm9zc3QuYzogICAgICAgICAgICAgICAgIF9fc2NzaV9wcmludF9zZW5zZSgi
+b3NzdCAiLCBTUnBudC0+c2Vuc2UsIFNDU0lfU0VOU0VfQlVGRkVSU0laRSk7DQpUaGVyZSBpcyBh
+IHNlcGFyYXRlIGNhbGwgdG8gcHJpbnRrIGp1c3QgYmVmb3JlIGVhY2ggb2YgdGhvc2UsDQp3aGlj
+aCBwcmludHMgb3V0IHRoZSBuYW1lLCB3aXRob3V0IFtdLg0KDQpzZy5jOiAgICAgICAgICAgICAg
+ICAgICBfX3Njc2lfcHJpbnRfc2Vuc2UoX19mdW5jX18sIHNlbnNlLA0KVGhhdCdzIHByaW50aW5n
+IHRoZSBDIGZ1bmN0aW9uIG5hbWUuDQoNCnN0LmM6ICAgICAgICAgICAgICAgICAgICBfX3Njc2lf
+cHJpbnRfc2Vuc2UobmFtZSwgU1JwbnQtPnNlbnNlLCBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpOw0K
+c3QuYzogICAgICAgICAgICAgICAgICAgX19zY3NpX3ByaW50X3NlbnNlKG5hbWUsIFNScG50LT5z
+ZW5zZSwgU0NTSV9TRU5TRV9CVUZGRVJTSVpFKTsNClRoaXMgaXMgbW9yZSBsaWtlIHdoYXQgeW91
+IGhhdmUgaW4gbWluZC4NCg0KDQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdl
+DQoNCg0K
