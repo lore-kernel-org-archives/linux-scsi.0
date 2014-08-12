@@ -1,31 +1,96 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v2] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
-Date: Mon, 11 Aug 2014 23:31:26 -0700
-Message-ID: <20140812063126.GA9075@roeck-us.net>
-References: <1407823717-17265-1-git-send-email-sanjeev_sharma@mentor.com>
- <20140812060153.GB13231@kroah.com>
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Subject: RE: [PATCH v3] uas: replace WARN_ON_ONCE() with
+ lockdep_assert_held()
+Date: Tue, 12 Aug 2014 06:37:23 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2B434@EU-MBX-02.mgc.mentorg.com>
+References: <yes>
+ <1407825621-23322-1-git-send-email-sanjeev_sharma@mentor.com>
+ <53E9B418.3050303@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140812060153.GB13231@kroah.com>
+In-Reply-To: <53E9B418.3050303@redhat.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Sanjeev Sharma <sanjeev_sharma@mentor.com>, hdegoede@redhat.com, kraxel@redhat.com, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "kraxel@redhat.com" <kraxel@redhat.com>, "mdharm-usb@one-eyed-alien.net" <mdharm-usb@one-eyed-alien.net>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 12, 2014 at 02:01:53PM +0800, Greg KH wrote:
-> On Tue, Aug 12, 2014 at 11:38:37AM +0530, Sanjeev Sharma wrote:
-> > spin_is_locked() always return false in uniprocessor configuration and therefore it
-> > would be advise to replace with lockdep_assert_held().
-> 
-> Add "on some architectures" in here somewhere, as it's not broken on the
-> large majority of UP cpus :)
-> 
-FWIW, it is confirmed broken on mips (32 and 64 bit), ppc, and sparc64.
-I have not tested on x86. Might be worth trying. arm64 seems to be ok,
-unless I did something wrong in my test, as well as at least some of
-the architectures which don't support smp to start with (such as sparc32
-or microblaze).
+Yes I have incorporated review comment from Greg.
 
-Guenter
+Regards
+Sanjeev Sharma
+
+-----Original Message-----
+From: Hans de Goede [mailto:hdegoede@redhat.com] 
+Sent: Tuesday, August 12, 2014 11:59 AM
+To: Sharma, Sanjeev
+Cc: gregkh@linuxfoundation.org; kraxel@redhat.com; mdharm-usb@one-eyed-alien.net; linux-usb@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
+
+Hi,
+
+On 08/12/2014 08:40 AM, Sanjeev Sharma wrote:
+> on some architecture spin_is_locked() always return false in 
+> uniprocessor configuration and therefore it would be advise to replace 
+> with lockdep_assert_held().
+> 
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> ---
+> Changes in v3:
+>  incorporated review comment suggested by Greg
+
+Thanks, this is still:
+
+Acked-by: Hans de Goede <hdegoede@redhat.com>
+
+Regards,
+
+Hans
+
+> 
+>  drivers/usb/storage/uas.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c 
+> index 3f42785..05b2d8e 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+>  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+>  
+>  	uas_log_cmd_state(cmnd, caller);
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+>  	cmdinfo->state |= COMMAND_ABORTED;
+>  	cmdinfo->state &= ~IS_IN_WORK_LIST;
+> @@ -181,7 +181,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+>  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+>  	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	cmdinfo->state |= IS_IN_WORK_LIST;
+>  	schedule_work(&devinfo->work);
+>  }
+> @@ -283,7 +283,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+>  	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+>  	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	if (cmdinfo->state & (COMMAND_INFLIGHT |
+>  			      DATA_IN_URB_INFLIGHT |
+>  			      DATA_OUT_URB_INFLIGHT |
+> @@ -622,7 +622,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+>  	struct urb *urb;
+>  	int err;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+>  		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
+>  		if (!urb)
+> 
