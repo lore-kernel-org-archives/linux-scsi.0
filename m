@@ -1,35 +1,66 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
-Date: Mon, 11 Aug 2014 22:32:59 -0400
-Message-ID: <yq1d2c65tes.fsf@sermon.lab.mkp.net>
-References: <20140625103445.GA12943@avagotech.com>
-	<yq1zjg2m6lu.fsf@sermon.lab.mkp.net>
-	<CAK=zhgoQt5J=jh4jShAy5rBXNz34sN-tqf=uZDkY4zQJ9XhM5g@mail.gmail.com>
-	<yq18unklvda.fsf@sermon.lab.mkp.net>
-	<CAK=zhgpDWJLBMBB1mV-7u+o_UC86PiOCAp4vi4-UAn_hXHtF2A@mail.gmail.com>
-	<yq1r41bkgdp.fsf@sermon.lab.mkp.net>
-	<CAK=zhgp_v_sdt+VLDs1Mxxi8Cg4nZNnzgQ=d228h+Ht2EpdEqw@mail.gmail.com>
-	<yq138dpgr6z.fsf@sermon.lab.mkp.net>
-	<CAK=zhgoEhW7fT7SV6ZkzgFa_A49W9quzWOgXb=DH3D_CrMAdDw@mail.gmail.com>
-	<yq161i6epv5.fsf@sermon.lab.mkp.net>
-	<CAK=zhgpqW-t11JKiBRRM7Z4TEMyaEUBX943qT8faaKPk6Pk4XA@mail.gmail.com>
-	<CAK=zhgpiyt9xukGCNDOpEDmWRwFSMCcEiUQ190BW0UgiLGVP6g@mail.gmail.com>
+From: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+Subject: [PATCH v2] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
+Date: Tue, 12 Aug 2014 11:38:37 +0530
+Message-ID: <1407823717-17265-1-git-send-email-sanjeev_sharma@mentor.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK=zhgpiyt9xukGCNDOpEDmWRwFSMCcEiUQ190BW0UgiLGVP6g@mail.gmail.com>
-	(Sreekanth Reddy's message of "Mon, 11 Aug 2014 18:45:12 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: hdegoede@redhat.com
+Cc: gregkh@linuxfoundation.org, kraxel@redhat.com, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sanjeev Sharma <sanjeev_sharma@mentor.com>, Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+spin_is_locked() always return false in uniprocessor configuration and therefore it
+would be advise to replace with lockdep_assert_held().
 
-Sreekanth> Please let me known any further changes are required so that
-Sreekanth> I can send this patch once again with git send-email.
+Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+---
+Changes in v2:
+ - replaced WARN_ON_ONCE() with lockdep_assert_held() to
+ avoid runtime overhead instead of assert_spin_locked()
 
-I'm OK with the latest iteration.
+ drivers/usb/storage/uas.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 3f42785..05b2d8e 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+ 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+ 
+ 	uas_log_cmd_state(cmnd, caller);
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	lockdep_assert_held(&devinfo->lock);
+ 	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+ 	cmdinfo->state |= COMMAND_ABORTED;
+ 	cmdinfo->state &= ~IS_IN_WORK_LIST;
+@@ -181,7 +181,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+ 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+ 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	lockdep_assert_held(&devinfo->lock);
+ 	cmdinfo->state |= IS_IN_WORK_LIST;
+ 	schedule_work(&devinfo->work);
+ }
+@@ -283,7 +283,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+ 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	lockdep_assert_held(&devinfo->lock);
+ 	if (cmdinfo->state & (COMMAND_INFLIGHT |
+ 			      DATA_IN_URB_INFLIGHT |
+ 			      DATA_OUT_URB_INFLIGHT |
+@@ -622,7 +622,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 	struct urb *urb;
+ 	int err;
+ 
+-	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
++	lockdep_assert_held(&devinfo->lock);
+ 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+ 		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
+ 		if (!urb)
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.11.7
