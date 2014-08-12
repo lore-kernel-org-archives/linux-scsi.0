@@ -1,68 +1,107 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [RESEND][PATCH 10/10][SCSI]mpt2sas: Bump mpt2sas driver version
- to 18.100.00.00
-Date: Tue, 12 Aug 2014 15:55:55 +0530
-Message-ID: <CAK=zhgq6p_egcV2HPqDCD2DJGw0-aSO4dg=5YPhKh+3GmOqbxA@mail.gmail.com>
-References: <20140625103640.GA12969@avagotech.com>
-	<yq14myiwop0.fsf@sermon.lab.mkp.net>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead
+ of pci_enable_msix()
+Date: Tue, 12 Aug 2014 11:50:14 +0100
+Message-ID: <20140812105014.GB1674@agordeev.usersys.redhat.com>
+References: <cover.1405533479.git.agordeev@redhat.com>
+ <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
+ <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
+ <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og121.obsmtp.com ([64.18.2.20]:42372 "EHLO
-	exprod7og121.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854AbaHLKZ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Aug 2014 06:25:56 -0400
-Received: by mail-qa0-f41.google.com with SMTP id j7so8914995qaq.28
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2014 03:25:55 -0700 (PDT)
-In-Reply-To: <yq14myiwop0.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Hi Martin,
+On Mon, Aug 11, 2014 at 11:02:56AM +0000, Anil Gurumurthy wrote:
+> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-Among the mpt2sas phase17 and phase18 patch set, following are the
-patches which you have completed the review
+Many thanks, Anil!
 
-1. [RESEND][PATCH 01/10][SCSI]mpt2sas: Added driver module parameter
-max_msix_vectors
-2. [RESEND][PATCH 02/10][SCSI]mpt2sas: MPI2 Rev Y (2.00.17) and Rev Z
-(2.00.18) specifications
-3. [RESEND][PATCH 03/10][SCSI]mpt2sas: Copyright in driver sources is
-updated for year the 2014
-4. [RESEND][PATCH 04/10][SCSI]mpt2sas: Clear PFA Status on SGPIO when
-PFA Drive is Removed or Replaced
-5. [RESEND][PATCH 05/10][SCSI]mpt2sas: Bump mpt2sas driver version to
-17.100.00.00
-6. [PATCH] [SCSI] mpt2sas: Avoid type casting for direct I/O commands
-7. [RESEND][PATCH 10/10][SCSI]mpt2sas: Bump mpt2sas driver version to
-18.100.00.00
+If your Ack apply to this patch only or to all three
+'bfa' patches in this series?
 
-Following are the patches which are remain for review completion
+Thanks!
 
-1. [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post
-Queue (RDPQ) Array support
-2. [RESEND][PATCH 08/10] [scsi] mpt2sas: Get IOC_FACTS information
-using handshake protocol only after HBA card gets into READY or
-Operational state.
-3. [RESEND][PATCH 09/10][SCSI]mpt2sas: Added module parameter
-'unblock_io' to unblock IO's during disk
+> -----Original Message-----
+> From: Alexander Gordeev [mailto:agordeev@redhat.com] 
+> Sent: 11 August 2014 13:09
+> To: linux-kernel
+> Cc: Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci; Anil Gurumurthy; Sudarsana Kalluru
+> Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+> 
+> On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers using these 
+> > two interfaces need to be updated to use the new 
+> > pci_enable_msi_range()  or pci_enable_msi_exact() and 
+> > pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
+> 
+> Anil, Sudarsana,
+> 
+> Could you please review bfa patches in this series?
+> 
+> Thanks!
+> 
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: Anil Gurumurthy <agurumur@brocade.com>
+> > Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+> > Cc: linux-scsi@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+> > ---
+> >  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
+> >  1 files changed, 6 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 
+> > c18279f..e90a374 100644
+> > --- a/drivers/scsi/bfa/bfad.c
+> > +++ b/drivers/scsi/bfa/bfad.c
+> > @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
+> >  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+> >  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+> >  
+> > -		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
+> > +		error = pci_enable_msix_exact(bfad->pcidev,
+> > +					      msix_entries, bfad->nvec);
+> >  		/* In CT1 & CT2, try to allocate just one vector */
+> > -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
+> > +		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+> >  			printk(KERN_WARNING "bfa %s: trying one msix "
+> >  			       "vector failed to allocate %d[%d]\n",
+> >  			       bfad->pci_name, bfad->nvec, error);
+> >  			bfad->nvec = 1;
+> > -			error = pci_enable_msix(bfad->pcidev,
+> > -						msix_entries, bfad->nvec);
+> > +			error = pci_enable_msix_exact(bfad->pcidev,
+> > +						      msix_entries, 1);
+> >  		}
+> >  
+> > -		/*
+> > -		 * Only error number of vector is available.
+> > -		 * We don't have a mechanism to map multiple
+> > -		 * interrupts into one vector, so even if we
+> > -		 * can try to request less vectors, we don't
+> > -		 * know how to associate interrupt events to
+> > -		 *  vectors. Linux doesn't duplicate vectors
+> > -		 * in the MSIX table for this case.
+> > -		 */
+> >  		if (error) {
+> >  			printk(KERN_WARNING "bfad%d: "
+> > -			       "pci_enable_msix failed (%d), "
+> > +			       "pci_enable_msix_exact failed (%d), "
+> >  			       "use line based.\n",
+> >  				bfad->inst_no, error);
+> >  			goto line_based;
+> > --
+> > 1.7.7.6
+> > 
 
-So, Can you please review these three patches, so that I can repost
-this patch set once again by appending your Signed-off-by signature.
-
+-- 
 Regards,
-Sreekanth
-
-
-On Tue, Jul 15, 2014 at 10:21 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
->
-> Sreekanth> Bump mpt2sas driver version to 18.100.00.00.
->
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Alexander Gordeev
+agordeev@redhat.com
