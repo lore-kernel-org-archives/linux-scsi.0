@@ -1,118 +1,505 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v3 12/23] lpfc: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Date: Tue, 12 Aug 2014 10:09:58 +0200
-Message-ID: <20140812080957.GA16561@dhcp-27-160.brq.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <ea1bf102a3ce0471996e2ddaaa498b088ac791c8.1405533479.git.agordeev@redhat.com>
- <20140726082227.GF21129@agordeev.usersys.redhat.com>
- <20140811080148.GG16504@dhcp-27-160.brq.redhat.com>
- <dfd59266-71ff-4112-8e11-835a08d7a94d@CMEXHTCAS2.ad.emulex.com>
- <20140812081115.GA1674@agordeev.usersys.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [RESEND][PATCH 07/10][SCSI]mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+Date: Tue, 12 Aug 2014 14:54:42 +0530
+Message-ID: <1407835482-37919-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140812081115.GA1674@agordeev.usersys.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@kernel.org
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Sending the this patch once agin using git send-email.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Up to now, Driver allocates a single contiguous block of memory
+pool for all reply queues and passes down a single address in the
+ReplyDescriptorPostQueueAddress field of the IOC Init Request
+Message to the firmware.
+
+When firmware receives this address, it will program each of the
+Reply Descriptor Post Queue registers, as each reply queue has its
+own register. Thus the firmware, starting from a base address it
+determines the starting address of the subsequent reply queues
+through some simple arithmetic calculations.
+
+The size of this contiguous block of memory pool is directly proportional
+to number of MSI-X vectors and the HBA queue depth. For example higher
+MSIX vectors requires larger contiguous block of memory pool.
+
+But some of the OS kernels are unable to allocate this larger
+contiguous block of memory pool.
+
+So, the proposal is to allocate memory independently for each
+Reply Queue and pass down all of the addresses to the firmware.
+Then the firmware will just take each address and program the value
+into the correct register.
+
+When HBAs with older firmware(i.e. without RDPQ capability) is used
+with this new driver then the max_msix_vectors value would be set
+to 8 by default.
+
+Change_set in v2:
+
+1. Declared _base_get_ioc_facts() function at the beginning of the mpt2sas_base.c
+file instead of moving all these functions before mpt2sas_base_map_resources() function
+        a. _base_wait_for_doorbell_int()
+        b. _base_wait_for_doorbell_ack()
+        c. _base_wait_for_doorbell_not_used()
+        d. _base_handshake_req_reply_wait()
+        e. _base_get_ioc_facts()
+
+2. Initially set the consistent DMA mask to 32 bit and then change it to 64 bit mask
+after allocating RDPQ pools by calling the function _base_change_consistent_dma_mask.
+This is to ensure that all the upper 32 bits of RDPQ entries's base address to be same.
+
+3. Reduced the redundancy between the RDPQ and non-RDPQ support in these following functions
+        a. _base_release_memory_pools()
+        b. _base_allocate_memory_pools()
+        c. _base_send_ioc_init()
+        d. _base_make_ioc_operational()
+
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 233 +++++++++++++++++++++++++++---------
+ drivers/scsi/mpt2sas/mpt2sas_base.h |  18 ++-
+ 2 files changed, 193 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a5769a9..37f2a20 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 24d0e52..018ae10 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -92,6 +92,11 @@ static int disable_discovery = -1;
+ module_param(disable_discovery, int, 0);
+ MODULE_PARM_DESC(disable_discovery, " disable discovery ");
  
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   LPFC_MSIX_VECTORS);
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8775,16 +8775,14 @@ out:
-  * @phba: pointer to lpfc hba data structure.
++static int dma_mask;
++
++static int
++_base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag);
++
+ /**
+  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
   *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-- * enabled and leaks its vectors.
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that
-+ * later when device is unloading, the driver should always call free_irq()
-+ * on all MSI-X vectors it has done request_irq() on before calling
-+ * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-+ * will be left with MSI-X enabled and leaks its vectors.
-  *
-  * Return codes
-  * 0 - successful
-@@ -8805,17 +8803,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
- 	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
- 	}
-+	vectors = rc;
+@@ -1179,17 +1184,22 @@ static int
+ _base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ {
+ 	struct sysinfo s;
+-	char *desc = NULL;
++	u64 consistent_dma_mask;
++
++	if (dma_mask)
++		consistent_dma_mask = DMA_BIT_MASK(64);
++	else
++		consistent_dma_mask = DMA_BIT_MASK(32);
  
- 	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
+ 	if (sizeof(dma_addr_t) > 4) {
+ 		const uint64_t required_mask =
+ 		    dma_get_required_mask(&pdev->dev);
+ 		if ((required_mask > DMA_BIT_MASK(32)) && !pci_set_dma_mask(pdev,
+ 		    DMA_BIT_MASK(64)) && !pci_set_consistent_dma_mask(pdev,
+-		    DMA_BIT_MASK(64))) {
++		    consistent_dma_mask)) {
+ 			ioc->base_add_sg_single = &_base_add_sg_single_64;
+ 			ioc->sge_size = sizeof(Mpi2SGESimple64_t);
+-			desc = "64";
++			dma_mask = 64;
+ 			goto out;
+ 		}
+ 	}
+@@ -1198,18 +1208,29 @@ _base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 	    && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
+ 		ioc->base_add_sg_single = &_base_add_sg_single_32;
+ 		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
+-		desc = "32";
++		dma_mask = 32;
+ 	} else
+ 		return -ENODEV;
+ 
+  out:
+ 	si_meminfo(&s);
+-	printk(MPT2SAS_INFO_FMT "%s BIT PCI BUS DMA ADDRESSING SUPPORTED, "
+-	    "total mem (%ld kB)\n", ioc->name, desc, convert_to_kb(s.totalram));
++	printk(MPT2SAS_INFO_FMT
++	    "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
++	    ioc->name, dma_mask, convert_to_kb(s.totalram));
+ 
+ 	return 0;
+ }
+ 
++static int
++_base_change_consistent_dma_mask(struct MPT2SAS_ADAPTER *ioc,
++				  struct pci_dev *pdev)
++{
++	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
++		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
++			return -ENODEV;
++	}
++	return 0;
++}
+ /**
+  * _base_check_enable_msix - checks MSIX capabable.
+  * @ioc: per adapter object
+@@ -1406,6 +1427,9 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->reply_queue_count = min_t(int, ioc->cpu_count,
+ 	    ioc->msix_vector_count);
+ 
++	if (!ioc->rdpq_array_enable && max_msix_vectors == -1)
++		max_msix_vectors = 8;
++
+ 	if (max_msix_vectors > 0) {
+ 		ioc->reply_queue_count = min_t(int, max_msix_vectors,
+ 		    ioc->reply_queue_count);
+@@ -1534,6 +1558,16 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	}
+ 
+ 	_base_mask_interrupts(ioc);
++
++	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
++	if (r)
++		goto out_fail;
++
++	if (!ioc->rdpq_array_enable_assigned) {
++		ioc->rdpq_array_enable = ioc->rdpq_array_capable;
++		ioc->rdpq_array_enable_assigned = 1;
++	}
++
+ 	r = _base_enable_msix(ioc);
+ 	if (r)
+ 		goto out_fail;
+@@ -2331,7 +2365,8 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
+ static void
+ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
+ {
+-	int i;
++	int i = 0;
++	struct reply_post_struct *rps;
+ 
+ 	dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -2372,15 +2407,25 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
+ 		ioc->reply_free = NULL;
+ 	}
+ 
+-	if (ioc->reply_post_free) {
+-		pci_pool_free(ioc->reply_post_free_dma_pool,
+-		    ioc->reply_post_free, ioc->reply_post_free_dma);
++	if (ioc->reply_post) {
++		do {
++			rps = &ioc->reply_post[i];
++			if (rps->reply_post_free) {
++				pci_pool_free(
++				    ioc->reply_post_free_dma_pool,
++				    rps->reply_post_free,
++				    rps->reply_post_free_dma);
++				dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
++				    "reply_post_free_pool(0x%p): free\n",
++				    ioc->name, rps->reply_post_free));
++				rps->reply_post_free = NULL;
++			}
++		} while (ioc->rdpq_array_enable &&
++			   (++i < ioc->reply_queue_count));
++
+ 		if (ioc->reply_post_free_dma_pool)
+ 			pci_pool_destroy(ioc->reply_post_free_dma_pool);
+-		dexitprintk(ioc, printk(MPT2SAS_INFO_FMT
+-		    "reply_post_free_pool(0x%p): free\n", ioc->name,
+-		    ioc->reply_post_free));
+-		ioc->reply_post_free = NULL;
++		kfree(ioc->reply_post);
+ 	}
+ 
+ 	if (ioc->config_page) {
+@@ -2523,6 +2568,65 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+ 	    ioc->max_sges_in_chain_message, ioc->shost->sg_tablesize,
+ 	    ioc->chains_needed_per_io));
+ 
++	/* reply post queue, 16 byte align */
++	reply_post_free_sz = ioc->reply_post_queue_depth *
++	    sizeof(Mpi2DefaultReplyDescriptor_t);
++
++	sz = reply_post_free_sz;
++	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
++		sz *= ioc->reply_queue_count;
++
++	ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
++	    (ioc->reply_queue_count):1,
++	    sizeof(struct reply_post_struct), GFP_KERNEL);
++
++	if (!ioc->reply_post) {
++		printk(MPT2SAS_ERR_FMT "reply_post_free pool: kcalloc failed\n",
++			ioc->name);
++		goto out;
++	}
++	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
++	    ioc->pdev, sz, 16, 0);
++	if (!ioc->reply_post_free_dma_pool) {
++		printk(MPT2SAS_ERR_FMT
++		 "reply_post_free pool: pci_pool_create failed\n",
++		 ioc->name);
++		goto out;
++	}
++	i = 0;
++	do {
++		ioc->reply_post[i].reply_post_free =
++		    pci_pool_alloc(ioc->reply_post_free_dma_pool,
++		    GFP_KERNEL,
++		    &ioc->reply_post[i].reply_post_free_dma);
++		if (!ioc->reply_post[i].reply_post_free) {
++			printk(MPT2SAS_ERR_FMT
++			"reply_post_free pool: pci_pool_alloc failed\n",
++			ioc->name);
++			goto out;
++		}
++		memset(ioc->reply_post[i].reply_post_free, 0, sz);
++		dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "reply post free pool (0x%p): depth(%d),"
++		    "element_size(%d), pool_size(%d kB)\n", ioc->name,
++		    ioc->reply_post[i].reply_post_free,
++		    ioc->reply_post_queue_depth, 8, sz/1024));
++		dinitprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "reply_post_free_dma = (0x%llx)\n", ioc->name,
++		    (unsigned long long)
++		    ioc->reply_post[i].reply_post_free_dma));
++		total_sz += sz;
++	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
++
++	if (dma_mask == 64) {
++		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
++			printk(MPT2SAS_WARN_FMT
++			    "no suitable consistent DMA mask for %s\n",
++			    ioc->name, pci_name(ioc->pdev));
++			goto out;
++		}
++	}
++
+ 	ioc->scsiio_depth = ioc->hba_queue_depth -
+ 	    ioc->hi_priority_depth - ioc->internal_depth;
+ 
+@@ -2734,37 +2838,6 @@ chain_done:
+ 	    "(0x%llx)\n", ioc->name, (unsigned long long)ioc->reply_free_dma));
+ 	total_sz += sz;
+ 
+-	/* reply post queue, 16 byte align */
+-	reply_post_free_sz = ioc->reply_post_queue_depth *
+-	    sizeof(Mpi2DefaultReplyDescriptor_t);
+-	if (_base_is_controller_msix_enabled(ioc))
+-		sz = reply_post_free_sz * ioc->reply_queue_count;
+-	else
+-		sz = reply_post_free_sz;
+-	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
+-	    ioc->pdev, sz, 16, 0);
+-	if (!ioc->reply_post_free_dma_pool) {
+-		printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_create "
+-		    "failed\n", ioc->name);
+-		goto out;
+-	}
+-	ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
+-	    GFP_KERNEL, &ioc->reply_post_free_dma);
+-	if (!ioc->reply_post_free) {
+-		printk(MPT2SAS_ERR_FMT "reply_post_free pool: pci_pool_alloc "
+-		    "failed\n", ioc->name);
+-		goto out;
+-	}
+-	memset(ioc->reply_post_free, 0, sz);
+-	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply post free pool"
+-	    "(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
+-	    ioc->name, ioc->reply_post_free, ioc->reply_post_queue_depth, 8,
+-	    sz/1024));
+-	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "reply_post_free_dma = "
+-	    "(0x%llx)\n", ioc->name, (unsigned long long)
+-	    ioc->reply_post_free_dma));
+-	total_sz += sz;
+-
+ 	ioc->config_page_sz = 512;
+ 	ioc->config_page = pci_alloc_consistent(ioc->pdev,
+ 	    ioc->config_page_sz, &ioc->config_page_dma);
+@@ -3436,6 +3509,9 @@ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	facts->IOCCapabilities = le32_to_cpu(mpi_reply.IOCCapabilities);
+ 	if ((facts->IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID))
+ 		ioc->ir_firmware = 1;
++	if ((facts->IOCCapabilities &
++	      MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE))
++		ioc->rdpq_array_capable = 1;
+ 	facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
+ 	facts->IOCRequestFrameSize =
+ 	    le16_to_cpu(mpi_reply.IOCRequestFrameSize);
+@@ -3471,9 +3547,12 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ {
+ 	Mpi2IOCInitRequest_t mpi_request;
+ 	Mpi2IOCInitReply_t mpi_reply;
+-	int r;
++	int i, r = 0;
+ 	struct timeval current_time;
+ 	u16 ioc_status;
++	u32 reply_post_free_array_sz = 0;
++	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
++	dma_addr_t reply_post_free_array_dma;
+ 
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -3502,9 +3581,31 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	    cpu_to_le64((u64)ioc->request_dma);
+ 	mpi_request.ReplyFreeQueueAddress =
+ 	    cpu_to_le64((u64)ioc->reply_free_dma);
+-	mpi_request.ReplyDescriptorPostQueueAddress =
+-	    cpu_to_le64((u64)ioc->reply_post_free_dma);
+ 
++	if (ioc->rdpq_array_enable) {
++		reply_post_free_array_sz = ioc->reply_queue_count *
++		    sizeof(Mpi2IOCInitRDPQArrayEntry);
++		reply_post_free_array = pci_alloc_consistent(ioc->pdev,
++			reply_post_free_array_sz, &reply_post_free_array_dma);
++		if (!reply_post_free_array) {
++			printk(MPT2SAS_ERR_FMT
++			"reply_post_free_array: pci_alloc_consistent failed\n",
++			ioc->name);
++			r = -ENOMEM;
++			goto out;
++		}
++		memset(reply_post_free_array, 0, reply_post_free_array_sz);
++		for (i = 0; i < ioc->reply_queue_count; i++)
++			reply_post_free_array[i].RDPQBaseAddress =
++			    cpu_to_le64(
++				(u64)ioc->reply_post[i].reply_post_free_dma);
++		mpi_request.MsgFlags = MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE;
++		mpi_request.ReplyDescriptorPostQueueAddress =
++		    cpu_to_le64((u64)reply_post_free_array_dma);
++	} else {
++		mpi_request.ReplyDescriptorPostQueueAddress =
++		    cpu_to_le64((u64)ioc->reply_post[0].reply_post_free_dma);
++	}
+ 
+ 	/* This time stamp specifies number of milliseconds
+ 	 * since epoch ~ midnight January 1, 1970.
+@@ -3532,7 +3633,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	if (r != 0) {
+ 		printk(MPT2SAS_ERR_FMT "%s: handshake failed (r=%d)\n",
+ 		    ioc->name, __func__, r);
+-		return r;
++		goto out;
+ 	}
+ 
+ 	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
+@@ -3542,7 +3643,12 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 		r = -EIO;
+ 	}
+ 
+-	return 0;
++out:
++	if (reply_post_free_array)
++		pci_free_consistent(ioc->pdev, reply_post_free_array_sz,
++				    reply_post_free_array,
++				    reply_post_free_array_dma);
++	return r;
+ }
+ 
+ /**
+@@ -4075,7 +4181,7 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	u8 hide_flag;
+ 	struct adapter_reply_queue *reply_q;
+ 	long reply_post_free;
+-	u32 reply_post_free_sz;
++	u32 reply_post_free_sz, index = 0;
+ 
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -4146,19 +4252,27 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 		_base_assign_reply_queues(ioc);
+ 
+ 	/* initialize Reply Post Free Queue */
+-	reply_post_free = (long)ioc->reply_post_free;
+ 	reply_post_free_sz = ioc->reply_post_queue_depth *
+ 	    sizeof(Mpi2DefaultReplyDescriptor_t);
++	reply_post_free = (long)ioc->reply_post[index].reply_post_free;
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+ 		reply_q->reply_post_host_index = 0;
+ 		reply_q->reply_post_free = (Mpi2ReplyDescriptorsUnion_t *)
+ 		    reply_post_free;
+ 		for (i = 0; i < ioc->reply_post_queue_depth; i++)
+ 			reply_q->reply_post_free[i].Words =
+-							cpu_to_le64(ULLONG_MAX);
++						     cpu_to_le64(ULLONG_MAX);
+ 		if (!_base_is_controller_msix_enabled(ioc))
+ 			goto skip_init_reply_post_free_queue;
+-		reply_post_free += reply_post_free_sz;
++		/*
++		 * If RDPQ is enabled, switch to the next allocation.
++		 * Otherwise advance within the contiguous region.
++		 */
++		if (ioc->rdpq_array_enable)
++			reply_post_free = (long)
++			    ioc->reply_post[++index].reply_post_free;
++		else
++			reply_post_free += reply_post_free_sz;
+ 	}
+  skip_init_reply_post_free_queue:
+ 
+@@ -4286,6 +4400,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 		}
+ 	}
+ 
++	ioc->rdpq_array_enable_assigned = 0;
+ 	r = mpt2sas_base_map_resources(ioc);
+ 	if (r)
+ 		goto out_free_resources;
+@@ -4647,6 +4762,16 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+ 		r = -EFAULT;
+ 		goto out;
+ 	}
++
++	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
++	if (r)
++		goto out;
++
++	if (ioc->rdpq_array_enable && !ioc->rdpq_array_capable)
++		panic("%s: Issue occurred with flashing controller firmware."
++		      "Please reboot the system and ensure that the correct"
++		      " firmware version is running\n", ioc->name);
++
+ 	r = _base_make_ioc_operational(ioc, sleep_flag);
+ 	if (!r)
+ 		_base_reset_handler(ioc, MPT2_IOC_DONE_RESET);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index e0e4dd4..0d40318 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -636,6 +636,11 @@ struct mpt2sas_port_facts {
+ 	u16			MaxPostedCmdBuffers;
+ };
+ 
++struct reply_post_struct {
++	Mpi2ReplyDescriptorsUnion_t	*reply_post_free;
++	dma_addr_t			reply_post_free_dma;
++};
++
+ /**
+  * enum mutex_type - task management mutex type
+  * @TM_MUTEX_OFF: mutex is not required becuase calling function is acquiring it
+@@ -779,8 +784,11 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct MPT2SAS_ADAPTER *ioc);
+  * @reply_free_dma_pool:
+  * @reply_free_host_index: tail index in pool to insert free replys
+  * @reply_post_queue_depth: reply post queue depth
+- * @reply_post_free: pool for reply post (64bit descriptor)
+- * @reply_post_free_dma:
++ * @reply_post_struct: struct for reply_post_free physical & virt address
++ * @rdpq_array_capable: FW supports multiple reply queue addresses in ioc_init
++ * @rdpq_array_enable: rdpq_array support is enabled in the driver
++ * @rdpq_array_enable_assigned: this ensures that rdpq_array_enable flag
++ *				is assigned only ones
+  * @reply_queue_count: number of reply queue's
+  * @reply_queue_list: link list contaning the reply queue info
+  * @reply_post_host_index: head index in the pool where FW completes IO
+@@ -972,8 +980,10 @@ struct MPT2SAS_ADAPTER {
+ 
+ 	/* reply post queue */
+ 	u16 		reply_post_queue_depth;
+-	Mpi2ReplyDescriptorsUnion_t *reply_post_free;
+-	dma_addr_t	reply_post_free_dma;
++	struct reply_post_struct *reply_post;
++	u8		rdpq_array_capable;
++	u8		rdpq_array_enable;
++	u8		rdpq_array_enable_assigned;
+ 	struct dma_pool *reply_post_free_dma_pool;
+ 	u8		reply_queue_count;
+ 	struct list_head reply_queue_list;
 -- 
-1.9.3
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+2.0.2
