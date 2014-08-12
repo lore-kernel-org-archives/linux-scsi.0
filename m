@@ -1,222 +1,684 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Tue, 12 Aug 2014 20:09:15 +0000
-Message-ID: <bug-81861-11613-eIYP0QR2t3@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH V4 3/4] Introduce XEN scsiback module
+Date: Tue, 12 Aug 2014 14:13:42 -0700
+Message-ID: <1407878022.27925.33.camel@haakon3.risingtidesystems.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>
+	 <1407484194-31876-4-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58571 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754606AbaHLUJU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2014 16:09:20 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id C2F9920160
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2014 20:09:18 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 104CF20172
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2014 20:09:16 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50932 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbaHLVNx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Aug 2014 17:13:53 -0400
+In-Reply-To: <1407484194-31876-4-git-send-email-jgross@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jgross@suse.com
+Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
+Hi Juergen & Co,
 
---- Comment #3 from linux-ide@crashplan.pro ---
-Because Ubuntu doesn't provide debug symbols for their mainline kernel builds
-<http://comments.gmane.org/gmane.linux.ubuntu.devel.kernel.general/40661> I am
-reverting back to their kernel version 3.13.0-24.46
+Finally had a chance to review this code.  Comments are inline below..
 
-That results in a kernel crash on port 8C: 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000255
+On Fri, 2014-08-08 at 09:49 +0200, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
+> 
+> Introduces the XEN pvSCSI backend. With pvSCSI it is possible for a XEN domU
+> to issue SCSI commands to a SCSI LUN assigned to that domU. The SCSI commands
+> are passed to the pvSCSI backend in a driver domain (usually Dom0) which is
+> owner of the physical device. This allows e.g. to use SCSI tape drives in a
+> XEN domU.
+> 
+> The code is taken from the pvSCSI implementation in XEN done by Fujitsu based
+> on Linux kernel 2.6.18.
+> 
+> Changes from the original version are:
+> - port to upstream kernel
+> - put all code in just one source file
+> - adapt to Linux style guide
+> - use target core infrastructure instead doing pure pass-through
+> - enable module unloading
+> - support SG-list in grant page(s)
+> - support task abort
+> - remove redundant struct backend
+> - allocate resources dynamically
+> - correct minor error in scsiback_fast_flush_area
+> - free allocated resources in case of error during I/O preparation
+> - remove CDB emulation, now handled by target core infrastructure
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> 
+> Xen related parts
+> Acked-by: David Vrabel <david.vrabel@citrix.com>
+> ---
 
-Full output:
-[   25.212661] mvsas 0000:01:00.0: mvsas: driver version 0.8.16
-[   25.212703] mvsas 0000:01:00.0: enabling device (0000 -> 0002)
-[   25.213249] mvsas 0000:01:00.0: mvsas: PCI-E x8, Bandwidth Usage: 5.0 Gbps
-[   31.994771] scsi5 : mvsas
-[   31.995530] sas: phy-5:0 added to port-5:0, phy_mask:0x1 (50014380182cf0e6)
-[   31.995564] /build/buildd/linux-3.13.0/drivers/scsi/mvsas/mv_sas.c 1218:set
-wide port phy map 1
-[   32.005672] sas: phy1 matched wide port0
-[   32.005695] sas: phy-5:1 added to port-5:0, phy_mask:0x3 (50014380182cf0e6)
-[   32.005720] /build/buildd/linux-3.13.0/drivers/scsi/mvsas/mv_sas.c 1218:set
-wide port phy map 3
-[   32.025591] sas: phy2 matched wide port0
-[   32.025611] sas: phy-5:2 added to port-5:0, phy_mask:0x7 (50014380182cf0e6)
-[   32.025635] /build/buildd/linux-3.13.0/drivers/scsi/mvsas/mv_sas.c 1218:set
-wide port phy map 7
-[   32.055410] sas: phy3 matched wide port0
-[   32.055427] sas: phy-5:3 added to port-5:0, phy_mask:0xf (50014380182cf0e6)
-[   32.055452] /build/buildd/linux-3.13.0/drivers/scsi/mvsas/mv_sas.c 1218:set
-wide port phy map f
-[   32.095144] sas: DOING DISCOVERY on port 0, pid:127
-[   32.096843] sas: ex 50014380182cf0e6 phy00:D:0 attached: 0000000000000000
-(no device)
-[   32.097408] sas: ex 50014380182cf0e6 phy01:D:0 attached: 0000000000000000
-(no device)
-[   32.097917] sas: ex 50014380182cf0e6 phy02:D:0 attached: 0000000000000000
-(no device)
-[   32.098503] sas: ex 50014380182cf0e6 phy03:D:0 attached: 0000000000000000
-(no device)
-[   32.099044] sas: ex 50014380182cf0e6 phy04:D:0 attached: 0000000000000000
-(no device)
-[   32.099628] sas: ex 50014380182cf0e6 phy05:D:0 attached: 0000000000000000
-(no device)
-[   32.100205] sas: ex 50014380182cf0e6 phy06:D:0 attached: 0000000000000000
-(no device)
-[   32.100739] sas: ex 50014380182cf0e6 phy07:D:0 attached: 0000000000000000
-(no device)
-[   32.101310] sas: ex 50014380182cf0e6 phy08:D:0 attached: 0000000000000000
-(no device)
-[   32.101840] sas: ex 50014380182cf0e6 phy09:D:0 attached: 0000000000000000
-(no device)
-[   32.102412] sas: ex 50014380182cf0e6 phy10:D:0 attached: 0000000000000000
-(no device)
-[   32.102959] sas: ex 50014380182cf0e6 phy11:D:0 attached: 0000000000000000
-(no device)
-[   32.103545] sas: ex 50014380182cf0e6 phy12:D:0 attached: 0000000000000000
-(no device)
-[   32.104128] sas: ex 50014380182cf0e6 phy13:D:0 attached: 0000000000000000
-(no device)
-[   32.104661] sas: ex 50014380182cf0e6 phy14:D:0 attached: 0000000000000000
-(no device)
-[   32.105273] sas: ex 50014380182cf0e6 phy15:D:0 attached: 0000000000000000
-(no device)
-[   32.105781] sas: ex 50014380182cf0e6 phy16:D:0 attached: 0000000000000000
-(no device)
-[   32.106385] sas: ex 50014380182cf0e6 phy17:D:0 attached: 0000000000000000
-(no device)
-[   32.106904] sas: ex 50014380182cf0e6 phy18:D:0 attached: 0000000000000000
-(no device)
-[   32.107486] sas: ex 50014380182cf0e6 phy19:D:0 attached: 0000000000000000
-(no device)
-[   32.108020] sas: ex 50014380182cf0e6 phy20:D:0 attached: 0000000000000000
-(no device)
-[   32.108605] sas: ex 50014380182cf0e6 phy21:D:0 attached: 0000000000000000
-(no device)
-[   32.109183] sas: ex 50014380182cf0e6 phy22:D:0 attached: 0000000000000000
-(no device)
-[   32.109714] sas: ex 50014380182cf0e6 phy23:D:0 attached: 0000000000000000
-(no device)
-[   32.110357] sas: ex 50014380182cf0e6 phy24:U:A attached: 5005043011ab0000
-(host)
-[   32.110929] sas: ex 50014380182cf0e6 phy25:U:A attached: 5005043011ab0000
-(host)
-[   32.111558] sas: ex 50014380182cf0e6 phy26:U:A attached: 5005043011ab0000
-(host)
-[   32.112181] sas: ex 50014380182cf0e6 phy27:U:A attached: 5005043011ab0000
-(host)
-[   32.112774] sas: ex 50014380182cf0e6 phy28:S:9 attached: 50014380182cf0dc
-(stp)
-[   32.113366] sas: ex 50014380182cf0e6 phy29:S:9 attached: 50014380182cf0dd
-(stp)
-[   32.113934] sas: ex 50014380182cf0e6 phy30:S:9 attached: 50014380182cf0de
-(stp)
-[   32.114557] sas: ex 50014380182cf0e6 phy31:S:9 attached: 50014380182cf0df
-(stp)
-[   32.115138] sas: ex 50014380182cf0e6 phy32:S:0 attached: 0000000000000000
-(no device)
-[   32.115654] sas: ex 50014380182cf0e6 phy33:S:0 attached: 0000000000000000
-(no device)
-[   32.116198] sas: ex 50014380182cf0e6 phy34:S:0 attached: 0000000000000000
-(no device)
-[   32.116711] sas: ex 50014380182cf0e6 phy35:S:0 attached: 0000000000000000
-(no device)
-[   32.117003] sas: ex 50014380182cf0e6 phy36:D:A attached: 50014380182cf0e5
-(host+target)
-[   32.118398] sas: DONE DISCOVERY on port 0, pid:127, result:0
-[   32.118435] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-[   32.118465] sas: ata6: end_device-5:0:28: dev error handler
-[   32.119140] sas: ata7: end_device-5:0:29: dev error handler
-[   32.119333] sas: ata8: end_device-5:0:30: dev error handler
-[   32.119368] sas: ata9: end_device-5:0:31: dev error handler
-[   32.271218] BUG: unable to handle kernel NULL pointer dereference at
-0000000000000255
-[   32.271791] IP: [<ffffffffa02d381e>] mvs_task_prep+0x72e/0xd50 [mvsas]
-[   32.272365] PGD 0
-[   32.272928] Oops: 0000 [#1] SMP
-[   32.273480] Modules linked in: mvsas libsas scsi_transport_sas hid_generic
-usbhid hid x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm
-crct10dif_pclmul crc32_pclmul ghash_clmulni_intel cryptd i915 drm_kms_helper
-serio_raw lpc_ich mei_me mei drm i2c_algo_bit netconsole configfs lp parport
-video mac_hid psmouse ahci libahci r8169 mii
-[   32.275388] CPU: 0 PID: 54 Comm: kworker/u4:1 Not tainted 3.13.0-24-generic
-#47-Ubuntu
-[   32.276028] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./H81
-Pro BTC, BIOS P1.80 07/21/2014
-[   32.276745] Workqueue: events_unbound async_run_entry_fn
-[   32.277389] task: ffff88020fe6afe0 ti: ffff8802136aa000 task.ti:
-ffff8802136aa000
-[   32.278032] RIP: 0010:[<ffffffffa02d381e>]  [<ffffffffa02d381e>]
-mvs_task_prep+0x72e/0xd50 [mvsas]
-[   32.278691] RSP: 0018:ffff8802136ab8c0  EFLAGS: 00010097
-[   32.279337] RAX: 000000000000002c RBX: 0000000000000001 RCX:
-0000000000000000
-[   32.279980] RDX: 0000000000000000 RSI: ffff8800d8c255b8 RDI:
-ffff8800d8c00000
-[   32.280619] RBP: ffff8802136ab958 R08: ffff8800d8c03618 R09:
-ffff8800363a0000
-[   32.281246] R10: ffff880212977600 R11: 0000000000000000 R12:
-ffff8800d8c00000
-[   32.281861] R13: 0000000000000000 R14: ffff8800d8c03618 R15:
-ffff88020f8dedc0
-[   32.282474] FS:  0000000000000000(0000) GS:ffff88021f200000(0000)
-knlGS:0000000000000000
-[   32.283082] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   32.283679] CR2: 0000000000000255 CR3: 0000000002c0e000 CR4:
-00000000000407f0
-[   32.284278] Stack:
-[   32.284880]  ffff88020fe6afe0 ffff880212977200 ffff8802136ab8e0
-ffffffff81719ee9
-[   32.285520]  ffff880212977600 ffff8800363a0000 ffff8800d8c03618
-ffff8800d8c255b0
-[   32.286167]  ffff8800d8c02678 0000000000000000 00000001d8c00008
-ffff8800d8c255b8
-[   32.286821] Call Trace:
-[   32.287473]  [<ffffffff81719ee9>] ? schedule+0x29/0x70
-[   32.288144]  [<ffffffffa02d3e9d>] mvs_task_exec.isra.13+0x5d/0xe0 [mvsas]
-[   32.288832]  [<ffffffffa02d49dc>] mvs_queue_command+0x30c/0x320 [mvsas]
-[   32.289530]  [<ffffffff811a013f>] ? kmem_cache_free+0xef/0x120
-[   32.290232]  [<ffffffff8119f692>] ? kmem_cache_alloc+0x132/0x140
-[   32.290942]  [<ffffffffa028601d>] ? sas_alloc_task+0x1d/0x40 [libsas]
-[   32.291662]  [<ffffffffa028fcab>] sas_ata_qc_issue+0x24b/0x290 [libsas]
-[   32.292392]  [<ffffffff814f7762>] ata_qc_issue+0x172/0x380
-[   32.293128]  [<ffffffff814f7c23>] ata_exec_internal_sg+0x2b3/0x570
-[   32.293875]  [<ffffffff814f7f3a>] ata_exec_internal+0x5a/0xa0
-[   32.294624]  [<ffffffff814f8334>] ata_dev_read_id+0x274/0x550
-[   32.295380]  [<ffffffffa028f8f0>] ? sas_ata_printk+0x80/0x80 [libsas]
-[   32.296148]  [<ffffffff81505bab>] ata_eh_recover+0x74b/0x1310
-[   32.296923]  [<ffffffff810bcfe8>] ? console_unlock+0x208/0x400
-[   32.297707]  [<ffffffff814facd0>] ? ata_phys_link_online+0x30/0x30
-[   32.298503]  [<ffffffffa028f8f0>] ? sas_ata_printk+0x80/0x80 [libsas]
-[   32.299367]  [<ffffffff814fae50>] ? ata_phys_link_offline+0x30/0x30
-[   32.300179]  [<ffffffffa028f8f0>] ? sas_ata_printk+0x80/0x80 [libsas]
-[   32.301001]  [<ffffffff814fae50>] ? ata_phys_link_offline+0x30/0x30
-[   32.301826]  [<ffffffffa028f8f0>] ? sas_ata_printk+0x80/0x80 [libsas]
-[   32.302661]  [<ffffffff81507299>] ata_do_eh+0x49/0xc0
-[   32.303503]  [<ffffffff814facd0>] ? ata_phys_link_online+0x30/0x30
-[   32.304357]  [<ffffffff8150734e>] ata_std_error_handler+0x3e/0x80
-[   32.305215]  [<ffffffff81506dba>] ata_scsi_port_error_handler+0x56a/0x940
-[   32.306086]  [<ffffffffa02900aa>] async_sas_ata_eh+0x4a/0x80 [libsas]
-[   32.306963]  [<ffffffff81091517>] async_run_entry_fn+0x37/0x130
-[   32.307849]  [<ffffffff810838a2>] process_one_work+0x182/0x450
-[   32.308735]  [<ffffffff81084641>] worker_thread+0x121/0x410
-[   32.309629]  [<ffffffff81084520>] ? rescuer_thread+0x3e0/0x3e0
-[   32.310530]  [<ffffffff8108b312>] kthread+0xd2/0xf0
-[   32.311437]  [<ffffffff8108b240>] ? kthread_create_on_node+0x1d0/0x1d0
-[   32.312351]  [<ffffffff817263fc>] ret_from_fork+0x7c/0xb0
-[   32.313255]  [<ffffffff8108b240>] ? kthread_create_on_node+0x1d0/0x1d0
-[   32.314160] Code: 63 92 a0 02 00 00 41 80 b8 84 00 00 00 7f 48 8b 80 58 01
-00 00 48 8b 1c d0 0f 84 a0 05 00 00 41 8b 44 24 58 48 8b 75 c0 89 46 1c <8b> 8b
-54 02 00 00 be 00 10 00 00 41 8b 54 24 58 49 8b 44 24 48
-[   32.316308] RIP  [<ffffffffa02d381e>] mvs_task_prep+0x72e/0xd50 [mvsas]
-[   32.317292]  RSP <ffff8802136ab8c0>
-[   32.318278] CR2: 0000000000000255
+<SNIP>
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> new file mode 100644
+> index 0000000..4a0d6e3
+> --- /dev/null
+> +++ b/drivers/xen/xen-scsiback.c
+
+<SNIP>
+
+> +struct scsiback_nacl {
+> +	/* Binary World Wide unique Port Name for pvscsi Initiator port */
+> +	u64 iport_wwpn;
+> +	/* ASCII formatted WWPN for Sas Initiator port */
+> +	char iport_name[VSCSI_NAMELEN];
+> +	/* Returned by scsiback_make_nodeacl() */
+> +	struct se_node_acl se_node_acl;
+> +};
+> +
+
+Given that this code is similar to how loopback + vhost-scsi function,
+and uses a (locally) generated nexus for each WWPN endpoint, the
+scsiback_nacl and associated code will be unused should be be dropped.
+
+<SNIP>
+
+> +static void scsiback_do_resp_with_sense(char *sense_buffer, int32_t result,
+> +			uint32_t resid, struct vscsibk_pend *pending_req)
+> +{
+> +	struct vscsiif_response *ring_res;
+> +	struct vscsibk_info *info = pending_req->info;
+> +	int notify;
+> +	struct scsi_sense_hdr sshdr;
+> +	unsigned long flags;
+> +	unsigned len;
+> +
+> +	spin_lock_irqsave(&info->ring_lock, flags);
+> +
+> +	ring_res = RING_GET_RESPONSE(&info->ring, info->ring.rsp_prod_pvt);
+> +	info->ring.rsp_prod_pvt++;
+> +
+> +	ring_res->rslt   = result;
+> +	ring_res->rqid   = pending_req->rqid;
+> +
+> +	if (sense_buffer != NULL &&
+> +	    scsi_normalize_sense(sense_buffer, VSCSIIF_SENSE_BUFFERSIZE,
+> +				 &sshdr)) {
+> +		len = min_t(unsigned, 8 + sense_buffer[7],
+> +			    VSCSIIF_SENSE_BUFFERSIZE);
+> +		memcpy(ring_res->sense_buffer, sense_buffer, len);
+> +		ring_res->sense_len = len;
+> +	} else {
+> +		ring_res->sense_len = 0;
+> +	}
+> +
+> +	ring_res->residual_len = resid;
+> +
+> +	RING_PUSH_RESPONSES_AND_CHECK_NOTIFY(&info->ring, notify);
+> +	spin_unlock_irqrestore(&info->ring_lock, flags);
+> +
+> +	if (notify)
+> +		notify_remote_via_irq(info->irq);
+> +
+> +	if (pending_req->v2p)
+> +		kref_put(&pending_req->v2p->kref,
+> +			 scsiback_free_translation_entry);
+> +
+> +	kmem_cache_free(scsiback_cachep, pending_req);
+> +}
+> +
+> +static void scsiback_cmd_done(struct vscsibk_pend *pending_req)
+> +{
+> +	struct vscsibk_info *info = pending_req->info;
+> +	unsigned char *sense_buffer;
+> +	unsigned int resid;
+> +	int errors;
+> +
+> +	sense_buffer = pending_req->sense_buffer;
+> +	resid        = pending_req->se_cmd.residual_count;
+> +	errors       = pending_req->result;
+> +
+> +	if (errors && log_print_stat)
+> +		scsiback_print_status(sense_buffer, errors, pending_req);
+> +
+> +	scsiback_fast_flush_area(pending_req);
+> +	scsiback_do_resp_with_sense(sense_buffer, errors, resid, pending_req);
+> +	scsiback_put(info);
+> +
+> +	transport_generic_free_cmd(&pending_req->se_cmd, 0);
+> +}
+> +
+
+The usage here of scsiback_do_resp_with_sense() -> kmem_cache_free() for
+*pending_req, and then invoking transport_generic_free_cmd() with
+&pending_req->se_cmd is an free after use bug..
+
+So the way this should work is similar to how loopback currently does
+things:
+
+  - Move the kmem_cache_free() for pending_req from 
+    scsiback_do_resp_with_sense() to scsiback_release_cmd()
+  - Remove the transport_generic_free_cmd() from scsiback_cmd_done()
+  - Copy what tcm_loop_check_stop_free() does into 
+    scsiback_check_stop_free(), and remove target_put_sess_cmd()
+
+> +static void scsiback_cmd_exec(struct vscsibk_pend *pending_req)
+> +{
+> +	struct se_cmd *se_cmd = &pending_req->se_cmd;
+> +	struct se_session *sess = pending_req->v2p->tpg->tpg_nexus->tvn_se_sess;
+> +	int rc;
+> +
+> +	memset(pending_req->sense_buffer, 0, VSCSIIF_SENSE_BUFFERSIZE);
+> +
+> +	memset(se_cmd, 0, sizeof(*se_cmd));
+> +	se_cmd->prot_pto = true;
+> +
+
+No need to set prot_pto = true, as T10_PI support is not enabled..
+
+> +	scsiback_get(pending_req->info);
+> +	rc = target_submit_cmd_map_sgls(se_cmd, sess, pending_req->cmnd,
+> +			pending_req->sense_buffer, pending_req->v2p->lun,
+> +			pending_req->data_len, 0,
+> +			pending_req->sc_data_direction, 0,
+> +			pending_req->sgl, pending_req->n_sg,
+> +			NULL, 0, NULL, 0);
+> +	if (rc < 0) {
+> +		transport_send_check_condition_and_sense(se_cmd,
+> +				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+> +		transport_generic_free_cmd(se_cmd, 0);
+> +	}
+> +}
+> +
+
+<SNIP>
+
+> +
+> +static void scsiback_device_action(struct vscsibk_pend *pending_req,
+> +	enum tcm_tmreq_table act, int tag)
+> +{
+> +	int rc, err = FAILED;
+> +	struct scsiback_tpg *tpg = pending_req->v2p->tpg;
+> +	struct se_cmd *se_cmd = &pending_req->se_cmd;
+> +	struct scsiback_tmr *tmr;
+> +
+> +	tmr = kzalloc(sizeof(struct scsiback_tmr), GFP_KERNEL);
+> +	if (!tmr) {
+> +		pr_err("xen-pvscsi: %s: kmalloc() error\n", __func__);
+> +		goto out;
+> +	}
+> +	init_waitqueue_head(&tmr->tmr_wait);
+> +
+> +	transport_init_se_cmd(se_cmd, tpg->se_tpg.se_tpg_tfo,
+> +		tpg->tpg_nexus->tvn_se_sess, 0, DMA_NONE, MSG_SIMPLE_TAG,
+> +		&pending_req->sense_buffer[0]);
+> +
+> +	rc = core_tmr_alloc_req(se_cmd, tmr, act, GFP_KERNEL);
+> +	if (rc < 0)
+> +		goto out;
+> +
+> +	se_cmd->se_tmr_req->ref_task_tag = tag;
+> +
+> +	if (transport_lookup_tmr_lun(se_cmd, pending_req->v2p->lun) < 0)
+> +		goto out;
+> +
+> +	transport_generic_handle_tmr(se_cmd);
+> +	wait_event(tmr->tmr_wait, atomic_read(&tmr->tmr_complete));
+> +
+> +	err = (se_cmd->se_tmr_req->response == TMR_FUNCTION_COMPLETE) ?
+> +		SUCCESS : FAILED;
+> +
+> +out:
+> +	if (tmr) {
+> +		transport_generic_free_cmd(&pending_req->se_cmd, 1);
+> +		kfree(tmr);
+> +	}
+> +
+> +	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
+> +}
+
+With scsiback_do_resp_with_sense() no longer freeing pending_req
+directly, this special case will need a kmem_cache_free()
+
+> +static int _scsiback_do_cmd_fn(struct vscsibk_info *info)
+> +{
+> +	struct vscsiif_back_ring *ring = &info->ring;
+> +	struct vscsiif_request *ring_req;
+> +	struct vscsibk_pend *pending_req;
+> +	RING_IDX rc, rp;
+> +	int err, more_to_do = 0;
+> +	uint32_t result;
+> +	uint8_t act;
+> +
+> +	rc = ring->req_cons;
+> +	rp = ring->sring->req_prod;
+> +	rmb();	/* guest system is accessing ring, too */
+> +
+> +	if (RING_REQUEST_PROD_OVERFLOW(ring, rp)) {
+> +		rc = ring->rsp_prod_pvt;
+> +		pr_warn("xen-pvscsi: Dom%d provided bogus ring requests (%#x - %#x = %u). Halting ring processing\n",
+> +			   info->domid, rp, rc, rp - rc);
+> +		return -EACCES;
+> +	}
+> +
+> +	while ((rc != rp)) {
+> +		if (RING_REQUEST_CONS_OVERFLOW(ring, rc))
+> +			break;
+> +		pending_req = kmem_cache_alloc(scsiback_cachep, GFP_KERNEL);
+> +		if (NULL == pending_req) {
+> +			more_to_do = 1;
+> +			break;
+> +		}
+> +
+
+Ideally this will end up using percpu_ida descriptor pre-allocation via
+se_sess->sess_tag_poll + se_sess->sess_cmd_map in order to avoid the
+fast-path memory allocation.
+
+See commit 4824d3bfb909 for an example of how this was done for
+vhost-scsi, but should be considered a post-merge optimization..
+
+> +		ring_req = RING_GET_REQUEST(ring, rc);
+> +		ring->req_cons = ++rc;
+> +
+> +		act = ring_req->act;
+> +		err = prepare_pending_reqs(info, ring_req, pending_req);
+> +		if (err) {
+> +			switch (err) {
+> +			case -ENODEV:
+> +				result = DID_NO_CONNECT;
+> +				break;
+> +			default:
+> +				result = DRIVER_ERROR;
+> +				break;
+> +			}
+> +			scsiback_do_resp_with_sense(NULL, result << 24, 0,
+> +						    pending_req);
+> +			more_to_do = 1;
+> +			break;
+> +		}
+> +
+> +		switch (act) {
+> +		case VSCSIIF_ACT_SCSI_CDB:
+> +			if (scsiback_gnttab_data_map(ring_req, pending_req)) {
+> +				scsiback_fast_flush_area(pending_req);
+> +				scsiback_do_resp_with_sense(NULL,
+> +					DRIVER_ERROR << 24, 0, pending_req);
+
+Another special case for scsiback_do_resp_with_sense() that with the
+recommended changes require a kmem_cache_free() call.
+
+> +			} else {
+> +				scsiback_cmd_exec(pending_req);
+> +			}
+> +			break;
+> +		case VSCSIIF_ACT_SCSI_ABORT:
+> +			scsiback_device_action(pending_req, TMR_ABORT_TASK,
+> +				ring_req->ref_rqid);
+> +			break;
+> +		case VSCSIIF_ACT_SCSI_RESET:
+> +			scsiback_device_action(pending_req, TMR_LUN_RESET, 0);
+> +			break;
+> +		default:
+> +			pr_err_ratelimited("xen-pvscsi: invalid request\n");
+> +			scsiback_do_resp_with_sense(NULL, DRIVER_ERROR << 24,
+> +						    0, pending_req);
+
+Ditto here.
+
+> +			break;
+> +		}
+> +
+> +		/* Yield point for this unbounded loop. */
+> +		cond_resched();
+> +	}
+> +
+> +	if (RING_HAS_UNCONSUMED_REQUESTS(ring))
+> +		more_to_do = 1;
+> +
+> +	return more_to_do;
+> +}
+> +
+
+<SNIP>
+
+> +static struct se_node_acl *
+> +scsiback_alloc_fabric_acl(struct se_portal_group *se_tpg)
+> +{
+> +	struct scsiback_nacl *nacl;
+> +
+> +	nacl = kzalloc(sizeof(struct scsiback_nacl), GFP_KERNEL);
+> +	if (!nacl) {
+> +		pr_err("Unable to allocate struct scsiback_nacl\n");
+> +		return NULL;
+> +	}
+> +
+> +	return &nacl->se_node_acl;
+> +}
+> +
+> +static void
+> +scsiback_release_fabric_acl(struct se_portal_group *se_tpg,
+> +			     struct se_node_acl *se_nacl)
+> +{
+> +	struct scsiback_nacl *nacl = container_of(se_nacl,
+> +			struct scsiback_nacl, se_node_acl);
+> +	kfree(nacl);
+> +}
+> +
+> +static u32 scsiback_tpg_get_inst_index(struct se_portal_group *se_tpg)
+> +{
+> +	return 1;
+> +}
+> +
+> +static struct se_node_acl *
+> +scsiback_make_nodeacl(struct se_portal_group *se_tpg,
+> +		       struct config_group *group,
+> +		       const char *name)
+> +{
+> +	struct se_node_acl *se_nacl, *se_nacl_new;
+> +	struct scsiback_nacl *nacl;
+> +	u64 wwpn = 0;
+> +	u32 nexus_depth;
+> +
+> +	se_nacl_new = scsiback_alloc_fabric_acl(se_tpg);
+> +	if (!se_nacl_new)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	nexus_depth = 1;
+> +	/*
+> +	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
+> +	 * when converting a NodeACL from demo mode -> explict
+> +	 */
+> +	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
+> +				name, nexus_depth);
+> +	if (IS_ERR(se_nacl)) {
+> +		scsiback_release_fabric_acl(se_tpg, se_nacl_new);
+> +		return se_nacl;
+> +	}
+> +	/*
+> +	 * Locate our struct scsiback_nacl and set the FC Nport WWPN
+> +	 */
+> +	nacl = container_of(se_nacl, struct scsiback_nacl, se_node_acl);
+> +	nacl->iport_wwpn = wwpn;
+> +
+> +	return se_nacl;
+> +}
+> +
+> +static void scsiback_drop_nodeacl(struct se_node_acl *se_acl)
+> +{
+> +	struct scsiback_nacl *nacl = container_of(se_acl,
+> +				struct scsiback_nacl, se_node_acl);
+> +	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
+> +	kfree(nacl);
+> +}
+> +
+
+As mentioned above, the NodeACL use is unnecessary for this driver so
+you can safely drop scsiback_make_node_acl() +
+scsiback_alloc_fabric_acl() + scsiback_drop_nodeacl() +
+scsiback_release_fabric_acl().
+
+> +static int scsiback_check_stop_free(struct se_cmd *se_cmd)
+> +{
+> +	return target_put_sess_cmd(se_cmd->se_sess, se_cmd);
+> +}
+> +
+
+As mentioned above, scsiback_check_stop_free() should follow what
+tcm_loop_check_stop_free() does here..
+
+> +static void scsiback_release_cmd(struct se_cmd *se_cmd)
+> +{
+> +}
+> +
+
+Move the kmem_cache_free() for pending_req here..
+
+> +static int scsiback_shutdown_session(struct se_session *se_sess)
+> +{
+> +	return 0;
+> +}
+> +
+> +static void scsiback_close_session(struct se_session *se_sess)
+> +{
+> +}
+> +
+> +static u32 scsiback_sess_get_index(struct se_session *se_sess)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int scsiback_write_pending(struct se_cmd *se_cmd)
+> +{
+> +	/* Go ahead and process the write immediately */
+> +	target_execute_cmd(se_cmd);
+> +
+> +	return 0;
+> +}
+> +
+> +static int scsiback_write_pending_status(struct se_cmd *se_cmd)
+> +{
+> +	return 0;
+> +}
+> +
+> +static void scsiback_set_default_node_attrs(struct se_node_acl *nacl)
+> +{
+> +}
+> +
+
+Safe to drop this no-op too.
+
+> +static u32 scsiback_get_task_tag(struct se_cmd *se_cmd)
+> +{
+> +	struct vscsibk_pend *pending_req = container_of(se_cmd,
+> +				struct vscsibk_pend, se_cmd);
+> +
+> +	return pending_req->rqid;
+> +}
+> +
+> +static int scsiback_get_cmd_state(struct se_cmd *se_cmd)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int scsiback_queue_data_in(struct se_cmd *se_cmd)
+> +{
+> +	struct vscsibk_pend *pending_req = container_of(se_cmd,
+> +				struct vscsibk_pend, se_cmd);
+> +
+> +	pending_req->result = SAM_STAT_GOOD;
+> +	scsiback_cmd_done(pending_req);
+> +	return 0;
+> +}
+> +
+> +static int scsiback_queue_status(struct se_cmd *se_cmd)
+> +{
+> +	struct vscsibk_pend *pending_req = container_of(se_cmd,
+> +				struct vscsibk_pend, se_cmd);
+> +
+> +	if (se_cmd->sense_buffer &&
+> +	    ((se_cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
+> +	     (se_cmd->se_cmd_flags & SCF_EMULATED_TASK_SENSE)))
+> +		pending_req->result = (DRIVER_SENSE << 24) |
+> +				      SAM_STAT_CHECK_CONDITION;
+> +	else
+> +		pending_req->result = se_cmd->scsi_status;
+> +
+> +	scsiback_cmd_done(pending_req);
+> +	return 0;
+> +}
+> +
+> +static void scsiback_queue_tm_rsp(struct se_cmd *se_cmd)
+> +{
+> +	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
+> +	struct scsiback_tmr *tmr = se_tmr->fabric_tmr_ptr;
+> +
+> +	atomic_set(&tmr->tmr_complete, 1);
+> +	wake_up(&tmr->tmr_wait);
+> +}
+> +
+> +static void scsiback_aborted_task(struct se_cmd *se_cmd)
+> +{
+> +	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
+> +	struct scsiback_tmr *tmr = se_tmr->fabric_tmr_ptr;
+> +
+> +	atomic_set(&tmr->tmr_complete, 1);
+> +	wake_up(&tmr->tmr_wait);
+> +}
+> +
+
+scsiback_aborted_task() should just return here, instead of the
+atomic_set + wake_up().  Eg: ABORT_TASK is already calling ->
+queue_tm_rsp(), and the ->aborted_task() callback is specifically for
+cleaning up any fabric specific descriptor resources, before
+->release_cmd() gets called.
+
+> +static ssize_t scsiback_tpg_param_show_alias(struct se_portal_group *se_tpg,
+> +					     char *page)
+> +{
+> +	struct scsiback_tpg *tpg = container_of(se_tpg, struct scsiback_tpg,
+> +						se_tpg);
+> +	ssize_t rb;
+> +
+> +	mutex_lock(&tpg->tv_tpg_mutex);
+> +	rb = snprintf(page, PAGE_SIZE, "%s\n", tpg->param_alias);
+> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> +
+> +	return rb;
+> +}
+> +
+> +static ssize_t scsiback_tpg_param_store_alias(struct se_portal_group *se_tpg,
+> +					      const char *page, size_t count)
+> +{
+> +	struct scsiback_tpg *tpg = container_of(se_tpg, struct scsiback_tpg,
+> +						se_tpg);
+> +	int len;
+> +
+> +	if (strlen(page) >= VSCSI_NAMELEN) {
+> +		pr_err("param alias: %s, exceeds max: %d\n", page,
+> +			VSCSI_NAMELEN);
+> +		return -EINVAL;
+> +	}
+> +
+> +	mutex_lock(&tpg->tv_tpg_mutex);
+> +	len = snprintf(tpg->param_alias, VSCSI_NAMELEN, "%s", page);
+> +	if (tpg->param_alias[len - 1] == '\n')
+> +		tpg->param_alias[len - 1] = '\0';
+> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> +
+> +	return count;
+> +}
+> +
+> +TF_TPG_PARAM_ATTR(scsiback, alias, S_IRUGO | S_IWUSR);
+> +
+> +static struct configfs_attribute *scsiback_param_attrs[] = {
+> +	&scsiback_tpg_param_alias.attr,
+> +	NULL,
+> +};
+> +
+> +static int scsiback_make_nexus(struct scsiback_tpg *tpg,
+> +				const char *name)
+> +{
+> +	struct se_portal_group *se_tpg;
+> +	struct se_session *se_sess;
+> +	struct scsiback_nexus *tv_nexus;
+> +
+> +	mutex_lock(&tpg->tv_tpg_mutex);
+> +	if (tpg->tpg_nexus) {
+> +		mutex_unlock(&tpg->tv_tpg_mutex);
+> +		pr_debug("tpg->tpg_nexus already exists\n");
+> +		return -EEXIST;
+> +	}
+> +	se_tpg = &tpg->se_tpg;
+> +
+> +	tv_nexus = kzalloc(sizeof(struct scsiback_nexus), GFP_KERNEL);
+> +	if (!tv_nexus) {
+> +		mutex_unlock(&tpg->tv_tpg_mutex);
+> +		pr_err("Unable to allocate struct scsiback_nexus\n");
+> +		return -ENOMEM;
+> +	}
+> +	/*
+> +	 *  Initialize the struct se_session pointer
+> +	 */
+> +	tv_nexus->tvn_se_sess = transport_init_session(TARGET_PROT_DIN_PASS |
+> +						       TARGET_PROT_DOUT_PASS);
+
+TARGET_PROT_D*_PASS incorrectly declares T10 PI support here, which
+should be TARGET_PROT_NORMAL instead.
+
+> +	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+> +		mutex_unlock(&tpg->tv_tpg_mutex);
+> +		kfree(tv_nexus);
+> +		return -ENOMEM;
+> +	}
+> +	se_sess = tv_nexus->tvn_se_sess;
+> +	/*
+> +	 * Since we are running in 'demo mode' this call with generate a
+> +	 * struct se_node_acl for the scsiback struct se_portal_group with
+> +	 * the SCSI Initiator port name of the passed configfs group 'name'.
+> +	 */
+> +	tv_nexus->tvn_se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
+> +				se_tpg, (unsigned char *)name);
+> +	if (!tv_nexus->tvn_se_sess->se_node_acl) {
+> +		mutex_unlock(&tpg->tv_tpg_mutex);
+> +		pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
+> +			 name);
+> +		goto out;
+> +	}
+> +	/*
+> +	 * Now register the TCM pvscsi virtual I_T Nexus as active with the
+> +	 * call to __transport_register_session()
+> +	 */
+> +	__transport_register_session(se_tpg, tv_nexus->tvn_se_sess->se_node_acl,
+> +			tv_nexus->tvn_se_sess, tv_nexus);
+> +	tpg->tpg_nexus = tv_nexus;
+> +
+> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> +	return 0;
+> +
+> +out:
+> +	transport_free_session(se_sess);
+> +	kfree(tv_nexus);
+> +	return -ENOMEM;
+> +}
+> +
+
+<SNIP>
+
+> +
+> +static int scsiback_port_link(struct se_portal_group *se_tpg,
+> +			       struct se_lun *lun)
+> +{
+> +	struct scsiback_tpg *tpg = container_of(se_tpg,
+> +				struct scsiback_tpg, se_tpg);
+> +
+> +	mutex_lock(&scsiback_mutex);
+> +
+> +	mutex_lock(&tpg->tv_tpg_mutex);
+> +	tpg->tv_tpg_port_count++;
+> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> +
+> +	mutex_unlock(&scsiback_mutex);
+> +
+> +	return 0;
+> +}
+> +
+
+AFAICT, no need to hold scsiback_mutex while incrementing
+tpg->tv_tpg_port_count.
+
+> +static void scsiback_port_unlink(struct se_portal_group *se_tpg,
+> +				  struct se_lun *lun)
+> +{
+> +	struct scsiback_tpg *tpg = container_of(se_tpg,
+> +				struct scsiback_tpg, se_tpg);
+> +
+> +	mutex_lock(&scsiback_mutex);
+> +
+> +	mutex_lock(&tpg->tv_tpg_mutex);
+> +	tpg->tv_tpg_port_count--;
+> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> +
+> +	mutex_unlock(&scsiback_mutex);
+> +}
+> +
+
+Ditto here.
+
