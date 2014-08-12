@@ -1,107 +1,77 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead
- of pci_enable_msix()
-Date: Tue, 12 Aug 2014 11:50:14 +0100
-Message-ID: <20140812105014.GB1674@agordeev.usersys.redhat.com>
-References: <cover.1405533479.git.agordeev@redhat.com>
- <bc13ddf17d035921de994d2f8a52902e0a5d1a60.1405533479.git.agordeev@redhat.com>
- <20140811073902.GB16504@dhcp-27-160.brq.redhat.com>
- <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V4 2/4] Introduce xen-scsifront module
+Date: Tue, 12 Aug 2014 13:32:53 +0200
+Message-ID: <53E9FB65.6080404@suse.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-3-git-send-email-jgross@suse.com>	<20140811095424.GB5952@infradead.org> <53E89A91.20203@suse.com> <20140811175042.GA6078@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20B1A3CBD98F3845B3F5F56D8597EF59FA0CF6@avmb2.qlogic.org>
-Sender: linux-pci-owner@vger.kernel.org
-To: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Anil Gurumurthy <agurumur@brocade.com>, Vijaya Mohan Guvva <vmohan@brocade.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33543 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850AbaHLLc6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Aug 2014 07:32:58 -0400
+In-Reply-To: <20140811175042.GA6078@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-On Mon, Aug 11, 2014 at 11:02:56AM +0000, Anil Gurumurthy wrote:
-> Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+On 08/11/2014 07:50 PM, Christoph Hellwig wrote:
+> On Mon, Aug 11, 2014 at 12:27:29PM +0200, Juergen Gross wrote:
+>> What do you mean with "unusual"? You mean transferring the EH action to
+>> Dom0?
+>
+> Yes.  Note that hyperv tries something similar and they've run into
+> timeout issues, you might want to read up the recent thread on that.
+>
+>>>> +				} else {
+>>>> +					xenbus_printf(XBT_NIL, dev->nodename,
+>>>> +						      state_str, "%d",
+>>>> +						      XenbusStateConnected);
+>>>> +				}
+>>>
+>>> Just print this message in ->slave_configure.
+>>
+>> This is calling for problems, I think. xenbus_printf() is not just a
+>> printing function, but it changes an entry in the xenstore. And this
+>> requires locking, switching threads, ...
+>>
+>> I doubt doing this while holding SCSI-internal locks is a good idea.
+>
+> Oh, I thought xenbus_printf was just a logging wrapper.
+>
+> Doing major work in the slave_* callouts is not a problem, that's what
+> they were designed for.
 
-Many thanks, Anil!
+Okay.
 
-If your Ack apply to this patch only or to all three
-'bfa' patches in this series?
+>
+> For the successful case the xenbus_printf should be done in
+> ->slave_configure.  For the failure case you probably want to do it
+> from ->slave_destroy based on the absence of a flag set in ->slave_configure,
+> e.g. in slave_configure:
+>
+> 	sdev->hostdata = (void *)1UL;
+>
+> and in ->slave_destroy:
+>
+> 	if (!sdev->hostdata)
 
-Thanks!
+I don't think I'll need the flag. The action is the same if the device
+is being destroyed again because of already existing or when it is
+really removed.
 
-> -----Original Message-----
-> From: Alexander Gordeev [mailto:agordeev@redhat.com] 
-> Sent: 11 August 2014 13:09
-> To: linux-kernel
-> Cc: Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; linux-pci; Anil Gurumurthy; Sudarsana Kalluru
-> Subject: Re: [PATCH v2 RESEND 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-> 
-> On Wed, Jul 16, 2014 at 08:05:08PM +0200, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers using these 
-> > two interfaces need to be updated to use the new 
-> > pci_enable_msi_range()  or pci_enable_msi_exact() and 
-> > pci_enable_msix_range() or pci_enable_msix_exact() interfaces.
-> 
-> Anil, Sudarsana,
-> 
-> Could you please review bfa patches in this series?
-> 
-> Thanks!
-> 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Anil Gurumurthy <agurumur@brocade.com>
-> > Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-> > ---
-> >  drivers/scsi/bfa/bfad.c |   20 ++++++--------------
-> >  1 files changed, 6 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 
-> > c18279f..e90a374 100644
-> > --- a/drivers/scsi/bfa/bfad.c
-> > +++ b/drivers/scsi/bfa/bfad.c
-> > @@ -1234,29 +1234,21 @@ bfad_setup_intr(struct bfad_s *bfad)
-> >  	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
-> >  	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
-> >  
-> > -		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-> > +		error = pci_enable_msix_exact(bfad->pcidev,
-> > +					      msix_entries, bfad->nvec);
-> >  		/* In CT1 & CT2, try to allocate just one vector */
-> > -		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-> > +		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
-> >  			printk(KERN_WARNING "bfa %s: trying one msix "
-> >  			       "vector failed to allocate %d[%d]\n",
-> >  			       bfad->pci_name, bfad->nvec, error);
-> >  			bfad->nvec = 1;
-> > -			error = pci_enable_msix(bfad->pcidev,
-> > -						msix_entries, bfad->nvec);
-> > +			error = pci_enable_msix_exact(bfad->pcidev,
-> > +						      msix_entries, 1);
-> >  		}
-> >  
-> > -		/*
-> > -		 * Only error number of vector is available.
-> > -		 * We don't have a mechanism to map multiple
-> > -		 * interrupts into one vector, so even if we
-> > -		 * can try to request less vectors, we don't
-> > -		 * know how to associate interrupt events to
-> > -		 *  vectors. Linux doesn't duplicate vectors
-> > -		 * in the MSIX table for this case.
-> > -		 */
-> >  		if (error) {
-> >  			printk(KERN_WARNING "bfad%d: "
-> > -			       "pci_enable_msix failed (%d), "
-> > +			       "pci_enable_msix_exact failed (%d), "
-> >  			       "use line based.\n",
-> >  				bfad->inst_no, error);
-> >  			goto line_based;
-> > --
-> > 1.7.7.6
-> > 
+> 		...
+>
+> although you might see something like this based on external scanning
+> through procfs/sysfs as mentioned earlier, so please take a look at
+> how all these corner cases could effect you.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+I'll add a check if .slave_configure() and .slave_destroy() are running
+in the same task as scsi_add_device() or scsi_remove_device(). This
+should rule out all of these corner cases.
+
+
+Juergen
+
