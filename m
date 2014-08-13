@@ -1,60 +1,87 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init()
-	and module_long_probe_exit()
-Date: Wed, 13 Aug 2014 19:51:01 +0200
-Message-ID: <20140813175101.GA7156@redhat.com>
-References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com> <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH v2 RESEND 10/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 13 Aug 2014 14:27:08 -0500
+Message-ID: <20140813192708.GD19666@beardog.cce.hp.com>
+References: <cover.1397461652.git.agordeev@redhat.com> <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:35513 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbaHMT2B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Aug 2014 15:28:01 -0400
 Content-Disposition: inline
-In-Reply-To: <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: gregkh@linuxfoundation.org, tiwai@suse.de, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com
 
-On 08/12, Luis R. Rodriguez wrote:
->
-> +/* To be used by modules which can take over 30 seconds at probe */
+On Mon, Apr 14, 2014 at 10:05:34AM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/hpsa.c |   29 +++++++++++++----------------
+>  1 files changed, 13 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 3284edb..36bb1e4 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6144,26 +6144,23 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+>  		goto default_int_mode;
+>  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+>  		dev_info(&h->pdev->dev, "MSIX\n");
+> -		h->msix_vector = MAX_REPLY_QUEUES;
+> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -				      h->msix_vector);
+> -		if (err > 0) {
+> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
+> +					    1, MAX_REPLY_QUEUES);
+> +		if (err < 0) {
+> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
+> +			h->msix_vector = 0;
+> +			goto single_msi_mode;
+> +		} else if (err < MAX_REPLY_QUEUES) {
+>  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+>  			       "available\n", err);
+> -			h->msix_vector = err;
+> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -					      h->msix_vector);
+> -		}
+> -		if (!err) {
+> -			for (i = 0; i < h->msix_vector; i++)
+> -				h->intr[i] = hpsa_msix_entries[i].vector;
+> -			return;
+> -		} else {
+> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+> -			       err);
+> -			h->msix_vector = 0;
+>  		}
+> +
+> +		h->msix_vector = err;
+> +		for (i = 0; i < h->msix_vector; i++)
+> +			h->intr[i] = hpsa_msix_entries[i].vector;
+> +		return;
+>  	}
+> +single_msi_mode:
+>  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+>  		dev_info(&h->pdev->dev, "MSI\n");
+>  		if (!pci_enable_msi(h->pdev))
+> -- 
+> 1.7.7.6
 
-Probably the comment should explain that this hack should only be
-used if the driver is buggy and is wating for "real fix".
+Ack.
 
-> +#define module_long_probe_init(initfn)				\
-> +	static struct task_struct *__init_thread;		\
-> +	static int _long_probe_##initfn(void *arg)		\
-> +	{							\
-> +		return initfn();				\
-> +	}							\
-> +	static inline __init int __long_probe_##initfn(void)	\
-> +	{							\
-> +		__init_thread = kthread_run(_long_probe_##initfn,\
-> +					    NULL,		\
-> +					    #initfn);		\
-> +		if (IS_ERR(__init_thread))			\
-> +			return PTR_ERR(__init_thread);		\
-> +		return 0;					\
-> +	}							\
-> +	module_init(__long_probe_##initfn);
-> +/* To be used by modules that require module_long_probe_init() */
-> +#define module_long_probe_exit(exitfn)				\
-> +	static inline void __long_probe_##exitfn(void)		\
-> +	{							\
-> +		exitfn();					\
-> +		if (__init_thread)				\
-> +			kthread_stop(__init_thread);		\
-> +	}							\
+-- steve
 
-exitfn() should be called after kthread_stop(), and only if initfn()
-returns 0. So it should probably do
-
-	int err = kthread_stop(__init_thread);
-	if (!err)
-		exitfn();
-
-But there is an additional complication, you can't use __init_thread
-without get_task_struct(), so  __long_probe_##initfn() can't use
-kthread_run(). It needs kthread_create() + get_task_struct() + wakeup.
-
-Oleg.
