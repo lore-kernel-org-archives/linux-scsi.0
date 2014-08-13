@@ -1,87 +1,136 @@
 From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH v2 RESEND 10/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 13 Aug 2014 14:27:08 -0500
-Message-ID: <20140813192708.GD19666@beardog.cce.hp.com>
-References: <cover.1397461652.git.agordeev@redhat.com> <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
+Subject: Re: [PATCH] hpsa: refine the pci enble/disable handling]
+Date: Wed, 13 Aug 2014 15:24:45 -0500
+Message-ID: <20140813202445.GE19666@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:35513 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbaHMT2B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Aug 2014 15:28:01 -0400
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:20266 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675AbaHMUZi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Aug 2014 16:25:38 -0400
 Content-Disposition: inline
-In-Reply-To: <6e17ab33b0ddbe49f72bf0d9c5fd3019acf6d6ca.1397461652.git.agordeev@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com
+To: linux-scsi@vger.kernel.org
+Cc: scameron@beardog.cce.hp.com, tomas.henzl@redhat.com, michael.miller@canonical.com, joseph.t.handzik@hp.com
 
-On Mon, Apr 14, 2014 at 10:05:34AM +0200, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-> Cc: iss_storagedev@hp.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+
+Let me try again, this time not from gmail.
+
+On Thu, Jun 12, 2014 at 10:29 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+> When a second(kdump) kernel starts and the hard reset method is used
+> the driver calls pci_disable_device without previously enabling it,
+> so the kernel shows a warning -
+> [   16.876248] WARNING: at drivers/pci/pci.c:1431
+> pci_disable_device+0x84/0x90()
+> [   16.882686] Device hpsa
+> disabling already-disabled device
+> ...
+> This patch fixes it, in addition to this I tried to balance also some
+> other pairs
+> of enable/disable device in the driver.
+> Unfortunately I wasn't able to verify the functionality for the case of a
+> sw reset,
+> because of a lack of proper hw.
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 > ---
->  drivers/scsi/hpsa.c |   29 +++++++++++++----------------
->  1 files changed, 13 insertions(+), 16 deletions(-)
-> 
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 3284edb..36bb1e4 100644
+> index 5858600..67c41b9 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -6144,26 +6144,23 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
->  		goto default_int_mode;
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
->  		dev_info(&h->pdev->dev, "MSIX\n");
-> -		h->msix_vector = MAX_REPLY_QUEUES;
-> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -				      h->msix_vector);
-> -		if (err > 0) {
-> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-> +					    1, MAX_REPLY_QUEUES);
-> +		if (err < 0) {
-> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
-> +			h->msix_vector = 0;
-> +			goto single_msi_mode;
-> +		} else if (err < MAX_REPLY_QUEUES) {
->  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
->  			       "available\n", err);
-> -			h->msix_vector = err;
-> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
-> -					      h->msix_vector);
-> -		}
-> -		if (!err) {
-> -			for (i = 0; i < h->msix_vector; i++)
-> -				h->intr[i] = hpsa_msix_entries[i].vector;
-> -			return;
-> -		} else {
-> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
-> -			       err);
-> -			h->msix_vector = 0;
->  		}
+> @@ -5983,7 +5983,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+> pci_dev *pdev)
+>         /* Turn the board off.  This is so that later pci_restore_state()
+>          * won't turn the board on before the rest of config space is
+> ready.
+>          */
+> -       pci_disable_device(pdev);
+>         pci_save_state(pdev);
+>
+>         /* find the first memory BAR, so we can find the cfg table */
+> @@ -6031,11 +6030,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+> pci_dev *pdev)
+>                 goto unmap_cfgtable;
+>
+>         pci_restore_state(pdev);
+> -       rc = pci_enable_device(pdev);
+> -       if (rc) {
+> -               dev_warn(&pdev->dev, "failed to enable device.\n");
+> -               goto unmap_cfgtable;
+> -       }
+>         pci_write_config_word(pdev, 4, command_register);
+>
+>         /* Some devices (notably the HP Smart Array 5i Controller)
+> @@ -6548,6 +6542,12 @@ static int hpsa_init_reset_devices(struct pci_dev
+> *pdev)
+>         if (!reset_devices)
+>                 return 0;
+>
+> +       rc = pci_enable_device(pdev);
+> +       if (rc) {
+> +               dev_warn(&pdev->dev, "failed to enable device.\n");
+> +               return -ENODEV;
+> +       }
 > +
-> +		h->msix_vector = err;
-> +		for (i = 0; i < h->msix_vector; i++)
-> +			h->intr[i] = hpsa_msix_entries[i].vector;
-> +		return;
->  	}
-> +single_msi_mode:
->  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
->  		dev_info(&h->pdev->dev, "MSI\n");
->  		if (!pci_enable_msi(h->pdev))
-> -- 
-> 1.7.7.6
+>         /* Reset the controller with a PCI power-cycle or via doorbell */
+>         rc = hpsa_kdump_hard_reset_controller(pdev);
+>
+> @@ -6556,10 +6556,11 @@ static int hpsa_init_reset_devices(struct pci_dev
+> *pdev)
+>          * "performant mode".  Or, it might be 640x, which can't reset
+>          * due to concerns about shared bbwc between 6402/6404 pair.
+>          */
+> -       if (rc == -ENOTSUPP)
+> -               return rc; /* just try to do the kdump anyhow. */
+> -       if (rc)
+> -               return -ENODEV;
+> +       if (rc) {
+> +               if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
+> +                       rc = -ENODEV;
+> +               goto out_disable;
+>
 
-Ack.
+
+Checkpatch complained of trailing whitespace here. ^^^
+
+Other than that, looks good.
 
 -- steve
 
+
+> +       }
+>
+>         /* Now try to get the controller to respond to a no-op */
+>         dev_warn(&pdev->dev, "Waiting for controller to respond to
+> no-op\n");
+> @@ -6570,7 +6571,11 @@ static int hpsa_init_reset_devices(struct pci_dev
+> *pdev)
+>                         dev_warn(&pdev->dev, "no-op failed%s\n",
+>                                         (i < 11 ? "; re-trying" : ""));
+>         }
+> -       return 0;
+> +
+> +out_disable:
+> +
+> +       pci_disable_device(pdev);
+> +       return rc;
+>  }
+>
+>  static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
+> @@ -6722,6 +6727,7 @@ static void
+> hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+>                 iounmap(h->transtable);
+>         if (h->cfgtable)
+>                 iounmap(h->cfgtable);
+> +       pci_disable_device(h->pdev);
+>         pci_release_regions(h->pdev);
+>         kfree(h);
+>  }
+> --
+> 1.8.3.1
+>
+>
+
+----- End forwarded message -----
