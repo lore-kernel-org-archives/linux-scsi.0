@@ -1,76 +1,110 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init() and
- module_long_probe_exit()
-Date: Wed, 13 Aug 2014 09:03:55 +0800
-Message-ID: <20140813010355.GA27894@kroah.com>
-References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com>
- <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com>
- <201408122259.s7CMx6Bm042549@www262.sakura.ne.jp>
+From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Subject: Re: Re: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
+ error messages on trace
+Date: Wed, 13 Aug 2014 12:13:16 +0900
+Message-ID: <53EAD7CC.8030408@hitachi.com>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <53E4CB7B.7020705@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201408122259.s7CMx6Bm042549@www262.sakura.ne.jp>
-Sender: netdev-owner@vger.kernel.org
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: "\"\\\"Luis R. Rodriguez\\\"\"" <mcgrof@do-not-panic.com>, tiwai@suse.de, linux-kernel@vger.kernel.org, "\"\\\"Luis R. Rodriguez\\\"\"" <mcgrof@suse.com>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail7.hitachi.co.jp ([133.145.228.42]:55972 "EHLO
+	mail7.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbaHMDNU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Aug 2014 23:13:20 -0400
+In-Reply-To: <53E4CB7B.7020705@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Aug 13, 2014 at 07:59:06AM +0900, Tetsuo Handa wrote:
-> Luis R. Rodriguez wrote:
-> > Tetsuo bisected and found that commit 786235ee \"kthread: make
-> > kthread_create() killable\" modified kthread_create() to bail as
-> > soon as SIGKILL is received.
-> 
-> I just wrote commit 786235ee. It is not Tetsuo who bisected it.
-> 
-> > @@ -128,4 +129,38 @@ bool queue_kthread_work(struct kthread_worker *worker,
-> > void flush_kthread_work(struct kthread_work *work);
-> > void flush_kthread_worker(struct kthread_worker *worker);
-> > 
-> > +#ifndef MODULE
-> > +
-> > +#define module_long_probe_init(x)      __initcall(x);
-> > +#define module_long_probe_exit(x)      __exitcall(x);
-> > +
-> > +#else
-> > +/* To be used by modules which can take over 30 seconds at probe */
-> > +#define module_long_probe_init(initfn)                    \\
-> > +     static struct task_struct *__init_thread;          \\
-> > +     static int _long_probe_##initfn(void *arg)          \\
-> > +     {                                   \\
-> > +          return initfn();                    \\
-> > +     }                                   \\
-> > +     static inline __init int __long_probe_##initfn(void)     \\
-> > +     {                                   \\
-> > +          __init_thread = kthread_run(_long_probe_##initfn,\\
-> > +                             NULL,          \\
-> > +                             #initfn);          \\
-> > +          if (IS_ERR(__init_thread))               \\
-> > +               return PTR_ERR(__init_thread);          \\
-> > +          return 0;                         \\
-> > +     }                                   \\
-> > +     module_init(__long_probe_##initfn);
-> > +/* To be used by modules that require module_long_probe_init() */
-> > +#define module_long_probe_exit(exitfn)                    \\
-> > +     static inline void __long_probe_##exitfn(void)          \\
-> > +     {                                   \\
-> > +          exitfn();                         \\
-> 
-> exitfn() must not be called if initfn() failed or has not
-> completed yet. You need a bool variable for indicating that
-> we are ready to call exitfn().
-> 
-> Also, subsequent userspace operations may fail if
-> we return to userspace before initfn() completes
-> (e.g. device nodes are not created yet).
+Hi Douglas,
 
-I doubt that this will be a problem, as device nodes are usually created
-_after_ module_init() returns.
+Thank you for your comment.
 
-But the cleanup issues are real on error paths.  Given that these
-drivers will need "work" anyway, I don't think it's really a big deal.
+(2014/08/08 22:07), Douglas Gilbert wrote:
+> On 14-08-08 01:50 PM, Yoshihiro YUNOMAE wrote:
+>> Hi All,
+>>
+>> This patch set introduces new traceevents in order to output
+>> continuous error
+>> messages. Current SCSI printk messages in upstream kernel can be
+>> divided by and
+>> mixed with other messages. Even if each error message has its device id,
+>> sometimes we can easily be lost in mixed logs because the message's
+>> device id
+>> is separated from it's body. To avoid it, I'd like to use traceevents to
+>> store error messages into the ftrace or perf buuffer, because traceevents
+>> are atomically commited to the buffer.
+>>
+>> In this patch set, all printk messages are removed based on a local
+>> discussion with Hannes, but I think printk messages should be kept
+>> because all
+>> users don't enable traceevents and rsyslog can store as files.
+>>
+>> However, if printk of logging branch is kept, the messages are
+>> duplicate and
+>> it can induce stack overflow by using local buffer(*1).
+>>
+>>   (*1) https://lkml.org/lkml/2014/5/20/742
+>>
+>> So, my suggestion is follows:
+>>
+>> 1) printk
+>> Keeps current implemntation of upstream kernel.
+>> The messages are divided and can be mixed, but all users can check the
+>> error
+>> messages without any settings.
+>>
+>> 2) traceevents
+>> To get the complete messages, we can use ftrace or perf (or something
+>> on them).
+>> Users can always understand correct messages, but they need to set up the
+>> tracers.
+>>
+>> This patch set is based on Hannes' logging branch:
+>> http://git.kernel.org/cgit/linux/kernel/git/hare/scsi-devel.git/log/?h=logging
+>>
+>>
+>> [1/10] ~  [6/10]: just cleanup for logging branch
+>> [7/10] ~ [10/10]: introduce new traceevents
+>>
+>> Any comments are welcome!
+>
+> In sg3_utils there are now string yielding equivalents
+> to the sense buffer "print" functions. They take a form
+> like this:
+>    char * get_sense_str(const unsigned char * sense_buffer,
+>                         int sb_len, int blen, char * b);
+>
+> So this just does the hard work of decoding the sense buffer
+> (or saying it is invalid) the result of which it places in
+> buffer 'b'. And 'b' is returned (so this function can be in
+> the arguments of a driver's printing function).
+>
+> Adding such string functions would give other parts of the
+> SCSI subsystem the capability of tailoring their own
+> messages that include sense data information.
+>
+>
+> Existing sense buffer "print" function could be kept and
+> implemented using the newer "_str" variants. Would that
+> be worth the trouble?
 
-thanks,
+I have already sent the idea using local buffer on this February,
+but it was rejected by James (*1). By using stack region for local
+buffer, stack overflow can occur. So, I implemented this feature
+to atomically output an error message with device information.
 
-greg k-h
+(*1) https://lkml.org/lkml/2014/5/20/742
+
+Thanks,
+Yoshihiro YUNOMAE
+
+-- 
+Yoshihiro YUNOMAE
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., Yokohama Research Laboratory
+E-mail: yoshihiro.yunomae.ez@hitachi.com
+
+
