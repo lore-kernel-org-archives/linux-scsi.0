@@ -1,70 +1,88 @@
-From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Subject: Re: [RFC PATCH 01/10] scsi/constants: Cleanup printk message in __scsi_print_sense()
-Date: Wed, 13 Aug 2014 12:14:37 +0900
-Message-ID: <53EAD81D.9010609@hitachi.com>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115006.6768.5118.stgit@yuno-kbuild.novalocal> <94D0CD8314A33A4D9D801C0FE68B402958BE5A76@G9W0745.americas.hpqcorp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH V5] Save command pool address of Scsi_Host
+Date: Wed, 13 Aug 2014 08:38:11 +0200
+Message-ID: <53EB07D3.2060708@suse.de>
+References: <1407151802-27198-1-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958BE5A76@G9W0745.americas.hpqcorp.net>
+In-Reply-To: <1407151802-27198-1-git-send-email-jgross@suse.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+To: jgross@suse.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Elliot,
-
-Thank you for your comment.
-
-(2014/08/12 23:51), Elliott, Robert (Server Storage) wrote:
+On 08/04/2014 01:30 PM, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
 >
+> If a scsi host driver specifies .cmd_len in it's scsi_host_template, =
+a driver's
+> private command pool is needed. scsi_find_host_cmd_pool() will locate=
+ it, but
+> scsi_alloc_host_cmd_pool() isn't saving the pool address in the host =
+template.
 >
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Yoshihiro YUNOMAE
->> Sent: Friday, 08 August, 2014 6:50 AM
-> ...
->> Subject: [RFC PATCH 01/10] scsi/constants: Cleanup printk message in
->> __scsi_print_sense()
->>
->> A device name is output like "sda: Sense Key : Medium Error [current]"
->> in __scsi_print_sense(), but it should be "[sda] Sense Key : Medium Error
->> [current]" because other printk messages output a device name like "[sda]
->> foo."
->>
-> ...
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index c6a7a4a..a0e8159 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -1470,7 +1470,7 @@ void __scsi_print_sense(struct scsi_device *sdev,
->> const char *name,
->>   		return;
->>   	}
->>
->> -	sdev_printk(KERN_INFO, sdev, "%s: Sense Key : %s %s%s\n", name,
->> +	sdev_printk(KERN_INFO, sdev, "[%s] Sense Key : %s %s%s\n", name,
->>   	       scsi_sense_key_string(sshdr.sense_key),
->>   	       scsi_sense_type_string(&sshdr),
->>   	       scsi_sense_format_string(&sshdr));
->>
+> This will result in an access error when the host is removed.
 >
+> Avoid the problem by saving the address of a new allocated command po=
+ol where
+> it is expected.
 >
-> The callers of __scsi_print_sense do not always pass in a name
-> like "sda".  In fact, sd.c doesn't even call that function; its
-> sd_print_sense_hdr calls sd_printk (which prints name as "[%s]")
-> and scsi_show_sense_hdr.
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> ---
+>   drivers/scsi/scsi.c | 12 ++++++++++--
+>   1 file changed, 10 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 88d46fe..b0cef5b 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -380,6 +380,10 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost=
+)
+>   		pool->slab_flags |=3D SLAB_CACHE_DMA;
+>   		pool->gfp_mask =3D __GFP_DMA;
+>   	}
+> +
+> +	if (hostt->cmd_size)
+> +		hostt->cmd_pool =3D pool;
+> +
+>   	return pool;
+>   }
+>
+> @@ -424,8 +428,10 @@ out:
+>   out_free_slab:
+>   	kmem_cache_destroy(pool->cmd_slab);
+>   out_free_pool:
+> -	if (hostt->cmd_size)
+> +	if (hostt->cmd_size) {
+>   		scsi_free_host_cmd_pool(pool);
+> +		hostt->cmd_pool =3D NULL;
+> +	}
+>   	goto out;
+>   }
+>
+> @@ -447,8 +453,10 @@ static void scsi_put_host_cmd_pool(struct Scsi_H=
+ost *shost)
+>   	if (!--pool->users) {
+>   		kmem_cache_destroy(pool->cmd_slab);
+>   		kmem_cache_destroy(pool->sense_slab);
+> -		if (hostt->cmd_size)
+> +		if (hostt->cmd_size) {
+>   			scsi_free_host_cmd_pool(pool);
+> +			hostt->cmd_pool =3D NULL;
+> +		}
+>   	}
+>   	mutex_unlock(&host_cmd_pool_mutex);
+>   }
+>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-OK, I understood.
-Current Linux kernel also outputs "<name>:" in __scsi_print_sense(),
-so we should not change this.
+Cheers,
 
-Thanks,
-Yoshihiro YUNOMOAE
-
--- 
-Yoshihiro YUNOMAE
-Software Platform Research Dept. Linux Technology Center
-Hitachi, Ltd., Yokohama Research Laboratory
-E-mail: yoshihiro.yunomae.ez@hitachi.com
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
