@@ -1,301 +1,164 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RFC V2 11/16] scsi: ufs: refactor configuring power mode
-Date: Thu, 14 Aug 2014 16:31:02 +0300
-Message-ID: <1408023067-26103-12-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RFC V2 13/16] scsi: ufs: Add freq-table-hz property for UFS device
+Date: Thu, 14 Aug 2014 16:31:04 +0300
+Message-ID: <1408023067-26103-14-git-send-email-draviv@codeaurora.org>
 References: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:35474 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755132AbaHNNby (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 09:31:54 -0400
 In-Reply-To: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sahitya Tummala <stummala@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-Sometimes, the device shall report its maximum power and speed
-capabilities, but we might not wish to configure it to use those
-maximum capabilities.
-This change adds support for the vendor specific host driver to
-implement power change notify callback.
+From: Sahitya Tummala <stummala@codeaurora.org>
 
-To enable configuring different power modes (number of lanes,
-gear number and fast/slow modes) it is necessary to split the
-configuration stage from the stage that reads the device max power mode.
-In addition, it is not required to read the configuration more than
-once, thus the configuration is stored after reading it once.
+Add freq-table-hz propery for UFS device to keep track of
+<min max> frequencies supported by UFS clocks.
 
+Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index fac71c9..3a66d0d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -178,6 +178,8 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- static void ufshcd_hba_exit(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
-+static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-+		struct ufs_pa_layer_attr *desired_pwr_mode);
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index b0f791a..e73a619 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -24,11 +24,11 @@ Optional properties:
+ - clocks                : List of phandle and clock specifier pairs
+ - clock-names           : List of clock input name strings sorted in the same
+                           order as the clocks property.
+-- max-clock-frequency-hz : List of maximum operating frequency stored in the same
+-                           order as the clocks property. If this property is not
+-			   defined or a value in the array is "0" then it is assumed
+-			   that the frequency is set by the parent clock or a
+-			   fixed rate clock source.
++- freq-table-hz		: Array of <min max> operating frequencies stored in the same
++                          order as the clocks property. If this property is not
++			  defined or a value in the array is "0" then it is assumed
++			  that the frequency is set by the parent clock or a
++			  fixed rate clock source.
  
- static inline void ufshcd_enable_irq(struct ufs_hba *hba)
- {
-@@ -1933,65 +1935,129 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- }
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+@@ -49,5 +49,5 @@ Example:
  
- /**
-- * ufshcd_config_max_pwr_mode - Set & Change power mode with
-- *	maximum capability attribute information.
-- * @hba: per adapter instance
-- *
-- * Returns 0 on success, non-zero value on failure
-+ * ufshcd_get_max_pwr_mode - reads the max power mode negotiated with device
-+ * @hba: per-adapter instance
-  */
--static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
-+static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
- {
--	enum {RX = 0, TX = 1};
--	u32 lanes[] = {1, 1};
--	u32 gear[] = {1, 1};
--	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
--	int ret;
-+	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
-+
-+	if (hba->max_pwr_info.is_valid)
-+		return 0;
-+
-+	pwr_info->pwr_tx = FASTAUTO_MODE;
-+	pwr_info->pwr_rx = FASTAUTO_MODE;
-+	pwr_info->hs_rate = PA_HS_MODE_B;
+ 		clocks = <&core 0>, <&ref 0>, <&iface 0>;
+ 		clock-names = "core_clk", "ref_clk", "iface_clk";
+-		max-clock-frequency-hz = <100000000 19200000 0>;
++		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+ 	};
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index edaccd0..551be95 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -63,6 +63,8 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	char *name;
+ 	u32 *clkfreq = NULL;
+ 	struct ufs_clk_info *clki;
++	int len = 0;
++	size_t sz = 0;
  
- 	/* Get the connected lane count */
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
-+			&pwr_info->lane_rx);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
-+			&pwr_info->lane_tx);
-+
-+	if (!pwr_info->lane_rx || !pwr_info->lane_tx) {
-+		dev_err(hba->dev, "%s: invalid connected lanes value. rx=%d, tx=%d\n",
-+				__func__,
-+				pwr_info->lane_rx,
-+				pwr_info->lane_tx);
-+		return -EINVAL;
+ 	if (!np)
+ 		goto out;
+@@ -82,39 +84,59 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	if (cnt <= 0)
+ 		goto out;
+ 
+-	clkfreq = kzalloc(cnt * sizeof(*clkfreq), GFP_KERNEL);
++	if (!of_get_property(np, "freq-table-hz", &len)) {
++		dev_info(dev, "freq-table-hz property not specified\n");
++		goto out;
 +	}
- 
- 	/*
- 	 * First, get the maximum gears of HS speed.
- 	 * If a zero value, it means there is no HSGEAR capability.
- 	 * Then, get the maximum gears of PWM speed.
- 	 */
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
--	if (!gear[RX]) {
--		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
--		pwr[RX] = SLOWAUTO_MODE;
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &pwr_info->gear_rx);
-+	if (!pwr_info->gear_rx) {
-+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
-+				&pwr_info->gear_rx);
-+		if (!pwr_info->gear_rx) {
-+			dev_err(hba->dev, "%s: invalid max pwm rx gear read = %d\n",
-+				__func__, pwr_info->gear_rx);
-+			return -EINVAL;
-+		}
-+		pwr_info->pwr_rx = SLOWAUTO_MODE;
++
++	if (len <= 0)
++		goto out;
++
++	sz = len / sizeof(*clkfreq);
++	if (sz != 2 * cnt) {
++		dev_err(dev, "%s len mismatch\n", "freq-table-hz");
++		ret = -EINVAL;
++		goto out;
++	}
++
++	clkfreq = devm_kzalloc(dev, sz * sizeof(*clkfreq),
++			GFP_KERNEL);
+ 	if (!clkfreq) {
++		dev_err(dev, "%s: no memory\n", "freq-table-hz");
+ 		ret = -ENOMEM;
+-		dev_err(dev, "%s: memory alloc failed\n", __func__);
+ 		goto out;
  	}
  
--	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
--	if (!gear[TX]) {
-+	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR),
-+			&pwr_info->gear_tx);
-+	if (!pwr_info->gear_tx) {
- 		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
--				    &gear[TX]);
--		pwr[TX] = SLOWAUTO_MODE;
-+				&pwr_info->gear_tx);
-+		if (!pwr_info->gear_tx) {
-+			dev_err(hba->dev, "%s: invalid max pwm tx gear read = %d\n",
-+				__func__, pwr_info->gear_tx);
-+			return -EINVAL;
-+		}
-+		pwr_info->pwr_tx = SLOWAUTO_MODE;
+-	ret = of_property_read_u32_array(np,
+-			"max-clock-frequency-hz", clkfreq, cnt);
++	ret = of_property_read_u32_array(np, "freq-table-hz",
++			clkfreq, sz);
+ 	if (ret && (ret != -EINVAL)) {
+-		dev_err(dev, "%s: invalid max-clock-frequency-hz property, %d\n",
+-				__func__, ret);
+-		goto out;
++		dev_err(dev, "%s: error reading array %d\n",
++				"freq-table-hz", ret);
++		goto free_clkfreq;
  	}
  
-+	hba->max_pwr_info.is_valid = true;
-+	return 0;
-+}
-+
-+/**
-+ * ufshcd_config_pwr_mode - configure a new power mode
-+ * @hba: per-adapter instance
-+ * @desired_pwr_mode: desired power configuration
-+ */
-+static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-+		struct ufs_pa_layer_attr *desired_pwr_mode)
-+{
-+	struct ufs_pa_layer_attr final_params = { 0 };
-+	int ret;
-+
-+	if (hba->vops->pwr_change_notify)
-+		hba->vops->pwr_change_notify(hba,
-+		     PRE_CHANGE, desired_pwr_mode, &final_params);
-+	else
-+		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
-+
- 	/*
- 	 * Configure attributes for power mode change with below.
- 	 * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
- 	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
- 	 * - PA_HSSERIES
- 	 */
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
--	if (pwr[RX] == FASTAUTO_MODE)
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), final_params.gear_rx);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
-+			final_params.lane_rx);
-+	if (final_params.pwr_rx == FASTAUTO_MODE ||
-+			final_params.pwr_rx == FAST_MODE)
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-+	else
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), FALSE);
+-	for (i = 0; i < cnt; i++) {
++	for (i = 0; i < sz; i += 2) {
+ 		ret = of_property_read_string_index(np,
+-				"clock-names", i, (const char **)&name);
++				"clock-names", i/2, (const char **)&name);
+ 		if (ret)
+-			goto out;
++			goto free_clkfreq;
  
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
--	if (pwr[TX] == FASTAUTO_MODE)
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), final_params.gear_tx);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
-+			final_params.lane_tx);
-+	if (final_params.pwr_tx == FASTAUTO_MODE ||
-+			final_params.pwr_tx == FAST_MODE)
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
--
--	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
--		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
--
--	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
--	if (ret)
-+	else
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), FALSE);
-+
-+	if ((final_params.pwr_rx == FASTAUTO_MODE ||
-+			final_params.pwr_tx == FASTAUTO_MODE ||
-+			final_params.pwr_rx == FAST_MODE ||
-+			final_params.pwr_tx == FAST_MODE) &&
-+			final_params.hs_rate == PA_HS_MODE_B)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
-+				final_params.hs_rate);
-+
-+	ret = ufshcd_uic_change_pwr_mode(hba, final_params.pwr_rx << 4
-+			| final_params.pwr_tx);
-+	if (ret) {
- 		dev_err(hba->dev,
- 			"pwr_mode: power mode change failed %d\n", ret);
-+	} else {
-+		if (hba->vops->pwr_change_notify)
-+			hba->vops->pwr_change_notify(hba,
-+				POST_CHANGE, NULL, &final_params);
-+
-+		memcpy(&hba->pwr_info, &final_params, sizeof(final_params));
-+	}
+ 		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
+ 		if (!clki) {
+ 			ret = -ENOMEM;
+-			goto out;
++			goto free_clkfreq;
+ 		}
  
+-		clki->max_freq = clkfreq[i];
++		clki->min_freq = clkfreq[i];
++		clki->max_freq = clkfreq[i+1];
+ 		clki->name = kstrdup(name, GFP_KERNEL);
++		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
++				clki->min_freq, clki->max_freq, clki->name);
+ 		list_add_tail(&clki->list, &hba->clk_list_head);
+ 	}
+-out:
++free_clkfreq:
+ 	kfree(clkfreq);
++out:
  	return ret;
  }
-@@ -3658,7 +3724,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	hba->wlun_dev_clr_ua = true;
  
--	ufshcd_config_max_pwr_mode(hba);
-+	if (ufshcd_get_max_pwr_mode(hba)) {
-+		dev_err(hba->dev,
-+			"%s: Failed getting max supported power mode\n",
-+			__func__);
-+	} else {
-+		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
-+		if (ret)
-+			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
-+					__func__, ret);
-+	}
- 
- 	/*
- 	 * If we are in error handling context or in power management callbacks
-@@ -4760,6 +4835,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	host->max_cmd_len = MAX_CDB_SIZE;
- 	host->report_wlus = 1;
- 
-+	hba->max_pwr_info.is_valid = false;
-+
- 	/* Initailize wait queue for task management */
- 	init_waitqueue_head(&hba->tm_wq);
- 	init_waitqueue_head(&hba->tm_tag_wq);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1ee429d..caebdcb 100644
+index 93c7c82..2caa27e 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -221,6 +221,22 @@ struct ufs_clk_info {
- 
- #define PRE_CHANGE      0
- #define POST_CHANGE     1
-+
-+struct ufs_pa_layer_attr {
-+	u32 gear_rx;
-+	u32 gear_tx;
-+	u32 lane_rx;
-+	u32 lane_tx;
-+	u32 pwr_rx;
-+	u32 pwr_tx;
-+	u32 hs_rate;
-+};
-+
-+struct ufs_pwr_mode_info {
-+	bool is_valid;
-+	struct ufs_pa_layer_attr info;
-+};
-+
- /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-@@ -232,6 +248,9 @@ struct ufs_clk_info {
-  *                     variant specific Uni-Pro initialization.
-  * @link_startup_notify: called before and after Link startup is carried out
-  *                       to allow variant specific Uni-Pro initialization.
-+ * @pwr_change_notify: called before and after a power mode change
-+ *			is carried out to allow vendor spesific capabilities
-+ *			to be set.
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
+@@ -209,6 +209,7 @@ struct ufs_dev_cmd {
+  * @clk: clock node
+  * @name: clock name
+  * @max_freq: maximum frequency supported by the clock
++ * @min_freq: min frequency that can be used for clock scaling
+  * @enabled: variable to check against multiple enable/disable
   */
-@@ -243,6 +262,9 @@ struct ufs_hba_variant_ops {
- 	int     (*setup_regulators)(struct ufs_hba *, bool);
- 	int     (*hce_enable_notify)(struct ufs_hba *, bool);
- 	int     (*link_startup_notify)(struct ufs_hba *, bool);
-+	int	(*pwr_change_notify)(struct ufs_hba *,
-+					bool, struct ufs_pa_layer_attr *,
-+					struct ufs_pa_layer_attr *);
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- };
-@@ -302,6 +324,8 @@ struct ufs_init_prefetch {
-  * @auto_bkops_enabled: to track whether bkops is enabled in device
-  * @vreg_info: UFS device voltage regulator information
-  * @clk_list_head: UFS host controller clocks list node head
-+ * @pwr_info: holds current power mode
-+ * @max_pwr_info: keeps the device max valid pwm
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -384,6 +408,9 @@ struct ufs_hba {
- 	struct list_head clk_list_head;
- 
- 	bool wlun_dev_clr_ua;
-+
-+	struct ufs_pa_layer_attr pwr_info;
-+	struct ufs_pwr_mode_info max_pwr_info;
+ struct ufs_clk_info {
+@@ -216,6 +217,7 @@ struct ufs_clk_info {
+ 	struct clk *clk;
+ 	const char *name;
+ 	u32 max_freq;
++	u32 min_freq;
+ 	bool enabled;
  };
  
- #define ufshcd_writel(hba, val, reg)	\
 -- 
 1.8.5.2
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
+
