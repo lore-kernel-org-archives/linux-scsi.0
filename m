@@ -1,140 +1,61 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH V2] hpsa: refine the pci enable/disable handling
-Date: Thu, 14 Aug 2014 10:17:42 -0500
-Message-ID: <20140814151742.GO19666@beardog.cce.hp.com>
-References: <53ECC3D7.90303@redhat.com>
+From: Casey Leedom <leedom@chelsio.com>
+Subject: Re: [PATCH v3 2/3] cxgb4: use module_long_probe_init()
+Date: Thu, 14 Aug 2014 09:42:49 -0700
+Message-ID: <53ECE709.5030008@chelsio.com>
+References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com>,<1407882507-325-3-git-send-email-mcgrof@do-not-panic.com> <525DB349B3FB5444AE057A887CB2A8D85A0977@nice.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t1625.atlanta.hp.com ([15.192.137.8]:53421 "EHLO
-	g5t1625.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755044AbaHNPSf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 11:18:35 -0400
-Content-Disposition: inline
-In-Reply-To: <53ECC3D7.90303@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D85A0977@nice.asicdesigners.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "tiwai@suse.de" <tiwai@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@redhat.com>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, "MPT-FusionLinux.pdl@avagotech.com" <MPT-FusionLinux.pdl@avagotech.com>, linux-scsi@vger
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Handzik, Joe" <joseph.t.handzik@hp.com>, michael.miller@canonical.com, scameron@beardog.cce.hp.com
 
-On Thu, Aug 14, 2014 at 04:12:39PM +0200, Tomas Henzl wrote:
-> When a second(kdump) kernel starts and the hard reset method is used
-> the driver calls pci_disable_device without previously enabling it,
-> so the kernel shows a warning -
-> [   16.876248] WARNING: at drivers/pci/pci.c:1431 pci_disable_device+0x84/0x90()
-> [   16.882686] Device hpsa
-> disabling already-disabled device
-> ...
-> This patch fixes it, in addition to this I tried to balance also some other pairs
-> of enable/disable device in the driver.
-> Unfortunately I wasn't able to verify the functionality for the case of a sw reset,
-> because of a lack of proper hw.
-> 
-> Changes in v2:
-> - fixed a checkpatch issue
-> - removed a no more valid comment
-> - added pci_enable/disable pair when kdump kernel starts
-> - fixed a typo in subject line
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/hpsa.c | 42 ++++++++++++++++++++++++++++--------------
->  1 file changed, 28 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 6b35d0d..cf793c3 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -5971,10 +5971,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
->  
->  	/* Save the PCI command register */
->  	pci_read_config_word(pdev, 4, &command_register);
-> -	/* Turn the board off.  This is so that later pci_restore_state()
-> -	 * won't turn the board on before the rest of config space is ready.
-> -	 */
-> -	pci_disable_device(pdev);
->  	pci_save_state(pdev);
->  
->  	/* find the first memory BAR, so we can find the cfg table */
-> @@ -6022,11 +6018,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
->  		goto unmap_cfgtable;
->  
->  	pci_restore_state(pdev);
-> -	rc = pci_enable_device(pdev);
-> -	if (rc) {
-> -		dev_warn(&pdev->dev, "failed to enable device.\n");
-> -		goto unmap_cfgtable;
-> -	}
->  	pci_write_config_word(pdev, 4, command_register);
->  
->  	/* Some devices (notably the HP Smart Array 5i Controller)
-> @@ -6541,6 +6532,23 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  	if (!reset_devices)
->  		return 0;
->  
-> +	/* kdump kernel is loading, we don't know in which state is
-> +	 * the pci interface. The dev->enable_cnt is equal zero
-> +	 * so we call enable+disable, wait a while and switch it on.
-> +	 */
-> +	rc = pci_enable_device(pdev);
-> +	if (rc) {
-> +		dev_warn(&pdev->dev, "Failed to enable PCI device\n");
-> +		return -ENODEV;
-> +	}
-> +	pci_disable_device(pdev);
-> +	msleep(260);			/* a randomly chosen number */
-> +	rc = pci_enable_device(pdev);
-> +	if (rc) {
-> +		dev_warn(&pdev->dev, "failed to enable device.\n");
-> +		return -ENODEV;
-> +	}
-> +
->  	/* Reset the controller with a PCI power-cycle or via doorbell */
->  	rc = hpsa_kdump_hard_reset_controller(pdev);
->  
-> @@ -6549,10 +6557,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  	 * "performant mode".  Or, it might be 640x, which can't reset
->  	 * due to concerns about shared bbwc between 6402/6404 pair.
->  	 */
-> -	if (rc == -ENOTSUPP)
-> -		return rc; /* just try to do the kdump anyhow. */
-> -	if (rc)
-> -		return -ENODEV;
-> +	if (rc) {
-> +		if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
-> +			rc = -ENODEV;
-> +		goto out_disable;
-> +	}
->  
->  	/* Now try to get the controller to respond to a no-op */
->  	dev_warn(&pdev->dev, "Waiting for controller to respond to no-op\n");
-> @@ -6563,7 +6572,11 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
->  			dev_warn(&pdev->dev, "no-op failed%s\n",
->  					(i < 11 ? "; re-trying" : ""));
->  	}
-> -	return 0;
-> +
-> +out_disable:
-> +
-> +	pci_disable_device(pdev);
-> +	return rc;
->  }
->  
->  static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
-> @@ -6743,6 +6756,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
->  		iounmap(h->transtable);
->  	if (h->cfgtable)
->  		iounmap(h->cfgtable);
-> +	pci_disable_device(h->pdev);
->  	pci_release_regions(h->pdev);
->  	kfree(h);
->  }
-> -- 
-> 1.8.3.1
 
-Ack.
+On 08/13/2014 04:33 PM, Anish Bhatt wrote:
+> Adding Casey who's actually incharge of this code and missing from the CC list
 
-Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+   Thanks Anish!
 
--- steve
+   As I mentioned to Anish, there are fundamentally two problems here in 
+the time being consumed by the cxgb4 PCI probe() function:
 
+  1. When various firmware files aren't present, request_firmware()
+     can take a very long time.  This is easily solved by using
+     request_firmware_direct() and I certainly have no objection to that.
+
+  2. When there are multiple adapters present in a system which
+     need firmware downloaded, each one individually may not take
+     a ton of time but together they can exceed simple Module Load
+     Timeouts.  There's not a simple answer here.
+
+   Part of the problem here is that it's a Module Load Timeout instead 
+of a per-device Probe Timeout.   Part of the problem is that the current 
+architecture has Device Probe happening out of the Module Initialization 
+when we call pci_register_driver() with our PCI Device ID Table.
+
+   Running the Device Probes asynchronously has been discussed but that 
+has the problem that it's then impossible to return the Device Probe 
+Status.  This is a problem for Driver Fallback and, if the probe fails, 
+we're not supposed to call the Device Remove function. To make this 
+work, the synchronous/asynchronous boundary would really need to be up 
+in the PCI Infrastructure layer so the Device Probe status could be 
+captured in the normal logic.  This would be a moderately large change 
+there ...
+
+   Deferring the Device Initialization till the first "ifup" has also 
+been discussed and is certainly possible, though a moderately large 
+architectural change to every driver which needs it.  It also has the 
+unfortunate effect of introducing random large delays directly on user 
+commands.  From a User Experience perspective I would tend to want such 
+large delays in the Device Probe.  But that's something that really 
+deserves a real User Interaction study rather than throwing a dart.
+
+   On the whole, I think that introducing these Module Load Timeouts 
+hasn't been well thought out with respect to the repercussions and I'd 
+be more inclined to back that out till a well thought out design is 
+developed.  But I'm here for the discussion.
+
+Casey
