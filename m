@@ -1,49 +1,70 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature
- support
-Date: Thu, 14 Aug 2014 09:28:11 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D85A712A@nice.asicdesigners.com>
-References: <1407364668-20931-1-git-send-email-anish@chelsio.com>
- <1407364668-20931-2-git-send-email-anish@chelsio.com>,<53EC806C.20207@dev.mellanox.co.il>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V4 3/4] Introduce XEN scsiback module
+Date: Thu, 14 Aug 2014 12:14:00 +0200
+Message-ID: <53EC8BE8.2030203@suse.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-4-git-send-email-jgross@suse.com>	<1407878022.27925.33.camel@haakon3.risingtidesystems.com> <53EC7911.7040109@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:17020
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751243AbaHNJ3b convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Aug 2014 05:29:31 -0400
-In-Reply-To: <53EC806C.20207@dev.mellanox.co.il>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:54560 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754255AbaHNKOE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Aug 2014 06:14:04 -0400
+In-Reply-To: <53EC7911.7040109@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-We tested against a Sanblaze target. 
--Anish
-________________________________________
-From: Sagi Grimberg [sagig@dev.mellanox.co.il]
-Sent: Thursday, August 14, 2014 2:25 AM
-To: Anish Bhatt
-Cc: linux-scsi@vger.kernel.org; hch@infradead.org; jbottomley@parallels.com; michaelc@cs.wisc.edu; Karen Xie; Manoj Malviya
-Subject: Re: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature support
-
-On 8/7/2014 1:37 AM, Anish Bhatt wrote:
-> Signed-off-by: Anish Bhatt <anish@chelsio.com>
-> Signed-off by: Manoj Malvia <manojmalviya@chelsio.com>
-> Signed-off by: Karen Xie <kxie@chelsio.com>
-> ---
->   drivers/scsi/libiscsi.c     |  61 +++++++--
->   drivers/scsi/libiscsi_tcp.c | 296 ++++++++++++++++++++++++++++++++++++++++----
->   include/scsi/libiscsi.h     |   6 +
->   include/scsi/libiscsi_tcp.h |  22 ++++
->   4 files changed, 349 insertions(+), 36 deletions(-)
+On 08/14/2014 10:53 AM, Juergen Gross wrote:
+> Nicholas,
 >
+> just one more question (see below):
+>
+> On 08/12/2014 11:13 PM, Nicholas A. Bellinger wrote:
+>> Hi Juergen & Co,
+>>
+>> Finally had a chance to review this code.  Comments are inline below..
+>>
+>> On Fri, 2014-08-08 at 09:49 +0200, jgross@suse.com wrote:
+>
+> ...
+>
+>>> +    if (IS_ERR(tv_nexus->tvn_se_sess)) {
+>>> +        mutex_unlock(&tpg->tv_tpg_mutex);
+>>> +        kfree(tv_nexus);
+>>> +        return -ENOMEM;
+>>> +    }
+>>> +    se_sess = tv_nexus->tvn_se_sess;
+>>> +    /*
+>>> +     * Since we are running in 'demo mode' this call with generate a
+>>> +     * struct se_node_acl for the scsiback struct se_portal_group with
+>>> +     * the SCSI Initiator port name of the passed configfs group
+>>> 'name'.
+>>> +     */
+>>> +    tv_nexus->tvn_se_sess->se_node_acl =
+>>> core_tpg_check_initiator_node_acl(
+>>> +                se_tpg, (unsigned char *)name);
+>>> +    if (!tv_nexus->tvn_se_sess->se_node_acl) {
+>>> +        mutex_unlock(&tpg->tv_tpg_mutex);
+>>> +        pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
+>>> +             name);
+>>> +        goto out;
+>>> +    }
+>
+> Can I drop the call to core_tpg_check_initiator_node_acl() as well?
+> Keeping it will result in failing to setup the nexus (which is to be
+> expected IMHO).
 
-Hey Anish,
+Obviously I can't. transport_lookup_cmd_lun() calls right at start
+spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
+resulting in a page fault...
 
-Against what target did you guys test this stuff?
+I guess the hint to just throw away all the node_acl related stuff has
+to be adjusted somehow...
 
-Sagi.
+So: what is needed, what can be removed?
+
+
+Juergen
