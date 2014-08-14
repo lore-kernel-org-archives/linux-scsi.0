@@ -1,154 +1,155 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RFC V2 16/16] scsi: ufs: definitions for phy interface
-Date: Thu, 14 Aug 2014 16:31:07 +0300
-Message-ID: <1408023067-26103-17-git-send-email-draviv@codeaurora.org>
-References: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] hpsa: refine the pci enble/disable handling]
+Date: Thu, 14 Aug 2014 15:32:28 +0200
+Message-ID: <53ECBA6C.20102@redhat.com>
+References: <20140813202445.GE19666@beardog.cce.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:35508 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755147AbaHNNcB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 09:32:01 -0400
-In-Reply-To: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:22017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754178AbaHNNdl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Aug 2014 09:33:41 -0400
+In-Reply-To: <20140813202445.GE19666@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+To: scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org
+Cc: michael.miller@canonical.com, joseph.t.handzik@hp.com
 
-- Adding some of the definitions missing in unipro.h, including power
-  enumeration.
-- Read Modify Write Line helper function
-- Indication for the type of suspend
+On 08/13/2014 10:24 PM, scameron@beardog.cce.hp.com wrote:
+> Let me try again, this time not from gmail.
+>
+> On Thu, Jun 12, 2014 at 10:29 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>> When a second(kdump) kernel starts and the hard reset method is used
+>> the driver calls pci_disable_device without previously enabling it,
+>> so the kernel shows a warning -
+>> [   16.876248] WARNING: at drivers/pci/pci.c:1431
+>> pci_disable_device+0x84/0x90()
+>> [   16.882686] Device hpsa
+>> disabling already-disabled device
+>> ...
+>> This patch fixes it, in addition to this I tried to balance also some
+>> other pairs
+>> of enable/disable device in the driver.
+>> Unfortunately I wasn't able to verify the functionality for the case of a
+>> sw reset,
+>> because of a lack of proper hw.
+>>
+>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>> ---
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 5858600..67c41b9 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -5983,7 +5983,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+>> pci_dev *pdev)
+>>         /* Turn the board off.  This is so that later pci_restore_state()
+>>          * won't turn the board on before the rest of config space is
+>> ready.
+>>          */
+>> -       pci_disable_device(pdev);
+>>         pci_save_state(pdev);
+>>
+>>         /* find the first memory BAR, so we can find the cfg table */
+>> @@ -6031,11 +6030,6 @@ static int hpsa_kdump_hard_reset_controller(struct
+>> pci_dev *pdev)
+>>                 goto unmap_cfgtable;
+>>
+>>         pci_restore_state(pdev);
+>> -       rc = pci_enable_device(pdev);
+>> -       if (rc) {
+>> -               dev_warn(&pdev->dev, "failed to enable device.\n");
+>> -               goto unmap_cfgtable;
+>> -       }
+>>         pci_write_config_word(pdev, 4, command_register);
+>>
+>>         /* Some devices (notably the HP Smart Array 5i Controller)
+>> @@ -6548,6 +6542,12 @@ static int hpsa_init_reset_devices(struct pci_dev
+>> *pdev)
+>>         if (!reset_devices)
+>>                 return 0;
+>>
+>> +       rc = pci_enable_device(pdev);
+>> +       if (rc) {
+>> +               dev_warn(&pdev->dev, "failed to enable device.\n");
+>> +               return -ENODEV;
+>> +       }
+>> +
+>>         /* Reset the controller with a PCI power-cycle or via doorbell */
+>>         rc = hpsa_kdump_hard_reset_controller(pdev);
+>>
+>> @@ -6556,10 +6556,11 @@ static int hpsa_init_reset_devices(struct pci_dev
+>> *pdev)
+>>          * "performant mode".  Or, it might be 640x, which can't reset
+>>          * due to concerns about shared bbwc between 6402/6404 pair.
+>>          */
+>> -       if (rc == -ENOTSUPP)
+>> -               return rc; /* just try to do the kdump anyhow. */
+>> -       if (rc)
+>> -               return -ENODEV;
+>> +       if (rc) {
+>> +               if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
+>> +                       rc = -ENODEV;
+>> +               goto out_disable;
+>>
+>
+> Checkpatch complained of trailing whitespace here. ^^^
 
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+And we should remove the comment "/* Turn the board off..."
+which is not correct now. I'll repost the patch.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d9eb2da..1b04cfa 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4924,6 +4924,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
- 
- 	ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
- out:
-+	if (!ret)
-+		hba->is_sys_suspended = true;
- 	return ret;
- }
- EXPORT_SYMBOL(ufshcd_system_suspend);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b94b835..d502d70 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -471,6 +471,7 @@ struct ufs_hba {
- 
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
-+	bool is_sys_suspended;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
-@@ -496,6 +497,23 @@ static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
- #define ufshcd_readl(hba, reg)	\
- 	readl((hba)->mmio_base + (reg))
- 
-+/**
-+ * ufshcd_rmwl - read modify write into a register
-+ * @hba - per adapter instance
-+ * @mask - mask to apply on read value
-+ * @val - actual value to write
-+ * @reg - register address
-+ */
-+static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
-+{
-+	u32 tmp;
-+
-+	tmp = ufshcd_readl(hba, reg);
-+	tmp &= ~mask;
-+	tmp |= (val & mask);
-+	ufshcd_writel(hba, tmp, reg);
-+}
-+
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 0bb8041..3fc3e21 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -13,6 +13,44 @@
- #define _UNIPRO_H_
- 
- /*
-+ * M-TX Configuration Attributes
-+ */
-+#define TX_MODE					0x0021
-+#define TX_HSRATE_SERIES			0x0022
-+#define TX_HSGEAR				0x0023
-+#define TX_PWMGEAR				0x0024
-+#define TX_AMPLITUDE				0x0025
-+#define TX_HS_SLEWRATE				0x0026
-+#define TX_SYNC_SOURCE				0x0027
-+#define TX_HS_SYNC_LENGTH			0x0028
-+#define TX_HS_PREPARE_LENGTH			0x0029
-+#define TX_LS_PREPARE_LENGTH			0x002A
-+#define TX_HIBERN8_CONTROL			0x002B
-+#define TX_LCC_ENABLE				0x002C
-+#define TX_PWM_BURST_CLOSURE_EXTENSION		0x002D
-+#define TX_BYPASS_8B10B_ENABLE			0x002E
-+#define TX_DRIVER_POLARITY			0x002F
-+#define TX_HS_UNTERMINATED_LINE_DRIVE_ENABLE	0x0030
-+#define TX_LS_TERMINATED_LINE_DRIVE_ENABLE	0x0031
-+#define TX_LCC_SEQUENCER			0x0032
-+#define TX_MIN_ACTIVATETIME			0x0033
-+#define TX_PWM_G6_G7_SYNC_LENGTH		0x0034
-+
-+/*
-+ * M-RX Configuration Attributes
-+ */
-+#define RX_MODE					0x00A1
-+#define RX_HSRATE_SERIES			0x00A2
-+#define RX_HSGEAR				0x00A3
-+#define RX_PWMGEAR				0x00A4
-+#define RX_LS_TERMINATED_ENABLE			0x00A5
-+#define RX_HS_UNTERMINATED_ENABLE		0x00A6
-+#define RX_ENTER_HIBERN8			0x00A7
-+#define RX_BYPASS_8B10B_ENABLE			0x00A8
-+#define RX_TERMINATION_FORCE_ENABLE		0x0089
-+
-+#define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-+/*
-  * PHY Adpater attributes
-  */
- #define PA_ACTIVETXDATALANES	0x1560
-@@ -87,6 +125,24 @@ enum {
- 	PA_HS_MODE_B	= 2,
- };
- 
-+enum ufs_pwm_gear_tag {
-+	UFS_PWM_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_PWM_G1,		/* PWM Gear 1 (default for reset) */
-+	UFS_PWM_G2,		/* PWM Gear 2 */
-+	UFS_PWM_G3,		/* PWM Gear 3 */
-+	UFS_PWM_G4,		/* PWM Gear 4 */
-+	UFS_PWM_G5,		/* PWM Gear 5 */
-+	UFS_PWM_G6,		/* PWM Gear 6 */
-+	UFS_PWM_G7,		/* PWM Gear 7 */
-+};
-+
-+enum ufs_hs_gear_tag {
-+	UFS_HS_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_HS_G1,		/* HS Gear 1 (default for reset) */
-+	UFS_HS_G2,		/* HS Gear 2 */
-+	UFS_HS_G3,		/* HS Gear 3 */
-+};
-+
- /*
-  * Data Link Layer Attributes
-  */
--- 
-1.8.5.2
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+We also might try to solve the problem that we don't know
+in which state the pci interface is when the driver starts
+in the kdump kernel. We could try something like
+pci_enable+disable at the start so it is switched off and the driver
+starts from the same point as if were switched off by bios.
+(Maybe it's done already somewhere and I'm just
+not able to find it though.)
+
+tomash
+
+>
+> Other than that, looks good.
+>
+> -- steve
+>
+>
+>> +       }
+>>
+>>         /* Now try to get the controller to respond to a no-op */
+>>         dev_warn(&pdev->dev, "Waiting for controller to respond to
+>> no-op\n");
+>> @@ -6570,7 +6571,11 @@ static int hpsa_init_reset_devices(struct pci_dev
+>> *pdev)
+>>                         dev_warn(&pdev->dev, "no-op failed%s\n",
+>>                                         (i < 11 ? "; re-trying" : ""));
+>>         }
+>> -       return 0;
+>> +
+>> +out_disable:
+>> +
+>> +       pci_disable_device(pdev);
+>> +       return rc;
+>>  }
+>>
+>>  static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
+>> @@ -6722,6 +6727,7 @@ static void
+>> hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+>>                 iounmap(h->transtable);
+>>         if (h->cfgtable)
+>>                 iounmap(h->cfgtable);
+>> +       pci_disable_device(h->pdev);
+>>         pci_release_regions(h->pdev);
+>>         kfree(h);
+>>  }
+>> --
+>> 1.8.3.1
+>>
+>>
+> ----- End forwarded message -----
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
