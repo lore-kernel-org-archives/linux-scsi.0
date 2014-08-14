@@ -1,161 +1,87 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RFC V2 13/16] scsi: ufs: Add freq-table-hz property for UFS device
-Date: Thu, 14 Aug 2014 16:31:04 +0300
-Message-ID: <1408023067-26103-14-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RFC V2 15/16] scsi: ufs: add capability to control the auto bkops during suspend
+Date: Thu, 14 Aug 2014 16:31:06 +0300
+Message-ID: <1408023067-26103-16-git-send-email-draviv@codeaurora.org>
 References: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:35474 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:35498 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755132AbaHNNby (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 09:31:54 -0400
+	with ESMTP id S1755122AbaHNNb7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 09:31:59 -0400
 In-Reply-To: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sahitya Tummala <stummala@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-From: Sahitya Tummala <stummala@codeaurora.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Add freq-table-hz propery for UFS device to keep track of
-<min max> frequencies supported by UFS clocks.
+If host explicitly enables the auto bkops (background operation) on device
+then only device would perform the bkops on its own. If auto bkops is not
+enabled explicitly and if the device reaches to state where it must do
+background operation, device would raise the urgent bkops exception event
+to host and then host will enable the auto bkops on device. This patch
+adds the option to choose whether auto bkops should be enabled during
+runtime suspend or not.
 
-Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index b0f791a..e73a619 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -24,11 +24,11 @@ Optional properties:
- - clocks                : List of phandle and clock specifier pairs
- - clock-names           : List of clock input name strings sorted in the same
-                           order as the clocks property.
--- max-clock-frequency-hz : List of maximum operating frequency stored in the same
--                           order as the clocks property. If this property is not
--			   defined or a value in the array is "0" then it is assumed
--			   that the frequency is set by the parent clock or a
--			   fixed rate clock source.
-+- freq-table-hz		: Array of <min max> operating frequencies stored in the same
-+                          order as the clocks property. If this property is not
-+			  defined or a value in the array is "0" then it is assumed
-+			  that the frequency is set by the parent clock or a
-+			  fixed rate clock source.
- 
- Note: If above properties are not defined it can be assumed that the supply
- regulators or clocks are always on.
-@@ -49,5 +49,5 @@ Example:
- 
- 		clocks = <&core 0>, <&ref 0>, <&iface 0>;
- 		clock-names = "core_clk", "ref_clk", "iface_clk";
--		max-clock-frequency-hz = <100000000 19200000 0>;
-+		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
- 	};
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index edaccd0..551be95 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -63,6 +63,8 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	char *name;
- 	u32 *clkfreq = NULL;
- 	struct ufs_clk_info *clki;
-+	int len = 0;
-+	size_t sz = 0;
- 
- 	if (!np)
- 		goto out;
-@@ -82,39 +84,59 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	if (cnt <= 0)
- 		goto out;
- 
--	clkfreq = kzalloc(cnt * sizeof(*clkfreq), GFP_KERNEL);
-+	if (!of_get_property(np, "freq-table-hz", &len)) {
-+		dev_info(dev, "freq-table-hz property not specified\n");
-+		goto out;
-+	}
-+
-+	if (len <= 0)
-+		goto out;
-+
-+	sz = len / sizeof(*clkfreq);
-+	if (sz != 2 * cnt) {
-+		dev_err(dev, "%s len mismatch\n", "freq-table-hz");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	clkfreq = devm_kzalloc(dev, sz * sizeof(*clkfreq),
-+			GFP_KERNEL);
- 	if (!clkfreq) {
-+		dev_err(dev, "%s: no memory\n", "freq-table-hz");
- 		ret = -ENOMEM;
--		dev_err(dev, "%s: memory alloc failed\n", __func__);
- 		goto out;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 6b769d0..d9eb2da 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4704,13 +4704,18 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
  	}
  
--	ret = of_property_read_u32_array(np,
--			"max-clock-frequency-hz", clkfreq, cnt);
-+	ret = of_property_read_u32_array(np, "freq-table-hz",
-+			clkfreq, sz);
- 	if (ret && (ret != -EINVAL)) {
--		dev_err(dev, "%s: invalid max-clock-frequency-hz property, %d\n",
--				__func__, ret);
--		goto out;
-+		dev_err(dev, "%s: error reading array %d\n",
-+				"freq-table-hz", ret);
-+		goto free_clkfreq;
+ 	if (ufshcd_is_runtime_pm(pm_op)) {
+-		/*
+-		 * The device is idle with no requests in the queue,
+-		 * allow background operations if needed.
+-		 */
+-		ret = ufshcd_bkops_ctrl(hba, BKOPS_STATUS_NON_CRITICAL);
+-		if (ret)
+-			goto enable_gating;
++		if (ufshcd_can_autobkops_during_suspend(hba)) {
++			/*
++			 * The device is idle with no requests in the queue,
++			 * allow background operations if needed.
++			 */
++			ret = ufshcd_bkops_ctrl(hba, BKOPS_STATUS_NON_CRITICAL);
++			if (ret)
++				goto enable_gating;
++		} else {
++			/* make sure that auto bkops is disabled */
++			ufshcd_disable_auto_bkops(hba);
++		}
  	}
  
--	for (i = 0; i < cnt; i++) {
-+	for (i = 0; i < sz; i += 2) {
- 		ret = of_property_read_string_index(np,
--				"clock-names", i, (const char **)&name);
-+				"clock-names", i/2, (const char **)&name);
- 		if (ret)
--			goto out;
-+			goto free_clkfreq;
- 
- 		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
- 		if (!clki) {
- 			ret = -ENOMEM;
--			goto out;
-+			goto free_clkfreq;
- 		}
- 
--		clki->max_freq = clkfreq[i];
-+		clki->min_freq = clkfreq[i];
-+		clki->max_freq = clkfreq[i+1];
- 		clki->name = kstrdup(name, GFP_KERNEL);
-+		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
-+				clki->min_freq, clki->max_freq, clki->name);
- 		list_add_tail(&clki->list, &hba->clk_list_head);
- 	}
--out:
-+free_clkfreq:
- 	kfree(clkfreq);
-+out:
- 	return ret;
- }
- 
+ 	if ((req_dev_pwr_mode != hba->curr_dev_pwr_mode) &&
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 93c7c82..2caa27e 100644
+index d5699d0..b94b835 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -209,6 +209,7 @@ struct ufs_dev_cmd {
-  * @clk: clock node
-  * @name: clock name
-  * @max_freq: maximum frequency supported by the clock
-+ * @min_freq: min frequency that can be used for clock scaling
-  * @enabled: variable to check against multiple enable/disable
-  */
- struct ufs_clk_info {
-@@ -216,6 +217,7 @@ struct ufs_clk_info {
- 	struct clk *clk;
- 	const char *name;
- 	u32 max_freq;
-+	u32 min_freq;
- 	bool enabled;
- };
+@@ -466,6 +466,8 @@ struct ufs_hba {
+ #define UFSHCD_CAP_HIBERN8_WITH_CLK_GATING (1 << 1)
+ 	/* Allow dynamic clk scaling */
+ #define UFSHCD_CAP_CLK_SCALING	(1 << 2)
++	/* Allow auto bkops to enabled during runtime suspend */
++#define UFSHCD_CAP_AUTO_BKOPS_SUSPEND (1 << 3)
  
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+@@ -484,6 +486,11 @@ static inline int ufshcd_is_clkscaling_enabled(struct ufs_hba *hba)
+ {
+ 	return hba->caps & UFSHCD_CAP_CLK_SCALING;
+ }
++static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
++{
++	return hba->caps & UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
++}
++
+ #define ufshcd_writel(hba, val, reg)	\
+ 	writel((val), (hba)->mmio_base + (reg))
+ #define ufshcd_readl(hba, reg)	\
 -- 
 1.8.5.2
 -- 
