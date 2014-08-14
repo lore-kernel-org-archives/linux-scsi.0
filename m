@@ -1,62 +1,38 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: Re: [Xen-devel] [PATCH V4 3/4] Introduce XEN scsiback module
-Date: Thu, 14 Aug 2014 10:53:37 +0200
-Message-ID: <53EC7911.7040109@suse.com>
-References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-4-git-send-email-jgross@suse.com> <1407878022.27925.33.camel@haakon3.risingtidesystems.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH scsi 1/1] libiscsi : Add T10 Data Integrity Feature support
+Date: Thu, 14 Aug 2014 12:25:00 +0300
+Message-ID: <53EC806C.20207@dev.mellanox.co.il>
+References: <1407364668-20931-1-git-send-email-anish@chelsio.com> <1407364668-20931-2-git-send-email-anish@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52716 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754773AbaHNIxm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Aug 2014 04:53:42 -0400
-In-Reply-To: <1407878022.27925.33.camel@haakon3.risingtidesystems.com>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:33985 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752323AbaHNJZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Aug 2014 05:25:08 -0400
+Received: by mail-wg0-f48.google.com with SMTP id x13so809281wgg.19
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2014 02:25:06 -0700 (PDT)
+In-Reply-To: <1407364668-20931-2-git-send-email-anish@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
+To: Anish Bhatt <anish@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com
 
-Nicholas,
-
-just one more question (see below):
-
-On 08/12/2014 11:13 PM, Nicholas A. Bellinger wrote:
-> Hi Juergen & Co,
+On 8/7/2014 1:37 AM, Anish Bhatt wrote:
+> Signed-off-by: Anish Bhatt <anish@chelsio.com>
+> Signed-off by: Manoj Malvia <manojmalviya@chelsio.com>
+> Signed-off by: Karen Xie <kxie@chelsio.com>
+> ---
+>   drivers/scsi/libiscsi.c     |  61 +++++++--
+>   drivers/scsi/libiscsi_tcp.c | 296 ++++++++++++++++++++++++++++++++++++++++----
+>   include/scsi/libiscsi.h     |   6 +
+>   include/scsi/libiscsi_tcp.h |  22 ++++
+>   4 files changed, 349 insertions(+), 36 deletions(-)
 >
-> Finally had a chance to review this code.  Comments are inline below..
->
-> On Fri, 2014-08-08 at 09:49 +0200, jgross@suse.com wrote:
 
-...
+Hey Anish,
 
->> +	if (IS_ERR(tv_nexus->tvn_se_sess)) {
->> +		mutex_unlock(&tpg->tv_tpg_mutex);
->> +		kfree(tv_nexus);
->> +		return -ENOMEM;
->> +	}
->> +	se_sess = tv_nexus->tvn_se_sess;
->> +	/*
->> +	 * Since we are running in 'demo mode' this call with generate a
->> +	 * struct se_node_acl for the scsiback struct se_portal_group with
->> +	 * the SCSI Initiator port name of the passed configfs group 'name'.
->> +	 */
->> +	tv_nexus->tvn_se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
->> +				se_tpg, (unsigned char *)name);
->> +	if (!tv_nexus->tvn_se_sess->se_node_acl) {
->> +		mutex_unlock(&tpg->tv_tpg_mutex);
->> +		pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
->> +			 name);
->> +		goto out;
->> +	}
+Against what target did you guys test this stuff?
 
-Can I drop the call to core_tpg_check_initiator_node_acl() as well?
-Keeping it will result in failing to setup the nexus (which is to be
-expected IMHO).
-
-I suppose the name of the nexus is just for reference and should be
-stored somewhere to be able to print it in _show_nexus()?
-
-
-Juergen
-
+Sagi.
