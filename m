@@ -1,70 +1,69 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V4 3/4] Introduce XEN scsiback module
-Date: Thu, 14 Aug 2014 12:14:00 +0200
-Message-ID: <53EC8BE8.2030203@suse.com>
-References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-4-git-send-email-jgross@suse.com>	<1407878022.27925.33.camel@haakon3.risingtidesystems.com> <53EC7911.7040109@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54560 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754255AbaHNKOE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Aug 2014 06:14:04 -0400
-In-Reply-To: <53EC7911.7040109@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH/RFC V2 00/16] UFS: Power managment support
+Date: Thu, 14 Aug 2014 16:30:51 +0300
+Message-ID: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 
-On 08/14/2014 10:53 AM, Juergen Gross wrote:
-> Nicholas,
->
-> just one more question (see below):
->
-> On 08/12/2014 11:13 PM, Nicholas A. Bellinger wrote:
->> Hi Juergen & Co,
->>
->> Finally had a chance to review this code.  Comments are inline below..
->>
->> On Fri, 2014-08-08 at 09:49 +0200, jgross@suse.com wrote:
->
-> ...
->
->>> +    if (IS_ERR(tv_nexus->tvn_se_sess)) {
->>> +        mutex_unlock(&tpg->tv_tpg_mutex);
->>> +        kfree(tv_nexus);
->>> +        return -ENOMEM;
->>> +    }
->>> +    se_sess = tv_nexus->tvn_se_sess;
->>> +    /*
->>> +     * Since we are running in 'demo mode' this call with generate a
->>> +     * struct se_node_acl for the scsiback struct se_portal_group with
->>> +     * the SCSI Initiator port name of the passed configfs group
->>> 'name'.
->>> +     */
->>> +    tv_nexus->tvn_se_sess->se_node_acl =
->>> core_tpg_check_initiator_node_acl(
->>> +                se_tpg, (unsigned char *)name);
->>> +    if (!tv_nexus->tvn_se_sess->se_node_acl) {
->>> +        mutex_unlock(&tpg->tv_tpg_mutex);
->>> +        pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
->>> +             name);
->>> +        goto out;
->>> +    }
->
-> Can I drop the call to core_tpg_check_initiator_node_acl() as well?
-> Keeping it will result in failing to setup the nexus (which is to be
-> expected IMHO).
+This patch seies introduces support for power managment in the driver as well as vendor specific initialization - registers, clocks, voltage regulators etc.
 
-Obviously I can't. transport_lookup_cmd_lun() calls right at start
-spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
-resulting in a page fault...
+It includes also a rework for the init sequnce and other PM pre-requisit such as write protection support, handling well-known LUN, error handling (retries), bkops, START_STOP unit command, and ICC levels settings.
 
-I guess the hint to just throw away all the node_acl related stuff has
-to be adjusted somehow...
+--
+Changes from V1:
+ - 6 new patches apended at the end
+ - Allow overriding power configuration with controller support and
+   preferences/capabilities <Dolev Raviv>
+ - Allow overriding power choice with controller capabilities <Dolev Raviv>
+ - Add support for clock gating and clock scaling <Sahitya Tummala>
+ - Add capability to control the auto bkops during suspend <Subhash Jadavani>
+ - Add misc changes for phy/unipro driver usage <Dolev Raviv>
 
-So: what is needed, what can be removed?
+Dolev Raviv (2):
+  scsi: ufs: refactor configuring power mode
+  scsi: ufs: definitions for phy interface
 
+Sahitya Tummala (3):
+  scsi: ufs: Add support for clock gating
+  scsi: ufs: Add freq-table-hz property for UFS device
+  scsi: ufs: Add support for clock scaling using devfreq framework
 
-Juergen
+Subhash Jadavani (5):
+  scsi: ufs: refactor query descriptor API support
+  scsi: support well known logical units
+  scsi: ufs: introduce well known logical unit in ufs
+  scsi: ufs: add UFS power management support
+  scsi: ufs: add capability to control the auto bkops during suspend
+
+Sujit Reddy Thumma (5):
+  scsi: ufs: Allow vendor specific initialization
+  scsi: ufs: Add regulator enable support
+  scsi: ufs: Add clock initialization support
+  scsi: ufs: improve init sequence
+  scsi: sd: Avoid sending medium write commands if device is write
+    protected
+
+Yaniv Gardi (1):
+  scsi: ufs: Active Power Mode - configuring bActiveICCLevel
+
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   37 +
+ drivers/scsi/scsi_scan.c                           |   16 +
+ drivers/scsi/scsi_sysfs.c                          |    7 +
+ drivers/scsi/sd.c                                  |    6 +-
+ drivers/scsi/ufs/Kconfig                           |    2 +
+ drivers/scsi/ufs/ufs.h                             |  131 +-
+ drivers/scsi/ufs/ufshcd-pci.c                      |   55 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  282 ++-
+ drivers/scsi/ufs/ufshcd.c                          | 2400 ++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h                          |  277 ++-
+ drivers/scsi/ufs/ufshci.h                          |    9 +-
+ drivers/scsi/ufs/unipro.h                          |   56 +
+ include/scsi/scsi.h                                |    1 +
+ include/scsi/scsi_host.h                           |    5 +
+ 14 files changed, 2959 insertions(+), 325 deletions(-)
+
+-- 
+1.8.5.2
