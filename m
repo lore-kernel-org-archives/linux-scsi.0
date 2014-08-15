@@ -1,41 +1,88 @@
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 2/3] cxgb4: use
-	module_long_probe_init()
-Date: Fri, 15 Aug 2014 15:12:05 +0800
-Message-ID: <20140815071205.GA6293@kroah.com>
-References: <525DB349B3FB5444AE057A887CB2A8D85A0977@nice.asicdesigners.com>
- <53ECE709.5030008@chelsio.com>
- <20140814195321.GO21930@wotan.suse.de>
- <20140815001458.GT21930@wotan.suse.de>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH v2 RESEND 09/23] hpsa: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Fri, 15 Aug 2014 10:48:03 -0500
+Message-ID: <20140815154803.GY19666@beardog.cce.hp.com>
+References: <cover.1405533479.git.agordeev@redhat.com> <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:20011 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbaHOPs4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Aug 2014 11:48:56 -0400
 Content-Disposition: inline
-In-Reply-To: <20140815001458.GT21930@wotan.suse.de>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "tiwai@suse.de" <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, "MPT-FusionLinux.pdl@avagotech.com" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Anish Bhatt <anish@chelsio.com>, Oleg Nesterov <oleg@redhat.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd-devel@lists.freedesktop.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, netdev@vger.kernel.org
+In-Reply-To: <fa8dc16252a7afa6186b78af4b90590755f45507.1405533479.git.agordeev@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, scameron@beardog.cce.hp.com
 
-On Fri, Aug 15, 2014 at 02:14:58AM +0200, Luis R. Rodriguez wrote:
-> This driver also uses module_pci_driver() so a module_long_probe_driver()
-> and respective module_long_probe_pci_driver() would need to be considered
-> if but easily implemented (sent to Alex to test).
+On Wed, Jul 16, 2014 at 08:05:13PM +0200, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+> 
+> Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/scsi/hpsa.c |   27 ++++++++++++---------------
+>  1 files changed, 12 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 648dec2..5c4ab6e 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6160,25 +6160,22 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+>  		h->msix_vector = MAX_REPLY_QUEUES;
+>  		if (h->msix_vector > num_online_cpus())
+>  			h->msix_vector = num_online_cpus();
+> -		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -				      h->msix_vector);
+> -		if (err > 0) {
+> +		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
+> +					    1, h->msix_vector);
+> +		if (err < 0) {
+> +			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
+> +			h->msix_vector = 0;
+> +			goto single_msi_mode;
+> +		} else if (err < h->msix_vector) {
+>  			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+>  			       "available\n", err);
+> -			h->msix_vector = err;
+> -			err = pci_enable_msix(h->pdev, hpsa_msix_entries,
+> -					      h->msix_vector);
+> -		}
+> -		if (!err) {
+> -			for (i = 0; i < h->msix_vector; i++)
+> -				h->intr[i] = hpsa_msix_entries[i].vector;
+> -			return;
+> -		} else {
+> -			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+> -			       err);
+> -			h->msix_vector = 0;
+>  		}
+> +		h->msix_vector = err;
+> +		for (i = 0; i < h->msix_vector; i++)
+> +			h->intr[i] = hpsa_msix_entries[i].vector;
+> +		return;
+>  	}
+> +single_msi_mode:
+>  	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+>  		dev_info(&h->pdev->dev, "MSI\n");
+>  		if (!pci_enable_msi(h->pdev))
+> -- 
+> 1.7.7.6
 
-No, don't create bus-only versions of the "long probe" function, just
-unwrap the module_pci_driver() logic and use the module_long_probe()
-call, we want it to be "obvious" that something is odd here and needs to
-be fixed someday.
+Ack. 
 
-thanks,
+I had previously acked an older, but seemingly semantically identical patch.
+Was requested to ack this one as well.
 
-greg k-h
+-- steve
+
