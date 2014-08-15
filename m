@@ -1,76 +1,106 @@
 From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init()
-	and module_long_probe_exit()
-Date: Fri, 15 Aug 2014 01:10:28 +0200
-Message-ID: <20140814231028.GQ21930@wotan.suse.de>
-References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com> <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com> <20140813175101.GA7156@redhat.com>
+Subject: Re: [PATCH v3 2/3] cxgb4: use
+	module_long_probe_init()
+Date: Fri, 15 Aug 2014 02:14:58 +0200
+Message-ID: <20140815001458.GT21930@wotan.suse.de>
+References: <525DB349B3FB5444AE057A887CB2A8D85A0977@nice.asicdesigners.com>
+ <53ECE709.5030008@chelsio.com> <20140814195321.GO21930@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <20140813175101.GA7156@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, tiwai@suse.de, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20140814195321.GO21930@wotan.suse.de>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: Casey Leedom <leedom@chelsio.com>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "Alexander E. Patrakov" <patrakov@gmail.com>, tj@kernel.org
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "tiwai@suse.de" <tiwai@suse.de>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, "MPT-FusionLinux.pdl@avagotech.com" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Anish Bhatt <anish@chelsio.com>, Oleg Nesterov <oleg@redhat.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd-devel@lists.freedesktop.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>"linux-kernel@vger.kernel.org" <linux>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 13, 2014 at 07:51:01PM +0200, Oleg Nesterov wrote:
-> On 08/12, Luis R. Rodriguez wrote:
+On Thu, Aug 14, 2014 at 09:53:21PM +0200, Luis R. Rodriguez wrote:
+> On Thu, Aug 14, 2014 at 09:42:49AM -0700, Casey Leedom wrote:
+> >   Part of the problem is that the current 
+> > architecture has Device Probe happening out of the Module Initialization 
+> > when we call pci_register_driver() with our PCI Device ID Table.
 > >
-> > +/* To be used by modules which can take over 30 seconds at probe */
+> >   Running the Device Probes asynchronously has been discussed but that has 
+> > the problem that it's then impossible to return the Device Probe Status.  
+> > This is a problem for Driver Fallback and, if the probe fails, we're not 
+> > supposed to call the Device Remove function. To make this work, the 
+> > synchronous/asynchronous boundary would really need to be up in the PCI 
+> > Infrastructure layer so the Device Probe status could be captured in the 
+> > normal logic.  This would be a moderately large change there ...
 > 
-> Probably the comment should explain that this hack should only be
-> used if the driver is buggy and is wating for "real fix".
+> Some maintainers consider most of the work to get what you need done
+> simple, I've tried to explain it ain't so, so glad you provided a bit
+> of details here. To be clear its not just about asynch firmware loading,
+> you need a bit more work. Can you evaluate using a bus driver?
+
+<-- snip -->
+
+> >   On the whole, I think that introducing these Module Load Timeouts hasn't 
+> > been well thought out with respect to the repercussions and I'd be more 
+> > inclined to back that out till a well thought out design is developed.  But 
+> > I'm here for the discussion.
 > 
-> > +#define module_long_probe_init(initfn)				\
-> > +	static struct task_struct *__init_thread;		\
-> > +	static int _long_probe_##initfn(void *arg)		\
-> > +	{							\
-> > +		return initfn();				\
-> > +	}							\
-> > +	static inline __init int __long_probe_##initfn(void)	\
-> > +	{							\
-> > +		__init_thread = kthread_run(_long_probe_##initfn,\
-> > +					    NULL,		\
-> > +					    #initfn);		\
-> > +		if (IS_ERR(__init_thread))			\
-> > +			return PTR_ERR(__init_thread);		\
-> > +		return 0;					\
-> > +	}							\
-> > +	module_init(__long_probe_##initfn);
-> > +/* To be used by modules that require module_long_probe_init() */
-> > +#define module_long_probe_exit(exitfn)				\
-> > +	static inline void __long_probe_##exitfn(void)		\
-> > +	{							\
-> > +		exitfn();					\
-> > +		if (__init_thread)				\
-> > +			kthread_stop(__init_thread);		\
-> > +	}							\
+> The way that the 30 second timeout was introduced as a new driver
+> initialization requirement was certainly not ideal specially since
+> the respective systemd patch that intended to trigger the SIGKILL on
+> kmod module loading only took effect once kernel commit 786235ee
+> went in about a year later, and since the original systemd commit
+> was only addressing asynchronous firmware loading as a possible
+> issue that drivers may need to fix. The cxgb4 driver is a good
+> example that needs quite a bit of more work. Regardless systemd
+> folks are right -- but again, having this be introduced as a new
+> requirement that otherwise simply kills drivers seems a bit too
+> aggressive specially if its killing boot on some systems due to
+> delays on storage drivers. What's done is done -- and we need to
+> move on. We already reviewed twice now reverting 786235ee and that
+> won't happen, as a compromise we're looking for an easy agreeable
+> general driver work around that would both circumvent the issue
+> and let us easily grep for broken drivers. The deferred probe trick
+> was the first approach and this series addresses the more agreeable
+> solution. This 2 line patch then is what we are looking as work
+> around until your driver gets properly fixed.
 > 
-> exitfn() should be called after kthread_stop(), and only if initfn()
-> returns 0. So it should probably do
+> Apart from these kernel changes there are systemd changes we've
+> looked at modifying, Hannes' patch 9719859c07a, now merged upstream on
+> systemd lets you override the timeout value through the kernel command
+> line. This will only help for all systems if you use a high enough
+> large timeout value, or on a case by case basis for each system.
+> I recently proposed replacing a kill for a warn only for udev
+> kmod built in commands, that's unacceptable for systemd's architecture
+> though so the last thing I proposed instead to use *for now* is a
+> multiplier for each different type of udev built-in command and
+> for kmod we'd use a high enough value, the timeout therefore would
+> be really large for module loading for now, but we'd still want to
+> collect logs of drivers taking long to probe. That's still being
+> discussed [0] but my hope is that with this series and that other
+> systemd discussion we'll have covered both areas affected and have
+> a good strategy to move forward with this new driver requirement.
 > 
-> 	int err = kthread_stop(__init_thread);
-> 	if (!err)
-> 		exitfn();
+> [0] http://comments.gmane.org/gmane.comp.sysutils.systemd.devel/21689
 
-Thanks! With the check for __init_thread as well as it can be
-ERR_PTR(-ENOMEM), ERR_PTR(-EINTR), or NULL (for whatever other
-reason).
+Here's another affected driver:
 
-> But there is an additional complication, you can't use __init_thread
-> without get_task_struct(),
+https://bugzilla.kernel.org/show_bug.cgi?id=59581
 
-Can you elaborate why ? kthread_stop() uses get_task_struct(), 
-wake_up_process() and finally put_task_struct(), and we're the
-only user of this thread. Also kthread_run() ensures wake_up_process()
-gets called on startup, so not sure where the race would be provided
-all users here and with the respective helpers on buggy drivers.
+pata_marvell, and using the work around in this series should work,
+just as the deferred probe work around. Alexander however notes that
+the pata_marvell driver is just a simple wrapper and other devices
+can act the same way. This can surely be fixed perhaps in libata
+but its an example of an old driver and folks not being around to
+care much over drivers which are affected.
 
-> so  __long_probe_##initfn() can't use
-> kthread_run(). It needs kthread_create() + get_task_struct() + wakeup.
-
-I fail to see why we'd need to add get_task_struct() on
-module_long_probe_init(), can you clarify?
+This driver also uses module_pci_driver() so a module_long_probe_driver()
+and respective module_long_probe_pci_driver() would need to be considered
+if but easily implemented (sent to Alex to test).
 
   Luis
