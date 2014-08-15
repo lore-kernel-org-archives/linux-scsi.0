@@ -1,24 +1,28 @@
 From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [RFC PATCH 05/10] scsi/trace: Use macros for getting driver
- byte, host byte, msg byte, and status byte
-Date: Fri, 15 Aug 2014 11:10:16 -0400
-Message-ID: <1408115416.1223.149.camel@localhost.localdomain>
+Subject: Re: [RFC PATCH 06/10] scsi/sd: Delete extra scsi_show_extd_sense()
+ in sd_print_sense_hdr()
+Date: Fri, 15 Aug 2014 11:14:18 -0400
+Message-ID: <1408115658.1223.150.camel@localhost.localdomain>
 References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
-	 <20140808115017.6768.74578.stgit@yuno-kbuild.novalocal>
+	 <20140808115019.6768.99063.stgit@yuno-kbuild.novalocal>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140808115017.6768.74578.stgit@yuno-kbuild.novalocal>
+In-Reply-To: <20140808115019.6768.99063.stgit@yuno-kbuild.novalocal>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
 Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2014-08-08 at 11:50 +0000, Yoshihiro YUNOMAE wrote:
-> For getting driver byte, host byte, msg byte, and status byte, macros are
-> implemented in scsi/scsi.h, so we use it.
+> sd_print_sense_hdr() calls scsi_show_extd_sense(),
+> but scsi_print_sense_hdr() also calls scsi_show_extd_sense().
+> We can get same result, so we delete it.
+> 
+> Note:
+> Calling scsi_show_extd_sense() is introduced in fdd8b297.
 > 
 > Signed-off-by: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
 > Cc: Hannes Reinecke <hare@suse.de>
@@ -29,37 +33,25 @@ On Fri, 2014-08-08 at 11:50 +0000, Yoshihiro YUNOMAE wrote:
 > Cc: Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>
 > Cc: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
 > ---
->  include/trace/events/scsi.h |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/scsi/sd.c |    2 --
+>  1 file changed, 2 deletions(-)
 > 
-> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-> index db6c935..8aecdc2 100644
-> --- a/include/trace/events/scsi.h
-> +++ b/include/trace/events/scsi.h
-> @@ -328,10 +328,10 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		  show_opcode_name(__entry->opcode),
->  		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
->  		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
-> -		  show_driverbyte_name(((__entry->result) >> 24) & 0xff),
-> -		  show_hostbyte_name(((__entry->result) >> 16) & 0xff),
-> -		  show_msgbyte_name(((__entry->result) >> 8) & 0xff),
-> -		  show_statusbyte_name(__entry->result & 0xff))
-> +		  show_driverbyte_name(driver_byte(__entry->result)),
-> +		  show_hostbyte_name(host_byte(__entry->result)),
-> +		  show_msgbyte_name(msg_byte(__entry->result)),
-> +		  show_statusbyte_name(status_byte(__entry->result)))
->  );
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 8d7204a..22dd214 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3286,8 +3286,6 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
+>  			       struct scsi_sense_hdr *sshdr)
+>  {
+>  	scsi_print_sense_hdr(sdkp->device, sdkp->disk->disk_name, sshdr);
+> -	scsi_show_extd_sense(sdkp->device, sdkp->disk->disk_name,
+> -			     sshdr->asc, sshdr->ascq);
+>  }
 >  
->  DEFINE_EVENT(scsi_cmd_done_timeout_template, scsi_dispatch_cmd_done,
+>  static void sd_print_result(struct scsi_disk *sdkp, int result)
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
 
-(Based upon Hannes' logging tree...)
-
-Hannes, you should probably just update your tree with this.
+Looks fine, but again, Hannes should probably update his tree.
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
