@@ -1,72 +1,105 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] Final round of SCSI updates for the 3.16+ merge window
-Date: Fri, 15 Aug 2014 12:38:55 -0700
-Message-ID: <1408131535.11617.27.camel@HansenPartnership.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init()
+	and module_long_probe_exit()
+Date: Sat, 16 Aug 2014 04:50:07 +0200
+Message-ID: <20140816025007.GB3347@wotan.suse.de>
+References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com> <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com> <20140813175101.GA7156@redhat.com> <20140814231028.GQ21930@wotan.suse.de> <20140815143902.GB13222@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59792 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751105AbaHPCuN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Aug 2014 22:50:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20140815143902.GB13222@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, tiwai@suse.de, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-Just a note, we do have a couple of bug fixes coming under separate
-cover, but they don't have to be part of the merge window
+On Fri, Aug 15, 2014 at 04:39:02PM +0200, Oleg Nesterov wrote:
+> On 08/15, Luis R. Rodriguez wrote:
+> >
+> > On Wed, Aug 13, 2014 at 07:51:01PM +0200, Oleg Nesterov wrote:
+> > > On 08/12, Luis R. Rodriguez wrote:
+> > > >
+> > > > +/* To be used by modules which can take over 30 seconds at probe */
+> > >
+> > > Probably the comment should explain that this hack should only be
+> > > used if the driver is buggy and is wating for "real fix".
+> > >
+> > > > +#define module_long_probe_init(initfn)				\
+> > > > +	static struct task_struct *__init_thread;		\
+> > > > +	static int _long_probe_##initfn(void *arg)		\
+> > > > +	{							\
+> > > > +		return initfn();				\
+> > > > +	}							\
+> > > > +	static inline __init int __long_probe_##initfn(void)	\
+> > > > +	{							\
+> > > > +		__init_thread = kthread_run(_long_probe_##initfn,\
+> > > > +					    NULL,		\
+> > > > +					    #initfn);		\
+> > > > +		if (IS_ERR(__init_thread))			\
+> > > > +			return PTR_ERR(__init_thread);		\
+> > > > +		return 0;					\
+> > > > +	}							\
+> > > > +	module_init(__long_probe_##initfn);
+> > > > +/* To be used by modules that require module_long_probe_init() */
+> > > > +#define module_long_probe_exit(exitfn)				\
+> > > > +	static inline void __long_probe_##exitfn(void)		\
+> > > > +	{							\
+> > > > +		exitfn();					\
+> > > > +		if (__init_thread)				\
+> > > > +			kthread_stop(__init_thread);		\
+> > > > +	}							\
+> > >
+> > > exitfn() should be called after kthread_stop(), and only if initfn()
+> > > returns 0. So it should probably do
+> > >
+> > > 	int err = kthread_stop(__init_thread);
+> > > 	if (!err)
+> > > 		exitfn();
+> >
+> > Thanks! With the check for __init_thread as well as it can be
+> > ERR_PTR(-ENOMEM), ERR_PTR(-EINTR), or NULL (for whatever other
+> > reason).
+> 
+> Do you mean __long_probe_##exitfn() should also check ERR_PTR(__init_thread)?
+> I don't think so. If kthread_run() above fails, module_init() should return
+> the error (it does), so module_exit() won't be called.
 
-This is a small set of updates which missed the first pull.  It's more
-msix updates, some iscsi and qla4xxx fixes, we also have some string
-null termination fixes a return value fix and a couple of pm8001
-firmware fixes.
+Good point.
 
-The patch is available here:
+> > > But there is an additional complication, you can't use __init_thread
+> > > without get_task_struct(),
+> >
+> > Can you elaborate why ? kthread_stop() uses get_task_struct(),
+> 
+> This is too late. This task_struct can be already freed/reused. See below.
+> 
+> > wake_up_process() and finally put_task_struct(), and we're the
+> > only user of this thread. Also kthread_run() ensures wake_up_process()
+> > gets called on startup, so not sure where the race would be provided
+> > all users here and with the respective helpers on buggy drivers.
+> >
+> > > so  __long_probe_##initfn() can't use
+> > > kthread_run(). It needs kthread_create() + get_task_struct() + wakeup.
+> >
+> > I fail to see why we'd need to add get_task_struct() on
+> > module_long_probe_init(), can you clarify?
+> 
+> kthread_stop(kthread_run(callback)) is only safe if callback() can not exit
+> on its own, without checking kthread_should_stop(). And btw that is why
+> kthread_stop() does get_task_struct()).
+> 
+> If callback() can exit (if it calls do_exit() or simply returns), then nothing
+> protects this task_struct, it will be freed.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+OK thanks, yeah I see the issue now, and I was able to create a null
+pointer dereference by simply calling schedule() quite a bit, will
+roll in the required fixes, but come to think of it if there are
+other uses (I haven't SmPLd grep'd for grammar uses yet) perhaps
+generic helpers would be good? kthread_run_alloc() kthread_run_free().
 
-The short changelog is:
-
-Alexander Gordeev (2):
-      qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
-      pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
-Maurizio Lombardi (1):
-      qla4xxx: check the return value of dma_alloc_coherent()
-
-Mike Christie (5):
-      iscsi class: Fix freeing of skb in get host error path
-      libiscsi: return new error code when nop times out
-      iscsi class: fix get_host_stats return code when not supported
-      iscsi class: fix get_host_stats error handling
-      qla4xxx: fix get_host_stats error propagation
-
-Randy Dunlap (1):
-      scsi: fix u14-34f printk format warnings
-
-Rickard Strandqvist (2):
-      scsi: qla4xxx: ql4_mbx.c: Cleaning up missing null-terminate in conjunction with strncpy
-      scsi: qla4xxx: ql4_os.c: Cleaning up missing null-terminate in conjunction with strncpy
-
-Suresh Thiagarajan (1):
-      pm8001: Update MAINTAINERS list
-
-Tomas Henzl (2):
-      pm8001: fix pm8001_store_update_fw
-      pm8001: Fix erratic calculation in update_flash
-
-And the diffstat
-
- MAINTAINERS                         |   1 +
- drivers/scsi/libiscsi.c             |   2 +-
- drivers/scsi/pm8001/pm8001_ctl.c    | 144 ++++++++++++++++++------------------
- drivers/scsi/pm8001/pm8001_hwi.c    |   4 +-
- drivers/scsi/pm8001/pm8001_init.c   |  39 +++++-----
- drivers/scsi/qla4xxx/ql4_init.c     |   6 ++
- drivers/scsi/qla4xxx/ql4_mbx.c      |  14 ++--
- drivers/scsi/qla4xxx/ql4_nx.c       |   2 +-
- drivers/scsi/qla4xxx/ql4_os.c       |  16 ++--
- drivers/scsi/scsi_transport_iscsi.c |   6 +-
- drivers/scsi/u14-34f.c              |   4 +-
- include/scsi/iscsi_if.h             |   1 +
- 12 files changed, 125 insertions(+), 114 deletions(-)
-
-James
+  Luis
