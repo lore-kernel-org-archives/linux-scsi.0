@@ -1,85 +1,51 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init()
-	and module_long_probe_exit()
-Date: Sun, 17 Aug 2014 14:55:05 +0200
-Message-ID: <20140817125505.GA32429@redhat.com>
-References: <1407882507-325-1-git-send-email-mcgrof@do-not-panic.com> <1407882507-325-2-git-send-email-mcgrof@do-not-panic.com> <20140813175101.GA7156@redhat.com> <20140814231028.GQ21930@wotan.suse.de> <20140815143902.GB13222@redhat.com> <20140816025007.GB3347@wotan.suse.de> <s5h1tsfwqi2.wl-tiwai@suse.de> <20140817122527.GA30546@redhat.com> <20140817124803.GA31996@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140817124803.GA31996@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Takashi Iwai <tiwai@suse.de>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+From: Sagi Grimberg <sagig@mellanox.com>
+Subject: [PATCH RESEND] libiscsi: Don't retry if xmit_task return a non-transient error code
+Date: Sun, 17 Aug 2014 18:23:40 +0300
+Message-ID: <1408289020-31847-1-git-send-email-sagig@mellanox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailp.voltaire.com ([193.47.165.129]:39098 "EHLO mellanox.co.il"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751574AbaHQPXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Aug 2014 11:23:49 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, jbottomley@parallels.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, ogerlitz@mellanox.com
 
-Damn, sorry for noise ;)
+Allow transport callback xmit_task to return a non-transient
+error code -EINVAL to inform us not to retry the task. For any
+other error code keep the current retry behavior.
 
-I was going to suggest to introduce module_put_and_exit() to simplify
-this and potentially other users, but it already exists. So this code
-can use it too without additional complications.
+Signed-off-by: Sagi Grimberg <sagig@mellanox.com>
+---
+ drivers/scsi/libiscsi.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
-On 08/17, Oleg Nesterov wrote:
-> On 08/17, Oleg Nesterov wrote:
-> >
-> > On 08/17, Takashi Iwai wrote:
-> > >
-> > > How about just increasing/decreasing the module count for blocking the
-> > > exit call?  For example:
-> > >
-> > > #define module_long_probe_init(initfn)				\
-> > > 	static int _long_probe_##initfn(void *arg)		\
-> > > 	{							\
-> > > 		int ret = initfn();				\
-> > > 		module_put(THIS_MODULE);			\
-> >
-> > WINDOW, please see below.
-> >
-> > > 		return ret;					\
-> > > 	}							\
-> > > 	static inline __init int __long_probe_##initfn(void)	\
-> > > 	{							\
-> > > 		struct task_struct *__init_thread;		\
-> > > 		__module_get(THIS_MODULE);			\
-> > > 		__init_thread = kthread_run(_long_probe_##initfn,\
-> > > 					    NULL,		\
-> > > 					    #initfn);		\
-> > > 		if (IS_ERR(__init_thread)) {			\
-> > > 			module_put(THIS_MODULE);		\
-> > > 			return PTR_ERR(__init_thread);		\
-> > > 		}						\
-> > > 		return 0;					\
-> > > 	}							\
-> >
-> > I leave this to you and Luis, but personally I think this is very
-> > nice idea, I like it. Because sys_delete_module() won't hang in D
-> > state waiting for initfn().
-> >
-> > There is a small problem. This module can be unloaded right after
-> > module_put() above. In this case its memory can be unmapped and
-> > the exiting thread can crash.
-> >
-> > This is very unlikely, this thread needs to execute just a few insn
-> > and escape from this module's memory. Given that only the buggy
-> > modules should use this hack, perhaps we can even ignore this race.
-> >
-> > But perhaps it makes sense to close this race anyway, and we already
-> > have complete_and_exit() which can be used instead of "return ret"
-> > above. Just we need the additional "static struct completion" and
-> > module_exit() should call wait_for_completion.
-> 
-> Forgot to mention... and __long_probe_##initfn() could be simpler
-> without kthread_run,
-> 
-> 	__init_thread = kthread_create(...);
-> 	if (IS_ERR(__init_thread))
-> 		return PTR_ERR();
-> 
-> 	module_get(THIS_MODULE);
-> 	wake_up_process(__init_thread);
-> 	return 0;
-> 
-> but this is subjective, up to you.
-> 
-> Oleg.
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 3d1bc67..03768a9 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1722,10 +1722,17 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 				goto prepd_fault;
+ 			}
+ 		}
+-		if (session->tt->xmit_task(task)) {
++
++		reason = session->tt->xmit_task(task);
++		if (reason) {
+ 			session->cmdsn--;
+-			reason = FAILURE_SESSION_NOT_READY;
+-			goto prepd_reject;
++			if (reason == -EINVAL) {
++				sc->result = DID_ABORT << 16;
++				goto prepd_fault;
++			} else {
++				reason = FAILURE_SESSION_NOT_READY;
++				goto prepd_reject;
++			}
+ 		}
+ 	} else {
+ 		list_add_tail(&task->running, &conn->cmdqueue);
+-- 
+1.7.1
+
