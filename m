@@ -1,74 +1,57 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 1/2] Drivers: scsi: storvsc: In responce to a scan event,
- scan the host
-Date: Sat, 16 Aug 2014 20:09:47 -0700
-Message-ID: <1408244988-27456-1-git-send-email-kys@microsoft.com>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH V4 3/4] Introduce XEN scsiback module
+Date: Sat, 16 Aug 2014 19:15:23 -0700
+Message-ID: <1408241723.30653.162.camel@haakon3.risingtidesystems.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>
+	 <1407484194-31876-4-git-send-email-jgross@suse.com>
+	 <1407878022.27925.33.camel@haakon3.risingtidesystems.com>
+	 <53EB0D9E.6050408@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1408244954-27417-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: hare@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <53EB0D9E.6050408@suse.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>
+Cc: xen-devel@lists.xen.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, JBottomley@parallels.com, konrad.wilk@oracle.com, hch@infradead.org, david.vrabel@citrix.com, JBeulich@suse.com
 List-Id: linux-scsi@vger.kernel.org
 
-The virtual HBA that storvsc implements can support multiple channels and
-targets. So, scan the host when the host notifies that a scan is needed.
+On Wed, 2014-08-13 at 09:02 +0200, Juergen Gross wrote:
+> On 08/12/2014 11:13 PM, Nicholas A. Bellinger wrote:
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/scsi/storvsc_drv.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
+<SNIP>
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 15ba695..02d1db6 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -426,21 +426,16 @@ done:
- 	kfree(wrk);
- }
- 
--static void storvsc_bus_scan(struct work_struct *work)
-+static void storvsc_host_scan(struct work_struct *work)
- {
- 	struct storvsc_scan_work *wrk;
--	int id, order_id;
-+	struct Scsi_Host *host;
- 
- 	wrk = container_of(work, struct storvsc_scan_work, work);
--	for (id = 0; id < wrk->host->max_id; ++id) {
--		if (wrk->host->reverse_ordering)
--			order_id = wrk->host->max_id - id - 1;
--		else
--			order_id = id;
--
--		scsi_scan_target(&wrk->host->shost_gendev, 0,
--				order_id, SCAN_WILD_CARD, 1);
--	}
-+	host = wrk->host;
-+
-+	scsi_scan_host(host);
-+
- 	kfree(wrk);
- }
- 
-@@ -1209,7 +1204,7 @@ static void storvsc_on_receive(struct hv_device *device,
- 		if (!work)
- 			return;
- 
--		INIT_WORK(&work->work, storvsc_bus_scan);
-+		INIT_WORK(&work->work, storvsc_host_scan);
- 		work->host = stor_device->host;
- 		schedule_work(&work->work);
- 		break;
--- 
-1.7.4.1
+> >
+> >> +
+> >> +static int scsiback_port_link(struct se_portal_group *se_tpg,
+> >> +			       struct se_lun *lun)
+> >> +{
+> >> +	struct scsiback_tpg *tpg = container_of(se_tpg,
+> >> +				struct scsiback_tpg, se_tpg);
+> >> +
+> >> +	mutex_lock(&scsiback_mutex);
+> >> +
+> >> +	mutex_lock(&tpg->tv_tpg_mutex);
+> >> +	tpg->tv_tpg_port_count++;
+> >> +	mutex_unlock(&tpg->tv_tpg_mutex);
+> >> +
+> >> +	mutex_unlock(&scsiback_mutex);
+> >> +
+> >> +	return 0;
+> >> +}
+> >> +
+> >
+> > AFAICT, no need to hold scsiback_mutex while incrementing
+> > tpg->tv_tpg_port_count.
+> 
+> So there is a guarantee that port_link and port_unlink are never
+> called in parallel?
+> 
+
+Correct.  configfs_symlink() only calls create_link() once
+type->ct_item_ops->allow_link() -> target_fabric_port_link() ->
+TFO->fabric_post_link() has successfully completed, effectively
+preventing configfs_unlink() + subsequent TFO->fabric_pre_unlink()
+execution until after configfs_symlink() completes.
+
+--nab
