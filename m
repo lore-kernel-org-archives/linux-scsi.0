@@ -1,42 +1,36 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] fusion: fix excess parameter kernel-doc warning
-Date: Sat, 16 Aug 2014 14:15:15 -0700
-Message-ID: <53EFC9E3.6070306@infradead.org>
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 0/2] Drivers: scsi: storvsc: Fix issues with hot-add/remove of
+ LUNs
+Date: Sat, 16 Aug 2014 20:09:14 -0700
+Message-ID: <1408244954-27417-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40296 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768AbaHPVPQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Aug 2014 17:15:16 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: hare@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, DL-MPTFusionLinux@lsi.com, MPT-FusionLinux.pdl@avagotech.com
 
-From: Randy Dunlap <rdunlap@infradead.org>
+This patch-set addresses issues with LUN hot-add and remove. When the host
+notifies the guest that a scan is needed, scan the host. Also, prior to
+discovering new devices that may have been added, ensure we handle the
+LUN remove case first.
 
-Fix kernel-doc excess parameter warning:
+K. Y. Srinivasan (2):
+  Drivers: scsi: storvsc: In responce to a scan event, scan the host
+  Drivers: scsi: storvsc: Force discovery of LUNs that may have been
+    removed.
 
-Warning(..//drivers/message/fusion/mptbase.c:1411): Excess function parameter 'prod_name' description in 'mpt_get_product_name'
+ drivers/scsi/storvsc_drv.c |   43 ++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 32 insertions(+), 11 deletions(-)
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: MPT-FusionLinux.pdl@avagotech.com
----
- drivers/message/fusion/mptbase.c |    1 -
- 1 file changed, 1 deletion(-)
-
-Index: lnx-317-rc1/drivers/message/fusion/mptbase.c
-===================================================================
---- lnx-317-rc1.orig/drivers/message/fusion/mptbase.c
-+++ lnx-317-rc1/drivers/message/fusion/mptbase.c
-@@ -1400,7 +1400,6 @@ mpt_verify_adapter(int iocid, MPT_ADAPTE
-  *	@vendor: pci vendor id
-  *	@device: pci device id
-  *	@revision: pci revision id
-- *	@prod_name: string returned
-  *
-  *	Returns product string displayed when driver loads,
-  *	in /proc/mpt/summary and /sysfs/class/scsi_host/host<X>/version_product
+-- 
+1.7.4.1
