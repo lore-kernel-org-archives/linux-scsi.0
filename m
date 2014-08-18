@@ -1,55 +1,79 @@
-From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-Subject: [PATCH] libfs: Replace rcu_assign_pointer() with RCU_INIT_POINTER()
-Date: Mon, 18 Aug 2014 17:56:22 +0300
-Message-ID: <20140818145622.GA14281@ada>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init()
+	and module_long_probe_exit()
+Date: Mon, 18 Aug 2014 17:19:54 +0200
+Message-ID: <20140818151954.GA20284@redhat.com>
+References: <20140816025007.GB3347@wotan.suse.de> <s5h1tsfwqi2.wl-tiwai@suse.de> <20140817122527.GA30546@redhat.com> <20140817124803.GA31996@redhat.com> <20140817125505.GA32429@redhat.com> <20140817174624.GE3347@wotan.suse.de> <20140817182138.GA4411@redhat.com> <s5hfvguw570.wl-tiwai@suse.de> <20140818122217.GA12707@redhat.com> <s5ha97253yo.wl-tiwai@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:37897 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaHRO4c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Aug 2014 10:56:32 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:10742 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751563AbaHRPXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Aug 2014 11:23:01 -0400
 Content-Disposition: inline
+In-Reply-To: <s5ha97253yo.wl-tiwai@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robert.w.love@intel.com, JBottomley@parallels.com, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: paulmck@linux.vnet.ibm.com
+To: Takashi Iwai <tiwai@suse.de>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-The uses of "rcu_assign_pointer()" are NULLing out the pointers.
-According to RCU_INIT_POINTER()'s block comment:
-"1.   This use of RCU_INIT_POINTER() is NULLing out the pointer"
-it is better to use it instead of rcu_assign_pointer() because it has a
-smaller overhead.
+On 08/18, Takashi Iwai wrote:
+>
+> At Mon, 18 Aug 2014 14:22:17 +0200,
+> Oleg Nesterov wrote:
+> >
+> > On 08/18, Takashi Iwai wrote:
+> > >
+> > > #define module_long_probe_init(initfn)				\
+> > > 	static int _long_probe_##initfn(void *arg)		\
+> > > 	{							\
+> > > 		module_put_and_exit(initfn());			\
+> > > 		return 0;					\
+> > > 	}							\
+> > > 	static int __init __long_probe_##initfn(void)		\
+> > > 	{							\
+> > > 		struct task_struct *__init_thread =		\
+> > > 			kthread_create(_long_probe_##initfn,	\
+> > > 				       NULL, #initfn);		\
+> > > 		if (IS_ERR(__init_thread))			\
+> > > 			return PTR_ERR(__init_thread);		\
+> > > 		__module_get(THIS_MODULE);			\
+> > > 		wake_up_process(__init_thread);			\
+> > > 		return 0;					\
+> > > 	}							\
+> > > 	module_init(__long_probe_##initfn)
+> > >
+> > > ... and module_exit() remains identical as the normal version.
+> >
+> > Aaaah. This is not true, module_exit() should not call exitfn() if initfn()
+> > fails... So _long_probe_##initfn() needs to save the error code which should
+> > be checked by module_exit().
+>
+> Oh, right.  So we need a reference in the module exit path in anyway,
 
-The following Coccinelle semantic patch was used:
-@@
-@@
+We only need to save the error code,
 
-- rcu_assign_pointer
-+ RCU_INIT_POINTER
-  (..., NULL)
+	static int _long_probe_retval;
 
-Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
----
- drivers/scsi/libfc/fc_libfc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+	static int _long_probe_##initfn(void *arg)
+	{
+		_long_probe_retval = initfn();
+		module_put_and_exit(0); /* noreturn */
+	}
 
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-index 8d65a51a..c11a638 100644
---- a/drivers/scsi/libfc/fc_libfc.c
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -296,9 +296,9 @@ void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *prov)
- 	BUG_ON(type >= FC_FC4_PROV_SIZE);
- 	mutex_lock(&fc_prov_mutex);
- 	if (prov->recv)
--		rcu_assign_pointer(fc_passive_prov[type], NULL);
-+		RCU_INIT_POINTER(fc_passive_prov[type], NULL);
- 	else
--		rcu_assign_pointer(fc_active_prov[type], NULL);
-+		RCU_INIT_POINTER(fc_active_prov[type], NULL);
- 	mutex_unlock(&fc_prov_mutex);
- 	synchronize_rcu();
- }
--- 
-1.9.1
+	static void __long_probe_##exitfn(void)
+	{
+		if (!_long_probe_retval)
+			exitfn();
+	}
+
+> and Luis' version might be shorter in the end.
+
+I dont't think that "shorter" does matter in this case. The real difference
+is sys_delete_module() behaviour if it is called before initfn() completes.
+
+And, again, I do not really know which version is better.
+
+Oleg.
 
