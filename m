@@ -1,61 +1,73 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v3 13/13] pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 18 Aug 2014 08:01:53 +0200
-Message-ID: <0f19a7660054e85da9f2137d21d198fbe7ddd71c.1408335523.git.agordeev@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p50936449.dip0.t-ipconnect.de ([80.147.100.73]:30499 "EHLO
-	dhcp-27-160.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751862AbaHRIzU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Aug 2014 04:55:20 -0400
-In-Reply-To: <cover.1408335523.git.agordeev@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH V4 3/4] Introduce XEN scsiback module
+Date: Mon, 18 Aug 2014 11:06:30 +0200
+Message-ID: <53F1C216.9010109@suse.com>
+References: <1407484194-31876-1-git-send-email-jgross@suse.com>	<1407484194-31876-4-git-send-email-jgross@suse.com>	<1407878022.27925.33.camel@haakon3.risingtidesystems.com>	<53EC7911.7040109@suse.com> <53EC8BE8.2030203@suse.com> <1408243108.30653.179.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1408243108.30653.179.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On 08/17/2014 04:38 AM, Nicholas A. Bellinger wrote:
+> On Thu, 2014-08-14 at 12:14 +0200, Juergen Gross wrote:
+>> On 08/14/2014 10:53 AM, Juergen Gross wrote:
+>>> Nicholas,
+>>>
+>>> just one more question (see below):
+>>>
+>>> On 08/12/2014 11:13 PM, Nicholas A. Bellinger wrote:
+>>>> Hi Juergen & Co,
+>>>>
+>>>> Finally had a chance to review this code.  Comments are inline below..
+>>>>
+>>>> On Fri, 2014-08-08 at 09:49 +0200, jgross@suse.com wrote:
+>>>
+>>> ...
+>>>
+>>>>> +    if (IS_ERR(tv_nexus->tvn_se_sess)) {
+>>>>> +        mutex_unlock(&tpg->tv_tpg_mutex);
+>>>>> +        kfree(tv_nexus);
+>>>>> +        return -ENOMEM;
+>>>>> +    }
+>>>>> +    se_sess = tv_nexus->tvn_se_sess;
+>>>>> +    /*
+>>>>> +     * Since we are running in 'demo mode' this call with generate a
+>>>>> +     * struct se_node_acl for the scsiback struct se_portal_group with
+>>>>> +     * the SCSI Initiator port name of the passed configfs group
+>>>>> 'name'.
+>>>>> +     */
+>>>>> +    tv_nexus->tvn_se_sess->se_node_acl =
+>>>>> core_tpg_check_initiator_node_acl(
+>>>>> +                se_tpg, (unsigned char *)name);
+>>>>> +    if (!tv_nexus->tvn_se_sess->se_node_acl) {
+>>>>> +        mutex_unlock(&tpg->tv_tpg_mutex);
+>>>>> +        pr_debug("core_tpg_check_initiator_node_acl() failed for %s\n",
+>>>>> +             name);
+>>>>> +        goto out;
+>>>>> +    }
+>>>
+>>> Can I drop the call to core_tpg_check_initiator_node_acl() as well?
+>>> Keeping it will result in failing to setup the nexus (which is to be
+>>> expected IMHO).
+>>
+>> Obviously I can't. transport_lookup_cmd_lun() calls right at start
+>> spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
+>> resulting in a page fault...
+>>
+>> I guess the hint to just throw away all the node_acl related stuff has
+>> to be adjusted somehow...
+>>
+>> So: what is needed, what can be removed?
+>>
+>
+> The scsiback_make_nodeacl() + scsiback_drop_nodeacl() configfs callbacks
+> can be safely dropped, along with scisback_ncal->iport_[wwpn,name].
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/pmcraid.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+Okay, thanks. This is working.
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 6e575ed..bcb64eb 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
- 			entries[i].entry = i;
- 
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
-+		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-+		if (num_hrrq < 0)
- 			goto pmcraid_isr_legacy;
- 
--		/* Check how many MSIX vectors are allocated and register
--		 * msi-x handlers for each of them giving appropriate buffer
--		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
--
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
- 			pinstance->hrrq_vector[i].drv_inst = pinstance;
--- 
-1.9.3
-
+Juergen
