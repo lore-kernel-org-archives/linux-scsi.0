@@ -1,47 +1,49 @@
-From: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-Subject: [PATCH] tcm_fc: Replace rcu_assign_pointer() with RCU_INIT_POINTER()
-Date: Mon, 18 Aug 2014 15:05:37 +0300
-Message-ID: <20140818120537.GA19578@ada>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v3 1/3] init / kthread: add module_long_probe_init() and
+	module_long_probe_exit()
+Date: Mon, 18 Aug 2014 14:22:17 +0200
+Message-ID: <20140818122217.GA12707@redhat.com>
+References: <20140814231028.GQ21930@wotan.suse.de> <20140815143902.GB13222@redhat.com> <20140816025007.GB3347@wotan.suse.de> <s5h1tsfwqi2.wl-tiwai@suse.de> <20140817122527.GA30546@redhat.com> <20140817124803.GA31996@redhat.com> <20140817125505.GA32429@redhat.com> <20140817174624.GE3347@wotan.suse.de> <20140817182138.GA4411@redhat.com> <s5hfvguw570.wl-tiwai@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: nab@linux-iscsi.org, agrover@redhat.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: paulmck@linux.vnet.ibm.com
+In-Reply-To: <s5hfvguw570.wl-tiwai@suse.de>
+Sender: netdev-owner@vger.kernel.org
+To: Takashi Iwai <tiwai@suse.de>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Benjamin Poirier <bpoirier@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The use of "rcu_assign_pointer()" is NULLing out the pointer.
-According to RCU_INIT_POINTER()'s block comment:
-"1.   This use of RCU_INIT_POINTER() is NULLing out the pointer"
-it is better to use it instead of rcu_assign_pointer() because it has a
-smaller overhead.
+On 08/18, Takashi Iwai wrote:
+>
+> #define module_long_probe_init(initfn)				\
+> 	static int _long_probe_##initfn(void *arg)		\
+> 	{							\
+> 		module_put_and_exit(initfn());			\
+> 		return 0;					\
+> 	}							\
+> 	static int __init __long_probe_##initfn(void)		\
+> 	{							\
+> 		struct task_struct *__init_thread =		\
+> 			kthread_create(_long_probe_##initfn,	\
+> 				       NULL, #initfn);		\
+> 		if (IS_ERR(__init_thread))			\
+> 			return PTR_ERR(__init_thread);		\
+> 		__module_get(THIS_MODULE);			\
+> 		wake_up_process(__init_thread);			\
+> 		return 0;					\
+> 	}							\
+> 	module_init(__long_probe_##initfn)
+>
+> ... and module_exit() remains identical as the normal version.
 
-The following Coccinelle semantic patch was used:
-@@
-@@
+Aaaah. This is not true, module_exit() should not call exitfn() if initfn()
+fails... So _long_probe_##initfn() needs to save the error code which should
+be checked by module_exit().
 
-- rcu_assign_pointer
-+ RCU_INIT_POINTER
-  (..., NULL)
+> But, it's really a small difference, and I don't mind much which way
+> to take, too.
 
-Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
----
- drivers/target/tcm_fc/tfc_sess.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Agreed.
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 21ce508..ccee7e3 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -98,7 +98,7 @@ static void ft_tport_delete(struct ft_tport *tport)
- 	ft_sess_delete_all(tport);
- 	lport = tport->lport;
- 	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
--	rcu_assign_pointer(lport->prov[FC_TYPE_FCP], NULL);
-+	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
- 
- 	tpg = tport->tpg;
- 	if (tpg) {
--- 
-1.9.1
+Oleg.
