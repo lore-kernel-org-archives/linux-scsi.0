@@ -1,116 +1,67 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v4 4/17] arcmsr: limit max. number of SCSI command request
-Date: Tue, 19 Aug 2014 14:29:41 +0800
-Message-ID: <1408429781.4748.15.camel@Centos6.3-64>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v7 1/3] arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS node.
+Date: Tue, 19 Aug 2014 12:01:49 +0530
+Message-ID: <1408429911-1406-2-git-send-email-stripathi@apm.com>
+References: <1408429911-1406-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:53465 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635AbaHSG3t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 02:29:49 -0400
-Received: by mail-pa0-f43.google.com with SMTP id lf10so9353881pab.16
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2014 23:29:48 -0700 (PDT)
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:45863 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752633AbaHSGdX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 02:33:23 -0400
+In-Reply-To: <1408429911-1406-1-git-send-email-stripathi@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-From: Ching Huang <ching2048@areca.com.tw>
+The value of the csr-mask of the SATA PHY clock DTS node has a
+wrong value resulting a kernel panic as the clock/reset is not
+proper for the PHY of the SATA host controller 1. This patch
+fixes the correct csr-mask value of the SATA PHY clock DTS node
+for the SATA Host controller 1.
 
-This patch limits the max. number of SCSI commmand request to avoid command overflow.
+As the 'ok' is the default status of a device tree node, this patch
+removes the status of the PHY clock node of SATA Host Controller 1.
+The status of the clock node is handled from the firmware based on
+the controller enabled/disabled by the user.
 
-Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
+ arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:24:06.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:22:36.000000000 +0800
-@@ -45,11 +45,12 @@
- #include <linux/interrupt.h>
- struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
--#define ARCMSR_MAX_OUTSTANDING_CMD						256
- #ifdef CONFIG_XEN
- 	#define ARCMSR_MAX_FREECCB_NUM	160
-+#define ARCMSR_MAX_OUTSTANDING_CMD	155
- #else
- 	#define ARCMSR_MAX_FREECCB_NUM	320
-+#define ARCMSR_MAX_OUTSTANDING_CMD	255
- #endif
- #define ARCMSR_DRIVER_VERSION		"v1.30.00.04-20140428"
- #define ARCMSR_SCSI_INITIATOR_ID						255
-@@ -598,6 +599,7 @@ struct AdapterControlBlock
- 				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
- 	atomic_t			ante_token_value;
-+	uint32_t	maxOutstanding;
- 	int		msix_vector_count;
- };/* HW_DEVICE_EXTENSION */
- /*
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:03:48.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-08 19:35:46.000000000 +0800
-@@ -134,7 +134,7 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
-+	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
- 	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
- 	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
-@@ -693,7 +693,7 @@ static int arcmsr_probe(struct pci_dev *
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;		/*16:8*/
- 	host->max_cmd_len = 16;	 			/*this is issue of 64bit LBA ,over 2T byte*/
--	host->can_queue = ARCMSR_MAX_FREECCB_NUM;	/* max simultaneous cmds */		
-+	host->can_queue = ARCMSR_MAX_OUTSTANDING_CMD;	/* max simultaneous cmds */		
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;	    
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
-@@ -2215,9 +2215,6 @@ static int arcmsr_queue_command_lck(stru
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (atomic_read(&acb->ccboutstandingcount) >=
--			ARCMSR_MAX_OUTSTANDING_CMD)
--		return SCSI_MLQUEUE_HOST_BUSY;
- 	ccb = arcmsr_get_freeccb(acb);
- 	if (!ccb)
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -2427,12 +2424,27 @@ static bool arcmsr_get_hbc_config(struct
- }
- static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
- {
--	if (acb->adapter_type == ACB_ADAPTER_TYPE_A)
--		return arcmsr_get_hba_config(acb);
--	else if (acb->adapter_type == ACB_ADAPTER_TYPE_B)
--		return arcmsr_get_hbb_config(acb);
-+	bool rtn = false;
-+
-+	switch (acb->adapter_type) {
-+	case ACB_ADAPTER_TYPE_A:
-+		rtn = arcmsr_get_hba_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_B:
-+		rtn = arcmsr_get_hbb_config(acb);
-+		break;
-+	case ACB_ADAPTER_TYPE_C:
-+		rtn = arcmsr_get_hbc_config(acb);
-+		break;
-+	default:
-+		break;
-+	}
-+	if(acb->firm_numbers_queue > ARCMSR_MAX_OUTSTANDING_CMD)
-+		acb->maxOutstanding = ARCMSR_MAX_OUTSTANDING_CMD;
- 	else
--		return arcmsr_get_hbc_config(acb);
-+		acb->maxOutstanding = acb->firm_numbers_queue - 1;
-+	acb->host->can_queue = acb->maxOutstanding;
-+	return rtn;
- }
- 
- static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
-
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index 40aa96c..1bdaeda 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -184,9 +184,8 @@
+ 				reg = <0x0 0x1f21c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy1clk";
+-				status = "disabled";
+ 				csr-offset = <0x4>;
+-				csr-mask = <0x00>;
++				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+ 				enable-mask = <0x06>;
+ 			};
+@@ -198,7 +197,6 @@
+ 				reg = <0x0 0x1f22c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy2clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+@@ -212,7 +210,6 @@
+ 				reg = <0x0 0x1f23c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy3clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+--
+1.8.2.1
 
