@@ -1,23 +1,23 @@
-From: Sam Ravnborg <sam@ravnborg.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: Sym2 scsi hang on boot on sparc64
-Date: Tue, 19 Aug 2014 22:30:55 +0200
-Message-ID: <20140819203054.GA24325@ravnborg.org>
+Date: Tue, 19 Aug 2014 15:37:18 -0500
+Message-ID: <1408480638.4424.0.camel@jarvis>
 References: <alpine.SOC.1.00.1408191420150.4929@math.ut.ee>
- <1408451668.2645.2.camel@jarvis>
- <alpine.SOC.1.00.1408191736190.7767@math.ut.ee>
- <1408459655.3491.1.camel@jarvis>
- <20140819201748.GC4885@drone.musicnaut.iki.fi>
+	 <1408451668.2645.2.camel@jarvis>
+	 <alpine.SOC.1.00.1408191736190.7767@math.ut.ee>
+	 <1408459655.3491.1.camel@jarvis>
+	 <20140819201748.GC4885@drone.musicnaut.iki.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <20140819201748.GC4885@drone.musicnaut.iki.fi>
 Sender: sparclinux-owner@vger.kernel.org
 To: Aaro Koskinen <aaro.koskinen@iki.fi>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, linux-parisc@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, linux-parisc@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 19, 2014 at 11:17:48PM +0300, Aaro Koskinen wrote:
+On Tue, 2014-08-19 at 23:17 +0300, Aaro Koskinen wrote:
 > Hi,
 > 
 > On Tue, Aug 19, 2014 at 09:47:35AM -0500, James Bottomley wrote:
@@ -54,22 +54,18 @@ On Tue, Aug 19, 2014 at 11:17:48PM +0300, Aaro Koskinen wrote:
 > 
 >     scsi: convert device_busy to atomic_t
 
-I guess you need this fix:
+That's fixed upstream:
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9c44392..ce62e87 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1774,7 +1774,7 @@ static void scsi_request_fn(struct request_queue *q)
- 	blk_requeue_request(q, req);
- 	atomic_dec(&sdev->device_busy);
- out_delay:
--	if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
-+	if (!atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
- 		blk_delay_queue(q, SCSI_QUEUE_DELAY);
- }
+commit 480cadc2b7e0fa2bbab20141efb547dfe0c3707c
+Author: Guenter Roeck <linux@roeck-us.net>
+Date:   Sun Aug 10 05:54:25 2014 -0700
+
+    scsi: Fix qemu boot hang problem
+
+Could you try with a kernel that has that fix?
+
+Thanks,
+
+James
 
 
-James already sent it to Linus.
-
-	Sam
