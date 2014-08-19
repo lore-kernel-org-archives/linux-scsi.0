@@ -1,88 +1,108 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v7 0/3] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
-Date: Tue, 19 Aug 2014 12:01:48 +0530
-Message-ID: <1408429911-1406-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:45862 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752633AbaHSGdO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 02:33:14 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+Subject: RE: [PATCH v3] uas: replace WARN_ON_ONCE() with
+ lockdep_assert_held()
+Date: Tue, 19 Aug 2014 06:33:04 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2FDA2@EU-MBX-02.mgc.mentorg.com>
+References: <yes>
+ <1407825621-23322-1-git-send-email-sanjeev_sharma@mentor.com>
+ <53E9B418.3050303@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "kraxel@redhat.com" <kraxel@redhat.com>, "mdharm-usb@one-eyed-alien.net" <mdharm-usb@one-eyed-alien.net>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch set contains a couple of fixes related to APM X-Gene SATA
-controller driver.
+Hi Greg,
 
-v2 Change:
-   1. Drop the Link down retry patch from this patch set.
+Any feedback on this patch ?
 
-v4 Change:
-   1. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   2. Add the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters.
-   3. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver.
-   4. Add the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node.
+Regards
+Sanjeev Sharma
 
-v5 Change :
-   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
-   2. Drop the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node as it breaks
-     with old firmware.
-   3. Add the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   4. Add the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   5. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
-     for-3.17 kernel.
-   6. Drop the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters as it is already applied to
-     3.16/for-3.17 branch by the maintainer.
-   7. Drop the patch to fix the watermark threshold as it is
-     already applied to 3.16/for-3.17 branch by the maintainer.
+-----Original Message-----
+From: Sharma, Sanjeev 
+Sent: Tuesday, August 12, 2014 12:07 PM
+To: 'Hans de Goede'
+Cc: gregkh@linuxfoundation.org; kraxel@redhat.com; mdharm-usb@one-eyed-alien.net; linux-usb@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: RE: [PATCH v3] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
 
-v6 change :
-   1. Drop the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   2. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   3. Add the remove the clock and PHY node patch as it
-     fixes the dropped patches together. This patch works with
-     old and new firmware as well.
+Yes I have incorporated review comment from Greg.
 
-v7 change :
-   1. Drop the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node as it breaks
-     with old firmware if sata not initialised from the firmware.
-   2. Add the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   3. Add the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   4. Add the Link down retry patch with a proper comments and
-     explanation.
-   5. Drop the patch to remove NCQ as it is applied to 3.16/for-3.17.
+Regards
+Sanjeev Sharma
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
+-----Original Message-----
+From: Hans de Goede [mailto:hdegoede@redhat.com]
+Sent: Tuesday, August 12, 2014 11:59 AM
+To: Sharma, Sanjeev
+Cc: gregkh@linuxfoundation.org; kraxel@redhat.com; mdharm-usb@one-eyed-alien.net; linux-usb@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
 
-Suman Tripathi (3):
-  arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS
-    node.
-  ahci_xgene: Skip the PHY and clock initialization if already
-    configured by the firmware.
-  ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC
-    AHCI SATA host controller driver.
+Hi,
 
- arch/arm64/boot/dts/apm-storm.dtsi |  5 +----
- drivers/ata/ahci_xgene.c           | 42 +++++++++++++++++++++++++++++++-------
- 2 files changed, 36 insertions(+), 11 deletions(-)
+On 08/12/2014 08:40 AM, Sanjeev Sharma wrote:
+> on some architecture spin_is_locked() always return false in 
+> uniprocessor configuration and therefore it would be advise to replace 
+> with lockdep_assert_held().
+> 
+> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+> ---
+> Changes in v3:
+>  incorporated review comment suggested by Greg
 
---
-1.8.2.1
+Thanks, this is still:
 
+Acked-by: Hans de Goede <hdegoede@redhat.com>
+
+Regards,
+
+Hans
+
+> 
+>  drivers/usb/storage/uas.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c 
+> index 3f42785..05b2d8e 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+>  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+>  
+>  	uas_log_cmd_state(cmnd, caller);
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+>  	cmdinfo->state |= COMMAND_ABORTED;
+>  	cmdinfo->state &= ~IS_IN_WORK_LIST;
+> @@ -181,7 +181,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+>  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
+>  	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	cmdinfo->state |= IS_IN_WORK_LIST;
+>  	schedule_work(&devinfo->work);
+>  }
+> @@ -283,7 +283,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+>  	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+>  	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	if (cmdinfo->state & (COMMAND_INFLIGHT |
+>  			      DATA_IN_URB_INFLIGHT |
+>  			      DATA_OUT_URB_INFLIGHT |
+> @@ -622,7 +622,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+>  	struct urb *urb;
+>  	int err;
+>  
+> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
+> +	lockdep_assert_held(&devinfo->lock);
+>  	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+>  		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
+>  		if (!urb)
+> 
