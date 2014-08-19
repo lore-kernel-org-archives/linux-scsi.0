@@ -1,22 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
- bnx2fc_map_sg()
-Date: Tue, 19 Aug 2014 12:09:10 -0500
-Message-ID: <20140819170910.GA12221@infradead.org>
-References: <1407140413-4561-1-git-send-email-mlombard@redhat.com>
+Subject: Re: [PATCH] drivers: message: fusion: Simplify rounding
+Date: Tue, 19 Aug 2014 12:12:15 -0500
+Message-ID: <20140819171215.GA12722@infradead.org>
+References: <1404219380-2712-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:41327 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753707AbaHSRHA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 13:07:00 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1407140413-4561-1-git-send-email-mlombard@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1404219380-2712-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: QLogic-Storage-Upstream@qlogic.com, eddie.wai@broadcom.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com
 
-Can I get a review for this one, please?
+On Tue, Jul 01, 2014 at 02:56:20PM +0200, Rasmus Villemoes wrote:
+> Rounding up to a multiple of 4 should be done using the ALIGN
+> macro. As a bonus, this also makes the generated code smaller.
+> 
+> In GetIocFacts(), sz is assigned to a few lines below without being
+> read in the meantime, so it is ok that it doesn't end up with the same
+> value as facts->FWImageSize.
+> 
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> Reviewed-by: Joe Lawrence <joe.lawrence@stratus.com>
 
+Thanks, applied to the drivers-for-3.18 branch.
