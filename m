@@ -1,40 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
- may have been removed.
-Date: Tue, 19 Aug 2014 10:54:31 -0700
-Message-ID: <20140819175431.GA4617@infradead.org>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-2-git-send-email-kys@microsoft.com>
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: Re: [RFC 09/10] scsi: sd: Avoid sending medium write commands if
+ device is write protected
+Date: Tue, 19 Aug 2014 10:55:57 -0700
+Message-ID: <CAHdzE-8SsD0BFqiuGVpY-+mBG5ZdcCQ2iV3p7KzskTmFTcBoaA@mail.gmail.com>
+References: <1407760838-6406-1-git-send-email-draviv@codeaurora.org>
+	<1407760838-6406-10-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1408244988-27456-2-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, hare@suse.de, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1407760838-6406-10-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 16, 2014 at 08:09:48PM -0700, K. Y. Srinivasan wrote:
-> The host asks the guest to scan when a LUN is removed or added.
-> The only way a guest can identify the removed LUN is when an I/O is
-> attempted on a removed LUN - the SRB status code indicates that the LUN
-> is invalid. We currently handle this SRB status and remove the device.
-> 
-> Rather than waiting for an I/O to remove the device, force the discovery of
-> LUNs that may have been removed prior to discovering LUNs that may have
-> been added.
+On Mon, Aug 11, 2014 at 5:40 AM, Dolev Raviv <draviv@codeaurora.org> wrote:
+> From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>
+> The SYNCHRONIZE_CACHE command is a medium write command and hence can
+> fail when the device is write protected. Avoid sending such commands by
+> making sure that write-cache-enable is disabled even though the device
+> claim to support it.
+>
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
-This looks pretty reasonable to me, but I wonder if we should move this
-up to common code so that it happens for any host rescan triggered by
-sysfs or other drivers as well.
+Looks good. Setting SWP is defined to flush caches; there is no other
+reason I could imagine WP media would need a SYNCHRONIZE CACHE.
+
+Reviewed-by: Venkatesh Srinivas <venkateshs@google.com>
+
+-- vs;
