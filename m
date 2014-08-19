@@ -1,48 +1,48 @@
-From: "Sharma, Sanjeev" <Sanjeev_Sharma-nmGgyN9QBj3QT0dZR+AlfA@public.gmane.org>
-Subject: RE: [PATCH v3] uas: replace WARN_ON_ONCE() with
- lockdep_assert_held()
-Date: Tue, 19 Aug 2014 09:38:41 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE94DF2FE70@EU-MBX-02.mgc.mentorg.com>
-References: <yes>
- <1407825621-23322-1-git-send-email-sanjeev_sharma@mentor.com>
- <53E9B418.3050303@redhat.com>
- <FDC088D3B5555644AE135ED28A7ABDE94DF2FDA2@EU-MBX-02.mgc.mentorg.com>
- <20140819093047.GA991@kroah.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Sym2 scsi hang on boot on sparc64
+Date: Tue, 19 Aug 2014 14:25:12 +0300 (EEST)
+Message-ID: <alpine.SOC.1.00.1408191420150.4929@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140819093047.GA991-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: "kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org" <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <sparclinux-owner@vger.kernel.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks for letting me know.
+3.16 scsi worked fine, 3.17-rc1 misbehaves on 3 of my sparc64 test 
+machines. E220R and E420R are with onboard 5c3875, V210 is with onboarc 
+53c1010 and all behave the same. Any ideas whre to dig deeper? bisection 
+might be nontrivial, because of sparc64 changes that are OK on 3.17-rc1 
+again - but is possible if nothing else helps.
 
-Sanjeev Sharma
+[  164.639697] PCI: Enabling device: (0000:00:03.0), cmd 147                                         
+[  164.705076] sym0: <875> rev 0x14 at pci 0000:00:03.0 irq 13                                       
+[  164.858446] sym0: No NVRAM, ID 7, Fast-20, SE, parity checking                                    
+[  164.935031] sym0: SCSI BUS has been reset.                                                        
+[  164.983113] scsi host0: sym-2.2.3                                                                 
+[  165.026358] PCI: Enabling device: (0000:00:03.1), cmd 3                                           
+[  165.089634] sym1: <875> rev 0x14 at pci 0000:00:03.1 irq 14                                       
+[  165.242820] sym1: No NVRAM, ID 7, Fast-20, SE, parity checking                                    
+[  165.319227] sym1: SCSI BUS has been reset.                                                        
+[  165.367281] scsi host1: sym-2.2.3                                                                 
+[...]
+[  388.835999] INFO: task swapper/0:1 blocked for more than 120 seconds.                             
+[  388.912181]       Not tainted 3.17.0-rc1 #46                                                      
+[  388.963187] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.             
+[  389.056953] swapper/0       D 0000000000483958  7584     1      0 0x200000001000000               
+[  389.148575] Call Trace:                                                                           
+[  389.177747]  [000000000082e5fc] schedule+0x1c/0x80                                                
+[  389.235024]  [0000000000483958] async_synchronize_cookie_domain+0x58/0x100                        
+[  389.317301]  [0000000000483a28] async_synchronize_full+0x8/0x20                                   
+[  389.388133]  [00000000006ebe04] wait_for_device_probe+0x64/0x80                                   
+[  389.458938]  [00000000009dcffc] prepare_namespace+0x4/0x1b8                                       
+[  389.525590]  [00000000009dcbac] kernel_init_freeable+0x1c0/0x1d8                                  
+[  389.597450]  [00000000008298e4] kernel_init+0x4/0x100                                             
+[  389.657868]  [00000000004060c4] ret_from_fork+0x1c/0x2c                                           
+[  389.720324]  [0000000000000000]           (null)                                                  
+[  389.775518] no locks held by swapper/0/1.                                                         
 
------Original Message-----
-From: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org [mailto:gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org] 
-Sent: Tuesday, August 19, 2014 3:01 PM
-To: Sharma, Sanjeev
-Cc: kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org; mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org; linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Hans de Goede
-Subject: Re: [PATCH v3] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
 
-On Tue, Aug 19, 2014 at 06:33:04AM +0000, Sharma, Sanjeev wrote:
-> Hi Greg,
-> 
-> Any feedback on this patch ?
 
-The merge window ended 2 days ago, _and_ I'm at the kernel summit this week, _and_ my queue is currently sitting at:
-	$ mdfrm -c ~/mail/todo/
-	1317 messages in /home/gregkh/mail/todo/
-
-So please be patient.  I'll get to it in a few weeks.
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Meelis Roos (mroos@linux.ee)
