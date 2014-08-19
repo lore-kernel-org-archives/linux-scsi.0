@@ -1,969 +1,319 @@
 From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v3 13/17] arcmsr: fix ioctl data read/write error for
- adapter type C
-Date: Tue, 19 Aug 2014 15:17:45 +0800
-Message-ID: <1408432665.4748.65.camel@Centos6.3-64>
+Subject: [PATCH v3 14/17] arcmsr: fix sparse warning and error
+Date: Tue, 19 Aug 2014 15:20:31 +0800
+Message-ID: <1408432831.4748.68.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36148 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbaHSHR5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 03:17:57 -0400
-Received: by mail-pa0-f50.google.com with SMTP id et14so9588734pad.9
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Aug 2014 00:17:57 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Ching Huang <ching2048@areca.com.tw>
 
-Rewrite ioctl entry and its relate function.
-This patch fix ioctl data read/write error and change data I/O access from byte to Dword.
+Fix sparse utility checking error and warning.
 
 Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
---- a/drivers/scsi/arcmsr/arcmsr_attr.c	2014-02-06 17:47:24.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_attr.c	2014-04-29 17:10:42.000000000 +0800
-@@ -70,40 +70,75 @@ static ssize_t arcmsr_sysfs_iop_message_
- 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
- 	uint8_t *pQbuffer,*ptmpQbuffer;
- 	int32_t allxfer_len = 0;
-+	unsigned long flags;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
- 	/* do message unit read. */
- 	ptmpQbuffer = (uint8_t *)buf;
--	while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
--		&& (allxfer_len < 1031)) {
-+	spin_lock_irqsave(&acb->rqbuffer_lock, flags);
-+	if (acb->rqbuf_firstindex != acb->rqbuf_lastindex) {
- 		pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
--		memcpy(ptmpQbuffer, pQbuffer, 1);
--		acb->rqbuf_firstindex++;
--		acb->rqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
--		ptmpQbuffer++;
--		allxfer_len++;
-+		if (acb->rqbuf_firstindex > acb->rqbuf_lastindex) {
-+			if ((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex) >= 1032) {
-+				memcpy(ptmpQbuffer, pQbuffer, 1032);
-+				acb->rqbuf_firstindex += 1032;
-+				acb->rqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
-+				allxfer_len = 1032;
-+			} else {
-+				if (((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex)
-+					+ acb->rqbuf_lastindex) > 1032) {
-+					memcpy(ptmpQbuffer, pQbuffer,
-+						ARCMSR_MAX_QBUFFER
-+						- acb->rqbuf_firstindex);
-+					ptmpQbuffer += ARCMSR_MAX_QBUFFER
-+						- acb->rqbuf_firstindex;
-+					memcpy(ptmpQbuffer, acb->rqbuffer, 1032
-+						- (ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex));
-+					acb->rqbuf_firstindex = 1032 -
-+						(ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex);
-+					allxfer_len = 1032;
-+				} else {
-+					memcpy(ptmpQbuffer, pQbuffer,
-+						ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex);
-+					ptmpQbuffer += ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex;
-+					memcpy(ptmpQbuffer, acb->rqbuffer,
-+						acb->rqbuf_lastindex);
-+					allxfer_len = ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex +
-+						acb->rqbuf_lastindex;
-+					acb->rqbuf_firstindex =
-+						acb->rqbuf_lastindex;
-+				}
-+			}
-+		} else {
-+			if ((acb->rqbuf_lastindex - acb->rqbuf_firstindex) > 1032) {
-+				memcpy(ptmpQbuffer, pQbuffer, 1032);
-+				acb->rqbuf_firstindex += 1032;
-+				allxfer_len = 1032;
-+			} else {
-+				memcpy(ptmpQbuffer, pQbuffer, acb->rqbuf_lastindex
-+					- acb->rqbuf_firstindex);
-+				allxfer_len = acb->rqbuf_lastindex -
-+					acb->rqbuf_firstindex;
-+				acb->rqbuf_firstindex = acb->rqbuf_lastindex;
-+			}
-+		}
- 	}
- 	if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
- 		struct QBUFFER __iomem *prbuffer;
--		uint8_t __iomem *iop_data;
--		int32_t iop_len;
--
- 		acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
- 		prbuffer = arcmsr_get_iop_rqbuffer(acb);
--		iop_data = prbuffer->data;
--		iop_len = readl(&prbuffer->data_len);
--		while (iop_len > 0) {
--			acb->rqbuffer[acb->rqbuf_lastindex] = readb(iop_data);
--			acb->rqbuf_lastindex++;
--			acb->rqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
--			iop_data++;
--			iop_len--;
--		}
--		arcmsr_iop_message_read(acb);
-+		if (arcmsr_Read_iop_rqbuffer_data(acb, prbuffer) == 0)
-+			acb->acb_flags |= ACB_F_IOPDATA_OVERFLOW;
- 	}
--	return (allxfer_len);
-+	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
-+	return allxfer_len;
- }
- 
- static ssize_t arcmsr_sysfs_iop_message_write(struct file *filp,
-@@ -117,6 +152,7 @@ static ssize_t arcmsr_sysfs_iop_message_
- 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
- 	int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
- 	uint8_t *pQbuffer, *ptmpuserbuffer;
-+	unsigned long flags;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
-@@ -125,18 +161,19 @@ static ssize_t arcmsr_sysfs_iop_message_
- 	/* do message unit write. */
- 	ptmpuserbuffer = (uint8_t *)buf;
- 	user_len = (int32_t)count;
-+	spin_lock_irqsave(&acb->wqbuffer_lock, flags);
- 	wqbuf_lastindex = acb->wqbuf_lastindex;
- 	wqbuf_firstindex = acb->wqbuf_firstindex;
- 	if (wqbuf_lastindex != wqbuf_firstindex) {
--		arcmsr_post_ioctldata2iop(acb);
-+		arcmsr_write_ioctldata2iop(acb);
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
- 		return 0;	/*need retry*/
- 	} else {
- 		my_empty_len = (wqbuf_firstindex-wqbuf_lastindex - 1)
--				&(ARCMSR_MAX_QBUFFER - 1);
-+			&(ARCMSR_MAX_QBUFFER - 1);
- 		if (my_empty_len >= user_len) {
- 			while (user_len > 0) {
--				pQbuffer =
--				&acb->wqbuffer[acb->wqbuf_lastindex];
-+				pQbuffer = &acb->wqbuffer[acb->wqbuf_lastindex];
- 				memcpy(pQbuffer, ptmpuserbuffer, 1);
- 				acb->wqbuf_lastindex++;
- 				acb->wqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
-@@ -146,10 +183,12 @@ static ssize_t arcmsr_sysfs_iop_message_
- 			if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_CLEARED) {
- 				acb->acb_flags &=
- 					~ACB_F_MESSAGE_WQBUFFER_CLEARED;
--				arcmsr_post_ioctldata2iop(acb);
-+				arcmsr_write_ioctldata2iop(acb);
- 			}
-+			spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
- 			return count;
- 		} else {
-+			spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
- 			return 0;	/*need retry*/
- 		}
- 	}
-@@ -165,22 +204,24 @@ static ssize_t arcmsr_sysfs_iop_message_
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
- 	uint8_t *pQbuffer;
-+	unsigned long flags;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
--		acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
--		arcmsr_iop_message_read(acb);
--	}
-+	arcmsr_clear_iop2drv_rqueue_buffer(acb);
- 	acb->acb_flags |=
- 		(ACB_F_MESSAGE_WQBUFFER_CLEARED
- 		| ACB_F_MESSAGE_RQBUFFER_CLEARED
- 		| ACB_F_MESSAGE_WQBUFFER_READED);
-+	spin_lock_irqsave(&acb->rqbuffer_lock, flags);
- 	acb->rqbuf_firstindex = 0;
- 	acb->rqbuf_lastindex = 0;
-+	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
-+	spin_lock_irqsave(&acb->wqbuffer_lock, flags);
- 	acb->wqbuf_firstindex = 0;
- 	acb->wqbuf_lastindex = 0;
-+	spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
- 	pQbuffer = acb->rqbuffer;
- 	memset(pQbuffer, 0, sizeof (struct QBUFFER));
- 	pQbuffer = acb->wqbuffer;
-diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
---- a/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:28:38.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr.h	2014-05-06 15:28:58.000000000 +0800
-@@ -518,6 +518,8 @@ struct AdapterControlBlock
- 	uint32_t			reg_mu_acc_handle0;
- 	spinlock_t                      			eh_lock;
- 	spinlock_t                      			ccblist_lock;
-+	spinlock_t			rqbuffer_lock;
-+	spinlock_t			wqbuffer_lock;
- 	union {
- 		struct MessageUnit_A __iomem *pmuA;
- 		struct MessageUnit_B 	*pmuB;
-@@ -693,8 +695,10 @@ struct SENSE_DATA
- #define     ARCMSR_MU_OUTBOUND_MESSAGE0_INTMASKENABLE               0x01
- #define     ARCMSR_MU_OUTBOUND_ALL_INTMASKENABLE                    0x1F
- 
--extern void arcmsr_post_ioctldata2iop(struct AdapterControlBlock *);
--extern void arcmsr_iop_message_read(struct AdapterControlBlock *);
-+extern void arcmsr_write_ioctldata2iop(struct AdapterControlBlock *);
-+extern uint32_t arcmsr_Read_iop_rqbuffer_data(struct AdapterControlBlock *,
-+	struct QBUFFER __iomem *);
-+extern void arcmsr_clear_iop2drv_rqueue_buffer(struct AdapterControlBlock *);
- extern struct QBUFFER __iomem *arcmsr_get_iop_rqbuffer(struct AdapterControlBlock *);
- extern struct device_attribute *arcmsr_host_attrs[];
- extern int arcmsr_alloc_sysfs_attr(struct AdapterControlBlock *);
 diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-14 18:40:38.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-14 18:40:48.000000000 +0800
-@@ -627,6 +627,8 @@ static int arcmsr_probe(struct pci_dev *
- 	}
- 	spin_lock_init(&acb->eh_lock);
- 	spin_lock_init(&acb->ccblist_lock);
-+	spin_lock_init(&acb->rqbuffer_lock);
-+	spin_lock_init(&acb->wqbuffer_lock);
- 	acb->acb_flags |= (ACB_F_MESSAGE_WQBUFFER_CLEARED |
- 			ACB_F_MESSAGE_RQBUFFER_CLEARED |
- 			ACB_F_MESSAGE_WQBUFFER_READED);
-@@ -1423,68 +1425,174 @@ static struct QBUFFER __iomem *arcmsr_ge
- 	return pqbuffer;
- }
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-14 18:40:48.000000000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-08-14 18:41:02.000000000 +0800
+@@ -78,7 +78,7 @@ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
+ #define	ARCMSR_SLEEPTIME	10
+ #define	ARCMSR_RETRYCOUNT	12
  
--static void arcmsr_iop2drv_data_wrote_handle(struct AdapterControlBlock *acb)
--{
--	struct QBUFFER __iomem *prbuffer;
--	struct QBUFFER *pQbuffer;
--	uint8_t __iomem *iop_data;
--	int32_t my_empty_len, iop_len, rqbuf_firstindex, rqbuf_lastindex;
--	rqbuf_lastindex = acb->rqbuf_lastindex;
--	rqbuf_firstindex = acb->rqbuf_firstindex;
--	prbuffer = arcmsr_get_iop_rqbuffer(acb);
--	iop_data = (uint8_t __iomem *)prbuffer->data;
--	iop_len = prbuffer->data_len;
--	my_empty_len = (rqbuf_firstindex - rqbuf_lastindex - 1) & (ARCMSR_MAX_QBUFFER - 1);
-+static uint32_t arcmsr_Read_iop_rqbuffer_in_DWORD(struct AdapterControlBlock *acb,
-+	struct QBUFFER __iomem *prbuffer) {
+-wait_queue_head_t wait_q;
++static wait_queue_head_t wait_q;
+ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 					struct scsi_cmnd *cmd);
+ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb);
+@@ -332,7 +332,7 @@ static uint8_t arcmsr_hbaB_wait_msgint_r
  
--	if (my_empty_len >= iop_len)
--	{
--		while (iop_len > 0) {
--			pQbuffer = (struct QBUFFER *)&acb->rqbuffer[rqbuf_lastindex];
--			memcpy(pQbuffer, iop_data, 1);
--			rqbuf_lastindex++;
--			rqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
-+	uint8_t *pQbuffer;
-+	uint8_t *buf1 = NULL;
-+	uint32_t __iomem *iop_data;
-+	uint32_t iop_len, data_len, *buf2 = NULL;
-+
-+	iop_data = (uint32_t __iomem *)prbuffer->data;
-+	iop_len = readl(&prbuffer->data_len);
-+	if (iop_len > 0) {
-+		buf1 = kmalloc(128, GFP_ATOMIC);
-+		buf2 = (uint32_t *)buf1;
-+		if (buf1 == NULL)
-+			return 0;
-+		data_len = iop_len;
-+		while (data_len >= 4) {
-+			*buf2++ = readl(iop_data);
- 			iop_data++;
--			iop_len--;
-+			data_len -= 4;
- 		}
--		acb->rqbuf_lastindex = rqbuf_lastindex;
--		arcmsr_iop_message_read(acb);
-+		if (data_len)
-+			*buf2 = readl(iop_data);
-+		buf2 = (uint32_t *)buf1;
-+	}
-+	while (iop_len > 0) {
-+		pQbuffer = &acb->rqbuffer[acb->rqbuf_lastindex];
-+		*pQbuffer = *buf1;
-+		acb->rqbuf_lastindex++;
-+		/* if last, index number set it to 0 */
-+		acb->rqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
-+		buf1++;
-+		iop_len--;
-+	}
-+	if (buf2)
-+		kfree(buf2);
-+	/* let IOP know data has been read */
-+	arcmsr_iop_message_read(acb);
-+	return 1;
-+}
-+
-+uint32_t
-+arcmsr_Read_iop_rqbuffer_data(struct AdapterControlBlock *acb,
-+	struct QBUFFER __iomem *prbuffer) {
-+
-+	uint8_t *pQbuffer;
-+	uint8_t __iomem *iop_data;
-+	uint32_t iop_len;
-+
-+	if (acb->adapter_type & ACB_ADAPTER_TYPE_C)
-+		return arcmsr_Read_iop_rqbuffer_in_DWORD(acb, prbuffer);
-+	iop_data = (uint8_t __iomem *)prbuffer->data;
-+	iop_len = readl(&prbuffer->data_len);
-+	while (iop_len > 0) {
-+		pQbuffer = &acb->rqbuffer[acb->rqbuf_lastindex];
-+		*pQbuffer = readb(iop_data);
-+		acb->rqbuf_lastindex++;
-+		acb->rqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
-+		iop_data++;
-+		iop_len--;
- 	}
-+	arcmsr_iop_message_read(acb);
-+	return 1;
-+}
-+
-+static void arcmsr_iop2drv_data_wrote_handle(struct AdapterControlBlock *acb)
-+{
-+	unsigned long flags;
-+	struct QBUFFER __iomem  *prbuffer;
-+	int32_t buf_empty_len;
- 
--	else {
-+	spin_lock_irqsave(&acb->rqbuffer_lock, flags);
-+	prbuffer = arcmsr_get_iop_rqbuffer(acb);
-+	buf_empty_len = (acb->rqbuf_lastindex - acb->rqbuf_firstindex - 1) &
-+		(ARCMSR_MAX_QBUFFER - 1);
-+	if (buf_empty_len >= readl(&prbuffer->data_len)) {
-+		if (arcmsr_Read_iop_rqbuffer_data(acb, prbuffer) == 0)
-+			acb->acb_flags |= ACB_F_IOPDATA_OVERFLOW;
-+	} else
- 		acb->acb_flags |= ACB_F_IOPDATA_OVERFLOW;
-+	spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
-+}
-+
-+static void arcmsr_write_ioctldata2iop_in_DWORD(struct AdapterControlBlock *acb)
-+{
-+	uint8_t *pQbuffer;
-+	struct QBUFFER __iomem *pwbuffer;
-+	uint8_t *buf1 = NULL;
-+	uint32_t __iomem *iop_data;
-+	uint32_t allxfer_len = 0, data_len, *buf2 = NULL, data;
-+
-+	if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_READED) {
-+		buf1 = kmalloc(128, GFP_ATOMIC);
-+		buf2 = (uint32_t *)buf1;
-+		if (buf1 == NULL)
-+			return;
-+
-+		acb->acb_flags &= (~ACB_F_MESSAGE_WQBUFFER_READED);
-+		pwbuffer = arcmsr_get_iop_wqbuffer(acb);
-+		iop_data = (uint32_t __iomem *)pwbuffer->data;
-+		while ((acb->wqbuf_firstindex != acb->wqbuf_lastindex)
-+			&& (allxfer_len < 124)) {
-+			pQbuffer = &acb->wqbuffer[acb->wqbuf_firstindex];
-+			*buf1 = *pQbuffer;
-+			acb->wqbuf_firstindex++;
-+			acb->wqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
-+			buf1++;
-+			allxfer_len++;
-+		}
-+		data_len = allxfer_len;
-+		buf1 = (uint8_t *)buf2;
-+		while (data_len >= 4) {
-+			data = *buf2++;
-+			writel(data, iop_data);
-+			iop_data++;
-+			data_len -= 4;
-+		}
-+		if (data_len) {
-+			data = *buf2;
-+			writel(data, iop_data);
-+		}
-+		writel(allxfer_len, &pwbuffer->data_len);
-+		kfree(buf1);
-+		arcmsr_iop_message_wrote(acb);
- 	}
- }
- 
--static void arcmsr_iop2drv_data_read_handle(struct AdapterControlBlock *acb)
-+void
-+arcmsr_write_ioctldata2iop(struct AdapterControlBlock *acb)
+ static uint8_t arcmsr_hbaC_wait_msgint_ready(struct AdapterControlBlock *pACB)
  {
--	acb->acb_flags |= ACB_F_MESSAGE_WQBUFFER_READED;
--	if (acb->wqbuf_firstindex != acb->wqbuf_lastindex) {
--		uint8_t *pQbuffer;
--		struct QBUFFER __iomem *pwbuffer;
--		uint8_t __iomem *iop_data;
--		int32_t allxfer_len = 0;
-+	uint8_t *pQbuffer;
-+	struct QBUFFER __iomem *pwbuffer;
-+	uint8_t __iomem *iop_data;
-+	int32_t allxfer_len = 0;
+-	struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *phbcmu = pACB->pmuC;
+ 	int i;
  
-+	if (acb->adapter_type & ACB_ADAPTER_TYPE_C) {
-+		arcmsr_write_ioctldata2iop_in_DWORD(acb);
-+		return;
-+	}
-+	if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_READED) {
- 		acb->acb_flags &= (~ACB_F_MESSAGE_WQBUFFER_READED);
- 		pwbuffer = arcmsr_get_iop_wqbuffer(acb);
- 		iop_data = (uint8_t __iomem *)pwbuffer->data;
--
--		while ((acb->wqbuf_firstindex != acb->wqbuf_lastindex) && \
--							(allxfer_len < 124)) {
-+		while ((acb->wqbuf_firstindex != acb->wqbuf_lastindex)
-+			&& (allxfer_len < 124)) {
- 			pQbuffer = &acb->wqbuffer[acb->wqbuf_firstindex];
--			memcpy(iop_data, pQbuffer, 1);
-+			writeb(*pQbuffer, iop_data);
- 			acb->wqbuf_firstindex++;
- 			acb->wqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
- 			iop_data++;
- 			allxfer_len++;
- 		}
--		pwbuffer->data_len = allxfer_len;
--
-+		writel(allxfer_len, &pwbuffer->data_len);
- 		arcmsr_iop_message_wrote(acb);
- 	}
-+}
+ 	for (i = 0; i < 2000; i++) {
+@@ -382,7 +382,7 @@ static void arcmsr_hbaB_flush_cache(stru
  
--	if (acb->wqbuf_firstindex == acb->wqbuf_lastindex) {
-+static void arcmsr_iop2drv_data_read_handle(struct AdapterControlBlock *acb)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&acb->wqbuffer_lock, flags);
-+	acb->acb_flags |= ACB_F_MESSAGE_WQBUFFER_READED;
-+	if (acb->wqbuf_firstindex != acb->wqbuf_lastindex)
-+		arcmsr_write_ioctldata2iop(acb);
-+	if (acb->wqbuf_firstindex == acb->wqbuf_lastindex)
- 		acb->acb_flags |= ACB_F_MESSAGE_WQBUFFER_CLEARED;
--	}
-+	spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
- }
- 
- static void arcmsr_hbaA_doorbell_isr(struct AdapterControlBlock *acb)
-@@ -1742,296 +1850,344 @@ static void arcmsr_iop_parking(struct Ad
- 	}
- }
- 
--void arcmsr_post_ioctldata2iop(struct AdapterControlBlock *acb)
-+
-+void arcmsr_clear_iop2drv_rqueue_buffer(struct AdapterControlBlock *acb)
+ static void arcmsr_hbaC_flush_cache(struct AdapterControlBlock *pACB)
  {
--	int32_t wqbuf_firstindex, wqbuf_lastindex;
--	uint8_t *pQbuffer;
--	struct QBUFFER __iomem *pwbuffer;
--	uint8_t __iomem *iop_data;
--	int32_t allxfer_len = 0;
--	pwbuffer = arcmsr_get_iop_wqbuffer(acb);
--	iop_data = (uint8_t __iomem *)pwbuffer->data;
--	if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_READED) {
--		acb->acb_flags &= (~ACB_F_MESSAGE_WQBUFFER_READED);
--		wqbuf_firstindex = acb->wqbuf_firstindex;
--		wqbuf_lastindex = acb->wqbuf_lastindex;
--		while ((wqbuf_firstindex != wqbuf_lastindex) && (allxfer_len < 124)) {
--			pQbuffer = &acb->wqbuffer[wqbuf_firstindex];
--			memcpy(iop_data, pQbuffer, 1);
--			wqbuf_firstindex++;
--			wqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
--			iop_data++;
--			allxfer_len++;
-+	uint32_t	i;
-+
-+	if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
-+		for (i = 0; i < 15; i++) {
-+			if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
-+				acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
-+				acb->rqbuf_firstindex = 0;
-+				acb->rqbuf_lastindex = 0;
-+				arcmsr_iop_message_read(acb);
-+				mdelay(30);
-+			} else if (acb->rqbuf_firstindex != acb->rqbuf_lastindex) {
-+				acb->rqbuf_firstindex = 0;
-+				acb->rqbuf_lastindex = 0;
-+				mdelay(30);
-+			} else
-+				break;
- 		}
--		acb->wqbuf_firstindex = wqbuf_firstindex;
--		pwbuffer->data_len = allxfer_len;
--		arcmsr_iop_message_wrote(acb);
- 	}
+-	struct MessageUnit_C *reg = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *reg = pACB->pmuC;
+ 	int retry_count = 30;/* enlarge wait flush adapter cache time: 10 minute */
+ 	writel(ARCMSR_INBOUND_MESG0_FLUSH_CACHE, &reg->inbound_msgaddr0);
+ 	writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
+@@ -800,7 +800,7 @@ static uint8_t arcmsr_hbaB_abort_allcmd(
  }
- 
--static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
--					struct scsi_cmnd *cmd)
-+static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, struct scsi_cmnd *cmd)
+ static uint8_t arcmsr_hbaC_abort_allcmd(struct AdapterControlBlock *pACB)
  {
--	struct CMD_MESSAGE_FIELD *pcmdmessagefld;
--	int retvalue = 0, transfer_len = 0;
- 	char *buffer;
-+	unsigned short use_sg;
-+	int retvalue = 0, transfer_len = 0;
-+	unsigned long flags;
-+	struct CMD_MESSAGE_FIELD *pcmdmessagefld;
-+	uint32_t controlcode = (uint32_t)cmd->cmnd[5] << 24 |
-+		(uint32_t)cmd->cmnd[6] << 16 |
-+		(uint32_t)cmd->cmnd[7] << 8 |
-+		(uint32_t)cmd->cmnd[8];
- 	struct scatterlist *sg;
--	uint32_t controlcode = (uint32_t ) cmd->cmnd[5] << 24 |
--						(uint32_t ) cmd->cmnd[6] << 16 |
--						(uint32_t ) cmd->cmnd[7] << 8  |
--						(uint32_t ) cmd->cmnd[8];
--						/* 4 bytes: Areca io control code */
-+
-+	use_sg = scsi_sg_count(cmd);
- 	sg = scsi_sglist(cmd);
- 	buffer = kmap_atomic(sg_page(sg)) + sg->offset;
--	if (scsi_sg_count(cmd) > 1) {
-+	if (use_sg > 1) {
- 		retvalue = ARCMSR_MESSAGE_FAIL;
- 		goto message_out;
- 	}
- 	transfer_len += sg->length;
--
- 	if (transfer_len > sizeof(struct CMD_MESSAGE_FIELD)) {
- 		retvalue = ARCMSR_MESSAGE_FAIL;
-+		pr_info("%s: ARCMSR_MESSAGE_FAIL!\n", __func__);
- 		goto message_out;
- 	}
--	pcmdmessagefld = (struct CMD_MESSAGE_FIELD *) buffer;
--	switch(controlcode) {
--
-+	pcmdmessagefld = (struct CMD_MESSAGE_FIELD *)buffer;
-+	switch (controlcode) {
- 	case ARCMSR_MESSAGE_READ_RQBUFFER: {
- 		unsigned char *ver_addr;
- 		uint8_t *pQbuffer, *ptmpQbuffer;
--		int32_t allxfer_len = 0;
--
-+		uint32_t allxfer_len = 0;
- 		ver_addr = kmalloc(1032, GFP_ATOMIC);
- 		if (!ver_addr) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
-+			pr_info("%s: memory not enough!\n", __func__);
- 			goto message_out;
+-	struct MessageUnit_C *reg = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *reg = pACB->pmuC;
+ 	writel(ARCMSR_INBOUND_MESG0_ABORT_CMD, &reg->inbound_msgaddr0);
+ 	writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
+ 	if (!arcmsr_hbaC_wait_msgint_ready(pACB)) {
+@@ -888,7 +888,7 @@ static u32 arcmsr_disable_outbound_ints(
  		}
--				
- 		ptmpQbuffer = ver_addr;
--		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
--			&& (allxfer_len < 1031)) {
-+		spin_lock_irqsave(&acb->rqbuffer_lock, flags);
-+		if (acb->rqbuf_firstindex != acb->rqbuf_lastindex) {
- 			pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
--			memcpy(ptmpQbuffer, pQbuffer, 1);
--			acb->rqbuf_firstindex++;
--			acb->rqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
--			ptmpQbuffer++;
--			allxfer_len++;
-+			if (acb->rqbuf_firstindex > acb->rqbuf_lastindex) {
-+				if ((ARCMSR_MAX_QBUFFER -
-+					acb->rqbuf_firstindex) >= 1032) {
-+					memcpy(ptmpQbuffer, pQbuffer, 1032);
-+					acb->rqbuf_firstindex += 1032;
-+					acb->rqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
-+					allxfer_len = 1032;
-+				} else {
-+					if (((ARCMSR_MAX_QBUFFER -
-+						acb->rqbuf_firstindex) +
-+						acb->rqbuf_lastindex) > 1032) {
-+						memcpy(ptmpQbuffer,
-+							pQbuffer, ARCMSR_MAX_QBUFFER
-+							- acb->rqbuf_firstindex);
-+						ptmpQbuffer +=
-+							ARCMSR_MAX_QBUFFER -
-+							acb->rqbuf_firstindex;
-+						memcpy(ptmpQbuffer,
-+							acb->rqbuffer, 1032 -
-+							(ARCMSR_MAX_QBUFFER
-+							- acb->rqbuf_firstindex));
-+						acb->rqbuf_firstindex =
-+							1032 - (ARCMSR_MAX_QBUFFER
-+							- acb->rqbuf_firstindex);
-+						allxfer_len = 1032;
-+					} else {
-+						memcpy(ptmpQbuffer,
-+							pQbuffer, ARCMSR_MAX_QBUFFER
-+							- acb->rqbuf_firstindex);
-+						ptmpQbuffer +=
-+							ARCMSR_MAX_QBUFFER -
-+							acb->rqbuf_firstindex;
-+						memcpy(ptmpQbuffer,
-+							acb->rqbuffer,
-+							acb->rqbuf_lastindex);
-+						allxfer_len = ARCMSR_MAX_QBUFFER
-+							- acb->rqbuf_firstindex +
-+							acb->rqbuf_lastindex;
-+						acb->rqbuf_firstindex =
-+							acb->rqbuf_lastindex;
-+					}
-+				}
-+			} else {
-+				if ((acb->rqbuf_lastindex -
-+					acb->rqbuf_firstindex) > 1032) {
-+					memcpy(ptmpQbuffer, pQbuffer, 1032);
-+					acb->rqbuf_firstindex += 1032;
-+					allxfer_len = 1032;
-+				} else {
-+					memcpy(ptmpQbuffer, pQbuffer,
-+						acb->rqbuf_lastindex -
-+						acb->rqbuf_firstindex);
-+					allxfer_len = acb->rqbuf_lastindex
-+						- acb->rqbuf_firstindex;
-+					acb->rqbuf_firstindex =
-+						acb->rqbuf_lastindex;
-+				}
-+			}
- 		}
-+		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr,
-+			allxfer_len);
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
--
- 			struct QBUFFER __iomem *prbuffer;
--			uint8_t __iomem *iop_data;
--			int32_t iop_len;
--
- 			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
- 			prbuffer = arcmsr_get_iop_rqbuffer(acb);
--			iop_data = prbuffer->data;
--			iop_len = readl(&prbuffer->data_len);
--			while (iop_len > 0) {
--				acb->rqbuffer[acb->rqbuf_lastindex] = readb(iop_data);
--				acb->rqbuf_lastindex++;
--				acb->rqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
--				iop_data++;
--				iop_len--;
--			}
--			arcmsr_iop_message_read(acb);
--		}
--		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr, allxfer_len);
--		pcmdmessagefld->cmdmessage.Length = allxfer_len;
--		if(acb->fw_flag == FW_DEADLOCK) {
--			pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
--			pcmdmessagefld->cmdmessage.ReturnCode = ARCMSR_MESSAGE_RETURNCODE_OK;
-+			if (arcmsr_Read_iop_rqbuffer_data(acb, prbuffer) == 0)
-+				acb->acb_flags |= ACB_F_IOPDATA_OVERFLOW;
- 		}
-+		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
- 		kfree(ver_addr);
--		}
-+		pcmdmessagefld->cmdmessage.Length = allxfer_len;
-+		if (acb->fw_flag == FW_DEADLOCK)
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
  		break;
--
-+	}
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
- 		unsigned char *ver_addr;
- 		int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
--
- 		ver_addr = kmalloc(1032, GFP_ATOMIC);
- 		if (!ver_addr) {
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
+ 	case ACB_ADAPTER_TYPE_C:{
+-		struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		/* disable all outbound interrupt */
+ 		orig_mask = readl(&reg->host_int_mask); /* disable outbound message0 int */
+ 		writel(orig_mask|ARCMSR_HBCMU_ALL_INTMASKENABLE, &reg->host_int_mask);
+@@ -1012,8 +1012,9 @@ static void arcmsr_done4abort_postqueue(
+ 		/*clear all outbound posted Q*/
+ 		writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell); /* clear doorbell interrupt */
+ 		for (i = 0; i < ARCMSR_MAX_HBB_POSTQUEUE; i++) {
+-			if ((flag_ccb = readl(&reg->done_qbuffer[i])) != 0) {
+-				writel(0, &reg->done_qbuffer[i]);
++			flag_ccb = reg->done_qbuffer[i];
++			if (flag_ccb != 0) {
++				reg->done_qbuffer[i] = 0;
+ 				pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset+(flag_ccb << 5));/*frame must be 32 bytes aligned*/
+ 				pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
+ 				error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE0) ? true : false;
+@@ -1026,7 +1027,7 @@ static void arcmsr_done4abort_postqueue(
  		}
--		if(acb->fw_flag == FW_DEADLOCK) {
--			pcmdmessagefld->cmdmessage.ReturnCode = 
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
--			pcmdmessagefld->cmdmessage.ReturnCode = 
--			ARCMSR_MESSAGE_RETURNCODE_OK;
--		}
- 		ptmpuserbuffer = ver_addr;
- 		user_len = pcmdmessagefld->cmdmessage.Length;
--		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
-+		memcpy(ptmpuserbuffer,
-+			pcmdmessagefld->messagedatabuffer, user_len);
-+		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
- 		wqbuf_lastindex = acb->wqbuf_lastindex;
- 		wqbuf_firstindex = acb->wqbuf_firstindex;
- 		if (wqbuf_lastindex != wqbuf_firstindex) {
- 			struct SENSE_DATA *sensebuffer =
- 				(struct SENSE_DATA *)cmd->sense_buffer;
--			arcmsr_post_ioctldata2iop(acb);
-+			arcmsr_write_ioctldata2iop(acb);
- 			/* has error report sensedata */
--			sensebuffer->ErrorCode = 0x70;
-+			sensebuffer->ErrorCode = SCSI_SENSE_CURRENT_ERRORS;
- 			sensebuffer->SenseKey = ILLEGAL_REQUEST;
- 			sensebuffer->AdditionalSenseLength = 0x0A;
- 			sensebuffer->AdditionalSenseCode = 0x20;
- 			sensebuffer->Valid = 1;
- 			retvalue = ARCMSR_MESSAGE_FAIL;
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *reg = acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		struct  ARCMSR_CDB *pARCMSR_CDB;
+ 		uint32_t flag_ccb, ccb_cdb_phy;
+ 		bool error;
+@@ -1144,7 +1145,7 @@ static void arcmsr_enable_outbound_ints(
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *reg = acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		mask = ~(ARCMSR_HBCMU_UTILITY_A_ISR_MASK | ARCMSR_HBCMU_OUTBOUND_DOORBELL_ISR_MASK|ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR_MASK);
+ 		writel(intmask_org & mask, &reg->host_int_mask);
+ 		acb->outbound_int_enable = ~(intmask_org & mask) & 0x0000000f;
+@@ -1231,12 +1232,12 @@ static void arcmsr_post_ccb(struct Adapt
+ 		uint32_t ending_index, index = reg->postq_index;
+ 
+ 		ending_index = ((index + 1) % ARCMSR_MAX_HBB_POSTQUEUE);
+-		writel(0, &reg->post_qbuffer[ending_index]);
++		reg->post_qbuffer[ending_index] = 0;
+ 		if (arcmsr_cdb->Flags & ARCMSR_CDB_FLAG_SGL_BSIZE) {
+-			writel(cdb_phyaddr | ARCMSR_CCBPOST_FLAG_SGL_BSIZE,\
+-						 &reg->post_qbuffer[index]);
++			reg->post_qbuffer[index] =
++				cdb_phyaddr | ARCMSR_CCBPOST_FLAG_SGL_BSIZE;
  		} else {
--			my_empty_len = (wqbuf_firstindex-wqbuf_lastindex - 1)
--				&(ARCMSR_MAX_QBUFFER - 1);
-+			my_empty_len = (wqbuf_firstindex - wqbuf_lastindex - 1)
-+				& (ARCMSR_MAX_QBUFFER - 1);
- 			if (my_empty_len >= user_len) {
- 				while (user_len > 0) {
--					pQbuffer =
--					&acb->wqbuffer[acb->wqbuf_lastindex];
--					memcpy(pQbuffer, ptmpuserbuffer, 1);
--					acb->wqbuf_lastindex++;
--					acb->wqbuf_lastindex %= ARCMSR_MAX_QBUFFER;
--					ptmpuserbuffer++;
--					user_len--;
-+					pQbuffer = &acb->wqbuffer[acb->wqbuf_lastindex];
-+					if ((acb->wqbuf_lastindex + user_len)
-+						> ARCMSR_MAX_QBUFFER) {
-+						memcpy(pQbuffer, ptmpuserbuffer,
-+							ARCMSR_MAX_QBUFFER -
-+							acb->wqbuf_lastindex);
-+						ptmpuserbuffer +=
-+							(ARCMSR_MAX_QBUFFER
-+							- acb->wqbuf_lastindex);
-+						user_len -= (ARCMSR_MAX_QBUFFER
-+							- acb->wqbuf_lastindex);
-+						acb->wqbuf_lastindex = 0;
-+					} else {
-+						memcpy(pQbuffer, ptmpuserbuffer,
-+							user_len);
-+						acb->wqbuf_lastindex += user_len;
-+						acb->wqbuf_lastindex %=
-+							ARCMSR_MAX_QBUFFER;
-+						user_len = 0;
-+					}
- 				}
--				if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_CLEARED) {
-+				if (acb->acb_flags &
-+					ACB_F_MESSAGE_WQBUFFER_CLEARED) {
- 					acb->acb_flags &=
- 						~ACB_F_MESSAGE_WQBUFFER_CLEARED;
--					arcmsr_post_ioctldata2iop(acb);
-+					arcmsr_write_ioctldata2iop(acb);
- 				}
- 			} else {
--				/* has error report sensedata */
- 				struct SENSE_DATA *sensebuffer =
- 					(struct SENSE_DATA *)cmd->sense_buffer;
--				sensebuffer->ErrorCode = 0x70;
-+				/* has error report sensedata */
-+				sensebuffer->ErrorCode =
-+					SCSI_SENSE_CURRENT_ERRORS;
- 				sensebuffer->SenseKey = ILLEGAL_REQUEST;
- 				sensebuffer->AdditionalSenseLength = 0x0A;
- 				sensebuffer->AdditionalSenseCode = 0x20;
- 				sensebuffer->Valid = 1;
- 				retvalue = ARCMSR_MESSAGE_FAIL;
- 			}
--			}
--			kfree(ver_addr);
+-			writel(cdb_phyaddr, &reg->post_qbuffer[index]);
++			reg->post_qbuffer[index] = cdb_phyaddr;
  		}
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
-+		kfree(ver_addr);
-+		if (acb->fw_flag == FW_DEADLOCK)
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
+ 		index++;
+ 		index %= ARCMSR_MAX_HBB_POSTQUEUE;/*if last index number set it to 0 */
+@@ -1245,7 +1246,7 @@ static void arcmsr_post_ccb(struct Adapt
+ 		}
  		break;
--
-+	}
- 	case ARCMSR_MESSAGE_CLEAR_RQBUFFER: {
- 		uint8_t *pQbuffer = acb->rqbuffer;
--		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
--			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
--			arcmsr_iop_message_read(acb);
--		}
-+
-+		arcmsr_clear_iop2drv_rqueue_buffer(acb);
-+		spin_lock_irqsave(&acb->rqbuffer_lock, flags);
- 		acb->acb_flags |= ACB_F_MESSAGE_RQBUFFER_CLEARED;
- 		acb->rqbuf_firstindex = 0;
- 		acb->rqbuf_lastindex = 0;
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);
--		if(acb->fw_flag == FW_DEADLOCK) {
-+		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_OK;
--		}
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
- 		break;
--
-+	}
- 	case ARCMSR_MESSAGE_CLEAR_WQBUFFER: {
- 		uint8_t *pQbuffer = acb->wqbuffer;
--		if(acb->fw_flag == FW_DEADLOCK) {
--			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
--			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_OK;
--		}
--
--		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
--			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
--			arcmsr_iop_message_read(acb);
--		}
--		acb->acb_flags |=
--			(ACB_F_MESSAGE_WQBUFFER_CLEARED |
--				ACB_F_MESSAGE_WQBUFFER_READED);
-+		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
-+		acb->acb_flags |= (ACB_F_MESSAGE_WQBUFFER_CLEARED |
-+			ACB_F_MESSAGE_WQBUFFER_READED);
- 		acb->wqbuf_firstindex = 0;
- 		acb->wqbuf_lastindex = 0;
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);
--		}
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
-+		if (acb->fw_flag == FW_DEADLOCK)
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
- 		break;
--
-+	}
- 	case ARCMSR_MESSAGE_CLEAR_ALLQBUFFER: {
- 		uint8_t *pQbuffer;
--
--		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
--			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
--			arcmsr_iop_message_read(acb);
--		}
--		acb->acb_flags |=
--			(ACB_F_MESSAGE_WQBUFFER_CLEARED
--			| ACB_F_MESSAGE_RQBUFFER_CLEARED
--			| ACB_F_MESSAGE_WQBUFFER_READED);
-+		arcmsr_clear_iop2drv_rqueue_buffer(acb);
-+		spin_lock_irqsave(&acb->rqbuffer_lock, flags);
-+		acb->acb_flags |= ACB_F_MESSAGE_RQBUFFER_CLEARED;
- 		acb->rqbuf_firstindex = 0;
- 		acb->rqbuf_lastindex = 0;
--		acb->wqbuf_firstindex = 0;
--		acb->wqbuf_lastindex = 0;
- 		pQbuffer = acb->rqbuffer;
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));
-+		spin_unlock_irqrestore(&acb->rqbuffer_lock, flags);
-+		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
-+		acb->acb_flags |= (ACB_F_MESSAGE_WQBUFFER_CLEARED |
-+			ACB_F_MESSAGE_WQBUFFER_READED);
-+		acb->wqbuf_firstindex = 0;
-+		acb->wqbuf_lastindex = 0;
- 		pQbuffer = acb->wqbuffer;
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));
--		if(acb->fw_flag == FW_DEADLOCK) {
-+		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_OK;
--		}
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
- 		break;
--
-+	}
- 	case ARCMSR_MESSAGE_RETURN_CODE_3F: {
--		if(acb->fw_flag == FW_DEADLOCK) {
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_3F;
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_3F;
- 		break;
--		}
-+	}
- 	case ARCMSR_MESSAGE_SAY_HELLO: {
- 		int8_t *hello_string = "Hello! I am ARCMSR";
--		if(acb->fw_flag == FW_DEADLOCK) {
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}else{
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_OK;
--		}
--		memcpy(pcmdmessagefld->messagedatabuffer, hello_string
--			, (int16_t)strlen(hello_string));
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
-+		memcpy(pcmdmessagefld->messagedatabuffer,
-+			hello_string, (int16_t)strlen(hello_string));
- 		break;
--
--	case ARCMSR_MESSAGE_SAY_GOODBYE:
--		if(acb->fw_flag == FW_DEADLOCK) {
-+	}
-+	case ARCMSR_MESSAGE_SAY_GOODBYE: {
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
- 		arcmsr_iop_parking(acb);
- 		break;
--
--	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE:
--		if(acb->fw_flag == FW_DEADLOCK) {
-+	}
-+	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE: {
-+		if (acb->fw_flag == FW_DEADLOCK)
- 			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--		}
-+				ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		else
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+				ARCMSR_MESSAGE_RETURNCODE_OK;
- 		arcmsr_flush_adapter_cache(acb);
- 		break;
--
-+	}
- 	default:
- 		retvalue = ARCMSR_MESSAGE_FAIL;
-+		pr_info("%s: unknown controlcode!\n", __func__);
-+	}
-+message_out:
-+	if (use_sg) {
-+		struct scatterlist *sg;
-+		sg = scsi_sglist(cmd);
-+		kunmap_atomic(buffer - sg->offset);
- 	}
--	message_out:
--	sg = scsi_sglist(cmd);
--	kunmap_atomic(buffer - sg->offset);
- 	return retvalue;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *phbcmu = acb->pmuC;
+ 		uint32_t ccb_post_stamp, arc_cdb_size;
+ 
+ 		arc_cdb_size = (ccb->arc_cdb_size > 0x300) ? 0x300 : ccb->arc_cdb_size;
+@@ -1287,7 +1288,7 @@ static void arcmsr_hbaB_stop_bgrb(struct
+ 
+ static void arcmsr_hbaC_stop_bgrb(struct AdapterControlBlock *pACB)
+ {
+-	struct MessageUnit_C *reg = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *reg = pACB->pmuC;
+ 	pACB->acb_flags &= ~ACB_F_MSG_START_BGRB;
+ 	writel(ARCMSR_INBOUND_MESG0_STOP_BGRB, &reg->inbound_msgaddr0);
+ 	writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &reg->inbound_doorbell);
+@@ -1321,7 +1322,7 @@ static void arcmsr_free_ccb_pool(struct 
+ 	dma_free_coherent(&acb->pdev->dev, acb->uncache_size, acb->dma_coherent, acb->dma_coherent_handle);
  }
  
-
-
+-void arcmsr_iop_message_read(struct AdapterControlBlock *acb)
++static void arcmsr_iop_message_read(struct AdapterControlBlock *acb)
+ {
+ 	switch (acb->adapter_type) {
+ 	case ACB_ADAPTER_TYPE_A: {
+@@ -1393,7 +1394,7 @@ struct QBUFFER __iomem *arcmsr_get_iop_r
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *phbcmu = acb->pmuC;
+ 		qbuffer = (struct QBUFFER __iomem *)&phbcmu->message_rbuffer;
+ 		}
+ 	}
+@@ -1417,7 +1418,7 @@ static struct QBUFFER __iomem *arcmsr_ge
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		pqbuffer = (struct QBUFFER __iomem *)&reg->message_wbuffer;
+ 	}
+ 
+@@ -1613,7 +1614,7 @@ static void arcmsr_hbaA_doorbell_isr(str
+ static void arcmsr_hbaC_doorbell_isr(struct AdapterControlBlock *pACB)
+ {
+ 	uint32_t outbound_doorbell;
+-	struct MessageUnit_C *reg = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *reg = pACB->pmuC;
+ 	/*
+ 	*******************************************************************
+ 	**  Maybe here we need to check wrqbuffer_lock is lock or not
+@@ -1659,8 +1660,8 @@ static void arcmsr_hbaB_postqueue_isr(st
+ 	struct CommandControlBlock *pCCB;
+ 	bool error;
+ 	index = reg->doneq_index;
+-	while ((flag_ccb = readl(&reg->done_qbuffer[index])) != 0) {
+-		writel(0, &reg->done_qbuffer[index]);
++	while ((flag_ccb = reg->done_qbuffer[index]) != 0) {
++		reg->done_qbuffer[index] = 0;
+ 		pARCMSR_CDB = (struct ARCMSR_CDB *)(acb->vir2phy_offset+(flag_ccb << 5));/*frame must be 32 bytes aligned*/
+ 		pCCB = container_of(pARCMSR_CDB, struct CommandControlBlock, arcmsr_cdb);
+ 		error = (flag_ccb & ARCMSR_CCBREPLY_FLAG_ERROR_MODE0) ? true : false;
+@@ -1673,13 +1674,13 @@ static void arcmsr_hbaB_postqueue_isr(st
+ 
+ static void arcmsr_hbaC_postqueue_isr(struct AdapterControlBlock *acb)
+ {
+-	struct MessageUnit_C *phbcmu;
++	struct MessageUnit_C __iomem *phbcmu;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
+ 	struct CommandControlBlock *ccb;
+ 	uint32_t flag_ccb, ccb_cdb_phy, throttling = 0;
+ 	int error;
+ 
+-	phbcmu = (struct MessageUnit_C *)acb->pmuC;
++	phbcmu = acb->pmuC;
+ 	/* areca cdb command done */
+ 	/* Use correct offset and size for syncing */
+ 
+@@ -1711,7 +1712,7 @@ static void arcmsr_hbaC_postqueue_isr(st
+ */
+ static void arcmsr_hbaA_message_isr(struct AdapterControlBlock *acb)
+ {
+-	struct MessageUnit_A *reg  = acb->pmuA;
++	struct MessageUnit_A __iomem *reg  = acb->pmuA;
+ 	/*clear interrupt and message state*/
+ 	writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT, &reg->outbound_intstatus);
+ 	schedule_work(&acb->arcmsr_do_message_isr_bh);
+@@ -1735,7 +1736,7 @@ static void arcmsr_hbaB_message_isr(stru
+ */
+ static void arcmsr_hbaC_message_isr(struct AdapterControlBlock *acb)
+ {
+-	struct MessageUnit_C *reg  = acb->pmuC;
++	struct MessageUnit_C __iomem *reg  = acb->pmuC;
+ 	/*clear interrupt and message state*/
+ 	writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR, &reg->outbound_doorbell_clear);
+ 	schedule_work(&acb->arcmsr_do_message_isr_bh);
+@@ -1796,7 +1797,7 @@ static int arcmsr_hbaB_handle_isr(struct
+ static int arcmsr_hbaC_handle_isr(struct AdapterControlBlock *pACB)
+ {
+ 	uint32_t host_interrupt_status;
+-	struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *phbcmu = pACB->pmuC;
+ 	/*
+ 	*********************************************
+ 	**   check outbound intstatus
+@@ -2202,7 +2203,7 @@ static struct CommandControlBlock *arcms
+ 		list_del_init(&ccb->list);
+ 	}else{
+ 		spin_unlock_irqrestore(&acb->ccblist_lock, flags);
+-		return 0;
++		return NULL;
+ 	}
+ 	spin_unlock_irqrestore(&acb->ccblist_lock, flags);
+ 	return ccb;
+@@ -2437,11 +2438,11 @@ static bool arcmsr_hbaB_get_config(struc
+ static bool arcmsr_hbaC_get_config(struct AdapterControlBlock *pACB)
+ {
+ 	uint32_t intmask_org, Index, firmware_state = 0;
+-	struct MessageUnit_C *reg = pACB->pmuC;
++	struct MessageUnit_C __iomem *reg = pACB->pmuC;
+ 	char *acb_firm_model = pACB->firm_model;
+ 	char *acb_firm_version = pACB->firm_version;
+-	char *iop_firm_model = (char *)(&reg->msgcode_rwbuffer[15]);    /*firm_model,15,60-67*/
+-	char *iop_firm_version = (char *)(&reg->msgcode_rwbuffer[17]);  /*firm_version,17,68-83*/
++	char __iomem *iop_firm_model = (char __iomem *)(&reg->msgcode_rwbuffer[15]);    /*firm_model,15,60-67*/
++	char __iomem *iop_firm_version = (char __iomem *)(&reg->msgcode_rwbuffer[17]);  /*firm_version,17,68-83*/
+ 	int count;
+ 	/* disable all outbound interrupt */
+ 	intmask_org = readl(&reg->host_int_mask); /* disable outbound message0 int */
+@@ -2589,7 +2590,8 @@ static int arcmsr_hbaB_polling_ccbdone(s
+ 	writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
+ 	while(1){
+ 		index = reg->doneq_index;
+-		if ((flag_ccb = readl(&reg->done_qbuffer[index])) == 0) {
++		flag_ccb = reg->done_qbuffer[index];
++		if (flag_ccb == 0) {
+ 			if (poll_ccb_done){
+ 				rtn = SUCCESS;
+ 				break;
+@@ -2602,7 +2604,7 @@ static int arcmsr_hbaB_polling_ccbdone(s
+ 				goto polling_hbb_ccb_retry;
+ 			}
+ 		}
+-		writel(0, &reg->done_qbuffer[index]);
++		reg->done_qbuffer[index] = 0;
+ 		index++;
+ 		/*if last index number set it to 0 */
+ 		index %= ARCMSR_MAX_HBB_POSTQUEUE;
+@@ -2639,7 +2641,7 @@ static int arcmsr_hbaB_polling_ccbdone(s
+ 
+ static int arcmsr_hbaC_polling_ccbdone(struct AdapterControlBlock *acb, struct CommandControlBlock *poll_ccb)
+ {
+-	struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++	struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 	uint32_t flag_ccb, ccb_cdb_phy;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
+ 	bool error;
+@@ -2802,7 +2804,7 @@ static int arcmsr_iop_confirm(struct Ada
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+ 		if (cdb_phyaddr_hi32 != 0) {
+-			struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++			struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 
+ 			printk(KERN_NOTICE "arcmsr%d: cdb_phyaddr_hi32=0x%x\n",
+ 					acb->adapter_index, cdb_phyaddr_hi32);
+@@ -2843,7 +2845,7 @@ static void arcmsr_wait_firmware_ready(s
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		do {
+ 			firmware_state = readl(&reg->outbound_msgaddr1);
+ 		} while ((firmware_state & ARCMSR_HBCMU_MESSAGE_FIRMWARE_OK) == 0);
+@@ -2875,7 +2877,7 @@ static void arcmsr_hbaA_request_device_m
+ 
+ static void arcmsr_hbaB_request_device_map(struct AdapterControlBlock *acb)
+ {
+-	struct MessageUnit_B __iomem *reg = acb->pmuB;
++	struct MessageUnit_B *reg = acb->pmuB;
+ 	if (unlikely(atomic_read(&acb->rq_map_token) == 0) || ((acb->acb_flags & ACB_F_BUS_RESET) != 0 ) || ((acb->acb_flags & ACB_F_ABORT) != 0 )){
+ 		mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6 * HZ));
+ 		return;
+@@ -2960,7 +2962,7 @@ static void arcmsr_hbaB_start_bgrb(struc
+ 
+ static void arcmsr_hbaC_start_bgrb(struct AdapterControlBlock *pACB)
+ {
+-	struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)pACB->pmuC;
++	struct MessageUnit_C __iomem *phbcmu = pACB->pmuC;
+ 	pACB->acb_flags |= ACB_F_MSG_START_BGRB;
+ 	writel(ARCMSR_INBOUND_MESG0_START_BGRB, &phbcmu->inbound_msgaddr0);
+ 	writel(ARCMSR_HBCMU_DRV2IOP_MESSAGE_CMD_DONE, &phbcmu->inbound_doorbell);
+@@ -3007,7 +3009,7 @@ static void arcmsr_clear_doorbell_queue_
+ 		}
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+-		struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
++		struct MessageUnit_C __iomem *reg = acb->pmuC;
+ 		uint32_t outbound_doorbell, i;
+ 		/* empty doorbell Qbuffer if door bell ringed */
+ 		outbound_doorbell = readl(&reg->outbound_doorbell);
