@@ -1,45 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Sym2 scsi hang on boot on sparc64
-Date: Tue, 19 Aug 2014 09:47:35 -0500
-Message-ID: <1408459655.3491.1.camel@jarvis>
-References: <alpine.SOC.1.00.1408191420150.4929@math.ut.ee>
-	 <1408451668.2645.2.camel@jarvis>
-	 <alpine.SOC.1.00.1408191736190.7767@math.ut.ee>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 0/17] arcmsr: change note since v13 or v2
+Date: Tue, 19 Aug 2014 08:02:21 -0700
+Message-ID: <20140819150221.GA4083@infradead.org>
+References: <1408422598.4801.112.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <alpine.SOC.1.00.1408191736190.7767@math.ut.ee>
-Sender: sparclinux-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:44858 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808AbaHSPCa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 11:02:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1408422598.4801.112.camel@Centos6.3-64>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2014-08-19 at 17:37 +0300, Meelis Roos wrote:
-> > On Tue, 2014-08-19 at 14:25 +0300, Meelis Roos wrote:
-> > > 3.16 scsi worked fine, 3.17-rc1 misbehaves on 3 of my sparc64 test 
-> > > machines. E220R and E420R are with onboard 5c3875, V210 is with onboarc 
-> > > 53c1010 and all behave the same. Any ideas whre to dig deeper? bisection 
-> > > might be nontrivial, because of sparc64 changes that are OK on 3.17-rc1 
-> > > again - but is possible if nothing else helps.
-> > 
-> > We've got a parisc with an 875 as a root SCSI bus ... I haven't got
-> > around to building for it yet, but I might find time to try today.
-> 
-> Same on parisc:
-> 
-> sym0: <1010-66> rev 0x1 at pci 0000:20:01.0 irq 22
-> sym0: PA-RISC Firmware, ID 7, Fast-80, LVD, parity checking
-> sym0: SCSI BUS has been reset.
-> scsi host0: sym-2.2.3
-> random: nonblocking pool is initialized
-> 
-> and hangs here. So hopefully it is reproducible for you.
+Hi Ching,
 
-And also independent of the sparc changes.  The only other change in the
-window you quote is 64 bit luns.
+I've fixed up various checkpatch errors and fixed up some descriptions
+and applied the patches to a branch.  This includes patch 4, so please
+send a fix for this and any other patches relative to the branch.
 
-James
+Please find the branch at
 
+	git://git.infradead.org/users/hch/scsi-queue.git arcmsr-for-3.18
 
+Can the others help reviewing these patches and make sure we can get
+them into 3.18?
 
+Thanks,
+	Christoph
