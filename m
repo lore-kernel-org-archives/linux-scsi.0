@@ -1,66 +1,79 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v7 2/3] ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
-Date: Tue, 19 Aug 2014 12:01:50 +0530
-Message-ID: <1408429911-1406-3-git-send-email-stripathi@apm.com>
+Subject: [PATCH v7 3/3] ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver.
+Date: Tue, 19 Aug 2014 12:01:51 +0530
+Message-ID: <1408429911-1406-4-git-send-email-stripathi@apm.com>
 References: <1408429911-1406-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1408429911-1406-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch implements the feature to skip the PHY and clock
-initialization if it is already configured by the firmware.
+The link down issue in first attempt happens due to 2 H/W errata below:
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+1. Due to HW errata, during speed negotiation, sometimes controller
+is not able to detect ALIGN at GEN3(6Gbps) within 54.6us results in
+a timeout. This issue can be recovered by issuing a COMRESET again.
+
+2. Due to HW errata, although ALIGH detection is successfull, due to
+8b/10b and disparity BERR, sometimes the signature from the drive is
+not received successfully by the Host controller. Due to this the
+communication with the host and drive is not established due to
+locking of CDR(clock and data recovery) circuit. This issue can be
+recovered by issuing a COMRESET again.
+
+This patch fixes the above issues by retrying the COMRESET with a
+maximum attempts of 3.
 ---
- drivers/ata/ahci_xgene.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/ata/ahci_xgene.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index f416495..0a87f2e 100644
+index 0a87f2e..294c9a8 100644
 --- a/drivers/ata/ahci_xgene.c
 +++ b/drivers/ata/ahci_xgene.c
-@@ -145,6 +145,16 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- 	return rc;
- }
+@@ -78,6 +78,9 @@
+ #define CFG_MEM_RAM_SHUTDOWN		0x00000070
+ #define BLOCK_MEM_RDY			0x00000074
 
-+static int xgene_ahci_is_memram_inited(struct xgene_ahci_context *ctx)
-+{
-+	void __iomem *diagcsr = ctx->csr_diag;
++/* Max retry for link down */
++#define MAX_LINK_DOWN_RETRY 3
 +
-+	if (readl(diagcsr + CFG_MEM_RAM_SHUTDOWN) == 0 &&
-+	    readl(diagcsr + BLOCK_MEM_RDY) == 0xFFFFFFFF)
-+		return 1;
-+	return 0;
-+}
+ struct xgene_ahci_context {
+ 	struct ahci_host_priv *hpriv;
+ 	struct device *dev;
+@@ -277,15 +280,23 @@ static int xgene_ahci_do_hardreset(struct ata_link *link,
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ata_taskfile tf;
++	int link_down_retry = 0;
+ 	int rc;
+-	u32 val;
+-
+-	/* clear D2H reception area to properly wait for D2H FIS */
+-	ata_tf_init(link->device, &tf);
+-	tf.command = ATA_BUSY;
+-	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+-	rc = sata_link_hardreset(link, timing, deadline, online,
++	u32 val, sstatus;
 +
- /**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-@@ -468,6 +478,11 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
++	do {
++		/* clear D2H reception area to properly wait for D2H FIS */
++		ata_tf_init(link->device, &tf);
++		tf.command = ATA_BUSY;
++		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
++		rc = sata_link_hardreset(link, timing, deadline, online,
+ 				 ahci_check_ready);
++		if (*online)
++			break;
++
++		sata_scr_read(link, SCR_STATUS, &sstatus);
++	} while (link_down_retry++ < MAX_LINK_DOWN_RETRY &&
++		 (sstatus & 0xff) == 0x1);
 
-+	if (xgene_ahci_is_memram_inited(ctx)) {
-+		dev_info(dev, "skip clock and PHY initialization\n");
-+		goto skip_clk_phy;
-+	}
-+
- 	/* Due to errata, HW requires full toggle transition */
- 	rc = ahci_platform_enable_clks(hpriv);
- 	if (rc)
-@@ -481,6 +496,8 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
-
-+skip_clk_phy:
-+
- 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+ 	val = readl(port_mmio + PORT_SCR_ERR);
+ 	if (val & (SERR_DISPARITY | SERR_10B_8B_ERR))
 --
 1.8.2.1
 
