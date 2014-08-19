@@ -1,42 +1,29 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: Question about scsi error handling and LLD
-Date: Tue, 19 Aug 2014 12:59:28 -0500
-Message-ID: <20140819175928.GL19666@beardog.cce.hp.com>
-References: <20140819153051.GG19666@beardog.cce.hp.com> <1408468572.7095.11.camel@jarvis>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: Bad tag value in scsi-mq.4
+Date: Tue, 19 Aug 2014 11:04:47 -0700
+Message-ID: <20140819180447.GA16742@infradead.org>
+References: <2C438B34CAC8264398F5C7AF7411910A62ADCC73@G9W0731.americas.hpqcorp.net>
+ <20140805192809.GA971@infradead.org>
+ <2C438B34CAC8264398F5C7AF7411910A62ADCDC8@G9W0731.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:55657 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbaHSSAs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 14:00:48 -0400
-Received: from g6t1525.atlanta.hp.com (g6t1525.atlanta.hp.com [15.193.200.68])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 0A9E37429D
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Aug 2014 18:00:48 +0000 (UTC)
+Received: from bombadil.infradead.org ([198.137.202.9]:41025 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496AbaHSSEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Aug 2014 14:04:48 -0400
 Content-Disposition: inline
-In-Reply-To: <1408468572.7095.11.camel@jarvis>
+In-Reply-To: <2C438B34CAC8264398F5C7AF7411910A62ADCDC8@G9W0731.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, elliott@hp.com, scameron@beardog.cce.hp.com
+To: "Handzik, Joe" <joseph.t.handzik@hp.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>, "Scales, Webb" <webb.scales@hp.com>, "Teel, Scott Stacy" <scott.stacy.teel@hp.com>
 
-On Tue, Aug 19, 2014 at 12:16:12PM -0500, James Bottomley wrote:
-> On Tue, 2014-08-19 at 10:30 -0500, scameron@beardog.cce.hp.com wrote:
-> > 
-> > Is it permitted for a LLD to call scsi_done() for a command which
-> > has been or is attempting to be aborted via the LLD abort error handler
-> > function?
-> > 
-> > I am looking at the scsi mid layer code, and I'm a bit confused.
-> 
-> Hannes asked a similar question; does this help:
-> 
-> http://marc.info/?l=linux-scsi&m=140267838320488
-[...]
+On Tue, Aug 05, 2014 at 07:47:12PM +0000, Handzik, Joe wrote:
+> Yeah, we thought about that one. We call scsi_activate_tcq if our scsi_device has tagged_supported set within hpsa_change_queue_type (our .change_queue_type entry into the scsi_host_template). Also made sure I was booting with the "scsi_mod.use_blk_mq=Y" option, which makes no difference either way.
 
-Yes, that helps.  Thanks.
-
--- steve
+Can you add some tracing to catch this?  On the non-mq path requests
+start out with ->tag set to -1 and blk_queue_start_tag, which is called
+from scsi_request_fn sets it up.  Adding printks in that area should
+help you to find the culprit.
 
