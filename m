@@ -1,75 +1,113 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented and
- there's not way to prevent the kernel from using the 2nd cdb byte for the LUN
-Date: Wed, 20 Aug 2014 19:15:12 +0000
-Message-ID: <bug-80711-11613-bYuhmf7drc@https.bugzilla.kernel.org/>
-References: <bug-80711-11613@https.bugzilla.kernel.org/>
+From: "Hiral Shah (hishah)" <hishah@cisco.com>
+Subject: Re: [RESEND][PATCH 4/4] [SCSI]fnic: assign FIP_ALL_FCF_MACS to
+ fcoe_all_fcfs
+Date: Wed, 20 Aug 2014 19:05:52 +0000
+Message-ID: <D01A3EFF.2472D%hishah@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:59530 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752350AbaHTTPQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Aug 2014 15:15:16 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 653812017D
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2014 19:15:15 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id DF10E2017A
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2014 19:15:13 +0000 (UTC)
-In-Reply-To: <bug-80711-11613@https.bugzilla.kernel.org/>
+Received: from alln-iport-3.cisco.com ([173.37.142.90]:58473 "EHLO
+	alln-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbaHTTPh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2014 15:15:37 -0400
+Content-Language: en-US
+Content-ID: <F5A4FD33669D9742B7EF82541A07CB3D@emea.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
+Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "Hiral Shah (hishah)" <hishah@cisco.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=80711
+On 5/2/14, 5:46 PM, "Hiral Shah (hishah)" <hishah@cisco.com> wrote:
 
---- Comment #10 from Alan Stern <stern@rowland.harvard.edu> ---
-On Tue, 19 Aug 2014, Christoph Hellwig wrote:
-
-> On Thu, Aug 07, 2014 at 11:58:37AM -0400, Alan Stern wrote:
-> > > On Wed, Aug 06, 2014 at 04:02:22PM -0400, Alan Stern wrote:
-> > > > > I doubt either of them forces users to hack up flags for these cases.
-> > > > 
-> > > > Why was this change needed in the first place?  There's no explanation 
-> > > > in the patch itself.
-> > > 
-> > > Which chance?  The one to not support SG_FLAG_LUN_INHIBIT?
-> > 
-> > No, the patch that started this Bugzilla entry.  Tiziano says it is 
-> > needed in order to send vendor-specific commands that use the LUN bits 
-> > in CDB[1].
+>1) Assgning FIP_ALL_FCF_MACS to fcoe_all_fcfs allows VLAN request to be
+>sent
+>to correct Mac address for VLAN Discovery otherwise VLAN request will be
+>sent to invalid address hence FLOGI never happens.
+>
+>2) Simplify the copy_and_format_trace_data code and log the correct Link
+>event
+>for fnic control path tracing in case of link status UP->UP.
+>
+>3) Increment Fnic driver version
+>
+>Signed-off-by: Hiral Shah <hishah@cisco.com>
+>Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+>---
+> drivers/scsi/fnic/fnic.h       | 2 +-
+> drivers/scsi/fnic/fnic_fcs.c   | 5 +++--
+> drivers/scsi/fnic/fnic_trace.c | 5 ++---
+> 3 files changed, 6 insertions(+), 6 deletions(-)
+>
+>diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+>index 1d3521e..bf8d34c 100644
+>--- a/drivers/scsi/fnic/fnic.h
+>+++ b/drivers/scsi/fnic/fnic.h
+>@@ -39,7 +39,7 @@
 > 
-> Yes, I'd really like to know the exact scenario.  What kind of command
-> is this and who sends it?
+> #define DRV_NAME		"fnic"
+> #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+>-#define DRV_VERSION		"1.6.0.10"
+>+#define DRV_VERSION		"1.6.0.11"
+> #define PFX			DRV_NAME ": "
+> #define DFX                     DRV_NAME "%d: "
+> 
+>diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+>index 1b948f6..f3984b4 100644
+>--- a/drivers/scsi/fnic/fnic_fcs.c
+>+++ b/drivers/scsi/fnic/fnic_fcs.c
+>@@ -35,7 +35,7 @@
+> #include "cq_enet_desc.h"
+> #include "cq_exch_desc.h"
+> 
+>-static u8 fcoe_all_fcfs[ETH_ALEN];
+>+static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
+> struct workqueue_struct *fnic_fip_queue;
+> struct workqueue_struct *fnic_event_queue;
+> 
+>@@ -101,13 +101,14 @@ void fnic_handle_link(struct work_struct *work)
+> 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+> 					     "link up\n");
+> 				fcoe_ctlr_link_up(&fnic->ctlr);
+>-			} else
+>+			} else {
+> 				/* UP -> UP */
+> 				spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> 				fnic_fc_trace_set_data(
+> 					fnic->lport->host->host_no, FNIC_FC_LE,
+> 					"Link Status: UP_UP",
+> 					strlen("Link Status: UP_UP"));
+>+			}
+> 		}
+> 	} else if (fnic->link_status) {
+> 		/* DOWN -> UP */
+>diff --git a/drivers/scsi/fnic/fnic_trace.c
+>b/drivers/scsi/fnic/fnic_trace.c
+>index c772859..121a5d7 100644
+>--- a/drivers/scsi/fnic/fnic_trace.c
+>+++ b/drivers/scsi/fnic/fnic_trace.c
+>@@ -743,7 +743,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr
+>*tdata,
+> 
+> 	fmt = "%02d:%02d:%04ld %02d:%02d:%02d.%09lu ns%8x       %c%8x\t";
+> 	len += snprintf(fnic_dbgfs_prt->buffer + len,
+>-		(fnic_fc_trace_max_pages * PAGE_SIZE * 3) - len,
+>+		max_size - len,
+> 		fmt,
+> 		tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
+> 		tm.tm_hour, tm.tm_min, tm.tm_sec,
+>@@ -767,8 +767,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr
+>*tdata,
+> 				j == ethhdr_len + fcoehdr_len + fchdr_len ||
+> 				(i > 3 && j%fchdr_len == 0)) {
+> 				len += snprintf(fnic_dbgfs_prt->buffer
+>-					+ len, (fnic_fc_trace_max_pages
+>-					* PAGE_SIZE * 3) - len,
+>+					+ len, max_size - len,
+> 					"\n\t\t\t\t\t\t\t\t");
+> 				i++;
+> 			}
+>-- 
+>1.8.5.4
+>
 
-I don't know what the command is, but Tiziano is sending it via the
-SCSI-generic (sg) interface.
-
-In the meantime, I have made a little progress with Windows.  It turns
-out there are two reasons my earlier test didn't work:
-
-    I didn't bother to set up a valid serial number for the test
-    device, and Windows wants to see the serial number.
-
-    Windows wants at least one of the logical units to be
-    removable.
-
-After those issues were fixed, the host did recognize both logical 
-units.  I tested with two devices, one reporting an ANSI SCSI level of 
-0 and the other 2.  In both cases, Windows 7 does _not_ stick the LUN 
-value into the high bits of CDB[1].
-
-This suggests that we shouldn't be doing that either, for USB
-mass-storage devices.  But I'm reluctant to change it because of the
-possibility of regressions, not to mention the fact that it would
-violate the SCSI spec.
-
-Suggestions?
-
-Alan Stern
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
