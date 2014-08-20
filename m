@@ -1,59 +1,48 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [Xen-devel] [PATCH V5 5/5] add xen pvscsi maintainer
-Date: Wed, 20 Aug 2014 09:08:37 -0400
-Message-ID: <20140820130837.GC3120@laptop.dumpdata.com>
-References: <1408354310-6362-1-git-send-email-jgross@suse.com>
- <1408354310-6362-6-git-send-email-jgross@suse.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: How to get the number of VFs assigned to the guests in XEN
+Date: Wed, 20 Aug 2014 19:14:25 +0530
+Message-ID: <CAK=zhgrFV10k0yzOrkSnmYJge3M+kQrcNz9e5qZZ5q180NY2xQ@mail.gmail.com>
+References: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
+	<1408538771.11383.33.camel@ul30vt.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23386 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbaHTNfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2014 09:35:55 -0400
-Content-Disposition: inline
-In-Reply-To: <1408354310-6362-6-git-send-email-jgross@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1408538771.11383.33.camel@ul30vt.home>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, konrad.wilk@oracle.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com, Sathya Prakash <sathya.prakash@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jgross@suse.com
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com, nab@linux-iscsi.org
 
-On Mon, Aug 18, 2014 at 11:31:50AM +0200, jgross@suse.com wrote:
-> From: Juergen Gross <jgross@suse.com>
-> 
-> Add myself as maintainer for the Xen pvSCSI stuff.
-> 
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+Thanks Alex,
 
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  MAINTAINERS | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index aefa948..360f86f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -10086,6 +10086,14 @@ S:	Supported
->  F:	drivers/block/xen-blkback/*
->  F:	drivers/block/xen*
->  
-> +XEN PVSCSI DRIVERS
-> +M:	Juergen Gross <jgross@suse.com>
-> +L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
-> +S:	Supported
-> +F:	drivers/scsi/xen-scsifront.c
-> +F:	drivers/xen/xen-scsiback.c
-> +F:	include/xen/interface/io/vscsiif.h
-> +
->  XEN SWIOTLB SUBSYSTEM
->  M:	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->  L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
-> -- 
-> 1.8.4.5
-> 
-> 
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xen.org
-> http://lists.xen.org/xen-devel
+Then, Is there any other ways to stop accidental unload of PF driver
+while still some VFs are accessing by the running VMs.
+
+Regards,
+Sreekanth
+
+On Wed, Aug 20, 2014 at 6:16 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Wed, 2014-08-20 at 16:39 +0530, Sreekanth Reddy wrote:
+>> HI,
+>>
+>> For SRIOV support, currently in the KVM environment, mpt3sas driver
+>> can use the API pci_vfs_assigned() to know the number of VFs that are
+>> currently assigned to the running VMs. So that during the PF driver
+>> unload time, if the return value of this API is greater than zero the
+>> our driver won't call the pci_disable_sriov() to disable the VFs.
+>>
+>> Now for the same purpose in XEN environment, is there any API similar
+>> to pci_vfs_assigned() which the low lever device driver can use to
+>> know 'the number of VFs that are currently assigned to the running
+>> VMs'. In XEN environment this API pci_vfs_assigned() will return
+>> always zero even though VFs are assigned to the running VMs.
+>
+> Note that pci_vfs_assigned() assigned is only used by legacy KVM device
+> assignment and primarily as a workaround for not using an actual
+> host-based device driver to manage device ownership.  When using
+> VFIO-based device assignment with KVM, pci_vfs_assigned() is not
+> updated.  Please don't rely on this interface.  Thanks,
+>
+> Alex
+>
