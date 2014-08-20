@@ -1,39 +1,30 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH v3 0/17] arcmsr: change note since v13 or v2
-Date: Wed, 20 Aug 2014 18:13:04 +0800
-Message-ID: <1408529584.5608.6.camel@Centos6.3-64>
-References: <1408422598.4801.112.camel@Centos6.3-64>
-	 <20140819150221.GA4083@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi.mq:Added enable_cmd_list flags in hostt to reduce
+ lock contention
+Date: Wed, 20 Aug 2014 12:48:24 +0200
+Message-ID: <53F47CF8.3080708@acm.org>
+References: <201408191819.s7JIIx12019025@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140819150221.GA4083@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: jbottomley@parallels.com, dan.carpenter@oracle.com, thenzl@redhat.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sf2.bxl.stone.is ([5.134.1.239]:60608 "EHLO sf2.bxl.stone.is"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbaHTKt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Aug 2014 06:49:29 -0400
+In-Reply-To: <201408191819.s7JIIx12019025@palmhbs0.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kashyap.Desai@avagotech.com, linux-scsi@vger.kernel.org
+Cc: aacraid@adaptec.com, Elliott@hp.com, jbottomley@parallels.com, hch@infradead.org
 
-Hi Christoph,
+On 08/19/14 20:17, Kashyap.Desai@avagotech.com wrote:
+> +	if (shost->hostt->enable_cmd_list) {
 
-Thanks for your effort to fix up errors and apply the patches of arcmsr
-to a branch. It is great.
+This code is in the hot path which means that caching "enable_cmd_list"
+in struct Scsi_Host (as is done for many other SCSI host parameters)
+probably will (slightly) improve performance further. Otherwise this
+patch looks fine to me.
 
-Regards,
-Ching Huang
-On Tue, 2014-08-19 at 08:02 -0700, Christoph Hellwig wrote:
-> Hi Ching,
-> 
-> I've fixed up various checkpatch errors and fixed up some descriptions
-> and applied the patches to a branch.  This includes patch 4, so please
-> send a fix for this and any other patches relative to the branch.
-> 
-> Please find the branch at
-> 
-> 	git://git.infradead.org/users/hch/scsi-queue.git arcmsr-for-3.18
-> 
-> Can the others help reviewing these patches and make sure we can get
-> them into 3.18?
-> 
-> Thanks,
-> 	Christoph
+Bart.
+
