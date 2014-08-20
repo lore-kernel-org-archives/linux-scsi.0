@@ -1,30 +1,28 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi.mq:Added enable_cmd_list flags in hostt to reduce
- lock contention
-Date: Wed, 20 Aug 2014 12:48:24 +0200
-Message-ID: <53F47CF8.3080708@acm.org>
-References: <201408191819.s7JIIx12019025@palmhbs0.lsi.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: How to get the number of VFs assigned to the guests in XEN
+Date: Wed, 20 Aug 2014 16:39:05 +0530
+Message-ID: <CAK=zhgrv=e20s11v7Ls5ioWZrbyvp9Rzyv+QRDLR3mffr9E61A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sf2.bxl.stone.is ([5.134.1.239]:60608 "EHLO sf2.bxl.stone.is"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbaHTKt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Aug 2014 06:49:29 -0400
-In-Reply-To: <201408191819.s7JIIx12019025@palmhbs0.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, konrad.wilk@oracle.com
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, boris.ostrovsky@oracle.com, Sathya Prakash <sathya.prakash@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap.Desai@avagotech.com, linux-scsi@vger.kernel.org
-Cc: aacraid@adaptec.com, Elliott@hp.com, jbottomley@parallels.com, hch@infradead.org
 
-On 08/19/14 20:17, Kashyap.Desai@avagotech.com wrote:
-> +	if (shost->hostt->enable_cmd_list) {
+HI,
 
-This code is in the hot path which means that caching "enable_cmd_list"
-in struct Scsi_Host (as is done for many other SCSI host parameters)
-probably will (slightly) improve performance further. Otherwise this
-patch looks fine to me.
+For SRIOV support, currently in the KVM environment, mpt3sas driver
+can use the API pci_vfs_assigned() to know the number of VFs that are
+currently assigned to the running VMs. So that during the PF driver
+unload time, if the return value of this API is greater than zero the
+our driver won't call the pci_disable_sriov() to disable the VFs.
 
-Bart.
+Now for the same purpose in XEN environment, is there any API similar
+to pci_vfs_assigned() which the low lever device driver can use to
+know 'the number of VFs that are currently assigned to the running
+VMs'. In XEN environment this API pci_vfs_assigned() will return
+always zero even though VFs are assigned to the running VMs.
 
+Regards,
+Sreekanth
