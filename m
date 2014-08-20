@@ -1,113 +1,29 @@
-From: "Hiral Shah (hishah)" <hishah@cisco.com>
-Subject: Re: [RESEND][PATCH 4/4] [SCSI]fnic: assign FIP_ALL_FCF_MACS to
- fcoe_all_fcfs
-Date: Wed, 20 Aug 2014 19:05:52 +0000
-Message-ID: <D01A3EFF.2472D%hishah@cisco.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Wed, 20 Aug 2014 12:22:39 -0700
+Message-ID: <20140820192239.GA25281@infradead.org>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <20140819170047.GA7237@infradead.org>
+ <20140820191416.GA1886@agordeev.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-3.cisco.com ([173.37.142.90]:58473 "EHLO
-	alln-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbaHTTPh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Aug 2014 15:15:37 -0400
-Content-Language: en-US
-Content-ID: <F5A4FD33669D9742B7EF82541A07CB3D@emea.cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140820191416.GA1886@agordeev.usersys.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, Naresh Kumar Inna <naresh@chelsio.com>, Arvind Bhushan <arvindb@chelsio.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>
-Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "Hiral Shah (hishah)" <hishah@cisco.com>
 
-On 5/2/14, 5:46 PM, "Hiral Shah (hishah)" <hishah@cisco.com> wrote:
+On Wed, Aug 20, 2014 at 08:14:17PM +0100, Alexander Gordeev wrote:
+> > I've applied patches 1 to 7 to the drivers-for-3.18 branch.
+> 
+> Thanks, Christoph!
+> 
+> Not sure how to handle the rest, though. Chelsio driver has no
+> maintainers and none of be2iscsi, pmcraid and csiostor has been
+> reviewed for several months.
 
->1) Assgning FIP_ALL_FCF_MACS to fcoe_all_fcfs allows VLAN request to be
->sent
->to correct Mac address for VLAN Discovery otherwise VLAN request will be
->sent to invalid address hence FLOGI never happens.
->
->2) Simplify the copy_and_format_trace_data code and log the correct Link
->event
->for fnic control path tracing in case of link status UP->UP.
->
->3) Increment Fnic driver version
->
->Signed-off-by: Hiral Shah <hishah@cisco.com>
->Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
->---
-> drivers/scsi/fnic/fnic.h       | 2 +-
-> drivers/scsi/fnic/fnic_fcs.c   | 5 +++--
-> drivers/scsi/fnic/fnic_trace.c | 5 ++---
-> 3 files changed, 6 insertions(+), 6 deletions(-)
->
->diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
->index 1d3521e..bf8d34c 100644
->--- a/drivers/scsi/fnic/fnic.h
->+++ b/drivers/scsi/fnic/fnic.h
->@@ -39,7 +39,7 @@
-> 
-> #define DRV_NAME		"fnic"
-> #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
->-#define DRV_VERSION		"1.6.0.10"
->+#define DRV_VERSION		"1.6.0.11"
-> #define PFX			DRV_NAME ": "
-> #define DFX                     DRV_NAME "%d: "
-> 
->diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
->index 1b948f6..f3984b4 100644
->--- a/drivers/scsi/fnic/fnic_fcs.c
->+++ b/drivers/scsi/fnic/fnic_fcs.c
->@@ -35,7 +35,7 @@
-> #include "cq_enet_desc.h"
-> #include "cq_exch_desc.h"
-> 
->-static u8 fcoe_all_fcfs[ETH_ALEN];
->+static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
-> struct workqueue_struct *fnic_fip_queue;
-> struct workqueue_struct *fnic_event_queue;
-> 
->@@ -101,13 +101,14 @@ void fnic_handle_link(struct work_struct *work)
-> 				FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
-> 					     "link up\n");
-> 				fcoe_ctlr_link_up(&fnic->ctlr);
->-			} else
->+			} else {
-> 				/* UP -> UP */
-> 				spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-> 				fnic_fc_trace_set_data(
-> 					fnic->lport->host->host_no, FNIC_FC_LE,
-> 					"Link Status: UP_UP",
-> 					strlen("Link Status: UP_UP"));
->+			}
-> 		}
-> 	} else if (fnic->link_status) {
-> 		/* DOWN -> UP */
->diff --git a/drivers/scsi/fnic/fnic_trace.c
->b/drivers/scsi/fnic/fnic_trace.c
->index c772859..121a5d7 100644
->--- a/drivers/scsi/fnic/fnic_trace.c
->+++ b/drivers/scsi/fnic/fnic_trace.c
->@@ -743,7 +743,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr
->*tdata,
-> 
-> 	fmt = "%02d:%02d:%04ld %02d:%02d:%02d.%09lu ns%8x       %c%8x\t";
-> 	len += snprintf(fnic_dbgfs_prt->buffer + len,
->-		(fnic_fc_trace_max_pages * PAGE_SIZE * 3) - len,
->+		max_size - len,
-> 		fmt,
-> 		tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900,
-> 		tm.tm_hour, tm.tm_min, tm.tm_sec,
->@@ -767,8 +767,7 @@ void copy_and_format_trace_data(struct fc_trace_hdr
->*tdata,
-> 				j == ethhdr_len + fcoehdr_len + fchdr_len ||
-> 				(i > 3 && j%fchdr_len == 0)) {
-> 				len += snprintf(fnic_dbgfs_prt->buffer
->-					+ len, (fnic_fc_trace_max_pages
->-					* PAGE_SIZE * 3) - len,
->+					+ len, max_size - len,
-> 					"\n\t\t\t\t\t\t\t\t");
-> 				i++;
-> 			}
->-- 
->1.8.5.4
->
-
+I've added Tomas to the Cc list who has been very helpful with reviewing
+drivers lately.  Tomas, can you take a quick look at these patches?
