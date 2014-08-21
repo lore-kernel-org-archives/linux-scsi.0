@@ -1,130 +1,131 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Date: Thu, 21 Aug 2014 13:58:39 +0200
-Message-ID: <53F5DEEF.4070406@redhat.com>
-References: <cover.1408335523.git.agordeev@redhat.com> <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com> <53F5D8DF.4060705@redhat.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Performance degradation in IO writes vs. reads (was scsi-mq V2)
+Date: Thu, 21 Aug 2014 15:32:09 +0300
+Message-ID: <53F5E6C9.1020207@dev.mellanox.co.il>
+References: <1403715121-1201-1-git-send-email-hch@lst.de> <20140708144829.GA5539@infradead.org> <53C39F36.9010003@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <53F5D8DF.4060705@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel@vger.kernel.org
-Cc: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <53C39F36.9010003@dev.mellanox.co.il>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, viro@ZenIV.linux.org.uk
+Cc: Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-fsdevel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Max Gurtovoy <maxg@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/21/2014 01:32 PM, Tomas Henzl wrote:
-> On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range()  or pci_enable_msi_exact()
->> and pci_enable_msix_range() or pci_enable_msix_exact()
->> interfaces.
->>
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: James Smart <james.smart@emulex.com>
->> Cc: linux-scsi@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
->>  drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
->>  1 file changed, 17 insertions(+), 22 deletions(-)
->>
->> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
->> index a5769a9..37f2a20 100644
->> --- a/drivers/scsi/lpfc/lpfc_init.c
->> +++ b/drivers/scsi/lpfc/lpfc_init.c
->> @@ -8211,9 +8211,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
->>   * @phba: pointer to lpfc hba data structure.
->>   *
->>   * This routine is invoked to enable the MSI-X interrupt vectors to device
->> - * with SLI-3 interface specs. The kernel function pci_enable_msix() is
->> - * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
->> - * invoked, enables either all or nothing, depending on the current
->> + * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
->> + * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
->> + * once invoked, enables either all or nothing, depending on the current
->>   * availability of PCI vector resources. The device driver is responsible
->>   * for calling the individual request_irq() to register each MSI-X vector
->>   * with a interrupt handler, which is done in this function. Note that
->> @@ -8237,8 +8237,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
->>  		phba->msix_entries[i].entry = i;
->>  
->>  	/* Configure MSI-X capability structure */
->> -	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
->> -				ARRAY_SIZE(phba->msix_entries));
->> +	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
->> +				   LPFC_MSIX_VECTORS);
->>  	if (rc) {
->>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->>  				"0420 PCI enable MSI-X failed (%d)\n", rc);
-> Hi Alexander 
+On 7/14/2014 12:13 PM, Sagi Grimberg wrote:
+
+<SNIP>
+
+> I'd like to share some benchmarks I took on this patch set using iSER
+> initiator (+2 pre-submitted performance improvements) vs LIO iSER target.
+> I ran workloads I think are interesting use-cases (single LUN with 1,2,4
+> IO threads up to a fully occupied system doing IO to multiple LUNs).
+> Overall (except 2 strange anomalies) seems that scsi-mq patches
+> (use_blk_mq=N) roughly sustains traditional scsi performance.
+> On the other hand scsi-mq code path (use_blk_mq=Y) on its own clearly
+> shows better performance (tables below).
 >
-> the code continues with:
-> goto ->  pci_disable_msix(phba->pcidev);
-> that call to disable_msix is also superfluous I think
-> shouldn't that be fixed too?
-> the same is also in lpfc_sli4_enable_msix
+> At first I too hit the aio issues discussed in this thread and converted
+> to scsi-mq.3-no-rebase for testing (thanks Doug & Rob for raising it).
+> I must say that for some reason I get very low numbers for writes vs.
+> reads (writes perf stuck at ~20K IOPs per thread), this happens
+> on 3.16-rc2 even before scsi-mq patches. Did anyone step on this as well
+> or is it just a weird problem I'm having in my setup?
+> Anyway this is why my benchmarks shows only randread IO pattern (getting
+> familiar numbers). I need to figure out whats wrong
+> with IO writes - I'll start bisecting on this.
 >
-> Tomas
 
-my bad, this was already fixed in
-commit 029165acfa611a3a8838723f6978586ae35ff53d lpfc: Remove superfluous call to pci_disable_msix()
+Hi,
 
-so patch looks good to me now
+So I just got back to checking this issue of *extremely low* IO write
+performance I got in 3.16-rc2.
 
-Reviewed-by: Tomas Henzl
+Reminder:
+I used iSER to benchmark Christoph's scsi-mq patches performance and
+noticed that direct-IO writes are stuck at 20-50K IOPs instead of 350K
+IOPs I was used to see for a single device. This issue existed also when
+I removed the scsi-mq patches, so I started bisecting to see what broke
+stuff.
 
->
->> @@ -8775,16 +8775,14 @@ out:
->>   * @phba: pointer to lpfc hba data structure.
->>   *
->>   * This routine is invoked to enable the MSI-X interrupt vectors to device
->> - * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
->> - * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
->> - * enables either all or nothing, depending on the current availability of
->> - * PCI vector resources. The device driver is responsible for calling the
->> - * individual request_irq() to register each MSI-X vector with a interrupt
->> - * handler, which is done in this function. Note that later when device is
->> - * unloading, the driver should always call free_irq() on all MSI-X vectors
->> - * it has done request_irq() on before calling pci_disable_msix(). Failure
->> - * to do so results in a BUG_ON() and a device will be left with MSI-X
->> - * enabled and leaks its vectors.
->> + * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
->> + * is called to enable the MSI-X vectors. The device driver is responsible
->> + * for calling the individual request_irq() to register each MSI-X vector
->> + * with a interrupt handler, which is done in this function. Note that
->> + * later when device is unloading, the driver should always call free_irq()
->> + * on all MSI-X vectors it has done request_irq() on before calling
->> + * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
->> + * will be left with MSI-X enabled and leaks its vectors.
->>   *
->>   * Return codes
->>   * 0 - successful
->> @@ -8805,17 +8803,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
->>  		phba->sli4_hba.msix_entries[index].entry = index;
->>  		vectors++;
->>  	}
->> -enable_msix_vectors:
->> -	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
->> -			     vectors);
->> -	if (rc > 1) {
->> -		vectors = rc;
->> -		goto enable_msix_vectors;
->> -	} else if (rc) {
->> +	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
->> +				   2, vectors);
->> +	if (rc < 0) {
->>  		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
->>  				"0484 PCI enable MSI-X failed (%d)\n", rc);
->>  		goto vec_fail_out;
->>  	}
->> +	vectors = rc;
->>  
->>  	/* Log MSI-X vector assignment */
->>  	for (index = 0; index < vectors; index++)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Finally I got to the completely unbisectable bulk that seems to yield
+the issue:
+
+/* IO write poor performance*/
+2b777c9 ceph_sync_read: stop poking into iov_iter guts
+f0d1bec new helper: copy_page_from_iter()
+84c3d55 fuse: switch to ->write_iter()
+b30ac0f btrfs: switch to ->write_iter()
+3ef045c ocfs2: switch to ->write_iter()
+bf97f3b xfs: switch to ->write_iter()
+50b5551 afs: switch to ->write_iter()
+da56e45 gfs2: switch to ->write_iter()
+edaf436 nfs: switch to ->write_iter()
+f5674c3 ubifs: switch to ->write_iter()
+a8f3550 bury __generic_file_aio_write()
+3dae875 cifs: switch to ->write_iter()
+d4637bc udf: switch to ->write_iter()
+9b88416 convert ext4 to ->write_iter()
+a832475 Merge ext4 changes in ext4_file_write() into for-next
+1456c0a blkdev_aio_write() - turn into blkdev_write_iter()
+8174202 write_iter variants of {__,}generic_file_aio_write()
+3644424 ceph: switch to ->read_iter()
+3aa2d19 nfs: switch to ->read_iter()
+a886038 fs/block_dev.c: switch to ->read_iter()
+2ba5bbe shmem: switch to ->read_iter()
+fb9096a pipe: switch to ->read_iter()
+e6a7bcb cifs: switch to ->read_iter()
+37c20f1 fuse_file_aio_read(): convert to ->read_iter()
+3cd9ad5 ocfs2: switch to ->read_iter()
+0279782 ecryptfs: switch to ->read_iter()
+b4f5d2c xfs: switch to ->read_iter()
+aad4f8b switch simple generic_file_aio_read() users to ->read_iter()
+293bc98 new methods: ->read_iter() and ->write_iter()
+7f7f25e replace checking for ->read/->aio_read presence with check in 
+->f_mode
+b318891 xfs: trim the argument lists of xfs_file_{dio,buffered}_aio_write()
+37938463 blkdev_aio_read(): switch to generic_file_read_iter(), get rid 
+of iov_shorten()
+0c94933 iov_iter_truncate()
+28060d5 btrfs: switch check_direct_IO() to iov_iter
+91f79c4 new helper: iov_iter_get_pages_alloc()
+f67da30 new helper: iov_iter_npages()
+5b46f25 f2fs: switch to iov_iter_alignment()
+c9c37e2 fuse: switch to iov_iter_get_pages()
+d22a943 fuse: pull iov_iter initializations up
+7b2c99d new helper: iov_iter_get_pages()
+3320c60 dio: take updating ->result into do_direct_IO(
+71d8e53 start adding the tag to iov_iter
+ed978a8 new helper: generic_file_read_iter()
+23faa7b fuse_file_aio_write(): merge initializations of iov_iter
+05bb2e0 ceph_aio_read(): keep iov_iter across retries
+886a391 new primitive: iov_iter_alignment()
+26978b8 give ->direct_IO() a copy of iov_iter
+31b1403 switch {__,}blockdev_direct_IO() to iov_iter
+a6cbcd4 get rid of pointless iov_length() in ->direct_IO()
+16b1f05 ext4: switch the guts of ->direct_IO() to iov_iter
+619d30b convert the guts of nfs_direct_IO() to iov_iter
+d8d3d94 pass iov_iter to ->direct_IO()
+cb66a7a kill generic_segment_checks()
+0ae5e4d __btrfs_direct_write(): switch to iov_iter
+f8579f8 generic_file_direct_write(): switch to iov_iter
+e7c2460 kill iov_iter_copy_from_user()
+f6c0a19 fs/file.c: don't open-code kvfree()
+/* IO write performance is OK*/
+
+I tried to isolate the issue by running fio on a null_blk
+device and also got performance degradation although it wasn't
+as severe as with iSER/iSCSI. IO write performance decreased
+from 360K IOPs to 280 KIOPs.
+
+So at the moment I can't pin point the problem, but I figured
+I'd raise the issue in case anyone else had stepped on this one
+(hard to imagine that no one saw this...)
+
+I'll run perf comparison to see if I get anything interesting.
+
+CC'ing Al Viro, the author of all the above commits.
+
+Cheers,
+Sagi.
