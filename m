@@ -1,22 +1,26 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH/RFC V2 10/16] scsi: ufs: add UFS power management support
-Date: Thu, 21 Aug 2014 06:01:59 -0700
-Message-ID: <20140821130159.GA1567@infradead.org>
-References: <1408023067-26103-1-git-send-email-draviv@codeaurora.org>
- <1408023067-26103-11-git-send-email-draviv@codeaurora.org>
- <17296D9F8FF2234F831FC3DF505A87A911B24B10@shsmsx102.ccr.corp.intel.com>
- <17296D9F8FF2234F831FC3DF505A87A911B25A0C@shsmsx102.ccr.corp.intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Performance degradation in IO writes vs. reads (was scsi-mq V2)
+Date: Thu, 21 Aug 2014 06:03:15 -0700
+Message-ID: <20140821130315.GB1567@infradead.org>
+References: <1403715121-1201-1-git-send-email-hch@lst.de>
+ <20140708144829.GA5539@infradead.org>
+ <53C39F36.9010003@dev.mellanox.co.il>
+ <53F5E6C9.1020207@dev.mellanox.co.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <17296D9F8FF2234F831FC3DF505A87A911B25A0C@shsmsx102.ccr.corp.intel.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: "Dong, Chuanxiao" <chuanxiao.dong@intel.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+In-Reply-To: <53F5E6C9.1020207@dev.mellanox.co.il>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, viro@ZenIV.linux.org.uk, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-fsdevel@vger.kernel.org, Max Gurtovoy <maxg@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-FYI: I won't read your mails until you actually make them readable
-by trimming the quotes back to provide just enough context.
+On Thu, Aug 21, 2014 at 03:32:09PM +0300, Sagi Grimberg wrote:
+> So I just got back to checking this issue of *extremely low* IO write
+> performance I got in 3.16-rc2.
 
-Consider this mail (and the one you replied to) unread.
+Please test with 3.16 final.  There once issue each in aio and dio
+that caused bad I/O performance regression that were only fixed last
+minute in the 3.16 cycle.
+
