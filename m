@@ -1,36 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
- and there's not way to prevent the kernel from using the 2nd cdb byte for
- the LUN
-Date: Thu, 21 Aug 2014 07:42:52 -0700
-Message-ID: <20140821144252.GA16226@infradead.org>
-References: <Pine.LNX.4.44L0.1408201507280.1959-100000@iolanthe.rowland.org>
- <53F604FE.8040301@interlog.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Thu, 21 Aug 2014 17:58:34 +0100
+Message-ID: <20140821165833.GA5853@agordeev.usersys.redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <e7470e484083c9eeb6b4f34f3e69e332ad5998c2.1408335523.git.agordeev@redhat.com>
+ <53F5D8DF.4060705@redhat.com>
+ <53F5DEEF.4070406@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36639 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750854AbaHUOnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2014 10:43:04 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <53F604FE.8040301@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <53F5DEEF.4070406@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Christoph Hellwig <hch@infradead.org>, James Smart <james.smart@emulex.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@infradead.org>, Tiziano Bacocco <tiziano.bacocco@gmail.com>, bugzilla-daemon@bugzilla.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On Thu, Aug 21, 2014 at 10:41:02AM -0400, Douglas Gilbert wrote:
-> Perhaps we could add another bit flag in struct
-> scsi_host_template such as:
->     unsigned int transport_says_dont_scsi2_lun_cmd:1;
+On Thu, Aug 21, 2014 at 01:58:39PM +0200, Tomas Henzl wrote:
+> my bad, this was already fixed in
+> commit 029165acfa611a3a8838723f6978586ae35ff53d lpfc: Remove superfluous call to pci_disable_msix()
 > 
-> then drivers/usb/storage/scsiglue.c could set that
-> bit in its usb_stor_host_template and
-> drivers/scsi/scsi.c could take heed (and not mask
-> cmd->cmnd[1] with the LUN).
+> so patch looks good to me now
 
-Fully agreed.
+Many thanks for your reviews, Tomas!
 
-(except that I'd shorten the flag name to .no_scsi2lun :))
+> Reviewed-by: Tomas Henzl
 
+Christoph, this patch was declined by James few times.
+I think it needs his approval as well.
+
+James?
+
+Thanks!
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
