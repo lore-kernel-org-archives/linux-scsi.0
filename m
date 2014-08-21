@@ -1,39 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RESEND][PATCH 09/10][SCSI]mpt2sas: Added module parameter 'unblock_io' to unblock IO's during disk addition
-Date: Thu, 21 Aug 2014 17:06:15 -0400
-Message-ID: <yq1oavdr1rs.fsf@sermon.lab.mkp.net>
-References: <20140625103615.GA12959@avagotech.com>
+Subject: Re: [RESEND][PATCH 8/8][SCSI]mpt3sas: Bump mpt3sas driver version to 04.100.00.00
+Date: Thu, 21 Aug 2014 17:10:12 -0400
+Message-ID: <yq1k361r1l7.fsf@sermon.lab.mkp.net>
+References: <20140625104207.GA13042@avagotech.com>
+	<yq1a98av9vi.fsf@sermon.lab.mkp.net>
+	<CAK=zhgqGVBsgxheZ1ixvGEeOFJ_7fPhO0d4HAh1f4YD1mWG7Sw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140625103615.GA12959@avagotech.com> (Sreekanth Reddy's message
-	of "Wed, 25 Jun 2014 16:06:15 +0530")
+In-Reply-To: <CAK=zhgqGVBsgxheZ1ixvGEeOFJ_7fPhO0d4HAh1f4YD1mWG7Sw@mail.gmail.com>
+	(Sreekanth Reddy's message of "Tue, 12 Aug 2014 15:55:43 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
-Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Sreekanth> This is because, when driver receives DELAY_NOT_RESPONDING
-Sreekanth> for a disk when it is undergoing addition in the SCSI Mid
-Sreekanth> layer, the driver would block the I/O to that disk resulting
-Sreekanth> in a deadlock. i.e the disk addition work couldn't be
-Sreekanth> completed as it can't send any I/O to the disk as I/Os are
-Sreekanth> blocked. Any device removal (TARGET_NOT_RESPONDING) or link
-Sreekanth> update(RC_PHY_CHANGED) couldn't be processed as they are in
-Sreekanth> the queue to get processed after disk addition.
+Sreekanth> 1. [RESEND][PATCH 7/8][SCSI]mpt3sas: Added Reply Descriptor
+Sreekanth>    Post Queue (RDPQ) Array support
 
-Sreekanth> An module parameter 'unblock_io' is introduced which needs to
-Sreekanth> be set to have this functionality enabled. By default this
-Sreekanth> functionality is disabled.
+Please make the change suggested by Joe Perches and then repost both
+mpt2sas and mpt3sas with the appropriate SoB and RB tags so they are
+easy for Christoph to pick up.
 
-This really sounds like a scenario you should be able to handle in
-general (without special "don't-be-broken" module parameters).
-
-Also, shouldn't your internal task management be able to deal with this?
-Why does the sdev's state during probe affect your ability to make
-forward progress?
+The only patch I'd like to dig deeper into before accepting it is the
+unblock one.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
