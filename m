@@ -1,203 +1,51 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v3] scsi: ufs-msm: add UFS controller support for
- Qualcomm MSM chips
-Date: Thu, 21 Aug 2014 09:53:48 -0000
-Message-ID: <026bb3e4ba9969dcfb0eca516f811e68.squirrel@www.codeaurora.org>
-References: <1408026157-26972-1-git-send-email-ygardi@codeaurora.org>
-    <F891F359-FFF1-4F72-ADEF-B023F1D50A0F@codeaurora.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
+Date: Thu, 21 Aug 2014 13:10:15 +0200
+Message-ID: <53F5D397.2020508@redhat.com>
+References: <cover.1408335523.git.agordeev@redhat.com> <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <F891F359-FFF1-4F72-ADEF-B023F1D50A0F@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Grant Likely <grant.likely@linaro.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->
-> On Aug 14, 2014, at 9:22 AM, Yaniv Gardi <ygardi@codeaurora.org> wrot=
-e:
->
->> The files in this change implement the UFS HW (controller & PHY)
->> specific
->> behavior in Qualcomm MSM chips.
->>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->> ---
->> Documentation/devicetree/bindings/ufs/ufs-msm.txt  |   37 +
->> .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |    4 +
->> drivers/scsi/ufs/Kconfig                           |   12 +
->> drivers/scsi/ufs/Makefile                          |    4 +
->> drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.c            |  254 +++++
->> drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.h            |  216 ++++
->> drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.c            |  368 +++++++
->> drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.h            |  735 ++++++++++=
-+++
->> drivers/scsi/ufs/ufs-msm-phy.c                     |  646 ++++++++++=
-++
->> drivers/scsi/ufs/ufs-msm-phy.h                     |  193 ++++
->
-> Any reason not to put the phy driver in drivers/phy ?
-Yes. Phy driver introduces a generic phy framework.
-And as a framework it provides with API's, callbacks,
-And data structures.
-I think the right place to have the >implementation< of the ufs-msm-phy=
- code
-Is under drivers/scsi/ufs as it's more related to ufs than it's related=
- to
-the framework itself.
+On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 
+Patch looks good to me.
 
->
->> drivers/scsi/ufs/ufs-msm.c                         | 1105
->> ++++++++++++++++++++
->> drivers/scsi/ufs/ufs-msm.h                         |  158 +++
->> 12 files changed, 3732 insertions(+)
->> create mode 100644 Documentation/devicetree/bindings/ufs/ufs-msm.txt
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.c
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.h
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.c
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.h
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy.c
->> create mode 100644 drivers/scsi/ufs/ufs-msm-phy.h
->> create mode 100644 drivers/scsi/ufs/ufs-msm.c
->> create mode 100644 drivers/scsi/ufs/ufs-msm.h
->
-> Seems like we should spit this into two patches, one for the phy and =
-one
-> for the UFS driver itself.  Maybe even three, one for the 20nm phy, o=
-ne
-> for the 28nm phy, and one for ufs-msm.c,h.
-we could try to split it, but since we didn't split this change into
-functional sub-changes, we decided to upload this change as a whole,
-as one change without the other wouldn't work anyhow, and they are both
-needed for proper functionality.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 >
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufs-msm.txt
->> b/Documentation/devicetree/bindings/ufs/ufs-msm.txt
->> new file mode 100644
->> index 0000000..b5caace
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ufs/ufs-msm.txt
->
-> This should probably be bindings/phy/qcom-ufs-phy.txt
->
->> @@ -0,0 +1,37 @@
->> +* MSM Universal Flash Storage (UFS) PHY
->> +
->> +UFSPHY nodes are defined to describe on-chip UFS PHY hardware macro=
-=2E
->> +Each UFS PHY node should have its own node.
->> +
->> +To bind UFS PHY with UFS host controller, the controller node shoul=
-d
->> +contain a phandle reference to UFS PHY node.
->> +
->> +Required properties:
->> +- compatible        : compatible list, contains
->> "qcom,ufs-msm-phy-qmp-28nm"
->> +                      or "qcom,ufs-msm-phy-qmp-20nm" according to t=
-he
->> relevant
->> +                      phy in use
->
-> Do we really need =91-msm=92 in the compat name?
->
->> +- reg               : <registers mapping>
->> +- #phy-cells         : This property shall be set to 0
->> +- vdda-phy-supply   : phandle to main PHY supply for analog domain
->> +- vdda-pll-supply   : phandle to PHY PLL and Power-Gen block power
->> supply
->> +
->> +Optional properties:
->> +- vdda-phy-max-microamp : specifies max. load that can be drawn fro=
-m
->> phy supply
->> +- vdda-pll-max-microamp : specifies max. load that can be drawn fro=
-m
->> pll supply
->> +
->> +Example:
->> +
->> +	ufsphy1: ufsphy@0xfc597000 {
->> +		compatible =3D "qcom,ufs-msm-phy-qmp-28nm";
->> +		reg =3D <0xfc597000 0x800>;
->> +		#phy-cells =3D <0>;
->> +		vdda-phy-supply =3D <&pma8084_l4>;
->> +		vdda-pll-supply =3D <&pma8084_l12>;
->> +		vdda-phy-max-microamp =3D <50000>;
->> +		vdda-pll-max-microamp =3D <1000>;
->> +	};
->> +
->> +	ufshc@0xfc598000 {
->> +		...
->> +		phys =3D <&ufsphy1>;
->> +	};
->> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> index e73a619..378585c 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> @@ -9,6 +9,9 @@ Required properties:
->> - reg               : <registers mapping>
->>
->> Optional properties:
->> +- phys			: phandle to UFS PHY node
->> +- phy-names		: the string "ufs_msm_phy" when is found in a node, al=
-ong
->> +			  with "phys" attribute, provides phandle to UFS PHY node
->
-> seems like the phy-names should be more generic like =93ufsphy"
->
->> - vcc-supply            : phandle to VCC supply regulator node
->> - vccq-supply           : phandle to VCCQ supply regulator node
->> - vccq2-supply          : phandle to VCCQ2 supply regulator node
->> @@ -39,6 +42,7 @@ Example:
->> 		reg =3D <0xfc598000 0x800>;
->> 		interrupts =3D <0 28 0>;
->>
->> +		ufs-phy =3D <&ufsphy>;
->> 		vcc-supply =3D <&xxx_reg1>;
->> 		vcc-supply-1p8;
->> 		vccq-supply =3D <&xxx_reg2>;
->
->
->> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
->> index 6e07b2a..a8259e0 100644
->> --- a/drivers/scsi/ufs/Kconfig
->> +++ b/drivers/scsi/ufs/Kconfig
->> @@ -70,3 +70,15 @@ config SCSI_UFSHCD_PLATFORM
->> 	If you have a controller with this interface, say Y or M here.
->>
->> 	  If unsure, say N.
->> +
->> +config SCSI_UFS_MSM
->> +	bool "MSM specific hooks to UFS controller platform driver"
->> +	depends on SCSI_UFSHCD_PLATFORM && ARCH_MSM
->
-> This should probably be ARCH_QCOM instead of ARCH_MSM
->
->> +	help
->> +	  This selects the MSM specific additions to UFSHCD platform drive=
-r.
->> +	  UFS host on MSM needs some vendor specific configuration before
->> +	  accessing the hardware which includes PHY configuration and vend=
-or
->> +	  specific registers.
->> +
->> +	  Select this if you have UFS controller on MSM chipset.
->> +	  If unsure, say N.
->
-> [ snip ]
->
-> - k
-> --
-> Employee of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, ho=
-sted
-> by The Linux Foundation
->
->
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index 915c26b..b422659 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -5276,9 +5276,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+>  	for (i = 0; i <= phba->num_cpus; i++)
+>  		phba->msix_entries[i].entry = i;
+>  
+> -	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> -				 (phba->num_cpus + 1));
+> -	if (!status)
+> +	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
+> +				       phba->num_cpus + 1, phba->num_cpus + 1);
+> +	if (status > 0)
+>  		phba->msix_enabled = true;
+>  
+>  	return;
