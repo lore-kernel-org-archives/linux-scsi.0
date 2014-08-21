@@ -1,31 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 3/3] ahci_xgene: Fix the link down in first attempt
- for the APM X-Gene SoC AHCI SATA host controller driver.
-Date: Thu, 21 Aug 2014 09:14:39 -0500
-Message-ID: <20140821141439.GB1766@mtj.dyndns.org>
-References: <1408429911-1406-1-git-send-email-stripathi@apm.com>
- <1408429911-1406-4-git-send-email-stripathi@apm.com>
- <20140819154912.GC16480@htj.dyndns.org>
- <CAOHikRB6Kfg82ewx6e-a6SCvjt_ipSKuXLciS=nHA1EpZzXrYA@mail.gmail.com>
+From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
+ and there's not way to prevent the kernel from using the 2nd cdb byte for
+ the LUN
+Date: Thu, 21 Aug 2014 10:41:02 -0400
+Message-ID: <53F604FE.8040301@interlog.com>
+References: <Pine.LNX.4.44L0.1408201507280.1959-100000@iolanthe.rowland.org>
+Reply-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOHikRB6Kfg82ewx6e-a6SCvjt_ipSKuXLciS=nHA1EpZzXrYA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1408201507280.1959-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 21, 2014 at 01:48:00PM +0530, Suman Tripathi wrote:
-> [suman] : The problem is COMRESET didn't failed. I meant the hardreset is
-> successful (return 0) but the device is not detected even if device is
-> present due to speed negotiation failure. For that reason I check for the
-> Pxstatus and retried.
+On 14-08-20 03:15 PM, Alan Stern wrote:
+> On Tue, 19 Aug 2014, Christoph Hellwig wrote:
+>
+>> On Thu, Aug 07, 2014 at 11:58:37AM -0400, Alan Stern wrote:
+>>>> On Wed, Aug 06, 2014 at 04:02:22PM -0400, Alan Stern wrote:
+>>>>>> I doubt either of them forces users to hack up flags for these cases.
+>>>>>
+>>>>> Why was this change needed in the first place?  There's no explanation
+>>>>> in the patch itself.
+>>>>
+>>>> Which chance?  The one to not support SG_FLAG_LUN_INHIBIT?
+>>>
+>>> No, the patch that started this Bugzilla entry.  Tiziano says it is
+>>> needed in order to send vendor-specific commands that use the LUN bits
+>>> in CDB[1].
+>>
+>> Yes, I'd really like to know the exact scenario.  What kind of command
+>> is this and who sends it?
+>
+> I don't know what the command is, but Tiziano is sending it via the
+> SCSI-generic (sg) interface.
+>
+> In the meantime, I have made a little progress with Windows.  It turns
+> out there are two reasons my earlier test didn't work:
+>
+> 	I didn't bother to set up a valid serial number for the test
+> 	device, and Windows wants to see the serial number.
+>
+> 	Windows wants at least one of the logical units to be
+> 	removable.
+>
+> After those issues were fixed, the host did recognize both logical
+> units.  I tested with two devices, one reporting an ANSI SCSI level of
+> 0 and the other 2.  In both cases, Windows 7 does _not_ stick the LUN
+> value into the high bits of CDB[1].
+>
+> This suggests that we shouldn't be doing that either, for USB
+> mass-storage devices.  But I'm reluctant to change it because of the
+> possibility of regressions, not to mention the fact that it would
+> violate the SCSI spec.
+>
+> Suggestions?
 
-Alright, please update the comment to explain what's going on.
+Perhaps we could add another bit flag in struct
+scsi_host_template such as:
+     unsigned int transport_says_dont_scsi2_lun_cmd:1;
 
-Thanks.
+then drivers/usb/storage/scsiglue.c could set that
+bit in its usb_stor_host_template and
+drivers/scsi/scsi.c could take heed (and not mask
+cmd->cmnd[1] with the LUN).
 
--- 
-tejun
+Doug Gilbert
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
