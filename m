@@ -1,50 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 08/10] [scsi] mpt2sas: Get IOC_FACTS information using handshake protocol only after HBA card gets into READY or Operational state.
-Date: Thu, 21 Aug 2014 16:47:11 -0400
-Message-ID: <yq1sikpr2nk.fsf@sermon.lab.mkp.net>
-References: <1407835788-38001-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: Re: [RESEND][PATCH 09/10][SCSI]mpt2sas: Added module parameter 'unblock_io' to unblock IO's during disk addition
+Date: Thu, 21 Aug 2014 17:06:15 -0400
+Message-ID: <yq1oavdr1rs.fsf@sermon.lab.mkp.net>
+References: <20140625103615.GA12959@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1407835788-38001-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	(Sreekanth Reddy's message of "Tue, 12 Aug 2014 14:59:48 +0530")
+In-Reply-To: <20140625103615.GA12959@avagotech.com> (Sreekanth Reddy's message
+	of "Wed, 25 Jun 2014 16:06:15 +0530")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: martin.petersen@oracle.com, jejb@kernel.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org
+To: "Reddy, Sreekanth" <Sreekanth.Reddy@avagotech.com>
+Cc: jejb@kernel.org, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, hch@infradead.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+>>>>> "Sreekanth" == Reddy, Sreekanth <Sreekanth.Reddy@avagotech.com> writes:
 
-Sreekanth,
+Sreekanth> This is because, when driver receives DELAY_NOT_RESPONDING
+Sreekanth> for a disk when it is undergoing addition in the SCSI Mid
+Sreekanth> layer, the driver would block the I/O to that disk resulting
+Sreekanth> in a deadlock. i.e the disk addition work couldn't be
+Sreekanth> completed as it can't send any I/O to the disk as I/Os are
+Sreekanth> blocked. Any device removal (TARGET_NOT_RESPONDING) or link
+Sreekanth> update(RC_PHY_CHANGED) couldn't be processed as they are in
+Sreekanth> the queue to get processed after disk addition.
 
-+	if (((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_READY) ||
-+	    (ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_OPERATIONAL)
-+		return 0;
+Sreekanth> An module parameter 'unblock_io' is introduced which needs to
+Sreekanth> be set to have this functionality enabled. By default this
+Sreekanth> functionality is disabled.
 
-I find the following easier to read:
+This really sounds like a scenario you should be able to handle in
+general (without special "don't-be-broken" module parameters).
 
-	switch (ioc_state & MPI2_IOC_STATE_MASK) {
-        case MPI2_IOC_STATE_READY:
-        case MPI2_IOC_STATE_OPERATIONAL:
-             return 0;
-	}
-
-but that's just personal preference...
-
-+	if (ioc_state & MPI2_DOORBELL_USED) {
-+		dhsprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "unexpected doorbell activ!e\n", ioc->name));
-
-Typo.
-
-+	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
-
-ioc_state & MPI2_IOC_STATE_MASK again. Maybe you should just introduce a
-variable for that and save a bunch of parentheses?
-
-Otherwise OK.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Also, shouldn't your internal task management be able to deal with this?
+Why does the sdev's state during probe affect your ability to make
+forward progress?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
