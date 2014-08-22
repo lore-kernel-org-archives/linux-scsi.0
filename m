@@ -1,54 +1,40 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm_fc: Replace rcu_assign_pointer() with
- RCU_INIT_POINTER()
-Date: Fri, 22 Aug 2014 14:10:38 -0700
-Message-ID: <1408741838.24496.15.camel@haakon3.risingtidesystems.com>
-References: <20140818120537.GA19578@ada>
+Subject: Re: [PATCH] drivers: target: target_core_ua_h: Add #define of
+ include guard
+Date: Fri, 22 Aug 2014 14:13:08 -0700
+Message-ID: <1408741988.24496.16.camel@haakon3.risingtidesystems.com>
+References: <1408712071-14474-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140818120537.GA19578@ada>
-Sender: target-devel-owner@vger.kernel.org
-To: Andreea-Cristina Bernat <bernat.ada@gmail.com>
-Cc: agrover@redhat.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, paulmck@linux.vnet.ibm.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1408712071-14474-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Andreea-Cristina,
+Hi Rasmus,
 
-On Mon, 2014-08-18 at 15:05 +0300, Andreea-Cristina Bernat wrote:
-> The use of "rcu_assign_pointer()" is NULLing out the pointer.
-> According to RCU_INIT_POINTER()'s block comment:
-> "1.   This use of RCU_INIT_POINTER() is NULLing out the pointer"
-> it is better to use it instead of rcu_assign_pointer() because it has a
-> smaller overhead.
+On Fri, 2014-08-22 at 14:54 +0200, Rasmus Villemoes wrote:
+> Clearly the file was meant to contain an include guard, but it was
+> missing the #define part.
 > 
-> The following Coccinelle semantic patch was used:
-> @@
-> @@
-> 
-> - rcu_assign_pointer
-> + RCU_INIT_POINTER
->   (..., NULL)
-> 
-> Signed-off-by: Andreea-Cristina Bernat <bernat.ada@gmail.com>
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 > ---
->  drivers/target/tcm_fc/tfc_sess.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/target/target_core_ua.h | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-> index 21ce508..ccee7e3 100644
-> --- a/drivers/target/tcm_fc/tfc_sess.c
-> +++ b/drivers/target/tcm_fc/tfc_sess.c
-> @@ -98,7 +98,7 @@ static void ft_tport_delete(struct ft_tport *tport)
->  	ft_sess_delete_all(tport);
->  	lport = tport->lport;
->  	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
-> -	rcu_assign_pointer(lport->prov[FC_TYPE_FCP], NULL);
-> +	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
+> diff --git a/drivers/target/target_core_ua.h b/drivers/target/target_core_ua.h
+> index be912b3..a6b56b3 100644
+> --- a/drivers/target/target_core_ua.h
+> +++ b/drivers/target/target_core_ua.h
+> @@ -1,4 +1,5 @@
+>  #ifndef TARGET_CORE_UA_H
+> +#define TARGET_CORE_UA_H
 >  
->  	tpg = tport->tpg;
->  	if (tpg) {
+>  /*
+>   * From spc4r17, Table D.1: ASC and ASCQ Assignement
 
 Applied to target-pending.git.
 
