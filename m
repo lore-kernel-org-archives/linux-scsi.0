@@ -1,37 +1,71 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Fri, 22 Aug 2014 12:17:30 +0000
-Message-ID: <bug-81861-11613-5IsD5Gtw59@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] drivers: scsi: #define missing include guards
+Date: Fri, 22 Aug 2014 14:37:33 +0200
+Message-ID: <1408711053-14129-1-git-send-email-linux@rasmusvillemoes.dk>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50532 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752737AbaHVMRd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:17:33 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 36C55201BC
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 12:17:32 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id B238D2018E
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 12:17:30 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:56192 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755982AbaHVMhk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2014 08:37:40 -0400
+Received: by mail-lb0-f179.google.com with SMTP id v6so9160706lbi.24
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 05:37:39 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
+The four files aha1542.h, aha1740.h, gvp11.h and mvme147.h under
+drivers/scsi/ contain two-thirds of an include guard, but do not
+elsewhere.
 
---- Comment #8 from linux-ide@crashplan.pro ---
-Comment on attachment 145681
-  --> https://bugzilla.kernel.org/attachment.cgi?id=145681
-Dmesg output from boot
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/aha1542.h | 1 +
+ drivers/scsi/aha1740.h | 1 +
+ drivers/scsi/gvp11.h   | 1 +
+ drivers/scsi/mvme147.h | 1 +
+ 4 files changed, 4 insertions(+)
 
-This is without loading the mvsas kernel module.
-
+diff --git a/drivers/scsi/aha1542.h b/drivers/scsi/aha1542.h
+index b871d2b..8f4e07a 100644
+--- a/drivers/scsi/aha1542.h
++++ b/drivers/scsi/aha1542.h
+@@ -1,4 +1,5 @@
+ #ifndef _AHA1542_H
++#define _AHA1542_H
+ 
+ /* $Id: aha1542.h,v 1.1 1992/07/24 06:27:38 root Exp root $
+  *
+diff --git a/drivers/scsi/aha1740.h b/drivers/scsi/aha1740.h
+index af23fd6..7ea484f 100644
+--- a/drivers/scsi/aha1740.h
++++ b/drivers/scsi/aha1740.h
+@@ -1,4 +1,5 @@
+ #ifndef _AHA1740_H
++#define _AHA1740_H
+ 
+ /* $Id$
+  *
+diff --git a/drivers/scsi/gvp11.h b/drivers/scsi/gvp11.h
+index 852913c..5aabe90 100644
+--- a/drivers/scsi/gvp11.h
++++ b/drivers/scsi/gvp11.h
+@@ -1,4 +1,5 @@
+ #ifndef GVP11_H
++#define GVP11_H
+ 
+ /* $Id: gvp11.h,v 1.4 1997/01/19 23:07:12 davem Exp $
+  *
+diff --git a/drivers/scsi/mvme147.h b/drivers/scsi/mvme147.h
+index bfd4566..479e9b4 100644
+--- a/drivers/scsi/mvme147.h
++++ b/drivers/scsi/mvme147.h
+@@ -1,4 +1,5 @@
+ #ifndef MVME147_H
++#define MVME147_H
+ 
+ /* $Id: mvme147.h,v 1.4 1997/01/19 23:07:10 davem Exp $
+  *
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.9.2
+
