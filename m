@@ -1,131 +1,107 @@
 From: Eddie Wai <eddie.wai@broadcom.com>
-Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
- bnx2fc_map_sg()
-Date: Fri, 22 Aug 2014 15:46:27 -0700
-Message-ID: <1408747587.3876.40.camel@lbirv-waie-lx2.broadcom.com>
-References: <1407140413-4561-1-git-send-email-mlombard@redhat.com>
-	 <1408556122.10706.20.camel@lbirv-waie-lx2.broadcom.com>
-	 <53F7091C.1080400@redhat.com>
-	 <alpine.OSX.2.00.1408220805170.360@administrators-macbook-pro.local>
-	 <53F7881A.1070808@redhat.com>
+Subject: Re: [PATCH] bnx2fc: do not add shared skbs to the fcoe_rx_list
+Date: Fri, 22 Aug 2014 16:02:03 -0700
+Message-ID: <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com>
+References: <1406275372-3983-1-git-send-email-mlombard@redhat.com>
+	 <53D21166.4090608@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15929 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145AbaHVWwv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2014 18:52:51 -0400
-In-Reply-To: <53F7881A.1070808@redhat.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61200 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbaHVXI1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Aug 2014 19:08:27 -0400
+In-Reply-To: <53D21166.4090608@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@lst.de
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2014-08-22 at 20:12 +0200, Maurizio Lombardi wrote:
-> Hi Chad,
+On Fri, 2014-07-25 at 10:12 +0200, Maurizio Lombardi wrote:
+> Hi Eddie,
 > 
-> On 08/22/2014 02:08 PM, Chad Dupuis wrote:
-> > Eddie, Maurizio,
-> > 
-> > Since it looks like there can be a difference in the pdev would it make sense instead to convert the unmap function to use the bare DMA API so we're consistent in our use of hba->pcidev->dev?  Maybe something like this:
+> just want to add you to the CC list.
 > 
-> I looked at what the bnx2i driver code does, it has a hba->pcidev pointer too but makes use of scsi_map_sg()/scsi_unmap_sg().
-> So, from my point of view, it is the bnx2fc's map operation (that bypasses scsi_map_sg() and uses dma_map_sg()) to look like a suspicious exception and I decided to change it.
+> Some days ago the bnx2fc's maintainer email address has been updated,
+> this should be the new one: QLogic-Storage-Upstream@qlogic.com
 > 
-> So far, I didn't get any error or strange behaviour after this change.
-> Eddie, what do you think about it?
+> I tried to send this patch to the new address but I received the following
+> delivery failure notification:
 > 
-> Regards,
-> Maurizio Lombardi
+> --------
+> Delivery has failed to these recipients or groups:
 > 
+> Dept_Linux_FC@qlogic.com<mailto:Dept_Linux_FC@qlogic.com>
+> Your message can't be delivered because delivery to this address is restricted.
+> --------
+is this still a problem?  The mail reflector seems to work for me...
+
+> 
+> On 07/25/2014 10:02 AM, Maurizio Lombardi wrote:
+> > In some cases, the fcoe_rx_list may contains multiple instances
+> > of the same skb (the so called "shared skbs").
 > > 
-> > diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> > index 32a5e0a..8b4adcf 100644
-> > --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-> > +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> > @@ -1700,9 +1700,12 @@ static int bnx2fc_build_bd_list_from_sg(struct bnx2fc_cmd *io_req)
-> >  static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
-> >  {
-> >         struct scsi_cmnd *sc = io_req->sc_cmd;
-> > +       struct bnx2fc_interface *interface = io_req->port->priv;
-> > +       struct bnx2fc_hba *hba = interface->hba;
+> > the bnx2fc_l2_rcv thread is a loop that extracts a skb from the list,
+> > modifies (and destroys) its content and the proceed to the next one.
+> > The problem is that if the skb is shared, the remaining instances will
+> > be corrupted.
 > > 
-> > -       if (io_req->bd_tbl->bd_valid && sc) {
-> > -               scsi_dma_unmap(sc);
-> > +       if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
-> > +               dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
-> > +                   scsi_sg_count(sc), sc->sc_data_direction);
-> >                 io_req->bd_tbl->bd_valid = 0;
-> >         }
-> >  }
+> > The solution is to use skb_share_check() before adding the skb to the
+> > fcoe_rx_list.
 > > 
-> > On Fri, 22 Aug 2014, Maurizio Lombardi wrote:
+> > [ 6286.808725] ------------[ cut here ]------------
+> > [ 6286.808729] WARNING: at include/scsi/fc_frame.h:173 bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]()
+> > [ 6286.808748] Modules linked in: bnx2x(-) mdio dm_service_time bnx2fc cnic uio fcoe libfcoe 8021q garp stp mrp libfc llc scsi_transport_fc scsi_tgt sg iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel e1000e ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper ptp cryptd hpilo serio_raw hpwdt lpc_ich pps_core ipmi_si pcspkr mfd_core ipmi_msghandler shpchp pcc_cpufreq mperf nfsd auth_rpcgss nfs_acl lockd sunrpc dm_multipath xfs libcrc32c ata_generic pata_acpi sd_mod crc_t10dif crct10dif_common mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit ata_piix drm_kms_helper ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod [last unloaded: mdio]
+> > [ 6286.808750] CPU: 3 PID: 1304 Comm: bnx2fc_l2_threa Not tainted 3.10.0-121.el7.x86_64 #1
+> > [ 6286.808750] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+> > [ 6286.808752]  0000000000000000 000000000b36e715 ffff8800deba1e00 ffffffff815ec0ba
+> > [ 6286.808753]  ffff8800deba1e38 ffffffff8105dee1 ffffffffa05618c0 ffff8801e4c81888
+> > [ 6286.808754]  ffffe8ffff663868 ffff8801f402b180 ffff8801f56bc000 ffff8800deba1e48
+> > [ 6286.808754] Call Trace:
+> > [ 6286.808759]  [<ffffffff815ec0ba>] dump_stack+0x19/0x1b
+> > [ 6286.808762]  [<ffffffff8105dee1>] warn_slowpath_common+0x61/0x80
+> > [ 6286.808763]  [<ffffffff8105e00a>] warn_slowpath_null+0x1a/0x20
+> > [ 6286.808765]  [<ffffffffa054f415>] bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]
+> > [ 6286.808767]  [<ffffffffa054eff0>] ? bnx2fc_disable+0x90/0x90 [bnx2fc]
+> > [ 6286.808769]  [<ffffffff81085aef>] kthread+0xcf/0xe0
+> > [ 6286.808770]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> > [ 6286.808772]  [<ffffffff815fc76c>] ret_from_fork+0x7c/0xb0
+> > [ 6286.808773]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> > [ 6286.808774] ---[ end trace c6cdb939184ccb4e ]---
 > > 
-> >> Hi Eddie,
-> >>
-> >> On 08/20/2014 07:35 PM, Eddie Wai wrote:
-> >>> On Mon, 2014-08-04 at 10:20 +0200, Maurizio Lombardi wrote:
-> >>>> In the bnx2fc_map_sg() function, the original behaviour is to
-> >>>> allocate the DMA memory by directly calling dma_map_sg()
-> >>>> instead of using scsi_dma_map().
-> >>>>
-> >>>> In contrast, bnx2fc_unmap_sg_list() calls scsi_dma_unmap().
-> >>>>
-> >>>> The problem is that bnx2fc_map_sg() passes to the dma_map_sg() function
-> >>>> the pointer to the "device" structure taken from pci_dev
-> >>>> and not from Scsi_Host (as scsi_dma_map/unmap() do).
-> >>>>
-> >>> Great find, Maurizio, Thanks again.
-> >>
-> >> Thanks :)
-> >>
-> >>>
-> >>>> In some circumstances, the two devices may be different and the
-> >>>> DMA library will be unable to find the correct entry
-> >>>> when freeing the memory.
-> >>>>
-> >>> I'm curious at how the hba->pcidev->dev in the dma_map_sg call could end
-> >>> up being different from the scsi_cmnd's device->host->dma_dev...  Can
-> >>> you share the test scenario?
-> >>
-> >> It happens every time you set up an fcoe interface, so you just have to compile the
-> >> kernel with the DMA API debug option.
-> >> It is 100% reproducible with RHEL6, RHEL7 and the latest mainline kernel also.
-
-This got me thinking that the scsi_host's dma_dev must have been changed
-recently and I think I found the culprit:
-http://www.spinics.net/lists/linux-scsi/msg65225.html
-
-So back when, we changed the scsi_host's parent from hba->pcidev->dev to
-the fcoe_ctlr_device's dev to basically align with the soft fcoe code to
-fix a fcoemon expectation.  Although this was changed correctly, the sg
-DMA mapping routine did not adapt to it; hence the mismatch.
-
-Prior to this change, both sg dma map and unmap were done to the
-hba->pcidev->dev along with all other DMA mapping routines.  I also see
-that even though bnx2i uses the scsi_map_sg/scsi_unmap_sg pairs,
-ultimately, they were operating on the hba->pcidev->dev device.
-
-My opinion is that it would probably be in our best interest to have all
-DMA mapping/unmapping routines continue to operate on the
-hba->pcidev->dev directly to prevent any unforeseen DMA problems.
-
-> >>
-> >>>
-> >>> I see that scsi_dma_map could possibly return a -ENOMEM.  It would be
-> >>> best if we also add the check for sg_count being < 0 and return the
-> >>> bd_count or 0.
-> >>>
-> >>>>      scsi_for_each_sg(sc, sg, sg_count, i) {
-> >>>>          sg_len = sg_dma_len(sg);
-> >>>>          addr = sg_dma_address(sg);
-> >>
-> >> True, but sg_count is only used for the "scsi_for_each()",
-> >> if it is 0 or -ENOMEM it will simply skip the loop and will execute "return bd_count".
-> >>
-> >> Regards,
-> >> Maurizio Lombardi
-> >>
+> > Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> > ---
+> >  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> > index 785d0d7..a190ab6 100644
+> > --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> > +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> > @@ -411,6 +411,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+> >  	struct fc_frame_header *fh;
+> >  	struct fcoe_rcv_info *fr;
+> >  	struct fcoe_percpu_s *bg;
+> > +	struct sk_buff *tmp_skb;
+> >  	unsigned short oxid;
+> >  
+> >  	interface = container_of(ptype, struct bnx2fc_interface,
+> > @@ -423,6 +424,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+> >  		goto err;
+> >  	}
+> >  
+> > +	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
+> > +	if (!tmp_skb)
+> > +		goto err;
+> > +
+> > +	skb = tmp_skb;
+> > +
+> >  	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
+> >  		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+> >  		goto err;
+> > 
+Seems logical, but this patch requires some testing which ought to be
+verified by the Qlogic team.  Thanks.
 
 
