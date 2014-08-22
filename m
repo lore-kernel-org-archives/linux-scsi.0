@@ -1,31 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
-	bnx2fc_map_sg()
-Date: Fri, 22 Aug 2014 14:11:06 +0200
-Message-ID: <20140822121106.GA14110@lst.de>
-References: <1407140413-4561-1-git-send-email-mlombard@redhat.com> <1408556122.10706.20.camel@lbirv-waie-lx2.broadcom.com> <53F7091C.1080400@redhat.com> <alpine.OSX.2.00.1408220805170.360@administrators-macbook-pro.local>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
+ error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
+Date: Fri, 22 Aug 2014 12:13:42 +0000
+Message-ID: <bug-81861-11613-rcxSV8ODsY@https.bugzilla.kernel.org/>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:36117 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.19.201]:50343 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753273AbaHVMLK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2014 08:11:10 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.OSX.2.00.1408220805170.360@administrators-macbook-pro.local>
+	id S1752737AbaHVMNq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Aug 2014 08:13:46 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 11B082017A
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 12:13:45 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 9B6772018E
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 12:13:42 +0000 (UTC)
+In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>, Eddie Wai <eddie.wai@broadcom.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@lst.de
+To: linux-scsi@vger.kernel.org
 
-On Fri, Aug 22, 2014 at 08:08:33AM -0400, Chad Dupuis wrote:
-> Eddie, Maurizio,
->
-> Since it looks like there can be a difference in the pdev would it make 
-> sense instead to convert the unmap function to use the bare DMA API so 
-> we're consistent in our use of hba->pcidev->dev?  Maybe something like 
-> this:
+https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
-This looks like a better plan to me.  Can you also document why you
-are using plain dma_map/unmap_sg and a different dma device in the code?
+--- Comment #6 from linux-ide@crashplan.pro ---
+When connecting just a single 4 drive group to the good ports (for example 2C)
+of the external PCIe expander card:
+cold boot = doesn't detect any of the 4 PUIS drives
+warm boot = does detect all 4 PUIS drives
 
+When powering up using the warm boot method there don't seem to be errors
+reported by smartctl neither sg_ses.
+
+However this cold boot issue might be a different issue from this kernel crash.
+According to debug messages first a "Set Features" (0xEF) is being sent. My
+guess is that this set features issues subcommand (0x07): spin up media.
+
+And later on the "Identify Device" (0xEC) is sent.
+
+
+When I correctly read the Hitachi specification the Spin Up (Set Features)
+should be sent after "Drive Identify". For this Hitachi HDS5C3020BLE630 the
+Drive_Identify (# sg_sat_identify -v /dev/sdb) word 2 outputs "738c" (hex),
+which translates to specification "Need Set Feature for spin-up after power-up
+Identify Device is complete" according to HGST specification page 127.
+
+Is there a boot parameter (or similar way) to load the mvsas driver without
+sending the "Set Features" (0xEF) command?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
