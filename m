@@ -1,51 +1,68 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Fri, 22 Aug 2014 14:05:25 +0000
-Message-ID: <bug-81861-11613-cRj1GxfnJg@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
+Date: Fri, 22 Aug 2014 14:40:25 +0000
+Message-ID: <37724B2049F71D4C9B086F99DDB2DE11572409D6@CMEXMB2.ad.emulex.com>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <1cf2c3d3243067edac8d170cda0450c82bbfc025.1408335523.git.agordeev@redhat.com>
+ <53F5D397.2020508@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55640 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932120AbaHVOF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2014 10:05:28 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 89231201BC
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 14:05:27 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 91A752018E
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Aug 2014 14:05:25 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <53F5D397.2020508@redhat.com>
+Content-Language: en-US
+Sender: linux-pci-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
---- Comment #10 from linux-ide@crashplan.pro ---
-Another test round to see whether there is a difference in crash whether using
-cold or warm boot:
-5C + cold boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-5C + warm boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-6C + cold boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-6C + warm boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-7C + cold boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-7C + warm boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-8C + cold boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-8C + warm boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-9C + cold boot = mvs_task_prep+0x72e/0xd50 [mvsas]
-9C + warm boot = mvs_task_prep+0x72e/0xd50 [mvsas]
 
-In cases 6C, 7C and 9C the r8169 nic 
-doesn't come up after the first automatic reboot after cold boot ("Waiting for
-network configuration..." and "Waiting up to 60 more seconds for network
-configuration...")
-   does come up after the second automatic reboot after cold boot
-[reproduceable=yes]
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Thursday, August 21, 2014 4:10 AM
+To: Alexander Gordeev; linux-kernel@vger.kernel.org
+Cc: Jayamohan Kallickal; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 08/13] be2iscsi: Use pci_enable_msix_range()
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+On 08/18/2014 08:01 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these 
+> two interfaces need to be updated to use the new 
+> pci_enable_msi_range() and pci_enable_msix_range() interfaces.
+
+Patch looks good to me.
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c 
+> b/drivers/scsi/be2iscsi/be_main.c index 915c26b..b422659 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -5276,9 +5276,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+>  	for (i = 0; i <= phba->num_cpus; i++)
+>  		phba->msix_entries[i].entry = i;
+>  
+> -	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+> -				 (phba->num_cpus + 1));
+> -	if (!status)
+> +	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
+> +				       phba->num_cpus + 1, phba->num_cpus + 1);
+> +	if (status > 0)
+>  		phba->msix_enabled = true;
+>  
+>  	return;
+
+
+Looks Good.
+
+Acked-by:  Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+--
