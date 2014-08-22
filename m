@@ -1,68 +1,214 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
- error messages on trace
-Date: Fri, 22 Aug 2014 00:39:59 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C1A9E5@G9W0745.americas.hpqcorp.net>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
+From: subhashj@codeaurora.org
+Subject: Re: [PATCH v3] scsi: ufs-msm: add UFS controller support for
+ Qualcomm MSM chips
+Date: Fri, 22 Aug 2014 00:50:46 -0000
+Message-ID: <a97b7b39f243133f7e7272bfbea09889.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:55828 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755388AbaHVAlp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2014 20:41:45 -0400
-In-Reply-To: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: Kumar Gala <galak@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Grant Likely <grant.likely@linaro.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIFlvc2hpaGlybyBZVU5PTUFFDQo+IFNlbnQ6IEZyaWRheSwgMDggQXVn
-dXN0LCAyMDE0IDY6NTAgQU0NCj4gU3ViamVjdDogW1JGQyBQQVRDSCAtbG9nZ2luZyAwMC8xMF0g
-c2NzaS9jb25zdGFudHM6IE91dHB1dCBjb250aW51b3VzDQo+IGVycm9yIG1lc3NhZ2VzIG9uIHRy
-YWNlDQouLi4NCj4gMSkgcHJpbnRrDQo+IEtlZXBzIGN1cnJlbnQgaW1wbGVtbnRhdGlvbiBvZiB1
-cHN0cmVhbSBrZXJuZWwuDQo+IFRoZSBtZXNzYWdlcyBhcmUgZGl2aWRlZCBhbmQgY2FuIGJlIG1p
-eGVkLCBidXQgYWxsIHVzZXJzIGNhbg0KPiBjaGVjayB0aGUgZXJyb3IgbWVzc2FnZXMgd2l0aG91
-dCBhbnkgc2V0dGluZ3MuDQoNCnNjc2lfaW9fY29tcGxldGlvbiBpZ25vcmUgdGhlIHNjc2lfbG9n
-Z2luZ19sZXZlbCBhbmQgYWx3YXlzIGNhbGxzDQpwcmludGsgaWYgaXQgZGV0ZWN0cyBBQ1RJT05f
-RkFJTCwgcmVzdWx0aW5nIGluIG1lc3NhZ2VzIGxpa2U6DQoNCiAgICBbMTAyNDAuMzM4NjAwXSBz
-ZCAyOjA6MDowOiBbc2RyXQ0KICAgIFsxMDI0MC4zMzk3MjJdIFJlc3VsdDogaG9zdGJ5dGU9RElE
-X09LIGRyaXZlcmJ5dGU9RFJJVkVSX1NFTlNFDQogICAgWzEwMjQwLjM0MTY2Ml0gc2QgMjowOjA6
-MDogW3Nkcl0NCiAgICBbMTAyNDAuMzQyNzkyXSBTZW5zZSBLZXkgOiBIYXJkd2FyZSBFcnJvciBb
-Y3VycmVudF0NCiAgICBbMTAyNDAuMzQ0NTc1XSBzZCAyOjA6MDowOiBbc2RyXQ0KICAgIFsxMDI0
-MC4zNDU2NTNdIEFkZC4gU2Vuc2U6IExvZ2ljYWwgdW5pdCBmYWlsdXJlDQogICAgWzEwMjQwLjM0
-NzEzOF0gc2QgMjowOjA6MDogW3Nkcl0gQ0RCOg0KICAgIFsxMDI0MC4zNDgzMDldIFJlYWQoMTAp
-OiAyOCAwMCAwMCAwMCAwMCA4MCAwMCAwMCAwOCAwMA0KDQpJZiB5b3UgdHJpZ2dlciBodW5kcmVk
-cyBvZiBlcnJvcnMgKGUuZy4sIGhvdCByZW1vdmUgYSBkZXZpY2UNCmR1cmluZyBoZWF2eSBJTyks
-IHRoZW4gYWxsIHRoZSBwcmludHMgdG8gdGhlIGxpbnV4IHNlcmlhbCBjb25zb2xlDQpib2cgZG93
-biB0aGUgc3lzdGVtLCBjYXVzaW5nIHRpbWVvdXRzIGluIGNvbW1hbmRzIHRvIG90aGVyDQpkZXZp
-Y2VzIGFuZCBzb2Z0IGxvY2t1cHMgZm9yIGFwcGxpY2F0aW9ucy4NCg0KU29tZSBjaGFuZ2VzIHRo
-YXQgd291bGQgaGVscCBhcmU6DQoxLiBQdXQgdGhlbSB1bmRlciBTQ1NJIGxvZ2dpbmcgbGV2ZWwg
-Y29udHJvbA0KMi4gVXNlIHByaW50a19yYXRlbGltaXRlZCBzbyBhbiBleGNlc3NpdmUgbnVtYmVy
-IGFyZSB0cmltbWVkDQoNCldvdWxkIHlvdSBsaWtlIHRvIGluY2x1ZGUgc29tZXRoaW5nIGxpa2Ug
-dGhpcyBpbiB5b3VyDQpwYXRjaCBzZXQ/DQoNClRoaXMgaXMgYW4gZXhhbXBsZSBwYXRjaCB0aGF0
-IG9ubHkgcHJpbnRzIHRoZW0gaWYgdGhlIE1MQ09NUExFVEUgDQpsb2dnaW5nIGxldmVsIGlzIG5v
-bnplcm8uDQpPZmY6IHNjc2lfbG9nZ2luZ19sZXZlbCAtLXNldCAtLW1sY29tcGxldGU9MA0KT246
-IHNjc2lfbG9nZ2luZ19sZXZlbCAtLXNldCAtLW1sY29tcGxldGU9MQ0KDQpTb21lIG90aGVyIGxv
-Z2xldmVsIChlLmcuLCBFUlJPUl9SRUNPVkVSWSkgY291bGQgYmUgdXNlZC4NCg0KZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCmlu
-ZGV4IGQ2YjRlYTguLmRiYjYwMWYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIu
-Yw0KKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCkBAIC0xMDM3LDcgKzEwMzcsOSBAQCB2
-b2lkIHNjc2lfaW9fY29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIHVuc2lnbmVkIGlu
-dCBnb29kX2J5dGVzKQ0KIAlzd2l0Y2ggKGFjdGlvbikgew0KIAljYXNlIEFDVElPTl9GQUlMOg0K
-IAkJLyogR2l2ZSB1cCBhbmQgZmFpbCB0aGUgcmVtYWluZGVyIG9mIHRoZSByZXF1ZXN0ICovDQot
-CQlpZiAoIShyZXEtPmNtZF9mbGFncyAmIFJFUV9RVUlFVCkpIHsNCisJCWlmICghKHJlcS0+Y21k
-X2ZsYWdzICYgUkVRX1FVSUVUKSAmJg0KKwkJICAgIFNDU0lfTE9HX0xFVkVMKFNDU0lfTE9HX01M
-Q09NUExFVEVfU0hJRlQsDQorCQkgICAgU0NTSV9MT0dfTUxDT01QTEVURV9CSVRTKSkgew0KIAkJ
-CXNjc2lfcHJpbnRfcmVzdWx0KGNtZCk7DQogCQkJaWYgKGRyaXZlcl9ieXRlKHJlc3VsdCkgJiBE
-UklWRVJfU0VOU0UpDQogCQkJCXNjc2lfcHJpbnRfc2Vuc2UoIiIsIGNtZCk7DQoNCkNvbnZlcnRp
-bmcgdG8gcHJpbnRrX3JhdGVsaW1pdGVkIGlzIGhhcmRlciBzaW5jZSB0aGUgcHJpbnRzDQphcmUg
-c3ByZWFkIG91dCBvdmVyIHRocmVlIGZ1bmN0aW9ucyAoYW5kIGFzIHlvdXIgcGF0Y2gNCnNlcmll
-cyBub3RlcywgbWFueSBpbmRpdmlkdWFsIHByaW50ayBjYWxscykuICBUaGUgcmF0ZXMNCmZvciB0
-aGUgcHJpbnRrIGNhbGxzIG1pZ2h0IG5vdCBtYXRjaCwgd2hpY2ggd291bGQgbGVhZCB0bw0KZXZl
-biBtb3JlIGNvbmZ1c2luZyBvdXRwdXQuDQoNCi0tLQ0KUm9iIEVsbGlvdHQgICAgSFAgU2VydmVy
-IFN0b3JhZ2UNCg0KDQoNCg==
+>> On Aug 14, 2014, at 9:22 AM, Yaniv Gardi <ygardi@codeaurora.org> wro=
+te:
+>>> The files in this change implement the UFS HW (controller & PHY) sp=
+ecific
+>>> behavior in Qualcomm MSM chips.
+>>> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+>>> ---
+>>> Documentation/devicetree/bindings/ufs/ufs-msm.txt  |   37 +
+>>> .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |    4 +
+>>> drivers/scsi/ufs/Kconfig                           |   12 +
+>>> drivers/scsi/ufs/Makefile                          |    4 +
+>>> drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.c            |  254 +++++
+drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.h            |  216 ++++
+drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.c            |  368 +++++++
+drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.h            |  735
++++++++++++++
+>>> drivers/scsi/ufs/ufs-msm-phy.c                     |  646 +++++++++=
++++
+drivers/scsi/ufs/ufs-msm-phy.h                     |  193 ++++
+>> Any reason not to put the phy driver in drivers/phy ?
+> Yes. Phy driver introduces a generic phy framework.
+> And as a framework it provides with API's, callbacks,
+> And data structures.
+> I think the right place to have the >implementation< of the ufs-msm-p=
+hy
+code
+> Is under drivers/scsi/ufs as it's more related to ufs than it's relat=
+ed
+to
+> the framework itself.
+
+I would agree with Kumar that PHY specific platform driver (which uses =
+the
+generic PHY framwork) can actually go under drivers/phy/*, if i look at
+the 3.17-rc1, there are many platform specific phy drivers under
+drivers/phy/.
+
+>>> drivers/scsi/ufs/ufs-msm.c                         | 1105
+>>> ++++++++++++++++++++
+>>> drivers/scsi/ufs/ufs-msm.h                         |  158 +++
+>>> 12 files changed, 3732 insertions(+)
+>>> create mode 100644 Documentation/devicetree/bindings/ufs/ufs-msm.tx=
+t
+create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.c
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-20nm.h
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.c
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm-phy-qmp-28nm.h
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm-phy.c
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm-phy.h
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm.c
+>>> create mode 100644 drivers/scsi/ufs/ufs-msm.h
+>> Seems like we should spit this into two patches, one for the phy and
+one
+>> for the UFS driver itself.  Maybe even three, one for the 20nm phy, =
+one
+for the 28nm phy, and one for ufs-msm.c,h.
+> we could try to split it, but since we didn't split this change into
+functional sub-changes, we decided to upload this change as a whole, as
+one change without the other wouldn't work anyhow, and they are both
+needed for proper functionality.
+>>> diff --git a/Documentation/devicetree/bindings/ufs/ufs-msm.txt
+b/Documentation/devicetree/bindings/ufs/ufs-msm.txt
+>>> new file mode 100644
+>>> index 0000000..b5caace
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/ufs/ufs-msm.txt
+>> This should probably be bindings/phy/qcom-ufs-phy.txt
+
+If Yaniv also agrees that Qualcomm UFS MSM PHY specific driver should m=
+ove
+under drivers/phy then yes, "ufs-msm.txt" should also move under
+bindings/phy/.
+
+Btw, regarding using "qcom-ufs-phy.txt" instead "ufs-msm.txt", i would
+agree that we need to add "phy" in file name but not sure we would like=
+ to
+replace "msm" with "qcom" because we used "msm" prefix/postfix almost
+everywhere.
+
+
+
+>>> @@ -0,0 +1,37 @@
+>>> +* MSM Universal Flash Storage (UFS) PHY
+>>> +
+>>> +UFSPHY nodes are defined to describe on-chip UFS PHY hardware macr=
+o.
++Each UFS PHY node should have its own node.
+>>> +
+>>> +To bind UFS PHY with UFS host controller, the controller node shou=
+ld
++contain a phandle reference to UFS PHY node.
+>>> +
+>>> +Required properties:
+>>> +- compatible        : compatible list, contains
+>>> "qcom,ufs-msm-phy-qmp-28nm"
+>>> +                      or "qcom,ufs-msm-phy-qmp-20nm" according to =
+the
+relevant
+>>> +                      phy in use
+>> Do we really need =91-msm=92 in the compat name?
+
+That's the convention we followed for all file names and hence carry
+forwarded to compatible name as well. Any specific issues with it?
+
+>>> +- reg               : <registers mapping>
+>>> +- #phy-cells         : This property shall be set to 0
+>>> +- vdda-phy-supply   : phandle to main PHY supply for analog domain=
+ +-
+vdda-pll-supply   : phandle to PHY PLL and Power-Gen block power
+supply
+>>> +
+>>> +Optional properties:
+>>> +- vdda-phy-max-microamp : specifies max. load that can be drawn fr=
+om
+phy supply
+>>> +- vdda-pll-max-microamp : specifies max. load that can be drawn fr=
+om
+pll supply
+>>> +
+>>> +Example:
+>>> +
+>>> +	ufsphy1: ufsphy@0xfc597000 {
+>>> +		compatible =3D "qcom,ufs-msm-phy-qmp-28nm";
+>>> +		reg =3D <0xfc597000 0x800>;
+>>> +		#phy-cells =3D <0>;
+>>> +		vdda-phy-supply =3D <&pma8084_l4>;
+>>> +		vdda-pll-supply =3D <&pma8084_l12>;
+>>> +		vdda-phy-max-microamp =3D <50000>;
+>>> +		vdda-pll-max-microamp =3D <1000>;
+>>> +	};
+>>> +
+>>> +	ufshc@0xfc598000 {
+>>> +		...
+>>> +		phys =3D <&ufsphy1>;
+>>> +	};
+>>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.tx=
+t
+b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>> index e73a619..378585c 100644
+>>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>>> @@ -9,6 +9,9 @@ Required properties:
+>>> - reg               : <registers mapping>
+>>> Optional properties:
+>>> +- phys			: phandle to UFS PHY node
+>>> +- phy-names		: the string "ufs_msm_phy" when is found in a node,
+along
+>>> +			  with "phys" attribute, provides phandle to UFS PHY node
+>> seems like the phy-names should be more generic like =93ufsphy"
+
+Agreed, in facts this "phy-names" property is no longer required. Yaniv=
+,
+can you please remove this.
+
+>>> - vcc-supply            : phandle to VCC supply regulator node -
+vccq-supply           : phandle to VCCQ supply regulator node -
+vccq2-supply          : phandle to VCCQ2 supply regulator node @@
+-39,6 +42,7 @@ Example:
+>>> 		reg =3D <0xfc598000 0x800>;
+>>> 		interrupts =3D <0 28 0>;
+>>> +		ufs-phy =3D <&ufsphy>;
+>>> 		vcc-supply =3D <&xxx_reg1>;
+>>> 		vcc-supply-1p8;
+>>> 		vccq-supply =3D <&xxx_reg2>;
+>>> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig in=
+dex
+6e07b2a..a8259e0 100644
+>>> --- a/drivers/scsi/ufs/Kconfig
+>>> +++ b/drivers/scsi/ufs/Kconfig
+>>> @@ -70,3 +70,15 @@ config SCSI_UFSHCD_PLATFORM
+>>> 	If you have a controller with this interface, say Y or M here.
+>>> 	  If unsure, say N.
+>>> +
+>>> +config SCSI_UFS_MSM
+>>> +	bool "MSM specific hooks to UFS controller platform driver"
+>>> +	depends on SCSI_UFSHCD_PLATFORM && ARCH_MSM
+>> This should probably be ARCH_QCOM instead of ARCH_MSM
+
+ok. will check this. Thanks.
+
+>>> +	help
+>>> +	  This selects the MSM specific additions to UFSHCD platform driv=
+er.
++	  UFS host on MSM needs some vendor specific configuration before +=09
+ accessing the hardware which includes PHY configuration and vendor +=09
+ specific registers.
+>>> +
+>>> +	  Select this if you have UFS controller on MSM chipset.
+>>> +	  If unsure, say N.
+>> [ snip ]
+>> - k
+>> --
+>> Employee of Qualcomm Innovation Center, Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, h=
+osted
+>> by The Linux Foundation
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
