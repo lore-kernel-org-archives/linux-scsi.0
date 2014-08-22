@@ -1,124 +1,68 @@
-From: subhashj@codeaurora.org
-Subject: Re: [PATCH/RFC V2 07/16] scsi: support well known logical units
-Date: Fri, 22 Aug 2014 00:02:30 -0000
-Message-ID: <82e763120409310e9d6b332854804858.squirrel@www.codeaurora.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
+ error messages on trace
+Date: Fri, 22 Aug 2014 00:39:59 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C1A9E5@G9W0745.americas.hpqcorp.net>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-Cc: Dolev Raviv <draviv@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:55828 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755388AbaHVAlp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Aug 2014 20:41:45 -0400
+In-Reply-To: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-> On Thu, Aug 14, 2014 at 04:30:58PM +0300, Dolev Raviv wrote:
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->> REPORT LUNS command has "SELECT REPORT" field which controls what ty=
-pe of
->> logical units to be reported by device server. According to UFS devi=
-ce
-standard, if this field is set to 0, REPORT LUNS would report only
-report
->> standard logical units. If it's set to 1 then it would report only w=
-ell
-known logical unit and if it's set to 2 then device would report both
-standard and well known logical units.
->> Some well-known logical units might not have scsi upper-layer driver=
-s. In
->> such cases, the runtime PM reference count increased during device
-enumeration will not be decreased, causing the parent device (host) to
-always be on even during idle.
->> This change allows the SCSI LLD (Low Level Driver) to choose which t=
-ype
-of logical units should be detected.
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
->> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c ind=
-ex
-4a6e4ba..5a0e164 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -802,6 +802,14 @@ static int scsi_add_lun(struct scsi_device *sde=
-v,
-unsigned char *inq_result,
->>  	} else {
->>  		sdev->type =3D (inq_result[0] & 0x1f);
->>  		sdev->removable =3D (inq_result[1] & 0x80) >> 7;
->> +
->> +		/*
->> +		 * some devices may respond with wrong type for
->> +		 * well-known logical units. Force well-known type
->> +		 * to enumerate them correctly.
->> +		 */
->> +		if (scsi_is_wlun(sdev->lun) && (sdev->type !=3D TYPE_WLUN))
->> +			sdev->type =3D TYPE_WLUN;
-> no need to test for TYPE_WLUN here.]
-
-Agreed, will fix it.
-
->>  	switch (sdev->type) {
->> @@ -817,6 +825,7 @@ static int scsi_add_lun(struct scsi_device *sdev=
-,
-unsigned char *inq_result,
->>  	case TYPE_COMM:
->>  	case TYPE_RAID:
->>  	case TYPE_OSD:
->> +	case TYPE_WLUN:
->>  		sdev->writeable =3D 1;
->>  		break;
->>  	case TYPE_ROM:
-> This switch statements has been removed in 3.17-rc1, please rebase yo=
-ur
-series on top of it.
-
-Sure.
-
-> While you're at it please make this patch, which
-> introduce=D1=95 core scsi changes first in the series.
-
-Ok. Will move these core changes first in the current patch series.
-
->> @@ -1412,6 +1421,13 @@ static int scsi_report_lun_scan(struct
->> scsi_target *starget, int bflags,
->>  	 */
->>  	memset(&scsi_cmd[1], 0, 5);
->> +	if (shost->report_wlus)
->> +		/*
->> +		 * Set "SELECT REPORT" field to 0x2 which will make device to +		=
- *
-report well known logical units along with standard LUs.
->> +		 */
->> +		scsi_cmd[2] =3D 0x2;
-> So we're finally getting well known LUN support.  I think we should k=
-ey
-this
-> off the SBC compliance level and not have the drivers opt in.
-
-If i understood this correctly, we want to make all devices report well
-known LUs irrespective of device driver (LLD)'s preference? If yes then=
- i
-will knock off "if (shost->report_wlus)" check.
-
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5f36788..ba9d0f0 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1060,6 +1060,13 @@ int scsi_sysfs_add_sdev(struct scsi_device
-*sdev)
->>  		}
->>  	}
->> +	/*
->> +	 * put runtime pm reference for well-known logical units,
->> +	 * drivers are expected to _get_* again during probe.
->> +	 */
->> +	if (scsi_is_wlun(sdev->lun))
->> +		scsi_autopm_put_device(sdev);
-> Special casing the well known LUNs here seems wrong.  Shouldn't we do
-this
-> for any devices that don't get a driver attached to them?
-
-Agreed, i will replace "if (scsi_is_wlun(sdev->lun))" check with "if
-(sdev->sdev_gendev.driver)".
-
-Regards,
-Subhash
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIFlvc2hpaGlybyBZVU5PTUFFDQo+IFNlbnQ6IEZyaWRheSwgMDggQXVn
+dXN0LCAyMDE0IDY6NTAgQU0NCj4gU3ViamVjdDogW1JGQyBQQVRDSCAtbG9nZ2luZyAwMC8xMF0g
+c2NzaS9jb25zdGFudHM6IE91dHB1dCBjb250aW51b3VzDQo+IGVycm9yIG1lc3NhZ2VzIG9uIHRy
+YWNlDQouLi4NCj4gMSkgcHJpbnRrDQo+IEtlZXBzIGN1cnJlbnQgaW1wbGVtbnRhdGlvbiBvZiB1
+cHN0cmVhbSBrZXJuZWwuDQo+IFRoZSBtZXNzYWdlcyBhcmUgZGl2aWRlZCBhbmQgY2FuIGJlIG1p
+eGVkLCBidXQgYWxsIHVzZXJzIGNhbg0KPiBjaGVjayB0aGUgZXJyb3IgbWVzc2FnZXMgd2l0aG91
+dCBhbnkgc2V0dGluZ3MuDQoNCnNjc2lfaW9fY29tcGxldGlvbiBpZ25vcmUgdGhlIHNjc2lfbG9n
+Z2luZ19sZXZlbCBhbmQgYWx3YXlzIGNhbGxzDQpwcmludGsgaWYgaXQgZGV0ZWN0cyBBQ1RJT05f
+RkFJTCwgcmVzdWx0aW5nIGluIG1lc3NhZ2VzIGxpa2U6DQoNCiAgICBbMTAyNDAuMzM4NjAwXSBz
+ZCAyOjA6MDowOiBbc2RyXQ0KICAgIFsxMDI0MC4zMzk3MjJdIFJlc3VsdDogaG9zdGJ5dGU9RElE
+X09LIGRyaXZlcmJ5dGU9RFJJVkVSX1NFTlNFDQogICAgWzEwMjQwLjM0MTY2Ml0gc2QgMjowOjA6
+MDogW3Nkcl0NCiAgICBbMTAyNDAuMzQyNzkyXSBTZW5zZSBLZXkgOiBIYXJkd2FyZSBFcnJvciBb
+Y3VycmVudF0NCiAgICBbMTAyNDAuMzQ0NTc1XSBzZCAyOjA6MDowOiBbc2RyXQ0KICAgIFsxMDI0
+MC4zNDU2NTNdIEFkZC4gU2Vuc2U6IExvZ2ljYWwgdW5pdCBmYWlsdXJlDQogICAgWzEwMjQwLjM0
+NzEzOF0gc2QgMjowOjA6MDogW3Nkcl0gQ0RCOg0KICAgIFsxMDI0MC4zNDgzMDldIFJlYWQoMTAp
+OiAyOCAwMCAwMCAwMCAwMCA4MCAwMCAwMCAwOCAwMA0KDQpJZiB5b3UgdHJpZ2dlciBodW5kcmVk
+cyBvZiBlcnJvcnMgKGUuZy4sIGhvdCByZW1vdmUgYSBkZXZpY2UNCmR1cmluZyBoZWF2eSBJTyks
+IHRoZW4gYWxsIHRoZSBwcmludHMgdG8gdGhlIGxpbnV4IHNlcmlhbCBjb25zb2xlDQpib2cgZG93
+biB0aGUgc3lzdGVtLCBjYXVzaW5nIHRpbWVvdXRzIGluIGNvbW1hbmRzIHRvIG90aGVyDQpkZXZp
+Y2VzIGFuZCBzb2Z0IGxvY2t1cHMgZm9yIGFwcGxpY2F0aW9ucy4NCg0KU29tZSBjaGFuZ2VzIHRo
+YXQgd291bGQgaGVscCBhcmU6DQoxLiBQdXQgdGhlbSB1bmRlciBTQ1NJIGxvZ2dpbmcgbGV2ZWwg
+Y29udHJvbA0KMi4gVXNlIHByaW50a19yYXRlbGltaXRlZCBzbyBhbiBleGNlc3NpdmUgbnVtYmVy
+IGFyZSB0cmltbWVkDQoNCldvdWxkIHlvdSBsaWtlIHRvIGluY2x1ZGUgc29tZXRoaW5nIGxpa2Ug
+dGhpcyBpbiB5b3VyDQpwYXRjaCBzZXQ/DQoNClRoaXMgaXMgYW4gZXhhbXBsZSBwYXRjaCB0aGF0
+IG9ubHkgcHJpbnRzIHRoZW0gaWYgdGhlIE1MQ09NUExFVEUgDQpsb2dnaW5nIGxldmVsIGlzIG5v
+bnplcm8uDQpPZmY6IHNjc2lfbG9nZ2luZ19sZXZlbCAtLXNldCAtLW1sY29tcGxldGU9MA0KT246
+IHNjc2lfbG9nZ2luZ19sZXZlbCAtLXNldCAtLW1sY29tcGxldGU9MQ0KDQpTb21lIG90aGVyIGxv
+Z2xldmVsIChlLmcuLCBFUlJPUl9SRUNPVkVSWSkgY291bGQgYmUgdXNlZC4NCg0KZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCmlu
+ZGV4IGQ2YjRlYTguLmRiYjYwMWYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIu
+Yw0KKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMNCkBAIC0xMDM3LDcgKzEwMzcsOSBAQCB2
+b2lkIHNjc2lfaW9fY29tcGxldGlvbihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIHVuc2lnbmVkIGlu
+dCBnb29kX2J5dGVzKQ0KIAlzd2l0Y2ggKGFjdGlvbikgew0KIAljYXNlIEFDVElPTl9GQUlMOg0K
+IAkJLyogR2l2ZSB1cCBhbmQgZmFpbCB0aGUgcmVtYWluZGVyIG9mIHRoZSByZXF1ZXN0ICovDQot
+CQlpZiAoIShyZXEtPmNtZF9mbGFncyAmIFJFUV9RVUlFVCkpIHsNCisJCWlmICghKHJlcS0+Y21k
+X2ZsYWdzICYgUkVRX1FVSUVUKSAmJg0KKwkJICAgIFNDU0lfTE9HX0xFVkVMKFNDU0lfTE9HX01M
+Q09NUExFVEVfU0hJRlQsDQorCQkgICAgU0NTSV9MT0dfTUxDT01QTEVURV9CSVRTKSkgew0KIAkJ
+CXNjc2lfcHJpbnRfcmVzdWx0KGNtZCk7DQogCQkJaWYgKGRyaXZlcl9ieXRlKHJlc3VsdCkgJiBE
+UklWRVJfU0VOU0UpDQogCQkJCXNjc2lfcHJpbnRfc2Vuc2UoIiIsIGNtZCk7DQoNCkNvbnZlcnRp
+bmcgdG8gcHJpbnRrX3JhdGVsaW1pdGVkIGlzIGhhcmRlciBzaW5jZSB0aGUgcHJpbnRzDQphcmUg
+c3ByZWFkIG91dCBvdmVyIHRocmVlIGZ1bmN0aW9ucyAoYW5kIGFzIHlvdXIgcGF0Y2gNCnNlcmll
+cyBub3RlcywgbWFueSBpbmRpdmlkdWFsIHByaW50ayBjYWxscykuICBUaGUgcmF0ZXMNCmZvciB0
+aGUgcHJpbnRrIGNhbGxzIG1pZ2h0IG5vdCBtYXRjaCwgd2hpY2ggd291bGQgbGVhZCB0bw0KZXZl
+biBtb3JlIGNvbmZ1c2luZyBvdXRwdXQuDQoNCi0tLQ0KUm9iIEVsbGlvdHQgICAgSFAgU2VydmVy
+IFN0b3JhZ2UNCg0KDQoNCg==
