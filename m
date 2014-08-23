@@ -1,161 +1,278 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v1 1/8][SCSI] mpt3sas: MPI2.5 Rev G (2.5.2) specifications
-Date: Sat, 23 Aug 2014 17:41:35 +0530
-Message-ID: <1408795902-10523-2-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v1 5/8][SCSI] mpt3sas: Copyright in driver sources is updated for year the 2014.
+Date: Sat, 23 Aug 2014 17:41:39 +0530
+Message-ID: <1408795902-10523-6-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1408795902-10523-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og127.obsmtp.com ([64.18.2.210]:47283 "EHLO
+	exprod7og127.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbaHWMMi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Aug 2014 08:12:38 -0400
+Received: by mail-pa0-f43.google.com with SMTP id lf10so17770258pab.2
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Aug 2014 05:12:37 -0700 (PDT)
 In-Reply-To: <1408795902-10523-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Below is the change set in MPI2.5 Rev G specification and 2.00.31 header files
-1) Added SCSIStatusQualifier to SCSI IO Error Reply message.
-2) Added ATA Security Freeze Lock to IO Unit Page 1 Flags field.
-3) Added Allow Protection Information bit for IR Volume Create.
+Copyright in driver sources is updated for year the 2014.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2.h      | 6 ++++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 8 ++++++--
- drivers/scsi/mpt3sas/mpi/mpi2_init.h | 6 ++++--
- drivers/scsi/mpt3sas/mpi/mpi2_raid.h | 6 +++++-
- 4 files changed, 19 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/Kconfig                | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2.h             | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h        | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h        | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h         | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h        | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_sas.h         | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h        | 2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_type.h        | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c         | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h         | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c       | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h          | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_debug.h        | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c    | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h | 2 +-
+ 19 files changed, 19 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/Kconfig b/drivers/scsi/mpt3sas/Kconfig
+index d53e1b0..4d235dd 100644
+--- a/drivers/scsi/mpt3sas/Kconfig
++++ b/drivers/scsi/mpt3sas/Kconfig
+@@ -2,7 +2,7 @@
+ # Kernel configuration file for the MPT3SAS
+ #
+ # This code is based on drivers/scsi/mpt3sas/Kconfig
+-# Copyright (C) 2012-2013  LSI Corporation
++# Copyright (C) 2012-2014  LSI Corporation
+ #  (mailto:DL-MPTFusionLinux@lsi.com)
+ 
+ # This program is free software; you can redistribute it and/or
 diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index 20da8f9..dc143dd 100644
+index dc143dd..c34c115 100644
 --- a/drivers/scsi/mpt3sas/mpi/mpi2.h
 +++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                 scatter/gather formats.
-  * Creation Date:  June 21, 2006
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
   *
-- * mpi2.h Version:  02.00.29
-+ * mpi2.h Version:  02.00.31
   *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -86,6 +86,8 @@
-  * 11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 12-20-12  02.00.29  Bumped MPI2_HEADER_VERSION_UNIT.
-  *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
-+ * 04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
-+ * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -119,7 +121,7 @@
- #define MPI2_VERSION_02_05                  (0x0205)
- 
- /*Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x1D)
-+#define MPI2_HEADER_VERSION_UNIT            (0x1F)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+  *          Name:  mpi2.h
 diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 889aa70..5b0e5c1 100644
+index becee07..e261a31 100644
 --- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
 +++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Configuration messages and pages
-  * Creation Date:  November 10, 2006
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
   *
-- *   mpi2_cnfg.h Version:  02.00.24
-+ *   mpi2_cnfg.h Version:  02.00.25
   *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -160,6 +160,9 @@
-  * 12-20-12  02.00.24  Marked MPI2_SASIOUNIT1_CONTROL_CLEAR_AFFILIATION as
-  *                     obsolete for MPI v2.5 and later.
-  *                     Added some defines for 12G SAS speeds.
-+ * 04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
-+ *                     Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
-+ *                     match the specification.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -792,6 +795,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
- #define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
- 
- /*IO Unit Page 1 Flags defines */
-+#define MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK       (0x00004000)
- #define MPI25_IOUNITPAGE1_NEW_DEVICE_FAST_PATH_DISABLE  (0x00002000)
- #define MPI25_IOUNITPAGE1_DISABLE_FAST_PATH             (0x00001000)
- #define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
-@@ -870,7 +874,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_5 {
- #define MPI2_IOUNITPAGE5_PAGEVERSION                    (0x00)
- 
- /*defines for IO Unit Page 5 DmaEngineCapabilities field */
--#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFF00)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFFFF0000)
- #define MPI2_IOUNITPAGE5_DMA_CAP_SHIFT_MAX_REQUESTS     (16)
- 
- #define MPI2_IOUNITPAGE5_DMA_CAP_EEDP                   (0x0008)
+  *          Name:  mpi2_cnfg.h
 diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-index f7928bf..b3e3331 100644
+index b3e3331..068c98e 100644
 --- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
 +++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI SCSI initiator mode messages and structures
-  * Creation Date:  June 23, 2006
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
   *
-- * mpi2_init.h Version:  02.00.14
-+ * mpi2_init.h Version:  02.00.15
   *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -44,6 +44,8 @@
-  *                     Priority to match SAM-4.
-  *                     Added EEDPErrorOffset to MPI2_SCSI_IO_REPLY.
-  * 07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
-+ * 04-09-13  02.00.15  Added SCSIStatusQualifier field to MPI2_SCSI_IO_REPLY,
-+ *                     replacing the Reserved4 field.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -347,7 +349,7 @@ typedef struct _MPI2_SCSI_IO_REPLY {
- 	U32 SenseCount;		/*0x18 */
- 	U32 ResponseInfo;	/*0x1C */
- 	U16 TaskTag;		/*0x20 */
--	U16 Reserved4;		/*0x22 */
-+	U16 SCSIStatusQualifier; /* 0x22 */
- 	U32 BidirectionalTransferCount;	/*0x24 */
- 	U32 EEDPErrorOffset;	/*0x28 *//*MPI 2.5 only; Reserved in MPI 2.0*/
- 	U32 Reserved6;		/*0x2C */
+  *          Name:  mpi2_init.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+index 15813f3..4908309 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_ioc.h
 diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
-index 7176523..fbe3aae 100644
+index fbe3aae..13d93ca 100644
 --- a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
 +++ b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Integrated RAID messages and structures
-  * Creation Date:  April 26, 2007
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
   *
-- *   mpi2_raid.h Version:  02.00.09
-+ *   mpi2_raid.h Version:  02.00.10
   *
-  * Version History
-  * ---------------
-@@ -30,6 +30,7 @@
-  * 02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
-  * 07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
-  *                     Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
-+ * 04-17-13  02.00.10  Added MPI25_RAID_ACTION_ADATA_ALLOW_PI.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -46,6 +47,9 @@
- * RAID Action messages
- ****************************************************************************/
- 
-+/* ActionDataWord defines for use with MPI2_RAID_ACTION_CREATE_VOLUME action */
-+#define MPI25_RAID_ACTION_ADATA_ALLOW_PI            (0x80000000)
-+
- /*ActionDataWord defines for use with MPI2_RAID_ACTION_DELETE_VOLUME action */
- #define MPI2_RAID_ACTION_ADATA_KEEP_LBA0            (0x00000000)
- #define MPI2_RAID_ACTION_ADATA_ZERO_LBA0            (0x00000001)
+  *          Name:  mpi2_raid.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+index 361a275..156e305 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_sas.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+index 94e32c2..904910d 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000-2013 LSI Corporation.
++ * Copyright (c) 2000-2014 LSI Corporation.
+  *
+  *
+  *          Name:  mpi2_tool.h
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_type.h b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
+index ba1fed5..99ab093 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_type.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_type.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2013 LSI Corporation.
++ *  Copyright (c) 2000-2014 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_type.h
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 93ce2b2..faa3380 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3,7 +3,7 @@
+  * for access to MPT (Message Passing Technology) firmware.
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 575f1bc..86b931e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -3,7 +3,7 @@
+  * for access to MPT (Message Passing Technology) firmware.
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.h
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 936ec03..4472c2a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -2,7 +2,7 @@
+  * This module provides common API for accessing firmware configuration pages
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index ba9cbe5..dca1487 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3,7 +3,7 @@
+  * controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_ctl.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.h b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
+index 53b0c48..5f3d7fd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
+@@ -3,7 +3,7 @@
+  * controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_ctl.h
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_debug.h b/drivers/scsi/mpt3sas/mpt3sas_debug.h
+index 545b22d..4778e7d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_debug.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_debug.h
+@@ -2,7 +2,7 @@
+  * Logging Support for MPT (Message Passing Technology) based controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_debug.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 77a5bfa..95a1049 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2,7 +2,7 @@
+  * Scsi Host Layer for MPT (Message Passing Technology) based controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_scsih.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 65170cb..d4bafaa 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -2,7 +2,7 @@
+  * SAS Transport Layer for MPT (Message Passing Technology) based controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_transport.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+index f6533ab..8a2dd11 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+@@ -3,7 +3,7 @@
+  * (Message Passing Technology) based controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
+index bb69392..f681db5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
+@@ -4,7 +4,7 @@
+  * controllers
+  *
+  * This code is based on drivers/scsi/mpt3sas/mpt3sas_base.h
+- * Copyright (C) 2012-2013  LSI Corporation
++ * Copyright (C) 2012-2014  LSI Corporation
+  *  (mailto:DL-MPTFusionLinux@lsi.com)
+  *
+  * This program is free software; you can redistribute it and/or
 -- 
 2.0.2
+
