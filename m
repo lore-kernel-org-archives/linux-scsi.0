@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v1 7/8][SCSI] mpt3sas: Added Reply Descriptor Post Queue (RDPQ) Array support
-Date: Sat, 23 Aug 2014 17:41:41 +0530
-Message-ID: <1408795902-10523-8-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v1 4/8][SCSI] mpt3sas: MPI2.5 Rev H (2.5.3) specifications
+Date: Sat, 23 Aug 2014 17:41:38 +0530
+Message-ID: <1408795902-10523-5-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1408795902-10523-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1408795902-10523-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,509 +10,303 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Up to now, Driver allocates a single contiguous block of memory
-pool for all reply queues and passes down a single address in the
-ReplyDescriptorPostQueueAddress field of the IOC Init Request
-Message to the firmware.
-
-When firmware receives this address, it will program each of the
-Reply Descriptor Post Queue registers, as each reply queue has its
-own register. Thus the firmware, starting from a base address it
-determines the starting address of the subsequent reply queues
-through some simple arithmetic calculations.
-
-The size of this contiguous block of memory pool is directly proportional
-to number of MSI-X vectors and the HBA queue depth. For example higher
-MSIX vectors requires larger contiguous block of memory pool.
-
-But some of the OS kernels are unable to allocate this larger
-contiguous block of memory pool.
-
-So, the proposal is to allocate memory independently for each
-Reply Queue and pass down all of the addresses to the firmware.
-Then the firmware will just take each address and program the value
-into the correct register.
-
-When HBAs with older firmware(i.e. without RDPQ capability) is used
-with this new driver then the max_msix_vectors value would be set
-to 8 by default.
-
-Change set in v1:
-
-1. Declared the _base_get_ioc_facts() functions at the beginning of the mpt3sas_base.c file
-instead of moving all these functions before mpt3sas_base_map_resources() function
-        a. _base_wait_for_doorbell_int()
-        b. _base_wait_for_doorbell_ack()
-        c. _base_wait_for_doorbell_not_used()
-        d. _base_handshake_req_reply_wait()
-        e. _base_get_ioc_facts()
-
-2. Initially set the consistent DMA mask to 32 bit and then change it to 64 bit mask
-after allocating RDPQ pools by calling the function _base_change_consistent_dma_mask.
-This is to ensure that all the upper 32 bits of RDPQ entries's base address to be same.
-
-3. Reduced the redundancy between the RDPQ and non-RDPQ support in these following functions
-        a. _base_release_memory_pools()
-        b. _base_allocate_memory_pools()
-        c. _base_send_ioc_init()
-        d. _base_make_ioc_operational()
+Below is the change set in MPI2.5 Rev H specification and 2.00.32 header files
+1) Added reserved fields to IO Unit Page 7 for future use.
+2) Added optional functionality to IOCInit Request so that
+   the host may specify a separate base address for each
+   Reply Descriptor Post Queue. IOC support for this is
+   indicated using a new IOCCapabilities bit in the IOCFacts Reply.
+3) Added Toolbox Console Text Display Tool
+   The host uses the Console Text Display Tool to send a string to
+   IOC's Console using different console types (eg: UART serial terminal or Ethernet terminal).
+4) Firmware images can now be signed using an encrypted hash.
+5) Added MPI2_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL
+6) Added more details about configuration page restrictions when Host Based Discovery is enabled
+   Enabling host based discovery affects the availability of some configuration pages and events.
+   The SAS Expander, SAS Device, and SAS Enclosure configuration  pages are not available from the IOC.
+   The IOC returns an error status to any Configuration Request message attempting to access these pages.
+   The IOC does not send the SAS Discovery Event, the SAS Topology Change List Event, or
+   the SAS Enclosure Device Status Change Event when host based discovery is enabled.
+7) Bit 13 of the SAS IO Unit Page 1 ControlFlags field is now obsolete.
+   It was used to enable limiting direct attached SATA maximum link rate to 1.5 Gbps.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 229 +++++++++++++++++++++++++++---------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  20 +++-
- 2 files changed, 189 insertions(+), 60 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 10 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  | 62 ++++++++++++++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_sas.h  |  6 ++--
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h | 43 ++++++++++++++++++++++++-
+ 4 files changed, 114 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index d71f135..110a993 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -91,6 +91,8 @@ static int mpt3sas_fwfault_debug;
- MODULE_PARM_DESC(mpt3sas_fwfault_debug,
- 	" enable detection of firmware fault and halt firmware - (default=0)");
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 5b0e5c1..becee07 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.25
++ *   mpi2_cnfg.h Version:  02.00.26
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -163,6 +163,8 @@
+  * 04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
+  *                     Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
+  *                     match the specification.
++ * 08-19-13  02.00.26  Added reserved words to MPI2_CONFIG_PAGE_IO_UNIT_7 for
++ *			future use.
+  * --------------------------------------------------------------------------
+  */
  
-+static int
-+_base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag);
+@@ -924,11 +926,15 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ 	U8
+ 		BoardTemperatureUnits;                  /*0x16 */
+ 	U8                      Reserved3;              /*0x17 */
++	U32			Reserved4;		/* 0x18 */
++	U32			Reserved5;		/* 0x1C */
++	U32			Reserved6;		/* 0x20 */
++	U32			Reserved7;		/* 0x24 */
+ } MPI2_CONFIG_PAGE_IO_UNIT_7,
+ 	*PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
+ 	Mpi2IOUnitPage7_t, *pMpi2IOUnitPage7_t;
  
- /**
-  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
-@@ -1482,17 +1484,23 @@ static int
- _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- {
- 	struct sysinfo s;
--	char *desc = NULL;
-+	u64 consistent_dma_mask;
+-#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x02)
++#define MPI2_IOUNITPAGE7_PAGEVERSION			(0x04)
+ 
+ /*defines for IO Unit Page 7 CurrentPowerMode and PreviousPowerMode fields */
+ #define MPI25_IOUNITPAGE7_PM_INIT_MASK              (0xC0)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+index e2bb821..15813f3 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  * Creation Date:  October 11, 2006
+  *
+- * mpi2_ioc.h Version:  02.00.22
++ * mpi2_ioc.h Version:  02.00.23
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -127,6 +127,11 @@
+  * 07-26-12  02.00.22  Added MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE.
+  *                     Added ElapsedSeconds field to
+  *                     MPI2_EVENT_DATA_IR_OPERATION_STATUS.
++ * 08-19-13  02.00.23  For IOCInit, added MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE
++ *			and MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY.
++ *			Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
++ *			Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
++ *			Added Encrypted Hash Extended Image.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -182,6 +187,10 @@ typedef struct _MPI2_IOC_INIT_REQUEST {
+ #define MPI2_WHOINIT_HOST_DRIVER                (0x04)
+ #define MPI2_WHOINIT_MANUFACTURER               (0x05)
+ 
++/* MsgFlags */
++#define MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE    (0x01)
 +
-+	if (ioc->dma_mask)
-+		consistent_dma_mask = DMA_BIT_MASK(64);
-+	else
-+		consistent_dma_mask = DMA_BIT_MASK(32);
- 
- 	if (sizeof(dma_addr_t) > 4) {
- 		const uint64_t required_mask =
- 		    dma_get_required_mask(&pdev->dev);
- 		if ((required_mask > DMA_BIT_MASK(32)) &&
- 		    !pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) &&
--		    !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
-+		    !pci_set_consistent_dma_mask(pdev,
-+		      DMA_BIT_MASK(consistent_dma_mask))) {
- 			ioc->base_add_sg_single = &_base_add_sg_single_64;
- 			ioc->sge_size = sizeof(Mpi2SGESimple64_t);
--			desc = "64";
-+			ioc->dma_mask = 64;
- 			goto out;
- 		}
- 	}
-@@ -1501,19 +1509,30 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- 	    && !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
- 		ioc->base_add_sg_single = &_base_add_sg_single_32;
- 		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
--		desc = "32";
-+		ioc->dma_mask = 32;
- 	} else
- 		return -ENODEV;
- 
-  out:
- 	si_meminfo(&s);
- 	pr_info(MPT3SAS_FMT
--		"%s BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
--		ioc->name, desc, convert_to_kb(s.totalram));
-+		"%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
-+		ioc->name, ioc->dma_mask, convert_to_kb(s.totalram));
- 
- 	return 0;
- }
- 
-+static int
-+_base_change_consistent_dma_mask(struct MPT3SAS_ADAPTER *ioc,
-+				      struct pci_dev *pdev)
-+{
-+	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64))) {
-+		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
-+			return -ENODEV;
-+	}
-+	return 0;
-+}
 +
- /**
-  * _base_check_enable_msix - checks MSIX capabable.
-  * @ioc: per adapter object
-@@ -1698,6 +1717,9 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- 	  ": %d, max_msix_vectors: %d\n", ioc->name, ioc->msix_vector_count,
- 	  ioc->cpu_count, max_msix_vectors);
+ /*MsgVersion */
+ #define MPI2_IOCINIT_MSGVERSION_MAJOR_MASK      (0xFF00)
+ #define MPI2_IOCINIT_MSGVERSION_MAJOR_SHIFT     (8)
+@@ -194,9 +203,19 @@ typedef struct _MPI2_IOC_INIT_REQUEST {
+ #define MPI2_IOCINIT_HDRVERSION_DEV_MASK        (0x00FF)
+ #define MPI2_IOCINIT_HDRVERSION_DEV_SHIFT       (0)
  
-+	if (!ioc->rdpq_array_enable && max_msix_vectors == -1)
-+		max_msix_vectors = 8;
+-/*minimum depth for the Reply Descriptor Post Queue */
++/*minimum depth for a Reply Descriptor Post Queue */
+ #define MPI2_RDPQ_DEPTH_MIN                     (16)
+ 
++/* Reply Descriptor Post Queue Array Entry */
++typedef struct _MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY {
++	U64                 RDPQBaseAddress;                    /* 0x00 */
++	U32                 Reserved1;                          /* 0x08 */
++	U32                 Reserved2;                          /* 0x0C */
++} MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY,
++*PTR_MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY,
++Mpi2IOCInitRDPQArrayEntry, *pMpi2IOCInitRDPQArrayEntry;
 +
- 	if (max_msix_vectors > 0) {
- 		ioc->reply_queue_count = min_t(int, max_msix_vectors,
- 			ioc->reply_queue_count);
-@@ -1821,6 +1843,16 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	_base_mask_interrupts(ioc);
 +
-+	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
-+	if (r)
-+		goto out_fail;
+ /*IOCInit Reply message */
+ typedef struct _MPI2_IOC_INIT_REPLY {
+ 	U8 WhoInit;		/*0x00 */
+@@ -306,6 +325,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
+ /*ProductID field uses MPI2_FW_HEADER_PID_ */
+ 
+ /*IOCCapabilities */
++#define MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE     (0x00040000)
+ #define MPI25_IOCFACTS_CAPABILITY_FAST_PATH_CAPABLE     (0x00020000)
+ #define MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY   (0x00010000)
+ #define MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX            (0x00008000)
+@@ -1140,6 +1160,7 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST {
+ #define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
++#define MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY           (0x0C)
+ #define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
+ 
+ /*MPI v2.0 FWDownload TransactionContext Element */
+@@ -1404,6 +1425,7 @@ typedef struct _MPI2_EXT_IMAGE_HEADER {
+ #define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT            (0x06)
+ #define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES       (0x07)
+ #define MPI2_EXT_IMAGE_TYPE_MEGARAID                (0x08)
++#define MPI2_EXT_IMAGE_TYPE_ENCRYPTED_HASH          (0x09)
+ #define MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC    (0x80)
+ #define MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC    (0xFF)
+ 
+@@ -1560,6 +1582,42 @@ typedef struct _MPI2_INIT_IMAGE_FOOTER {
+ /*defines for the ResetVector field */
+ #define MPI2_INIT_IMAGE_RESETVECTOR_OFFSET      (0x14)
+ 
 +
-+	if (!ioc->rdpq_array_enable_assigned) {
-+		ioc->rdpq_array_enable = ioc->rdpq_array_capable;
-+		ioc->rdpq_array_enable_assigned = 1;
-+	}
++/* Encrypted Hash Extended Image Data */
 +
- 	r = _base_enable_msix(ioc);
- 	if (r)
- 		goto out_fail;
-@@ -2496,7 +2528,8 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- static void
- _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- {
--	int i;
-+	int i = 0;
-+	struct reply_post_struct *rps;
- 
- 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
-@@ -2541,15 +2574,25 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		ioc->reply_free = NULL;
- 	}
- 
--	if (ioc->reply_post_free) {
--		pci_pool_free(ioc->reply_post_free_dma_pool,
--		    ioc->reply_post_free, ioc->reply_post_free_dma);
-+	if (ioc->reply_post) {
-+		do {
-+			rps = &ioc->reply_post[i];
-+			if (rps->reply_post_free) {
-+				pci_pool_free(
-+				    ioc->reply_post_free_dma_pool,
-+				    rps->reply_post_free,
-+				    rps->reply_post_free_dma);
-+				dexitprintk(ioc, pr_info(MPT3SAS_FMT
-+				    "reply_post_free_pool(0x%p): free\n",
-+				    ioc->name, rps->reply_post_free));
-+				rps->reply_post_free = NULL;
-+			}
-+		} while (ioc->rdpq_array_enable &&
-+			   (++i < ioc->reply_queue_count));
++typedef struct _MPI25_ENCRYPTED_HASH_ENTRY {
++	U8		HashImageType;		/* 0x00 */
++	U8		HashAlgorithm;		/* 0x01 */
++	U8		EncryptionAlgorithm;	/* 0x02 */
++	U8		Reserved1;		/* 0x03 */
++	U32		Reserved2;		/* 0x04 */
++	U32		EncryptedHash[1];	/* 0x08 */ /* variable length */
++} MPI25_ENCRYPTED_HASH_ENTRY, *PTR_MPI25_ENCRYPTED_HASH_ENTRY,
++Mpi25EncryptedHashEntry_t, *pMpi25EncryptedHashEntry_t;
 +
- 		if (ioc->reply_post_free_dma_pool)
- 			pci_pool_destroy(ioc->reply_post_free_dma_pool);
--		dexitprintk(ioc, pr_info(MPT3SAS_FMT
--		    "reply_post_free_pool(0x%p): free\n", ioc->name,
--		    ioc->reply_post_free));
--		ioc->reply_post_free = NULL;
-+		kfree(ioc->reply_post);
- 	}
- 
- 	if (ioc->config_page) {
-@@ -2696,6 +2739,65 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
- 	    ioc->max_sges_in_chain_message, ioc->shost->sg_tablesize,
- 	    ioc->chains_needed_per_io));
- 
-+	/* reply post queue, 16 byte align */
-+	reply_post_free_sz = ioc->reply_post_queue_depth *
-+	    sizeof(Mpi2DefaultReplyDescriptor_t);
++/* values for HashImageType */
++#define MPI25_HASH_IMAGE_TYPE_UNUSED		(0x00)
++#define MPI25_HASH_IMAGE_TYPE_FIRMWARE		(0x01)
 +
-+	sz = reply_post_free_sz;
-+	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
-+		sz *= ioc->reply_queue_count;
++/* values for HashAlgorithm */
++#define MPI25_HASH_ALGORITHM_UNUSED		(0x00)
++#define MPI25_HASH_ALGORITHM_SHA256		(0x01)
 +
-+	ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
-+	    (ioc->reply_queue_count):1,
-+	    sizeof(struct reply_post_struct), GFP_KERNEL);
++/* values for EncryptionAlgorithm */
++#define MPI25_ENCRYPTION_ALG_UNUSED		(0x00)
++#define MPI25_ENCRYPTION_ALG_RSA256		(0x01)
 +
-+	if (!ioc->reply_post) {
-+		pr_err(MPT3SAS_FMT "reply_post_free pool: kcalloc failed\n",
-+			ioc->name);
-+		goto out;
-+	}
-+	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
-+	    ioc->pdev, sz, 16, 0);
-+	if (!ioc->reply_post_free_dma_pool) {
-+		pr_err(MPT3SAS_FMT
-+		 "reply_post_free pool: pci_pool_create failed\n",
-+		 ioc->name);
-+		goto out;
-+	}
-+	i = 0;
-+	do {
-+		ioc->reply_post[i].reply_post_free =
-+		    pci_pool_alloc(ioc->reply_post_free_dma_pool,
-+		    GFP_KERNEL,
-+		    &ioc->reply_post[i].reply_post_free_dma);
-+		if (!ioc->reply_post[i].reply_post_free) {
-+			pr_err(MPT3SAS_FMT
-+			"reply_post_free pool: pci_pool_alloc failed\n",
-+			ioc->name);
-+			goto out;
-+		}
-+		memset(ioc->reply_post[i].reply_post_free, 0, sz);
-+		dinitprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "reply post free pool (0x%p): depth(%d),"
-+		    "element_size(%d), pool_size(%d kB)\n", ioc->name,
-+		    ioc->reply_post[i].reply_post_free,
-+		    ioc->reply_post_queue_depth, 8, sz/1024));
-+		dinitprintk(ioc, pr_info(MPT3SAS_FMT
-+		    "reply_post_free_dma = (0x%llx)\n", ioc->name,
-+		    (unsigned long long)
-+		    ioc->reply_post[i].reply_post_free_dma));
-+		total_sz += sz;
-+	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
++typedef struct _MPI25_ENCRYPTED_HASH_DATA {
++	U8				ImageVersion;		/* 0x00 */
++	U8				NumHash;		/* 0x01 */
++	U16				Reserved1;		/* 0x02 */
++	U32				Reserved2;		/* 0x04 */
++	MPI25_ENCRYPTED_HASH_ENTRY	EncryptedHashEntry[1];  /* 0x08 */
++} MPI25_ENCRYPTED_HASH_DATA, *PTR_MPI25_ENCRYPTED_HASH_DATA,
++Mpi25EncryptedHashData_t, *pMpi25EncryptedHashData_t;
 +
-+	if (ioc->dma_mask == 64) {
-+		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
-+			pr_warn(MPT3SAS_FMT
-+			    "no suitable consistent DMA mask for %s\n",
-+			    ioc->name, pci_name(ioc->pdev));
-+			goto out;
-+		}
-+	}
 +
- 	ioc->scsiio_depth = ioc->hba_queue_depth -
- 	    ioc->hi_priority_depth - ioc->internal_depth;
- 
-@@ -2910,40 +3012,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
- 		ioc->name, (unsigned long long)ioc->reply_free_dma));
- 	total_sz += sz;
- 
--	/* reply post queue, 16 byte align */
--	reply_post_free_sz = ioc->reply_post_queue_depth *
--	    sizeof(Mpi2DefaultReplyDescriptor_t);
--	if (_base_is_controller_msix_enabled(ioc))
--		sz = reply_post_free_sz * ioc->reply_queue_count;
--	else
--		sz = reply_post_free_sz;
--	ioc->reply_post_free_dma_pool = pci_pool_create("reply_post_free pool",
--	    ioc->pdev, sz, 16, 0);
--	if (!ioc->reply_post_free_dma_pool) {
--		pr_err(MPT3SAS_FMT
--			"reply_post_free pool: pci_pool_create failed\n",
--			ioc->name);
--		goto out;
--	}
--	ioc->reply_post_free = pci_pool_alloc(ioc->reply_post_free_dma_pool ,
--	    GFP_KERNEL, &ioc->reply_post_free_dma);
--	if (!ioc->reply_post_free) {
--		pr_err(MPT3SAS_FMT
--			"reply_post_free pool: pci_pool_alloc failed\n",
--			ioc->name);
--		goto out;
--	}
--	memset(ioc->reply_post_free, 0, sz);
--	dinitprintk(ioc, pr_info(MPT3SAS_FMT "reply post free pool" \
--	    "(0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
--	    ioc->name, ioc->reply_post_free, ioc->reply_post_queue_depth, 8,
--	    sz/1024));
--	dinitprintk(ioc, pr_info(MPT3SAS_FMT
--		"reply_post_free_dma = (0x%llx)\n",
--		ioc->name, (unsigned long long)
--	    ioc->reply_post_free_dma));
--	total_sz += sz;
--
- 	ioc->config_page_sz = 512;
- 	ioc->config_page = pci_alloc_consistent(ioc->pdev,
- 	    ioc->config_page_sz, &ioc->config_page_dma);
-@@ -3626,6 +3694,9 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	facts->IOCCapabilities = le32_to_cpu(mpi_reply.IOCCapabilities);
- 	if ((facts->IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID))
- 		ioc->ir_firmware = 1;
-+	if ((facts->IOCCapabilities &
-+	      MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE))
-+		ioc->rdpq_array_capable = 1;
- 	facts->FWVersion.Word = le32_to_cpu(mpi_reply.FWVersion.Word);
- 	facts->IOCRequestFrameSize =
- 	    le16_to_cpu(mpi_reply.IOCRequestFrameSize);
-@@ -3662,9 +3733,12 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- {
- 	Mpi2IOCInitRequest_t mpi_request;
- 	Mpi2IOCInitReply_t mpi_reply;
--	int r;
-+	int i, r = 0;
- 	struct timeval current_time;
- 	u16 ioc_status;
-+	u32 reply_post_free_array_sz = 0;
-+	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
-+	dma_addr_t reply_post_free_array_dma;
- 
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
-@@ -3693,9 +3767,31 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	    cpu_to_le64((u64)ioc->request_dma);
- 	mpi_request.ReplyFreeQueueAddress =
- 	    cpu_to_le64((u64)ioc->reply_free_dma);
--	mpi_request.ReplyDescriptorPostQueueAddress =
--	    cpu_to_le64((u64)ioc->reply_post_free_dma);
- 
-+	if (ioc->rdpq_array_enable) {
-+		reply_post_free_array_sz = ioc->reply_queue_count *
-+		    sizeof(Mpi2IOCInitRDPQArrayEntry);
-+		reply_post_free_array = pci_alloc_consistent(ioc->pdev,
-+			reply_post_free_array_sz, &reply_post_free_array_dma);
-+		if (!reply_post_free_array) {
-+			pr_err(MPT3SAS_FMT
-+			"reply_post_free_array: pci_alloc_consistent failed\n",
-+			ioc->name);
-+			r = -ENOMEM;
-+			goto out;
-+		}
-+		memset(reply_post_free_array, 0, reply_post_free_array_sz);
-+		for (i = 0; i < ioc->reply_queue_count; i++)
-+			reply_post_free_array[i].RDPQBaseAddress =
-+			    cpu_to_le64(
-+				(u64)ioc->reply_post[i].reply_post_free_dma);
-+		mpi_request.MsgFlags = MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE;
-+		mpi_request.ReplyDescriptorPostQueueAddress =
-+		    cpu_to_le64((u64)reply_post_free_array_dma);
-+	} else {
-+		mpi_request.ReplyDescriptorPostQueueAddress =
-+		    cpu_to_le64((u64)ioc->reply_post[0].reply_post_free_dma);
-+	}
- 
- 	/* This time stamp specifies number of milliseconds
- 	 * since epoch ~ midnight January 1, 1970.
-@@ -3723,7 +3819,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	if (r != 0) {
- 		pr_err(MPT3SAS_FMT "%s: handshake failed (r=%d)\n",
- 		    ioc->name, __func__, r);
--		return r;
-+		goto out;
- 	}
- 
- 	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-@@ -3733,7 +3829,12 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 		r = -EIO;
- 	}
- 
--	return 0;
-+out:
-+	if (reply_post_free_array)
-+		pci_free_consistent(ioc->pdev, reply_post_free_array_sz,
-+				    reply_post_free_array,
-+				    reply_post_free_array_dma);
-+	return r;
- }
- 
- /**
-@@ -4283,7 +4384,7 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	struct _tr_list *delayed_tr, *delayed_tr_next;
- 	struct adapter_reply_queue *reply_q;
- 	long reply_post_free;
--	u32 reply_post_free_sz;
-+	u32 reply_post_free_sz, index = 0;
- 
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
- 	    __func__));
-@@ -4354,9 +4455,9 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 		_base_assign_reply_queues(ioc);
- 
- 	/* initialize Reply Post Free Queue */
--	reply_post_free = (long)ioc->reply_post_free;
- 	reply_post_free_sz = ioc->reply_post_queue_depth *
- 	    sizeof(Mpi2DefaultReplyDescriptor_t);
-+	reply_post_free = (long)ioc->reply_post[index].reply_post_free;
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
- 		reply_q->reply_post_host_index = 0;
- 		reply_q->reply_post_free = (Mpi2ReplyDescriptorsUnion_t *)
-@@ -4366,7 +4467,15 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 			    cpu_to_le64(ULLONG_MAX);
- 		if (!_base_is_controller_msix_enabled(ioc))
- 			goto skip_init_reply_post_free_queue;
--		reply_post_free += reply_post_free_sz;
-+		/*
-+		 * If RDPQ is enabled, switch to the next allocation.
-+		 * Otherwise advance within the contiguous region.
-+		 */
-+		if (ioc->rdpq_array_enable)
-+			reply_post_free = (long)
-+			    ioc->reply_post[++index].reply_post_free;
-+		else
-+			reply_post_free += reply_post_free_sz;
- 	}
-  skip_init_reply_post_free_queue:
- 
-@@ -4477,6 +4586,8 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 		goto out_free_resources;
- 	}
- 
-+	ioc->rdpq_array_enable_assigned = 0;
-+	ioc->dma_mask = 0;
- 	r = mpt3sas_base_map_resources(ioc);
- 	if (r)
- 		goto out_free_resources;
-@@ -4853,6 +4964,12 @@ mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADAPTER *ioc, int sleep_flag,
- 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
- 	if (r)
- 		goto out;
 +
-+	if (ioc->rdpq_array_enable && !ioc->rdpq_array_capable)
-+		panic("%s: Issue occurred with flashing controller firmware."
-+		      "Please reboot the system and ensure that the correct"
-+		      " firmware version is running\n", ioc->name);
+ /****************************************************************************
+ * PowerManagementControl message
+ ****************************************************************************/
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+index cba046f..361a275 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_sas.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Serial Attached SCSI structures and definitions
+  * Creation Date:  February 9, 2007
+  *
+- * mpi2_sas.h Version:  02.00.07
++ * mpi2_sas.h Version:  02.00.08
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -30,6 +30,8 @@
+  * 11-18-11  02.00.06  Incorporating additions for MPI v2.5.
+  * 07-10-12  02.00.07  Added MPI2_SATA_PT_SGE_UNION for use in the SATA
+  *                     Passthrough Request message.
++ * 08-19-13  02.00.08  Made MPI2_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL obsolete
++ *			for anything newer than MPI v2.0.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -251,7 +253,7 @@ typedef struct _MPI2_SAS_IOUNIT_CONTROL_REQUEST {
+ #define MPI2_SAS_OP_PHY_CLEAR_ERROR_LOG         (0x08)
+ #define MPI2_SAS_OP_SEND_PRIMITIVE              (0x0A)
+ #define MPI2_SAS_OP_FORCE_FULL_DISCOVERY        (0x0B)
+-#define MPI2_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL (0x0C)
++#define MPI2_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL (0x0C) /* MPI v2.0 only */
+ #define MPI2_SAS_OP_REMOVE_DEVICE               (0x0D)
+ #define MPI2_SAS_OP_LOOKUP_MAPPING              (0x0E)
+ #define MPI2_SAS_OP_SET_IOC_PARAMETER           (0x0F)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+index 34e9a7b..94e32c2 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI diagnostic tool structures and definitions
+  * Creation Date:  March 26, 2007
+  *
+- *   mpi2_tool.h Version:  02.00.10
++ *   mpi2_tool.h Version:  02.00.11
+  *
+  * Version History
+  * ---------------
+@@ -32,6 +32,7 @@
+  *                     message.
+  * 07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
+  *                     it uses MPI Chain SGE as well as MPI Simple SGE.
++ * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -51,6 +52,7 @@
+ #define MPI2_TOOLBOX_ISTWI_READ_WRITE_TOOL          (0x03)
+ #define MPI2_TOOLBOX_BEACON_TOOL                    (0x05)
+ #define MPI2_TOOLBOX_DIAGNOSTIC_CLI_TOOL            (0x06)
++#define MPI2_TOOLBOX_TEXT_DISPLAY_TOOL              (0x07)
+ 
+ /****************************************************************************
+ * Toolbox reply
+@@ -331,6 +333,45 @@ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REPLY {
+ 	Mpi2ToolboxDiagnosticCliReply_t,
+ 	*pMpi2ToolboxDiagnosticCliReply_t;
+ 
 +
- 	r = _base_make_ioc_operational(ioc, sleep_flag);
- 	if (!r)
- 		_base_reset_handler(ioc, MPT3_IOC_DONE_RESET);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index e920728..ca4a7cc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -569,6 +569,11 @@ struct mpt3sas_port_facts {
- 	u16			MaxPostedCmdBuffers;
- };
- 
-+struct reply_post_struct {
-+	Mpi2ReplyDescriptorsUnion_t	*reply_post_free;
-+	dma_addr_t			reply_post_free_dma;
-+};
++/****************************************************************************
++*  Toolbox Console Text Display Tool
++****************************************************************************/
 +
- /**
-  * enum mutex_type - task management mutex type
-  * @TM_MUTEX_OFF: mutex is not required becuase calling function is acquiring it
-@@ -597,6 +602,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @ir_firmware: IR firmware present
-  * @bars: bitmask of BAR's that must be configured
-  * @mask_interrupts: ignore interrupt
-+ * @dma_mask: used to set the consistent dma mask
-  * @fault_reset_work_q_name: fw fault work queue
-  * @fault_reset_work_q: ""
-  * @fault_reset_work: ""
-@@ -712,8 +718,11 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @reply_free_dma_pool:
-  * @reply_free_host_index: tail index in pool to insert free replys
-  * @reply_post_queue_depth: reply post queue depth
-- * @reply_post_free: pool for reply post (64bit descriptor)
-- * @reply_post_free_dma:
-+ * @reply_post_struct: struct for reply_post_free physical & virt address
-+ * @rdpq_array_capable: FW supports multiple reply queue addresses in ioc_init
-+ * @rdpq_array_enable: rdpq_array support is enabled in the driver
-+ * @rdpq_array_enable_assigned: this ensures that rdpq_array_enable flag
-+ *				is assigned only ones
-  * @reply_queue_count: number of reply queue's
-  * @reply_queue_list: link list contaning the reply queue info
-  * @reply_post_host_index: head index in the pool where FW completes IO
-@@ -735,6 +744,7 @@ struct MPT3SAS_ADAPTER {
- 	u8		ir_firmware;
- 	int		bars;
- 	u8		mask_interrupts;
-+	int		dma_mask;
- 
- 	/* fw fault handler */
- 	char		fault_reset_work_q_name[20];
-@@ -914,8 +924,10 @@ struct MPT3SAS_ADAPTER {
- 
- 	/* reply post queue */
- 	u16		reply_post_queue_depth;
--	Mpi2ReplyDescriptorsUnion_t *reply_post_free;
--	dma_addr_t	reply_post_free_dma;
-+	struct reply_post_struct *reply_post;
-+	u8		rdpq_array_capable;
-+	u8		rdpq_array_enable;
-+	u8		rdpq_array_enable_assigned;
- 	struct dma_pool *reply_post_free_dma_pool;
- 	u8		reply_queue_count;
- 	struct list_head reply_queue_list;
++/* Toolbox Console Text Display Tool request message */
++typedef struct _MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST {
++	U8			Tool;			/* 0x00 */
++	U8			Reserved1;		/* 0x01 */
++	U8			ChainOffset;		/* 0x02 */
++	U8			Function;		/* 0x03 */
++	U16			Reserved2;		/* 0x04 */
++	U8			Reserved3;		/* 0x06 */
++	U8			MsgFlags;		/* 0x07 */
++	U8			VP_ID;			/* 0x08 */
++	U8			VF_ID;			/* 0x09 */
++	U16			Reserved4;		/* 0x0A */
++	U8			Console;		/* 0x0C */
++	U8			Flags;			/* 0x0D */
++	U16			Reserved6;		/* 0x0E */
++	U8			TextToDisplay[4];	/* 0x10 */
++} MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST,
++*PTR_MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST,
++Mpi2ToolboxTextDisplayRequest_t,
++*pMpi2ToolboxTextDisplayRequest_t;
++
++/* defines for the Console field */
++#define MPI2_TOOLBOX_CONSOLE_TYPE_MASK          (0xF0)
++#define MPI2_TOOLBOX_CONSOLE_TYPE_DEFAULT       (0x00)
++#define MPI2_TOOLBOX_CONSOLE_TYPE_UART          (0x10)
++#define MPI2_TOOLBOX_CONSOLE_TYPE_ETHERNET      (0x20)
++
++#define MPI2_TOOLBOX_CONSOLE_NUMBER_MASK        (0x0F)
++
++/* defines for the Flags field */
++#define MPI2_TOOLBOX_CONSOLE_FLAG_TIMESTAMP     (0x01)
++
++
++
+ /*****************************************************************************
+ *
+ *      Diagnostic Buffer Messages
 -- 
 2.0.2
