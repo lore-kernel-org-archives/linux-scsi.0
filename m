@@ -1,41 +1,72 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Sat, 23 Aug 2014 20:06:31 +0000
-Message-ID: <bug-81861-11613-r6YvNhvG6d@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Debugging scsi abort handling ?
+Date: Sat, 23 Aug 2014 16:05:20 -0500
+Message-ID: <1408827920.2181.8.camel@jarvis>
+References: <53F8AAA8.8040407@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:35398 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957AbaHWUGf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Aug 2014 16:06:35 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 412EF20131
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Aug 2014 20:06:34 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 86AED2018A
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Aug 2014 20:06:31 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52263 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751143AbaHWVF0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Aug 2014 17:05:26 -0400
+In-Reply-To: <53F8AAA8.8040407@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
+On Sat, 2014-08-23 at 16:52 +0200, Hans de Goede wrote:
+> Hi All,
+> 
+> Now that the UAS driver is no longer marked as CONFIG_BROKEN,
+> I'm getting quite a few bug reports about issues with UAS drives.
+> 
+> One if the issues is that there might be a number of bugs in the
+> abort handling path, as I don't think that was ever tested properly.
 
---- Comment #14 from linux-ide@crashplan.pro ---
-By the way:
+Can you report the actual bugs and we'll try to take a look at them?
 
-printk("%d", mvi->tx_prod]);
+> So I'm wondering is there a way to test the abort path with a real
+> drive? E.G. submit some command which is known to take a significant
+> amount of time, and then abort it right after submitting ?
 
-was changed to:
+This scenario can't really happen under the current eh, if by abort
+path, you mean the path where we abort the command by sending an abort
+TMF in error handling.  The reason is that the command must timeout
+before we abort.  If you mean the path where the driver says it aborted
+the command and we have to retry, you can test that by returning
+DID_ABORT immediately in the queuecommand routine ... I use this to test
+some of the EH properties.  What you want to do is to modify the
+queuecommand to return abort on a small number of commands (say around
+5%) and then try normal operation.  This is what I used to test our
+submission and resubmission routines, but I haven't run it for a year or
+so.
 
-printk("%d", mvi->tx_prod);
+The final suggestion is that you need to make sure this patch is in
+their environment:
 
-The square bracket after tx_prod was removed.
+commit c69e6f812bab0d5442b40e2f1bfbca48d40bc50b
+Author: James Bottomley <JBottomley@Parallels.com>
+Date:   Thu Apr 10 13:36:11 2014 -0700
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+    [SCSI] More USB deadlock fixes
+
+The reason this may make a difference is that USB appears fragile to
+issuing commands before you complete a reset.
+
+James
+
+
+> Thanks & Regards,
+> 
+> Hans
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
