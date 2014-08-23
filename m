@@ -1,73 +1,58 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH][SCSI] scsi-mq: fix requests that use a separate CDB buffer
-Date: Fri, 22 Aug 2014 21:23:17 -0400
-Message-ID: <53F7ED05.1020400@interlog.com>
-References: <53F79FC3.6040907@cybernetics.com> <53F7E5DF.3090809@interlog.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH v1 0/8][SCSI] mpt3sas: Phase2 and Phase3 mpt3sas driver patch set
+Date: Sat, 23 Aug 2014 17:41:34 +0530
+Message-ID: <1408795902-10523-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51132 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752365AbaHWBXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2014 21:23:23 -0400
-In-Reply-To: <53F7E5DF.3090809@interlog.com>
+Received: from exprod7og125.obsmtp.com ([64.18.2.28]:54688 "EHLO
+	exprod7og125.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994AbaHWMMT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Aug 2014 08:12:19 -0400
+Received: by mail-pd0-f181.google.com with SMTP id g10so17087688pdj.40
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Aug 2014 05:12:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-On 14-08-22 08:52 PM, Douglas Gilbert wrote:
-> On 14-08-22 03:53 PM, Tony Battersby wrote:
->> This patch fixes code such as the following with scsi-mq enabled:
->>
->>      rq = blk_get_request(...);
->>      blk_rq_set_block_pc(rq);
->>
->>      rq->cmd = my_cmd_buffer; /* separate CDB buffer */
->>
->>      blk_execute_rq_nowait(...);
->>
->> Code like this appears in e.g. sg_start_req() in drivers/scsi/sg.c (for
->> large CDBs only).  Without this patch, scsi_mq_prep_fn() will set
->> rq->cmd back to rq->__cmd, causing the wrong CDB to be sent to the device.
->
-> Still looking at this one. 'sg_write_same --32' is my
-> tool of choice. The target is scsi_debug which needs
-> dif=2 (because mkp read the draft and only allows
-> WRITE SAME(32) when the protection_level=2). Turned
-> on command tracing and this is what I saw:
->
-> sd 7:0:0:0: scsi_debug: cmd 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 00 00
-> sd 7:0:0:0: scsi_debug: cmd 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08
-> 24 6b d3 00 88 ff ff 20 00 c7 e8 00 00 00 00
->
-> So the WS(32) command did get through, it is the second
-> command that arrived on its tail that is a worry. So yes,
-> IMO it is broken.
+Just resending the complete Phase2 and Phase3
+mpt3sas driver patch set Reviewed by the Martin K. Petersen.
+This will make easy for Christoph to pick up this patch set for next kernel release.
 
-Got that wrong, that is a READ CAPACITY(16) that got
-through properly (issued by sg_write_same) followed
-by a 32 byte command of random bytes instead of the
-requested WS(32), the first 6 bytes of which will
-cause it to be parsed as a TEST UNIT READY.
+Thanks Martin for reviewing this patch set and helping me for tuning this patch set.
 
-> Now the >16 byte cdb length in the sg driver
-> introduced in lk 3.17-rc1 was copied directly
-> from the bsg driver which has had that capability
-> for some time. Since your patch touches two files
-> in drivers/block I'm wondering the bsg driver's
->  >16 byte cdb length capability is broken in
-> lk 3.16 ?
->
-> Doug Gilbert
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Sreekanth Reddy (8):
+  [SCSI] mpt3sas: MPI2.5 Rev G (2.5.2) specifications
+  [SCSI] mpt3sas: Clear PFA Status on SGPIO when PFA Drive is Removed or
+    Replaced
+  [SCSI] mpt3sas: Bump mpt3sas driver version to 03.100.00.00
+  [SCSI] mpt3sas: MPI2.5 Rev H (2.5.3) specifications
+  [SCSI] mpt3sas: Copyright in driver sources is updated for year the
+    2014.
+  [SCSI] mpt3sas: Added OEM branding Strings
+  [SCSI] mpt3sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+  [SCSI] mpt3sas: Bump mpt3sas driver version to 04.100.00.00
+
+ drivers/scsi/mpt3sas/Kconfig                |   2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2.h             |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h        |  18 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h        |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h         |  64 ++++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h        |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_sas.h         |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h        |  45 ++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_type.h        |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c         | 280 ++++++++++++++++++++++------
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |  49 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c       |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h          |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_debug.h        |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  69 +++++--
+ drivers/scsi/mpt3sas/mpt3sas_transport.c    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h |   2 +-
+ 19 files changed, 470 insertions(+), 105 deletions(-)
+
+-- 
+2.0.2
 
