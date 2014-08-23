@@ -1,63 +1,69 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v8 1/3] arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS node.
-Date: Sun, 24 Aug 2014 00:07:25 +0530
-Message-ID: <1408819047-17224-2-git-send-email-stripathi@apm.com>
+Subject: [PATCH v8 2/3] ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
+Date: Sun, 24 Aug 2014 00:07:26 +0530
+Message-ID: <1408819047-17224-3-git-send-email-stripathi@apm.com>
 References: <1408819047-17224-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:43179 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751473AbaHWSiy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Aug 2014 14:38:54 -0400
 In-Reply-To: <1408819047-17224-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
-List-Id: linux-scsi@vger.kernel.org
 
-The value of the csr-mask of the SATA PHY clock DTS node has a
-wrong value resulting a kernel panic as the clock/reset is not
-proper for the PHY of the SATA host controller 1. This patch
-fixes the correct csr-mask value of the SATA PHY clock DTS node
-for the SATA Host controller 1.
-
-As the 'ok' is the default status of a device tree node, this patch
-removes the status of the PHY clock node of SATA Host Controller 1.
-The status of the clock node is handled from the firmware based on
-the controller enabled/disabled by the user.
+This patch implements the feature to skip the PHY and clock
+initialization if it is already configured by the firmware.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/ata/ahci_xgene.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 40aa96c..1bdaeda 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -184,9 +184,8 @@
- 				reg = <0x0 0x1f21c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy1clk";
--				status = "disabled";
- 				csr-offset = <0x4>;
--				csr-mask = <0x00>;
-+				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-@@ -198,7 +197,6 @@
- 				reg = <0x0 0x1f22c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy2clk";
--				status = "ok";
- 				csr-offset = <0x4>;
- 				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
-@@ -212,7 +210,6 @@
- 				reg = <0x0 0x1f23c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy3clk";
--				status = "ok";
- 				csr-offset = <0x4>;
- 				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index f416495..fd9c137 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -145,6 +145,15 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
+ 	return rc;
+ }
+
++static bool xgene_ahci_is_memram_inited(struct xgene_ahci_context *ctx)
++{
++	void __iomem *diagcsr = ctx->csr_diag;
++
++	return (readl(diagcsr + CFG_MEM_RAM_SHUTDOWN) == 0 &&
++	        readl(diagcsr + BLOCK_MEM_RDY) == 0xFFFFFFFF) ?
++		true : false;
++}
++
+ /**
+  * xgene_ahci_read_id - Read ID data from the specified device
+  * @dev: device
+@@ -468,6 +477,11 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+
++	if (xgene_ahci_is_memram_inited(ctx)) {
++		dev_info(dev, "skip clock and PHY initialization\n");
++		goto skip_clk_phy;
++	}
++
+ 	/* Due to errata, HW requires full toggle transition */
+ 	rc = ahci_platform_enable_clks(hpriv);
+ 	if (rc)
+@@ -481,6 +495,8 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	/* Configure the host controller */
+ 	xgene_ahci_hw_init(hpriv);
+
++skip_clk_phy:
++
+ 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+
+ 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
 --
 1.8.2.1
 
