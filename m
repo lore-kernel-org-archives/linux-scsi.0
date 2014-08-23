@@ -1,74 +1,27 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH][SCSI] fix regression in SCSI_IOCTL_SEND_COMMAND
-Date: Fri, 22 Aug 2014 20:28:27 -0400
-Message-ID: <53F7E02B.4070606@interlog.com>
-References: <53F79FBF.4090000@cybernetics.com>
-Reply-To: dgilbert@interlog.com
+Date: Sat, 23 Aug 2014 02:31:00 +0200
+Message-ID: <20140823003100.GA16302@lst.de>
+References: <53F79FBF.4090000@cybernetics.com> <53F7E02B.4070606@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53F79FBF.4090000@cybernetics.com>
+Content-Disposition: inline
+In-Reply-To: <53F7E02B.4070606@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@fb.com>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-08-22 03:53 PM, Tony Battersby wrote:
-> blk_rq_set_block_pc() memsets rq->cmd to 0, so it should come
-> immediately after blk_get_request() to avoid overwriting the
-> user-supplied CDB.  Also check for failure to allocate rq.
+On Fri, Aug 22, 2014 at 08:28:27PM -0400, Douglas Gilbert wrote:
+> To test this ioctl one option is to get the sg3_utils
+> package and build scsi_ioctl.c in the examples
+> directory with 'make scsi_ioctl'.
 >
-> Fixes: f27b087b81b7 ("block: add blk_rq_set_block_pc()")
-> Cc: <stable@vger.kernel.org> # 3.16.x
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> In lk 3.17-rc1, scsi_ioctl indicates that
+> SCSI_IOCTL_SEND_COMMAND is not working. In my test applying
+> this patch fixes the regression.
 
-Tested-by: Douglas Gilbert <dgilbert@interlog.com>
-
-> For inclusion in 3.17 and 3.16.x.
->
-> Note: I don't have any programs that use this ioctl, so this patch is
-> compile-tested only.
-
-To test this ioctl one option is to get the sg3_utils
-package and build scsi_ioctl.c in the examples
-directory with 'make scsi_ioctl'.
-
-In lk 3.17-rc1, scsi_ioctl indicates that
-SCSI_IOCTL_SEND_COMMAND is not working. In my test applying
-this patch fixes the regression.
-
-> --- linux-3.17.0-rc1-a/block/scsi_ioctl.c	2014-08-16 12:40:26.000000000 -0400
-> +++ linux-3.17.0-rc1-b/block/scsi_ioctl.c	2014-08-22 14:15:34.000000000 -0400
-> @@ -448,6 +448,11 @@ int sg_scsi_ioctl(struct request_queue *
->   	}
->
->   	rq = blk_get_request(q, in_len ? WRITE : READ, __GFP_WAIT);
-> +	if (!rq) {
-> +		err = -ENOMEM;
-> +		goto error;
-> +	}
-> +	blk_rq_set_block_pc(rq);
->
->   	cmdlen = COMMAND_SIZE(opcode);
->
-> @@ -501,7 +506,6 @@ int sg_scsi_ioctl(struct request_queue *
->   	memset(sense, 0, sizeof(sense));
->   	rq->sense = sense;
->   	rq->sense_len = 0;
-> -	blk_rq_set_block_pc(rq);
->
->   	blk_execute_rq(q, disk, rq, 0);
->
-> @@ -521,7 +525,8 @@ out:
->   	
->   error:
->   	kfree(buffer);
-> -	blk_put_request(rq);
-> +	if (rq)
-> +		blk_put_request(rq);
->   	return err;
->   }
->   EXPORT_SYMBOL_GPL(sg_scsi_ioctl);
->
-> --
+Is there any amount of chocolate or beer that could trick you into adding an
+automated regression test suite to sg3_utils that could be used to
+automatically check for regressions like this?
