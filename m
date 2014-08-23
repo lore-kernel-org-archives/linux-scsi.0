@@ -1,88 +1,63 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v8 0/3] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
-Date: Sun, 24 Aug 2014 00:07:24 +0530
-Message-ID: <1408819047-17224-1-git-send-email-stripathi@apm.com>
+Subject: [PATCH v8 1/3] arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS node.
+Date: Sun, 24 Aug 2014 00:07:25 +0530
+Message-ID: <1408819047-17224-2-git-send-email-stripathi@apm.com>
+References: <1408819047-17224-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1408819047-17224-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch set contains a couple of fixes related to APM X-Gene SATA
-controller driver.
+The value of the csr-mask of the SATA PHY clock DTS node has a
+wrong value resulting a kernel panic as the clock/reset is not
+proper for the PHY of the SATA host controller 1. This patch
+fixes the correct csr-mask value of the SATA PHY clock DTS node
+for the SATA Host controller 1.
 
-v2 Change:
-   1. Drop the Link down retry patch from this patch set.
-
-v4 Change:
-   1. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   2. Add the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters.
-   3. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver.
-   4. Add the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node.
-
-v5 Change :
-   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
-   2. Drop the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node as it breaks
-     with old firmware.
-   3. Add the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   4. Add the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   5. Add the patch to remove the NCQ support from the APM
-     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
-     for-3.17 kernel.
-   6. Drop the patch to correct the OOB tunning parameters for
-     the COMINIT/COMWAKE parameters as it is already applied to
-     3.16/for-3.17 branch by the maintainer.
-   7. Drop the patch to fix the watermark threshold as it is
-     already applied to 3.16/for-3.17 branch by the maintainer.
-
-v6 change :
-   1. Drop the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   2. Drop the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   3. Add the remove the clock and PHY node patch as it
-     fixes the dropped patches together. This patch works with
-     old and new firmware as well.
-
-v7 change :
-   1. Drop the patch to remove the clock and PHY reference nodes
-     from the APM X-Gene Host controller dts node as it breaks
-     with old firmware if sata not initialised from the firmware.
-   2. Add the patch to skip phy and clock initialisation if
-     already done in the firmware.
-   3. Add the patch to fix the csr-mask in dts for PHY clock
-     node of SATA Host Controller 1.
-   4. Add the Link down retry patch with a proper comments and
-     explanation.
-   5. Drop the patch to remove NCQ as it is applied to 3.16/for-3.17.
-
-v8 change :
-   1. Adding proper comments for link down retry patch.
-   2. changing the return type to bool for skip phy patch.
+As the 'ok' is the default status of a device tree node, this patch
+removes the status of the PHY clock node of SATA Host Controller 1.
+The status of the clock node is handled from the firmware based on
+the controller enabled/disabled by the user.
 
 Signed-off-by: Loc Ho <lho@apm.com>
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
+ arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Suman Tripathi (3):
-  arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS
-    node.
-  ahci_xgene: Skip the PHY and clock initialization if already
-    configured by the firmware.
-  ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC
-    AHCI SATA host controller driver.
-
- arch/arm64/boot/dts/apm-storm.dtsi |  5 +----
- drivers/ata/ahci_xgene.c           | 41 +++++++++++++++++++++++++++++++-------
- 2 files changed, 35 insertions(+), 11 deletions(-)
-
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index 40aa96c..1bdaeda 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -184,9 +184,8 @@
+ 				reg = <0x0 0x1f21c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy1clk";
+-				status = "disabled";
+ 				csr-offset = <0x4>;
+-				csr-mask = <0x00>;
++				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+ 				enable-mask = <0x06>;
+ 			};
+@@ -198,7 +197,6 @@
+ 				reg = <0x0 0x1f22c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy2clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+@@ -212,7 +210,6 @@
+ 				reg = <0x0 0x1f23c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy3clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
 --
 1.8.2.1
 
