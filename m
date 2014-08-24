@@ -1,30 +1,27 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
- and there's not way to prevent the kernel from using the 2nd cdb byte for
- the LUN
-Date: Sun, 24 Aug 2014 08:04:39 -0700
-Message-ID: <20140824150439.GA3453@infradead.org>
-References: <1408721990.11179.3.camel@jarvis>
- <Pine.LNX.4.44L0.1408221249360.967-100000@iolanthe.rowland.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/2] qla2xxx: Miscellaneous fixes
+Date: Sun, 24 Aug 2014 08:30:54 -0700
+Message-ID: <20140824153054.GA16490@infradead.org>
+References: <1407497889-4814-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:56228 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbaHXPa4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Aug 2014 11:30:56 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1408221249360.967-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1407497889-4814-1-git-send-email-chad.dupuis@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, giridhar.malavali@qlogic.com
 
-On Fri, Aug 22, 2014 at 01:29:32PM -0400, Alan Stern wrote:
-> > Other than this, I'm fine with the code ... you can add the acked by
-> > from me when we resolve the above question.
+On Fri, Aug 08, 2014 at 07:38:07AM -0400, Chad Dupuis wrote:
+> Hi James, Christoph,
 > 
-> Okay.  It's true that this issue is only tangentially related to the 
-> main point of the patch.  It could be removed and addressed later.
+> Pleas apply the following two patches at your earliest convenience.
 
-Just make it a separate patch and send it along..
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks, I've applied them to the drivers-for-3.18 branch (actually
+already a few days ago, so they are in Linux-next already)
+
