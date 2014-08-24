@@ -1,33 +1,21 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: Performance degradation in IO writes vs. reads (was scsi-mq V2)
-Date: Sun, 24 Aug 2014 19:41:57 +0300
-Message-ID: <53FA15D5.1030206@dev.mellanox.co.il>
-References: <1403715121-1201-1-git-send-email-hch@lst.de> <20140708144829.GA5539@infradead.org> <53C39F36.9010003@dev.mellanox.co.il> <53F5E6C9.1020207@dev.mellanox.co.il> <20140821130315.GB1567@infradead.org> <53F5FBF8.9040700@dev.mellanox.co.il>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 00/13] scsi: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Sun, 24 Aug 2014 10:31:01 -0700
+Message-ID: <20140824173101.GA24145@infradead.org>
+References: <cover.1408335523.git.agordeev@redhat.com>
+ <20140819170047.GA7237@infradead.org>
+ <20140820191416.GA1886@agordeev.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <53F5FBF8.9040700@dev.mellanox.co.il>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@fusionio.com>, Robert Elliott <Elliott@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, viro@ZenIV.linux.org.uk, Or Gerlitz <ogerlitz@mellanox.com>, Oren Duer <oren@mellanox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-fsdevel@vger.kernel.org, Max Gurtovoy <maxg@mellanox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140820191416.GA1886@agordeev.usersys.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, Naresh Kumar Inna <naresh@chelsio.com>, Arvind Bhushan <arvindb@chelsio.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 8/21/2014 5:02 PM, Sagi Grimberg wrote:
-> On 8/21/2014 4:03 PM, Christoph Hellwig wrote:
->> On Thu, Aug 21, 2014 at 03:32:09PM +0300, Sagi Grimberg wrote:
->>> So I just got back to checking this issue of *extremely low* IO write
->>> performance I got in 3.16-rc2.
->>
->> Please test with 3.16 final.  There once issue each in aio and dio
->> that caused bad I/O performance regression that were only fixed last
->> minute in the 3.16 cycle.
->>
->
-> I'll do that now.
->
+I've applied all other patches except for the lpfc one now.
 
-Indeed this issue is resolved in 3.16. Sorry for the false alarm...
-Thanks Christoph.
-
-Sagi.
+Thanks again!
