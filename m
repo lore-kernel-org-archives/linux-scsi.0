@@ -1,20 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 09/10] sd: Avoid sending medium write commands if device is
- write protected
-Date: Sun, 24 Aug 2014 09:28:30 -0700
-Message-ID: <20140824162830.GA29350@infradead.org>
-References: <1407760838-6406-1-git-send-email-draviv@codeaurora.org>
- <1407760838-6406-10-git-send-email-draviv@codeaurora.org>
+Subject: Re: [PATCH/RESEND] scsi.mq: Added use_cmd_list flag in scsi_host to
+ reduce lock contention
+Date: Sun, 24 Aug 2014 09:26:44 -0700
+Message-ID: <20140824162644.GA19279@infradead.org>
+References: <201408201357.s7KDvDeL021549@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58980 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865AbaHXQ0p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Aug 2014 12:26:45 -0400
 Content-Disposition: inline
-In-Reply-To: <1407760838-6406-10-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>
+In-Reply-To: <201408201357.s7KDvDeL021549@palmhbs0.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kashyap.Desai@avagotech.com
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, elliott@hp.com, jbottomley@parallels.com, aacraid@adaptec.com, bvanassche@acm.org
 
 Thanks,
 
 applied.
+
