@@ -1,55 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: scsi logging future directions, was Re: [RFC PATCH -logging 00/10]
-	scsi/constants: Output continuous error messages on trace
-Date: Sun, 24 Aug 2014 22:44:54 +0200
-Message-ID: <20140824204454.GA11423@lst.de>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <94D0CD8314A33A4D9D801C0FE68B402958C1A9E5@G9W0745.americas.hpqcorp.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH/RFC V2 07/16] scsi: support well known logical units
+Date: Sun, 24 Aug 2014 13:56:05 -0700
+Message-ID: <20140824205605.GA30004@infradead.org>
+References: <82e763120409310e9d6b332854804858.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958C1A9E5@G9W0745.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <82e763120409310e9d6b332854804858.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: subhashj@codeaurora.org
+Cc: Dolev Raviv <draviv@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 22, 2014 at 12:39:59AM +0000, Elliott, Robert (Server Storage) wrote:
-> If you trigger hundreds of errors (e.g., hot remove a device
-> during heavy IO), then all the prints to the linux serial console
-> bog down the system, causing timeouts in commands to other
-> devices and soft lockups for applications.
+On Fri, Aug 22, 2014 at 12:02:30AM -0000, subhashj@codeaurora.org wrote:
+> >> +	/*
+> >> +	 * put runtime pm reference for well-known logical units,
+> >> +	 * drivers are expected to _get_* again during probe.
+> >> +	 */
+> >> +	if (scsi_is_wlun(sdev->lun))
+> >> +		scsi_autopm_put_device(sdev);
+> > Special casing the well known LUNs here seems wrong.  Shouldn't we do
+> this
+> > for any devices that don't get a driver attached to them?
 > 
-> Some changes that would help are:
-> 1. Put them under SCSI logging level control
-> 2. Use printk_ratelimited so an excessive number are trimmed
-> 
-> Would you like to include something like this in your
-> patch set?
+> Agreed, i will replace "if (scsi_is_wlun(sdev->lun))" check with "if
+> (sdev->sdev_gendev.driver)".
 
-I think we should come to an agreement where we want to go with scsi
-logging first before doing various smaller adjustments.  (Although your
-example is one that's urgent enough that I'd like to put it in ASAP,
-I had issues with it a few times).
+I would really prefer the callers of autopm get/put to be symmetric to
+issues with later than probe driver attach or similar.  Think of the
+case say the CDROM or tape driver only gets loaded after we already
+did a bus scan.  A quick check of the autopm code and it's underlying
+implementation seems to suggest that nesting them is okay.  If that's
+indeed the case I would suggest to restructure it the following way:
 
-I had a chat with Martin at Linuxcon about these issues, and we were
-both in favor of getting rid of the old scsi logging mechansisms and
-instead replace it by an extended version of the scsi tracepoints that
-cover all places, and dump all data from the old logging mechanism
-that people find useful.
+ - make the scsi_autopm_put_device call you add at the end of
+   scsi_sysfs_add_sdev unconditional to make it balance out
+   the get earlier in the function (and delete the now incorrect comment
+   above the scsi_autopm_get_device call).
+ - let drivers do paired get/put calls in their probe/remove methods.
 
-In a few places we'd still want to log normal dev_printk style errors,
-and the I/O completion is one of them, even if they really need to be
-ratelimited and condensed.
+If you still need any wlun changes after that please send them as a
+separate patch with a detailed description on why you need it.
 
-If someone has arguments in favour of keeping the old logging code
-I'd love to hear them, but in practive the traceevent code has huge
-benefits:
-
- - almost zero overhead if disabled
- - can easily be used without any tools through configs, but can be used
-   even better with tools like trace-cmd or perf
- - allows both fine and coarse grained selections of events to trace
- - allows to capture statistics on each trace point without event enabling the
-   output
- - doesn't have any of the console lockup problems.
+All in all the autopm code and it's underlying implementation is highly
+confusing, so additional documentation on it would also be very welcome.
