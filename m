@@ -1,71 +1,70 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented and
- there's not way to prevent the kernel from using the 2nd cdb byte for the LUN
-Date: Mon, 25 Aug 2014 20:12:49 +0000
-Message-ID: <bug-80711-11613-aBrbCTHibI@https.bugzilla.kernel.org/>
-References: <bug-80711-11613@https.bugzilla.kernel.org/>
+From: Alfredo Dal Ava Junior <alfredo.junior-peCLlicIkyA3OWu3QmcX+g@public.gmane.org>
+Subject: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Mon, 25 Aug 2014 20:14:20 +0000
+Message-ID: <5afd9bda607a48d3b0a1f7b362c666c5@serv030.corp.eldorado.org.br>
+References: <40601ab081d3451baf6267807659c80e@serv030.corp.eldorado.org.br>
+ <Pine.LNX.4.44L0.1408251526390.1385-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:39686 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932577AbaHYUMy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2014 16:12:54 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 33ABB201C7
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2014 20:12:53 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D7D0E201CE
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2014 20:12:49 +0000 (UTC)
-In-Reply-To: <bug-80711-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1408251526390.1385-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Content-Language: pt-BR
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=80711
 
---- Comment #19 from Alan Stern <stern@rowland.harvard.edu> ---
-On Mon, 25 Aug 2014, James Bottomley wrote:
-
-> On Mon, 2014-08-25 at 10:44 -0400, Alan Stern wrote:
+On Mon, 25 Aug 2014 Alan Stern wrote:
 > 
-> > James, can you explain how the INQUIRY command in scsi_probe_lun()  
-> > managed to work back in the days when multi-lun SCSI-2 devices were
-> > common?  sdev->scsi_level doesn't get set when sdev is allocated, so it
-> > initially contains 0, so the LUN bits won't get filled in when the
-> > first INQUIRY command is sent.  Then how could the target know which
-> > logical unit the INQUIRY was meant for?
+> On Mon, 25 Aug 2014, Alfredo Dal Ava Junior wrote:
 > 
-> Best guess, some patches over the course of time altered the way we do
-> this and no-one noticed.  I think it was probably the introduction of
-> the unknown SCSI data level that caused the breakage.
+> That's right.  I don't know why Windows behaves that way.
 
-Heh.  The change was made by commit 4d7db04a7a69 ([SCSI] add
-SCSI_UNKNOWN and LUN transfer limit restrictions) back in 2006 -- the
-2.6.17 kernel.  If nobody has complained in all this time then it's
-probably not worth changing.
+Please look this output from diskpart (Windows):
 
-> Historically, the LUN in CMD bits is left over from SCSI-1; it was
-> incorporated into SCSI-2 for backward compatibility (even though SCSI-2
-> moved the LUN specification to the identify message).  In SCSI-3 and
-> beyond, those bits were obsoleted and transports took sole
-> responsibility for LUN handling.  I'm fairly certain all the SCSI-1
-> devices relying on this behaviour have long ago migrated to the great
-> data centre in the sky.
+DISKPART> list partition
+
+  Partition ###  Type              Size     Offset
+  -------------  ----------------  -------  -------
+  Partition 1    Primary           3726 GB    17 KB
+
+DISKPART> list disk
+
+  Disk ###  Status         Size     Free     Dyn  Gpt
+  --------  -------------  -------  -------  ---  ---
+  Disk 0    Online          298 GB      0 B
+* Disk 1    Online         1678 GB      0 B        *
+
+DISKPART> select disk 1
+
+Disk 1 is now the selected disk.
+
+DISKPART> list partition
+
+  Partition ###  Type              Size     Offset
+  -------------  ----------------  -------  -------
+  Partition 1    Primary           3726 GB    17 KB
+
+> > Could we do the same? Would be possible to signalize to upper layers
+> > that capacity is not accurate (or return zero) on this device, and
+> > tell GPT handlers to bypass it's partition_size vs disk size
+> > consistency check?
 > 
-> Alan's fix looks reasonable because we probe LUN 0 first (for SCSI-1 and
-> 2 which has parallel scanning), which is why it doesn't matter (the bits
-> are set to zero) and once we have LUN 0 we propagate the data to the
-> target and make it the basis for future checks.  I'd like to see a
-> comment explaining this in the code, though ...
+> There is no way to do this, as far as I know.  But I'm not an expert in this area.
+> Maybe you can figure out a way to add this capability.
+> 
+> (But then what happens if the size stored in the partition table really is larger
+> than the disk's capacity?)
 
-If you think it would be a good idea, I could put it into a separate 
-patch with an explanatory comment.  At the moment, I'm inclined to 
-forget about it.
+It's the first time I touch this code, but I will learn from the code and try to find it out... but still in hope to find a clean solution...
+If size stored on partition table is really larger than disk, my guess it will cause I/O errors, and that some disks may get crazy like you pointed. 
+Do you think disk could cause kernel instability? I think it is acceptable if no consequences to kernel stability, since it is a "specific-device" workaround. 
 
-Alan Stern
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+[]'s
+Alfredo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
