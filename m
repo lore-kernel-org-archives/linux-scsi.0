@@ -1,69 +1,49 @@
-From: Alfredo Dal Ava Junior <alfredo.junior-peCLlicIkyA3OWu3QmcX+g@public.gmane.org>
-Subject: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
-Date: Mon, 25 Aug 2014 20:14:20 +0000
-Message-ID: <5afd9bda607a48d3b0a1f7b362c666c5@serv030.corp.eldorado.org.br>
-References: <40601ab081d3451baf6267807659c80e@serv030.corp.eldorado.org.br>
- <Pine.LNX.4.44L0.1408251526390.1385-100000@iolanthe.rowland.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Mon, 25 Aug 2014 16:21:12 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1408251613270.1385-100000@iolanthe.rowland.org>
+References: <175058921e084d26ba362fa6ecd7351c@serv030.corp.eldorado.org.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1408251526390.1385-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Content-Language: pt-BR
+In-Reply-To: <175058921e084d26ba362fa6ecd7351c-CWPHn/M7kmRpAIlDVkCwMZnVvqcnFG0x9MRKq5+/VYY@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Alfredo Dal Ava Junior <alfredo.junior-peCLlicIkyA3OWu3QmcX+g@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 25 Aug 2014, Alfredo Dal Ava Junior wrote:
 
-On Mon, 25 Aug 2014 Alan Stern wrote:
-> 
-> On Mon, 25 Aug 2014, Alfredo Dal Ava Junior wrote:
-> 
-> That's right.  I don't know why Windows behaves that way.
+> Well, it is causing problems anyway... from user perspective, it's a
+> Linux compatibility issue, as it works "fine" on Windows. I'm not an
+> expert, but I'm wondering that if usb-storage could set capacity as
+> "UNDETERMINED"/ Zero (or keep using the readcapacity_10 as it as with
+> some flag signalizing it as inaccurate), EFI partition check would be
+> able to ignore size and look for secondary GPT where it really is.
 
-Please look this output from diskpart (Windows):
+Part of the problem is that usb-storage has no way to know that
+anything strange is going on.  It's normal for READ CAPACITY(16) to
+fail (this depend on the SCSI level), and it's normal for the READ
+CAPACITY(10) to report a value less than 2 TB.
 
-DISKPART> list partition
+Really there is only one way to know whether the actual capacity is 
+larger than the reported capacity, and that is by trying to read blocks 
+beyond the reported capacity -- a dangerous test that many drives do 
+not like.  (And in most cases a futile test.  If a device doesn't 
+support READ CAPACITY(16), how likely is it to support READ(16)?)
 
-  Partition ###  Type              Size     Offset
-  -------------  ----------------  -------  -------
-  Partition 1    Primary           3726 GB    17 KB
+Yes, in theory you can believe the value in the partition table in 
+preference to the reported capacity.  But what if that value is wrong?  
+And how do you tell partition-manager programs what the capacity should 
+be when they modify or set up the initial partition table?
 
-DISKPART> list disk
+Attaching the drive over a SATA connection when you want to partition
+it isn't a very satisfactory solution.  After all, if you have a SATA
+connection available then why would you be using a USB enclosure in the
+first place?
 
-  Disk ###  Status         Size     Free     Dyn  Gpt
-  --------  -------------  -------  -------  ---  ---
-  Disk 0    Online          298 GB      0 B
-* Disk 1    Online         1678 GB      0 B        *
+Alan Stern
 
-DISKPART> select disk 1
-
-Disk 1 is now the selected disk.
-
-DISKPART> list partition
-
-  Partition ###  Type              Size     Offset
-  -------------  ----------------  -------  -------
-  Partition 1    Primary           3726 GB    17 KB
-
-> > Could we do the same? Would be possible to signalize to upper layers
-> > that capacity is not accurate (or return zero) on this device, and
-> > tell GPT handlers to bypass it's partition_size vs disk size
-> > consistency check?
-> 
-> There is no way to do this, as far as I know.  But I'm not an expert in this area.
-> Maybe you can figure out a way to add this capability.
-> 
-> (But then what happens if the size stored in the partition table really is larger
-> than the disk's capacity?)
-
-It's the first time I touch this code, but I will learn from the code and try to find it out... but still in hope to find a clean solution...
-If size stored on partition table is really larger than disk, my guess it will cause I/O errors, and that some disks may get crazy like you pointed. 
-Do you think disk could cause kernel instability? I think it is acceptable if no consequences to kernel stability, since it is a "specific-device" workaround. 
-
-[]'s
-Alfredo
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
