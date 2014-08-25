@@ -1,47 +1,60 @@
-From: Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>
-Subject: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
-Date: Mon, 25 Aug 2014 19:51:39 +0000
-Message-ID: <175058921e084d26ba362fa6ecd7351c@serv030.corp.eldorado.org.br>
-References: <1408972618.10300.35.camel@linux-fkkt.site>
-	 <Pine.LNX.4.44L0.1408251021560.1385-100000@iolanthe.rowland.org>
-	 <40601ab081d3451baf6267807659c80e@serv030.corp.eldorado.org.br>
- <1408994897.3629.5.camel@HansenPartnership.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
+ and there's not way to prevent the kernel from using the 2nd cdb byte for
+ the LUN
+Date: Mon, 25 Aug 2014 16:12:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1408251545580.1385-100000@iolanthe.rowland.org>
+References: <1408995547.3629.7.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.eldorado.org.br ([200.148.226.10]:59918 "EHLO
-	smtp1.eldorado.org.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006AbaHYTvp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Aug 2014 15:51:45 -0400
-In-Reply-To: <1408994897.3629.5.camel@HansenPartnership.com>
-Content-Language: pt-BR
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1408995547.3629.7.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oneukum@suse.de>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Mon, 25 Aug 2014, James Bottomley wrote:
 
-On Mon, 15 Aug 2014 James Bottomley wrote:
+> On Mon, 2014-08-25 at 10:44 -0400, Alan Stern wrote:
+> 
+> > James, can you explain how the INQUIRY command in scsi_probe_lun()  
+> > managed to work back in the days when multi-lun SCSI-2 devices were
+> > common?  sdev->scsi_level doesn't get set when sdev is allocated, so it
+> > initially contains 0, so the LUN bits won't get filled in when the
+> > first INQUIRY command is sent.  Then how could the target know which
+> > logical unit the INQUIRY was meant for?
+> 
+> Best guess, some patches over the course of time altered the way we do
+> this and no-one noticed.  I think it was probably the introduction of
+> the unknown SCSI data level that caused the breakage.
 
-> So how did the partition get on there at the correct size in the first place?
-> Even under windows partition managers believe the disk size they get from
-> the system if the disk is blank.
+Heh.  The change was made by commit 4d7db04a7a69 ([SCSI] add
+SCSI_UNKNOWN and LUN transfer limit restrictions) back in 2006 -- the
+2.6.17 kernel.  If nobody has complained in all this time then it's
+probably not worth changing.
 
-The HDD can be partitioned outside the enclosure, when connected directly to one SATA port on motherboard. READ_CAPACITY(16) will return properly when talking directly to the HDD.
+> Historically, the LUN in CMD bits is left over from SCSI-1; it was
+> incorporated into SCSI-2 for backward compatibility (even though SCSI-2
+> moved the LUN specification to the identify message).  In SCSI-3 and
+> beyond, those bits were obsoleted and transports took sole
+> responsibility for LUN handling.  I'm fairly certain all the SCSI-1
+> devices relying on this behaviour have long ago migrated to the great
+> data centre in the sky.
+> 
+> Alan's fix looks reasonable because we probe LUN 0 first (for SCSI-1 and
+> 2 which has parallel scanning), which is why it doesn't matter (the bits
+> are set to zero) and once we have LUN 0 we propagate the data to the
+> target and make it the basis for future checks.  I'd like to see a
+> comment explaining this in the code, though ...
 
-> I assume for those of us on linux-scsi who don't have the start of this thread,
-> you already tried read capacity(16) and it has this same problem?
+If you think it would be a good idea, I could put it into a separate 
+patch with an explanatory comment.  At the moment, I'm inclined to 
+forget about it.
 
-Sorry, I forgot to include linux-scsi. On this device, READ_CAPACITY_16 fails 100% of times as unsupported command, then  READ_CAPACITY_10 has a distinct behavior depending on HDD size:
+Alan Stern
 
-1TB and 2TB: READ_CAPACITY_10 returns correct value
-3TB and 4TB: READ_CAPACITY_10 returns in a 2TB modulus
-
-> Hm, allowing users to set desired capacity by overriding the partition size ...
-> I'm sure that's not going to cause support problems ...
-
-Well, it is causing problems anyway... from user perspective, it's a Linux  compatibility issue, as it works "fine" on Windows. I'm not an expert, but I'm wondering that if usb-storage could set capacity as "UNDETERMINED"/ Zero  (or keep using the readcapacity_10 as it as with some flag signalizing it as inaccurate), EFI partition check would be able to ignore size and look for secondary GPT where it really is.
-
-[]'s
-Alfredo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
