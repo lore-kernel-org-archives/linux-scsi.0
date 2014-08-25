@@ -1,47 +1,32 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
 Subject: Re: [PATCH] bnx2fc: do not add shared skbs to the fcoe_rx_list
-Date: Mon, 25 Aug 2014 08:28:19 -0400
-Message-ID: <alpine.OSX.2.00.1408250827510.529@administrators-macbook-pro.local>
-References: <1406275372-3983-1-git-send-email-mlombard@redhat.com>  <53D21166.4090608@redhat.com> <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com>
+Date: Mon, 25 Aug 2014 14:41:47 +0200
+Message-ID: <53FB2F0B.6040409@redhat.com>
+References: <1406275372-3983-1-git-send-email-mlombard@redhat.com>	 <53D21166.4090608@redhat.com> <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:59489 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932379AbaHYM20 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2014 08:28:26 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:38828 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755616AbaHYMlv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2014 08:41:51 -0400
 In-Reply-To: <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
+Hi Eddie,
 
-
-On Fri, 22 Aug 2014, Eddie Wai wrote:
-
-> On Fri, 2014-07-25 at 10:12 +0200, Maurizio Lombardi wrote:
->> Hi Eddie,
->>
->> just want to add you to the CC list.
->>
->> Some days ago the bnx2fc's maintainer email address has been updated,
->> this should be the new one: QLogic-Storage-Upstream@qlogic.com
->>
->> I tried to send this patch to the new address but I received the following
->> delivery failure notification:
->>
->> --------
->> Delivery has failed to these recipients or groups:
->>
->> Dept_Linux_FC@qlogic.com<mailto:Dept_Linux_FC@qlogic.com>
->> Your message can't be delivered because delivery to this address is restricted.
->> --------
+On 08/23/2014 01:02 AM, Eddie Wai wrote:
 > is this still a problem?  The mail reflector seems to work for me...
->
+> 
 
-This issue has been fixed.
+Works for me now.
+
+Regards,
+Maurizio Lombardi
 
 >>
 >> On 07/25/2014 10:02 AM, Maurizio Lombardi wrote:
@@ -91,12 +76,12 @@ This issue has been fixed.
 >>>  	struct fcoe_percpu_s *bg;
 >>> +	struct sk_buff *tmp_skb;
 >>>  	unsigned short oxid;
->>>
+>>>  
 >>>  	interface = container_of(ptype, struct bnx2fc_interface,
 >>> @@ -423,6 +424,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
 >>>  		goto err;
 >>>  	}
->>>
+>>>  
 >>> +	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
 >>> +	if (!tmp_skb)
 >>> +		goto err;
@@ -109,10 +94,5 @@ This issue has been fixed.
 >>>
 > Seems logical, but this patch requires some testing which ought to be
 > verified by the Qlogic team.  Thanks.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> 
+> 
