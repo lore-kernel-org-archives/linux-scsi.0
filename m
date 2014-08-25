@@ -1,87 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: scsi logging future directions, was Re: [RFC PATCH -logging 00/10]
- scsi/constants: Output continuous error messages on trace
-Date: Mon, 25 Aug 2014 13:30:55 +0200
-Message-ID: <53FB1E6F.7080803@suse.de>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <94D0CD8314A33A4D9D801C0FE68B402958C1A9E5@G9W0745.americas.hpqcorp.net> <20140824204454.GA11423@lst.de>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: Debugging scsi abort handling ?
+Date: Mon, 25 Aug 2014 13:39:47 +0200
+Message-ID: <53FB2083.9000208@redhat.com>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com> <53FB1D4F.5070606@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140824204454.GA11423@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "yrl.pp-manager.tt@hitachi.com" <yrl.pp-manager.tt@hitachi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37572 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753795AbaHYLjv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2014 07:39:51 -0400
+In-Reply-To: <53FB1D4F.5070606@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 08/24/2014 10:44 PM, Christoph Hellwig wrote:
-> On Fri, Aug 22, 2014 at 12:39:59AM +0000, Elliott, Robert (Server Sto=
-rage) wrote:
->> If you trigger hundreds of errors (e.g., hot remove a device
->> during heavy IO), then all the prints to the linux serial console
->> bog down the system, causing timeouts in commands to other
->> devices and soft lockups for applications.
->>
->> Some changes that would help are:
->> 1. Put them under SCSI logging level control
->> 2. Use printk_ratelimited so an excessive number are trimmed
->>
->> Would you like to include something like this in your
->> patch set?
->
-> I think we should come to an agreement where we want to go with scsi
-> logging first before doing various smaller adjustments.  (Although yo=
-ur
-> example is one that's urgent enough that I'd like to put it in ASAP,
-> I had issues with it a few times).
->
-> I had a chat with Martin at Linuxcon about these issues, and we were
-> both in favor of getting rid of the old scsi logging mechansisms and
-> instead replace it by an extended version of the scsi tracepoints tha=
-t
-> cover all places, and dump all data from the old logging mechanism
-> that people find useful.
->
-> In a few places we'd still want to log normal dev_printk style errors=
-,
-> and the I/O completion is one of them, even if they really need to be
-> ratelimited and condensed.
->
-> If someone has arguments in favour of keeping the old logging code
-> I'd love to hear them, but in practive the traceevent code has huge
-> benefits:
->
->   - almost zero overhead if disabled
->   - can easily be used without any tools through configs, but can be =
-used
->     even better with tools like trace-cmd or perf
->   - allows both fine and coarse grained selections of events to trace
->   - allows to capture statistics on each trace point without event en=
-abling the
->     output
->   - doesn't have any of the console lockup problems.
->
-I've already been working on updating scsi logging infrastructure,=20
-removing old cludges and streamlining it.
-I'm all in favour of moving things over to scsi tracing; in fact I've=20
-already moved all the current SCSI_ML_XXX statements to tracepoints in
-my current patchset.
+Il 25/08/2014 13:26, Hans de Goede ha scritto:
+> Thanks Bart and Paolo, your insights into this are greatly appreciated.
+> 
+> So with uas there are separate usb transaction for cmd, data in, data out
+> and sense for each tag. At the time of abort, usually one of data in / data
+> out and a sense usb transaction will be outstanding.
+> 
+> There already is logic in the driver to kill the data in / out transactions
+> if a sense gets returned (usually with an error) before they are done.
+> 
+> So if I'm reading this correctly, then on a successful abort, the sense
+> transaction (if not already completed by the target) should be cancelled as
+> it will never complete, correct ?
 
-Unfortunately I haven't found time to test things out there, and there'=
-s=20
-the patchset from Yoshihiro which needs review and integration.
+Yes.  More precisely, once the response IU comes back for the abort,
+there should be no more IUs for that task.  Figure 13 ("Multiple Command
+Example") in the UAS spec actually shows that.
 
-As of now I've treated this as rather low priority as no-one seemed to=20
-mind and the patchsets will be touching each and every driver.
+At least, that's what it should be like in theory.  I suspect firmware
+bugs will abound in this area, but at least you shouldn't be actively
+expecting an IU for an aborted task.
 
-I'll be updating the patchset and send it for review.
+> I wish the uas spec contained some more details on this, but it is very
+> vague wrt task management (well it is vague in general, task management just
+> is extra hard to test).
 
-Cheers,
+That may complicate usage of the spec, but it's not necessarily a bad
+thing; a SCSI transport should heavily rely on the SCSI architecture and
+thus the SAM spec, and vagueness can be a hint that the transport was
+done right.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Paolo
+
