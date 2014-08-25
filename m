@@ -1,19 +1,31 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
- and there's not way to prevent the kernel from using the 2nd cdb byte for
- the LUN
-Date: Mon, 25 Aug 2014 16:12:46 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1408251545580.1385-100000@iolanthe.rowland.org>
-References: <1408995547.3629.7.camel@HansenPartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented and
+ there's not way to prevent the kernel from using the 2nd cdb byte for the LUN
+Date: Mon, 25 Aug 2014 20:12:49 +0000
+Message-ID: <bug-80711-11613-aBrbCTHibI@https.bugzilla.kernel.org/>
+References: <bug-80711-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1408995547.3629.7.camel-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, bugzilla-daemon-590EEB7GvNiWaY/ihj7yzEB+6BGkLq7r@public.gmane.org, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:39686 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932577AbaHYUMy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Aug 2014 16:12:54 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 33ABB201C7
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2014 20:12:53 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id D7D0E201CE
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2014 20:12:49 +0000 (UTC)
+In-Reply-To: <bug-80711-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=80711
+
+--- Comment #19 from Alan Stern <stern@rowland.harvard.edu> ---
 On Mon, 25 Aug 2014, James Bottomley wrote:
 
 > On Mon, 2014-08-25 at 10:44 -0400, Alan Stern wrote:
@@ -54,7 +66,6 @@ forget about it.
 
 Alan Stern
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
