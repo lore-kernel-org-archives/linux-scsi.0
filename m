@@ -1,174 +1,60 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
- bnx2fc_map_sg()
-Date: Mon, 25 Aug 2014 15:15:47 -0400
-Message-ID: <alpine.OSX.2.00.1408251511290.1834@administrators-macbook-pro.local>
-References: <1407140413-4561-1-git-send-email-mlombard@redhat.com>  <1408556122.10706.20.camel@lbirv-waie-lx2.broadcom.com>  <53F7091C.1080400@redhat.com>  <alpine.OSX.2.00.1408220805170.360@administrators-macbook-pro.local>  <53F7881A.1070808@redhat.com>
- <1408747587.3876.40.camel@lbirv-waie-lx2.broadcom.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Mon, 25 Aug 2014 12:28:17 -0700
+Message-ID: <1408994897.3629.5.camel@HansenPartnership.com>
+References: <1408972618.10300.35.camel@linux-fkkt.site>
+	 <Pine.LNX.4.44L0.1408251021560.1385-100000@iolanthe.rowland.org>
+	 <40601ab081d3451baf6267807659c80e@serv030.corp.eldorado.org.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:57250 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933108AbaHYTQE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2014 15:16:04 -0400
-In-Reply-To: <1408747587.3876.40.camel@lbirv-waie-lx2.broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <40601ab081d3451baf6267807659c80e-CWPHn/M7kmRpAIlDVkCwMZnVvqcnFG0x9MRKq5+/VYY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alfredo Dal Ava Junior <alfredo.junior-peCLlicIkyA3OWu3QmcX+g@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@lst.de
+
+On Mon, 2014-08-25 at 18:48 +0000, Alfredo Dal Ava Junior wrote:
+> On Mon, 25 Aug 2014, Alan Stern wrote:
+> > 
+> > Don't forget that lots of disks go crazy if you try to read from a nonexistent
+> > block, that is, one beyond the end of the disk.
+> > IMO, this bug cannot be worked around in any reasonable manner.  The
+> > device simply cannot handle disks larger than 2 TB.
+> 
+> 
+> This device works well on Windows 7 if HDD is already partitioned.
+
+So how did the partition get on there at the correct size in the first
+place?  Even under windows partition managers believe the disk size they
+get from the system if the disk is blank.
+
+>  Sounds like Win7 gnores the READ_CAPACITY value on a partitioned HDD.
+> It shows 4TB on disk manager, but will fall back to 1.8TB if I remove
+> the partition.
+
+I assume for those of us on linux-scsi who don't have the start of this
+thread, you already tried read capacity(16) and it has this same
+problem?
+
+> Could we do the same?
+
+Hm, allowing users to set desired capacity by overriding the partition
+size ... I'm sure that's not going to cause support problems ...
+
+>  Would be possible to signalize to upper layers that capacity is not
+> accurate (or return zero) on this device, and tell GPT handlers to
+> bypass it's partition_size vs disk size consistency check?
+
+If we can find a heuristic to set the correct capacity in the kernel,
+then we may be able to fix this ... but as Alain says, it looks hard.
+We can't ask userspace to hack tools for broken devices.
+
+James
 
 
-
-On Fri, 22 Aug 2014, Eddie Wai wrote:
-
-> On Fri, 2014-08-22 at 20:12 +0200, Maurizio Lombardi wrote:
->> Hi Chad,
->>
->> On 08/22/2014 02:08 PM, Chad Dupuis wrote:
->>> Eddie, Maurizio,
->>>
->>> Since it looks like there can be a difference in the pdev would it make sense instead to convert the unmap function to use the bare DMA API so we're consistent in our use of hba->pcidev->dev?  Maybe something like this:
->>
->> I looked at what the bnx2i driver code does, it has a hba->pcidev pointer too but makes use of scsi_map_sg()/scsi_unmap_sg().
->> So, from my point of view, it is the bnx2fc's map operation (that bypasses scsi_map_sg() and uses dma_map_sg()) to look like a suspicious exception and I decided to change it.
->>
->> So far, I didn't get any error or strange behaviour after this change.
->> Eddie, what do you think about it?
->>
->> Regards,
->> Maurizio Lombardi
->>
->>>
->>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
->>> index 32a5e0a..8b4adcf 100644
->>> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
->>> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
->>> @@ -1700,9 +1700,12 @@ static int bnx2fc_build_bd_list_from_sg(struct bnx2fc_cmd *io_req)
->>>  static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
->>>  {
->>>         struct scsi_cmnd *sc = io_req->sc_cmd;
->>> +       struct bnx2fc_interface *interface = io_req->port->priv;
->>> +       struct bnx2fc_hba *hba = interface->hba;
->>>
->>> -       if (io_req->bd_tbl->bd_valid && sc) {
->>> -               scsi_dma_unmap(sc);
->>> +       if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
->>> +               dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
->>> +                   scsi_sg_count(sc), sc->sc_data_direction);
->>>                 io_req->bd_tbl->bd_valid = 0;
->>>         }
->>>  }
->>>
->>> On Fri, 22 Aug 2014, Maurizio Lombardi wrote:
->>>
->>>> Hi Eddie,
->>>>
->>>> On 08/20/2014 07:35 PM, Eddie Wai wrote:
->>>>> On Mon, 2014-08-04 at 10:20 +0200, Maurizio Lombardi wrote:
->>>>>> In the bnx2fc_map_sg() function, the original behaviour is to
->>>>>> allocate the DMA memory by directly calling dma_map_sg()
->>>>>> instead of using scsi_dma_map().
->>>>>>
->>>>>> In contrast, bnx2fc_unmap_sg_list() calls scsi_dma_unmap().
->>>>>>
->>>>>> The problem is that bnx2fc_map_sg() passes to the dma_map_sg() function
->>>>>> the pointer to the "device" structure taken from pci_dev
->>>>>> and not from Scsi_Host (as scsi_dma_map/unmap() do).
->>>>>>
->>>>> Great find, Maurizio, Thanks again.
->>>>
->>>> Thanks :)
->>>>
->>>>>
->>>>>> In some circumstances, the two devices may be different and the
->>>>>> DMA library will be unable to find the correct entry
->>>>>> when freeing the memory.
->>>>>>
->>>>> I'm curious at how the hba->pcidev->dev in the dma_map_sg call could end
->>>>> up being different from the scsi_cmnd's device->host->dma_dev...  Can
->>>>> you share the test scenario?
->>>>
->>>> It happens every time you set up an fcoe interface, so you just have to compile the
->>>> kernel with the DMA API debug option.
->>>> It is 100% reproducible with RHEL6, RHEL7 and the latest mainline kernel also.
->
-> This got me thinking that the scsi_host's dma_dev must have been changed
-> recently and I think I found the culprit:
-> http://www.spinics.net/lists/linux-scsi/msg65225.html
->
-> So back when, we changed the scsi_host's parent from hba->pcidev->dev to
-> the fcoe_ctlr_device's dev to basically align with the soft fcoe code to
-> fix a fcoemon expectation.  Although this was changed correctly, the sg
-> DMA mapping routine did not adapt to it; hence the mismatch.
->
-> Prior to this change, both sg dma map and unmap were done to the
-> hba->pcidev->dev along with all other DMA mapping routines.  I also see
-> that even though bnx2i uses the scsi_map_sg/scsi_unmap_sg pairs,
-> ultimately, they were operating on the hba->pcidev->dev device.
->
-> My opinion is that it would probably be in our best interest to have all
-> DMA mapping/unmapping routines continue to operate on the
-> hba->pcidev->dev directly to prevent any unforeseen DMA problems.
->
-
-Thanks Eddie.  Would my original patch work then (I added comments per 
-Christoph's request):
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c 
-b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 32a5e0a..6a61a0d 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1651,6 +1651,10 @@ static int bnx2fc_map_sg(struct bnx2fc_cmd *io_req)
-         u64 addr;
-         int i;
-
-+       /*
-+        * Use dma_map_sg directly to ensure we're using the correct
-+        * dev struct off of pcidev.
-+        */
-         sg_count = dma_map_sg(&hba->pcidev->dev, scsi_sglist(sc),
-                               scsi_sg_count(sc), sc->sc_data_direction);
-         scsi_for_each_sg(sc, sg, sg_count, i) {
-@@ -1700,9 +1704,16 @@ static int bnx2fc_build_bd_list_from_sg(struct 
-bnx2fc_cmd *io_req)
-  static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
-  {
-         struct scsi_cmnd *sc = io_req->sc_cmd;
-+       struct bnx2fc_interface *interface = io_req->port->priv;
-+       struct bnx2fc_hba *hba = interface->hba;
-
--       if (io_req->bd_tbl->bd_valid && sc) {
--               scsi_dma_unmap(sc);
-+       /*
-+        * Use dma_unmap_sg directly to ensure we're using the correct
-+        * dev struct off of pcidev.
-+        */
-+       if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
-+               dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
-+                   scsi_sg_count(sc), sc->sc_data_direction);
-                 io_req->bd_tbl->bd_valid = 0;
-         }
-  }
-
->>>>
->>>>>
->>>>> I see that scsi_dma_map could possibly return a -ENOMEM.  It would be
->>>>> best if we also add the check for sg_count being < 0 and return the
->>>>> bd_count or 0.
->>>>>
->>>>>>      scsi_for_each_sg(sc, sg, sg_count, i) {
->>>>>>          sg_len = sg_dma_len(sg);
->>>>>>          addr = sg_dma_address(sg);
->>>>
->>>> True, but sg_count is only used for the "scsi_for_each()",
->>>> if it is 0 or -ENOMEM it will simply skip the loop and will execute "return bd_count".
->>>>
->>>> Regards,
->>>> Maurizio Lombardi
->>>>
->
->
->
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
