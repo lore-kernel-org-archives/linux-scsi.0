@@ -1,36 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
- size issues with >2TB HDDs)
-Date: Tue, 26 Aug 2014 12:59:18 -0700
-Message-ID: <1409083158.3812.66.camel@jarvis.lan>
-References: <87801b450dee41dda169a3aa2dd2baf6@serv030.corp.eldorado.org.br>
-	 <1408972618.10300.35.camel@linux-fkkt.site>
-	 <201408261939.s7QJdg4B013031@hobgoblin.ariadne.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH RESEND 0/6] qla2xxx device removal fixups
+Date: Tue, 26 Aug 2014 17:08:23 -0400
+Message-ID: <1409087303-18479-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50721 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753824AbaHZT7U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 15:59:20 -0400
-In-Reply-To: <201408261939.s7QJdg4B013031@hobgoblin.ariadne.com>
+Received: from p01c11o145.mxlogic.net ([208.65.144.68]:57406 "EHLO
+	p01c11o145.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754209AbaHZVJ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2014 17:09:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dale R. Worley" <worley@alum.mit.edu>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-On Tue, 2014-08-26 at 15:39 -0400, Dale R. Worley wrote:
-> This is almost certainly a form of the problem reported in
-> "AS2105-based enclosure size issues with >2TB HDDs".  I'm repeating my
-> original message here so linux-usb can see it, and so it can be
-> connected to the older thread.  I'll address it in another message.
+Resending patchset against scsi-queue/drivers-for-3.18 with Acked-by and
+Cc stable annotations.
 
-Did you try read capacity 16 on it?  What happened?  (the AS2105 rejects
-read capacity 16, so there's no reliable way to deduce the capacity of
-drives over 2TB).
+Joe Lawrence (6):
+  qla2xxx: Fix shost use-after-free on device removal
+  qla2xxx: Use qla2x00_clear_drv_active on probe failure
+  qla2xxx: Collect PCI register checks and board_disable scheduling
+  qla2xxx: Schedule board_disable only once
+  qla2xxx: Prevent removal and board_disable race
+  qla2xxx: Prevent probe and board_disable race
 
-James
+ drivers/scsi/qla2xxx/qla_def.h |    5 ++++
+ drivers/scsi/qla2xxx/qla_gbl.h |    3 +-
+ drivers/scsi/qla2xxx/qla_isr.c |   44 +++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_mr.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_nx.c  |    6 ++--
+ drivers/scsi/qla2xxx/qla_os.c  |   60 ++++++++++++++++++----------------------
+ 6 files changed, 61 insertions(+), 59 deletions(-)
 
+-- 
+1.7.10.4
 
