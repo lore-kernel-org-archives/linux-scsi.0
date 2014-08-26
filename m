@@ -1,136 +1,147 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: Debugging scsi abort handling ?
-Date: Tue, 26 Aug 2014 21:19:51 +0200
-Message-ID: <53FCDDD7.1020608@redhat.com>
-References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com>		 <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org>		 <53FB1ACD.1040208@redhat.com> <53FB1D4F.5070606@redhat.com>		 <53FB2083.9000208@redhat.com> <1408981299.17968.27.camel@jarvis.lan>	 <53FC4193.4010808@redhat.com> <1409078078.3812.25.camel@jarvis.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28640 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751989AbaHZTT4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 15:19:56 -0400
-In-Reply-To: <1409078078.3812.25.camel@jarvis.lan>
-Sender: linux-scsi-owner@vger.kernel.org
+From: worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org (Dale R. Worley)
+Subject: Problem with USB-to-SATA adapters (was: AS2105-based enclosure size issues with >2TB HDDs)
+Date: Tue, 26 Aug 2014 15:39:42 -0400
+Message-ID: <201408261939.s7QJdg4B013031@hobgoblin.ariadne.com>
+References: <87801b450dee41dda169a3aa2dd2baf6@serv030.corp.eldorado.org.br> <1408972618.10300.35.camel@linux-fkkt.site>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <1408972618.10300.35.camel-B2T3B9s34ElbnMAlSieJcQ@public.gmane.org> (oneukum-l3A5Bk7waGM@public.gmane.org)
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
+This is almost certainly a form of the problem reported in
+"AS2105-based enclosure size issues with >2TB HDDs".  I'm repeating my
+original message here so linux-usb can see it, and so it can be
+connected to the older thread.  I'll address it in another message.
 
-On 08/26/2014 08:34 PM, James Bottomley wrote:
-> On Tue, 2014-08-26 at 10:13 +0200, Hans de Goede wrote:
->> Hi,
->>
->> On 08/25/2014 05:41 PM, James Bottomley wrote:
->>> On Mon, 2014-08-25 at 13:39 +0200, Paolo Bonzini wrote:
->>>> Il 25/08/2014 13:26, Hans de Goede ha scritto:
->>>>> Thanks Bart and Paolo, your insights into this are greatly appreciated.
->>>>>
->>>>> So with uas there are separate usb transaction for cmd, data in, data out
->>>>> and sense for each tag. At the time of abort, usually one of data in / data
->>>>> out and a sense usb transaction will be outstanding.
->>>>>
->>>>> There already is logic in the driver to kill the data in / out transactions
->>>>> if a sense gets returned (usually with an error) before they are done.
->>>>>
->>>>> So if I'm reading this correctly, then on a successful abort, the sense
->>>>> transaction (if not already completed by the target) should be cancelled as
->>>>> it will never complete, correct ?
->>>>
->>>> Yes.  More precisely, once the response IU comes back for the abort,
->>>> there should be no more IUs for that task.  Figure 13 ("Multiple Command
->>>> Example") in the UAS spec actually shows that.
->>>>
->>>> At least, that's what it should be like in theory.  I suspect firmware
->>>> bugs will abound in this area, but at least you shouldn't be actively
->>>> expecting an IU for an aborted task.
->>>
->>> Just a note on this.  The abort area in all devices is where we have
->>> scope for spec compliance issues.  Also in the old days abort itself
->>> could trigger a firmware crash on some devices (including arrays).  The
->>> problem is actually that the system is usually groaning because it's out
->>> of memory within the controller.  That actually means that sending in
->>> another task (the abort) causes greater pressure.  For this reason, some
->>> device drivers choose to skip the abort step and head straight to reset.
->>> For reset, you guarantee that all outstanding tasks for the unit are
->>> killed.
->>
->> Hmm, I like this idea, given the finickiness of the abort path in the uas
->> driver, and that:
->>
->> 1) We really have no proper way to test this
->> 2) We already have some known issues there (we don't kill sense urbs atm,
->>     and I've a note somewhere about a double free on some corner case
->>     where an urb submit fails)
->> 3)
->> 3) In all the cases where I've managed to trip op an uas device the only
->>     thing which actually worked to recover things was doing a usb reset
->> 4) Aborts should not happen in the first place, so using a big hammer
->>     when they do is not really a big problem, instead we should focus
->>     on figuring out why they happen and fix the cause
->>
->> I think that just dropping abort handling altogether is a good idea actually,
->> so if there are no objections I'm just going to do that.
->>
->> I can simply not set eh_abort_handler (aka set it to NULL), right ?
->
-> Just so you know, if you do this, error handling becomes much more
-> painful.  The abort handler can now handle aborting and retrying without
-> pausing the host.  The reset definitely stops the host and causes a big
-> and noticeable burp in processing.  However, there are hosts which have
-> to do it.
+I've appended James Bottomley's response, to avoid creating an
+additional message.
 
-I understand, but shouldn't aborts be something which rarely happens.
-I guess that with a faulty drive they happen more often, but at this
-point in time the uas driver's error handling problems are mostly with
-dealing with timeouts during probing, which are likely caused by
-the device not grokking some command we've send, and responding to
-this in a bad manner (hanging mostly).
+Dale
+----------
+Date:	Wed, 20 Aug 2014 16:18:00 -0400
+From: worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org (Dale R. Worley)
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Subject: Problem with USB-to-SATA adapters
 
-So I'm tempted to just remove the abort handling, and first focus on
-getting uas stable under all conditions. Once it is stable we can
-look into making it deal more graciously with errors.
+I don't know if this is the correct place for this problem, but you
+people can probably tell me the correct place.
 
+I have two "USB to SATA adapter" dongles.  In general, they work fine.
+However I've discovered that one of them handles large (1 TB and
+above) drives correctly and one does not.  In particular, when I use
+the unsuccessful one, neither fdisk nor gdisk reports the disk size
+correctly, and the kernel does not read the partition table.
 
->
->> ###
->>
->> What about a logical unit reset ? Is that worth trying first? Or is that
->> likely to just trip up more firmware bugs (uas == usb == cheap == lots of
->> those) ?
->>
->> Going straight to an usb device reset would significantly simplify the code,
->> but is not really friendly toward other usb drivers for a multi-function
->> uas device (of which I've seen no so far, but they are bound to happen).
->>
->> So I guess that trying a logical unit reset first would probably be a good
->> idea.
->
-> Yes, that's the eh_device_reset_handler() callback.
->
->> I know that it works in non error conditions as I've inserted one (in my
->> local tree only) in the probe path to test task management functions in
->> general. It has never really been tested under error conditions since the
->> uas code can only run one task management function at a time (there is 1
->> tag reserved for task management functions)
->
-> Wait, could this also be your abort problem?  In the running abort
-> handler, we could get a scenario where we abort a bunch of commands at
-> the same time.
+More confusingly, both dongles work correctly with large disks on
+Windows 7 Professional.
 
-I don't think so, the uas code does not return from eh_abort_handler
-until the abort has either succeeded or timedout (for which a 3 second
-timeout is used). AFAIK the scsi core will always issue multiple aborts
-sequentially, right. And if the abort succeeds then the tag is free
-again for the next abort. Only if an abort fails (times out, which is
-what I've seen in all the error conditions which I've encountered so far),
-then will subsequent aborts, and the logical unit reset, fail due to
-there not being a free tag to use for them.
+Both of the following cases are when a 3.0 TB drive is attached.
 
-Thanks for answering all my other questions.
+The successful device has the "Diablo" brand.  The most interesting
+messages in the log when I plug in the USB are (the complete message
+set is appended below):
 
-Regards,
+Aug 18 21:56:53 hobgoblin kernel: [  294.229462] usb 2-1.3: New USB device found, idVendor=152d, idProduct=2338
+Aug 18 21:56:53 hobgoblin kernel: [  294.229475] usb 2-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+Aug 18 21:56:53 hobgoblin kernel: [  294.229482] usb 2-1.3: Product: USB to ATA/ATAPI bridge
+Aug 18 21:56:53 hobgoblin kernel: [  294.229488] usb 2-1.3: Manufacturer: JMicron
+Aug 18 21:56:53 hobgoblin kernel: [  294.229495] usb 2-1.3: SerialNumber: 000001D91CC4
+Aug 18 21:56:54 hobgoblin kernel: [  295.236576] sd 7:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+Aug 18 21:56:54 hobgoblin kernel: [  295.236955] sd 7:0:0:0: [sdb] 5860533168 512-byte logical blocks: (3.00 TB/2.72 TiB)
 
-Hans
+The unsuccessful device has the "Ez-Connect" brand.  The most
+interesting messages in the log when I plug in the USB are (the
+complete message set is appended below):
+
+Aug 18 21:54:06 hobgoblin kernel: [  127.674374] usb 2-2: new high-speed USB device number 4 using ehci-pci
+Aug 18 21:54:06 hobgoblin kernel: [  127.791128] usb 2-2: New USB device found, idVendor=05e3, idProduct=0718
+Aug 18 21:54:06 hobgoblin kernel: [  127.791135] usb 2-2: New USB device strings: Mfr=0, Product=1, SerialNumber=2
+Aug 18 21:54:06 hobgoblin kernel: [  127.791138] usb 2-2: Product: USB Storage
+Aug 18 21:54:06 hobgoblin kernel: [  127.791142] usb 2-2: SerialNumber: 000000000033
+Aug 18 21:54:07 hobgoblin kernel: [  128.847269] sd 6:0:0:0: [sdb] 1565565872 512-byte logical blocks: (801 GB/746 GiB)
+
+Dale
+
+----------------------------------------------------------------------
+For the Diablo adapter:
+
+Aug 18 21:56:53 hobgoblin kernel: [  294.153343] usb 2-1.3: new high-speed USB device number 5 using ehci-pci
+Aug 18 21:56:53 hobgoblin kernel: [  294.229462] usb 2-1.3: New USB device found, idVendor=152d, idProduct=2338
+Aug 18 21:56:53 hobgoblin kernel: [  294.229475] usb 2-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+Aug 18 21:56:53 hobgoblin kernel: [  294.229482] usb 2-1.3: Product: USB to ATA/ATAPI bridge
+Aug 18 21:56:53 hobgoblin kernel: [  294.229488] usb 2-1.3: Manufacturer: JMicron
+Aug 18 21:56:53 hobgoblin kernel: [  294.229495] usb 2-1.3: SerialNumber: 000001D91CC4
+Aug 18 21:56:53 hobgoblin kernel: [  294.231159] usb-storage 2-1.3:1.0: USB Mass Storage device detected
+Aug 18 21:56:53 hobgoblin kernel: [  294.233951] scsi7 : usb-storage 2-1.3:1.0
+Aug 18 21:56:53 hobgoblin mtp-probe: checking bus 2, device 5: "/sys/devices/pci0000:00/0000:00:1d.7/usb2/2-1/2-1.3"
+Aug 18 21:56:53 hobgoblin mtp-probe: bus: 2, device: 5 was not an MTP device
+Aug 18 21:56:54 hobgoblin kernel: [  295.235735] scsi 7:0:0:0: Direct-Access     WDC WD30 EZRX-00SPEB0          PQ: 0 ANSI: 5
+Aug 18 21:56:54 hobgoblin kernel: [  295.236209] sd 7:0:0:0: Attached scsi generic sg2 type 0
+Aug 18 21:56:54 hobgoblin kernel: [  295.236576] sd 7:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+Aug 18 21:56:54 hobgoblin kernel: [  295.236955] sd 7:0:0:0: [sdb] 5860533168 512-byte logical blocks: (3.00 TB/2.72 TiB)
+Aug 18 21:56:54 hobgoblin kernel: [  295.237957] sd 7:0:0:0: [sdb] Write Protect is off
+Aug 18 21:56:54 hobgoblin kernel: [  295.238957] sd 7:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:56:54 hobgoblin kernel: [  295.238962] sd 7:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:56:54 hobgoblin kernel: [  295.239956] sd 7:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+Aug 18 21:56:54 hobgoblin kernel: [  295.242334] sd 7:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:56:54 hobgoblin kernel: [  295.242339] sd 7:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:56:54 hobgoblin kernel: [  295.305631] GPT:Primary header thinks Alt. header is not at the end of the disk.
+Aug 18 21:56:54 hobgoblin kernel: [  295.305638] GPT:1565565871 != 5860533167
+Aug 18 21:56:54 hobgoblin kernel: [  295.305639] GPT:Alternate GPT header not at the end of the disk.
+Aug 18 21:56:54 hobgoblin kernel: [  295.305640] GPT:1565565871 != 5860533167
+Aug 18 21:56:54 hobgoblin kernel: [  295.305642] GPT: Use GNU Parted to correct GPT errors.
+Aug 18 21:56:54 hobgoblin kernel: [  295.305653]  sdb: sdb1 sdb2 sdb3 sdb4
+Aug 18 21:56:54 hobgoblin kernel: [  295.308235] sd 7:0:0:0: [sdb] Very big device. Trying to use READ CAPACITY(16).
+Aug 18 21:56:54 hobgoblin kernel: [  295.310974] sd 7:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:56:54 hobgoblin kernel: [  295.310980] sd 7:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:56:54 hobgoblin kernel: [  295.310984] sd 7:0:0:0: [sdb] Attached SCSI disk
+----------------------------------------------------------------------
+For the Ez-Connect adapter:
+
+Aug 18 21:54:06 hobgoblin kernel: [  127.674374] usb 2-2: new high-speed USB device number 4 using ehci-pci
+Aug 18 21:54:06 hobgoblin kernel: [  127.791128] usb 2-2: New USB device found, idVendor=05e3, idProduct=0718
+Aug 18 21:54:06 hobgoblin kernel: [  127.791135] usb 2-2: New USB device strings: Mfr=0, Product=1, SerialNumber=2
+Aug 18 21:54:06 hobgoblin kernel: [  127.791138] usb 2-2: Product: USB Storage
+Aug 18 21:54:06 hobgoblin kernel: [  127.791142] usb 2-2: SerialNumber: 000000000033
+Aug 18 21:54:06 hobgoblin mtp-probe: checking bus 2, device 4: "/sys/devices/pci0000:00/0000:00:1d.7/usb2/2-2"
+Aug 18 21:54:06 hobgoblin mtp-probe: bus: 2, device: 4 was not an MTP device
+Aug 18 21:54:06 hobgoblin kernel: [  127.839825] usb-storage 2-2:1.0: USB Mass Storage device detected
+Aug 18 21:54:06 hobgoblin kernel: [  127.839917] scsi6 : usb-storage 2-2:1.0
+Aug 18 21:54:06 hobgoblin kernel: [  127.840721] usbcore: registered new interface driver usb-storage
+Aug 18 21:54:07 hobgoblin kernel: [  128.844942] scsi 6:0:0:0: Direct-Access     WDC WD30 EZRX-00SPEB0     0041 PQ: 0 ANSI: 0
+Aug 18 21:54:07 hobgoblin kernel: [  128.846146] sd 6:0:0:0: Attached scsi generic sg2 type 0
+Aug 18 21:54:07 hobgoblin kernel: [  128.847269] sd 6:0:0:0: [sdb] 1565565872 512-byte logical blocks: (801 GB/746 GiB)
+Aug 18 21:54:07 hobgoblin kernel: [  128.848303] sd 6:0:0:0: [sdb] Write Protect is off
+Aug 18 21:54:07 hobgoblin kernel: [  128.849389] sd 6:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:54:07 hobgoblin kernel: [  128.849398] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:54:07 hobgoblin kernel: [  128.853028] sd 6:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:54:07 hobgoblin kernel: [  128.853038] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:54:08 hobgoblin kernel: [  129.638416]  sdb: sdb1 sdb2 sdb3
+Aug 18 21:54:08 hobgoblin kernel: [  129.641877] sd 6:0:0:0: [sdb] No Caching mode page found
+Aug 18 21:54:08 hobgoblin kernel: [  129.641884] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+Aug 18 21:54:08 hobgoblin kernel: [  129.641889] sd 6:0:0:0: [sdb] Attached SCSI disk
+----------------------------------------------------------------------
+Subject: Re: Problem with USB-to-SATA adapters
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Date: Wed, 20 Aug 2014 17:45:48 -0500
+
+[clipped]
+
+So the basic problem here seems to be that this adapter has wrapped the
+INQUIRY response instead of giving us the the conventional response that
+means my device is too big.  This could be because the processing engine
+on the card doesn't understand 16 byte commands (which are required for
+addressing capacity > 2TB) or it could just be a firmware SCSI emulator
+mistake.  The best way of telling might be to use the SG_IO interface to
+send a read capacity 16.  sg_readcap --16 should be able to do this.
+
+If you get a sensible response, chances are we should just quirk this
+device to apply RC16 first.  If something goes wrong, it's likely
+unfixably broken for devices > 2TB
+
+James
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
