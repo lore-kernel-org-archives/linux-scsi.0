@@ -1,56 +1,79 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH V5 5/5] add xen pvscsi maintainer
-Date: Tue, 26 Aug 2014 16:23:17 +0200
-Message-ID: <53FC9855.1090908@suse.com>
-References: <1408354310-6362-1-git-send-email-jgross@suse.com>	<1408354310-6362-6-git-send-email-jgross@suse.com> <53FC962D.8070409@citrix.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Tue, 26 Aug 2014 10:47:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1408261031090.1434-100000@iolanthe.rowland.org>
+References: <1409001390.376.6.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46022 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758341AbaHZOXV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 10:23:21 -0400
-In-Reply-To: <53FC962D.8070409@citrix.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42988 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755253AbaHZOrm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2014 10:47:42 -0400
+In-Reply-To: <1409001390.376.6.camel@linux-fkkt.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Vrabel <david.vrabel@citrix.com>, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, JBeulich@suse.com, nab@linux-iscsi.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/26/2014 04:14 PM, David Vrabel wrote:
-> On 18/08/14 10:31, jgross@suse.com wrote:
->> From: Juergen Gross <jgross@suse.com>
->>
->> Add myself as maintainer for the Xen pvSCSI stuff.
->>
->> Signed-off-by: Juergen Gross <jgross@suse.com>
->> ---
->>   MAINTAINERS | 8 ++++++++
->>   1 file changed, 8 insertions(+)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index aefa948..360f86f 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -10086,6 +10086,14 @@ S:	Supported
->>   F:	drivers/block/xen-blkback/*
->>   F:	drivers/block/xen*
->>
->> +XEN PVSCSI DRIVERS
->> +M:	Juergen Gross <jgross@suse.com>
->> +L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
->
-> You should add the appropriate scsi list here
-> (linux-scsi@vger.kernel.org I presume?)
+On Mon, 25 Aug 2014, Oliver Neukum wrote:
 
-Really? Xen PCI and Xen Block susbsystems don't have an according entry.
-James, do you have an opinion here? I don't mind adding linux-scsi, but
-I think the Xen list is the appropriate one for pvSCSI.
+> On Mon, 2014-08-25 at 16:21 -0400, Alan Stern wrote:
+> > On Mon, 25 Aug 2014, Alfredo Dal Ava Junior wrote:
+> > 
+> > > Well, it is causing problems anyway... from user perspective, it's a
+> > > Linux compatibility issue, as it works "fine" on Windows. I'm not an
+> > > expert, but I'm wondering that if usb-storage could set capacity as
+> > > "UNDETERMINED"/ Zero (or keep using the readcapacity_10 as it as
+> > with
+> > > some flag signalizing it as inaccurate), EFI partition check would
+> > be
+> > > able to ignore size and look for secondary GPT where it really is.
+> > 
+> > Part of the problem is that usb-storage has no way to know that
+> > anything strange is going on.  It's normal for READ CAPACITY(16) to
+> > fail (this depend on the SCSI level), and it's normal for the READ
+> > CAPACITY(10) to report a value less than 2 TB.
+> 
+> Just set US_FL_NEEDS_CAP16. If READ CAPACITY(16) fails in that case,
+> it is clear that something is wrong. It must be set or READ CAPACITY(10)
+> alone would be taken as giving a valid answer.
 
->> +S:	Supported
->> +F:	drivers/scsi/xen-scsifront.c
->> +F:	drivers/xen/xen-scsiback.c
->> +F:	include/xen/interface/io/vscsiif.h
->> +
+You have committed a mental layering violation.  :-)
 
+US_FL_NEEDS_CAP16 is a usb-storage flag.  But the capacity
+determination is made by the sd driver, which relies on the SCSI
+try_rc_10_first flag.  If that flag isn't set, sd tries READ 
+CAPACITY(16) and then falls back to READ CAPACITY(10) if an error 
+occurs.  That's what happened here.
 
-Juergen
+I don't think we want to add another SCSI flag to say that READ
+CAPACITY(10) is unreliable.
+
+> At that time we are sure that the drive will be unusable unless we
+> determine the correct capacity, so we don't make matters worse if we
+> crash it.
+
+Given the difficulty of determining the true capacity, I see two
+alternatives.  We could set the capacity to a ridiculously large value
+(like 1 billion TB), or we could leave the capacity set to the low
+value and disable the "block within bounds" checks.  Neither of these
+is attractive and they both have issues of their own -- although the 
+second is close to what Windows does.
+
+(For example, udev often tries to read the last sectors of a new drive, 
+looking for a GPT or RAID signature.  That won't work if the capacity 
+is set to some random value.)
+
+> Is there an easy way for Alfredo to determine what happens if we
+> read beyond the end?
+
+He could fiddle with sd_read_capacity().  Change sdkp->capacity to 
+something bigger than the disk's actual size and then try reading 
+beyond the actual end.
+
+However, I don't see much point in this.  Any changes we make will have 
+to work with every drive, not just Alfredo's.
+
+Alan Stern
+
