@@ -1,150 +1,169 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Debugging scsi abort handling ?
-Date: Tue, 26 Aug 2014 11:34:38 -0700
-Message-ID: <1409078078.3812.25.camel@jarvis.lan>
-References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com>
-		 <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org>
-		 <53FB1ACD.1040208@redhat.com> <53FB1D4F.5070606@redhat.com>
-		 <53FB2083.9000208@redhat.com> <1408981299.17968.27.camel@jarvis.lan>
-	 <53FC4193.4010808@redhat.com>
+From: Eddie Wai <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
+ bnx2fc_map_sg()
+Date: Tue, 26 Aug 2014 11:35:23 -0700
+Message-ID: <1409078123.18812.5.camel@lbirv-waie-lx2.broadcom.com>
+References: <1407140413-4561-1-git-send-email-mlombard@redhat.com>
+	 <1408556122.10706.20.camel@lbirv-waie-lx2.broadcom.com>
+	 <53F7091C.1080400@redhat.com>
+	 <alpine.OSX.2.00.1408220805170.360@administrators-macbook-pro.local>
+	 <53F7881A.1070808@redhat.com>
+	 <1408747587.3876.40.camel@lbirv-waie-lx2.broadcom.com>
+	 <alpine.OSX.2.00.1408251511290.1834@administrators-macbook-pro.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50169 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752114AbaHZSek (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 14:34:40 -0400
-In-Reply-To: <53FC4193.4010808@redhat.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37327 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbaHZSlx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2014 14:41:53 -0400
+In-Reply-To: <alpine.OSX.2.00.1408251511290.1834@administrators-macbook-pro.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Maurizio Lombardi <mlombard@redhat.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@lst.de
 
-On Tue, 2014-08-26 at 10:13 +0200, Hans de Goede wrote:
-> Hi,
+On Mon, 2014-08-25 at 15:15 -0400, Chad Dupuis wrote:
 > 
-> On 08/25/2014 05:41 PM, James Bottomley wrote:
-> > On Mon, 2014-08-25 at 13:39 +0200, Paolo Bonzini wrote:
-> >> Il 25/08/2014 13:26, Hans de Goede ha scritto:
-> >>> Thanks Bart and Paolo, your insights into this are greatly appreciated.
-> >>>
-> >>> So with uas there are separate usb transaction for cmd, data in, data out
-> >>> and sense for each tag. At the time of abort, usually one of data in / data
-> >>> out and a sense usb transaction will be outstanding.
-> >>>
-> >>> There already is logic in the driver to kill the data in / out transactions
-> >>> if a sense gets returned (usually with an error) before they are done.
-> >>>
-> >>> So if I'm reading this correctly, then on a successful abort, the sense
-> >>> transaction (if not already completed by the target) should be cancelled as
-> >>> it will never complete, correct ?
+> On Fri, 22 Aug 2014, Eddie Wai wrote:
+> 
+> > On Fri, 2014-08-22 at 20:12 +0200, Maurizio Lombardi wrote:
+> >> Hi Chad,
 > >>
-> >> Yes.  More precisely, once the response IU comes back for the abort,
-> >> there should be no more IUs for that task.  Figure 13 ("Multiple Command
-> >> Example") in the UAS spec actually shows that.
+> >> On 08/22/2014 02:08 PM, Chad Dupuis wrote:
+> >>> Eddie, Maurizio,
+> >>>
+> >>> Since it looks like there can be a difference in the pdev would it make sense instead to convert the unmap function to use the bare DMA API so we're consistent in our use of hba->pcidev->dev?  Maybe something like this:
 > >>
-> >> At least, that's what it should be like in theory.  I suspect firmware
-> >> bugs will abound in this area, but at least you shouldn't be actively
-> >> expecting an IU for an aborted task.
-> > 
-> > Just a note on this.  The abort area in all devices is where we have
-> > scope for spec compliance issues.  Also in the old days abort itself
-> > could trigger a firmware crash on some devices (including arrays).  The
-> > problem is actually that the system is usually groaning because it's out
-> > of memory within the controller.  That actually means that sending in
-> > another task (the abort) causes greater pressure.  For this reason, some
-> > device drivers choose to skip the abort step and head straight to reset.
-> > For reset, you guarantee that all outstanding tasks for the unit are
-> > killed.
+> >> I looked at what the bnx2i driver code does, it has a hba->pcidev pointer too but makes use of scsi_map_sg()/scsi_unmap_sg().
+> >> So, from my point of view, it is the bnx2fc's map operation (that bypasses scsi_map_sg() and uses dma_map_sg()) to look like a suspicious exception and I decided to change it.
+> >>
+> >> So far, I didn't get any error or strange behaviour after this change.
+> >> Eddie, what do you think about it?
+> >>
+> >> Regards,
+> >> Maurizio Lombardi
+> >>
+> >>>
+> >>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> >>> index 32a5e0a..8b4adcf 100644
+> >>> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> >>> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> >>> @@ -1700,9 +1700,12 @@ static int bnx2fc_build_bd_list_from_sg(struct bnx2fc_cmd *io_req)
+> >>>  static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
+> >>>  {
+> >>>         struct scsi_cmnd *sc = io_req->sc_cmd;
+> >>> +       struct bnx2fc_interface *interface = io_req->port->priv;
+> >>> +       struct bnx2fc_hba *hba = interface->hba;
+> >>>
+> >>> -       if (io_req->bd_tbl->bd_valid && sc) {
+> >>> -               scsi_dma_unmap(sc);
+> >>> +       if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
+> >>> +               dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
+> >>> +                   scsi_sg_count(sc), sc->sc_data_direction);
+> >>>                 io_req->bd_tbl->bd_valid = 0;
+> >>>         }
+> >>>  }
+> >>>
+> >>> On Fri, 22 Aug 2014, Maurizio Lombardi wrote:
+> >>>
+> >>>> Hi Eddie,
+> >>>>
+> >>>> On 08/20/2014 07:35 PM, Eddie Wai wrote:
+> >>>>> On Mon, 2014-08-04 at 10:20 +0200, Maurizio Lombardi wrote:
+> >>>>>> In the bnx2fc_map_sg() function, the original behaviour is to
+> >>>>>> allocate the DMA memory by directly calling dma_map_sg()
+> >>>>>> instead of using scsi_dma_map().
+> >>>>>>
+> >>>>>> In contrast, bnx2fc_unmap_sg_list() calls scsi_dma_unmap().
+> >>>>>>
+> >>>>>> The problem is that bnx2fc_map_sg() passes to the dma_map_sg() function
+> >>>>>> the pointer to the "device" structure taken from pci_dev
+> >>>>>> and not from Scsi_Host (as scsi_dma_map/unmap() do).
+> >>>>>>
+> >>>>> Great find, Maurizio, Thanks again.
+> >>>>
+> >>>> Thanks :)
+> >>>>
+> >>>>>
+> >>>>>> In some circumstances, the two devices may be different and the
+> >>>>>> DMA library will be unable to find the correct entry
+> >>>>>> when freeing the memory.
+> >>>>>>
+> >>>>> I'm curious at how the hba->pcidev->dev in the dma_map_sg call could end
+> >>>>> up being different from the scsi_cmnd's device->host->dma_dev...  Can
+> >>>>> you share the test scenario?
+> >>>>
+> >>>> It happens every time you set up an fcoe interface, so you just have to compile the
+> >>>> kernel with the DMA API debug option.
+> >>>> It is 100% reproducible with RHEL6, RHEL7 and the latest mainline kernel also.
+> >
+> > This got me thinking that the scsi_host's dma_dev must have been changed
+> > recently and I think I found the culprit:
+> > http://www.spinics.net/lists/linux-scsi/msg65225.html
+> >
+> > So back when, we changed the scsi_host's parent from hba->pcidev->dev to
+> > the fcoe_ctlr_device's dev to basically align with the soft fcoe code to
+> > fix a fcoemon expectation.  Although this was changed correctly, the sg
+> > DMA mapping routine did not adapt to it; hence the mismatch.
+> >
+> > Prior to this change, both sg dma map and unmap were done to the
+> > hba->pcidev->dev along with all other DMA mapping routines.  I also see
+> > that even though bnx2i uses the scsi_map_sg/scsi_unmap_sg pairs,
+> > ultimately, they were operating on the hba->pcidev->dev device.
+> >
+> > My opinion is that it would probably be in our best interest to have all
+> > DMA mapping/unmapping routines continue to operate on the
+> > hba->pcidev->dev directly to prevent any unforeseen DMA problems.
+> >
 > 
-> Hmm, I like this idea, given the finickiness of the abort path in the uas
-> driver, and that:
+> Thanks Eddie.  Would my original patch work then (I added comments per 
+> Christoph's request):
 > 
-> 1) We really have no proper way to test this
-> 2) We already have some known issues there (we don't kill sense urbs atm,
->    and I've a note somewhere about a double free on some corner case
->    where an urb submit fails)
-> 3)
-> 3) In all the cases where I've managed to trip op an uas device the only
->    thing which actually worked to recover things was doing a usb reset
-> 4) Aborts should not happen in the first place, so using a big hammer
->    when they do is not really a big problem, instead we should focus
->    on figuring out why they happen and fix the cause
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c 
+> b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 32a5e0a..6a61a0d 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -1651,6 +1651,10 @@ static int bnx2fc_map_sg(struct bnx2fc_cmd *io_req)
+>          u64 addr;
+>          int i;
 > 
-> I think that just dropping abort handling altogether is a good idea actually,
-> so if there are no objections I'm just going to do that.
+> +       /*
+> +        * Use dma_map_sg directly to ensure we're using the correct
+> +        * dev struct off of pcidev.
+> +        */
+>          sg_count = dma_map_sg(&hba->pcidev->dev, scsi_sglist(sc),
+>                                scsi_sg_count(sc), sc->sc_data_direction);
+>          scsi_for_each_sg(sc, sg, sg_count, i) {
+> @@ -1700,9 +1704,16 @@ static int bnx2fc_build_bd_list_from_sg(struct 
+> bnx2fc_cmd *io_req)
+>   static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
+>   {
+>          struct scsi_cmnd *sc = io_req->sc_cmd;
+> +       struct bnx2fc_interface *interface = io_req->port->priv;
+> +       struct bnx2fc_hba *hba = interface->hba;
 > 
-> I can simply not set eh_abort_handler (aka set it to NULL), right ?
-
-Just so you know, if you do this, error handling becomes much more
-painful.  The abort handler can now handle aborting and retrying without
-pausing the host.  The reset definitely stops the host and causes a big
-and noticeable burp in processing.  However, there are hosts which have
-to do it.
-
-> ###
+> -       if (io_req->bd_tbl->bd_valid && sc) {
+> -               scsi_dma_unmap(sc);
+> +       /*
+> +        * Use dma_unmap_sg directly to ensure we're using the correct
+> +        * dev struct off of pcidev.
+> +        */
+> +       if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
+> +               dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
+> +                   scsi_sg_count(sc), sc->sc_data_direction);
+>                  io_req->bd_tbl->bd_valid = 0;
+>          }
+>   }
 > 
-> What about a logical unit reset ? Is that worth trying first? Or is that
-> likely to just trip up more firmware bugs (uas == usb == cheap == lots of
-> those) ?
-> 
-> Going straight to an usb device reset would significantly simplify the code,
-> but is not really friendly toward other usb drivers for a multi-function
-> uas device (of which I've seen no so far, but they are bound to happen).
-> 
-> So I guess that trying a logical unit reset first would probably be a good
-> idea.
+Chad, the patch looks fine to me.  Thanks for verifying it.  I asked for
+some test coverage earlier only because I was afraid that there might be
+corner cases where the hba might not be available during the unmap
+process.
 
-Yes, that's the eh_device_reset_handler() callback.
+Acked-by: Eddie Wai <eddie.wai@broadcom.com>
 
-> I know that it works in non error conditions as I've inserted one (in my
-> local tree only) in the probe path to test task management functions in
-> general. It has never really been tested under error conditions since the
-> uas code can only run one task management function at a time (there is 1
-> tag reserved for task management functions)
-
-Wait, could this also be your abort problem?  In the running abort
-handler, we could get a scenario where we abort a bunch of commands at
-the same time.
-
->  and in all error scenarios
-> I've been able to test so far, the abort timed out, so the
-> eh_device_reset_handler would always return FAILED (-EBUSY).
-> 
-> So showing my greeness wrt scsi again, what should I do with outstanding
-> scsi commands at this time. Can I simply cancel all outstanding usb transactions
-> (ie data in/out, sense) for all outstanding commands on the lun in question,
-> wait for the cancellations to complete, and then issue the logical unit reset ?
-
-For successful aborts, you can cancel the aborted commands (the device
-should have forgotten about them).  For a successful device (lun) reset,
-you can cancel all the commands on that LUN; for a target reset you
-cancel all the commands on every LUN and so on.
-
-> IOW will the lun have forgotten about any outstanding scsi commands after
-> a successful logical unit reset ?
-
-Yes.
-
-> And what should I do with regards to calling the scsi_done function for the
-> outstanding commands. I assume that when eh_device_reset_handler gets called,
-> the scsi_done function for any outstanding commands should not be called,
-> correct ?
-
-correct ... although it won't matter if you do, the completion will be
-treated as spurious (at least until the command is reissued).
-
-> And what about a race when a command completes after all just before
-> eh_device_reset_handler gets called, I assume that that is handled properly
-> by the scsi core ?
-
-Yes, it's actually mediated in the block layer.  As soon as the command
-timeout fires, all normal completions are treated as spurious and error
-handling begins (I don't have the command you're talking about is a
-legitimate condition in the eh ... we treat it as success).
-
-James
 
 
