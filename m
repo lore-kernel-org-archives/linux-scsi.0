@@ -1,30 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Xen-devel] [PATCH V5 0/5] Add XEN pvSCSI support
-Date: Tue, 26 Aug 2014 06:55:52 -0700
-Message-ID: <20140826135552.GA9464@infradead.org>
-References: <1408354310-6362-1-git-send-email-jgross@suse.com>
- <1408742515.24496.21.camel@haakon3.risingtidesystems.com>
- <20140823004042.GA5547@laptop.dumpdata.com>
- <53FC5DBB.9080101@citrix.com>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH V5 5/5] add xen pvscsi maintainer
+Date: Tue, 26 Aug 2014 15:14:05 +0100
+Message-ID: <53FC962D.8070409@citrix.com>
+References: <1408354310-6362-1-git-send-email-jgross@suse.com> <1408354310-6362-6-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53FC5DBB.9080101@citrix.com>
+In-Reply-To: <1408354310-6362-6-git-send-email-jgross@suse.com>
 Sender: target-devel-owner@vger.kernel.org
-To: David Vrabel <david.vrabel@citrix.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jgross@suse.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, JBeulich@suse.com
+To: jgross@suse.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, JBeulich@suse.com, nab@linux-iscsi.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 26, 2014 at 11:13:15AM +0100, David Vrabel wrote:
-> > <nods>
-> > When I chatted with Christopher Hellwig he recommended it be done that way.
+On 18/08/14 10:31, jgross@suse.com wrote:
+> From: Juergen Gross <jgross@suse.com>
 > 
-> Did he give a reason?  The driver has more scsi bits in it than Xen bits
-> really.
+> Add myself as maintainer for the Xen pvSCSI stuff.
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> ---
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index aefa948..360f86f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10086,6 +10086,14 @@ S:	Supported
+>  F:	drivers/block/xen-blkback/*
+>  F:	drivers/block/xen*
+>  
+> +XEN PVSCSI DRIVERS
+> +M:	Juergen Gross <jgross@suse.com>
+> +L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
 
-There's Xen core changes and a scsi initiator driver and a target driver
-both depending on the core changes.  If we want to get all these in
-in the same merge window without pre-merging trees the Xen tree is the
-most sensible way to get it in.  I'll hapilly take patches for the
-initiator driver for the following merge windows once it is in.
+You should add the appropriate scsi list here
+(linux-scsi@vger.kernel.org I presume?)
+
+David
+
+> +S:	Supported
+> +F:	drivers/scsi/xen-scsifront.c
+> +F:	drivers/xen/xen-scsiback.c
+> +F:	include/xen/interface/io/vscsiif.h
+> +
+>  XEN SWIOTLB SUBSYSTEM
+>  M:	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>  L:	xen-devel@lists.xenproject.org (moderated for non-subscribers)
+> 
