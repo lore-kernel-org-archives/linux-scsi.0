@@ -1,82 +1,62 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] drivers: scsi: #define missing include guards
-Date: Tue, 26 Aug 2014 11:26:55 +0200
-Message-ID: <53FC52DF.2000007@suse.de>
-References: <1408711053-14129-1-git-send-email-linux@rasmusvillemoes.dk>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Tue, 26 Aug 2014 09:58:32 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1748130C@AcuExch.aculab.com>
+References: <175058921e084d26ba362fa6ecd7351c@serv030.corp.eldorado.org.br>
+ <Pine.LNX.4.44L0.1408251613270.1385-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1408711053-14129-1-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0.aculab.com ([213.249.233.131]:60477 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757186AbaHZKAO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Aug 2014 06:00:14 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 14483-09 for <linux-scsi@vger.kernel.org>;
+ Tue, 26 Aug 2014 11:00:04 +0100 (BST)
+In-Reply-To: <Pine.LNX.4.44L0.1408251613270.1385-100000@iolanthe.rowland.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Alan Stern' <stern@rowland.harvard.edu>, Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Oliver Neukum <oneukum@suse.de>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/22/2014 02:37 PM, Rasmus Villemoes wrote:
-> The four files aha1542.h, aha1740.h, gvp11.h and mvme147.h under
-> drivers/scsi/ contain two-thirds of an include guard, but do not
-> elsewhere.
->
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->   drivers/scsi/aha1542.h | 1 +
->   drivers/scsi/aha1740.h | 1 +
->   drivers/scsi/gvp11.h   | 1 +
->   drivers/scsi/mvme147.h | 1 +
->   4 files changed, 4 insertions(+)
->
-> diff --git a/drivers/scsi/aha1542.h b/drivers/scsi/aha1542.h
-> index b871d2b..8f4e07a 100644
-> --- a/drivers/scsi/aha1542.h
-> +++ b/drivers/scsi/aha1542.h
-> @@ -1,4 +1,5 @@
->   #ifndef _AHA1542_H
-> +#define _AHA1542_H
->
->   /* $Id: aha1542.h,v 1.1 1992/07/24 06:27:38 root Exp root $
->    *
-> diff --git a/drivers/scsi/aha1740.h b/drivers/scsi/aha1740.h
-> index af23fd6..7ea484f 100644
-> --- a/drivers/scsi/aha1740.h
-> +++ b/drivers/scsi/aha1740.h
-> @@ -1,4 +1,5 @@
->   #ifndef _AHA1740_H
-> +#define _AHA1740_H
->
->   /* $Id$
->    *
-> diff --git a/drivers/scsi/gvp11.h b/drivers/scsi/gvp11.h
-> index 852913c..5aabe90 100644
-> --- a/drivers/scsi/gvp11.h
-> +++ b/drivers/scsi/gvp11.h
-> @@ -1,4 +1,5 @@
->   #ifndef GVP11_H
-> +#define GVP11_H
->
->   /* $Id: gvp11.h,v 1.4 1997/01/19 23:07:12 davem Exp $
->    *
-> diff --git a/drivers/scsi/mvme147.h b/drivers/scsi/mvme147.h
-> index bfd4566..479e9b4 100644
-> --- a/drivers/scsi/mvme147.h
-> +++ b/drivers/scsi/mvme147.h
-> @@ -1,4 +1,5 @@
->   #ifndef MVME147_H
-> +#define MVME147_H
->
->   /* $Id: mvme147.h,v 1.4 1997/01/19 23:07:10 davem Exp $
->    *
->
-Not that it matter much, but:
+From: Alan Stern
+> On Mon, 25 Aug 2014, Alfredo Dal Ava Junior wrote:
+> 
+> > Well, it is causing problems anyway... from user perspective, it's a
+> > Linux compatibility issue, as it works "fine" on Windows. I'm not an
+> > expert, but I'm wondering that if usb-storage could set capacity as
+> > "UNDETERMINED"/ Zero (or keep using the readcapacity_10 as it as with
+> > some flag signalizing it as inaccurate), EFI partition check would be
+> > able to ignore size and look for secondary GPT where it really is.
+> 
+> Part of the problem is that usb-storage has no way to know that
+> anything strange is going on.  It's normal for READ CAPACITY(16) to
+> fail (this depend on the SCSI level), and it's normal for the READ
+> CAPACITY(10) to report a value less than 2 TB.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Could the code try READ CAPACITY(16) first?
 
-Cheers,
+> Really there is only one way to know whether the actual capacity is
+> larger than the reported capacity, and that is by trying to read blocks
+> beyond the reported capacity -- a dangerous test that many drives do
+> not like.  (And in most cases a futile test.  If a device doesn't
+> support READ CAPACITY(16), how likely is it to support READ(16)?)
+> 
+> Yes, in theory you can believe the value in the partition table in
+> preference to the reported capacity.  But what if that value is wrong?
+> And how do you tell partition-manager programs what the capacity should
+> be when they modify or set up the initial partition table?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+I've a feeling that, historically at least, windows believes the partition table.
+I remember some CF cards that locked up when I tried to read the 'device info'
+sector, and others (apparently identical) that had the 32bit sector size misaligned.
+These were 'major manufacturer' cards as well.
+
+	David
+
+
+
