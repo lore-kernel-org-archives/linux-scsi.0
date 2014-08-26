@@ -1,92 +1,115 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 80711] [PATCH]SG_FLAG_LUN_INHIBIT is no longer implemented
- and there's not way to prevent the kernel from using the 2nd cdb byte for
- the LUN
-Date: Mon, 25 Aug 2014 14:30:36 -0700
-Message-ID: <1409002236.3629.8.camel@HansenPartnership.com>
-References: <Pine.LNX.4.44L0.1408251634320.1385-100000@iolanthe.rowland.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: Debugging scsi abort handling ?
+Date: Tue, 26 Aug 2014 10:13:07 +0200
+Message-ID: <53FC4193.4010808@redhat.com>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com>	 <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org>	 <53FB1ACD.1040208@redhat.com> <53FB1D4F.5070606@redhat.com>	 <53FB2083.9000208@redhat.com> <1408981299.17968.27.camel@jarvis.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45692 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933370AbaHYVah (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Aug 2014 17:30:37 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1408251634320.1385-100000@iolanthe.rowland.org>
+Received: from mx1.redhat.com ([209.132.183.28]:21393 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933894AbaHZINM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2014 04:13:12 -0400
+In-Reply-To: <1408981299.17968.27.camel@jarvis.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Tiziano Bacocco <tiziano.bacocco@gmail.com>, bugzilla-daemon@bugzilla.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Paolo Bonzini <pbonzini@redhat.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2014-08-25 at 17:19 -0400, Alan Stern wrote:
-> On Mon, 25 Aug 2014, Alan Stern wrote:
-> 
-> > On Mon, 25 Aug 2014, James Bottomley wrote:
-> > 
-> > > On Mon, 2014-08-25 at 10:44 -0400, Alan Stern wrote:
-> > > 
-> > > > James, can you explain how the INQUIRY command in scsi_probe_lun()  
-> > > > managed to work back in the days when multi-lun SCSI-2 devices were
-> > > > common?  sdev->scsi_level doesn't get set when sdev is allocated, so it
-> > > > initially contains 0, so the LUN bits won't get filled in when the
-> > > > first INQUIRY command is sent.  Then how could the target know which
-> > > > logical unit the INQUIRY was meant for?
-> > > 
-> > > Best guess, some patches over the course of time altered the way we do
-> > > this and no-one noticed.  I think it was probably the introduction of
-> > > the unknown SCSI data level that caused the breakage.
-> > 
-> > Heh.  The change was made by commit 4d7db04a7a69 ([SCSI] add
-> > SCSI_UNKNOWN and LUN transfer limit restrictions) back in 2006 -- the
-> > 2.6.17 kernel.  If nobody has complained in all this time then it's
-> > probably not worth changing.
-> 
-> It turns out the code is already there, and I didn't realize because I
-> was looking at the wrong source file.  scsi_sysfs_device_initialize()
-> already does:
-> 
-> 	sdev->scsi_level = starget->scsi_level;
-> 
-> Here's the update to the patch, adding an appropriate comment and
-> setting the new sdev->lun_in_sdb flag properly:
+Hi,
 
-Looks good.  Add your signed-off-by and you can add my acked-by as well.
-
-James
-
+On 08/25/2014 05:41 PM, James Bottomley wrote:
+> On Mon, 2014-08-25 at 13:39 +0200, Paolo Bonzini wrote:
+>> Il 25/08/2014 13:26, Hans de Goede ha scritto:
+>>> Thanks Bart and Paolo, your insights into this are greatly appreciated.
+>>>
+>>> So with uas there are separate usb transaction for cmd, data in, data out
+>>> and sense for each tag. At the time of abort, usually one of data in / data
+>>> out and a sense usb transaction will be outstanding.
+>>>
+>>> There already is logic in the driver to kill the data in / out transactions
+>>> if a sense gets returned (usually with an error) before they are done.
+>>>
+>>> So if I'm reading this correctly, then on a successful abort, the sense
+>>> transaction (if not already completed by the target) should be cancelled as
+>>> it will never complete, correct ?
+>>
+>> Yes.  More precisely, once the response IU comes back for the abort,
+>> there should be no more IUs for that task.  Figure 13 ("Multiple Command
+>> Example") in the UAS spec actually shows that.
+>>
+>> At least, that's what it should be like in theory.  I suspect firmware
+>> bugs will abound in this area, but at least you shouldn't be actively
+>> expecting an IU for an aborted task.
 > 
-> Index: usb-3.16/drivers/scsi/scsi_sysfs.c
-> ===================================================================
-> --- usb-3.16.orig/drivers/scsi/scsi_sysfs.c
-> +++ usb-3.16/drivers/scsi/scsi_sysfs.c
-> @@ -1238,7 +1238,19 @@ void scsi_sysfs_device_initialize(struct
->  	sdev->sdev_dev.class = &sdev_class;
->  	dev_set_name(&sdev->sdev_dev, "%d:%d:%d:%d",
->  		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-> +	/*
-> +	 * Get a default scsi_level from the target (derived from sibling
-> +	 * devices).  This is the best we can do for guessing how to set
-> +	 * sdev->lun_in_cdb for the initial INQUIRY command.  For LUN 0 the
-> +	 * setting doesn't matter, because all the bits are zero anyway.
-> +	 * But it does matter for higher LUNs.
-> +	 */
->  	sdev->scsi_level = starget->scsi_level;
-> +	if (sdev->scsi_level <= SCSI_2 &&
-> +			sdev->scsi_level != SCSI_UNKNOWN &&
-> +			!shost->no_scsi2_lun_in_cdb)
-> +		sdev->lun_in_cdb = 1;
-> +
->  	transport_setup_device(&sdev->sdev_gendev);
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Just a note on this.  The abort area in all devices is where we have
+> scope for spec compliance issues.  Also in the old days abort itself
+> could trigger a firmware crash on some devices (including arrays).  The
+> problem is actually that the system is usually groaning because it's out
+> of memory within the controller.  That actually means that sending in
+> another task (the abort) causes greater pressure.  For this reason, some
+> device drivers choose to skip the abort step and head straight to reset.
+> For reset, you guarantee that all outstanding tasks for the unit are
+> killed.
 
+Hmm, I like this idea, given the finickiness of the abort path in the uas
+driver, and that:
 
+1) We really have no proper way to test this
+2) We already have some known issues there (we don't kill sense urbs atm,
+   and I've a note somewhere about a double free on some corner case
+   where an urb submit fails)
+3)
+3) In all the cases where I've managed to trip op an uas device the only
+   thing which actually worked to recover things was doing a usb reset
+4) Aborts should not happen in the first place, so using a big hammer
+   when they do is not really a big problem, instead we should focus
+   on figuring out why they happen and fix the cause
 
+I think that just dropping abort handling altogether is a good idea actually,
+so if there are no objections I'm just going to do that.
+
+I can simply not set eh_abort_handler (aka set it to NULL), right ?
+
+###
+
+What about a logical unit reset ? Is that worth trying first? Or is that
+likely to just trip up more firmware bugs (uas == usb == cheap == lots of
+those) ?
+
+Going straight to an usb device reset would significantly simplify the code,
+but is not really friendly toward other usb drivers for a multi-function
+uas device (of which I've seen no so far, but they are bound to happen).
+
+So I guess that trying a logical unit reset first would probably be a good
+idea.
+
+I know that it works in non error conditions as I've inserted one (in my
+local tree only) in the probe path to test task management functions in
+general. It has never really been tested under error conditions since the
+uas code can only run one task management function at a time (there is 1
+tag reserved for task management functions) and in all error scenarios
+I've been able to test so far, the abort timed out, so the
+eh_device_reset_handler would always return FAILED (-EBUSY).
+
+So showing my greeness wrt scsi again, what should I do with outstanding
+scsi commands at this time. Can I simply cancel all outstanding usb transactions
+(ie data in/out, sense) for all outstanding commands on the lun in question,
+wait for the cancellations to complete, and then issue the logical unit reset ?
+
+IOW will the lun have forgotten about any outstanding scsi commands after
+a successful logical unit reset ?
+
+And what should I do with regards to calling the scsi_done function for the
+outstanding commands. I assume that when eh_device_reset_handler gets called,
+the scsi_done function for any outstanding commands should not be called,
+correct ?
+
+And what about a race when a command completes after all just before
+eh_device_reset_handler gets called, I assume that that is handled properly
+by the scsi core ?
+
+Regards,
+
+Hans
