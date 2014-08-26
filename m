@@ -1,34 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/6] qla2xxx device removal fixups
-Date: Tue, 26 Aug 2014 15:52:23 +0200
-Message-ID: <20140826135223.GB30461@lst.de>
-References: <1403100139-1798-1-git-send-email-joe.lawrence@stratus.com> <20140826092055.53a2ff26@jlaw-desktop.mno.stratus.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Xen-devel] [PATCH V5 0/5] Add XEN pvSCSI support
+Date: Tue, 26 Aug 2014 06:55:52 -0700
+Message-ID: <20140826135552.GA9464@infradead.org>
+References: <1408354310-6362-1-git-send-email-jgross@suse.com>
+ <1408742515.24496.21.camel@haakon3.risingtidesystems.com>
+ <20140823004042.GA5547@laptop.dumpdata.com>
+ <53FC5DBB.9080101@citrix.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43491 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754404AbaHZNwZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 09:52:25 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140826092055.53a2ff26@jlaw-desktop.mno.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <53FC5DBB.9080101@citrix.com>
+Sender: target-devel-owner@vger.kernel.org
+To: David Vrabel <david.vrabel@citrix.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, jgross@suse.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, JBeulich@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Don Zickus <dzickus@redhat.com>, Prarit Bhargava <prarit@redhat.com>, Bill Kuzeja <william.kuzeja@stratus.com>, Dave Bulkow <david.bulkow@stratus.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Aug 26, 2014 at 09:20:55AM -0400, Joe Lawrence wrote:
-> > The final four patches are more invasive and modify the scsi_qla_host
-> > structure to avoid device removal race conditions.  These changes were
-> > written to demonstrate the problem at hand and minimally fix them in
-> > order to continue testing.  (For example, adding completely a new
-> > pci_flags member to scsi_qla_host is probably overkill.) 
-> > 
-> > We would welcome any feedback or questions about our testing.
+On Tue, Aug 26, 2014 at 11:13:15AM +0100, David Vrabel wrote:
+> > <nods>
+> > When I chatted with Christopher Hellwig he recommended it be done that way.
 > 
-> Chad ack'd the series on 28 Jul 2014.  Any chance this can make into
-> hch's queue for 3.18?
+> Did he give a reason?  The driver has more scsi bits in it than Xen bits
+> really.
 
-Can you please resend the patches with the collected ACKs against the
-drivers-for-3.18 branch?  Thanks!
-
+There's Xen core changes and a scsi initiator driver and a target driver
+both depending on the core changes.  If we want to get all these in
+in the same merge window without pre-merging trees the Xen tree is the
+most sensible way to get it in.  I'll hapilly take patches for the
+initiator driver for the following merge windows once it is in.
