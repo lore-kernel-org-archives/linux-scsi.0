@@ -1,42 +1,36 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH V5 0/5] Add XEN pvSCSI support
-Date: Tue, 26 Aug 2014 11:13:15 +0100
-Message-ID: <53FC5DBB.9080101@citrix.com>
-References: <1408354310-6362-1-git-send-email-jgross@suse.com> <1408742515.24496.21.camel@haakon3.risingtidesystems.com> <20140823004042.GA5547@laptop.dumpdata.com>
+From: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Tue, 26 Aug 2014 14:24:03 +0200
+Message-ID: <1409055843.27494.21.camel@linux-fkkt.site>
+References: <175058921e084d26ba362fa6ecd7351c@serv030.corp.eldorado.org.br>
+	 <Pine.LNX.4.44L0.1408251613270.1385-100000@iolanthe.rowland.org>
+	 <063D6719AE5E284EB5DD2968C1650D6D1748130C@AcuExch.aculab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:18983 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934467AbaHZKNT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2014 06:13:19 -0400
-In-Reply-To: <20140823004042.GA5547@laptop.dumpdata.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1748130C-VkEWCZq2GCInGFn1LkZF6NBPR1lH4CV8@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
+Cc: 'Alan Stern' <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Alfredo Dal Ava Junior <alfredo.junior-peCLlicIkyA3OWu3QmcX+g@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: jgross@suse.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, JBeulich@suse.com
 
-On 23/08/14 01:40, Konrad Rzeszutek Wilk wrote:
-> On Fri, Aug 22, 2014 at 02:21:55PM -0700, Nicholas A. Bellinger wrote:
->> 
->>
->> For the XEN scsiback parts as a new target fabric driver, feel free to
->> add my:
->>
->> Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
->>
->> So I assume this will be merged for v3.18 via the xen.git tree, yes..?
+On Tue, 2014-08-26 at 09:58 +0000, David Laight wrote:
+> > Part of the problem is that usb-storage has no way to know that
+> > anything strange is going on.  It's normal for READ CAPACITY(16) to
+> > fail (this depend on the SCSI level), and it's normal for the READ
+> > CAPACITY(10) to report a value less than 2 TB.
+> 
+> Could the code try READ CAPACITY(16) first?
 
-My preference is for drivers outside of drivers/xen/ to be merged via
-their relevant subsystem tree.  This is how all the other Xen PV drivers
-are handled (net, block, console, etc.).
+Yes. It does already. That fails as the device doesn't support
+this version. In a way we are discussing error handling here.
 
-> <nods>
-> When I chatted with Christopher Hellwig he recommended it be done that way.
+	Regards
+		Oliver
 
-Did he give a reason?  The driver has more scsi bits in it than Xen bits
-really.
 
-David
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
