@@ -1,19 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/5] be2iscsi: Fix the sparse warning introduced in previous
- submission
-Date: Wed, 27 Aug 2014 15:50:20 +0200
-Message-ID: <53FDE21C.70803@suse.de>
-References: <1407474003-26220-1-git-send-email-jkallickal@emulex.com>
+Subject: Re: [PATCH 2/5] be2iscsi: Fix the copyright year
+Date: Wed, 27 Aug 2014 15:50:43 +0200
+Message-ID: <53FDE233.2080006@suse.de>
+References: <1407474003-26220-1-git-send-email-jkallickal@emulex.com> <1407474003-26220-2-git-send-email-jkallickal@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36019 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:36035 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934253AbaH0NuW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2014 09:50:22 -0400
-In-Reply-To: <1407474003-26220-1-git-send-email-jkallickal@emulex.com>
+	id S934639AbaH0Nup (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Aug 2014 09:50:45 -0400
+In-Reply-To: <1407474003-26220-2-git-send-email-jkallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jay Kallickal <jayamohank@gmail.com>, jbottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
@@ -22,54 +21,129 @@ Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, John Soni Jose <sony.j
 On 08/08/2014 06:59 AM, Jay Kallickal wrote:
 > From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 >
->   commit 73af08e11c6638e2abd6b1fa13cdab58c2bbdbf8
->   Author: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
->   Date:   Mon May 5 21:41:26 2014 -0400
->
->    be2iscsi: Fix interrupt Coalescing mechanism.
+>   Change the copyright year to 2014
 >
 > Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 > Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 > ---
->   drivers/scsi/be2iscsi/be_cmds.h | 14 +++++++-------
->   1 file changed, 7 insertions(+), 7 deletions(-)
+>   drivers/scsi/be2iscsi/be.h       | 2 +-
+>   drivers/scsi/be2iscsi/be_cmds.c  | 2 +-
+>   drivers/scsi/be2iscsi/be_cmds.h  | 2 +-
+>   drivers/scsi/be2iscsi/be_iscsi.c | 2 +-
+>   drivers/scsi/be2iscsi/be_iscsi.h | 2 +-
+>   drivers/scsi/be2iscsi/be_main.c  | 2 +-
+>   drivers/scsi/be2iscsi/be_main.h  | 2 +-
+>   drivers/scsi/be2iscsi/be_mgmt.c  | 2 +-
+>   drivers/scsi/be2iscsi/be_mgmt.h  | 2 +-
+>   9 files changed, 9 insertions(+), 9 deletions(-)
 >
+> diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+> index 860f527..81e83a6 100644
+> --- a/drivers/scsi/be2iscsi/be.h
+> +++ b/drivers/scsi/be2iscsi/be.h
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/=
+be_cmds.c
+> index 1432ed5..ea4477f 100644
+> --- a/drivers/scsi/be2iscsi/be_cmds.c
+> +++ b/drivers/scsi/be2iscsi/be_cmds.c
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
 > diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/=
 be_cmds.h
-> index cc7405c..4e8cb61 100644
+> index 4e8cb61..ccda0b6 100644
 > --- a/drivers/scsi/be2iscsi/be_cmds.h
 > +++ b/drivers/scsi/be2iscsi/be_cmds.h
-> @@ -26,9 +26,9 @@
->    * The commands are serviced by the ARM processor in the OneConnect=
-'s MPU.
->    */
->   struct be_sge {
-> -	u32 pa_lo;
-> -	u32 pa_hi;
-> -	u32 len;
-> +	__le32 pa_lo;
-> +	__le32 pa_hi;
-> +	__le32 len;
->   };
->
->   #define MCC_WRB_SGE_CNT_SHIFT 3	/* bits 3 - 7 of dword 0 */
-> @@ -624,11 +624,11 @@ static inline struct be_sge *nonembedded_sgl(st=
-ruct be_mcc_wrb *wrb)
->   /******************** Modify EQ Delay *******************/
->   struct be_cmd_req_modify_eq_delay {
->   	struct be_cmd_req_hdr hdr;
-> -	u32 num_eq;
-> +	__le32 num_eq;
->   	struct {
-> -		u32 eq_id;
-> -		u32 phase;
-> -		u32 delay_multiplier;
-> +		__le32 eq_id;
-> +		__le32 phase;
-> +		__le32 delay_multiplier;
->   	} delay[MAX_CPUS];
->   } __packed;
->
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi=
+/be_iscsi.c
+> index 8616281..e25203e 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.c
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi=
+/be_iscsi.h
+> index 31ddc84..e0b3b2d 100644
+> --- a/drivers/scsi/be2iscsi/be_iscsi.h
+> +++ b/drivers/scsi/be2iscsi/be_iscsi.h
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/=
+be_main.c
+> index 56467df..d6465ed 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/=
+be_main.h
+> index 9ceab42..0ca9d2d 100644
+> --- a/drivers/scsi/be2iscsi/be_main.h
+> +++ b/drivers/scsi/be2iscsi/be_main.h
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/=
+be_mgmt.c
+> index a3e5648..785deb3 100644
+> --- a/drivers/scsi/be2iscsi/be_mgmt.c
+> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
+> diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/=
+be_mgmt.h
+> index 24a8fc5..bd81446 100644
+> --- a/drivers/scsi/be2iscsi/be_mgmt.h
+> +++ b/drivers/scsi/be2iscsi/be_mgmt.h
+> @@ -1,5 +1,5 @@
+>   /**
+> - * Copyright (C) 2005 - 2013 Emulex
+> + * Copyright (C) 2005 - 2014 Emulex
+>    * All rights reserved.
+>    *
+>    * This program is free software; you can redistribute it and/or
 >
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
