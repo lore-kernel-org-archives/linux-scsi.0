@@ -1,134 +1,75 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC PATCH -logging 00/10] scsi/constants: Output continuous
- error messages on trace
-Date: Wed, 27 Aug 2014 16:23:14 +0200
-Message-ID: <53FDE9D2.6070100@suse.de>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <53E4CB7B.7020705@interlog.com>
+Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
+ may have been removed.
+Date: Wed, 27 Aug 2014 16:31:21 +0200
+Message-ID: <53FDEBB9.5070704@suse.de>
+References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
+ <1408244988-27456-1-git-send-email-kys@microsoft.com>
+ <1408244988-27456-2-git-send-email-kys@microsoft.com>
+ <20140819175431.GA4617@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36871 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934408AbaH0OXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2014 10:23:17 -0400
-In-Reply-To: <53E4CB7B.7020705@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20140819175431.GA4617@infradead.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Christoph Hellwig <hch@infradead.org>, "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Christoph Hellwig <hch@lst.de>
 
-On 08/08/2014 03:07 PM, Douglas Gilbert wrote:
-> On 14-08-08 01:50 PM, Yoshihiro YUNOMAE wrote:
->> Hi All,
+On 08/19/2014 07:54 PM, Christoph Hellwig wrote:
+> On Sat, Aug 16, 2014 at 08:09:48PM -0700, K. Y. Srinivasan wrote:
+>> The host asks the guest to scan when a LUN is removed or added.
+>> The only way a guest can identify the removed LUN is when an I/O is
+>> attempted on a removed LUN - the SRB status code indicates that the LUN
+>> is invalid. We currently handle this SRB status and remove the device.
 >>
->> This patch set introduces new traceevents in order to output
->> continuous error
->> messages. Current SCSI printk messages in upstream kernel can be
->> divided by and
->> mixed with other messages. Even if each error message has its
->> device id,
->> sometimes we can easily be lost in mixed logs because the
->> message's device id
->> is separated from it's body. To avoid it, I'd like to use
->> traceevents to
->> store error messages into the ftrace or perf buuffer, because
->> traceevents
->> are atomically commited to the buffer.
->>
->> In this patch set, all printk messages are removed based on a local
->> discussion with Hannes, but I think printk messages should be kept
->> because all
->> users don't enable traceevents and rsyslog can store as files.
->>
->> However, if printk of logging branch is kept, the messages are
->> duplicate and
->> it can induce stack overflow by using local buffer(*1).
->>
->>   (*1) https://lkml.org/lkml/2014/5/20/742
->>
->> So, my suggestion is follows:
->>
->> 1) printk
->> Keeps current implemntation of upstream kernel.
->> The messages are divided and can be mixed, but all users can check
->> the error
->> messages without any settings.
->>
->> 2) traceevents
->> To get the complete messages, we can use ftrace or perf (or
->> something on them).
->> Users can always understand correct messages, but they need to set
->> up the
->> tracers.
->>
->> This patch set is based on Hannes' logging branch:
->> http://git.kernel.org/cgit/linux/kernel/git/hare/scsi-devel.git/log/=
-?h=3Dlogging
->>
->>
->> [1/10] ~  [6/10]: just cleanup for logging branch
->> [7/10] ~ [10/10]: introduce new traceevents
->>
->> Any comments are welcome!
+>> Rather than waiting for an I/O to remove the device, force the discovery=
+ of
+>> LUNs that may have been removed prior to discovering LUNs that may have
+>> been added.
 >
-> In sg3_utils there are now string yielding equivalents
-> to the sense buffer "print" functions. They take a form
-> like this:
->    char * get_sense_str(const unsigned char * sense_buffer,
->                         int sb_len, int blen, char * b);
+> This looks pretty reasonable to me, but I wonder if we should move this
+> up to common code so that it happens for any host rescan triggered by
+> sysfs or other drivers as well.
 >
-> So this just does the hard work of decoding the sense buffer
-> (or saying it is invalid) the result of which it places in
-> buffer 'b'. And 'b' is returned (so this function can be in
-> the arguments of a driver's printing function).
->
-> Adding such string functions would give other parts of the
-> SCSI subsystem the capability of tailoring their own
-> messages that include sense data information.
->
->
-> Existing sense buffer "print" function could be kept and
-> implemented using the newer "_str" variants. Would that
-> be worth the trouble?
->
-Hmm. Probably not.
+Not without proper testing.
+Currently we cannot rescan existing devices; the inquiry string is =
 
-I would rather go the approach we've been taking with the
-VPD pages, and do _not_ decode any sense code data
-(except from the usual sense key/ASC/ASCQ values, of course).
-Instead we should rather ensure that we can get to the raw
-sense code values from userspace so that we can interpret
-it later with userspace tools.
+nailed to the sdev structure. The only way to really refresh the =
 
-My plan for updating scsi logging is:
+information is to delete it and rescan it again.
 
-- move all lone 'printk' statements into dev_printk() variants
-   and ensure they are printed in one line to avoid breaking
-   logging statements up under high load
-- Update scsi_trace to use the functionality from constants.c
-- Convert the current scsi_logging mechanism over to tracepoints.
+And I really do _not_ want to do this automatically as the device =
 
-The first bit is mostly done; I'll be sending the patchset for review.
-The hard part is the third bit; would be really grand if we can
-model this with the existing scsi_logging_level interface intact.
-But not sure if that's possible nor if it's desirable.
+might be busy due to various reasons (think of multipathing).
+It tooks us ages to get this working with FC, and we finally settled =
 
-Btw, _now_ would be a good chance to send an update of constants.c
-with latest SPC bits ...
+to have a soft-remove implemented in the transport class.
+And we still have issues with SAS HBAs, where at least the standard =
+
+defines a mechanism. Trying this in the SCSI midlayer itself
+is the road to disaster.
+
+If we were to attempt this we would need to lift the dev_loss_tmo =
+
+mechanism from the FC transport layer and make this a generic
+facility for every HBA. But this is quite some work.
 
 Cheers,
 
 Hannes
---=20
+-- =
+
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
