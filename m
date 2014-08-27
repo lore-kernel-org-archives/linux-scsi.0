@@ -1,75 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
- may have been removed.
-Date: Wed, 27 Aug 2014 16:31:21 +0200
-Message-ID: <53FDEBB9.5070704@suse.de>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-2-git-send-email-kys@microsoft.com>
- <20140819175431.GA4617@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: RES: RES: AS2105-based enclosure size issues with >2TB HDDs
+Date: Wed, 27 Aug 2014 10:45:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1408271040300.1460-100000@iolanthe.rowland.org>
+References: <1409121931.27702.8.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20140819175431.GA4617@infradead.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Christoph Hellwig <hch@infradead.org>, "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com, devel@linuxdriverproject.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:53133 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934808AbaH0Opx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Aug 2014 10:45:53 -0400
+In-Reply-To: <1409121931.27702.8.camel@linux-fkkt.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/19/2014 07:54 PM, Christoph Hellwig wrote:
-> On Sat, Aug 16, 2014 at 08:09:48PM -0700, K. Y. Srinivasan wrote:
->> The host asks the guest to scan when a LUN is removed or added.
->> The only way a guest can identify the removed LUN is when an I/O is
->> attempted on a removed LUN - the SRB status code indicates that the LUN
->> is invalid. We currently handle this SRB status and remove the device.
->>
->> Rather than waiting for an I/O to remove the device, force the discovery=
- of
->> LUNs that may have been removed prior to discovering LUNs that may have
->> been added.
->
-> This looks pretty reasonable to me, but I wonder if we should move this
-> up to common code so that it happens for any host rescan triggered by
-> sysfs or other drivers as well.
->
-Not without proper testing.
-Currently we cannot rescan existing devices; the inquiry string is =
+On Wed, 27 Aug 2014, Oliver Neukum wrote:
 
-nailed to the sdev structure. The only way to really refresh the =
+> > I don't think we want to add another SCSI flag to say that READ
+> > CAPACITY(10) is unreliable.
+> 
+> Why not? It would only be friendly to tell the upper layer
+> of a malfunction if we know about it.
 
-information is to delete it and rescan it again.
+To what end?  What will the upper layer do with this information?
 
-And I really do _not_ want to do this automatically as the device =
+> > Given the difficulty of determining the true capacity, I see two
+> > alternatives.  We could set the capacity to a ridiculously large value
+> > (like 1 billion TB), or we could leave the capacity set to the low
+> > value and disable the "block within bounds" checks.  Neither of these
+> > is attractive and they both have issues of their own -- although the 
+> > second is close to what Windows does.
+> 
+> That seems to be the most attractive solution to me.
 
-might be busy due to various reasons (think of multipathing).
-It tooks us ages to get this working with FC, and we finally settled =
+I'm skeptical that you can convince the SCSI and block-layer developers 
+about this.  Maybe they'll accept it if it is applied only to USB 
+transports...
 
-to have a soft-remove implemented in the transport class.
-And we still have issues with SAS HBAs, where at least the standard =
+> > (For example, udev often tries to read the last sectors of a new drive, 
+> > looking for a GPT or RAID signature.  That won't work if the capacity 
+> > is set to some random value.)
+> 
+> Yes, but clipping has its own dangers. Suppose you use the medium
+> without a partition table.
 
-defines a mechanism. Trying this in the SCSI midlayer itself
-is the road to disaster.
+What would Windows do?  In the absence of a partition table, it would 
+believe the value from READ CAPACITY, right?  Isn't that the same as 
+clipping?
 
-If we were to attempt this we would need to lift the dev_loss_tmo =
+Alan Stern
 
-mechanism from the FC transport layer and make this a generic
-facility for every HBA. But this is quite some work.
-
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
