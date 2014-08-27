@@ -1,47 +1,240 @@
-From: Alan <gnomes@lxorguk.ukuu.org.uk>
-Subject: [PATCH] ibmraid: fix writeable attribute with no store method
-Date: Wed, 27 Aug 2014 16:27:20 +0100
-Message-ID: <20140827152700.7694.65005.stgit@alan.etchedpixels.co.uk>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH] lpfc: Avoid to disable pci_dev twice
+Date: Wed, 27 Aug 2014 14:34:43 -0400
+Message-ID: <53FE24C3.6080708@emulex.com>
+References: <1405578751-14164-1-git-send-email-qiudayu@linux.vnet.ibm.com> <53DAF88C.50008@linux.vnet.ibm.com>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpc5-cwma8-2-0-cust185.7-3.cable.virginm.net ([82.17.37.186]:37081
-	"EHLO alan.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S934491AbaH0Pfq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Aug 2014 11:35:46 -0400
-Received: from alan.etchedpixels.co.uk (localhost [127.0.0.1])
-	by alan.etchedpixels.co.uk (8.14.4/8.14.4/Debian-4.1ubuntu1) with ESMTP id s7RFRKO5007719
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2014 16:27:21 +0100
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53DAF88C.50008@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81311
+Mike,
 
- [ 0.603157] WARNING: at drivers/base/core.c:601
-device_create_file+0x8d/0xa0()
- [ 0.603158] Attribute adapter_id: write permission without 'store'
- [ 0.603159] Modules linked in: i915(+) i2c_algo_bit drm_kms_helper drm
-mpt2sas(+) pmcraid(+) raid_class scsi_transport_sas i2c_core video
+Can you confirm - the "nulls" this patch correct are because the 
+probe_one and error_detect threads are running concurrently, thus battling ?
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
- drivers/scsi/pmcraid.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If so - this fix looks insufficient and we should rework it.
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 6f3275d..e2232c3 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4292,7 +4292,7 @@ static ssize_t pmcraid_show_adapter_id(
- static struct device_attribute pmcraid_adapter_id_attr = {
- 	.attr = {
- 		 .name = "adapter_id",
--		 .mode = S_IRUGO | S_IWUSR,
-+		 .mode = S_IRUGO,
- 		 },
- 	.show = pmcraid_show_adapter_id,
- };
+Q: why are they allowed to run concurrently ?  I could see this solved 
+at the platform level to let probe_one finish before error_detect is 
+called (and therefore stating error_detect only makes sense to call if 
+probe_one was successful). It's also a much driver-friendly solution. I 
+could see other drivers have much the same issue with concurrency and 
+data structure teardown - and if locks aren't allowed in the 
+error-detect path... it's not good.
 
+-- james s
+
+
+
+On 7/31/2014 10:16 PM, Mike Qiu wrote:
+> On 07/17/2014 02:32 PM, Mike Qiu wrote:
+>
+>
+> Hi, all
+>
+> How about this patch ?
+>
+> Any idea ?
+>
+>> In IBM Power servers, when hardware error occurs during probe
+>> state, EEH subsystem will call driver's error_detected interface,
+>> which will call pci_disable_device(). But driver's probe function also
+>> call pci_disable_device() in this situation.
+>>
+>> So pci_dev will be disabled twice:
+>>
+>> Device lpfc disabling already-disabled device
+>> ------------[ cut here ]------------
+>> WARNING: at drivers/pci/pci.c:1407
+>> CPU: 0 PID: 8744 Comm: kworker/0:0 Tainted: G        W 
+>> 3.10.42-2002.pkvm2_1_1.6.ppc64 #1
+>> Workqueue: events .work_for_cpu_fn
+>> task: c00000274e3f5400 ti: c0000027d3958000 task.ti: c0000027d3958000
+>> NIP: c000000000471b8c LR: c000000000471b88 CTR: c00000000043ebe0
+>> REGS: c0000027d395b650 TRAP: 0700   Tainted: G        W 
+>> (3.10.42-2002.pkvm2_1_1.6.ppc64)
+>> MSR: 9000000100029032 <SF,HV,EE,ME,IR,DR,RI>  CR: 28b52b44  XER: 
+>> 20000000
+>> CFAR: c000000000879ab8 SOFTE: 1
+>> ...
+>> NIP .pci_disable_device+0xcc/0xe0
+>> LR  .pci_disable_device+0xc8/0xe0
+>> Call Trace:
+>> .pci_disable_device+0xc8/0xe0 (unreliable)
+>> .lpfc_disable_pci_dev+0x50/0x80 [lpfc]
+>> .lpfc_pci_probe_one+0x870/0x21a0 [lpfc]
+>> .local_pci_probe+0x68/0xb0
+>> .work_for_cpu_fn+0x38/0x60
+>> .process_one_work+0x1a4/0x4d0
+>> .worker_thread+0x37c/0x490
+>> .kthread+0xf0/0x100
+>> .ret_from_kernel_thread+0x5c/0x80
+>>
+>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>> ---
+>>   drivers/scsi/lpfc/lpfc.h      |  1 +
+>>   drivers/scsi/lpfc/lpfc_init.c | 59 
+>> +++++++++++++++++++++++++++++++++++++++----
+>>   2 files changed, 55 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+>> index 434e903..0c7bad9 100644
+>> --- a/drivers/scsi/lpfc/lpfc.h
+>> +++ b/drivers/scsi/lpfc/lpfc.h
+>> @@ -813,6 +813,7 @@ struct lpfc_hba {
+>>   #define VPD_MASK            0xf         /* mask for any vpd data */
+>>
+>>       uint8_t soft_wwn_enable;
+>> +    uint8_t probe_done;
+>>
+>>       struct timer_list fcp_poll_timer;
+>>       struct timer_list eratt_poll;
+>> diff --git a/drivers/scsi/lpfc/lpfc_init.c 
+>> b/drivers/scsi/lpfc/lpfc_init.c
+>> index 06f9a5b..c2e67ae 100644
+>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>> @@ -9519,6 +9519,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, 
+>> const struct pci_device_id *pid)
+>>           }
+>>       }
+>>
+>> +    /* Set the probe flag */
+>> +    phba->probe_done = 1;
+>> +
+>>       /* Perform post initialization setup */
+>>       lpfc_post_init_setup(phba);
+>>
+>> @@ -9795,6 +9798,9 @@ lpfc_sli_prep_dev_for_recover(struct lpfc_hba 
+>> *phba)
+>>   static void
+>>   lpfc_sli_prep_dev_for_reset(struct lpfc_hba *phba)
+>>   {
+>> +    if (phba)
+>> +        return;
+>> +
+>>       lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>>               "2710 PCI channel disable preparing for reset\n");
+>>
+>> @@ -9812,7 +9818,8 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_hba *phba)
+>>
+>>       /* Disable interrupt and pci device */
+>>       lpfc_sli_disable_intr(phba);
+>> -    pci_disable_device(phba->pcidev);
+>> +    if (phba->probe_done && phba->pcidev)
+>> +        pci_disable_device(phba->pcidev);
+>>   }
+>>
+>>   /**
+>> @@ -10282,6 +10289,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, 
+>> const struct pci_device_id *pid)
+>>           goto out_disable_intr;
+>>       }
+>>
+>> +    /* Set probe_done flag */
+>> +    phba->probe_done = 1;
+>> +
+>>       /* Log the current active interrupt mode */
+>>       phba->intr_mode = intr_mode;
+>>       lpfc_log_intr_mode(phba, intr_mode);
+>> @@ -10544,6 +10554,9 @@ lpfc_sli4_prep_dev_for_recover(struct 
+>> lpfc_hba *phba)
+>>   static void
+>>   lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
+>>   {
+>> +    if (!phba)
+>> +        return;
+>> +
+>>       lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>>               "2826 PCI channel disable preparing for reset\n");
+>>
+>> @@ -10562,7 +10575,9 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba 
+>> *phba)
+>>       /* Disable interrupt and pci device */
+>>       lpfc_sli4_disable_intr(phba);
+>>       lpfc_sli4_queue_destroy(phba);
+>> -    pci_disable_device(phba->pcidev);
+>> +
+>> +    if (phba->probe_done && phba->pcidev)
+>> +        pci_disable_device(phba->pcidev);
+>>   }
+>>
+>>   /**
+>> @@ -10893,9 +10908,21 @@ static pci_ers_result_t
+>>   lpfc_io_error_detected(struct pci_dev *pdev, pci_channel_state_t 
+>> state)
+>>   {
+>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>> *)shost->hostdata)->phba;
+>> +    struct lpfc_hba *phba;
+>>       pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
+>>
+>> +    if (!shost)
+>> +        /* Run here means it may during probe state and
+>> +         * Scsi_Host has not been created and We can do nothing
+>> +         * in this state so call for hotplug*/
+>> +        return PCI_ERS_RESULT_NONE;
+>> +
+>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>> +
+>> +    if (!phba || !phba->probe_done)
+>> +        /* Run here means it may during probe state */
+>> +        return PCI_ERS_RESULT_NONE;
+>> +
+>>       switch (phba->pci_dev_grp) {
+>>       case LPFC_PCI_DEV_LP:
+>>           rc = lpfc_io_error_detected_s3(pdev, state);
+>> @@ -10930,9 +10957,20 @@ static pci_ers_result_t
+>>   lpfc_io_slot_reset(struct pci_dev *pdev)
+>>   {
+>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>> *)shost->hostdata)->phba;
+>> +    struct lpfc_hba *phba;
+>>       pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
+>>
+>> +    if (!shost)
+>> +        /* Run here means it may during probe state and
+>> +         * Scsi_Host has not been created */
+>> +        return PCI_ERS_RESULT_NONE;
+>> +
+>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>> +
+>> +    if (!phba || !phba->probe_done)
+>> +        /* Run here means it may during probe state */
+>> +        return PCI_ERS_RESULT_NONE;
+>> +
+>>       switch (phba->pci_dev_grp) {
+>>       case LPFC_PCI_DEV_LP:
+>>           rc = lpfc_io_slot_reset_s3(pdev);
+>> @@ -10963,7 +11001,18 @@ static void
+>>   lpfc_io_resume(struct pci_dev *pdev)
+>>   {
+>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>> *)shost->hostdata)->phba;
+>> +    struct lpfc_hba *phba;
+>> +
+>> +    if (!shost)
+>> +        /* Run here means it may during probe state and
+>> +         * Scsi_Host has not been created */
+>> +        return;
+>> +
+>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>> +
+>> +    if (!phba || !phba->probe_done)
+>> +        /* Run here means it may during probe state */
+>> +        return;
+>>
+>>       switch (phba->pci_dev_grp) {
+>>       case LPFC_PCI_DEV_LP:
+>
+>
