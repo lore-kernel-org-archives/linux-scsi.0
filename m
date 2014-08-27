@@ -1,60 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
- size issues with >2TB HDDs)
-Date: Wed, 27 Aug 2014 16:02:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1408271551170.1460-100000@iolanthe.rowland.org>
-References: <201408271923.s7RJNkHA009793@hobgoblin.ariadne.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH] fusion: fix excess parameter kernel-doc warning
+Date: Wed, 27 Aug 2014 16:47:24 -0700
+Message-ID: <53FE6E0C.5040101@infradead.org>
+References: <53EFC9E3.6070306@infradead.org> <1408381672.1223.212.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53704 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S935538AbaH0UCZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Aug 2014 16:02:25 -0400
-In-Reply-To: <201408271923.s7RJNkHA009793@hobgoblin.ariadne.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:38286 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935743AbaH0Xr1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Aug 2014 19:47:27 -0400
+In-Reply-To: <1408381672.1223.212.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dale R. Worley" <worley@alum.mit.edu>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: emilne@redhat.com
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPTFusionLinux@lsi.com, MPT-FusionLinux.pdl@avagotech.com
 
-On Wed, 27 Aug 2014, Dale R. Worley wrote:
+On 08/18/14 10:07, Ewan Milne wrote:
+> On Sat, 2014-08-16 at 14:15 -0700, Randy Dunlap wrote:
+>> From: Randy Dunlap <rdunlap@infradead.org>
+>>
+>> Fix kernel-doc excess parameter warning:
+>>
+>> Warning(..//drivers/message/fusion/mptbase.c:1411): Excess function parameter 'prod_name' description in 'mpt_get_product_name'
+>>
+>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+>> Cc: DL-MPTFusionLinux@lsi.com
+>> Cc: MPT-FusionLinux.pdl@avagotech.com
+>> ---
+>>  drivers/message/fusion/mptbase.c |    1 -
+>>  1 file changed, 1 deletion(-)
+>>
+>> Index: lnx-317-rc1/drivers/message/fusion/mptbase.c
+>> ===================================================================
+>> --- lnx-317-rc1.orig/drivers/message/fusion/mptbase.c
+>> +++ lnx-317-rc1/drivers/message/fusion/mptbase.c
+>> @@ -1400,7 +1400,6 @@ mpt_verify_adapter(int iocid, MPT_ADAPTE
+>>   *	@vendor: pci vendor id
+>>   *	@device: pci device id
+>>   *	@revision: pci revision id
+>> - *	@prod_name: string returned
+>>   *
+>>   *	Returns product string displayed when driver loads,
+>>   *	in /proc/mpt/summary and /sysfs/class/scsi_host/host<X>/version_product
+>> --
+> 
+> Goes with commit c9834c70efbaaa1461ec04289d97a842244fb294.
+> 
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-> What I find interesting is that Windows (at least, Windows 7
-> Professional) seems to be able to handle the deficient adapter.
+Christoph, did you pick up this patch or should I merge it
+with my documentation patches?
 
-So does Linux.  The difference is that Windows believes the values in
-the partition table in preference to what the hardware says, whereas 
-Linux believes the hardware in preference to the partition table.
+Thanks.
 
-Thus, if the hardware says the disk contains 0.8 TB and the partition 
-table says the first partition contains 2.8 TB, Windows will try to 
-access all 2.8 TB but Linux will complain that the partition entry is 
-invalid (because the partition extends beyond the end of the disk).
-
-If you try to repartition the drive under Windows using the deficient 
-adapter, you'll see that the problem still exists.  It just doesn't 
-show up during normal use.
-
->  What
-> I'd like to do is log the disk commands during the mounting sequence,
-> preferably at both the SCSI and USB layers.  Then at least we'll know
-> exactly what the driver is doing.  Are there kernel options to do
-> this?
-
-You can record the USB transfers by using usbmon (see
-Documentation/usb/usbmon.txt).  The trace will include all the
-important SCSI data, so you don't need to record anything at the SCSI
-layer.
-
-This isn't really necessary, though.  We already know what the driver 
-is doing.
-
-> Unfortunately, I don't know any way to log what Windows is doing with
-> the drive.
-
-My experiments with Windows show that it does essentially the same
-things as Linux does.  The important difference is not what commands
-and data get sent, but whether the OS pays attention to the result.
-
-Alan Stern
-
+-- 
+~Randy
