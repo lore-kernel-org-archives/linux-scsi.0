@@ -1,22 +1,41 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
 Subject: Re: Debugging scsi abort handling ?
-Date: Thu, 28 Aug 2014 14:17:45 +0200
-Message-ID: <53FF1DE9.5040605@redhat.com>
+Date: Thu, 28 Aug 2014 14:21:12 +0200
+Message-ID: <53FF1EB8.9010700@redhat.com>
 References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1318 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43055 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751081AbaH1MR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2014 08:17:57 -0400
+	id S1750904AbaH1MVT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 08:21:19 -0400
 In-Reply-To: <53FF1AD8.9020800@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Il 28/08/2014 14:04, Hannes Reinecke ha scritto:
+Hi,
+
+On 08/28/2014 02:04 PM, Hannes Reinecke wrote:
+> On 08/25/2014 01:15 PM, Paolo Bonzini wrote:
+>> Il 25/08/2014 12:28, Bart Van Assche ha scritto:
+>>>
+>>>  From SPC-4: "7.5.8 Control mode page [ ... ] A task aborted status (TAS)
+>>> bit set to zero specifies that aborted commands shall be terminated by
+>>> the device server without any response to the application client. A TAS
+>>> bit set to one specifies that commands aborted by the actions of an I_T
+>>> nexus other than the I_T nexus on which the command was received shall
+>>> be completed with TASK ABORTED status (see SAM-5)."
+>>
+>> Note the "aborted by the actions of an I_T nexus other than the I_T
+>> nexus on which the command was received".
+>>
+>> In practice, this means that TASK ABORTED should only happen if you use
+>> the CLEAR TASK SET tmf and TST is not set to 001b (i.e. _not_ to "per
+>> I_T nexus") in the Control mode page.  It should never happen for a pen
+>> drive.
 >>
 >> Setting TASK ABORTED aside, the important part is that an abort can do
 >> one of two things:
@@ -28,29 +47,28 @@ Il 28/08/2014 14:04, Hannes Reinecke ha scritto:
 >> - abort the command, and then the driver should never call the
 >> ->scsi_done callback for the Scsi_Cmnd*.
 >>
-> In practice we rely on the latter behaviour; when ->scsi_done is called
-> while the command is under eh_abort _really bad things_
+> In practice we rely on the latter behaviour; when ->scsi_done is called while the command is under eh_abort _really bad things_
 > will happen.
+
+Interesting, those very bad things may very well be exactly the things
+some uas users are seeing. But this sounds racy, I can stop a command
+from completing as the very first thing inside eh_abort, but I cannot
+stop it from completing when the scsi core is getting ready to call
+eh_abort, but eh_abort is not yet called.
+
+Is there some flag I should check before calling scsi_done to avoid this
+race? And if so which locks should I hold (and why does scsi_done not do
+this check itself) ?
+
 > As soon as eh_abort is called control is transferred back to the
 > SCSI midlayer, so any LLDD should never send completions for these
 > commands back to the midlayer.
 
-No, this is wrong.  I think we have sorted it out a couple of months
-ago.  virtio-scsi for example (due to QEMU quirks) will do the former
-more often than not.
+I'm fine with not calling scsi_done from eh_abort, but I cannot guarantee
+that another thread will not complete the cmnd in the mean time before hand.
 
-Ignoring scsi_eh_done which is just as harmless, ->scsi_done does
-nothing more than calling blk_complete_request.  If the command is under
-abort, it has already been marked as complete by the block layer's
-timeout timer---see blk_rq_timed_out_timer and blk_rq_check_expired---or
-by blk_abort_request.
+Thanks for your input!
 
-Then, blk_complete_request will do nothing because its call to
-blk_mark_rq_complete returns true.
+Regards,
 
-All this, of course, as long as ->scsi_done is called _before_ eh_abort
-returns.  Otherwise, occasions abound for uses-after-free, which is what
-virtio-scsi got until commit 8faeb529b2da (virtio-scsi: fix various bad
-behavior on aborted requests, 2014-06-04).
-
-Paolo
+Hans
