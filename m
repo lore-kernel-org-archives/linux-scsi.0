@@ -1,64 +1,78 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v9 2/3] ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
-Date: Thu, 28 Aug 2014 14:51:21 +0530
-Message-ID: <1409217682-5759-3-git-send-email-stripathi@apm.com>
-References: <1409217682-5759-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1409217682-5759-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Debugging scsi abort handling ?
+Date: Thu, 28 Aug 2014 14:04:40 +0200
+Message-ID: <53FF1AD8.9020800@suse.de>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53914 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750730AbaH1MEm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 08:04:42 -0400
+In-Reply-To: <53FB1ACD.1040208@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch implements the feature to skip the PHY and clock
-initialization if it is already configured by the firmware.
+On 08/25/2014 01:15 PM, Paolo Bonzini wrote:
+> Il 25/08/2014 12:28, Bart Van Assche ha scritto:
+>>
+>>  From SPC-4: "7.5.8 Control mode page [ ... ] A task aborted status =
+(TAS)
+>> bit set to zero specifies that aborted commands shall be terminated =
+by
+>> the device server without any response to the application client. A =
+TAS
+>> bit set to one specifies that commands aborted by the actions of an =
+I_T
+>> nexus other than the I_T nexus on which the command was received sha=
+ll
+>> be completed with TASK ABORTED status (see SAM-5)."
+>
+> Note the "aborted by the actions of an I_T nexus other than the I_T
+> nexus on which the command was received".
+>
+> In practice, this means that TASK ABORTED should only happen if you u=
+se
+> the CLEAR TASK SET tmf and TST is not set to 001b (i.e. _not_ to "per
+> I_T nexus") in the Control mode page.  It should never happen for a p=
+en
+> drive.
+>
+> Setting TASK ABORTED aside, the important part is that an abort can d=
+o
+> one of two things:
+>
+> - complete the command, and then eh_abort should return after the dri=
+ver
+> has noticed the completion and called the ->scsi_done callback for th=
+e
+> Scsi_Cmnd*.
+>
+> - abort the command, and then the driver should never call the
+> ->scsi_done callback for the Scsi_Cmnd*.
+>
+In practice we rely on the latter behaviour; when ->scsi_done is=20
+called while the command is under eh_abort _really bad things_
+will happen.
+As soon as eh_abort is called control is transferred back to the
+SCSI midlayer, so any LLDD should never send completions for these
+commands back to the midlayer.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Cheers,
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index f416495..c721887 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -145,6 +145,14 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- 	return rc;
- }
-
-+static bool xgene_ahci_is_memram_inited(struct xgene_ahci_context *ctx)
-+{
-+	void __iomem *diagcsr = ctx->csr_diag;
-+
-+	return (readl(diagcsr + CFG_MEM_RAM_SHUTDOWN) == 0 &&
-+	        readl(diagcsr + BLOCK_MEM_RDY) == 0xFFFFFFFF);
-+}
-+
- /**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-@@ -468,6 +476,11 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
-
-+	if (xgene_ahci_is_memram_inited(ctx)) {
-+		dev_info(dev, "skip clock and PHY initialization\n");
-+		goto skip_clk_phy;
-+	}
-+
- 	/* Due to errata, HW requires full toggle transition */
- 	rc = ahci_platform_enable_clks(hpriv);
- 	if (rc)
-@@ -481,6 +494,8 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
-
-+skip_clk_phy:
-+
- 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
-1.8.2.1
-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
