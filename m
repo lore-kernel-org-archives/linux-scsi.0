@@ -1,119 +1,651 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 10/14] block: Relocate bio integrity flags
-Date: Thu, 28 Aug 2014 15:31:28 -0400
-Message-ID: <1409254292-2540-11-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 13/14] block: Add T10 Protection Information functions
+Date: Thu, 28 Aug 2014 15:31:31 -0400
+Message-ID: <1409254292-2540-14-git-send-email-martin.petersen@oracle.com>
 References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32761 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752620AbaH1Tan (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 15:30:43 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:23067 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbaH1Tav (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 15:30:51 -0400
 In-Reply-To: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, axboe@fb.com
 Cc: hch@lst.de, sagig@mellanox.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Move flags affecting the integrity code out of the bio bi_flags and into
-the block integrity payload.
+The T10 Protection Information format is also used by some devices that
+do not go through the SCSI layer (virtual block devices, NVMe). Relocate
+the relevant functions to a block layer library that can be used without
+involving SCSI.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio-integrity.c     | 4 ++--
- drivers/scsi/sd_dif.c     | 4 ++--
- include/linux/bio.h       | 9 ++++++++-
- include/linux/blk_types.h | 6 ++----
- 4 files changed, 14 insertions(+), 9 deletions(-)
+ block/Kconfig              |   1 +
+ block/Makefile             |   4 +-
+ block/t10-pi.c             | 164 ++++++++++++++++++++++++++++++
+ drivers/scsi/Kconfig       |   1 -
+ drivers/scsi/sd_dif.c      | 241 ++++-----------------------------------------
+ include/linux/crc-t10dif.h |   5 +-
+ include/linux/t10-pi.h     |  60 +++++++++++
+ 7 files changed, 250 insertions(+), 226 deletions(-)
+ create mode 100644 block/t10-pi.c
+ create mode 100644 include/linux/t10-pi.h
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index c6bc2faf2af7..7cac9c34615c 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -100,7 +100,7 @@ void bio_integrity_free(struct bio *bio)
- 	struct bio_integrity_payload *bip = bio_integrity(bio);
- 	struct bio_set *bs = bio->bi_pool;
+diff --git a/block/Kconfig b/block/Kconfig
+index 2429515c05c2..1427106f30c9 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -77,6 +77,7 @@ config BLK_DEV_BSGLIB
  
--	if (bip->bip_owns_buf)
-+	if (bip->bip_flags & BIP_BLOCK_INTEGRITY)
- 		kfree(page_address(bip->bip_vec->bv_page) +
- 		      bip->bip_vec->bv_offset);
+ config BLK_DEV_INTEGRITY
+ 	bool "Block layer data integrity support"
++	select CRC_T10_PI if BLK_DEV_INTEGRITY
+ 	---help---
+ 	Some storage devices allow extra information to be
+ 	stored/retrieved to help protect the data.  The block layer
+diff --git a/block/Makefile b/block/Makefile
+index a2ce6ac935ec..00ecc97629db 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -20,6 +20,6 @@ obj-$(CONFIG_IOSCHED_DEADLINE)	+= deadline-iosched.o
+ obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched.o
  
-@@ -293,7 +293,7 @@ int bio_integrity_prep(struct bio *bio)
- 		return -EIO;
- 	}
- 
--	bip->bip_owns_buf = 1;
-+	bip->bip_flags |= BIP_BLOCK_INTEGRITY;
- 	bip->bip_iter.bi_size = len;
- 	bip_set_seed(bip, bio->bi_iter.bi_sector);
- 
+ obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
+-obj-$(CONFIG_BLK_DEV_INTEGRITY)	+= blk-integrity.o
+ obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
+-obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o
++obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o
++
+diff --git a/block/t10-pi.c b/block/t10-pi.c
+new file mode 100644
+index 000000000000..f45da5d55bd8
+--- /dev/null
++++ b/block/t10-pi.c
+@@ -0,0 +1,164 @@
++/*
++ * t10_pi.c - Functions for generating and verifying T10 Protection
++ *	      Information.
++ *
++ * Copyright (C) 2007, 2008, 2014 Oracle Corporation
++ * Written by: Martin K. Petersen <martin.petersen@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
++ * USA.
++ *
++ */
++
++#include <linux/t10-pi.h>
++#include <linux/blkdev.h>
++#include <linux/crc-t10dif.h>
++#include <net/checksum.h>
++
++typedef __u16 (csum_fn) (void *, unsigned int);
++
++static __u16 t10_pi_crc_fn(void *data, unsigned int len)
++{
++	return cpu_to_be16(crc_t10dif(data, len));
++}
++
++static __u16 t10_pi_ip_fn(void *data, unsigned int len)
++{
++	return ip_compute_csum(data, len);
++}
++
++/*
++ * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
++ * 16 bit app tag, 32 bit reference tag. Type 3 does not define the ref
++ * tag.
++ */
++static int t10_pi_generate(struct blk_integrity_iter *iter, csum_fn *fn,
++			   unsigned int type)
++{
++	unsigned int i;
++
++	for (i = 0 ; i < iter->data_size ; i += iter->interval) {
++		struct t10_pi_tuple *pi = iter->prot_buf;
++
++		pi->guard_tag = fn(iter->data_buf, iter->interval);
++		pi->app_tag = 0;
++
++		if (type == 1)
++			pi->ref_tag = cpu_to_be32(iter->seed & 0xffffffff);
++		else
++			pi->ref_tag = 0;
++
++		iter->data_buf += iter->interval;
++		iter->prot_buf += sizeof(struct t10_pi_tuple);
++		iter->seed++;
++	}
++
++	return 0;
++}
++
++static int t10_pi_verify(struct blk_integrity_iter *iter, csum_fn *fn,
++				unsigned int type)
++{
++	unsigned int i;
++
++	for (i = 0 ; i < iter->data_size ; i += iter->interval) {
++		struct t10_pi_tuple *pi = iter->prot_buf;
++		__u16 csum;
++
++		switch (type) {
++		case 1:
++		case 2:
++			if (pi->app_tag == 0xffff)
++				goto next;
++
++			if (be32_to_cpu(pi->ref_tag) !=
++			    (iter->seed & 0xffffffff)) {
++				pr_err("%s: ref tag error at location %lu " \
++				       "(rcvd %u)\n", iter->disk_name,
++				       iter->seed, be32_to_cpu(pi->ref_tag));
++				return -EILSEQ;
++			}
++			break;
++		case 3:
++			if (pi->app_tag == 0xffff && pi->ref_tag == 0xffffffff)
++				goto next;
++			break;
++		}
++
++		csum = fn(iter->data_buf, iter->interval);
++
++		if (pi->guard_tag != csum) {
++			pr_err("%s: guard tag error at location %lu " \
++			       "(rcvd %04x, data %04x)\n", iter->disk_name,
++			       (unsigned long)iter->seed,
++			       be16_to_cpu(pi->guard_tag), be16_to_cpu(csum));
++			return -EILSEQ;
++		}
++
++next:
++		iter->data_buf += iter->interval;
++		iter->prot_buf += sizeof(struct t10_pi_tuple);
++		iter->seed++;
++	}
++
++	return 0;
++}
++
++int t10_pi_type1_generate_crc(struct blk_integrity_iter *iter)
++{
++	return t10_pi_generate(iter, t10_pi_crc_fn, 1);
++}
++EXPORT_SYMBOL(t10_pi_type1_generate_crc);
++
++int t10_pi_type1_generate_ip(struct blk_integrity_iter *iter)
++{
++	return t10_pi_generate(iter, t10_pi_ip_fn, 1);
++}
++EXPORT_SYMBOL(t10_pi_type1_generate_ip);
++
++int t10_pi_type1_verify_crc(struct blk_integrity_iter *iter)
++{
++	return t10_pi_verify(iter, t10_pi_crc_fn, 1);
++}
++EXPORT_SYMBOL(t10_pi_type1_verify_crc);
++
++int t10_pi_type1_verify_ip(struct blk_integrity_iter *iter)
++{
++	return t10_pi_verify(iter, t10_pi_ip_fn, 1);
++}
++EXPORT_SYMBOL(t10_pi_type1_verify_ip);
++
++int t10_pi_type3_generate_crc(struct blk_integrity_iter *iter)
++{
++	return t10_pi_generate(iter, t10_pi_crc_fn, 3);
++}
++EXPORT_SYMBOL(t10_pi_type3_generate_crc);
++
++int t10_pi_type3_generate_ip(struct blk_integrity_iter *iter)
++{
++	return t10_pi_generate(iter, t10_pi_ip_fn, 3);
++}
++EXPORT_SYMBOL(t10_pi_type3_generate_ip);
++
++int t10_pi_type3_verify_crc(struct blk_integrity_iter *iter)
++{
++	return t10_pi_verify(iter, t10_pi_crc_fn, 3);
++}
++EXPORT_SYMBOL(t10_pi_type3_verify_crc);
++
++int t10_pi_type3_verify_ip(struct blk_integrity_iter *iter)
++{
++	return t10_pi_verify(iter, t10_pi_ip_fn, 3);
++}
++EXPORT_SYMBOL(t10_pi_type3_verify_ip);
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 18a3358eb1d4..9ece13f922a6 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -62,7 +62,6 @@ comment "SCSI support type (disk, tape, CD-ROM)"
+ config BLK_DEV_SD
+ 	tristate "SCSI disk support"
+ 	depends on SCSI
+-	select CRC_T10DIF if BLK_DEV_INTEGRITY
+ 	---help---
+ 	  If you want to use SCSI hard disks, Fibre Channel disks,
+ 	  Serial ATA (SATA) or Parallel ATA (PATA) hard disks,
 diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 1e971c6f8c2b..4ce636fdc15f 100644
+index 2198abee619e..b7eaeadc18f9 100644
 --- a/drivers/scsi/sd_dif.c
 +++ b/drivers/scsi/sd_dif.c
-@@ -326,7 +326,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 		unsigned int j;
+@@ -21,7 +21,7 @@
+  */
  
- 		/* Already remapped? */
--		if (bio_flagged(bio, BIO_MAPPED_INTEGRITY))
-+		if (bip->bip_flags & BIP_MAPPED_INTEGRITY)
- 			break;
+ #include <linux/blkdev.h>
+-#include <linux/crc-t10dif.h>
++#include <linux/t10-pi.h>
  
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -33,207 +33,8 @@
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsicam.h>
+ 
+-#include <net/checksum.h>
+-
+ #include "sd.h"
+ 
+-typedef __u16 (csum_fn) (void *, unsigned int);
+-
+-static __u16 sd_dif_crc_fn(void *data, unsigned int len)
+-{
+-	return cpu_to_be16(crc_t10dif(data, len));
+-}
+-
+-static __u16 sd_dif_ip_fn(void *data, unsigned int len)
+-{
+-	return ip_compute_csum(data, len);
+-}
+-
+-/*
+- * Type 1 and Type 2 protection use the same format: 16 bit guard tag,
+- * 16 bit app tag, 32 bit reference tag.
+- */
+-static void sd_dif_type1_generate(struct blk_integrity_iter *iter, csum_fn *fn)
+-{
+-	void *buf = iter->data_buf;
+-	struct sd_dif_tuple *sdt = iter->prot_buf;
+-	sector_t seed = iter->seed;
+-	unsigned int i;
+-
+-	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
+-		sdt->guard_tag = fn(buf, iter->interval);
+-		sdt->ref_tag = cpu_to_be32(seed & 0xffffffff);
+-		sdt->app_tag = 0;
+-
+-		buf += iter->interval;
+-		seed++;
+-	}
+-}
+-
+-static int sd_dif_type1_generate_crc(struct blk_integrity_iter *iter)
+-{
+-	sd_dif_type1_generate(iter, sd_dif_crc_fn);
+-	return 0;
+-}
+-
+-static int sd_dif_type1_generate_ip(struct blk_integrity_iter *iter)
+-{
+-	sd_dif_type1_generate(iter, sd_dif_ip_fn);
+-	return 0;
+-}
+-
+-static int sd_dif_type1_verify(struct blk_integrity_iter *iter, csum_fn *fn)
+-{
+-	void *buf = iter->data_buf;
+-	struct sd_dif_tuple *sdt = iter->prot_buf;
+-	sector_t seed = iter->seed;
+-	unsigned int i;
+-	__u16 csum;
+-
+-	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
+-		/* Unwritten sectors */
+-		if (sdt->app_tag == 0xffff)
+-			return 0;
+-
+-		if (be32_to_cpu(sdt->ref_tag) != (seed & 0xffffffff)) {
+-			printk(KERN_ERR
+-			       "%s: ref tag error on sector %lu (rcvd %u)\n",
+-			       iter->disk_name, (unsigned long)seed,
+-			       be32_to_cpu(sdt->ref_tag));
+-			return -EIO;
+-		}
+-
+-		csum = fn(buf, iter->interval);
+-
+-		if (sdt->guard_tag != csum) {
+-			printk(KERN_ERR "%s: guard tag error on sector %lu " \
+-			       "(rcvd %04x, data %04x)\n", iter->disk_name,
+-			       (unsigned long)seed,
+-			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
+-			return -EIO;
+-		}
+-
+-		buf += iter->interval;
+-		seed++;
+-	}
+-
+-	return 0;
+-}
+-
+-static int sd_dif_type1_verify_crc(struct blk_integrity_iter *iter)
+-{
+-	return sd_dif_type1_verify(iter, sd_dif_crc_fn);
+-}
+-
+-static int sd_dif_type1_verify_ip(struct blk_integrity_iter *iter)
+-{
+-	return sd_dif_type1_verify(iter, sd_dif_ip_fn);
+-}
+-
+-static struct blk_integrity dif_type1_integrity_crc = {
+-	.name			= "T10-DIF-TYPE1-CRC",
+-	.generate_fn		= sd_dif_type1_generate_crc,
+-	.verify_fn		= sd_dif_type1_verify_crc,
+-	.tuple_size		= sizeof(struct sd_dif_tuple),
+-	.tag_size		= 0,
+-};
+-
+-static struct blk_integrity dif_type1_integrity_ip = {
+-	.name			= "T10-DIF-TYPE1-IP",
+-	.generate_fn		= sd_dif_type1_generate_ip,
+-	.verify_fn		= sd_dif_type1_verify_ip,
+-	.tuple_size		= sizeof(struct sd_dif_tuple),
+-	.tag_size		= 0,
+-};
+-
+-
+-/*
+- * Type 3 protection has a 16-bit guard tag and 16 + 32 bits of opaque
+- * tag space.
+- */
+-static void sd_dif_type3_generate(struct blk_integrity_iter *iter, csum_fn *fn)
+-{
+-	void *buf = iter->data_buf;
+-	struct sd_dif_tuple *sdt = iter->prot_buf;
+-	unsigned int i;
+-
+-	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
+-		sdt->guard_tag = fn(buf, iter->interval);
+-		sdt->ref_tag = 0;
+-		sdt->app_tag = 0;
+-
+-		buf += iter->interval;
+-	}
+-}
+-
+-static int sd_dif_type3_generate_crc(struct blk_integrity_iter *iter)
+-{
+-	sd_dif_type3_generate(iter, sd_dif_crc_fn);
+-	return 0;
+-}
+-
+-static int sd_dif_type3_generate_ip(struct blk_integrity_iter *iter)
+-{
+-	sd_dif_type3_generate(iter, sd_dif_ip_fn);
+-	return 0;
+-}
+-
+-static int sd_dif_type3_verify(struct blk_integrity_iter *iter, csum_fn *fn)
+-{
+-	void *buf = iter->data_buf;
+-	struct sd_dif_tuple *sdt = iter->prot_buf;
+-	sector_t seed = iter->seed;
+-	unsigned int i;
+-	__u16 csum;
+-
+-	for (i = 0 ; i < iter->data_size ; i += iter->interval, sdt++) {
+-		/* Unwritten sectors */
+-		if (sdt->app_tag == 0xffff && sdt->ref_tag == 0xffffffff)
+-			return 0;
+-
+-		csum = fn(buf, iter->interval);
+-
+-		if (sdt->guard_tag != csum) {
+-			printk(KERN_ERR "%s: guard tag error on sector %lu " \
+-			       "(rcvd %04x, data %04x)\n", iter->disk_name,
+-			       (unsigned long)seed,
+-			       be16_to_cpu(sdt->guard_tag), be16_to_cpu(csum));
+-			return -EIO;
+-		}
+-
+-		buf += iter->interval;
+-		seed++;
+-	}
+-
+-	return 0;
+-}
+-
+-static int sd_dif_type3_verify_crc(struct blk_integrity_iter *iter)
+-{
+-	return sd_dif_type3_verify(iter, sd_dif_crc_fn);
+-}
+-
+-static int sd_dif_type3_verify_ip(struct blk_integrity_iter *iter)
+-{
+-	return sd_dif_type3_verify(iter, sd_dif_ip_fn);
+-}
+-
+-static struct blk_integrity dif_type3_integrity_crc = {
+-	.name			= "T10-DIF-TYPE3-CRC",
+-	.generate_fn		= sd_dif_type3_generate_crc,
+-	.verify_fn		= sd_dif_type3_verify_crc,
+-	.tuple_size		= sizeof(struct sd_dif_tuple),
+-	.tag_size		= 0,
+-};
+-
+-static struct blk_integrity dif_type3_integrity_ip = {
+-	.name			= "T10-DIF-TYPE3-IP",
+-	.generate_fn		= sd_dif_type3_generate_ip,
+-	.verify_fn		= sd_dif_type3_verify_ip,
+-	.tuple_size		= sizeof(struct sd_dif_tuple),
+-	.tag_size		= 0,
+-};
+-
+ /*
+  * Configure exchange of protection information between OS and HBA.
+  */
+@@ -257,16 +58,16 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ 	/* Enable DMA of protection information */
+ 	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP) {
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
+-			blk_integrity_register(disk, &dif_type3_integrity_ip);
++			blk_integrity_register(disk, &t10_pi_type3_ip);
+ 		else
+-			blk_integrity_register(disk, &dif_type1_integrity_ip);
++			blk_integrity_register(disk, &t10_pi_type1_ip);
+ 
+ 		disk->integrity->flags |= BLK_INTEGRITY_IP_CHECKSUM;
+ 	} else
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
+-			blk_integrity_register(disk, &dif_type3_integrity_crc);
++			blk_integrity_register(disk, &t10_pi_type3_crc);
+ 		else
+-			blk_integrity_register(disk, &dif_type1_integrity_crc);
++			blk_integrity_register(disk, &t10_pi_type1_crc);
+ 
+ 	sd_printk(KERN_NOTICE, sdkp,
+ 		  "Enabling DIX %s protection\n", disk->integrity->name);
+@@ -308,10 +109,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
+ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+ 		    unsigned int sector_sz)
+ {
+-	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	const int tuple_sz = sizeof(struct t10_pi_tuple);
+ 	struct bio *bio;
+ 	struct scsi_disk *sdkp;
+-	struct sd_dif_tuple *sdt;
++	struct t10_pi_tuple *pi;
+ 	u32 phys, virt;
+ 
+ 	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
+@@ -334,19 +135,18 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
  		virt = bip_get_seed(bip) & 0xffffffff;
-@@ -347,7 +347,7 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 			kunmap_atomic(sdt);
+ 
+ 		bip_for_each_vec(iv, bip, iter) {
+-			sdt = kmap_atomic(iv.bv_page)
+-				+ iv.bv_offset;
++			pi = kmap_atomic(iv.bv_page) + iv.bv_offset;
+ 
+-			for (j = 0; j < iv.bv_len; j += tuple_sz, sdt++) {
++			for (j = 0; j < iv.bv_len; j += tuple_sz, pi++) {
+ 
+-				if (be32_to_cpu(sdt->ref_tag) == virt)
+-					sdt->ref_tag = cpu_to_be32(phys);
++				if (be32_to_cpu(pi->ref_tag) == virt)
++					pi->ref_tag = cpu_to_be32(phys);
+ 
+ 				virt++;
+ 				phys++;
+ 			}
+ 
+-			kunmap_atomic(sdt);
++			kunmap_atomic(pi);
  		}
  
--		bio->bi_flags |= (1 << BIO_MAPPED_INTEGRITY);
-+		bip->bip_flags |= BIP_MAPPED_INTEGRITY;
+ 		bip->bip_flags |= BIP_MAPPED_INTEGRITY;
+@@ -359,10 +159,10 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
+  */
+ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ {
+-	const int tuple_sz = sizeof(struct sd_dif_tuple);
++	const int tuple_sz = sizeof(struct t10_pi_tuple);
+ 	struct scsi_disk *sdkp;
+ 	struct bio *bio;
+-	struct sd_dif_tuple *sdt;
++	struct t10_pi_tuple *pi;
+ 	unsigned int j, sectors, sector_sz;
+ 	u32 phys, virt;
+ 
+@@ -386,25 +186,24 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
+ 		virt = bip_get_seed(bip) & 0xffffffff;
+ 
+ 		bip_for_each_vec(iv, bip, iter) {
+-			sdt = kmap_atomic(iv.bv_page)
+-				+ iv.bv_offset;
++			pi = kmap_atomic(iv.bv_page) + iv.bv_offset;
+ 
+-			for (j = 0; j < iv.bv_len; j += tuple_sz, sdt++) {
++			for (j = 0; j < iv.bv_len; j += tuple_sz, pi++) {
+ 
+ 				if (sectors == 0) {
+-					kunmap_atomic(sdt);
++					kunmap_atomic(pi);
+ 					return;
+ 				}
+ 
+-				if (be32_to_cpu(sdt->ref_tag) == phys)
+-					sdt->ref_tag = cpu_to_be32(virt);
++				if (be32_to_cpu(pi->ref_tag) == phys)
++					pi->ref_tag = cpu_to_be32(virt);
+ 
+ 				virt++;
+ 				phys++;
+ 				sectors--;
+ 			}
+ 
+-			kunmap_atomic(sdt);
++			kunmap_atomic(pi);
+ 		}
  	}
  }
+diff --git a/include/linux/crc-t10dif.h b/include/linux/crc-t10dif.h
+index b3cb71f0d3b0..cf53d0773ce3 100644
+--- a/include/linux/crc-t10dif.h
++++ b/include/linux/crc-t10dif.h
+@@ -6,7 +6,8 @@
+ #define CRC_T10DIF_DIGEST_SIZE 2
+ #define CRC_T10DIF_BLOCK_SIZE 1
  
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 3fd36660fd10..b508cf69206d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -315,7 +315,7 @@ struct bio_integrity_payload {
- 	unsigned short		bip_slab;	/* slab the bip came from */
- 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
- 	unsigned short		bip_max_vcnt;	/* integrity bio_vec slots */
--	unsigned		bip_owns_buf:1;	/* should free bip_buf */
-+	unsigned short		bip_flags;	/* control flags */
+-__u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer, size_t len);
+-__u16 crc_t10dif(unsigned char const *, size_t);
++extern __u16 crc_t10dif_generic(__u16 crc, const unsigned char *buffer,
++				size_t len);
++extern __u16 crc_t10dif(unsigned char const *, size_t);
  
- 	struct work_struct	bip_work;	/* I/O completion */
- 
-@@ -323,6 +323,13 @@ struct bio_integrity_payload {
- 	struct bio_vec		bip_inline_vecs[0];/* embedded bvec array */
- };
- 
-+enum bip_flags {
-+	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
-+	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
-+	BIP_CTRL_NOCHECK	= 1 << 2, /* disable HBA integrity checking */
-+	BIP_DISK_NOCHECK	= 1 << 3, /* disable disk integrity checking */
+ #endif
+diff --git a/include/linux/t10-pi.h b/include/linux/t10-pi.h
+new file mode 100644
+index 000000000000..70569a6f2e8c
+--- /dev/null
++++ b/include/linux/t10-pi.h
+@@ -0,0 +1,60 @@
++#ifndef _LINUX_T10_PI_H
++#define _LINUX_T10_PI_H
++
++#include <linux/types.h>
++#include <linux/blkdev.h>
++
++/*
++ * T10 Protection Information tuple.
++ */
++struct t10_pi_tuple {
++	__be16 guard_tag;	/* Checksum */
++	__be16 app_tag;		/* Opaque storage */
++	__be32 ref_tag;		/* Target LBA or indirect LBA */
 +};
 +
- static inline sector_t bip_get_seed(struct bio_integrity_payload *bip)
- {
- 	return bip->bip_iter.bi_sector;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 0b7084f7c136..c96939d488ed 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -120,10 +120,8 @@ struct bio {
- #define BIO_USER_MAPPED 6	/* contains user pages */
- #define BIO_EOPNOTSUPP	7	/* not supported */
- #define BIO_NULL_MAPPED 8	/* contains invalid user pages */
--#define BIO_FS_INTEGRITY 9	/* fs owns integrity data, not block layer */
--#define BIO_QUIET	10	/* Make BIO Quiet */
--#define BIO_MAPPED_INTEGRITY 11/* integrity metadata has been remapped */
--#define BIO_SNAP_STABLE	12	/* bio data must be snapshotted during write */
-+#define BIO_QUIET	9	/* Make BIO Quiet */
-+#define BIO_SNAP_STABLE	10	/* bio data must be snapshotted during write */
- 
- /*
-  * Flags starting here get preserved by bio_reset() - this includes
++extern int t10_pi_type1_generate_crc(struct blk_integrity_iter *);
++extern int t10_pi_type1_verify_crc(struct blk_integrity_iter *);
++
++extern int t10_pi_type1_generate_ip(struct blk_integrity_iter *);
++extern int t10_pi_type1_verify_ip(struct blk_integrity_iter *);
++
++extern int t10_pi_type3_generate_crc(struct blk_integrity_iter *);
++extern int t10_pi_type3_verify_crc(struct blk_integrity_iter *);
++
++extern int t10_pi_type3_generate_ip(struct blk_integrity_iter *);
++extern int t10_pi_type3_verify_ip(struct blk_integrity_iter *);
++
++struct blk_integrity t10_pi_type1_crc = {
++	.name			= "T10-DIF-TYPE1-CRC",
++	.generate_fn		= t10_pi_type1_generate_crc,
++	.verify_fn		= t10_pi_type1_verify_crc,
++	.tuple_size		= sizeof(struct t10_pi_tuple),
++	.tag_size		= 0,
++};
++
++struct blk_integrity t10_pi_type1_ip = {
++	.name			= "T10-DIF-TYPE1-IP",
++	.generate_fn		= t10_pi_type1_generate_ip,
++	.verify_fn		= t10_pi_type1_verify_ip,
++	.tuple_size		= sizeof(struct t10_pi_tuple),
++	.tag_size		= 0,
++};
++
++struct blk_integrity t10_pi_type3_crc = {
++	.name			= "T10-DIF-TYPE3-CRC",
++	.generate_fn		= t10_pi_type3_generate_crc,
++	.verify_fn		= t10_pi_type3_verify_crc,
++	.tuple_size		= sizeof(struct t10_pi_tuple),
++	.tag_size		= 0,
++};
++
++struct blk_integrity t10_pi_type3_ip = {
++	.name			= "T10-DIF-TYPE3-IP",
++	.generate_fn		= t10_pi_type3_generate_ip,
++	.verify_fn		= t10_pi_type3_verify_ip,
++	.tuple_size		= sizeof(struct t10_pi_tuple),
++	.tag_size		= 0,
++};
++
++#endif
 -- 
 1.9.3
 
