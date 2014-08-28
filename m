@@ -1,399 +1,102 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 14/14] sd: Honor block layer integrity handling flags
-Date: Thu, 28 Aug 2014 15:31:32 -0400
-Message-ID: <1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 11/14] block: Integrity checksum flag
+Date: Thu, 28 Aug 2014 15:31:29 -0400
+Message-ID: <1409254292-2540-12-git-send-email-martin.petersen@oracle.com>
 References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23060 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861AbaH1Tav (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 15:30:51 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:32796 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752620AbaH1Tap (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 15:30:45 -0400
 In-Reply-To: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, axboe@fb.com
 Cc: hch@lst.de, sagig@mellanox.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-A set of flags introduced in the block layer enable better control over
-how protection information is handled. These flags are useful for both
-error injection and data recovery purposes. Checking can be enabled and
-disabled for controller and disk, and the guard tag format is now a
-per-I/O property.
+Make the choice of checksum a per-I/O property by introducing a flag
+that can be inspected by the SCSI layer. There are several reasons for
+this:
 
-Update sd_protect_op to communicate the relevant information to the
-low-level device driver via a set of flags in scsi_cmnd.
+ 1. It allows us to switch choice of checksum without unloading and
+    reloading the HBA driver.
+
+ 2. During error recovery we need to be able to tell the HBA that
+    checksums read from disk should not be verified and converted to IP
+    checksums.
+
+ 3. For error injection purposes we need to be able to write a bad guard
+    tag to storage. Since the storage device only supports T10 CRC we
+    need to be able to disable IP checksum conversion on the HBA.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
 ---
- drivers/scsi/sd.c        | 73 ++++++++++++++++++++++++++++--------------------
- drivers/scsi/sd.h        | 66 +++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/sd_dif.c    | 23 ++++++---------
- include/scsi/scsi_cmnd.h | 36 +++++++++++++++++-------
- 4 files changed, 142 insertions(+), 56 deletions(-)
+ block/bio-integrity.c  | 3 +++
+ drivers/scsi/sd_dif.c  | 6 ++++--
+ include/linux/bio.h    | 1 +
+ include/linux/blkdev.h | 1 +
+ 4 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2c2041ca4b70..53d049cc1a1e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -610,29 +610,44 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
+diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+index 7cac9c34615c..b5327751fecc 100644
+--- a/block/bio-integrity.c
++++ b/block/bio-integrity.c
+@@ -297,6 +297,9 @@ int bio_integrity_prep(struct bio *bio)
+ 	bip->bip_iter.bi_size = len;
+ 	bip_set_seed(bip, bio->bi_iter.bi_sector);
  
--static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
--{
--	unsigned int prot_op = SCSI_PROT_NORMAL;
--	unsigned int dix = scsi_prot_sg_count(scmd);
--
--	if (scmd->sc_data_direction == DMA_FROM_DEVICE) {
--		if (dif && dix)
--			prot_op = SCSI_PROT_READ_PASS;
--		else if (dif && !dix)
--			prot_op = SCSI_PROT_READ_STRIP;
--		else if (!dif && dix)
--			prot_op = SCSI_PROT_READ_INSERT;
--	} else {
--		if (dif && dix)
--			prot_op = SCSI_PROT_WRITE_PASS;
--		else if (dif && !dix)
--			prot_op = SCSI_PROT_WRITE_INSERT;
--		else if (!dif && dix)
--			prot_op = SCSI_PROT_WRITE_STRIP;
++	if (bi->flags & BLK_INTEGRITY_IP_CHECKSUM)
++		bip->bip_flags |= BIP_IP_CHECKSUM;
 +
-+
-+static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
-+					   unsigned int dix, unsigned int dif)
-+{
-+	struct bio_integrity_payload *bip = bio_integrity(scmd->request->bio);
-+	unsigned int prot_op = sd_prot_op(rq_data_dir(scmd->request), dix, dif);
-+	unsigned int protect = 0;
-+
-+	if (dix) {				/* DIX Type 0, 1, 2, 3 */
-+		if (bip->bip_flags & BIP_IP_CHECKSUM)
-+			scmd->prot_flags |= SCSI_PROT_IP_CHECKSUM;
-+
-+		if ((bip->bip_flags & BIP_CTRL_NOCHECK) == 0)
-+			scmd->prot_flags |= SCSI_PROT_GUARD_CHECK;
-+	}
-+
-+	if (dif != SD_DIF_TYPE3_PROTECTION) {	/* DIX/DIF Type 0, 1, 2 */
-+		scmd->prot_flags |= SCSI_PROT_REF_INCREMENT;
-+
-+		if ((bip && bip->bip_flags & BIP_CTRL_NOCHECK) == 0)
-+			scmd->prot_flags |= SCSI_PROT_REF_CHECK;
-+	}
-+
-+	if (dif) {				/* DIX/DIF Type 1, 2, 3 */
-+		scmd->prot_flags |= SCSI_PROT_TRANSFER_PI;
-+
-+		if (bip && bip->bip_flags & BIP_DISK_NOCHECK)
-+			protect = 3 << 5;	/* Disable target PI checking */
-+		else
-+			protect = 1 << 5;	/* Enable target PI checking */
- 	}
- 
- 	scsi_set_prot_op(scmd, prot_op);
- 	scsi_set_prot_type(scmd, dif);
-+	scmd->prot_flags &= sd_prot_flag_mask(prot_op);
-+
-+	return protect;
- }
- 
- static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
-@@ -893,7 +908,8 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	sector_t block = blk_rq_pos(rq);
- 	sector_t threshold;
- 	unsigned int this_count = blk_rq_sectors(rq);
--	int ret, host_dif;
-+	unsigned int dif, dix;
-+	int ret;
- 	unsigned char protect;
- 
- 	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
-@@ -995,7 +1011,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 		SCpnt->cmnd[0] = WRITE_6;
- 
- 		if (blk_integrity_rq(rq))
--			sd_dif_prepare(rq, block, sdp->sector_size);
-+			sd_dif_prepare(SCpnt);
- 
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
-@@ -1010,14 +1026,15 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 					"writing" : "reading", this_count,
- 					blk_rq_sectors(rq)));
- 
--	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
--	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
--	if (host_dif)
--		protect = 1 << 5;
-+	dix = scsi_prot_sg_count(SCpnt);
-+	dif = scsi_host_dif_capable(SCpnt->device->host, sdkp->protection_type);
-+
-+	if (dif || dix)
-+		protect = sd_setup_protect_cmnd(SCpnt, dix, dif);
- 	else
- 		protect = 0;
- 
--	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
-+	if (protect && sdkp->protection_type == SD_DIF_TYPE2_PROTECTION) {
- 		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
- 
- 		if (unlikely(SCpnt->cmnd == NULL)) {
-@@ -1102,10 +1119,6 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	}
- 	SCpnt->sdb.length = this_count * sdp->sector_size;
- 
--	/* If DIF or DIX is enabled, tell HBA how to handle request */
--	if (host_dif || scsi_prot_sg_count(SCpnt))
--		sd_prot_op(SCpnt, host_dif);
--
- 	/*
- 	 * We shouldn't disconnect in the middle of a sector, so with a dumb
- 	 * host adapter, it's safe to assume that we can at least transfer
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 4c3ab8377fd3..467377884b63 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -167,6 +167,68 @@ enum sd_dif_target_protection_types {
- };
- 
- /*
-+ * Look up the DIX operation based on whether the command is read or
-+ * write and whether dix and dif are enabled.
-+ */
-+static inline unsigned int sd_prot_op(bool write, bool dix, bool dif)
-+{
-+	/* Lookup table: bit 2 (write), bit 1 (dix), bit 0 (dif) */
-+	const unsigned int ops[] = {	/* wrt dix dif */
-+		SCSI_PROT_NORMAL,	/*  0	0   0  */
-+		SCSI_PROT_READ_STRIP,	/*  0	0   1  */
-+		SCSI_PROT_READ_INSERT,	/*  0	1   0  */
-+		SCSI_PROT_READ_PASS,	/*  0	1   1  */
-+		SCSI_PROT_NORMAL,	/*  1	0   0  */
-+		SCSI_PROT_WRITE_INSERT, /*  1	0   1  */
-+		SCSI_PROT_WRITE_STRIP,	/*  1	1   0  */
-+		SCSI_PROT_WRITE_PASS,	/*  1	1   1  */
-+	};
-+
-+	return ops[write << 2 | dix << 1 | dif];
-+}
-+
-+/*
-+ * Returns a mask of the protection flags that are valid for a given DIX
-+ * operation.
-+ */
-+static inline unsigned int sd_prot_flag_mask(unsigned int prot_op)
-+{
-+	const unsigned int flag_mask[] = {
-+		[SCSI_PROT_NORMAL]		= 0,
-+
-+		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT,
-+
-+		[SCSI_PROT_READ_INSERT]		= SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_READ_PASS]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_WRITE_INSERT]	= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_REF_INCREMENT,
-+
-+		[SCSI_PROT_WRITE_STRIP]		= SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+
-+		[SCSI_PROT_WRITE_PASS]		= SCSI_PROT_TRANSFER_PI |
-+						  SCSI_PROT_GUARD_CHECK |
-+						  SCSI_PROT_REF_CHECK |
-+						  SCSI_PROT_REF_INCREMENT |
-+						  SCSI_PROT_IP_CHECKSUM,
-+	};
-+
-+	return flag_mask[prot_op];
-+}
-+
-+/*
-  * Data Integrity Field tuple.
-  */
- struct sd_dif_tuple {
-@@ -178,7 +240,7 @@ struct sd_dif_tuple {
- #ifdef CONFIG_BLK_DEV_INTEGRITY
- 
- extern void sd_dif_config_host(struct scsi_disk *);
--extern void sd_dif_prepare(struct request *rq, sector_t, unsigned int);
-+extern void sd_dif_prepare(struct scsi_cmnd *scmd);
- extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
- 
- #else /* CONFIG_BLK_DEV_INTEGRITY */
-@@ -186,7 +248,7 @@ extern void sd_dif_complete(struct scsi_cmnd *, unsigned int);
- static inline void sd_dif_config_host(struct scsi_disk *disk)
- {
- }
--static inline int sd_dif_prepare(struct request *rq, sector_t s, unsigned int a)
-+static inline int sd_dif_prepare(struct scsi_cmnd *scmd)
- {
- 	return 0;
- }
+ 	/* Map it */
+ 	offset = offset_in_page(buf);
+ 	for (i = 0 ; i < nr_pages ; i++) {
 diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index b7eaeadc18f9..14c7d42a11c2 100644
+index 4ce636fdc15f..2198abee619e 100644
 --- a/drivers/scsi/sd_dif.c
 +++ b/drivers/scsi/sd_dif.c
-@@ -106,8 +106,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
-  *
-  * Type 3 does not have a reference tag so no remapping is required.
-  */
--void sd_dif_prepare(struct request *rq, sector_t hw_sector,
--		    unsigned int sector_sz)
-+void sd_dif_prepare(struct scsi_cmnd *scmd)
- {
- 	const int tuple_sz = sizeof(struct t10_pi_tuple);
- 	struct bio *bio;
-@@ -115,14 +114,14 @@ void sd_dif_prepare(struct request *rq, sector_t hw_sector,
- 	struct t10_pi_tuple *pi;
- 	u32 phys, virt;
- 
--	sdkp = rq->bio->bi_bdev->bd_disk->private_data;
-+	sdkp = scsi_disk(scmd->request->rq_disk);
- 
- 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION)
+@@ -255,12 +255,14 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
  		return;
  
--	phys = hw_sector & 0xffffffff;
-+	phys = scsi_prot_ref_tag(scmd);
- 
--	__rq_for_each_bio(bio, rq) {
-+	__rq_for_each_bio(bio, scmd->request) {
- 		struct bio_integrity_payload *bip = bio_integrity(bio);
- 		struct bio_vec iv;
- 		struct bvec_iter iter;
-@@ -163,7 +162,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 	struct scsi_disk *sdkp;
- 	struct bio *bio;
- 	struct t10_pi_tuple *pi;
--	unsigned int j, sectors, sector_sz;
-+	unsigned int j, intervals;
- 	u32 phys, virt;
- 
- 	sdkp = scsi_disk(scmd->request->rq_disk);
-@@ -171,12 +170,8 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 	if (sdkp->protection_type == SD_DIF_TYPE3_PROTECTION || good_bytes == 0)
- 		return;
- 
--	sector_sz = scmd->device->sector_size;
--	sectors = good_bytes / sector_sz;
--
--	phys = blk_rq_pos(scmd->request) & 0xffffffff;
--	if (sector_sz == 4096)
--		phys >>= 3;
-+	intervals = good_bytes / scsi_prot_interval(scmd);
-+	phys = scsi_prot_ref_tag(scmd);
- 
- 	__rq_for_each_bio(bio, scmd->request) {
- 		struct bio_integrity_payload *bip = bio_integrity(bio);
-@@ -190,7 +185,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 
- 			for (j = 0; j < iv.bv_len; j += tuple_sz, pi++) {
- 
--				if (sectors == 0) {
-+				if (intervals == 0) {
- 					kunmap_atomic(pi);
- 					return;
- 				}
-@@ -200,7 +195,7 @@ void sd_dif_complete(struct scsi_cmnd *scmd, unsigned int good_bytes)
- 
- 				virt++;
- 				phys++;
--				sectors--;
-+				intervals--;
- 			}
- 
- 			kunmap_atomic(pi);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 73f349044941..522a5f27f553 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -10,9 +10,10 @@
- #include <scsi/scsi_device.h>
- 
- struct Scsi_Host;
--struct scsi_device;
- struct scsi_driver;
- 
-+#include <scsi/scsi_device.h>
+ 	/* Enable DMA of protection information */
+-	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP)
++	if (scsi_host_get_guard(sdkp->device->host) & SHOST_DIX_GUARD_IP) {
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
+ 			blk_integrity_register(disk, &dif_type3_integrity_ip);
+ 		else
+ 			blk_integrity_register(disk, &dif_type1_integrity_ip);
+-	else
 +
- /*
-  * MAX_COMMAND_SIZE is:
-  * The longest fixed-length SCSI CDB as per the SCSI standard.
-@@ -81,6 +82,7 @@ struct scsi_cmnd {
++		disk->integrity->flags |= BLK_INTEGRITY_IP_CHECKSUM;
++	} else
+ 		if (type == SD_DIF_TYPE3_PROTECTION)
+ 			blk_integrity_register(disk, &dif_type3_integrity_crc);
+ 		else
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index b508cf69206d..14bff3fe56d4 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -328,6 +328,7 @@ enum bip_flags {
+ 	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
+ 	BIP_CTRL_NOCHECK	= 1 << 2, /* disable HBA integrity checking */
+ 	BIP_DISK_NOCHECK	= 1 << 3, /* disable disk integrity checking */
++	BIP_IP_CHECKSUM		= 1 << 4, /* IP checksum */
+ };
  
- 	unsigned char prot_op;
- 	unsigned char prot_type;
-+	unsigned char prot_flags;
+ static inline sector_t bip_get_seed(struct bio_integrity_payload *bip)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index fc1ac3cab086..cbc3608d08c1 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1468,6 +1468,7 @@ enum blk_integrity_flags {
+ 	BLK_INTEGRITY_VERIFY		= 1 << 0,
+ 	BLK_INTEGRITY_GENERATE		= 1 << 1,
+ 	BLK_INTEGRITY_DEVICE_CAPABLE	= 1 << 2,
++	BLK_INTEGRITY_IP_CHECKSUM	= 1 << 3,
+ };
  
- 	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
-@@ -252,6 +254,14 @@ static inline unsigned char scsi_get_prot_op(struct scsi_cmnd *scmd)
- 	return scmd->prot_op;
- }
- 
-+enum scsi_prot_flags {
-+	SCSI_PROT_TRANSFER_PI		= 1 << 0,
-+	SCSI_PROT_GUARD_CHECK		= 1 << 1,
-+	SCSI_PROT_REF_CHECK		= 1 << 2,
-+	SCSI_PROT_REF_INCREMENT		= 1 << 3,
-+	SCSI_PROT_IP_CHECKSUM		= 1 << 4,
-+};
-+
- /*
-  * The controller usually does not know anything about the target it
-  * is communicating with.  However, when DIX is enabled the controller
-@@ -280,6 +290,17 @@ static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
- 	return blk_rq_pos(scmd->request);
- }
- 
-+static inline unsigned int scsi_prot_interval(struct scsi_cmnd *scmd)
-+{
-+	return scmd->device->sector_size;
-+}
-+
-+static inline u32 scsi_prot_ref_tag(struct scsi_cmnd *scmd)
-+{
-+	return blk_rq_pos(scmd->request) >>
-+		(ilog2(scsi_prot_interval(scmd)) - 9) & 0xffffffff;
-+}
-+
- static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
- {
- 	return cmd->prot_sdb ? cmd->prot_sdb->table.nents : 0;
-@@ -316,17 +337,12 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
- static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- {
- 	unsigned int xfer_len = scsi_out(scmd)->length;
--	unsigned int prot_op = scsi_get_prot_op(scmd);
--	unsigned int sector_size = scmd->device->sector_size;
-+	unsigned int prot_interval = scsi_prot_interval(scmd);
- 
--	switch (prot_op) {
--	case SCSI_PROT_NORMAL:
--	case SCSI_PROT_WRITE_STRIP:
--	case SCSI_PROT_READ_INSERT:
--		return xfer_len;
--	}
-+	if (scmd->prot_flags & SCSI_PROT_TRANSFER_PI)
-+		xfer_len += (xfer_len >> ilog2(prot_interval)) * 8;
- 
--	return xfer_len + (xfer_len >> ilog2(sector_size)) * 8;
-+	return xfer_len;
- }
- 
- #endif /* _SCSI_SCSI_CMND_H */
+ struct blk_integrity_iter {
 -- 
 1.9.3
 
