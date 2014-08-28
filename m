@@ -1,38 +1,65 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Debugging scsi abort handling ?
-Date: Thu, 28 Aug 2014 08:56:38 -0700
-Message-ID: <20140828155638.GA14133@infradead.org>
-References: <53FF1AD8.9020800@suse.de>
- <53FF1DE9.5040605@redhat.com>
- <53FF1FE8.9060108@redhat.com>
- <53FF2199.4030300@redhat.com>
- <53FF2283.9000502@redhat.com>
- <53FF39F7.3070004@suse.de>
- <53FF430F.5060103@redhat.com>
- <53FF4709.9040801@suse.de>
- <94D0CD8314A33A4D9D801C0FE68B402958C2A1D0@G9W0745.americas.hpqcorp.net>
- <53FF50CA.70209@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 01/22] Remove scsi_cmd_print_sense_hdr()
+Date: Thu, 28 Aug 2014 19:33:15 +0200
+Message-ID: <1409247216-76074-2-git-send-email-hare@suse.de>
+References: <1409247216-76074-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59870 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaH1P4n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 11:56:43 -0400
-Content-Disposition: inline
-In-Reply-To: <53FF50CA.70209@redhat.com>
+Received: from cantor2.suse.de ([195.135.220.15]:60157 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751149AbaH1Rdj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 13:33:39 -0400
+In-Reply-To: <1409247216-76074-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>, Hans de Goede <hdegoede@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
 
-On Thu, Aug 28, 2014 at 05:54:50PM +0200, Paolo Bonzini wrote:
-> Il 28/08/2014 17:50, Elliott, Robert (Server Storage) ha scritto:
-> > Is the block layer prevented from issuing a new command with the
-> > same tag before the error handling is finished?
-> 
-> Tags are chosen by the LLDs, so it's up to it to pick the right tags.
+Unused.
 
-When using scsi-mq or the older block level tagging implementation they
-aren't.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/constants.c | 14 --------------
+ include/scsi/scsi_dbg.h  |  2 --
+ 2 files changed, 16 deletions(-)
+
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index d35a5d6..2f44707 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
+ }
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
+ 
+-/*
+- * Print normalized SCSI sense header with device information and a prefix.
+- */
+-void
+-scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+-			  struct scsi_sense_hdr *sshdr)
+-{
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+-}
+-EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+-
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 		       struct scsi_sense_hdr *sshdr)
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index e89844c..5a43a4c 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_show_extd_sense(unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+-extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+-				     struct scsi_sense_hdr *);
+ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
+-- 
+1.8.5.2
 
