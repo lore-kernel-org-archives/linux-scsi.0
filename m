@@ -1,62 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: Debugging scsi abort handling ?
-Date: Thu, 28 Aug 2014 16:22:08 +0200
-Message-ID: <53FF3B10.1040401@suse.de>
-References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com>	 <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org>	 <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de> <1409229105.714.14.camel@br9vgx5g.de.ibm.com>
+Date: Thu, 28 Aug 2014 16:56:15 +0200
+Message-ID: <53FF430F.5060103@redhat.com>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de> <53FF1DE9.5040605@redhat.com> <53FF1FE8.9060108@redhat.com> <53FF2199.4030300@redhat.com> <53FF2283.9000502@redhat.com> <53FF39F7.3070004@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56762 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:27465 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750886AbaH1OWK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2014 10:22:10 -0400
-In-Reply-To: <1409229105.714.14.camel@br9vgx5g.de.ibm.com>
+	id S1752169AbaH1O4V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 10:56:21 -0400
+In-Reply-To: <53FF39F7.3070004@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mpeschke@linux.vnet.ibm.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Bart Van Assche <bvanassche@acm.org>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, Hans de Goede <hdegoede@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 08/28/2014 02:31 PM, Martin Peschke wrote:
-> On Thu, 2014-08-28 at 14:04 +0200, Hannes Reinecke wrote:
->> On 08/25/2014 01:15 PM, Paolo Bonzini wrote:
->>> - abort the command, and then the driver should never call the
->>> ->scsi_done callback for the Scsi_Cmnd*.
->>>
->> In practice we rely on the latter behaviour; when ->scsi_done is
->> called while the command is under eh_abort _really bad things_
->> will happen.
->> As soon as eh_abort is called control is transferred back to the
->> SCSI midlayer, so any LLDD should never send completions for these
->> commands back to the midlayer.
->
-> Mmh, then there is a small race window starting at the point in time
-> when the abort function of an LLDD is called up to the point in time
-> when that abort function has taken the necessary measures to make sur=
-e
-> that scsi_done won't be called for a racing command completion , isn'=
-t
-> it?
->
-No, that's fine. The timeout function is under control of the block=20
-layer, which sets an atomic flag on the request before calling the=20
-timeout function.
-And ->scsi_done() essentially just calls 'blk_complete_request();, whic=
-h=20
-checks the very same flag before raising the block soft irq.
+Il 28/08/2014 16:17, Hannes Reinecke ha scritto:
+>>
+> As mentioned earlier, as soon as SCSI EH is invoked control
+> is assumed to be transferred back to the SCSI midlayer.
+> How the midlayer interprets any return value from the various eh_XX
+> callbacks is immaterial to the LLDD.
+> 
+> So even if the eh_abort returns FAILED control is still with the SCSI
+> midlayer, so the earlier statements apply.
+> IE the command will be short-circuited by the block layer anyway if
+> ->scsi_done() is called.
 
-Cheers,
+As I parsed it, the question is not whether the short-circuiting will
+happen.  It's whether you will have use-after-free bugs or not if you
+call ->scsi_done() after eh_abort returns FAILED.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Paolo
