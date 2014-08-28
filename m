@@ -1,72 +1,64 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Debugging scsi abort handling ?
-Date: Thu, 28 Aug 2014 17:13:13 +0200
-Message-ID: <53FF4709.9040801@suse.de>
-References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de> <53FF1DE9.5040605@redhat.com> <53FF1FE8.9060108@redhat.com> <53FF2199.4030300@redhat.com> <53FF2283.9000502@redhat.com> <53FF39F7.3070004@suse.de> <53FF430F.5060103@redhat.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Debugging scsi abort handling ?
+Date: Thu, 28 Aug 2014 15:50:17 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C2A1D0@G9W0745.americas.hpqcorp.net>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com>
+ <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org>
+ <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de>
+ <53FF1DE9.5040605@redhat.com> <53FF1FE8.9060108@redhat.com>
+ <53FF2199.4030300@redhat.com> <53FF2283.9000502@redhat.com>
+ <53FF39F7.3070004@suse.de> <53FF430F.5060103@redhat.com>
+ <53FF4709.9040801@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58071 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751034AbaH1PNP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2014 11:13:15 -0400
-In-Reply-To: <53FF430F.5060103@redhat.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:24139 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaH1Pvb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 11:51:31 -0400
+In-Reply-To: <53FF4709.9040801@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Hans de Goede <hdegoede@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, Paolo Bonzini <pbonzini@redhat.com>, Hans de Goede <hdegoede@redhat.com>, Bart Van Assche <bvanassche@acm.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 08/28/2014 04:56 PM, Paolo Bonzini wrote:
-> Il 28/08/2014 16:17, Hannes Reinecke ha scritto:
->>>
->> As mentioned earlier, as soon as SCSI EH is invoked control
->> is assumed to be transferred back to the SCSI midlayer.
->> How the midlayer interprets any return value from the various eh_XX
->> callbacks is immaterial to the LLDD.
->>
->> So even if the eh_abort returns FAILED control is still with the SCS=
-I
->> midlayer, so the earlier statements apply.
->> IE the command will be short-circuited by the block layer anyway if
->> ->scsi_done() is called.
->
-> As I parsed it, the question is not whether the short-circuiting will
-> happen.  It's whether you will have use-after-free bugs or not if you
-> call ->scsi_done() after eh_abort returns FAILED.
->
-> Paolo
->
-No. Once eh_abort is called control is back with the SCSI midlayer.
-(Read: REQ_ATOM_COMPLETE is set in req->atomic_flags).
-So you can call ->scsi_done() at your hearts content and nothing will=20
-happen.
-What might happen, though, that the command is already dead and gone by=
-=20
-the time you're calling ->scsi_done() (if you call it after eh_abort).
-So there might not _be_ a command upon which you can call ->scsi_done()
-to start with.
-
-Hence any LLDD need to clear up any internal references after a call to=
-=20
-eh_XXX to ensure it doesn't call ->scsi_done() an in invalid command.
-
-So even if the LLDD returns 'FAILED' upon a call to eh_XXX it _still_=20
-needs to clear up the internal reference.
-Either that or return 'FAILED' for any later eh_XXX function until the=20
-internal references can be cleared up.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBIYW5uZXMgUmVpbmVja2UNCj4gU2VudDogVGh1cnNkYXksIDI4
+IEF1Z3VzdCwgMjAxNCAxMDoxMyBBTQ0KPiBUbzogUGFvbG8gQm9uemluaTsgSGFucyBkZSBHb2Vk
+ZTsgQmFydCBWYW4gQXNzY2hlOyBTQ1NJIGRldmVsb3BtZW50DQo+IGxpc3QNCj4gU3ViamVjdDog
+UmU6IERlYnVnZ2luZyBzY3NpIGFib3J0IGhhbmRsaW5nID8NCj4gDQo+IE9uIDA4LzI4LzIwMTQg
+MDQ6NTYgUE0sIFBhb2xvIEJvbnppbmkgd3JvdGU6DQo+ID4gSWwgMjgvMDgvMjAxNCAxNjoxNywg
+SGFubmVzIFJlaW5lY2tlIGhhIHNjcml0dG86DQo+ID4+Pg0KPiA+PiBBcyBtZW50aW9uZWQgZWFy
+bGllciwgYXMgc29vbiBhcyBTQ1NJIEVIIGlzIGludm9rZWQgY29udHJvbA0KPiA+PiBpcyBhc3N1
+bWVkIHRvIGJlIHRyYW5zZmVycmVkIGJhY2sgdG8gdGhlIFNDU0kgbWlkbGF5ZXIuDQo+ID4+IEhv
+dyB0aGUgbWlkbGF5ZXIgaW50ZXJwcmV0cyBhbnkgcmV0dXJuIHZhbHVlIGZyb20gdGhlIHZhcmlv
+dXMNCj4gZWhfWFgNCj4gPj4gY2FsbGJhY2tzIGlzIGltbWF0ZXJpYWwgdG8gdGhlIExMREQuDQo+
+ID4+DQo+ID4+IFNvIGV2ZW4gaWYgdGhlIGVoX2Fib3J0IHJldHVybnMgRkFJTEVEIGNvbnRyb2wg
+aXMgc3RpbGwgd2l0aCB0aGUNCj4gU0NTSQ0KPiA+PiBtaWRsYXllciwgc28gdGhlIGVhcmxpZXIg
+c3RhdGVtZW50cyBhcHBseS4NCj4gPj4gSUUgdGhlIGNvbW1hbmQgd2lsbCBiZSBzaG9ydC1jaXJj
+dWl0ZWQgYnkgdGhlIGJsb2NrIGxheWVyIGFueXdheQ0KPiBpZg0KPiA+PiAtPnNjc2lfZG9uZSgp
+IGlzIGNhbGxlZC4NCj4gPg0KPiA+IEFzIEkgcGFyc2VkIGl0LCB0aGUgcXVlc3Rpb24gaXMgbm90
+IHdoZXRoZXIgdGhlIHNob3J0LWNpcmN1aXRpbmcNCj4gd2lsbA0KPiA+IGhhcHBlbi4gIEl0J3Mg
+d2hldGhlciB5b3Ugd2lsbCBoYXZlIHVzZS1hZnRlci1mcmVlIGJ1Z3Mgb3Igbm90IGlmDQo+IHlv
+dQ0KPiA+IGNhbGwgLT5zY3NpX2RvbmUoKSBhZnRlciBlaF9hYm9ydCByZXR1cm5zIEZBSUxFRC4N
+Cj4gPg0KPiA+IFBhb2xvDQo+ID4NCj4gTm8uIE9uY2UgZWhfYWJvcnQgaXMgY2FsbGVkIGNvbnRy
+b2wgaXMgYmFjayB3aXRoIHRoZSBTQ1NJIG1pZGxheWVyLg0KPiAoUmVhZDogUkVRX0FUT01fQ09N
+UExFVEUgaXMgc2V0IGluIHJlcS0+YXRvbWljX2ZsYWdzKS4NCj4gU28geW91IGNhbiBjYWxsIC0+
+c2NzaV9kb25lKCkgYXQgeW91ciBoZWFydHMgY29udGVudCBhbmQgbm90aGluZyB3aWxsDQo+IGhh
+cHBlbi4NCj4gV2hhdCBtaWdodCBoYXBwZW4sIHRob3VnaCwgdGhhdCB0aGUgY29tbWFuZCBpcyBh
+bHJlYWR5IGRlYWQgYW5kIGdvbmUNCj4gYnkNCj4gdGhlIHRpbWUgeW91J3JlIGNhbGxpbmcgLT5z
+Y3NpX2RvbmUoKSAoaWYgeW91IGNhbGwgaXQgYWZ0ZXINCj4gZWhfYWJvcnQpLg0KPiBTbyB0aGVy
+ZSBtaWdodCBub3QgX2JlXyBhIGNvbW1hbmQgdXBvbiB3aGljaCB5b3UgY2FuIGNhbGwgLQ0KPiA+
+c2NzaV9kb25lKCkNCj4gdG8gc3RhcnQgd2l0aC4NCj4gDQo+IEhlbmNlIGFueSBMTEREIG5lZWQg
+dG8gY2xlYXIgdXAgYW55IGludGVybmFsIHJlZmVyZW5jZXMgYWZ0ZXIgYSBjYWxsDQo+IHRvDQo+
+IGVoX1hYWCB0byBlbnN1cmUgaXQgZG9lc24ndCBjYWxsIC0+c2NzaV9kb25lKCkgYW4gaW4gaW52
+YWxpZCBjb21tYW5kLg0KPiANCj4gU28gZXZlbiBpZiB0aGUgTExERCByZXR1cm5zICdGQUlMRUQn
+IHVwb24gYSBjYWxsIHRvIGVoX1hYWCBpdCBfc3RpbGxfDQo+IG5lZWRzIHRvIGNsZWFyIHVwIHRo
+ZSBpbnRlcm5hbCByZWZlcmVuY2UuDQo+IEVpdGhlciB0aGF0IG9yIHJldHVybiAnRkFJTEVEJyBm
+b3IgYW55IGxhdGVyIGVoX1hYWCBmdW5jdGlvbiB1bnRpbA0KPiB0aGUNCj4gaW50ZXJuYWwgcmVm
+ZXJlbmNlcyBjYW4gYmUgY2xlYXJlZCB1cC4NCj4gDQoNCklzIHRoZSBibG9jayBsYXllciBwcmV2
+ZW50ZWQgZnJvbSBpc3N1aW5nIGEgbmV3IGNvbW1hbmQgd2l0aCB0aGUNCnNhbWUgdGFnIGJlZm9y
+ZSB0aGUgZXJyb3IgaGFuZGxpbmcgaXMgZmluaXNoZWQ/DQoNCi0tLQ0KUm9iIEVsbGlvdHQgICAg
+SFAgU2VydmVyIFN0b3JhZ2UNCg0KDQoNCg==
