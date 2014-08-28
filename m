@@ -1,64 +1,162 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/22] scsi_error: format abort error message
-Date: Thu, 28 Aug 2014 19:33:32 +0200
-Message-ID: <1409247216-76074-19-git-send-email-hare@suse.de>
+Subject: [PATCH 12/22] scsi: remove obsolete __scsi_print_command() usages
+Date: Thu, 28 Aug 2014 19:33:26 +0200
+Message-ID: <1409247216-76074-13-git-send-email-hare@suse.de>
 References: <1409247216-76074-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60214 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60192 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121AbaH1Rdn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2014 13:33:43 -0400
+	id S1751932AbaH1Rdl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 13:33:41 -0400
 In-Reply-To: <1409247216-76074-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>, Hannes Reinecke <hare@suse.de>
 
-Suggested-by: Robert Elliot <elliot@hp.com>
+Some drivers still use the __scsi_print_command() function although
+they infact refer to the scsi command. So move them over to use
+scsi_print_command() instead.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 16 ++++++++++++----
- include/scsi/scsi_dbg.h   |  1 +
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/aha152x.c       | 18 ++++++++----------
+ drivers/scsi/arm/acornscsi.c |  9 +++++----
+ drivers/scsi/arm/fas216.c    | 30 +++++++++++++-----------------
+ 3 files changed, 26 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 6c99624..07887b1 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -155,10 +155,18 @@ scmd_eh_abort_handler(struct work_struct *work)
- 				return;
- 			}
- 		} else {
--			SCSI_LOG_ERROR_RECOVERY(3,
--				scmd_printk(KERN_INFO, scmd,
--					    "scmd %p abort failed, rtn %d\n",
--					    scmd, rtn));
-+			const char *rtn_str = scsi_disposition_string(rtn);
-+			if (rtn_str) {
-+				SCSI_LOG_ERROR_RECOVERY(3,
-+					scmd_printk(KERN_INFO, scmd,
-+						    "scmd %p abort failed,"
-+						    " %s\n", scmd, rtn_str));
-+			} else {
-+				SCSI_LOG_ERROR_RECOVERY(3,
-+					scmd_printk(KERN_INFO, scmd,
-+						    "scmd %p abort failed,"
-+						    " 0x%x\n", scmd, rtn));
-+			}
- 		}
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 4287f86..68af777 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -988,10 +988,11 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+ 
+ #if defined(AHA152X_DEBUG)
+ 	if (HOSTDATA(shpnt)->debug & debug_queue) {
+-		printk(INFO_LEAD "queue: %p; cmd_len=%d pieces=%d size=%u cmnd=",
+-		       CMDINFO(SCpnt), SCpnt, SCpnt->cmd_len,
+-		       scsi_sg_count(SCpnt), scsi_bufflen(SCpnt));
+-		__scsi_print_command(SCpnt->cmnd);
++		scmd_printk(KERN_INFO, SCpnt,
++			    "queue: %p; cmd_len=%d pieces=%d size=%u\n",
++			    SCpnt, SCpnt->cmd_len,
++			    scsi_sg_count(SCpnt), scsi_bufflen(SCpnt));
++		scsi_print_command(SCpnt);
+ 	}
+ #endif
+ 
+@@ -2077,8 +2078,7 @@ static void cmd_init(struct Scsi_Host *shpnt)
+ 
+ #if defined(AHA152X_DEBUG)
+ 	if (HOSTDATA(shpnt)->debug & debug_cmd) {
+-		printk(DEBUG_LEAD "cmd_init: ", CMDINFO(CURRENT_SC));
+-		__scsi_print_command(CURRENT_SC->cmnd);
++		scsi_print_command(CURRENT_SC);
+ 	}
+ #endif
+ 
+@@ -2906,11 +2906,9 @@ static void disp_enintr(struct Scsi_Host *shpnt)
+  */
+ static void show_command(Scsi_Cmnd *ptr)
+ {
+-	scmd_printk(KERN_DEBUG, ptr, "%p: cmnd=(", ptr);
++	scsi_print_command(ptr);
+ 
+-	__scsi_print_command(ptr->cmnd);
+-
+-	printk(KERN_DEBUG "); request_bufflen=%d; resid=%d; phase |",
++	scmd_printk(KERN_DEBUG, ptr, "request_bufflen=%d; resid=%d; phase |",
+ 	       scsi_bufflen(ptr), scsi_get_resid(ptr));
+ 
+ 	if (ptr->SCp.phase & not_issued)
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index d89b9b4..78dd881 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -850,11 +850,12 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
+ 			break;
+ 
+ 		    default:
+-			printk(KERN_ERR "scsi%d.H: incomplete data transfer detected: result=%08X command=",
+-				host->host->host_no, SCpnt->result);
+-			__scsi_print_command(SCpnt->cmnd);
++			scmd_printk(KERN_ERR, SCPnt,
++				    "incomplete data transfer detected:"
++				    " result=%08X\n", SCpnt->result);
++			scsi_print_command(SCpnt);
+ 			acornscsi_dumpdma(host, "done");
+-		 	acornscsi_dumplog(host, SCpnt->device->id);
++			acornscsi_dumplog(host, SCpnt->device->id);
+ 			SCpnt->result &= 0xffff;
+ 			SCpnt->result |= DID_ERROR << 16;
+ 		    }
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 71cfb1e..778fd36 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -308,8 +308,7 @@ static void fas216_log_command(FAS216_Info *info, int level,
+ 	fas216_do_log(info, '0' + SCpnt->device->id, fmt, args);
+ 	va_end(args);
+ 
+-	printk(" CDB: ");
+-	__scsi_print_command(SCpnt->cmnd);
++	scsi_print_command(SCpnt);
+ }
+ 
+ static void
+@@ -2079,12 +2078,12 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
+ 			break;
+ 
+ 		default:
+-			printk(KERN_ERR "scsi%d.%c: incomplete data transfer "
+-				"detected: res=%08X ptr=%p len=%X CDB: ",
+-				info->host->host_no, '0' + SCpnt->device->id,
+-				SCpnt->result, info->scsi.SCp.ptr,
+-				info->scsi.SCp.this_residual);
+-			__scsi_print_command(SCpnt->cmnd);
++			scmd_printk(KERN_ERR, SCpnt,
++				    "incomplete data transfer "
++				    "detected: res=%08X ptr=%p len=%X\n",
++				    SCpnt->result, info->scsi.SCp.ptr,
++				    info->scsi.SCp.this_residual);
++			scsi_print_command(SCpnt->cmnd);
+ 			SCpnt->result &= ~(255 << 16);
+ 			SCpnt->result |= DID_BAD_TARGET << 16;
+ 			goto request_sense;
+@@ -2158,12 +2157,11 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
+ 	 * to transfer, we should not have a valid pointer.
+ 	 */
+ 	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
+-		printk("scsi%d.%c: zero bytes left to transfer, but "
+-		       "buffer pointer still valid: ptr=%p len=%08x CDB: ",
+-		       info->host->host_no, '0' + SCpnt->device->id,
+-		       info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
++		scmd_printk(KERN_INFO, SCpnt, "zero bytes left to transfer, "
++			    "but buffer pointer still valid: ptr=%p len=%08x\n",
++			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+ 		info->scsi.SCp.ptr = NULL;
+-		__scsi_print_command(SCpnt->cmnd);
++		scsi_print_command(SCpnt);
  	}
  
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index fa04587..d60e7d8 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -25,5 +25,6 @@ extern const char *scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
-+extern const char *scsi_disposition_string(unsigned int);
+ 	/*
+@@ -2427,14 +2425,12 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
  
- #endif /* _SCSI_SCSI_DBG_H */
+ 	info->stats.aborts += 1;
+ 
+-	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
+-	__scsi_print_command(SCpnt->cmnd);
++	scmd_printk(KERN_WARNING, SCpnt, "abort command %p\n", SCpnt);
++	scsi_print_command(SCpnt);
+ 
+ 	print_debug_list();
+ 	fas216_dumpstate(info);
+ 
+-	printk(KERN_WARNING "scsi%d: abort %p ", info->host->host_no, SCpnt);
+-
+ 	switch (fas216_find_command(info, SCpnt)) {
+ 	/*
+ 	 * We found the command, and cleared it out.  Either
 -- 
 1.8.5.2
 
