@@ -1,95 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC PATCH 10/10] scsi/trace: Use scsi_print_command trace point
- instead of printk
-Date: Thu, 28 Aug 2014 14:15:00 +0200
-Message-ID: <53FF1D44.3080702@suse.de>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115030.6768.91195.stgit@yuno-kbuild.novalocal> <53FDE859.1020800@suse.de> <53FE8890.80403@hitachi.com> <53FEC9E7.6000909@hitachi.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: Debugging scsi abort handling ?
+Date: Thu, 28 Aug 2014 14:17:45 +0200
+Message-ID: <53FF1DE9.5040605@redhat.com>
+References: <53F8AAA8.8040407@redhat.com> <53FAE3CA.6060603@redhat.com> <53FAF80D.2070209@redhat.com> <53FB0FE3.80603@acm.org> <53FB1ACD.1040208@redhat.com> <53FF1AD8.9020800@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54085 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:1318 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750748AbaH1MPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2014 08:15:06 -0400
-In-Reply-To: <53FEC9E7.6000909@hitachi.com>
+	id S1751081AbaH1MR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 08:17:57 -0400
+In-Reply-To: <53FF1AD8.9020800@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+To: Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 08/28/2014 08:19 AM, Yoshihiro YUNOMAE wrote:
-> Hi Hannes,
->
-> I tried to remove duplicated decoder of SCSI command, but the
-> output format of it in constants.c is different from it in traceevent=
-s.
-> I have two questions for it.
->
-> (Ex1)
-> traceevents: TEST_UNIT_READY
-> constants: Test Unit Ready
->
-> =3D> Which of "XXX_YYY_ZZZ" and "Xxx Yyy Zzz" should the kernel outpu=
-t
-> strings? This difference comes from difference of implementation.
-> The decoder in traceevents are using macro. So, it cannot define
-> separated words. On the other hand, the decoder in constants are usin=
-g
-> constant string array table. So, it can define separated words.
->
-I would go with the wording in constants.c, but set in double quotes=20
-like "Test Unit Ready" to avoid parsing errors later on.
+Il 28/08/2014 14:04, Hannes Reinecke ha scritto:
+>>
+>> Setting TASK ABORTED aside, the important part is that an abort can do
+>> one of two things:
+>>
+>> - complete the command, and then eh_abort should return after the driver
+>> has noticed the completion and called the ->scsi_done callback for the
+>> Scsi_Cmnd*.
+>>
+>> - abort the command, and then the driver should never call the
+>> ->scsi_done callback for the Scsi_Cmnd*.
+>>
+> In practice we rely on the latter behaviour; when ->scsi_done is called
+> while the command is under eh_abort _really bad things_
+> will happen.
+> As soon as eh_abort is called control is transferred back to the
+> SCSI midlayer, so any LLDD should never send completions for these
+> commands back to the midlayer.
 
-> (Ex2)
-> traceevents: (nothing)
-> constants: Set limits(12)
->
-> =3D> Should we merge those decoder?
->
-Yes, I would prefer this. Again, we should be setting the strings in=20
-double quotes irrespective if there are spaces in the resulting=20
-string or not.
+No, this is wrong.  I think we have sorted it out a couple of months
+ago.  virtio-scsi for example (due to QEMU quirks) will do the former
+more often than not.
 
-> I understand we use the decoder of constants, but we need to solve
-> these problems. Would you give me your comments?
->
-As mentioned previously, my aim is to convert the logging system in=20
-several steps:
+Ignoring scsi_eh_done which is just as harmless, ->scsi_done does
+nothing more than calling blk_complete_request.  If the command is under
+abort, it has already been marked as complete by the block layer's
+timeout timer---see blk_rq_timed_out_timer and blk_rq_check_expired---or
+by blk_abort_request.
 
-a) convert all lone 'printk' statements into dev_printk() variants
-    and ensure everything is printed in one statement to avoid
-    linebreaks in the resulting logging message.
-    This will eliminate the immediate problem we're having, namely
-    that debugging is near to impossible under high load.
-    The patchset is nearing completion, and I will be posting it
-    later this week.
-b) Convert scsi_trace to use the functions from constants.c to
-    avoid code duplication and update scsi_trace to log sense codes.
-c) Remove all logging functions in the hot path (ie
-    SCSI_LOG_MLQUEUE and SCSI_LOG_MLCOMPLETE) and replace them
-    with trace events.
+Then, blk_complete_request will do nothing because its call to
+blk_mark_rq_complete returns true.
 
-b) is what you're working on, right?
-=46or 'c)' the problem is that we should retain the existing=20
-functionality with scsi_logging_level here, at least initially.
-So we cannot just replace it, as this would leave SCSI_LOG_ML
-a dummy without any real functionality.
+All this, of course, as long as ->scsi_done is called _before_ eh_abort
+returns.  Otherwise, occasions abound for uses-after-free, which is what
+virtio-scsi got until commit 8faeb529b2da (virtio-scsi: fix various bad
+behavior on aborted requests, 2014-06-04).
 
-I'll be posting my current patchset for review shortly.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Paolo
