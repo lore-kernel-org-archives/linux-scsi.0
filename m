@@ -1,64 +1,70 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
- may have been removed.
-Date: Fri, 29 Aug 2014 10:13:44 +0200
-Message-ID: <54003638.5010301@suse.de>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-2-git-send-email-kys@microsoft.com>
- <20140819175431.GA4617@infradead.org> <53FDEBB9.5070704@suse.de>
- <53FFE87B.9040802@cs.wisc.edu> <54001B5F.9040506@suse.de>
- <54002E2E.7030301@acm.org>
+Subject: Re: [PATCH 00/22] scsi logging update
+Date: Fri, 29 Aug 2014 11:48:13 +0200
+Message-ID: <54004C5D.80707@suse.de>
+References: <1409247216-76074-1-git-send-email-hare@suse.de> <53FF81F8.2000807@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <54002E2E.7030301@acm.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Bart Van Assche <bvanassche@acm.org>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@infradead.org>, "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41028 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751026AbaH2JsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Aug 2014 05:48:15 -0400
+In-Reply-To: <53FF81F8.2000807@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com, James Bottomley <jbottomley@parallels.com>
+Cc: Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
-On 08/29/2014 09:39 AM, Bart Van Assche wrote:
-> On 08/29/14 08:19, Hannes Reinecke wrote:
->> On 08/29/2014 04:42 AM, Mike Christie wrote:
->>> How are distros handling 0x6/0x3f/0x0e (report luns changed) when it
->>> gets passed to userspace? Is everyone kicking off a new full (add and
->>> delete) scan to handle this or logging it? Is the driver returning this
->>> when the LUNs change?
->>>
->> Currently it's logged to userspace and ignored.
->> Doing an automated rescan has proven to be dangerous, as it
->> might disconnect any LUNs which are still in use by applications.
->> Especially HA or database setups tends to become very annoyed
->> when you do an automated rescan.
+On 08/28/2014 09:24 PM, Douglas Gilbert wrote:
+> On 14-08-28 01:33 PM, Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> here's my next round of scsi logging updates.
+>> Main feature is the update to have all logging
+>> statements in one line so that they won't be broken
+>> up even under high load.
+>> This will dramatically improve debugging.
+>>
+>> Additionally all printk() statements are moved
+>> to dev_printk() variants to ensure proper device
+>> tagging and keep the systemd journal happy.
 >
-> Has it already been considered to add newly discovered LUNs
-> automatically and to leave it to the user to remove stale LUNs manually
-> ? That would be similar to what the rescan-scsi-bus.sh script does
-> without option -r/--remove.
+> s/all/most/ ??
 >
+My, you are picky.
 
-As of now we're still missing an in-kernel infrastructure which =
+> Surely there are situations where a "dev" cannot be
+> associated with a printk(). For example in transport
+> discovery before any devices are found (or after,
+> if none are found). LLDs often helpfully log their HBA's
+> firmware details prior to discovery (and may fail
+> before discovery).
+>
+Indeed there are some printks left, eg during
+SCSI initialization where we don't have any device.
+And I didn't modify the LLDDs, which have their
+own logging.
+(But most don't use dev_printk(), neither).
 
-would allow us to react on any sense codes; currently we're relying =
-
-on the administrator to setup a udev rule here.
+> And it is possible to write via sysfs to a driver
+> that has no devices attached. How does one log that?
+>
+Well, I haven't come across any logging messages here,
+so the question has never arisen.
 
 Cheers,
 
 Hannes
--- =
-
+--=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
