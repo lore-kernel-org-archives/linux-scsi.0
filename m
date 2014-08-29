@@ -1,36 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
- may have been removed.
-Date: Thu, 28 Aug 2014 18:11:29 -0700
-Message-ID: <20140829011129.GA22458@infradead.org>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-2-git-send-email-kys@microsoft.com>
- <20140819175431.GA4617@infradead.org>
- <c5da85b38a2a4b26b9a7a7fadc40bcc2@BY2PR0301MB0711.namprd03.prod.outlook.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 83391] Oops  on sd_mod
+Date: Fri, 29 Aug 2014 01:18:47 +0000
+Message-ID: <bug-83391-11613-8TcswbblVw@https.bugzilla.kernel.org/>
+References: <bug-83391-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <c5da85b38a2a4b26b9a7a7fadc40bcc2@BY2PR0301MB0711.namprd03.prod.outlook.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:38608 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbaH2BSv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2014 21:18:51 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id EE7D82011D
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 01:18:49 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id E7BA820123
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 01:18:47 +0000 (UTC)
+In-Reply-To: <bug-83391-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Aug 26, 2014 at 10:54:51PM +0000, KY Srinivasan wrote:
-> > This looks pretty reasonable to me, but I wonder if we should move this up
-> > to common code so that it happens for any host rescan triggered by sysfs or
-> > other drivers as well.
-> Ping. Any decision on if/when this patch may be checked in.
+https://bugzilla.kernel.org/show_bug.cgi?id=83391
 
-I'll need a review or two for it still..
+--- Comment #4 from tomsun <tomsunchen@gmail.com> ---
+sorry, thank you very much!
+
+
+(In reply to Jeff Moyer from comment #3)
+> This is a vendor kernel.  You should file a bug report with Red Hat here:
+>  
+> https://bugzilla.redhat.com/enter_bug.
+> cgi?product=Red%20Hat%20Enterprise%20Linux%206
+> 
+> First, though, you should update to a newer kernel... that one is several
+> years old.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
