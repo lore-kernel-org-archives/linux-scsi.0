@@ -1,21 +1,19 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: Ewan Milne <emilne@redhat.com>
 Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs
  that may have been removed.
-Date: Fri, 29 Aug 2014 13:53:42 +0000
-Message-ID: <1409320422.2036.5.camel@jarvis.lan>
+Date: Fri, 29 Aug 2014 11:01:37 -0400
+Message-ID: <1409324497.1223.383.camel@localhost.localdomain>
 References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
  <1408244988-27456-1-git-send-email-kys@microsoft.com>
  <1408244988-27456-2-git-send-email-kys@microsoft.com>
  <20140819175431.GA4617@infradead.org> <53FDEBB9.5070704@suse.de>
- <53FFE87B.9040802@cs.wisc.edu> <54001B5F.9040506@suse.de>
- <54002E2E.7030301@acm.org> <54003638.5010301@suse.de>
+ <53FFE87B.9040802@cs.wisc.edu>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <54003638.5010301@suse.de>
-Content-Language: en-US
-Content-ID: <39D09D14E9FB88409B62F001C01BFF34@sw.swsoft.com>
+In-Reply-To: <53FFE87B.9040802@cs.wisc.edu>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
@@ -25,45 +23,64 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-08-29 at 10:13 +0200, Hannes Reinecke wrote:
-> On 08/29/2014 09:39 AM, Bart Van Assche wrote:
-> > On 08/29/14 08:19, Hannes Reinecke wrote:
-> >> On 08/29/2014 04:42 AM, Mike Christie wrote:
-> >>> How are distros handling 0x6/0x3f/0x0e (report luns changed) when it
-> >>> gets passed to userspace? Is everyone kicking off a new full (add and
-> >>> delete) scan to handle this or logging it? Is the driver returning this
-> >>> when the LUNs change?
+On Thu, 2014-08-28 at 21:42 -0500, Mike Christie wrote:
+> On 08/27/2014 09:31 AM, Hannes Reinecke wrote:
+> > On 08/19/2014 07:54 PM, Christoph Hellwig wrote:
+> >> On Sat, Aug 16, 2014 at 08:09:48PM -0700, K. Y. Srinivasan wrote:
+> >>> The host asks the guest to scan when a LUN is removed or added.
+> >>> The only way a guest can identify the removed LUN is when an I/O is
+> >>> attempted on a removed LUN - the SRB status code indicates that the LUN
+> >>> is invalid. We currently handle this SRB status and remove the device.
 > >>>
-> >> Currently it's logged to userspace and ignored.
-> >> Doing an automated rescan has proven to be dangerous, as it
-> >> might disconnect any LUNs which are still in use by applications.
-> >> Especially HA or database setups tends to become very annoyed
-> >> when you do an automated rescan.
-> >
-> > Has it already been considered to add newly discovered LUNs
-> > automatically and to leave it to the user to remove stale LUNs manually
-> > ? That would be similar to what the rescan-scsi-bus.sh script does
-> > without option -r/--remove.
-> >
+> >>> Rather than waiting for an I/O to remove the device, force the
+> >>> discovery of
+> >>> LUNs that may have been removed prior to discovering LUNs that may have
+> >>> been added.
+> >>
+> >> This looks pretty reasonable to me, but I wonder if we should move this
+> >> up to common code so that it happens for any host rescan triggered by
+> >> sysfs or other drivers as well.
+> >>
+> > Not without proper testing.
+> > Currently we cannot rescan existing devices; the inquiry string is
+> > nailed to the sdev structure. The only way to really refresh the
+> > information is to delete it and rescan it again.
 > 
-> As of now we're still missing an in-kernel infrastructure which 
-> would allow us to react on any sense codes; currently we're relying 
-> on the administrator to setup a udev rule here.
+> How are distros handling 0x6/0x3f/0x0e (report luns changed) when it
+> gets passed to userspace? Is everyone kicking off a new full (add and
+> delete) scan to handle this or logging it? Is the driver returning this
+> when the LUNs change?
 
-Um, I thought this was supposed to solve that problem:
+Currently the udev rules we have to handle these events are installed
+with a separate package, and only the REPORTED LUNS DATA HAS CHANGED
+does anything, the others are commented out.  It turns out that e.g.
+multipath stops using a path if it notices that the capacity has changed
+and we need to do some more work there, it is under discussion.
 
-commit 279afdfe78a020b4b1a68bffd0009b961b12982e
-Author: Ewan D. Milne <emilne@redhat.com>
-Date:   Thu Aug 8 15:07:48 2013 -0400
+We do not delete LUNs that disappear from the REPORT LUNS inventory,
+although someone could write their own udev rule to do that if desired.
 
-    [SCSI] Generate uevents on certain unit attention codes
+Beware the case where a LUN is remapped to a different LUN number, or
+if LUN's WWID is used for a device with different data (e.g. a LUN
+deleted and re-added and the WWID is the same although I don't know
+if this actually happens).
 
-The idea was supposed to be that, as you say, log scrubbers are hard to
-configure and break every time someone fixes a spelling error, so we
-could now listen for a report luns data change uevent instead.
+Consider that the UA just provides notification to userspace of a
+change -- lack of notification does not prevent someone from deciding
+to rescan for new LUNs via sysfs any time they feel like it.  So
+you can't just change the storage configuration and hope that no-one
+notices until you are done making changes.
 
-James
+-Ewan
+
+> 
+> Also is the driver getting a 0x5/0x25/0 (invalid LUN) when the LUN does
+> not exist, or is it just getting that SRB_STATUS_INVALID_LUN error code?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
