@@ -1,33 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Block/SCSI data integrity update v3
-Date: Thu, 28 Aug 2014 17:43:23 -0700
-Message-ID: <20140829004323.GA17327@infradead.org>
-References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
- <53FF8CC9.9030206@fb.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC PATCH 07/10] scsi/trace: Use scsi_show_result trace point
+	instead of printk
+Date: Fri, 29 Aug 2014 02:50:39 +0200
+Message-ID: <20140829005039.GA2876@lst.de>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115022.6768.33712.stgit@yuno-kbuild.novalocal> <53FDE743.2040705@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56068 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbaH2An0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Aug 2014 20:43:26 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <53FF8CC9.9030206@fb.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <53FDE743.2040705@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, hch@lst.de, sagig@mellanox.com
 
-On Thu, Aug 28, 2014 at 02:10:49PM -0600, Jens Axboe wrote:
-> On 08/28/2014 01:31 PM, Martin K. Petersen wrote:
-> > This is the data integrity patch series originally submitted for 3.16
-> > and 3.17.  It has been rebased on top of block/for-3.18/core.  Other
-> > than that there are no changes from v2.
-> 
-> Thanks, picked up. I did not apply 14/14 since that should go through
-> the SCSI tree. I can carry it if need be, but it'd be nice to have a
-> SCSI signoff on it then.
+> I'm not sure this is the correct way.
+> Currently we have quite some code duplication in scsi_trace.c and 
+> constants.c, correct.
+> So I definitely would like to see them both merged.
+>
+> But constants.c is influenced by CONFIG_SCSI_CONSTANTS, whereas
+> scsi_trace isn't, and the functions in constants.c are used throughout the 
+> scsi stack.
+> So I'd rather see to have scsi_trace to be updated to use the functions 
+> from constants.c, and remove the duplicate code in
+> scsi_trace.
 
-I'd rather avoid introducing a dependency of the SCSI tree on the block
-one, so I'd prefer if you merge the last one as well.  I'll try to find
-some time to review it ASAP.
+The tracepoints need to use the magic print_flags & co helpers so that
+output works properly if using the binary tracebuffer and user space tools that
+decoded it (e.g. trace-cmd or perf), so using a kernel function for decoding is
+not an option.
+
+But we can make these tracepoints dependent on CONFIG_SCSI_CONSTANTS to
+still allow building lighter kernels if we really care about it.
