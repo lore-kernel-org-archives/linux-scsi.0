@@ -1,67 +1,83 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/5] kexec: Export kexec_in_progress
-Date: Fri, 29 Aug 2014 10:38:50 -0500
-Message-ID: <54009E8A.4070809@linux.vnet.ibm.com>
-References: <53D6B270.5020403@linux.vnet.ibm.com> <53DF96E5.7000601@linux.vnet.ibm.com>
+From: Matthieu CASTET <matthieu.castet-ITF29qwbsa/QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Buffer I/O error after s2ram with usb storage
+Date: Fri, 29 Aug 2014 18:12:01 +0200
+Message-ID: <20140829181201.277e699d@parrot.com>
+References: <20140827104059.3a4bed94@parrot.com>
+	<Pine.LNX.4.44L0.1408271051160.1460-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:46215 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752650AbaH2Piz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2014 11:38:55 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 29 Aug 2014 11:38:54 -0400
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 1F75BC90042
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 11:38:44 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7TFcqH23080492
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 15:38:52 GMT
-Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7TFcptp019847
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 11:38:52 -0400
-In-Reply-To: <53DF96E5.7000601@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1408271051160.1460-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, TARUISI Hiroaki <taruishi.hiroak-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: ebiederm@xmission.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-On 08/04/2014 09:21 AM, Brian King wrote:
-> On 07/28/2014 03:28 PM, Brian King wrote:
->>
->> Export kexec_in_progress for use by device drivers and other modules
->> to optimize kexec boot.
->>
->> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
->> ---
->>
->>  kernel/kexec.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff -puN kernel/kexec.c~kexec_export_in_prog kernel/kexec.c
->> --- linux/kernel/kexec.c~kexec_export_in_prog	2014-07-23 17:05:24.851887935 -0500
->> +++ linux-bjking1/kernel/kexec.c	2014-07-23 17:05:24.856887970 -0500
->> @@ -1716,3 +1716,5 @@ int kernel_kexec(void)
->>  	mutex_unlock(&kexec_mutex);
->>  	return error;
->>  }
->> +
->> +EXPORT_SYMBOL_GPL(kexec_in_progress);
-> 
-> Eric,
-> 
-> Can I get an ack on this so we can take this entire series through the SCSI tree?
+Le Wed, 27 Aug 2014 10:54:53 -0400,
+Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> a =E9crit :
 
-Eric,
+> On Wed, 27 Aug 2014, Matthieu CASTET wrote:
+>=20
+> > Ping
+> >=20
+> > I have got also a problem with a usb sdcard reader (without power c=
+ut
+> > during suspend)
+>=20
+> > > > The usb storage driver call scsi_report_bus_reset after device =
+reset,
+> > > > but because of commit dfcf7775 <4>, we don't ignore unit attent=
+ion if
+> > > > "sshdr.asc =3D=3D 0x28 && sshdr.ascq =3D=3D 0x00" ("Not-ready t=
+o ready").
+> > > >=20
+> > > > If dfcf7775 is reverted there is no more Buffer I/O error.
+> > > >=20
+> > > > Is that possible to find a way to restore the behavior before d=
+fcf7775
+> > > > commit (no Buffer I/O error after device reset) after a suspend=
+ to ram ?
+>=20
+> Since that commit was written to fix a problem with certain cdrom
+> drives, maybe we would work around the issue by modifying the commit.=
+ =20
+> Have it go back to the original behavior if the device isn't a cdrom=20
+> drive.
+>=20
+> That's not a complete fix (it won't help when a CD drive is attached=20
+> via USB), but maybe it's better than nothing.
+>=20
+Ok,
 
-Any issues with this patch?
-
-Thanks,
-
-Brian
+note to handle all case we need also to filter unit_attention in
+scsi_test_unit_ready. Otherwise DISK_EVENT_MEDIA_CHANGE event is set an=
+d check_disk_change will invalidate vfs cache.
 
 
+Matthieu
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2bc0362..e994061 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2030,8 +2030,12 @@ scsi_test_unit_ready(struct scsi_device *sdev, i=
+nt timeout, int retries,
+ 		result =3D scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
+ 					  timeout, retries, NULL);
+ 		if (sdev->removable && scsi_sense_valid(sshdr) &&
+-		    sshdr->sense_key =3D=3D UNIT_ATTENTION)
+-			sdev->changed =3D 1;
++		    sshdr->sense_key =3D=3D UNIT_ATTENTION) {
++			if (sdev->expecting_cc_ua)
++				sdev->expecting_cc_ua =3D 0;
++			else
++				sdev->changed =3D 1;
++		}
+ 	} while (scsi_sense_valid(sshdr) &&
+ 		 sshdr->sense_key =3D=3D UNIT_ATTENTION && --retries);
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
