@@ -1,35 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCH 07/10] scsi/trace: Use scsi_show_result trace point
-	instead of printk
-Date: Fri, 29 Aug 2014 02:50:39 +0200
-Message-ID: <20140829005039.GA2876@lst.de>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115022.6768.33712.stgit@yuno-kbuild.novalocal> <53FDE743.2040705@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs that
+ may have been removed.
+Date: Thu, 28 Aug 2014 18:11:29 -0700
+Message-ID: <20140829011129.GA22458@infradead.org>
+References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
+ <1408244988-27456-1-git-send-email-kys@microsoft.com>
+ <1408244988-27456-2-git-send-email-kys@microsoft.com>
+ <20140819175431.GA4617@infradead.org>
+ <c5da85b38a2a4b26b9a7a7fadc40bcc2@BY2PR0301MB0711.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <53FDE743.2040705@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <c5da85b38a2a4b26b9a7a7fadc40bcc2@BY2PR0301MB0711.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "hare@suse.de" <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> I'm not sure this is the correct way.
-> Currently we have quite some code duplication in scsi_trace.c and 
-> constants.c, correct.
-> So I definitely would like to see them both merged.
->
-> But constants.c is influenced by CONFIG_SCSI_CONSTANTS, whereas
-> scsi_trace isn't, and the functions in constants.c are used throughout the 
-> scsi stack.
-> So I'd rather see to have scsi_trace to be updated to use the functions 
-> from constants.c, and remove the duplicate code in
-> scsi_trace.
+On Tue, Aug 26, 2014 at 10:54:51PM +0000, KY Srinivasan wrote:
+> > This looks pretty reasonable to me, but I wonder if we should move this up
+> > to common code so that it happens for any host rescan triggered by sysfs or
+> > other drivers as well.
+> Ping. Any decision on if/when this patch may be checked in.
 
-The tracepoints need to use the magic print_flags & co helpers so that
-output works properly if using the binary tracebuffer and user space tools that
-decoded it (e.g. trace-cmd or perf), so using a kernel function for decoding is
-not an option.
-
-But we can make these tracepoints dependent on CONFIG_SCSI_CONSTANTS to
-still allow building lighter kernels if we really care about it.
+I'll need a review or two for it still..
