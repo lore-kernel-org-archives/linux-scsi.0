@@ -1,86 +1,67 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH 2/2] Drivers: scsi: storvsc: Force discovery of LUNs
- that may have been removed.
-Date: Fri, 29 Aug 2014 11:01:37 -0400
-Message-ID: <1409324497.1223.383.camel@localhost.localdomain>
-References: <1408244954-27417-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-1-git-send-email-kys@microsoft.com>
- <1408244988-27456-2-git-send-email-kys@microsoft.com>
- <20140819175431.GA4617@infradead.org> <53FDEBB9.5070704@suse.de>
- <53FFE87B.9040802@cs.wisc.edu>
-Reply-To: emilne@redhat.com
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/5] kexec: Export kexec_in_progress
+Date: Fri, 29 Aug 2014 10:38:50 -0500
+Message-ID: <54009E8A.4070809@linux.vnet.ibm.com>
+References: <53D6B270.5020403@linux.vnet.ibm.com> <53DF96E5.7000601@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <53FFE87B.9040802@cs.wisc.edu>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: driverdev-devel-bounces@linuxdriverproject.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, ohering@suse.com, jbottomley@parallels.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:46215 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752650AbaH2Piz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Aug 2014 11:38:55 -0400
+Received: from /spool/local
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 29 Aug 2014 11:38:54 -0400
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 1F75BC90042
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 11:38:44 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s7TFcqH23080492
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 15:38:52 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s7TFcptp019847
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 11:38:52 -0400
+In-Reply-To: <53DF96E5.7000601@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ebiederm@xmission.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-On Thu, 2014-08-28 at 21:42 -0500, Mike Christie wrote:
-> On 08/27/2014 09:31 AM, Hannes Reinecke wrote:
-> > On 08/19/2014 07:54 PM, Christoph Hellwig wrote:
-> >> On Sat, Aug 16, 2014 at 08:09:48PM -0700, K. Y. Srinivasan wrote:
-> >>> The host asks the guest to scan when a LUN is removed or added.
-> >>> The only way a guest can identify the removed LUN is when an I/O is
-> >>> attempted on a removed LUN - the SRB status code indicates that the LUN
-> >>> is invalid. We currently handle this SRB status and remove the device.
-> >>>
-> >>> Rather than waiting for an I/O to remove the device, force the
-> >>> discovery of
-> >>> LUNs that may have been removed prior to discovering LUNs that may have
-> >>> been added.
-> >>
-> >> This looks pretty reasonable to me, but I wonder if we should move this
-> >> up to common code so that it happens for any host rescan triggered by
-> >> sysfs or other drivers as well.
-> >>
-> > Not without proper testing.
-> > Currently we cannot rescan existing devices; the inquiry string is
-> > nailed to the sdev structure. The only way to really refresh the
-> > information is to delete it and rescan it again.
+On 08/04/2014 09:21 AM, Brian King wrote:
+> On 07/28/2014 03:28 PM, Brian King wrote:
+>>
+>> Export kexec_in_progress for use by device drivers and other modules
+>> to optimize kexec boot.
+>>
+>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+>> ---
+>>
+>>  kernel/kexec.c |    2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff -puN kernel/kexec.c~kexec_export_in_prog kernel/kexec.c
+>> --- linux/kernel/kexec.c~kexec_export_in_prog	2014-07-23 17:05:24.851887935 -0500
+>> +++ linux-bjking1/kernel/kexec.c	2014-07-23 17:05:24.856887970 -0500
+>> @@ -1716,3 +1716,5 @@ int kernel_kexec(void)
+>>  	mutex_unlock(&kexec_mutex);
+>>  	return error;
+>>  }
+>> +
+>> +EXPORT_SYMBOL_GPL(kexec_in_progress);
 > 
-> How are distros handling 0x6/0x3f/0x0e (report luns changed) when it
-> gets passed to userspace? Is everyone kicking off a new full (add and
-> delete) scan to handle this or logging it? Is the driver returning this
-> when the LUNs change?
-
-Currently the udev rules we have to handle these events are installed
-with a separate package, and only the REPORTED LUNS DATA HAS CHANGED
-does anything, the others are commented out.  It turns out that e.g.
-multipath stops using a path if it notices that the capacity has changed
-and we need to do some more work there, it is under discussion.
-
-We do not delete LUNs that disappear from the REPORT LUNS inventory,
-although someone could write their own udev rule to do that if desired.
-
-Beware the case where a LUN is remapped to a different LUN number, or
-if LUN's WWID is used for a device with different data (e.g. a LUN
-deleted and re-added and the WWID is the same although I don't know
-if this actually happens).
-
-Consider that the UA just provides notification to userspace of a
-change -- lack of notification does not prevent someone from deciding
-to rescan for new LUNs via sysfs any time they feel like it.  So
-you can't just change the storage configuration and hope that no-one
-notices until you are done making changes.
-
--Ewan
-
+> Eric,
 > 
-> Also is the driver getting a 0x5/0x25/0 (invalid LUN) when the LUN does
-> not exist, or is it just getting that SRB_STATUS_INVALID_LUN error code?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Can I get an ack on this so we can take this entire series through the SCSI tree?
+
+Eric,
+
+Any issues with this patch?
+
+Thanks,
+
+Brian
+
+
