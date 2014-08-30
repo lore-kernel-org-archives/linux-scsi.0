@@ -1,49 +1,90 @@
-From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
- size issues with >2TB HDDs)
-Date: Fri, 29 Aug 2014 16:04:34 -0700
-Message-ID: <CAA6KcBCnns-nuE4LA4EqWGhEbisueBNwAjN7vtYcfBdKm2WyUA@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1408271551170.1460-100000@iolanthe.rowland.org> <201408292107.s7TL7ZPj017216@hobgoblin.ariadne.com>
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: Re: [RFC 1/2] target: Add documentation on the target userspace
+ pass-through driver
+Date: Sat, 30 Aug 2014 18:35:10 +0100
+Message-ID: <20140830173510.GA11820@redhat.com>
+References: <1404241875-29164-1-git-send-email-agrover@redhat.com>
+ <1404241875-29164-2-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f176.google.com ([209.85.220.176]:50950 "EHLO
-	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbaH2XEz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2014 19:04:55 -0400
-Received: by mail-vc0-f176.google.com with SMTP id ik5so3240576vcb.35
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2014 16:04:54 -0700 (PDT)
-In-Reply-To: <201408292107.s7TL7ZPj017216@hobgoblin.ariadne.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1404241875-29164-2-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dale R. Worley" <worley@alum.mit.edu>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Is there an 'easy' way to override the detected size of a storage
-device from userspace?  If we had that, someone could write a helper
-application which looked for this particular fubar and try to Do The
-Right Thing(tm), or at least offer the user some options.
+On Tue, Jul 01, 2014 at 12:11:14PM -0700, Andy Grover wrote:
+> Describes the driver and its interface to make it possible for user
+> programs to back a LIO-exported LUN.
+> 
+> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ---
+>  Documentation/target/tcmu-design.txt | 210 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 210 insertions(+)
+>  create mode 100644 Documentation/target/tcmu-design.txt
+> 
+> diff --git a/Documentation/target/tcmu-design.txt b/Documentation/target/tcmu-design.txt
+> new file mode 100644
+> index 0000000..200ff3e
+> --- /dev/null
+> +++ b/Documentation/target/tcmu-design.txt
+> @@ -0,0 +1,210 @@
+> +TCM Userspace Design
+> +--------------------
+> +
+> +
+> +Background:
+> +
+> +In addition to modularizing the transport protocol used for carrying
+> +SCSI commands ("fabrics"), the Linux kernel target, LIO, also modularizes
+> +the actual data storage as well. These are referred to as "backstores"
+> +or "storage engines". The target comes with backstores that allow a
+> +file, a block device, RAM, or another SCSI device to be used for the
+> +local storage needed for the exported SCSI LUN. Like the rest of LIO,
+> +these are implemented entirely as kernel code.
+> +
+> +These backstores cover the most common use cases, but not all. One new
+> +use case that other non-kernel target solutions, such as tgt, are able
+> +to support is using Gluster's GLFS or Ceph's RBD as a backstore. The
+> +target then serves as a translator, allowing initiators to store data
+> +in these non-traditional networked storage systems, while still only
+> +using standard protocols themselves.
+> +
+> +If the target is a userspace process, supporting these is easy. tgt,
+> +for example, needs only a small adapter module for each, because the
+> +modules just use the available userspace libraries for RBD and GLFS.
+> +
+> +Adding support for these backstores in LIO is considerably more
+> +difficult, because LIO is entirely kernel code. Instead of undertaking
+> +the significant work to port the GLFS or RBD APIs and protocols to the
+> +kernel, another approach is to create a userspace pass-through
+> +backstore for LIO, "TCMU".
 
-Matt
+It has to be said that this documentation is terrible.
 
-On Fri, Aug 29, 2014 at 2:07 PM, Dale R. Worley <worley@alum.mit.edu> wrote:
->> From: Alan Stern <stern@rowland.harvard.edu>
->
->> If you try to repartition the drive under Windows using the deficient
->> adapter, you'll see that the problem still exists.  It just doesn't
->> show up during normal use.
->
-> So in summary, the Windows workaround is icky, but it allows any use
-> but repartitioning to be one on the attached disk.
->
-> Dale
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jumping "in medias res"[1] is great for fiction, awful for technical
+documentation.
 
+I would recommend the Economist Style Guide[2].  They always say
+"Barak Obama, President of the United States" the first time he is
+mentioned in an article, even though almost everyone knows who Barak
+Obama is.
 
+In this case you're leaping into something .. fabrics, LIO,
+backstores, target solutions, ... aargh.  Explain what you mean by
+each term and how it all fits together.
+
+Thanks,
+Rich.
+
+[1] https://en.wikipedia.org/wiki/In_medias_res
+
+[2] http://www.economist.com/styleguide/introduction
 
 -- 
-Matthew Dharm
-Maintainer, USB Mass Storage driver for Linux
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+virt-builder quickly builds VMs from scratch
+http://libguestfs.org/virt-builder.1.html
