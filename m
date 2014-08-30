@@ -1,90 +1,57 @@
-From: "Richard W.M. Jones" <rjones@redhat.com>
-Subject: Re: [RFC 1/2] target: Add documentation on the target userspace
- pass-through driver
-Date: Sat, 30 Aug 2014 18:35:10 +0100
-Message-ID: <20140830173510.GA11820@redhat.com>
-References: <1404241875-29164-1-git-send-email-agrover@redhat.com>
- <1404241875-29164-2-git-send-email-agrover@redhat.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 2/5] kexec: Export kexec_in_progress
+Date: Sat, 30 Aug 2014 15:02:10 -0500
+Message-ID: <87wq9piw59.fsf@x220.int.ebiederm.org>
+References: <53D6B270.5020403@linux.vnet.ibm.com>
+	<53DF96E5.7000601@linux.vnet.ibm.com>
+	<54009E8A.4070809@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1404241875-29164-2-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out03.mta.xmission.com ([166.70.13.233]:40106 "EHLO
+	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbaH3UCW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Aug 2014 16:02:22 -0400
+In-Reply-To: <54009E8A.4070809@linux.vnet.ibm.com> (Brian King's message of
+	"Fri, 29 Aug 2014 10:38:50 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-On Tue, Jul 01, 2014 at 12:11:14PM -0700, Andy Grover wrote:
-> Describes the driver and its interface to make it possible for user
-> programs to back a LIO-exported LUN.
-> 
-> Signed-off-by: Andy Grover <agrover@redhat.com>
-> ---
->  Documentation/target/tcmu-design.txt | 210 +++++++++++++++++++++++++++++++++++
->  1 file changed, 210 insertions(+)
->  create mode 100644 Documentation/target/tcmu-design.txt
-> 
-> diff --git a/Documentation/target/tcmu-design.txt b/Documentation/target/tcmu-design.txt
-> new file mode 100644
-> index 0000000..200ff3e
-> --- /dev/null
-> +++ b/Documentation/target/tcmu-design.txt
-> @@ -0,0 +1,210 @@
-> +TCM Userspace Design
-> +--------------------
-> +
-> +
-> +Background:
-> +
-> +In addition to modularizing the transport protocol used for carrying
-> +SCSI commands ("fabrics"), the Linux kernel target, LIO, also modularizes
-> +the actual data storage as well. These are referred to as "backstores"
-> +or "storage engines". The target comes with backstores that allow a
-> +file, a block device, RAM, or another SCSI device to be used for the
-> +local storage needed for the exported SCSI LUN. Like the rest of LIO,
-> +these are implemented entirely as kernel code.
-> +
-> +These backstores cover the most common use cases, but not all. One new
-> +use case that other non-kernel target solutions, such as tgt, are able
-> +to support is using Gluster's GLFS or Ceph's RBD as a backstore. The
-> +target then serves as a translator, allowing initiators to store data
-> +in these non-traditional networked storage systems, while still only
-> +using standard protocols themselves.
-> +
-> +If the target is a userspace process, supporting these is easy. tgt,
-> +for example, needs only a small adapter module for each, because the
-> +modules just use the available userspace libraries for RBD and GLFS.
-> +
-> +Adding support for these backstores in LIO is considerably more
-> +difficult, because LIO is entirely kernel code. Instead of undertaking
-> +the significant work to port the GLFS or RBD APIs and protocols to the
-> +kernel, another approach is to create a userspace pass-through
-> +backstore for LIO, "TCMU".
+Brian King <brking@linux.vnet.ibm.com> writes:
 
-It has to be said that this documentation is terrible.
+> On 08/04/2014 09:21 AM, Brian King wrote:
+>> On 07/28/2014 03:28 PM, Brian King wrote:
+>>>
+>>> Export kexec_in_progress for use by device drivers and other modules
+>>> to optimize kexec boot.
+>>>
+>>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+>>> ---
+>>>
+>>>  kernel/kexec.c |    2 ++
+>>>  1 file changed, 2 insertions(+)
+>>>
+>>> diff -puN kernel/kexec.c~kexec_export_in_prog kernel/kexec.c
+>>> --- linux/kernel/kexec.c~kexec_export_in_prog	2014-07-23 17:05:24.851887935 -0500
+>>> +++ linux-bjking1/kernel/kexec.c	2014-07-23 17:05:24.856887970 -0500
+>>> @@ -1716,3 +1716,5 @@ int kernel_kexec(void)
+>>>  	mutex_unlock(&kexec_mutex);
+>>>  	return error;
+>>>  }
+>>> +
+>>> +EXPORT_SYMBOL_GPL(kexec_in_progress);
+>> 
+>> Eric,
+>> 
+>> Can I get an ack on this so we can take this entire series through the SCSI tree?
+>
+> Eric,
+>
+> Any issues with this patch?
 
-Jumping "in medias res"[1] is great for fiction, awful for technical
-documentation.
+No huge issues except that patch description is largely uniformitive and
+actually wrong.  kexec_in_progress is never set at boot/kernel startup.
 
-I would recommend the Economist Style Guide[2].  They always say
-"Barak Obama, President of the United States" the first time he is
-mentioned in an article, even though almost everyone knows who Barak
-Obama is.
-
-In this case you're leaping into something .. fabrics, LIO,
-backstores, target solutions, ... aargh.  Explain what you mean by
-each term and how it all fits together.
-
-Thanks,
-Rich.
-
-[1] https://en.wikipedia.org/wiki/In_medias_res
-
-[2] http://www.economist.com/styleguide/introduction
-
--- 
-Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
-Read my programming and virtualization blog: http://rwmj.wordpress.com
-virt-builder quickly builds VMs from scratch
-http://libguestfs.org/virt-builder.1.html
+Eric
