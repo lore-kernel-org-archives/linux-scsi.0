@@ -1,116 +1,77 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
-Date: Mon, 01 Sep 2014 00:17:51 +0300
-Message-ID: <540390FF.2040703@dev.mellanox.co.il>
-References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com> <1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: Re: [RFC 1/2] target: Add documentation on the target userspace
+ pass-through driver
+Date: Sun, 31 Aug 2014 22:22:58 +0100
+Message-ID: <20140831212257.GO1302@redhat.com>
+References: <1404241875-29164-1-git-send-email-agrover@redhat.com>
+ <1404241875-29164-2-git-send-email-agrover@redhat.com>
+ <20140830173510.GA11820@redhat.com>
+ <54037C46.1050601@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:36749 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235AbaHaVR4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 17:17:56 -0400
-Received: by mail-wg0-f50.google.com with SMTP id x12so4580028wgg.9
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Aug 2014 14:17:55 -0700 (PDT)
-In-Reply-To: <1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54037C46.1050601@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, axboe@fb.com
-Cc: hch@lst.de, sagig@mellanox.com
 
-On 8/28/2014 10:31 PM, Martin K. Petersen wrote:
-> A set of flags introduced in the block layer enable better control over
-> how protection information is handled. These flags are useful for both
-> error injection and data recovery purposes. Checking can be enabled and
-> disabled for controller and disk, and the guard tag format is now a
-> per-I/O property.
->
+On Sun, Aug 31, 2014 at 12:49:26PM -0700, Andy Grover wrote:
+> Thanks for the feedback. I am undoubtedly too close to the details,
+> because I thought I *was* explaining things :)
 
-Hi Martin,
+Yeah, sorry it came across as a bit harsh.
 
-Not sure why I didn't post a review for this one...
-Anyway sorry, I hope it's not too late...
-just two comments below.
+Benoit did explain it to me so I understood it in the end (I think!)
 
-> Update sd_protect_op to communicate the relevant information to the
-> low-level device driver via a set of flags in scsi_cmnd.
->
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   drivers/scsi/sd.c        | 73 ++++++++++++++++++++++++++++--------------------
->   drivers/scsi/sd.h        | 66 +++++++++++++++++++++++++++++++++++++++++--
->   drivers/scsi/sd_dif.c    | 23 ++++++---------
->   include/scsi/scsi_cmnd.h | 36 +++++++++++++++++-------
->   4 files changed, 142 insertions(+), 56 deletions(-)
->
+> This doc is for people like you -- tech-savvy but unfamiliar with
+> this specific area. Would you be so kind as to point out exactly the
+> terms this document should explain? Should it explain SCSI and SCSI
+> commands? What a SCSI target is? Say "target implementations" rather
+> than "target solutions"? Do I need some ASCII art?
 
-<SNIP>
+So I can only speak for myself here, but I'm pretty familiar with
+iSCSI, using it, and some of the internals -- in fact I'm using the
+Linux kernel target daily.
 
-> +/*
-> + * Returns a mask of the protection flags that are valid for a given DIX
-> + * operation.
-> + */
-> +static inline unsigned int sd_prot_flag_mask(unsigned int prot_op)
-> +{
-> +	const unsigned int flag_mask[] = {
-> +		[SCSI_PROT_NORMAL]		= 0,
-> +
-> +		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
-> +						  SCSI_PROT_GUARD_CHECK |
-> +						  SCSI_PROT_REF_CHECK |
-> +						  SCSI_PROT_REF_INCREMENT,
-> +
-> +		[SCSI_PROT_READ_INSERT]		= SCSI_PROT_REF_INCREMENT |
-> +						  SCSI_PROT_IP_CHECKSUM,
-> +
-> +		[SCSI_PROT_READ_PASS]		= SCSI_PROT_TRANSFER_PI |
-> +						  SCSI_PROT_GUARD_CHECK |
-> +						  SCSI_PROT_REF_CHECK |
-> +						  SCSI_PROT_REF_INCREMENT |
-> +						  SCSI_PROT_IP_CHECKSUM,
-> +
-> +		[SCSI_PROT_WRITE_INSERT]	= SCSI_PROT_TRANSFER_PI |
-> +						  SCSI_PROT_REF_INCREMENT,
-> +
-> +		[SCSI_PROT_WRITE_STRIP]		= SCSI_PROT_GUARD_CHECK |
-> +						  SCSI_PROT_REF_CHECK |
-> +						  SCSI_PROT_REF_INCREMENT |
-> +						  SCSI_PROT_IP_CHECKSUM,
-> +
-> +		[SCSI_PROT_WRITE_PASS]		= SCSI_PROT_TRANSFER_PI |
-> +						  SCSI_PROT_GUARD_CHECK |
-> +						  SCSI_PROT_REF_CHECK |
-> +						  SCSI_PROT_REF_INCREMENT |
-> +						  SCSI_PROT_IP_CHECKSUM,
+> TCM Userspace Design
+> In addition to modularizing the transport protocol used for carrying
+> SCSI commands ("fabrics"), the Linux kernel target, LIO, also
+> modularizes the actual data storage as well.  These are referred to
+> as "backstores" or "storage engines".
 
-A bit strange to me that you put REF_CHECK & REF_INCREMENT flag
-depending on the prot_op while it really depends on the prot_type.
-It is &'nd with preset scmnd->prot_flags anyways.. so no worries...
+Reading this several times, I now think I get what it's trying to say,
+but I think it needs to introduces the terms (as the Economist style
+does).  Something like this:
 
-> +	};
-> +
-> +	return flag_mask[prot_op];
-> +}
-> +
+  "TCM is the new name for LIO, an in-kernel iSCSI target (server).
+  Existing TCM targets run in the kernel.  TCMU (TCM in Userspace)
+  allows userspace programs to be written which act as iSCSI targets.
+  This document describes the design.
 
-<SNIP>
+  The existing kernel provides modules for different SCSI transport
+  protocols.  TCM also modularizes the data storage.  There are
+  existing modules for file, block device, RAM or using another SCSI
+  device as storage.  These are called "backstores" or "storage
+  engines".  These built-in modules are implemented entirely as kernel
+  code."
 
-> +/*
-> +enum scsi_prot_flags {
-> +	SCSI_PROT_TRANSFER_PI		= 1 << 0,
-> +	SCSI_PROT_GUARD_CHECK		= 1 << 1,
-> +	SCSI_PROT_REF_CHECK		= 1 << 2,
-> +	SCSI_PROT_REF_INCREMENT		= 1 << 3,
-> +	SCSI_PROT_IP_CHECKSUM		= 1 << 4,
+And hopefully having defined a bit of background, the rest of the
+document just flows nicely:
 
-I have a question here,
-What are your plans with explicit ref/app escape flags?
-Were these just left behind on this series?
+> These backstores cover the most common use cases, but not all. One new
+> use case that other non-kernel target solutions, such as tgt, are able
+> to support is using Gluster's GLFS or Ceph's RBD as a backstore. The
+> target then serves as a translator, allowing initiators to store data
+> in these non-traditional networked storage systems, while still only
+> using standard protocols themselves.
 
+Rich.
 
-Other than that, looks good.
-
-Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
-
-Sagi.
+-- 
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+virt-df lists disk usage of guests without needing to install any
+software inside the virtual machine.  Supports Linux and Windows.
+http://people.redhat.com/~rjones/virt-df/
