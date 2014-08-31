@@ -1,27 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 22/22] sd: Reduce logging output
-Date: Sun, 31 Aug 2014 15:29:23 -0700
-Message-ID: <20140831222923.GN16432@infradead.org>
-References: <1409247216-76074-1-git-send-email-hare@suse.de>
- <1409247216-76074-23-git-send-email-hare@suse.de>
+Subject: Re: [PATCH V6 3/5] Introduce xen-scsifront module
+Date: Sun, 31 Aug 2014 15:33:01 -0700
+Message-ID: <20140831223301.GA27016@infradead.org>
+References: <1409201053-6223-1-git-send-email-jgross@suse.com>
+ <1409201053-6223-4-git-send-email-jgross@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48669 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:48698 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbaHaW3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 18:29:25 -0400
+	with ESMTP id S1751429AbaHaWdD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 18:33:03 -0400
 Content-Disposition: inline
-In-Reply-To: <1409247216-76074-23-git-send-email-hare@suse.de>
+In-Reply-To: <1409201053-6223-4-git-send-email-jgross@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, xen-devel@lists.xen.org, hch@infradead.org, target-devel@vger.kernel.org, david.vrabel@citrix.com, JBeulich@suse.com, nab@linux-iscsi.org, konrad.wilk@oracle.com
 
-On Thu, Aug 28, 2014 at 07:33:36PM +0200, Hannes Reinecke wrote:
-> There is no need to print out the command result verbatim;
-> that will be done by the scsi stack if required.
-> Here we just should log the result in short if requested.
+Looks good to me from the SCSI POV. As discussed earlier I'm fine with
+picking this up via the Xen tree.  If you really want it to go through
+the SCSI tree and I'd be happy to pick it up once I get another full
+review.
 
-Is there any good reason to keep this logging in sd at all?
 
+Acked-by: Christoph Hellwig <hch@lst.de>
