@@ -1,257 +1,190 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC v1 3/3] async: add driver asynch levels
-Date: Sun, 31 Aug 2014 02:03:20 -0700
-Message-ID: <1409475800-17573-4-git-send-email-mcgrof@do-not-panic.com>
-References: <1409475800-17573-1-git-send-email-mcgrof@do-not-panic.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1409475800-17573-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com
-Cc: linux-kernel@vger.kernel.org, oleg@redhat.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Santosh Rastapur <santosh@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+From: Milan Broz <gmazyland@gmail.com>
+Subject: Re: scsi_debug module deadlock on 3.17-rc2
+Date: Sun, 31 Aug 2014 11:49:46 +0200
+Message-ID: <5402EFBA.1020708@gmail.com>
+References: <54023A60.1090208@gmail.com> <54025AE1.9030406@interlog.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f50.google.com ([209.85.215.50]:53809 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbaHaJtv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 05:49:51 -0400
+In-Reply-To: <54025AE1.9030406@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 08/31/2014 01:14 AM, Douglas Gilbert wrote:
+> On 14-08-30 04:56 PM, Milan Broz wrote:
+>> Hi,
+>>
+>> I am using scsi_debug in cryptsetup testsuite and with recent 3.17-rc kernel
+>> it deadlocks on rmmod of scsi_debug module.
+>>
+>> For me even this simple reproducer causes deadlock:
+>>    modprobe scsi_debug dev_size_mb=16 sector_size=512 num_tgts=1
+>>    DEV="/dev/"$(grep -l -e scsi_debug /sys/block/*/device/model | cut -f4 -d /)
+>>    mkfs -t ext4 $DEV
+>>    rmmod scsi_debug
+>>
+>> (adding small delay before rmmod obviously helps here)
+> 
+> So I used this slight variation for testing:
+> 
+> modprobe scsi_debug dev_size_mb=16 sector_size=512 num_tgts=1 num_parts=1
+> DEV="/dev/"$(grep -l -e scsi_debug /sys/block/*/device/model | cut -f4 -d /)"1"
+> echo "mkfs -t ext4 ${DEV}"
+> mkfs -t ext4 ${DEV}
+> sleep 0.1
+> rmmod scsi_debug
+> 
+>> Bisect tracked it to commit
+>>    commit cbf67842c3d9e7af8ccc031332b79e88d9cca592
+>>    Author: Douglas Gilbert <dgilbert@interlog.com>
+>>    Date:   Sat Jul 26 11:55:35 2014 -0400
+>>    scsi_debug: support scsi-mq, queues and locks
+>>
+>> I guess that with introducing mq the del_timer_sync() must not be called
+>> with acquired queued_arr_lock.
+>> (to me it looks like situation described in comment before
+>> del_timer_sync() in kernel/time/timer.c...)
+> 
+> Looks like something a lawyer would write.
 
-Joseph bisected and found that Tetsuo Handa's commit 786235ee
-"kthread: make kthread_create() killable" modified kthread_create()
-to bail as soon as SIGKILL is received [0] [1]. This is causing some
-issues with some drivers and at times boot. There are other patches which
-could also enable the SIGKILL trigger on driver loading though:
+:-)
 
-70834d30 "usermodehelper: use UMH_WAIT_PROC consistently"
-b3449922 "usermodehelper: introduce umh_complete(sub_info)"
-d0bd587a "usermodehelper: implement UMH_KILLABLE"
-9d944ef3 "usermodehelper: kill umh_wait, renumber UMH_* constants"
-5b9bd473 "usermodehelper: ____call_usermodehelper() doesn't need do_exit()"
-3e63a93b "kmod: introduce call_modprobe() helper"
-1cc684ab "kmod: make __request_module() killable"
+...
 
-All of these went in on 3.4 upstream, and were part of the fixes for
-CVE-2012-4398 [2] and documented more properly on Red Hat's bugzilla [3].
-Any of these patches may contribute to having a module be properly
-killed now, but 786235ee is the latest in the series. For instance on
-SLE12 cxgb4 has been fond to get the SIGKILL even though SLE12 does not
-yet have 786235ee merged [4].
+> Anyway the attached patch removes the lock(queued_arr_lock)
+> from around the del_timer calls. Could you try it and report
+> back.
 
-Joseph found that the systemd-udevd process sends SIGKILL to systemd's
-usage of kmod for module loading if probe on a driver takes over 30
-seconds [5] [6]. When this happens probe will fail on any driver, its why
-booting on some systems will fail if the driver happens to be a storage
-related driver. When helping debug the issue Tetsuo suggested fixing this
-issue by modifying kthread_create() to not leave upon SIGKILL immediately
-if the source of the SIGKILL was the OOM, and actually wait for 10 seconds
-more before completing the kill [7]. This work around would in turn only
-help by adding an extra 10 second delay increasing in effect the systemd
-timeout by an extra 10 seconds. Drivers which take more than 40 seconds
-should then still fail to load on kernels with this work around patch.
-Upon review of this patch Oleg rejected this change [8] and the discussion
-was punted out to systemd-devel to see if the default timeout could be
-increased from 30 seconds to 120 [9]. The opinion of the systemd maintainers
-was that the driver's behavior should be fixed [10]. Linus seems to agree [11],
-however more recently even networking drivers have been reported to fail
-on probe since just writing the firmware to a device and kicking it can take
-easy over 60 seconds [4]. Benjamim was able to trace the issues recently
-reported on cxgb4 down to the same systemd-udevd 30 second timeout [6].
+Yes, the patch fixes the deadlock.
+Thanks!
 
-Folks are a bit confused here though -- its not only module initialization
-which is being penalized, because the driver core will immediately trigger
-the driver's own bus probe routine if autoprobe is enabled each driver's
-probe routine must also complete within the same 30 second timeout.
-This means not only should driver's init complete within the set
-default systemd timeout of 30 seconds but so should the probe routine, and
-probe would obviously also have less time given that the timeout is
-for both the module's init() and its own bus' probe(). Quite a bit of
-driver's fail to complete the bus' probe within 30 seconds, its
-not the init routine that takes long.
+Tested-and-reported-by: Milan Broz <gmazyland@gmail.com>
 
-We'll need a solution to split up asynch probing then. This solution
-provides a more generic module-agnostic solution which could be used by
-any init() caller and ends up respecting the same init levels as when
-things are built-in.
+However, removing the device (rmmod scsi_debug) now take up to 20 or more seconds.
+(Nothing like flush buffers or udev settle helps seems...)
 
-[0]  http://thread.gmane.org/gmane.linux.ubuntu.devel.kernel.general/39123
-[1]  https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705
-[2]  http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2012-4398
-[3]  https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2012-4398
-[4]  https://bugzilla.novell.com/show_bug.cgi?id=877622
-[5]  http://article.gmane.org/gmane.linux.kernel/1669550
-[6]  https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1297248
-[7]  https://launchpadlibrarian.net/169657493/kthread-defer-leaving.patch
-[8]  http://article.gmane.org/gmane.linux.kernel/1669604
-[9]  http://lists.freedesktop.org/archives/systemd-devel/2014-March/018006.html
-[10] http://article.gmane.org/gmane.comp.sysutils.systemd.devel/17860
-[11] http://article.gmane.org/gmane.linux.kernel/1671333
+It is somehow related to udev events processing (killing udev process
+will remove this delay).
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Kay Sievers <kay@vrfy.org>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Tim Gardner <tim.gardner@canonical.com>
-Cc: Pierre Fersing <pierre-fersing@pierref.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Benjamin Poirier <bpoirier@suse.de>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: Casey Leedom <leedom@chelsio.com>
-Cc: Hariprasad S <hariprasad@chelsio.com>
-Cc: Santosh Rastapur <santosh@chelsio.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- include/linux/async.h |  4 ++++
- include/linux/init.h  | 34 ++++++++++++++++++++++++++++++++++
- kernel/async.c        | 33 +++++++++++++++++++++++++++++++++
- 3 files changed, 71 insertions(+)
+I have full process trace (let me know if you want to send it),
+this is just where rmmod is while waiting (note the delay in the end):
 
-diff --git a/include/linux/async.h b/include/linux/async.h
-index 6b0226b..e06544b 100644
---- a/include/linux/async.h
-+++ b/include/linux/async.h
-@@ -40,9 +40,13 @@ struct async_domain {
- extern async_cookie_t async_schedule(async_func_t func, void *data);
- extern async_cookie_t async_schedule_domain(async_func_t func, void *data,
- 					    struct async_domain *domain);
-+extern async_cookie_t async_schedule_level(async_func_t func, void *data,
-+					   int level);
-+
- void async_unregister_domain(struct async_domain *domain);
- extern void async_synchronize_full(void);
- extern void async_synchronize_full_domain(struct async_domain *domain);
-+extern void async_synchronize_level(int level);
- extern void async_synchronize_cookie(async_cookie_t cookie);
- extern void async_synchronize_cookie_domain(async_cookie_t cookie,
- 					    struct async_domain *domain);
-diff --git a/include/linux/init.h b/include/linux/init.h
-index 3b69b1a..6ba7e4f 100644
---- a/include/linux/init.h
-+++ b/include/linux/init.h
-@@ -282,6 +282,7 @@ void __init parse_early_options(char *cmdline);
-  * be one per module.
-  */
- #define module_init(x)	__initcall(x);
-+#define module_init_async(x)	__initcall(x);
- 
- /**
-  * module_exit() - driver exit entry point
-@@ -294,9 +295,12 @@ void __init parse_early_options(char *cmdline);
-  * There can only be one per module.
-  */
- #define module_exit(x)	__exitcall(x);
-+#define module_exit_async(x)	__exitcall(x);
- 
- #else /* MODULE */
- 
-+#include <linux/async.h>
-+
- /*
-  * In most cases loadable modules do not need custom
-  * initcall levels. There are still some valid cases where
-@@ -335,9 +339,39 @@ void __init parse_early_options(char *cmdline);
- 	{ return exitfn; }					\
- 	void cleanup_module(void) __attribute__((alias(#exitfn)));
- 
-+#define drv_init_async(initfn, __level)				\
-+	static int ___init_ret;					\
-+	static void _drv_init_async_##initfn(void *data, async_cookie_t cookie) \
-+	{							\
-+		initcall_t fn = data;				\
-+		async_synchronize_level(__level - 1);		\
-+		___init_ret = fn();				\
-+		if (___init_ret !=0)				\
-+			printk(KERN_DEBUG			\
-+			       "async init routine failed: " #initfn "(): %d\n", ___init_ret); \
-+	}							\
-+	static __init int __drv_init_async_##initfn(void)	\
-+	{							\
-+		async_schedule_level(_drv_init_async_##initfn, initfn, __level); \
-+		return 0;					\
-+	}							\
-+	drv_init(__drv_init_async_##initfn);
-+
-+#define drv_exit_async(exitfn, level)				\
-+	static __exit void __drv_exit_async##exitfn(void)	\
-+	{							\
-+		async_synchronize_level(level);			\
-+		if (___init_ret == 0)				\
-+			exitfn();				\
-+	}							\
-+	drv_exit(__drv_exit_async##exitfn);
-+
- #define module_init(initfn)	drv_init(initfn);
- #define module_exit(exitfn)	drv_exit(exitfn);
- 
-+#define module_init_async(fn)			drv_init_async(fn, 7)
-+#define module_exit_async(exitfn)		drv_exit_async(exitfn, 7)
-+
- #define __setup_param(str, unique_id, fn)	/* nothing */
- #define __setup(str, func) 			/* nothing */
- #endif
-diff --git a/kernel/async.c b/kernel/async.c
-index 362b3d6..4d80a36 100644
---- a/kernel/async.c
-+++ b/kernel/async.c
-@@ -68,6 +68,20 @@ static LIST_HEAD(async_global_pending);	/* pending from all registered doms */
- static ASYNC_DOMAIN(async_dfl_domain);
- static DEFINE_SPINLOCK(async_lock);
- 
-+#define ASYNC_DOMAIN_LEVEL(level) \
-+	{ .pending = LIST_HEAD_INIT(async_level_domains[level-1].pending), \
-+	.registered = 0 }
-+
-+static struct async_domain async_level_domains[] = {
-+	ASYNC_DOMAIN_LEVEL(1),
-+	ASYNC_DOMAIN_LEVEL(2),
-+	ASYNC_DOMAIN_LEVEL(3),
-+	ASYNC_DOMAIN_LEVEL(4),
-+	ASYNC_DOMAIN_LEVEL(5),
-+	ASYNC_DOMAIN_LEVEL(6),
-+	ASYNC_DOMAIN_LEVEL(7),
-+};
-+
- struct async_entry {
- 	struct list_head	domain_list;
- 	struct list_head	global_list;
-@@ -237,6 +251,14 @@ async_cookie_t async_schedule_domain(async_func_t func, void *data,
- }
- EXPORT_SYMBOL_GPL(async_schedule_domain);
- 
-+async_cookie_t async_schedule_level(async_func_t func, void *data, int level)
-+{
-+	if (level <= 0 || level > ARRAY_SIZE(async_level_domains))
-+		return __async_schedule_sync(func, data);
-+	return async_schedule_domain(func, data, &async_level_domains[level-1]);
-+}
-+EXPORT_SYMBOL_GPL(async_schedule_level);
-+
- /**
-  * async_synchronize_full - synchronize all asynchronous function calls
-  *
-@@ -279,6 +301,17 @@ void async_synchronize_full_domain(struct async_domain *domain)
- }
- EXPORT_SYMBOL_GPL(async_synchronize_full_domain);
- 
-+void async_synchronize_level(int level)
-+{
-+	int i;
-+	if (level <= 0 || level > ARRAY_SIZE(async_level_domains))
-+		return;
-+
-+	for (i=1; i <= level; i++)
-+		async_synchronize_full_domain(&async_level_domains[i-1]);
-+}
-+EXPORT_SYMBOL_GPL(async_synchronize_level);
-+
- /**
-  * async_synchronize_cookie_domain - synchronize asynchronous function calls within a certain domain with cookie checkpointing
-  * @cookie: async_cookie_t to use as checkpoint
--- 
-2.0.3
+[  132.918141] sd 3:0:0:0: [sdh] Attached SCSI disk
+[  137.476448] SysRq : Show State
+...
+[  137.485711] kworker/0:2     D c16ce000     0   274      2 0x00000000
+[  137.485724] Workqueue: events_freezable_power_ disk_events_workfn
+[  137.485728]  dc915c2c 00000046 dc915bcc c16ce000 debad340 0000001f de15e250 c00530f0
+[  137.485741]  00000002 c00530f0 00000001 c00530f0 c0053698 dc915c0c c106e934 c1465cdd
+[  137.485753]  c00530f0 dc915c44 dc915c0c c128925f dc915c1c c106ea49 00000282 c1ff7d80
+[  137.485765] Call Trace:
+[  137.485772]  [<c106e934>] ? mark_held_locks+0x64/0x90
+[  137.485779]  [<c1465cdd>] ? _raw_spin_unlock_irqrestore+0x4d/0x70
+[  137.485785]  [<c128925f>] ? __this_cpu_preempt_check+0xf/0x20
+[  137.485792]  [<c106ea49>] ? trace_hardirqs_on_caller+0xe9/0x220
+[  137.485798]  [<c146194e>] schedule+0x1e/0x60
+[  137.485804]  [<c146520f>] schedule_timeout+0x11f/0x1b0
+[  137.485811]  [<c1084270>] ? internal_add_timer+0x60/0x60
+[  137.485817]  [<c106ea49>] ? trace_hardirqs_on_caller+0xe9/0x220
+[  137.485824]  [<c1461db6>] io_schedule_timeout+0x46/0x60
+[  137.485831]  [<c146230b>] wait_for_common_io.constprop.1+0x7b/0xd0
+[  137.485836]  [<c1059c60>] ? wake_up_process+0x40/0x40
+[  137.485843]  [<c1462368>] wait_for_completion_io_timeout+0x8/0x10
+[  137.485849]  [<c12614a1>] blk_execute_rq+0x81/0x100
+[  137.485856]  [<c14622a7>] ? wait_for_common_io.constprop.1+0x17/0xd0
+[  137.485863]  [<c12730f0>] ? cfq_exit_icq+0x40/0x40
+[  137.485870]  [<c125a2d5>] ? elv_set_request+0x15/0x30
+[  137.485877]  [<c125bd4a>] ? get_request+0x2ea/0x490
+[  137.485884]  [<c1066fd0>] ? __wake_up_sync+0x10/0x10
+[  137.485891]  [<c125bf59>] ? blk_get_request+0x69/0xd0
+[  137.485897]  [<c13312bc>] scsi_execute+0xfc/0x190
+[  137.485904]  [<c1331423>] scsi_execute_req_flags+0x53/0xb0
+[  137.485912]  [<c13319be>] scsi_test_unit_ready+0x5e/0x100
+[  137.485918]  [<c1349df3>] sd_check_events+0xe3/0x120
+[  137.485925]  [<c12697f7>] disk_check_events+0x37/0x100
+[  137.485932]  [<c12698d3>] disk_events_workfn+0x13/0x20
+[  137.485939]  [<c104d096>] process_one_work+0x156/0x390
+[  137.485945]  [<c104d043>] ? process_one_work+0x103/0x390
+[  137.485951]  [<c104d8f9>] worker_thread+0x39/0x440
+[  137.485958]  [<c104d8c0>] ? execute_in_process_context+0x70/0x70
+[  137.485965]  [<c10513f3>] kthread+0xa3/0xc0
+[  137.485970]  [<c106cc9d>] ? put_lock_stats.isra.21+0xd/0x30
+[  137.485976]  [<c106eb8b>] ? trace_hardirqs_on+0xb/0x10
+[  137.485982]  [<c14667c1>] ret_from_kernel_thread+0x21/0x30
+[  137.485989]  [<c1051350>] ? kthread_create_on_node+0x160/0x160
+...
+[  137.493862] rmmod           D c16ce000     0  1434   1422 0x00000000
+[  137.493869]  da1bbca4 00000046 deb5e050 c16ce000 199fe46e 0000001f df11c190 deb5e050
+[  137.493881]  b02da1a3 da1bbcc0 c10708cb c1c0f9c8 00000004 00000000 c1c75a90 00000000
+[  137.493893]  0ac0a782 b02da1a3 00000003 deb5e670 00000001 deb5e050 deb5e050 deb5e670
+[  137.493905] Call Trace:
+[  137.493911]  [<c10708cb>] ? __lock_acquire+0x48b/0x1c30
+[  137.493917]  [<c146194e>] schedule+0x1e/0x60
+[  137.493924]  [<c146523d>] schedule_timeout+0x14d/0x1b0
+[  137.493930]  [<c106e934>] ? mark_held_locks+0x64/0x90
+[  137.493936]  [<c1465d22>] ? _raw_spin_unlock_irq+0x22/0x50
+[  137.493942]  [<c128925f>] ? __this_cpu_preempt_check+0xf/0x20
+[  137.493948]  [<c106ea49>] ? trace_hardirqs_on_caller+0xe9/0x220
+[  137.493954]  [<c106eb8b>] ? trace_hardirqs_on+0xb/0x10
+[  137.493960]  [<c1462156>] wait_for_common+0x86/0x110
+[  137.493965]  [<c1059c60>] ? wake_up_process+0x40/0x40
+[  137.493971]  [<c14621f2>] wait_for_completion+0x12/0x20
+[  137.493977]  [<c104c9bf>] flush_work+0x13f/0x1e0
+[  137.493982]  [<c104abe0>] ? work_busy+0x80/0x80
+[  137.493988]  [<c14620ea>] ? wait_for_common+0x1a/0x110
+[  137.493994]  [<c104d7a7>] __cancel_work_timer+0x67/0xf0
+[  137.494000]  [<c104d84d>] cancel_delayed_work_sync+0xd/0x10
+[  137.494006]  [<c126ad93>] disk_block_events+0x73/0x80
+[  137.494011]  [<c126ae32>] del_gendisk+0x22/0x1d0
+[  137.494017]  [<c1318de1>] ? device_del+0x131/0x180
+[  137.494022]  [<c134a929>] sd_remove+0x49/0xa0
+[  137.494029]  [<c131bc59>] __device_release_driver+0x49/0xb0
+[  137.494034]  [<c131bcda>] device_release_driver+0x1a/0x30
+[  137.494040]  [<c131b7cb>] bus_remove_device+0xbb/0xf0
+[  137.494045]  [<c1318d9c>] device_del+0xec/0x180
+[  137.494051]  [<c1337981>] __scsi_remove_device+0xb1/0xc0
+[  137.494058]  [<c13364f7>] scsi_forget_host+0x57/0x60
+[  137.494064]  [<c132c75e>] scsi_remove_host+0x5e/0xf0
+[  137.494074]  [<e10e4fdb>] sdebug_driver_remove+0x1b/0x80 [scsi_debug]
+[  137.494081]  [<c131bc59>] __device_release_driver+0x49/0xb0
+[  137.494086]  [<c131bcda>] device_release_driver+0x1a/0x30
+[  137.494092]  [<c131b7cb>] bus_remove_device+0xbb/0xf0
+[  137.494097]  [<c1318d9c>] device_del+0xec/0x180
+[  137.494103]  [<c1318e3b>] device_unregister+0xb/0x20
+[  137.494110]  [<e10e48bd>] sdebug_remove_adapter+0x4d/0x70 [scsi_debug]
+[  137.494118]  [<e10e8ffd>] scsi_debug_exit+0x6e/0xac [scsi_debug]
+[  137.494125]  [<c109a74d>] SyS_delete_module+0xfd/0x180
+[  137.494131]  [<c14669e1>] ? restore_all+0xf/0xf
+[  137.494137]  [<c128925f>] ? __this_cpu_preempt_check+0xf/0x20
+[  137.494143]  [<c106ea49>] ? trace_hardirqs_on_caller+0xe9/0x220
+[  137.494148]  [<c14669ae>] syscall_call+0x7/0x7
+...
+[  137.496322] Showing all locks held in the system:
+[  137.496332] 2 locks held by kworker/0:2/274:
+[  137.496334]  #0:  ("events_freezable_power_efficient"){.+.+.+}, at: [<c104d043>] process_one_work+0x103/0x390
+[  137.496347]  #1:  ((&(&ev->dwork)->work)){+.+.+.}, at: [<c104d043>] process_one_work+0x103/0x390
+[  137.496360] 2 locks held by agetty/1395:
+[  137.496363]  #0:  (&tty->ldisc_sem){++++++}, at: [<c12d8c83>] tty_ldisc_ref_wait+0x13/0x40
+[  137.496374]  #1:  (&ldata->atomic_read_lock){+.+...}, at: [<c12d6c04>] n_tty_read+0x84/0x920
+[  137.496386] 3 locks held by bash/1416:
+[  137.496388]  #0:  (sb_writers#5){.+.+.+}, at: [<c10f4282>] vfs_write+0x152/0x1a0
+[  137.496399]  #1:  (rcu_read_lock){......}, at: [<c12dc9d0>] __handle_sysrq+0x0/0x150
+[  137.496409]  #2:  (tasklist_lock){.+.+..}, at: [<c106d636>] debug_show_all_locks+0x36/0x1b0
+[  137.496420] 4 locks held by rmmod/1434:
+[  137.496423]  #0:  (&dev->mutex){......}, at: [<c131bcd3>] device_release_driver+0x13/0x30
+[  137.496433]  #1:  (&shost->scan_mutex){+.+.+.}, at: [<c132c714>] scsi_remove_host+0x14/0xf0
+[  137.496443]  #2:  (&dev->mutex){......}, at: [<c131bcd3>] device_release_driver+0x13/0x30
+[  137.496453]  #3:  (&ev->block_mutex){+.+...}, at: [<c126ad42>] disk_block_events+0x22/0x80
+[  137.496464] 
+[  137.496467] =============================================
+[  137.496467] 
+[  164.035571] sd 3:0:0:0: [sdh] Synchronizing SCSI cache
+
+Milan
