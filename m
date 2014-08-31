@@ -1,57 +1,92 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v3.17-rc3
-Date: Sun, 31 Aug 2014 11:59:46 -0700
-Message-ID: <1409511586.1483.5.camel@haakon3.risingtidesystems.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [RFC 1/2] target: Add documentation on the target userspace pass-through
+ driver
+Date: Sun, 31 Aug 2014 12:49:26 -0700
+Message-ID: <54037C46.1050601@redhat.com>
+References: <1404241875-29164-1-git-send-email-agrover@redhat.com> <1404241875-29164-2-git-send-email-agrover@redhat.com> <20140830173510.GA11820@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140830173510.GA11820@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: "Richard W.M. Jones" <rjones@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+On 08/30/2014 10:35 AM, Richard W.M. Jones wrote:
+> On Tue, Jul 01, 2014 at 12:11:14PM -0700, Andy Grover wrote:
+>> Describes the driver and its interface to make it possible for user
+>> programs to back a LIO-exported LUN.
+>>
+>> Signed-off-by: Andy Grover <agrover@redhat.com>
+>> ---
+>>   Documentation/target/tcmu-design.txt | 210 +++++++++++++++++++++++++++++++++++
+>>   1 file changed, 210 insertions(+)
+>>   create mode 100644 Documentation/target/tcmu-design.txt
+>>
+>> diff --git a/Documentation/target/tcmu-design.txt b/Documentation/target/tcmu-design.txt
+>> new file mode 100644
+>> index 0000000..200ff3e
+>> --- /dev/null
+>> +++ b/Documentation/target/tcmu-design.txt
+>> @@ -0,0 +1,210 @@
+>> +TCM Userspace Design
+>> +--------------------
+>> +
+>> +
+>> +Background:
+>> +
+>> +In addition to modularizing the transport protocol used for carrying
+>> +SCSI commands ("fabrics"), the Linux kernel target, LIO, also modularizes
+>> +the actual data storage as well. These are referred to as "backstores"
+>> +or "storage engines". The target comes with backstores that allow a
+>> +file, a block device, RAM, or another SCSI device to be used for the
+>> +local storage needed for the exported SCSI LUN. Like the rest of LIO,
+>> +these are implemented entirely as kernel code.
+>> +
+>> +These backstores cover the most common use cases, but not all. One new
+>> +use case that other non-kernel target solutions, such as tgt, are able
+>> +to support is using Gluster's GLFS or Ceph's RBD as a backstore. The
+>> +target then serves as a translator, allowing initiators to store data
+>> +in these non-traditional networked storage systems, while still only
+>> +using standard protocols themselves.
+>> +
+>> +If the target is a userspace process, supporting these is easy. tgt,
+>> +for example, needs only a small adapter module for each, because the
+>> +modules just use the available userspace libraries for RBD and GLFS.
+>> +
+>> +Adding support for these backstores in LIO is considerably more
+>> +difficult, because LIO is entirely kernel code. Instead of undertaking
+>> +the significant work to port the GLFS or RBD APIs and protocols to the
+>> +kernel, another approach is to create a userspace pass-through
+>> +backstore for LIO, "TCMU".
+>
+> It has to be said that this documentation is terrible.
+>
+> Jumping "in medias res"[1] is great for fiction, awful for technical
+> documentation.
+>
+> I would recommend the Economist Style Guide[2].  They always say
+> "Barak Obama, President of the United States" the first time he is
+> mentioned in an article, even though almost everyone knows who Barak
+> Obama is.
+>
+> In this case you're leaping into something .. fabrics, LIO,
+> backstores, target solutions, ... aargh.  Explain what you mean by
+> each term and how it all fits together.
 
-Here are the target pending updates for v3.17-rc3.  Please go ahead and
-pull from:
+Thanks for the feedback. I am undoubtedly too close to the details, 
+because I thought I *was* explaining things :)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+This doc is for people like you -- tech-savvy but unfamiliar with this 
+specific area. Would you be so kind as to point out exactly the terms 
+this document should explain? Should it explain SCSI and SCSI commands? 
+What a SCSI target is? Say "target implementations" rather than "target 
+solutions"? Do I need some ASCII art?
 
-Note that these patches where originally intended for -rc1, but missed
-the merge window.  They are mostly iser-target related bug-fixes, along
-with a few other very minor cleanups.
+Or, if in finding these gaps you've actually picked up the jargon and 
+wanted to just take a pass a rewriting it, that would be fine too :) 
+I've read some of your libguestfs docs and they were very understandable.
 
-Thank you,
-
---nab
-
-Andreea-Cristina Bernat (1):
-  tcm_fc: Replace rcu_assign_pointer() with RCU_INIT_POINTER()
-
-Himangi Saraogi (1):
-  target/configfs: Remove unnecessary null test
-
-Nicholas Bellinger (1):
-  iscsi-target: Ignore ICF_GOT_LAST_DATAOUT during Data-Out ITT lookup
-
-Rasmus Villemoes (1):
-  target: target_core_ua_h: Add #define of include guard
-
-Rickard Strandqvist (1):
-  target: target_core_transport.c: Cleaning up missing null-terminate
-    in conjunction with strncpy
-
-Sagi Grimberg (4):
-  Target/iser: Get isert_conn reference once got to connected_handler
-  Target/iser: Don't put isert_conn inside disconnected handler
-  Target/iser: Avoid calling rdma_disconnect twice
-  Target/iser: Fix initiator_depth and responder_resources
-
- drivers/infiniband/ulp/isert/ib_isert.c      |   20 +++---
- drivers/target/iscsi/iscsi_target_util.c     |    2 +
- drivers/target/target_core_fabric_configfs.c |    3 +-
- drivers/target/target_core_transport.c       |   86 +++++++++++++-------------
- drivers/target/target_core_ua.h              |    1 +
- drivers/target/tcm_fc/tfc_sess.c             |    2 +-
- 6 files changed, 60 insertions(+), 54 deletions(-)
+Regards -- Andy
