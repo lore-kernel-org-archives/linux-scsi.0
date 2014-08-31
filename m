@@ -1,92 +1,116 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [RFC 1/2] target: Add documentation on the target userspace pass-through
- driver
-Date: Sun, 31 Aug 2014 12:49:26 -0700
-Message-ID: <54037C46.1050601@redhat.com>
-References: <1404241875-29164-1-git-send-email-agrover@redhat.com> <1404241875-29164-2-git-send-email-agrover@redhat.com> <20140830173510.GA11820@redhat.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
+Date: Mon, 01 Sep 2014 00:17:51 +0300
+Message-ID: <540390FF.2040703@dev.mellanox.co.il>
+References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com> <1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20140830173510.GA11820@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Richard W.M. Jones" <rjones@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:36749 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235AbaHaVR4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 17:17:56 -0400
+Received: by mail-wg0-f50.google.com with SMTP id x12so4580028wgg.9
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Aug 2014 14:17:55 -0700 (PDT)
+In-Reply-To: <1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, axboe@fb.com
+Cc: hch@lst.de, sagig@mellanox.com
 
-On 08/30/2014 10:35 AM, Richard W.M. Jones wrote:
-> On Tue, Jul 01, 2014 at 12:11:14PM -0700, Andy Grover wrote:
->> Describes the driver and its interface to make it possible for user
->> programs to back a LIO-exported LUN.
->>
->> Signed-off-by: Andy Grover <agrover@redhat.com>
->> ---
->>   Documentation/target/tcmu-design.txt | 210 +++++++++++++++++++++++++++++++++++
->>   1 file changed, 210 insertions(+)
->>   create mode 100644 Documentation/target/tcmu-design.txt
->>
->> diff --git a/Documentation/target/tcmu-design.txt b/Documentation/target/tcmu-design.txt
->> new file mode 100644
->> index 0000000..200ff3e
->> --- /dev/null
->> +++ b/Documentation/target/tcmu-design.txt
->> @@ -0,0 +1,210 @@
->> +TCM Userspace Design
->> +--------------------
->> +
->> +
->> +Background:
->> +
->> +In addition to modularizing the transport protocol used for carrying
->> +SCSI commands ("fabrics"), the Linux kernel target, LIO, also modularizes
->> +the actual data storage as well. These are referred to as "backstores"
->> +or "storage engines". The target comes with backstores that allow a
->> +file, a block device, RAM, or another SCSI device to be used for the
->> +local storage needed for the exported SCSI LUN. Like the rest of LIO,
->> +these are implemented entirely as kernel code.
->> +
->> +These backstores cover the most common use cases, but not all. One new
->> +use case that other non-kernel target solutions, such as tgt, are able
->> +to support is using Gluster's GLFS or Ceph's RBD as a backstore. The
->> +target then serves as a translator, allowing initiators to store data
->> +in these non-traditional networked storage systems, while still only
->> +using standard protocols themselves.
->> +
->> +If the target is a userspace process, supporting these is easy. tgt,
->> +for example, needs only a small adapter module for each, because the
->> +modules just use the available userspace libraries for RBD and GLFS.
->> +
->> +Adding support for these backstores in LIO is considerably more
->> +difficult, because LIO is entirely kernel code. Instead of undertaking
->> +the significant work to port the GLFS or RBD APIs and protocols to the
->> +kernel, another approach is to create a userspace pass-through
->> +backstore for LIO, "TCMU".
+On 8/28/2014 10:31 PM, Martin K. Petersen wrote:
+> A set of flags introduced in the block layer enable better control over
+> how protection information is handled. These flags are useful for both
+> error injection and data recovery purposes. Checking can be enabled and
+> disabled for controller and disk, and the guard tag format is now a
+> per-I/O property.
 >
-> It has to be said that this documentation is terrible.
+
+Hi Martin,
+
+Not sure why I didn't post a review for this one...
+Anyway sorry, I hope it's not too late...
+just two comments below.
+
+> Update sd_protect_op to communicate the relevant information to the
+> low-level device driver via a set of flags in scsi_cmnd.
 >
-> Jumping "in medias res"[1] is great for fiction, awful for technical
-> documentation.
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>   drivers/scsi/sd.c        | 73 ++++++++++++++++++++++++++++--------------------
+>   drivers/scsi/sd.h        | 66 +++++++++++++++++++++++++++++++++++++++++--
+>   drivers/scsi/sd_dif.c    | 23 ++++++---------
+>   include/scsi/scsi_cmnd.h | 36 +++++++++++++++++-------
+>   4 files changed, 142 insertions(+), 56 deletions(-)
 >
-> I would recommend the Economist Style Guide[2].  They always say
-> "Barak Obama, President of the United States" the first time he is
-> mentioned in an article, even though almost everyone knows who Barak
-> Obama is.
->
-> In this case you're leaping into something .. fabrics, LIO,
-> backstores, target solutions, ... aargh.  Explain what you mean by
-> each term and how it all fits together.
 
-Thanks for the feedback. I am undoubtedly too close to the details, 
-because I thought I *was* explaining things :)
+<SNIP>
 
-This doc is for people like you -- tech-savvy but unfamiliar with this 
-specific area. Would you be so kind as to point out exactly the terms 
-this document should explain? Should it explain SCSI and SCSI commands? 
-What a SCSI target is? Say "target implementations" rather than "target 
-solutions"? Do I need some ASCII art?
+> +/*
+> + * Returns a mask of the protection flags that are valid for a given DIX
+> + * operation.
+> + */
+> +static inline unsigned int sd_prot_flag_mask(unsigned int prot_op)
+> +{
+> +	const unsigned int flag_mask[] = {
+> +		[SCSI_PROT_NORMAL]		= 0,
+> +
+> +		[SCSI_PROT_READ_STRIP]		= SCSI_PROT_TRANSFER_PI |
+> +						  SCSI_PROT_GUARD_CHECK |
+> +						  SCSI_PROT_REF_CHECK |
+> +						  SCSI_PROT_REF_INCREMENT,
+> +
+> +		[SCSI_PROT_READ_INSERT]		= SCSI_PROT_REF_INCREMENT |
+> +						  SCSI_PROT_IP_CHECKSUM,
+> +
+> +		[SCSI_PROT_READ_PASS]		= SCSI_PROT_TRANSFER_PI |
+> +						  SCSI_PROT_GUARD_CHECK |
+> +						  SCSI_PROT_REF_CHECK |
+> +						  SCSI_PROT_REF_INCREMENT |
+> +						  SCSI_PROT_IP_CHECKSUM,
+> +
+> +		[SCSI_PROT_WRITE_INSERT]	= SCSI_PROT_TRANSFER_PI |
+> +						  SCSI_PROT_REF_INCREMENT,
+> +
+> +		[SCSI_PROT_WRITE_STRIP]		= SCSI_PROT_GUARD_CHECK |
+> +						  SCSI_PROT_REF_CHECK |
+> +						  SCSI_PROT_REF_INCREMENT |
+> +						  SCSI_PROT_IP_CHECKSUM,
+> +
+> +		[SCSI_PROT_WRITE_PASS]		= SCSI_PROT_TRANSFER_PI |
+> +						  SCSI_PROT_GUARD_CHECK |
+> +						  SCSI_PROT_REF_CHECK |
+> +						  SCSI_PROT_REF_INCREMENT |
+> +						  SCSI_PROT_IP_CHECKSUM,
 
-Or, if in finding these gaps you've actually picked up the jargon and 
-wanted to just take a pass a rewriting it, that would be fine too :) 
-I've read some of your libguestfs docs and they were very understandable.
+A bit strange to me that you put REF_CHECK & REF_INCREMENT flag
+depending on the prot_op while it really depends on the prot_type.
+It is &'nd with preset scmnd->prot_flags anyways.. so no worries...
 
-Regards -- Andy
+> +	};
+> +
+> +	return flag_mask[prot_op];
+> +}
+> +
+
+<SNIP>
+
+> +/*
+> +enum scsi_prot_flags {
+> +	SCSI_PROT_TRANSFER_PI		= 1 << 0,
+> +	SCSI_PROT_GUARD_CHECK		= 1 << 1,
+> +	SCSI_PROT_REF_CHECK		= 1 << 2,
+> +	SCSI_PROT_REF_INCREMENT		= 1 << 3,
+> +	SCSI_PROT_IP_CHECKSUM		= 1 << 4,
+
+I have a question here,
+What are your plans with explicit ref/app escape flags?
+Were these just left behind on this series?
+
+
+Other than that, looks good.
+
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+
+Sagi.
