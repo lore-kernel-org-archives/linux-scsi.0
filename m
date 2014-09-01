@@ -1,19 +1,19 @@
 From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 20/22] scsi: align logging messages
-Date: Mon, 1 Sep 2014 01:00:26 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C2F65E@G9W0745.americas.hpqcorp.net>
+Subject: RE: [PATCH 21/22] scsi: reduce messages for command failure
+Date: Mon, 1 Sep 2014 01:14:23 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C2F69F@G9W0745.americas.hpqcorp.net>
 References: <1409247216-76074-1-git-send-email-hare@suse.de>
- <1409247216-76074-21-git-send-email-hare@suse.de>
- <20140831222556.GL16432@infradead.org>
+ <1409247216-76074-22-git-send-email-hare@suse.de>
+ <20140831222840.GM16432@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:43425 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667AbaIABBK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 21:01:10 -0400
-In-Reply-To: <20140831222556.GL16432@infradead.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:39408 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429AbaIABPd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 21:15:33 -0400
+In-Reply-To: <20140831222840.GM16432@infradead.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,32 +25,45 @@ Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, 
 > -----Original Message-----
 > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
 > owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: Sunday, 31 August, 2014 5:26 PM
-...
-> On Thu, Aug 28, 2014 at 07:33:34PM +0200, Hannes Reinecke wrote:
-> > Always use 'scmd 0x%p' when logging a command pointer.
+> Sent: Sunday, 31 August, 2014 5:29 PM
+> To: Hannes Reinecke
+> Cc: James Bottomley; Ewan Milne; Christoph Hellwig; linux-
+> scsi@vger.kernel.org; Hoffmann, Elliot; Yoshihiro Yunomae
+> Subject: Re: [PATCH 21/22] scsi: reduce messages for command failure
 > 
-> Is there any good reason to print the address of a command pointer?
- 
-It relates the messages to each other.  When you get lots of
-interleaved messages like:
+> On Thu, Aug 28, 2014 at 07:33:35PM +0200, Hannes Reinecke wrote:
+> > When devices fail they can generate quite a lot of error
+> > messages, possibly overloading the logging system.
+> > So we should be putting these messages under logging control
+> > to be able to silence them if requested.
+> > And we should shorten the overall message; more verbose
+> > logging can be requested by the normal scsi logging.
+> 
+> While the logging mask magic always confused me I'm fairly sure this
+> disables logging the completion errors entirely by default.  If that
+> was the intention it should be mentioned in the changelog.
+> 
+> I do however think printing them in a ratelimit way might be useful,
+> so I'd like to see a few more arguments for not doing it that way if
+> you really prefer it.
 
-[ 3161.441116] sd 2:0:0:2: [sdt] scmd ffff88041a874e70 abort scheduled
-[ 3161.444258] sd 2:0:0:2: [sdt] scmd ffff88041a8b3b30 abort scheduled
-...
-[ 3162.707427] sd 2:0:0:2: [sdt] aborting command ffff88041a8b3b30
-[ 3162.710445] sd 2:0:0:2: [sdt] scmd ffff88041a8b3b30 abort failed, rtn 8195
-[ 3162.713092] sd 2:0:0:2: [sdt] aborting command ffff88041a8dd530
-[ 3162.715172] sd 2:0:0:2: [sdt] scmd ffff88041a8dd530 abort failed, rtn 8195
-...
-[ 3171.052277] sd 2:0:0:2: [sdt] scsi_eh_2: flush retry cmd: ffff88041a8b3b30
-[ 3171.054910] sd 2:0:0:2: [sdt] scsi_eh_2: flush retry cmd: ffff88041a8dd530
-...
-[ 3203.406218] sd 2:0:0:0: [sdr] scmd ffff88041a8214b0 not aborting, host in recovery
-[ 3203.406424] sd 2:0:0:0: [sdr] scmd ffff88041a8474f0 not aborting, host in recovery
+Before this patch set, ratelimited printing was impossible because
+there were so many partial-line printk calls.  This patch set
+may resolve that problem.
 
-scmd ties the messages together so you can tell which command
-has gotten to which state.  grep works.
+Multiple related lines may still cause problems; if it prints
+CDB, sense key, and additional sense code on three lines, you
+don't want the CDB and sense key suppressed with the additional
+sense code still sneaking out (because command completions
+are concurrent).
+
+If those issues can be overcome, then I'd favor offering ratelimited
+calls.  Maybe the logging level could be used to select the amount,
+like:
+	0 = no prints
+	1..n = ratelimited versions of the prints
+	n+1..m = not ratelimited versions of the prints
+
 
 ---
 Rob Elliott    HP Server Storage
