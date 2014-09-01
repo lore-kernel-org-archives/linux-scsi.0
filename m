@@ -1,72 +1,95 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 21/22] scsi: reduce messages for command failure
-Date: Mon, 1 Sep 2014 01:14:23 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C2F69F@G9W0745.americas.hpqcorp.net>
-References: <1409247216-76074-1-git-send-email-hare@suse.de>
- <1409247216-76074-22-git-send-email-hare@suse.de>
- <20140831222840.GM16432@infradead.org>
+From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
+Subject: Re: [RFC PATCH 10/10] scsi/trace: Use scsi_print_command trace point
+ instead of printk
+Date: Mon, 01 Sep 2014 15:38:07 +0900
+Message-ID: <5404144F.2070509@hitachi.com>
+References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115030.6768.91195.stgit@yuno-kbuild.novalocal> <53FDE859.1020800@suse.de> <53FE8890.80403@hitachi.com> <53FEC9E7.6000909@hitachi.com> <53FF1D44.3080702@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:39408 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429AbaIABPd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Aug 2014 21:15:33 -0400
-In-Reply-To: <20140831222840.GM16432@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53FF1D44.3080702@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Hoffmann, Elliot" <elliot.hoffmann@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
+Hi Hannes,
 
+Sorry for the late reply.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: Sunday, 31 August, 2014 5:29 PM
-> To: Hannes Reinecke
-> Cc: James Bottomley; Ewan Milne; Christoph Hellwig; linux-
-> scsi@vger.kernel.org; Hoffmann, Elliot; Yoshihiro Yunomae
-> Subject: Re: [PATCH 21/22] scsi: reduce messages for command failure
-> 
-> On Thu, Aug 28, 2014 at 07:33:35PM +0200, Hannes Reinecke wrote:
-> > When devices fail they can generate quite a lot of error
-> > messages, possibly overloading the logging system.
-> > So we should be putting these messages under logging control
-> > to be able to silence them if requested.
-> > And we should shorten the overall message; more verbose
-> > logging can be requested by the normal scsi logging.
-> 
-> While the logging mask magic always confused me I'm fairly sure this
-> disables logging the completion errors entirely by default.  If that
-> was the intention it should be mentioned in the changelog.
-> 
-> I do however think printing them in a ratelimit way might be useful,
-> so I'd like to see a few more arguments for not doing it that way if
-> you really prefer it.
+(2014/08/28 21:15), Hannes Reinecke wrote:
+> On 08/28/2014 08:19 AM, Yoshihiro YUNOMAE wrote:
+>> Hi Hannes,
+>>
+>> I tried to remove duplicated decoder of SCSI command, but the
+>> output format of it in constants.c is different from it in traceevents.
+>> I have two questions for it.
+>>
+>> (Ex1)
+>> traceevents: TEST_UNIT_READY
+>> constants: Test Unit Ready
+>>
+>> => Which of "XXX_YYY_ZZZ" and "Xxx Yyy Zzz" should the kernel output
+>> strings? This difference comes from difference of implementation.
+>> The decoder in traceevents are using macro. So, it cannot define
+>> separated words. On the other hand, the decoder in constants are using
+>> constant string array table. So, it can define separated words.
+>>
+> I would go with the wording in constants.c, but set in double quotes
+> like "Test Unit Ready" to avoid parsing errors later on.
 
-Before this patch set, ratelimited printing was impossible because
-there were so many partial-line printk calls.  This patch set
-may resolve that problem.
+OK, we use constants' format and add double quotes for each sense code.
 
-Multiple related lines may still cause problems; if it prints
-CDB, sense key, and additional sense code on three lines, you
-don't want the CDB and sense key suppressed with the additional
-sense code still sneaking out (because command completions
-are concurrent).
+>> (Ex2)
+>> traceevents: (nothing)
+>> constants: Set limits(12)
+>>
+>> => Should we merge those decoder?
+>>
+> Yes, I would prefer this. Again, we should be setting the strings in
+> double quotes irrespective if there are spaces in the resulting string
+> or not.
 
-If those issues can be overcome, then I'd favor offering ratelimited
-calls.  Maybe the logging level could be used to select the amount,
-like:
-	0 = no prints
-	1..n = ratelimited versions of the prints
-	n+1..m = not ratelimited versions of the prints
+Sure.
 
+>> I understand we use the decoder of constants, but we need to solve
+>> these problems. Would you give me your comments?
+>>
+> As mentioned previously, my aim is to convert the logging system in
+> several steps:
+>
+> a) convert all lone 'printk' statements into dev_printk() variants
+>     and ensure everything is printed in one statement to avoid
+>     linebreaks in the resulting logging message.
+>     This will eliminate the immediate problem we're having, namely
+>     that debugging is near to impossible under high load.
+>     The patchset is nearing completion, and I will be posting it
+>     later this week.
+> b) Convert scsi_trace to use the functions from constants.c to
+>     avoid code duplication and update scsi_trace to log sense codes.
+> c) Remove all logging functions in the hot path (ie
+>     SCSI_LOG_MLQUEUE and SCSI_LOG_MLCOMPLETE) and replace them
+>     with trace events.
+>
+> b) is what you're working on, right?
 
----
-Rob Elliott    HP Server Storage
+Right.
 
+> For 'c)' the problem is that we should retain the existing functionality
+> with scsi_logging_level here, at least initially.
+> So we cannot just replace it, as this would leave SCSI_LOG_ML
+> a dummy without any real functionality.
 
+I tried to change printk messages to new tracevents, but I'll stop it
+until we solve the problem.
+I'll submit the patch set removing duplicated decoder first.
 
+Thanks,
+Yoshihiro YUNOMAE
+
+-- 
+Yoshihiro YUNOMAE
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., Yokohama Research Laboratory
+E-mail: yoshihiro.yunomae.ez@hitachi.com
