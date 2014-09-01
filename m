@@ -1,82 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 06/22] scsi: stop decoding if scsi_normalize_sense() fails
-Date: Mon, 01 Sep 2014 10:06:25 +0200
-Message-ID: <54042901.6090403@suse.de>
-References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-7-git-send-email-hare@suse.de> <20140831220036.GB16432@infradead.org>
+Subject: Re: [PATCH 07/22] scsi: do not decode sense extras
+Date: Mon, 01 Sep 2014 10:10:24 +0200
+Message-ID: <540429F0.7010708@suse.de>
+References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-8-git-send-email-hare@suse.de> <20140831220622.GC16432@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44985 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:45019 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882AbaIAIG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Sep 2014 04:06:27 -0400
-In-Reply-To: <20140831220036.GB16432@infradead.org>
+	id S1752338AbaIAIK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Sep 2014 04:10:27 -0400
+In-Reply-To: <20140831220622.GC16432@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>, Kai.Makisara@kolumbus.fi, Willem Riede <osst@riede.org>
 
-On 09/01/2014 12:00 AM, Christoph Hellwig wrote:
-> On Thu, Aug 28, 2014 at 07:33:20PM +0200, Hannes Reinecke wrote:
->> If scsi_normalize_sense() fails we couldn't decode the sense
->> buffer, so we should not try to interpret the result.
->> We should rather dump the sense buffer instead and stop decoding.
+On 09/01/2014 12:06 AM, Christoph Hellwig wrote:
+> On Thu, Aug 28, 2014 at 07:33:21PM +0200, Hannes Reinecke wrote:
+>> Currently we're only decoding sense extras for tape devices.
+>> And even there only for fixed format sense formats.
+>> As this is of rather limited use in the general case we should
+>> be stop trying to decode things here and rather dump the entire
+>> sense code.
 >=20
-> as far as I can tell the old code doesn't interpret it, it just does =
+> I don't like this one at all.  Not that I'm attached to decoding the
+> extra sense buffer, but:
+>=20
+>   - __scsi_print_sense now prints both decoded sense data as well as =
 a
-> slightly more convoluted hexdump than your version.  Care to come up
-> with a better description for this patch?
+>     full dump, which is rather ugly
+>   - __scsi_print_sense prints that buffer unconditionally
 >=20
-Yep, done.
+> I'd say let's sit down and work with the tape driver maintainers on
+> finding a better way to deal with their sense printing needs.  And pa=
+rt
+> of that should probably be to get rid of __scsi_print_sense entirely
+> and make the tape drivers use pre-decoded and normalized sense buffer=
+s.
+>=20
+Well, thing is the tape driver does it's own sense decoding anyway.
+So there's no need for that to be done here.
 
->>  static void
->> +scsi_dump_sense_buffer(struct scsi_device *sdev, const char *name,
->> +		       const unsigned char *sense_buffer, int sense_len)
->>  {
->> +	char linebuf[128];
->> +	int i, linelen, remaining;
->> =20
->> +	remaining =3D sense_len;
->> +	for (i =3D 0; i < sense_len; i +=3D 16) {
->> +		linelen =3D min(remaining, 16);
->> +		remaining -=3D 16;
->> +
->> +		hex_dump_to_buffer(sense_buffer + i, linelen, 16, 1,
->> +				   linebuf, sizeof(linebuf), false);
->> +		sdev_prefix_printk(KERN_INFO, sdev, name,
->> +				   "Sense: %s\n", linebuf);
->>  	}
->=20
-> This would be more readanle without the remaining variable:
->=20
-> 	for (i =3D 0; i < sense_len; i +=3D 16) {
-> 		linelen =3D min(senselen - i, 16);
-> =09
-> 		...
-> 	}
->=20
-Ok, fixed.
-
->> @@ -1517,8 +1513,13 @@ void __scsi_print_sense(struct scsi_device *s=
-dev, const char *name,
->>  			const unsigned char *sense_buffer, int sense_len)
->>  {
->>  	struct scsi_sense_hdr sshdr;
->> +	int res;
->> =20
->> -	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr);
->> +	res =3D scsi_normalize_sense(sense_buffer, sense_len, &sshdr);
->> +	if (res =3D=3D 0) {
->> +		scsi_dump_sense_buffer(sdev, name, sense_buffer, sense_len);
->> +		return;
->> +	}
->=20
-> no need for the res variable.  In fact due to the boolean-like return
-> value of scsi_normalize_sense it would be a lot more readable without
-> the variable.
->=20
-Ok, fixed.
+I've updated the patch to not dump any sense code and adapted the
+descriptions somewhat.
 
 Cheers,
 
