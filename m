@@ -1,50 +1,40 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/22] scsi: do not decode sense extras
-Date: Mon, 01 Sep 2014 10:10:24 +0200
-Message-ID: <540429F0.7010708@suse.de>
-References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-8-git-send-email-hare@suse.de> <20140831220622.GC16432@infradead.org>
+Subject: Re: [PATCH 08/22] scsi: dump sense buffer only for debugging
+Date: Mon, 01 Sep 2014 10:26:51 +0200
+Message-ID: <54042DCB.70209@suse.de>
+References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-9-git-send-email-hare@suse.de> <20140831220904.GD16432@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45019 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:45210 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752338AbaIAIK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Sep 2014 04:10:27 -0400
-In-Reply-To: <20140831220622.GC16432@infradead.org>
+	id S1752611AbaIAI0x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Sep 2014 04:26:53 -0400
+In-Reply-To: <20140831220904.GD16432@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>, Kai.Makisara@kolumbus.fi, Willem Riede <osst@riede.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
-On 09/01/2014 12:06 AM, Christoph Hellwig wrote:
-> On Thu, Aug 28, 2014 at 07:33:21PM +0200, Hannes Reinecke wrote:
->> Currently we're only decoding sense extras for tape devices.
->> And even there only for fixed format sense formats.
->> As this is of rather limited use in the general case we should
->> be stop trying to decode things here and rather dump the entire
->> sense code.
+On 09/01/2014 12:09 AM, Christoph Hellwig wrote:
+> On Thu, Aug 28, 2014 at 07:33:22PM +0200, Hannes Reinecke wrote:
+>> Dumping the entire sense buffer might overwhelm the logging function=
+s,
+>> so suppress it per default.
 >=20
-> I don't like this one at all.  Not that I'm attached to decoding the
-> extra sense buffer, but:
+> Call me dumb, but I don't see anything in here that limits the dumps
+> to debug output.
 >=20
->   - __scsi_print_sense now prints both decoded sense data as well as =
-a
->     full dump, which is rather ugly
->   - __scsi_print_sense prints that buffer unconditionally
->=20
-> I'd say let's sit down and work with the tape driver maintainers on
-> finding a better way to deal with their sense printing needs.  And pa=
-rt
-> of that should probably be to get rid of __scsi_print_sense entirely
-> and make the tape drivers use pre-decoded and normalized sense buffer=
-s.
->=20
-Well, thing is the tape driver does it's own sense decoding anyway.
-So there's no need for that to be done here.
+Yeah, you're right. This patch is pretty pointless.
+I'll be removing it.
 
-I've updated the patch to not dump any sense code and adapted the
-descriptions somewhat.
+> Also if you return boolean-like values please use the bool type for i=
+t.
+> Also please switch scsi_normalize_sense over to return bool as well
+> while you're at it.
+>=20
+Ok.
 
 Cheers,
 
