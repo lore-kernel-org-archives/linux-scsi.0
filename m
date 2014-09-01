@@ -1,95 +1,64 @@
-From: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Subject: Re: [RFC PATCH 10/10] scsi/trace: Use scsi_print_command trace point
- instead of printk
-Date: Mon, 01 Sep 2014 15:38:07 +0900
-Message-ID: <5404144F.2070509@hitachi.com>
-References: <20140808115004.6768.97014.stgit@yuno-kbuild.novalocal> <20140808115030.6768.91195.stgit@yuno-kbuild.novalocal> <53FDE859.1020800@suse.de> <53FE8890.80403@hitachi.com> <53FEC9E7.6000909@hitachi.com> <53FF1D44.3080702@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 12/22] scsi: remove obsolete __scsi_print_command() usages
+Date: Mon, 01 Sep 2014 08:56:06 +0200
+Message-ID: <54041886.6090703@suse.de>
+References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-13-git-send-email-hare@suse.de> <20140831221809.GH16432@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53FF1D44.3080702@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:43883 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752518AbaIAG4J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Sep 2014 02:56:09 -0400
+In-Reply-To: <20140831221809.GH16432@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Robert Elliot <elliot@hp.com>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
-Hi Hannes,
+On 09/01/2014 12:18 AM, Christoph Hellwig wrote:
+> Can you change the subject a bit?  There's nothing obsolete in
+> __scsi_print_command, you're just moving it to a higher level helper.
+>=20
+>>  #if defined(AHA152X_DEBUG)
+>>  	if (HOSTDATA(shpnt)->debug & debug_queue) {
+>> -		printk(INFO_LEAD "queue: %p; cmd_len=3D%d pieces=3D%d size=3D%u c=
+mnd=3D",
+>> -		       CMDINFO(SCpnt), SCpnt, SCpnt->cmd_len,
+>> -		       scsi_sg_count(SCpnt), scsi_bufflen(SCpnt));
+>> -		__scsi_print_command(SCpnt->cmnd);
+>> +		scmd_printk(KERN_INFO, SCpnt,
+>> +			    "queue: %p; cmd_len=3D%d pieces=3D%d size=3D%u\n",
+>> +			    SCpnt, SCpnt->cmd_len,
+>> +			    scsi_sg_count(SCpnt), scsi_bufflen(SCpnt));
+>> +		scsi_print_command(SCpnt);
+>=20
+> This also has a printk -> scmd_printk change that's unrelated to the
+> patch.
+>=20
+> Honestly I think we should just kill much of the AHA152X_DEBUG code a=
+t
+> the start of this series to avoid all the churn in it.
+>=20
+I'm all for it.
+The 152x is a _really_ old card (that's the one which used to get
+shipped with the old parallel SCSI scanner, before they switched
+to ncr53c4xx) and it's ISA only. So the overall exposure will be
+rather limited, and I sincerely doubt anyone will be missing the
+debugging stubs.
+Will be removing them with the next patchset.
 
-Sorry for the late reply.
+Cheers,
 
-(2014/08/28 21:15), Hannes Reinecke wrote:
-> On 08/28/2014 08:19 AM, Yoshihiro YUNOMAE wrote:
->> Hi Hannes,
->>
->> I tried to remove duplicated decoder of SCSI command, but the
->> output format of it in constants.c is different from it in traceevents.
->> I have two questions for it.
->>
->> (Ex1)
->> traceevents: TEST_UNIT_READY
->> constants: Test Unit Ready
->>
->> => Which of "XXX_YYY_ZZZ" and "Xxx Yyy Zzz" should the kernel output
->> strings? This difference comes from difference of implementation.
->> The decoder in traceevents are using macro. So, it cannot define
->> separated words. On the other hand, the decoder in constants are using
->> constant string array table. So, it can define separated words.
->>
-> I would go with the wording in constants.c, but set in double quotes
-> like "Test Unit Ready" to avoid parsing errors later on.
-
-OK, we use constants' format and add double quotes for each sense code.
-
->> (Ex2)
->> traceevents: (nothing)
->> constants: Set limits(12)
->>
->> => Should we merge those decoder?
->>
-> Yes, I would prefer this. Again, we should be setting the strings in
-> double quotes irrespective if there are spaces in the resulting string
-> or not.
-
-Sure.
-
->> I understand we use the decoder of constants, but we need to solve
->> these problems. Would you give me your comments?
->>
-> As mentioned previously, my aim is to convert the logging system in
-> several steps:
->
-> a) convert all lone 'printk' statements into dev_printk() variants
->     and ensure everything is printed in one statement to avoid
->     linebreaks in the resulting logging message.
->     This will eliminate the immediate problem we're having, namely
->     that debugging is near to impossible under high load.
->     The patchset is nearing completion, and I will be posting it
->     later this week.
-> b) Convert scsi_trace to use the functions from constants.c to
->     avoid code duplication and update scsi_trace to log sense codes.
-> c) Remove all logging functions in the hot path (ie
->     SCSI_LOG_MLQUEUE and SCSI_LOG_MLCOMPLETE) and replace them
->     with trace events.
->
-> b) is what you're working on, right?
-
-Right.
-
-> For 'c)' the problem is that we should retain the existing functionality
-> with scsi_logging_level here, at least initially.
-> So we cannot just replace it, as this would leave SCSI_LOG_ML
-> a dummy without any real functionality.
-
-I tried to change printk messages to new tracevents, but I'll stop it
-until we solve the problem.
-I'll submit the patch set removing duplicated decoder first.
-
-Thanks,
-Yoshihiro YUNOMAE
-
--- 
-Yoshihiro YUNOMAE
-Software Platform Research Dept. Linux Technology Center
-Hitachi, Ltd., Yokohama Research Laboratory
-E-mail: yoshihiro.yunomae.ez@hitachi.com
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
