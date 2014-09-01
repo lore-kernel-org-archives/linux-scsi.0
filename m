@@ -1,24 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/3] scsi/trace: Use macros for getting driver byte,
-	host byte, msg byte, and status byte
-Date: Mon, 1 Sep 2014 17:15:31 +0200
-Message-ID: <20140901151531.GA5136@lst.de>
-References: <20140901123325.597.47231.stgit@yuno-kbuild.novalocal> <20140901123327.597.39622.stgit@yuno-kbuild.novalocal>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
+ module removal
+Date: Mon, 1 Sep 2014 08:36:29 -0700
+Message-ID: <20140901153629.GA29938@infradead.org>
+References: <5403AB47.3040706@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140901123327.597.39622.stgit@yuno-kbuild.novalocal>
+In-Reply-To: <5403AB47.3040706@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hidehiro Kawai <hidehiro.kawai.ez@hitachi.com>, "Ewan D. Milne" <emilne@redhat.com>, Doug Gilbert <dgilbert@interlog.com>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, Christoph Hellwig <hch@lst.de>
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Milan Broz <gmazyland@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Sep 01, 2014 at 12:33:28PM +0000, Yoshihiro YUNOMAE wrote:
-> For getting driver byte, host byte, msg byte, and status byte, macros are
-> implemented in scsi/scsi.h, so we use it.
+> --- a/drivers/scsi/scsi_debug.c	2014-08-26 13:24:51.646948507 -0400
+> +++ b/drivers/scsi/scsi_debug.c	2014-08-30 18:04:54.589226679 -0400
+> @@ -2743,6 +2743,13 @@ static int stop_queued_cmnd(struct scsi_
+>  		if (test_bit(k, queued_in_use_bm)) {
+>  			sqcp = &queued_arr[k];
+>  			if (cmnd == sqcp->a_cmnd) {
+> +				devip = (struct sdebug_dev_info *)
+> +					cmnd->device->hostdata;
+> +				if (devip)
+> +					atomic_dec(&devip->num_in_q);
+> +				sqcp->a_cmnd = NULL;
 
-As mentioned about three times in various previous scsi logging discussions
-this is entirely wrong and breaks decoding binary trace buffers.
-
-NAK.
+Why would the hostdata every be NULL here?  We should never
+call ->slave_destroy on a device that has outstanding commands.
