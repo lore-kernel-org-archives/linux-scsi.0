@@ -1,175 +1,64 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: [PATCH] SCSI: Don't store LUN bits in CDB[1] for USB mass-storage
- devices
-Date: Tue, 2 Sep 2014 11:35:50 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1409021108380.2308-100000@iolanthe.rowland.org>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [PATCH] bnx2fc: fix incorrect DMA memory mapping in bnx2fc_unmap_sg_list()
+Date: Tue, 2 Sep 2014 14:34:58 -0400
+Message-ID: <1409682898-29777-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:36973 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754729AbaIBTII (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2014 15:08:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, hch@lst.de
+Cc: giridhar.malavali@qlogic.com
 
-The SCSI specification requires that the second Command Data Byte
-should contain the LUN value in its high-order bits if the recipient
-device reports SCSI level 2 or below.  Nevertheless, some USB
-mass-storage devices use those bits for other purposes in
-vendor-specific commands.  Currently Linux has no way to send such
-commands, because the SCSI stack always overwrites the LUN bits.
+This patch is based on a problem and solution from Maurizio Lombardi
+where bnx2fc isn't consistent in which device struct we using for DMA
+map and unmap operations.  Make them consistent by using dma_sg_unmap
+in bnx2fc_unmap_sg_list like bnx2fc_map_sg.
 
-Testing shows that Windows 7 and XP do not store the LUN bits in the
-CDB when sending commands to a USB device.  This doesn't matter if the
-device uses the Bulk-Only or UAS transports (which virtually all
-modern USB mass-storage devices do), as these have a separate
-mechanism for sending the LUN value.
-
-Therefore this patch introduces a flag in the Scsi_Host structure to
-inform the SCSI midlayer that a transport does not require the LUN
-bits to be stored in the CDB, and it makes usb-storage set this flag
-for all devices using the Bulk-Only transport.  (UAS is handled by a
-separate driver, but it doesn't really matter because no SCSI-2 or
-lower device is at all likely to use UAS.)
-
-The patch also cleans up the code responsible for storing the LUN
-value by adding a bitflag to the scsi_device structure.  The test for
-whether to stick the LUN value in the CDB can be made when the device
-is probed, and stored for future use rather than being made over and
-over in the fast path.
-
-Signed-off-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Reported-by: Tiziano Bacocco <tiziano.bacocco-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Acked-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Acked-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Acked-by: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-
+Reviewed-by: Eddie Wai <eddie.wai@broadcom.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-
-[as1762]
-
-
- drivers/scsi/scsi.c        |    8 ++------
- drivers/scsi/scsi_scan.c   |   10 ++++++++++
- drivers/scsi/scsi_sysfs.c  |   12 ++++++++++++
- drivers/usb/storage/usb.c  |    8 ++++++++
- include/scsi/scsi_device.h |    1 +
- include/scsi/scsi_host.h   |    3 +++
- 6 files changed, 36 insertions(+), 6 deletions(-)
-
-Index: usb-3.16/include/scsi/scsi_host.h
-===================================================================
---- usb-3.16.orig/include/scsi/scsi_host.h
-+++ usb-3.16/include/scsi/scsi_host.h
-@@ -692,6 +692,9 @@ struct Scsi_Host {
- 	 */
- 	struct workqueue_struct *tmf_work_q;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 4c5891e..0679782 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1654,6 +1654,10 @@ static int bnx2fc_map_sg(struct bnx2fc_cmd *io_req)
+ 	u64 addr;
+ 	int i;
  
-+	/* The transport requires the LUN bits NOT to be stored in CDB[1] */
-+	unsigned no_scsi2_lun_in_cdb:1;
-+
- 	/*
- 	 * Value host_blocked counts down from
- 	 */
-Index: usb-3.16/include/scsi/scsi_device.h
-===================================================================
---- usb-3.16.orig/include/scsi/scsi_device.h
-+++ usb-3.16/include/scsi/scsi_device.h
-@@ -174,6 +174,7 @@ struct scsi_device {
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
-+	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
++	/*
++	 * Use dma_map_sg directly to ensure we're using the correct
++	 * dev struct off of pcidev.
++	 */
+ 	sg_count = dma_map_sg(&hba->pcidev->dev, scsi_sglist(sc),
+ 			      scsi_sg_count(sc), sc->sc_data_direction);
+ 	scsi_for_each_sg(sc, sg, sg_count, i) {
+@@ -1703,9 +1707,16 @@ static int bnx2fc_build_bd_list_from_sg(struct bnx2fc_cmd *io_req)
+ static void bnx2fc_unmap_sg_list(struct bnx2fc_cmd *io_req)
+ {
+ 	struct scsi_cmnd *sc = io_req->sc_cmd;
++	struct bnx2fc_interface *interface = io_req->port->priv;
++	struct bnx2fc_hba *hba = interface->hba;
  
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
- 
-Index: usb-3.16/drivers/scsi/scsi.c
-===================================================================
---- usb-3.16.orig/drivers/scsi/scsi.c
-+++ usb-3.16/drivers/scsi/scsi.c
-@@ -670,14 +670,10 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
+-	if (io_req->bd_tbl->bd_valid && sc) {
+-		scsi_dma_unmap(sc);
++	/*
++	 * Use dma_unmap_sg directly to ensure we're using the correct
++	 * dev struct off of pcidev.
++	 */
++	if (io_req->bd_tbl->bd_valid && sc && scsi_sg_count(sc)) {
++		dma_unmap_sg(&hba->pcidev->dev, scsi_sglist(sc),
++		    scsi_sg_count(sc), sc->sc_data_direction);
+ 		io_req->bd_tbl->bd_valid = 0;
  	}
- 
--	/*
--	 * If SCSI-2 or lower, store the LUN value in cmnd.
--	 */
--	if (cmd->device->scsi_level <= SCSI_2 &&
--	    cmd->device->scsi_level != SCSI_UNKNOWN) {
-+	/* Store the LUN value in cmnd, if needed. */
-+	if (cmd->device->lun_in_cdb)
- 		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
- 			       (cmd->device->lun << 5 & 0xe0);
--	}
- 
- 	scsi_log_send(cmd);
- 
-Index: usb-3.16/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-3.16.orig/drivers/scsi/scsi_scan.c
-+++ usb-3.16/drivers/scsi/scsi_scan.c
-@@ -736,6 +736,16 @@ static int scsi_probe_lun(struct scsi_de
- 		sdev->scsi_level++;
- 	sdev->sdev_target->scsi_level = sdev->scsi_level;
- 
-+	/*
-+	 * If SCSI-2 or lower, and if the transport requires it,
-+	 * store the LUN value in CDB[1].
-+	 */
-+	sdev->lun_in_cdb = 0;
-+	if (sdev->scsi_level <= SCSI_2 &&
-+	    sdev->scsi_level != SCSI_UNKNOWN &&
-+	    !sdev->host->no_scsi2_lun_in_cdb)
-+		sdev->lun_in_cdb = 1;
-+
- 	return 0;
  }
- 
-Index: usb-3.16/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-3.16.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-3.16/drivers/scsi/scsi_sysfs.c
-@@ -1263,7 +1263,19 @@ void scsi_sysfs_device_initialize(struct
- 	sdev->sdev_dev.class = &sdev_class;
- 	dev_set_name(&sdev->sdev_dev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-+	/*
-+	 * Get a default scsi_level from the target (derived from sibling
-+	 * devices).  This is the best we can do for guessing how to set
-+	 * sdev->lun_in_cdb for the initial INQUIRY command.  For LUN 0 the
-+	 * setting doesn't matter, because all the bits are zero anyway.
-+	 * But it does matter for higher LUNs.
-+	 */
- 	sdev->scsi_level = starget->scsi_level;
-+	if (sdev->scsi_level <= SCSI_2 &&
-+			sdev->scsi_level != SCSI_UNKNOWN &&
-+			!shost->no_scsi2_lun_in_cdb)
-+		sdev->lun_in_cdb = 1;
-+
- 	transport_setup_device(&sdev->sdev_gendev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-Index: usb-3.16/drivers/usb/storage/usb.c
-===================================================================
---- usb-3.16.orig/drivers/usb/storage/usb.c
-+++ usb-3.16/drivers/usb/storage/usb.c
-@@ -983,6 +983,14 @@ int usb_stor_probe2(struct us_data *us)
- 	if (!(us->fflags & US_FL_SCM_MULT_TARG))
- 		us_to_host(us)->max_id = 1;
- 
-+	/*
-+	 * Like Windows, we won't store the LUN bits in CDB[1] for SCSI-2
-+	 * devices using the Bulk-Only transport (even though this violates
-+	 * the SCSI spec).
-+	 */
-+	if (us->transport == usb_stor_Bulk_transport)
-+		us_to_host(us)->no_scsi2_lun_in_cdb = 1;
-+
- 	/* Find the endpoints and calculate pipe values */
- 	result = get_pipes(us);
- 	if (result)
+-- 
+1.8.5.2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
