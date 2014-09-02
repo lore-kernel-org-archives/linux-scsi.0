@@ -1,52 +1,54 @@
-From: Chunwei Chen <tuxoko@gmail.com>
-Subject: Re: [uas/3.16.1] panic in uas_data_cmplt()
-Date: Tue, 02 Sep 2014 20:15:34 +0800
-Message-ID: <5405B4E6.1040908@gmail.com>
-References: <54054509.2070609@gmail.com> <540568A3.4010106@redhat.com>
+From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
+Subject: RE: Adaptec 71605H HBA randomly failing to detect any drives at init
+Date: Tue, 2 Sep 2014 13:28:03 +0000
+Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E49DD3387@BBYEXM02.pmc-sierra.internal>
+References: <CAKmTNed2uSUGCDkxQSLofjgSGxLpZ154_gNpwt_NWChjR=s8iA@mail.gmail.com>
+ <CAKmTNecfkgOoX6p_1MeV5vNac4N1KoGTjMRcWL2GV77piR8RUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <540568A3.4010106@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:56887 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753902AbaIBN1Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2014 09:27:24 -0400
+In-Reply-To: <CAKmTNecfkgOoX6p_1MeV5vNac4N1KoGTjMRcWL2GV77piR8RUw@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Robertson <andyrobertson101@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-
-On =E8=A5=BF=E5=85=832014=E5=B9=B409=E6=9C=8802=E6=97=A5 14:50, Hans de=
- Goede wrote:
-> Hi,
->=20
-> On 09/02/2014 06:18 AM, Chunwei Chen wrote:
->> Dear all:
->>
->> The kernel version is 3.16.1-1-ARCH
->>
->> Today I keep getting this panic when booting up.
->> http://i.imgur.com/0Rx93Kr.jpg
->>
->> It might be that the UAS device was in some strange state,
->> because that after I unplugged and power-cycled the UAS,
->> everything went normal again.
->>
->> Does anyone know what's the root cause of this issue?
->> Or could anyone provide some instruction on how to debug this issue?
->=20
-> There seem to be some issues in the error handling paths of the uas
-> driver. I plan to rewrite them completely for robustness and go
-> through them with a fine comb to fix any possible bugs while at it.
->=20
-> I'll send out a mail when I've a new version ready for testing.
->=20
-> Regards,
->=20
-> Hans
->=20
-
-Hi Hans,
-
-Thanks for looking into this.
-
-Kind regards,
-Chunwei
+DQpPbiBNb24sIFNlcCAxLCAyMDE0IGF0IDk6MzYgUE0sIEFuZHJldyBSb2JlcnRzb24gPGFuZHly
+b2JlcnRzb24xMDFAZ21haWwuY29tPiB3cm90ZToNCj4gSGksDQo+DQo+IEkgaGF2ZSBhbiBBZGFw
+dGVjIDcxNjA1SCBIQkEgdGhhdCdzIHJhbmRvbWx5IGZhaWxpbmcgdG8gZGV0ZWN0IGFueQ0KPiBk
+cml2ZXMgYXQgYm9vdC4gIEkgaGF2ZSB0d28gc3lzdGVtcyB3aXRoIHRoaXMgSEJBLCBhbmQgYm90
+aCBhcmUNCj4gc2hvd2luZyB0aGUgZXhhY3Qgc2FtZSBiZWhhdmlvci4gIEkgY2FuIHJlcHJvZHVj
+ZSB0aGlzIHJhbmRvbWx5IGFib3V0DQo+IDMgb3V0IG9mIDQgdGltZXMsIHdoZXJlIG1vc3Qgb2Yg
+dGhlIHRpbWUgaXQgY29tZXMgdXAgd2hlcmUgImxzc2NzaSINCj4gc2hvd3Mgbm8gZHJpdmVzIGF0
+dGFjaGVkIChvdGhlciB0aGFuIG15IGJvb3QgZGlzaywgbm90IGF0dGFjaGVkIHRvDQo+IHRoaXMg
+SEJBKSAtIGJ1dCB0aGVuIG9jY2FzaW9uYWxseSBpdCB3b3JrcyBmaW5lICh+MSBvdXQgb2YgNCBy
+ZWJvb3RzKQ0KPiBhbmQgZGV0ZWN0cyB0aGUgZHJpdmVzLg0KPg0KPiBPbiBhICJnb29kIiBib290
+LCB0aGUga2VybmVsIG1lc3NhZ2VzIGluY2x1ZGU6DQo+IFsgICAyNy41NzUwOTFdIHBtODB4eCBw
+bTgwMDFfZXhlY19pbnRlcm5hbF90YXNrX2Fib3J0IDgzNDpUTUYgdGFzayB0aW1lb3V0Lg0KPiBb
+ICAgMjcuNzU0NjQwXSBzYXM6IC0tLSBFeGl0IHNhc19zY3NpX3JlY292ZXJfaG9zdDogYnVzeTog
+MCBmYWlsZWQ6IDAgdHJpZXM6IDENCj4NCj4gT24gYSAiYmFkIiBib290LCBpdCBkb2Vzbid0IGlu
+Y2x1ZGUgdGhlc2UgbWVzc2FnZXM7IGluc3RlYWQgaXQgaGFuZ3MNCj4gZm9yIH42MCBzZWNvbmRz
+IGFmdGVyICJFbnRlciBzYXNfc2NzaV9yZWNvdmVyX2hvc3QgYnVzeSIgYW5kIHRoZW4ganVzdA0K
+PiBjb250aW51ZXMgdG8gYm9vdCAoYW5kIHRoYXQgc2VlbXMgdG8gbmV2ZXIgcmVjb3ZlcikuICBJ
+dCBhbHNvIG5ldmVyDQo+IGNsZWFubHkgc2h1dHMgZG93biBpbiB0aGlzIHN0YXRlIChpdCBoYW5n
+cyBmb3JldmVyIG9uICJtb2Rwcm9iZSAtcSAtcg0KPiBpcG1pX2RldmludGYiIGFuZCBJIGhhdmUg
+dG8gcG93ZXItY3ljbGUgdGhlIG1hY2hpbmUgLS0gSSBzdXNwZWN0IHRoaXMNCj4gaXMgbW9yZSBv
+ZiBhIHN5bXB0b20gdGhhdCB0aGUga2VybmVsIGlzIGJ1c3kgZG9pbmcgb3RoZXIgdGhpbmdzIC0N
+Cj4gcG9zc2libHkgc3RpbGwgdHJ5aW5nIHRvIGluaXQgc2NzaSAtIGlzbnRlYWQgYW4gaXBtaS1z
+cGVjaWZpYyBpc3N1ZSkuDQo+DQo+IEknbSBoYXBweSB0byB0ZXN0IHBhdGNoZXMvZXRjIG9uIHRo
+aXMgc3lzdGVtIGlmIG5lY2Vzc2FyeSAtLSBhbmQvb3IgaWYNCj4gc29tZW9uZSBjYW4gaGVscCBw
+b2ludCBtZSBpbiB0aGUgcmlnaHQgZGlyZWN0aW9uLCBJJ2QgYXBwcmVjaWF0ZSBpdC4NCkhpIEFu
+ZHksDQoNCkNhbiB5b3Ugc2hhcmUgdGhlIGZvbGxvd2luZyBkZXRhaWxzPw0KDQoxLiBGdyB2ZXJz
+aW9uIGluIHRoZSBjYXJkIHlvdSBoYXZlLiBVc2UgYmVsb3cgY29tbWFuZCB0byBnZXQgdGhlIGZ3
+X3ZlcnNpb24gc3lzIGZpbGUuDQoyLiBFeHBhbmRlciBhbmQgZHJpdmUgZGV0YWlscyBhbmQgaG93
+IHlvdSBjb25uZWN0ZWQgaXQgdG8gSEJBPw0KMy4gQ2FuIHlvdSBlbmFibGUgZnVsbCBsb2dzIGFu
+ZCBob3QgcGx1ZyB0aGUgZXhwYW5kZXIvZGV2aWNlcyBhbmQgc2hhcmUgdGhlIGxvZyBpZiB0aGUg
+ZGlzY292ZXJ5IGZhaWxzLg0KDQpGaW5kIC9zeXMgLWluYW1lICJmd192ZXJzaW9uIg0KRmluZCAv
+c3lzIC1pbmFtZSBsb2dnaW5nX2xldmVsDQpFY2hvIG94ZmZmID4gImxvZ2dpbmdfbGV2ZWwgc3lz
+IGZpbGUiDQoNCkFsc28gY2FuIHlvdSB0ZXN0IHdpdGggbGF0ZXN0IExpbnV4IHN0YWJsZSByZWxl
+YXNlPw0KDQpUaGFua3MsDQpTdXJlc2gNCg0KPg0KPiBUaGFua3MsDQo+IEFuZHkNCg==
