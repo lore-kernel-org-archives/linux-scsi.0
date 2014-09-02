@@ -1,83 +1,49 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/5] kexec: Export kexec_in_progress
-Date: Tue, 02 Sep 2014 14:46:03 -0500
-Message-ID: <54061E7B.4080803@linux.vnet.ibm.com>
-References: <53D6B270.5020403@linux.vnet.ibm.com> <53DF96E5.7000601@linux.vnet.ibm.com>	<54009E8A.4070809@linux.vnet.ibm.com> <87wq9piw59.fsf@x220.int.ebiederm.org>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [RFC 1/2] target: Add documentation on the target userspace pass-through
+ driver
+Date: Tue, 02 Sep 2014 15:06:14 -0700
+Message-ID: <54063F56.9090606@redhat.com>
+References: <1404241875-29164-1-git-send-email-agrover@redhat.com> <1404241875-29164-2-git-send-email-agrover@redhat.com> <20140830173510.GA11820@redhat.com> <54037C46.1050601@redhat.com> <20140831212257.GO1302@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:58821 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752455AbaIBTqN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2014 15:46:13 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 2 Sep 2014 15:46:12 -0400
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 553236E804A
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Sep 2014 15:45:58 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s82Jk9Nm9372006
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2014 19:46:09 GMT
-Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s82Jk6YU013946
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Sep 2014 15:46:09 -0400
-In-Reply-To: <87wq9piw59.fsf@x220.int.ebiederm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20140831212257.GO1302@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Richard W.M. Jones" <rjones@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-On 08/30/2014 03:02 PM, Eric W. Biederman wrote:
-> Brian King <brking@linux.vnet.ibm.com> writes:
-> 
->> On 08/04/2014 09:21 AM, Brian King wrote:
->>> On 07/28/2014 03:28 PM, Brian King wrote:
->>>>
->>>> Export kexec_in_progress for use by device drivers and other modules
->>>> to optimize kexec boot.
->>>>
->>>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
->>>> ---
->>>>
->>>>  kernel/kexec.c |    2 ++
->>>>  1 file changed, 2 insertions(+)
->>>>
->>>> diff -puN kernel/kexec.c~kexec_export_in_prog kernel/kexec.c
->>>> --- linux/kernel/kexec.c~kexec_export_in_prog	2014-07-23 17:05:24.851887935 -0500
->>>> +++ linux-bjking1/kernel/kexec.c	2014-07-23 17:05:24.856887970 -0500
->>>> @@ -1716,3 +1716,5 @@ int kernel_kexec(void)
->>>>  	mutex_unlock(&kexec_mutex);
->>>>  	return error;
->>>>  }
->>>> +
->>>> +EXPORT_SYMBOL_GPL(kexec_in_progress);
->>>
->>> Eric,
->>>
->>> Can I get an ack on this so we can take this entire series through the SCSI tree?
->>
->> Eric,
->>
->> Any issues with this patch?
-> 
-> No huge issues except that patch description is largely uniformitive and
-> actually wrong.  kexec_in_progress is never set at boot/kernel startup.
+On 08/31/2014 02:22 PM, Richard W.M. Jones wrote:
+> Reading this several times, I now think I get what it's trying to say,
+> but I think it needs to introduces the terms (as the Economist style
+> does).  Something like this:
+>
+>    "TCM is the new name for LIO, an in-kernel iSCSI target (server).
+>    Existing TCM targets run in the kernel.  TCMU (TCM in Userspace)
+>    allows userspace programs to be written which act as iSCSI targets.
+>    This document describes the design.
+>
+>    The existing kernel provides modules for different SCSI transport
+>    protocols.  TCM also modularizes the data storage.  There are
+>    existing modules for file, block device, RAM or using another SCSI
+>    device as storage.  These are called "backstores" or "storage
+>    engines".  These built-in modules are implemented entirely as kernel
+>    code."
+>
+> And hopefully having defined a bit of background, the rest of the
+> document just flows nicely:
 
-Good point. How about this instead:
+Thanks much! I've put this in the doc, and will hopefully send out a 
+final patchset for inclusion with the new text in the next week or so.
 
-Export kexec_in_progress for use by device drivers and other modules
-to optimize shutdown handling during kexec.
+<begin naming potential-bikeshed wasteoftime>
 
-Thanks,
+The only change I made was "another" instead of "the new name" -- 
+because to be honest I don't know if there was actually an attempt at a 
+name change, and if so if it was successful or not :) LIO seems to have 
+stuck, but TCM seems to refer just to the "backend" part of LIO.
 
-Brian
+<end bikeshed>
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+Thanks again -- Andy
