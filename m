@@ -1,54 +1,50 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: RE: Adaptec 71605H HBA randomly failing to detect any drives at init
-Date: Tue, 2 Sep 2014 13:28:03 +0000
-Message-ID: <CE2C58F938F4C44EA74FFF880BAA7E5E49DD3387@BBYEXM02.pmc-sierra.internal>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Adaptec 71605H HBA randomly failing to detect any drives at
+ init
+Date: Tue, 2 Sep 2014 16:06:38 +0200
+Message-ID: <20140902160638.4824aff1@harpe.intellique.com>
 References: <CAKmTNed2uSUGCDkxQSLofjgSGxLpZ154_gNpwt_NWChjR=s8iA@mail.gmail.com>
- <CAKmTNecfkgOoX6p_1MeV5vNac4N1KoGTjMRcWL2GV77piR8RUw@mail.gmail.com>
+	<CAKmTNecfkgOoX6p_1MeV5vNac4N1KoGTjMRcWL2GV77piR8RUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:56887 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753902AbaIBN1Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2014 09:27:24 -0400
+Received: from mail1.g1.pair.com ([66.39.3.162]:41990 "EHLO mail1.g1.pair.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751640AbaIBOND convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Sep 2014 10:13:03 -0400
 In-Reply-To: <CAKmTNecfkgOoX6p_1MeV5vNac4N1KoGTjMRcWL2GV77piR8RUw@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Robertson <andyrobertson101@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Robertson <andyrobertson101@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-DQpPbiBNb24sIFNlcCAxLCAyMDE0IGF0IDk6MzYgUE0sIEFuZHJldyBSb2JlcnRzb24gPGFuZHly
-b2JlcnRzb24xMDFAZ21haWwuY29tPiB3cm90ZToNCj4gSGksDQo+DQo+IEkgaGF2ZSBhbiBBZGFw
-dGVjIDcxNjA1SCBIQkEgdGhhdCdzIHJhbmRvbWx5IGZhaWxpbmcgdG8gZGV0ZWN0IGFueQ0KPiBk
-cml2ZXMgYXQgYm9vdC4gIEkgaGF2ZSB0d28gc3lzdGVtcyB3aXRoIHRoaXMgSEJBLCBhbmQgYm90
-aCBhcmUNCj4gc2hvd2luZyB0aGUgZXhhY3Qgc2FtZSBiZWhhdmlvci4gIEkgY2FuIHJlcHJvZHVj
-ZSB0aGlzIHJhbmRvbWx5IGFib3V0DQo+IDMgb3V0IG9mIDQgdGltZXMsIHdoZXJlIG1vc3Qgb2Yg
-dGhlIHRpbWUgaXQgY29tZXMgdXAgd2hlcmUgImxzc2NzaSINCj4gc2hvd3Mgbm8gZHJpdmVzIGF0
-dGFjaGVkIChvdGhlciB0aGFuIG15IGJvb3QgZGlzaywgbm90IGF0dGFjaGVkIHRvDQo+IHRoaXMg
-SEJBKSAtIGJ1dCB0aGVuIG9jY2FzaW9uYWxseSBpdCB3b3JrcyBmaW5lICh+MSBvdXQgb2YgNCBy
-ZWJvb3RzKQ0KPiBhbmQgZGV0ZWN0cyB0aGUgZHJpdmVzLg0KPg0KPiBPbiBhICJnb29kIiBib290
-LCB0aGUga2VybmVsIG1lc3NhZ2VzIGluY2x1ZGU6DQo+IFsgICAyNy41NzUwOTFdIHBtODB4eCBw
-bTgwMDFfZXhlY19pbnRlcm5hbF90YXNrX2Fib3J0IDgzNDpUTUYgdGFzayB0aW1lb3V0Lg0KPiBb
-ICAgMjcuNzU0NjQwXSBzYXM6IC0tLSBFeGl0IHNhc19zY3NpX3JlY292ZXJfaG9zdDogYnVzeTog
-MCBmYWlsZWQ6IDAgdHJpZXM6IDENCj4NCj4gT24gYSAiYmFkIiBib290LCBpdCBkb2Vzbid0IGlu
-Y2x1ZGUgdGhlc2UgbWVzc2FnZXM7IGluc3RlYWQgaXQgaGFuZ3MNCj4gZm9yIH42MCBzZWNvbmRz
-IGFmdGVyICJFbnRlciBzYXNfc2NzaV9yZWNvdmVyX2hvc3QgYnVzeSIgYW5kIHRoZW4ganVzdA0K
-PiBjb250aW51ZXMgdG8gYm9vdCAoYW5kIHRoYXQgc2VlbXMgdG8gbmV2ZXIgcmVjb3ZlcikuICBJ
-dCBhbHNvIG5ldmVyDQo+IGNsZWFubHkgc2h1dHMgZG93biBpbiB0aGlzIHN0YXRlIChpdCBoYW5n
-cyBmb3JldmVyIG9uICJtb2Rwcm9iZSAtcSAtcg0KPiBpcG1pX2RldmludGYiIGFuZCBJIGhhdmUg
-dG8gcG93ZXItY3ljbGUgdGhlIG1hY2hpbmUgLS0gSSBzdXNwZWN0IHRoaXMNCj4gaXMgbW9yZSBv
-ZiBhIHN5bXB0b20gdGhhdCB0aGUga2VybmVsIGlzIGJ1c3kgZG9pbmcgb3RoZXIgdGhpbmdzIC0N
-Cj4gcG9zc2libHkgc3RpbGwgdHJ5aW5nIHRvIGluaXQgc2NzaSAtIGlzbnRlYWQgYW4gaXBtaS1z
-cGVjaWZpYyBpc3N1ZSkuDQo+DQo+IEknbSBoYXBweSB0byB0ZXN0IHBhdGNoZXMvZXRjIG9uIHRo
-aXMgc3lzdGVtIGlmIG5lY2Vzc2FyeSAtLSBhbmQvb3IgaWYNCj4gc29tZW9uZSBjYW4gaGVscCBw
-b2ludCBtZSBpbiB0aGUgcmlnaHQgZGlyZWN0aW9uLCBJJ2QgYXBwcmVjaWF0ZSBpdC4NCkhpIEFu
-ZHksDQoNCkNhbiB5b3Ugc2hhcmUgdGhlIGZvbGxvd2luZyBkZXRhaWxzPw0KDQoxLiBGdyB2ZXJz
-aW9uIGluIHRoZSBjYXJkIHlvdSBoYXZlLiBVc2UgYmVsb3cgY29tbWFuZCB0byBnZXQgdGhlIGZ3
-X3ZlcnNpb24gc3lzIGZpbGUuDQoyLiBFeHBhbmRlciBhbmQgZHJpdmUgZGV0YWlscyBhbmQgaG93
-IHlvdSBjb25uZWN0ZWQgaXQgdG8gSEJBPw0KMy4gQ2FuIHlvdSBlbmFibGUgZnVsbCBsb2dzIGFu
-ZCBob3QgcGx1ZyB0aGUgZXhwYW5kZXIvZGV2aWNlcyBhbmQgc2hhcmUgdGhlIGxvZyBpZiB0aGUg
-ZGlzY292ZXJ5IGZhaWxzLg0KDQpGaW5kIC9zeXMgLWluYW1lICJmd192ZXJzaW9uIg0KRmluZCAv
-c3lzIC1pbmFtZSBsb2dnaW5nX2xldmVsDQpFY2hvIG94ZmZmID4gImxvZ2dpbmdfbGV2ZWwgc3lz
-IGZpbGUiDQoNCkFsc28gY2FuIHlvdSB0ZXN0IHdpdGggbGF0ZXN0IExpbnV4IHN0YWJsZSByZWxl
-YXNlPw0KDQpUaGFua3MsDQpTdXJlc2gNCg0KPg0KPiBUaGFua3MsDQo+IEFuZHkNCg==
+Le Mon, 1 Sep 2014 09:06:46 -0700
+Andrew Robertson <andyrobertson101@gmail.com> =E9crivait:
+
+> I'm happy to test patches/etc on this system if necessary -- and/or i=
+f
+> someone can help point me in the right direction, I'd appreciate it.
+
+In my experience the 7xxx5 are very sensitive to cable length and
+backplane type: basically work fine with 50 cm cables, and fails with 8=
+0
+cm cables with some backplanes (works with Supermicro, not with AIC,
+etc).=20
+
+So what is the backplane and cables you're using?
+
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
