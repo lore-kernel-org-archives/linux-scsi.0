@@ -1,65 +1,81 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: [PATCH] drivers/target/target_core_transport.c: Fix typo issue to
- use 'buf' instead of 'len'
-Date: Wed, 03 Sep 2014 23:33:50 +0800
-Message-ID: <540734DE.6090306@gmail.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/19] lpfc 10.4.8000.0: Update lpfc version to driver
+ version 10.4.8000.0
+Date: Wed, 3 Sep 2014 12:54:48 -0400
+Message-ID: <1409763288.12357.0.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:57672 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752004AbaICPdu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 11:33:50 -0400
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:43837 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbaICQz0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:55:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michal Simek <monstr@monstr.eu>
+To: linux-scsi@vger.kernel.org
 
-It is a typo issue, need use 'buf' instead of 'len', the related warnin=
-g
-with allmodconfig under microblaze:
+Update lpfc version to driver version 10.4.8000.0
 
-drivers/target/target_core_transport.c: In function =91transport_dump_v=
-pd_ident_type=92:
-drivers/target/target_core_transport.c:956:9: warning: passing argument=
- 1 of =91strlen=92 makes pointer from integer without a cast
-   len =3D strlen(len);
-         ^
-In file included from include/linux/bitmap.h:8:0,
-                 from include/linux/cpumask.h:11,
-                 from include/linux/mm_types.h:12,
-                 from include/linux/kmemcheck.h:4,
-                 from include/linux/net.h:25,
-                 from drivers/target/target_core_transport.c:26:
-include/linux/string.h:83:24: note: expected =91const char *=92 but arg=
-ument is of type =91int=92
- extern __kernel_size_t strlen(const char *);
-                        ^
+This patch set updates the lpfc driver to revision 10.4.8000.0
 
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
----
- drivers/target/target_core_transport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The patches for 10.4.8000.0 contain:
+- Incorporate patches posted to linux-scsi
+  - Mark functions as static in lpfc/lpfc_sli.c
+  - Mark functions as static in lpfc/lpfc_hbadisc.c
+  - Mark functions as static in lpfc/lpfc_init.c
+  - Mark functions as static in lpfc/lpfc_scsi.c
+  - Mark function as static in lpfc/lpfc_bsg.c
+  - Use time_after()
+  - Use dma_zalloc_coherent
+  - random32: do not feed jiffies as seed from lpfc driver
+  - Use pci_enable_msix_range() instead of pci_enable_msix()
+- Fix discovery timeout during nameserver login
+- Fix quarantined XRI recovery qualifier state in link bounce 
+- Fix IP Reset processing - wait for RDY before proceeding
+- Fix race between LOGO/PLOGI handling causing NULL pointer
+- Fix locking issues with abort data paths
+- Fixed crash from page fault caused by use after rport delete
+- Fixed High priority issues from lpfc given by fortify source code scan.
+- Fixed Low priority issues from lpfc given by fortify source code scan.
+- Fix for handling unmapped ndlp in target reset handler
+- Update lpfc version to driver version 10.4.8000.0
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/ta=
-rget_core_transport.c
-index 1dd1181..3ce85ed 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -953,7 +953,7 @@ int transport_dump_vpd_ident_type(
- 		strlcat(buf, "SCSI name string\n", sizeof(buf));
- 		break;
- 	default:
--		len =3D strlen(len);
-+		len =3D strlen(buf);
- 		snprintf(&buf[len], sizeof(buf) - len, "Unsupported: 0x%02x\n",
- 				vpd->device_identifier_type);
- 		ret =3D -EINVAL;
---=20
-1.9.3
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+The patches were cut against Christoph's scsi-queue.git,
+branch "drivers-for-3.18".
+
+
+-- james s
+
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+
+James Smart (19):
+
+ drivers/scsi/lpfc/lpfc_attr.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       |  20 ++-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   1 -
+ drivers/scsi/lpfc/lpfc_ct.c        |  14 ++-
+ drivers/scsi/lpfc/lpfc_debugfs.c   |   4 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   6 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  33 +++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  53 +++++---
+ drivers/scsi/lpfc/lpfc_init.c      | 225 ++++++++++++++++-----------------
+ drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   2 +
+ drivers/scsi/lpfc/lpfc_scsi.c      |  34 +++--
+ drivers/scsi/lpfc/lpfc_sli.c       | 247 ++++++++++++++++++-------------------
+ drivers/scsi/lpfc/lpfc_sli.h       |   1 +
+ drivers/scsi/lpfc/lpfc_sli4.h      |  20 +--
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 16 files changed, 351 insertions(+), 319 deletions(-)
+
+-- 
+1.7.11.7
+
+
+
+
