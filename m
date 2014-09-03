@@ -1,259 +1,59 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 14/19] lpfc 10.4.8000.0: Fix locking issues with abort data
- paths
-Date: Wed, 3 Sep 2014 12:57:30 -0400
-Message-ID: <1409763450.12357.14.camel@myfc17>
+Subject: [PATCH 15/19] lpfc 10.4.8000.0: Fixed crash from page fault caused
+ by use after rport delete
+Date: Wed, 3 Sep 2014 12:57:43 -0400
+Message-ID: <1409763463.12357.15.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:43869 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932380AbaICQ5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:57:37 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:47654 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380AbaICQ5v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:57:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix locking issues with abort data paths
+Fixed crash from page fault caused by use after rport delete
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c |  12 ++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 118 +++++++++++++++++++++++++-----------------
- drivers/scsi/lpfc/lpfc_sli.h  |   1 +
- 3 files changed, 83 insertions(+), 48 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 6094545..0f6be85 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3466,7 +3466,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 	 */
- 	if ((phba->cfg_fof) && ((struct lpfc_device_data *)
- 		scsi_cmnd->device->hostdata)->oas_enabled)
--		lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_OAS;
-+		lpfc_cmd->cur_iocbq.iocb_flag |= (LPFC_IO_OAS | LPFC_IO_FOF);
- 	return 0;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 2d929a5..310507d 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -150,6 +150,17 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
  
-@@ -3606,6 +3606,14 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
- 	 */
- 	iocb_cmd->un.fcpi.fcpi_parm = fcpdl;
- 
-+	/*
-+	 * If the OAS driver feature is enabled and the lun is enabled for
-+	 * OAS, set the oas iocb related flags.
-+	 */
-+	if ((phba->cfg_fof) && ((struct lpfc_device_data *)
-+		scsi_cmnd->device->hostdata)->oas_enabled)
-+		lpfc_cmd->cur_iocbq.iocb_flag |= (LPFC_IO_OAS | LPFC_IO_FOF);
-+
- 	return 0;
- err:
- 	if (lpfc_cmd->seg_cnt)
-@@ -4876,6 +4884,8 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abtsiocb->fcp_wqidx = iocb->fcp_wqidx;
- 	abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
-+	if (iocb->iocb_flag & LPFC_IO_FOF)
-+		abtsiocb->iocb_flag |= LPFC_IO_FOF;
- 
- 	if (lpfc_is_link_up(phba))
- 		icmd->ulpCommand = CMD_ABORT_XRI_CN;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index deb7f12..7185aac 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -8753,6 +8753,37 @@ lpfc_sli_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 	return 0;
- }
- 
-+int
-+lpfc_sli_calc_ring(struct lpfc_hba *phba, uint32_t ring_number,
-+		    struct lpfc_iocbq *piocb)
-+{
-+	uint32_t idx;
-+
-+	if (phba->sli_rev == LPFC_SLI_REV4) {
-+		if (piocb->iocb_flag &  (LPFC_IO_FCP | LPFC_USE_FCPWQIDX)) {
-+			/*
-+			 * fcp_wqidx should already be setup based on what
-+			 * completion queue we want to use.
-+			 */
-+			if (!(phba->cfg_fof) ||
-+			    (!(piocb->iocb_flag & LPFC_IO_FOF))) {
-+				if (unlikely(!phba->sli4_hba.fcp_wq))
-+					return LPFC_HBA_ERROR;
-+				idx = lpfc_sli4_scmd_to_wqidx_distr(phba);
-+				piocb->fcp_wqidx = idx;
-+				ring_number = MAX_SLI3_CONFIGURED_RINGS + idx;
-+			} else {
-+				if (unlikely(!phba->sli4_hba.oas_wq))
-+					return LPFC_HBA_ERROR;
-+				idx = 0;
-+				piocb->fcp_wqidx = idx;
-+				ring_number =  LPFC_FCP_OAS_RING;
-+			}
-+		}
-+	}
-+	return ring_number;
-+}
-+
- /**
-  * lpfc_sli_issue_iocb - Wrapper function for __lpfc_sli_issue_iocb
-  * @phba: Pointer to HBA context object.
-@@ -8778,61 +8809,42 @@ lpfc_sli_issue_iocb(struct lpfc_hba *phba, uint32_t ring_number,
- 	int rc, idx;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
--		if (piocb->iocb_flag &  LPFC_IO_FCP) {
--			if (!phba->cfg_fof || (!(piocb->iocb_flag &
--				LPFC_IO_OAS))) {
--				if (unlikely(!phba->sli4_hba.fcp_wq))
--					return IOCB_ERROR;
--				idx = lpfc_sli4_scmd_to_wqidx_distr(phba);
--				piocb->fcp_wqidx = idx;
--				ring_number = MAX_SLI3_CONFIGURED_RINGS + idx;
--			} else {
--				if (unlikely(!phba->sli4_hba.oas_wq))
--					return IOCB_ERROR;
--				idx = 0;
--				piocb->fcp_wqidx = 0;
--				ring_number =  LPFC_FCP_OAS_RING;
--			}
--			pring = &phba->sli.ring[ring_number];
--			spin_lock_irqsave(&pring->ring_lock, iflags);
--			rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb,
--				flag);
--			spin_unlock_irqrestore(&pring->ring_lock, iflags);
-+		ring_number = lpfc_sli_calc_ring(phba, ring_number, piocb);
-+		if (unlikely(ring_number == LPFC_HBA_ERROR))
-+			return IOCB_ERROR;
-+		idx = piocb->fcp_wqidx;
- 
--			if (lpfc_fcp_look_ahead) {
--				fcp_eq_hdl = &phba->sli4_hba.fcp_eq_hdl[idx];
-+		pring = &phba->sli.ring[ring_number];
-+		spin_lock_irqsave(&pring->ring_lock, iflags);
-+		rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
-+		spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 
--				if (atomic_dec_and_test(&fcp_eq_hdl->
--					fcp_eq_in_use)) {
-+		if (lpfc_fcp_look_ahead && (piocb->iocb_flag &  LPFC_IO_FCP)) {
-+			fcp_eq_hdl = &phba->sli4_hba.fcp_eq_hdl[idx];
- 
--					/* Get associated EQ with this index */
--					fpeq = phba->sli4_hba.hba_eq[idx];
-+			if (atomic_dec_and_test(&fcp_eq_hdl->
-+				fcp_eq_in_use)) {
- 
--					/* Turn off interrupts from this EQ */
--					lpfc_sli4_eq_clr_intr(fpeq);
-+				/* Get associated EQ with this index */
-+				fpeq = phba->sli4_hba.hba_eq[idx];
- 
--					/*
--					 * Process all the events on FCP EQ
--					 */
--					while ((eqe = lpfc_sli4_eq_get(fpeq))) {
--						lpfc_sli4_hba_handle_eqe(phba,
--							eqe, idx);
--						fpeq->EQ_processed++;
--					}
-+				/* Turn off interrupts from this EQ */
-+				lpfc_sli4_eq_clr_intr(fpeq);
- 
--					/* Always clear and re-arm the EQ */
--					lpfc_sli4_eq_release(fpeq,
--						LPFC_QUEUE_REARM);
-+				/*
-+				 * Process all the events on FCP EQ
-+				 */
-+				while ((eqe = lpfc_sli4_eq_get(fpeq))) {
-+					lpfc_sli4_hba_handle_eqe(phba,
-+						eqe, idx);
-+					fpeq->EQ_processed++;
- 				}
--				atomic_inc(&fcp_eq_hdl->fcp_eq_in_use);
--			}
--		} else {
--			pring = &phba->sli.ring[ring_number];
--			spin_lock_irqsave(&pring->ring_lock, iflags);
--			rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb,
--				flag);
--			spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 
-+				/* Always clear and re-arm the EQ */
-+				lpfc_sli4_eq_release(fpeq,
-+					LPFC_QUEUE_REARM);
-+			}
-+			atomic_inc(&fcp_eq_hdl->fcp_eq_in_use);
+ 		/* If the WWPN of the rport and ndlp don't match, ignore it */
+ 		if (rport->port_name != wwn_to_u64(ndlp->nlp_portname.u.wwn)) {
++			lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE,
++				"6789 rport name %lx != node port name %lx",
++				(unsigned long)rport->port_name,
++				(unsigned long)wwn_to_u64(
++						ndlp->nlp_portname.u.wwn));
++			put_node = rdata->pnode != NULL;
++			put_rport = ndlp->rport != NULL;
++			rdata->pnode = NULL;
++			ndlp->rport = NULL;
++			if (put_node)
++				lpfc_nlp_put(ndlp);
+ 			put_device(&rport->dev);
+ 			return;
  		}
- 	} else {
- 		/* For now, SLI2/3 will still use hbalock */
-@@ -9715,6 +9727,7 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	struct lpfc_iocbq *abtsiocbp;
- 	IOCB_t *icmd = NULL;
- 	IOCB_t *iabt = NULL;
-+	int ring_number;
- 	int retval;
- 	unsigned long iflags;
- 
-@@ -9755,6 +9768,8 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	abtsiocbp->fcp_wqidx = cmdiocb->fcp_wqidx;
- 	if (cmdiocb->iocb_flag & LPFC_IO_FCP)
- 		abtsiocbp->iocb_flag |= LPFC_USE_FCPWQIDX;
-+	if (cmdiocb->iocb_flag & LPFC_IO_FOF)
-+		abtsiocbp->iocb_flag |= LPFC_IO_FOF;
- 
- 	if (phba->link_state >= LPFC_LINK_UP)
- 		iabt->ulpCommand = CMD_ABORT_XRI_CN;
-@@ -9771,6 +9786,11 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			 abtsiocbp->iotag);
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
-+		ring_number =
-+			lpfc_sli_calc_ring(phba, pring->ringno, abtsiocbp);
-+		if (unlikely(ring_number == LPFC_HBA_ERROR))
-+			return 0;
-+		pring = &phba->sli.ring[ring_number];
- 		/* Note: both hbalock and ring_lock need to be set here */
- 		spin_lock_irqsave(&pring->ring_lock, iflags);
- 		retval = __lpfc_sli_issue_iocb(phba, pring->ringno,
-@@ -10068,6 +10088,8 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
- 		abtsiocb->fcp_wqidx = iocbq->fcp_wqidx;
- 		if (iocbq->iocb_flag & LPFC_IO_FCP)
- 			abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
-+		if (iocbq->iocb_flag & LPFC_IO_FOF)
-+			abtsiocb->iocb_flag |= LPFC_IO_FOF;
- 
- 		if (lpfc_is_link_up(phba))
- 			abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
-@@ -10167,6 +10189,8 @@ lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
- 		abtsiocbq->fcp_wqidx = iocbq->fcp_wqidx;
- 		if (iocbq->iocb_flag & LPFC_IO_FCP)
- 			abtsiocbq->iocb_flag |= LPFC_USE_FCPWQIDX;
-+		if (iocbq->iocb_flag & LPFC_IO_FOF)
-+			abtsiocbq->iocb_flag |= LPFC_IO_FOF;
- 
- 		if (lpfc_is_link_up(phba))
- 			abtsiocbq->iocb.ulpCommand = CMD_ABORT_XRI_CN;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
-index edb4883..4a01452 100644
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -79,6 +79,7 @@ struct lpfc_iocbq {
- #define LPFC_FIP_ELS_ID_SHIFT	14
- 
- #define LPFC_IO_OAS		0x10000 /* OAS FCP IO */
-+#define LPFC_IO_FOF		0x20000 /* FOF FCP IO */
- 
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	uint32_t fcp_wqidx;	/* index to FCP work queue */
+@@ -285,6 +296,7 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 	if (ndlp->nlp_sid != NLP_NO_SID) {
+ 		warn_on = 1;
+ 		/* flush the target */
++		ndlp->nlp_add_flag &= ~NLP_IN_DEV_LOSS;
+ 		lpfc_sli_abort_iocb(vport, &phba->sli.ring[phba->sli.fcp_ring],
+ 				    ndlp->nlp_sid, 0, LPFC_CTX_TGT);
+ 	}
 -- 
 1.7.11.7
 
