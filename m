@@ -1,49 +1,37 @@
-From: Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>
-Subject: RES: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
  size issues with >2TB HDDs)
-Date: Wed, 3 Sep 2014 19:17:45 +0000
-Message-ID: <0dd1959994514ab098456600a312237e@serv031.corp.eldorado.org.br>
-References: <CAA6KcBCnns-nuE4LA4EqWGhEbisueBNwAjN7vtYcfBdKm2WyUA@mail.gmail.com>
- <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
- <CAA6KcBBYbwxrCD3-W_frS5TLBVixMr-tBjhLp0HmoaDSRT==Cw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Date: Wed, 3 Sep 2014 15:50:16 -0400
+Message-ID: <201409031950.s83JoGxU015055@hobgoblin.ariadne.com>
+References: <Pine.LNX.4.44L0.1409031459400.2156-100000@iolanthe.rowland.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.eldorado.org.br ([200.148.226.10]:8409 "EHLO
-	smtp1.eldorado.org.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbaICTRw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 15:17:52 -0400
-In-Reply-To: <CAA6KcBBYbwxrCD3-W_frS5TLBVixMr-tBjhLp0HmoaDSRT==Cw@mail.gmail.com>
-Content-Language: pt-BR
+Received: from qmta06.westchester.pa.mail.comcast.net ([76.96.62.56]:57710
+	"EHLO qmta06.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751544AbaICTuT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 15:50:19 -0400
+In-reply-to: <Pine.LNX.4.44L0.1409031459400.2156-100000@iolanthe.rowland.org>
+	(stern@rowland.harvard.edu)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Alan Stern <stern@rowland.harvard.edu>
-Cc: "Dale R. Worley" <worley@alum.mit.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
+> From: Alan Stern <stern@rowland.harvard.edu>
 
-On Sat, 30 Aug 2014, Matthew Dharm wrote 
-> I was thinking of something that could notice a USB device which is formatted
-> NTFS and has a partition table and filesystem that indicates a much bigger
-> capacity than what the drive reports.  Under this circumstances, you could do
-> something like pop-up a dialog box saying "this drive is confused -- is it 2TB or
-> 3TB?"
-> 
-> Well, maybe that would say "Drive capacity is not consistent with partition
-> table.  This can happen with certain USB drives designed for use with
-> Windows.  Override drive capacity (emulating Windows)?"
-> 
-> You could imagine increasing complex heuristics to try to detect this scenario.
-> Even without an automated helper program to do it, if there was a sysfs
-> interface then when we got the periodic e-mails reporting this same type of
-> problem, we could offer a quick-and-clean solution.
+> Anyway, I can try writing a patch to add this capability.  We'll see if 
+> it can solve your problem.
 
+Unfortunately, I think there is genuine value in such a hack.  E.g.,
+I've got two USB-to-SATA adapters.  One works correctly.  One does
+not.  But at this point, I can't attach both of my high-capacity disks
+to the laptop at the same time, which makes it difficult to
+bulk-transfer files from one to the other.
 
-Hi Matt,
+If, for the deficient adapter, the kernel assumed the disk size was
+the end of the last partition (or the backup GPT partition table, if
+that follows), then I could use it for everything other than
+repartitioning.  And that would make life easier.
 
-I did small hack to skip is_pte_valid() on efi.c  and now I have sdc1 partition listed on /proc/partition, but I hit other issue: ntfs-3g mount userspace tool that comes with Fedora now fails with "Failed to read last sector (7814037100): Invalid argument".  I also tried to override disk capacity, but SD driver fails with "Invalid command failure" and "Illegal Request" (I'll investigate it later)
+Thanks for trying,
 
-Many places rely on disk capacity value, I think emulate Windows behavior for these HDD docks will not be an easy task.... 
-
-[]'s
-Alfredo
+Dale
