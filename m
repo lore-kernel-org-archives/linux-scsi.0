@@ -1,410 +1,53 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 17/19] lpfc 10.4.8000.0: Fixed Low priority issues from lpfc
- given by fortify source code scan
-Date: Wed, 3 Sep 2014 12:58:06 -0400
-Message-ID: <1409763486.12357.17.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
+ size issues with >2TB HDDs)
+Date: Wed, 3 Sep 2014 14:44:48 -0400
+Message-ID: <201409031844.s83IimIl011663@hobgoblin.ariadne.com>
+References: <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:43875 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932743AbaICQ6L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:58:11 -0400
+Received: from qmta14.westchester.pa.mail.comcast.net ([76.96.59.212]:48176
+	"EHLO qmta14.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755158AbaICSov (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 14:44:51 -0400
+In-reply-to: <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
+	(stern@rowland.harvard.edu)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Fixed Low priority issues from lpfc given by fortify source code scan.
+> From: Alan Stern <stern@rowland.harvard.edu>
+> 
+> On Fri, 29 Aug 2014, Matthew Dharm wrote:
+> > Is there an 'easy' way to override the detected size of a storage
+> > device from userspace?  If we had that, someone could write a helper
+> > application which looked for this particular fubar and try to Do The
+> > Right Thing(tm), or at least offer the user some options.
+> 
+> You mean, force a Media Change event and override the capacity reported 
+> by the hardware?  I'm not aware of any API for doing that, although it 
+> probably wouldn't be too hard to add one.
+> 
+> How would the user know what value to put in for the capacity?  Unless 
+> the drive had been hooked up to a different computer and the user 
+> manually noted the correct capacity and typed it in, it would have to 
+> be guesswork.
 
-Signed-off-by: James Smart <james.smart@emulex.com>
-Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
----
- drivers/scsi/lpfc/lpfc_attr.c    |  2 +-
- drivers/scsi/lpfc/lpfc_bsg.c     |  5 -----
- drivers/scsi/lpfc/lpfc_ct.c      | 14 ++++++++------
- drivers/scsi/lpfc/lpfc_debugfs.c |  4 ++--
- drivers/scsi/lpfc/lpfc_els.c     | 16 ++++------------
- drivers/scsi/lpfc/lpfc_hbadisc.c | 10 +---------
- drivers/scsi/lpfc/lpfc_init.c    |  2 --
- drivers/scsi/lpfc/lpfc_sli.c     | 21 +++++++++------------
- 8 files changed, 25 insertions(+), 49 deletions(-)
+The value would most sanely be extracted from the partition table.
+(After verifying that the partition table looks correct.)  That seems
+to be what Windows does, and it seems to work consistently enough for
+Windows to trust that method.  Or at least, it could take the disk
+size to be the end of the last partition, which would at least make
+all the partitions accessible.
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 6eed9e7..2f9b968 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3385,7 +3385,7 @@ lpfc_stat_data_ctrl_store(struct device *dev, struct device_attribute *attr,
- 		if (strlen(buf) > (LPFC_MAX_DATA_CTRL_LEN - 1))
- 			return -EINVAL;
- 
--		strcpy(bucket_data, buf);
-+		strncpy(bucket_data, buf, LPFC_MAX_DATA_CTRL_LEN);
- 		str_ptr = &bucket_data[0];
- 		/* Ignore this token - this is command token */
- 		token = strsep(&str_ptr, "\t ");
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index a58bffb..a7bf359 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -656,7 +656,6 @@ lpfc_bsg_rport_els(struct fc_bsg_job *job)
- 	struct lpfc_nodelist *ndlp = rdata->pnode;
- 	uint32_t elscmd;
- 	uint32_t cmdsize;
--	uint32_t rspsize;
- 	struct lpfc_iocbq *cmdiocbq;
- 	uint16_t rpi = 0;
- 	struct bsg_job_data *dd_data;
-@@ -687,7 +686,6 @@ lpfc_bsg_rport_els(struct fc_bsg_job *job)
- 
- 	elscmd = job->request->rqst_data.r_els.els_code;
- 	cmdsize = job->request_payload.payload_len;
--	rspsize = job->reply_payload.payload_len;
- 
- 	if (!lpfc_nlp_get(ndlp)) {
- 		rc = -ENODEV;
-@@ -2251,7 +2249,6 @@ lpfc_sli4_bsg_diag_mode_end(struct fc_bsg_job *job)
- 	i = 0;
- 	while (phba->link_state != LPFC_LINK_DOWN) {
- 		if (i++ > timeout) {
--			rc = -ETIMEDOUT;
- 			lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 					"3140 Timeout waiting for link to "
- 					"diagnostic mode_end, timeout:%d ms\n",
-@@ -2291,7 +2288,6 @@ lpfc_sli4_bsg_link_diag_test(struct fc_bsg_job *job)
- 	LPFC_MBOXQ_t *pmboxq;
- 	struct sli4_link_diag *link_diag_test_cmd;
- 	uint32_t req_len, alloc_len;
--	uint32_t timeout;
- 	struct lpfc_mbx_run_link_diag_test *run_link_diag_test;
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	uint32_t shdr_status, shdr_add_status;
-@@ -2342,7 +2338,6 @@ lpfc_sli4_bsg_link_diag_test(struct fc_bsg_job *job)
- 
- 	link_diag_test_cmd = (struct sli4_link_diag *)
- 			 job->request->rqst_data.h_vendor.vendor_cmd;
--	timeout = link_diag_test_cmd->timeout * 100;
- 
- 	rc = lpfc_sli4_bsg_set_link_diag_state(phba, 1);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index da61d8d..61a32cd 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1439,7 +1439,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #2 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(MANUFACTURER);
--			strcpy(ae->un.Manufacturer, "Emulex Corporation");
-+			strncpy(ae->un.Manufacturer, "Emulex Corporation", 64);
- 			len = strlen(ae->un.Manufacturer);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-@@ -1449,7 +1449,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #3 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(SERIAL_NUMBER);
--			strcpy(ae->un.SerialNumber, phba->SerialNumber);
-+			strncpy(ae->un.SerialNumber, phba->SerialNumber, 64);
- 			len = strlen(ae->un.SerialNumber);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-@@ -1459,7 +1459,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #4 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(MODEL);
--			strcpy(ae->un.Model, phba->ModelName);
-+			strncpy(ae->un.Model, phba->ModelName, 256);
- 			len = strlen(ae->un.Model);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-@@ -1469,7 +1469,7 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #5 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(MODEL_DESCRIPTION);
--			strcpy(ae->un.ModelDescription, phba->ModelDesc);
-+			strncpy(ae->un.ModelDescription, phba->ModelDesc, 256);
- 			len = strlen(ae->un.ModelDescription);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-@@ -1500,7 +1500,8 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #7 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(DRIVER_VERSION);
--			strcpy(ae->un.DriverVersion, lpfc_release_version);
-+			strncpy(ae->un.DriverVersion,
-+				lpfc_release_version, 256);
- 			len = strlen(ae->un.DriverVersion);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-@@ -1510,7 +1511,8 @@ lpfc_fdmi_cmd(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp, int cmdcode)
- 			/* #8 HBA attribute entry */
- 			ae = (ATTRIBUTE_ENTRY *) ((uint8_t *) rh + size);
- 			ae->ad.bits.AttrType = be16_to_cpu(OPTION_ROM_VERSION);
--			strcpy(ae->un.OptionROMVersion, phba->OptionROMVersion);
-+			strncpy(ae->un.OptionROMVersion,
-+				phba->OptionROMVersion, 256);
- 			len = strlen(ae->un.OptionROMVersion);
- 			len += (len & 3) ? (4 - (len & 3)) : 4;
- 			ae->ad.bits.AttrLen = be16_to_cpu(FOURBYTES + len);
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index b0aedce..786a2af 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -269,7 +269,7 @@ static int
- lpfc_debugfs_hbqinfo_data(struct lpfc_hba *phba, char *buf, int size)
- {
- 	int len = 0;
--	int cnt, i, j, found, posted, low;
-+	int i, j, found, posted, low;
- 	uint32_t phys, raw_index, getidx;
- 	struct lpfc_hbq_init *hip;
- 	struct hbq_s *hbqs;
-@@ -279,7 +279,7 @@ lpfc_debugfs_hbqinfo_data(struct lpfc_hba *phba, char *buf, int size)
- 
- 	if (phba->sli_rev != 3)
- 		return 0;
--	cnt = LPFC_HBQINFO_SIZE;
-+
- 	spin_lock_irq(&phba->hbalock);
- 
- 	/* toggle between multiple hbqs, if any */
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index c7e5080..4c25485 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1829,7 +1829,7 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	IOCB_t *irsp;
- 	struct lpfc_nodelist *ndlp;
- 	struct lpfc_dmabuf *prsp;
--	int disc, rc, did, type;
-+	int disc, rc;
- 
- 	/* we pass cmdiocb to state machine which needs rspiocb as well */
- 	cmdiocb->context_un.rsp_iocb = rspiocb;
-@@ -1874,10 +1874,6 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out;
- 	}
- 
--	/* ndlp could be freed in DSM, save these values now */
--	type = ndlp->nlp_type;
--	did = ndlp->nlp_DID;
--
- 	if (irsp->ulpStatus) {
- 		/* Check for retry */
- 		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
-@@ -2270,8 +2266,6 @@ lpfc_adisc_done(struct lpfc_vport *vport)
- void
- lpfc_more_adisc(struct lpfc_vport *vport)
- {
--	int sentadisc;
--
- 	if (vport->num_disc_nodes)
- 		vport->num_disc_nodes--;
- 	/* Continue discovery with <num_disc_nodes> ADISCs to go */
-@@ -2284,7 +2278,7 @@ lpfc_more_adisc(struct lpfc_vport *vport)
- 	if (vport->fc_flag & FC_NLP_MORE) {
- 		lpfc_set_disctmo(vport);
- 		/* go thru NPR nodes and issue any remaining ELS ADISCs */
--		sentadisc = lpfc_els_disc_adisc(vport);
-+		lpfc_els_disc_adisc(vport);
- 	}
- 	if (!vport->num_disc_nodes)
- 		lpfc_adisc_done(vport);
-@@ -3028,10 +3022,9 @@ lpfc_els_retry_delay_handler(struct lpfc_nodelist *ndlp)
- {
- 	struct lpfc_vport *vport = ndlp->vport;
- 	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
--	uint32_t cmd, did, retry;
-+	uint32_t cmd, retry;
- 
- 	spin_lock_irq(shost->host_lock);
--	did = ndlp->nlp_DID;
- 	cmd = ndlp->nlp_last_elscmd;
- 	ndlp->nlp_last_elscmd = 0;
- 
-@@ -5289,10 +5282,9 @@ lpfc_els_rcv_rnid(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	IOCB_t *icmd;
- 	RNID *rn;
- 	struct ls_rjt stat;
--	uint32_t cmd, did;
-+	uint32_t cmd;
- 
- 	icmd = &cmdiocb->iocb;
--	did = icmd->un.elsreq64.remoteID;
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
- 	lp = (uint32_t *) pcmd->virt;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 310507d..5452f1f 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -5031,7 +5031,6 @@ lpfc_disc_start(struct lpfc_vport *vport)
- 	struct lpfc_hba  *phba = vport->phba;
- 	uint32_t num_sent;
- 	uint32_t clear_la_pending;
--	int did_changed;
- 
- 	if (!lpfc_is_link_up(phba)) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
-@@ -5050,11 +5049,6 @@ lpfc_disc_start(struct lpfc_vport *vport)
- 
- 	lpfc_set_disctmo(vport);
- 
--	if (vport->fc_prevDID == vport->fc_myDID)
--		did_changed = 0;
--	else
--		did_changed = 1;
--
- 	vport->fc_prevDID = vport->fc_myDID;
- 	vport->num_disc_nodes = 0;
- 
-@@ -6343,7 +6337,7 @@ lpfc_parse_fcoe_conf(struct lpfc_hba *phba,
- 		uint8_t *buff,
- 		uint32_t size)
- {
--	uint32_t offset = 0, rec_length;
-+	uint32_t offset = 0;
- 	uint8_t *rec_ptr;
- 
- 	/*
-@@ -6370,8 +6364,6 @@ lpfc_parse_fcoe_conf(struct lpfc_hba *phba,
- 	}
- 	offset += 4;
- 
--	rec_length = buff[offset + 1];
--
- 	/* Read FCoE param record */
- 	rec_ptr = lpfc_get_rec_conf23(&buff[offset],
- 			size - offset, FCOE_PARAM_TYPE);
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0d92304..0b2c53a 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -6719,7 +6719,6 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 	struct lpfc_mbx_get_func_cfg *get_func_cfg;
- 	struct lpfc_rsrc_desc_fcfcoe *desc;
- 	char *pdesc_0;
--	uint32_t desc_count;
- 	int length, i, rc = 0, rc2;
- 
- 	pmb = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-@@ -6850,7 +6849,6 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 
- 	/* search for fc_fcoe resrouce descriptor */
- 	get_func_cfg = &pmb->u.mqe.un.get_func_cfg;
--	desc_count = get_func_cfg->func_cfg.rsrc_desc_count;
- 
- 	pdesc_0 = (char *)&get_func_cfg->func_cfg.desc[0];
- 	desc = (struct lpfc_rsrc_desc_fcfcoe *)pdesc_0;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 2c7057f..cea89c6 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -187,7 +187,6 @@ lpfc_sli4_mq_put(struct lpfc_queue *q, struct lpfc_mqe *mqe)
- {
- 	struct lpfc_mqe *temp_mqe;
- 	struct lpfc_register doorbell;
--	uint32_t host_index;
- 
- 	/* sanity check on queue memory */
- 	if (unlikely(!q))
-@@ -202,7 +201,6 @@ lpfc_sli4_mq_put(struct lpfc_queue *q, struct lpfc_mqe *mqe)
- 	q->phba->mbox = (MAILBOX_t *)temp_mqe;
- 
- 	/* Update the host index before invoking device */
--	host_index = q->host_index;
- 	q->host_index = ((q->host_index + 1) % q->entry_count);
- 
- 	/* Ring Doorbell */
-@@ -2435,11 +2433,9 @@ lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	IOCB_t           * irsp;
- 	WORD5            * w5p;
- 	uint32_t           Rctl, Type;
--	uint32_t           match;
- 	struct lpfc_iocbq *iocbq;
- 	struct lpfc_dmabuf *dmzbuf;
- 
--	match = 0;
- 	irsp = &(saveq->iocb);
- 
- 	if (irsp->ulpCommand == CMD_ASYNC_STATUS) {
-@@ -2865,7 +2861,7 @@ lpfc_sli_rsp_pointers_error(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- void lpfc_poll_eratt(unsigned long ptr)
- {
- 	struct lpfc_hba *phba;
--	uint32_t eratt = 0, rem;
-+	uint32_t eratt = 0;
- 	uint64_t sli_intr, cnt;
- 
- 	phba = (struct lpfc_hba *)ptr;
-@@ -2880,7 +2876,7 @@ void lpfc_poll_eratt(unsigned long ptr)
- 		cnt = (sli_intr - phba->sli.slistat.sli_prev_intr);
- 
- 	/* 64-bit integer division not supporte on 32-bit x86 - use do_div */
--	rem = do_div(cnt, LPFC_ERATT_POLL_INTERVAL);
-+	do_div(cnt, LPFC_ERATT_POLL_INTERVAL);
- 	phba->sli.slistat.sli_ips = cnt;
- 
- 	phba->sli.slistat.sli_prev_intr = sli_intr;
-@@ -5953,9 +5949,6 @@ lpfc_sli4_get_allocated_extnts(struct lpfc_hba *phba, uint16_t type,
- 		curr_blks++;
- 	}
- 
--	/* Calculate the total requested length of the dma memory. */
--	req_len = curr_blks * sizeof(uint16_t);
--
- 	/*
- 	 * Calculate the size of an embedded mailbox.  The uint32_t
- 	 * accounts for extents-specific word.
-@@ -6766,13 +6759,16 @@ void
- lpfc_mbox_timeout_handler(struct lpfc_hba *phba)
- {
- 	LPFC_MBOXQ_t *pmbox = phba->sli.mbox_active;
--	MAILBOX_t *mb = &pmbox->u.mb;
-+	MAILBOX_t *mb = NULL;
-+
- 	struct lpfc_sli *psli = &phba->sli;
- 
- 	/* If the mailbox completed, process the completion and return */
- 	if (lpfc_sli4_process_missed_mbox_completions(phba))
- 		return;
- 
-+	if (pmbox != NULL)
-+		mb = &pmbox->u.mb;
- 	/* Check the pmbox pointer first.  There is a race condition
- 	 * between the mbox timeout handler getting executed in the
- 	 * worklist and the mailbox actually completing. When this
-@@ -8121,7 +8117,6 @@ lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba)
- 			cpup += cpu;
- 			return cpup->channel_id;
- 		}
--		chann = cpu;
- 	}
- 	chann = atomic_add_return(1, &phba->fcp_qidx);
- 	chann = (chann % phba->cfg_fcp_io_channel);
-@@ -12604,6 +12599,9 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 	 * Process all the event on FCP fast-path EQ
- 	 */
- 	while ((eqe = lpfc_sli4_eq_get(fpeq))) {
-+		if (eqe == NULL)
-+			break;
-+
- 		lpfc_sli4_hba_handle_eqe(phba, eqe, fcp_eqidx);
- 		if (!(++ecount % fpeq->entry_repost))
- 			lpfc_sli4_eq_release(fpeq, LPFC_QUEUE_NOARM);
-@@ -14244,7 +14242,6 @@ lpfc_sli4_post_sgl(struct lpfc_hba *phba,
- 				"2511 POST_SGL mailbox failed with "
- 				"status x%x add_status x%x, mbx status x%x\n",
- 				shdr_status, shdr_add_status, rc);
--		rc = -ENXIO;
- 	}
- 	return 0;
- }
--- 
-1.7.11.7
+As somebody else hinted at, the userspace program could check the USB
+device against a list of device types known to have this problem.
 
+It could even verify that the SCSI-reported size matches the size
+reported by the partition table (modulo two-to-the-whatever) (at least
+for GPT tables, I don't know if MBR tables report the disk size).
 
+Do we have any way of knowing what algorithm Windows uses in this
+situation?
 
-
+Dale
