@@ -1,85 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/20] scsi: remove scsi_print_status()
-Date: Wed,  3 Sep 2014 12:06:04 +0200
-Message-ID: <1409738775-80876-10-git-send-email-hare@suse.de>
+Subject: [PATCH 01/20] Remove scsi_cmd_print_sense_hdr()
+Date: Wed,  3 Sep 2014 12:05:56 +0200
+Message-ID: <1409738775-80876-2-git-send-email-hare@suse.de>
 References: <1409738775-80876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59656 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59618 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932336AbaICKG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Sep 2014 06:06:27 -0400
+	id S932336AbaICKGZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Sep 2014 06:06:25 -0400
 In-Reply-To: <1409738775-80876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so we can remove it.
+Unused.
 
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 35 -----------------------------------
- include/scsi/scsi_dbg.h  |  1 -
- 2 files changed, 36 deletions(-)
+ drivers/scsi/constants.c | 14 --------------
+ include/scsi/scsi_dbg.h  |  2 --
+ 2 files changed, 16 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 2850062e..d3915d8 100644
+index d35a5d6..2f44707 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
  }
- EXPORT_SYMBOL(scsi_print_command);
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
  
--/**
-- *	scsi_print_status - print scsi status description
-- *	@scsi_status: scsi status value
-- *
-- *	If the status is recognized, the description is printed.
-- *	Otherwise "Unknown status" is output. No trailing space.
-- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
-- *	(e.g. "0x2" for Check Condition).
-- **/
+-/*
+- * Print normalized SCSI sense header with device information and a prefix.
+- */
 -void
--scsi_print_status(unsigned char scsi_status) {
--#ifdef CONFIG_SCSI_CONSTANTS
--	const char * ccp;
--
--	switch (scsi_status) {
--	case 0:    ccp = "Good"; break;
--	case 0x2:  ccp = "Check Condition"; break;
--	case 0x4:  ccp = "Condition Met"; break;
--	case 0x8:  ccp = "Busy"; break;
--	case 0x10: ccp = "Intermediate"; break;
--	case 0x14: ccp = "Intermediate-Condition Met"; break;
--	case 0x18: ccp = "Reservation Conflict"; break;
--	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
--	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
--	case 0x30: ccp = "ACA Active"; break;
--	case 0x40: ccp = "Task Aborted"; break;
--	default:   ccp = "Unknown status";
--	}
--	printk(KERN_INFO "%s", ccp);
--#else
--	printk(KERN_INFO "0x%0x", scsi_status);
--#endif
+-scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+-			  struct scsi_sense_hdr *sshdr)
+-{
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
 -}
--EXPORT_SYMBOL(scsi_print_status);
+-EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
 -
- #ifdef CONFIG_SCSI_CONSTANTS
- 
- struct error_info {
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 		       struct scsi_sense_hdr *sshdr)
 diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index cd0c873..44bea15 100644
+index e89844c..5a43a4c 100644
 --- a/include/scsi/scsi_dbg.h
 +++ b/include/scsi/scsi_dbg.h
-@@ -19,7 +19,6 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
--extern void scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_show_extd_sense(unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+-extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+-				     struct scsi_sense_hdr *);
+ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
 -- 
 1.8.5.2
 
