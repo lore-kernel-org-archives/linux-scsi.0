@@ -1,53 +1,38 @@
-From: worley@alum.mit.edu (Dale R. Worley)
-Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
- size issues with >2TB HDDs)
-Date: Wed, 3 Sep 2014 14:44:48 -0400
-Message-ID: <201409031844.s83IimIl011663@hobgoblin.ariadne.com>
-References: <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qmta14.westchester.pa.mail.comcast.net ([76.96.59.212]:48176
-	"EHLO qmta14.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755158AbaICSov (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 14:44:51 -0400
-In-reply-to: <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
-	(stern@rowland.harvard.edu)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Husam Al Sayed <oscar55@post.sk>
+Subject: FROM: Husam Al Sayed
+Date: Wed, 3 Sep 2014 20:56:32 +0200 (CEST)
+Message-ID: <201862227.347304.1409770592327.JavaMail.root@mbox05>
+Reply-To: "alsayedhusa@hotmail.com" <alsayedhusa@hotmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <platform-driver-x86-owner@vger.kernel.org>
+Sender: platform-driver-x86-owner@vger.kernel.org
+Cc: m.hulsman@tudelft.nl, r.marek@assembler.cz, khali@linux-fr.org, lm-sensors@lm-sensors.org, pierre@ossman.eu, wim@iguana.be, linux-watchdog@vger.kernel.org, zaga@fly.cc.fer.hr, linux-scsi@vger.kernel.org, dh.herrmann@googlemail.com, david@hardeman.nu, inaky.perez-gonzalez@intel.com, linux-wimax@intel.com, wimax@linuxwimax.org, mitr@volny.cz, acme@ghostprotocols.net, broonie@kernel.org, lrg@slimlogic.co.uk, linux-input@vger.kernel.org, patches@opensource.wolfsonmicro.com, tj@kernel.org, andrew.hendry@gmail.com, linux-x25@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, matthew.garrett@nebula.com, platform-driver-x86@vger.kernel.org, tony.luck@intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> From: Alan Stern <stern@rowland.harvard.edu>
-> 
-> On Fri, 29 Aug 2014, Matthew Dharm wrote:
-> > Is there an 'easy' way to override the detected size of a storage
-> > device from userspace?  If we had that, someone could write a helper
-> > application which looked for this particular fubar and try to Do The
-> > Right Thing(tm), or at least offer the user some options.
-> 
-> You mean, force a Media Change event and override the capacity reported 
-> by the hardware?  I'm not aware of any API for doing that, although it 
-> probably wouldn't be too hard to add one.
-> 
-> How would the user know what value to put in for the capacity?  Unless 
-> the drive had been hooked up to a different computer and the user 
-> manually noted the correct capacity and typed it in, it would have to 
-> be guesswork.
+FROM: Husam Al Sayed.
 
-The value would most sanely be extracted from the partition table.
-(After verifying that the partition table looks correct.)  That seems
-to be what Windows does, and it seems to work consistently enough for
-Windows to trust that method.  Or at least, it could take the disk
-size to be the end of the last partition, which would at least make
-all the partitions accessible.
+EMAIL:alsayedhusa@hotmail.com
+ 
+Hello,
+ 
+I decided to write you this proposal in good faith, believing that you will
+not betray me. I am Mr. Husam Al Sayed, a Bank officer here in U.A.E.
+ 
+One Mr. Peter Adams, a citizen of your country and Crude Oil dealer made a fixed deposit with my bank in 2005 for 108 calendar months, valued at US$30,000,000.00 (Thirty Million United State Dollars) the due date for this deposit contract was last 22nd of January 2014. Sadly Peter was among the death victims in the May 27 2006 Earthquake disaster in Java, Indonesia that killed over 5,000 people. He was in Indonesia on a business trip and that was how he met his untimely end. My bank management is yet to know about his death, I knew about it because he was my friend and I am his Account Officer. Peter did not mention any Next of Kin/ Heir when the account was opened, he was not married and no children. Last week my Bank Management requested that Peter should give instructions on what to do 
+ about his funds, if to renew the contract.
+ 
+I know this will happen and that is why I have been looking for a means to handle the situation, because if my Bank Directors happens to know that Peter is dead and do not have any Heir, they will take the funds for their personal use, so I don't want such to happen. That is why I am seeking your co-operation to present you as the Next of Kin/ Heir to the account, since you are a foreigner and my bank head quarters will release the account to you. There is no risk involved; the transaction will be executed under a legitimate arrangement that will protect us from any breach of law. It is better that we claim the money, than allowing the Bank Directors to take it, they are rich already. I am not a greedy person, so I am suggesting we share the funds in this ratio, 50/50%, equal sharing. Let 
+ me know your mind on this and please do treat this information highly confidential. We shall go over the details once I receive your urgent response. Please Urgently get back to me through this email address as soon as possible:
+ 
+ 
+ 
+Have a nice day and God bless. Anticipating your communication.
+ 
+Regards,
+FROM: Husam Al Sayed.
+EMAIL: alsayedhusa@hotmail.com
+_____________________________________________________________________
 
-As somebody else hinted at, the userspace program could check the USB
-device against a list of device types known to have this problem.
-
-It could even verify that the SCSI-reported size matches the size
-reported by the partition table (modulo two-to-the-whatever) (at least
-for GPT tables, I don't know if MBR tables report the disk size).
-
-Do we have any way of knowing what algorithm Windows uses in this
-situation?
-
-Dale
+Presny televizny program najdete na http://www.ahaho.sk
