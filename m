@@ -1,66 +1,203 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/20] Remove scsi_cmd_print_sense_hdr()
-Date: Wed,  3 Sep 2014 12:05:56 +0200
-Message-ID: <1409738775-80876-2-git-send-email-hare@suse.de>
+Subject: [PATCH 10/20] Implement scsi_opcode_sa_name
+Date: Wed,  3 Sep 2014 12:06:05 +0200
+Message-ID: <1409738775-80876-11-git-send-email-hare@suse.de>
 References: <1409738775-80876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59618 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59657 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932336AbaICKGZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Sep 2014 06:06:25 -0400
+	id S932376AbaICKG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Sep 2014 06:06:28 -0400
 In-Reply-To: <1409738775-80876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Unused.
+Implement a lookup array for SERVICE ACTION commands instead
+of hardcoding it in a large switch statement.
 
 Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 14 --------------
- include/scsi/scsi_dbg.h  |  2 --
- 2 files changed, 16 deletions(-)
+ drivers/scsi/constants.c | 132 +++++++++++++++++++----------------------------
+ 1 file changed, 54 insertions(+), 78 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index d35a5d6..2f44707 100644
+index d3915d8..364349c 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
- }
- EXPORT_SYMBOL(scsi_print_sense_hdr);
+@@ -244,102 +244,77 @@ static const struct value_name_pair variable_length_arr[] = {
+ };
+ #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
  
--/*
-- * Print normalized SCSI sense header with device information and a prefix.
-- */
--void
--scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
--			  struct scsi_sense_hdr *sshdr)
--{
--	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
--	scsi_show_sense_hdr(sshdr);
--	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
--	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
--}
--EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+-static const char * get_sa_name(const struct value_name_pair * arr,
+-			        int arr_sz, int service_action)
++struct sa_name_list {
++	int cmd;
++	const struct value_name_pair *arr;
++	int arr_sz;
++};
++
++static struct sa_name_list sa_names_arr[] = {
++	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
++	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
++	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
++	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
++	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
++	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
++	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
++	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
++	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
++	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
++	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
++	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
++	{0, NULL, 0},
++};
++#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
++
++static bool scsi_opcode_sa_name(int cmd, int service_action,
++				const char **sa_name)
+ {
+-	int k;
++	struct sa_name_list *sa_name_ptr = sa_names_arr;
++	const struct value_name_pair * arr = NULL;
++	int arr_sz, k;
++
++	for (k = 0; k < SA_NAME_LIST_SZ; ++k, ++sa_name_ptr) {
++		if (sa_name_ptr->cmd == cmd) {
++			arr = sa_name_ptr->arr;
++			arr_sz = sa_name_ptr->arr_sz;
++			break;
++		}
++	}
++	if (!arr)
++		return false;
+ 
+ 	for (k = 0; k < arr_sz; ++k, ++arr) {
+ 		if (service_action == arr->value)
+ 			break;
+ 	}
+-	return (k < arr_sz) ? arr->name : NULL;
++	if (k < arr_sz)
++		*sa_name = arr->name;
++
++	return true;
+ }
+ 
+ /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
+ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ {
+ 	int sa, len, cdb0;
+-	int fin_name = 0;
+-	const char * name;
++	const char * name = NULL;
+ 
+ 	cdb0 = cdbp[0];
+-	switch(cdb0) {
+-	case VARIABLE_LENGTH_CMD:
++	if (cdb0 == VARIABLE_LENGTH_CMD) {
+ 		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short variable length command, "
+ 			       "len=%d ext_len=%d", len, cdb_len);
+-			break;
++			return;
+ 		}
+ 		sa = (cdbp[8] << 8) + cdbp[9];
+-		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
+-				   sa);
+-		if (name)
+-			printk("%s", name);
+-		else
+-			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
 -
- static void
- scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
- 		       struct scsi_sense_hdr *sshdr)
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index e89844c..5a43a4c 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
- extern void scsi_show_extd_sense(unsigned char, unsigned char);
- extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
- extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
--extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
--				     struct scsi_sense_hdr *);
- extern void scsi_print_sense(char *, struct scsi_cmnd *);
- extern void __scsi_print_sense(const char *name,
- 			       const unsigned char *sense_buffer,
+-		if ((cdb_len > 0) && (len != cdb_len))
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-
+-		break;
+-	case MAINTENANCE_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case MAINTENANCE_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(maint_out_arr, MAINT_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case PERSISTENT_RESERVE_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(pr_in_arr, PR_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case PERSISTENT_RESERVE_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(pr_out_arr, PR_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_IN_12:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_in12_arr, SERV_IN12_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_OUT_12:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_out12_arr, SERV_OUT12_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_BIDIRECTIONAL:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_bidi_arr, SERV_BIDI_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_IN_16:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_in16_arr, SERV_IN16_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_OUT_16:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_out16_arr, SERV_OUT16_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case THIRD_PARTY_COPY_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(tpc_in_arr, TPC_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case THIRD_PARTY_COPY_OUT:
++	} else {
+ 		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(tpc_out_arr, TPC_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	default:
++		len = cdb_len;
++	}
++
++	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+ 		if (cdb0 < 0xc0) {
+ 			name = cdb_byte0_names[cdb0];
+ 			if (name)
+@@ -348,13 +323,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 				printk("cdb[0]=0x%x (reserved)", cdb0);
+ 		} else
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		break;
+-	}
+-	if (fin_name) {
++	} else {
+ 		if (name)
+ 			printk("%s", name);
+ 		else
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++
++		if (cdb_len > 0 && len != cdb_len)
++			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+ 	}
+ }
+ 
 -- 
 1.8.5.2
 
