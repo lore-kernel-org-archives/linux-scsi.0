@@ -1,67 +1,49 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
+From: Alfredo Dal Ava Junior <alfredo.junior@eldorado.org.br>
+Subject: RES: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
  size issues with >2TB HDDs)
-Date: Wed, 3 Sep 2014 15:05:30 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1409031459400.2156-100000@iolanthe.rowland.org>
-References: <201409031844.s83IimIl011663@hobgoblin.ariadne.com>
+Date: Wed, 3 Sep 2014 19:17:45 +0000
+Message-ID: <0dd1959994514ab098456600a312237e@serv031.corp.eldorado.org.br>
+References: <CAA6KcBCnns-nuE4LA4EqWGhEbisueBNwAjN7vtYcfBdKm2WyUA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1408301710120.4299-100000@netrider.rowland.org>
+ <CAA6KcBBYbwxrCD3-W_frS5TLBVixMr-tBjhLp0HmoaDSRT==Cw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201409031844.s83IimIl011663-fKCv92Uu9G1eYiHQf5CFXGXnswh1EIUO@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>
-Cc: mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.eldorado.org.br ([200.148.226.10]:8409 "EHLO
+	smtp1.eldorado.org.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753897AbaICTRw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 15:17:52 -0400
+In-Reply-To: <CAA6KcBBYbwxrCD3-W_frS5TLBVixMr-tBjhLp0HmoaDSRT==Cw@mail.gmail.com>
+Content-Language: pt-BR
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Alan Stern <stern@rowland.harvard.edu>
+Cc: "Dale R. Worley" <worley@alum.mit.edu>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 3 Sep 2014, Dale R. Worley wrote:
 
-> > From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-> > 
-> > On Fri, 29 Aug 2014, Matthew Dharm wrote:
-> > > Is there an 'easy' way to override the detected size of a storage
-> > > device from userspace?  If we had that, someone could write a helper
-> > > application which looked for this particular fubar and try to Do The
-> > > Right Thing(tm), or at least offer the user some options.
-> > 
-> > You mean, force a Media Change event and override the capacity reported 
-> > by the hardware?  I'm not aware of any API for doing that, although it 
-> > probably wouldn't be too hard to add one.
-> > 
-> > How would the user know what value to put in for the capacity?  Unless 
-> > the drive had been hooked up to a different computer and the user 
-> > manually noted the correct capacity and typed it in, it would have to 
-> > be guesswork.
+On Sat, 30 Aug 2014, Matthew Dharm wrote 
+> I was thinking of something that could notice a USB device which is formatted
+> NTFS and has a partition table and filesystem that indicates a much bigger
+> capacity than what the drive reports.  Under this circumstances, you could do
+> something like pop-up a dialog box saying "this drive is confused -- is it 2TB or
+> 3TB?"
 > 
-> The value would most sanely be extracted from the partition table.
-> (After verifying that the partition table looks correct.)  That seems
-> to be what Windows does, and it seems to work consistently enough for
-> Windows to trust that method.  Or at least, it could take the disk
-> size to be the end of the last partition, which would at least make
-> all the partitions accessible.
-
-If there is a partition table.  It might be worthwhile to try an ATA 
-pass-through command as well.
-
-> As somebody else hinted at, the userspace program could check the USB
-> device against a list of device types known to have this problem.
+> Well, maybe that would say "Drive capacity is not consistent with partition
+> table.  This can happen with certain USB drives designed for use with
+> Windows.  Override drive capacity (emulating Windows)?"
 > 
-> It could even verify that the SCSI-reported size matches the size
-> reported by the partition table (modulo two-to-the-whatever) (at least
-> for GPT tables, I don't know if MBR tables report the disk size).
+> You could imagine increasing complex heuristics to try to detect this scenario.
+> Even without an automated helper program to do it, if there was a sysfs
+> interface then when we got the periodic e-mails reporting this same type of
+> problem, we could offer a quick-and-clean solution.
 
-They don't.  Just the start and end of each partition.
 
-> Do we have any way of knowing what algorithm Windows uses in this
-> situation?
+Hi Matt,
 
-Ask Microsoft.  I suspect you're not likely to get an answer, though.
+I did small hack to skip is_pte_valid() on efi.c  and now I have sdc1 partition listed on /proc/partition, but I hit other issue: ntfs-3g mount userspace tool that comes with Fedora now fails with "Failed to read last sector (7814037100): Invalid argument".  I also tried to override disk capacity, but SD driver fails with "Invalid command failure" and "Illegal Request" (I'll investigate it later)
 
-Anyway, I can try writing a patch to add this capability.  We'll see if 
-it can solve your problem.
+Many places rely on disk capacity value, I think emulate Windows behavior for these HDD docks will not be an easy task.... 
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[]'s
+Alfredo
