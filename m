@@ -1,115 +1,199 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 9/19] lpfc 10.4.8000.0: Use pci_enable_msix_range() instead
- of pci_enable_msix()
-Date: Wed, 3 Sep 2014 12:56:29 -0400
-Message-ID: <1409763389.12357.9.camel@myfc17>
+Subject: [PATCH 10/19] lpfc 10.4.8000.0: Fix discovery timeout during
+ nameserver login
+Date: Wed, 3 Sep 2014 12:56:40 -0400
+Message-ID: <1409763400.12357.10.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:43852 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932380AbaICQ4c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:56:32 -0400
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:47637 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932380AbaICQ4p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2014 12:56:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Incorporating prior patch:
- http://marc.info/?l=linux-scsi&m=140835226413990&w=2
+Fix discovery timeout during nameserver login
 
-  Alexander Gordeev <agordeev@redhat.com>
-  [PATCH v3 11/13] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-
-  As result of deprecation of MSI-X/MSI enablement functions
-  pci_enable_msix() and pci_enable_msi_block() all drivers
-  using these two interfaces need to be updated to use the
-  new pci_enable_msi_range()  or pci_enable_msi_exact()
-  and pci_enable_msix_range() or pci_enable_msix_exact()
-  interfaces.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: James Smart <james.smart@emulex.com>
+Signed-off-by: James Smart <james.smart@emulex.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 39 +++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c  |  5 +++++
+ drivers/scsi/lpfc/lpfc_init.c | 15 +++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c  | 10 +++++++++-
+ 3 files changed, 29 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 7a5d81a..30ec80f 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8187,9 +8187,11 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hba *phba,
+ 			list_del(&sglq_entry->list);
+ 			ndlp = sglq_entry->ndlp;
+ 			sglq_entry->ndlp = NULL;
++			spin_lock(&pring->ring_lock);
+ 			list_add_tail(&sglq_entry->list,
+ 				&phba->sli4_hba.lpfc_sgl_list);
+ 			sglq_entry->state = SGL_FREED;
++			spin_unlock(&pring->ring_lock);
+ 			spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
+ 			spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 			lpfc_set_rrq_active(phba, ndlp,
+@@ -8208,12 +8210,15 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hba *phba,
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		return;
+ 	}
++	spin_lock(&pring->ring_lock);
+ 	sglq_entry = __lpfc_get_active_sglq(phba, lxri);
+ 	if (!sglq_entry || (sglq_entry->sli4_xritag != xri)) {
++		spin_unlock(&pring->ring_lock);
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		return;
+ 	}
+ 	sglq_entry->state = SGL_XRI_ABORTED;
++	spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 	return;
+ }
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 990c3a2..1953b3b 100644
+index 1953b3b..7f54916 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8203,9 +8203,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8229,8 +8229,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
+@@ -988,9 +988,12 @@ lpfc_hba_down_post_s4(struct lpfc_hba *phba)
+ 	LIST_HEAD(aborts);
+ 	unsigned long iflag = 0;
+ 	struct lpfc_sglq *sglq_entry = NULL;
++	struct lpfc_sli *psli = &phba->sli;
++	struct lpfc_sli_ring *pring;
  
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   LPFC_MSIX_VECTORS);
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8767,16 +8767,14 @@ out:
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-- * enabled and leaks its vectors.
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that
-+ * later when device is unloading, the driver should always call free_irq()
-+ * on all MSI-X vectors it has done request_irq() on before calling
-+ * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-+ * will be left with MSI-X enabled and leaks its vectors.
-  *
-  * Return codes
-  * 0 - successful
-@@ -8797,17 +8795,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
- 	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
- 	}
-+	vectors = rc;
+ 	lpfc_hba_free_post_buf(phba);
+ 	lpfc_hba_clean_txcmplq(phba);
++	pring = &psli->ring[LPFC_ELS_RING];
  
- 	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
+ 	/* At this point in time the HBA is either reset or DOA. Either
+ 	 * way, nothing should be on lpfc_abts_els_sgl_list, it needs to be
+@@ -1008,8 +1011,10 @@ lpfc_hba_down_post_s4(struct lpfc_hba *phba)
+ 		&phba->sli4_hba.lpfc_abts_els_sgl_list, list)
+ 		sglq_entry->state = SGL_FREED;
+ 
++	spin_lock(&pring->ring_lock);
+ 	list_splice_init(&phba->sli4_hba.lpfc_abts_els_sgl_list,
+ 			&phba->sli4_hba.lpfc_sgl_list);
++	spin_unlock(&pring->ring_lock);
+ 	spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
+ 	/* abts_scsi_buf_list_lock required because worker thread uses this
+ 	 * list.
+@@ -3047,6 +3052,7 @@ lpfc_sli4_xri_sgl_update(struct lpfc_hba *phba)
+ 	LIST_HEAD(els_sgl_list);
+ 	LIST_HEAD(scsi_sgl_list);
+ 	int rc;
++	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 
+ 	/*
+ 	 * update on pci function's els xri-sgl list
+@@ -3087,7 +3093,9 @@ lpfc_sli4_xri_sgl_update(struct lpfc_hba *phba)
+ 			list_add_tail(&sglq_entry->list, &els_sgl_list);
+ 		}
+ 		spin_lock_irq(&phba->hbalock);
++		spin_lock(&pring->ring_lock);
+ 		list_splice_init(&els_sgl_list, &phba->sli4_hba.lpfc_sgl_list);
++		spin_unlock(&pring->ring_lock);
+ 		spin_unlock_irq(&phba->hbalock);
+ 	} else if (els_xri_cnt < phba->sli4_hba.els_xri_cnt) {
+ 		/* els xri-sgl shrinked */
+@@ -3097,7 +3105,9 @@ lpfc_sli4_xri_sgl_update(struct lpfc_hba *phba)
+ 				"%d to %d\n", phba->sli4_hba.els_xri_cnt,
+ 				els_xri_cnt);
+ 		spin_lock_irq(&phba->hbalock);
++		spin_lock(&pring->ring_lock);
+ 		list_splice_init(&phba->sli4_hba.lpfc_sgl_list, &els_sgl_list);
++		spin_unlock(&pring->ring_lock);
+ 		spin_unlock_irq(&phba->hbalock);
+ 		/* release extra els sgls from list */
+ 		for (i = 0; i < xri_cnt; i++) {
+@@ -3110,7 +3120,9 @@ lpfc_sli4_xri_sgl_update(struct lpfc_hba *phba)
+ 			}
+ 		}
+ 		spin_lock_irq(&phba->hbalock);
++		spin_lock(&pring->ring_lock);
+ 		list_splice_init(&els_sgl_list, &phba->sli4_hba.lpfc_sgl_list);
++		spin_unlock(&pring->ring_lock);
+ 		spin_unlock_irq(&phba->hbalock);
+ 	} else
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+@@ -5680,10 +5692,13 @@ static void
+ lpfc_free_els_sgl_list(struct lpfc_hba *phba)
+ {
+ 	LIST_HEAD(sglq_list);
++	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 
+ 	/* Retrieve all els sgls from driver list */
+ 	spin_lock_irq(&phba->hbalock);
++	spin_lock(&pring->ring_lock);
+ 	list_splice_init(&phba->sli4_hba.lpfc_sgl_list, &sglq_list);
++	spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	/* Now free the sgl list */
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 27221cb..8f3be2a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -937,7 +937,7 @@ out:
+  * @phba: Pointer to HBA context object.
+  * @piocb: Pointer to the iocbq.
+  *
+- * This function is called with hbalock held. This function
++ * This function is called with the ring lock held. This function
+  * gets a new driver sglq object from the sglq list. If the
+  * list is not empty then it is successful, it returns pointer to the newly
+  * allocated sglq object else it returns NULL.
+@@ -1053,10 +1053,12 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+ 			spin_unlock_irqrestore(
+ 				&phba->sli4_hba.abts_sgl_list_lock, iflag);
+ 		} else {
++			spin_lock_irqsave(&pring->ring_lock, iflag);
+ 			sglq->state = SGL_FREED;
+ 			sglq->ndlp = NULL;
+ 			list_add_tail(&sglq->list,
+ 				&phba->sli4_hba.lpfc_sgl_list);
++			spin_unlock_irqrestore(&pring->ring_lock, iflag);
+ 
+ 			/* Check if TXQ queue needs to be serviced */
+ 			if (!list_empty(&pring->txq))
+@@ -6098,14 +6100,18 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
+ 	struct lpfc_sglq *sglq_entry_first = NULL;
+ 	int status, total_cnt, post_cnt = 0, num_posted = 0, block_cnt = 0;
+ 	int last_xritag = NO_XRI;
++	struct lpfc_sli_ring *pring;
+ 	LIST_HEAD(prep_sgl_list);
+ 	LIST_HEAD(blck_sgl_list);
+ 	LIST_HEAD(allc_sgl_list);
+ 	LIST_HEAD(post_sgl_list);
+ 	LIST_HEAD(free_sgl_list);
+ 
++	pring = &phba->sli.ring[LPFC_ELS_RING];
+ 	spin_lock_irq(&phba->hbalock);
++	spin_lock(&pring->ring_lock);
+ 	list_splice_init(&phba->sli4_hba.lpfc_sgl_list, &allc_sgl_list);
++	spin_unlock(&pring->ring_lock);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	total_cnt = phba->sli4_hba.els_xri_cnt;
+@@ -6207,8 +6213,10 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
+ 	/* push els sgls posted to the availble list */
+ 	if (!list_empty(&post_sgl_list)) {
+ 		spin_lock_irq(&phba->hbalock);
++		spin_lock(&pring->ring_lock);
+ 		list_splice_init(&post_sgl_list,
+ 				 &phba->sli4_hba.lpfc_sgl_list);
++		spin_unlock(&pring->ring_lock);
+ 		spin_unlock_irq(&phba->hbalock);
+ 	} else {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
 -- 
 1.7.11.7
 
