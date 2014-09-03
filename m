@@ -1,136 +1,156 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/20] scsi: Use scsi_print_command() where possible
-Date: Wed,  3 Sep 2014 12:06:06 +0200
-Message-ID: <1409738775-80876-12-git-send-email-hare@suse.de>
+Subject: [PATCH 12/20] scsi: merge print_opcode_name()
+Date: Wed,  3 Sep 2014 12:06:07 +0200
+Message-ID: <1409738775-80876-13-git-send-email-hare@suse.de>
 References: <1409738775-80876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59664 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59734 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932397AbaICKG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Sep 2014 06:06:28 -0400
+	id S932425AbaICKGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Sep 2014 06:06:31 -0400
 In-Reply-To: <1409738775-80876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Some drivers use __scsi_print_command() although in fact
-they refer to the scsi command. So move them over to use
-scsi_print_command() instead.
+Instead of having two versions of print_opcode_name() we
+should be consolidating them into one version.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/aha152x.c       |  6 ++----
- drivers/scsi/arm/acornscsi.c |  9 +++++----
- drivers/scsi/arm/fas216.c    | 30 +++++++++++++-----------------
- 3 files changed, 20 insertions(+), 25 deletions(-)
+ drivers/scsi/constants.c | 90 +++++++++++++++++++-----------------------------
+ 1 file changed, 35 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index 447568a..bc923d1 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -2443,11 +2443,9 @@ static void disp_enintr(struct Scsi_Host *shpnt)
-  */
- static void show_command(Scsi_Cmnd *ptr)
- {
--	scmd_printk(KERN_DEBUG, ptr, "%p: cmnd=(", ptr);
-+	scsi_print_command(ptr);
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 364349c..3aee43b 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -30,6 +30,11 @@
+ #define THIRD_PARTY_COPY_IN 0x84
  
--	__scsi_print_command(ptr->cmnd);
+ 
++struct sa_name_list {
++	int cmd;
++	const struct value_name_pair *arr;
++	int arr_sz;
++};
+ 
+ #ifdef CONFIG_SCSI_CONSTANTS
+ static const char * cdb_byte0_names[] = {
+@@ -244,12 +249,6 @@ static const struct value_name_pair variable_length_arr[] = {
+ };
+ #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
+ 
+-struct sa_name_list {
+-	int cmd;
+-	const struct value_name_pair *arr;
+-	int arr_sz;
+-};
 -
--	printk(KERN_DEBUG "); request_bufflen=%d; resid=%d; phase |",
-+	scmd_printk(KERN_DEBUG, ptr, "request_bufflen=%d; resid=%d; phase |",
- 	       scsi_bufflen(ptr), scsi_get_resid(ptr));
+ static struct sa_name_list sa_names_arr[] = {
+ 	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
+ 	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
+@@ -267,6 +266,28 @@ static struct sa_name_list sa_names_arr[] = {
+ };
+ #define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
  
- 	if (ptr->SCp.phase & not_issued)
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index d89b9b4..78dd881 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -850,11 +850,12 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
- 			break;
++#else /* ifndef CONFIG_SCSI_CONSTANTS */
++static const char * cdb_byte0_names[] = NULL;
++
++static struct sa_name_list sa_names_arr[] = {
++	{VARIABLE_LENGTH_CMD, NULL, 0},
++	{MAINTENANCE_IN, NULL, 0},
++	{MAINTENANCE_OUT, NULL, 0},
++	{PERSISTENT_RESERVE_IN, NULL, 0},
++	{PERSISTENT_RESERVE_OUT, NULL, 0},
++	{SERVICE_ACTION_IN_12, NULL, 0},
++	{SERVICE_ACTION_OUT_12, NULL, 0},
++	{SERVICE_ACTION_BIDIRECTIONAL, NULL, 0},
++	{SERVICE_ACTION_IN_16, NULL, 0},
++	{SERVICE_ACTION_OUT_16, NULL, 0},
++	{THIRD_PARTY_COPY_IN, NULL, 0},
++	{THIRD_PARTY_COPY_OUT, NULL, 0},
++	{0, NULL, 0},
++};
++#endif /* CONFIG_SCSI_CONSTANTS */
++#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
++#define CDB_BYTE0_NAMES_SZ ARRAY_SIZE(cdb_byte0_names)
++
+ static bool scsi_opcode_sa_name(int cmd, int service_action,
+ 				const char **sa_name)
+ {
+@@ -316,11 +337,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
  
- 		    default:
--			printk(KERN_ERR "scsi%d.H: incomplete data transfer detected: result=%08X command=",
--				host->host->host_no, SCpnt->result);
--			__scsi_print_command(SCpnt->cmnd);
-+			scmd_printk(KERN_ERR, SCPnt,
-+				    "incomplete data transfer detected:"
-+				    " result=%08X\n", SCpnt->result);
-+			scsi_print_command(SCpnt);
- 			acornscsi_dumpdma(host, "done");
--		 	acornscsi_dumplog(host, SCpnt->device->id);
-+			acornscsi_dumplog(host, SCpnt->device->id);
- 			SCpnt->result &= 0xffff;
- 			SCpnt->result |= DID_ERROR << 16;
- 		    }
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 71cfb1e..778fd36 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -308,8 +308,7 @@ static void fas216_log_command(FAS216_Info *info, int level,
- 	fas216_do_log(info, '0' + SCpnt->device->id, fmt, args);
- 	va_end(args);
- 
--	printk(" CDB: ");
--	__scsi_print_command(SCpnt->cmnd);
-+	scsi_print_command(SCpnt);
+ 	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+ 		if (cdb0 < 0xc0) {
+-			name = cdb_byte0_names[cdb0];
+-			if (name)
+-				printk("%s", name);
+-			else
+-				printk("cdb[0]=0x%x (reserved)", cdb0);
++			if (CDB_BYTE0_NAMES_SZ) {
++				name = cdb_byte0_names[cdb0];
++				if (name)
++					printk("%s", name);
++				else
++					printk("cdb[0]=0x%x (reserved)", cdb0);
++			} else
++				printk("cdb[0]=0x%x", cdb0);
+ 		} else
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
+ 	} else {
+@@ -334,50 +358,6 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	}
  }
  
- static void
-@@ -2079,12 +2078,12 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
- 			break;
- 
- 		default:
--			printk(KERN_ERR "scsi%d.%c: incomplete data transfer "
--				"detected: res=%08X ptr=%p len=%X CDB: ",
--				info->host->host_no, '0' + SCpnt->device->id,
--				SCpnt->result, info->scsi.SCp.ptr,
--				info->scsi.SCp.this_residual);
--			__scsi_print_command(SCpnt->cmnd);
-+			scmd_printk(KERN_ERR, SCpnt,
-+				    "incomplete data transfer "
-+				    "detected: res=%08X ptr=%p len=%X\n",
-+				    SCpnt->result, info->scsi.SCp.ptr,
-+				    info->scsi.SCp.this_residual);
-+			scsi_print_command(SCpnt->cmnd);
- 			SCpnt->result &= ~(255 << 16);
- 			SCpnt->result |= DID_BAD_TARGET << 16;
- 			goto request_sense;
-@@ -2158,12 +2157,11 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * to transfer, we should not have a valid pointer.
- 	 */
- 	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
--		printk("scsi%d.%c: zero bytes left to transfer, but "
--		       "buffer pointer still valid: ptr=%p len=%08x CDB: ",
--		       info->host->host_no, '0' + SCpnt->device->id,
--		       info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
-+		scmd_printk(KERN_INFO, SCpnt, "zero bytes left to transfer, "
-+			    "but buffer pointer still valid: ptr=%p len=%08x\n",
-+			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
- 		info->scsi.SCp.ptr = NULL;
--		__scsi_print_command(SCpnt->cmnd);
-+		scsi_print_command(SCpnt);
- 	}
- 
- 	/*
-@@ -2427,14 +2425,12 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
- 
- 	info->stats.aborts += 1;
- 
--	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
--	__scsi_print_command(SCpnt->cmnd);
-+	scmd_printk(KERN_WARNING, SCpnt, "abort command %p\n", SCpnt);
-+	scsi_print_command(SCpnt);
- 
- 	print_debug_list();
- 	fas216_dumpstate(info);
- 
--	printk(KERN_WARNING "scsi%d: abort %p ", info->host->host_no, SCpnt);
+-#else /* ifndef CONFIG_SCSI_CONSTANTS */
 -
- 	switch (fas216_find_command(info, SCpnt)) {
- 	/*
- 	 * We found the command, and cleared it out.  Either
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+-{
+-	int sa, len, cdb0;
+-
+-	cdb0 = cdbp[0];
+-	switch(cdb0) {
+-	case VARIABLE_LENGTH_CMD:
+-		len = scsi_varlen_cdb_length(cdbp);
+-		if (len < 10) {
+-			printk("short opcode=0x%x command, len=%d "
+-			       "ext_len=%d", cdb0, len, cdb_len);
+-			break;
+-		}
+-		sa = (cdbp[8] << 8) + cdbp[9];
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		if (len != cdb_len)
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-		break;
+-	case MAINTENANCE_IN:
+-	case MAINTENANCE_OUT:
+-	case PERSISTENT_RESERVE_IN:
+-	case PERSISTENT_RESERVE_OUT:
+-	case SERVICE_ACTION_IN_12:
+-	case SERVICE_ACTION_OUT_12:
+-	case SERVICE_ACTION_BIDIRECTIONAL:
+-	case SERVICE_ACTION_IN_16:
+-	case SERVICE_ACTION_OUT_16:
+-	case THIRD_PARTY_COPY_IN:
+-	case THIRD_PARTY_COPY_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		break;
+-	default:
+-		if (cdb0 < 0xc0)
+-			printk("cdb[0]=0x%x", cdb0);
+-		else
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		break;
+-	}
+-}
+-#endif
+-
+ void __scsi_print_command(unsigned char *cdb)
+ {
+ 	int k, len;
 -- 
 1.8.5.2
 
