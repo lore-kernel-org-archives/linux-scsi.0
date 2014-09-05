@@ -1,102 +1,34 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
- module removal
-Date: Thu, 4 Sep 2014 22:24:02 -0700
-Message-ID: <20140905052402.GA27094@infradead.org>
-References: <5403AB47.3040706@interlog.com>
+Subject: Re: [PATCH 0/19] lpfc 10.4.8000.0: Update lpfc version to driver
+ version 10.4.8000.0
+Date: Thu, 4 Sep 2014 22:35:32 -0700
+Message-ID: <20140905053532.GA10457@infradead.org>
+References: <1409763288.12357.0.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:45936 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaIEFfd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 01:35:33 -0400
 Content-Disposition: inline
-In-Reply-To: <5403AB47.3040706@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Milan Broz <gmazyland@gmail.com>
+In-Reply-To: <1409763288.12357.0.camel@myfc17>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
 
-Can I get another review for this one?
+I've applied the series, but for next time can you make sure to follow
+the proper format:
 
-On Sun, Aug 31, 2014 at 07:09:59PM -0400, Douglas Gilbert wrote:
-> A deadlock has been reported when the completion
-> of SCSI commands (simulated by a timer) was surprised
-> by a module removal. This patch removes one half of
-> the offending locks around timer deletions. This fix
-> is applied both to stop_all_queued() which is were
-> the deadlock was discovered and stop_queued_cmnd()
-> which has very similar logic.
-> 
-> This patch should be applied both to the lk 3.17 tree
-> and Christoph's drivers-for-3.18 tree.
-> 
-> Tested-and-reported-by: Milan Broz <gmazyland@gmail.com>
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+ - remove the version number in every subject line
+ - patches you resend from an original author should be unchanged,
+   except that the From: lines moves into the mail body
+ - patches that you send on with your maintainer hat on should be
+   signed off by you, not just reviewed.
 
-> --- a/drivers/scsi/scsi_debug.c	2014-08-26 13:24:51.646948507 -0400
-> +++ b/drivers/scsi/scsi_debug.c	2014-08-30 18:04:54.589226679 -0400
-> @@ -2743,6 +2743,13 @@ static int stop_queued_cmnd(struct scsi_
->  		if (test_bit(k, queued_in_use_bm)) {
->  			sqcp = &queued_arr[k];
->  			if (cmnd == sqcp->a_cmnd) {
-> +				devip = (struct sdebug_dev_info *)
-> +					cmnd->device->hostdata;
-> +				if (devip)
-> +					atomic_dec(&devip->num_in_q);
-> +				sqcp->a_cmnd = NULL;
-> +				spin_unlock_irqrestore(&queued_arr_lock,
-> +						       iflags);
->  				if (scsi_debug_ndelay > 0) {
->  					if (sqcp->sd_hrtp)
->  						hrtimer_cancel(
-> @@ -2755,18 +2762,13 @@ static int stop_queued_cmnd(struct scsi_
->  					if (sqcp->tletp)
->  						tasklet_kill(sqcp->tletp);
->  				}
-> -				__clear_bit(k, queued_in_use_bm);
-> -				devip = (struct sdebug_dev_info *)
-> -					cmnd->device->hostdata;
-> -				if (devip)
-> -					atomic_dec(&devip->num_in_q);
-> -				sqcp->a_cmnd = NULL;
-> -				break;
-> +				clear_bit(k, queued_in_use_bm);
-> +				return 1;
->  			}
->  		}
->  	}
->  	spin_unlock_irqrestore(&queued_arr_lock, iflags);
-> -	return (k < qmax) ? 1 : 0;
-> +	return 0;
->  }
->  
->  /* Deletes (stops) timers or tasklets of all queued commands */
-> @@ -2782,6 +2784,13 @@ static void stop_all_queued(void)
->  		if (test_bit(k, queued_in_use_bm)) {
->  			sqcp = &queued_arr[k];
->  			if (sqcp->a_cmnd) {
-> +				devip = (struct sdebug_dev_info *)
-> +					sqcp->a_cmnd->device->hostdata;
-> +				if (devip)
-> +					atomic_dec(&devip->num_in_q);
-> +				sqcp->a_cmnd = NULL;
-> +				spin_unlock_irqrestore(&queued_arr_lock,
-> +						       iflags);
->  				if (scsi_debug_ndelay > 0) {
->  					if (sqcp->sd_hrtp)
->  						hrtimer_cancel(
-> @@ -2794,12 +2803,8 @@ static void stop_all_queued(void)
->  					if (sqcp->tletp)
->  						tasklet_kill(sqcp->tletp);
->  				}
-> -				__clear_bit(k, queued_in_use_bm);
-> -				devip = (struct sdebug_dev_info *)
-> -					sqcp->a_cmnd->device->hostdata;
-> -				if (devip)
-> -					atomic_dec(&devip->num_in_q);
-> -				sqcp->a_cmnd = NULL;
-> +				clear_bit(k, queued_in_use_bm);
-> +				spin_lock_irqsave(&queued_arr_lock, iflags);
->  			}
->  		}
->  	}
+not strictly required, but making my life a lot easier would be if all
+patches are sent by reply to the original mail.  git-send-email does
+this, and it seems like the Emulex division supporting be2scsi has found
+a way to use it with the corporate email servers.
 
----end quoted text---
