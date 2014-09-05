@@ -1,42 +1,61 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: [PATCH] mpt2sas: remove duplicate disable_discovery MODULE_PARAM
-Date: Fri, 5 Sep 2014 12:30:25 -0400
-Message-ID: <1409934625-10129-1-git-send-email-joe.lawrence@stratus.com>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Fri, 5 Sep 2014 09:44:05 -0700
+Message-ID: <20140905164405.GA28964@core.coreip.homeip.net>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c11o142.mxlogic.net ([208.65.144.65]:52606 "EHLO
-	p01c11o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712AbaIEQan (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 12:30:43 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140905141241.GC10455@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-The disable_discovery module parameter is declared and only used by
-mpt2sas_scsih.c. Remove the extra copy in mpt2sas_base.c.
+On Friday, September 05, 2014 11:12:41 PM Tejun Heo wrote:
+> On Fri, Sep 05, 2014 at 12:47:16AM -0700, Luis R. Rodriguez wrote:
+> > Ah -- well without it the way we "find" drivers that need this new
+> > "async feature" is by a bug report and folks saying their system can't
+> > boot, or they say their device doesn't come up. That's all. Tracing
+> > this to systemd and a timeout was one of the most ugliest things ever.
+> > There two insane bug reports you can go check:
+> > 
+> > mptsas was the first:
+> > 
+> > http://article.gmane.org/gmane.linux.kernel/1669550
+> > https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1297248
+> > 
+> > Then cxgb4:
+> > 
+> > https://bugzilla.novell.com/show_bug.cgi?id=877622
+> > 
+> > I only had Cc'd you on the newest gem pata_marvell :
+> > 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=59581
+> > 
+> > We can't seriously expect to be doing all this work for every driver.
+> > a WARN_ONCE() would enable us to find the drivers that need this new
+> > async probe "feature".
+> 
+> This whole approach of trying to mark specific drivers as needing
+> "async probing" is completely broken for the problem at hand.  It
+> can't address the problem adequately while breaking backward
+> compatibility.  I don't think this makes much sense.
+> 
 
-Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    4 ----
- 1 file changed, 4 deletions(-)
+Which problem are we talking about here though? It does solve the slow device
+stalling the rest if the kernel booting (non-module case) for me.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index cf51b48..bb8dcb0 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -84,10 +84,6 @@ static int mpt2sas_fwfault_debug;
- MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
- 	"and halt firmware - (default=0)");
- 
--static int disable_discovery = -1;
--module_param(disable_discovery, int, 0);
--MODULE_PARM_DESC(disable_discovery, " disable discovery ");
--
- /**
-  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
-  *
+I also reject the notion that anyone should be relying on drivers to be fully
+bound on module loading. It is not nineties anymore. We have hot pluggable
+buses, deferred probing, and even for not hot-pluggable ones the module
+providing the device itself might not be yet loaded. Any scripts that expect to
+find device 100% ready after module loading are simply broken.
+
+Thanks.
+
 -- 
-1.7.10.4
-
+Dmitry
