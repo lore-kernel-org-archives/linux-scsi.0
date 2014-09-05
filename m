@@ -1,48 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
-Date: Sat, 6 Sep 2014 08:32:03 +0900
-Message-ID: <20140905233203.GG15723@mtj.dyndns.org>
-References: <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
- <20140905141241.GC10455@mtj.dyndns.org>
- <20140905164405.GA28964@core.coreip.homeip.net>
- <20140905174925.GA12991@mtj.dyndns.org>
- <20140905181003.GA29003@core.coreip.homeip.net>
- <20140905222956.GA15723@mtj.dyndns.org>
- <20140905223139.GB15723@mtj.dyndns.org>
- <20140905224917.GB35667@core.coreip.homeip.net>
- <20140905225533.GE15723@mtj.dyndns.org>
- <20140905232242.GE35667@core.coreip.homeip.net>
+Subject: Re: [PATCH 1/4] libata: consolidate ata_dev_classify()
+Date: Sat, 6 Sep 2014 08:42:41 +0900
+Message-ID: <20140905234241.GH15723@mtj.dyndns.org>
+References: <1406706911-79510-1-git-send-email-hare@suse.de>
+ <1406706911-79510-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:33971 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbaIEXcM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 19:32:12 -0400
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:62113 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbaIEXmq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 19:42:46 -0400
 Content-Disposition: inline
-In-Reply-To: <20140905232242.GE35667@core.coreip.homeip.net>
+In-Reply-To: <1406706911-79510-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-Hey,
+Hello, Hannes.
 
-On Fri, Sep 05, 2014 at 04:22:42PM -0700, Dmitry Torokhov wrote:
-> > I don't get it.  This is a behavior userland already depends on for
-> > boots.  What's there to agree or disagree?  This is just a fact that
-> > we can't do this w/o disturbing some userlands in a major way.
-> 
-> I am just expressing my disbelief that somebody relies on module loading
-> being synchronous with probing. Out of curiosity, do you have any
-> pointers?
+Sorry about the delay.
 
-I've seen initrd scripts which depended on the behavior to wait for
-storage devices over the years.  AFAIK, none of the modern distros
-does it but this has been such a basic feature all along and it seems
-highly unlikely to me that there's no userland remaining out there
-depending on such behavior.  We do have a lot of different userlands,
-many of them quite ad-hoc.
+On Wed, Jul 30, 2014 at 09:55:08AM +0200, Hannes Reinecke wrote:
+> ata_dev_classify() just uses the 'lbah' and 'lbam'
+> fields from the taskfile, so we can as well use those
+> as arguments and rip out the custom code from sas_ata.
+
+I wonder whether it'd easier to just make sas code pass in
+ata_taskfile instead?  The interface which takes three consecutive
+u8's is kinda error-prone.
+
+> --- a/drivers/scsi/aic94xx/aic94xx_task.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_task.c
+> @@ -373,10 +373,10 @@ static int asd_build_ata_ascb(struct asd_ascb *ascb, struct sas_task *task,
+>  
+>  	if (unlikely(task->ata_task.device_control_reg_update))
+>  		scb->header.opcode = CONTROL_ATA_DEV;
+> -	else if (dev->sata_dev.command_set == ATA_COMMAND_SET)
+> -		scb->header.opcode = INITIATE_ATA_TASK;
+> -	else
+> +	else if (dev->sata_dev.class == ATA_DEV_ATAPI)
+>  		scb->header.opcode = INITIATE_ATAPI_TASK;
+> +	else
+> +		scb->header.opcode = INITIATE_ATA_TASK;
+
+Are these changes covered by the patch description?  Looks like the
+patch is mixing two separate logical changes.
 
 Thanks.
 
