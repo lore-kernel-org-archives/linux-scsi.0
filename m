@@ -1,50 +1,137 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [RFC v2 2/6] driver-core: add driver async_probe support
-Date: Fri, 5 Sep 2014 19:25:41 +0200
-Message-ID: <20140905172541.GA17986@wotan.suse.de>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com> <1409899047-13045-3-git-send-email-mcgrof@do-not-panic.com> <20140905112417.GB22778@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Problem with USB-to-SATA adapters (was: AS2105-based enclosure
+ size issues with >2TB HDDs)
+Date: Fri, 5 Sep 2014 13:32:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1409051329400.879-100000@iolanthe.rowland.org>
+References: <1409782054.6571.27.camel@jarvis.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140905112417.GB22778@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com, linux-kernel@vger.kernel.org, hare@suse.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netd
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49621 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754479AbaIERc5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 13:32:57 -0400
+In-Reply-To: <1409782054.6571.27.camel@jarvis.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Dale R. Worley" <worley@alum.mit.edu>, mdharm-usb@one-eyed-alien.net, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Sep 05, 2014 at 01:24:17PM +0200, Oleg Nesterov wrote:
-> On 09/04, Luis R. Rodriguez wrote:
-> >
-> >  struct driver_private {
-> >  	struct kobject kobj;
-> >  	struct klist klist_devices;
-> >  	struct klist_node knode_bus;
-> >  	struct module_kobject *mkobj;
-> > +	struct driver_attach_work *attach_work;
-> >  	struct device_driver *driver;
+On Wed, 3 Sep 2014, James Bottomley wrote:
+
+> On Wed, 2014-09-03 at 16:30 -0400, Alan Stern wrote:
+> > On Wed, 3 Sep 2014, James Bottomley wrote:
+> > 
+> > > Before we embark on elaborate hacks, why don't we just make the capacity
+> > > writeable (by root) in sysfs from userspace (will require block change)?
+> > > We can then encode all the nasty heuristics (including gpt reading) in
+> > > userspace as a udev rule.
+> > 
+> > That's what I'm working on.  Except that I don't know where to do it in
+> > the block layer, so for now I'm adding the attribute to sd.c.
+> > 
+> > Where in the block layer would the right place be?  We want this to
+> > apply only to entire devices, not to individual partitions.
 > 
-> I am not arguing, just curious...
+> The bottom layer for this is part0.nr_sects which is the size attribute
+> you see in the block sysfs.  However, it looks like we keep a separate
+> value in sdkp, but we don't ever seem to use it (except to see if the
+> capacity has changed).
 > 
-> Are you trying to shrink sizeof(driver_private) ? 
+> So this could be done in two ways: add a writeable capacity attribute in
+> sd.c, as you were originally thinking (it would call set_capacity() on
+> write and that would update the block layer) or make the size parameter
+> writeable.
 
-Yeap.
+Here's my patch to the sd driver.  It seems to work -- writing to the
+capacity_override attribute does change the device size.  But then you
+have to force the kernel to re-read the partition table manually, for
+example by running
 
-> The code can be simpler
-> if you just embedd "struct work_struct attach_work" into driver_private,
-> and you do not need "struct driver_attach_work" or another ->driver pointer
-> this way.
+	blockdev --rereadpt /dev/sdX
 
-Agreed, I considered it and figured it wouldn't make much sense
-to push onto folks more bytes if this feature was optional and
-likely only used by a few drivers, so a pointer / kzalloc seemed
-better to deal with. This saves us 24 bytes. I even tried to
-implement a container_of_p() for pointers but that obviosly
-didn't work well fast as a pointer can have any address and is
-not relative to the parent, and if its on stack the address
-can vary depending on implementation. For example the first member
-should always have the same address as the struct but if the
-first member is a pointer it would be off for me by 12 bytes.
-I am not sure if this is standarized or not.
+because I couldn't see any reasonable way to make this happen 
+automatically.
 
-  Luis
+Alan Stern
+
+
+
+Index: usb-3.17/drivers/scsi/sd.h
+===================================================================
+--- usb-3.17.orig/drivers/scsi/sd.h
++++ usb-3.17/drivers/scsi/sd.h
+@@ -66,6 +66,7 @@ struct scsi_disk {
+ 	struct gendisk	*disk;
+ 	atomic_t	openers;
+ 	sector_t	capacity;	/* size in 512-byte sectors */
++	sector_t	capacity_override;	/* in native-size blocks */
+ 	u32		max_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
+Index: usb-3.17/drivers/scsi/sd.c
+===================================================================
+--- usb-3.17.orig/drivers/scsi/sd.c
++++ usb-3.17/drivers/scsi/sd.c
+@@ -477,6 +477,38 @@ max_write_same_blocks_store(struct devic
+ }
+ static DEVICE_ATTR_RW(max_write_same_blocks);
+ 
++static ssize_t
++capacity_override_show(struct device *dev, struct device_attribute *attr,
++		char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return sprintf(buf, "%llu\n",
++			(unsigned long long) sdkp->capacity_override);
++}
++
++static ssize_t
++capacity_override_store(struct device *dev, struct device_attribute *attr,
++		const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	unsigned long long cap;
++	int err;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	err = kstrtoull(buf, 10, &cap);
++	if (err)
++		return err;
++
++	sdkp->capacity_override = cap;
++	revalidate_disk(sdkp->disk);
++
++	return count;
++}
++static DEVICE_ATTR_RW(capacity_override);
++
+ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_cache_type.attr,
+ 	&dev_attr_FUA.attr,
+@@ -489,6 +521,7 @@ static struct attribute *sd_disk_attrs[]
+ 	&dev_attr_provisioning_mode.attr,
+ 	&dev_attr_max_write_same_blocks.attr,
+ 	&dev_attr_max_medium_access_timeouts.attr,
++	&dev_attr_capacity_override.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(sd_disk);
+@@ -2158,6 +2191,13 @@ sd_read_capacity(struct scsi_disk *sdkp,
+ 	struct scsi_device *sdp = sdkp->device;
+ 	sector_t old_capacity = sdkp->capacity;
+ 
++	/* Did the user override the reported capacity? */
++	if (!sdkp->first_scan && sdkp->capacity_override) {
++		sector_size = sdkp->device->sector_size;
++		sdkp->capacity = sdkp->capacity_override;
++		goto got_data;
++	}
++
+ 	if (sd_try_rc16_first(sdp)) {
+ 		sector_size = read_capacity_16(sdkp, sdp, buffer);
+ 		if (sector_size == -EOVERFLOW)
+
