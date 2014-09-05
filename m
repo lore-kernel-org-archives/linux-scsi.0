@@ -1,44 +1,42 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
- module removal
-Date: Fri, 05 Sep 2014 17:25:04 +0200
-Message-ID: <5409D5D0.8060801@acm.org>
-References: <5403AB47.3040706@interlog.com> <20140905052402.GA27094@infradead.org> <5409C116.5060702@interlog.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: [PATCH] mpt2sas: remove duplicate disable_discovery MODULE_PARAM
+Date: Fri, 5 Sep 2014 12:30:25 -0400
+Message-ID: <1409934625-10129-1-git-send-email-joe.lawrence@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:34023 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbaIEPZL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 11:25:11 -0400
-In-Reply-To: <5409C116.5060702@interlog.com>
+Received: from p01c11o142.mxlogic.net ([208.65.144.65]:52606 "EHLO
+	p01c11o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbaIEQan (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 12:30:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Milan Broz <gmazyland@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Joe Lawrence <joe.lawrence@stratus.com>
 
-On 09/05/14 15:56, Douglas Gilbert wrote:
-> With scsi-mq I think many LLDs probably have a new
-> race possibility between a surprise rmmod of the LLD
-> and another thread presenting a new command at about
-> the same time (or another thread's command completing
-> around that time). Does anything above the LLD stop
-> this happening?
->
-> Looking at mpt3sas and hpsa module exit calls, they don't
-> seem to guard against this possibility.
->
-> The test is pretty easy: build the LLD as a module, load
-> it and fire up a multi-thread, libaio fio test on one or
-> more devices (SSDs would probably be good) on that LLD.
-> While the test is running, do 'rmmod LLD'.
+The disable_discovery module parameter is declared and only used by
+mpt2sas_scsih.c. Remove the extra copy in mpt2sas_base.c.
 
-An LLD must call scsi_remove_host() directly or indirectly from the 
-module cleanup path. scsi_remove_host() triggers a call to 
-blk_cleanup_queue(). That last function sets the flag QUEUE_FLAG_DYING 
-which prevents that new I/O is queued and waits until previously queued 
-requests have finished before returning.
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index cf51b48..bb8dcb0 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -84,10 +84,6 @@ static int mpt2sas_fwfault_debug;
+ MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
+ 	"and halt firmware - (default=0)");
+ 
+-static int disable_discovery = -1;
+-module_param(disable_discovery, int, 0);
+-MODULE_PARM_DESC(disable_discovery, " disable discovery ");
+-
+ /**
+  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
+  *
+-- 
+1.7.10.4
 
