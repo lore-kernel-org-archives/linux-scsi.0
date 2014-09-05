@@ -1,60 +1,35 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC v2 5/6] mptsas: use async probe
-Date: Thu,  4 Sep 2014 23:37:26 -0700
-Message-ID: <1409899047-13045-6-git-send-email-mcgrof@do-not-panic.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 5/6] mptsas: use async probe
+Date: Fri, 5 Sep 2014 16:16:43 +0900
+Message-ID: <20140905071643.GB9323@mtj.dyndns.org>
 References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com
-Cc: linux-kernel@vger.kernel.org, oleg@redhat.com, hare@suse.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, "Luis R. Rodriguez" <mcgrof@suse.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Casey Leedom <leedom@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+ <1409899047-13045-6-git-send-email-mcgrof@do-not-panic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:61558 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbaIEHRE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 03:17:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1409899047-13045-6-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, arjan@linux.intel.com, linux-kernel@vger.kernel.org, oleg@redhat.com, hare@suse.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, "Luis R. Rodriguez" <mcgrof@suse.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Casey Leedom <leedom@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Thu, Sep 04, 2014 at 11:37:26PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> Its reported that mptsas can at times take over 30 seconds
+> to recognize SCSI storage devices [0], this is done on the
+> driver's probe path. Use the the new asynch probe to
+> circumvent systemd from killing this driver.
 
-Its reported that mptsas can at times take over 30 seconds
-to recognize SCSI storage devices [0], this is done on the
-driver's probe path. Use the the new asynch probe to
-circumvent systemd from killing this driver.
+Again, *ANY* SCSI storage controller may.  The fact that a specific
+bug report was filed on mptsas doesn't really mean anything.
 
-[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705
+Thanks.
 
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Tim Gardner <tim.gardner@canonical.com>
-Cc: Pierre Fersing <pierre-fersing@pierref.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Benjamin Poirier <bpoirier@suse.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: Hariprasad S <hariprasad@chelsio.com>
-Cc: Santosh Rastapur <santosh@chelsio.com>
-Cc: Casey Leedom <leedom@chelsio.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/message/fusion/mptsas.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 0707fa2..6dfee95 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5385,6 +5385,7 @@ static struct pci_driver mptsas_driver = {
- 	.suspend	= mptscsih_suspend,
- 	.resume		= mptscsih_resume,
- #endif
-+	.driver.async_probe = true,
- };
- 
- static int __init
 -- 
-2.0.3
+tejun
