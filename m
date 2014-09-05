@@ -1,21 +1,28 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] bnx2fc: fix incorrect DMA memory mapping in
-	bnx2fc_unmap_sg_list()
-Date: Fri, 5 Sep 2014 07:39:12 +0200
-Message-ID: <20140905053912.GA20417@lst.de>
-References: <1409682898-29777-1-git-send-email-chad.dupuis@qlogic.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
+Date: Thu, 4 Sep 2014 22:40:14 -0700
+Message-ID: <20140905054014.GA11595@infradead.org>
+References: <1409701396-20226-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37729 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066AbaIEFjO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Sep 2014 01:39:14 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <1409682898-29777-1-git-send-email-chad.dupuis@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1409701396-20226-1-git-send-email-kys@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, jbottomley@parallels.com, ohering@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com
 
-Thanks, applied.
+Looks good to me.
+
+Olaf, Hannes - can I get another review for this (and the older hyperv
+scanning patch set)?
