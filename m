@@ -1,84 +1,75 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [RFC v2 5/6] mptsas: use async probe
-Date: Fri, 05 Sep 2014 09:23:28 +0200
-Message-ID: <540964F0.8070809@suse.com>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com> <1409899047-13045-6-git-send-email-mcgrof@do-not-panic.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Fri, 5 Sep 2014 00:47:16 -0700
+Message-ID: <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <1409899047-13045-4-git-send-email-mcgrof@do-not-panic.com> <20140905071925.GC9323@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1409899047-13045-6-git-send-email-mcgrof@do-not-panic.com>
-Sender: netdev-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com
-Cc: linux-kernel@vger.kernel.org, oleg@redhat.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, "Luis R. Rodriguez" <mcgrof@suse.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Hariprasad S <hariprasad@chelsio.com>, Casey Leedom <leedom@chelsio.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:32793 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756000AbaIEHri (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 03:47:38 -0400
+In-Reply-To: <20140905071925.GC9323@mtj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit
 
-On 09/05/2014 08:37 AM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> Its reported that mptsas can at times take over 30 seconds
-> to recognize SCSI storage devices [0], this is done on the
-> driver's probe path. Use the the new asynch probe to
-> circumvent systemd from killing this driver.
-> 
-> [0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1276705
-> 
-> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Cc: Joseph Salisbury <joseph.salisbury@canonical.com>
-> Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-> Cc: Tim Gardner <tim.gardner@canonical.com>
-> Cc: Pierre Fersing <pierre-fersing@pierref.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Oleg Nesterov <oleg@redhat.com>
-> Cc: Benjamin Poirier <bpoirier@suse.de>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-> Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-> Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-> Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-> Cc: Hariprasad S <hariprasad@chelsio.com>
-> Cc: Santosh Rastapur <santosh@chelsio.com>
-> Cc: Casey Leedom <leedom@chelsio.com>
-> Cc: MPT-FusionLinux.pdl@avagotech.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->  drivers/message/fusion/mptsas.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-> index 0707fa2..6dfee95 100644
-> --- a/drivers/message/fusion/mptsas.c
-> +++ b/drivers/message/fusion/mptsas.c
-> @@ -5385,6 +5385,7 @@ static struct pci_driver mptsas_driver = {
->  	.suspend	= mptscsih_suspend,
->  	.resume		= mptscsih_resume,
->  #endif
-> +	.driver.async_probe = true,
->  };
->  
->  static int __init
-> 
-This is the wrong appoach.
-First of all, the mptsas, mpt2sas, and mpt3sas all share the same
-driver layout, so any issue happeing with this driver will most
-likely affect the others, too.
-Secondly the driver is event-based anyway, so we should be moving
-the initialisation to the already existing event handler:
+On Fri, Sep 5, 2014 at 12:19 AM, Tejun Heo <tj@kernel.org> wrote:
+> On Thu, Sep 04, 2014 at 11:37:24PM -0700, Luis R. Rodriguez wrote:
+> ...
+>> +             /*
+>> +              * I got SIGKILL, but wait for 60 more seconds for completion
+>> +              * unless chosen by the OOM killer. This delay is there as a
+>> +              * workaround for boot failure caused by SIGKILL upon device
+>> +              * driver initialization timeout.
+>> +              *
+>> +              * N.B. this will actually let the thread complete regularly,
+>> +              * wait_for_completion() will be used eventually, the 60 second
+>> +              * try here is just to check for the OOM over that time.
+>> +              */
+>> +             WARN_ONCE(!test_thread_flag(TIF_MEMDIE),
+>> +                       "Got SIGKILL but not from OOM, if this issue is on probe use .driver.async_probe\n");
+>> +             for (i = 0; i < 60 && !test_thread_flag(TIF_MEMDIE); i++)
+>> +                     if (wait_for_completion_timeout(&done, HZ))
+>> +                             goto wait_done;
+>> +
+>
+> Ugh... Jesus, this is way too hacky, so now we fail on 90s timeout
+> instead of 30?
 
-diff --git a/drivers/message/fusion/mptsas.c
-b/drivers/message/fusion/mptsas.c
-index 0707fa2..6f41e2c 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5305,7 +5305,7 @@ mptsas_probe(struct pci_dev *pdev, const
-struct pci_device_id *id)
-        /* older firmware doesn't support expander events */
-        if ((ioc->facts.HeaderVersion >> 8) < 0xE)
-                ioc->old_sas_discovery_protocal = 1;
--       mptsas_scan_sas_topology(ioc);
-+       mptsas_queue_rescan(ioc);
-        mptsas_fw_event_on(ioc);
-        return 0;
+Nope! I fell into the same trap and only with tons of patience by part
+of Tetsuo with me was I able to grok that the 60 seconds here are not
+for increasing the timeout, this is just time spent checking to ensure
+that the OOM wasn't the one who triggered the SIGKILL. Even if the
+drivers took eons it should be fine now, I tried it :D
+
+>  Why do we even need this with the proposed async
+> probing changes?
+
+Ah -- well without it the way we "find" drivers that need this new
+"async feature" is by a bug report and folks saying their system can't
+boot, or they say their device doesn't come up. That's all. Tracing
+this to systemd and a timeout was one of the most ugliest things ever.
+There two insane bug reports you can go check:
+
+mptsas was the first:
+
+http://article.gmane.org/gmane.linux.kernel/1669550
+https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1297248
+
+Then cxgb4:
+
+https://bugzilla.novell.com/show_bug.cgi?id=877622
+
+I only had Cc'd you on the newest gem pata_marvell :
+
+https://bugzilla.kernel.org/show_bug.cgi?id=59581
+
+We can't seriously expect to be doing all this work for every driver.
+a WARN_ONCE() would enable us to find the drivers that need this new
+async probe "feature".
+
+  Luis
