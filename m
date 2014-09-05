@@ -1,46 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/19] lpfc 10.4.8000.0: Update lpfc version to driver
- version 10.4.8000.0
-Date: Fri, 05 Sep 2014 06:59:01 -0700
-Message-ID: <1409925541.2025.8.camel@jarvis.lan>
-References: <1409763288.12357.0.camel@myfc17>
-	 <20140905053532.GA10457@infradead.org> <5409BB3F.6040205@emulex.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Fri, 5 Sep 2014 23:12:41 +0900
+Message-ID: <20140905141241.GC10455@mtj.dyndns.org>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <1409899047-13045-4-git-send-email-mcgrof@do-not-panic.com>
+ <20140905071925.GC9323@mtj.dyndns.org>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51126 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932318AbaIEN7D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 09:59:03 -0400
-In-Reply-To: <5409BB3F.6040205@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+Sender: netdev-owner@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Fri, 2014-09-05 at 09:31 -0400, James Smart wrote:
-> On 9/5/2014 1:35 AM, Christoph Hellwig wrote:
-> >   - patches that you send on with your maintainer hat on should be
-> >     signed off by you, not just reviewed.
+On Fri, Sep 05, 2014 at 12:47:16AM -0700, Luis R. Rodriguez wrote:
+> Ah -- well without it the way we "find" drivers that need this new
+> "async feature" is by a bug report and folks saying their system can't
+> boot, or they say their device doesn't come up. That's all. Tracing
+> this to systemd and a timeout was one of the most ugliest things ever.
+> There two insane bug reports you can go check:
 > 
-> ok - but I guess I had a different interpretation of the meaning for 
-> signed-by.  I thought it conveyed an ownership and originality of 
-> authorship of the content posted. As such, if I didn't contribute 
-> anything in the patch, I shouldn't give anything other than a 
-> reviewed-by indicating approval.
+> mptsas was the first:
+> 
+> http://article.gmane.org/gmane.linux.kernel/1669550
+> https://bugs.launchpad.net/ubuntu/+source/systemd/+bug/1297248
+> 
+> Then cxgb4:
+> 
+> https://bugzilla.novell.com/show_bug.cgi?id=877622
+> 
+> I only had Cc'd you on the newest gem pata_marvell :
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=59581
+> 
+> We can't seriously expect to be doing all this work for every driver.
+> a WARN_ONCE() would enable us to find the drivers that need this new
+> async probe "feature".
 
-No, this is a DCO thing;the Signed-off-by: tag is the certification
-under the DCO:
+This whole approach of trying to mark specific drivers as needing
+"async probing" is completely broken for the problem at hand.  It
+can't address the problem adequately while breaking backward
+compatibility.  I don't think this makes much sense.
 
-http://developercertificate.org/
+Nacked-by: Tejun Heo <tj@kernel.org>
 
-It follows the chain of transmission, whether you alter the patch or
-not, so it needs your Signed-off-by for any patch you send on behalf of
-another (whether or not you alter it).  By convention, you also append
-your alterations to the change log in square brackets, but you don't
-have to bother if it's trivial.
+Thanks.
 
-James
-
-
+-- 
+tejun
