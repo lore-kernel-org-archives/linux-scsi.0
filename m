@@ -1,45 +1,73 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
- module removal
-Date: Sat, 6 Sep 2014 07:44:06 -0700
-Message-ID: <20140906144406.GA25469@infradead.org>
-References: <5403AB47.3040706@interlog.com>
- <20140905052402.GA27094@infradead.org>
- <5409C116.5060702@interlog.com>
- <5409D5D0.8060801@acm.org>
- <540B1CC6.8010800@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] block: remove artifical max_hw_sectors cap
+Date: Sat,  6 Sep 2014 16:08:05 -0700
+Message-ID: <1410044885-14893-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52267 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaIFOoH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2014 10:44:07 -0400
-Content-Disposition: inline
-In-Reply-To: <540B1CC6.8010800@interlog.com>
+Received: from casper.infradead.org ([85.118.1.10]:60586 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbaIFXFq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2014 19:05:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Milan Broz <gmazyland@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Sep 06, 2014 at 10:40:06AM -0400, Douglas Gilbert wrote:
-> And they do call scsi_remove_host(). But they do that toward
-> the end of their clean-up. The problem that I observed has
-> already happened before that.
-> 
-> IOW I think the QUEUE_FLAG_DYING state needs to be set and
-> acknowledged as the first order of business by the code
-> that implements 'rmmod LLD'.
+Set max_sectors to the value the drivers provides as hardware limit by
+default.  Linux had proper I/O throttling for a long time and doesn't
+rely on a artifically small maximum I/O size anymore.  By not limiting
+the I/O size by default we remove an annoying tuning step required for
+most Linux installation.
 
-That's how driver should implement their ->remove driver callback:
+Note that both the user, and if absolutely required the driver can still
+impose a limit for FS requests below max_hw_sectors_kb.
 
-foo_remove()
-{
-	scsi_remove_host()
-	< actual cleanup here>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-settings.c       | 4 +---
+ drivers/block/aoe/aoeblk.c | 2 +-
+ include/linux/blkdev.h     | 1 -
+ 3 files changed, 2 insertions(+), 5 deletions(-)
 
-	scsi_host_put();
-}
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index f1a1795..f52c223 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -257,9 +257,7 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
+ 		       __func__, max_hw_sectors);
+ 	}
+ 
+-	limits->max_hw_sectors = max_hw_sectors;
+-	limits->max_sectors = min_t(unsigned int, max_hw_sectors,
+-				    BLK_DEF_MAX_SECTORS);
++	limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
+ }
+ EXPORT_SYMBOL(blk_limits_max_hw_sectors);
+ 
+diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
+index dd73e1f..46c282f 100644
+--- a/drivers/block/aoe/aoeblk.c
++++ b/drivers/block/aoe/aoeblk.c
+@@ -395,7 +395,7 @@ aoeblk_gdalloc(void *vp)
+ 	WARN_ON(d->flags & DEVFL_TKILL);
+ 	WARN_ON(d->gd);
+ 	WARN_ON(d->flags & DEVFL_UP);
+-	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
++	blk_queue_max_hw_sectors(q, 1024);
+ 	q->backing_dev_info.name = "aoe";
+ 	q->backing_dev_info.ra_pages = READ_AHEAD / PAGE_CACHE_SIZE;
+ 	d->bufpool = mp;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 518b465..7e3c172 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1192,7 +1192,6 @@ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
+ enum blk_default_limits {
+ 	BLK_MAX_SEGMENTS	= 128,
+ 	BLK_SAFE_MAX_SECTORS	= 255,
+-	BLK_DEF_MAX_SECTORS	= 1024,
+ 	BLK_MAX_SEGMENT_SIZE	= 65536,
+ 	BLK_SEG_BOUNDARY_MASK	= 0xFFFFFFFFUL,
+ };
+-- 
+1.9.1
 
-if a driver doesn't do that, thats a bug in the driver which needs
-fixing.
