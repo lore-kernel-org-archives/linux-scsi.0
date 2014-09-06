@@ -1,161 +1,112 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 08/11] megaraid_sas : Add module parameter to disable
- IRQ-CPU affinity hint
-Date: Sat, 6 Sep 2014 18:55:52 +0530
-Message-ID: <201409061328.s86DSAsY013235@palmhbs0.lsi.com>
+Subject: [PATCH 03/11] megaraid_sas : Update threshold based reply post
+ host index register
+Date: Sat, 6 Sep 2014 18:55:47 +0530
+Message-ID: <201409061328.s86DS5EM012885@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0063.outbound.protection.outlook.com ([207.46.100.63]:8544
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0060.outbound.protection.outlook.com ([157.56.110.60]:24768
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751368AbaIFNlt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Sep 2014 09:41:49 -0400
+	id S1751284AbaIFNuN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Sep 2014 09:50:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
+Current driver updates reply post host index to let firmware know that replies are processed,
+while returning from ISR function, only if there is no oustanding replies in reply queue.
 
-For certain deployment, we may need to disable irq cpu affinity hint.
-This module parameter provides option for use to disable irq cpu affinity hint
-and allow irqbalancer to handle the rest.
+Driver will free the request frame immediately from ISR but reply post host index is not yet updated.
+It means freed request can be used by submission path and there may be a tight loop in request/reply
+path. In such condition, firmware may crash when it tries to post reply and there is no free 
+reply post descriptor.
 
+Eventually two things needs to be change to avoid this issue.
+
+Increase reply queue depth (double than request queue) to accommodate worst case scenario.
+Update reply post host index to firmware once it reach to some pre-defined threshold value.
+
+This change will make sure that firmware will always have some buffer of reply descriptor and 
+will never find empty reply descriptor in completion path.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 60 +++++++++++++++++++------------
- 1 file changed, 38 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 23 ++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  1 +
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 07255c1..086beee 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -89,6 +89,10 @@ module_param(resetwaittime, int, S_IRUGO);
- MODULE_PARM_DESC(resetwaittime, "Wait time in seconds after I/O timeout "
- 		 "before resetting adapter. Default: 180");
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index c69c1ac..f30297d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -971,7 +971,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
  
-+int smp_affinity_enable = 1;
-+module_param(smp_affinity_enable, int, S_IRUGO);
-+MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
-+
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux@lsi.com");
-@@ -5160,8 +5164,9 @@ retry_irq_register:
- 				printk(KERN_DEBUG "megasas: Failed to "
- 				       "register IRQ for vector %d.\n", i);
- 				for (j = 0; j < i; j++) {
--					irq_set_affinity_hint(
--						instance->msixentry[j].vector, NULL);
-+					if (smp_affinity_enable)
-+						irq_set_affinity_hint(
-+							instance->msixentry[j].vector, NULL);
- 					free_irq(
- 						instance->msixentry[j].vector,
- 						&instance->irq_context[j]);
-@@ -5170,11 +5175,14 @@ retry_irq_register:
- 				instance->msix_vectors = 0;
- 				goto retry_irq_register;
- 			}
--			if (irq_set_affinity_hint(instance->msixentry[i].vector,
--				get_cpu_mask(cpu)))
--				dev_err(&instance->pdev->dev, "Error setting"
--					"affinity hint for cpu %d\n", cpu);
--			cpu = cpumask_next(cpu, cpu_online_mask);
-+			if (smp_affinity_enable) {
-+				if (irq_set_affinity_hint(instance->msixentry[i].vector,
-+					get_cpu_mask(cpu)))
-+					dev_err(&instance->pdev->dev,
-+						"Error setting affinity hint "
-+						"for cpu %d\n", cpu);
-+				cpu = cpumask_next(cpu, cpu_online_mask);
-+			}
- 		}
- 	} else {
- 		instance->irq_context[0].instance = instance;
-@@ -5233,8 +5241,9 @@ retry_irq_register:
- 	instance->instancet->disable_intr(instance);
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
--			irq_set_affinity_hint(
--				instance->msixentry[i].vector, NULL);
-+			if (smp_affinity_enable)
-+				irq_set_affinity_hint(
-+					instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
- 		}
-@@ -5397,8 +5406,9 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	max_cmd = instance->max_fw_cmds;
  
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
--			irq_set_affinity_hint(
--				instance->msixentry[i].vector, NULL);
-+			if (smp_affinity_enable)
-+				irq_set_affinity_hint(
-+					instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
- 		}
-@@ -5507,8 +5517,9 @@ megasas_resume(struct pci_dev *pdev)
- 				printk(KERN_DEBUG "megasas: Failed to "
- 				       "register IRQ for vector %d.\n", i);
- 				for (j = 0; j < i; j++) {
--					irq_set_affinity_hint(
--						instance->msixentry[j].vector, NULL);
-+					if (smp_affinity_enable)
-+						irq_set_affinity_hint(
-+							instance->msixentry[j].vector, NULL);
- 					free_irq(
- 						instance->msixentry[j].vector,
- 						&instance->irq_context[j]);
-@@ -5516,11 +5527,14 @@ megasas_resume(struct pci_dev *pdev)
- 				goto fail_irq;
- 			}
+-	fusion->reply_q_depth = ((max_cmd + 1 + 15)/16)*16;
++	fusion->reply_q_depth = (((max_cmd * 2) + 1 + 15)/16)*16;
  
--			if (irq_set_affinity_hint(instance->msixentry[i].vector,
--				get_cpu_mask(cpu)))
--				dev_err(&instance->pdev->dev, "Error setting"
--					"affinity hint for cpu %d\n", cpu);
--			cpu = cpumask_next(cpu, cpu_online_mask);
-+			if (smp_affinity_enable) {
-+				if (irq_set_affinity_hint(instance->msixentry[i].vector,
-+					get_cpu_mask(cpu)))
-+					dev_err(&instance->pdev->dev, "Error "
-+						"setting affinity hint for cpu "
-+						"%d\n", cpu);
-+				cpu = cpumask_next(cpu, cpu_online_mask);
-+			}
- 		}
- 	} else {
- 		instance->irq_context[0].instance = instance;
-@@ -5638,8 +5652,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	fusion->request_alloc_sz =
+ 		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *max_cmd;
+@@ -1876,6 +1876,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ 	u32 status, extStatus, device_id;
+ 	union desc_value d_val;
+ 	struct LD_LOAD_BALANCE_INFO *lbinfo;
++	int threshold_reply_count = 0;
  
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
--			irq_set_affinity_hint(
--				instance->msixentry[i].vector, NULL);
-+			if (smp_affinity_enable)
-+				irq_set_affinity_hint(
-+					instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
- 		}
-@@ -5727,8 +5742,9 @@ static void megasas_shutdown(struct pci_dev *pdev)
- 	instance->instancet->disable_intr(instance);
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
--			irq_set_affinity_hint(
--				instance->msixentry[i].vector, NULL);
-+			if (smp_affinity_enable)
-+				irq_set_affinity_hint(
-+					instance->msixentry[i].vector, NULL);
- 			free_irq(instance->msixentry[i].vector,
- 				 &instance->irq_context[i]);
- 		}
+ 	fusion = instance->ctrl_context;
+ 
+@@ -1963,6 +1964,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ 
+ 		desc->Words = ULLONG_MAX;
+ 		num_completed++;
++		threshold_reply_count++;
+ 
+ 		/* Get the next reply descriptor */
+ 		if (!fusion->last_reply_idx[MSIxIndex])
+@@ -1982,6 +1984,25 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ 
+ 		if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
+ 			break;
++		/*
++		 * Write to reply post host index register after completing threshold
++		 * number of reply counts and still there are more replies in reply queue
++		 * pending to be completed
++		 */
++		if (threshold_reply_count >= THRESHOLD_REPLY_COUNT) {
++			if ((instance->pdev->device ==
++				PCI_DEVICE_ID_LSI_INVADER) ||
++				(instance->pdev->device ==
++				PCI_DEVICE_ID_LSI_FURY))
++				writel(((MSIxIndex & 0x7) << 24) |
++					fusion->last_reply_idx[MSIxIndex],
++					instance->reply_post_host_index_addr[MSIxIndex/8]);
++			else
++				writel((MSIxIndex << 24) |
++					fusion->last_reply_idx[MSIxIndex],
++					instance->reply_post_host_index_addr[0]);
++			threshold_reply_count = 0;
++		}
+ 	}
+ 
+ 	if (!num_completed)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index e76af54..d660c4d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -86,6 +86,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
+ 
+ #define MEGASAS_FP_CMD_LEN	16
+ #define MEGASAS_FUSION_IN_RESET 0
++#define THRESHOLD_REPLY_COUNT 50
+ 
+ /*
+  * Raid Context structure which describes MegaRAID specific IO Parameters
 -- 
 1.8.3.1
 
