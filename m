@@ -1,73 +1,69 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] block: remove artifical max_hw_sectors cap
-Date: Sat,  6 Sep 2014 16:08:05 -0700
-Message-ID: <1410044885-14893-1-git-send-email-hch@lst.de>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH V2] hpsa: refine the pci enable/disable handling
+Date: Sat, 6 Sep 2014 23:38:31 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C55BD2@G4W3202.americas.hpqcorp.net>
+References: <53ECC3D7.90303@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60586 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbaIFXFq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2014 19:05:46 -0400
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:60730 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbaIFXmS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Sep 2014 19:42:18 -0400
+In-Reply-To: <53ECC3D7.90303@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: "Handzik, Joe" <joseph.t.handzik@hp.com>
 
-Set max_sectors to the value the drivers provides as hardware limit by
-default.  Linux had proper I/O throttling for a long time and doesn't
-rely on a artifically small maximum I/O size anymore.  By not limiting
-the I/O size by default we remove an annoying tuning step required for
-most Linux installation.
 
-Note that both the user, and if absolutely required the driver can still
-impose a limit for FS requests below max_hw_sectors_kb.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Tomas Henzl
+...
+
+> +	/* kdump kernel is loading, we don't know in which state is
+> +	 * the pci interface. The dev->enable_cnt is equal zero
+> +	 * so we call enable+disable, wait a while and switch it on.
+> +	 */
+> +	rc = pci_enable_device(pdev);
+> +	if (rc) {
+> +		dev_warn(&pdev->dev, "Failed to enable PCI device\n");
+> +		return -ENODEV;
+> +	}
+> +	pci_disable_device(pdev);
+> +	msleep(260);			/* a randomly chosen number */
+> +	rc = pci_enable_device(pdev);
+> +	if (rc) {
+> +		dev_warn(&pdev->dev, "failed to enable device.\n");
+> +		return -ENODEV;
+> +	}
+> +
+>  	/* Reset the controller with a PCI power-cycle or via doorbell
+> */
+
+I tested this patch by adding:
+	reset_devices
+to the kernel command line, which sets a kernel global variable that
+triggers the driver to take this path.
+
+Controller initialization failed with:
+[   21.822789] hpsa 0000:02:00.0: Waiting for controller to respond to no-op
+[  121.822219] hpsa 0000:02:00.0: controller message 03:00 timed out
+[  121.854814] hpsa 0000:02:00.0: no-op failed; re-trying
+...
+
+The reason is that pci_disable_device clears the Bus Master Enable bit,
+and there is no call to pci_set_master after pci_enable.  The controller is
+unable to return the response for the command sent by hpsa_noop down
+below.  Adding pci_set_master(pdev) got it working.
+
+A call to pci_request_regions is also missing (that's supposed to
+be called before accessing the controller's memory space), but
+that's not fatal here.
+
 ---
- block/blk-settings.c       | 4 +---
- drivers/block/aoe/aoeblk.c | 2 +-
- include/linux/blkdev.h     | 1 -
- 3 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f1a1795..f52c223 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -257,9 +257,7 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
- 		       __func__, max_hw_sectors);
- 	}
- 
--	limits->max_hw_sectors = max_hw_sectors;
--	limits->max_sectors = min_t(unsigned int, max_hw_sectors,
--				    BLK_DEF_MAX_SECTORS);
-+	limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
- }
- EXPORT_SYMBOL(blk_limits_max_hw_sectors);
- 
-diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
-index dd73e1f..46c282f 100644
---- a/drivers/block/aoe/aoeblk.c
-+++ b/drivers/block/aoe/aoeblk.c
-@@ -395,7 +395,7 @@ aoeblk_gdalloc(void *vp)
- 	WARN_ON(d->flags & DEVFL_TKILL);
- 	WARN_ON(d->gd);
- 	WARN_ON(d->flags & DEVFL_UP);
--	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
-+	blk_queue_max_hw_sectors(q, 1024);
- 	q->backing_dev_info.name = "aoe";
- 	q->backing_dev_info.ra_pages = READ_AHEAD / PAGE_CACHE_SIZE;
- 	d->bufpool = mp;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 518b465..7e3c172 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1192,7 +1192,6 @@ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
- enum blk_default_limits {
- 	BLK_MAX_SEGMENTS	= 128,
- 	BLK_SAFE_MAX_SECTORS	= 255,
--	BLK_DEF_MAX_SECTORS	= 1024,
- 	BLK_MAX_SEGMENT_SIZE	= 65536,
- 	BLK_SEG_BOUNDARY_MASK	= 0xFFFFFFFFUL,
- };
--- 
-1.9.1
-
+Rob Elliott    HP Server Storage
