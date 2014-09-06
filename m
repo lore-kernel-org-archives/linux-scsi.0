@@ -1,360 +1,115 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 09/11] megaraid_sas : N-drive primary raid level 1 load
- balancing
-Date: Sat, 6 Sep 2014 18:55:53 +0530
-Message-ID: <201409061328.s86DSBZn013333@palmhbs0.lsi.com>
+Subject: [PATCH 01/11] megaraid_sas : Do not scan non syspd drives
+Date: Sat, 6 Sep 2014 18:55:45 +0530
+Message-ID: <201409061328.s86DS3SR012749@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0064.outbound.protection.outlook.com ([207.46.100.64]:54240
+Received: from mail-by2on0090.outbound.protection.outlook.com ([207.46.100.90]:61473
 	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750936AbaIFOAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Sep 2014 10:00:53 -0400
+	id S1751702AbaIFOBU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Sep 2014 10:01:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
+Current driver allow device scan for all the devices on channel 0 and 1.
+E.a If we have two single drive raid volumes, we may see prints like below.
+First two prints are for physical device which are used to form VD. 
+Prints like this creates confusion as it is really not required to scan any
+hidden physical devices. 
 
-Current driver does fast path read load balancing between arm and mirror disk 
-for two Drive Raid-1 configuration only.
+scsi1 : LSI SAS based MegaRAID driver
+scsi 1:0:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:0:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
 
-Now, Driver support fast path read load balancing for all (any number of disk) Raid-1 configuration.
+When slave_alloc called, sdev-type will not be set, so current code will always
+reutrn "0" in slave_alloc callback.
+This patch make sure that driver return "-ENXIO" for non-syspd devices.
+
+After this patch, we will see prints in syslog only for devices which are exposed. 
+For current example, below print will be available in syslog.
+
+scsi1 : LSI SAS based MegaRAID driver
+scsi 1:2:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
----
- drivers/scsi/megaraid/megaraid_sas.h        |   8 +-
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 134 ++++++++++++++++------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  14 ++-
- drivers/scsi/megaraid/megaraid_sas_fusion.h |   8 +-
- 4 files changed, 96 insertions(+), 68 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 5dedf09..156d4b9 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1188,7 +1188,8 @@ union megasas_sgl_frame {
- typedef union _MFI_CAPABILITIES {
- 	struct {
- #if   defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:28;
-+		u32     reserved:27;
-+		u32     support_ndrive_r1_lb:1;
- 		u32	support_max_255lds:1;
- 		u32	reserved1:1;
- 		u32     support_additional_msix:1;
-@@ -1198,7 +1199,8 @@ typedef union _MFI_CAPABILITIES {
- 		u32     support_additional_msix:1;
- 		u32	reserved1:1;
- 		u32	support_max_255lds:1;
--		u32     reserved:28;
-+		u32     support_ndrive_r1_lb:1;
-+		u32     reserved:27;
- #endif
- 	} mfi_capabilities;
- 	u32     reg;
-@@ -1914,6 +1916,8 @@ u16 MR_LdSpanArrayGet(u32 ld, u32 span, struct MR_DRV_RAID_MAP_ALL *map);
- u16 MR_PdDevHandleGet(u32 pd, struct MR_DRV_RAID_MAP_ALL *map);
- u16 MR_GetLDTgtId(u32 ld, struct MR_DRV_RAID_MAP_ALL *map);
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 35 ++++---------------------------
+ 1 file changed, 4 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ff44f2c..a894f13 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1628,36 +1628,12 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
  
-+u16 get_updated_dev_handle(struct megasas_instance *instance,
-+	struct LD_LOAD_BALANCE_INFO *lbInfo, struct IO_REQUEST_INFO *in_info);
- void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
- 	struct LD_LOAD_BALANCE_INFO *lbInfo);
- int megasas_get_ctrl_info(struct megasas_instance *instance,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index c2eaf6e..685e6f3 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -55,6 +55,13 @@
- #include "megaraid_sas.h"
- #include <asm/div64.h>
- 
-+#define LB_PENDING_CMDS_DEFAULT 4
-+static unsigned int lb_pending_cmds = LB_PENDING_CMDS_DEFAULT;
-+module_param(lb_pending_cmds, int, S_IRUGO);
-+MODULE_PARM_DESC(lb_pending_cmds, "Change raid-1 load balancing outstanding "
-+	"threshold. Valid Values are 1-128. Default: 4");
-+
-+
- #define ABS_DIFF(a, b)   (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
- #define MR_LD_STATE_OPTIMAL 3
- #define FALSE 0
-@@ -769,6 +776,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
- 	pRAID_Context->spanArm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) |
- 					physArm;
-+	io_info->span_arm = pRAID_Context->spanArm;
- 	return retval;
- }
- 
-@@ -865,6 +873,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
- 	pRAID_Context->spanArm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) |
- 		physArm;
-+	io_info->span_arm = pRAID_Context->spanArm;
- 	return retval;
- }
- 
-@@ -1131,7 +1140,7 @@ MR_BuildRaidContext(struct megasas_instance *instance,
- *
- */
- void mr_update_span_set(struct MR_DRV_RAID_MAP_ALL *map,
--			PLD_SPAN_INFO ldSpanInfo)
-+	PLD_SPAN_INFO ldSpanInfo)
+ static int megasas_slave_configure(struct scsi_device *sdev)
  {
- 	u8   span, count;
- 	u32  element, span_row_width;
-@@ -1239,90 +1248,105 @@ void mr_update_span_set(struct MR_DRV_RAID_MAP_ALL *map,
- 
+-	u16             pd_index = 0;
+-	struct  megasas_instance *instance ;
+-
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+-
+-	/*
+-	* Don't export physical disk devices to the disk driver.
+-	*
+-	* FIXME: Currently we don't export them to the midlayer at all.
+-	*        That will be fixed once LSI engineers have audited the
+-	*        firmware for possible issues.
+-	*/
+-	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
+-				sdev->type == TYPE_DISK) {
+-		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+-								sdev->id;
+-		if (instance->pd_list[pd_index].driveState ==
+-						MR_PD_STATE_SYSTEM) {
+-			blk_queue_rq_timeout(sdev->request_queue,
+-				MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
+-			return 0;
+-		}
+-		return -ENXIO;
+-	}
+-
+ 	/*
+ 	* The RAID firmware may require extended timeouts.
+ 	*/
+ 	blk_queue_rq_timeout(sdev->request_queue,
+ 		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
++
+ 	return 0;
  }
  
--void
--mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
--			      struct LD_LOAD_BALANCE_INFO *lbInfo)
-+void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
-+	struct LD_LOAD_BALANCE_INFO *lbInfo)
- {
- 	int ldCount;
- 	u16 ld;
- 	struct MR_LD_RAID *raid;
- 
-+	if (lb_pending_cmds > 128 || lb_pending_cmds < 1)
-+		lb_pending_cmds = LB_PENDING_CMDS_DEFAULT;
-+
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
--		ld = MR_TargetIdToLdGet(ldCount, map);
-+		ld = MR_TargetIdToLdGet(ldCount, drv_map);
- 		if (ld >= MAX_LOGICAL_DRIVES_EXT) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
- 			continue;
+@@ -1666,18 +1642,15 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 	u16             pd_index = 0;
+ 	struct megasas_instance *instance ;
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+-	if ((sdev->channel < MEGASAS_MAX_PD_CHANNELS) &&
+-				(sdev->type == TYPE_DISK)) {
++	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+ 		/*
+ 		 * Open the OS scan to the SYSTEM PD
+ 		 */
+ 		pd_index =
+ 			(sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+ 			sdev->id;
+-		if ((instance->pd_list[pd_index].driveState ==
+-					MR_PD_STATE_SYSTEM) &&
+-			(instance->pd_list[pd_index].driveType ==
+-						TYPE_DISK)) {
++		if (instance->pd_list[pd_index].driveState ==
++					MR_PD_STATE_SYSTEM) {
+ 			return 0;
  		}
- 
--		raid = MR_LdRaidGet(ld, map);
--
--		/* Two drive Optimal RAID 1 */
--		if ((raid->level == 1)  &&  (raid->rowSize == 2) &&
--		    (raid->spanDepth == 1) && raid->ldState ==
--		    MR_LD_STATE_OPTIMAL) {
--			u32 pd, arRef;
--
--			lbInfo[ldCount].loadBalanceFlag = 1;
--
--			/* Get the array on which this span is present */
--			arRef = MR_LdSpanArrayGet(ld, 0, map);
--
--			/* Get the Pd */
--			pd = MR_ArPdGet(arRef, 0, map);
--			/* Get dev handle from Pd */
--			lbInfo[ldCount].raid1DevHandle[0] =
--				MR_PdDevHandleGet(pd, map);
--			/* Get the Pd */
--			pd = MR_ArPdGet(arRef, 1, map);
--
--			/* Get the dev handle from Pd */
--			lbInfo[ldCount].raid1DevHandle[1] =
--				MR_PdDevHandleGet(pd, map);
--		} else
-+		raid = MR_LdRaidGet(ld, drv_map);
-+		if ((raid->level != 1) ||
-+			(raid->ldState != MR_LD_STATE_OPTIMAL)) {
- 			lbInfo[ldCount].loadBalanceFlag = 0;
-+			continue;
-+		}
-+		lbInfo[ldCount].loadBalanceFlag = 1;
- 	}
- }
- 
--u8 megasas_get_best_arm(struct LD_LOAD_BALANCE_INFO *lbInfo, u8 arm, u64 block,
--			u32 count)
-+u8 megasas_get_best_arm_pd(struct megasas_instance *instance,
-+	struct LD_LOAD_BALANCE_INFO *lbInfo, struct IO_REQUEST_INFO *io_info)
- {
--	u16     pend0, pend1;
-+	struct fusion_context *fusion;
-+	struct MR_LD_RAID  *raid;
-+	struct MR_DRV_RAID_MAP_ALL *drv_map;
-+	u16     pend0, pend1, ld;
- 	u64     diff0, diff1;
--	u8      bestArm;
-+	u8      bestArm, pd0, pd1, span, arm;
-+	u32     arRef, span_row_size;
-+
-+	u64 block = io_info->ldStartBlock;
-+	u32 count = io_info->numBlocks;
-+
-+	span = ((io_info->span_arm & RAID_CTX_SPANARM_SPAN_MASK)
-+			>> RAID_CTX_SPANARM_SPAN_SHIFT);
-+	arm = (io_info->span_arm & RAID_CTX_SPANARM_ARM_MASK);
-+
-+
-+	fusion = instance->ctrl_context;
-+	drv_map = fusion->ld_drv_map[(instance->map_id & 1)];
-+	ld = MR_TargetIdToLdGet(io_info->ldTgtId, drv_map);
-+	raid = MR_LdRaidGet(ld, drv_map);
-+	span_row_size = instance->UnevenSpanSupport ?
-+			SPAN_ROW_SIZE(drv_map, ld, span) : raid->rowSize;
-+
-+	arRef = MR_LdSpanArrayGet(ld, span, drv_map);
-+	pd0 = MR_ArPdGet(arRef, arm, drv_map);
-+	pd1 = MR_ArPdGet(arRef, (arm + 1) >= span_row_size ?
-+		(arm + 1 - span_row_size) : arm + 1, drv_map);
- 
- 	/* get the pending cmds for the data and mirror arms */
--	pend0 = atomic_read(&lbInfo->scsi_pending_cmds[0]);
--	pend1 = atomic_read(&lbInfo->scsi_pending_cmds[1]);
-+	pend0 = atomic_read(&lbInfo->scsi_pending_cmds[pd0]);
-+	pend1 = atomic_read(&lbInfo->scsi_pending_cmds[pd1]);
- 
- 	/* Determine the disk whose head is nearer to the req. block */
--	diff0 = ABS_DIFF(block, lbInfo->last_accessed_block[0]);
--	diff1 = ABS_DIFF(block, lbInfo->last_accessed_block[1]);
--	bestArm = (diff0 <= diff1 ? 0 : 1);
-+	diff0 = ABS_DIFF(block, lbInfo->last_accessed_block[pd0]);
-+	diff1 = ABS_DIFF(block, lbInfo->last_accessed_block[pd1]);
-+	bestArm = (diff0 <= diff1 ? arm : arm ^ 1);
- 
--	/*Make balance count from 16 to 4 to keep driver in sync with Firmware*/
--	if ((bestArm == arm && pend0 > pend1 + 4)  ||
--	    (bestArm != arm && pend1 > pend0 + 4))
-+	if ((bestArm == arm && pend0 > pend1 + lb_pending_cmds)  ||
-+			(bestArm != arm && pend1 > pend0 + lb_pending_cmds))
- 		bestArm ^= 1;
- 
- 	/* Update the last accessed block on the correct pd */
--	lbInfo->last_accessed_block[bestArm] = block + count - 1;
--
--	return bestArm;
-+	io_info->pd_after_lb = (bestArm == arm) ? pd0 : pd1;
-+	lbInfo->last_accessed_block[io_info->pd_after_lb] = block + count - 1;
-+	io_info->span_arm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) | bestArm;
-+#if SPAN_DEBUG
-+	if (arm != bestArm)
-+		dev_dbg(&instance->pdev->dev, "LSI Debug R1 Load balance "
-+			"occur - span 0x%x arm 0x%x bestArm 0x%x "
-+			"io_info->span_arm 0x%x\n",
-+			span, arm, bestArm, io_info->span_arm);
-+#endif
-+	return io_info->pd_after_lb;
- }
- 
--u16 get_updated_dev_handle(struct LD_LOAD_BALANCE_INFO *lbInfo,
--			   struct IO_REQUEST_INFO *io_info)
-+u16 get_updated_dev_handle(struct megasas_instance *instance,
-+	struct LD_LOAD_BALANCE_INFO *lbInfo, struct IO_REQUEST_INFO *io_info)
- {
--	u8 arm, old_arm;
-+	u8 arm_pd;
- 	u16 devHandle;
-+	struct fusion_context *fusion;
-+	struct MR_DRV_RAID_MAP_ALL *drv_map;
- 
--	old_arm = lbInfo->raid1DevHandle[0] == io_info->devHandle ? 0 : 1;
--
--	/* get best new arm */
--	arm  = megasas_get_best_arm(lbInfo, old_arm, io_info->ldStartBlock,
--				    io_info->numBlocks);
--	devHandle = lbInfo->raid1DevHandle[arm];
--	atomic_inc(&lbInfo->scsi_pending_cmds[arm]);
-+	fusion = instance->ctrl_context;
-+	drv_map = fusion->ld_drv_map[(instance->map_id & 1)];
- 
-+	/* get best new arm (PD ID) */
-+	arm_pd  = megasas_get_best_arm_pd(instance, lbInfo, io_info);
-+	devHandle = MR_PdDevHandleGet(arm_pd, drv_map);
-+	atomic_inc(&lbInfo->scsi_pending_cmds[arm_pd]);
- 	return devHandle;
- }
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 4593641..a3de45a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -76,8 +76,6 @@ megasas_issue_polled(struct megasas_instance *instance,
- void
- megasas_check_and_restore_queue_depth(struct megasas_instance *instance);
- 
--u16 get_updated_dev_handle(struct LD_LOAD_BALANCE_INFO *lbInfo,
--			   struct IO_REQUEST_INFO *in_info);
- int megasas_transition_to_ready(struct megasas_instance *instance, int ocr);
- void megaraid_sas_kill_hba(struct megasas_instance *instance);
- 
-@@ -654,6 +652,8 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		= 1;
- 	init_frame->driver_operations.mfi_capabilities.support_max_255lds
- 		= 1;
-+	init_frame->driver_operations.mfi_capabilities.support_ndrive_r1_lb
-+		= 1;
- 	/* Convert capability to LE32 */
- 	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
- 
-@@ -1608,10 +1608,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		if ((fusion->load_balance_info[device_id].loadBalanceFlag) &&
- 		    (io_info.isRead)) {
- 			io_info.devHandle =
--				get_updated_dev_handle(
-+				get_updated_dev_handle(instance,
- 					&fusion->load_balance_info[device_id],
- 					&io_info);
- 			scp->SCp.Status |= MEGASAS_LOAD_BALANCE_FLAG;
-+			cmd->pd_r1_lb = io_info.pd_after_lb;
- 		} else
- 			scp->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
- 		cmd->request_desc->SCSIIO.DevHandle = io_info.devHandle;
-@@ -1944,7 +1945,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 	struct megasas_cmd *cmd_mfi;
- 	struct megasas_cmd_fusion *cmd_fusion;
- 	u16 smid, num_completed;
--	u8 reply_descript_type, arm;
-+	u8 reply_descript_type;
- 	u32 status, extStatus, device_id;
- 	union desc_value d_val;
- 	struct LD_LOAD_BALANCE_INFO *lbinfo;
-@@ -1995,10 +1996,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
- 			lbinfo = &fusion->load_balance_info[device_id];
- 			if (cmd_fusion->scmd->SCp.Status &
- 			    MEGASAS_LOAD_BALANCE_FLAG) {
--				arm = lbinfo->raid1DevHandle[0] ==
--					cmd_fusion->io_request->DevHandle ? 0 :
--					1;
--				atomic_dec(&lbinfo->scsi_pending_cmds[arm]);
-+				atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
- 				cmd_fusion->scmd->SCp.Status &=
- 					~MEGASAS_LOAD_BALANCE_FLAG;
- 			}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 0a6a430..a72fa19 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -631,6 +631,8 @@ struct IO_REQUEST_INFO {
- 	u8 start_span;
- 	u8 reserved;
- 	u64 start_row;
-+	u8  span_arm;	/* span[7:5], arm[4:0] */
-+	u8  pd_after_lb;
- };
- 
- struct MR_LD_TARGET_SYNC {
-@@ -682,14 +684,14 @@ struct megasas_cmd_fusion {
- 	u32 sync_cmd_idx;
- 	u32 index;
- 	u8 flags;
-+	u8 pd_r1_lb;
- };
- 
- struct LD_LOAD_BALANCE_INFO {
- 	u8	loadBalanceFlag;
- 	u8	reserved1;
--	u16     raid1DevHandle[2];
--	atomic_t     scsi_pending_cmds[2];
--	u64     last_accessed_block[2];
-+	atomic_t     scsi_pending_cmds[MAX_PHYSICAL_DEVICES];
-+	u64     last_accessed_block[MAX_PHYSICAL_DEVICES];
- };
- 
- /* SPAN_SET is info caclulated from span info from Raid map per LD */
+ 		return -ENXIO;
 -- 
 1.8.3.1
 
