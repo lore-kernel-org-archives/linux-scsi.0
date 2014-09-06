@@ -1,33 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 12/20] scsi: merge print_opcode_name()
-Date: Fri, 5 Sep 2014 17:12:07 -0700
-Message-ID: <20140906001207.GH29588@infradead.org>
+Subject: Re: [PATCH 20/20] scsi_error: format abort error message
+Date: Fri, 5 Sep 2014 17:33:05 -0700
+Message-ID: <20140906003305.GA18426@infradead.org>
 References: <1409738775-80876-1-git-send-email-hare@suse.de>
- <1409738775-80876-13-git-send-email-hare@suse.de>
- <540910D8.1080703@hitachi.com>
+ <1409738775-80876-21-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:56539 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803AbaIFAJu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 20:09:50 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:32953 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750762AbaIFAdI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Sep 2014 20:33:08 -0400
 Content-Disposition: inline
-In-Reply-To: <540910D8.1080703@hitachi.com>
+In-Reply-To: <1409738775-80876-21-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yoshihiro YUNOMAE <yoshihiro.yunomae.ez@hitachi.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>, linux-scsi@vger.kernel.org
 
-On Fri, Sep 05, 2014 at 10:24:40AM +0900, Yoshihiro YUNOMAE wrote:
-> >   #define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
-> 
-> We can delete SA_NAME_LIST_SZ because we define it out of
-> CONFIG_SCSI_CONSTANTS.
+On Wed, Sep 03, 2014 at 12:06:15PM +0200, Hannes Reinecke wrote:
+> Decode the return value if the command abort failed.
 
-I'd generally prefer to just use ARRAY_SIZE() directly instead of adding
-another layer of indirection.
+I've not seen an answer to my question in reply to the previous version
+of this.  Why would you do pretty printing of a variable that can just
+return SUCCESS or FAILURE?
 
-Otherwise looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
