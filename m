@@ -1,54 +1,41 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: WARNING in block layer triggered in 3.17-rc3
-Date: Sun, 7 Sep 2014 18:43:43 +0800
-Message-ID: <CACVXFVOS2RbFQH4CNqSTDeGCoJ3L7c1JCCsAzQrOn+hbVQvbCA@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1409051340450.879-100000@iolanthe.rowland.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] libata: consolidate ata_dev_classify()
+Date: Sun, 07 Sep 2014 13:24:47 +0200
+Message-ID: <540C407F.5030305@suse.de>
+References: <1406706911-79510-1-git-send-email-hare@suse.de> <1406706911-79510-2-git-send-email-hare@suse.de> <20140905234241.GH15723@mtj.dyndns.org> <540AC41F.8020506@suse.de> <20140906125227.GA29401@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f176.google.com ([209.85.220.176]:54144 "EHLO
-	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbaIGKno (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2014 06:43:44 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1409051340450.879-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20140906125227.GA29401@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Sat, Sep 6, 2014 at 1:45 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> James and Jens:
+On 09/06/2014 02:52 PM, Tejun Heo wrote:
+> Hello,
 >
-> I got a WARNING when unbinding the sd driver from a USB flash drive and
-> then binding it back again.  Here's where the flash drive gets probed
-> initially:
+> On Sat, Sep 06, 2014 at 10:21:51AM +0200, Hannes Reinecke wrote:
+>> Well, yes, in principle. I was looking into that, too.
+>> But then I figured that moving to ata_taskfile would be a major over=
+haul for
+>> libsas, which would be quite beyond scope here.
+>> And all for a puny little patch.
 >
-> [  143.300886] usb-storage 4-8:1.0: usb_probe_interface
-> [  143.300911] usb-storage 4-8:1.0: usb_probe_interface - got id
-> [  143.300930] usb-storage 4-8:1.0: USB Mass Storage device detected
-> [  143.318239] scsi host0: usb-storage 4-8:1.0
-> [  143.359979] scsi 0:0:0:0: Direct-Access     Ut165    USB2FlashStorage 0.00 PQ: 0 ANSI: 2
-> [  143.376366] usbcore: registered new interface driver usb-storage
-> [  143.468464] sd 0:0:0:0: [sda] 7892040 512-byte logical blocks: (4.04 GB/3.76 GiB)
-> [  143.481725] sd 0:0:0:0: [sda] Write Protect is off
-> [  143.485712] sd 0:0:0:0: [sda] Mode Sense: 00 00 00 00
-> [  143.487064] sd 0:0:0:0: [sda] Asking for cache data failed
-> [  143.498428] sd 0:0:0:0: [sda] Assuming drive cache: write through
-> [  143.656797]  sda: sda1
-> [  143.676922] sd 0:0:0:0: [sda] Attached SCSI removable disk
+> Hmm?  Just allocate a ata_taskfile stuct on stack when invoking the
+> function.  The change would be a lot smaller actually.
 >
-> Then I did
->
->         echo 0:0:0:0 >/sys/bus/scsi/drivers/sd_mod/unbind
->
-> followed by
->
->         echo 0:0:0:0 >/sys/bus/scsi/drivers/sd_mod/bind
+Which was actually my first attempt, but then I figured I'd be
+increasing the stacksize in doing so.
+But sure, if you're okay with it I'll be redoing the patch.
 
-I can reproduce it on virtio-blk too with scsi-mq, and can't duplicate
-it on non-scsi devices, so looks there are refcounts leak in scsi subsystem?
+Cheers,
 
-
-Thanks,
--- 
-Ming Lei
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
