@@ -1,228 +1,174 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/8] scsi: move scsi_dispatch_cmd to scsi_lib.c
-Date: Sun,  7 Sep 2014 09:31:06 -0700
-Message-ID: <1410107469-896-6-git-send-email-hch@lst.de>
+Subject: [PATCH 4/8] scsi: stop passing a gfp_mask argument down the command setup path
+Date: Sun,  7 Sep 2014 09:31:05 -0700
+Message-ID: <1410107469-896-5-git-send-email-hch@lst.de>
 References: <1410107469-896-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:35030 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:35029 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752601AbaIGQ3G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2014 12:29:06 -0400
+	with ESMTP id S1752601AbaIGQ3D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2014 12:29:03 -0400
 Received: from [50.247.105.171] (helo=localhost)
 	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1XQfKq-0006T0-Kk
-	for linux-scsi@vger.kernel.org; Sun, 07 Sep 2014 16:29:05 +0000
+	id 1XQfKn-0006Sw-Mm
+	for linux-scsi@vger.kernel.org; Sun, 07 Sep 2014 16:29:02 +0000
 In-Reply-To: <1410107469-896-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-scsi_lib.c is where the rest of the I/O submission path lives, so move
-scsi_dispatch_cmd there and mark it static.
+There is no reason for ULDs to pass in a flag on how to allocate the S/G
+lists.  While we don't need GFP_ATOMIC for the blk-mq case because we
+don't hold locks, that decision can be made way down the chain without
+having to pass a pointless gfp_mask argument.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi.c      | 81 ------------------------------------------------
- drivers/scsi/scsi_lib.c  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_priv.h |  1 -
- 3 files changed, 81 insertions(+), 82 deletions(-)
+ drivers/scsi/scsi_lib.c  | 20 +++++++++-----------
+ drivers/scsi/sd.c        |  6 +++---
+ drivers/scsi/sr.c        |  2 +-
+ include/scsi/scsi_cmnd.h |  2 +-
+ 4 files changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 534bf26..a86ccb7 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -626,87 +626,6 @@ void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- EXPORT_SYMBOL(scsi_cmd_get_serial);
- 
- /**
-- * scsi_dispatch_command - Dispatch a command to the low-level driver.
-- * @cmd: command block we are dispatching.
-- *
-- * Return: nonzero return request was rejected and device's queue needs to be
-- * plugged.
-- */
--int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
--{
--	struct Scsi_Host *host = cmd->device->host;
--	int rtn = 0;
--
--	atomic_inc(&cmd->device->iorequest_cnt);
--
--	/* check if the device is still usable */
--	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
--		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
--		 * returns an immediate error upwards, and signals
--		 * that the device is no longer present */
--		cmd->result = DID_NO_CONNECT << 16;
--		goto done;
--	}
--
--	/* Check to see if the scsi lld made this device blocked. */
--	if (unlikely(scsi_device_blocked(cmd->device))) {
--		/*
--		 * in blocked state, the command is just put back on
--		 * the device queue.  The suspend state has already
--		 * blocked the queue so future requests should not
--		 * occur until the device transitions out of the
--		 * suspend state.
--		 */
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			"queuecommand : device blocked\n"));
--		return SCSI_MLQUEUE_DEVICE_BUSY;
--	}
--
--	/* Store the LUN value in cmnd, if needed. */
--	if (cmd->device->lun_in_cdb)
--		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
--			       (cmd->device->lun << 5 & 0xe0);
--
--	scsi_log_send(cmd);
--
--	/*
--	 * Before we queue this command, check if the command
--	 * length exceeds what the host adapter can handle.
--	 */
--	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			       "queuecommand : command too long. "
--			       "cdb_size=%d host->max_cmd_len=%d\n",
--			       cmd->cmd_len, cmd->device->host->max_cmd_len));
--		cmd->result = (DID_ABORT << 16);
--		goto done;
--	}
--
--	if (unlikely(host->shost_state == SHOST_DEL)) {
--		cmd->result = (DID_NO_CONNECT << 16);
--		goto done;
--
--	}
--
--	trace_scsi_dispatch_cmd_start(cmd);
--	rtn = host->hostt->queuecommand(host, cmd);
--	if (rtn) {
--		trace_scsi_dispatch_cmd_error(cmd, rtn);
--		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
--		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
--			rtn = SCSI_MLQUEUE_HOST_BUSY;
--
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			"queuecommand : request rejected\n"));
--	}
--
--	return rtn;
-- done:
--	cmd->scsi_done(cmd);
--	return 0;
--}
--
--/**
-  * scsi_finish_command - cleanup and pass command back to upper layer
-  * @cmd: the command
-  *
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 877ea3d..c398343 100644
+index 0062865..877ea3d 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1581,6 +1581,87 @@ static void scsi_softirq_done(struct request *rq)
+@@ -587,10 +587,10 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+ 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
  }
  
- /**
-+ * scsi_dispatch_command - Dispatch a command to the low-level driver.
-+ * @cmd: command block we are dispatching.
-+ *
-+ * Return: nonzero return request was rejected and device's queue needs to be
-+ * plugged.
-+ */
-+static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host = cmd->device->host;
-+	int rtn = 0;
-+
-+	atomic_inc(&cmd->device->iorequest_cnt);
-+
-+	/* check if the device is still usable */
-+	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
-+		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
-+		 * returns an immediate error upwards, and signals
-+		 * that the device is no longer present */
-+		cmd->result = DID_NO_CONNECT << 16;
-+		goto done;
-+	}
-+
-+	/* Check to see if the scsi lld made this device blocked. */
-+	if (unlikely(scsi_device_blocked(cmd->device))) {
-+		/*
-+		 * in blocked state, the command is just put back on
-+		 * the device queue.  The suspend state has already
-+		 * blocked the queue so future requests should not
-+		 * occur until the device transitions out of the
-+		 * suspend state.
-+		 */
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : device blocked\n"));
-+		return SCSI_MLQUEUE_DEVICE_BUSY;
-+	}
-+
-+	/* Store the LUN value in cmnd, if needed. */
-+	if (cmd->device->lun_in_cdb)
-+		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-+			       (cmd->device->lun << 5 & 0xe0);
-+
-+	scsi_log_send(cmd);
-+
-+	/*
-+	 * Before we queue this command, check if the command
-+	 * length exceeds what the host adapter can handle.
-+	 */
-+	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			       "queuecommand : command too long. "
-+			       "cdb_size=%d host->max_cmd_len=%d\n",
-+			       cmd->cmd_len, cmd->device->host->max_cmd_len));
-+		cmd->result = (DID_ABORT << 16);
-+		goto done;
-+	}
-+
-+	if (unlikely(host->shost_state == SHOST_DEL)) {
-+		cmd->result = (DID_NO_CONNECT << 16);
-+		goto done;
-+
-+	}
-+
-+	trace_scsi_dispatch_cmd_start(cmd);
-+	rtn = host->hostt->queuecommand(host, cmd);
-+	if (rtn) {
-+		trace_scsi_dispatch_cmd_error(cmd, rtn);
-+		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-+		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
-+			rtn = SCSI_MLQUEUE_HOST_BUSY;
-+
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : request rejected\n"));
-+	}
-+
-+	return rtn;
-+ done:
-+	cmd->scsi_done(cmd);
-+	return 0;
-+}
-+
-+/**
-  * scsi_done - Invoke completion on finished SCSI command.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 2a382c1..2dc4a83 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -29,7 +29,6 @@ extern int scsi_init_hosts(void);
- extern void scsi_exit_hosts(void);
+-static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
+-			      gfp_t gfp_mask, bool mq)
++static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+ {
+ 	struct scatterlist *first_chunk = NULL;
++	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+ 	int ret;
  
- /* scsi.c */
--extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- #ifdef CONFIG_SCSI_LOGGING
+ 	BUG_ON(!nents);
+@@ -1017,8 +1017,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	}
+ }
+ 
+-static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+-			     gfp_t gfp_mask)
++static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
+ {
+ 	int count;
+ 
+@@ -1026,7 +1025,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	 * If sg table allocation fails, requeue request later.
+ 	 */
+ 	if (unlikely(scsi_alloc_sgtable(sdb, req->nr_phys_segments,
+-					gfp_mask, req->mq_ctx != NULL)))
++					req->mq_ctx != NULL)))
+ 		return BLKPREP_DEFER;
+ 
+ 	/* 
+@@ -1051,7 +1050,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+  *		BLKPREP_DEFER if the failure is retryable
+  *		BLKPREP_KILL if the failure is fatal
+  */
+-int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++int scsi_init_io(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
+ 	struct request *rq = cmd->request;
+@@ -1060,7 +1059,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 
+ 	BUG_ON(!rq->nr_phys_segments);
+ 
+-	error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
++	error = scsi_init_sgtable(rq, &cmd->sdb);
+ 	if (error)
+ 		goto err_exit;
+ 
+@@ -1076,8 +1075,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 			rq->next_rq->special = bidi_sdb;
+ 		}
+ 
+-		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special,
+-					  GFP_ATOMIC);
++		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special);
+ 		if (error)
+ 			goto err_exit;
+ 	}
+@@ -1089,7 +1087,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 		BUG_ON(prot_sdb == NULL);
+ 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
+ 
+-		if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask, is_mq)) {
++		if (scsi_alloc_sgtable(prot_sdb, ivecs, is_mq)) {
+ 			error = BLKPREP_DEFER;
+ 			goto err_exit;
+ 		}
+@@ -1156,7 +1154,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ 	 * submit a request without an attached bio.
+ 	 */
+ 	if (req->bio) {
+-		int ret = scsi_init_io(cmd, GFP_ATOMIC);
++		int ret = scsi_init_io(cmd);
+ 		if (unlikely(ret))
+ 			return ret;
+ 	} else {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index aa43496..6f7588d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -769,7 +769,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	 * amount of blocks described by the request.
+ 	 */
+ 	blk_add_request_payload(rq, page, len);
+-	ret = scsi_init_io(cmd, GFP_ATOMIC);
++	ret = scsi_init_io(cmd);
+ 	rq->__data_len = nr_bytes;
+ 
+ out:
+@@ -863,7 +863,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+ 	 * knows how much to actually write.
+ 	 */
+ 	rq->__data_len = sdp->sector_size;
+-	ret = scsi_init_io(cmd, GFP_ATOMIC);
++	ret = scsi_init_io(cmd);
+ 	rq->__data_len = nr_bytes;
+ 	return ret;
+ }
+@@ -896,7 +896,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
+-	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
++	ret = scsi_init_io(SCpnt);
+ 	if (ret != BLKPREP_OK)
+ 		goto out;
+ 	SCpnt = rq->special;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7eeb936..5d1e3ac 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -387,7 +387,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
+ 	struct request *rq = SCpnt->request;
+ 	int ret;
+ 
+-	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
++	ret = scsi_init_io(SCpnt);
+ 	if (ret != BLKPREP_OK)
+ 		goto out;
+ 	SCpnt = rq->special;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 73f3490..fb0a848 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -157,7 +157,7 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+ 				 size_t *offset, size_t *len);
+ extern void scsi_kunmap_atomic_sg(void *virt);
+ 
+-extern int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask);
++extern int scsi_init_io(struct scsi_cmnd *cmd);
+ 
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
 -- 
 1.9.1
 
