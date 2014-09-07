@@ -1,25 +1,20 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] scsi_scan: Send TEST UNIT READY to the LUN before
- scanning
-Date: Sun, 7 Sep 2014 09:24:06 -0700
-Message-ID: <20140907162406.GA10775@infradead.org>
-References: <1401953203-103015-1-git-send-email-hare@suse.de>
- <1401953203-103015-2-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: I/O path cleanup
+Date: Sun,  7 Sep 2014 09:31:01 -0700
+Message-ID: <1410107469-896-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56019 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925AbaIGQYI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2014 12:24:08 -0400
-Content-Disposition: inline
-In-Reply-To: <1401953203-103015-2-git-send-email-hare@suse.de>
+Received: from casper.infradead.org ([85.118.1.10]:35025 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549AbaIGQ2v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Sep 2014 12:28:51 -0400
+Received: from [50.247.105.171] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1XQfKb-0006Sf-Vf
+	for linux-scsi@vger.kernel.org; Sun, 07 Sep 2014 16:28:50 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Robert Elliot <elliot@hp.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Looks like you put a version into the SuSE tree with a blacklist entry
-just for the Fujitsu array that requires the TEST UNIT READY.  Can you
-send that version upstream as well?
+This series cleans up a couple of lose ends I noticed during the scsi-mq
+work, but which weren't important enough to address during the last cycle.
 
