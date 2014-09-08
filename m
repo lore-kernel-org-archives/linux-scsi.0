@@ -1,49 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 84091] Unloading qla2xxx kernel module triggers segmentation
- fault
-Date: Mon, 08 Sep 2014 15:08:14 +0000
-Message-ID: <bug-84091-11613-9XhHORpYyV@https.bugzilla.kernel.org/>
-References: <bug-84091-11613@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: I/O path cleanup
+Date: Mon, 8 Sep 2014 17:13:01 +0200
+Message-ID: <20140908151301.GA2551@lst.de>
+References: <1410107469-896-1-git-send-email-hch@lst.de> <540D5940.8070900@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50097 "EHLO mail.kernel.org"
+Received: from verein.lst.de ([213.95.11.211]:44202 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753208AbaIHPIV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2014 11:08:21 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id E22EA20138
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2014 15:08:19 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id DD3ED2015A
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2014 15:08:14 +0000 (UTC)
-In-Reply-To: <bug-84091-11613@https.bugzilla.kernel.org/>
+	id S1751891AbaIHPNH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Sep 2014 11:13:07 -0400
+Content-Disposition: inline
+In-Reply-To: <540D5940.8070900@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=84091
+On Mon, Sep 08, 2014 at 09:22:40AM +0200, Bart Van Assche wrote:
+> On 09/07/14 18:31, Christoph Hellwig wrote:
+>> This series cleans up a couple of lose ends I noticed during the scsi-mq
+>> work, but which weren't important enough to address during the last cycle.
+>
+> Hello Christoph,
+>
+> Is there perhaps a public git tree available with this patch series ? I 
+> have tried to apply these patches on top of v3.17-rc4 but unfortunately 
+> without success:
 
-Joe Lawrence <joe.lawrence@stratus.com> changed:
+I've pushed a scsi-io-path-cleanups tree to my scsi-queue.git tree.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |joe.lawrence@stratus.com
+I think you were missing the patches from mthe core-for-3.18 branch which
+overlap a bit.
 
---- Comment #1 from Joe Lawrence <joe.lawrence@stratus.com> ---
-Hi Bart,
-
-Does the following patch queued up in Christoph's tree fix the use-after-free?
-
-cf6dc619eb7c qla2xxx: Fix shost use-after-free on device removal
-
-http://git.infradead.org/users/hch/scsi-queue.git/commit/cf6dc619eb7cfadd9e44d384fb06672a157024ab
-
-Regards,
-
--- Joe
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+I will also rebase the core-for-3.18 and drivers-for-18 branches soon
+as -rc1 which they are currently based on has the percpu issues the
+scsi + blk-mq can trigger easily.
