@@ -1,64 +1,45 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [patch] xen-scsiback: clean up a type issue in scsiback_make_tpg()
-Date: Mon, 08 Sep 2014 13:31:57 +0200
-Message-ID: <540D93AD.3050500@suse.com>
-References: <20140908111735.GB6947@mwanda>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: WARNING in block layer triggered in 3.17-rc3
+Date: Mon, 8 Sep 2014 10:51:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1409081047420.1433-100000@iolanthe.rowland.org>
+References: <CADT32eLJOd5AuFSkg34gOJx-7GXe3Lz1xNe3SzCBv9U1F1ikbA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53878 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751404AbaIHLb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2014 07:31:59 -0400
-In-Reply-To: <20140908111735.GB6947@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CADT32eLJOd5AuFSkg34gOJx-7GXe3Lz1xNe3SzCBv9U1F1ikbA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shirish Pargaonkar <shirishpargaonkar@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xenproject.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
-On 09/08/2014 01:17 PM, Dan Carpenter wrote:
-> This code was confusing because we had an unsigned long and then we
-> compared it to UINT_MAX and then we stored it in a u16.  How many bytes
-> is this supposed to have: 2, 4 or 16???
->
-> I've made it a u16 throughout.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On Sun, 7 Sep 2014, Shirish Pargaonkar wrote:
 
-Reviewed-by: Juergen Gross <jgross@suse.com>
+> I think the problem is, when a gendisk is detached, its request queue
+> is not put in bypass mode
+> cause when it is re-attached, code tries to put it out of bypass mode,
+> hence the warning.
+> 
+> So either of these should work, I have not tested it, just coded it up.
 
-Thanks,
+I'm pretty sure that both of your solutions are wrong.
 
-Juergen
+Jens and James, it appears the problem is in blk_register_queue().  The 
+code does this:
 
->
-> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-> index 7b565632..ad11258 100644
-> --- a/drivers/xen/xen-scsiback.c
-> +++ b/drivers/xen/xen-scsiback.c
-> @@ -1885,13 +1885,14 @@ scsiback_make_tpg(struct se_wwn *wwn,
->   			struct scsiback_tport, tport_wwn);
->
->   	struct scsiback_tpg *tpg;
-> -	unsigned long tpgt;
-> +	u16 tpgt;
->   	int ret;
->
->   	if (strstr(name, "tpgt_") != name)
->   		return ERR_PTR(-EINVAL);
-> -	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
-> -		return ERR_PTR(-EINVAL);
-> +	ret = kstrtou16(name + 5, 10, &tpgt);
-> +	if (ret)
-> +		return ERR_PTR(ret);
->
->   	tpg = kzalloc(sizeof(struct scsiback_tpg), GFP_KERNEL);
->   	if (!tpg)
->
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xen.org
-> http://lists.xen.org/xen-devel
->
+	/*
+	 * Initialization must be complete by now.  Finish the initial
+	 * bypass from queue allocation.
+	 */
+	queue_flag_set_unlocked(QUEUE_FLAG_INIT_DONE, q);
+	blk_queue_bypass_end(q);
 
+This doesn't work well if the queue is unregistered later and then
+registered again -- which is what happens when the sd driver is unbound
+from a device and then bound again.  It looks like the code should be:
+
+	if (!queue_flag_test_and_set(QUEUE_FLAG_INIT_DONE, q))
+		blk_queue_bypass_end(q);
+
+Do you agree?  If so, I'll send in patch.
+
+Alan Stern
