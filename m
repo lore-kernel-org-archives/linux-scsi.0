@@ -1,61 +1,51 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: I/O path cleanup
-Date: Mon, 08 Sep 2014 09:22:40 +0200
-Message-ID: <540D5940.8070900@acm.org>
-References: <1410107469-896-1-git-send-email-hch@lst.de>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] bnx2i: Make boot_nic entry visible in the sysfs session
+ objects
+Date: Mon, 08 Sep 2014 10:02:52 +0200
+Message-ID: <540D62AC.3060802@redhat.com>
+References: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xavier.telenet-ops.be ([195.130.132.52]:43190 "EHLO
-	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbaIHHWm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 03:22:42 -0400
-In-Reply-To: <1410107469-896-1-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:3663 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752934AbaIHID3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Sep 2014 04:03:29 -0400
+In-Reply-To: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, Christoph Hellwig <hch@lst.de>
+Cc: vikas.chaudhary@qlogic.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
 
-On 09/07/14 18:31, Christoph Hellwig wrote:
-> This series cleans up a couple of lose ends I noticed during the scsi-mq
-> work, but which weren't important enough to address during the last cycle.
+Hi Cristoph, Jens,
 
-Hello Christoph,
+On 05/19/2014 01:32 PM, vikas.chaudhary@qlogic.com wrote:
+> From: Tej Parkash <tej.parkash@qlogic.com>
+> 
+> Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
+> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 166543f..cabc8c1 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -2234,6 +2234,9 @@ static umode_t bnx2i_attr_is_visible(int param_type, int param)
+>  		case ISCSI_PARAM_TGT_RESET_TMO:
+>  		case ISCSI_PARAM_IFACE_NAME:
+>  		case ISCSI_PARAM_INITIATOR_NAME:
+> +		case ISCSI_PARAM_BOOT_ROOT:
+> +		case ISCSI_PARAM_BOOT_NIC:
+> +		case ISCSI_PARAM_BOOT_TARGET:
+>  			return S_IRUGO;
+>  		default:
+>  			return 0;
+> 
 
-Is there perhaps a public git tree available with this patch series ? I 
-have tried to apply these patches on top of v3.17-rc4 but unfortunately 
-without success:
-$ git checkout v3.17-rc4 -b scsi-core-cleanup
-$ for p in \[PATCH\ *; do echo ==== $p && git am -C1 "$p" || break; done
-==== [PATCH 1_8] scsi: don't use scsi_next_command in 
-scsi_reset_provider - Christoph Hellwig <hch@lst.de> - 2014-09-07 1831.eml
-Applying: scsi: don't use scsi_next_command in scsi_reset_provider
-==== [PATCH 2_8] scsi: remove scsi_next_command - Christoph Hellwig 
-<hch@lst.de> - 2014-09-07 1831.eml
-Applying: scsi: remove scsi_next_command
-==== [PATCH 3_8] scsi: clean up S_G table freeing - Christoph Hellwig 
-<hch@lst.de> - 2014-09-07 1831.eml
-Applying: scsi: clean up S/G table freeing
-/home/bart/software/linux-kernel/.git/rebase-apply/patch:138: trailing 
-whitespace.
+Can you merge this patch? It has been ACKed already.
 
-Context reduced to (1/1) to apply fragment at 640
-Context reduced to (2/2) to apply fragment at 646
-warning: 1 line adds whitespace errors.
-==== [PATCH 4_8] scsi: stop passing a gfp_mask argument down the command 
-setup path - Christoph Hellwig <hch@lst.de> - 2014-09-07 1831.eml
-Applying: scsi: stop passing a gfp_mask argument down the command setup path
-==== [PATCH 5_8] scsi: move scsi_dispatch_cmd to scsi_lib.c - Christoph 
-Hellwig <hch@lst.de> - 2014-09-07 1831.eml
-Applying: scsi: move scsi_dispatch_cmd to scsi_lib.c
-error: patch failed: drivers/scsi/scsi.c:626
-error: drivers/scsi/scsi.c: patch does not apply
-Patch failed at 0001 scsi: move scsi_dispatch_cmd to scsi_lib.c
-The copy of the patch that failed is found in:
-    /home/bart/software/linux-kernel/.git/rebase-apply/patch
-When you have resolved this problem, run "git am --continue".
-If you prefer to skip this patch, run "git am --skip" instead.
-To restore the original branch and stop patching, run "git am --abort".
-
-Bart.
-
+Thanks,
+Maurizio Lombardi
