@@ -1,38 +1,106 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: I/O path cleanup
-Date: Mon, 8 Sep 2014 17:13:01 +0200
-Message-ID: <20140908151301.GA2551@lst.de>
-References: <1410107469-896-1-git-send-email-hch@lst.de> <540D5940.8070900@acm.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V2] hpsa: refine the pci enable/disable handling
+Date: Mon, 08 Sep 2014 17:26:02 +0200
+Message-ID: <540DCA8A.9010203@redhat.com>
+References: <53ECC3D7.90303@redhat.com> <94D0CD8314A33A4D9D801C0FE68B402958C55BD2@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44202 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:52479 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751891AbaIHPNH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2014 11:13:07 -0400
-Content-Disposition: inline
-In-Reply-To: <540D5940.8070900@acm.org>
+	id S1753584AbaIHP1f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Sep 2014 11:27:35 -0400
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958C55BD2@G4W3202.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: "Handzik, Joe" <joseph.t.handzik@hp.com>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Sep 08, 2014 at 09:22:40AM +0200, Bart Van Assche wrote:
-> On 09/07/14 18:31, Christoph Hellwig wrote:
->> This series cleans up a couple of lose ends I noticed during the scsi-mq
->> work, but which weren't important enough to address during the last cycle.
+On 09/07/2014 01:38 AM, Elliott, Robert (Server Storage) wrote:
 >
-> Hello Christoph,
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Tomas Henzl
+> ...
 >
-> Is there perhaps a public git tree available with this patch series ? I 
-> have tried to apply these patches on top of v3.17-rc4 but unfortunately 
-> without success:
+>> +	/* kdump kernel is loading, we don't know in which state is
+>> +	 * the pci interface. The dev->enable_cnt is equal zero
+>> +	 * so we call enable+disable, wait a while and switch it on.
+>> +	 */
+>> +	rc = pci_enable_device(pdev);
+>> +	if (rc) {
+>> +		dev_warn(&pdev->dev, "Failed to enable PCI device\n");
+>> +		return -ENODEV;
+>> +	}
+>> +	pci_disable_device(pdev);
+>> +	msleep(260);			/* a randomly chosen number */
+>> +	rc = pci_enable_device(pdev);
+>> +	if (rc) {
+>> +		dev_warn(&pdev->dev, "failed to enable device.\n");
+>> +		return -ENODEV;
+>> +	}
+>> +
+>>  	/* Reset the controller with a PCI power-cycle or via doorbell
+>> */
+> I tested this patch by adding:
+> 	reset_devices
+> to the kernel command line, which sets a kernel global variable that
+> triggers the driver to take this path.
+>
+> Controller initialization failed with:
+> [   21.822789] hpsa 0000:02:00.0: Waiting for controller to respond to no-op
+> [  121.822219] hpsa 0000:02:00.0: controller message 03:00 timed out
+> [  121.854814] hpsa 0000:02:00.0: no-op failed; re-trying
+> ...
+>
+> The reason is that pci_disable_device clears the Bus Master Enable bit,
+> and there is no call to pci_set_master after pci_enable.  The controller is
+> unable to return the response for the command sent by hpsa_noop down
+> below.  Adding pci_set_master(pdev) got it working.
 
-I've pushed a scsi-io-path-cleanups tree to my scsi-queue.git tree.
+And I was sure I've tested it, but apparently I haven't after adding the last part.
+Thanks for testing.
 
-I think you were missing the patches from mthe core-for-3.18 branch which
-overlap a bit.
+>
+> A call to pci_request_regions is also missing (that's supposed to
+> be called before accessing the controller's memory space), but
+> that's not fatal here.
 
-I will also rebase the core-for-3.18 and drivers-for-18 branches soon
-as -rc1 which they are currently based on has the percpu issues the
-scsi + blk-mq can trigger easily.
+This patch doesn't change this, pci_request_regions wasn't also called without
+it before. Likely there probably are some weak points during the pci initialisation
+and combined with the "OS BUG" there is room for changes.
+I wanted just to get rid of the "disabling already-disabled device" warning
+and change it only as least as possible so it doesn't stop working (but have failed though).
+
+
+The patch below fixes the problem for me.
+
+Christoph, what is the best approach - should  I post this to the list as new patch
+or would you prefer to drop the old version and repost a fixed patch?
+Maybe HP could add the patch to their upcoming series in that case.
+
+Tomas
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 7828834..cef5d49 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -6544,7 +6544,7 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
+ 		dev_warn(&pdev->dev, "failed to enable device.\n");
+ 		return -ENODEV;
+ 	}
+-
++	pci_set_master(pdev);
+ 	/* Reset the controller with a PCI power-cycle or via doorbell */
+ 	rc = hpsa_kdump_hard_reset_controller(pdev);
+ 
+
+>
+> ---
+> Rob Elliott    HP Server Storage
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
