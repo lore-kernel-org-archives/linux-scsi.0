@@ -1,51 +1,49 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: Re: [PATCH] bnx2i: Make boot_nic entry visible in the sysfs session
- objects
-Date: Mon, 08 Sep 2014 10:02:52 +0200
-Message-ID: <540D62AC.3060802@redhat.com>
-References: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
+ module removal
+Date: Mon, 08 Sep 2014 11:11:23 +0200
+Message-ID: <540D72BB.2020100@acm.org>
+References: <5403AB47.3040706@interlog.com> <20140905052402.GA27094@infradead.org> <5409C116.5060702@interlog.com> <5409D5D0.8060801@acm.org> <540B1CC6.8010800@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752934AbaIHID3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2014 04:03:29 -0400
-In-Reply-To: <1400499133-32196-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from baptiste.telenet-ops.be ([195.130.132.51]:54448 "EHLO
+	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093AbaIHJLe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 05:11:34 -0400
+In-Reply-To: <540B1CC6.8010800@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, Christoph Hellwig <hch@lst.de>
-Cc: vikas.chaudhary@qlogic.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, giridhar.malavali@qlogic.com, Tej Parkash <tej.parkash@qlogic.com>
+To: dgilbert@interlog.com, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Milan Broz <gmazyland@gmail.com>
 
-Hi Cristoph, Jens,
+On 09/06/14 16:40, Douglas Gilbert wrote:
+> On 14-09-05 11:25 AM, Bart Van Assche wrote:
+>> An LLD must call scsi_remove_host() directly or indirectly from the
+>> module
+>> cleanup path. scsi_remove_host() triggers a call to
+>> blk_cleanup_queue(). That
+>> last function sets the flag QUEUE_FLAG_DYING which prevents that new
+>> I/O is
+>> queued and waits until previously queued requests have finished before
+>> returning.
+>
+> And they do call scsi_remove_host(). But they do that toward
+> the end of their clean-up. The problem that I observed has
+> already happened before that.
+>
+> IOW I think the QUEUE_FLAG_DYING state needs to be set and
+> acknowledged as the first order of business by the code
+> that implements 'rmmod LLD'.
 
-On 05/19/2014 01:32 PM, vikas.chaudhary@qlogic.com wrote:
-> From: Tej Parkash <tej.parkash@qlogic.com>
-> 
-> Signed-off-by: Tej Parkash <tej.parkash@qlogic.com>
-> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> ---
->  drivers/scsi/bnx2i/bnx2i_iscsi.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> index 166543f..cabc8c1 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> @@ -2234,6 +2234,9 @@ static umode_t bnx2i_attr_is_visible(int param_type, int param)
->  		case ISCSI_PARAM_TGT_RESET_TMO:
->  		case ISCSI_PARAM_IFACE_NAME:
->  		case ISCSI_PARAM_INITIATOR_NAME:
-> +		case ISCSI_PARAM_BOOT_ROOT:
-> +		case ISCSI_PARAM_BOOT_NIC:
-> +		case ISCSI_PARAM_BOOT_TARGET:
->  			return S_IRUGO;
->  		default:
->  			return 0;
-> 
+Hello Doug,
 
-Can you merge this patch? It has been ACKed already.
+In the scsi_debug driver scsi_remove_host() is called from inside the 
+sdebug_driver_remove() callback function. Unless I have missed something 
+it is not guaranteed that that callback function is invoked before 
+unloading of the scsi_debug driver has finished. I think most of the 
+code in sdebug_driver_remove() should be moved to sdebug_remove_adapter().
 
-Thanks,
-Maurizio Lombardi
+Bart.
+
