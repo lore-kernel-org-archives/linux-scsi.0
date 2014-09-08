@@ -1,47 +1,49 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] xen-scsiback: clean up a type issue in scsiback_make_tpg()
-Date: Mon, 8 Sep 2014 14:17:35 +0300
-Message-ID: <20140908111735.GB6947@mwanda>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [patch] xen-scsifront: use GFP_ATOMIC under spin_lock
+Date: Mon, 08 Sep 2014 13:30:05 +0200
+Message-ID: <540D933D.9020809@suse.com>
+References: <20140908111542.GA6947@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18165 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbaIHLS0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 07:18:26 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20140908111542.GA6947@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xenproject.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-This code was confusing because we had an unsigned long and then we
-compared it to UINT_MAX and then we stored it in a u16.  How many bytes
-is this supposed to have: 2, 4 or 16???
+On 09/08/2014 01:15 PM, Dan Carpenter wrote:
+> This function is only called with a spin_lock held and IRQs disabled.
+> The allocation is not allowed to sleep and NOIO is not sufficient, it
+> has to be ATOMIC.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I've made it a u16 throughout.
+Reviewed-by: Juergen Gross <jgross@suse.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Thanks,
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 7b565632..ad11258 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -1885,13 +1885,14 @@ scsiback_make_tpg(struct se_wwn *wwn,
- 			struct scsiback_tport, tport_wwn);
- 
- 	struct scsiback_tpg *tpg;
--	unsigned long tpgt;
-+	u16 tpgt;
- 	int ret;
- 
- 	if (strstr(name, "tpgt_") != name)
- 		return ERR_PTR(-EINVAL);
--	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
--		return ERR_PTR(-EINVAL);
-+	ret = kstrtou16(name + 5, 10, &tpgt);
-+	if (ret)
-+		return ERR_PTR(ret);
- 
- 	tpg = kzalloc(sizeof(struct scsiback_tpg), GFP_KERNEL);
- 	if (!tpg)
+Juergen
+
+>
+> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+> index 0aceb70..7e88659 100644
+> --- a/drivers/scsi/xen-scsifront.c
+> +++ b/drivers/scsi/xen-scsifront.c
+> @@ -359,7 +359,7 @@ static int map_data_for_request(struct vscsifrnt_info *info,
+>   		}
+>   		seg_grants = vscsiif_grants_sg(data_grants);
+>   		shadow->sg = kcalloc(data_grants,
+> -			sizeof(struct scsiif_request_segment), GFP_NOIO);
+> +			sizeof(struct scsiif_request_segment), GFP_ATOMIC);
+>   		if (!shadow->sg)
+>   			return -ENOMEM;
+>   	}
+>
+> _______________________________________________
+> Xen-devel mailing list
+> Xen-devel@lists.xen.org
+> http://lists.xen.org/xen-devel
+>
+
