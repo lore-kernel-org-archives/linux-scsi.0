@@ -1,43 +1,78 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: Block/SCSI data integrity update v3
-Date: Mon, 8 Sep 2014 09:50:51 -0600
-Message-ID: <540DD05B.7030908@fb.com>
-References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com> <53FF8CC9.9030206@fb.com> <20140907162957.GA17353@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: WARNING in block layer triggered in 3.17-rc3
+Date: Mon, 08 Sep 2014 08:51:18 -0700
+Message-ID: <1410191478.2027.28.camel@jarvis.lan>
+References: <Pine.LNX.4.44L0.1409081047420.1433-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:18011 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752986AbaIHPvK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 11:51:10 -0400
-In-Reply-To: <20140907162957.GA17353@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1409081047420.1433-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Shirish Pargaonkar <shirishpargaonkar@gmail.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, hch@lst.de, sagig@mellanox.com
 
-On 09/07/2014 10:29 AM, Christoph Hellwig wrote:
-> On Thu, Aug 28, 2014 at 02:10:49PM -0600, Jens Axboe wrote:
->> On 08/28/2014 01:31 PM, Martin K. Petersen wrote:
->>> This is the data integrity patch series originally submitted for 3.16
->>> and 3.17.  It has been rebased on top of block/for-3.18/core.  Other
->>> than that there are no changes from v2.
->>
->> Thanks, picked up. I did not apply 14/14 since that should go through
->> the SCSI tree. I can carry it if need be, but it'd be nice to have a
->> SCSI signoff on it then.
+On Mon, 2014-09-08 at 10:51 -0400, Alan Stern wrote:
+> On Sun, 7 Sep 2014, Shirish Pargaonkar wrote:
 > 
-> While Sagi found some minor nitpicks I think we could address them later
-> if needed, so
+> > I think the problem is, when a gendisk is detached, its request queue
+> > is not put in bypass mode
+> > cause when it is re-attached, code tries to put it out of bypass mode,
+> > hence the warning.
+> > 
+> > So either of these should work, I have not tested it, just coded it up.
 > 
-> Acked-by: Christoph Hellwig <hch@lst.de>
+> I'm pretty sure that both of your solutions are wrong.
 > 
-> from me for picking it up through the block tree.
+> Jens and James, it appears the problem is in blk_register_queue().  The 
+> code does this:
+> 
+> 	/*
+> 	 * Initialization must be complete by now.  Finish the initial
+> 	 * bypass from queue allocation.
+> 	 */
+> 	queue_flag_set_unlocked(QUEUE_FLAG_INIT_DONE, q);
+> 	blk_queue_bypass_end(q);
+> 
+> This doesn't work well if the queue is unregistered later and then
+> registered again -- which is what happens when the sd driver is unbound
+> from a device and then bound again.  It looks like the code should be:
+> 
+> 	if (!queue_flag_test_and_set(QUEUE_FLAG_INIT_DONE, q))
+> 		blk_queue_bypass_end(q);
+> 
+> Do you agree?  If so, I'll send in patch.
 
-Thanks, I'll do that once Martin respins the previous series (was pulled
-due to multiple issues).
+This looks like a nasty hack.  In theory the QUEUE_FLAG_INIT_DONE should
+be unset on blk_unregister_queue() to match the teardown; it's only
+accident it isn't.  del_gendisk() in sd_remove() is supposed to tear a
+lot of queue stuff down.  However, the problem looks to be the mismatch
+in assumptions.  The way SCSI binding works, the queue belongs to the
+underlying device so we always assumed we could add and remove upper
+drivers ... there's even a case for this if you don't want a disk but
+want to attach sg instead.  However, it's not the common use case.
 
--- 
-Jens Axboe
+The block model now seems to tie a lot of queue set up and teardown to
+add and remove of the gendisk which is counter to these assumptions.  As
+long as we can go from del->add without calling the ->release function
+on the queue, everything works.  Most of the operations seem
+symmetrical, so perhaps this is only the bypass doing too much.
 
+The ideal is that disk teardown only does as much as disk setup, so the
+mid layer can still use the underlying queue on the device.
+
+This bypass code is not very well documented.  However, your problem
+seems to be caused by this change:
+
+commit 776687bce42bb22cce48b5da950e48ebbb9a948f
+Author: Tejun Heo <tj@kernel.org>
+Date:   Tue Jul 1 10:29:17 2014 -0600
+
+    block, blk-mq: draining can't be skipped even if bypass_depth was
+non-zero
+
+Your hack seems to indicate that this doesn't work on the add->del->add
+transtion of a gendisk.
+
+James
