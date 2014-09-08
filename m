@@ -1,85 +1,55 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
- module removal
-Date: Mon, 08 Sep 2014 16:31:01 -0400
-Message-ID: <540E1205.9060201@interlog.com>
-References: <5403AB47.3040706@interlog.com> <20140905052402.GA27094@infradead.org> <5409C116.5060702@interlog.com> <5409D5D0.8060801@acm.org> <540B1CC6.8010800@interlog.com> <540D72BB.2020100@acm.org> <20140908150703.GA30298@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 0/6] blk-mq: initialize pdu of flush req explicitly
+Date: Mon, 8 Sep 2014 22:53:05 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C67C0E@G9W0745.americas.hpqcorp.net>
+References: <1410079162-9872-1-git-send-email-ming.lei@canonical.com>
+	<20140907184956.GB23026@lst.de>
+ <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:52867 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754160AbaIHUbN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2014 16:31:13 -0400
-In-Reply-To: <20140908150703.GA30298@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bvanassche@acm.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Milan Broz <gmazyland@gmail.com>
 
-On 14-09-08 11:07 AM, Christoph Hellwig wrote:
-> On Mon, Sep 08, 2014 at 11:11:23AM +0200, Bart Van Assche wrote:
->> Hello Doug,
->>
->> In the scsi_debug driver scsi_remove_host() is called from inside the
->> sdebug_driver_remove() callback function. Unless I have missed something it
->> is not guaranteed that that callback function is invoked before unloading of
->> the scsi_debug driver has finished. I think most of the code in
->> sdebug_driver_remove() should be moved to sdebug_remove_adapter().
->
-> I'm not sure that's right.  scsi_debug uses the driver mode in a
-> slightly unusual way, and includes both the bus driver, device and
-> device driver.
->
-> sdebug_driver_remove is a bus method, but as we don't have driver methods
-> should act very much like all other _remove callbacks.
->
-> sdebug_remove_adapter is more a "bus-level" function that calls into
-> the driver model to unbind devices from the driver.
->
-> But we defintively shouldn't stop and free queued command before we
-> fully remove the hosts.  As far as I can tell the stop_all_queued
-> call can be entirely removed from the remove path, as the midlayer
-> will take care of waiting for all commands to return, and the
-> free_all_queued should be after all hosts are unregistered.
-
-stop_all_queued() is doing hrtimer_cancel(), del_timer_sync()
-or tasklet_kill() on all the scsi_cmnd objects that are
-"in play". Unless another mechanism calls the .eh_abort_handler
-entry point reliably on each "in play" command then the module
-cannot be removed. That is because some timer expiry callbacks
-are pending.
-
-> Something like the (untested) patch below would do the trick.
-> We'd still need Dougs patch for the EH case, though.
->
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index d19c0e3..d022c2f 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3983,14 +3983,13 @@ static void __exit scsi_debug_exit(void)
->   {
->   	int k = scsi_debug_add_host;
->
-> -	stop_all_queued();
-> -	free_all_queued();
->   	for (; k; k--)
->   		sdebug_remove_adapter();
->   	driver_unregister(&sdebug_driverfs_driver);
->   	bus_unregister(&pseudo_lld_bus);
->   	root_device_unregister(pseudo_primary);
->
-> +	free_all_queued();
->   	if (dif_storep)
->   		vfree(dif_storep);
->
-> --
-
-The only other call to stop_all_queued() is from the
-.eh_host_reset_handler entry point.
-
-Doug Gilbert
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBNaW5nIExlaQ0KPiBTZW50OiBNb25kYXksIDA4IFNlcHRlbWJl
+ciwgMjAxNCAxMTo1NSBBTQ0KPiBUbzogQ2hyaXN0b3BoIEhlbGx3aWcNCj4gQ2M6IEplbnMgQXhi
+b2U7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4IFNDU0kgTGlzdA0KPiBTdWJqZWN0
+OiBSZTogW1BBVENIIDAvNl0gYmxrLW1xOiBpbml0aWFsaXplIHBkdSBvZiBmbHVzaCByZXENCj4g
+ZXhwbGljaXRseQ0KPiANCj4gT24gTW9uLCBTZXAgOCwgMjAxNCBhdCAyOjQ5IEFNLCBDaHJpc3Rv
+cGggSGVsbHdpZyA8aGNoQGxzdC5kZT4gd3JvdGU6DQo+ID4gVGhpcyB3b3JrcyBmaW5lIGZvciBt
+ZSwgYWx0aG91Z2ggSSBzdGlsbCBkb24ndCByZWFsbHkgbGlrZSBpdCB2ZXJ5DQo+IG11Y2guDQo+
+ID4NCj4gPiBJZiB5b3UgcmVhbGx5IHdhbnQgdG8gZ28gZG93biB0aGUgcGF0aCBvZiBtYWpvciBz
+dXJnZXJ5IGluIHRoaXMNCj4gPiBhcmVhIHdlIHNob3VsZCBwcm9iYWJseSBhbGxvY2F0ZSBhIGZs
+dXNoIHJlcXVlc3QgcGVyIGh3X2N0eCwgYW5kDQo+ID4gaW5pdGlhbGl6ZSBpdCB1c2luZyB0aGUg
+bm9ybWFsIGluaXQvZXhpdCBmdW5jdGlvbnMuICBJZiB3ZSB3YW50DQo+ID4gdG8gaGF2ZSBwcm9w
+ZXIgbXVsdGlxdWV1ZSBwZXJmb3JtYW5jZSBvbiBkZXZpY2VzIG5lZWRpbmcgZmx1c2hlcw0KPiA+
+IHdlJ2xsIG5lZWQgc29tZXRoaW5nIGxpa2UgdGhhdCBhbnl3YXkuDQo+IA0KPiBZZXMsIHRoYXQg
+c2hvdWxkIGJlIHRoZSBmaW5hbCBzb2x1dGlvbiBmb3IgdGhlIHByb2JsZW0sIGFuZCBsb29rcyB0
+aGUNCj4gd2hvbGUgZmx1c2ggbWFjaGluZXJ5IG5lZWQgdG8gbW92ZSBpbnRvIGhjdHgsIEkgd2ls
+bCB0cnkgdG8gZmlndXJlDQo+IG91dCBvbmUgcGF0Y2ggdG8gZG8gdGhhdC4NCg0KUGxlYXNlIGNo
+YW5nZSBmbHVzaF9ycSBhbGxvY2F0aW9uIGZyb20ga3phbGxvYyB0byBremFsbG9jX25vZGUgDQp3
+aGlsZSBvcGVyYXRpbmcgb24gdGhhdCBjb2RlICh3b3VsZCBoYXZlIGFmZmVjdGVkIFBBVENIIDEv
+NikuDQoNCmJsa19tcV9pbml0X3F1ZXVlIGN1cnJlbnRseSBoYXMgdGhpcyBmb3IgcS0+Zmx1c2hf
+cnE6DQogICAgICAgIHEtPmZsdXNoX3JxID0ga3phbGxvYyhyb3VuZF91cChzaXplb2Yoc3RydWN0
+IHJlcXVlc3QpICsNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0LT5jbWRfc2l6
+ZSwgY2FjaGVfbGluZV9zaXplKCkpLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBH
+RlBfS0VSTkVMKTsNCg0Kd2hpbGUgYWxsIGl0cyBvdGhlciBhbGxvY2F0aW9ucyBhcmUgdGllZCB0
+byBzZXQtPm51bWFfbm9kZToNCiAgICAgICAgaGN0eHMgPSBrbWFsbG9jX25vZGUoc2V0LT5ucl9o
+d19xdWV1ZXMgKiBzaXplb2YoKmhjdHhzKSwgR0ZQX0tFUk5FTCwNCiAgICAgICAgICAgICAgICAg
+ICAgICAgIHNldC0+bnVtYV9ub2RlKTsNCiAgICAgICAgcSA9IGJsa19hbGxvY19xdWV1ZV9ub2Rl
+KEdGUF9LRVJORUwsIHNldC0+bnVtYV9ub2RlKTsNCg0Kb3IsIGZvciBwZXItQ1BVIHN0cnVjdHVy
+ZXMsIHRpZWQgdG8gdGhlIGFwcHJvcHJpYXRlIG5vZGU6DQogICAgICAgIGZvciAoaSA9IDA7IGkg
+PCBzZXQtPm5yX2h3X3F1ZXVlczsgaSsrKSB7DQogICAgICAgICAgICAgICAgaW50IG5vZGUgPSBi
+bGtfbXFfaHdfcXVldWVfdG9fbm9kZShtYXAsIGkpOw0KDQogICAgICAgICAgICAgICAgaGN0eHNb
+aV0gPSBremFsbG9jX25vZGUoc2l6ZW9mKHN0cnVjdCBibGtfbXFfaHdfY3R4KSwNCiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBHRlBfS0VSTkVMLCBub2RlKTsNCg0KUGVy
+LWhjdHggZmx1c2ggcmVxdWVzdHMgd291bGQgbWVhbiBmb2xsb3dpbmcgdGhlIGhjdHhzW2ldDQph
+cHByb2FjaC4NCg0KDQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdlDQoNCg0K
+DQo=
