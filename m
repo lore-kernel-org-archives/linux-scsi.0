@@ -1,40 +1,44 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/6] blk-mq: initialize pdu of flush req explicitly
-Date: Mon, 08 Sep 2014 13:03:41 -0600
-Message-ID: <540DFD8D.2020804@kernel.dk>
-References: <1410079162-9872-1-git-send-email-ming.lei@canonical.com>	<20140907184956.GB23026@lst.de> <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
+Date: Mon, 8 Sep 2014 19:17:00 +0000
+Message-ID: <155acb7b8a3d4532aaa280e44f62447f@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1409701396-20226-1-git-send-email-kys@microsoft.com>
+ <20140905054014.GA11595@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:38599 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590AbaIHTDe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 15:03:34 -0400
-Received: by mail-pd0-f181.google.com with SMTP id w10so2426702pde.40
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Sep 2014 12:03:34 -0700 (PDT)
-In-Reply-To: <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20140905054014.GA11595@infradead.org>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: driverdev-devel-bounces@linuxdriverproject.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "ohering@suse.com" <ohering@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, Christoph Hellwig <hch@lst.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On 09/08/2014 10:55 AM, Ming Lei wrote:
-> On Mon, Sep 8, 2014 at 2:49 AM, Christoph Hellwig <hch@lst.de> wrote:
->> This works fine for me, although I still don't really like it very much.
->>
->> If you really want to go down the path of major surgery in this area we
->> should probably allocate a flush request per hw_ctx, and initialize it
->> using the normal init/exit functions.  If we want to have proper multiqueue
->> performance on devices needing flushes we'll need something like that anyway.
+
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Thursday, September 4, 2014 10:40 PM
+> To: KY Srinivasan
+> Cc: linux-kernel@vger.kernel.org; devel@linuxdriverproject.org;
+> ohering@suse.com; jbottomley@parallels.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
 > 
-> Yes, that should be the final solution for the problem, and looks the whole
-> flush machinery need to move into hctx, I will try to figure out one patch to
-> do that.
+> Looks good to me.
+> 
+> Olaf, Hannes - can I get another review for this (and the older hyperv
+> scanning patch set)?
 
-I had not thought of that, but seems like a great way to clean this up a
-lot. It just never felt like the right thing to do.
+Olaf, Hannes,
 
--- 
-Jens Axboe
+Ping.
 
+K. Y
