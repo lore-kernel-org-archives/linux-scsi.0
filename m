@@ -1,76 +1,50 @@
-From: Sony John-N <Sony.John-N@Emulex.Com>
-Subject: RE: [SCSI] be2iscsi: adding functionality to change network
- settings using iscsiadm
-Date: Tue, 9 Sep 2014 06:26:32 +0000
-Message-ID: <6b5b12f4-e46a-4467-a09f-8311377648d0@CMEXHTCAS1.ad.emulex.com>
-References: <20140904102734.GA21504@mwanda> <54092983.70604@cs.wisc.edu>
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH] drivers: target: target_core_transport.c: build warning
+Date: Tue, 9 Sep 2014 13:02:27 +0530
+Message-ID: <20140909073227.GB11332@sudip-PC>
+References: <1410247430-11293-1-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:42249 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbaIIG1E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2014 02:27:04 -0400
-In-Reply-To: <54092983.70604@cs.wisc.edu>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1410247430-11293-1-git-send-email-sudipm.mukherjee@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kees Cook <keescook@chromium.org>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
 
-
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mike Christie
-Sent: Friday, September 05, 2014 8:40 AM
-To: Dan Carpenter
-Cc: linux-scsi@vger.kernel.org; Kees Cook; Jayamohan Kallickal
-Subject: Re: [SCSI] be2iscsi: adding functionality to change network settings using iscsiadm
-
-On 09/04/2014 05:27 AM, Dan Carpenter wrote:
-> Hello Mike Christie,
+On Tue, Sep 09, 2014 at 12:53:50PM +0530, Sudip Mukherjee wrote:
+> build is giving : 
+> warning: passing argument 1 of 'strlen' makes pointer from integer 
+> without a cast [enabled by default]
 > 
-> The patch 0e43895ec1f4: "[SCSI] be2iscsi: adding functionality to 
-> change network settings using iscsiadm" from Apr 3, 2012, leads to the 
-> following static checker warning:
+> the snprintf after the strlen is trying to put the "Unsupported" string
+> at the end of exising string. so len should give the string length here
 > 
-> 	drivers/scsi/be2iscsi/be_mgmt.c:945 mgmt_static_ip_modify()
-> 	error: 'ip_param->len' from user is not capped properly
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> ---
+>  drivers/target/target_core_transport.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> drivers/scsi/be2iscsi/be_mgmt.c
->    940          req->ip_params.ip_record.ip_addr.size_of_structure =
->    941                  sizeof(struct be_ip_addr_subnet_format);
->    942          req->ip_params.ip_record.ip_addr.ip_type = ip_type;
->    943  
->    944          if (ip_action == IP_ACTION_ADD) {
->    945                  memcpy(req->ip_params.ip_record.ip_addr.addr, ip_param->value,
->    946                         ip_param->len);
->    947  
->    948                  if (subnet_param)
->    949                          memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
->    950                                 subnet_param->value, subnet_param->len);
->                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->    951          } else {
->    952                  memcpy(req->ip_params.ip_record.ip_addr.addr,
->    953                         if_info->ip_addr.addr, ip_param->len);
->                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->    954  
->    955                  memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
->    956                         if_info->ip_addr.subnet_mask, ip_param->len);
->                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->    957          }
-> 
-> These memcpy()s can overflow.  It seems root only but it makes the 
-> static checker complain.
-> 
-> One call tree is:
-> 
-> beiscsi_set_static_ip() <- gets iface_ip.
->   -> mgmt_set_ip()
->      -> mgmt_static_ip_modify()
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 1dd1181..3ce85ed 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -953,7 +953,7 @@ int transport_dump_vpd_ident_type(
+>  		strlcat(buf, "SCSI name string\n", sizeof(buf));
+>  		break;
+>  	default:
+> -		len = strlen(len);
+> +		len = strlen(buf);
+>  		snprintf(&buf[len], sizeof(buf) - len, "Unsupported: 0x%02x\n",
+>  				vpd->device_identifier_type);
+>  		ret = -EINVAL;
+> -- 
+> 1.8.1.2
 > 
 
-> Jay, I made the attached patch to fix these issues plus one more I found. I am still waiting on getting systems at work. Could you have your people test it?
+please discard this patch. This is based on next-20140908 , and the
+issue has been corrected in next-20140909.
 
-Tested the patch and its working fine.
+thanks
+sudip
