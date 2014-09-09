@@ -1,55 +1,94 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 0/6] blk-mq: initialize pdu of flush req explicitly
-Date: Mon, 8 Sep 2014 22:53:05 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C67C0E@G9W0745.americas.hpqcorp.net>
-References: <1410079162-9872-1-git-send-email-ming.lei@canonical.com>
-	<20140907184956.GB23026@lst.de>
- <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Mon, 8 Sep 2014 18:04:23 -0700
+Message-ID: <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org> <20140905164405.GA28964@core.coreip.homeip.net>
+ <20140905174925.GA12991@mtj.dyndns.org> <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+ <20140905224047.GC15723@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVP-kUkCoW_pPrxqKWeoSKkxCACLLth2ycv87EVzfr2mUA@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20140905224047.GC15723@mtj.dyndns.org>
+Sender: netdev-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagot>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBNaW5nIExlaQ0KPiBTZW50OiBNb25kYXksIDA4IFNlcHRlbWJl
-ciwgMjAxNCAxMTo1NSBBTQ0KPiBUbzogQ2hyaXN0b3BoIEhlbGx3aWcNCj4gQ2M6IEplbnMgQXhi
-b2U7IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IExpbnV4IFNDU0kgTGlzdA0KPiBTdWJqZWN0
-OiBSZTogW1BBVENIIDAvNl0gYmxrLW1xOiBpbml0aWFsaXplIHBkdSBvZiBmbHVzaCByZXENCj4g
-ZXhwbGljaXRseQ0KPiANCj4gT24gTW9uLCBTZXAgOCwgMjAxNCBhdCAyOjQ5IEFNLCBDaHJpc3Rv
-cGggSGVsbHdpZyA8aGNoQGxzdC5kZT4gd3JvdGU6DQo+ID4gVGhpcyB3b3JrcyBmaW5lIGZvciBt
-ZSwgYWx0aG91Z2ggSSBzdGlsbCBkb24ndCByZWFsbHkgbGlrZSBpdCB2ZXJ5DQo+IG11Y2guDQo+
-ID4NCj4gPiBJZiB5b3UgcmVhbGx5IHdhbnQgdG8gZ28gZG93biB0aGUgcGF0aCBvZiBtYWpvciBz
-dXJnZXJ5IGluIHRoaXMNCj4gPiBhcmVhIHdlIHNob3VsZCBwcm9iYWJseSBhbGxvY2F0ZSBhIGZs
-dXNoIHJlcXVlc3QgcGVyIGh3X2N0eCwgYW5kDQo+ID4gaW5pdGlhbGl6ZSBpdCB1c2luZyB0aGUg
-bm9ybWFsIGluaXQvZXhpdCBmdW5jdGlvbnMuICBJZiB3ZSB3YW50DQo+ID4gdG8gaGF2ZSBwcm9w
-ZXIgbXVsdGlxdWV1ZSBwZXJmb3JtYW5jZSBvbiBkZXZpY2VzIG5lZWRpbmcgZmx1c2hlcw0KPiA+
-IHdlJ2xsIG5lZWQgc29tZXRoaW5nIGxpa2UgdGhhdCBhbnl3YXkuDQo+IA0KPiBZZXMsIHRoYXQg
-c2hvdWxkIGJlIHRoZSBmaW5hbCBzb2x1dGlvbiBmb3IgdGhlIHByb2JsZW0sIGFuZCBsb29rcyB0
-aGUNCj4gd2hvbGUgZmx1c2ggbWFjaGluZXJ5IG5lZWQgdG8gbW92ZSBpbnRvIGhjdHgsIEkgd2ls
-bCB0cnkgdG8gZmlndXJlDQo+IG91dCBvbmUgcGF0Y2ggdG8gZG8gdGhhdC4NCg0KUGxlYXNlIGNo
-YW5nZSBmbHVzaF9ycSBhbGxvY2F0aW9uIGZyb20ga3phbGxvYyB0byBremFsbG9jX25vZGUgDQp3
-aGlsZSBvcGVyYXRpbmcgb24gdGhhdCBjb2RlICh3b3VsZCBoYXZlIGFmZmVjdGVkIFBBVENIIDEv
-NikuDQoNCmJsa19tcV9pbml0X3F1ZXVlIGN1cnJlbnRseSBoYXMgdGhpcyBmb3IgcS0+Zmx1c2hf
-cnE6DQogICAgICAgIHEtPmZsdXNoX3JxID0ga3phbGxvYyhyb3VuZF91cChzaXplb2Yoc3RydWN0
-IHJlcXVlc3QpICsNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0LT5jbWRfc2l6
-ZSwgY2FjaGVfbGluZV9zaXplKCkpLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBH
-RlBfS0VSTkVMKTsNCg0Kd2hpbGUgYWxsIGl0cyBvdGhlciBhbGxvY2F0aW9ucyBhcmUgdGllZCB0
-byBzZXQtPm51bWFfbm9kZToNCiAgICAgICAgaGN0eHMgPSBrbWFsbG9jX25vZGUoc2V0LT5ucl9o
-d19xdWV1ZXMgKiBzaXplb2YoKmhjdHhzKSwgR0ZQX0tFUk5FTCwNCiAgICAgICAgICAgICAgICAg
-ICAgICAgIHNldC0+bnVtYV9ub2RlKTsNCiAgICAgICAgcSA9IGJsa19hbGxvY19xdWV1ZV9ub2Rl
-KEdGUF9LRVJORUwsIHNldC0+bnVtYV9ub2RlKTsNCg0Kb3IsIGZvciBwZXItQ1BVIHN0cnVjdHVy
-ZXMsIHRpZWQgdG8gdGhlIGFwcHJvcHJpYXRlIG5vZGU6DQogICAgICAgIGZvciAoaSA9IDA7IGkg
-PCBzZXQtPm5yX2h3X3F1ZXVlczsgaSsrKSB7DQogICAgICAgICAgICAgICAgaW50IG5vZGUgPSBi
-bGtfbXFfaHdfcXVldWVfdG9fbm9kZShtYXAsIGkpOw0KDQogICAgICAgICAgICAgICAgaGN0eHNb
-aV0gPSBremFsbG9jX25vZGUoc2l6ZW9mKHN0cnVjdCBibGtfbXFfaHdfY3R4KSwNCiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBHRlBfS0VSTkVMLCBub2RlKTsNCg0KUGVy
-LWhjdHggZmx1c2ggcmVxdWVzdHMgd291bGQgbWVhbiBmb2xsb3dpbmcgdGhlIGhjdHhzW2ldDQph
-cHByb2FjaC4NCg0KDQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdlDQoNCg0K
-DQo=
+On Fri, Sep 5, 2014 at 3:40 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Luis.
+>
+> On Fri, Sep 05, 2014 at 11:12:17AM -0700, Luis R. Rodriguez wrote:
+>> Meanwhile we are allowing a major design consideration such as a 30
+>> second timeout for both init + probe all of a sudden become a hard
+>> requirement for device drivers. I see your point but can't also be
+>> introducing major design changes willy nilly either. We *need* a
+>> solution for the affected drivers.
+>
+> Yes, make the behavior specifically specified from userland.  When did
+> I ever say that there should be no solution for the problem?  I've
+> been saying that the behavior should be selected from userland from
+> the get-go, haven't I?
+>
+> I have no idea how the selection should be.  It could be per-insmod or
+> maybe just a system-wide flag with explicit exceptions marked on
+> drivers is good enough.  I don't know.
+
+Its perfectly understandable if we don't know what path to take yet
+and its also understandable for it to take time to figure out --
+meanwhile though systemd already has merged a policy of a 30 second
+timeout for *all drivers* though so we therefore need:
+
+0) a solutions for affected combination of systemd / drivers
+1) an agreed path forward
+
+If we want a tight integration between both kernel / init system we
+need to be able to communicate effectively folks and I'm afraid this
+isn't happening. I last noted on systemd-devel how the 30 second
+timeout issue was merged under incorrect assumptions -- that it was
+not just init that at times caused delays, and that since we currently
+batch both init and probe on the driver core we need a non fatal
+userspace solution [0], while we work on design on the kernel side of
+things for async'ing for drivers that make sense. A proper kernel
+solution may take longer than expected, we can't just assume a
+probe_async flag will suffice on drivers, in fact as Tejun notes, its
+wrong since historically we have had some random userland depend on
+the synhronous behaviour of module loading of some drivers, and that
+*could* have taken a while.
+
+Kay, Lennart, any recommendations ?
+
+[0] http://lists.freedesktop.org/archives/systemd-devel/2014-August/022696.html
+
+>> Also what stops drivers from going ahead and just implementing their
+>> own async probe? Would that now be frowned upon as it strives away
+>
+> The drivers can't.  How many times should I explain the same thing
+> over and over again.  libata can't simply make probing asynchronous
+> w.r.t. module loading no matter how it does it.  Yeah, sure, there can
+> be other drivers which can do that without most people noticing it but
+> a storage driver isn't one of them and the storage drivers are the
+> problematic ones already, right?
+
+Its one of the subsystems that has suffered from this, but not the only one.
+
+>> from the original design? The bool would let those drivers do this
+>> easily, and we would still need to identify these drivers, although
+>> this particular change can be NAK'd Oleg's suggestion on
+>> WARN_ON(fatal_signal_pending() at the end of load_module() seems to me
+>> at least needed. And if its not async probe... what do those with
+>> failed drivers do?
+>
+> I'm getting tired of explaining the same thing over and over again.
+> The said change was nacked because the whole approach of "let's see
+> which drivers get reported on the issue which exists basically for all
+> drivers and just change the behavior of them" is braindead.  It makes
+> no sense whatsoever.  It doesn't address the root cause of the problem
+> while making the same class of drivers behave significantly
+> differently for no good reason.  Please stop chasing your own tail and
+> try to understand the larger picture.
+
+Understood.
+
+  Luis
