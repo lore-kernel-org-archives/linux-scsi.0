@@ -1,73 +1,119 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 02/11] megaraid_sas : Use writeq for 64bit pci write to
- avoid spinlock overhead
-Date: Tue, 09 Sep 2014 15:30:46 +0200
-Message-ID: <540F0106.6090702@redhat.com>
-References: <201409061328.s86DS4h1012830@palmhbs0.lsi.com>
+Subject: Re: [PATCH 03/11] megaraid_sas : Update threshold based reply post
+ host index register
+Date: Tue, 09 Sep 2014 16:08:58 +0200
+Message-ID: <540F09FA.1080708@redhat.com>
+References: <201409061328.s86DS5EM012885@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11299 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58080 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756722AbaIINbZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Sep 2014 09:31:25 -0400
-In-Reply-To: <201409061328.s86DS4h1012830@palmhbs0.lsi.com>
+	id S1751361AbaIIOJd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2014 10:09:33 -0400
+In-Reply-To: <201409061328.s86DS5EM012885@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
 On 09/06/2014 03:25 PM, Sumit.Saxena@avagotech.com wrote:
-> Use writeq() for 64bit PCI write instead of writel() to avoid additional lock overhead.
+> Current driver updates reply post host index to let firmware know that replies are processed,
+> while returning from ISR function, only if there is no oustanding replies in reply queue.
+>
+> Driver will free the request frame immediately from ISR but reply post host index is not yet updated.
+> It means freed request can be used by submission path and there may be a tight loop in request/reply
+> path. In such condition, firmware may crash when it tries to post reply and there is no free 
+> reply post descriptor.
+>
+> Eventually two things needs to be change to avoid this issue.
+>
+> Increase reply queue depth (double than request queue) to accommodate worst case scenario.
+> Update reply post host index to firmware once it reach to some pre-defined threshold value.
+>
+> This change will make sure that firmware will always have some buffer of reply descriptor and 
+> will never find empty reply descriptor in completion path.
 >
 > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 23 ++++++++++++++++++++++-
+>  drivers/scsi/megaraid/megaraid_sas_fusion.h |  1 +
+>  2 files changed, 23 insertions(+), 1 deletion(-)
 >
 > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 57b47fe..c69c1ac 100644
+> index c69c1ac..f30297d 100644
 > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -1065,6 +1065,13 @@ megasas_fire_cmd_fusion(struct megasas_instance *instance,
->  			u32 req_desc_hi,
->  			struct megasas_register_set __iomem *regs)
-
-Hi Sumit,
-the fn params are a bit confusing req_desc_lo is of type dma_addr_t
-and req_desc_hi is u32, is it possible to unite it in the future?
-
->  {
-> +#if defined(writeq) && defined(CONFIG_64BIT)
-
-On a similar place mpt2sas(_base_writeq) uses only "#ifndef writeq"
-if it's incorrect fix it there too or remove the CONFIG_64 here
-
-> +	u64 req_data = 0;
-> +
-> +	req_data = req_desc_hi;
-> +	req_data = ((req_data << 32) | (u32)req_desc_lo);
-
-This seems to be critical path (you are removing an spinlock to avoid overhead),
-so why do you have three consecutive assignments to the same variable?
-(~(u64 req_data = r_hi << 32 | r_lo))
-
-Cheers,
-Tomas
-
-> +	writeq(le64_to_cpu(req_data), &(regs)->inbound_low_queue_port);
-> +#else
->  	unsigned long flags;
+> @@ -971,7 +971,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
 >  
->  	spin_lock_irqsave(&instance->hba_lock, flags);
-> @@ -1072,6 +1079,7 @@ megasas_fire_cmd_fusion(struct megasas_instance *instance,
->  	writel(le32_to_cpu(req_desc_lo), &(regs)->inbound_low_queue_port);
->  	writel(le32_to_cpu(req_desc_hi), &(regs)->inbound_high_queue_port);
->  	spin_unlock_irqrestore(&instance->hba_lock, flags);
-> +#endif
->  }
+>  	max_cmd = instance->max_fw_cmds;
 >  
->  /**
+> -	fusion->reply_q_depth = ((max_cmd + 1 + 15)/16)*16;
+> +	fusion->reply_q_depth = (((max_cmd * 2) + 1 + 15)/16)*16;
+
+This computation gives for certain values the same result as before,
+for some the result is 1.5*higher and for others 2*higher. Is this intended?
+(I'm not asking what all the magic numbers mean..)
+what about a simple
+fusion->reply_q_depth = 2*(((max_cmd + 1 + 15)/16)*16);
+
+>  
+>  	fusion->request_alloc_sz =
+>  		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *max_cmd;
+> @@ -1876,6 +1876,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+>  	u32 status, extStatus, device_id;
+>  	union desc_value d_val;
+>  	struct LD_LOAD_BALANCE_INFO *lbinfo;
+> +	int threshold_reply_count = 0;
+>  
+>  	fusion = instance->ctrl_context;
+>  
+> @@ -1963,6 +1964,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+>  
+>  		desc->Words = ULLONG_MAX;
+>  		num_completed++;
+> +		threshold_reply_count++;
+>  
+>  		/* Get the next reply descriptor */
+>  		if (!fusion->last_reply_idx[MSIxIndex])
+> @@ -1982,6 +1984,25 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+>  
+>  		if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
+>  			break;
+> +		/*
+> +		 * Write to reply post host index register after completing threshold
+> +		 * number of reply counts and still there are more replies in reply queue
+> +		 * pending to be completed
+> +		 */
+> +		if (threshold_reply_count >= THRESHOLD_REPLY_COUNT) {
+> +			if ((instance->pdev->device ==
+> +				PCI_DEVICE_ID_LSI_INVADER) ||
+> +				(instance->pdev->device ==
+> +				PCI_DEVICE_ID_LSI_FURY))
+> +				writel(((MSIxIndex & 0x7) << 24) |
+> +					fusion->last_reply_idx[MSIxIndex],
+> +					instance->reply_post_host_index_addr[MSIxIndex/8]);
+> +			else
+> +				writel((MSIxIndex << 24) |
+> +					fusion->last_reply_idx[MSIxIndex],
+> +					instance->reply_post_host_index_addr[0]);
+> +			threshold_reply_count = 0;
+> +		}
+>  	}
+>  
+>  	if (!num_completed)
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> index e76af54..d660c4d 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> @@ -86,6 +86,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
+>  
+>  #define MEGASAS_FP_CMD_LEN	16
+>  #define MEGASAS_FUSION_IN_RESET 0
+> +#define THRESHOLD_REPLY_COUNT 50
+>  
+>  /*
+>   * Raid Context structure which describes MegaRAID specific IO Parameters
 
