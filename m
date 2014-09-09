@@ -1,68 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] blk-mq: support per-distpatch_queue flush machinery
-Date: Tue, 9 Sep 2014 11:48:56 -0700
-Message-ID: <20140909184856.GG16750@infradead.org>
-References: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
- <1410267949-21904-9-git-send-email-ming.lei@canonical.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 5/8] block: introduce blk_flush_queue to drive flush machinery
+Date: Tue, 09 Sep 2014 12:55:03 -0600
+Message-ID: <540F4D07.4080103@kernel.dk>
+References: <1410267949-21904-1-git-send-email-ming.lei@canonical.com> <1410267949-21904-6-git-send-email-ming.lei@canonical.com> <20140909184331.GE16750@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1410267949-21904-9-git-send-email-ming.lei@canonical.com>
+In-Reply-To: <20140909184331.GE16750@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@canonical.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-> +	if (hctx) {
-> +		int cmd_sz = q->tag_set->cmd_size;
-> +		int node = hctx->numa_node;
-> +
-> +		fq = kzalloc_node(sizeof(*fq), GFP_KERNEL, node);
-> +		if (!fq)
-> +			goto failed;
-> +
-> +		rq_sz = round_up(rq_sz + cmd_sz, cache_line_size());
-> +		fq->flush_rq = kzalloc_node(rq_sz, GFP_KERNEL, node);
-> +		if (!fq->flush_rq)
-> +			goto rq_failed;
-> +
-> +		spin_lock_init(&fq->mq_flush_lock);
-> +	} else {
-> +		fq = kzalloc(sizeof(*fq), GFP_KERNEL);
-> +		if (!fq)
-> +			goto failed;
-> +
-> +		fq->flush_rq = kzalloc(rq_sz, GFP_KERNEL);
-> +		if (!fq->flush_rq)
-> +			goto rq_failed;
-> +	}
+On 09/09/2014 12:43 PM, Christoph Hellwig wrote:
+> On Tue, Sep 09, 2014 at 09:05:46PM +0800, Ming Lei wrote:
+>> This patch introduces 'struct blk_flush_queue' and puts all
+>> flush machinery related stuff into this strcuture, so that
+> 
+> s/stuff/fields/
+> s/strcuture/structure/
+> 
+> Looks good, but a few more nitpicks below.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+>> +int blk_init_flush(struct request_queue *q)
+>> +{
+>> +	int ret;
+>> +	struct blk_flush_queue *fq = kzalloc(sizeof(*fq), GFP_KERNEL);
+>>  
+>> +	if (!fq)
+>>  		return -ENOMEM;
+>>  
+>> +	q->fq = fq;
+> 
+> I think it would be cleaner to return the flush data structure and
+> assign it in the caller.
 
-Seems like this would be a lot cleaner by passing the cmd_size and
-node_id explicitly.  The added benefit would be that we could also
-pass the node for the blk_init_queue_node() case.
+I was going to suggest renaming because of this as well. If we do this:
 
-> +static void __blk_mq_exit_flush(struct request_queue *q,
-> +		unsigned free_end, unsigned int exit_end)
-> +{
-> +	struct blk_mq_hw_ctx *hctx;
-> +	unsigned int k;
-> +	struct blk_flush_queue *fq;
-> +	struct blk_mq_tag_set *set = q->tag_set;
-> +	unsigned start_idx = set->queue_depth;
-> +
-> +	queue_for_each_hw_ctx(q, hctx, k) {
-> +		if (k >= free_end)
-> +			break;
-> +
-> +		fq = hctx->fq;
-> +		if (k < exit_end && set->ops->exit_request)
-> +			set->ops->exit_request(set->driver_data,
-> +					fq->flush_rq, k,
-> +					start_idx + k);
-> +
-> +		blk_free_flush_queue(fq);
-> +	}
+	q->fq = blk_init_flush(q);
 
-Can we merge the mq init/exit case into some existing for each hctx
-loop in blk-mq?
+then it's immediately clear what it does, whereas blk_init_flush(q)
+means very little on its own. I'd change the naming to
+blk_alloc_flush_queue() and blk_free_flush_queue().
+
+-- 
+Jens Axboe
