@@ -1,36 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WARNING in block layer triggered in 3.17-rc3
-Date: Wed, 10 Sep 2014 00:17:26 +0900
-Message-ID: <20140909151726.GA8890@mtj.dyndns.org>
-References: <20140909011945.GD11706@mtj.dyndns.org>
- <Pine.LNX.4.44L0.1409091026470.1677-100000@iolanthe.rowland.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 0/8] block: per-distpatch_queue flush machinery
+Date: Tue, 9 Sep 2014 17:20:28 +0200
+Message-ID: <20140909152028.GA13699@lst.de>
+References: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:47129 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750816AbaIIPUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2014 11:20:31 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1409091026470.1677-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Shirish Pargaonkar <shirishpargaonkar@gmail.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+In-Reply-To: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello, Alan.
+Hi Ming,
 
-On Tue, Sep 09, 2014 at 11:08:22AM -0400, Alan Stern wrote:
-> Sorry, the meaning wasn't clear.  I meant that the existing code 
-> doesn't work.  The patch seems to work okay (except that I can't use 
-> queue_flag_test_and_set because the queue isn't locked at that point).  
-> I'll submit the patch shortly.
+thanks for doing this work!
 
-Given it's fully synchronized, the following should work fine and
-probably is less misleading than using atomic test_and_set.
+I've only taken a very cursory look at the series and I like most of it.
 
-	if (!blk_queue_init_done) {
-		queue_flag_set_unlocked(QUEUE_FLAG_INIT_DONE, q);
-		blk_queue_bypass_end(q);
-	}
+But can you explain why you're not simply incrementing the number of
+allocated requests in the blk-mq request allocation code instead of
+allocating the flush request separately in the last patch?
 
-Thanks.
+(A more throughout review will follow too)
 
--- 
-tejun
