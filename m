@@ -1,43 +1,48 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [REGRESSION 3.17] scsi (uas) disks no longer using tagged command
- queuing
-Date: Tue, 09 Sep 2014 11:15:24 +0200
-Message-ID: <540EC52C.3000804@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH 0/8] block: per-distpatch_queue flush machinery
+Date: Tue,  9 Sep 2014 21:05:41 +0800
+Message-ID: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2668 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754745AbaIIJP1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Sep 2014 05:15:27 -0400
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:33413 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756621AbaIINGC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2014 09:06:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Hi All,
+Hi,
 
-While working on making error handling in the uas driver more robust,
-I noticed that all the commands being send to a sata ssd hooked up
-over uas were untagged, where I would expect tcq to be used, as that
-is the big advantage of uas over usb-storage / bot.
+As recent discussion, especially suggested by Christoph, this patchset
+implements per-distpatch_queue flush machinery, so that:
 
-Taking the uas.c file from 3.17, and building it for 3.16 restores
-the use of tcq (debugged by adding a printk blk_rq_tagged + request->tag).
+	- current init_request and exit_request callbacks can
+	cover flush request too, then the ugly and buggy copying
+	way of initializing flush request's pdu can be fixed
+    
+	- flushing performance gets improved in case of multi hw-queue
 
-So either uas is doing something wrong which happened to work in
-3.16, or something has broken in 3.17.
+About 70% throughput improvement is observed in sync write/randwrite
+over multi dispatch-queue virtio-blk, see details in commit log
+of patch 8/8.
 
-I've already added debug printk-s of scsi_device->tagged_supported,
-queue_depth, ordered_tags and simple_tags and those all look good
-(1, 29, 1, 1).
+This patchset can be pulled from below tree too:
 
-I've also tried setting disable_blk_mq and that does not help.
+	git://kernel.ubuntu.com/ming/linux.git v3.17-block-dev
 
-Any hints to help debugging this further (other then a bisect) are
-appreciated. If no-one has any smart ideas I guess I'll end up doing
-a full bisect.
 
-Regards,
+ block/blk-core.c       |   11 +--
+ block/blk-flush.c      |  239 +++++++++++++++++++++++++++++++++++++++---------
+ block/blk-mq.c         |   27 +++---
+ block/blk-mq.h         |    1 -
+ block/blk-sysfs.c      |    4 +-
+ block/blk.h            |   35 ++++++-
+ include/linux/blk-mq.h |    2 +
+ include/linux/blkdev.h |   10 +-
+ 8 files changed, 251 insertions(+), 78 deletions(-)
 
-Hans
+Thanks,
+--
+Ming Lei
+
