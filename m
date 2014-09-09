@@ -1,101 +1,96 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] uas: Disable uas on ASM1051 devices
-Date: Tue, 09 Sep 2014 21:13:15 +0200
-Message-ID: <540F514B.90807@redhat.com>
-References: <Pine.LNX.4.44L0.1409091120150.968-100000@iolanthe.rowland.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Tue, 9 Sep 2014 12:16:12 -0700
+Message-ID: <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org> <20140905164405.GA28964@core.coreip.homeip.net>
+ <20140905174925.GA12991@mtj.dyndns.org> <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+ <20140905224047.GC15723@mtj.dyndns.org> <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+ <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1409091120150.968-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1410241109.2028.22.camel@jarvis.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@ava>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 09/09/2014 05:23 PM, Alan Stern wrote:
-> On Tue, 9 Sep 2014, Hans de Goede wrote:
+On Mon, Sep 8, 2014 at 10:38 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Tue, 2014-09-09 at 10:10 +0900, Tejun Heo wrote:
+>> Hello, Luis.
+>>
+>> On Mon, Sep 08, 2014 at 06:04:23PM -0700, Luis R. Rodriguez wrote:
+>> > > I have no idea how the selection should be.  It could be per-insmod or
+>> > > maybe just a system-wide flag with explicit exceptions marked on
+>> > > drivers is good enough.  I don't know.
+>> >
+>> > Its perfectly understandable if we don't know what path to take yet
+>> > and its also understandable for it to take time to figure out --
+>> > meanwhile though systemd already has merged a policy of a 30 second
+>> > timeout for *all drivers* though so we therefore need:
+>>
+>> I'm not too convinced this is such a difficult problem to figure out.
+>> We already have most of logic in place and the only thing missing is
+>> how to switch it.  Wouldn't something like the following work?
+>>
+>> * Add a sysctl knob to enable asynchronous device probing on module
+>>   load and enable asynchronous probing globally if the knob is set.
+>>
+>> * Identify cases which can't be asynchronous and make them
+>>   synchronous.  e.g. keep who's doing request_module() and avoid
+>>   asynchronous probing if current is probing one of those.
 >
->> Even with REPORT SUPPORTED OPERATION CODES blacklisted the ASM1051 chipset
->> still does not work when combined with some disks, e.g. a Crucial M500 ssd.
->>
->> When used with a troublesome disk, the chipset throws all kinds of USB errors,
->> and eventually hangs, where as in BOT mode it works fine.
->>
->> To make matters worse the ASM1051 chipset and older versions of the ASM1053
->> chipset use the same usb-id.
->>
->> When connected over USB-3 the 2 can be told apart by the number of streams
->> they support. So this patch adds some less then pretty code to disable uas for
->> the ASM1051. When connected over USB-2, simply disable uas alltogether for
->> devices with the shared usb-id.
->>
->> This ends up disabling uas in many cases where it actually works fine, which
->> is unfortunate, but better then leaving some users with completely non working
->> external disks. This patch adds a log level explaining how perfomance conscious
->> users can re-enable uas.
->>
->> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16
->> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>   drivers/usb/storage/uas-detect.h | 34 ++++++++++++++++++++++++++++++----
->>   1 file changed, 30 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
->> index 503ac5c..3119f3f 100644
->> --- a/drivers/usb/storage/uas-detect.h
->> +++ b/drivers/usb/storage/uas-detect.h
->> @@ -59,10 +59,6 @@ static int uas_use_uas_driver(struct usb_interface *intf,
->>   	unsigned long flags = id->driver_info;
->>   	int r, alt;
->>
->> -	usb_stor_adjust_quirks(udev, &flags);
->> -
->> -	if (flags & US_FL_IGNORE_UAS)
->> -		return 0;
->>
->>   	alt = uas_find_uas_alt_setting(intf);
->>   	if (alt < 0)
->> @@ -72,6 +68,36 @@ static int uas_use_uas_driver(struct usb_interface *intf,
->>   	if (r < 0)
->>   		return 0;
->>
->> +	/*
->> +	 * ASM1051 and older ASM1053 devices have the same usb-id, and UAS is
->> +	 * broken with some disks on the ASM1051, use the number of streams to
->> +	 * differentiate between the 2. Newer ASM1053 devices also support 32
->> +	 * streams, but have a different product-id.
->> +	 */
->> +	if (udev->descriptor.idVendor == 0x174c &&
->> +			udev->descriptor.idProduct == 0x55aa) {
->> +		if (udev->speed < USB_SPEED_SUPER) {
->> +			/* No streams info, assume ASM1051E */
->> +			dev_warn(&udev->dev, "Assuming ASM1051E chipset\n");
->> +			flags |= US_FL_IGNORE_UAS;
->> +		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
->> +			dev_warn(&udev->dev, "Detected ASM1051E chipset\n");
->> +			flags |= US_FL_IGNORE_UAS;
->> +		}
->> +	}
->> +
->> +	usb_stor_adjust_quirks(udev, &flags);
->
-> This won't work.  usb_stor_adjust_quirks masks out all the quirks that
-> it handles before applying the user-specified quirks.  Therefore it
-> will erase your US_FL_IGNORE_UAS flag.
+> What's wrong with just fixing systemd?  Arbitrary timeouts in init
+> scripts for system bring up are plain wrong ... I thought we had this
+> sorted out ten years ago when we were first having the arguments about
+> how long to wait for root; I'm surprised it's coming back again.
 
-Only if there is a matching quirk entry in the quirks parameter, and then
-masking it out is fine, we want to allow this as we're setting the
-US_FL_IGNORE_US flag on bridges where it is known to cause issues when
-combined with *some* disks, while uas works fine with other disks, so
-users may want to override it.
+By design it seems systemd should not allow worker processes to block
+indefinitely and in fact it currently uses the same timeout for all
+types of worker processes. I last recommended a multiplier to at least
+allow systemd to distinguish and allow us to modify the timeout based
+on the type of process by using an enum used to classify these, kmod
+for example would be one type of command:
 
-Regards,
+http://lists.freedesktop.org/archives/systemd-devel/2014-August/021852.html
 
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This was deemed to introduce unnecessary complexity, but I believe
+this was before we realized that the timeout was penalizing kmod usage
+unfairly given that the original assumption that it was just init that
+should be penalized was incorrect given that we batch both init +
+probe together. I have been relaying updates back on that thread as we
+move along with this discussion on the issues found with the timeout,
+but haven't gotten feedback yet as to which path folks on systemd
+would like to take in light of recent discussions / clarifications.
+Perhaps your arguments might help folks here reconsider things a bit
+as well.
+
+If we want *tight* integration between init system / kernel these
+discussions are necessary not only when we find issues but also should
+be part of the design phase for major changes.
+
+> If we want to sort out some sync/async mechanism for probing devices, as
+> an agreement between the init systems and the kernel, that's fine, but
+> its a to-be negotiated enhancement.
+
+Unfortunately as Tejun notes the train has left which already made
+assumptions on this. I'm afraid distributions that want to avoid this
+sigkill at least on the kernel front will have to work around this
+issue either on systemd by increasing the default timeout which is now
+possible thanks to Hannes' changes or by some other means such as the
+combination of a modified non-chatty version of this patch + a check
+at the end of load_module() as mentioned earlier on these threads.
+
+> For the current bug fix, just fix  the component that broke ... which would be systemd.
+
+For new systems it seems the proposed fix is to have systemd tell the
+kernel what it thought it should be seeing and that is all pure async
+probes through a sysctl, and then we'd do async probe on all modules
+unless a driver is specifically flagged with a need to run synchronous
+(we'll enable this for request_firmware() users for example to start
+off with).
+
+ Luis
