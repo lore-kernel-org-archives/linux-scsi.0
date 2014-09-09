@@ -1,52 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: WARNING in block layer triggered in 3.17-rc3
-Date: Tue, 9 Sep 2014 10:19:45 +0900
-Message-ID: <20140909011945.GD11706@mtj.dyndns.org>
-References: <1410191478.2027.28.camel@jarvis.lan>
- <Pine.LNX.4.44L0.1409081335450.1433-100000@iolanthe.rowland.org>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Tue, 9 Sep 2014 10:22:27 +0900
+Message-ID: <20140909012227.GE11706@mtj.dyndns.org>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org>
+ <20140905164405.GA28964@core.coreip.homeip.net>
+ <20140905174925.GA12991@mtj.dyndns.org>
+ <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+ <20140905224047.GC15723@mtj.dyndns.org>
+ <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+ <20140909011059.GB11706@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:38497 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbaIIBTv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2014 21:19:51 -0400
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1409081335450.1433-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140909011059.GB11706@mtj.dyndns.org>
+Sender: netdev-owner@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Shirish Pargaonkar <shirishpargaonkar@gmail.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-Hello,
-
-On Mon, Sep 08, 2014 at 01:42:44PM -0400, Alan Stern wrote:
-> > This looks like a nasty hack.  In theory the QUEUE_FLAG_INIT_DONE should
-> > be unset on blk_unregister_queue() to match the teardown; it's only
-> > accident it isn't.  del_gendisk() in sd_remove() is supposed to tear a
-> > lot of queue stuff down.
+On Tue, Sep 09, 2014 at 10:10:59AM +0900, Tejun Heo wrote:
+> I'm not too convinced this is such a difficult problem to figure out.
+> We already have most of logic in place and the only thing missing is
+> how to switch it.  Wouldn't something like the following work?
 > 
-> It's not clear what the operative assumptions are.  The comment in
-> blk_register_queue() implies that bypass is active only because it was
-> set up that way when the queue was created.  The fact that
-> blk_unregister_queue() doesn't call blk_queue_bypass_start() seems to
-> support this view -- although it could also be a simple oversight.
-> 
-> Hopefully Tejun can clear this iup.
+> * Add a sysctl knob to enable asynchronous device probing on module
+>   load and enable asynchronous probing globally if the knob is set.
 
-Maintaining the initial bypass till queue registration is an
-optimization because shutting down a fully functional queue is a
-costly operation and there are drivers which set and destroy queues
-repeatedly while probing, so, yeah, it's really a special case for
-when the queue is being registered for the first time.
-
-> > Your hack seems to indicate that this doesn't work on the add->del->add
-> > transtion of a gendisk.
-> 
-> Indeed, it does not work.
-
-As such, the change you suggested makes perfect sense to me.  Why
-wouldn't it work?
+Alternatively, add a module-generic param "async_probe" or whatever
+and use that to switch the behavior should work too.  I don't know
+which way is better but either should work fine.
 
 Thanks.
 
