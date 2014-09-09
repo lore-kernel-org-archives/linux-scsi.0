@@ -1,37 +1,43 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH] drivers: target: target_core_transport.c: build warning
-Date: Tue,  9 Sep 2014 12:53:50 +0530
-Message-ID: <1410247430-11293-1-git-send-email-sudipm.mukherjee@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [REGRESSION 3.17] scsi (uas) disks no longer using tagged command
+ queuing
+Date: Tue, 09 Sep 2014 11:15:24 +0200
+Message-ID: <540EC52C.3000804@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2668 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745AbaIIJP1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2014 05:15:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-build is giving : 
-warning: passing argument 1 of 'strlen' makes pointer from integer 
-without a cast [enabled by default]
+Hi All,
 
-the snprintf after the strlen is trying to put the "Unsupported" string
-at the end of exising string. so len should give the string length here
+While working on making error handling in the uas driver more robust,
+I noticed that all the commands being send to a sata ssd hooked up
+over uas were untagged, where I would expect tcq to be used, as that
+is the big advantage of uas over usb-storage / bot.
 
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
----
- drivers/target/target_core_transport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Taking the uas.c file from 3.17, and building it for 3.16 restores
+the use of tcq (debugged by adding a printk blk_rq_tagged + request->tag).
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 1dd1181..3ce85ed 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -953,7 +953,7 @@ int transport_dump_vpd_ident_type(
- 		strlcat(buf, "SCSI name string\n", sizeof(buf));
- 		break;
- 	default:
--		len = strlen(len);
-+		len = strlen(buf);
- 		snprintf(&buf[len], sizeof(buf) - len, "Unsupported: 0x%02x\n",
- 				vpd->device_identifier_type);
- 		ret = -EINVAL;
--- 
-1.8.1.2
+So either uas is doing something wrong which happened to work in
+3.16, or something has broken in 3.17.
+
+I've already added debug printk-s of scsi_device->tagged_supported,
+queue_depth, ordered_tags and simple_tags and those all look good
+(1, 29, 1, 1).
+
+I've also tried setting disable_blk_mq and that does not help.
+
+Any hints to help debugging this further (other then a bisect) are
+appreciated. If no-one has any smart ideas I guess I'll end up doing
+a full bisect.
+
+Regards,
+
+Hans
