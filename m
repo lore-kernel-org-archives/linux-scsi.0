@@ -1,119 +1,40 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 03/11] megaraid_sas : Update threshold based reply post
- host index register
-Date: Tue, 09 Sep 2014 16:08:58 +0200
-Message-ID: <540F09FA.1080708@redhat.com>
-References: <201409061328.s86DS5EM012885@palmhbs0.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58080 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361AbaIIOJd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Sep 2014 10:09:33 -0400
-In-Reply-To: <201409061328.s86DS5EM012885@palmhbs0.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH fixes for 3.17 0/2] uas: Disable uas on ASM1051 devices
+Date: Tue,  9 Sep 2014 16:59:58 +0200
+Message-ID: <1410274800-11578-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
-On 09/06/2014 03:25 PM, Sumit.Saxena@avagotech.com wrote:
-> Current driver updates reply post host index to let firmware know that replies are processed,
-> while returning from ISR function, only if there is no oustanding replies in reply queue.
->
-> Driver will free the request frame immediately from ISR but reply post host index is not yet updated.
-> It means freed request can be used by submission path and there may be a tight loop in request/reply
-> path. In such condition, firmware may crash when it tries to post reply and there is no free 
-> reply post descriptor.
->
-> Eventually two things needs to be change to avoid this issue.
->
-> Increase reply queue depth (double than request queue) to accommodate worst case scenario.
-> Update reply post host index to firmware once it reach to some pre-defined threshold value.
->
-> This change will make sure that firmware will always have some buffer of reply descriptor and 
-> will never find empty reply descriptor in completion path.
->
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 23 ++++++++++++++++++++++-
->  drivers/scsi/megaraid/megaraid_sas_fusion.h |  1 +
->  2 files changed, 23 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index c69c1ac..f30297d 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -971,7 +971,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
->  
->  	max_cmd = instance->max_fw_cmds;
->  
-> -	fusion->reply_q_depth = ((max_cmd + 1 + 15)/16)*16;
-> +	fusion->reply_q_depth = (((max_cmd * 2) + 1 + 15)/16)*16;
+Hi Greg,
 
-This computation gives for certain values the same result as before,
-for some the result is 1.5*higher and for others 2*higher. Is this intended?
-(I'm not asking what all the magic numbers mean..)
-what about a simple
-fusion->reply_q_depth = 2*(((max_cmd + 1 + 15)/16)*16);
+I've received a number of bug-reports from users related to uas on ASM1051
+chipset using devices. After some searching around I've managed to get myself
+an ASM1051 device.
 
->  
->  	fusion->request_alloc_sz =
->  		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *max_cmd;
-> @@ -1876,6 +1876,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
->  	u32 status, extStatus, device_id;
->  	union desc_value d_val;
->  	struct LD_LOAD_BALANCE_INFO *lbinfo;
-> +	int threshold_reply_count = 0;
->  
->  	fusion = instance->ctrl_context;
->  
-> @@ -1963,6 +1964,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
->  
->  		desc->Words = ULLONG_MAX;
->  		num_completed++;
-> +		threshold_reply_count++;
->  
->  		/* Get the next reply descriptor */
->  		if (!fusion->last_reply_idx[MSIxIndex])
-> @@ -1982,6 +1984,25 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
->  
->  		if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
->  			break;
-> +		/*
-> +		 * Write to reply post host index register after completing threshold
-> +		 * number of reply counts and still there are more replies in reply queue
-> +		 * pending to be completed
-> +		 */
-> +		if (threshold_reply_count >= THRESHOLD_REPLY_COUNT) {
-> +			if ((instance->pdev->device ==
-> +				PCI_DEVICE_ID_LSI_INVADER) ||
-> +				(instance->pdev->device ==
-> +				PCI_DEVICE_ID_LSI_FURY))
-> +				writel(((MSIxIndex & 0x7) << 24) |
-> +					fusion->last_reply_idx[MSIxIndex],
-> +					instance->reply_post_host_index_addr[MSIxIndex/8]);
-> +			else
-> +				writel((MSIxIndex << 24) |
-> +					fusion->last_reply_idx[MSIxIndex],
-> +					instance->reply_post_host_index_addr[0]);
-> +			threshold_reply_count = 0;
-> +		}
->  	}
->  
->  	if (!num_completed)
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> index e76af54..d660c4d 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> @@ -86,6 +86,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
->  
->  #define MEGASAS_FP_CMD_LEN	16
->  #define MEGASAS_FUSION_IN_RESET 0
-> +#define THRESHOLD_REPLY_COUNT 50
->  
->  /*
->   * Raid Context structure which describes MegaRAID specific IO Parameters
+As a result I've spend the last 4 days trying to get the ASM1051 chipset to
+work. After some initial success which makes it work with most disks I've
+laying around (patch 1), I hit problems with one disk where it just would
+not work.
 
+To makes matters worse the ASM1051 chipset shares its usb-id with older
+versions of the ASM1053, which works fine with all disks.
+
+So I've come up with a patch which disables uas on all ASM1051 devices and on
+some ASM1053 devices. Both the need to blacklist and the actual blacklisting
+code are less then satisfactory, esp. after 4 days of work. But this is the
+best I can come up with :|
+
+It seems that older uas-bridge chips and xhci controllers streams support are
+suffering from quite a few hw bugs, and that blacklisting is the best we can
+do.
+
+Regards,
+
+Hans
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
