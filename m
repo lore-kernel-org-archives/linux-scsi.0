@@ -1,37 +1,57 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 1/2] uas: Set no_report_opcodes
-Date: Tue,  9 Sep 2014 16:59:59 +0200
-Message-ID: <1410274800-11578-2-git-send-email-hdegoede@redhat.com>
-References: <1410274800-11578-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1410274800-11578-1-git-send-email-hdegoede@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: WARNING in block layer triggered in 3.17-rc3
+Date: Tue, 9 Sep 2014 11:08:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1409091026470.1677-100000@iolanthe.rowland.org>
+References: <20140909011945.GD11706@mtj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37195 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751493AbaIIPIX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2014 11:08:23 -0400
+In-Reply-To: <20140909011945.GD11706@mtj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Shirish Pargaonkar <shirishpargaonkar@gmail.com>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-asm1051e usb <-> sata bridges hang when receiving a report opcodes scsi cmnd.
-Take a page out of the usb-storage book, and simple disable no_report_opcodes
-outright.
+On Tue, 9 Sep 2014, Tejun Heo wrote:
 
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/uas.c | 2 ++
- 1 file changed, 2 insertions(+)
+> Hello,
+> 
+> On Mon, Sep 08, 2014 at 01:42:44PM -0400, Alan Stern wrote:
+> > > This looks like a nasty hack.  In theory the QUEUE_FLAG_INIT_DONE should
+> > > be unset on blk_unregister_queue() to match the teardown; it's only
+> > > accident it isn't.  del_gendisk() in sd_remove() is supposed to tear a
+> > > lot of queue stuff down.
+> > 
+> > It's not clear what the operative assumptions are.  The comment in
+> > blk_register_queue() implies that bypass is active only because it was
+> > set up that way when the queue was created.  The fact that
+> > blk_unregister_queue() doesn't call blk_queue_bypass_start() seems to
+> > support this view -- although it could also be a simple oversight.
+> > 
+> > Hopefully Tejun can clear this iup.
+> 
+> Maintaining the initial bypass till queue registration is an
+> optimization because shutting down a fully functional queue is a
+> costly operation and there are drivers which set and destroy queues
+> repeatedly while probing, so, yeah, it's really a special case for
+> when the queue is being registered for the first time.
+> 
+> > > Your hack seems to indicate that this doesn't work on the add->del->add
+> > > transtion of a gendisk.
+> > 
+> > Indeed, it does not work.
+> 
+> As such, the change you suggested makes perfect sense to me.  Why
+> wouldn't it work?
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 3f42785..4e2f576 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -944,6 +944,8 @@ static int uas_slave_alloc(struct scsi_device *sdev)
- 	 */
- 	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
- 
-+	sdev->no_report_opcodes = 1;
-+
- 	return 0;
- }
- 
--- 
-2.1.0
+Sorry, the meaning wasn't clear.  I meant that the existing code 
+doesn't work.  The patch seems to work okay (except that I can't use 
+queue_flag_test_and_set because the queue isn't locked at that point).  
+I'll submit the patch shortly.
+
+Alan Stern
+
