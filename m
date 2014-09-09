@@ -1,30 +1,38 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] uas: Set no_report_opcodes
-Date: Tue, 9 Sep 2014 09:01:50 -0700
-Message-ID: <20140909160150.GA15724@infradead.org>
-References: <1410274800-11578-1-git-send-email-hdegoede@redhat.com>
- <1410274800-11578-2-git-send-email-hdegoede@redhat.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 04/11] megaraid_sas : Firmware crash dump feature support
+Date: Tue, 9 Sep 2014 16:18:35 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C6C617@G9W0745.americas.hpqcorp.net>
+References: <201409061328.s86DS6lO012975@palmhbs0.lsi.com>
+ <540F22A2.3040906@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1410274800-11578-2-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:16950 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111AbaIIQUA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2014 12:20:00 -0400
+In-Reply-To: <540F22A2.3040906@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, "Sumit.Saxena@avagotech.com" <Sumit.Saxena@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "kashyap.desai@avagotech.com" <kashyap.desai@avagotech.com>, "aradford@gmail.com" <aradford@gmail.com>
 
-On Tue, Sep 09, 2014 at 04:59:59PM +0200, Hans de Goede wrote:
-> asm1051e usb <-> sata bridges hang when receiving a report opcodes scsi cmnd.
-> Take a page out of the usb-storage book, and simple disable no_report_opcodes
-> outright.
-
-Given that this device also seems broken in other ways can we wait a bit
-before using the big hammer?  I'm still hoping UAS might give us some
-better SCSI implementation so that we don't have to disable any kind of
-advanced feature.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBUb21hcyBIZW56bA0KPiBTZW50OiBUdWVzZGF5LCAwOSBTZXB0
+ZW1iZXIsIDIwMTQgMTA6NTQgQU0NCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwNC8xMV0gbWVnYXJh
+aWRfc2FzIDogRmlybXdhcmUgY3Jhc2ggZHVtcCBmZWF0dXJlDQo+IHN1cHBvcnQNCj4gDQo+IE9u
+IDA5LzA2LzIwMTQgMDM6MjUgUE0sIFN1bWl0LlNheGVuYUBhdmFnb3RlY2guY29tIHdyb3RlOg0K
+PiA+IFRoaXMgZmVhdHVyZSB3aWxsIHByb3ZpZGUgc2ltaWxhciBpbnRlcmZhY2UgYXMga2VybmVs
+IGNyYXNoIGR1bXANCj4gZmVhdHVyZS4NCj4gPiBXaGVuIG1lZ2FyYWlkIGZpcm13YXJlIGVuY291
+bnRlciBhbnkgY3Jhc2gsIGRyaXZlciB3aWxsIGNvbGxlY3QgdGhlDQo+IGZpcm13YXJlIHJhdyBp
+bWFnZSBhbmQNCj4gPiBkdW1wIGl0IGludG8gcHJlLWNvbmZpZ3VyZWQgbG9jYXRpb24uDQo+ID4N
+Ci4uLg0KPiBXaXRoIHNldmVyYWwgY29udHJvbGxlcnMgaW4gYSBzeXN0ZW0gdGhpcyBtYXkgdGFr
+ZSBhIGxvdCBtZW1vcnksDQo+IGNvdWxkIHlvdSBhbHNvDQo+IGluIGNhc2Ugd2hlbiBhIGtkdW1w
+IGtlcm5lbCBpcyBydW5uaW5nIGxvd2VyIGl0LCBieSBub3QgdXNpbmcgdGhpcw0KPiBmZWF0dXJl
+Pw0KDQpXaGF0IGlzIHRoZSBjb3JyZWN0IHdheSBmb3IgYSBkcml2ZXIgdG8gZGV0ZXJtaW5lIHRo
+YXQgaXQgaXMNCnJ1bm5pbmcgaW4gYSBrZHVtcCBrZXJuZWw/ICBUaGUgcmVzZXRfZGV2aWNlcyBn
+bG9iYWwgdmFyaWFibGU/DQoNCg0KLS0tDQpSb2IgRWxsaW90dCAgICBIUCBTZXJ2ZXIgU3RvcmFn
+ZQ0KDQoNCg0K
