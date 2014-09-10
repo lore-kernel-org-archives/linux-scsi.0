@@ -1,86 +1,87 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 01/21] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
-Date: Wed, 10 Sep 2014 13:48:51 +0200
-Message-ID: <54103AA3.7000801@redhat.com>
-References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com> <1410349611-17573-2-git-send-email-hdegoede@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH V3 00/16] UFS: Power management support
+Date: Wed, 10 Sep 2014 14:54:07 +0300
+Message-ID: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28564 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752436AbaIJLs4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:48:56 -0400
-In-Reply-To: <1410349611-17573-2-git-send-email-hdegoede@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:43840 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbaIJLyg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2014 07:54:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 
-Hi,
+This patch seies introduces support for power management in the driver as well as vendor specific initialization - registers, clocks, voltage regulators etc.
 
-Note this series is NOT intended for stable, but I accidentally
-had "cc = stable@vger.kernel.org" in my .git/config when sending
-this series, please ignore for stable.
+It includes also a rework for the init sequence and other PM pre-requisite such as write protection support, handling well-known LUN, error handling (retries), bkops, START_STOP unit command, and ICC levels settings.
 
-NACK for stable.
+--
+Changes from V2:
+ - Reordered scsi core patches
+ - add patch "[PATCH V3 02/16] scsi: balance out autopm get/put calls in"
+ - Minor changes/fixes to the patches:
+    * "[PATCH V3 10/16] scsi: ufs: add UFS power management support"
+    * "[PATCH V3 12/16] scsi: ufs: Add support for clock gating"
+    * "[PATCH V3 16/16] scsi: ufs: definitions for phy interface"
+   In order to address community concerns, and as a result of further
+   development and testing.
 
-Sorry & Regards,
+Changes from V1:
+ - 6 new patches apended at the end
+ - Allow overriding power configuration with controller support and
+   preferences/capabilities <Dolev Raviv>
+ - Allow overriding power choice with controller capabilities <Dolev Raviv>
+ - Add support for clock gating and clock scaling <Sahitya Tummala>
+ - Add capability to control the auto bkops during suspend <Subhash Jadavani>
+ - Add misc changes for phy/unipro driver usage <Dolev Raviv>
 
-Hans
+Dolev Raviv (2):
+  scsi: ufs: refactor configuring power mode
+  scsi: ufs: definitions for phy interface
 
+Sahitya Tummala (3):
+  scsi: ufs: Add support for clock gating
+  scsi: ufs: Add freq-table-hz property for UFS device
+  scsi: ufs: Add support for clock scaling using devfreq framework
 
-On 09/10/2014 01:46 PM, Hans de Goede wrote:
-> From: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-> 
-> On some architecture spin_is_locked() always return false in
-> uniprocessor configuration and therefore it would be advise to replace
-> with lockdep_assert_held().
-> 
-> Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->  drivers/usb/storage/uas.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 3f42785..05b2d8e 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -154,7 +154,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
->  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
->  
->  	uas_log_cmd_state(cmnd, caller);
-> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-> +	lockdep_assert_held(&devinfo->lock);
->  	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
->  	cmdinfo->state |= COMMAND_ABORTED;
->  	cmdinfo->state &= ~IS_IN_WORK_LIST;
-> @@ -181,7 +181,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
->  	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
->  	struct uas_dev_info *devinfo = cmnd->device->hostdata;
->  
-> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-> +	lockdep_assert_held(&devinfo->lock);
->  	cmdinfo->state |= IS_IN_WORK_LIST;
->  	schedule_work(&devinfo->work);
->  }
-> @@ -283,7 +283,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
->  	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
->  	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
->  
-> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-> +	lockdep_assert_held(&devinfo->lock);
->  	if (cmdinfo->state & (COMMAND_INFLIGHT |
->  			      DATA_IN_URB_INFLIGHT |
->  			      DATA_OUT_URB_INFLIGHT |
-> @@ -622,7 +622,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
->  	struct urb *urb;
->  	int err;
->  
-> -	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-> +	lockdep_assert_held(&devinfo->lock);
->  	if (cmdinfo->state & SUBMIT_STATUS_URB) {
->  		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
->  		if (!urb)
-> 
+Subhash Jadavani (6):
+  scsi: support well known logical units
+  scsi: balance out autopm get/put calls in scsi_sysfs_add_sdev()
+  scsi: ufs: refactor query descriptor API support
+  scsi: ufs: introduce well known logical unit in ufs
+  scsi: ufs: add UFS power management support
+  scsi: ufs: tune bkops while power managment events
+
+Sujit Reddy Thumma (4):
+  scsi: ufs: Allow vendor specific initialization
+  scsi: ufs: Add regulator enable support
+  scsi: ufs: Add clock initialization support
+  scsi: ufs: improve init sequence
+
+Yaniv Gardi (1):
+  scsi: ufs: Active Power Mode - configuring bActiveICCLevel
+
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   37 +
+ drivers/scsi/scsi_scan.c                           |   14 +
+ drivers/scsi/scsi_sysfs.c                          |    5 +-
+ drivers/scsi/sd.c                                  |    2 +
+ drivers/scsi/sr.c                                  |    2 +
+ drivers/scsi/st.c                                  |    2 +
+ drivers/scsi/ufs/Kconfig                           |    2 +
+ drivers/scsi/ufs/ufs.h                             |  131 +-
+ drivers/scsi/ufs/ufshcd-pci.c                      |   55 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  282 ++-
+ drivers/scsi/ufs/ufshcd.c                          | 2408 ++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h                          |  277 ++-
+ drivers/scsi/ufs/ufshci.h                          |    9 +-
+ drivers/scsi/ufs/unipro.h                          |   56 +
+ include/scsi/scsi.h                                |    1 +
+ 15 files changed, 2962 insertions(+), 321 deletions(-)
+
+-- 
+1.8.5.2
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
