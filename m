@@ -1,286 +1,266 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V3 06/16] scsi: ufs: refactor query descriptor API support
-Date: Wed, 10 Sep 2014 14:54:13 +0300
-Message-ID: <1410350063-23267-7-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH V3 08/16] scsi: ufs: Active Power Mode - configuring bActiveICCLevel
+Date: Wed, 10 Sep 2014 14:54:15 +0300
+Message-ID: <1410350063-23267-9-git-send-email-draviv@codeaurora.org>
 References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:43913 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:43946 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbaIJLyu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2014 07:54:50 -0400
+	with ESMTP id S1751479AbaIJLy4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2014 07:54:56 -0400
 In-Reply-To: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Yaniv Gardi <ygardi@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+From: Yaniv Gardi <ygardi@codeaurora.org>
 
-Currently reading query descriptor is more tightened to each
-descriptor type. This patch generalize the approach and allows
-reading any parameter from any query descriptor.
+The maximum power consumption in active is determined by bActiveICCLevel.
+The configuration is done by reading max current supported by the
+regulators connected to VCC, VCCQ and VCCQ2 rails on the boards, and
+reading the current consumption levels from the device for each rails
+(vcc/vccq/vccq2) using power descriptor.
+We configure the bActiveICCLevel attribute, with the max value that
+correspond to the minimum-of(VCC-current-level,VCCQ-current-level,
+VCCQ2-current-level).
+In order to minimize resume latency, pre-fetch icc levels and reference
+clock during initialization and avoid reading them each link startup
+during resume.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 729ce7d..7ea8e71 100644
+index 7ea8e71..b0e1f62 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -50,6 +50,8 @@
- 			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
- 			 (byte1 << 8) | (byte0))
+@@ -115,6 +115,7 @@ enum flag_idn {
  
-+#define UFS_UPIU_MAX_GENERAL_LUN	8
-+
- /*
-  * UFS Protocol Information Unit related definitions
-  */
-@@ -129,10 +131,29 @@ enum desc_idn {
- 	QUERY_DESC_IDN_RFU_1		= 0x6,
- 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
- 	QUERY_DESC_IDN_POWER		= 0x8,
--	QUERY_DESC_IDN_RFU_2		= 0x9,
-+	QUERY_DESC_IDN_MAX,
-+};
-+
-+enum desc_header_offset {
-+	QUERY_DESC_LENGTH_OFFSET	= 0x00,
-+	QUERY_DESC_DESC_TYPE_OFFSET	= 0x01,
-+};
-+
-+enum ufs_desc_max_size {
-+	QUERY_DESC_DEVICE_MAX_SIZE		= 0x1F,
-+	QUERY_DESC_CONFIGURAION_MAX_SIZE	= 0x90,
-+	QUERY_DESC_UNIT_MAX_SIZE		= 0x23,
-+	QUERY_DESC_INTERCONNECT_MAX_SIZE	= 0x06,
-+	/*
-+	 * Max. 126 UNICODE characters (2 bytes per character) plus 2 bytes
-+	 * of descriptor header.
-+	 */
-+	QUERY_DESC_STRING_MAX_SIZE		= 0xFE,
-+	QUERY_DESC_GEOMETRY_MAZ_SIZE		= 0x44,
-+	QUERY_DESC_POWER_MAX_SIZE		= 0x62,
-+	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
+ /* Attribute idn for Query requests */
+ enum attr_idn {
++	QUERY_ATTR_IDN_ACTIVE_ICC_LVL	= 0x03,
+ 	QUERY_ATTR_IDN_BKOPS_STATUS	= 0x05,
+ 	QUERY_ATTR_IDN_EE_CONTROL	= 0x0D,
+ 	QUERY_ATTR_IDN_EE_STATUS	= 0x0E,
+@@ -174,6 +175,31 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
  };
  
--#define UNIT_DESC_MAX_SIZE       0x22
- /* Unit descriptor parameters offsets in bytes*/
- enum unit_desc_param {
- 	UNIT_DESC_PARAM_LEN			= 0x0,
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b033702..57a8dbb 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -78,6 +78,19 @@
- 		_ret;                                                   \
- 	})
- 
-+static u32 ufs_query_desc_max_size[] = {
-+	QUERY_DESC_DEVICE_MAX_SIZE,
-+	QUERY_DESC_CONFIGURAION_MAX_SIZE,
-+	QUERY_DESC_UNIT_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
-+	QUERY_DESC_INTERCONNECT_MAX_SIZE,
-+	QUERY_DESC_STRING_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
-+	QUERY_DESC_GEOMETRY_MAZ_SIZE,
-+	QUERY_DESC_POWER_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
++/* bActiveICCLevel parameter current units */
++enum {
++	UFSHCD_NANO_AMP		= 0,
++	UFSHCD_MICRO_AMP	= 1,
++	UFSHCD_MILI_AMP		= 2,
++	UFSHCD_AMP		= 3,
 +};
 +
++#define POWER_DESC_MAX_SIZE			0x62
++#define POWER_DESC_MAX_ACTV_ICC_LVLS		16
++
++/* Attribute  bActiveICCLevel parameter bit masks definitions */
++#define ATTR_ICC_LVL_UNIT_OFFSET	14
++#define ATTR_ICC_LVL_UNIT_MASK		(0x3 << ATTR_ICC_LVL_UNIT_OFFSET)
++#define ATTR_ICC_LVL_VALUE_MASK		0x3FF
++
++/* Power descriptor parameters offsets in bytes */
++enum power_desc_param_offset {
++	PWR_DESC_LEN			= 0x0,
++	PWR_DESC_TYPE			= 0x1,
++	PWR_DESC_ACTIVE_LVLS_VCC_0	= 0x2,
++	PWR_DESC_ACTIVE_LVLS_VCCQ_0	= 0x22,
++	PWR_DESC_ACTIVE_LVLS_VCCQ2_0	= 0x42,
++};
++
+ /* Exception event mask values */
  enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -124,8 +137,6 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
--static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
--					struct scsi_device *sdev);
- 
- /*
-  * ufshcd_wait_for_register - wait for register value to change
-@@ -1393,6 +1404,115 @@ out:
+ 	MASK_EE_STATUS		= 0xFFFF,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1fabff4..a851323 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3265,6 +3265,125 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
  }
  
  /**
-+ * ufshcd_read_desc_param - read the specified descriptor parameter
-+ * @hba: Pointer to adapter instance
-+ * @desc_id: descriptor idn value
-+ * @desc_index: descriptor index
-+ * @param_offset: offset of the parameter to read
-+ * @param_read_buf: pointer to buffer where parameter would be read
-+ * @param_size: sizeof(param_read_buf)
++ * ufshcd_get_max_icc_level - calculate the ICC level
++ * @sup_curr_uA: max. current supported by the regulator
++ * @start_scan: row at the desc table to start scan from
++ * @buff: power descriptor buffer
 + *
-+ * Return 0 in case of success, non-zero otherwise
++ * Returns calculated max ICC level for specific regulator
 + */
-+static int ufshcd_read_desc_param(struct ufs_hba *hba,
-+				  enum desc_idn desc_id,
-+				  int desc_index,
-+				  u32 param_offset,
-+				  u8 *param_read_buf,
-+				  u32 param_size)
++static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
 +{
-+	int ret;
-+	u8 *desc_buf;
-+	u32 buff_len;
-+	bool is_kmalloc = true;
++	int i;
++	int curr_uA;
++	u16 data;
++	u16 unit;
 +
-+	/* safety checks */
-+	if (desc_id >= QUERY_DESC_IDN_MAX)
-+		return -EINVAL;
-+
-+	buff_len = ufs_query_desc_max_size[desc_id];
-+	if ((param_offset + param_size) > buff_len)
-+		return -EINVAL;
-+
-+	if (!param_offset && (param_size == buff_len)) {
-+		/* memory space already available to hold full descriptor */
-+		desc_buf = param_read_buf;
-+		is_kmalloc = false;
-+	} else {
-+		/* allocate memory to hold full descriptor */
-+		desc_buf = kmalloc(buff_len, GFP_KERNEL);
-+		if (!desc_buf)
-+			return -ENOMEM;
++	for (i = start_scan; i >= 0; i--) {
++		data = be16_to_cpu(*((u16 *)(buff + 2*i)));
++		unit = (data & ATTR_ICC_LVL_UNIT_MASK) >>
++						ATTR_ICC_LVL_UNIT_OFFSET;
++		curr_uA = data & ATTR_ICC_LVL_VALUE_MASK;
++		switch (unit) {
++		case UFSHCD_NANO_AMP:
++			curr_uA = curr_uA / 1000;
++			break;
++		case UFSHCD_MILI_AMP:
++			curr_uA = curr_uA * 1000;
++			break;
++		case UFSHCD_AMP:
++			curr_uA = curr_uA * 1000 * 1000;
++			break;
++		case UFSHCD_MICRO_AMP:
++		default:
++			break;
++		}
++		if (sup_curr_uA >= curr_uA)
++			break;
++	}
++	if (i < 0) {
++		i = 0;
++		pr_err("%s: Couldn't find valid icc_level = %d", __func__, i);
 +	}
 +
-+	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+				      desc_id, desc_index, 0, desc_buf,
-+				      &buff_len);
++	return (u32)i;
++}
 +
-+	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
-+	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
-+	     ufs_query_desc_max_size[desc_id])
-+	    || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
-+		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d param_offset %d buff_len %d ret %d",
-+			__func__, desc_id, param_offset, buff_len, ret);
-+		if (!ret)
-+			ret = -EINVAL;
++/**
++ * ufshcd_calc_icc_level - calculate the max ICC level
++ * In case regulators are not initialized we'll return 0
++ * @hba: per-adapter instance
++ * @desc_buf: power descriptor buffer to extract ICC levels from.
++ * @len: length of desc_buff
++ *
++ * Returns calculated ICC level
++ */
++static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
++							u8 *desc_buf, int len)
++{
++	u32 icc_level = 0;
 +
++	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
++						!hba->vreg_info.vccq2) {
++		dev_err(hba->dev,
++			"%s: Regulator capability was not set, actvIccLevel=%d",
++							__func__, icc_level);
 +		goto out;
 +	}
 +
-+	if (is_kmalloc)
-+		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
++	if (hba->vreg_info.vcc)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vcc->max_uA,
++				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
++
++	if (hba->vreg_info.vccq)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vccq->max_uA,
++				icc_level,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
++
++	if (hba->vreg_info.vccq2)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vccq2->max_uA,
++				icc_level,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ2_0]);
 +out:
-+	if (is_kmalloc)
-+		kfree(desc_buf);
-+	return ret;
++	return icc_level;
 +}
 +
-+static inline int ufshcd_read_desc(struct ufs_hba *hba,
-+				   enum desc_idn desc_id,
-+				   int desc_index,
-+				   u8 *buf,
-+				   u32 size)
++static void ufshcd_init_icc_levels(struct ufs_hba *hba)
 +{
-+	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
-+}
-+
-+static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
-+					 u8 *buf,
-+					 u32 size)
-+{
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
-+}
-+
-+/**
-+ * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
-+ * @hba: Pointer to adapter instance
-+ * @lun: lun id
-+ * @param_offset: offset of the parameter to read
-+ * @param_read_buf: pointer to buffer where parameter would be read
-+ * @param_size: sizeof(param_read_buf)
-+ *
-+ * Return 0 in case of success, non-zero otherwise
-+ */
-+static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
-+					      int lun,
-+					      enum unit_desc_param param_offset,
-+					      u8 *param_read_buf,
-+					      u32 param_size)
-+{
-+	/*
-+	 * Unit descriptors are only available for general purpose LUs (LUN id
-+	 * from 0 to 7) and RPMB Well known LU.
-+	 */
-+	if (lun >= UFS_UPIU_MAX_GENERAL_LUN)
-+		return -EOPNOTSUPP;
-+
-+	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
-+				      param_offset, param_read_buf, param_size);
-+}
-+
-+/**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
-  * @hba: per adapter instance
-  *
-@@ -2011,7 +2131,8 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- static int ufshcd_slave_alloc(struct scsi_device *sdev)
- {
- 	struct ufs_hba *hba;
--	int lun_qdepth;
-+	u8 lun_qdepth;
 +	int ret;
++	int buff_len = QUERY_DESC_POWER_MAX_SIZE;
++	u8 desc_buf[QUERY_DESC_POWER_MAX_SIZE];
++
++	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
++	if (ret) {
++		dev_err(hba->dev,
++			"%s: Failed reading power descriptor.len = %d ret = %d",
++			__func__, buff_len, ret);
++		return;
++	}
++
++	hba->init_prefetch_data.icc_level =
++			ufshcd_find_max_sup_active_icc_level(hba,
++			desc_buf, buff_len);
++	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
++			__func__, hba->init_prefetch_data.icc_level);
++
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
++			&hba->init_prefetch_data.icc_level);
++
++	if (ret)
++		dev_err(hba->dev,
++			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
++			__func__, hba->init_prefetch_data.icc_level , ret);
++
++}
++
++/**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+  *
+@@ -3293,9 +3412,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
  
- 	hba = shost_priv(sdev->host);
- 	sdev->tagged_supported = 1;
-@@ -2026,8 +2147,12 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 	/* REPORT SUPPORTED OPERATION CODES is not supported */
- 	sdev->no_report_opcodes = 1;
- 
--	lun_qdepth = ufshcd_read_sdev_qdepth(hba, sdev);
--	if (lun_qdepth <= 0)
-+	ret = ufshcd_read_unit_desc_param(hba,
-+					  sdev->lun,
-+					  UNIT_DESC_PARAM_LU_Q_DEPTH,
-+					  &lun_qdepth,
-+					  sizeof(lun_qdepth));
-+	if (!ret || !lun_qdepth)
- 		/* eventually, we can figure out the real queue depth */
- 		lun_qdepth = hba->nutrs;
- 	else
-@@ -3118,38 +3243,6 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
- }
+ 	/* If we are in error handling context no need to scan the host */
+ 	if (!ufshcd_eh_in_progress(hba)) {
++		if (!hba->is_init_prefetch)
++			ufshcd_init_icc_levels(hba);
++
+ 		scsi_scan_host(hba->host);
+ 		pm_runtime_put_sync(hba->dev);
+ 	}
++
++	if (!hba->is_init_prefetch)
++		hba->is_init_prefetch = true;
++
+ out:
+ 	/*
+ 	 * If we failed to initialize the device or the device is not
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index eddb3f3..8365ad4 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -196,6 +196,15 @@ struct ufs_hba_variant_ops {
+ };
  
  /**
-- * ufshcd_read_sdev_qdepth - read the lun command queue depth
-- * @hba: Pointer to adapter instance
-- * @sdev: pointer to SCSI device
-- *
-- * Return in case of success the lun's queue depth else error.
-- */
--static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
--				struct scsi_device *sdev)
--{
--	int ret;
--	int buff_len = UNIT_DESC_MAX_SIZE;
--	u8 desc_buf[UNIT_DESC_MAX_SIZE];
--
--	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
--			QUERY_DESC_IDN_UNIT, sdev->lun, 0, desc_buf, &buff_len);
--
--	if (ret || (buff_len < UNIT_DESC_PARAM_LU_Q_DEPTH)) {
--		dev_err(hba->dev,
--			"%s:Failed reading unit descriptor. len = %d ret = %d"
--			, __func__, buff_len, ret);
--		if (!ret)
--			ret = -EINVAL;
--
--		goto out;
--	}
--
--	ret = desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH] & 0xFF;
--out:
--	return ret;
--}
--
--/**
-  * ufshcd_async_scan - asynchronous execution for link startup
-  * @data: data pointer to pass to this function
-  * @cookie: cookie data
++ * struct ufs_init_prefetch - contains data that is pre-fetched once during
++ * initialization
++ * @icc_level: icc level which was read during initialization
++ */
++struct ufs_init_prefetch {
++	u32 icc_level;
++};
++
++/**
+  * struct ufs_hba - per adapter private structure
+  * @mmio_base: UFSHCI base register address
+  * @ucdl_base_addr: UFS Command Descriptor base address
+@@ -229,6 +238,8 @@ struct ufs_hba_variant_ops {
+  * @intr_mask: Interrupt Mask Bits
+  * @ee_ctrl_mask: Exception event control mask
+  * @is_powered: flag to check if HBA is powered
++ * @is_init_prefetch: flag to check if data was pre-fetched in initialization
++ * @init_prefetch_data: data pre-fetched during initialization
+  * @eh_work: Worker to handle UFS errors that require s/w attention
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
+@@ -285,6 +296,8 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
++	bool is_init_prefetch;
++	struct ufs_init_prefetch init_prefetch_data;
+ 
+ 	/* Work Queues */
+ 	struct work_struct eh_work;
 -- 
 1.8.5.2
 -- 
