@@ -1,54 +1,59 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [REGRESSION 3.17] scsi (uas) disks no longer using tagged command
- queuing
-Date: Wed, 10 Sep 2014 09:21:24 +0200
-Message-ID: <540FFBF4.9090001@redhat.com>
-References: <540EC52C.3000804@redhat.com> <20140909152730.GA17882@infradead.org>
+Subject: Re: [PATCH 1/2] uas: Set no_report_opcodes
+Date: Wed, 10 Sep 2014 10:17:04 +0200
+Message-ID: <54100900.2050109@redhat.com>
+References: <1410274800-11578-1-git-send-email-hdegoede@redhat.com> <1410274800-11578-2-git-send-email-hdegoede@redhat.com> <20140909160150.GA15724@infradead.org> <540F5333.80201@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140909152730.GA17882@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <540F5333.80201@redhat.com>
+Sender: stable-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Hi,
 
-On 09/09/2014 05:27 PM, Christoph Hellwig wrote:
-> On Tue, Sep 09, 2014 at 11:15:24AM +0200, Hans de Goede wrote:
->> Taking the uas.c file from 3.17, and building it for 3.16 restores
->> the use of tcq (debugged by adding a printk blk_rq_tagged + request->tag).
->>
->> So either uas is doing something wrong which happened to work in
->> 3.16, or something has broken in 3.17.
->>
->> I've already added debug printk-s of scsi_device->tagged_supported,
->> queue_depth, ordered_tags and simple_tags and those all look good
->> (1, 29, 1, 1).
->>
->> I've also tried setting disable_blk_mq and that does not help.
->>
->> Any hints to help debugging this further (other then a bisect) are
->> appreciated. If no-one has any smart ideas I guess I'll end up doing
->> a full bisect.
+On 09/09/2014 09:21 PM, Hans de Goede wrote:
+> Hi,
 > 
-> scsi-mq isn't enabled by default, so setting disable_blk_mq should
-> indeed not make a difference.
+> On 09/09/2014 06:01 PM, Christoph Hellwig wrote:
+>> On Tue, Sep 09, 2014 at 04:59:59PM +0200, Hans de Goede wrote:
+>>> asm1051e usb <-> sata bridges hang when receiving a report opcodes scsi cmnd.
+>>> Take a page out of the usb-storage book, and simple disable no_report_opcodes
+>>> outright.
+>>
+>> Given that this device also seems broken in other ways can we wait a bit
+>> before using the big hammer?
 > 
-> One interesting thing with uas is that it uses scsi_init_shared_tag_map,
-> which only few drivers do.
+> Actually the big hammer I would like to avoid is disabling uas all together
+> on these devices, as they work fine with 2 out of 3 of the 3 disks I've
+> tested with, as long as no report opcodes is not used.
 > 
-> Can you apply a debug patch like the one below and see if that helps to
-> poinpoint down the issue?
+> Which is why my other patch also includes a log message to explain how
+> to enable uas despite the blacklist, but that will only work if we don't
+> send report opcodes.
+> 
+>> I'm still hoping UAS might give us some
+>> better SCSI implementation so that we don't have to disable any kind of
+>> advanced feature.
+> 
+> I understand, so an alternative would be to make this a quirk and only
+> set it for ASM1051/ASM1053 bridges.
 
-I've applied the patch, this results in the following new dmesg output
-when using uas:
+So further (stress) testing of ASM1051 bridges with disks with which they
+do work under normal conditions have shown that even with those disks
+they can get stuck / hang in a state which can only be recovered by an
+unplug + replug (power cycle).
 
-[  120.602632] initialized host-wide tag map!
+So basically ASM1051 bridges should just never be used together with uas,
+which means that this patch can be dropped.
 
-Thank you for looking into this.
+So: self-nak.
+
+I'll respin the second patch in this set to change the log messages a
+bit to reflect this new insight.
 
 Regards,
 
