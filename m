@@ -1,88 +1,26 @@
 From: Hans de Goede <hdegoede@redhat.com>
 Subject: [PATCH fix for 3.17 v2] uas: Disable uas on ASM1051 devices
-Date: Wed, 10 Sep 2014 10:51:36 +0200
-Message-ID: <1410339096-13227-2-git-send-email-hdegoede@redhat.com>
-References: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
+Date: Wed, 10 Sep 2014 10:51:35 +0200
+Message-ID: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
 Sender: stable-owner@vger.kernel.org
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-There are a large numbers of issues with ASM1051 devices in uas mode:
+Hi Greg,
 
-1) They do not support REPORT SUPPORTED OPERATION CODES
+Here is v2 of my ASM1051 blacklist patch. The commit message and some of
+the log messages have been changed to reflect that my vision on the ASM1051
+woes has shifted from: "too bad we need to blacklist this because it does not
+work in some cases", to: "this thing is just too buggy to try and use with uas,
+disable it already".
 
-2) They use out of spec 8 byte status iu-s when they have no sense data,
-   switching to normal 16 byte status iu-s when they do have sense data.
+Other then that there are no changes.
 
-3) They hang / crash when combined with some disks, e.g. a Crucial M500 ssd.
+It would be good if we could get this fix into 3.17, as we've been receiving
+a number of uas bug reports from ASM1051 users.
 
-4) They hang / crash when stressed (through e.g. sg_reset --bus) with disks
-   with which then normally do work (once 1 & 2 are worked around).
+Regards,
 
-Where as in BOT mode they appear to work fine, so the best way forward with
-these devices is to just blacklist them for uas usage.
-
-Unfortunately this is easier said then done. as older versions of the ASM1053
-(which works fine) use the same usb-id as the ASM1051.
-
-When connected over USB-3 the 2 can be told apart by the number of streams
-they support. So this patch adds some less then pretty code to disable uas for
-the ASM1051. When connected over USB-2, simply disable uas alltogether for
-devices with the shared usb-id.
-
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/uas-detect.h | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
-index 503ac5c..1e298ec 100644
---- a/drivers/usb/storage/uas-detect.h
-+++ b/drivers/usb/storage/uas-detect.h
-@@ -59,10 +59,6 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 	unsigned long flags = id->driver_info;
- 	int r, alt;
- 
--	usb_stor_adjust_quirks(udev, &flags);
--
--	if (flags & US_FL_IGNORE_UAS)
--		return 0;
- 
- 	alt = uas_find_uas_alt_setting(intf);
- 	if (alt < 0)
-@@ -72,6 +68,29 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 	if (r < 0)
- 		return 0;
- 
-+	/*
-+	 * ASM1051 and older ASM1053 devices have the same usb-id, and UAS is
-+	 * broken on the ASM1051, use the number of streams to differentiate.
-+	 * New ASM1053-s also support 32 streams, but have a different prod-id.
-+	 */
-+	if (udev->descriptor.idVendor == 0x174c &&
-+			udev->descriptor.idProduct == 0x55aa) {
-+		if (udev->speed < USB_SPEED_SUPER) {
-+			/* No streams info, assume ASM1051 */
-+			flags |= US_FL_IGNORE_UAS;
-+		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
-+			flags |= US_FL_IGNORE_UAS;
-+		}
-+	}
-+
-+	usb_stor_adjust_quirks(udev, &flags);
-+
-+	if (flags & US_FL_IGNORE_UAS) {
-+		dev_warn(&udev->dev,
-+			"UAS is blacklisted for this device, using usb-storage instead\n");
-+		return 0;
-+	}
-+
- 	if (udev->bus->sg_tablesize == 0) {
- 		dev_warn(&udev->dev,
- 			"The driver for the USB controller %s does not support scatter-gather which is\n",
--- 
-2.1.0
+Hans
