@@ -1,115 +1,253 @@
-From: Tom Gundersen <teg@jklm.no>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if
-	not OOM
-Date: Wed, 10 Sep 2014 08:46:34 +0200
-Message-ID: <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
- <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
- <20140905141241.GC10455@mtj.dyndns.org>
- <20140905164405.GA28964@core.coreip.homeip.net>
- <20140905174925.GA12991@mtj.dyndns.org>
- <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
- <20140905224047.GC15723@mtj.dyndns.org>
- <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
- <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
- <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
- <1410291346.13298.16.camel@jarvis.lan>
- <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH] lpfc: Avoid to disable pci_dev twice
+Date: Wed, 10 Sep 2014 14:49:20 +0800
+Message-ID: <540FF470.5020205@linux.vnet.ibm.com>
+References: <1405578751-14164-1-git-send-email-qiudayu@linux.vnet.ibm.com> <53DAF88C.50008@linux.vnet.ibm.com> <53FE24C3.6080708@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd Mailing List <systemd-devel@lists.freedesk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53FE24C3.6080708@emulex.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 9, 2014 at 10:45 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, Sep 9, 2014 at 12:35 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
->> On Tue, 2014-09-09 at 12:16 -0700, Luis R. Rodriguez wrote:
->>> On Mon, Sep 8, 2014 at 10:38 PM, James Bottomley
->>> <James.Bottomley@hansenpartnership.com> wrote:
->>> > If we want to sort out some sync/async mechanism for probing devices, as
->>> > an agreement between the init systems and the kernel, that's fine, but
->>> > its a to-be negotiated enhancement.
+On 08/28/2014 02:34 AM, James Smart wrote:
+> Mike,
+>
+> Can you confirm - the "nulls" this patch correct are because the 
+> probe_one and error_detect threads are running concurrently, thus 
+> battling ?
+>
+> If so - this fix looks insufficient and we should rework it.
+
+Yes, it is. My patch is just a workaround for this bug.
+
+>
+> Q: why are they allowed to run concurrently ?  I could see this solved 
+> at the platform level to let probe_one finish before error_detect is 
+> called (and therefore stating error_detect only makes sense to call if 
+> probe_one was successful). It's also a much driver-friendly solution. 
+> I could see other drivers have much the same issue with concurrency 
+> and data structure teardown - and if locks aren't allowed in the 
+> error-detect path... it's not good.
+>
+
+I agree with you on this point, platform solution is much better. So 
+maybe use a lock or a flag to show it is in such stat, this maybe  also 
+happens when driver is in  remove stat.
+
+Thanks,
+Mike
+> -- james s
+>
+>
+>
+> On 7/31/2014 10:16 PM, Mike Qiu wrote:
+>> On 07/17/2014 02:32 PM, Mike Qiu wrote:
+>>
+>>
+>> Hi, all
+>>
+>> How about this patch ?
+>>
+>> Any idea ?
+>>
+>>> In IBM Power servers, when hardware error occurs during probe
+>>> state, EEH subsystem will call driver's error_detected interface,
+>>> which will call pci_disable_device(). But driver's probe function also
+>>> call pci_disable_device() in this situation.
 >>>
->>> Unfortunately as Tejun notes the train has left which already made
->>> assumptions on this.
+>>> So pci_dev will be disabled twice:
+>>>
+>>> Device lpfc disabling already-disabled device
+>>> ------------[ cut here ]------------
+>>> WARNING: at drivers/pci/pci.c:1407
+>>> CPU: 0 PID: 8744 Comm: kworker/0:0 Tainted: G        W 
+>>> 3.10.42-2002.pkvm2_1_1.6.ppc64 #1
+>>> Workqueue: events .work_for_cpu_fn
+>>> task: c00000274e3f5400 ti: c0000027d3958000 task.ti: c0000027d3958000
+>>> NIP: c000000000471b8c LR: c000000000471b88 CTR: c00000000043ebe0
+>>> REGS: c0000027d395b650 TRAP: 0700   Tainted: G        W 
+>>> (3.10.42-2002.pkvm2_1_1.6.ppc64)
+>>> MSR: 9000000100029032 <SF,HV,EE,ME,IR,DR,RI>  CR: 28b52b44  XER: 
+>>> 20000000
+>>> CFAR: c000000000879ab8 SOFTE: 1
+>>> ...
+>>> NIP .pci_disable_device+0xcc/0xe0
+>>> LR  .pci_disable_device+0xc8/0xe0
+>>> Call Trace:
+>>> .pci_disable_device+0xc8/0xe0 (unreliable)
+>>> .lpfc_disable_pci_dev+0x50/0x80 [lpfc]
+>>> .lpfc_pci_probe_one+0x870/0x21a0 [lpfc]
+>>> .local_pci_probe+0x68/0xb0
+>>> .work_for_cpu_fn+0x38/0x60
+>>> .process_one_work+0x1a4/0x4d0
+>>> .worker_thread+0x37c/0x490
+>>> .kthread+0xf0/0x100
+>>> .ret_from_kernel_thread+0x5c/0x80
+>>>
+>>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>>> ---
+>>>   drivers/scsi/lpfc/lpfc.h      |  1 +
+>>>   drivers/scsi/lpfc/lpfc_init.c | 59 
+>>> +++++++++++++++++++++++++++++++++++++++----
+>>>   2 files changed, 55 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+>>> index 434e903..0c7bad9 100644
+>>> --- a/drivers/scsi/lpfc/lpfc.h
+>>> +++ b/drivers/scsi/lpfc/lpfc.h
+>>> @@ -813,6 +813,7 @@ struct lpfc_hba {
+>>>   #define VPD_MASK            0xf         /* mask for any vpd data */
+>>>
+>>>       uint8_t soft_wwn_enable;
+>>> +    uint8_t probe_done;
+>>>
+>>>       struct timer_list fcp_poll_timer;
+>>>       struct timer_list eratt_poll;
+>>> diff --git a/drivers/scsi/lpfc/lpfc_init.c 
+>>> b/drivers/scsi/lpfc/lpfc_init.c
+>>> index 06f9a5b..c2e67ae 100644
+>>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>>> @@ -9519,6 +9519,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pdev, 
+>>> const struct pci_device_id *pid)
+>>>           }
+>>>       }
+>>>
+>>> +    /* Set the probe flag */
+>>> +    phba->probe_done = 1;
+>>> +
+>>>       /* Perform post initialization setup */
+>>>       lpfc_post_init_setup(phba);
+>>>
+>>> @@ -9795,6 +9798,9 @@ lpfc_sli_prep_dev_for_recover(struct lpfc_hba 
+>>> *phba)
+>>>   static void
+>>>   lpfc_sli_prep_dev_for_reset(struct lpfc_hba *phba)
+>>>   {
+>>> +    if (phba)
+>>> +        return;
+>>> +
+>>>       lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>>>               "2710 PCI channel disable preparing for reset\n");
+>>>
+>>> @@ -9812,7 +9818,8 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_hba 
+>>> *phba)
+>>>
+>>>       /* Disable interrupt and pci device */
+>>>       lpfc_sli_disable_intr(phba);
+>>> -    pci_disable_device(phba->pcidev);
+>>> +    if (phba->probe_done && phba->pcidev)
+>>> +        pci_disable_device(phba->pcidev);
+>>>   }
+>>>
+>>>   /**
+>>> @@ -10282,6 +10289,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, 
+>>> const struct pci_device_id *pid)
+>>>           goto out_disable_intr;
+>>>       }
+>>>
+>>> +    /* Set probe_done flag */
+>>> +    phba->probe_done = 1;
+>>> +
+>>>       /* Log the current active interrupt mode */
+>>>       phba->intr_mode = intr_mode;
+>>>       lpfc_log_intr_mode(phba, intr_mode);
+>>> @@ -10544,6 +10554,9 @@ lpfc_sli4_prep_dev_for_recover(struct 
+>>> lpfc_hba *phba)
+>>>   static void
+>>>   lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
+>>>   {
+>>> +    if (!phba)
+>>> +        return;
+>>> +
+>>>       lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>>>               "2826 PCI channel disable preparing for reset\n");
+>>>
+>>> @@ -10562,7 +10575,9 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba 
+>>> *phba)
+>>>       /* Disable interrupt and pci device */
+>>>       lpfc_sli4_disable_intr(phba);
+>>>       lpfc_sli4_queue_destroy(phba);
+>>> -    pci_disable_device(phba->pcidev);
+>>> +
+>>> +    if (phba->probe_done && phba->pcidev)
+>>> +        pci_disable_device(phba->pcidev);
+>>>   }
+>>>
+>>>   /**
+>>> @@ -10893,9 +10908,21 @@ static pci_ers_result_t
+>>>   lpfc_io_error_detected(struct pci_dev *pdev, pci_channel_state_t 
+>>> state)
+>>>   {
+>>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>>> *)shost->hostdata)->phba;
+>>> +    struct lpfc_hba *phba;
+>>>       pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
+>>>
+>>> +    if (!shost)
+>>> +        /* Run here means it may during probe state and
+>>> +         * Scsi_Host has not been created and We can do nothing
+>>> +         * in this state so call for hotplug*/
+>>> +        return PCI_ERS_RESULT_NONE;
+>>> +
+>>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>>> +
+>>> +    if (!phba || !phba->probe_done)
+>>> +        /* Run here means it may during probe state */
+>>> +        return PCI_ERS_RESULT_NONE;
+>>> +
+>>>       switch (phba->pci_dev_grp) {
+>>>       case LPFC_PCI_DEV_LP:
+>>>           rc = lpfc_io_error_detected_s3(pdev, state);
+>>> @@ -10930,9 +10957,20 @@ static pci_ers_result_t
+>>>   lpfc_io_slot_reset(struct pci_dev *pdev)
+>>>   {
+>>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>>> *)shost->hostdata)->phba;
+>>> +    struct lpfc_hba *phba;
+>>>       pci_ers_result_t rc = PCI_ERS_RESULT_DISCONNECT;
+>>>
+>>> +    if (!shost)
+>>> +        /* Run here means it may during probe state and
+>>> +         * Scsi_Host has not been created */
+>>> +        return PCI_ERS_RESULT_NONE;
+>>> +
+>>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>>> +
+>>> +    if (!phba || !phba->probe_done)
+>>> +        /* Run here means it may during probe state */
+>>> +        return PCI_ERS_RESULT_NONE;
+>>> +
+>>>       switch (phba->pci_dev_grp) {
+>>>       case LPFC_PCI_DEV_LP:
+>>>           rc = lpfc_io_slot_reset_s3(pdev);
+>>> @@ -10963,7 +11001,18 @@ static void
+>>>   lpfc_io_resume(struct pci_dev *pdev)
+>>>   {
+>>>       struct Scsi_Host *shost = pci_get_drvdata(pdev);
+>>> -    struct lpfc_hba *phba = ((struct lpfc_vport 
+>>> *)shost->hostdata)->phba;
+>>> +    struct lpfc_hba *phba;
+>>> +
+>>> +    if (!shost)
+>>> +        /* Run here means it may during probe state and
+>>> +         * Scsi_Host has not been created */
+>>> +        return;
+>>> +
+>>> +    phba = ((struct lpfc_vport *)shost->hostdata)->phba;
+>>> +
+>>> +    if (!phba || !phba->probe_done)
+>>> +        /* Run here means it may during probe state */
+>>> +        return;
+>>>
+>>>       switch (phba->pci_dev_grp) {
+>>>       case LPFC_PCI_DEV_LP:
 >>
->> Well, that's why it's a bug.  It's a material regression impacting
->> users.
->
-> Indeed. I believe the issue with this regression however was that the
-> original commit e64fae55 (January 2012) was only accepted by *kernel
-> folks* to be a real regression until recently.
-
-Just for the record, this only caused user-visible problems after
-kernel commit 786235ee (November 2013), right?
-
-> More than two years
-> have gone by on growing design and assumptions on top of that original
-> commit. I'm not sure if *systemd folks* yet believe its was a design
-> regression?
-
-I don't think so. udev should not allow its workers to run for an
-unbounded length of time. Whether the upper bound should be 30, 60,
-180 seconds or something else is up for debate (currently it is 60,
-but if that is too short for some drivers we could certainly revisit
-that). Moreover, it seems from this discussion that the aim is (still)
-that insmod should be near-instantaneous (i.e., not wait for probe),
-so it seems to me that the basic design is correct and all we need is
-some temporary work-around and a way to better detect misbehaving
-drivers?
-
->>>  I'm afraid distributions that want to avoid this
->>> sigkill at least on the kernel front will have to work around this
->>> issue either on systemd by increasing the default timeout which is now
->>> possible thanks to Hannes' changes or by some other means such as the
->>> combination of a modified non-chatty version of this patch + a check
->>> at the end of load_module() as mentioned earlier on these threads.
 >>
->> Increasing the default timeout in systemd seems like the obvious bug fix
->> to me.  If the patch exists already, having distros that want it use it
->> looks to be correct ... not every bug is a kernel bug, after all.
 >
-> Its merged upstream on systemd now, along with a few fixes on top of
-> it. I also see Kay merged a change to the default timeout to 60 second
-> on August 30. Its unclear if these discussions had any impact on that
-> decision or if that was just because udev firmware loading got now
-> ripped out. I'll note that the new 60 second timeout wouldn't suffice
-> for cxgb4 even if it didn't do firmware loading, its probe takes over
-> one full minute.
->
->> Negotiating a probe vs init split for drivers is fine too, but it's a
->> longer term thing rather than a bug fix.
->
-> Indeed. What I proposed with a multiplier for the timeout for the
-> different types of built in commands was deemed complex but saw no
-> alternatives proposed despite my interest to work on one and
-> clarifications noted that this was a design regression. Not quite sure
-> what else I could have done here. I'm interested in learning what the
-> better approach is for the future as if we want to marry init + kernel
-> we need a smooth way for us to discuss design without getting worked
-> up about it, or taking it personal. I really want this to work as I
-> personally like systemd so far.
-
-How about this: keep the timeout global, but also introduce a
-(relatively short, say 10 or 15 seconds) timeout after which a warning
-is printed. Even if nothing is actually killed, having workers (be it
-insmod or something else) take longer than a couple of seconds is
-likely a sign that something is seriously off somewhere.
-
-Cheers,
-
-Tom
