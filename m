@@ -1,101 +1,50 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 13/21] uas: Drop all references to a scsi_cmnd once it has been aborted
-Date: Wed, 10 Sep 2014 13:46:43 +0200
-Message-ID: <1410349611-17573-14-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 10/21] uas: zap_pending: data urbs should have completed at this time
+Date: Wed, 10 Sep 2014 13:46:40 +0200
+Message-ID: <1410349611-17573-11-git-send-email-hdegoede@redhat.com>
 References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4873 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848AbaIJLrR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2014 07:47:17 -0400
-In-Reply-To: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410349611-17573-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Do not keep references around to a cmnd which is under error handling.
+The data urbs are all killed before calling zap_pending, and their completion
+handler should have cleared their inflight flag.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Do not 0 the data inflight flags, and add a check for try_complete succeeding,
+as it should always succeed when called from zap_pending.
+
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 47 ++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 44 insertions(+), 3 deletions(-)
+ drivers/usb/storage/uas.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 1fdcfad..75ce40c 100644
+index bba5498..ec6547d 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -254,12 +254,11 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 	lockdep_assert_held(&devinfo->lock);
- 	if (cmdinfo->state & (COMMAND_INFLIGHT |
- 			      DATA_IN_URB_INFLIGHT |
--			      DATA_OUT_URB_INFLIGHT))
-+			      DATA_OUT_URB_INFLIGHT |
-+			      COMMAND_ABORTED))
- 		return -EBUSY;
- 	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
- 	cmdinfo->state |= COMMAND_COMPLETED;
--	if (cmdinfo->state & COMMAND_ABORTED)
--		scmd_printk(KERN_INFO, cmnd, "abort completed\n");
- 	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
- 	cmnd->scsi_done(cmnd);
- 	return 0;
-@@ -700,6 +699,47 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 
- static DEF_SCSI_QCMD(uas_queuecommand)
- 
-+/*
-+ * For now we do not support actually sending an abort to the device, so
-+ * this eh always fails. Still we must define it to make sure that we've
-+ * dropped all references to the cmnd in question once this function exits.
-+ */
-+static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
-+{
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
-+	struct urb *data_in_urb = NULL;
-+	struct urb *data_out_urb = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&devinfo->lock, flags);
-+
-+	uas_log_cmd_state(cmnd, __func__);
-+
-+	/* Ensure that try_complete does not call scsi_done */
-+	cmdinfo->state |= COMMAND_ABORTED;
-+
-+	/* Drop all refs to this cmnd, kill data urbs to break their ref */
-+	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
-+		data_in_urb = usb_get_urb(cmdinfo->data_in_urb);
-+	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
-+		data_out_urb = usb_get_urb(cmdinfo->data_out_urb);
-+
-+	spin_unlock_irqrestore(&devinfo->lock, flags);
-+
-+	if (data_in_urb) {
-+		usb_kill_urb(data_in_urb);
-+		usb_put_urb(data_in_urb);
-+	}
-+	if (data_out_urb) {
-+		usb_kill_urb(data_out_urb);
-+		usb_put_urb(data_out_urb);
-+	}
-+
-+	return FAILED;
-+}
-+
- static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
- {
- 	struct scsi_device *sdev = cmnd->device;
-@@ -781,6 +821,7 @@ static struct scsi_host_template uas_host_template = {
- 	.queuecommand = uas_queuecommand,
- 	.slave_alloc = uas_slave_alloc,
- 	.slave_configure = uas_slave_configure,
-+	.eh_abort_handler = uas_eh_abort_handler,
- 	.eh_bus_reset_handler = uas_eh_bus_reset_handler,
- 	.can_queue = 65536,	/* Is there a limit on the _host_ ? */
- 	.this_id = -1,
+@@ -150,12 +150,10 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+ 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
+ 						      SCp);
+ 		uas_log_cmd_state(cmnd, __func__);
+-		/* all urbs are killed, clear inflight bits */
+-		cmdinfo->state &= ~(COMMAND_INFLIGHT |
+-				    DATA_IN_URB_INFLIGHT |
+-				    DATA_OUT_URB_INFLIGHT);
++		/* Sense urbs were killed, clear COMMAND_INFLIGHT manually */
++		cmdinfo->state &= ~COMMAND_INFLIGHT;
+ 		cmnd->result = result << 16;
+-		uas_try_complete(cmnd, __func__);
++		WARN_ON(uas_try_complete(cmnd, __func__) != 0);
+ 	}
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ }
 -- 
 2.1.0
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
