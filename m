@@ -1,60 +1,88 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 1/2] uas: Set no_report_opcodes
-Date: Wed, 10 Sep 2014 10:17:04 +0200
-Message-ID: <54100900.2050109@redhat.com>
-References: <1410274800-11578-1-git-send-email-hdegoede@redhat.com> <1410274800-11578-2-git-send-email-hdegoede@redhat.com> <20140909160150.GA15724@infradead.org> <540F5333.80201@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH fix for 3.17 v2] uas: Disable uas on ASM1051 devices
+Date: Wed, 10 Sep 2014 10:51:36 +0200
+Message-ID: <1410339096-13227-2-git-send-email-hdegoede@redhat.com>
+References: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <540F5333.80201@redhat.com>
+In-Reply-To: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
 Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+There are a large numbers of issues with ASM1051 devices in uas mode:
 
-On 09/09/2014 09:21 PM, Hans de Goede wrote:
-> Hi,
-> 
-> On 09/09/2014 06:01 PM, Christoph Hellwig wrote:
->> On Tue, Sep 09, 2014 at 04:59:59PM +0200, Hans de Goede wrote:
->>> asm1051e usb <-> sata bridges hang when receiving a report opcodes scsi cmnd.
->>> Take a page out of the usb-storage book, and simple disable no_report_opcodes
->>> outright.
->>
->> Given that this device also seems broken in other ways can we wait a bit
->> before using the big hammer?
-> 
-> Actually the big hammer I would like to avoid is disabling uas all together
-> on these devices, as they work fine with 2 out of 3 of the 3 disks I've
-> tested with, as long as no report opcodes is not used.
-> 
-> Which is why my other patch also includes a log message to explain how
-> to enable uas despite the blacklist, but that will only work if we don't
-> send report opcodes.
-> 
->> I'm still hoping UAS might give us some
->> better SCSI implementation so that we don't have to disable any kind of
->> advanced feature.
-> 
-> I understand, so an alternative would be to make this a quirk and only
-> set it for ASM1051/ASM1053 bridges.
+1) They do not support REPORT SUPPORTED OPERATION CODES
 
-So further (stress) testing of ASM1051 bridges with disks with which they
-do work under normal conditions have shown that even with those disks
-they can get stuck / hang in a state which can only be recovered by an
-unplug + replug (power cycle).
+2) They use out of spec 8 byte status iu-s when they have no sense data,
+   switching to normal 16 byte status iu-s when they do have sense data.
 
-So basically ASM1051 bridges should just never be used together with uas,
-which means that this patch can be dropped.
+3) They hang / crash when combined with some disks, e.g. a Crucial M500 ssd.
 
-So: self-nak.
+4) They hang / crash when stressed (through e.g. sg_reset --bus) with disks
+   with which then normally do work (once 1 & 2 are worked around).
 
-I'll respin the second patch in this set to change the log messages a
-bit to reflect this new insight.
+Where as in BOT mode they appear to work fine, so the best way forward with
+these devices is to just blacklist them for uas usage.
 
-Regards,
+Unfortunately this is easier said then done. as older versions of the ASM1053
+(which works fine) use the same usb-id as the ASM1051.
 
-Hans
+When connected over USB-3 the 2 can be told apart by the number of streams
+they support. So this patch adds some less then pretty code to disable uas for
+the ASM1051. When connected over USB-2, simply disable uas alltogether for
+devices with the shared usb-id.
+
+Cc: stable@vger.kernel.org # 3.16
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/uas-detect.h | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
+index 503ac5c..1e298ec 100644
+--- a/drivers/usb/storage/uas-detect.h
++++ b/drivers/usb/storage/uas-detect.h
+@@ -59,10 +59,6 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 	unsigned long flags = id->driver_info;
+ 	int r, alt;
+ 
+-	usb_stor_adjust_quirks(udev, &flags);
+-
+-	if (flags & US_FL_IGNORE_UAS)
+-		return 0;
+ 
+ 	alt = uas_find_uas_alt_setting(intf);
+ 	if (alt < 0)
+@@ -72,6 +68,29 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 	if (r < 0)
+ 		return 0;
+ 
++	/*
++	 * ASM1051 and older ASM1053 devices have the same usb-id, and UAS is
++	 * broken on the ASM1051, use the number of streams to differentiate.
++	 * New ASM1053-s also support 32 streams, but have a different prod-id.
++	 */
++	if (udev->descriptor.idVendor == 0x174c &&
++			udev->descriptor.idProduct == 0x55aa) {
++		if (udev->speed < USB_SPEED_SUPER) {
++			/* No streams info, assume ASM1051 */
++			flags |= US_FL_IGNORE_UAS;
++		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
++			flags |= US_FL_IGNORE_UAS;
++		}
++	}
++
++	usb_stor_adjust_quirks(udev, &flags);
++
++	if (flags & US_FL_IGNORE_UAS) {
++		dev_warn(&udev->dev,
++			"UAS is blacklisted for this device, using usb-storage instead\n");
++		return 0;
++	}
++
+ 	if (udev->bus->sg_tablesize == 0) {
+ 		dev_warn(&udev->dev,
+ 			"The driver for the USB controller %s does not support scatter-gather which is\n",
+-- 
+2.1.0
