@@ -1,79 +1,90 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 04/11] megaraid_sas : Firmware crash dump feature support
-Date: Wed, 10 Sep 2014 11:46:43 -0400
-Message-ID: <20140910154643.GC2166@redhat.com>
-References: <201409061328.s86DS6lO012975@palmhbs0.lsi.com>
- <540F22A2.3040906@redhat.com>
- <55ba5d7cdee7dbcce18dc1a2bbbefc03@mail.gmail.com>
- <94D0CD8314A33A4D9D801C0FE68B402958C70F51@G9W0745.americas.hpqcorp.net>
- <54106E28.1030807@redhat.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 18/21] uas: Use scsi_print_command
+Date: Wed, 10 Sep 2014 16:08:49 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C710E7@G9W0745.americas.hpqcorp.net>
+References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>
+ <1410349611-17573-19-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18993 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720AbaIJPsZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2014 11:48:25 -0400
-Content-Disposition: inline
-In-Reply-To: <54106E28.1030807@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1410349611-17573-19-git-send-email-hdegoede@redhat.com>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Sumit Saxena <sumit.saxena@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, Kashyap Desai <kashyap.desai@avagotech.com>, "aradford@gmail.com" <aradford@gmail.com>, Michal Schmidt <mschmidt@redhat.com>, "amirv@mellanox.com" <amirv@mellanox.com>, "Jens Axboe <axboe@kernel.dk> (axboe@kernel.dk)" <axboe@kernel.dk>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>
 
-On Wed, Sep 10, 2014 at 05:28:40PM +0200, Tomas Henzl wrote:
-> On 09/10/2014 05:06 PM, Elliott, Robert (Server Storage) wrote:
-> >> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> >> owner@vger.kernel.org] On Behalf Of Sumit Saxena
-> >>
-> >>> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> >>>
-> >>> With several controllers in a system this may take a lot memory,
-> >>> could you also in case when a kdump kernel is running lower it,
-> >>> by not using this feature?
-> >>>
-> >> Agreed, we will disable this feature for kdump kernel by adding
-> >> "reset_devices" global varaiable.
-> >> That check is required for only one place, throughout the code, this
-> >> feature will remain disabled.  Code snippet for the same-
-> >>
-> >>         instance->crash_dump_drv_support = (!reset_devices) &&
-> >> crashdump_enable &&
-> >>                                 instance->crash_dump_fw_support &&
-> >>                                 instance->crash_dump_buf);
-> >>         if(instance->crash_dump_drv_support) {
-> >>                 printk(KERN_INFO "megaraid_sas: FW Crash dump is
-> >> supported\n");
-> >>                 megasas_set_crash_dump_params(instance,
-> >> MR_CRASH_BUF_TURN_OFF);
-> >>
-> >>         } else {
-> >> ..
-> >>         }
-> > Network drivers have been running into similar problems.
-> >
-> > There's a new patch from Amir coming through net-next to make 
-> > is_kdump_kernel() (in crash_dump.h) accessible to modules.
-> > That may be a better signal than reset_devices that the
-> > driver should use minimal resources.
-> >
-> > http://comments.gmane.org/gmane.linux.network/324737
-> >
-> > I'm not sure about the logistics of a SCSI patch depending
-> > on a net-next patch.
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Hans de Goede
+> Sent: Wednesday, 10 September, 2014 6:47 AM
+> To: Greg Kroah-Hartman
+> Cc: linux-usb@vger.kernel.org; linux-scsi@vger.kernel.org;
+> stable@vger.kernel.org; Hans de Goede
+> Subject: [PATCH 18/21] uas: Use scsi_print_command
 > 
-> Probably better to start with reset_devices and switch to is_kdump_kernel()
-> later. 
-> This is not a discussion about reset_devices versus is_kdump_kernel, but
-> while it looks good to have it distinguished - is the reset_devices actually
-> used anywhere else than in kdump kernel?
+> Use scsi_print_command to print commands during errors, rather then
+> printing
+> the rather meaningless pointer to the command.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  drivers/usb/storage/uas.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 46b8788..220f4c7 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -229,8 +229,8 @@ static void uas_log_cmd_state(struct scsi_cmnd
+> *cmnd, const char *caller)
+>  	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
+> 
+>  	scmd_printk(KERN_INFO, cmnd,
+> -		    "%s %p tag %d,
+> inflight:%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+> -		    caller, cmnd, uas_get_tag(cmnd),
+> +		    "%s tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s%s ",
+> +		    caller, uas_get_tag(cmnd),
+>  		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
+>  		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
+>  		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
+> @@ -244,6 +244,7 @@ static void uas_log_cmd_state(struct scsi_cmnd
+> *cmnd, const char *caller)
+>  		    (ci->state & COMMAND_COMPLETED)     ? " done"  : "",
+>  		    (ci->state & COMMAND_ABORTED)       ? " abort" : "",
+>  		    (ci->state & IS_IN_WORK_LIST)       ? " work"  : "");
+> +	scsi_print_command(cmnd);
+>  }
 
-I think usage of reset_devices for lowering memory footprint of driver
-is plain wrong. It tells driver to only reset the device as BIOS might
-not have done it right or we skipped BIOS completely.
+The SCSI midlayer already does a scsi_print_command, under
+the MLCOMPLETE logging level.  Printing the command in
+the LLD is redundant; Printing the scmd pointer was not,
+as it matched the prints in the SCSI midlayer, letting
+you find all the messages for a command.
 
-Using is_kdump_kernel() is also not perfect either but atleast better than
-reset_devices.
+In Hannes' logging patch series, Christoph Hellwig suggested
+printing the block layer tag instead of the scmd pointer.
+If UAS uses that tag directly, then the uas_get_tag() print
+already does that.  If they're not identical (looks like 
+they differ by 2), then you might want to print both.
 
-Thanks
-Vivek
+More general comment: 
+scsi-mq stress testing has shown that calling printk
+on each command with an error is problematic.  If the
+system runs into hundreds or thousands of errors, the
+printks take so long they induce more timeouts and errors.  
+
+As discussed in the threads by Yoshihiro YUNOMAE and Hannes
+Reinecke, you might want to:
+* tuck the scmd_printk inside SCSI_LOG_LLCOMPLETE so
+the user can control the verbosity
+* use a _ratelimited version of each print
+* plan to add and eventually switch to tracepoints, so
+logging doesn't have performance impacts
+
+---
+Rob Elliott    HP Server Storage
