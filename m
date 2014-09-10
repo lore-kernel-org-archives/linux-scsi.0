@@ -1,81 +1,39 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 14/21] uas: Fix memleak of non-submitted urbs
-Date: Wed, 10 Sep 2014 13:46:44 +0200
-Message-ID: <1410349611-17573-15-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 16/21] uas: Use streams on upcoming 10Gbps / 3.1 USB
+Date: Wed, 10 Sep 2014 13:46:46 +0200
+Message-ID: <1410349611-17573-17-git-send-email-hdegoede@redhat.com>
 References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1410349611-17573-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43966 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751717AbaIJLrX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2014 07:47:23 -0400
+In-Reply-To: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Not all urbs we've allocated are necessarily also submitted, non-submitted
-urbs will not be free-ed by their completion handler. So we need to free
-them manually.
+Limit the no-streams case to speeds less then USB_SPEED_SUPER.
 
-There are 2 scenarios where this can happen:
-
-1) We have failed to submit some urbs at abort / disconnect
-2) When running over usb-2 we may have never tried to submit the data urbs
-   when completing the scsi cmnd, because we never got a READ/WRITE_READY iu
-
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/usb/storage/uas.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ drivers/usb/storage/uas.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 75ce40c..6ee61bd 100644
+index aaca65b..685eb37 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -246,6 +246,25 @@ static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *caller)
- 		    (ci->state & IS_IN_WORK_LIST)       ? " work"  : "");
- }
+@@ -909,7 +909,7 @@ static int uas_configure_endpoints(struct uas_dev_info *devinfo)
+ 	devinfo->data_out_pipe = usb_sndbulkpipe(udev,
+ 					    usb_endpoint_num(&eps[3]->desc));
  
-+static void uas_free_unsubmitted_urbs(struct scsi_cmnd *cmnd)
-+{
-+	struct uas_cmd_info *cmdinfo;
-+
-+	if (!cmnd)
-+		return;
-+
-+	cmdinfo = (void *)&cmnd->SCp;
-+
-+	if (cmdinfo->state & SUBMIT_CMD_URB)
-+		usb_free_urb(cmdinfo->cmd_urb);
-+
-+	/* data urbs may have never gotten their submit flag set */
-+	if (!(cmdinfo->state & DATA_IN_URB_INFLIGHT))
-+		usb_free_urb(cmdinfo->data_in_urb);
-+	if (!(cmdinfo->state & DATA_OUT_URB_INFLIGHT))
-+		usb_free_urb(cmdinfo->data_out_urb);
-+}
-+
- static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- {
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-@@ -260,6 +279,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
- 	cmdinfo->state |= COMMAND_COMPLETED;
- 	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	uas_free_unsubmitted_urbs(cmnd);
- 	cmnd->scsi_done(cmnd);
- 	return 0;
- }
-@@ -726,6 +746,8 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
- 		data_out_urb = usb_get_urb(cmdinfo->data_out_urb);
- 
-+	uas_free_unsubmitted_urbs(cmnd);
-+
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- 
- 	if (data_in_urb) {
+-	if (udev->speed != USB_SPEED_SUPER) {
++	if (udev->speed < USB_SPEED_SUPER) {
+ 		devinfo->qdepth = 32;
+ 		devinfo->use_streams = 0;
+ 	} else {
 -- 
 2.1.0
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
