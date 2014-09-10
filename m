@@ -1,40 +1,70 @@
-From: Ceriel Jacobs <linux-scsi@crashplan.pro>
-Subject: Re: [systemd-devel] [RFC v2 3/6] kthread: warn on kill signal if
- not OOM
-Date: Wed, 10 Sep 2014 12:07:48 +0200
-Message-ID: <541022F4.4020501@crashplan.pro>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com> <20140905141241.GC10455@mtj.dyndns.org> <20140905164405.GA28964@core.coreip.homeip.net> <20140905174925.GA12991@mtj.dyndns.org> <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com> <20140905224047.GC15723@mtj.dyndns.org> <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com> <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan> <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com> <1410291346.13298.16.camel@jarvis.lan> <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com> <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 04/11] megaraid_sas : Firmware crash dump feature support
+Date: Wed, 10 Sep 2014 12:08:19 +0200
+Message-ID: <54102313.1090604@redhat.com>
+References: <201409061328.s86DS6lO012975@palmhbs0.lsi.com> <540F22A2.3040906@redhat.com> <94D0CD8314A33A4D9D801C0FE68B402958C6C617@G9W0745.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tom Gundersen <teg@jklm.no>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Oleg Nesterov <oleg@redhat.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48376 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752475AbaIJKIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2014 06:08:52 -0400
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958C6C617@G9W0745.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Sumit.Saxena@avagotech.com" <Sumit.Saxena@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "kashyap.desai@avagotech.com" <kashyap.desai@avagotech.com>, "aradford@gmail.com" <aradford@gmail.com>
 
-Tom Gundersen schreef op 10-09-14 om 08:46:
->> >Indeed. What I proposed with a multiplier for the timeout for the
->> >different types of built in commands was deemed complex but saw no
->> >alternatives proposed despite my interest to work on one and
->> >clarifications noted that this was a design regression. Not quite sure
->> >what else I could have done here. I'm interested in learning what the
->> >better approach is for the future as if we want to marry init + kernel
->> >we need a smooth way for us to discuss design without getting worked
->> >up about it, or taking it personal. I really want this to work as I
->> >personally like systemd so far.
-> How about this: keep the timeout global, but also introduce a
-> (relatively short, say 10 or 15 seconds) timeout after which a warning
-> is printed. Even if nothing is actually killed, having workers (be it
-> insmod or something else) take longer than a couple of seconds is
-> likely a sign that something is seriously off somewhere.
+On 09/09/2014 06:18 PM, Elliott, Robert (Server Storage) wrote:
+>
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Tomas Henzl
+>> Sent: Tuesday, 09 September, 2014 10:54 AM
+>> Subject: Re: [PATCH 04/11] megaraid_sas : Firmware crash dump featur=
+e
+>> support
+>>
+>> On 09/06/2014 03:25 PM, Sumit.Saxena@avagotech.com wrote:
+>>> This feature will provide similar interface as kernel crash dump
+>> feature.
+>>> When megaraid firmware encounter any crash, driver will collect the
+>> firmware raw image and
+>>> dump it into pre-configured location.
+>>>
+> ...
+>> With several controllers in a system this may take a lot memory,
+>> could you also
+>> in case when a kdump kernel is running lower it, by not using this
+>> feature?
+> What is the correct way for a driver to determine that it is
+> running in a kdump kernel?  The reset_devices global variable?
 
-I don't agree with the statement that something is seriously off when it 
-takes more then 10 to 15 seconds.
+Yes reset_devices is used for this purpose.
+I think, that I've seen some drivers even trying to reduce the normal
+mem use, because a top performance is not needed.
 
-When probing only one hard disk drive, then I do agree that something is 
-seriously off after 10 to 15 seconds.
+>
+>
+> ---
+> Rob Elliott    HP Server Storage
+>
+>
+>
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
+=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
 
-When probing a SAS bus with one hundred hard disk drives in standby 
-mode, then I do expect that to take longer then 10 to 15 seconds.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
