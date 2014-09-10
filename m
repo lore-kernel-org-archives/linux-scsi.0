@@ -1,48 +1,100 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
-Date: Wed, 10 Sep 2014 08:03:33 +0900
-Message-ID: <20140909230333.GD3154@mtj.dyndns.org>
-References: <CAB=NE6Vn3hA_VKJyi4kgMi6iMtTtA104-_UfFm6vgX14RoDOTw@mail.gmail.com>
- <20140909012933.GF11706@mtj.dyndns.org>
- <CAB=NE6V+of_RLQtjFpkLN49nKgfONx0T4cbu8kkNU69tUyNozw@mail.gmail.com>
- <20140909014754.GG11706@mtj.dyndns.org>
- <CAB=NE6VAe_96dezJmdXkOjy8mSz8EABX6i8C46GzUJRC-HLAZQ@mail.gmail.com>
- <20140909023943.GH11706@mtj.dyndns.org>
- <CAB=NE6XH64QLfwoE3r7uf3SYKNJMzP-tjUkrxDwVca7G2zOxBQ@mail.gmail.com>
- <20140909030353.GI11706@mtj.dyndns.org>
- <CAB=NE6UGNC7VHnkuv8huaVHLX3Kuh2kOTK92SCw07ehJ3LdXFg@mail.gmail.com>
- <20140909032529.GJ11706@mtj.dyndns.org>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH 5/8] block: introduce blk_flush_queue to drive flush machinery
+Date: Wed, 10 Sep 2014 09:23:27 +0800
+Message-ID: <CACVXFVNjQyS6HzQy418jKGqjBr+waTx-gMrDnE9uhvfzUEJMaA@mail.gmail.com>
+References: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
+	<1410267949-21904-6-git-send-email-ming.lei@canonical.com>
+	<20140909184331.GE16750@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140909032529.GJ11706@mtj.dyndns.org>
-Sender: netdev-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140909184331.GE16750@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 09, 2014 at 12:25:29PM +0900, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Sep 08, 2014 at 08:19:12PM -0700, Luis R. Rodriguez wrote:
-> > On the systemd side of things it should enable this sysctl and for
-> > older kernels what should it do?
-> 
-> Supposing the change is backported via -stable, it can try to set the
-> sysctl on all kernels.  If the knob doesn't exist, the fix is not
-> there and nothing can be done about it.
+On Wed, Sep 10, 2014 at 2:43 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Sep 09, 2014 at 09:05:46PM +0800, Ming Lei wrote:
+>> This patch introduces 'struct blk_flush_queue' and puts all
+>> flush machinery related stuff into this strcuture, so that
+>
+> s/stuff/fields/
+> s/strcuture/structure/
+>
+> Looks good, but a few more nitpicks below.
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+>> +int blk_init_flush(struct request_queue *q)
+>> +{
+>> +     int ret;
+>> +     struct blk_flush_queue *fq = kzalloc(sizeof(*fq), GFP_KERNEL);
+>>
+>> +     if (!fq)
+>>               return -ENOMEM;
+>>
+>> +     q->fq = fq;
+>
+> I think it would be cleaner to return the flush data structure and
+> assign it in the caller.
 
-The more I think about it, the more I think this should be a
-per-insmod instance thing rather than a system-wide switch.  Currently
-the kernel param code doesn't allow a generic param outside the ones
-specified by the module itself but adding support for something like
-driver.async_load=1 shouldn't be too difficult, applying that to
-existing systems shouldn't be much more difficult than a system-wide
-switch, and it'd be siginificantly cleaner than fiddling with driver
-blacklist.
+OK, and most of this part is transitional.
 
-Thanks.
+>
+>> +     INIT_LIST_HEAD(&fq->flush_queue[0]);
+>> +     INIT_LIST_HEAD(&fq->flush_queue[1]);
+>> +     INIT_LIST_HEAD(&fq->flush_data_in_flight);
+>> +
+>> +     if (q->mq_ops) {
+>> +             ret = blk_mq_init_flush(q);
+>
+> I think we can just remove blk_mq_init_flush now that it's only
+> called in blk-flush.c anyway.
 
--- 
-tejun
+blk_mq_init_flush() will become bigger in following patch.
+
+>>  void blk_exit_flush(struct request_queue *q)
+>>  {
+>> +     if (q->mq_ops)
+>> +             blk_mq_exit_flush(q);
+>> +     else {
+>> +             struct blk_flush_queue *fq = blk_get_flush_queue(q);
+>> +             kfree(fq->flush_rq);
+>> +             kfree(fq);
+>> +     }
+>
+> Similarly I would pass the flush structure here.
+
+OK.
+
+>
+>> +struct blk_flush_queue {
+>> +     unsigned int            flush_queue_delayed:1;
+>> +     unsigned int            flush_pending_idx:1;
+>> +     unsigned int            flush_running_idx:1;
+>> +     unsigned long           flush_pending_since;
+>> +     struct list_head        flush_queue[2];
+>> +     struct list_head        flush_data_in_flight;
+>> +     struct request          *flush_rq;
+>> +     spinlock_t              mq_flush_lock;
+>> +};
+>
+> As this isn't really a queue I would call it blk_flush_data.
+
+It is sort of a queue since there is a double buffer flush queue.
+
+>
+>> +static inline struct blk_flush_queue *blk_get_flush_queue(
+>> +             struct request_queue *q)
+>> +{
+>> +     return q->fq;
+>> +}
+>
+> I don't think there is a need for this helper.
+
+No, the helper can simplify the following patch a lot since
+the flush queue data is always obtained from this helper in both
+legacy and mq case, which will take per-hw_queue flush queue.
+
+Thanks,
