@@ -1,68 +1,76 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 01/21] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
-Date: Wed, 10 Sep 2014 15:15:41 +0200
-Message-ID: <54104EFD.1090701@redhat.com>
-References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>	 <1410349611-17573-2-git-send-email-hdegoede@redhat.com>	 <54103AA3.7000801@redhat.com> <1410350184.12706.18.camel@linux-fkkt.site>	 <54103D73.5050104@redhat.com> <1410353663.12706.20.camel@linux-fkkt.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [systemd-devel] [RFC v2 3/6] kthread: warn on kill signal if
+ not OOM
+Date: Wed, 10 Sep 2014 06:31:41 -0700
+Message-ID: <1410355901.2038.8.camel@jarvis.lan>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+	 <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+	 <20140905141241.GC10455@mtj.dyndns.org>
+	 <20140905164405.GA28964@core.coreip.homeip.net>
+	 <20140905174925.GA12991@mtj.dyndns.org>
+	 <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+	 <20140905224047.GC15723@mtj.dyndns.org>
+	 <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+	 <20140909011059.GB11706@mtj.dyndns.org>
+	 <1410241109.2028.22.camel@jarvis.lan>
+	 <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
+	 <1410291346.13298.16.camel@jarvis.lan>
+	 <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
+	 <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
+	 <541022F4.4020501@crashplan.pro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1410353663.12706.20.camel-B2T3B9s34ElbnMAlSieJcQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oneukum-l3A5Bk7waGM@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sanjeev Sharma <Sanjeev_Sharma-nmGgyN9QBj3QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <541022F4.4020501@crashplan.pro>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ceriel Jacobs <linux-scsi@crashplan.pro>
+Cc: Tom Gundersen <teg@jklm.no>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Oleg Nesterov <oleg@redhat.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.c>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 2014-09-10 at 12:07 +0200, Ceriel Jacobs wrote:
+> Tom Gundersen schreef op 10-09-14 om 08:46:
+> >> >Indeed. What I proposed with a multiplier for the timeout for the
+> >> >different types of built in commands was deemed complex but saw no
+> >> >alternatives proposed despite my interest to work on one and
+> >> >clarifications noted that this was a design regression. Not quite sure
+> >> >what else I could have done here. I'm interested in learning what the
+> >> >better approach is for the future as if we want to marry init + kernel
+> >> >we need a smooth way for us to discuss design without getting worked
+> >> >up about it, or taking it personal. I really want this to work as I
+> >> >personally like systemd so far.
+> > How about this: keep the timeout global, but also introduce a
+> > (relatively short, say 10 or 15 seconds) timeout after which a warning
+> > is printed. Even if nothing is actually killed, having workers (be it
+> > insmod or something else) take longer than a couple of seconds is
+> > likely a sign that something is seriously off somewhere.
 
-On 09/10/2014 02:54 PM, Oliver Neukum wrote:
-> On Wed, 2014-09-10 at 14:00 +0200, Hans de Goede wrote:
->> Hi,
->>
->> On 09/10/2014 01:56 PM, Oliver Neukum wrote:
->>> On Wed, 2014-09-10 at 13:48 +0200, Hans de Goede wrote:
->>>> Hi,
->>>>
->>>> Note this series is NOT intended for stable, but I accidentally
->>>> had "cc = stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" in my .git/config when sending
->>>> this series, please ignore for stable.
->>>>
->>>> NACK for stable.
->>>
->>> If this is not for stable, what do you intend to do about
->>> the problems in stable? For example patch#01 of this series
->>> looks like clear stable material to me.
->>
->> The plan for stable is mostly, as lame as that is, to make sure
->> we get all the right quirks in place so that error handling
->> does not get triggered, for now.
+> I don't agree with the statement that something is seriously off when it 
+> takes more then 10 to 15 seconds.
 > 
-> How? A medium can be defect. Short of entirely disabling it,
-> error handling will be triggered.
+> When probing only one hard disk drive, then I do agree that something is 
+> seriously off after 10 to 15 seconds.
 
-I agree that this is a concern, but defective disks are not the
-norm. All the bugs I've received sofar seem to be about incompatibilities
-between the Linux uas/scsi stack and the device, not defective mediums.
+Really?  We keep explaining that arbitrary times are wrong.  A while ago
+the Adaptec driver used to use 15s as its bus settle time after the
+initial reset (it's now a Kconfig variable set at 5s) and a Parallel bus
+takes a minimum of 4s to scan and has to be done sequentially.  If any
+probed device is having difficulty, that can escalate way beyond this
+into the tens to hundreds of seconds.   If your root disk is on it,
+you're waiting or not booting.
 
->> I agree that once this set has seen wider testing, we should
->> reconsider, and probably add it, to stable. But at this point
->> in time I'm worried that it may cause regressions, and as such
->> it is not stable material atm IHMO.
-> 
-> Well, we would exchange something known to work imperfectly
-> for something feared to work imperfectly.
+> When probing a SAS bus with one hundred hard disk drives in standby 
+> mode, then I do expect that to take longer then 10 to 15 seconds.
 
-True. Note as said I'm not against this going into stable, I just don't
-want to rush it into stable. So first lets get it reviewed and into
-3.18 (and see how it works for the users who have been having troubles
-sofar, see my request for testing), and then see from there.
+Good luck with that even on SAS if you have a lot of expanders.
 
-I assume that you agree that this is (way) too late for 3.17?
+For an installed system, you know what you need (usually root and
+possibly one other disc like /home), so you spawn all the insertions
+asynchronously and then wait for just the devices you need them but,
+since the alternative is panic when init isn't found, this wait better
+be quite long (if not forever, given the consequence is guaranteed
+failure).   Everything else can be async, but, as I've pointed out
+before, it can be async in user space (fire and forget) instead of the
+kernel.
 
-Regards,
-
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
