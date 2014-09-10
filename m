@@ -1,56 +1,165 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 20/21] uas: Remove support for old sense ui as used in
- pre-production hardware
-Date: Wed, 10 Sep 2014 16:16:21 +0200
-Message-ID: <54105D35.6080707@redhat.com>
-References: <1410349611-17573-1-git-send-email-hdegoede@redhat.com>	 <1410349611-17573-21-git-send-email-hdegoede@redhat.com> <1410358004.12706.29.camel@linux-fkkt.site>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 08/11] megaraid_sas : Add module parameter to disable
+ IRQ-CPU affinity hint
+Date: Wed, 10 Sep 2014 16:16:48 +0200
+Message-ID: <54105D50.1070309@redhat.com>
+References: <201409061328.s86DSAsY013235@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1410358004.12706.29.camel@linux-fkkt.site>
-Sender: stable-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:23568 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889AbaIJORV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2014 10:17:21 -0400
+In-Reply-To: <201409061328.s86DSAsY013235@palmhbs0.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
-Hi,
+On 09/06/2014 03:25 PM, Sumit.Saxena@avagotech.com wrote:
+> For certain deployment, we may need to disable irq cpu affinity hint.
+> This module parameter provides option for use to disable irq cpu affinity hint
+> and allow irqbalancer to handle the rest.
 
-On 09/10/2014 04:06 PM, Oliver Neukum wrote:
-> On Wed, 2014-09-10 at 13:46 +0200, Hans de Goede wrote:
->> I've access to a number of different uas devices now, and none of them use
->> old style sense urbs. The only case where these code-paths trigger is with
->> the asm1051 and there they do the wrong thing, as the asm1051 sends 8 bytes
->> status iu-s when it does not have any sense data, but uses new style
->> sense iu-s regardless, as can be seen for scsi cmnds where there is sense
->> data.
-> 
-> This looks like a bad idea over all.
+Only curious , in which environments causes this which issues?
 
-Removing this actually makes the ASM1051 bridge, which is the only one
-ever sending 8 byte sense iu-s work better, as when it actually has
-sense data it sends > 16 byte sense iu-s with the sense data length
-at the location defined in the new 16 byte sense iu struct, and with the
-old code we then ignore the length field (as we use the wrong field)
-and instead use urb->actual_length - 8 bytes of the data as sense data,
-while in reality there only is urb->actual_length - 16.
+Thanks,
+Tomas
 
-So either we drop support for the old style sense iu, at which point
-sense iu-s just works with the ASM1051, or we need to add some extra
-magic.
+>
+> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 60 +++++++++++++++++++------------
+>  1 file changed, 38 insertions(+), 22 deletions(-) 
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 07255c1..086beee 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -89,6 +89,10 @@ module_param(resetwaittime, int, S_IRUGO);
+>  MODULE_PARM_DESC(resetwaittime, "Wait time in seconds after I/O timeout "
+>  		 "before resetting adapter. Default: 180");
+>  
+> +int smp_affinity_enable = 1;
+> +module_param(smp_affinity_enable, int, S_IRUGO);
+> +MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disbale Default: enable(1)");
+> +
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(MEGASAS_VERSION);
+>  MODULE_AUTHOR("megaraidlinux@lsi.com");
+> @@ -5160,8 +5164,9 @@ retry_irq_register:
+>  				printk(KERN_DEBUG "megasas: Failed to "
+>  				       "register IRQ for vector %d.\n", i);
+>  				for (j = 0; j < i; j++) {
+> -					irq_set_affinity_hint(
+> -						instance->msixentry[j].vector, NULL);
+> +					if (smp_affinity_enable)
+> +						irq_set_affinity_hint(
+> +							instance->msixentry[j].vector, NULL);
+>  					free_irq(
+>  						instance->msixentry[j].vector,
+>  						&instance->irq_context[j]);
+> @@ -5170,11 +5175,14 @@ retry_irq_register:
+>  				instance->msix_vectors = 0;
+>  				goto retry_irq_register;
+>  			}
+> -			if (irq_set_affinity_hint(instance->msixentry[i].vector,
+> -				get_cpu_mask(cpu)))
+> -				dev_err(&instance->pdev->dev, "Error setting"
+> -					"affinity hint for cpu %d\n", cpu);
+> -			cpu = cpumask_next(cpu, cpu_online_mask);
+> +			if (smp_affinity_enable) {
+> +				if (irq_set_affinity_hint(instance->msixentry[i].vector,
+> +					get_cpu_mask(cpu)))
+> +					dev_err(&instance->pdev->dev,
+> +						"Error setting affinity hint "
+> +						"for cpu %d\n", cpu);
+> +				cpu = cpumask_next(cpu, cpu_online_mask);
+> +			}
+>  		}
+>  	} else {
+>  		instance->irq_context[0].instance = instance;
+> @@ -5233,8 +5241,9 @@ retry_irq_register:
+>  	instance->instancet->disable_intr(instance);
+>  	if (instance->msix_vectors)
+>  		for (i = 0; i < instance->msix_vectors; i++) {
+> -			irq_set_affinity_hint(
+> -				instance->msixentry[i].vector, NULL);
+> +			if (smp_affinity_enable)
+> +				irq_set_affinity_hint(
+> +					instance->msixentry[i].vector, NULL);
+>  			free_irq(instance->msixentry[i].vector,
+>  				 &instance->irq_context[i]);
+>  		}
+> @@ -5397,8 +5406,9 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+>  
+>  	if (instance->msix_vectors)
+>  		for (i = 0; i < instance->msix_vectors; i++) {
+> -			irq_set_affinity_hint(
+> -				instance->msixentry[i].vector, NULL);
+> +			if (smp_affinity_enable)
+> +				irq_set_affinity_hint(
+> +					instance->msixentry[i].vector, NULL);
+>  			free_irq(instance->msixentry[i].vector,
+>  				 &instance->irq_context[i]);
+>  		}
+> @@ -5507,8 +5517,9 @@ megasas_resume(struct pci_dev *pdev)
+>  				printk(KERN_DEBUG "megasas: Failed to "
+>  				       "register IRQ for vector %d.\n", i);
+>  				for (j = 0; j < i; j++) {
+> -					irq_set_affinity_hint(
+> -						instance->msixentry[j].vector, NULL);
+> +					if (smp_affinity_enable)
+> +						irq_set_affinity_hint(
+> +							instance->msixentry[j].vector, NULL);
+>  					free_irq(
+>  						instance->msixentry[j].vector,
+>  						&instance->irq_context[j]);
+> @@ -5516,11 +5527,14 @@ megasas_resume(struct pci_dev *pdev)
+>  				goto fail_irq;
+>  			}
+>  
+> -			if (irq_set_affinity_hint(instance->msixentry[i].vector,
+> -				get_cpu_mask(cpu)))
+> -				dev_err(&instance->pdev->dev, "Error setting"
+> -					"affinity hint for cpu %d\n", cpu);
+> -			cpu = cpumask_next(cpu, cpu_online_mask);
+> +			if (smp_affinity_enable) {
+> +				if (irq_set_affinity_hint(instance->msixentry[i].vector,
+> +					get_cpu_mask(cpu)))
+> +					dev_err(&instance->pdev->dev, "Error "
+> +						"setting affinity hint for cpu "
+> +						"%d\n", cpu);
+> +				cpu = cpumask_next(cpu, cpu_online_mask);
+> +			}
+>  		}
+>  	} else {
+>  		instance->irq_context[0].instance = instance;
+> @@ -5638,8 +5652,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
+>  
+>  	if (instance->msix_vectors)
+>  		for (i = 0; i < instance->msix_vectors; i++) {
+> -			irq_set_affinity_hint(
+> -				instance->msixentry[i].vector, NULL);
+> +			if (smp_affinity_enable)
+> +				irq_set_affinity_hint(
+> +					instance->msixentry[i].vector, NULL);
+>  			free_irq(instance->msixentry[i].vector,
+>  				 &instance->irq_context[i]);
+>  		}
+> @@ -5727,8 +5742,9 @@ static void megasas_shutdown(struct pci_dev *pdev)
+>  	instance->instancet->disable_intr(instance);
+>  	if (instance->msix_vectors)
+>  		for (i = 0; i < instance->msix_vectors; i++) {
+> -			irq_set_affinity_hint(
+> -				instance->msixentry[i].vector, NULL);
+> +			if (smp_affinity_enable)
+> +				irq_set_affinity_hint(
+> +					instance->msixentry[i].vector, NULL);
+>  			free_irq(instance->msixentry[i].vector,
+>  				 &instance->irq_context[i]);
+>  		}
 
-> The version is in the spec.
-
-Not sure what you're trying to say here, the old sense-iu was only
-ever present in draft versions. The official uas-r04.pdf and the
-uas2r00.pdf draft both only define the new style 16 byte sense iu.
-
-> And you might see true USB<->SCSI bridges passing through the
-> sense data.
-
-Right, and we support that, this just drops support for the old style
-8 byte sense-iu which was only present in the r00 draft of the spec.
-
-Regards,
-
-Hans
