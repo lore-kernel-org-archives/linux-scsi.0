@@ -1,26 +1,35 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH fix for 3.17 v2] uas: Disable uas on ASM1051 devices
-Date: Wed, 10 Sep 2014 10:51:35 +0200
-Message-ID: <1410339096-13227-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v3 16/17] arcmsr: support new adapter ARC12x4 series
+Date: Wed, 10 Sep 2014 11:58:35 +0200
+Message-ID: <541020CB.8010302@redhat.com>
+References: <1408433122.4748.73.camel@Centos6.3-64> <53FDE490.1070201@redhat.com> <1409240809.4762.259.camel@Centos6.3-64> <53FF2544.8020601@redhat.com> <20140909163057.GA25745@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27068 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750879AbaIJJ7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2014 05:59:07 -0400
+In-Reply-To: <20140909163057.GA25745@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ching Huang <ching2048@areca.com.tw>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Greg,
+On 09/09/2014 06:30 PM, Christoph Hellwig wrote:
+> Ching,
+>
+> do you have a chance to address Thomas second concern below?  As
+> far as I can tell (Thomas, please correct me) that's the last
+> outstanding concern, and I'd really like to merge the arcmsr updates
+> for the Linux 3.18 merge window.
 
-Here is v2 of my ASM1051 blacklist patch. The commit message and some of
-the log messages have been changed to reflect that my vision on the ASM1051
-woes has shifted from: "too bad we need to blacklist this because it does not
-work in some cases", to: "this thing is just too buggy to try and use with uas,
-disable it already".
+Correct, still awaiting a response.
 
-Other then that there are no changes.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-It would be good if we could get this fix into 3.17, as we've been receiving
-a number of uas bug reports from ASM1051 users.
-
-Regards,
-
-Hans
