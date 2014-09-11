@@ -1,96 +1,44 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH V3 11/16] scsi: ufs: refactor configuring power mode
-Date: Thu, 11 Sep 2014 22:09:50 +0900
-Message-ID: <CAC5umyh4n9+2mRg-q+yjnmPuxVM5q+qKcY67EdGe7-pCst249A@mail.gmail.com>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
-	<1410350063-23267-12-git-send-email-draviv@codeaurora.org>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: [PATCH] xen-scsifront: don't deadlock if the ring becomes full
+Date: Thu, 11 Sep 2014 14:31:53 +0100
+Message-ID: <1410442313-19639-1-git-send-email-david.vrabel@citrix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:49749 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756643AbaIKNJw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 09:09:52 -0400
-In-Reply-To: <1410350063-23267-12-git-send-email-draviv@codeaurora.org>
+Received: from smtp02.citrix.com ([66.165.176.63]:61841 "EHLO
+	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879AbaIKNcj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 09:32:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>
+To: xen-devel@lists.xenproject.org
+Cc: David Vrabel <david.vrabel@citrix.com>, linux-scsi@vger.kernel.org, Juergen Gross <jgross@suse.com>
 
-2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
-> +static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-> +               struct ufs_pa_layer_attr *desired_pwr_mode)
-> +{
-> +       struct ufs_pa_layer_attr final_params = { 0 };
-> +       int ret;
-> +
-> +       if (hba->vops->pwr_change_notify)
+scsifront_action_handler() will deadlock on host->host_lock, if the
+ring is full and it has to wait for entries to become available.
 
-If hba->vops is null as no vendor specific callbacks, this causes
-a null pointer dereference.  So null check for hba->vops is also needed
-just like other callbacks.
+Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+---
+This was found with sparse. I've not tested it.
+---
+ drivers/scsi/xen-scsifront.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> +               hba->vops->pwr_change_notify(hba,
-> +                    PRE_CHANGE, desired_pwr_mode, &final_params);
-> +       else
-> +               memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
-> +
->         /*
->          * Configure attributes for power mode change with below.
->          * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
->          * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
->          * - PA_HSSERIES
->          */
-> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
-> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
-> -       if (pwr[RX] == FASTAUTO_MODE)
-> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), final_params.gear_rx);
-> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
-> +                       final_params.lane_rx);
-> +       if (final_params.pwr_rx == FASTAUTO_MODE ||
-> +                       final_params.pwr_rx == FAST_MODE)
->                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-> +       else
-> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), FALSE);
->
-> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
-> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
-> -       if (pwr[TX] == FASTAUTO_MODE)
-> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), final_params.gear_tx);
-> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
-> +                       final_params.lane_tx);
-> +       if (final_params.pwr_tx == FASTAUTO_MODE ||
-> +                       final_params.pwr_tx == FAST_MODE)
->                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
-> -
-> -       if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
-> -               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
-> -
-> -       ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
-> -       if (ret)
-> +       else
-> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), FALSE);
-> +
-> +       if ((final_params.pwr_rx == FASTAUTO_MODE ||
-> +                       final_params.pwr_tx == FASTAUTO_MODE ||
-> +                       final_params.pwr_rx == FAST_MODE ||
-> +                       final_params.pwr_tx == FAST_MODE) &&
-> +                       final_params.hs_rate == PA_HS_MODE_B)
-> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
-> +                               final_params.hs_rate);
-> +
-> +       ret = ufshcd_uic_change_pwr_mode(hba, final_params.pwr_rx << 4
-> +                       | final_params.pwr_tx);
-> +       if (ret) {
->                 dev_err(hba->dev,
->                         "pwr_mode: power mode change failed %d\n", ret);
-> +       } else {
-> +               if (hba->vops->pwr_change_notify)
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 7e88659..cc14c8d 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -541,8 +541,9 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
+ 	if (!shadow)
+ 		return FAILED;
+ 
++	spin_lock_irq(host->host_lock);
++
+ 	for (;;) {
+-		spin_lock_irq(host->host_lock);
+ 		if (!RING_FULL(&info->ring)) {
+ 			ring_req = scsifront_command2ring(info, sc, shadow);
+ 			if (ring_req)
+-- 
+1.7.10.4
 
-Ditto.
-
-> +                       hba->vops->pwr_change_notify(hba,
-> +                               POST_CHANGE, NULL, &final_params);
-> +
-> +               memcpy(&hba->pwr_info, &final_params, sizeof(final_params));
-> +       }
