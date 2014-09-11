@@ -1,51 +1,95 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
-Date: Thu, 11 Sep 2014 10:09:23 +0300
-Message-ID: <54114AA3.2090806@dev.mellanox.co.il>
-References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>	<1409254292-2540-15-git-send-email-martin.petersen@oracle.com>	<540390FF.2040703@dev.mellanox.co.il> <yq1bnqn9fzg.fsf@sermon.lab.mkp.net>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Updated linux uas driver, please test
+Date: Thu, 11 Sep 2014 10:07:45 +0200
+Message-ID: <54115851.5090302@redhat.com>
+References: <54104070.20606@redhat.com> <5410BA88.9090508@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:47570 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbaIKHJa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 03:09:30 -0400
-Received: by mail-we0-f182.google.com with SMTP id k48so4017604wev.13
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2014 00:09:29 -0700 (PDT)
-In-Reply-To: <yq1bnqn9fzg.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5410BA88.9090508-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, daveiro-PkbjNfxxIARBDgjK7y7TUQ@public.gmane.org, tuxoko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, sumit.tiwari1943-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, wolput-eWKpJWsLgTg@public.gmane.org, claudio.bizzarri-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, axboe@fb.com, hch@lst.de, sagig@mellanox.com
 
-On 9/11/2014 3:07 AM, Martin K. Petersen wrote:
->>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
->
-> [Back from vacation]
+Hi,
 
-Hey Martin,
+On 09/10/2014 10:54 PM, Douglas Gilbert wrote:
+> On 14-09-10 08:13 AM, Hans de Goede wrote:
+>> Hi All,
+>>
+>> I'm mailing all of you because you've reported various problems
+>> with the new uas support in kernel 3.16 and later.
+>>
+>> I've been working on making the uas driver more resilient to
+>> errors, as well as improved logging so we can easier figure
+>> out the cause of errors.
+>>
+>> I would like to ask you all to test a standalone version of
+>> the new uas driver with the devices you've been having
+>> trouble with before, and report the results to me.
+>>
+>> Testing instructions:
+>>
+>> 1) Remove any usb-storage.quirks= setting from the kernel commandline,
+>> and remove any /etc/modprobe.conf* files doing the same, boot your
+>> machine without the uas device attached.
+>>
+>> 2) Make sure your machine is set up for building kernel modules,
+>> usually this means installing kernel-devel and gcc packages, see
+>> your distributions documentation for more info
+>>
+>> 3) Download all files from here:
+>> https://fedorapeople.org/~jwrdegoede/uas/
+>> And put them all in a single directory, named e.g. uas
+>>
+>> 4) Start a terminal, cd into the uas directory
+>>
+>> 5) Run the following commands:
+>> make
+>> sudo rmmod uas
+>> sudo insmod ./uas.ko
+>>
+>> 6) Connect your uas device
+>>
+>> 7) Wait for the disk to show up (wait circa 1 minute max), then do:
+>>
+>> dmesg > dmesg.log
+>> lsusb -v > lsusb.log
+>>
+>> 8) Test the uas disk
+>>
+>> Once done please send me a mail, in this mail please
+>>
+>> 1) Describe how the disk worked, did it show up in a reasonable time,
+>> and did it work?
+>>
+>> 2) Attach dmesg.log and lsusb.log
+> 
+> Could you give some sort of indication of the dd throughput
+> time (on READs) with UAS given a recent SATA SSD that can
+> source data faster than 300 MB/sec (say)?
 
->
->>> + [SCSI_PROT_WRITE_PASS] = SCSI_PROT_TRANSFER_PI |
->>> + SCSI_PROT_GUARD_CHECK |
->>> + SCSI_PROT_REF_CHECK |
->>> + SCSI_PROT_REF_INCREMENT |
->>> + SCSI_PROT_IP_CHECKSUM,
->
-> Sagi> A bit strange to me that you put REF_CHECK & REF_INCREMENT flag
-> Sagi> depending on the prot_op while it really depends on the prot_type.
->
-> It doesn't just depend on the prot_type. You need to be able to tell the
-> HBA to increment/test the ref tag even for a Type 0 device.
->
+I've done tests with 3 dd running simultaneously, reading data
+from 3 different parts of the disk, and I'm getting about 110 MB/s
+for each dd, so about 330 MB / s in total.
 
-That's still a dependence on prot_type (type 0...). Notice that you
-set SCSI_PROT_REF_INCREMENT in every op index (except SCSI_PROT_NORMAL)
-so my point is that it's strange to see this association.
+This is with a Crucial M500 ssd, with both asm1053 and nec chipsets.
 
-P.S.
-Now drivers can stop understanding prot_type to set DIF operations...
-so once drivers stop referencing it we can remove it from scsi_cmnd.
+> My ASM1051 based dock under W7 got an underwhelming maximum
+> of 42 MB/sec with such a SATA SSD. And I saw enough stupid
+> meta-data from SCSI commands to suggest that product should
+> be binned.
 
-Sagi.
+42 MB/s sounds like you're running over USB-2 not USB-3 (although for
+USB-2 it is very good, but uas should be able to get pretty close
+to saturating the bus with USB-2).
+
+Regards,
+
+Hans
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
