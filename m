@@ -1,47 +1,96 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH V3 09/16] scsi: ufs: introduce well known logical unit in ufs
-Date: Thu, 11 Sep 2014 22:06:06 +0900
-Message-ID: <CAC5umyid+ASquE=RzuNq8Q946et+Sv9dw6vJWMM=JjecoDJvmQ@mail.gmail.com>
+Subject: Re: [PATCH V3 11/16] scsi: ufs: refactor configuring power mode
+Date: Thu, 11 Sep 2014 22:09:50 +0900
+Message-ID: <CAC5umyh4n9+2mRg-q+yjnmPuxVM5q+qKcY67EdGe7-pCst249A@mail.gmail.com>
 References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
-	<1410350063-23267-10-git-send-email-draviv@codeaurora.org>
+	<1410350063-23267-12-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:58607 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755025AbaIKNGI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 09:06:08 -0400
-In-Reply-To: <1410350063-23267-10-git-send-email-draviv@codeaurora.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:49749 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756643AbaIKNJw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 09:09:52 -0400
+In-Reply-To: <1410350063-23267-12-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dolev Raviv <draviv@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>
 
 2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
-> +static void ufshcd_set_queue_depth(struct scsi_device *sdev)
+> +static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+> +               struct ufs_pa_layer_attr *desired_pwr_mode)
 > +{
-> +       int ret = 0;
-> +       u8 lun_qdepth;
-> +       struct ufs_hba *hba;
+> +       struct ufs_pa_layer_attr final_params = { 0 };
+> +       int ret;
 > +
-> +       hba = shost_priv(sdev->host);
-> +
-> +       lun_qdepth = hba->nutrs;
-> +       ret = ufshcd_read_unit_desc_param(hba,
-> +                                         ufshcd_scsi_to_upiu_lun(sdev->lun),
-> +                                         UNIT_DESC_PARAM_LU_Q_DEPTH,
-> +                                         &lun_qdepth,
-> +                                         sizeof(lun_qdepth));
-> +
-> +       /* Some WLUN doesn't support unit descriptor */
-> +       if (ret == -EOPNOTSUPP)
-> +               lun_qdepth = 1;
-> +       else if (!lun_qdepth)
-> +               /* eventually, we can figure out the real queue depth */
-> +               lun_qdepth = hba->nutrs;
-> +       else
-> +               lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
+> +       if (hba->vops->pwr_change_notify)
 
-If ufshcd_read_unit_desc_param() failed and its error code was not
--EOPNOTSUPP, lun_qdepth is undefined.  In such cases lun_qdepth
-should be 1?
+If hba->vops is null as no vendor specific callbacks, this causes
+a null pointer dereference.  So null check for hba->vops is also needed
+just like other callbacks.
+
+> +               hba->vops->pwr_change_notify(hba,
+> +                    PRE_CHANGE, desired_pwr_mode, &final_params);
+> +       else
+> +               memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
+> +
+>         /*
+>          * Configure attributes for power mode change with below.
+>          * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
+>          * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
+>          * - PA_HSSERIES
+>          */
+> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
+> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
+> -       if (pwr[RX] == FASTAUTO_MODE)
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), final_params.gear_rx);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
+> +                       final_params.lane_rx);
+> +       if (final_params.pwr_rx == FASTAUTO_MODE ||
+> +                       final_params.pwr_rx == FAST_MODE)
+>                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
+> +       else
+> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), FALSE);
+>
+> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
+> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
+> -       if (pwr[TX] == FASTAUTO_MODE)
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), final_params.gear_tx);
+> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
+> +                       final_params.lane_tx);
+> +       if (final_params.pwr_tx == FASTAUTO_MODE ||
+> +                       final_params.pwr_tx == FAST_MODE)
+>                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
+> -
+> -       if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
+> -               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
+> -
+> -       ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
+> -       if (ret)
+> +       else
+> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), FALSE);
+> +
+> +       if ((final_params.pwr_rx == FASTAUTO_MODE ||
+> +                       final_params.pwr_tx == FASTAUTO_MODE ||
+> +                       final_params.pwr_rx == FAST_MODE ||
+> +                       final_params.pwr_tx == FAST_MODE) &&
+> +                       final_params.hs_rate == PA_HS_MODE_B)
+> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
+> +                               final_params.hs_rate);
+> +
+> +       ret = ufshcd_uic_change_pwr_mode(hba, final_params.pwr_rx << 4
+> +                       | final_params.pwr_tx);
+> +       if (ret) {
+>                 dev_err(hba->dev,
+>                         "pwr_mode: power mode change failed %d\n", ret);
+> +       } else {
+> +               if (hba->vops->pwr_change_notify)
+
+Ditto.
+
+> +                       hba->vops->pwr_change_notify(hba,
+> +                               POST_CHANGE, NULL, &final_params);
+> +
+> +               memcpy(&hba->pwr_info, &final_params, sizeof(final_params));
+> +       }
