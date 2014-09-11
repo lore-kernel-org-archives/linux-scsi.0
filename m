@@ -1,38 +1,44 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH 8/8] blk-mq: support per-distpatch_queue flush machinery
-Date: Thu, 11 Sep 2014 07:53:09 +0800
-Message-ID: <CACVXFVNMfe1bGRmeQf-xKxA=YnD8e=dXwBQmoJzx_HNiPFJYHQ@mail.gmail.com>
-References: <1410267949-21904-1-git-send-email-ming.lei@canonical.com>
-	<1410267949-21904-9-git-send-email-ming.lei@canonical.com>
-	<20140909184856.GG16750@infradead.org>
-	<CACVXFVNhmvy+aSgbJX8zgRVJQS0q6PWJLhmy_XVN_9YvSFdwag@mail.gmail.com>
-	<20140910190247.GA28821@infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
+Date: Wed, 10 Sep 2014 20:07:47 -0400
+Message-ID: <yq1bnqn9fzg.fsf@sermon.lab.mkp.net>
+References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
+	<1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
+	<540390FF.2040703@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48229 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbaIJXxM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2014 19:53:12 -0400
-In-Reply-To: <20140910190247.GA28821@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51382 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbaIKAH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Sep 2014 20:07:59 -0400
+In-Reply-To: <540390FF.2040703@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Mon, 01 Sep 2014 00:17:51 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, axboe@fb.com, hch@lst.de, sagig@mellanox.com
 
-On Thu, Sep 11, 2014 at 3:02 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Sep 10, 2014 at 09:40:11AM +0800, Ming Lei wrote:
->> I am wondering we can do that because lifetime is totally different
->> between flush requests and tag_set requests which are initialized
->> before request queue is created.
->
-> We shouldn't do it in the tag sets, but where we allocate and free
-> each hctx: blk_mq_init_queue and blk_mq_free_hw_queues.
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
-That should work, but both flush queue's allocation and .init_request()
-have to move to the function because hctx->numa_node is basically
-ready in blk_mq_init_queue().  Then blk_init_flush() only need to allocate
-the data for legacy case.
+[Back from vacation]
 
+>> + [SCSI_PROT_WRITE_PASS] = SCSI_PROT_TRANSFER_PI |
+>> + SCSI_PROT_GUARD_CHECK |
+>> + SCSI_PROT_REF_CHECK |
+>> + SCSI_PROT_REF_INCREMENT |
+>> + SCSI_PROT_IP_CHECKSUM,
 
-Thanks,
+Sagi> A bit strange to me that you put REF_CHECK & REF_INCREMENT flag
+Sagi> depending on the prot_op while it really depends on the prot_type.
+
+It doesn't just depend on the prot_type. You need to be able to tell the
+HBA to increment/test the ref tag even for a Type 0 device.
+
+Sagi> I have a question here, What are your plans with explicit ref/app
+Sagi> escape flags?  Were these just left behind on this series?
+
+We don't yet have a need for them in Linux so I didn't define them.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
