@@ -1,504 +1,194 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 02/18][SCSI] mpt2sas: MPI2 Rev Y (2.00.17) and Rev Z (2.00.18) specifications
-Date: Fri, 12 Sep 2014 15:35:17 +0530
-Message-ID: <1410516333-3678-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 04/18][SCSI] mpt2sas: Clear PFA Status on SGPIO when PFA Drive is Removed or Replaced
+Date: Fri, 12 Sep 2014 15:35:19 +0530
+Message-ID: <1410516333-3678-5-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:50168 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbaILKG0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 06:06:26 -0400
-Received: by mail-pa0-f43.google.com with SMTP id fa1so930999pad.30
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 03:06:25 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Below is the change set in MPI2 Rev Y specification and in 2.00.17 header files
-1) Added SCSIStatusQualifier to SCSI IO Error Reply message.
-2) Added ATA Security Freeze Lock to IO Unit Page 1 Flags field.
+Added code to send a SEP message that turns off the Predictive
+Failure LED when a drive is removed (if Predictive Failure LED was turned on).
 
-Below is the change set in MPI2 Rev Z specification and in 2.00.19 header files
-1) Added reserved fields to IO Unit Page 7 for future use.
-2) Added optional functionality to IOCInit Request so that
-   the host may specify a separate base address for each
-   Reply Descriptor Post Queue. IOC support for this is
-   indicated using a new IOCCapabilities bit in the IOCFacts Reply.
-3) Added Toolbox Console Text Display Tool
-   The host uses the Console Text Display Tool to send a string to
-   IOC's Console using different console types (eg: UART serial terminal or Ethernet terminal).
-
-The copyright in the mpi files is updated for year 2014
+Added a new flag 'pfa_led_on' per device that tracks the status of Predictive
+Failure LED. When the drive is removed, this flag is checked and
+sends the SEP message to turn off the respective Predictive Failure LED.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt2sas/mpi/mpi2.h      | 12 ++++--
- drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h | 29 ++++++++++----
- drivers/scsi/mpt2sas/mpi/mpi2_init.h |  8 ++--
- drivers/scsi/mpt2sas/mpi/mpi2_ioc.h  | 74 ++++++++++++++++++++++++++++++------
- drivers/scsi/mpt2sas/mpi/mpi2_raid.h |  8 +++-
- drivers/scsi/mpt2sas/mpi/mpi2_sas.h  |  2 +-
- drivers/scsi/mpt2sas/mpi/mpi2_tool.h | 44 ++++++++++++++++++++-
- drivers/scsi/mpt2sas/mpi/mpi2_type.h |  2 +-
- 8 files changed, 148 insertions(+), 31 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |  2 ++
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 70 +++++++++++++++++++++++++++++++-----
+ 2 files changed, 63 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index 7b14a01..088eefa 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.28
-+ *  mpi2.h Version:  02.00.32
-  *
-  *  Version History
-  *  ---------------
-@@ -78,6 +78,11 @@
-  *  07-10-12  02.00.26  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  07-26-12  02.00.27  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  12-20-12  02.00.29  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *			Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
-+ *  04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  --------------------------------------------------------------------------
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 89f944a..6ce7020 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -355,6 +355,7 @@ struct _internal_cmd {
+  * @slot: number number
+  * @phy: phy identifier provided in sas device page 0
+  * @responding: used in _scsih_sas_device_mark_responding
++ * @pfa_led_on: flag for PFA LED status
   */
+ struct _sas_device {
+ 	struct list_head list;
+@@ -373,6 +374,7 @@ struct _sas_device {
+ 	u16	slot;
+ 	u8	phy;
+ 	u8	responding;
++	u8	pfa_led_on;
+ };
  
-@@ -103,7 +108,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
+ /**
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index db71b60..e7303ed 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -145,7 +145,7 @@ struct sense_info {
+ };
  
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x1C)
-+#define MPI2_HEADER_VERSION_UNIT            (0x20)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -263,6 +268,7 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS
- #define MPI2_REPLY_POST_HOST_INDEX_MASK         (0x00FFFFFF)
- #define MPI2_RPHI_MSIX_INDEX_MASK               (0xFF000000)
- #define MPI2_RPHI_MSIX_INDEX_SHIFT              (24)
-+#define MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET  (0x0000030C) /* MPI v2.5 only */
  
- /*
-  * Defines for the HCBSize and address
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index 88cb7f8..510ef0d 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_cnfg.h
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
-  *
-- *    mpi2_cnfg.h Version:  02.00.23
-+ *    mpi2_cnfg.h Version:  02.00.26
-  *
-  *  Version History
-  *  ---------------
-@@ -150,7 +150,13 @@
-  *                      Added UEFIVersion field to BIOS Page 1 and defined new
-  *                      BiosOptions bits.
-  *  11-27-12  02.00.23  Added MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER.
-- *			 Added MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID.
-+ *			Added MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID.
-+ *  12-20-12  02.00.24  Marked MPI2_SASIOUNIT1_CONTROL_CLEAR_AFFILIATION as
-+ *			obsolete for MPI v2.5 and later.
-+ *			Added some defines for 12G SAS speeds.
-+ *  04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
-+ *			Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
-+ *			match the specification.
-  *  --------------------------------------------------------------------------
+-#define MPT2SAS_TURN_ON_FAULT_LED (0xFFFC)
++#define MPT2SAS_TURN_ON_PFA_LED (0xFFFC)
+ #define MPT2SAS_PORT_ENABLE_COMPLETE (0xFFFD)
+ #define MPT2SAS_REMOVE_UNRESPONDING_DEVICES (0xFFFF)
+ /**
+@@ -4308,7 +4308,7 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ #endif
+ 
+ /**
+- * _scsih_turn_on_fault_led - illuminate Fault LED
++ * _scsih_turn_on_pfa_led - illuminate PFA LED
+  * @ioc: per adapter object
+  * @handle: device handle
+  * Context: process
+@@ -4316,10 +4316,15 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+  * Return nothing.
   */
+ static void
+-_scsih_turn_on_fault_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
++_scsih_turn_on_pfa_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ {
+ 	Mpi2SepReply_t mpi_reply;
+ 	Mpi2SepRequest_t mpi_request;
++	struct _sas_device *sas_device;
++
++	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
++	if (!sas_device)
++		return;
  
-@@ -773,6 +779,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1
- #define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
+ 	memset(&mpi_request, 0, sizeof(Mpi2SepRequest_t));
+ 	mpi_request.Function = MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR;
+@@ -4334,6 +4339,47 @@ _scsih_turn_on_fault_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 		__FILE__, __LINE__, __func__);
+ 		return;
+ 	}
++	sas_device->pfa_led_on = 1;
++
++
++	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT
++		 "enclosure_processor: ioc_status (0x%04x), loginfo(0x%08x)\n",
++		 ioc->name, le16_to_cpu(mpi_reply.IOCStatus),
++		 le32_to_cpu(mpi_reply.IOCLogInfo)));
++		return;
++	}
++}
++
++/**
++ * _scsih_turn_off_pfa_led - turn off PFA LED
++ * @ioc: per adapter object
++ * @sas_device: sas device whose PFA LED has to turned off
++ * Context: process
++ *
++ * Return nothing.
++ */
++static void
++_scsih_turn_off_pfa_led(struct MPT2SAS_ADAPTER *ioc,
++	struct _sas_device *sas_device)
++{
++	Mpi2SepReply_t mpi_reply;
++	Mpi2SepRequest_t mpi_request;
++
++	memset(&mpi_request, 0, sizeof(Mpi2SepRequest_t));
++	mpi_request.Function = MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR;
++	mpi_request.Action = MPI2_SEP_REQ_ACTION_WRITE_STATUS;
++	mpi_request.SlotStatus = 0;
++	mpi_request.Slot = cpu_to_le16(sas_device->slot);
++	mpi_request.DevHandle = 0;
++	mpi_request.EnclosureHandle = cpu_to_le16(sas_device->enclosure_handle);
++	mpi_request.Flags = MPI2_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS;
++	if ((mpt2sas_base_scsi_enclosure_processor(ioc, &mpi_reply,
++	    &mpi_request)) != 0) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n", ioc->name,
++		__FILE__, __LINE__, __func__);
++		return;
++	}
  
- /* IO Unit Page 1 Flags defines */
-+#define MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK       (0x00004000)
- #define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
- #define MPI2_IOUNITPAGE1_MASK_SATA_WRITE_CACHE          (0x00000600)
- #define MPI2_IOUNITPAGE1_SATA_WRITE_CACHE_SHIFT         (9)
-@@ -844,7 +851,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_5 {
- #define MPI2_IOUNITPAGE5_PAGEVERSION                    (0x00)
+ 	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo) {
+ 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "enclosure_processor: "
+@@ -4345,7 +4391,7 @@ _scsih_turn_on_fault_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ }
  
- /* defines for IO Unit Page 5 DmaEngineCapabilities field */
--#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFF00)
-+#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFFFF0000)
- #define MPI2_IOUNITPAGE5_DMA_CAP_SHIFT_MAX_REQUESTS     (16)
- 
- #define MPI2_IOUNITPAGE5_DMA_CAP_EEDP                   (0x0008)
-@@ -885,13 +892,17 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
-     U16                     IOCTemperature;                         /* 0x10 */
-     U8                      IOCTemperatureUnits;                    /* 0x12 */
-     U8                      IOCSpeed;                               /* 0x13 */
--	U16                     BoardTemperature;              /* 0x14 */
--	U8                      BoardTemperatureUnits;         /* 0x16 */
--	U8                      Reserved3;                     /* 0x17 */
-+	U16                     BoardTemperature;		    /* 0x14 */
-+	U8                      BoardTemperatureUnits;		    /* 0x16 */
-+	U8                      Reserved3;			    /* 0x17 */
-+	U32                     Reserved4;                          /* 0x18 */
-+	U32                     Reserved5;                          /* 0x1C */
-+	U32                     Reserved6;                          /* 0x20 */
-+	U32                     Reserved7;                          /* 0x24 */
- } MPI2_CONFIG_PAGE_IO_UNIT_7, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
-   Mpi2IOUnitPage7_t, MPI2_POINTER pMpi2IOUnitPage7_t;
- 
--#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x02)
-+#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x04)
- 
- /* defines for IO Unit Page 7 PCIeWidth field */
- #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X1              (0x01)
-@@ -1801,6 +1812,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1
- #define MPI2_SAS_PRATE_MAX_RATE_1_5                     (0x80)
- #define MPI2_SAS_PRATE_MAX_RATE_3_0                     (0x90)
- #define MPI2_SAS_PRATE_MAX_RATE_6_0                     (0xA0)
-+#define MPI25_SAS_PRATE_MAX_RATE_12_0                   (0xB0)
- #define MPI2_SAS_PRATE_MIN_RATE_MASK                    (0x0F)
- #define MPI2_SAS_PRATE_MIN_RATE_NOT_PROGRAMMABLE        (0x00)
- #define MPI2_SAS_PRATE_MIN_RATE_1_5                     (0x08)
-@@ -1813,6 +1825,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_1
- #define MPI2_SAS_HWRATE_MAX_RATE_1_5                    (0x80)
- #define MPI2_SAS_HWRATE_MAX_RATE_3_0                    (0x90)
- #define MPI2_SAS_HWRATE_MAX_RATE_6_0                    (0xA0)
-+#define MPI25_SAS_HWRATE_MAX_RATE_12_0                  (0xB0)
- #define MPI2_SAS_HWRATE_MIN_RATE_MASK                   (0x0F)
- #define MPI2_SAS_HWRATE_MIN_RATE_1_5                    (0x08)
- #define MPI2_SAS_HWRATE_MIN_RATE_3_0                    (0x09)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 9d284da..eea1a16 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_init.h
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.14
-+ *    mpi2_init.h Version:  02.00.15
-  *
-  *  Version History
-  *  ---------------
-@@ -37,6 +37,8 @@
-  *  02-06-12  02.00.13  Added alternate defines for Task Priority / Command
-  *                      Priority to match SAM-4.
-  *  07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
-+ *  04-09-13  02.00.15  Added SCSIStatusQualifier field to MPI2_SCSI_IO_REPLY,
-+ *			replacing the Reserved4 field.
-  *  --------------------------------------------------------------------------
+ /**
+- * _scsih_send_event_to_turn_on_fault_led - fire delayed event
++ * _scsih_send_event_to_turn_on_pfa_led - fire delayed event
+  * @ioc: per adapter object
+  * @handle: device handle
+  * Context: interrupt.
+@@ -4353,14 +4399,14 @@ _scsih_turn_on_fault_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+  * Return nothing.
   */
+ static void
+-_scsih_send_event_to_turn_on_fault_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
++_scsih_send_event_to_turn_on_pfa_led(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ {
+ 	struct fw_event_work *fw_event;
  
-@@ -234,7 +236,7 @@ typedef struct _MPI2_SCSI_IO_REPLY
-     U32                     SenseCount;                     /* 0x18 */
-     U32                     ResponseInfo;                   /* 0x1C */
-     U16                     TaskTag;                        /* 0x20 */
--    U16                     Reserved4;                      /* 0x22 */
-+	U16                     SCSIStatusQualifier;	     /* 0x22 */
-     U32                     BidirectionalTransferCount;     /* 0x24 */
-     U32                     Reserved5;                      /* 0x28 */
-     U32                     Reserved6;                      /* 0x2C */
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index d159c5f..2c3b0f2 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_ioc.h
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.22
-+ *  mpi2_ioc.h Version:  02.00.23
-  *
-  *  Version History
-  *  ---------------
-@@ -121,6 +121,11 @@
-  *  07-26-12  02.00.22  Added MPI2_IOCFACTS_EXCEPT_PARTIAL_MEMORY_FAILURE.
-  *                      Added ElapsedSeconds field to
-  *                      MPI2_EVENT_DATA_IR_OPERATION_STATUS.
-+ *  08-19-13  02.00.23  For IOCInit, added MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE
-+ *                      and MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY.
-+ *                      Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
-+ *                      Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
-+ *                      Added Encrypted Hash Extended Image.
-  *  --------------------------------------------------------------------------
-  */
+ 	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
+ 	if (!fw_event)
+ 		return;
+-	fw_event->event = MPT2SAS_TURN_ON_FAULT_LED;
++	fw_event->event = MPT2SAS_TURN_ON_PFA_LED;
+ 	fw_event->device_handle = handle;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
+@@ -4404,7 +4450,7 @@ _scsih_smart_predicted_fault(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
  
-@@ -177,6 +182,9 @@ typedef struct _MPI2_IOC_INIT_REQUEST
- #define MPI2_WHOINIT_HOST_DRIVER                (0x04)
- #define MPI2_WHOINIT_MANUFACTURER               (0x05)
+ 	if (ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_IBM)
+-		_scsih_send_event_to_turn_on_fault_led(ioc, handle);
++		_scsih_send_event_to_turn_on_pfa_led(ioc, handle);
  
-+/* MsgFlags */
-+#define MPI2_IOCINIT_MSGFLAG_RDPQ_ARRAY_MODE    (0x01)
+ 	/* insert into event log */
+ 	sz = offsetof(Mpi2EventNotificationReply_t, EventData) +
+@@ -5325,6 +5371,12 @@ _scsih_remove_device(struct MPT2SAS_ADAPTER *ioc,
+ {
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 
++	if ((ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_IBM) &&
++		(sas_device->pfa_led_on)) {
++		_scsih_turn_off_pfa_led(ioc, sas_device);
++		sas_device->pfa_led_on = 0;
++	}
 +
- /* MsgVersion */
- #define MPI2_IOCINIT_MSGVERSION_MAJOR_MASK      (0xFF00)
- #define MPI2_IOCINIT_MSGVERSION_MAJOR_SHIFT     (8)
-@@ -189,9 +197,17 @@ typedef struct _MPI2_IOC_INIT_REQUEST
- #define MPI2_IOCINIT_HDRVERSION_DEV_MASK        (0x00FF)
- #define MPI2_IOCINIT_HDRVERSION_DEV_SHIFT       (0)
- 
--/* minimum depth for the Reply Descriptor Post Queue */
-+/* minimum depth for a Reply Descriptor Post Queue */
- #define MPI2_RDPQ_DEPTH_MIN                     (16)
- 
-+/* Reply Descriptor Post Queue Array Entry */
-+typedef struct _MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY {
-+	U64                 RDPQBaseAddress;                    /* 0x00 */
-+	U32                 Reserved1;                          /* 0x08 */
-+	U32                 Reserved2;                          /* 0x0C */
-+} MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY,
-+MPI2_POINTER PTR_MPI2_IOC_INIT_RDPQ_ARRAY_ENTRY,
-+Mpi2IOCInitRDPQArrayEntry, MPI2_POINTER pMpi2IOCInitRDPQArrayEntry;
- 
- /* IOCInit Reply message */
- typedef struct _MPI2_IOC_INIT_REPLY
-@@ -307,6 +323,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY
- /* ProductID field uses MPI2_FW_HEADER_PID_ */
- 
- /* IOCCapabilities */
-+#define MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE     (0x00040000)
- #define MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY   (0x00010000)
- #define MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX            (0x00008000)
- #define MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR       (0x00004000)
-@@ -1153,6 +1170,7 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST
- #define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
- #define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
- #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
-+#define MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY           (0x0C)
- #define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
- 
- /* FWDownload TransactionContext Element */
-@@ -1379,14 +1397,15 @@ typedef struct _MPI2_EXT_IMAGE_HEADER
- #define MPI2_EXT_IMAGE_HEADER_SIZE              (0x40)
- 
- /* defines for the ImageType field */
--#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED				(0x00)
--#define MPI2_EXT_IMAGE_TYPE_FW						(0x01)
--#define MPI2_EXT_IMAGE_TYPE_NVDATA					(0x03)
--#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER				(0x04)
--#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION			(0x05)
--#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT			(0x06)
--#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES		(0x07)
--#define MPI2_EXT_IMAGE_TYPE_MEGARAID				(0x08)
-+#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED             (0x00)
-+#define MPI2_EXT_IMAGE_TYPE_FW                      (0x01)
-+#define MPI2_EXT_IMAGE_TYPE_NVDATA                  (0x03)
-+#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER              (0x04)
-+#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION          (0x05)
-+#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT            (0x06)
-+#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES       (0x07)
-+#define MPI2_EXT_IMAGE_TYPE_MEGARAID                (0x08)
-+#define MPI2_EXT_IMAGE_TYPE_ENCRYPTED_HASH          (0x09)
- #define MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC    (0x80)
- #define MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC    (0xFF)
- #define MPI2_EXT_IMAGE_TYPE_MAX                   \
-@@ -1555,6 +1574,39 @@ typedef struct _MPI2_INIT_IMAGE_FOOTER
- #define MPI2_INIT_IMAGE_RESETVECTOR_OFFSET      (0x14)
- 
- 
-+/* Encrypted Hash Extended Image Data */
-+
-+typedef struct _MPI25_ENCRYPTED_HASH_ENTRY {
-+	U8                  HashImageType;          /* 0x00 */
-+	U8                  HashAlgorithm;          /* 0x01 */
-+	U8                  EncryptionAlgorithm;    /* 0x02 */
-+	U8                  Reserved1;              /* 0x03 */
-+	U32                 Reserved2;              /* 0x04 */
-+	U32                 EncryptedHash[1];       /* 0x08 */
-+} MPI25_ENCRYPTED_HASH_ENTRY, MPI2_POINTER PTR_MPI25_ENCRYPTED_HASH_ENTRY,
-+Mpi25EncryptedHashEntry_t, MPI2_POINTER pMpi25EncryptedHashEntry_t;
-+
-+/* values for HashImageType */
-+#define MPI25_HASH_IMAGE_TYPE_UNUSED            (0x00)
-+#define MPI25_HASH_IMAGE_TYPE_FIRMWARE          (0x01)
-+
-+/* values for HashAlgorithm */
-+#define MPI25_HASH_ALGORITHM_UNUSED             (0x00)
-+#define MPI25_HASH_ALGORITHM_SHA256             (0x01)
-+
-+/* values for EncryptionAlgorithm */
-+#define MPI25_ENCRYPTION_ALG_UNUSED             (0x00)
-+#define MPI25_ENCRYPTION_ALG_RSA256             (0x01)
-+
-+typedef struct _MPI25_ENCRYPTED_HASH_DATA {
-+	U8                              ImageVersion;           /* 0x00 */
-+	U8                              NumHash;                /* 0x01 */
-+	U16                             Reserved1;              /* 0x02 */
-+	U32                             Reserved2;              /* 0x04 */
-+	MPI25_ENCRYPTED_HASH_ENTRY      EncryptedHashEntry[1];  /* 0x08 */
-+} MPI25_ENCRYPTED_HASH_DATA, MPI2_POINTER PTR_MPI25_ENCRYPTED_HASH_DATA,
-+Mpi25EncryptedHashData_t, MPI2_POINTER pMpi25EncryptedHashData_t;
-+
- /****************************************************************************
- *  PowerManagementControl message
- ****************************************************************************/
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-index 0d202a2..7efa58f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_raid.h
-  *          Title:  MPI Integrated RAID messages and structures
-  *  Creation Date:  April 26, 2007
-  *
-- *    mpi2_raid.h Version:  02.00.09
-+ *    mpi2_raid.h Version:  02.00.10
-  *
-  *  Version History
-  *  ---------------
-@@ -29,6 +29,7 @@
-  *  02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
-  *  07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
-  *                      Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
-+ *  04-17-13  02.00.10  Added MPI25_RAID_ACTION_ADATA_ALLOW_PI.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -45,6 +46,9 @@
- *  RAID Action messages
- ****************************************************************************/
- 
-+/* ActionDataWord defines for use with MPI2_RAID_ACTION_CREATE_VOLUME action */
-+#define MPI25_RAID_ACTION_ADATA_ALLOW_PI            (0x80000000)
-+
- /* ActionDataWord defines for use with MPI2_RAID_ACTION_DELETE_VOLUME action */
- #define MPI2_RAID_ACTION_ADATA_KEEP_LBA0            (0x00000000)
- #define MPI2_RAID_ACTION_ADATA_ZERO_LBA0            (0x00000001)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-index 50b39cc..45b6fa1 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_sas.h
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-index 11b2ac4..9be03ed 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-@@ -1,12 +1,12 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_tool.h
-  *          Title:  MPI diagnostic tool structures and definitions
-  *  Creation Date:  March 26, 2007
-  *
-- *    mpi2_tool.h Version:  02.00.10
-+ *    mpi2_tool.h Version:  02.00.11
-  *
-  *  Version History
-  *  ---------------
-@@ -29,6 +29,7 @@
-  *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
-  *  07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
-  *			it uses MPI Chain SGE as well as MPI Simple SGE.
-+ * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -48,6 +49,7 @@
- #define MPI2_TOOLBOX_ISTWI_READ_WRITE_TOOL          (0x03)
- #define MPI2_TOOLBOX_BEACON_TOOL                    (0x05)
- #define MPI2_TOOLBOX_DIAGNOSTIC_CLI_TOOL            (0x06)
-+#define MPI2_TOOLBOX_TEXT_DISPLAY_TOOL              (0x07)
- 
- 
- /****************************************************************************
-@@ -321,6 +323,44 @@ typedef struct _MPI2_TOOLBOX_DIAGNOSTIC_CLI_REPLY {
-   MPI2_POINTER pMpi2ToolboxDiagnosticCliReply_t;
- 
- 
-+/****************************************************************************
-+*  Toolbox Console Text Display Tool
-+****************************************************************************/
-+
-+/* Toolbox Console Text Display Tool request message */
-+typedef struct _MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST {
-+	U8                      Tool;               /* 0x00 */
-+	U8                      Reserved1;          /* 0x01 */
-+	U8                      ChainOffset;        /* 0x02 */
-+	U8                      Function;           /* 0x03 */
-+	U16                     Reserved2;          /* 0x04 */
-+	U8                      Reserved3;          /* 0x06 */
-+	U8                      MsgFlags;           /* 0x07 */
-+	U8                      VP_ID;              /* 0x08 */
-+	U8                      VF_ID;              /* 0x09 */
-+	U16                     Reserved4;          /* 0x0A */
-+	U8                      Console;            /* 0x0C */
-+	U8                      Flags;              /* 0x0D */
-+	U16                     Reserved6;          /* 0x0E */
-+	U8                      TextToDisplay[4];   /* 0x10 */
-+} MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST,
-+MPI2_POINTER PTR_MPI2_TOOLBOX_TEXT_DISPLAY_REQUEST,
-+Mpi2ToolboxTextDisplayRequest_t,
-+MPI2_POINTER pMpi2ToolboxTextDisplayRequest_t;
-+
-+/* defines for the Console field */
-+#define MPI2_TOOLBOX_CONSOLE_TYPE_MASK          (0xF0)
-+#define MPI2_TOOLBOX_CONSOLE_TYPE_DEFAULT       (0x00)
-+#define MPI2_TOOLBOX_CONSOLE_TYPE_UART          (0x10)
-+#define MPI2_TOOLBOX_CONSOLE_TYPE_ETHERNET      (0x20)
-+
-+#define MPI2_TOOLBOX_CONSOLE_NUMBER_MASK        (0x0F)
-+
-+/* defines for the Flags field */
-+#define MPI2_TOOLBOX_CONSOLE_FLAG_TIMESTAMP     (0x01)
-+
-+
-+
- /*****************************************************************************
- *
- *       Diagnostic Buffer Messages
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_type.h b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-index 0b128b6..6b0dcdd 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_type.h
-@@ -1,5 +1,5 @@
- /*
-- *  Copyright (c) 2000-2013 LSI Corporation.
-+ *  Copyright (c) 2000-2014 LSI Corporation.
-  *
-  *
-  *           Name:  mpi2_type.h
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter: "
+ 	    "handle(0x%04x), sas_addr(0x%016llx)\n", ioc->name, __func__,
+ 		sas_device->handle, (unsigned long long)
+@@ -7441,8 +7493,8 @@ _firmware_event_work(struct work_struct *work)
+ 		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "port enable: complete "
+ 		    "from worker thread\n", ioc->name));
+ 		break;
+-	case MPT2SAS_TURN_ON_FAULT_LED:
+-		_scsih_turn_on_fault_led(ioc, fw_event->device_handle);
++	case MPT2SAS_TURN_ON_PFA_LED:
++		_scsih_turn_on_pfa_led(ioc, fw_event->device_handle);
+ 		break;
+ 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+ 		_scsih_sas_topology_change_event(ioc, fw_event);
 -- 
 2.0.2
-
