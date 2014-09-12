@@ -1,197 +1,128 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 11/18][SCSI] mpt3sas: Clear PFA Status on SGPIO when PFA Drive is Removed or Replaced
-Date: Fri, 12 Sep 2014 15:35:26 +0530
-Message-ID: <1410516333-3678-12-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 08/18][SCSI] mpt2sas: Get IOC_FACTS information using handshake protocol only after HBA card gets into READY or Operational state.
+Date: Fri, 12 Sep 2014 15:35:23 +0530
+Message-ID: <1410516333-3678-9-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og110.obsmtp.com ([64.18.2.173]:46173 "EHLO
+	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112AbaILKGu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 06:06:50 -0400
+Received: by mail-pa0-f44.google.com with SMTP id kx10so938718pab.31
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 03:06:49 -0700 (PDT)
 In-Reply-To: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Added code to send an SEP message that turns off the Predictive
-Failure LED when a drive is removed (if Predictive Failure LED was turned on).
+Driver initialization fails if driver tries to send IOC facts request message when the IOC is in reset or in a fault state.
 
-Added a new flag 'pfa_led_on' per device that tracks the status of Predictive
-Failure LED. When the drive is removed, this flag is checked and
-sends an SEP message to turn off the respective Predictive Failure LED.
+This patch will make sure that
+ 1.Driver to send IOC facts request message only if HBA is in operational or ready state.
+ 2.If IOC is in fault state, a diagnostic reset would be issued.
+ 3.If IOC is in reset state then driver will wait for 10 seconds to exit out of reset state.
+   If the HBA continues to be in reset state, then the HBA wouldn't be claimed by the driver.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  5 ++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 67 ++++++++++++++++++++++++++++++------
- 2 files changed, 61 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 68 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 9b90a6f..184826c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -272,8 +272,10 @@ struct _internal_cmd {
-  * @channel: target channel
-  * @slot: number number
-  * @phy: phy identifier provided in sas device page 0
-- * @fast_path: fast path feature enable bit
-  * @responding: used in _scsih_sas_device_mark_responding
-+ * @fast_path: fast path feature enable bit
-+ * @pfa_led_on: flag for PFA LED status
-+ *
-  */
- struct _sas_device {
- 	struct list_head list;
-@@ -293,6 +295,7 @@ struct _sas_device {
- 	u8	phy;
- 	u8	responding;
- 	u8	fast_path;
-+	u8	pfa_led_on;
- };
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 51a83d7..32cd7fa 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -95,6 +95,9 @@ MODULE_PARM_DESC(disable_discovery, " disable discovery ");
+ static int
+ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag);
  
- /**
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 135f12c..77a5bfa 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -159,7 +159,7 @@ struct sense_info {
- };
- 
- #define MPT3SAS_PROCESS_TRIGGER_DIAG (0xFFFB)
--#define MPT3SAS_TURN_ON_FAULT_LED (0xFFFC)
-+#define MPT3SAS_TURN_ON_PFA_LED (0xFFFC)
- #define MPT3SAS_PORT_ENABLE_COMPLETE (0xFFFD)
- #define MPT3SAS_ABRT_TASK_SET (0xFFFE)
- #define MPT3SAS_REMOVE_UNRESPONDING_DEVICES (0xFFFF)
-@@ -3885,7 +3885,7 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- #endif
- 
- /**
-- * _scsih_turn_on_fault_led - illuminate Fault LED
-+ * _scsih_turn_on_pfa_led - illuminate PFA LED
-  * @ioc: per adapter object
-  * @handle: device handle
-  * Context: process
-@@ -3893,10 +3893,15 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
-  * Return nothing.
-  */
- static void
--_scsih_turn_on_fault_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-+_scsih_turn_on_pfa_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	Mpi2SepReply_t mpi_reply;
- 	Mpi2SepRequest_t mpi_request;
-+	struct _sas_device *sas_device;
++static int
++_base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag);
 +
-+	sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
-+	if (!sas_device)
-+		return;
- 
- 	memset(&mpi_request, 0, sizeof(Mpi2SepRequest_t));
- 	mpi_request.Function = MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR;
-@@ -3911,6 +3916,7 @@ _scsih_turn_on_fault_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 		__FILE__, __LINE__, __func__);
- 		return;
- 	}
-+	sas_device->pfa_led_on = 1;
- 
- 	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo) {
- 		dewtprintk(ioc, pr_info(MPT3SAS_FMT
-@@ -3920,9 +3926,46 @@ _scsih_turn_on_fault_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 		return;
- 	}
+ /**
+  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
+  *
+@@ -3461,6 +3464,64 @@ _base_get_port_facts(struct MPT2SAS_ADAPTER *ioc, int port, int sleep_flag)
  }
-+/**
-+ * _scsih_turn_off_pfa_led - turn off Fault LED
-+ * @ioc: per adapter object
-+ * @sas_device: sas device whose PFA LED has to turned off
-+ * Context: process
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_turn_off_pfa_led(struct MPT3SAS_ADAPTER *ioc,
-+	struct _sas_device *sas_device)
-+{
-+	Mpi2SepReply_t mpi_reply;
-+	Mpi2SepRequest_t mpi_request;
  
-+	memset(&mpi_request, 0, sizeof(Mpi2SepRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR;
-+	mpi_request.Action = MPI2_SEP_REQ_ACTION_WRITE_STATUS;
-+	mpi_request.SlotStatus = 0;
-+	mpi_request.Slot = cpu_to_le16(sas_device->slot);
-+	mpi_request.DevHandle = 0;
-+	mpi_request.EnclosureHandle = cpu_to_le16(sas_device->enclosure_handle);
-+	mpi_request.Flags = MPI2_SEP_REQ_FLAGS_ENCLOSURE_SLOT_ADDRESS;
-+	if ((mpt3sas_base_scsi_enclosure_processor(ioc, &mpi_reply,
-+		&mpi_request)) != 0) {
-+		printk(MPT3SAS_FMT "failure at %s:%d/%s()!\n", ioc->name,
-+		__FILE__, __LINE__, __func__);
-+		return;
+ /**
++ * _base_wait_for_iocstate - Wait until the card is in READY or OPERATIONAL
++ * @ioc: per adapter object
++ * @timeout:
++ * @sleep_flag: CAN_SLEEP or NO_SLEEP
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
++static int
++_base_wait_for_iocstate(struct MPT2SAS_ADAPTER *ioc, int timeout,
++	int sleep_flag)
++{
++	u32 ioc_state, doorbell;
++	int rc;
++
++	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
++	    __func__));
++
++	if (ioc->pci_error_recovery)
++		return 0;
++
++	doorbell = mpt2sas_base_get_iocstate(ioc, 0);
++	ioc_state = doorbell & MPI2_IOC_STATE_MASK;
++	dhsprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: ioc_state(0x%08x)\n",
++	    ioc->name, __func__, ioc_state));
++
++	switch (ioc_state) {
++	case MPI2_IOC_STATE_READY:
++	case MPI2_IOC_STATE_OPERATIONAL:
++		return 0;
 +	}
 +
-+	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo) {
-+		dewtprintk(ioc, printk(MPT3SAS_FMT
-+		 "enclosure_processor: ioc_status (0x%04x), loginfo(0x%08x)\n",
-+		 ioc->name, le16_to_cpu(mpi_reply.IOCStatus),
-+		 le32_to_cpu(mpi_reply.IOCLogInfo)));
-+		return;
++	if (doorbell & MPI2_DOORBELL_USED) {
++		dhsprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "unexpected doorbell activ!e\n", ioc->name));
++		goto issue_diag_reset;
 +	}
++
++	if (ioc_state == MPI2_IOC_STATE_FAULT) {
++		mpt2sas_base_fault_info(ioc, doorbell &
++		    MPI2_DOORBELL_DATA_MASK);
++		goto issue_diag_reset;
++	}
++
++	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY,
++	    timeout, sleep_flag);
++	if (ioc_state) {
++		printk(MPT2SAS_ERR_FMT
++		    "%s: failed going to ready state (ioc_state=0x%x)\n",
++		    ioc->name, __func__, ioc_state);
++		return -EFAULT;
++	}
++
++ issue_diag_reset:
++	rc = _base_diag_reset(ioc, sleep_flag);
++	return rc;
 +}
- /**
-- * _scsih_send_event_to_turn_on_fault_led - fire delayed event
-+ * _scsih_send_event_to_turn_on_pfa_led - fire delayed event
++
++/**
+  * _base_get_ioc_facts - obtain ioc facts reply and save in ioc
   * @ioc: per adapter object
-  * @handle: device handle
-  * Context: interrupt.
-@@ -3930,14 +3973,14 @@ _scsih_turn_on_fault_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-  * Return nothing.
-  */
- static void
--_scsih_send_event_to_turn_on_fault_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-+_scsih_send_event_to_turn_on_pfa_led(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- {
- 	struct fw_event_work *fw_event;
+  * @sleep_flag: CAN_SLEEP or NO_SLEEP
+@@ -3478,6 +3539,13 @@ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
  
- 	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
- 	if (!fw_event)
- 		return;
--	fw_event->event = MPT3SAS_TURN_ON_FAULT_LED;
-+	fw_event->event = MPT3SAS_TURN_ON_PFA_LED;
- 	fw_event->device_handle = handle;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
-@@ -3981,7 +4024,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
- 
- 	if (ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_IBM)
--		_scsih_send_event_to_turn_on_fault_led(ioc, handle);
-+		_scsih_send_event_to_turn_on_pfa_led(ioc, handle);
- 
- 	/* insert into event log */
- 	sz = offsetof(Mpi2EventNotificationReply_t, EventData) +
-@@ -4911,7 +4954,11 @@ _scsih_remove_device(struct MPT3SAS_ADAPTER *ioc,
- {
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 
--
-+	if ((ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_IBM) &&
-+	     (sas_device->pfa_led_on)) {
-+		_scsih_turn_off_pfa_led(ioc, sas_device);
-+		sas_device->pfa_led_on = 0;
++	r = _base_wait_for_iocstate(ioc, 10, sleep_flag);
++	if (r) {
++		printk(MPT2SAS_ERR_FMT "%s: failed getting to correct state\n",
++			ioc->name, __func__);
++		return r;
 +	}
- 	dewtprintk(ioc, pr_info(MPT3SAS_FMT
- 		"%s: enter: handle(0x%04x), sas_addr(0x%016llx)\n",
- 		ioc->name, __func__,
-@@ -7065,8 +7112,8 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 			"port enable: complete from worker thread\n",
- 			ioc->name));
- 		break;
--	case MPT3SAS_TURN_ON_FAULT_LED:
--		_scsih_turn_on_fault_led(ioc, fw_event->device_handle);
-+	case MPT3SAS_TURN_ON_PFA_LED:
-+		_scsih_turn_on_pfa_led(ioc, fw_event->device_handle);
- 		break;
- 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
- 		_scsih_sas_topology_change_event(ioc, fw_event);
++
+ 	mpi_reply_sz = sizeof(Mpi2IOCFactsReply_t);
+ 	mpi_request_sz = sizeof(Mpi2IOCFactsRequest_t);
+ 	memset(&mpi_request, 0, mpi_request_sz);
 -- 
 2.0.2
+
