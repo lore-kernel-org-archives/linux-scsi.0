@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 06/18][SCSI] mpt2sas: Avoid type casting for direct I/O commands
-Date: Fri, 12 Sep 2014 15:35:21 +0530
-Message-ID: <1410516333-3678-7-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 10/18][SCSI] mpt3sas: MPI2.5 Rev G (2.5.2) specifications
+Date: Fri, 12 Sep 2014 15:35:25 +0530
+Message-ID: <1410516333-3678-11-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,156 +10,152 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-A type casting error caused the max volume LBA to be truncated from 64
-to 32 bits. The virtual LBA would also get truncated to 32 bits in the
-case of a 16-byte READ/WRITE command.
+Below is the change set in MPI2.5 Rev G specification and 2.00.31 header files
+1) Added SCSIStatusQualifier to SCSI IO Error Reply message.
+2) Added ATA Security Freeze Lock to IO Unit Page 1 Flags field.
+3) Added Allow Protection Information bit for IR Volume Create.
 
-Rewrite entire function to get rid of code duplication and type casts.
-Use get/put_unaligned wrappers to extract and replace the LBA field in
-the MPI request CDB.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Tested-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 117 ++++++++++++-----------------------
- 1 file changed, 40 insertions(+), 77 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      | 6 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 8 ++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h | 6 ++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h | 6 +++++-
+ 4 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index e7303ed..231ec34 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -55,6 +55,8 @@
- #include <linux/raid_class.h>
- #include <linux/slab.h>
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index 20da8f9..dc143dd 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.29
++ * mpi2.h Version:  02.00.31
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -86,6 +86,8 @@
+  * 11-27-12  02.00.28  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-20-12  02.00.29  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
++ * 04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
+  * --------------------------------------------------------------------------
+  */
  
-+#include <asm/unaligned.h>
-+
- #include "mpt2sas_base.h"
+@@ -119,7 +121,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
  
- MODULE_AUTHOR(MPT2SAS_AUTHOR);
-@@ -3858,85 +3860,46 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	struct _raid_device *raid_device, Mpi2SCSIIORequest_t *mpi_request,
- 	u16 smid)
- {
--	u32 v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
-+	sector_t v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
- 	u32 stripe_sz, stripe_exp;
--	u8 num_pds, *cdb_ptr, i;
--	u8 cdb0 = scmd->cmnd[0];
--	u64 v_llba;
-+	u8 num_pds, cmd = scmd->cmnd[0];
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x1D)
++#define MPI2_HEADER_VERSION_UNIT            (0x1F)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 889aa70..5b0e5c1 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.24
++ *   mpi2_cnfg.h Version:  02.00.25
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -160,6 +160,9 @@
+  * 12-20-12  02.00.24  Marked MPI2_SASIOUNIT1_CONTROL_CLEAR_AFFILIATION as
+  *                     obsolete for MPI v2.5 and later.
+  *                     Added some defines for 12G SAS speeds.
++ * 04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
++ *                     Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
++ *                     match the specification.
+  * --------------------------------------------------------------------------
+  */
  
--	/*
--	 * Try Direct I/O to RAID memeber disks
--	 */
--	if (cdb0 == READ_16 || cdb0 == READ_10 ||
--	    cdb0 == WRITE_16 || cdb0 == WRITE_10) {
--		cdb_ptr = mpi_request->CDB.CDB32;
--
--		if ((cdb0 < READ_16) || !(cdb_ptr[2] | cdb_ptr[3] | cdb_ptr[4]
--			| cdb_ptr[5])) {
--			io_size = scsi_bufflen(scmd) >>
--			    raid_device->block_exponent;
--			i = (cdb0 < READ_16) ? 2 : 6;
--			/* get virtual lba */
--			v_lba = be32_to_cpu(*(__be32 *)(&cdb_ptr[i]));
--
--			if (((u64)v_lba + (u64)io_size - 1) <=
--			    (u32)raid_device->max_lba) {
--				stripe_sz = raid_device->stripe_sz;
--				stripe_exp = raid_device->stripe_exponent;
--				stripe_off = v_lba & (stripe_sz - 1);
--
--				/* Check whether IO falls within a stripe */
--				if ((stripe_off + io_size) <= stripe_sz) {
--					num_pds = raid_device->num_pds;
--					p_lba = v_lba >> stripe_exp;
--					stripe_unit = p_lba / num_pds;
--					column = p_lba % num_pds;
--					p_lba = (stripe_unit << stripe_exp) +
--					    stripe_off;
--					mpi_request->DevHandle =
--						cpu_to_le16(raid_device->
--						    pd_handle[column]);
--					(*(__be32 *)(&cdb_ptr[i])) =
--						cpu_to_be32(p_lba);
--					/*
--					* WD: To indicate this I/O is directI/O
--					*/
--					_scsih_scsi_direct_io_set(ioc, smid, 1);
--				}
--			}
--		} else {
--			io_size = scsi_bufflen(scmd) >>
--			    raid_device->block_exponent;
--			/* get virtual lba */
--			v_llba = be64_to_cpu(*(__be64 *)(&cdb_ptr[2]));
--
--			if ((v_llba + (u64)io_size - 1) <=
--			    raid_device->max_lba) {
--				stripe_sz = raid_device->stripe_sz;
--				stripe_exp = raid_device->stripe_exponent;
--				stripe_off = (u32) (v_llba & (stripe_sz - 1));
--
--				/* Check whether IO falls within a stripe */
--				if ((stripe_off + io_size) <= stripe_sz) {
--					num_pds = raid_device->num_pds;
--					p_lba = (u32)(v_llba >> stripe_exp);
--					stripe_unit = p_lba / num_pds;
--					column = p_lba % num_pds;
--					p_lba = (stripe_unit << stripe_exp) +
--					    stripe_off;
--					mpi_request->DevHandle =
--						cpu_to_le16(raid_device->
--						    pd_handle[column]);
--					(*(__be64 *)(&cdb_ptr[2])) =
--					    cpu_to_be64((u64)p_lba);
--					/*
--					* WD: To indicate this I/O is directI/O
--					*/
--					_scsih_scsi_direct_io_set(ioc, smid, 1);
--				}
--			}
--		}
--	}
-+	if (cmd != READ_10 && cmd != WRITE_10 &&
-+	    cmd != READ_16 && cmd != WRITE_16)
-+		return;
-+
-+	if (cmd == READ_10 || cmd == WRITE_10)
-+		v_lba = get_unaligned_be32(&mpi_request->CDB.CDB32[2]);
-+	else
-+		v_lba = get_unaligned_be64(&mpi_request->CDB.CDB32[2]);
-+
-+	io_size = scsi_bufflen(scmd) >> raid_device->block_exponent;
-+
-+	if (v_lba + io_size - 1 > raid_device->max_lba)
-+		return;
-+
-+	stripe_sz = raid_device->stripe_sz;
-+	stripe_exp = raid_device->stripe_exponent;
-+	stripe_off = v_lba & (stripe_sz - 1);
-+
-+	/* Return unless IO falls within a stripe */
-+	if (stripe_off + io_size > stripe_sz)
-+		return;
-+
-+	num_pds = raid_device->num_pds;
-+	p_lba = v_lba >> stripe_exp;
-+	stripe_unit = p_lba / num_pds;
-+	column = p_lba % num_pds;
-+	p_lba = (stripe_unit << stripe_exp) + stripe_off;
-+	mpi_request->DevHandle = cpu_to_le16(raid_device->pd_handle[column]);
-+
-+	if (cmd == READ_10 || cmd == WRITE_10)
-+		put_unaligned_be32(lower_32_bits(p_lba),
-+				   &mpi_request->CDB.CDB32[2]);
-+	else
-+		put_unaligned_be64(p_lba, &mpi_request->CDB.CDB32[2]);
-+
-+	_scsih_scsi_direct_io_set(ioc, smid, 1);
- }
+@@ -792,6 +795,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
+ #define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
  
- /**
+ /*IO Unit Page 1 Flags defines */
++#define MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK       (0x00004000)
+ #define MPI25_IOUNITPAGE1_NEW_DEVICE_FAST_PATH_DISABLE  (0x00002000)
+ #define MPI25_IOUNITPAGE1_DISABLE_FAST_PATH             (0x00001000)
+ #define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
+@@ -870,7 +874,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_5 {
+ #define MPI2_IOUNITPAGE5_PAGEVERSION                    (0x00)
+ 
+ /*defines for IO Unit Page 5 DmaEngineCapabilities field */
+-#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFF00)
++#define MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS      (0xFFFF0000)
+ #define MPI2_IOUNITPAGE5_DMA_CAP_SHIFT_MAX_REQUESTS     (16)
+ 
+ #define MPI2_IOUNITPAGE5_DMA_CAP_EEDP                   (0x0008)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+index f7928bf..b3e3331 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI SCSI initiator mode messages and structures
+  * Creation Date:  June 23, 2006
+  *
+- * mpi2_init.h Version:  02.00.14
++ * mpi2_init.h Version:  02.00.15
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -44,6 +44,8 @@
+  *                     Priority to match SAM-4.
+  *                     Added EEDPErrorOffset to MPI2_SCSI_IO_REPLY.
+  * 07-10-12  02.00.14  Added MPI2_SCSIIO_CONTROL_SHIFT_DATADIRECTION.
++ * 04-09-13  02.00.15  Added SCSIStatusQualifier field to MPI2_SCSI_IO_REPLY,
++ *                     replacing the Reserved4 field.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -347,7 +349,7 @@ typedef struct _MPI2_SCSI_IO_REPLY {
+ 	U32 SenseCount;		/*0x18 */
+ 	U32 ResponseInfo;	/*0x1C */
+ 	U16 TaskTag;		/*0x20 */
+-	U16 Reserved4;		/*0x22 */
++	U16 SCSIStatusQualifier; /* 0x22 */
+ 	U32 BidirectionalTransferCount;	/*0x24 */
+ 	U32 EEDPErrorOffset;	/*0x28 *//*MPI 2.5 only; Reserved in MPI 2.0*/
+ 	U32 Reserved6;		/*0x2C */
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+index 7176523..fbe3aae 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_raid.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Integrated RAID messages and structures
+  * Creation Date:  April 26, 2007
+  *
+- *   mpi2_raid.h Version:  02.00.09
++ *   mpi2_raid.h Version:  02.00.10
+  *
+  * Version History
+  * ---------------
+@@ -30,6 +30,7 @@
+  * 02-06-12  02.00.08  Added MPI2_RAID_ACTION_PHYSDISK_HIDDEN.
+  * 07-26-12  02.00.09  Added ElapsedSeconds field to MPI2_RAID_VOL_INDICATOR.
+  *                     Added MPI2_RAID_VOL_FLAGS_ELAPSED_SECONDS_VALID define.
++ * 04-17-13  02.00.10  Added MPI25_RAID_ACTION_ADATA_ALLOW_PI.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -46,6 +47,9 @@
+ * RAID Action messages
+ ****************************************************************************/
+ 
++/* ActionDataWord defines for use with MPI2_RAID_ACTION_CREATE_VOLUME action */
++#define MPI25_RAID_ACTION_ADATA_ALLOW_PI            (0x80000000)
++
+ /*ActionDataWord defines for use with MPI2_RAID_ACTION_DELETE_VOLUME action */
+ #define MPI2_RAID_ACTION_ADATA_KEEP_LBA0            (0x00000000)
+ #define MPI2_RAID_ACTION_ADATA_ZERO_LBA0            (0x00000001)
 -- 
 2.0.2
