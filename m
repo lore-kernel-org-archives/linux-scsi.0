@@ -1,56 +1,117 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
-Date: Fri, 12 Sep 2014 16:20:19 +0300
-Message-ID: <5412F313.4030005@dev.mellanox.co.il>
-References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>	<1409254292-2540-15-git-send-email-martin.petersen@oracle.com>	<540390FF.2040703@dev.mellanox.co.il>	<yq1bnqn9fzg.fsf@sermon.lab.mkp.net>	<54114AA3.2090806@dev.mellanox.co.il> <yq1k3594o4p.fsf@sermon.lab.mkp.net>
+From: <Sumit.Saxena@avagotech.com>
+Subject: [PATCH RESEND 01/11] megaraid_sas : Do not scan non syspd drives
+Date: Fri, 12 Sep 2014 18:57:13 +0530
+Message-ID: <201409121329.s8CDTZNF022240@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48656 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754674AbaILNU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 09:20:27 -0400
-Received: by mail-wi0-f174.google.com with SMTP id n3so625042wiv.1
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 06:20:25 -0700 (PDT)
-In-Reply-To: <yq1k3594o4p.fsf@sermon.lab.mkp.net>
+Received: from mail-bn1bon0061.outbound.protection.outlook.com ([157.56.111.61]:37426
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753963AbaILN1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Sep 2014 09:27:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, axboe@fb.com, hch@lst.de, sagig@mellanox.com
+To: linux-scsi@vger.kernel.org
+Cc: thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
-On 9/12/2014 4:35 AM, Martin K. Petersen wrote:
->>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
->
-> Sagi,
->
-> Sagi> That's still a dependence on prot_type (type 0...). Notice that
-> Sagi> you set SCSI_PROT_REF_INCREMENT in every op index (except
-> Sagi> SCSI_PROT_NORMAL) so my point is that it's strange to see this
-> Sagi> association.
->
-> I still don't understand your point. The mask table indicates which
-> flags are valid for a given protection operation. They are explicitly
-> DIX flags and have nothing to do with the target protection type.
->
+Resending the patch. Addressed the review comments from Tomas Henzl.
 
-I see,
-It's just confusing to see flags such as REF_INCREMENT/GUARD_CHECK/REF_CHECK
-associated with a set of prot operations, but I guess it's just me.
-Do you really need the mask anyway? seems like just an extra precaution
-against wrong flagging.
+Current driver allow device scan for all the devices on channel 0 and 1.
+E.a If we have two single drive raid volumes, we may see prints like below.
+First two prints are for physical device which are used to form VD. 
+Prints like this creates confusion as it is really not required to scan any
+hidden physical devices. 
 
-It's just nit-picking - I do not see anything wrong with the patchset.
-We can drop this if you want...
+scsi1 : LSI SAS based MegaRAID driver
+scsi 1:0:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:0:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
 
-> Sagi> P.S.  Now drivers can stop understanding prot_type to set DIF
-> Sagi> operations...  so once drivers stop referencing it we can remove
-> Sagi> it from scsi_cmnd.
->
-> Yes. Second part of this installment removes this and a few other things
-> and converts qla2xxx, lpfc, mptNsas, etc. to the new interface.
->
+When slave_alloc called, sdev-type will not be set, so current code will always
+return "0" in slave_alloc callback.
+This patch make sure that driver return "-ENXIO" for non-syspd devices.
 
-Nice, I posted "RDMA signature feature update" preparing iSER DIF code 
-to complement this change - all that is left now is a straight-forward
-conversion.
+After this patch, we will see prints in syslog only for devices which are exposed. 
+For current example, below print will be available in syslog.
+
+scsi1 : LSI SAS based MegaRAID driver
+scsi 1:2:0:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+scsi 1:2:1:0: Direct-Access     LSI      MR9361-8i        4.21 PQ: 0 ANSI: 5
+
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 35 ++++---------------------------
+ 1 file changed, 4 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ff44f2c..a894f13 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1628,36 +1628,12 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
+ 
+ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
+-	u16             pd_index = 0;
+-	struct  megasas_instance *instance ;
+-
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+-
+-	/*
+-	* Don't export physical disk devices to the disk driver.
+-	*
+-	* FIXME: Currently we don't export them to the midlayer at all.
+-	*        That will be fixed once LSI engineers have audited the
+-	*        firmware for possible issues.
+-	*/
+-	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
+-				sdev->type == TYPE_DISK) {
+-		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+-								sdev->id;
+-		if (instance->pd_list[pd_index].driveState ==
+-						MR_PD_STATE_SYSTEM) {
+-			blk_queue_rq_timeout(sdev->request_queue,
+-				MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
+-			return 0;
+-		}
+-		return -ENXIO;
+-	}
+-
+ 	/*
+ 	* The RAID firmware may require extended timeouts.
+ 	*/
+ 	blk_queue_rq_timeout(sdev->request_queue,
+ 		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
++
+ 	return 0;
+ }
+ 
+@@ -1666,18 +1642,15 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 	u16             pd_index = 0;
+ 	struct megasas_instance *instance ;
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+-	if ((sdev->channel < MEGASAS_MAX_PD_CHANNELS) &&
+-				(sdev->type == TYPE_DISK)) {
++	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+ 		/*
+ 		 * Open the OS scan to the SYSTEM PD
+ 		 */
+ 		pd_index =
+ 			(sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+ 			sdev->id;
+-		if ((instance->pd_list[pd_index].driveState ==
+-					MR_PD_STATE_SYSTEM) &&
+-			(instance->pd_list[pd_index].driveType ==
+-						TYPE_DISK)) {
++		if (instance->pd_list[pd_index].driveState ==
++					MR_PD_STATE_SYSTEM) {
+ 			return 0;
+ 		}
+ 		return -ENXIO;
+-- 
+1.8.3.1
+
