@@ -1,95 +1,45 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH V3 01/16] scsi: support well known logical units
-Date: Thu, 11 Sep 2014 17:41:18 -0700
-Message-ID: <000f01cfce22$446f79c0$cd4e6d40$@codeaurora.org>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org> <1410350063-23267-2-git-send-email-draviv@codeaurora.org> <20140910185839.GA26364@infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
+Date: Thu, 11 Sep 2014 21:35:18 -0400
+Message-ID: <yq1k3594o4p.fsf@sermon.lab.mkp.net>
+References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>
+	<1409254292-2540-15-git-send-email-martin.petersen@oracle.com>
+	<540390FF.2040703@dev.mellanox.co.il>
+	<yq1bnqn9fzg.fsf@sermon.lab.mkp.net>
+	<54114AA3.2090806@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:53416 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754874AbaILAlT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 20:41:19 -0400
-In-Reply-To: <20140910185839.GA26364@infradead.org>
-Content-Language: en-us
+Received: from aserp1040.oracle.com ([141.146.126.69]:27144 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbaILBfc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2014 21:35:32 -0400
+In-Reply-To: <54114AA3.2090806@dev.mellanox.co.il> (Sagi Grimberg's message of
+	"Thu, 11 Sep 2014 10:09:23 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>, 'Dolev Raviv' <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, axboe@fb.com, hch@lst.de, sagig@mellanox.com
 
-> This is the defintion of the field in SPC (does the UFS spec duplicate all
-of SPC?), 
-Yes, UFS device specification (both 1.1 and 2.0) supports
-[SAM], INCITS T10 draft standard: SCSI Architecture Model - 5 (SAM-5),
-Revision 05, 19 May 2010  
-[SPC], INCITS T10 draft standard: SCSI Primary Commands - 4 (SPC-4),
-Revision 27, 11 October 2010 
-[SBC], INCITS T10 draft standard: SCSI Block Commands - 3 (SBC-3), Revision
-24, 05 August 2010  
+>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
 
-In addition, this is what specification says explicitly " SCSI SBC and SPC
-commands are the baseline for UFS. UFS will not modify the SBC and SPC
-Compliant commands.  The goal is to maximize re-use and leverage of the
-software codebase available on platforms (PC, netbook, MID) that are already
-supporting SCSI."
+Sagi,
 
-> but still doesn't explain why you want it.
+Sagi> That's still a dependence on prot_type (type 0...). Notice that
+Sagi> you set SCSI_PROT_REF_INCREMENT in every op index (except
+Sagi> SCSI_PROT_NORMAL) so my point is that it's strange to see this
+Sagi> association.
 
-UFS device has supports 4 different well known logical units: "REPORT_LUNS"
-(address: 01h), "UFS Device" (address: 50h), "RPMB" (address: 44h) and
-"BOOT" (address: 30h).
+I still don't understand your point. The mask table indicates which
+flags are valid for a given protection operation. They are explicitly
+DIX flags and have nothing to do with the target protection type.
 
-UFS device's power management needs to be controlled by "POWER CONDITION"
-field of SSU (START STOP UNIT) command. But this "power condition"  field
-will take effect only when its sent to "UFS device" well known logical unit
-(address: 50h) hence we require the scsi_device instance to represent this
-logical unit in order for the UFS host driver to send the SSU command for
-power management.
+Sagi> P.S.  Now drivers can stop understanding prot_type to set DIF
+Sagi> operations...  so once drivers stop referencing it we can remove
+Sagi> it from scsi_cmnd.
 
-We also require the scsi_device instance for "RPMB" (Replay Protected Memory
-Block) LU so user space process can control this LU.
+Yes. Second part of this installment removes this and a few other things
+and converts qla2xxx, lpfc, mptNsas, etc. to the new interface.
 
-> Also the SELECT REPORT field only appeared in SPC-3, so we should not set
-it for devices that report older standards compliance.
-
-Thanks for pointing this out, was not aware of this. We will add appropriate
-check (if (sdev->scsi_level >= SCSI_SPC_3))  before setting the SELECT
-REPORT field.
-
-Regards,
-Subhash
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Wednesday, September 10, 2014 11:59 AM
-To: Dolev Raviv
-Cc: James.Bottomley@HansenPartnership.com; hch@infradead.org;
-linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org;
-linux-arm-msm@vger.kernel.org; santoshsy@gmail.com; Subhash Jadavani; Sujit
-Reddy Thumma; Martin K. Petersen
-Subject: Re: [PATCH V3 01/16] scsi: support well known logical units
-
-On Wed, Sep 10, 2014 at 02:54:08PM +0300, Dolev Raviv wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> REPORT LUNS command has "SELECT REPORT" field which controls what type 
-> of logical units to be reported by device server. According to UFS 
-> device standard, if this field is set to 0, REPORT LUNS would report 
-> only report standard logical units. If it's set to 1 then it would 
-> report only well known logical unit and if it's set to 2 then device 
-> would report both standard and well known logical units.
-
-This is the defintion of the field in SPC (does the UFS spec duplicate all
-of SPC?), but still doesn't explain why you want it.
-
-Also the SELECT REPORT field only appeared in SPC-3, so we should not set it
-for devices that report older standards compliance.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
