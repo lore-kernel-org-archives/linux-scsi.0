@@ -1,226 +1,97 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: [PATCH v4 2/2] arcmsr: simplify of updating doneq_index and
- postq_index
-Date: Fri, 12 Sep 2014 16:22:55 +0800
-Message-ID: <1410510175.5045.304.camel@Centos6.3-64>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH 00/18][SCSI] mpt2sas,mpt3sas: mpt2sas's phase17, phase18 and mpt3sas's phase2, phase3 patch set series
+Date: Fri, 12 Sep 2014 15:35:15 +0530
+Message-ID: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:54427 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbaILIXF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 04:23:05 -0400
-Received: by mail-pd0-f173.google.com with SMTP id ft15so707243pdb.32
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 01:23:04 -0700 (PDT)
+Received: from exprod7og107.obsmtp.com ([64.18.2.167]:50110 "EHLO
+	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361AbaILKGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 06:06:19 -0400
+Received: by mail-pa0-f53.google.com with SMTP id rd3so925823pab.40
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 03:06:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-From: Ching Huang <ching2048@areca.com.tw>
+This patch set series contains latest reviewed mpt2sas driver's Phase17 and Phase18 patches
+and also mpt3sas driver's Phase2 and Phase3 patches.
 
-This patch is to modify previous patch 16/17 and it is relative to
-http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
+Thanks Martin for reviewing all these patches.
 
-change in v4:
-1. clean up of duplicate variable declaration in switch.
-2. simplify of updating doneq_index and postq_index
-3. fix spin_lock area in arcmsr_hbaD_polling_ccbdone
+Incremented the version to v2 for all these patches to indicate that
+these are the latest patches and accommodates all the review changes.
 
-Signed-off-by: Ching Huang <ching2048@areca.com.tw>
----
+Droped below patch from this series and I will include this patch in the
+next series once the review completes on this patch
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-09-12 12:43:16.956653000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-09-12 15:00:23.516069000 +0800
-@@ -1121,7 +1121,7 @@ static void arcmsr_drain_donequeue(struc
- static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
- {
- 	int i = 0;
--	uint32_t flag_ccb;
-+	uint32_t flag_ccb, ccb_cdb_phy;
- 	struct ARCMSR_CDB *pARCMSR_CDB;
- 	bool error;
- 	struct CommandControlBlock *pCCB;
-@@ -1165,10 +1165,6 @@ static void arcmsr_done4abort_postqueue(
- 		break;
- 	case ACB_ADAPTER_TYPE_C: {
- 		struct MessageUnit_C __iomem *reg = acb->pmuC;
--		struct  ARCMSR_CDB *pARCMSR_CDB;
--		uint32_t flag_ccb, ccb_cdb_phy;
--		bool error;
--		struct CommandControlBlock *pCCB;
- 		while ((readl(&reg->host_int_status) & ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR) && (i++ < ARCMSR_MAX_OUTSTANDING_CMD)) {
- 			/*need to do*/
- 			flag_ccb = readl(&reg->outbound_queueport_low);
-@@ -1182,10 +1178,8 @@ static void arcmsr_done4abort_postqueue(
- 		break;
- 	case ACB_ADAPTER_TYPE_D: {
- 		struct MessageUnit_D  *pmu = acb->pmuD;
--		uint32_t ccb_cdb_phy, outbound_write_pointer;
--		uint32_t doneq_index, index_stripped, addressLow, residual;
--		bool error;
--		struct CommandControlBlock *pCCB;
-+		uint32_t outbound_write_pointer;
-+		uint32_t doneq_index, index_stripped, addressLow, residual, toggle;
- 
- 		outbound_write_pointer = pmu->done_qbuffer[0].addressLow + 1;
- 		doneq_index = pmu->doneq_index;
-@@ -1193,23 +1187,11 @@ static void arcmsr_done4abort_postqueue(
- 		for (i = 0; i < residual; i++) {
- 			while ((doneq_index & 0xFFF) !=
- 				(outbound_write_pointer & 0xFFF)) {
--				if (doneq_index & 0x4000) {
--					index_stripped = doneq_index & 0xFFF;
--					index_stripped += 1;
--					index_stripped %=
--						ARCMSR_MAX_ARC1214_DONEQUEUE;
--					pmu->doneq_index = index_stripped ?
--						(index_stripped | 0x4000) :
--						(index_stripped + 1);
--				} else {
--					index_stripped = doneq_index;
--					index_stripped += 1;
--					index_stripped %=
--						ARCMSR_MAX_ARC1214_DONEQUEUE;
--					pmu->doneq_index = index_stripped ?
--						index_stripped :
--						((index_stripped | 0x4000) + 1);
--				}
-+				toggle = doneq_index & 0x4000;
-+				index_stripped = (doneq_index & 0xFFF) + 1;
-+				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
-+				pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
-+					((toggle ^ 0x4000) + 1);
- 				doneq_index = pmu->doneq_index;
- 				addressLow = pmu->done_qbuffer[doneq_index &
- 					0xFFF].addressLow;
-@@ -1461,7 +1443,7 @@ static void arcmsr_post_ccb(struct Adapt
- 	case ACB_ADAPTER_TYPE_D: {
- 		struct MessageUnit_D  *pmu = acb->pmuD;
- 		u16 index_stripped;
--		u16 postq_index;
-+		u16 postq_index, toggle;
- 		unsigned long flags;
- 		struct InBound_SRB *pinbound_srb;
- 
-@@ -1472,19 +1454,11 @@ static void arcmsr_post_ccb(struct Adapt
- 		pinbound_srb->addressLow = dma_addr_lo32(cdb_phyaddr);
- 		pinbound_srb->length = ccb->arc_cdb_size >> 2;
- 		arcmsr_cdb->msgContext = dma_addr_lo32(cdb_phyaddr);
--		if (postq_index & 0x4000) {
--			index_stripped = postq_index & 0xFF;
--			index_stripped += 1;
--			index_stripped %= ARCMSR_MAX_ARC1214_POSTQUEUE;
--			pmu->postq_index = index_stripped ?
--				(index_stripped | 0x4000) : index_stripped;
--		} else {
--			index_stripped = postq_index;
--			index_stripped += 1;
--			index_stripped %= ARCMSR_MAX_ARC1214_POSTQUEUE;
--			pmu->postq_index = index_stripped ? index_stripped :
--				(index_stripped | 0x4000);
--		}
-+		toggle = postq_index & 0x4000;
-+		index_stripped = postq_index + 1;
-+		index_stripped &= (ARCMSR_MAX_ARC1214_POSTQUEUE - 1);
-+		pmu->postq_index = index_stripped ? (index_stripped | toggle) :
-+			(toggle ^ 0x4000);
- 		writel(postq_index, pmu->inboundlist_write_pointer);
- 		spin_unlock_irqrestore(&acb->postq_lock, flags);
- 		break;
-@@ -1999,7 +1973,7 @@ static void arcmsr_hbaC_postqueue_isr(st
- 
- static void arcmsr_hbaD_postqueue_isr(struct AdapterControlBlock *acb)
- {
--	u32 outbound_write_pointer, doneq_index, index_stripped;
-+	u32 outbound_write_pointer, doneq_index, index_stripped, toggle;
- 	uint32_t addressLow, ccb_cdb_phy;
- 	int error;
- 	struct MessageUnit_D  *pmu;
-@@ -2013,21 +1987,11 @@ static void arcmsr_hbaD_postqueue_isr(st
- 	doneq_index = pmu->doneq_index;
- 	if ((doneq_index & 0xFFF) != (outbound_write_pointer & 0xFFF)) {
- 		do {
--			if (doneq_index & 0x4000) {
--				index_stripped = doneq_index & 0xFFF;
--				index_stripped += 1;
--				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
--				pmu->doneq_index = index_stripped
--					? (index_stripped | 0x4000) :
--					(index_stripped + 1);
--			} else {
--				index_stripped = doneq_index;
--				index_stripped += 1;
--				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
--				pmu->doneq_index = index_stripped
--					? index_stripped :
--					((index_stripped | 0x4000) + 1);
--			}
-+			toggle = doneq_index & 0x4000;
-+			index_stripped = (doneq_index & 0xFFF) + 1;
-+			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
-+			pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
-+				((toggle ^ 0x4000) + 1);
- 			doneq_index = pmu->doneq_index;
- 			addressLow = pmu->done_qbuffer[doneq_index &
- 				0xFFF].addressLow;
-@@ -2843,7 +2807,7 @@ static bool arcmsr_hbaD_get_config(struc
- 	char __iomem *iop_firm_version;
- 	char __iomem *iop_device_map;
- 	u32 count;
--	struct MessageUnit_D *reg ;
-+	struct MessageUnit_D *reg;
- 	void *dma_coherent2;
- 	dma_addr_t dma_coherent_handle2;
- 	struct pci_dev *pdev = acb->pdev;
-@@ -3176,7 +3140,7 @@ static int arcmsr_hbaD_polling_ccbdone(s
- {
- 	bool error;
- 	uint32_t poll_ccb_done = 0, poll_count = 0, flag_ccb, ccb_cdb_phy;
--	int rtn, doneq_index, index_stripped, outbound_write_pointer;
-+	int rtn, doneq_index, index_stripped, outbound_write_pointer, toggle;
- 	unsigned long flags;
- 	struct ARCMSR_CDB *arcmsr_cdb;
- 	struct CommandControlBlock *pCCB;
-@@ -3185,9 +3149,11 @@ static int arcmsr_hbaD_polling_ccbdone(s
- polling_hbaD_ccb_retry:
- 	poll_count++;
- 	while (1) {
-+		spin_lock_irqsave(&acb->doneq_lock, flags);
- 		outbound_write_pointer = pmu->done_qbuffer[0].addressLow + 1;
- 		doneq_index = pmu->doneq_index;
- 		if ((outbound_write_pointer & 0xFFF) == (doneq_index & 0xFFF)) {
-+			spin_unlock_irqrestore(&acb->doneq_lock, flags);
- 			if (poll_ccb_done) {
- 				rtn = SUCCESS;
- 				break;
-@@ -3200,21 +3166,11 @@ polling_hbaD_ccb_retry:
- 				goto polling_hbaD_ccb_retry;
- 			}
- 		}
--		spin_lock_irqsave(&acb->doneq_lock, flags);
--		if (doneq_index & 0x4000) {
--			index_stripped = doneq_index & 0xFFF;
--			index_stripped += 1;
--			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
--			pmu->doneq_index = index_stripped ?
--				(index_stripped | 0x4000) :
--				(index_stripped + 1);
--		} else {
--			index_stripped = doneq_index;
--			index_stripped += 1;
--			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
--			pmu->doneq_index = index_stripped ? index_stripped :
--				((index_stripped | 0x4000) + 1);
--		}
-+		toggle = doneq_index & 0x4000;
-+		index_stripped = (doneq_index & 0xFFF) + 1;
-+		index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
-+		pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
-+				((toggle ^ 0x4000) + 1);
- 		spin_unlock_irqrestore(&acb->doneq_lock, flags);
- 		doneq_index = pmu->doneq_index;
- 		flag_ccb = pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;
+mpt2sas: Added module parameter 'unblock_io' to unblock IO's during disk addition
 
+Sreekanth Reddy (18):
+  [SCSI] mpt2sas: Added driver module parameter max_msix_vectors
+  [SCSI] mpt2sas: MPI2 Rev Y (2.00.17) and Rev Z (2.00.18)
+    specifications
+  [SCSI] mpt2sas: Copyright in driver sources is updated for year the
+    2014
+  [SCSI] mpt2sas: Clear PFA Status on SGPIO when PFA Drive is Removed or
+    Replaced
+  [SCSI] mpt2sas: Bump mpt2sas driver version to 17.100.00.00
+  [SCSI] mpt2sas: Avoid type casting for direct I/O commands
+  [SCSI] mpt2sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+  [SCSI] mpt2sas: Get IOC_FACTS information using handshake protocol
+    only after HBA card gets into READY or Operational state.
+  [SCSI] mpt2sas: Bump mpt2sas driver version to 18.100.00.00
+  [SCSI] mpt3sas: MPI2.5 Rev G (2.5.2) specifications
+  SCSI] mpt3sas: Clear PFA Status on SGPIO when PFA Drive is Removed or
+    Replaced
+  [SCSI] mpt3sas: Bump mpt3sas driver version to 03.100.00.00
+  [SCSI] mpt3sas: MPI2.5 Rev H (2.5.3) specifications
+  [SCSI] mpt3sas: Copyright in driver sources is updated for year the
+    2014.
+  [SCSI] mpt3sas: Added OEM branding Strings
+  [SCSI] mpt3sas: Added Reply Descriptor Post Queue (RDPQ) Array support
+  [SCSI] mpt3sas: Bump mpt3sas driver version to 04.100.00.00
+  [SCSI] mpt3sas, mpt2sas: fix scsi_add_host error handling problems in
+    _scsih_probe
+
+ drivers/scsi/mpt2sas/Kconfig                |   2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2.h             |  12 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h        |  29 ++-
+ drivers/scsi/mpt2sas/mpi/mpi2_init.h        |   8 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_ioc.h         |  74 ++++++-
+ drivers/scsi/mpt2sas/mpi/mpi2_raid.h        |   8 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_sas.h         |   2 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_tool.h        |  44 +++-
+ drivers/scsi/mpt2sas/mpi/mpi2_type.h        |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_base.c         | 322 +++++++++++++++++++++++-----
+ drivers/scsi/mpt2sas/mpt2sas_base.h         |  28 ++-
+ drivers/scsi/mpt2sas/mpt2sas_config.c       |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c          |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.h          |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_debug.h        |   2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c        | 197 +++++++++--------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c    |   2 +-
+ drivers/scsi/mpt3sas/Kconfig                |   2 +-
+ drivers/scsi/mpt3sas/mpi/mpi2.h             |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h        |  18 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_init.h        |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_ioc.h         |  64 +++++-
+ drivers/scsi/mpt3sas/mpi/mpi2_raid.h        |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_sas.h         |   8 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h        |  45 +++-
+ drivers/scsi/mpt3sas/mpi/mpi2_type.h        |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c         | 283 +++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |  49 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_config.c       |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c          |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h          |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_debug.h        |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  78 +++++--
+ drivers/scsi/mpt3sas/mpt3sas_transport.c    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h |   2 +-
+ 36 files changed, 1026 insertions(+), 299 deletions(-)
+
+-- 
+2.0.2
 
