@@ -1,41 +1,56 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] hpsa: add missing pci_set_master in kdump path
-Date: Fri, 12 Sep 2014 14:44:15 +0200
-Message-ID: <5412EA9F.4060703@redhat.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 14/14] sd: Honor block layer integrity handling flags
+Date: Fri, 12 Sep 2014 16:20:19 +0300
+Message-ID: <5412F313.4030005@dev.mellanox.co.il>
+References: <1409254292-2540-1-git-send-email-martin.petersen@oracle.com>	<1409254292-2540-15-git-send-email-martin.petersen@oracle.com>	<540390FF.2040703@dev.mellanox.co.il>	<yq1bnqn9fzg.fsf@sermon.lab.mkp.net>	<54114AA3.2090806@dev.mellanox.co.il> <yq1k3594o4p.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6695 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753923AbaILMol (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Sep 2014 08:44:41 -0400
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:48656 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754674AbaILNU1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 09:20:27 -0400
+Received: by mail-wi0-f174.google.com with SMTP id n3so625042wiv.1
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 06:20:25 -0700 (PDT)
+In-Reply-To: <yq1k3594o4p.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: elliott@hp.com, steve.cameron@hp.com, Christoph Hellwig <hch@infradead.org>, "Handzik, Joe" <joseph.t.handzik@hp.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, axboe@fb.com, hch@lst.de, sagig@mellanox.com
 
-Add a call to pci_set_master(...)  missing in the previous
-patch "hpsa: refine the pci enable/disable handling".
-Found thanks to Rob Elliot.
----
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 9/12/2014 4:35 AM, Martin K. Petersen wrote:
+>>>>>> "Sagi" == Sagi Grimberg <sagig@dev.mellanox.co.il> writes:
+>
+> Sagi,
+>
+> Sagi> That's still a dependence on prot_type (type 0...). Notice that
+> Sagi> you set SCSI_PROT_REF_INCREMENT in every op index (except
+> Sagi> SCSI_PROT_NORMAL) so my point is that it's strange to see this
+> Sagi> association.
+>
+> I still don't understand your point. The mask table indicates which
+> flags are valid for a given protection operation. They are explicitly
+> DIX flags and have nothing to do with the target protection type.
+>
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7828834..cef5d49 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6544,7 +6544,7 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
- 		dev_warn(&pdev->dev, "failed to enable device.\n");
- 		return -ENODEV;
- 	}
--
-+	pci_set_master(pdev);
- 	/* Reset the controller with a PCI power-cycle or via doorbell */
- 	rc = hpsa_kdump_hard_reset_controller(pdev);
- 
--- 
-1.8.3.1
+I see,
+It's just confusing to see flags such as REF_INCREMENT/GUARD_CHECK/REF_CHECK
+associated with a set of prot operations, but I guess it's just me.
+Do you really need the mask anyway? seems like just an extra precaution
+against wrong flagging.
 
+It's just nit-picking - I do not see anything wrong with the patchset.
+We can drop this if you want...
 
+> Sagi> P.S.  Now drivers can stop understanding prot_type to set DIF
+> Sagi> operations...  so once drivers stop referencing it we can remove
+> Sagi> it from scsi_cmnd.
+>
+> Yes. Second part of this installment removes this and a few other things
+> and converts qla2xxx, lpfc, mptNsas, etc. to the new interface.
+>
+
+Nice, I posted "RDMA signature feature update" preparing iSER DIF code 
+to complement this change - all that is left now is a straight-forward
+conversion.
