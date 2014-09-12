@@ -1,56 +1,124 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [REGRESSION 3.17] scsi (uas) disks no longer using tagged command
- queuing
-Date: Fri, 12 Sep 2014 21:49:36 +0200
-Message-ID: <54134E50.6040805@redhat.com>
-References: <540EC52C.3000804@redhat.com> <20140909152730.GA17882@infradead.org> <540FFBF4.9090001@redhat.com> <20140910154535.GA5102@infradead.org> <541172E9.8070309@redhat.com> <20140911161331.GA24488@infradead.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if
+	not OOM
+Date: Fri, 12 Sep 2014 13:09:57 -0700
+Message-ID: <CAB=NE6XS9pWmfO7xjTpLFG1OdOJ=UktbOK5pjJCK8hzfXagfXQ@mail.gmail.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org>
+ <20140905164405.GA28964@core.coreip.homeip.net>
+ <20140905174925.GA12991@mtj.dyndns.org>
+ <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+ <20140905224047.GC15723@mtj.dyndns.org>
+ <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+ <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
+ <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
+ <1410291346.13298.16.camel@jarvis.lan>
+ <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
+ <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
+ <CAB=NE6UprJH69hzc1mjqyq6PAn+7LZmX65Z8CDwUdJ73nDusHg@mail.gmail.com>
+ <CAG-2HqUzCvd55mq=M3=tXbHAjc2QnVuRtbFZMWTz9k_6BmmngQ@mail.gmail.com>
+ <CAB=NE6XmFaWMKuW3vJ7QMZ1BmmWrAPezTYYsqatX4mMNdMjpog@mail.gmail.com>
+ <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140911161331.GA24488@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: Tom Gundersen <teg@jklm.no>, Tejun Heo <tj@kernel.org>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd Mailing List <systemd-devel@lists.freedesk>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 09/11/2014 06:13 PM, Christoph Hellwig wrote:
-> On Thu, Sep 11, 2014 at 12:01:13PM +0200, Hans de Goede wrote:
->>> So we're initializing the tag map, but scsi_activate_tcq doesn't pick it
->>> up.  I can't really come up with a good explanation for it, but there
->>> even without that there is an elephant in the room:  as part of the
->>> scsi-mq series I moved the bqt field used for this into a union with the
->>> new blk_mq_tag_set.  Below is a patch to get rid of that union, can you
->>> try if that fixes it?
+On Thu, Sep 11, 2014 at 10:48 PM, Tom Gundersen <teg@jklm.no> wrote:
+> On Fri, Sep 12, 2014 at 12:26 AM, Luis R. Rodriguez
+> <mcgrof@do-not-panic.com> wrote:
+>> On Thu, Sep 11, 2014 at 2:43 PM, Tom Gundersen <teg@jklm.no> wrote:
+>>> How about simply introducing a new flag to finit_module() to indicate
+>>> that the caller does not care about asynchronicity. We could then pass
+>>> this from udev, but existing scripts calling modprobe/insmod will not
+>>> be affected.
 >>
->> Unfortunately that does not fix it :|
-> 
-> Alright, I guess we need the big bisect hammer unfortunately.
-> 
-> We should be able to start with trying the first and last commit
-> of the big SCSI merge:
-> 
->  start:		fcc95a763444017288b318d48367098850c23c0d
->  end:		c21a2c1a4973c8dde32557970fdb44eaa9489aeb
+>> Do you mean that you *do want asynchronicity*?
+>
+> Precisely, udev would opt-in, but existing scripts etc would not.
 
-The bisect points to:
+Sure that's the other alternative that Tejun was mentioning.
 
-[hans@shalem linux]$ git bisect bad
-Bisecting: 0 revisions left to test after this (roughly 0 steps)
-[d285203cf647d7c97db3a1c33794315c9008593f] scsi: add support for a blk-mq
-based I/O path.
+>>> But isn't finit_module() taking a long time a serious problem given
+>>> that it means no other module can be loaded in parallel?
+>>
+>> Indeed but having a desire to make the init() complete fast is
+>> different than the desire to have the combination of both init and
+>> probe fast synchronously.
+>
+> I guess no one is arguing that probe should somehow be required to be
+> fast, but rather:
+>
+>> If userspace wants init to be fast and let
+>> probe be async then userspace has no option but to deal with the fact
+>> that async probe will be async, and it should then use other methods
+>> to match any dependencies if its doing that itself.
+>
+> Correct. And this therefore likely needs to be opt-in behaviour per
+> finit_module() invocation to avoid breaking old assumptions.
 
-I've double checked that that commit is bad, and one commit earlier in the
-history is good, so that really is the one.
+Sure.
 
-I've tried again to fix the union thing you spotted, which is introduced
-by that commit, and again it does not help.
+>> For example
+>> networking should not kick off after a network driver is loaded but
+>> rather one the device creeps up on udev. We should be good with
+>> networking dealing with this correctly today but not sure about other
+>> subsystems. depmod should be able to load the required modules in
+>> order and if bus drivers work right then probe of the remnant devices
+>> should happen asynchronously. The one case I can think of that is a
+>> bit different is modules-load.d things but those *do not rely on the
+>> timeout*, but are loaded prior to a service requirement. Note though
+>> that if those modules had probe and they then run async'd then systemd
+>> service would probably need to consider that the requirements may not
+>> be there until later. If this is not carefully considered that could
+>> introduce regression to users of modules-load.d when async probe is
+>> fully deployed. The same applies to systemd making assumptions of kmod
+>> loading a module and a dependency being complete as probe would have
+>> run it before.
+>
+> Yeah, these all needs to be considered when deciding whether or not to
+> enable async in each specific case.
 
-I've taken a quick look at the commit, and my guess with be this has
-something to do with the changes surrounding __scsi_alloc_queue .
+Yes and come to think of it I'd recommend opting out of async
+functionality for modules-load.d given that it does *not* hooked with
+the timeout and there is a good chances its users likely do want to
+wait for probe to run at this point.
 
-Regards,
+Given this I also am inclined now for the per module request to be
+async or not (default) from userspace. The above would be a good
+example starting use case.
 
-Hans
+>> I believe one concern here lies in on whether or not userspace
+>> is properly equipped to deal with the requirements on module loading
+>> doing async probing and that possibly failing. Perhaps systemd might
+>> think all userspace is ready for that but are we sure that's the case?
+>
+> There almost certainly are custom things out there relying on the
+> synchronous behaviour, but if we make it opt-in we should not have a
+> problem.
+
+Indeed.
+
+BTW as for the cxgb4 device driver it fails to load because it relies
+on get_vpd_params() on probe, that end sup calling
+pci_vpd_pci22_wait() which will fail if if
+fatal_signal_pending(current). This is an example now completely
+unrelated to the OOM series, and any other uses of
+fatal_signal_pending(current) should trigger similar failures on
+device drivers.
+
+  Luis
