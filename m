@@ -1,121 +1,133 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 18/18][SCSI] mpt3sas, mpt2sas: fix scsi_add_host error handling problems in _scsih_probe
-Date: Fri, 12 Sep 2014 15:35:33 +0530
-Message-ID: <1410516333-3678-19-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 15/18][SCSI] mpt3sas: Added OEM branding Strings
+Date: Fri, 12 Sep 2014 15:35:30 +0530
+Message-ID: <1410516333-3678-16-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og103.obsmtp.com ([64.18.2.159]:56032 "EHLO
+	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753655AbaILKHQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 06:07:16 -0400
+Received: by mail-pd0-f169.google.com with SMTP id fp1so901090pdb.14
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 03:07:14 -0700 (PDT)
 In-Reply-To: <1410516333-3678-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, Robert Elliott <elliott@hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-In _scsih_probe, propagate the return value from scsi_add_host.
-In mpt3sas, avoid calling list_del twice if that returns an
-error, which causes list_del corruption warnings if an error
-is returned.
+Added following branding Strings for Intel custom HBAs support.
 
-Tested with blk-mq and scsi-mq patches to properly cleanup
-from and propagate blk_mq_init_rq_map errors.
+Driver String:                                  Vendor ID       Device ID       SubSystemVendor ID      SubSystemDevice ID
+Intel(R) Integrated RAID Module RMS3JC080       0x1000          0x0097          0x8086                  0x3521
+Intel(R) RAID Controller RS3GC008               0x1000          0x0097          0x8086                  0x3522
+Intel(R) RAID Controller RS3FC044               0x1000          0x0097          0x8086                  0x3523
+Intel(R) RAID Controller RS3UC080               0x1000          0x0097          0x8086                  0x3524
 
-Signed-off-by: Robert Elliott <elliott@hp.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 8 ++++++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 9 ++++++---
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 49 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 18 ++++++++++++++
+ 2 files changed, 67 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 231ec34..992a224 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -8147,6 +8147,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct MPT2SAS_ADAPTER *ioc;
- 	struct Scsi_Host *shost;
-+	int rv;
- 
- 	shost = scsi_host_alloc(&scsih_driver_template,
- 	    sizeof(struct MPT2SAS_ADAPTER));
-@@ -8242,6 +8243,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (!ioc->firmware_event_thread) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		rv = -ENODEV;
- 		goto out_thread_fail;
- 	}
- 
-@@ -8249,6 +8251,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if ((mpt2sas_base_attach(ioc))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		rv = -ENODEV;
- 		goto out_attach_fail;
- 	}
- 
-@@ -8266,7 +8269,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	} else
- 		ioc->hide_drives = 0;
- 
--	if ((scsi_add_host(shost, &pdev->dev))) {
-+	rv = scsi_add_host(shost, &pdev->dev);
-+	if (rv) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 		goto out_add_shost_fail;
-@@ -8283,7 +8287,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-  out_thread_fail:
- 	list_del(&ioc->list);
- 	scsi_host_put(shost);
--	return -ENODEV;
-+	return rv;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index faa3380..d71f135 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2185,6 +2185,53 @@ mpt3sas_base_put_smid_default(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 	    &ioc->scsi_lookup_lock);
  }
  
- #ifdef CONFIG_PM
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 95a1049..857276b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -7781,6 +7781,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct MPT3SAS_ADAPTER *ioc;
- 	struct Scsi_Host *shost;
-+	int rv;
++/**
++ * _base_display_intel_branding - Display branding string
++ * @ioc: per adapter object
++ *
++ * Return nothing.
++ */
++static void
++_base_display_intel_branding(struct MPT3SAS_ADAPTER *ioc)
++{
++	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_INTEL)
++		return;
++
++	switch (ioc->pdev->device) {
++	case MPI25_MFGPAGE_DEVID_SAS3008:
++		switch (ioc->pdev->subsystem_device) {
++		case MPT3SAS_INTEL_RMS3JC080_SSDID:
++			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				MPT3SAS_INTEL_RMS3JC080_BRANDING);
++			break;
++
++		case MPT3SAS_INTEL_RS3GC008_SSDID:
++			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				MPT3SAS_INTEL_RS3GC008_BRANDING);
++			break;
++		case MPT3SAS_INTEL_RS3FC044_SSDID:
++			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				MPT3SAS_INTEL_RS3FC044_BRANDING);
++			break;
++		case MPT3SAS_INTEL_RS3UC080_SSDID:
++			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				MPT3SAS_INTEL_RS3UC080_BRANDING);
++			break;
++		default:
++			pr_info(MPT3SAS_FMT
++				"Intel(R) Controller: Subsystem ID: 0x%X\n",
++				ioc->name, ioc->pdev->subsystem_device);
++			break;
++		}
++		break;
++	default:
++		pr_info(MPT3SAS_FMT
++			"Intel(R) Controller: Subsystem ID: 0x%X\n",
++			ioc->name, ioc->pdev->subsystem_device);
++		break;
++	}
++}
++
  
- 	shost = scsi_host_alloc(&scsih_driver_template,
- 	    sizeof(struct MPT3SAS_ADAPTER));
-@@ -7873,6 +7874,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (!ioc->firmware_event_thread) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		rv = -ENODEV;
- 		goto out_thread_fail;
- 	}
  
-@@ -7880,12 +7882,13 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if ((mpt3sas_base_attach(ioc))) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		rv = -ENODEV;
- 		goto out_attach_fail;
- 	}
--	if ((scsi_add_host(shost, &pdev->dev))) {
-+	rv = scsi_add_host(shost, &pdev->dev);
-+	if (rv) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
--		list_del(&ioc->list);
- 		goto out_add_shost_fail;
- 	}
+ /**
+@@ -2216,6 +2263,8 @@ _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
+ 	   (bios_version & 0x0000FF00) >> 8,
+ 	    bios_version & 0x000000FF);
  
-@@ -7898,7 +7901,7 @@ out_add_shost_fail:
-  out_thread_fail:
- 	list_del(&ioc->list);
- 	scsi_host_put(shost);
--	return -ENODEV;
-+	return rv;
- }
++	_base_display_intel_branding(ioc);
++
+ 	pr_info(MPT3SAS_FMT "Protocol=(", ioc->name);
  
- #ifdef CONFIG_PM
+ 	if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_SCSI_INITIATOR) {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 86b931e..e920728 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -130,7 +130,25 @@
+ #define MPT_TARGET_FLAGS_DELETED	0x04
+ #define MPT_TARGET_FASTPATH_IO		0x08
+ 
++/*
++ * Intel HBA branding
++ */
++#define MPT3SAS_INTEL_RMS3JC080_BRANDING       \
++	"Intel(R) Integrated RAID Module RMS3JC080"
++#define MPT3SAS_INTEL_RS3GC008_BRANDING       \
++	"Intel(R) RAID Controller RS3GC008"
++#define MPT3SAS_INTEL_RS3FC044_BRANDING       \
++	"Intel(R) RAID Controller RS3FC044"
++#define MPT3SAS_INTEL_RS3UC080_BRANDING       \
++	"Intel(R) RAID Controller RS3UC080"
+ 
++/*
++ * Intel HBA SSDIDs
++ */
++#define MPT3SAS_INTEL_RMS3JC080_SSDID	0x3521
++#define MPT3SAS_INTEL_RS3GC008_SSDID	0x3522
++#define MPT3SAS_INTEL_RS3FC044_SSDID	0x3523
++#define MPT3SAS_INTEL_RS3UC080_SSDID    0x3524
+ 
+ /*
+  * status bits for ioc->diag_buffer_status
 -- 
 2.0.2
+
