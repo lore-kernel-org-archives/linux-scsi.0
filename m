@@ -1,124 +1,56 @@
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if
-	not OOM
-Date: Fri, 12 Sep 2014 13:09:57 -0700
-Message-ID: <CAB=NE6XS9pWmfO7xjTpLFG1OdOJ=UktbOK5pjJCK8hzfXagfXQ@mail.gmail.com>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
- <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
- <20140905141241.GC10455@mtj.dyndns.org>
- <20140905164405.GA28964@core.coreip.homeip.net>
- <20140905174925.GA12991@mtj.dyndns.org>
- <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
- <20140905224047.GC15723@mtj.dyndns.org>
- <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
- <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
- <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
- <1410291346.13298.16.camel@jarvis.lan>
- <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
- <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
- <CAB=NE6UprJH69hzc1mjqyq6PAn+7LZmX65Z8CDwUdJ73nDusHg@mail.gmail.com>
- <CAG-2HqUzCvd55mq=M3=tXbHAjc2QnVuRtbFZMWTz9k_6BmmngQ@mail.gmail.com>
- <CAB=NE6XmFaWMKuW3vJ7QMZ1BmmWrAPezTYYsqatX4mMNdMjpog@mail.gmail.com>
- <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Fri, 12 Sep 2014 13:14:22 -0700
+Message-ID: <CAB=NE6XpYZEZ=uKj+T3BtofCHOToQDottzYXCENSTMyhx83Rvg@mail.gmail.com>
+References: <CAB=NE6Vn3hA_VKJyi4kgMi6iMtTtA104-_UfFm6vgX14RoDOTw@mail.gmail.com>
+ <20140909012933.GF11706@mtj.dyndns.org> <CAB=NE6V+of_RLQtjFpkLN49nKgfONx0T4cbu8kkNU69tUyNozw@mail.gmail.com>
+ <20140909014754.GG11706@mtj.dyndns.org> <CAB=NE6VAe_96dezJmdXkOjy8mSz8EABX6i8C46GzUJRC-HLAZQ@mail.gmail.com>
+ <20140909023943.GH11706@mtj.dyndns.org> <CAB=NE6XH64QLfwoE3r7uf3SYKNJMzP-tjUkrxDwVca7G2zOxBQ@mail.gmail.com>
+ <20140909030353.GI11706@mtj.dyndns.org> <CAB=NE6UGNC7VHnkuv8huaVHLX3Kuh2kOTK92SCw07ehJ3LdXFg@mail.gmail.com>
+ <20140909032529.GJ11706@mtj.dyndns.org> <20140909230333.GD3154@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Tom Gundersen <teg@jklm.no>, Tejun Heo <tj@kernel.org>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd Mailing List <systemd-devel@lists.freedesk>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f43.google.com ([209.85.215.43]:57459 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbaILUOq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 16:14:46 -0400
+In-Reply-To: <20140909230333.GD3154@mtj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Tom Gundersen <teg@jklm.no>
+Cc: Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekan
 
-On Thu, Sep 11, 2014 at 10:48 PM, Tom Gundersen <teg@jklm.no> wrote:
-> On Fri, Sep 12, 2014 at 12:26 AM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
->> On Thu, Sep 11, 2014 at 2:43 PM, Tom Gundersen <teg@jklm.no> wrote:
->>> How about simply introducing a new flag to finit_module() to indicate
->>> that the caller does not care about asynchronicity. We could then pass
->>> this from udev, but existing scripts calling modprobe/insmod will not
->>> be affected.
+On Tue, Sep 9, 2014 at 4:03 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Tue, Sep 09, 2014 at 12:25:29PM +0900, Tejun Heo wrote:
+>> Hello,
 >>
->> Do you mean that you *do want asynchronicity*?
->
-> Precisely, udev would opt-in, but existing scripts etc would not.
-
-Sure that's the other alternative that Tejun was mentioning.
-
->>> But isn't finit_module() taking a long time a serious problem given
->>> that it means no other module can be loaded in parallel?
+>> On Mon, Sep 08, 2014 at 08:19:12PM -0700, Luis R. Rodriguez wrote:
+>> > On the systemd side of things it should enable this sysctl and for
+>> > older kernels what should it do?
 >>
->> Indeed but having a desire to make the init() complete fast is
->> different than the desire to have the combination of both init and
->> probe fast synchronously.
+>> Supposing the change is backported via -stable, it can try to set the
+>> sysctl on all kernels.  If the knob doesn't exist, the fix is not
+>> there and nothing can be done about it.
 >
-> I guess no one is arguing that probe should somehow be required to be
-> fast, but rather:
->
->> If userspace wants init to be fast and let
->> probe be async then userspace has no option but to deal with the fact
->> that async probe will be async, and it should then use other methods
->> to match any dependencies if its doing that itself.
->
-> Correct. And this therefore likely needs to be opt-in behaviour per
-> finit_module() invocation to avoid breaking old assumptions.
+> The more I think about it, the more I think this should be a
+> per-insmod instance thing rather than a system-wide switch.
 
-Sure.
+Agreed, a good use case that comes to mind would be systemd's
+modules-load.d lists used by systemd services to require modules, the
+hooks there however likely expect probe to complete as part of the
+service, since the timeout is not applicable to these the synchronous
+probe for them would be good while systemd would use async probe for
+regular modules.
 
->> For example
->> networking should not kick off after a network driver is loaded but
->> rather one the device creeps up on udev. We should be good with
->> networking dealing with this correctly today but not sure about other
->> subsystems. depmod should be able to load the required modules in
->> order and if bus drivers work right then probe of the remnant devices
->> should happen asynchronously. The one case I can think of that is a
->> bit different is modules-load.d things but those *do not rely on the
->> timeout*, but are loaded prior to a service requirement. Note though
->> that if those modules had probe and they then run async'd then systemd
->> service would probably need to consider that the requirements may not
->> be there until later. If this is not carefully considered that could
->> introduce regression to users of modules-load.d when async probe is
->> fully deployed. The same applies to systemd making assumptions of kmod
->> loading a module and a dependency being complete as probe would have
->> run it before.
->
-> Yeah, these all needs to be considered when deciding whether or not to
-> enable async in each specific case.
+> Currently
+> the kernel param code doesn't allow a generic param outside the ones
+> specified by the module itself but adding support for something like
+> driver.async_load=1 shouldn't be too difficult, applying that to
+> existing systems shouldn't be much more difficult than a system-wide
+> switch, and it'd be siginificantly cleaner than fiddling with driver
+> blacklist.
 
-Yes and come to think of it I'd recommend opting out of async
-functionality for modules-load.d given that it does *not* hooked with
-the timeout and there is a good chances its users likely do want to
-wait for probe to run at this point.
-
-Given this I also am inclined now for the per module request to be
-async or not (default) from userspace. The above would be a good
-example starting use case.
-
->> I believe one concern here lies in on whether or not userspace
->> is properly equipped to deal with the requirements on module loading
->> doing async probing and that possibly failing. Perhaps systemd might
->> think all userspace is ready for that but are we sure that's the case?
->
-> There almost certainly are custom things out there relying on the
-> synchronous behaviour, but if we make it opt-in we should not have a
-> problem.
-
-Indeed.
-
-BTW as for the cxgb4 device driver it fails to load because it relies
-on get_vpd_params() on probe, that end sup calling
-pci_vpd_pci22_wait() which will fail if if
-fatal_signal_pending(current). This is an example now completely
-unrelated to the OOM series, and any other uses of
-fatal_signal_pending(current) should trigger similar failures on
-device drivers.
+Agreed.
 
   Luis
