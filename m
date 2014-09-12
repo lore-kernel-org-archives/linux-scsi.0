@@ -1,28 +1,226 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH] ahci_xgene: Fix the error print invalid resource for APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Fri, 12 Sep 2014 13:24:07 +0530
-Message-ID: <1410508448-25111-1-git-send-email-stripathi@apm.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: [PATCH v4 2/2] arcmsr: simplify of updating doneq_index and
+ postq_index
+Date: Fri, 12 Sep 2014 16:22:55 +0800
+Message-ID: <1410510175.5045.304.camel@Centos6.3-64>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:54121 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752788AbaILHzS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 03:55:18 -0400
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:54427 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018AbaILIXF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Sep 2014 04:23:05 -0400
+Received: by mail-pd0-f173.google.com with SMTP id ft15so707243pdb.32
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2014 01:23:04 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+To: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+From: Ching Huang <ching2048@areca.com.tw>
+
+This patch is to modify previous patch 16/17 and it is relative to
+http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
+
+change in v4:
+1. clean up of duplicate variable declaration in switch.
+2. simplify of updating doneq_index and postq_index
+3. fix spin_lock area in arcmsr_hbaD_polling_ccbdone
+
+Signed-off-by: Ching Huang <ching2048@areca.com.tw>
 ---
 
-Suman Tripathi (1):
-  ahci_xgene: Fix the error print invalid resource for APM X-Gene SoC
-    AHCI SATA Host Controller driver.
+diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c	2014-09-12 12:43:16.956653000 +0800
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2014-09-12 15:00:23.516069000 +0800
+@@ -1121,7 +1121,7 @@ static void arcmsr_drain_donequeue(struc
+ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ {
+ 	int i = 0;
+-	uint32_t flag_ccb;
++	uint32_t flag_ccb, ccb_cdb_phy;
+ 	struct ARCMSR_CDB *pARCMSR_CDB;
+ 	bool error;
+ 	struct CommandControlBlock *pCCB;
+@@ -1165,10 +1165,6 @@ static void arcmsr_done4abort_postqueue(
+ 		break;
+ 	case ACB_ADAPTER_TYPE_C: {
+ 		struct MessageUnit_C __iomem *reg = acb->pmuC;
+-		struct  ARCMSR_CDB *pARCMSR_CDB;
+-		uint32_t flag_ccb, ccb_cdb_phy;
+-		bool error;
+-		struct CommandControlBlock *pCCB;
+ 		while ((readl(&reg->host_int_status) & ARCMSR_HBCMU_OUTBOUND_POSTQUEUE_ISR) && (i++ < ARCMSR_MAX_OUTSTANDING_CMD)) {
+ 			/*need to do*/
+ 			flag_ccb = readl(&reg->outbound_queueport_low);
+@@ -1182,10 +1178,8 @@ static void arcmsr_done4abort_postqueue(
+ 		break;
+ 	case ACB_ADAPTER_TYPE_D: {
+ 		struct MessageUnit_D  *pmu = acb->pmuD;
+-		uint32_t ccb_cdb_phy, outbound_write_pointer;
+-		uint32_t doneq_index, index_stripped, addressLow, residual;
+-		bool error;
+-		struct CommandControlBlock *pCCB;
++		uint32_t outbound_write_pointer;
++		uint32_t doneq_index, index_stripped, addressLow, residual, toggle;
+ 
+ 		outbound_write_pointer = pmu->done_qbuffer[0].addressLow + 1;
+ 		doneq_index = pmu->doneq_index;
+@@ -1193,23 +1187,11 @@ static void arcmsr_done4abort_postqueue(
+ 		for (i = 0; i < residual; i++) {
+ 			while ((doneq_index & 0xFFF) !=
+ 				(outbound_write_pointer & 0xFFF)) {
+-				if (doneq_index & 0x4000) {
+-					index_stripped = doneq_index & 0xFFF;
+-					index_stripped += 1;
+-					index_stripped %=
+-						ARCMSR_MAX_ARC1214_DONEQUEUE;
+-					pmu->doneq_index = index_stripped ?
+-						(index_stripped | 0x4000) :
+-						(index_stripped + 1);
+-				} else {
+-					index_stripped = doneq_index;
+-					index_stripped += 1;
+-					index_stripped %=
+-						ARCMSR_MAX_ARC1214_DONEQUEUE;
+-					pmu->doneq_index = index_stripped ?
+-						index_stripped :
+-						((index_stripped | 0x4000) + 1);
+-				}
++				toggle = doneq_index & 0x4000;
++				index_stripped = (doneq_index & 0xFFF) + 1;
++				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
++				pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
++					((toggle ^ 0x4000) + 1);
+ 				doneq_index = pmu->doneq_index;
+ 				addressLow = pmu->done_qbuffer[doneq_index &
+ 					0xFFF].addressLow;
+@@ -1461,7 +1443,7 @@ static void arcmsr_post_ccb(struct Adapt
+ 	case ACB_ADAPTER_TYPE_D: {
+ 		struct MessageUnit_D  *pmu = acb->pmuD;
+ 		u16 index_stripped;
+-		u16 postq_index;
++		u16 postq_index, toggle;
+ 		unsigned long flags;
+ 		struct InBound_SRB *pinbound_srb;
+ 
+@@ -1472,19 +1454,11 @@ static void arcmsr_post_ccb(struct Adapt
+ 		pinbound_srb->addressLow = dma_addr_lo32(cdb_phyaddr);
+ 		pinbound_srb->length = ccb->arc_cdb_size >> 2;
+ 		arcmsr_cdb->msgContext = dma_addr_lo32(cdb_phyaddr);
+-		if (postq_index & 0x4000) {
+-			index_stripped = postq_index & 0xFF;
+-			index_stripped += 1;
+-			index_stripped %= ARCMSR_MAX_ARC1214_POSTQUEUE;
+-			pmu->postq_index = index_stripped ?
+-				(index_stripped | 0x4000) : index_stripped;
+-		} else {
+-			index_stripped = postq_index;
+-			index_stripped += 1;
+-			index_stripped %= ARCMSR_MAX_ARC1214_POSTQUEUE;
+-			pmu->postq_index = index_stripped ? index_stripped :
+-				(index_stripped | 0x4000);
+-		}
++		toggle = postq_index & 0x4000;
++		index_stripped = postq_index + 1;
++		index_stripped &= (ARCMSR_MAX_ARC1214_POSTQUEUE - 1);
++		pmu->postq_index = index_stripped ? (index_stripped | toggle) :
++			(toggle ^ 0x4000);
+ 		writel(postq_index, pmu->inboundlist_write_pointer);
+ 		spin_unlock_irqrestore(&acb->postq_lock, flags);
+ 		break;
+@@ -1999,7 +1973,7 @@ static void arcmsr_hbaC_postqueue_isr(st
+ 
+ static void arcmsr_hbaD_postqueue_isr(struct AdapterControlBlock *acb)
+ {
+-	u32 outbound_write_pointer, doneq_index, index_stripped;
++	u32 outbound_write_pointer, doneq_index, index_stripped, toggle;
+ 	uint32_t addressLow, ccb_cdb_phy;
+ 	int error;
+ 	struct MessageUnit_D  *pmu;
+@@ -2013,21 +1987,11 @@ static void arcmsr_hbaD_postqueue_isr(st
+ 	doneq_index = pmu->doneq_index;
+ 	if ((doneq_index & 0xFFF) != (outbound_write_pointer & 0xFFF)) {
+ 		do {
+-			if (doneq_index & 0x4000) {
+-				index_stripped = doneq_index & 0xFFF;
+-				index_stripped += 1;
+-				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
+-				pmu->doneq_index = index_stripped
+-					? (index_stripped | 0x4000) :
+-					(index_stripped + 1);
+-			} else {
+-				index_stripped = doneq_index;
+-				index_stripped += 1;
+-				index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
+-				pmu->doneq_index = index_stripped
+-					? index_stripped :
+-					((index_stripped | 0x4000) + 1);
+-			}
++			toggle = doneq_index & 0x4000;
++			index_stripped = (doneq_index & 0xFFF) + 1;
++			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
++			pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
++				((toggle ^ 0x4000) + 1);
+ 			doneq_index = pmu->doneq_index;
+ 			addressLow = pmu->done_qbuffer[doneq_index &
+ 				0xFFF].addressLow;
+@@ -2843,7 +2807,7 @@ static bool arcmsr_hbaD_get_config(struc
+ 	char __iomem *iop_firm_version;
+ 	char __iomem *iop_device_map;
+ 	u32 count;
+-	struct MessageUnit_D *reg ;
++	struct MessageUnit_D *reg;
+ 	void *dma_coherent2;
+ 	dma_addr_t dma_coherent_handle2;
+ 	struct pci_dev *pdev = acb->pdev;
+@@ -3176,7 +3140,7 @@ static int arcmsr_hbaD_polling_ccbdone(s
+ {
+ 	bool error;
+ 	uint32_t poll_ccb_done = 0, poll_count = 0, flag_ccb, ccb_cdb_phy;
+-	int rtn, doneq_index, index_stripped, outbound_write_pointer;
++	int rtn, doneq_index, index_stripped, outbound_write_pointer, toggle;
+ 	unsigned long flags;
+ 	struct ARCMSR_CDB *arcmsr_cdb;
+ 	struct CommandControlBlock *pCCB;
+@@ -3185,9 +3149,11 @@ static int arcmsr_hbaD_polling_ccbdone(s
+ polling_hbaD_ccb_retry:
+ 	poll_count++;
+ 	while (1) {
++		spin_lock_irqsave(&acb->doneq_lock, flags);
+ 		outbound_write_pointer = pmu->done_qbuffer[0].addressLow + 1;
+ 		doneq_index = pmu->doneq_index;
+ 		if ((outbound_write_pointer & 0xFFF) == (doneq_index & 0xFFF)) {
++			spin_unlock_irqrestore(&acb->doneq_lock, flags);
+ 			if (poll_ccb_done) {
+ 				rtn = SUCCESS;
+ 				break;
+@@ -3200,21 +3166,11 @@ polling_hbaD_ccb_retry:
+ 				goto polling_hbaD_ccb_retry;
+ 			}
+ 		}
+-		spin_lock_irqsave(&acb->doneq_lock, flags);
+-		if (doneq_index & 0x4000) {
+-			index_stripped = doneq_index & 0xFFF;
+-			index_stripped += 1;
+-			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
+-			pmu->doneq_index = index_stripped ?
+-				(index_stripped | 0x4000) :
+-				(index_stripped + 1);
+-		} else {
+-			index_stripped = doneq_index;
+-			index_stripped += 1;
+-			index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
+-			pmu->doneq_index = index_stripped ? index_stripped :
+-				((index_stripped | 0x4000) + 1);
+-		}
++		toggle = doneq_index & 0x4000;
++		index_stripped = (doneq_index & 0xFFF) + 1;
++		index_stripped %= ARCMSR_MAX_ARC1214_DONEQUEUE;
++		pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
++				((toggle ^ 0x4000) + 1);
+ 		spin_unlock_irqrestore(&acb->doneq_lock, flags);
+ 		doneq_index = pmu->doneq_index;
+ 		flag_ccb = pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;
 
- drivers/ata/ahci_xgene.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---
-1.8.2.1
 
