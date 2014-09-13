@@ -1,36 +1,73 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3 02/16] scsi: balance out autopm get/put calls in
- scsi_sysfs_add_sdev()
-Date: Sat, 13 Sep 2014 11:54:57 -0700
-Message-ID: <20140913185457.GC30010@infradead.org>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
- <1410350063-23267-3-git-send-email-draviv@codeaurora.org>
+From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH v2 10/24] uas: zap_pending: data urbs should have completed
+ at this time
+Date: Sat, 13 Sep 2014 22:31:50 +0300
+Message-ID: <54149BA6.3010305@cogentembedded.com>
+References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com> <1410604011-3828-11-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1410350063-23267-3-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410604011-3828-11-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 10, 2014 at 02:54:09PM +0300, Dolev Raviv wrote:
-> From: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> SCSI Well-known logical units generally don't have any scsi driver
-> associated with it which means no one will call scsi_autopm_put_device()
-> on these wlun scsi devices and this would result in keeping the
-> corresponding scsi device always active (hence LLD can't be suspended as
-> well). Same exact problem can be seen for other scsi device representing
-> normal logical unit whose driver is yet to be loaded. This patch fixes
-> the above problem with this approach:
-> 
-> - make the scsi_autopm_put_device call at the end of scsi_sysfs_add_sdev
->   to make it balance out the get earlier in the function.
-> - let drivers do paired get/put calls in their probe methods.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+Hello.
 
-Looks good to me, I will pick this up for the next core-for-3.18 update.
+On 9/13/2014 1:26 PM, Hans de Goede wrote:
+
+> The data urbs are all killed before calling zap_pending, and their completion
+> handler should have cleared their inflight flag.
+
+> Do not 0 the data inflight flags, and add a check for try_complete succeeding,
+> as it should always succeed when called from zap_pending.
+
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   drivers/usb/storage/uas.c | 10 +++++-----
+>   1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 08edb6b..85bbc1d 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -145,6 +145,7 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+>   	struct uas_cmd_info *cmdinfo;
+>   	struct uas_cmd_info *temp;
+>   	unsigned long flags;
+> +	int err;
+
+    Er, I don't see why this variable is necessary.
+
+[...]
+> @@ -152,12 +153,11 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+>   		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
+>   						      SCp);
+>   		uas_log_cmd_state(cmnd, __func__);
+> -		/* all urbs are killed, clear inflight bits */
+> -		cmdinfo->state &= ~(COMMAND_INFLIGHT |
+> -				    DATA_IN_URB_INFLIGHT |
+> -				    DATA_OUT_URB_INFLIGHT);
+> +		/* Sense urbs were killed, clear COMMAND_INFLIGHT manually */
+> +		cmdinfo->state &= ~COMMAND_INFLIGHT;
+>   		cmnd->result = result << 16;
+> -		uas_try_complete(cmnd, __func__);
+> +		err = uas_try_complete(cmnd, __func__);
+> +		WARN_ON(err != 0);
+
+    Why not:
+
+		WARN_ON(uas_try_complete(cmnd, __func__));
+
+>   	}
+>   	spin_unlock_irqrestore(&devinfo->lock, flags);
+>   }
+
+WBR, Sergei
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
