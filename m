@@ -1,63 +1,52 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] scsi: fix regression that accidentally disabled block-based
- tcq
-Date: Sat, 13 Sep 2014 12:28:41 +0200
-Message-ID: <54141C59.7040707@redhat.com>
-References: <540EC52C.3000804@redhat.com> <20140909152730.GA17882@infradead.org> <540FFBF4.9090001@redhat.com> <20140910154535.GA5102@infradead.org> <541172E9.8070309@redhat.com> <20140911161331.GA24488@infradead.org> <54134E50.6040805@redhat.com> <20140912230032.GA21143@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH fix for 3.17] uas: Add a quirk for rejecting ATA_12 and
+ ATA_16 commands
+Date: Sat, 13 Sep 2014 10:11:13 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1409131009530.7476-100000@netrider.rowland.org>
+References: <1410603548-3579-2-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140912230032.GA21143@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1410603548-3579-2-git-send-email-hdegoede@redhat.com>
+Sender: stable-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Sat, 13 Sep 2014, Hans de Goede wrote:
 
-On 09/13/2014 01:00 AM, Christoph Hellwig wrote:
-> Please try the fix below, looks like the commit broke TCQ for all drivers 
-> using block-level tagging.
-
-Yes this one does the trick and fixes things. Note the git tree I used for
-testing also had your previous fix to split up the blk_tcq union in 2
-separate struct members. Let me know if you want me to re-test without that
-fix.
-
-Thanks & Regards,
-
-Hans
-
-
+> And set this quirk for the Seagate Expansion Desk (0bc2:2312), as that one
+> seems to hang upon receiving an ATA_12 or ATA_16 command.
 > 
-> ---
-> From 865a19b760d2786fe37d3b5c151a4ecea4c0e95e Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Fri, 12 Sep 2014 16:00:19 -0700
-> Subject: scsi: fix regression that accidentally disabled block-based tcq
+> https://bugzilla.kernel.org/show_bug.cgi?id=79511
 > 
-> The scsi blk-mq support accidentally flipped a conditional, which lead to
-> never enabling block based tcq when using the legacy request path.
-> 
-> Fixes: d285203cf647d7c9 scsi: add support for a blk-mq based I/O path.
-> Reported-by: Hans de Goede <hdegoede@redhat.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  include/scsi/scsi_tcq.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-> index cdcc90b..e645835 100644
-> --- a/include/scsi/scsi_tcq.h
-> +++ b/include/scsi/scsi_tcq.h
-> @@ -68,7 +68,7 @@ static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
->  		return;
+> Cc: stable@vger.kernel.org # 3.16
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+> --- a/drivers/usb/storage/usb.c
+> +++ b/drivers/usb/storage/usb.c
+> @@ -478,7 +478,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+>  			US_FL_CAPACITY_OK | US_FL_IGNORE_RESIDUE |
+>  			US_FL_SINGLE_LUN | US_FL_NO_WP_DETECT |
+>  			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
+> -			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE);
+> +			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
+> +			US_FL_NO_ATA_1X);
 >  
->  	if (!shost_use_blk_mq(sdev->host) &&
-> -	    blk_queue_tagged(sdev->request_queue))
-> +	    !blk_queue_tagged(sdev->request_queue))
->  		blk_queue_init_tags(sdev->request_queue, depth,
->  				    sdev->host->bqt);
->  
-> 
+>  	p = quirks;
+>  	while (*p) {
+> @@ -543,6 +544,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+>  		case 's':
+>  			f |= US_FL_SINGLE_LUN;
+>  			break;
+> +		case 't':
+> +			f |= US_FL_NO_ATA_1X;
+> +			break;
+>  		case 'u':
+>  			f |= US_FL_IGNORE_UAS;
+>  			break;
+
+You must not add an aditional value for a module parameter without 
+documenting it in Documentation/kernel-parameters.txt.
+
+Alan Stern
