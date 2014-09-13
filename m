@@ -1,177 +1,134 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 03/24] uas: Fix resetting flag handling
-Date: Sat, 13 Sep 2014 12:26:30 +0200
-Message-ID: <1410604011-3828-4-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 09/24] uas: Simplify reset / disconnect handling
+Date: Sat, 13 Sep 2014 12:26:36 +0200
+Message-ID: <1410604011-3828-10-git-send-email-hdegoede@redhat.com>
 References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32675 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752113AbaIMK1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Sep 2014 06:27:09 -0400
+In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-- Make sure we always hold the lock when setting / checking resetting
-- Check resetting before checking urb->status
-- Add missing check for resetting to uas_data_cmplt
-- Add missing check for resetting to uas_do_work
+Drop the whole dance with first moving cmnds to a dead-list. The resetting
+flag ensures that no new cmds / urbs will be submitted, and that any urb
+completions are short-circuited without trying to complete the scsi cmnd.
 
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/usb/storage/uas.c | 49 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 35 insertions(+), 14 deletions(-)
+ drivers/usb/storage/uas.c | 43 ++++++-------------------------------------
+ 1 file changed, 6 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 4cf4d58..0d97602 100644
+index 70b44f0..08edb6b 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -129,6 +129,10 @@ static void uas_do_work(struct work_struct *work)
- 	int err;
+@@ -62,7 +62,6 @@ struct uas_dev_info {
+ 	spinlock_t lock;
+ 	struct work_struct work;
+ 	struct list_head inflight_list;
+-	struct list_head dead_list;
+ };
  
- 	spin_lock_irqsave(&devinfo->lock, flags);
-+
-+	if (devinfo->resetting)
-+		goto out;
-+
- 	list_for_each_entry(cmdinfo, &devinfo->inflight_list, list) {
- 		struct scsi_pointer *scp = (void *)cmdinfo;
- 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
-@@ -143,6 +147,7 @@ static void uas_do_work(struct work_struct *work)
- 		else
- 			schedule_work(&devinfo->work);
- 	}
-+out:
+ enum {
+@@ -130,35 +129,6 @@ out:
  	spin_unlock_irqrestore(&devinfo->lock, flags);
  }
  
-@@ -322,6 +327,11 @@ static void uas_stat_cmplt(struct urb *urb)
- 	unsigned long flags;
- 	u16 tag;
- 
-+	spin_lock_irqsave(&devinfo->lock, flags);
-+
-+	if (devinfo->resetting)
-+		goto out;
-+
- 	if (urb->status) {
- 		if (urb->status == -ENOENT) {
- 			dev_err(&urb->dev->dev, "stat urb: killed, stream %d\n",
-@@ -330,27 +340,17 @@ static void uas_stat_cmplt(struct urb *urb)
- 			dev_err(&urb->dev->dev, "stat urb: status %d\n",
- 				urb->status);
- 		}
--		usb_free_urb(urb);
--		return;
--	}
+-static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
+-			      struct uas_cmd_info *cmdinfo,
+-			      int result, const char *caller)
+-{
+-	struct scsi_pointer *scp = (void *)cmdinfo;
+-	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
 -
--	if (devinfo->resetting) {
--		usb_free_urb(urb);
--		return;
-+		goto out;
- 	}
- 
+-	uas_log_cmd_state(cmnd, caller);
+-	lockdep_assert_held(&devinfo->lock);
+-	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
+-	cmdinfo->state |= COMMAND_ABORTED;
+-	cmdinfo->state &= ~IS_IN_WORK_LIST;
+-	cmnd->result = result << 16;
+-	list_move_tail(&cmdinfo->list, &devinfo->dead_list);
+-}
+-
+-static void uas_abort_inflight(struct uas_dev_info *devinfo, int result,
+-			       const char *caller)
+-{
+-	struct uas_cmd_info *cmdinfo;
+-	struct uas_cmd_info *temp;
+-	unsigned long flags;
+-
 -	spin_lock_irqsave(&devinfo->lock, flags);
- 	tag = be16_to_cpup(&iu->tag) - 1;
- 	if (tag == 0)
- 		cmnd = devinfo->cmnd;
- 	else
- 		cmnd = scsi_host_find_tag(shost, tag - 1);
- 
--	if (!cmnd) {
--		usb_free_urb(urb);
--		spin_unlock_irqrestore(&devinfo->lock, flags);
--		return;
--	}
-+	if (!cmnd)
-+		goto out;
- 
- 	cmdinfo = (void *)&cmnd->SCp;
- 	switch (iu->iu_id) {
-@@ -391,6 +391,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 		scmd_printk(KERN_ERR, cmnd,
- 			"Bogus IU (%d) received on status pipe\n", iu->iu_id);
- 	}
-+out:
- 	usb_free_urb(urb);
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- }
-@@ -404,6 +405,7 @@ static void uas_data_cmplt(struct urb *urb)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&devinfo->lock, flags);
-+
- 	if (cmdinfo->data_in_urb == urb) {
- 		sdb = scsi_in(cmnd);
- 		cmdinfo->state &= ~DATA_IN_URB_INFLIGHT;
-@@ -413,7 +415,13 @@ static void uas_data_cmplt(struct urb *urb)
- 	}
- 	if (sdb == NULL) {
- 		WARN_ON_ONCE(1);
--	} else if (urb->status) {
-+		goto out;
-+	}
-+
-+	if (devinfo->resetting)
-+		goto out;
-+
-+	if (urb->status) {
- 		if (urb->status != -ECONNRESET) {
- 			uas_log_cmd_state(cmnd, __func__);
- 			scmd_printk(KERN_ERR, cmnd,
-@@ -426,6 +434,7 @@ static void uas_data_cmplt(struct urb *urb)
- 		sdb->resid = sdb->length - urb->actual_length;
- 	}
- 	uas_try_complete(cmnd, __func__);
-+out:
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
+-	list_for_each_entry_safe(cmdinfo, temp, &devinfo->inflight_list, list)
+-		uas_mark_cmd_dead(devinfo, cmdinfo, result, caller);
+-	spin_unlock_irqrestore(&devinfo->lock, flags);
+-}
+-
+ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+ {
+ 	struct scsi_pointer *scp = (void *)cmdinfo;
+@@ -170,7 +140,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
+ 	schedule_work(&devinfo->work);
  }
  
-@@ -732,6 +741,7 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
- 	struct scsi_device *sdev = cmnd->device;
- 	struct uas_dev_info *devinfo = sdev->hostdata;
- 	struct usb_device *udev = devinfo->udev;
-+	unsigned long flags;
- 	int err;
- 
- 	err = usb_lock_device_for_reset(udev, devinfo->intf);
-@@ -742,14 +752,21 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
+-static void uas_zap_dead(struct uas_dev_info *devinfo)
++static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+ {
+ 	struct uas_cmd_info *cmdinfo;
+ 	struct uas_cmd_info *temp;
+@@ -182,11 +152,11 @@ static void uas_zap_dead(struct uas_dev_info *devinfo)
+ 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
+ 						      SCp);
+ 		uas_log_cmd_state(cmnd, __func__);
+-		WARN_ON_ONCE(!(cmdinfo->state & COMMAND_ABORTED));
+ 		/* all urbs are killed, clear inflight bits */
+ 		cmdinfo->state &= ~(COMMAND_INFLIGHT |
+ 				    DATA_IN_URB_INFLIGHT |
+ 				    DATA_OUT_URB_INFLIGHT);
++		cmnd->result = result << 16;
+ 		uas_try_complete(cmnd, __func__);
  	}
- 
- 	shost_printk(KERN_INFO, sdev->host, "%s start\n", __func__);
-+
-+	spin_lock_irqsave(&devinfo->lock, flags);
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+@@ -765,11 +735,11 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
  	devinfo->resetting = 1;
-+	spin_unlock_irqrestore(&devinfo->lock, flags);
-+
- 	uas_abort_inflight(devinfo, DID_RESET, __func__);
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ 
+-	uas_abort_inflight(devinfo, DID_RESET, __func__);
  	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
  	usb_kill_anchored_urbs(&devinfo->sense_urbs);
  	usb_kill_anchored_urbs(&devinfo->data_urbs);
- 	uas_zap_dead(devinfo);
+-	uas_zap_dead(devinfo);
++	uas_zap_pending(devinfo, DID_RESET);
++
  	err = usb_reset_device(udev);
-+
-+	spin_lock_irqsave(&devinfo->lock, flags);
- 	devinfo->resetting = 0;
-+	spin_unlock_irqrestore(&devinfo->lock, flags);
  
- 	usb_unlock_device(udev);
+ 	spin_lock_irqsave(&devinfo->lock, flags);
+@@ -948,7 +918,6 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	spin_lock_init(&devinfo->lock);
+ 	INIT_WORK(&devinfo->work, uas_do_work);
+ 	INIT_LIST_HEAD(&devinfo->inflight_list);
+-	INIT_LIST_HEAD(&devinfo->dead_list);
  
-@@ -1045,8 +1062,12 @@ static void uas_disconnect(struct usb_interface *intf)
- {
- 	struct Scsi_Host *shost = usb_get_intfdata(intf);
- 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
-+	unsigned long flags;
+ 	result = uas_configure_endpoints(devinfo);
+ 	if (result)
+@@ -1076,11 +1045,11 @@ static void uas_disconnect(struct usb_interface *intf)
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
  
-+	spin_lock_irqsave(&devinfo->lock, flags);
- 	devinfo->resetting = 1;
-+	spin_unlock_irqrestore(&devinfo->lock, flags);
-+
  	cancel_work_sync(&devinfo->work);
- 	uas_abort_inflight(devinfo, DID_NO_CONNECT, __func__);
+-	uas_abort_inflight(devinfo, DID_NO_CONNECT, __func__);
  	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->data_urbs);
+-	uas_zap_dead(devinfo);
++	uas_zap_pending(devinfo, DID_NO_CONNECT);
++
+ 	scsi_remove_host(shost);
+ 	uas_free_streams(devinfo);
+ 	scsi_host_put(shost);
 -- 
 2.1.0
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
