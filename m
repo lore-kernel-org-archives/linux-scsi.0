@@ -1,7 +1,7 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 19/24] uas: Drop COMMAND_COMPLETED flag
-Date: Sat, 13 Sep 2014 12:26:46 +0200
-Message-ID: <1410604011-3828-20-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v2 23/24] uas: Log error codes when logging errors
+Date: Sat, 13 Sep 2014 12:26:50 +0200
+Message-ID: <1410604011-3828-24-git-send-email-hdegoede@redhat.com>
 References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
@@ -10,57 +10,60 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-It was only used to sanity check against completing the same cmnd twice,
-but that is the case we're likely operating on free-ed memory, and doing
-sanity checks on free-ed memory is not really helpful.
-
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/usb/storage/uas.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 652b97b..c6f7870 100644
+index 0b3d3a5..1dcaeee 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -74,9 +74,8 @@ enum {
- 	COMMAND_INFLIGHT        = (1 << 8),
- 	DATA_IN_URB_INFLIGHT    = (1 << 9),
- 	DATA_OUT_URB_INFLIGHT   = (1 << 10),
--	COMMAND_COMPLETED       = (1 << 11),
--	COMMAND_ABORTED         = (1 << 12),
--	IS_IN_WORK_LIST         = (1 << 13),
-+	COMMAND_ABORTED         = (1 << 11),
-+	IS_IN_WORK_LIST         = (1 << 12),
- };
+@@ -750,7 +750,8 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 	usb_unlock_device(udev);
  
- /* Overrides scsi_pointer */
-@@ -232,7 +231,7 @@ static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *caller)
- 	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
+ 	if (err) {
+-		shost_printk(KERN_INFO, sdev->host, "%s FAILED\n", __func__);
++		shost_printk(KERN_INFO, sdev->host, "%s FAILED err %d\n",
++			     __func__, err);
+ 		return FAILED;
+ 	}
  
- 	scmd_printk(KERN_INFO, cmnd,
--		    "%s tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s%s ",
-+		    "%s tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
- 		    caller, uas_get_tag(cmnd),
- 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
- 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
-@@ -244,7 +243,6 @@ static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *caller)
- 		    (ci->state & COMMAND_INFLIGHT)      ? " CMD"   : "",
- 		    (ci->state & DATA_IN_URB_INFLIGHT)  ? " IN"    : "",
- 		    (ci->state & DATA_OUT_URB_INFLIGHT) ? " OUT"   : "",
--		    (ci->state & COMMAND_COMPLETED)     ? " done"  : "",
- 		    (ci->state & COMMAND_ABORTED)       ? " abort" : "",
- 		    (ci->state & IS_IN_WORK_LIST)       ? " work"  : "");
- 	scsi_print_command(cmnd);
-@@ -280,8 +278,6 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 			      DATA_OUT_URB_INFLIGHT |
- 			      COMMAND_ABORTED))
- 		return -EBUSY;
--	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
--	cmdinfo->state |= COMMAND_COMPLETED;
- 	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
- 	uas_free_unsubmitted_urbs(cmnd);
- 	cmnd->scsi_done(cmnd);
+@@ -1020,13 +1021,16 @@ static int uas_post_reset(struct usb_interface *intf)
+ 	struct Scsi_Host *shost = usb_get_intfdata(intf);
+ 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
+ 	unsigned long flags;
++	int err;
+ 
+ 	if (devinfo->shutdown)
+ 		return 0;
+ 
+-	if (uas_configure_endpoints(devinfo) != 0) {
++	err = uas_configure_endpoints(devinfo);
++	if (err) {
+ 		shost_printk(KERN_ERR, shost,
+-			     "%s: alloc streams error after reset", __func__);
++			     "%s: alloc streams error %d after reset",
++			     __func__, err);
+ 		return 1;
+ 	}
+ 
+@@ -1062,10 +1066,13 @@ static int uas_reset_resume(struct usb_interface *intf)
+ 	struct Scsi_Host *shost = usb_get_intfdata(intf);
+ 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
+ 	unsigned long flags;
++	int err;
+ 
+-	if (uas_configure_endpoints(devinfo) != 0) {
++	err = uas_configure_endpoints(devinfo);
++	if (err) {
+ 		shost_printk(KERN_ERR, shost,
+-			     "%s: alloc streams error after reset", __func__);
++			     "%s: alloc streams error %d after reset",
++			     __func__, err);
+ 		return -EIO;
+ 	}
+ 
 -- 
 2.1.0
 
