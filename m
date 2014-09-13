@@ -1,51 +1,39 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v2 17/24] uas: Do not log urb status error on cancellation
-Date: Sat, 13 Sep 2014 12:26:44 +0200
-Message-ID: <1410604011-3828-18-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 21/24] uas: Remove protype hardware usb interface info
+Date: Sat, 13 Sep 2014 12:26:48 +0200
+Message-ID: <1410604011-3828-22-git-send-email-hdegoede@redhat.com>
 References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54727 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752062AbaIMK1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Sep 2014 06:27:22 -0400
-In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Check for both type of cancellation codes for sense and data urbs.
+We've removed all hack from the driver for pre-production hardware.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/usb/storage/uas.c | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 187e7bf..90afe4a 100644
+index cbd4312..a77c5e0 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -318,10 +318,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 		goto out;
- 
- 	if (urb->status) {
--		if (urb->status == -ENOENT) {
--			dev_err(&urb->dev->dev, "stat urb: killed, stream %d\n",
--				urb->stream_id);
--		} else {
-+		if (urb->status != -ENOENT && urb->status != -ECONNRESET) {
- 			dev_err(&urb->dev->dev, "stat urb: status %d\n",
- 				urb->status);
- 		}
-@@ -428,7 +425,7 @@ static void uas_data_cmplt(struct urb *urb)
- 	}
- 
- 	if (urb->status) {
--		if (urb->status != -ECONNRESET) {
-+		if (urb->status != -ENOENT && urb->status != -ECONNRESET) {
- 			uas_log_cmd_state(cmnd, __func__);
- 			scmd_printk(KERN_ERR, cmnd,
- 				"data cmplt err %d stream %d\n",
+@@ -830,8 +830,6 @@ static struct usb_device_id uas_usb_ids[] = {
+ #	include "unusual_uas.h"
+ 	{ USB_INTERFACE_INFO(USB_CLASS_MASS_STORAGE, USB_SC_SCSI, USB_PR_BULK) },
+ 	{ USB_INTERFACE_INFO(USB_CLASS_MASS_STORAGE, USB_SC_SCSI, USB_PR_UAS) },
+-	/* 0xaa is a prototype device I happen to have access to */
+-	{ USB_INTERFACE_INFO(USB_CLASS_MASS_STORAGE, USB_SC_SCSI, 0xaa) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(usb, uas_usb_ids);
 -- 
 2.1.0
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
