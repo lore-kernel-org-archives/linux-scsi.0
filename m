@@ -1,60 +1,63 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 08/24] uas: Free data urbs on completion
-Date: Sat, 13 Sep 2014 12:26:35 +0200
-Message-ID: <1410604011-3828-9-git-send-email-hdegoede@redhat.com>
-References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] scsi: fix regression that accidentally disabled block-based
+ tcq
+Date: Sat, 13 Sep 2014 12:28:41 +0200
+Message-ID: <54141C59.7040707@redhat.com>
+References: <540EC52C.3000804@redhat.com> <20140909152730.GA17882@infradead.org> <540FFBF4.9090001@redhat.com> <20140910154535.GA5102@infradead.org> <541172E9.8070309@redhat.com> <20140911161331.GA24488@infradead.org> <54134E50.6040805@redhat.com> <20140912230032.GA21143@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140912230032.GA21143@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Now that we no longer drop our lock to unlink the data urbs, we can simply
-free them on completion, making their handling consistent with the other urbs.
+Hi,
 
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/usb/storage/uas.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On 09/13/2014 01:00 AM, Christoph Hellwig wrote:
+> Please try the fix below, looks like the commit broke TCQ for all drivers 
+> using block-level tagging.
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 68853b5..70b44f0 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -288,8 +288,6 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 		return -EBUSY;
- 	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
- 	cmdinfo->state |= COMMAND_COMPLETED;
--	usb_free_urb(cmdinfo->data_in_urb);
--	usb_free_urb(cmdinfo->data_out_urb);
- 	if (cmdinfo->state & COMMAND_ABORTED)
- 		scmd_printk(KERN_INFO, cmnd, "abort completed\n");
- 	list_del(&cmdinfo->list);
-@@ -418,9 +416,11 @@ static void uas_data_cmplt(struct urb *urb)
- 	if (cmdinfo->data_in_urb == urb) {
- 		sdb = scsi_in(cmnd);
- 		cmdinfo->state &= ~DATA_IN_URB_INFLIGHT;
-+		cmdinfo->data_in_urb = NULL;
- 	} else if (cmdinfo->data_out_urb == urb) {
- 		sdb = scsi_out(cmnd);
- 		cmdinfo->state &= ~DATA_OUT_URB_INFLIGHT;
-+		cmdinfo->data_out_urb = NULL;
- 	}
- 	if (sdb == NULL) {
- 		WARN_ON_ONCE(1);
-@@ -450,6 +450,7 @@ static void uas_data_cmplt(struct urb *urb)
- 	}
- 	uas_try_complete(cmnd, __func__);
- out:
-+	usb_free_urb(urb);
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- }
- 
--- 
-2.1.0
+Yes this one does the trick and fixes things. Note the git tree I used for
+testing also had your previous fix to split up the blk_tcq union in 2
+separate struct members. Let me know if you want me to re-test without that
+fix.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks & Regards,
+
+Hans
+
+
+> 
+> ---
+> From 865a19b760d2786fe37d3b5c151a4ecea4c0e95e Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Fri, 12 Sep 2014 16:00:19 -0700
+> Subject: scsi: fix regression that accidentally disabled block-based tcq
+> 
+> The scsi blk-mq support accidentally flipped a conditional, which lead to
+> never enabling block based tcq when using the legacy request path.
+> 
+> Fixes: d285203cf647d7c9 scsi: add support for a blk-mq based I/O path.
+> Reported-by: Hans de Goede <hdegoede@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/scsi/scsi_tcq.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+> index cdcc90b..e645835 100644
+> --- a/include/scsi/scsi_tcq.h
+> +++ b/include/scsi/scsi_tcq.h
+> @@ -68,7 +68,7 @@ static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
+>  		return;
+>  
+>  	if (!shost_use_blk_mq(sdev->host) &&
+> -	    blk_queue_tagged(sdev->request_queue))
+> +	    !blk_queue_tagged(sdev->request_queue))
+>  		blk_queue_init_tags(sdev->request_queue, depth,
+>  				    sdev->host->bqt);
+>  
+> 
