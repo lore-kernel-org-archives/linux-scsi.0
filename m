@@ -1,71 +1,60 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v2 01/24] uas: replace WARN_ON_ONCE() with lockdep_assert_held()
-Date: Sat, 13 Sep 2014 12:26:28 +0200
-Message-ID: <1410604011-3828-2-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 08/24] uas: Free data urbs on completion
+Date: Sat, 13 Sep 2014 12:26:35 +0200
+Message-ID: <1410604011-3828-9-git-send-email-hdegoede@redhat.com>
 References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12368 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011AbaIMK07 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Sep 2014 06:26:59 -0400
-In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Sanjeev Sharma <Sanjeev_Sharma@mentor.com>, Hans de Goede <hdegoede@redhat.com>
 
-From: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
+Now that we no longer drop our lock to unlink the data urbs, we can simply
+free them on completion, making their handling consistent with the other urbs.
 
-On some architecture spin_is_locked() always return false in
-uniprocessor configuration and therefore it would be advise to replace
-with lockdep_assert_held().
-
-Signed-off-by: Sanjeev Sharma <Sanjeev_Sharma@mentor.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/usb/storage/uas.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 75d2ccd..8c7d4a2 100644
+index 68853b5..70b44f0 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -156,7 +156,7 @@ static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
- 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
- 
- 	uas_log_cmd_state(cmnd, caller);
--	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-+	lockdep_assert_held(&devinfo->lock);
- 	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
- 	cmdinfo->state |= COMMAND_ABORTED;
- 	cmdinfo->state &= ~IS_IN_WORK_LIST;
-@@ -183,7 +183,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
- 	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
- 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
- 
--	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-+	lockdep_assert_held(&devinfo->lock);
- 	cmdinfo->state |= IS_IN_WORK_LIST;
- 	schedule_work(&devinfo->work);
+@@ -288,8 +288,6 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+ 		return -EBUSY;
+ 	WARN_ON_ONCE(cmdinfo->state & COMMAND_COMPLETED);
+ 	cmdinfo->state |= COMMAND_COMPLETED;
+-	usb_free_urb(cmdinfo->data_in_urb);
+-	usb_free_urb(cmdinfo->data_out_urb);
+ 	if (cmdinfo->state & COMMAND_ABORTED)
+ 		scmd_printk(KERN_INFO, cmnd, "abort completed\n");
+ 	list_del(&cmdinfo->list);
+@@ -418,9 +416,11 @@ static void uas_data_cmplt(struct urb *urb)
+ 	if (cmdinfo->data_in_urb == urb) {
+ 		sdb = scsi_in(cmnd);
+ 		cmdinfo->state &= ~DATA_IN_URB_INFLIGHT;
++		cmdinfo->data_in_urb = NULL;
+ 	} else if (cmdinfo->data_out_urb == urb) {
+ 		sdb = scsi_out(cmnd);
+ 		cmdinfo->state &= ~DATA_OUT_URB_INFLIGHT;
++		cmdinfo->data_out_urb = NULL;
+ 	}
+ 	if (sdb == NULL) {
+ 		WARN_ON_ONCE(1);
+@@ -450,6 +450,7 @@ static void uas_data_cmplt(struct urb *urb)
+ 	}
+ 	uas_try_complete(cmnd, __func__);
+ out:
++	usb_free_urb(urb);
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
  }
-@@ -285,7 +285,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
  
--	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-+	lockdep_assert_held(&devinfo->lock);
- 	if (cmdinfo->state & (COMMAND_INFLIGHT |
- 			      DATA_IN_URB_INFLIGHT |
- 			      DATA_OUT_URB_INFLIGHT |
-@@ -624,7 +624,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
- 	struct urb *urb;
- 	int err;
- 
--	WARN_ON_ONCE(!spin_is_locked(&devinfo->lock));
-+	lockdep_assert_held(&devinfo->lock);
- 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
- 		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
- 		if (!urb)
 -- 
 2.1.0
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
