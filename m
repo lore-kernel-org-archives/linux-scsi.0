@@ -1,134 +1,279 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v2 09/24] uas: Simplify reset / disconnect handling
-Date: Sat, 13 Sep 2014 12:26:36 +0200
-Message-ID: <1410604011-3828-10-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 02/24] uas: Remove task-management / abort error handling code
+Date: Sat, 13 Sep 2014 12:26:29 +0200
+Message-ID: <1410604011-3828-3-git-send-email-hdegoede@redhat.com>
 References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32675 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752113AbaIMK1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Sep 2014 06:27:09 -0400
-In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410604011-3828-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Drop the whole dance with first moving cmnds to a dead-list. The resetting
-flag ensures that no new cmds / urbs will be submitted, and that any urb
-completions are short-circuited without trying to complete the scsi cmnd.
+There are various bug reports about oopses / hangs with the uas driver,
+which all point to the abort-command and logical-unit-reset (task-management)
+error handling paths.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Getting these right is very hard, there are quite a few corner cases, and
+testing is almost impossible since under normal operation these code paths
+are not used at all.
+
+Another problem is that there are also some cases where it simply is not clear
+what to do at all. E.g. over usb-2 multiple outstanding commands share the same
+endpoint. What if a command gets aborted while its sense urb is half way
+through completing (so some data has been transfered but not all). Since the
+urb is not yet complete we don't know if the sense urb is actually for this
+command, or for one of the other oustanding commands. If it is for one of the
+other commands and we cancel it, then we end up in an undefined state. But if
+it is actually for the command we're aborting, and the abort succeeds, then it
+may never complete...
+
+This exact same problem applies to logical unit resets too, if there are
+multiple luns, then commands outstanding on both luns share the sense
+endpoint. If there is only a single lun, then doing a logical unit reset is
+little better then doing a full usb device reset.
+
+So summarizing because:
+1) abort / lun-reset is very tricky to get right
+2) Not being able to test the tricky code, which means it will have bugs
+3) This being a code path which under normal operation will never happen,
+   so being slow / sub-optimal here is not really an issue
+4) Under error conditions we will still be able to recover through usb
+   device resets.
+5) This may be a bit slower in some cases, but this is actually faster in
+   cases where the bridge ship has locked up, which seems to be the most
+   common error case sofar.
+
+This commit removes the abort / lun-reset error handling paths, and also the
+taks-mgmt code since those are the only 2 task-mgmt users. Leaving only the
+(tested and testable) usb-device-reset error handling path in place.
+
+Note I realize that this is somewhat of a big hammer, but currently people
+are seeing very hard to debug oopses with uas. First let focus on making uas
+work reliable, then we can later look into adding more fine grained error
+handling.
+
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 43 ++++++-------------------------------------
- 1 file changed, 6 insertions(+), 37 deletions(-)
+ drivers/usb/storage/uas.c | 177 +---------------------------------------------
+ 1 file changed, 1 insertion(+), 176 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 70b44f0..08edb6b 100644
+index 8c7d4a2..4cf4d58 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -62,7 +62,6 @@ struct uas_dev_info {
+@@ -2,7 +2,7 @@
+  * USB Attached SCSI
+  * Note that this is not the same as the USB Mass Storage driver
+  *
+- * Copyright Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> for Red Hat, Inc. 2013
++ * Copyright Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> for Red Hat, Inc. 2013 - 2014
+  * Copyright Matthew Wilcox for Intel Corp, 2010
+  * Copyright Sarah Sharp for Intel Corp, 2010
+  *
+@@ -52,11 +52,9 @@ struct uas_dev_info {
+ 	struct usb_anchor data_urbs;
+ 	unsigned long flags;
+ 	int qdepth, resetting;
+-	struct response_iu response;
+ 	unsigned cmd_pipe, status_pipe, data_in_pipe, data_out_pipe;
+ 	unsigned use_streams:1;
+ 	unsigned uas_sense_old:1;
+-	unsigned running_task:1;
+ 	unsigned shutdown:1;
+ 	struct scsi_cmnd *cmnd;
  	spinlock_t lock;
- 	struct work_struct work;
- 	struct list_head inflight_list;
--	struct list_head dead_list;
- };
- 
- enum {
-@@ -130,35 +129,6 @@ out:
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- }
- 
--static void uas_mark_cmd_dead(struct uas_dev_info *devinfo,
--			      struct uas_cmd_info *cmdinfo,
--			      int result, const char *caller)
--{
--	struct scsi_pointer *scp = (void *)cmdinfo;
--	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
--
--	uas_log_cmd_state(cmnd, caller);
--	lockdep_assert_held(&devinfo->lock);
--	WARN_ON_ONCE(cmdinfo->state & COMMAND_ABORTED);
--	cmdinfo->state |= COMMAND_ABORTED;
--	cmdinfo->state &= ~IS_IN_WORK_LIST;
--	cmnd->result = result << 16;
--	list_move_tail(&cmdinfo->list, &devinfo->dead_list);
--}
--
--static void uas_abort_inflight(struct uas_dev_info *devinfo, int result,
--			       const char *caller)
--{
--	struct uas_cmd_info *cmdinfo;
--	struct uas_cmd_info *temp;
--	unsigned long flags;
--
--	spin_lock_irqsave(&devinfo->lock, flags);
--	list_for_each_entry_safe(cmdinfo, temp, &devinfo->inflight_list, list)
--		uas_mark_cmd_dead(devinfo, cmdinfo, result, caller);
--	spin_unlock_irqrestore(&devinfo->lock, flags);
--}
--
- static void uas_add_work(struct uas_cmd_info *cmdinfo)
- {
- 	struct scsi_pointer *scp = (void *)cmdinfo;
-@@ -170,7 +140,7 @@ static void uas_add_work(struct uas_cmd_info *cmdinfo)
- 	schedule_work(&devinfo->work);
- }
- 
--static void uas_zap_dead(struct uas_dev_info *devinfo)
-+static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
- {
- 	struct uas_cmd_info *cmdinfo;
- 	struct uas_cmd_info *temp;
-@@ -182,11 +152,11 @@ static void uas_zap_dead(struct uas_dev_info *devinfo)
- 		struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
- 						      SCp);
- 		uas_log_cmd_state(cmnd, __func__);
--		WARN_ON_ONCE(!(cmdinfo->state & COMMAND_ABORTED));
- 		/* all urbs are killed, clear inflight bits */
- 		cmdinfo->state &= ~(COMMAND_INFLIGHT |
- 				    DATA_IN_URB_INFLIGHT |
+@@ -207,7 +205,6 @@ static void uas_zap_dead(struct uas_dev_info *devinfo)
  				    DATA_OUT_URB_INFLIGHT);
-+		cmnd->result = result << 16;
  		uas_try_complete(cmnd, __func__);
  	}
+-	devinfo->running_task = 0;
  	spin_unlock_irqrestore(&devinfo->lock, flags);
-@@ -765,11 +735,11 @@ static int uas_eh_bus_reset_handler(struct scsi_cmnd *cmnd)
- 	devinfo->resetting = 1;
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ }
  
--	uas_abort_inflight(devinfo, DID_RESET, __func__);
- 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
- 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
- 	usb_kill_anchored_urbs(&devinfo->data_urbs);
--	uas_zap_dead(devinfo);
-+	uas_zap_pending(devinfo, DID_RESET);
-+
- 	err = usb_reset_device(udev);
+@@ -350,13 +347,6 @@ static void uas_stat_cmplt(struct urb *urb)
+ 		cmnd = scsi_host_find_tag(shost, tag - 1);
  
- 	spin_lock_irqsave(&devinfo->lock, flags);
-@@ -948,7 +918,6 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	spin_lock_init(&devinfo->lock);
- 	INIT_WORK(&devinfo->work, uas_do_work);
- 	INIT_LIST_HEAD(&devinfo->inflight_list);
--	INIT_LIST_HEAD(&devinfo->dead_list);
+ 	if (!cmnd) {
+-		if (iu->iu_id == IU_ID_RESPONSE) {
+-			if (!devinfo->running_task)
+-				dev_warn(&urb->dev->dev,
+-				    "stat urb: recv unexpected response iu\n");
+-			/* store results for uas_eh_task_mgmt() */
+-			memcpy(&devinfo->response, iu, sizeof(devinfo->response));
+-		}
+ 		usb_free_urb(urb);
+ 		spin_unlock_irqrestore(&devinfo->lock, flags);
+ 		return;
+@@ -536,56 +526,6 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	return NULL;
+ }
  
- 	result = uas_configure_endpoints(devinfo);
- 	if (result)
-@@ -1076,11 +1045,11 @@ static void uas_disconnect(struct usb_interface *intf)
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
+-static int uas_submit_task_urb(struct scsi_cmnd *cmnd, gfp_t gfp,
+-			       u8 function, u16 stream_id)
+-{
+-	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+-	struct usb_device *udev = devinfo->udev;
+-	struct urb *urb = usb_alloc_urb(0, gfp);
+-	struct task_mgmt_iu *iu;
+-	int err = -ENOMEM;
+-
+-	if (!urb)
+-		goto err;
+-
+-	iu = kzalloc(sizeof(*iu), gfp);
+-	if (!iu)
+-		goto err;
+-
+-	iu->iu_id = IU_ID_TASK_MGMT;
+-	iu->tag = cpu_to_be16(stream_id);
+-	int_to_scsilun(cmnd->device->lun, &iu->lun);
+-
+-	iu->function = function;
+-	switch (function) {
+-	case TMF_ABORT_TASK:
+-		if (blk_rq_tagged(cmnd->request))
+-			iu->task_tag = cpu_to_be16(cmnd->request->tag + 2);
+-		else
+-			iu->task_tag = cpu_to_be16(1);
+-		break;
+-	}
+-
+-	usb_fill_bulk_urb(urb, udev, devinfo->cmd_pipe, iu, sizeof(*iu),
+-			  uas_cmd_cmplt, cmnd);
+-	urb->transfer_flags |= URB_FREE_BUFFER;
+-
+-	usb_anchor_urb(urb, &devinfo->cmd_urbs);
+-	err = usb_submit_urb(urb, gfp);
+-	if (err) {
+-		usb_unanchor_urb(urb);
+-		uas_log_cmd_state(cmnd, __func__);
+-		scmd_printk(KERN_ERR, cmnd, "task submission err %d\n", err);
+-		goto err;
+-	}
+-
+-	return 0;
+-
+-err:
+-	usb_free_urb(urb);
+-	return err;
+-}
+-
+ /*
+  * Why should I request the Status IU before sending the Command IU?  Spec
+  * says to, but also says the device may receive them in any order.  Seems
+@@ -787,118 +727,6 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
  
- 	cancel_work_sync(&devinfo->work);
--	uas_abort_inflight(devinfo, DID_NO_CONNECT, __func__);
- 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
- 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
- 	usb_kill_anchored_urbs(&devinfo->data_urbs);
--	uas_zap_dead(devinfo);
-+	uas_zap_pending(devinfo, DID_NO_CONNECT);
-+
- 	scsi_remove_host(shost);
- 	uas_free_streams(devinfo);
- 	scsi_host_put(shost);
--- 
-2.1.0
-
+ static DEF_SCSI_QCMD(uas_queuecommand)
+ 
+-static int uas_eh_task_mgmt(struct scsi_cmnd *cmnd,
+-			    const char *fname, u8 function)
+-{
+-	struct Scsi_Host *shost = cmnd->device->host;
+-	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
+-	u16 tag = devinfo->qdepth;
+-	unsigned long flags;
+-	struct urb *sense_urb;
+-	int result = SUCCESS;
+-
+-	spin_lock_irqsave(&devinfo->lock, flags);
+-
+-	if (devinfo->resetting) {
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		return FAILED;
+-	}
+-
+-	if (devinfo->running_task) {
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s: error already running a task\n",
+-			     __func__, fname);
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		return FAILED;
+-	}
+-
+-	devinfo->running_task = 1;
+-	memset(&devinfo->response, 0, sizeof(devinfo->response));
+-	sense_urb = uas_submit_sense_urb(cmnd, GFP_ATOMIC,
+-					 devinfo->use_streams ? tag : 0);
+-	if (!sense_urb) {
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s: submit sense urb failed\n",
+-			     __func__, fname);
+-		devinfo->running_task = 0;
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		return FAILED;
+-	}
+-	if (uas_submit_task_urb(cmnd, GFP_ATOMIC, function, tag)) {
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s: submit task mgmt urb failed\n",
+-			     __func__, fname);
+-		devinfo->running_task = 0;
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		usb_kill_urb(sense_urb);
+-		return FAILED;
+-	}
+-	spin_unlock_irqrestore(&devinfo->lock, flags);
+-
+-	if (usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 3000) == 0) {
+-		/*
+-		 * Note we deliberately do not clear running_task here. If we
+-		 * allow new tasks to be submitted, there is no way to figure
+-		 * out if a received response_iu is for the failed task or for
+-		 * the new one. A bus-reset will eventually clear running_task.
+-		 */
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s timed out\n", __func__, fname);
+-		return FAILED;
+-	}
+-
+-	spin_lock_irqsave(&devinfo->lock, flags);
+-	devinfo->running_task = 0;
+-	if (be16_to_cpu(devinfo->response.tag) != tag) {
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s failed (wrong tag %d/%d)\n", __func__,
+-			     fname, be16_to_cpu(devinfo->response.tag), tag);
+-		result = FAILED;
+-	} else if (devinfo->response.response_code != RC_TMF_COMPLETE) {
+-		shost_printk(KERN_INFO, shost,
+-			     "%s: %s failed (rc 0x%x)\n", __func__,
+-			     fname, devinfo->response.response_code);
+-		result = FAILED;
+-	}
+-	spin_unlock_irqrestore(&devinfo->lock, flags);
+-
+-	return result;
+-}
+-
+-static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+-{
+-	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+-	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
+-	unsigned long flags;
+-	int ret;
+-
+-	spin_lock_irqsave(&devinfo->lock, flags);
+-
+-	if (devinfo->resetting) {
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		return FAILED;
+-	}
+-
+-	uas_mark_cmd_dead(devinfo, cmdinfo, DID_ABORT, __func__);
+-	if (cmdinfo->state & COMMAND_INFLIGHT) {
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		ret = uas_eh_task_mgmt(cmnd, "ABORT TASK", TMF_ABORT_TASK);
+-	} else {
+-		uas_unlink_data_urbs(devinfo, cmdinfo, &flags);
+-		uas_try_complete(cmnd, __func__);
+-		spin_unlock_irqrestore(&devinfo->lock, flags);
+-		ret = SUCCESS;
+-	}
+-	return ret;
+-}
+-
+-static int uas_eh_device_reset_handler(struct scsi_cmnd *cmnd)
+-{
+-	sdev_printk(KERN_INFO, cmnd->device, "%s\n", __func__);
+-	return uas_eh_task_mgmt(cmnd, "LOGICAL UNIT RESET",
+-				TMF_LOGICAL_UNIT_RESET);
+-}
