@@ -1,74 +1,113 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] scsi: scsi_devinfo.c:  Cleaning up unnecessarily
- complicated in conjunction with strncpy
-Date: Sun, 14 Sep 2014 21:34:51 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C7A75B@G9W0745.americas.hpqcorp.net>
-References: <1410727738-17430-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:28933 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbaINVht convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Sep 2014 17:37:49 -0400
-In-Reply-To: <1410727738-17430-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: qla2xxx: qla_gs.c:  Cleaning up missing null-terminate in conjunction with strncpy
+Date: Sun, 14 Sep 2014 23:43:49 +0200
+Message-ID: <1410731029-18031-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
+Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
 
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Rickard Strandqvist
-...
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-...
->  static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
->  				char *from, int compatible)
->  {
-> -	size_t from_length;
-> -
-> -	from_length = strlen(from);
-> -	strncpy(to, from, min(to_length, from_length));
-> -	if (from_length < to_length) {
-> -		if (compatible) {
-> -			/*
-> -			 * NUL terminate the string if it is short.
-> -			 */
-> -			to[from_length] = '\0';
-> -		} else {
-> -			/*
-> -			 * space pad the string if it is short.
-> -			 */
-> -			strncpy(&to[from_length], spaces,
-> -				to_length - from_length);
-> -		}
-> -	}
-> -	if (from_length > to_length)
-> -		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
-> +	strncpy(to, from, to_length);
-> +	if (to[to_length - 1] != '\0') {
-> +		to[to_length - 1] = '\0';
-> +		printk(KERN_WARNING "%s: %s string '%s' is too long\n",
->  			__func__, name, from);
-> +	}
-
-The caller of this function, scsi_dev_info_list_add_keyed, created
-the "to" destination buffer, devinfo, with kmalloc, so it's not
-guaranteed to be full of zeros.
-
-If from_length is shorter than to_length, then this code will
-be inspecting an uninitialized character that strncpy didn't
-touch.
-
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
-Rob Elliott    HP Server Storage
+ drivers/scsi/qla2xxx/qla_gs.c |   34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-
-
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index a0df3b1..03e3276 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1300,8 +1300,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Manufacturer. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_MANUFACTURER);
+-	alen = strlen(QLA2XXX_MANUFACTURER);
+-	strncpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER, alen + 1);
++	alen = strlcpy(eiter->a.manufacturer, QLA2XXX_MANUFACTURER,
++			sizeof(eiter->a.manufacturer));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1325,8 +1325,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Model name. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_MODEL);
+-	strcpy(eiter->a.model, ha->model_number);
+-	alen = strlen(eiter->a.model);
++	alen = strlcpy(eiter->a.model, ha->model_number,
++					sizeof(eiter->a.model));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1337,8 +1337,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Model description. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_MODEL_DESCRIPTION);
+-	strncpy(eiter->a.model_desc, ha->model_desc, 80);
+-	alen = strlen(eiter->a.model_desc);
++	alen = strlcpy(eiter->a.model_desc, ha->model_desc,
++			sizeof(eiter->a.model_desc));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1349,8 +1349,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Hardware version. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_HARDWARE_VERSION);
+-	strcpy(eiter->a.hw_version, ha->adapter_id);
+-	alen = strlen(eiter->a.hw_version);
++	alen = strlcpy(eiter->a.hw_version, ha->adapter_id,
++					sizeof(eiter->a.hw_version));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1361,8 +1361,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Driver version. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_DRIVER_VERSION);
+-	strcpy(eiter->a.driver_version, qla2x00_version_str);
+-	alen = strlen(eiter->a.driver_version);
++	alen = strlcpy(eiter->a.driver_version, qla2x00_version_str,
++			sizeof(eiter->a.driver_version));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1373,8 +1373,8 @@ qla2x00_fdmi_rhba(scsi_qla_host_t *vha)
+ 	/* Option ROM version. */
+ 	eiter = (struct ct_fdmi_hba_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_HBA_OPTION_ROM_VERSION);
+-	strcpy(eiter->a.orom_version, "0.00");
+-	alen = strlen(eiter->a.orom_version);
++	alen = strlcpy(eiter->a.orom_version, "0.00",
++				sizeof(eiter->a.orom_version));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1614,8 +1614,8 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
+ 	/* OS device name. */
+ 	eiter = (struct ct_fdmi_port_attr *) (entries + size);
+ 	eiter->type = __constant_cpu_to_be16(FDMI_PORT_OS_DEVICE_NAME);
+-	alen = strlen(QLA2XXX_DRIVER_NAME);
+-	strncpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME, alen + 1);
++	alen = strlcpy(eiter->a.os_dev_name, QLA2XXX_DRIVER_NAME,
++			sizeof(eiter->a.os_dev_name));
+ 	alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 	eiter->len = cpu_to_be16(4 + alen);
+ 	size += 4 + alen;
+@@ -1629,9 +1629,9 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *vha)
+ 		    __constant_cpu_to_be32(FDMI_PORT_ATTR_COUNT);
+ 		eiter = (struct ct_fdmi_port_attr *) (entries + size);
+ 		eiter->type = __constant_cpu_to_be16(FDMI_PORT_HOST_NAME);
+-		snprintf(eiter->a.host_name, sizeof(eiter->a.host_name),
+-		    "%s", fc_host_system_hostname(vha->host));
+-		alen = strlen(eiter->a.host_name);
++		alen = strlcpy(eiter->a.host_name,
++					fc_host_system_hostname(vha->host),
++					sizeof(eiter->a.host_name));
+ 		alen += (alen & 3) ? (4 - (alen & 3)) : 4;
+ 		eiter->len = cpu_to_be16(4 + alen);
+ 		size += 4 + alen;
+-- 
+1.7.10.4
