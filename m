@@ -1,34 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 16/17] arcmsr: support new adapter ARC12x4 series
-Date: Mon, 15 Sep 2014 10:05:19 -0700
-Message-ID: <20140915170519.GB31009@infradead.org>
-References: <1408433122.4748.73.camel@Centos6.3-64>
- <53FDE490.1070201@redhat.com>
- <1409240809.4762.259.camel@Centos6.3-64>
- <53FF2544.8020601@redhat.com>
- <20140909163057.GA25745@infradead.org>
- <541020CB.8010302@redhat.com>
- <5416E858.7010709@redhat.com>
+From: "Karim Wattara" <karimwattara22@gmail.com>
+Subject: Are You interested?
+Date: Sun, 14 Sep 2014 13:20:19 +0800
+Message-ID: <20140914051950.M63170__19166.8271822438$1410805875$gmane$org@gmail.com>
+Reply-To: karimwatara@voila.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5416E858.7010709@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ching Huang <ching2048@areca.com.tw>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset=gb2312
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [202.155.223.115] ([202.155.223.115]:46450 "EHLO hkmanfung.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754076AbaIOSbE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2014 14:31:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Sep 15, 2014 at 03:23:36PM +0200, Tomas Henzl wrote:
-> Christoph,
-> 
-> you may add my 'reviewed-by' to the arcmsr series
-> http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
-> with the '[PATCH v5 2/2] arcmsr: simplify of updating doneq_index and postq_index'
-> ( https://lkml.org/lkml/2014/9/15/177 ) on top of the series
-> that last patch fixes the 16/17 from your git.
-> I hope the series is an iteration in the right direction.
-> Skip the the '[PATCH v4 1/2] arcmsr: simplify ioctl data read/write', Ching will repost it later.
+Greetings,
 
-Thanks a lot Tomas for all the review, and thanks Ching for the patches
-and updates.  I'll merge the branch and the additional patch today.
+I am Mr.Karim Wattara. a banker, i know that this mail will come to you as a surprise 
+as we have never met before, but need not to worry as I am contacting you 
+independently of my investigation and no one is informed of this communication. I need 
+your urgent Cooperation in transferring the sum of $11.3 Million dollars immediately 
+to your private account.The money has been here in our Bank lying dormant for years 
+now without anybody coming for the claim of it.
+
+The fund belong to our deceased Customer Mrs.Joy Lake who perished along with her 
+family since January 31 2000. The Banking laws here does not allow such money to stay 
+more than 15 years,that is the reason why i need your Cooperation in transferring the 
+money to your bank account so that we can use it to secure the future of our both 
+families because i don't want the money to be recalled to the bank treasury as 
+unclaimed fund.
+
+By indicating your interest I will send you the full details on how the business will 
+be executed. Please keep this proposal as a top secret and delete if you are not 
+interested,
+
+Best Regards,
+Karim Wattara.
