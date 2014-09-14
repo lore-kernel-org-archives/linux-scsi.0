@@ -1,45 +1,77 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/2] scsi_scan: Send TEST UNIT READY to the LUN before
- scanning
-Date: Sun, 14 Sep 2014 10:17:21 +0200
-Message-ID: <54154F11.4010305@suse.de>
-References: <1401953203-103015-1-git-send-email-hare@suse.de> <1401953203-103015-2-git-send-email-hare@suse.de> <20140907162406.GA10775@infradead.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v2 10/24] uas: zap_pending: data urbs should have completed
+ at this time
+Date: Sun, 14 Sep 2014 11:26:33 +0200
+Message-ID: <54155F49.8060904@redhat.com>
+References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com> <1410604011-3828-11-git-send-email-hdegoede@redhat.com> <54149BA6.3010305@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50322 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:18080 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752397AbaINIRZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Sep 2014 04:17:25 -0400
-In-Reply-To: <20140907162406.GA10775@infradead.org>
+	id S1752516AbaINJ0m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Sep 2014 05:26:42 -0400
+In-Reply-To: <54149BA6.3010305@cogentembedded.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Robert Elliot <elliot@hp.com>, linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 09/07/2014 06:24 PM, Christoph Hellwig wrote:
-> Looks like you put a version into the SuSE tree with a blacklist entr=
-y
-> just for the Fujitsu array that requires the TEST UNIT READY.  Can yo=
-u
-> send that version upstream as well?
->
-I've just had reports that this is required, as it interferes with=20
-NetApp arrays.
-So I'll be reposting a combined series with that.
+Hi,
 
-Cheers,
+On 09/13/2014 09:31 PM, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 9/13/2014 1:26 PM, Hans de Goede wrote:
+> 
+>> The data urbs are all killed before calling zap_pending, and their completion
+>> handler should have cleared their inflight flag.
+> 
+>> Do not 0 the data inflight flags, and add a check for try_complete succeeding,
+>> as it should always succeed when called from zap_pending.
+> 
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>   drivers/usb/storage/uas.c | 10 +++++-----
+>>   1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+>> index 08edb6b..85bbc1d 100644
+>> --- a/drivers/usb/storage/uas.c
+>> +++ b/drivers/usb/storage/uas.c
+>> @@ -145,6 +145,7 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+>>       struct uas_cmd_info *cmdinfo;
+>>       struct uas_cmd_info *temp;
+>>       unsigned long flags;
+>> +    int err;
+> 
+>    Er, I don't see why this variable is necessary.
+> 
+> [...]
+>> @@ -152,12 +153,11 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
+>>           struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
+>>                                 SCp);
+>>           uas_log_cmd_state(cmnd, __func__);
+>> -        /* all urbs are killed, clear inflight bits */
+>> -        cmdinfo->state &= ~(COMMAND_INFLIGHT |
+>> -                    DATA_IN_URB_INFLIGHT |
+>> -                    DATA_OUT_URB_INFLIGHT);
+>> +        /* Sense urbs were killed, clear COMMAND_INFLIGHT manually */
+>> +        cmdinfo->state &= ~COMMAND_INFLIGHT;
+>>           cmnd->result = result << 16;
+>> -        uas_try_complete(cmnd, __func__);
+>> +        err = uas_try_complete(cmnd, __func__);
+>> +        WARN_ON(err != 0);
+> 
+>    Why not:
+> 
+>         WARN_ON(uas_try_complete(cmnd, __func__));
+> 
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This was discussed already during v1 of this patch-set, WARN_ON may
+not have a side-effect, as it may be defined as an empty macro.
+
+Regards,
+
+Hans
