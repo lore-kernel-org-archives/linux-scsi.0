@@ -1,77 +1,34 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v2 10/24] uas: zap_pending: data urbs should have completed
- at this time
-Date: Sun, 14 Sep 2014 11:26:33 +0200
-Message-ID: <54155F49.8060904@redhat.com>
-References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com> <1410604011-3828-11-git-send-email-hdegoede@redhat.com> <54149BA6.3010305@cogentembedded.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci_xgene: Fix the error print invalid resource for APM
+ X-Gene SoC AHCI SATA Host Controller driver.
+Date: Sun, 14 Sep 2014 18:39:11 +0900
+Message-ID: <20140914093911.GB9028@mtj.dyndns.org>
+References: <1410508448-25111-1-git-send-email-stripathi@apm.com>
+ <1410508448-25111-2-git-send-email-stripathi@apm.com>
+ <20140912175014.GA6298@mtj.dyndns.org>
+ <CAOHikRA8LiNkMuzqe-Kgrf4QWbJ_jpXRGHdf+rsrCmq6R0GjDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18080 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752516AbaINJ0m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Sep 2014 05:26:42 -0400
-In-Reply-To: <54149BA6.3010305@cogentembedded.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAOHikRA8LiNkMuzqe-Kgrf4QWbJ_jpXRGHdf+rsrCmq6R0GjDg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
 
-On 09/13/2014 09:31 PM, Sergei Shtylyov wrote:
-> Hello.
+On Sun, Sep 14, 2014 at 11:36:51AM +0530, Suman Tripathi wrote:
+> We can  maintain same piece (IS_ERR(ctx->csr_mux)), then we can do the
+> below instead of NULL ??
 > 
-> On 9/13/2014 1:26 PM, Hans de Goede wrote:
-> 
->> The data urbs are all killed before calling zap_pending, and their completion
->> handler should have cleared their inflight flag.
-> 
->> Do not 0 the data inflight flags, and add a check for try_complete succeeding,
->> as it should always succeed when called from zap_pending.
-> 
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->> ---
->>   drivers/usb/storage/uas.c | 10 +++++-----
->>   1 file changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
->> index 08edb6b..85bbc1d 100644
->> --- a/drivers/usb/storage/uas.c
->> +++ b/drivers/usb/storage/uas.c
->> @@ -145,6 +145,7 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
->>       struct uas_cmd_info *cmdinfo;
->>       struct uas_cmd_info *temp;
->>       unsigned long flags;
->> +    int err;
-> 
->    Er, I don't see why this variable is necessary.
-> 
-> [...]
->> @@ -152,12 +153,11 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
->>           struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd,
->>                                 SCp);
->>           uas_log_cmd_state(cmnd, __func__);
->> -        /* all urbs are killed, clear inflight bits */
->> -        cmdinfo->state &= ~(COMMAND_INFLIGHT |
->> -                    DATA_IN_URB_INFLIGHT |
->> -                    DATA_OUT_URB_INFLIGHT);
->> +        /* Sense urbs were killed, clear COMMAND_INFLIGHT manually */
->> +        cmdinfo->state &= ~COMMAND_INFLIGHT;
->>           cmnd->result = result << 16;
->> -        uas_try_complete(cmnd, __func__);
->> +        err = uas_try_complete(cmnd, __func__);
->> +        WARN_ON(err != 0);
-> 
->    Why not:
-> 
->         WARN_ON(uas_try_complete(cmnd, __func__));
-> 
+> ctx->csr_mux = res ? devm_ioremap_resource(dev, res) : ERR_PTR(-EINVAL);
 
-This was discussed already during v1 of this patch-set, WARN_ON may
-not have a side-effect, as it may be defined as an empty macro.
+Setting it to NULL on failure would probably make more sense.  No need
+to carry around ERR_PTR() value around.
 
-Regards,
+Thanks.
 
-Hans
+-- 
+tejun
