@@ -1,30 +1,172 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] scsi: scsi_devinfo.c: Cleaning up unnecessarily
- complicated in conjunction with strncpy
-Date: Sun, 14 Sep 2014 22:38:02 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C7A8A6@G9W0745.americas.hpqcorp.net>
-References: <1410727738-17430-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <94D0CD8314A33A4D9D801C0FE68B402958C7A75B@G9W0745.americas.hpqcorp.net>
- <CAFo99gbtGfEgcWukEQoEmcTro__aGND6-4bb4Ms+cV8Wu1FM4w@mail.gmail.com>
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH v4 1/2] arcmsr: simplify ioctl data read/write
+Date: Mon, 15 Sep 2014 10:56:48 +0800
+Message-ID: <1410749808.4764.5.camel@Centos6.3-64>
+References: <1410506960.5045.250.camel@Centos6.3-64>
+	 <5412F680.2070702@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFo99gbtGfEgcWukEQoEmcTro__aGND6-4bb4Ms+cV8Wu1FM4w@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <5412F680.2070702@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, agordeev@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmlja2FyZCBTdHJhbmRx
-dmlzdCBbbWFpbHRvOnJpY2thcmRfc3RyYW5kcXZpc3RAc3BlY3RydW1kaWdpdGFsLnNlXQ0KPiBI
-b3cgZG8geW91IG1lYW4/DQo+IA0KPiBzdHJuY3B5IHplcm9lcyB0aHJvdWdob3V0IHRoZSByZW1h
-aW5kZXIgb2YgdGhlIHN0cmluZyAiZnJvbSIgdW50aWwgdGhlDQo+IGxlbmd0aCBvZmYgdG9fbGVu
-Z3RoLCBvciBvdGhlcndpc2UgZ3VhcmFudGVlZCB0cmFpbGluZyB6ZXJvIGNoYXJhY3RlcnMNCj4g
-YW5kIGEgd2FybmluZyBpcyBwcmludGVkLg0KPiANCj4gSXMgbm90IGl0IGV4YWN0bHkgdGhlIGZ1
-bmN0aW9uYWxpdHkgdGhhdCBpcyBkZXNpcmVkPw0KDQpBaCwgSSBzZWUgdGhhdCBpbiBtYW4gMyBz
-dHJjcHk6IA0KICAgICJJZiB0aGUgbGVuZ3RoIG9mIHNyYyBpcyBsZXNzIHRoYW4gbiwgc3RybmNw
-eSgpIHBhZHMgdGhlIA0KICAgICByZW1haW5kZXIgb2YgZGVzdCB3aXRoIG51bGwgYnl0ZXMuIg0K
-DQpJIGFncmVlIHRoYXQgc2hvdWxkIHdvcmsuDQoNCi0tLQ0KUm9iIEVsbGlvdHQgICAgSFAgU2Vy
-dmVyIFN0b3JhZ2UNCg0KDQoNCg==
+On Fri, 2014-09-12 at 15:34 +0200, Tomas Henzl wrote:
+> On 09/12/2014 09:29 AM, Ching Huang wrote:
+> > From: Ching Huang <ching2048@areca.com.tw>
+> >
+> > This patch is to modify previous patch 13/17 and it is relative to
+> > http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
+> >
+> > change in v4:
+> > 1. for readability, rename firstindex to getIndex, rename lastindex to putIndex
+> For some reason, the names head+tail areusual for a circular buffer.
+> But let us ignore the names, I don't care.
+> > 2. define ARCMSR_API_DATA_BUFLEN as 1032
+> > 3. simplify ioctl data read by macro CIRC_CNT_TO_END and CIRC_CNT
+> It's definitely better when you post renames and other non-functional changes in separate
+> patches, it's easier for the reviewer. 
+> >
+> > Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> > ---
+> >
+> > diff -uprN a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
+> > --- a/drivers/scsi/arcmsr/arcmsr_attr.c	2014-08-21 12:14:27.000000000 +0800
+> > +++ b/drivers/scsi/arcmsr/arcmsr_attr.c	2014-09-12 15:18:46.659125000 +0800
+> > @@ -50,6 +50,7 @@
+> >  #include <linux/errno.h>
+> >  #include <linux/delay.h>
+> >  #include <linux/pci.h>
+> > +#include <linux/circ_buf.h>
+> >  
+> >  #include <scsi/scsi_cmnd.h>
+> >  #include <scsi/scsi_device.h>
+> > @@ -68,7 +69,7 @@ static ssize_t arcmsr_sysfs_iop_message_
+> >  	struct device *dev = container_of(kobj,struct device,kobj);
+> >  	struct Scsi_Host *host = class_to_shost(dev);
+> >  	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+> > -	uint8_t *pQbuffer,*ptmpQbuffer;
+> > +	uint8_t *ptmpQbuffer;
+> >  	int32_t allxfer_len = 0;
+> >  	unsigned long flags;
+> >  
+> > @@ -78,57 +79,22 @@ static ssize_t arcmsr_sysfs_iop_message_
+> >  	/* do message unit read. */
+> >  	ptmpQbuffer = (uint8_t *)buf;
+> >  	spin_lock_irqsave(&acb->rqbuffer_lock, flags);
+> > -	if (acb->rqbuf_firstindex != acb->rqbuf_lastindex) {
+> > -		pQbuffer = &acb->rqbuffer[acb->rqbuf_firstindex];
+> > -		if (acb->rqbuf_firstindex > acb->rqbuf_lastindex) {
+> > -			if ((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex) >= 1032) {
+> > -				memcpy(ptmpQbuffer, pQbuffer, 1032);
+> > -				acb->rqbuf_firstindex += 1032;
+> > -				acb->rqbuf_firstindex %= ARCMSR_MAX_QBUFFER;
+> > -				allxfer_len = 1032;
+> > -			} else {
+> > -				if (((ARCMSR_MAX_QBUFFER - acb->rqbuf_firstindex)
+> > -					+ acb->rqbuf_lastindex) > 1032) {
+> > -					memcpy(ptmpQbuffer, pQbuffer,
+> > -						ARCMSR_MAX_QBUFFER
+> > -						- acb->rqbuf_firstindex);
+> > -					ptmpQbuffer += ARCMSR_MAX_QBUFFER
+> > -						- acb->rqbuf_firstindex;
+> > -					memcpy(ptmpQbuffer, acb->rqbuffer, 1032
+> > -						- (ARCMSR_MAX_QBUFFER -
+> > -						acb->rqbuf_firstindex));
+> > -					acb->rqbuf_firstindex = 1032 -
+> > -						(ARCMSR_MAX_QBUFFER -
+> > -						acb->rqbuf_firstindex);
+> > -					allxfer_len = 1032;
+> > -				} else {
+> > -					memcpy(ptmpQbuffer, pQbuffer,
+> > -						ARCMSR_MAX_QBUFFER -
+> > -						acb->rqbuf_firstindex);
+> > -					ptmpQbuffer += ARCMSR_MAX_QBUFFER -
+> > -						acb->rqbuf_firstindex;
+> > -					memcpy(ptmpQbuffer, acb->rqbuffer,
+> > -						acb->rqbuf_lastindex);
+> > -					allxfer_len = ARCMSR_MAX_QBUFFER -
+> > -						acb->rqbuf_firstindex +
+> > -						acb->rqbuf_lastindex;
+> > -					acb->rqbuf_firstindex =
+> > -						acb->rqbuf_lastindex;
+> > -				}
+> > -			}
+> > -		} else {
+> > -			if ((acb->rqbuf_lastindex - acb->rqbuf_firstindex) > 1032) {
+> > -				memcpy(ptmpQbuffer, pQbuffer, 1032);
+> > -				acb->rqbuf_firstindex += 1032;
+> > -				allxfer_len = 1032;
+> > -			} else {
+> > -				memcpy(ptmpQbuffer, pQbuffer, acb->rqbuf_lastindex
+> > -					- acb->rqbuf_firstindex);
+> > -				allxfer_len = acb->rqbuf_lastindex -
+> > -					acb->rqbuf_firstindex;
+> > -				acb->rqbuf_firstindex = acb->rqbuf_lastindex;
+> > -			}
+> > +	if (acb->rqbuf_getIndex != acb->rqbuf_putIndex) {
+> > +		unsigned int tail = acb->rqbuf_getIndex;
+> > +		unsigned int head = acb->rqbuf_putIndex;
+> > +		unsigned int cnt_to_end = CIRC_CNT_TO_END(head, tail, ARCMSR_MAX_QBUFFER);
+> > +
+> > +		allxfer_len = CIRC_CNT(head, tail, ARCMSR_MAX_QBUFFER);
+> > +		if (allxfer_len > ARCMSR_API_DATA_BUFLEN)
+> > +			allxfer_len = ARCMSR_API_DATA_BUFLEN;
+> > +
+> > +		if (allxfer_len <= cnt_to_end)
+> > +			memcpy(ptmpQbuffer, acb->rqbuffer + tail, allxfer_len);
+> > +		else {
+> > +			memcpy(ptmpQbuffer, acb->rqbuffer + tail, cnt_to_end);
+> > +			memcpy(ptmpQbuffer + cnt_to_end, acb->rqbuffer, allxfer_len - cnt_to_end);
+> >  		}
+> > +		acb->rqbuf_getIndex = (acb->rqbuf_getIndex + allxfer_len) % ARCMSR_MAX_QBUFFER;
+> >  	}
+> >  	if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
+> >  		struct QBUFFER __iomem *prbuffer;
+> > @@ -150,33 +116,32 @@ static ssize_t arcmsr_sysfs_iop_message_
+> >  	struct device *dev = container_of(kobj,struct device,kobj);
+> >  	struct Scsi_Host *host = class_to_shost(dev);
+> >  	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+> > -	int32_t my_empty_len, user_len, wqbuf_firstindex, wqbuf_lastindex;
+> > +	int32_t my_empty_len, user_len, wqbuf_getIndex, wqbuf_putIndex;
+> >  	uint8_t *pQbuffer, *ptmpuserbuffer;
+> >  	unsigned long flags;
+> >  
+> >  	if (!capable(CAP_SYS_ADMIN))
+> >  		return -EACCES;
+> > -	if (count > 1032)
+> > +	if (count > ARCMSR_API_DATA_BUFLEN)
+> >  		return -EINVAL;
+> >  	/* do message unit write. */
+> >  	ptmpuserbuffer = (uint8_t *)buf;
+> >  	user_len = (int32_t)count;
+> >  	spin_lock_irqsave(&acb->wqbuffer_lock, flags);
+> > -	wqbuf_lastindex = acb->wqbuf_lastindex;
+> > -	wqbuf_firstindex = acb->wqbuf_firstindex;
+> > -	if (wqbuf_lastindex != wqbuf_firstindex) {
+> > +	wqbuf_putIndex = acb->wqbuf_putIndex;
+> > +	wqbuf_getIndex = acb->wqbuf_getIndex;
+> > +	if (wqbuf_putIndex != wqbuf_getIndex) {
+> >  		arcmsr_write_ioctldata2iop(acb);
+> >  		spin_unlock_irqrestore(&acb->wqbuffer_lock, flags);
+> >  		return 0;	/*need retry*/
+> >  	} else {
+> > -		my_empty_len = (wqbuf_firstindex-wqbuf_lastindex - 1)
+> > -			&(ARCMSR_MAX_QBUFFER - 1);
+> > +		my_empty_len = ARCMSR_MAX_QBUFFER - 1;
+> This^ doesn't look like like an rename can you explain?
+It is just a code simplification.
+> 
+> Let us stop here, or we end in an endless loop of corrections. The original 13/17
+> you are trying to improve here was at least without bugs (better said I haven't noticed) so
+> improving it now only complicates the process.
+> My suggestion is -let us skip this patch and focus only on fixing the spinlock problem found in 16/17.
+> OKay?
+Agree.
+> 
+> Cheers,
+> Tomas
+> 
