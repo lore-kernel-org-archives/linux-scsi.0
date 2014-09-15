@@ -1,61 +1,42 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH V3 09/16] scsi: ufs: introduce well known logical unit in ufs
-Date: Mon, 15 Sep 2014 23:55:16 +0900
-Message-ID: <CAC5umyh+XzCouFLeVVZrnSt3ADb4OdvGg=cjLp3d39rWiprjLA@mail.gmail.com>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
-	<1410350063-23267-10-git-send-email-draviv@codeaurora.org>
-	<CAC5umyid+ASquE=RzuNq8Q946et+Sv9dw6vJWMM=JjecoDJvmQ@mail.gmail.com>
-	<b216e24fcff2825f8ef0b01be4e7f9fe.squirrel@www.codeaurora.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH fix for 3.17] uas: Add a quirk for rejecting ATA_12 and
+ ATA_16 commands
+Date: Mon, 15 Sep 2014 10:56:08 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1409151048110.1360-100000@iolanthe.rowland.org>
+References: <1410779556.6635.6.camel@linux-fkkt.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <b216e24fcff2825f8ef0b01be4e7f9fe.squirrel@www.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: Jej B <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1410779556.6635.6.camel@linux-fkkt.site>
+Sender: stable-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: David Laight <David.Laight@ACULAB.COM>, Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-2014-09-15 19:39 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
->
->> 2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
->>> +static void ufshcd_set_queue_depth(struct scsi_device *sdev)
->>> +{
->>> +       int ret = 0;
->>> +       u8 lun_qdepth;
->>> +       struct ufs_hba *hba;
->>> +
->>> +       hba = shost_priv(sdev->host);
->>> +
->>> +       lun_qdepth = hba->nutrs;
->>> +       ret = ufshcd_read_unit_desc_param(hba,
->>> +
->>> ufshcd_scsi_to_upiu_lun(sdev->lun),
->>> +                                         UNIT_DESC_PARAM_LU_Q_DEPTH,
->>> +                                         &lun_qdepth,
->>> +                                         sizeof(lun_qdepth));
->>> +
->>> +       /* Some WLUN doesn't support unit descriptor */
->>> +       if (ret == -EOPNOTSUPP)
->>> +               lun_qdepth = 1;
->>> +       else if (!lun_qdepth)
->>> +               /* eventually, we can figure out the real queue depth */
->>> +               lun_qdepth = hba->nutrs;
->>> +       else
->>> +               lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
->>
->> If ufshcd_read_unit_desc_param() failed and its error code was not
->> -EOPNOTSUPP, lun_qdepth is undefined.  In such cases lun_qdepth
->> should be 1?
->
-> I'm not sure I follow your concern.
-> If this lun does not support command queuing (ret == -EOPNOTSUPP)
-> obviously, lun_qdepth should be 1.
-> If there was an error and lun_qdepth, was returned as 0, hba->nutrs will
-> be our default choice.
-> last, even if the query succeed we want to make sure we don't exceed the
-> hba->nutrs.
+On Mon, 15 Sep 2014, Oliver Neukum wrote:
 
-I missed that the local variable lun_qdepth is initialized to
-hba->nutrs just before calling ufshcd_read_unit_desc_param().  So what
-I said undefined in the last message was just wrong.  Thanks for the
-clarification.
+> On Mon, 2014-09-15 at 08:42 +0000, David Laight wrote:
+> > From: Alan Stern
+> >  
+> > > You must not add an aditional value for a module parameter without
+> > > documenting it in Documentation/kernel-parameters.txt.
+> > 
+> > How can this work as a 'module parameter'?
+> 
+> It cannot. This parameter is an aid to debugging.
+
+Not true; it really is a module parameter and can be used for multiple
+devices at once.  And while it is meant partially for debugging, it's
+also meant for testing or for when there's no permanent unusual_devs
+quirk entry.
+
+> > I might want to use two different usb-scsi devices that have different
+> > requirements.
+> 
+> Indeed. Quirky devices must be added to the quirks file.
+
+As Hans said (and as described in Documentation/kernel-parameters.txt), 
+the parameter format is a comma-separated list of 
+vendor-id:product-id:flags triples.
+
+Alan Stern
