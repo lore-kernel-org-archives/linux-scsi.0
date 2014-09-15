@@ -1,55 +1,61 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH fix for 3.17 v5] uas: Add a quirk for rejecting ATA_12
- and ATA_16 commands
-Date: Mon, 15 Sep 2014 16:13:52 +0200
-Message-ID: <5416F420.9080901@redhat.com>
-References: <1410789852-30567-1-git-send-email-hdegoede@redhat.com> <20140915140807.GA26412@kroah.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH V3 09/16] scsi: ufs: introduce well known logical unit in ufs
+Date: Mon, 15 Sep 2014 23:55:16 +0900
+Message-ID: <CAC5umyh+XzCouFLeVVZrnSt3ADb4OdvGg=cjLp3d39rWiprjLA@mail.gmail.com>
+References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
+	<1410350063-23267-10-git-send-email-draviv@codeaurora.org>
+	<CAC5umyid+ASquE=RzuNq8Q946et+Sv9dw6vJWMM=JjecoDJvmQ@mail.gmail.com>
+	<b216e24fcff2825f8ef0b01be4e7f9fe.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28172 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752573AbaIOON7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Sep 2014 10:13:59 -0400
-In-Reply-To: <20140915140807.GA26412@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <b216e24fcff2825f8ef0b01be4e7f9fe.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Jej B <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-Hi,
-
-On 09/15/2014 04:08 PM, Greg Kroah-Hartman wrote:
-> On Mon, Sep 15, 2014 at 04:04:12PM +0200, Hans de Goede wrote:
->> And set this quirk for the Seagate Expansion Desk (0bc2:2312), as that one
->> seems to hang upon receiving an ATA_12 or ATA_16 command.
+2014-09-15 19:39 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
+>
+>> 2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
+>>> +static void ufshcd_set_queue_depth(struct scsi_device *sdev)
+>>> +{
+>>> +       int ret = 0;
+>>> +       u8 lun_qdepth;
+>>> +       struct ufs_hba *hba;
+>>> +
+>>> +       hba = shost_priv(sdev->host);
+>>> +
+>>> +       lun_qdepth = hba->nutrs;
+>>> +       ret = ufshcd_read_unit_desc_param(hba,
+>>> +
+>>> ufshcd_scsi_to_upiu_lun(sdev->lun),
+>>> +                                         UNIT_DESC_PARAM_LU_Q_DEPTH,
+>>> +                                         &lun_qdepth,
+>>> +                                         sizeof(lun_qdepth));
+>>> +
+>>> +       /* Some WLUN doesn't support unit descriptor */
+>>> +       if (ret == -EOPNOTSUPP)
+>>> +               lun_qdepth = 1;
+>>> +       else if (!lun_qdepth)
+>>> +               /* eventually, we can figure out the real queue depth */
+>>> +               lun_qdepth = hba->nutrs;
+>>> +       else
+>>> +               lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
 >>
->> https://bugzilla.kernel.org/show_bug.cgi?id=79511
->> https://bbs.archlinux.org/viewtopic.php?id=183190
->>
->> While at it also add missing documentation for the u value for usb-storage
->> quirks.
->>
->> Cc: stable@vger.kernel.org # 3.16
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>
->> --
->> Changes in v2: Add documentation for new t and u usb-storage.quirks flags
->> Changes in v3: Fix typo in documentation
->> Changes in v4: Also apply the quirk to (0bc2:3312)
->> Changes in v5: Rebased on 3.17-rc5, drop u documentation, already upstream
-> 
-> So I should wait another day for v6?  :)
+>> If ufshcd_read_unit_desc_param() failed and its error code was not
+>> -EOPNOTSUPP, lun_qdepth is undefined.  In such cases lun_qdepth
+>> should be 1?
+>
+> I'm not sure I follow your concern.
+> If this lun does not support command queuing (ret == -EOPNOTSUPP)
+> obviously, lun_qdepth should be 1.
+> If there was an error and lun_qdepth, was returned as 0, hba->nutrs will
+> be our default choice.
+> last, even if the query succeed we want to make sure we don't exceed the
+> hba->nutrs.
 
-Hehe, no I certainly hope not.
-
-Chances are I there will eventually be more seagate models needing the quirk,
-but I've none in the pipeline atm, and we can always add those with an
-incremental patch.
-
-So if this is not too late for 3.17 and you can pick up v5 that would be great.
-
-Thanks,
-
-Hans
+I missed that the local variable lun_qdepth is initialized to
+hba->nutrs just before calling ufshcd_read_unit_desc_param().  So what
+I said undefined in the last message was just wrong.  Thanks for the
+clarification.
