@@ -1,7 +1,7 @@
 From: Ming Lei <tom.leiming@gmail.com>
 Subject: Re: [PATCH 2/6] blk-mq: call blk_mq_start_request from ->queue_rq
-Date: Mon, 15 Sep 2014 14:34:49 +0800
-Message-ID: <CACVXFVP-sK9EUyPJa7kA8Xg9a=kiyAxEEvXAJMJyw=i01-_ScQ@mail.gmail.com>
+Date: Mon, 15 Sep 2014 15:27:29 +0800
+Message-ID: <CACVXFVNm8nBjMBvpq03xZkhC+tkpVz7v-U8A8fhDrOi9cfMrxQ@mail.gmail.com>
 References: <1410651613-1993-1-git-send-email-hch@lst.de>
 	<1410651613-1993-3-git-send-email-hch@lst.de>
 Mime-Version: 1.0
@@ -18,23 +18,16 @@ On Sun, Sep 14, 2014 at 7:40 AM, Christoph Hellwig <hch@lst.de> wrote:
 > ->queue_rq there is a racy window where the timeout handler can hit before we've
 > fully set up the driver specific part of the command.
 
-It is quite difficult to happen since the default timeout is 30s, which
-is long enough.
+One problem I thought of is that writing on rq->deadline and writing on
+the following two atomic flags can be reordered, then timeout may hit on this
+req too early because the previous deadline of the rq can be read in
+blk_rq_check_expired().
 
-Suppose it happens, what is the matter without setting up request's pdu
-since the request can only be completed one time thanks to flag of
-REQ_ATOM_COMPLETE?
+That said an explicit memory barrier is required in blk_mq_start_request().
 
 >
 > Move the call to blk_mq_start_request into the driver so the driver can start
 > the request only once it is fully set up.
-
-The change isn't friendly for drivers since every drivers need to do that and
-it should have been done in blk-mq core code.
-
-Also the timeout handler still may see pdu of request not setup because
-writing rq in blk_mq_start_request() and writing on pdu may be reordered.
-
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
