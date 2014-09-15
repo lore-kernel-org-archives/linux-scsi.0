@@ -1,31 +1,29 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net 0/2] Fix randconfig errros in bnx2i/bnx2fc caused
- by IPV6
-Date: Mon, 15 Sep 2014 17:45:42 -0400 (EDT)
-Message-ID: <20140915.174542.1800056695683269477.davem@davemloft.net>
-References: <1410813921-24400-1-git-send-email-anish@chelsio.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [ANNOUNCE] scsi patch queue tree updated
+Date: Mon, 15 Sep 2014 15:58:18 -0700
+Message-ID: <20140915225818.GA11869@infradead.org>
+References: <20140708134003.GA7790@infradead.org>
+ <20140801122042.GA10771@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1410813921-24400-1-git-send-email-anish@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: anish@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, mchan@broadcom.com, eddie.wai@broadcom.com, rdunlap@infradead.org, jim.epost@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140801122042.GA10771@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Anish Bhatt <anish@chelsio.com>
-Date: Mon, 15 Sep 2014 13:45:19 -0700
+Hi James,
 
-> Just like CNIC bnx2i/bnx2fc also have their tristate dependent on IPV6, however
-> using the same solution as CNIC can cause recursive dependecies during make.
-> 
-> Based on suggestions by Randy Dunlap, SCSI_NETLINK now depends on NET instead
->  of selecting NET. Second patch fixes the actual randconfig error.
-> 
-> Entire thread can be followed here : https://lkml.org/lkml/2014/9/9/500
-> -Anish
-> 
-> Fixes: c99d667e8527 ("cnic : Cleanup CONFIG_IPV6 & VLAN check")
+I've pushed two updates to the core-for-3.17 branch of
 
-Series applied, thank you.
+    git://git.infradead.org/users/hch/scsi-queue.git
+
+which should go to Linus before the next rc.
+
+One is a regression fix for drivers using block layer tagging when
+not using blk-mq introduced in the blk-mq series, and the other
+fixes a potential buffer overrun in the iscsi initiator.
+
+Updates of the for-3.18 trees will follow soon.
