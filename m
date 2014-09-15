@@ -1,29 +1,71 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [ANNOUNCE] scsi patch queue tree updated
-Date: Mon, 15 Sep 2014 15:58:18 -0700
-Message-ID: <20140915225818.GA11869@infradead.org>
-References: <20140708134003.GA7790@infradead.org>
- <20140801122042.GA10771@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140801122042.GA10771@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Andy Grover <agrover@redhat.com>
+Subject: [PATCH 2/4] uio: Export definition of struct uio_device
+Date: Mon, 15 Sep 2014 16:12:28 -0700
+Message-ID: <1410822750-10717-3-git-send-email-agrover@redhat.com>
+References: <1410822750-10717-1-git-send-email-agrover@redhat.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1410822750-10717-1-git-send-email-agrover@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org, rjones@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
+In order to prevent a O(n) search of the filesystem to link up its uio
+node with its target configuration, TCMU needs to know the minor number
+that UIO assigned. Expose the definition of this struct so TCMU can
+access this field.
 
-I've pushed two updates to the core-for-3.17 branch of
+Signed-off-by: Andy Grover <agrover@redhat.com>
+---
+ drivers/uio/uio.c          | 12 ------------
+ include/linux/uio_driver.h | 12 +++++++++++-
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
-    git://git.infradead.org/users/hch/scsi-queue.git
-
-which should go to Linus before the next rc.
-
-One is a regression fix for drivers using block layer tagging when
-not using blk-mq introduced in the blk-mq series, and the other
-fixes a potential buffer overrun in the iscsi initiator.
-
-Updates of the for-3.18 trees will follow soon.
+diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
+index a673e5b..60fa627 100644
+--- a/drivers/uio/uio.c
++++ b/drivers/uio/uio.c
+@@ -28,18 +28,6 @@
+ 
+ #define UIO_MAX_DEVICES		(1U << MINORBITS)
+ 
+-struct uio_device {
+-	struct module		*owner;
+-	struct device		*dev;
+-	int			minor;
+-	atomic_t		event;
+-	struct fasync_struct	*async_queue;
+-	wait_queue_head_t	wait;
+-	struct uio_info		*info;
+-	struct kobject		*map_dir;
+-	struct kobject		*portio_dir;
+-};
+-
+ static int uio_major;
+ static struct cdev *uio_cdev;
+ static DEFINE_IDR(uio_idr);
+diff --git a/include/linux/uio_driver.h b/include/linux/uio_driver.h
+index 1ad4724..baa8171 100644
+--- a/include/linux/uio_driver.h
++++ b/include/linux/uio_driver.h
+@@ -63,7 +63,17 @@ struct uio_port {
+ 
+ #define MAX_UIO_PORT_REGIONS	5
+ 
+-struct uio_device;
++struct uio_device {
++        struct module           *owner;
++        struct device           *dev;
++        int                     minor;
++        atomic_t                event;
++        struct fasync_struct    *async_queue;
++        wait_queue_head_t       wait;
++        struct uio_info         *info;
++        struct kobject          *map_dir;
++        struct kobject          *portio_dir;
++};
+ 
+ /**
+  * struct uio_info - UIO device capabilities
+-- 
+1.9.3
