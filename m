@@ -1,119 +1,35 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
-Subject: Re: [PATCH V3 11/16] scsi: ufs: refactor configuring power mode
-Date: Mon, 15 Sep 2014 11:10:46 -0000
-Message-ID: <f8e2562174ccf1080eff0912c6a3191b.squirrel@www.codeaurora.org>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
-    <1410350063-23267-12-git-send-email-draviv@codeaurora.org>
-    <CAC5umyh4n9+2mRg-q+yjnmPuxVM5q+qKcY67EdGe7-pCst249A@mail.gmail.com>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH fix for 3.17] uas: Add a quirk for rejecting ATA_12 and
+ ATA_16 commands
+Date: Mon, 15 Sep 2014 13:12:36 +0200
+Message-ID: <1410779556.6635.6.camel@linux-fkkt.site>
+References: <1410603548-3579-2-git-send-email-hdegoede@redhat.com>
+	 <Pine.LNX.4.44L0.1409131009530.7476-100000@netrider.rowland.org>
+	 <063D6719AE5E284EB5DD2968C1650D6D17491F5F@AcuExch.aculab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyh4n9+2mRg-q+yjnmPuxVM5q+qKcY67EdGe7-pCst249A@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Yaniv Gardi <ygardi@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17491F5F@AcuExch.aculab.com>
+Sender: stable-owner@vger.kernel.org
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: 'Alan Stern' <stern@rowland.harvard.edu>, Hans de Goede <hdegoede@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 2014-09-15 at 08:42 +0000, David Laight wrote:
+> From: Alan Stern
+>  
+> > You must not add an aditional value for a module parameter without
+> > documenting it in Documentation/kernel-parameters.txt.
+> 
+> How can this work as a 'module parameter'?
 
-> 2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
->> +static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
->> +               struct ufs_pa_layer_attr *desired_pwr_mode)
->> +{
->> +       struct ufs_pa_layer_attr final_params = { 0 };
->> +       int ret;
->> +
->> +       if (hba->vops->pwr_change_notify)
->
-> If hba->vops is null as no vendor specific callbacks, this causes
-> a null pointer dereference.  So null check for hba->vops is also needed
-> just like other callbacks.
+It cannot. This parameter is an aid to debugging.
 
-Sure, will fix both.
+> I might want to use two different usb-scsi devices that have different
+> requirements.
 
->
->> +               hba->vops->pwr_change_notify(hba,
->> +                    PRE_CHANGE, desired_pwr_mode, &final_params);
->> +       else
->> +               memcpy(&final_params, desired_pwr_mode,
->> sizeof(final_params));
->> +
->>         /*
->>          * Configure attributes for power mode change with below.
->>          * - PA_RXGEAR, PA_ACTIVERXDATALANES, PA_RXTERMINATION,
->>          * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
->>          * - PA_HSSERIES
->>          */
->> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
->> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
->> lanes[RX]);
->> -       if (pwr[RX] == FASTAUTO_MODE)
->> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR),
->> final_params.gear_rx);
->> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
->> +                       final_params.lane_rx);
->> +       if (final_params.pwr_rx == FASTAUTO_MODE ||
->> +                       final_params.pwr_rx == FAST_MODE)
->>                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION),
->> TRUE);
->> +       else
->> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION),
->> FALSE);
->>
->> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
->> -       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
->> lanes[TX]);
->> -       if (pwr[TX] == FASTAUTO_MODE)
->> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR),
->> final_params.gear_tx);
->> +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
->> +                       final_params.lane_tx);
->> +       if (final_params.pwr_tx == FASTAUTO_MODE ||
->> +                       final_params.pwr_tx == FAST_MODE)
->>                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION),
->> TRUE);
->> -
->> -       if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
->> -               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
->> PA_HS_MODE_B);
->> -
->> -       ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
->> -       if (ret)
->> +       else
->> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION),
->> FALSE);
->> +
->> +       if ((final_params.pwr_rx == FASTAUTO_MODE ||
->> +                       final_params.pwr_tx == FASTAUTO_MODE ||
->> +                       final_params.pwr_rx == FAST_MODE ||
->> +                       final_params.pwr_tx == FAST_MODE) &&
->> +                       final_params.hs_rate == PA_HS_MODE_B)
->> +               ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
->> +                               final_params.hs_rate);
->> +
->> +       ret = ufshcd_uic_change_pwr_mode(hba, final_params.pwr_rx << 4
->> +                       | final_params.pwr_tx);
->> +       if (ret) {
->>                 dev_err(hba->dev,
->>                         "pwr_mode: power mode change failed %d\n", ret);
->> +       } else {
->> +               if (hba->vops->pwr_change_notify)
->
-> Ditto.
->
->> +                       hba->vops->pwr_change_notify(hba,
->> +                               POST_CHANGE, NULL, &final_params);
->> +
->> +               memcpy(&hba->pwr_info, &final_params,
->> sizeof(final_params));
->> +       }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Indeed. Quirky devices must be added to the quirks file.
 
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+	Regards
+		Oliver
