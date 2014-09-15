@@ -1,33 +1,47 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: [PATCH net 0/2] Fix randconfig errros in bnx2i/bnx2fc caused by IPV6
-Date: Mon, 15 Sep 2014 13:45:19 -0700
-Message-ID: <1410813921-24400-1-git-send-email-anish@chelsio.com>
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, davem@davemloft.net, JBottomley@parallels.com, mchan@broadcom.com, eddie.wai@broadcom.com, rdunlap@infradead.org, jim.epost@gmail.com, Anish Bhatt <anish@chelsio.com>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: Re: [PATCH] scsi: scsi_devinfo.c: Cleaning up unnecessarily
+ complicated in conjunction with strncpy
+Date: Mon, 15 Sep 2014 22:47:07 +0200
+Message-ID: <CAFo99gYiSViTkek8uv_vBHyxG47An+giKuCS7SPR3FwGK1_SAw@mail.gmail.com>
+References: <1410727738-17430-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+ <94D0CD8314A33A4D9D801C0FE68B402958C7A75B@G9W0745.americas.hpqcorp.net>
+ <CAFo99gbtGfEgcWukEQoEmcTro__aGND6-4bb4Ms+cV8Wu1FM4w@mail.gmail.com> <94D0CD8314A33A4D9D801C0FE68B402958C7A8A6@G9W0745.americas.hpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958C7A8A6@G9W0745.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Just like CNIC bnx2i/bnx2fc also have their tristate dependent on IPV6, however
-using the same solution as CNIC can cause recursive dependecies during make.
+2014-09-15 0:38 GMT+02:00 Elliott, Robert (Server Storage) <Elliott@hp.com>:
+>
+>
+>> -----Original Message-----
+>> From: Rickard Strandqvist [mailto:rickard_strandqvist@spectrumdigital.se]
+>> How do you mean?
+>>
+>> strncpy zeroes throughout the remainder of the string "from" until the
+>> length off to_length, or otherwise guaranteed trailing zero characters
+>> and a warning is printed.
+>>
+>> Is not it exactly the functionality that is desired?
+>
+> Ah, I see that in man 3 strcpy:
+>     "If the length of src is less than n, strncpy() pads the
+>      remainder of dest with null bytes."
+>
+> I agree that should work.
+>
+> ---
+> Rob Elliott    HP Server Storage
 
-Based on suggestions by Randy Dunlap, SCSI_NETLINK now depends on NET instead
- of selecting NET. Second patch fixes the actual randconfig error.
 
-Entire thread can be followed here : https://lkml.org/lkml/2014/9/9/500
--Anish
+Hi
 
-Fixes: c99d667e8527 ("cnic : Cleanup CONFIG_IPV6 & VLAN check")
+Okay, good.
+Suspected that there was some misunderstanding :)
 
-Anish Bhatt (2):
-  scsi_netlink : Make SCSI_NETLINK dependent on NET instead of selecting
-    NET
-  bnx2i/bnx2fc : fix randconfig error
-
- drivers/scsi/Kconfig        | 2 +-
- drivers/scsi/bnx2fc/Kconfig | 1 +
- drivers/scsi/bnx2i/Kconfig  | 1 +
- 3 files changed, 3 insertions(+), 1 deletion(-)
-
--- 
-2.1.0
+Kind regards
+Rickard Strandqvist
