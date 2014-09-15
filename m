@@ -1,48 +1,51 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH fix for 3.17] uas: Add a quirk for rejecting ATA_12 and
- ATA_16 commands
-Date: Mon, 15 Sep 2014 15:21:56 +0200
-Message-ID: <5416E7F4.7040604@redhat.com>
-References: <1410603548-3579-2-git-send-email-hdegoede@redhat.com> <Pine.LNX.4.44L0.1409131009530.7476-100000@netrider.rowland.org> <063D6719AE5E284EB5DD2968C1650D6D17491F5F@AcuExch.aculab.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v3 16/17] arcmsr: support new adapter ARC12x4 series
+Date: Mon, 15 Sep 2014 15:23:36 +0200
+Message-ID: <5416E858.7010709@redhat.com>
+References: <1408433122.4748.73.camel@Centos6.3-64> <53FDE490.1070201@redhat.com> <1409240809.4762.259.camel@Centos6.3-64> <53FF2544.8020601@redhat.com> <20140909163057.GA25745@infradead.org> <541020CB.8010302@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D17491F5F@AcuExch.aculab.com>
-Sender: stable-owner@vger.kernel.org
-To: David Laight <David.Laight@ACULAB.COM>, 'Alan Stern' <stern@rowland.harvard.edu>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44745 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbaIONYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2014 09:24:07 -0400
+In-Reply-To: <541020CB.8010302@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ching Huang <ching2048@areca.com.tw>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
-
-On 09/15/2014 10:42 AM, David Laight wrote:
-> From: Alan Stern
-> ...
->>>  	p = quirks;
->>>  	while (*p) {
->>> @@ -543,6 +544,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
->>>  		case 's':
->>>  			f |= US_FL_SINGLE_LUN;
->>>  			break;
->>> +		case 't':
->>> +			f |= US_FL_NO_ATA_1X;
->>> +			break;
->>>  		case 'u':
->>>  			f |= US_FL_IGNORE_UAS;
->>>  			break;
+On 09/10/2014 11:58 AM, Tomas Henzl wrote:
+> On 09/09/2014 06:30 PM, Christoph Hellwig wrote:
+>> Ching,
 >>
->> You must not add an aditional value for a module parameter without
->> documenting it in Documentation/kernel-parameters.txt.
-> 
-> How can this work as a 'module parameter'?
-> I might want to use two different usb-scsi devices that have different
-> requirements.
+>> do you have a chance to address Thomas second concern below?  As
+>> far as I can tell (Thomas, please correct me) that's the last
+>> outstanding concern, and I'd really like to merge the arcmsr updates
+>> for the Linux 3.18 merge window.
+> Correct, still awaiting a response.
 
-The usb-storage.quirks format includes a usb prod:vend if pair, so unless
-you've 2 identical devices, you can specify which quirks to apply to
-which device.
+Christoph,
 
-Regards,
+you may add my 'reviewed-by' to the arcmsr series
+http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
+with the '[PATCH v5 2/2] arcmsr: simplify of updating doneq_index and postq_index'
+( https://lkml.org/lkml/2014/9/15/177 ) on top of the series
+that last patch fixes the 16/17 from your git.
+I hope the series is an iteration in the right direction.
+Skip the the '[PATCH v4 1/2] arcmsr: simplify ioctl data read/write', Ching will repost it later.
 
-Hans
+Tomas
+
+>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
