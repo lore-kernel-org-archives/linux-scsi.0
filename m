@@ -1,71 +1,36 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 2/4] uio: Export definition of struct uio_device
-Date: Mon, 15 Sep 2014 16:12:28 -0700
-Message-ID: <1410822750-10717-3-git-send-email-agrover@redhat.com>
+Subject: [PATCH 1/4] target: Remove unneeded check in sbc_parse_cdb
+Date: Mon, 15 Sep 2014 16:12:27 -0700
+Message-ID: <1410822750-10717-2-git-send-email-agrover@redhat.com>
 References: <1410822750-10717-1-git-send-email-agrover@redhat.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1410822750-10717-1-git-send-email-agrover@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org, shli@kernel.org, linux-kernel@vger.kernel.org, rjones@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-In order to prevent a O(n) search of the filesystem to link up its uio
-node with its target configuration, TCMU needs to know the minor number
-that UIO assigned. Expose the definition of this struct so TCMU can
-access this field.
+The check of SCF_SCSI_DATA_CDB seems to be a remnant from before hch's
+refactoring of this function. There are no places where that flag is set
+that cmd->execute_cmd isn't also set.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/uio/uio.c          | 12 ------------
- include/linux/uio_driver.h | 12 +++++++++++-
- 2 files changed, 11 insertions(+), 13 deletions(-)
+ drivers/target/target_core_sbc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
-index a673e5b..60fa627 100644
---- a/drivers/uio/uio.c
-+++ b/drivers/uio/uio.c
-@@ -28,18 +28,6 @@
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index bd78d92..ebe62af 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -948,7 +948,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 	}
  
- #define UIO_MAX_DEVICES		(1U << MINORBITS)
+ 	/* reject any command that we don't have a handler for */
+-	if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) && !cmd->execute_cmd)
++	if (!cmd->execute_cmd)
+ 		return TCM_UNSUPPORTED_SCSI_OPCODE;
  
--struct uio_device {
--	struct module		*owner;
--	struct device		*dev;
--	int			minor;
--	atomic_t		event;
--	struct fasync_struct	*async_queue;
--	wait_queue_head_t	wait;
--	struct uio_info		*info;
--	struct kobject		*map_dir;
--	struct kobject		*portio_dir;
--};
--
- static int uio_major;
- static struct cdev *uio_cdev;
- static DEFINE_IDR(uio_idr);
-diff --git a/include/linux/uio_driver.h b/include/linux/uio_driver.h
-index 1ad4724..baa8171 100644
---- a/include/linux/uio_driver.h
-+++ b/include/linux/uio_driver.h
-@@ -63,7 +63,17 @@ struct uio_port {
- 
- #define MAX_UIO_PORT_REGIONS	5
- 
--struct uio_device;
-+struct uio_device {
-+        struct module           *owner;
-+        struct device           *dev;
-+        int                     minor;
-+        atomic_t                event;
-+        struct fasync_struct    *async_queue;
-+        wait_queue_head_t       wait;
-+        struct uio_info         *info;
-+        struct kobject          *map_dir;
-+        struct kobject          *portio_dir;
-+};
- 
- /**
-  * struct uio_info - UIO device capabilities
+ 	if (cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
 -- 
 1.9.3
