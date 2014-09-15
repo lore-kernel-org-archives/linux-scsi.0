@@ -1,18 +1,20 @@
-From: Webb Scales <webbnh@hp.com>
+From: Hans de Goede <hdegoede@redhat.com>
 Subject: Re: [PATCH] scsi: fix regression that accidentally disabled block-based
  tcq
-Date: Mon, 15 Sep 2014 15:05:24 -0400
-Message-ID: <54173874.6080900@hp.com>
+Date: Mon, 15 Sep 2014 21:15:09 +0200
+Message-ID: <54173ABD.40207@redhat.com>
 References: <540EC52C.3000804@redhat.com> <20140909152730.GA17882@infradead.org> <540FFBF4.9090001@redhat.com> <20140910154535.GA5102@infradead.org> <541172E9.8070309@redhat.com> <20140911161331.GA24488@infradead.org> <54134E50.6040805@redhat.com> <20140912230032.GA21143@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20140912230032.GA21143@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hans de Goede <hdegoede@redhat.com>
-Cc: linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+Hi,
 
 On 9/12/14 7:00 PM, Christoph Hellwig wrote:
 > Please try the fix below, looks like the commit broke TCQ for all drivers
@@ -48,5 +50,8 @@ On 9/12/14 7:00 PM, Christoph Hellwig wrote:
 >   				    sdev->host->bqt);
 >   
 
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
-Reviewed-by: Webb Scales <webbnh@hp.com>
+Regards,
+
+Hans
