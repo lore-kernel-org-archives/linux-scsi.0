@@ -1,115 +1,66 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH -net] scsi: fix users of SCSI_FC_ATTRS to depend on NET
-Date: Mon, 15 Sep 2014 23:35:21 -0700
-Message-ID: <5417DA29.4060205@infradead.org>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH V3 10/16] scsi: ufs: add UFS power management support
+Date: Tue, 16 Sep 2014 22:44:21 +0900
+Message-ID: <CAC5umyjK_JN9rZS6zGfKQm5Drs2LqH3c559ZmXZpQAWzJecH1g@mail.gmail.com>
+References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org>
+	<1410350063-23267-11-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:39584 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328AbaIPGfY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Sep 2014 02:35:24 -0400
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56982 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753863AbaIPNoY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Sep 2014 09:44:24 -0400
+In-Reply-To: <1410350063-23267-11-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <jbottomley@parallels.com>, David Miller <davem@davemloft.net>
-Cc: Fengguang Wu <fengguang.wu@intel.com>
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+2014-09-10 20:54 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
+> +static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
+> +                                  int ua)
+> +{
+> +       int ret = 0;
+> +       struct regulator *reg = vreg->reg;
+> +       const char *name = vreg->name;
+> +
+> +       BUG_ON(!vreg);
+> +
+> +       ret = regulator_set_optimum_mode(reg, ua);
+> +       if (ret >= 0) {
+> +               /*
+> +                * regulator_set_optimum_mode() returns new regulator
+> +                * mode upon success.
+> +                */
+> +               ret = 0;
+> +       } else {
+> +               dev_err(dev, "%s: %s set optimum mode(ua=%d) failed, err=%d\n",
+> +                               __func__, name, ua, ret);
+> +       }
+> +
+> +       return ret;
+> +}
+> +
+> +static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+> +                                        struct ufs_vreg *vreg)
+> +{
+> +       return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
+> +}
 
-There are other kconfig symbols which select SCSI_FC_ATTRS,
-so they also need to depend on NET to fix kconfig warnings and
-build errors:
+If hba->vreg_info.vcc* is NULL as no applicable regulator driver exists,
+this function can be called with vreg == NULL through ufshcd_suspend()
+-> ufshcd_vreg_set_lpm() -> ufshcd_config_vreg_lpm().  Then this causes
+null pointer dereference or hits BUG_ON in ufshcd_config_vreg_load().
 
-warning: (LIBFC && SCSI_IBMVFC && SCSI_QLA_FC && SCSI_LPFC && ZFCP && SCSI_BFA_FC && SCSI_CHELSIO_FCOE && FUSION_FC) selects SCSI_FC_ATTRS which has unmet direct dependencies (SCSI && NET)
-drivers/scsi/scsi_transport_fc.c: In function 'fc_host_post_event':
-drivers/scsi/scsi_transport_fc.c:543:7: error: 'scsi_nl_sock' undeclared (first use in this function)
-drivers/scsi/scsi_transport_fc.c: In function 'fc_host_post_vendor_event':
-drivers/scsi/scsi_transport_fc.c:611:7: error: 'scsi_nl_sock' undeclared (first use in this function)
+> +static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+> +                                        struct ufs_vreg *vreg)
+> +{
+> +       return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+> +}
 
-Reported-by: Fengguang Wu <fengguang.wu@intel.com> [0-day test robot]
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- drivers/message/fusion/Kconfig |    2 +-
- drivers/scsi/Kconfig           |    9 +++++----
- drivers/scsi/csiostor/Kconfig  |    2 +-
- drivers/scsi/qla2xxx/Kconfig   |    2 +-
- 4 files changed, 8 insertions(+), 7 deletions(-)
+Similar issue as above will happen through ufshcd_resume() ->
+ufshcd_vreg_set_hpm() -> ufshcd_config_vreg_hpm().  Then this causes
+null pointer dereference of vreg->max_uA.
 
---- lnx-317-rc5.orig/drivers/message/fusion/Kconfig
-+++ lnx-317-rc5/drivers/message/fusion/Kconfig
-@@ -28,7 +28,7 @@ config FUSION_SPI
- 
- config FUSION_FC
- 	tristate "Fusion MPT ScsiHost drivers for FC"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	---help---
- 	  SCSI HOST support for a Fiber Channel host adapters.
---- lnx-317-rc5.orig/drivers/scsi/Kconfig
-+++ lnx-317-rc5/drivers/scsi/Kconfig
-@@ -585,6 +585,7 @@ config HYPERV_STORAGE
- 
- config LIBFC
- 	tristate "LibFC module"
-+	depends on NET
- 	select SCSI_FC_ATTRS
- 	select CRC32
- 	---help---
-@@ -815,7 +816,7 @@ config SCSI_IBMVSCSI
- 
- config SCSI_IBMVFC
- 	tristate "IBM Virtual FC support"
--	depends on PPC_PSERIES && SCSI
-+	depends on PPC_PSERIES && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	help
- 	  This is the IBM POWER Virtual FC Client
-@@ -1265,7 +1266,7 @@ source "drivers/scsi/qla4xxx/Kconfig"
- 
- config SCSI_LPFC
- 	tristate "Emulex LightPulse Fibre Channel Support"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	select CRC_T10DIF
- 	help
-@@ -1675,7 +1676,7 @@ config SCSI_SUNESP
- 
- config ZFCP
- 	tristate "FCP host bus adapter driver for IBM eServer zSeries"
--	depends on S390 && QDIO && SCSI
-+	depends on S390 && QDIO && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	help
-           If you want to access SCSI devices attached to your IBM eServer
-@@ -1703,7 +1704,7 @@ config SCSI_PM8001
- 
- config SCSI_BFA_FC
- 	tristate "Brocade BFA Fibre Channel Support"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	help
- 	  This bfa driver supports all Brocade PCIe FC/FCOE host adapters.
---- lnx-317-rc5.orig/drivers/scsi/csiostor/Kconfig
-+++ lnx-317-rc5/drivers/scsi/csiostor/Kconfig
-@@ -1,6 +1,6 @@
- config SCSI_CHELSIO_FCOE
- 	tristate "Chelsio Communications FCoE support"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	select FW_LOADER
- 	help
---- lnx-317-rc5.orig/drivers/scsi/qla2xxx/Kconfig
-+++ lnx-317-rc5/drivers/scsi/qla2xxx/Kconfig
-@@ -1,6 +1,6 @@
- config SCSI_QLA_FC
- 	tristate "QLogic QLA2XXX Fibre Channel Support"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_FC_ATTRS
- 	select FW_LOADER
- 	---help---
+So should these functions be noop when vreg == NULL is passed?
