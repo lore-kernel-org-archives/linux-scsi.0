@@ -1,48 +1,33 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend
- on SCSI && NET
-Date: Mon, 15 Sep 2014 20:17:43 -0700
-Message-ID: <5417ABD7.3020005@infradead.org>
-References: <1410813921-24400-1-git-send-email-anish@chelsio.com> <1410813921-24400-2-git-send-email-anish@chelsio.com>,<5417825A.4050902@infradead.org> <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to
+ depend on SCSI && NET
+Date: Tue, 16 Sep 2014 00:07:23 -0400 (EDT)
+Message-ID: <20140916.000723.1605333026296804622.davem@davemloft.net>
+References: <1410813921-24400-1-git-send-email-anish@chelsio.com>
+	<1410813921-24400-2-git-send-email-anish@chelsio.com>
+	<5417825A.4050902@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:53268 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753917AbaIPDRo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Sep 2014 23:17:44 -0400
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:44318 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbaIPEH0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Sep 2014 00:07:26 -0400
+In-Reply-To: <5417825A.4050902@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, David Miller <davem@davemloft.net>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchan@broadcom.com" <mchan@broadcom.com>, "eddie.wai@broadcom.com" <eddie.wai@broadcom.com>, "jim.epost@gmail.com" <jim.epost@gmail.com>
+To: rdunlap@infradead.org
+Cc: anish@chelsio.com, netdev@vger.kernel.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org, mchan@broadcom.com, eddie.wai@broadcom.com, jim.epost@gmail.com
 
-On 09/15/14 20:00, Anish Bhatt wrote:
+From: Randy Dunlap <rdunlap@infradead.org>
+Date: Mon, 15 Sep 2014 17:20:42 -0700
+
+> From: Randy Dunlap <rdunlap@infradead.org>
 > 
-> Doesn't fix make warnings, but SCSI_FC_ATTRS can no longer be selected without
-> NET. Though both ia64 and powerpc emit a lot of unmet dependency warnings as is 
-> on defconfig
+> Fix build errors when CONFIG_SCSI_NETLINK is enabled but
+> CONFIG_NET is not enabled:
+ ...
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-
-You mean these kconfig warnings?
-
-<quote>
-
-After merging the net tree, today's linux-next build
-(powerpc ppc64_defconfig) failed like this:
-
-warning: (PPC_CELL_NATIVE && BLUESTONE && CANYONLANDS && GLACIER && EIGER && 440EPX && 440GRX && 440GX && 460SX && 405EX) selects IBM_EMAC_RGMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && CANYONLANDS && GLACIER && 440EP && 440EPX && 440GRX && 440GP && 440GX && 460SX && 405GP) selects IBM_EMAC_ZMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && 440GX && 460EX && 460SX && APM821xx) selects IBM_EMAC_TAH which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && AKEBONO && 440EPX && 440GRX && 440GX && 440SPe && 460EX && 460SX && APM821xx && 405EX) selects IBM_EMAC_EMAC4 which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && CANYONLANDS && GLACIER && 440EP && 440EPX && 440GRX && 440GP && 440GX && 460SX && 405GP) selects IBM_EMAC_ZMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && BLUESTONE && CANYONLANDS && GLACIER && EIGER && 440EPX && 440GRX && 440GX && 460SX && 405EX) selects IBM_EMAC_RGMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && 440GX && 460EX && 460SX && APM821xx) selects IBM_EMAC_TAH which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-warning: (PPC_CELL_NATIVE && AKEBONO && 440EPX && 440GRX && 440GX && 440SPe && 460EX && 460SX && APM821xx && 405EX) selects IBM_EMAC_EMAC4 which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
-
-</quote>
-
-I'll look into those.
--- 
-~Randy
+Applied, thanks a lot Randy.
