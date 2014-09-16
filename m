@@ -1,175 +1,40 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Mon, 15 Sep 2014 17:44:18 -0700
-Message-ID: <1410828258-14692-1-git-send-email-anish@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:52488
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756155AbaIPApO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Sep 2014 20:45:14 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ching Huang <ching2048@areca.com.tw>
+Subject: Re: [PATCH v3 16/17] arcmsr: support new adapter ARC12x4 series
+Date: Tue, 16 Sep 2014 10:42:08 +0800
+Message-ID: <1410835328.4782.9.camel@Centos6.3-64>
+References: <1408433122.4748.73.camel@Centos6.3-64>
+	 <53FDE490.1070201@redhat.com> <1409240809.4762.259.camel@Centos6.3-64>
+	 <53FF2544.8020601@redhat.com> <20140909163057.GA25745@infradead.org>
+	 <541020CB.8010302@redhat.com> <5416E858.7010709@redhat.com>
+	 <20140915170519.GB31009@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140915170519.GB31009@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tomas Henzl <thenzl@redhat.com>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, hch@infradead.org, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-cxgbi_inet6addr_handler() can be called in interrupt context, so use rcu
-protected list while finding netdev
+On Mon, 2014-09-15 at 10:05 -0700, Christoph Hellwig wrote:
+> On Mon, Sep 15, 2014 at 03:23:36PM +0200, Tomas Henzl wrote:
+> > Christoph,
+> > 
+> > you may add my 'reviewed-by' to the arcmsr series
+> > http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
+> > with the '[PATCH v5 2/2] arcmsr: simplify of updating doneq_index and postq_index'
+> > ( https://lkml.org/lkml/2014/9/15/177 ) on top of the series
+> > that last patch fixes the 16/17 from your git.
+> > I hope the series is an iteration in the right direction.
+> > Skip the the '[PATCH v4 1/2] arcmsr: simplify ioctl data read/write', Ching will repost it later.
+> 
+> Thanks a lot Tomas for all the review, and thanks Ching for the patches
+> and updates.  I'll merge the branch and the additional patch today.
+> 
 
-Applies on top of core-for-3.18
+Christoph,
 
-Signed-off-by: Anish Bhatt <anish@chelsio.com>
-Signed-off-by: Karen Xie <kxie@chelsio.com>
-
-Fixes: fc8d0590d914 ("libcxgbi: Add ipv6 api to driver")
-Fixes: 759a0cc5a3e1 ("cxgb4i: Add ipv6 code to driver, call into libcxgbi ipv6
-api")
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |  2 +-
- drivers/scsi/cxgbi/libcxgbi.c      | 57 ++++++++++++++++++++++++++++++++++----
- drivers/scsi/cxgbi/libcxgbi.h      |  3 ++
- 3 files changed, 55 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 79788a1..02e69e7 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1647,7 +1647,7 @@ static int cxgbi_inet6addr_handler(struct notifier_block *this,
- 	if (event_dev->priv_flags & IFF_802_1Q_VLAN)
- 		event_dev = vlan_dev_real_dev(event_dev);
- 
--	cdev = cxgbi_device_find_by_netdev(event_dev, NULL);
-+	cdev = cxgbi_device_find_by_netdev_rcu(event_dev, NULL);
- 
- 	if (!cdev)
- 		return ret;
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index d65df6d..addd1dd 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -57,6 +57,9 @@ MODULE_PARM_DESC(dbg_level, "libiscsi debug level (default=0)");
- static LIST_HEAD(cdev_list);
- static DEFINE_MUTEX(cdev_mutex);
- 
-+static LIST_HEAD(cdev_rcu_list);
-+static DEFINE_SPINLOCK(cdev_rcu_lock);
-+
- int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
- 				unsigned int max_conn)
- {
-@@ -142,6 +145,10 @@ struct cxgbi_device *cxgbi_device_register(unsigned int extra,
- 	list_add_tail(&cdev->list_head, &cdev_list);
- 	mutex_unlock(&cdev_mutex);
- 
-+	spin_lock(&cdev_rcu_lock);
-+	list_add_tail_rcu(&cdev->rcu_node, &cdev_rcu_list);
-+	spin_unlock(&cdev_rcu_lock);
-+
- 	log_debug(1 << CXGBI_DBG_DEV,
- 		"cdev 0x%p, p# %u.\n", cdev, nports);
- 	return cdev;
-@@ -153,9 +160,16 @@ void cxgbi_device_unregister(struct cxgbi_device *cdev)
- 	log_debug(1 << CXGBI_DBG_DEV,
- 		"cdev 0x%p, p# %u,%s.\n",
- 		cdev, cdev->nports, cdev->nports ? cdev->ports[0]->name : "");
-+
- 	mutex_lock(&cdev_mutex);
- 	list_del(&cdev->list_head);
- 	mutex_unlock(&cdev_mutex);
-+
-+	spin_lock(&cdev_rcu_lock);
-+	list_del_rcu(&cdev->rcu_node);
-+	spin_unlock(&cdev_rcu_lock);
-+	synchronize_rcu();
-+
- 	cxgbi_device_destroy(cdev);
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_unregister);
-@@ -167,12 +181,9 @@ void cxgbi_device_unregister_all(unsigned int flag)
- 	mutex_lock(&cdev_mutex);
- 	list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
- 		if ((cdev->flags & flag) == flag) {
--			log_debug(1 << CXGBI_DBG_DEV,
--				"cdev 0x%p, p# %u,%s.\n",
--				cdev, cdev->nports, cdev->nports ?
--				 cdev->ports[0]->name : "");
--			list_del(&cdev->list_head);
--			cxgbi_device_destroy(cdev);
-+			mutex_unlock(&cdev_mutex);
-+			cxgbi_device_unregister(cdev);
-+			mutex_lock(&cdev_mutex);
- 		}
- 	}
- 	mutex_unlock(&cdev_mutex);
-@@ -191,6 +202,7 @@ struct cxgbi_device *cxgbi_device_find_by_lldev(void *lldev)
- 		}
- 	}
- 	mutex_unlock(&cdev_mutex);
-+
- 	log_debug(1 << CXGBI_DBG_DEV,
- 		"lldev 0x%p, NO match found.\n", lldev);
- 	return NULL;
-@@ -230,6 +242,39 @@ struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev);
- 
-+struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *ndev,
-+						     int *port)
-+{
-+	struct net_device *vdev = NULL;
-+	struct cxgbi_device *cdev;
-+	int i;
-+
-+	if (ndev->priv_flags & IFF_802_1Q_VLAN) {
-+		vdev = ndev;
-+		ndev = vlan_dev_real_dev(ndev);
-+		pr_info("vlan dev %s -> %s.\n", vdev->name, ndev->name);
-+	}
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(cdev, &cdev_rcu_list, rcu_node) {
-+		for (i = 0; i < cdev->nports; i++) {
-+			if (ndev == cdev->ports[i]) {
-+				cdev->hbas[i]->vdev = vdev;
-+				rcu_read_unlock();
-+				if (port)
-+					*port = i;
-+				return cdev;
-+			}
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	log_debug(1 << CXGBI_DBG_DEV,
-+		  "ndev 0x%p, %s, NO match found.\n", ndev, ndev->name);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev_rcu);
-+
- static struct cxgbi_device *cxgbi_device_find_by_mac(struct net_device *ndev,
- 						     int *port)
- {
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index b3e6e75..1d98fad 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -527,6 +527,7 @@ struct cxgbi_ports_map {
- #define CXGBI_FLAG_IPV4_SET		0x10
- struct cxgbi_device {
- 	struct list_head list_head;
-+	struct list_head rcu_node;
- 	unsigned int flags;
- 	struct net_device **ports;
- 	void *lldev;
-@@ -709,6 +710,8 @@ void cxgbi_device_unregister(struct cxgbi_device *);
- void cxgbi_device_unregister_all(unsigned int flag);
- struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
- struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *, int *);
-+struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *,
-+						     int *);
- int cxgbi_hbas_add(struct cxgbi_device *, u64, unsigned int,
- 			struct scsi_host_template *,
- 			struct scsi_transport_template *);
--- 
-2.1.0
-
+The [PATCH v5 2/2] was depend on [PATCH v4 1/2].
+If you skip patch 1/2, then patch 2/2 may cause line number mismatch.
+How should I do? Please advise.
