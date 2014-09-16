@@ -1,40 +1,70 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH v3 16/17] arcmsr: support new adapter ARC12x4 series
-Date: Tue, 16 Sep 2014 10:42:08 +0800
-Message-ID: <1410835328.4782.9.camel@Centos6.3-64>
-References: <1408433122.4748.73.camel@Centos6.3-64>
-	 <53FDE490.1070201@redhat.com> <1409240809.4762.259.camel@Centos6.3-64>
-	 <53FF2544.8020601@redhat.com> <20140909163057.GA25745@infradead.org>
-	 <541020CB.8010302@redhat.com> <5416E858.7010709@redhat.com>
-	 <20140915170519.GB31009@infradead.org>
+From: Anish Bhatt <anish@chelsio.com>
+Subject: RE: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend
+ on SCSI && NET
+Date: Tue, 16 Sep 2014 03:00:21 +0000
+Message-ID: <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
+References: <1410813921-24400-1-git-send-email-anish@chelsio.com>
+ <1410813921-24400-2-git-send-email-anish@chelsio.com>,<5417825A.4050902@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140915170519.GB31009@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tomas Henzl <thenzl@redhat.com>, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:18013
+	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753184AbaIPDBV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2014 23:01:21 -0400
+In-Reply-To: <5417825A.4050902@infradead.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, David Miller <davem@davemloft.net>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchan@broadcom.com" <mchan@broadcom.com>, "eddie.wai@broadcom.com" <eddie.wai@broadcom.com>, "jim.epost@gmail.com" <jim.epost@gmail.com>
 
-On Mon, 2014-09-15 at 10:05 -0700, Christoph Hellwig wrote:
-> On Mon, Sep 15, 2014 at 03:23:36PM +0200, Tomas Henzl wrote:
-> > Christoph,
-> > 
-> > you may add my 'reviewed-by' to the arcmsr series
-> > http://git.infradead.org/users/hch/scsi-queue.git/tree/arcmsr-for-3.18:/drivers/scsi/arcmsr
-> > with the '[PATCH v5 2/2] arcmsr: simplify of updating doneq_index and postq_index'
-> > ( https://lkml.org/lkml/2014/9/15/177 ) on top of the series
-> > that last patch fixes the 16/17 from your git.
-> > I hope the series is an iteration in the right direction.
-> > Skip the the '[PATCH v4 1/2] arcmsr: simplify ioctl data read/write', Ching will repost it later.
-> 
-> Thanks a lot Tomas for all the review, and thanks Ching for the patches
-> and updates.  I'll merge the branch and the additional patch today.
-> 
+> From : Randy Dunlap [rdunlap@infradead.org]
+> Sent: Monday, September 15, 2014 5:20 PM
+> To: Anish Bhatt; netdev@vger.kernel.org; JBottomley@parallels.com; David Miller
+> Cc: linux-scsi@vger.kernel.org; mchan@broadcom.com; eddie.wai@broadcom.com; jim.epost@gmail.com
+> Subject: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend on SCSI && NET
+>
+> From: Randy Dunlap <rdunlap@infradead.org>
+>
+> Fix build errors when CONFIG_SCSI_NETLINK is enabled but
+> CONFIG_NET is not enabled:
+>
+> drivers/built-in.o: In function `scsi_nl_rcv_msg':
+> scsi_netlink.c:(.text+0x1850fa): undefined reference to `netlink_ack'
+> scsi_netlink.c:(.text+0x185105): undefined reference to `skb_pull'
+> scsi_netlink.c:(.text+0x18515d): undefined reference to `netlink_capable'
+> drivers/built-in.o: In function `scsi_netlink_init':
+> (.text+0x185244): undefined reference to `init_net'
+> drivers/built-in.o: In function `scsi_netlink_init':
+> (.text+0x185258): undefined reference to `__netlink_kernel_create'
+> drivers/built-in.o: In function `scsi_netlink_exit':
+> (.text+0x185291): undefined reference to `netlink_kernel_release'
+>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Christoph,
+Doesn't fix make warnings, but SCSI_FC_ATTRS can no longer be selected without
+NET. Though both ia64 and powerpc emit a lot of unmet dependency warnings as is 
+on defconfig
 
-The [PATCH v5 2/2] was depend on [PATCH v4 1/2].
-If you skip patch 1/2, then patch 2/2 may cause line number mismatch.
-How should I do? Please advise.
+Tested-by: Anish Bhatt <anish@chelsio.com>
+> ---
+>  drivers/scsi/Kconfig |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Based on Anish's previous SCSI_NETLINK patch.
+> Sorry about missing this one.
+>
+> --- lnx-317-rc5.orig/drivers/scsi/Kconfig
+> +++ lnx-317-rc5/drivers/scsi/Kconfig
+> @@ -257,7 +257,7 @@ config SCSI_SPI_ATTRS
+>
+>  config SCSI_FC_ATTRS
+>         tristate "FiberChannel Transport Attributes"
+> -       depends on SCSI
+> +       depends on SCSI && NET
+>         select SCSI_NETLINK
+>         help
+>           If you wish to export transport-specific information about
