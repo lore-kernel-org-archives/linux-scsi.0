@@ -1,61 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] blk-mq: avoid infite recursion with the FUA
-Date: Tue, 16 Sep 2014 14:44:07 -0700
-Message-ID: <1410903847-18519-1-git-send-email-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Robert Elliott <elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [ANNOUNCE] scsi patch queue tree updated
+Date: Tue, 16 Sep 2014 22:44:42 +0100
+Message-ID: <1410903882.3840.17.camel@jarvis>
+References: <20140708134003.GA7790@infradead.org>
+	 <20140801122042.GA10771@infradead.org>
+	 <20140915225818.GA11869@infradead.org>
+	 <20140916213739.GA19111@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41370 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753033AbaIPVos (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Sep 2014 17:44:48 -0400
+In-Reply-To: <20140916213739.GA19111@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-We should not insert requests into the flush state machine from
-blk_mq_insert_request.  All incoming flush requests come through
-blk_{m,s}q_make_request and are handled there, while blk_execute_rq_nowait
-should only be called for BLOCK_PC requests.  All other callers
-deal with requests that already went through the flush statemchine
-and shouldn't be reinserted into it.
+On Tue, 2014-09-16 at 14:37 -0700, Christoph Hellwig wrote:
+> On Mon, Sep 15, 2014 at 03:58:18PM -0700, Christoph Hellwig wrote:
+> > I've pushed two updates to the core-for-3.17 branch of
+> > 
+> >     git://git.infradead.org/users/hch/scsi-queue.git
+> > 
+> > which should go to Linus before the next rc.
+> > 
+> > One is a regression fix for drivers using block layer tagging when
+> > not using blk-mq introduced in the blk-mq series, and the other
+> > fixes a potential buffer overrun in the iscsi initiator.
+> > 
+> > Updates of the for-3.18 trees will follow soon.
+> 
+> core-for-3.17 has grown another fix from Daniel for bidi support.
 
-Reported-by: Robert Elliott  <Elliott@hp.com>
-Debugged-by: Ming Lei <ming.lei@canonical.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-exec.c |  1 +
- block/blk-mq.c   | 11 +++--------
- 2 files changed, 4 insertions(+), 8 deletions(-)
+OK, I've pushed this to -next.  If nothing bad turns up I'll send it to
+Linus on Friday.
 
-diff --git a/block/blk-exec.c b/block/blk-exec.c
-index f4d27b1..9924725 100644
---- a/block/blk-exec.c
-+++ b/block/blk-exec.c
-@@ -56,6 +56,7 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
- 	bool is_pm_resume;
- 
- 	WARN_ON(irqs_disabled());
-+	WARN_ON(rq->cmd_type == REQ_TYPE_FS);
- 
- 	rq->rq_disk = bd_disk;
- 	rq->end_io = done;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 383ea0c..7373949 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -957,14 +957,9 @@ void blk_mq_insert_request(struct request *rq, bool at_head, bool run_queue,
- 
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
--	if (rq->cmd_flags & (REQ_FLUSH | REQ_FUA) &&
--	    !(rq->cmd_flags & (REQ_FLUSH_SEQ))) {
--		blk_insert_flush(rq);
--	} else {
--		spin_lock(&ctx->lock);
--		__blk_mq_insert_request(hctx, rq, at_head);
--		spin_unlock(&ctx->lock);
--	}
-+	spin_lock(&ctx->lock);
-+	__blk_mq_insert_request(hctx, rq, at_head);
-+	spin_unlock(&ctx->lock);
- 
- 	if (run_queue)
- 		blk_mq_run_hw_queue(hctx, async);
--- 
-1.9.1
+James
+
+
