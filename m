@@ -1,70 +1,48 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend
  on SCSI && NET
-Date: Tue, 16 Sep 2014 03:00:21 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
-References: <1410813921-24400-1-git-send-email-anish@chelsio.com>
- <1410813921-24400-2-git-send-email-anish@chelsio.com>,<5417825A.4050902@infradead.org>
+Date: Mon, 15 Sep 2014 20:17:43 -0700
+Message-ID: <5417ABD7.3020005@infradead.org>
+References: <1410813921-24400-1-git-send-email-anish@chelsio.com> <1410813921-24400-2-git-send-email-anish@chelsio.com>,<5417825A.4050902@infradead.org> <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:18013
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753184AbaIPDBV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Sep 2014 23:01:21 -0400
-In-Reply-To: <5417825A.4050902@infradead.org>
-Content-Language: en-US
+Received: from bombadil.infradead.org ([198.137.202.9]:53268 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753917AbaIPDRo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Sep 2014 23:17:44 -0400
+In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D88EBB11@nice.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, David Miller <davem@davemloft.net>
+To: Anish Bhatt <anish@chelsio.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, David Miller <davem@davemloft.net>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchan@broadcom.com" <mchan@broadcom.com>, "eddie.wai@broadcom.com" <eddie.wai@broadcom.com>, "jim.epost@gmail.com" <jim.epost@gmail.com>
 
-> From : Randy Dunlap [rdunlap@infradead.org]
-> Sent: Monday, September 15, 2014 5:20 PM
-> To: Anish Bhatt; netdev@vger.kernel.org; JBottomley@parallels.com; David Miller
-> Cc: linux-scsi@vger.kernel.org; mchan@broadcom.com; eddie.wai@broadcom.com; jim.epost@gmail.com
-> Subject: [PATCH 3] scsi: fix build errors, SCSI_FC_ATTRS needs to depend on SCSI && NET
->
-> From: Randy Dunlap <rdunlap@infradead.org>
->
-> Fix build errors when CONFIG_SCSI_NETLINK is enabled but
-> CONFIG_NET is not enabled:
->
-> drivers/built-in.o: In function `scsi_nl_rcv_msg':
-> scsi_netlink.c:(.text+0x1850fa): undefined reference to `netlink_ack'
-> scsi_netlink.c:(.text+0x185105): undefined reference to `skb_pull'
-> scsi_netlink.c:(.text+0x18515d): undefined reference to `netlink_capable'
-> drivers/built-in.o: In function `scsi_netlink_init':
-> (.text+0x185244): undefined reference to `init_net'
-> drivers/built-in.o: In function `scsi_netlink_init':
-> (.text+0x185258): undefined reference to `__netlink_kernel_create'
-> drivers/built-in.o: In function `scsi_netlink_exit':
-> (.text+0x185291): undefined reference to `netlink_kernel_release'
->
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+On 09/15/14 20:00, Anish Bhatt wrote:
+> 
+> Doesn't fix make warnings, but SCSI_FC_ATTRS can no longer be selected without
+> NET. Though both ia64 and powerpc emit a lot of unmet dependency warnings as is 
+> on defconfig
 
-Doesn't fix make warnings, but SCSI_FC_ATTRS can no longer be selected without
-NET. Though both ia64 and powerpc emit a lot of unmet dependency warnings as is 
-on defconfig
 
-Tested-by: Anish Bhatt <anish@chelsio.com>
-> ---
->  drivers/scsi/Kconfig |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Based on Anish's previous SCSI_NETLINK patch.
-> Sorry about missing this one.
->
-> --- lnx-317-rc5.orig/drivers/scsi/Kconfig
-> +++ lnx-317-rc5/drivers/scsi/Kconfig
-> @@ -257,7 +257,7 @@ config SCSI_SPI_ATTRS
->
->  config SCSI_FC_ATTRS
->         tristate "FiberChannel Transport Attributes"
-> -       depends on SCSI
-> +       depends on SCSI && NET
->         select SCSI_NETLINK
->         help
->           If you wish to export transport-specific information about
+You mean these kconfig warnings?
+
+<quote>
+
+After merging the net tree, today's linux-next build
+(powerpc ppc64_defconfig) failed like this:
+
+warning: (PPC_CELL_NATIVE && BLUESTONE && CANYONLANDS && GLACIER && EIGER && 440EPX && 440GRX && 440GX && 460SX && 405EX) selects IBM_EMAC_RGMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && CANYONLANDS && GLACIER && 440EP && 440EPX && 440GRX && 440GP && 440GX && 460SX && 405GP) selects IBM_EMAC_ZMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && 440GX && 460EX && 460SX && APM821xx) selects IBM_EMAC_TAH which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && AKEBONO && 440EPX && 440GRX && 440GX && 440SPe && 460EX && 460SX && APM821xx && 405EX) selects IBM_EMAC_EMAC4 which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && CANYONLANDS && GLACIER && 440EP && 440EPX && 440GRX && 440GP && 440GX && 460SX && 405GP) selects IBM_EMAC_ZMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && BLUESTONE && CANYONLANDS && GLACIER && EIGER && 440EPX && 440GRX && 440GX && 460SX && 405EX) selects IBM_EMAC_RGMII which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && 440GX && 460EX && 460SX && APM821xx) selects IBM_EMAC_TAH which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+warning: (PPC_CELL_NATIVE && AKEBONO && 440EPX && 440GRX && 440GX && 440SPe && 460EX && 460SX && APM821xx && 405EX) selects IBM_EMAC_EMAC4 which has unmet direct dependencies (NETDEVICES && ETHERNET && NET_VENDOR_IBM)
+
+</quote>
+
+I'll look into those.
+-- 
+~Randy
