@@ -1,190 +1,74 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Wed, 17 Sep 2014 21:00:54 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D88ED73F@nice.asicdesigners.com>
-References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: blk-mq timeout handling fixes
+Date: Wed, 17 Sep 2014 21:53:50 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C86C8E@G9W0745.americas.hpqcorp.net>
+References: <1410651613-1993-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:11840
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756698AbaIQVDX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Sep 2014 17:03:23 -0400
-In-Reply-To: <1410828258-14692-1-git-send-email-anish@chelsio.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1410651613-1993-1-git-send-email-hch@lst.de>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "hch@lst.de" <hch@lst.de>
 
-Pinging for visibility
--Anish
-________________________________________
-From: Anish Bhatt [anish@chelsio.com]
-Sent: Monday, September 15, 2014 5:44 PM
-To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com; hch@infradead.org; Karen Xie; Manoj Malviya; Anish Bhatt
-Subject: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
 
-cxgbi_inet6addr_handler() can be called in interrupt context, so use rcu
-protected list while finding netdev
 
-Applies on top of core-for-3.18
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@lst.de]
+> Sent: Saturday, 13 September, 2014 6:40 PM
+> To: Jens Axboe
+> Cc: Elliott, Robert (Server Storage); linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: blk-mq timeout handling fixes
+> 
+> This series fixes various issues with timeout handling that Robert
+> ran into when testing scsi-mq heavily.  He tested an earlier version,
+> and couldn't reproduce the issues anymore, although the series changed
+> quite significantly since and should probably be retested.
+> 
+> In summary we not only start the blk-mq timer inside the drivers
+> ->queue_rq method after the request has been fully setup, and we
+> also tell the drivers if we're timing out a reserved (internal)
+> request or a real one.  Many drivers including will need to handle
+> those internal ones differently, e.g. for scsi-mq we don't even
+> have a scsi command structure allocated for the reserved commands.
 
-Signed-off-by: Anish Bhatt <anish@chelsio.com>
-Signed-off-by: Karen Xie <kxie@chelsio.com>
+I have rerun a variety of tests on:
+* Jens' for-next tree that went into 3.17rc5
+* plus this series
+* plus two patches for infinite recursion on flushes from 
+  Ming and then Christoph
 
-Fixes: fc8d0590d914 ("libcxgbi: Add ipv6 api to driver")
-Fixes: 759a0cc5a3e1 ("cxgb4i: Add ipv6 code to driver, call into libcxgbi ipv6
-api")
+and have not been able to trigger the scsi_times_out req->special
+NULL pointer dereference that prompted this series.
+
+Testing includes:
+* concurrent heavy workload generators:
+  * fio high iodepth direct 512 byte random reads (> 1M IOPS)
+  * programs generating large bursts of paged writes
+    * mkfs.ext4 (followed by e2fsck)
+    * mkfs.xfs (followed by xfs_check)
+    * ddpt
+  * watch -n 0 sync to generate flushes
+* scsi_logging_level MLCOMPLETE set to 0 or 1
+  * scsi_lib.c patched to put all the ACTION_FAIL messages
+    under level 1 so they can be squelched (massive error 
+    prints cause more timeouts themselves)
+* 4 hpsa and 16 mpt3sas devices (all made from SAS SSDs)
+  * lockless hpsa driver
+* injecting errors
+  * device removal
+  * device generating infinite errors
+  * device generating a brief number of errors
+
+The filesystems don't always recover properly, but nothing in 
+the block or scsi midlayers crashed.
+
+So, you may add this to the series:
+Tested-by: Robert Elliott <elliott@hp.com>
+
 ---
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |  2 +-
- drivers/scsi/cxgbi/libcxgbi.c      | 57 ++++++++++++++++++++++++++++++++++----
- drivers/scsi/cxgbi/libcxgbi.h      |  3 ++
- 3 files changed, 55 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 79788a1..02e69e7 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1647,7 +1647,7 @@ static int cxgbi_inet6addr_handler(struct notifier_block *this,
-        if (event_dev->priv_flags & IFF_802_1Q_VLAN)
-                event_dev = vlan_dev_real_dev(event_dev);
-
--       cdev = cxgbi_device_find_by_netdev(event_dev, NULL);
-+       cdev = cxgbi_device_find_by_netdev_rcu(event_dev, NULL);
-
-        if (!cdev)
-                return ret;
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index d65df6d..addd1dd 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -57,6 +57,9 @@ MODULE_PARM_DESC(dbg_level, "libiscsi debug level (default=0)");
- static LIST_HEAD(cdev_list);
- static DEFINE_MUTEX(cdev_mutex);
-
-+static LIST_HEAD(cdev_rcu_list);
-+static DEFINE_SPINLOCK(cdev_rcu_lock);
-+
- int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
-                                unsigned int max_conn)
- {
-@@ -142,6 +145,10 @@ struct cxgbi_device *cxgbi_device_register(unsigned int extra,
-        list_add_tail(&cdev->list_head, &cdev_list);
-        mutex_unlock(&cdev_mutex);
-
-+       spin_lock(&cdev_rcu_lock);
-+       list_add_tail_rcu(&cdev->rcu_node, &cdev_rcu_list);
-+       spin_unlock(&cdev_rcu_lock);
-+
-        log_debug(1 << CXGBI_DBG_DEV,
-                "cdev 0x%p, p# %u.\n", cdev, nports);
-        return cdev;
-@@ -153,9 +160,16 @@ void cxgbi_device_unregister(struct cxgbi_device *cdev)
-        log_debug(1 << CXGBI_DBG_DEV,
-                "cdev 0x%p, p# %u,%s.\n",
-                cdev, cdev->nports, cdev->nports ? cdev->ports[0]->name : "");
-+
-        mutex_lock(&cdev_mutex);
-        list_del(&cdev->list_head);
-        mutex_unlock(&cdev_mutex);
-+
-+       spin_lock(&cdev_rcu_lock);
-+       list_del_rcu(&cdev->rcu_node);
-+       spin_unlock(&cdev_rcu_lock);
-+       synchronize_rcu();
-+
-        cxgbi_device_destroy(cdev);
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_unregister);
-@@ -167,12 +181,9 @@ void cxgbi_device_unregister_all(unsigned int flag)
-        mutex_lock(&cdev_mutex);
-        list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
-                if ((cdev->flags & flag) == flag) {
--                       log_debug(1 << CXGBI_DBG_DEV,
--                               "cdev 0x%p, p# %u,%s.\n",
--                               cdev, cdev->nports, cdev->nports ?
--                                cdev->ports[0]->name : "");
--                       list_del(&cdev->list_head);
--                       cxgbi_device_destroy(cdev);
-+                       mutex_unlock(&cdev_mutex);
-+                       cxgbi_device_unregister(cdev);
-+                       mutex_lock(&cdev_mutex);
-                }
-        }
-        mutex_unlock(&cdev_mutex);
-@@ -191,6 +202,7 @@ struct cxgbi_device *cxgbi_device_find_by_lldev(void *lldev)
-                }
-        }
-        mutex_unlock(&cdev_mutex);
-+
-        log_debug(1 << CXGBI_DBG_DEV,
-                "lldev 0x%p, NO match found.\n", lldev);
-        return NULL;
-@@ -230,6 +242,39 @@ struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev);
-
-+struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *ndev,
-+                                                    int *port)
-+{
-+       struct net_device *vdev = NULL;
-+       struct cxgbi_device *cdev;
-+       int i;
-+
-+       if (ndev->priv_flags & IFF_802_1Q_VLAN) {
-+               vdev = ndev;
-+               ndev = vlan_dev_real_dev(ndev);
-+               pr_info("vlan dev %s -> %s.\n", vdev->name, ndev->name);
-+       }
-+
-+       rcu_read_lock();
-+       list_for_each_entry_rcu(cdev, &cdev_rcu_list, rcu_node) {
-+               for (i = 0; i < cdev->nports; i++) {
-+                       if (ndev == cdev->ports[i]) {
-+                               cdev->hbas[i]->vdev = vdev;
-+                               rcu_read_unlock();
-+                               if (port)
-+                                       *port = i;
-+                               return cdev;
-+                       }
-+               }
-+       }
-+       rcu_read_unlock();
-+
-+       log_debug(1 << CXGBI_DBG_DEV,
-+                 "ndev 0x%p, %s, NO match found.\n", ndev, ndev->name);
-+       return NULL;
-+}
-+EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev_rcu);
-+
- static struct cxgbi_device *cxgbi_device_find_by_mac(struct net_device *ndev,
-                                                     int *port)
- {
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index b3e6e75..1d98fad 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -527,6 +527,7 @@ struct cxgbi_ports_map {
- #define CXGBI_FLAG_IPV4_SET            0x10
- struct cxgbi_device {
-        struct list_head list_head;
-+       struct list_head rcu_node;
-        unsigned int flags;
-        struct net_device **ports;
-        void *lldev;
-@@ -709,6 +710,8 @@ void cxgbi_device_unregister(struct cxgbi_device *);
- void cxgbi_device_unregister_all(unsigned int flag);
- struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
- struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *, int *);
-+struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *,
-+                                                    int *);
- int cxgbi_hbas_add(struct cxgbi_device *, u64, unsigned int,
-                        struct scsi_host_template *,
-                        struct scsi_transport_template *);
---
-2.1.0
-
+Rob Elliott    HP Server Storage
