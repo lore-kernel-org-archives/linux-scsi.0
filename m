@@ -1,214 +1,190 @@
-From: =?iso-8859-1?Q?Gon=E7alo_Rosa?= <goncalo.rosa@gmail.com>
-Subject: RE: CentOS 6.5 tgtadm LUN ID set doesn't work
-Date: Wed, 17 Sep 2014 13:51:37 -0500
-Message-ID: <000601cfd2a8$69e83cc0$3db8b640$@gmail.com>
+From: Anish Bhatt <anish@chelsio.com>
+Subject: RE: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
+Date: Wed, 17 Sep 2014 21:00:54 +0000
+Message-ID: <525DB349B3FB5444AE057A887CB2A8D88ED73F@nice.asicdesigners.com>
+References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:62756 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755881AbaIQSvk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Sep 2014 14:51:40 -0400
-Content-Language: en-us
+Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:11840
+	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756698AbaIQVDX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Sep 2014 17:03:23 -0400
+In-Reply-To: <1410828258-14692-1-git-send-email-anish@chelsio.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "hch@lst.de" <hch@lst.de>
+
+Pinging for visibility
+-Anish
+________________________________________
+From: Anish Bhatt [anish@chelsio.com]
+Sent: Monday, September 15, 2014 5:44 PM
 To: linux-scsi@vger.kernel.org
-Cc: linux-scsi-owner@vger.kernel.org
+Cc: JBottomley@parallels.com; hch@infradead.org; Karen Xie; Manoj Malviya; Anish Bhatt
+Subject: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
 
-Hello,
+cxgbi_inet6addr_handler() can be called in interrupt context, so use rcu
+protected list while finding netdev
 
-I am having issues to have tgtd to assume specified LUN ID numbers.
+Applies on top of core-for-3.18
 
-I did the following procedure:
-tgtadm --lld iscsi --mode target --op new --tid 1 --targetname
-iqn.2014-09.local.vclass:tg0
-tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 1
---backing-store /dev/sdg
-tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 2
---backing-store /dev/sdh
-tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 3
---backing-store /dev/sdi
-tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 4
---backing-store /dev/sdj
-tgtadm --lld iscsi --mode target --op new --tid 2 --targetname
-iqn.2014-09.local.vclass:tg1
-tgtadm --lld iscsi --mode target --op new --tid 3 --targetname
-iqn.2014-09.local.vclass:tg2
-tgtadm --lld iscsi --op new --mode logicalunit --tid 2 --lun 5
---backing-store /dev/sde
-tgtadm --lld iscsi --op new --mode logicalunit --tid 3 --lun 5
---backing-store /dev/sdf
-tgtadm --lld iscsi --op bind --mode target --tid 2 --initiator-address
-172.20.10.61
-tgtadm --lld iscsi --op bind --mode target --tid 3 --initiator-address
-172.20.10.62
-tgtadm --mode target --op show
-tgt-admin --dump > /etc/tgt/targets.conf
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
+Signed-off-by: Karen Xie <kxie@chelsio.com>
 
-and the tgtadm --mode target --op show output was as shown below:
-[root@iscsi ~]# tgtadm --mode target --op show
-Target 1: iqn.2014-09.local.vclass:tg0
-System information:
-Driver: iscsi
-State: ready
-I_T nexus information:
-LUN information:
-LUN: 0
-Type: controller
-SCSI ID: IET 00010000
-SCSI SN: beaf10
-Size: 0 MB, Block size: 1
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: null
-Backing store path: None
-Backing store flags:
-LUN: 1
-Type: disk
-SCSI ID: IET 00010001
-SCSI SN: beaf11
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sdg
-Backing store flags:
-LUN: 2
-Type: disk
-SCSI ID: IET 00010002
-SCSI SN: beaf12
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sdh
-Backing store flags:
-LUN: 3
-Type: disk
-SCSI ID: IET 00010003
-SCSI SN: beaf13
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sdi
-Backing store flags:
-LUN: 4
-Type: disk
-SCSI ID: IET 00010004
-SCSI SN: beaf14
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sdj
-Backing store flags:
-Account information:
-ACL information:
-Target 2: iqn.2014-09.local.vclass:tg1
-System information:
-Driver: iscsi
-State: ready
-I_T nexus information:
-LUN information:
-LUN: 0
-Type: controller
-SCSI ID: IET 00020000
-SCSI SN: beaf20
-Size: 0 MB, Block size: 1
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: null
-Backing store path: None
-Backing store flags:
-LUN: 5
-Type: disk
-SCSI ID: IET 00020005
-SCSI SN: beaf25
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sde
-Backing store flags:
-Account information:
-ACL information:
-172.20.10.61
-Target 3: iqn.2014-09.local.vclass:tg2
-System information:
-Driver: iscsi
-State: ready
-I_T nexus information:
-LUN information:
-LUN: 0
-Type: controller
-SCSI ID: IET 00030000
-SCSI SN: beaf30
-Size: 0 MB, Block size: 1
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: null
-Backing store path: None
-Backing store flags:
-LUN: 5
-Type: disk
-SCSI ID: IET 00030005
-SCSI SN: beaf35
-Size: 10737 MB, Block size: 512
-Online: Yes
-Removable media: No
-Prevent removal: No
-Readonly: No
-Backing store type: rdwr
-Backing store path: /dev/sdf
-Backing store flags:
-Account information:
-ACL information:
-172.20.10.62
+Fixes: fc8d0590d914 ("libcxgbi: Add ipv6 api to driver")
+Fixes: 759a0cc5a3e1 ("cxgb4i: Add ipv6 code to driver, call into libcxgbi ipv6
+api")
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |  2 +-
+ drivers/scsi/cxgbi/libcxgbi.c      | 57 ++++++++++++++++++++++++++++++++++----
+ drivers/scsi/cxgbi/libcxgbi.h      |  3 ++
+ 3 files changed, 55 insertions(+), 7 deletions(-)
 
-My intention is that all LUN IDs should be different per host, so tg0 will
-serves shared LUNs 1,2,3 and 4 and tg1 serves LUN 5 to host 172.20.10.61 and
-tg2 serves LUN 5 to host 172.20.10.62. I am using CentOS 6.5
-After reboot tg1 and tg2 presents the LUNs both with LUN ID 1.
-Also added LUN 5 to both targets in /etc/tgt/targets.conf and after reboot
-ignores the instruction and still presents with LUN ID 1.
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 79788a1..02e69e7 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1647,7 +1647,7 @@ static int cxgbi_inet6addr_handler(struct notifier_block *this,
+        if (event_dev->priv_flags & IFF_802_1Q_VLAN)
+                event_dev = vlan_dev_real_dev(event_dev);
 
-/etc/tgt/targets.conf below:
+-       cdev = cxgbi_device_find_by_netdev(event_dev, NULL);
++       cdev = cxgbi_device_find_by_netdev_rcu(event_dev, NULL);
 
-Default-driver iscsi
+        if (!cdev)
+                return ret;
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index d65df6d..addd1dd 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -57,6 +57,9 @@ MODULE_PARM_DESC(dbg_level, "libiscsi debug level (default=0)");
+ static LIST_HEAD(cdev_list);
+ static DEFINE_MUTEX(cdev_mutex);
 
-backing-store /dev/sdf
-LUN 5
-initiator-address 172.20.10.62
++static LIST_HEAD(cdev_rcu_list);
++static DEFINE_SPINLOCK(cdev_rcu_lock);
++
+ int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
+                                unsigned int max_conn)
+ {
+@@ -142,6 +145,10 @@ struct cxgbi_device *cxgbi_device_register(unsigned int extra,
+        list_add_tail(&cdev->list_head, &cdev_list);
+        mutex_unlock(&cdev_mutex);
 
-backing-store /dev/sde
-LUN 5
-initiator-address 172.20.10.61
++       spin_lock(&cdev_rcu_lock);
++       list_add_tail_rcu(&cdev->rcu_node, &cdev_rcu_list);
++       spin_unlock(&cdev_rcu_lock);
++
+        log_debug(1 << CXGBI_DBG_DEV,
+                "cdev 0x%p, p# %u.\n", cdev, nports);
+        return cdev;
+@@ -153,9 +160,16 @@ void cxgbi_device_unregister(struct cxgbi_device *cdev)
+        log_debug(1 << CXGBI_DBG_DEV,
+                "cdev 0x%p, p# %u,%s.\n",
+                cdev, cdev->nports, cdev->nports ? cdev->ports[0]->name : "");
++
+        mutex_lock(&cdev_mutex);
+        list_del(&cdev->list_head);
+        mutex_unlock(&cdev_mutex);
++
++       spin_lock(&cdev_rcu_lock);
++       list_del_rcu(&cdev->rcu_node);
++       spin_unlock(&cdev_rcu_lock);
++       synchronize_rcu();
++
+        cxgbi_device_destroy(cdev);
+ }
+ EXPORT_SYMBOL_GPL(cxgbi_device_unregister);
+@@ -167,12 +181,9 @@ void cxgbi_device_unregister_all(unsigned int flag)
+        mutex_lock(&cdev_mutex);
+        list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
+                if ((cdev->flags & flag) == flag) {
+-                       log_debug(1 << CXGBI_DBG_DEV,
+-                               "cdev 0x%p, p# %u,%s.\n",
+-                               cdev, cdev->nports, cdev->nports ?
+-                                cdev->ports[0]->name : "");
+-                       list_del(&cdev->list_head);
+-                       cxgbi_device_destroy(cdev);
++                       mutex_unlock(&cdev_mutex);
++                       cxgbi_device_unregister(cdev);
++                       mutex_lock(&cdev_mutex);
+                }
+        }
+        mutex_unlock(&cdev_mutex);
+@@ -191,6 +202,7 @@ struct cxgbi_device *cxgbi_device_find_by_lldev(void *lldev)
+                }
+        }
+        mutex_unlock(&cdev_mutex);
++
+        log_debug(1 << CXGBI_DBG_DEV,
+                "lldev 0x%p, NO match found.\n", lldev);
+        return NULL;
+@@ -230,6 +242,39 @@ struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
+ }
+ EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev);
 
-backing-store /dev/sdg
-backing-store /dev/sdh
-backing-store /dev/sdi
-backing-store /dev/sdj
-
-Please, can anyone be so kind and help me to fix the LUN IDs?
-
-Thank you in advance.
++struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *ndev,
++                                                    int *port)
++{
++       struct net_device *vdev = NULL;
++       struct cxgbi_device *cdev;
++       int i;
++
++       if (ndev->priv_flags & IFF_802_1Q_VLAN) {
++               vdev = ndev;
++               ndev = vlan_dev_real_dev(ndev);
++               pr_info("vlan dev %s -> %s.\n", vdev->name, ndev->name);
++       }
++
++       rcu_read_lock();
++       list_for_each_entry_rcu(cdev, &cdev_rcu_list, rcu_node) {
++               for (i = 0; i < cdev->nports; i++) {
++                       if (ndev == cdev->ports[i]) {
++                               cdev->hbas[i]->vdev = vdev;
++                               rcu_read_unlock();
++                               if (port)
++                                       *port = i;
++                               return cdev;
++                       }
++               }
++       }
++       rcu_read_unlock();
++
++       log_debug(1 << CXGBI_DBG_DEV,
++                 "ndev 0x%p, %s, NO match found.\n", ndev, ndev->name);
++       return NULL;
++}
++EXPORT_SYMBOL_GPL(cxgbi_device_find_by_netdev_rcu);
++
+ static struct cxgbi_device *cxgbi_device_find_by_mac(struct net_device *ndev,
+                                                     int *port)
+ {
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index b3e6e75..1d98fad 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -527,6 +527,7 @@ struct cxgbi_ports_map {
+ #define CXGBI_FLAG_IPV4_SET            0x10
+ struct cxgbi_device {
+        struct list_head list_head;
++       struct list_head rcu_node;
+        unsigned int flags;
+        struct net_device **ports;
+        void *lldev;
+@@ -709,6 +710,8 @@ void cxgbi_device_unregister(struct cxgbi_device *);
+ void cxgbi_device_unregister_all(unsigned int flag);
+ struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
+ struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *, int *);
++struct cxgbi_device *cxgbi_device_find_by_netdev_rcu(struct net_device *,
++                                                    int *);
+ int cxgbi_hbas_add(struct cxgbi_device *, u64, unsigned int,
+                        struct scsi_host_template *,
+                        struct scsi_transport_template *);
+--
+2.1.0
 
