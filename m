@@ -1,41 +1,37 @@
-From: Olaf Hering <ohering@suse.com>
-Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
-Date: Wed, 17 Sep 2014 09:33:24 +0200
-Message-ID: <20140917073324.GB23716@suse.com>
-References: <1409701396-20226-1-git-send-email-kys@microsoft.com>
- <20140905054014.GA11595@infradead.org>
- <155acb7b8a3d4532aaa280e44f62447f@BY2PR0301MB0711.namprd03.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52807 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466AbaIQHd2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Sep 2014 03:33:28 -0400
-Content-Disposition: inline
-In-Reply-To: <155acb7b8a3d4532aaa280e44f62447f@BY2PR0301MB0711.namprd03.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH fix for 3.17] uas: Add US_FL_NO_ATA_1X quirk for Seagate (0bc2:ab20) drives
+Date: Wed, 17 Sep 2014 10:10:58 +0200
+Message-ID: <1410941458-5049-1-git-send-email-hdegoede@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 08, KY Srinivasan wrote:
+https://bbs.archlinux.org/viewtopic.php?pid=1457492
 
-> > -----Original Message-----
-> > From: Christoph Hellwig [mailto:hch@infradead.org]
-> > Sent: Thursday, September 4, 2014 10:40 PM
-> > To: KY Srinivasan
-> > Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
-> > 
-> > Looks good to me.
-> > 
-> > Olaf, Hannes - can I get another review for this (and the older hyperv
-> > scanning patch set)?
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/unusual_uas.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Christoph,
-
-what does "review of this" mean?  There are many hv related patches
-floating around.  The removal of the warning in msgid
-<1409701396-20226-1-git-send-email-kys@microsoft.com> looks ok to me.
-
-Olaf
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index 3e62437..94fb09f 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -54,6 +54,13 @@ UNUSUAL_DEV(0x0bc2, 0x3312, 0x0000, 0x9999,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_ATA_1X),
+ 
++/* https://bbs.archlinux.org/viewtopic.php?id=183190 */
++UNUSUAL_DEV(0x0bc2, 0xab20, 0x0000, 0x9999,
++		"Seagate",
++		"Backup+ BK",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_NO_ATA_1X),
++
+ /* Reported-by: Claudio Bizzarri <claudio.bizzarri@gmail.com> */
+ UNUSUAL_DEV(0x152d, 0x0567, 0x0000, 0x9999,
+ 		"JMicron",
+-- 
+2.1.0
