@@ -1,12 +1,42 @@
-From: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: [PATCH v4] scsi: ufs: add support of generic PHY framework in Qualcomm MSM chips
-Date: Wed, 17 Sep 2014 19:21:52 +0300
-Message-ID: <1410970929-25544-1-git-send-email-ygardi@codeaurora.org>
+From: "Yaniv Gardi" <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: RE: [PATCH v4] scsi: ufs: add support of generic PHY framework in Qualcomm MSM chips
+Date: Wed, 17 Sep 2014 19:26:05 +0300
+Message-ID: <000001cfd294$18e4e300$4aaea900$@codeaurora.org>
+References: <1410970929-25544-1-git-send-email-ygardi@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1410970929-25544-1-git-send-email-ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Content-Language: en-us
 Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, noag-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Grant Likely <grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Raviv Shvili <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sahitya Tummala <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "open list:OPEN FIRMWARE AND..." <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, noag-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, 'Rob Herring' <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, 'Pawel Moll' <pawel.moll-5wv7dgnIgG8@public.gmane.org>, 'Mark Rutland' <mark.rutland-5wv7dgnIgG8@public.gmane.org>, 'Ian Campbell' <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, 'Kumar Gala' <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, 'Kishon Vijay Abraham I' <kishon-l0cyMroinI0@public.gmane.org>, 'Vinayak Holikatti' <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "'James E.J. Bottomley'" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, 'Grant Likely' <grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, 'Raviv Shvili' <rshvili-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, 'Sujit Reddy Thumma' <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, 'Christoph Hellwig' <hch-jcswGhMUV9g@public.gmane.org>, 'Sahitya Tummala' <stummala-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "'open list:OPEN FIRMWARE AND...'" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
+
+This change depends on draviv [PATCH v3] series of 16 changes that was
+already uploaded.
+Soon draviv will uploaded again as [PATCH v4] that contain 17 patches, and
+this change will be dependent on this serie,
+
+Thanks,
+Yaniv
+
+-----Original Message-----
+From: Yaniv Gardi [mailto:ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org] 
+Sent: Wednesday, September 17, 2014 7:22 PM
+To: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org; hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
+linux-arm-msm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; santoshsy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org;
+ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org; noag-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org; draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org; Rob
+Herring; Pawel Moll; Mark Rutland; Ian Campbell; Kumar Gala; Kishon Vijay
+Abraham I; Vinayak Holikatti; James E.J. Bottomley; Grant Likely; Raviv
+Shvili; Sujit Reddy Thumma; Christoph Hellwig; Sahitya Tummala; open
+list:OPEN FIRMWARE AND...
+Subject: [PATCH v4] scsi: ufs: add support of generic PHY framework in
+Qualcomm MSM chips
 
 In this change we add support to the generic PHY framework.
 Two UFS phys are implemented:
@@ -28,7 +58,8 @@ Signed-off-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
  drivers/phy/phy-qcom-ufs.c                         | 661 ++++++++++++++++
  drivers/scsi/ufs/Kconfig                           |  12 +
  drivers/scsi/ufs/Makefile                          |   1 +
- drivers/scsi/ufs/ufs-qcom.c                        | 866 +++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.c                        | 866
++++++++++++++++++++++
  drivers/scsi/ufs/ufs.h                             | 491 ------------
  drivers/scsi/ufs/ufshcd-pci.c                      |   2 +-
  drivers/scsi/ufs/ufshcd-pltfrm.c                   |   2 +-
@@ -57,7 +88,8 @@ Signed-off-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
  create mode 100644 include/linux/scsi/ufs/ufshcd.h
  create mode 100644 include/linux/scsi/ufs/unipro.h
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-ufs-phy.txt b/Documentation/devicetree/bindings/phy/qcom-ufs-phy.txt
+diff --git a/Documentation/devicetree/bindings/phy/qcom-ufs-phy.txt
+b/Documentation/devicetree/bindings/phy/qcom-ufs-phy.txt
 new file mode 100644
 index 0000000..8a6798f
 --- /dev/null
@@ -81,8 +113,10 @@ index 0000000..8a6798f
 +- vdda-pll-supply   : phandle to PHY PLL and Power-Gen block power supply
 +
 +Optional properties:
-+- vdda-phy-max-microamp : specifies max. load that can be drawn from phy supply
-+- vdda-pll-max-microamp : specifies max. load that can be drawn from pll supply
++- vdda-phy-max-microamp : specifies max. load that can be drawn from phy
+supply
++- vdda-pll-max-microamp : specifies max. load that can be drawn from pll
+supply
 +
 +Example:
 +
@@ -104,14 +138,16 @@ diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
 index 95c69ed..eac4854 100644
 --- a/drivers/phy/Makefile
 +++ b/drivers/phy/Makefile
-@@ -28,3 +28,6 @@ obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)	+= phy-qcom-ipq806x-sata.o
+@@ -28,3 +28,6 @@ obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)	+=
+phy-qcom-ipq806x-sata.o
  obj-$(CONFIG_PHY_ST_SPEAR1310_MIPHY)	+= phy-spear1310-miphy.o
  obj-$(CONFIG_PHY_ST_SPEAR1340_MIPHY)	+= phy-spear1340-miphy.o
  obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
 +obj-$(CONFIG_SCSI_UFS_QCOM) 		+= phy-qcom-ufs.o
 +obj-$(CONFIG_SCSI_UFS_QCOM) 		+= phy-qcom-ufs-qmp-28nm.o
 +obj-$(CONFIG_SCSI_UFS_QCOM) 		+= phy-qcom-ufs-qmp-20nm.o
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
 new file mode 100644
 index 0000000..b6dcf2d
 --- /dev/null
@@ -162,14 +198,16 @@ index 0000000..b6dcf2d
 +						tbl_B, tbl_size_B, rate);
 +
 +	if (err)
-+		dev_err(ufs_qcom_phy->dev, "%s: ufs_qcom_phy_calibrate() failed %d\n",
++		dev_err(ufs_qcom_phy->dev, "%s: ufs_qcom_phy_calibrate()
+failed %d\n",
 +			__func__, err);
 +
 +	return err;
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
++void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct ufs_qcom_phy
+*phy_common)
 +{
 +	phy_common->quirks =
 +		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
@@ -183,14 +221,16 @@ index 0000000..b6dcf2d
 +
 +	err = ufs_qcom_phy_init_clks(generic_phy, phy_common);
 +	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
++		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks()
+failed %d\n",
 +			__func__, err);
 +		goto out;
 +	}
 +
 +	err = ufs_qcom_phy_init_vregulators(generic_phy, phy_common);
 +	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
++		dev_err(phy_common->dev, "%s:
+ufs_qcom_phy_init_vregulators() failed %d\n",
 +			__func__, err);
 +		goto out;
 +	}
@@ -202,7 +242,8 @@ index 0000000..b6dcf2d
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, bool val)
++void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, bool
+val)
 +{
 +	bool hibern8_exit_after_pwr_collapse = phy->quirks &
 +		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
@@ -226,7 +267,8 @@ index 0000000..b6dcf2d
 +			writel_relaxed(0x08, phy->mmio +
 +				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
 +			/*
-+			 * Make sure workaround is deactivated before proceeding
++			 * Make sure workaround is deactivated before
+proceeding
 +			 * with normal PHY operations.
 +			 */
 +			mb();
@@ -238,7 +280,8 @@ index 0000000..b6dcf2d
 +			writel_relaxed(0x02, phy->mmio +
 +				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
 +			/*
-+			 * Make sure that above workaround is activated before
++			 * Make sure that above workaround is activated
+before
 +			 * PHY analog power collapse.
 +			 */
 +			mb();
@@ -254,7 +297,8 @@ index 0000000..b6dcf2d
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_20nm_set_tx_lane_enable(struct ufs_qcom_phy *phy, u32 val)
++void ufs_qcom_phy_qmp_20nm_set_tx_lane_enable(struct ufs_qcom_phy *phy, u32
+val)
 +{
 +	writel_relaxed(val & UFS_PHY_TX_LANE_ENABLE_MASK,
 +			phy->mmio + UFS_PHY_TX_LANE_ENABLE);
@@ -265,7 +309,8 @@ index 0000000..b6dcf2d
 +	mb();
 +}
 +
-+static inline void ufs_qcom_phy_qmp_20nm_start_serdes(struct ufs_qcom_phy *phy)
++static inline void ufs_qcom_phy_qmp_20nm_start_serdes(struct ufs_qcom_phy
+*phy)
 +{
 +	u32 tmp;
 +
@@ -280,15 +325,18 @@ index 0000000..b6dcf2d
 +	mb();
 +}
 +
-+static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
++static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy
+*phy_common)
 +{
 +	int err = 0;
 +	u32 val;
 +
-+	err = readl_poll_timeout(phy_common->mmio + UFS_PHY_PCS_READY_STATUS,
++	err = readl_poll_timeout(phy_common->mmio +
+UFS_PHY_PCS_READY_STATUS,
 +			val, (val & MASK_PCS_READY), 10, 1000000);
 +	if (err)
-+		dev_err(phy_common->dev, "%s: poll for pcs failed err = %d\n",
++		dev_err(phy_common->dev, "%s: poll for pcs failed err =
+%d\n",
 +			__func__, err);
 +	return err;
 +}
@@ -304,7 +352,8 @@ index 0000000..b6dcf2d
 +struct ufs_qcom_phy_specific_ops phy_20nm_ops = {
 +	.calibrate_phy		= ufs_qcom_phy_qmp_20nm_phy_calibrate,
 +	.start_serdes		= ufs_qcom_phy_qmp_20nm_start_serdes,
-+	.is_physical_coding_sublayer_ready = ufs_qcom_phy_qmp_20nm_is_pcs_ready,
++	.is_physical_coding_sublayer_ready =
+ufs_qcom_phy_qmp_20nm_is_pcs_ready,
 +	.set_tx_lane_enable	= ufs_qcom_phy_qmp_20nm_set_tx_lane_enable,
 +	.power_control		= ufs_qcom_phy_qmp_20nm_power_control,
 +};
@@ -323,7 +372,8 @@ index 0000000..b6dcf2d
 +	}
 +
 +	generic_phy = ufs_qcom_phy_generic_probe(pdev, &phy->common_cfg,
-+				&ufs_qcom_phy_qmp_20nm_phy_ops, &phy_20nm_ops);
++				&ufs_qcom_phy_qmp_20nm_phy_ops,
+&phy_20nm_ops);
 +
 +	if (!generic_phy) {
 +		dev_err(dev, "%s: ufs_qcom_phy_generic_probe() failed\n",
@@ -376,7 +426,8 @@ index 0000000..b6dcf2d
 +
 +MODULE_DESCRIPTION("Universal Flash Storage (UFS) QCOM PHY QMP 20nm");
 +MODULE_LICENSE("GPL v2");
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.h b/drivers/phy/phy-qcom-ufs-qmp-20nm.h
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.h
+b/drivers/phy/phy-qcom-ufs-qmp-20nm.h
 new file mode 100644
 index 0000000..189e0ed
 --- /dev/null
@@ -598,7 +649,8 @@ index 0000000..189e0ed
 +};
 +
 +#endif
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-28nm.c b/drivers/phy/phy-qcom-ufs-qmp-28nm.c
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-28nm.c
+b/drivers/phy/phy-qcom-ufs-qmp-28nm.c
 new file mode 100644
 index 0000000..21594e1
 --- /dev/null
@@ -633,7 +685,8 @@ index 0000000..21594e1
 +#define UFS_PHY_NAME "ufs_qcom_phy_qmp_28nm"
 +
 +static
-+void ufs_qcom_phy_qmp_28nm_power_control(struct ufs_qcom_phy *phy, bool val)
++void ufs_qcom_phy_qmp_28nm_power_control(struct ufs_qcom_phy *phy, bool
+val)
 +{
 +	if (val) {
 +		writel_relaxed(0x1, phy->mmio + UFS_PHY_POWER_DOWN_CONTROL);
@@ -644,20 +697,23 @@ index 0000000..21594e1
 +		 * SIGDET.
 +		 */
 +		mb();
-+		if (phy->quirks & UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE) {
++		if (phy->quirks &
+UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE) {
 +			writel_relaxed(0xC0,
 +				phy->mmio + QSERDES_RX_SIGDET_CNTRL(0));
 +			writel_relaxed(0xC0,
 +				phy->mmio + QSERDES_RX_SIGDET_CNTRL(1));
 +			/*
-+			 * make sure that SIGDET is enabled before proceeding
++			 * make sure that SIGDET is enabled before
+proceeding
 +			 * further.
 +			 */
 +			 mb();
 +		}
 +	} else {
 +		 if (phy->quirks &
-+				UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE) {
++				UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE)
+{
 +			writel_relaxed(0x0,
 +				phy->mmio + QSERDES_RX_SIGDET_CNTRL(0));
 +			writel_relaxed(0x0,
@@ -678,10 +734,12 @@ index 0000000..21594e1
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_28nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
++void ufs_qcom_phy_qmp_28nm_advertise_quirks(struct ufs_qcom_phy
+*phy_common)
 +{
 +	phy_common->quirks = UFS_QCOM_PHY_QUIRK_CFG_RESTORE
-+				| UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE;
++				|
+UFS_QCOM_PHY_DIS_SIGDET_BEFORE_PWR_COLLAPSE;
 +}
 +
 +static int ufs_qcom_phy_qmp_28nm_init(struct phy *generic_phy)
@@ -692,14 +750,16 @@ index 0000000..21594e1
 +
 +	err = ufs_qcom_phy_init_clks(generic_phy, phy_common);
 +	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
++		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks()
+failed %d\n",
 +			__func__, err);
 +		goto out;
 +	}
 +
 +	err = ufs_qcom_phy_init_vregulators(generic_phy, phy_common);
 +	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
++		dev_err(phy_common->dev, "%s:
+ufs_qcom_phy_init_vregulators() failed %d\n",
 +			__func__, err);
 +		goto out;
 +	}
@@ -710,7 +770,8 @@ index 0000000..21594e1
 +	return err;
 +}
 +
-+static int ufs_qcom_phy_qmp_28nm_calibrate(struct ufs_qcom_phy *ufs_qcom_phy)
++static int ufs_qcom_phy_qmp_28nm_calibrate(struct ufs_qcom_phy
+*ufs_qcom_phy)
 +{
 +	struct ufs_qcom_phy_calibration *tbl_A, *tbl_B;
 +	int tbl_size_A, tbl_size_B;
@@ -737,14 +798,16 @@ index 0000000..21594e1
 +	err = ufs_qcom_phy_calibrate(ufs_qcom_phy, tbl_A, tbl_size_A,
 +			      tbl_B, tbl_size_B, rate);
 +	if (err)
-+		dev_err(ufs_qcom_phy->dev, "%s: ufs_qcom_phy_calibrate() failed %d\n",
++		dev_err(ufs_qcom_phy->dev, "%s: ufs_qcom_phy_calibrate()
+failed %d\n",
 +			__func__, err);
 +
 +	return err;
 +}
 +
 +static
-+u32 ufs_qcom_phy_qmp_28nm_read_attr(struct ufs_qcom_phy *phy_common, u32 attr)
++u32 ufs_qcom_phy_qmp_28nm_read_attr(struct ufs_qcom_phy *phy_common, u32
+attr)
 +
 +{
 +	u32 l0, l1;
@@ -754,11 +817,14 @@ index 0000000..21594e1
 +	writel_relaxed((UFS_PHY_RMMI_CFGRD_L0 | UFS_PHY_RMMI_CFGRD_L1),
 +		       phy_common->mmio + UFS_PHY_RMMI_ATTR_CTRL);
 +
-+	l0 = readl_relaxed(phy_common->mmio + UFS_PHY_RMMI_ATTRRDVAL_L0_STATUS);
-+	l1 = readl_relaxed(phy_common->mmio + UFS_PHY_RMMI_ATTRRDVAL_L1_STATUS);
++	l0 = readl_relaxed(phy_common->mmio +
+UFS_PHY_RMMI_ATTRRDVAL_L0_STATUS);
++	l1 = readl_relaxed(phy_common->mmio +
+UFS_PHY_RMMI_ATTRRDVAL_L1_STATUS);
 +	/* Both lanes should have the same value for same attribute type */
 +	if (unlikely(l0 != l1))
-+		dev_warn(phy_common->dev, "%s: attr 0x%x values are not same for Lane-0 and Lane-1, l0=0x%x, l1=0x%x",
++		dev_warn(phy_common->dev, "%s: attr 0x%x values are not same
+for Lane-0 and Lane-1, l0=0x%x, l1=0x%x",
 +				__func__, attr, l0, l1);
 +
 +	/* must clear now */
@@ -789,7 +855,8 @@ index 0000000..21594e1
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_28nm_save_configuration(struct ufs_qcom_phy *phy_common)
++void ufs_qcom_phy_qmp_28nm_save_configuration(struct ufs_qcom_phy
+*phy_common)
 +{
 +	int i;
 +
@@ -805,7 +872,8 @@ index 0000000..21594e1
 +}
 +
 +static void
-+ufs_qcom_phy_qmp_28nm_restore_configuration(struct ufs_qcom_phy *phy_common)
++ufs_qcom_phy_qmp_28nm_restore_configuration(struct ufs_qcom_phy
+*phy_common)
 +{
 +	int i;
 +
@@ -815,7 +883,8 @@ index 0000000..21594e1
 +}
 +
 +static
-+void ufs_qcom_phy_qmp_28nm_set_tx_lane_enable(struct ufs_qcom_phy *phy, u32 val)
++void ufs_qcom_phy_qmp_28nm_set_tx_lane_enable(struct ufs_qcom_phy *phy, u32
+val)
 +{
 +	writel_relaxed(val & UFS_PHY_TX_LANE_ENABLE_MASK,
 +			phy->mmio + UFS_PHY_TX_LANE_ENABLE);
@@ -826,7 +895,8 @@ index 0000000..21594e1
 +	mb();
 +}
 +
-+static inline void ufs_qcom_phy_qmp_28nm_start_serdes(struct ufs_qcom_phy *phy)
++static inline void ufs_qcom_phy_qmp_28nm_start_serdes(struct ufs_qcom_phy
+*phy)
 +{
 +	u32 tmp;
 +
@@ -841,12 +911,14 @@ index 0000000..21594e1
 +	mb();
 +}
 +
-+static int ufs_qcom_phy_qmp_28nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
++static int ufs_qcom_phy_qmp_28nm_is_pcs_ready(struct ufs_qcom_phy
+*phy_common)
 +{
 +	int err = 0;
 +	u32 val;
 +
-+	err = readl_poll_timeout(phy_common->mmio + UFS_PHY_PCS_READY_STATUS,
++	err = readl_poll_timeout(phy_common->mmio +
+UFS_PHY_PCS_READY_STATUS,
 +			val, (val & MASK_PCS_READY), 10, 1000000);
 +	if (err)
 +		dev_err(phy_common->dev, "%s: phy init failed, %d\n",
@@ -867,8 +939,10 @@ index 0000000..21594e1
 +	.calibrate_phy		= ufs_qcom_phy_qmp_28nm_calibrate,
 +	.start_serdes		= ufs_qcom_phy_qmp_28nm_start_serdes,
 +	.save_configuration	= ufs_qcom_phy_qmp_28nm_save_configuration,
-+	.restore_configuration	= ufs_qcom_phy_qmp_28nm_restore_configuration,
-+	.is_physical_coding_sublayer_ready = ufs_qcom_phy_qmp_28nm_is_pcs_ready,
++	.restore_configuration	=
+ufs_qcom_phy_qmp_28nm_restore_configuration,
++	.is_physical_coding_sublayer_ready =
+ufs_qcom_phy_qmp_28nm_is_pcs_ready,
 +	.set_tx_lane_enable	= ufs_qcom_phy_qmp_28nm_set_tx_lane_enable,
 +	.power_control		= ufs_qcom_phy_qmp_28nm_power_control,
 +};
@@ -893,7 +967,8 @@ index 0000000..21594e1
 +				ARRAY_SIZE(cached_phy_regs);
 +
 +	generic_phy = ufs_qcom_phy_generic_probe(pdev, &phy->common_cfg,
-+				&ufs_qcom_phy_qmp_28nm_phy_ops, &phy_28nm_ops);
++				&ufs_qcom_phy_qmp_28nm_phy_ops,
+&phy_28nm_ops);
 +
 +	if (!generic_phy) {
 +		dev_err(dev, "%s: ufs_qcom_phy_generic_probe() failed\n",
@@ -946,7 +1021,8 @@ index 0000000..21594e1
 +
 +MODULE_DESCRIPTION("Universal Flash Storage (UFS) QCOM PHY QMP 28nm");
 +MODULE_LICENSE("GPL v2");
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-28nm.h b/drivers/phy/phy-qcom-ufs-qmp-28nm.h
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-28nm.h
+b/drivers/phy/phy-qcom-ufs-qmp-28nm.h
 new file mode 100644
 index 0000000..b406d99
 --- /dev/null
@@ -1237,7 +1313,8 @@ index 0000000..b406d99
 +	struct ufs_qcom_phy common_cfg;
 +};
 +
-+static struct ufs_qcom_phy_calibration phy_cal_table_ctrl_1_1_0_rate_A[] = {
++static struct ufs_qcom_phy_calibration phy_cal_table_ctrl_1_1_0_rate_A[] =
+{
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_POWER_DOWN_CONTROL, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CRCTRL, 0xFF),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CNTRL, 0x24),
@@ -1300,7 +1377,8 @@ index 0000000..b406d99
 +		UFS_PHY_RX_MIN_SAVE_CONFIG_TIME_CAPABILITY, 0xc8),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_RX_PWM_BURST_CLOSURE_LENGTH_CAPABILITY, 0x10),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_MIN_ACTIVATETIME_CAPABILITY, 0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_MIN_ACTIVATETIME_CAPABILITY,
+0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1(0), 0x07),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2(0), 0x07),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1(1), 0x07),
@@ -1320,8 +1398,10 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_BIST_MODE_LANENO(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TX_EMP_POST1_LVL(0), 0x04),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TX_EMP_POST1_LVL(1), 0x04),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(0), 0x05),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(1), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(0),
+0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(1),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_100US_SYSCLK_STEPS_MSB, 0x07),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_100US_SYSCLK_STEPS_LSB, 0x80),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_20US_CORECLK_STEPS_MSB, 0x27),
@@ -1336,20 +1416,26 @@ index 0000000..b406d99
 +		UFS_PHY_TX_HS_UNTERMINATED_LINE_DRIVE_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_TX_LS_TERMINATED_LINE_DRIVE_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_REF_CLOCK_SHARED_CAPABILITY, 0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_REF_CLOCK_SHARED_CAPABILITY,
+0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_HIBERN8TIME_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HSGEAR_CAPABILITY, 0x03),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_PWMGEAR_CAPABILITY, 0x04),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_UNTERMINATED_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_TERMINATED_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_REF_CLOCK_SHARED_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G1_SYNC_LENGTH_CAPABILITY, 0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_REF_CLOCK_SHARED_CAPABILITY,
+0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G1_SYNC_LENGTH_CAPABILITY,
+0x48),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_RX_HS_G1_PREPARE_LENGTH_CAPABILITY, 0x0f),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_PREPARE_LENGTH_CAPABILITY, 0x09),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_PREPARE_LENGTH_CAPABILITY,
+0x09),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HIBERN8TIME_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G2_SYNC_LENGTH_CAPABILITY, 0x48),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G3_SYNC_LENGTH_CAPABILITY, 0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G2_SYNC_LENGTH_CAPABILITY,
+0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G3_SYNC_LENGTH_CAPABILITY,
+0x48),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_RX_HS_G2_PREPARE_LENGTH_CAPABILITY, 0x0f),
 +	UFS_QCOM_PHY_CAL_ENTRY(
@@ -1359,14 +1445,16 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_RES_CODE(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_SERDES_BYP_EN_OUT(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_REC_DETECT_LVL(0), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(0), 0x00),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(0),
+0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TRAN_DRVR_EMP_EN(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_CONTROL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_DATA_TCODE(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RCLK_AUXDATA_SEL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_EQ_CONTROL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_IQ_RXDET_EN(0), 0x73),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(0), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(0),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_FREEZE_UP_DN(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_UFS_CNTRL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_EIGHTH(0), 0x22),
@@ -1380,14 +1468,16 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_RES_CODE(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_SERDES_BYP_EN_OUT(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_REC_DETECT_LVL(1), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(1), 0x00),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(1),
+0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TRAN_DRVR_EMP_EN(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_CONTROL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_DATA_TCODE(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RCLK_AUXDATA_SEL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_EQ_CONTROL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_IQ_RXDET_EN(1), 0x73),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(1), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(1),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_FREEZE_UP_DN(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_UFS_CNTRL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_EIGHTH(1), 0x22),
@@ -1405,7 +1495,8 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_FAUX_EN, 0x00),
 +};
 +
-+static struct ufs_qcom_phy_calibration phy_cal_table_ctrl_1_1_1_rate_A[] = {
++static struct ufs_qcom_phy_calibration phy_cal_table_ctrl_1_1_1_rate_A[] =
+{
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_POWER_DOWN_CONTROL, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CRCTRL, 0x43),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CNTRL, 0x24),
@@ -1468,7 +1559,8 @@ index 0000000..b406d99
 +		UFS_PHY_RX_MIN_SAVE_CONFIG_TIME_CAPABILITY, 0xc8),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_RX_PWM_BURST_CLOSURE_LENGTH_CAPABILITY, 0x10),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_MIN_ACTIVATETIME_CAPABILITY, 0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_MIN_ACTIVATETIME_CAPABILITY,
+0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1(0), 0x1f),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2(0), 0x17),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1(1), 0x1f),
@@ -1488,8 +1580,10 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_BIST_MODE_LANENO(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TX_EMP_POST1_LVL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TX_EMP_POST1_LVL(1), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(0), 0x05),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(1), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(0),
+0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_EN(1),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_100US_SYSCLK_STEPS_MSB, 0x07),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_100US_SYSCLK_STEPS_LSB, 0x80),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TIMER_20US_CORECLK_STEPS_MSB, 0x27),
@@ -1504,37 +1598,48 @@ index 0000000..b406d99
 +		UFS_PHY_TX_HS_UNTERMINATED_LINE_DRIVE_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(
 +		UFS_PHY_TX_LS_TERMINATED_LINE_DRIVE_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_REF_CLOCK_SHARED_CAPABILITY, 0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_REF_CLOCK_SHARED_CAPABILITY,
+0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_TX_HIBERN8TIME_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HSGEAR_CAPABILITY, 0x03),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_PWMGEAR_CAPABILITY, 0x04),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_UNTERMINATED_CAPABILITY, 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_TERMINATED_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_REF_CLOCK_SHARED_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G1_SYNC_LENGTH_CAPABILITY, 0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_REF_CLOCK_SHARED_CAPABILITY,
+0x01),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G1_SYNC_LENGTH_CAPABILITY,
+0x48),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G1_PREPARE_LENGTH_CAPABILITY,
-+									0x0f),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_PREPARE_LENGTH_CAPABILITY, 0x0a),
++
+0x0f),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_LS_PREPARE_LENGTH_CAPABILITY,
+0x0a),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HIBERN8TIME_CAPABILITY, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G2_SYNC_LENGTH_CAPABILITY, 0x48),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G3_SYNC_LENGTH_CAPABILITY, 0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G2_SYNC_LENGTH_CAPABILITY,
+0x48),
++	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G3_SYNC_LENGTH_CAPABILITY,
+0x48),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G2_PREPARE_LENGTH_CAPABILITY,
-+									0x0f),
++
+0x0f),
 +	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_HS_G3_PREPARE_LENGTH_CAPABILITY,
-+									0x0f),
++
+0x0f),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_CLKBUF_ENABLE(0), 0x09),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_RESET_TSYNC_EN(0), 0x01),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_RES_CODE(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_SERDES_BYP_EN_OUT(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_REC_DETECT_LVL(0), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(0), 0x00),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(0),
+0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TRAN_DRVR_EMP_EN(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_CONTROL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_DATA_TCODE(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RCLK_AUXDATA_SEL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_EQ_CONTROL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_IQ_RXDET_EN(0), 0x51),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(0), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(0),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_FREEZE_UP_DN(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_UFS_CNTRL(0), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_EIGHTH(0), 0x22),
@@ -1548,14 +1653,16 @@ index 0000000..b406d99
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_RES_CODE(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_SERDES_BYP_EN_OUT(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_REC_DETECT_LVL(1), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(1), 0x00),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_PARRATE_REC_DETECT_IDLE_EN(1),
+0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_TRAN_DRVR_EMP_EN(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_CONTROL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_AUX_DATA_TCODE(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RCLK_AUXDATA_SEL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_EQ_CONTROL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_IQ_RXDET_EN(1), 0x51),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(1), 0x05),
++	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_TERM_HIGHZ_CM_AC_COUPLE(1),
+0x05),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_FREEZE_UP_DN(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_UFS_CNTRL(1), 0x00),
 +	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_EIGHTH(1), 0x22),
@@ -1768,7 +1875,8 @@ index 0000000..48af90f
 +struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
 +				struct ufs_qcom_phy *common_cfg,
 +				struct phy_ops *ufs_qcom_phy_gen_ops,
-+				struct ufs_qcom_phy_specific_ops *phy_spec_ops)
++				struct ufs_qcom_phy_specific_ops
+*phy_spec_ops)
 +{
 +	int err;
 +	struct device *dev = &pdev->dev;
@@ -1777,21 +1885,26 @@ index 0000000..48af90f
 +
 +	err = ufs_qcom_phy_base_init(pdev, common_cfg);
 +	if (err) {
-+		dev_err(dev, "%s: phy base init failed %d\n", __func__, err);
++		dev_err(dev, "%s: phy base init failed %d\n", __func__,
+err);
 +		goto out;
 +	}
 +
-+	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	phy_provider = devm_of_phy_provider_register(dev,
+of_phy_simple_xlate);
 +	if (IS_ERR(phy_provider)) {
 +		err = PTR_ERR(phy_provider);
-+		dev_err(dev, "%s: failed to register phy %d\n", __func__, err);
++		dev_err(dev, "%s: failed to register phy %d\n", __func__,
+err);
 +		goto out;
 +	}
 +
-+	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops, NULL);
++	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops,
+NULL);
 +	if (IS_ERR(generic_phy)) {
 +		err =  PTR_ERR(generic_phy);
-+		dev_err(dev, "%s: failed to create phy %d\n", __func__, err);
++		dev_err(dev, "%s: failed to create phy %d\n", __func__,
+err);
 +		goto out;
 +	}
 +
@@ -1822,7 +1935,8 @@ index 0000000..48af90f
 +
 +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 +	if (!res) {
-+		dev_err(dev, "%s: platform_get_resource() failed. returned NULL\n",
++		dev_err(dev, "%s: platform_get_resource() failed. returned
+NULL\n",
 +			__func__);
 +		err = -ENOMEM;
 +		goto out;
@@ -1986,12 +2100,14 @@ index 0000000..48af90f
 +		ret = regulator_set_optimum_mode(reg, uA_load);
 +		if (ret >= 0) {
 +			/*
-+			 * regulator_set_optimum_mode() returns new regulator
++			 * regulator_set_optimum_mode() returns new
+regulator
 +			 * mode upon success.
 +			 */
 +			ret = 0;
 +		} else {
-+			dev_err(dev, "%s: %s set optimum mode(uA_load=%d) failed, err=%d\n",
++			dev_err(dev, "%s: %s set optimum mode(uA_load=%d)
+failed, err=%d\n",
 +					__func__, name, uA_load, ret);
 +			goto out;
 +		}
@@ -2143,7 +2259,8 @@ index 0000000..48af90f
 +	ret = clk_prepare_enable(phy->rx_iface_clk);
 +	if (ret) {
 +		clk_disable_unprepare(phy->tx_iface_clk);
-+		dev_err(phy->dev, "%s: rx_iface_clk enable failed %d. disabling also tx_iface_clk\n",
++		dev_err(phy->dev, "%s: rx_iface_clk enable failed %d.
+disabling also tx_iface_clk\n",
 +				__func__, ret);
 +		goto out;
 +	}
@@ -2178,7 +2295,8 @@ index 0000000..48af90f
 +	int ret = 0;
 +
 +	if (!ufs_qcom_phy->phy_spec_ops->start_serdes) {
-+		dev_err(ufs_qcom_phy->dev, "%s: start_serdes() callback is not supported\n",
++		dev_err(ufs_qcom_phy->dev, "%s: start_serdes() callback is
+not supported\n",
 +			__func__);
 +		ret = -ENOTSUPP;
 +	} else {
@@ -2194,7 +2312,8 @@ index 0000000..48af90f
 +	int ret = 0;
 +
 +	if (!ufs_qcom_phy->phy_spec_ops->set_tx_lane_enable) {
-+		dev_err(ufs_qcom_phy->dev, "%s: set_tx_lane_enable() callback is not supported\n",
++		dev_err(ufs_qcom_phy->dev, "%s: set_tx_lane_enable()
+callback is not supported\n",
 +			__func__);
 +		ret = -ENOTSUPP;
 +	} else {
@@ -2221,14 +2340,16 @@ index 0000000..48af90f
 +	int ret = 0;
 +
 +	if (!ufs_qcom_phy->phy_spec_ops->calibrate_phy) {
-+		dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() callback is not supported\n",
++		dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() callback is
+not supported\n",
 +			__func__);
 +		ret = -ENOTSUPP;
 +	} else {
 +		ret = ufs_qcom_phy->phy_spec_ops->
 +				calibrate_phy(ufs_qcom_phy);
 +		if (ret)
-+			dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy() failed %d\n",
++			dev_err(ufs_qcom_phy->dev, "%s: calibrate_phy()
+failed %d\n",
 +				__func__, ret);
 +	}
 +
@@ -2260,8 +2381,10 @@ index 0000000..48af90f
 +{
 +	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
 +
-+	if (!ufs_qcom_phy->phy_spec_ops->is_physical_coding_sublayer_ready) {
-+		dev_err(ufs_qcom_phy->dev, "%s: is_physical_coding_sublayer_ready() callback is not supported\n",
++	if (!ufs_qcom_phy->phy_spec_ops->is_physical_coding_sublayer_ready)
+{
++		dev_err(ufs_qcom_phy->dev, "%s:
+is_physical_coding_sublayer_ready() callback is not supported\n",
 +			__func__);
 +		return -ENOTSUPP;
 +	}
@@ -2276,11 +2399,13 @@ index 0000000..48af90f
 +	int ret = 0;
 +
 +	if (!ufs_qcom_phy->phy_spec_ops->save_configuration) {
-+		dev_err(ufs_qcom_phy->dev, "%s: save_configuration() callback is not supported\n",
++		dev_err(ufs_qcom_phy->dev, "%s: save_configuration()
+callback is not supported\n",
 +			__func__);
 +		ret = -ENOTSUPP;
 +	} else {
-+		ufs_qcom_phy->phy_spec_ops->save_configuration(ufs_qcom_phy);
++
+ufs_qcom_phy->phy_spec_ops->save_configuration(ufs_qcom_phy);
 +	}
 +
 +	return ret;
@@ -2292,11 +2417,13 @@ index 0000000..48af90f
 +	int ret = 0;
 +
 +	if (!ufs_qcom_phy->phy_spec_ops->restore_configuration) {
-+		dev_err(ufs_qcom_phy->dev, "%s: restore_configuration() callback is not supported\n",
++		dev_err(ufs_qcom_phy->dev, "%s: restore_configuration()
+callback is not supported\n",
 +			__func__);
 +		ret = -ENOTSUPP;
 +	} else {
-+		ufs_qcom_phy->phy_spec_ops->restore_configuration(ufs_qcom_phy);
++
+ufs_qcom_phy->phy_spec_ops->restore_configuration(ufs_qcom_phy);
 +	}
 +
 +	return ret;
@@ -2370,7 +2497,8 @@ index 6e07b2a..b7e426e 100644
 +	bool "QCOM specific hooks to UFS controller platform driver"
 +	depends on SCSI_UFSHCD_PLATFORM && ARCH_MSM
 +	help
-+	  This selects the QCOM specific additions to UFSHCD platform driver.
++	  This selects the QCOM specific additions to UFSHCD platform
+driver.
 +	  UFS host on QCOM needs some vendor specific configuration before
 +	  accessing the hardware which includes PHY configuration and vendor
 +	  specific registers.
@@ -2421,14 +2549,16 @@ index 0000000..47e55e8
 +#include <linux/phy/phy-qcom-ufs.h>
 +#include "ufshci.h"
 +
-+static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
++static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32
+*tx_lanes)
 +{
 +	int err = 0;
 +
 +	err = ufshcd_dme_get(hba,
 +			UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), tx_lanes);
 +	if (err)
-+		dev_err(hba->dev, "%s: couldn't read PA_CONNECTEDTXDATALANES %d\n",
++		dev_err(hba->dev, "%s: couldn't read PA_CONNECTEDTXDATALANES
+%d\n",
 +				__func__, err);
 +
 +	return err;
@@ -2459,7 +2589,8 @@ index 0000000..47e55e8
 +
 +	err = clk_prepare_enable(clk);
 +	if (err)
-+		dev_err(dev, "%s: %s enable failed %d\n", __func__, name, err);
++		dev_err(dev, "%s: %s enable failed %d\n", __func__, name,
+err);
 +
 +	return err;
 +}
@@ -2557,7 +2688,8 @@ index 0000000..47e55e8
 +
 +	err = ufs_qcom_phy_set_tx_lane_enable(phy, tx_lanes);
 +	if (err)
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_set_tx_lane_enable failed\n",
++		dev_err(hba->dev, "%s: ufs_qcom_phy_set_tx_lane_enable
+failed\n",
 +			__func__);
 +
 +out:
@@ -2568,7 +2700,8 @@ index 0000000..47e55e8
 +{
 +	int err;
 +	u32 tx_fsm_val = 0;
-+	unsigned long timeout = jiffies + msecs_to_jiffies(HBRN8_POLL_TOUT_MS);
++	unsigned long timeout = jiffies +
+msecs_to_jiffies(HBRN8_POLL_TOUT_MS);
 +
 +	do {
 +		err = ufshcd_dme_get(hba,
@@ -2586,10 +2719,12 @@ index 0000000..47e55e8
 +	 */
 +	if (time_after(jiffies, timeout))
 +		err = ufshcd_dme_get(hba,
-+				UIC_ARG_MIB(MPHY_TX_FSM_STATE), &tx_fsm_val);
++				UIC_ARG_MIB(MPHY_TX_FSM_STATE),
+&tx_fsm_val);
 +
 +	if (err) {
-+		dev_err(hba->dev, "%s: unable to get TX_FSM_STATE, err %d\n",
++		dev_err(hba->dev, "%s: unable to get TX_FSM_STATE, err
+%d\n",
 +				__func__, err);
 +	} else if (tx_fsm_val != TX_FSM_HIBERN8) {
 +		err = tx_fsm_val;
@@ -2617,7 +2752,8 @@ index 0000000..47e55e8
 +	ufs_qcom_phy_save_controller_version(phy, major, minor, step);
 +	ret = ufs_qcom_phy_calibrate_phy(phy);
 +	if (ret) {
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed, ret = %d\n",
++		dev_err(hba->dev, "%s: ufs_qcom_phy_calibrate_phy() failed,
+ret = %d\n",
 +			__func__, ret);
 +		goto out;
 +	}
@@ -2632,14 +2768,16 @@ index 0000000..47e55e8
 +	usleep_range(1000, 1100);
 +	ret = ufs_qcom_phy_start_serdes(phy);
 +	if (ret) {
-+		dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes() failed, ret = %d\n",
++		dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes() failed,
+ret = %d\n",
 +			__func__, ret);
 +		goto out;
 +	}
 +
 +	ret = ufs_qcom_phy_is_pcs_ready(phy);
 +	if (ret)
-+		dev_err(hba->dev, "%s: is_physical_coding_sublayer_ready() failed, ret = %d\n",
++		dev_err(hba->dev, "%s: is_physical_coding_sublayer_ready()
+failed, ret = %d\n",
 +			__func__, ret);
 +
 +out:
@@ -2666,7 +2804,8 @@ index 0000000..47e55e8
 +		err = ufs_qcom_check_hibern8(hba);
 +		break;
 +	default:
-+		dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
++		dev_err(hba->dev, "%s: invalid status %d\n", __func__,
+status);
 +		err = -EINVAL;
 +		break;
 +	}
@@ -2704,7 +2843,8 @@ index 0000000..47e55e8
 +	};
 +
 +	if (gear == 0) {
-+		dev_err(hba->dev, "%s: invalid gear = %d\n", __func__, gear);
++		dev_err(hba->dev, "%s: invalid gear = %d\n", __func__,
+gear);
 +		goto out_error;
 +	}
 +
@@ -2730,7 +2870,8 @@ index 0000000..47e55e8
 +		if (rate == PA_HS_MODE_A) {
 +			if (gear > ARRAY_SIZE(hs_fr_table_rA)) {
 +				dev_err(hba->dev,
-+					"%s: index %d exceeds table size %zu\n",
++					"%s: index %d exceeds table size
+%zu\n",
 +					__func__, gear,
 +					ARRAY_SIZE(hs_fr_table_rA));
 +				goto out_error;
@@ -2739,7 +2880,8 @@ index 0000000..47e55e8
 +		} else if (rate == PA_HS_MODE_B) {
 +			if (gear > ARRAY_SIZE(hs_fr_table_rB)) {
 +				dev_err(hba->dev,
-+					"%s: index %d exceeds table size %zu\n",
++					"%s: index %d exceeds table size
+%zu\n",
 +					__func__, gear,
 +					ARRAY_SIZE(hs_fr_table_rB));
 +				goto out_error;
@@ -2755,7 +2897,8 @@ index 0000000..47e55e8
 +	case SLOW_MODE:
 +		if (gear > ARRAY_SIZE(pwm_fr_table)) {
 +			dev_err(hba->dev,
-+					"%s: index %d exceeds table size %zu\n",
++					"%s: index %d exceeds table size
+%zu\n",
 +					__func__, gear,
 +					ARRAY_SIZE(pwm_fr_table));
 +			goto out_error;
@@ -2770,7 +2913,8 @@ index 0000000..47e55e8
 +
 +	/* this register 2 fields shall be written at once */
 +	ufshcd_writel(hba, core_clk_period_in_ns | tx_clk_cycles_per_us,
-+						REG_UFS_TX_SYMBOL_CLK_NS_US);
++
+REG_UFS_TX_SYMBOL_CLK_NS_US);
 +	goto out;
 +
 +out_error:
@@ -2789,7 +2933,8 @@ index 0000000..47e55e8
 +		core_clk_rate = ufs_qcom_cfg_timers(hba, UFS_PWM_G1,
 +						    SLOWAUTO_MODE, 0);
 +		if (!core_clk_rate) {
-+			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
++			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers()
+failed\n",
 +				__func__);
 +			return -EINVAL;
 +		}
@@ -2835,7 +2980,8 @@ index 0000000..47e55e8
 +		    ufs_qcom_is_link_hibern8(hba)) {
 +			ret = ufs_qcom_phy_save_configuration(phy);
 +			if (ret)
-+				dev_err(hba->dev, "%s: failed ufs_qcom_phy_save_configuration %d\n",
++				dev_err(hba->dev, "%s: failed
+ufs_qcom_phy_save_configuration %d\n",
 +					__func__, ret);
 +		}
 +		phy_power_off(phy);
@@ -2888,21 +3034,24 @@ index 0000000..47e55e8
 +
 +		err = ufs_qcom_phy_start_serdes(phy);
 +		if (err) {
-+			dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes() failed, err = %d\n",
++			dev_err(hba->dev, "%s: ufs_qcom_phy_start_serdes()
+failed, err = %d\n",
 +				__func__, err);
 +			goto out;
 +		}
 +
 +		err = ufs_qcom_phy_restore_configuration(phy);
 +		if (err) {
-+			dev_err(hba->dev, "%s: ufs_qcom_phy_restore_configuration() failed, err = %d\n",
++			dev_err(hba->dev, "%s:
+ufs_qcom_phy_restore_configuration() failed, err = %d\n",
 +				__func__, err);
 +			goto out;
 +		}
 +
 +		err = ufs_qcom_phy_is_pcs_ready(phy);
 +		if (err) {
-+			dev_err(hba->dev, "%s: is_physical_coding_sublayer_ready() failed, err = %d\n",
++			dev_err(hba->dev, "%s:
+is_physical_coding_sublayer_ready() failed, err = %d\n",
 +				__func__, err);
 +			goto out;
 +		}
@@ -2928,7 +3077,8 @@ index 0000000..47e55e8
 +	u32 desired_working_mode;
 +};
 +
-+static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params *qcom_param,
++static int ufs_qcom_get_pwr_dev_param(struct ufs_qcom_dev_params
+*qcom_param,
 +				      struct ufs_pa_layer_attr *dev_max,
 +				      struct ufs_pa_layer_attr *agreed_pwr)
 +{
@@ -2954,7 +3104,8 @@ index 0000000..47e55e8
 +	 * HS, thus device and qcom_param don't agree
 +	 */
 +	if (!is_dev_sup_hs && is_qcom_max_hs) {
-+		pr_err("%s: failed to agree on power mode (device doesn't support HS but requested power is HS)\n",
++		pr_err("%s: failed to agree on power mode (device doesn't
+support HS but requested power is HS)\n",
 +			__func__);
 +		return -ENOTSUPP;
 +	} else if (is_dev_sup_hs && is_qcom_max_hs) {
@@ -2987,15 +3138,19 @@ index 0000000..47e55e8
 +	agreed_pwr->lane_rx = min_t(u32, dev_max->lane_rx,
 +						qcom_param->rx_lanes);
 +
-+	/* device maximum gear is the minimum between device rx and tx gears */
++	/* device maximum gear is the minimum between device rx and tx gears
+*/
 +	min_dev_gear = min_t(u32, dev_max->gear_rx, dev_max->gear_tx);
 +
 +	/*
-+	 * if both device capabilities and vendor pre-defined preferences are
++	 * if both device capabilities and vendor pre-defined preferences
+are
 +	 * both HS or both PWM then set the minimum gear to be the chosen
 +	 * working gear.
-+	 * if one is PWM and one is HS then the one that is PWM get to decide
-+	 * what is the gear, as it is the one that also decided previously what
++	 * if one is PWM and one is HS then the one that is PWM get to
+decide
++	 * what is the gear, as it is the one that also decided previously
+what
 +	 * pwr the device will be configured to.
 +	 */
 +	if ((is_dev_sup_hs && is_qcom_max_hs) ||
@@ -3059,7 +3214,8 @@ index 0000000..47e55e8
 +		if (!ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
 +					dev_req_params->pwr_rx,
 +					dev_req_params->hs_rate)) {
-+			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers() failed\n",
++			dev_err(hba->dev, "%s: ufs_qcom_cfg_timers()
+failed\n",
 +				__func__);
 +			/*
 +			 * we return error code at the end of the routine,
@@ -3072,7 +3228,8 @@ index 0000000..47e55e8
 +		val = ~(MAX_U32 << dev_req_params->lane_tx);
 +		res = ufs_qcom_phy_set_tx_lane_enable(phy, val);
 +		if (res) {
-+			dev_err(hba->dev, "%s: ufs_qcom_phy_set_tx_lane_enable() failed res = %d\n",
++			dev_err(hba->dev, "%s:
+ufs_qcom_phy_set_tx_lane_enable() failed res = %d\n",
 +				__func__, res);
 +			ret = res;
 +		}
@@ -3090,12 +3247,15 @@ index 0000000..47e55e8
 +}
 +
 +/**
-+ * ufs_qcom_advertise_quirks - advertise the known QCOM UFS controller quirks
++ * ufs_qcom_advertise_quirks - advertise the known QCOM UFS controller
+quirks
 + * @hba: host controller instance
 + *
-+ * QCOM UFS host controller might have some non standard behaviours (quirks)
++ * QCOM UFS host controller might have some non standard behaviours
+(quirks)
 + * than what is specified by UFSHCI specification. Advertise all such
-+ * quirks to standard UFS host controller driver so standard takes them into
++ * quirks to standard UFS host controller driver so standard takes them
+into
 + * account.
 + */
 +static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
@@ -3171,7 +3331,8 @@ index 0000000..47e55e8
 +	struct device *dev = hba->dev;
 +	struct ufs_qcom_host *host;
 +
-+	if (strlen(android_boot_dev) && strcmp(android_boot_dev, dev_name(dev)))
++	if (strlen(android_boot_dev) && strcmp(android_boot_dev,
+dev_name(dev)))
 +		return -ENODEV;
 +
 +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
@@ -3770,7 +3931,8 @@ index 955ed55..2a18b8e 100644
  #include <linux/pci.h>
  #include <linux/pm_runtime.h>
  
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c
+b/drivers/scsi/ufs/ufshcd-pltfrm.c
 index 8adf067..d2b0ae6 100644
 --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
 +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
@@ -3937,12 +4099,14 @@ index d502d70..0000000
 -	UIC_LINK_HIBERN8_STATE	= 2, /* Link is in Hibernate state */
 -};
 -
--#define ufshcd_is_link_off(hba) ((hba)->uic_link_state == UIC_LINK_OFF_STATE)
+-#define ufshcd_is_link_off(hba) ((hba)->uic_link_state ==
+UIC_LINK_OFF_STATE)
 -#define ufshcd_is_link_active(hba) ((hba)->uic_link_state == \
 -				    UIC_LINK_ACTIVE_STATE)
 -#define ufshcd_is_link_hibern8(hba) ((hba)->uic_link_state == \
 -				    UIC_LINK_HIBERN8_STATE)
--#define ufshcd_set_link_off(hba) ((hba)->uic_link_state = UIC_LINK_OFF_STATE)
+-#define ufshcd_set_link_off(hba) ((hba)->uic_link_state =
+UIC_LINK_OFF_STATE)
 -#define ufshcd_set_link_active(hba) ((hba)->uic_link_state = \
 -				    UIC_LINK_ACTIVE_STATE)
 -#define ufshcd_set_link_hibern8(hba) ((hba)->uic_link_state = \
@@ -3980,7 +4144,8 @@ index d502d70..0000000
 - * @command_type: SCSI, UFS, Query.
 - * @task_tag: Task tag of the command
 - * @lun: LUN of the command
-- * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+- * @intr_cmd: Interrupt command (doesn't participate in interrupt
+aggregation)
 - */
 -struct ufshcd_lrb {
 -	struct utp_transfer_req_desc *utr_descriptor_ptr;
@@ -4012,7 +4177,8 @@ index d502d70..0000000
 -};
 -
 -/**
-- * struct ufs_dev_cmd - all assosiated fields with device management commands
+- * struct ufs_dev_cmd - all assosiated fields with device management
+commands
 - * @type: device management command type - Query, NOP OUT
 - * @lock: lock to allow one command at a time
 - * @complete: internal commands completion
@@ -4072,9 +4238,11 @@ index d502d70..0000000
 - * @clk_scale_notify: notifies that clks are scaled up/down
 - * @setup_clocks: called before touching any of the controller registers
 - * @setup_regulators: called before accessing the host controller
-- * @hce_enable_notify: called before and after HCE enable bit is set to allow
+- * @hce_enable_notify: called before and after HCE enable bit is set to
+allow
 - *                     variant specific Uni-Pro initialization.
-- * @link_startup_notify: called before and after Link startup is carried out
+- * @link_startup_notify: called before and after Link startup is carried
+out
 - *                       to allow variant specific Uni-Pro initialization.
 - * @pwr_change_notify: called before and after a power mode change
 - *			is carried out to allow vendor spesific capabilities
@@ -4117,7 +4285,8 @@ index d502d70..0000000
 - * @is_suspended: clk gating is suspended when set to 1 which can be used
 - * during suspend/resume
 - * @delay_attr: sysfs attribute to control delay_attr
-- * @active_reqs: number of requests that are pending and should be waited for
+- * @active_reqs: number of requests that are pending and should be waited
+for
 - * completion before gating clocks.
 - */
 -struct ufs_clk_gating {
@@ -4180,7 +4349,8 @@ index d502d70..0000000
 - * @intr_mask: Interrupt Mask Bits
 - * @ee_ctrl_mask: Exception event control mask
 - * @is_powered: flag to check if HBA is powered
-- * @is_init_prefetch: flag to check if data was pre-fetched in initialization
+- * @is_init_prefetch: flag to check if data was pre-fetched in
+initialization
 - * @init_prefetch_data: data pre-fetched during initialization
 - * @eh_work: Worker to handle UFS errors that require s/w attention
 - * @eeh_work: Worker to handle exception events
@@ -4211,7 +4381,8 @@ index d502d70..0000000
 -	struct Scsi_Host *host;
 -	struct device *dev;
 -	/*
--	 * This field is to keep a reference to "scsi_device" corresponding to
+-	 * This field is to keep a reference to "scsi_device" corresponding
+to
 -	 * "UFS device" W-LU.
 -	 */
 -	struct scsi_device *sdev_ufs_device;
@@ -4327,7 +4498,8 @@ index d502d70..0000000
 - * @val - actual value to write
 - * @reg - register address
 - */
--static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+-static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32
+reg)
 -{
 -	u32 tmp;
 -
@@ -4629,7 +4801,8 @@ index 3fc3e21..0000000
 -};
 -
 -#endif /* _UNIPRO_H_ */
-diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
+diff --git a/include/linux/phy/phy-qcom-ufs.h
+b/include/linux/phy/phy-qcom-ufs.h
 new file mode 100644
 index 0000000..f8eeb4c
 --- /dev/null
@@ -4711,8 +4884,10 @@ index 0000000..f8eeb4c
 +	u16 host_ctrl_rev_step;
 +
 +	/*
-+	 * As part of UFS power management, UFS link would be put in hibernate
-+	 * and UFS device would be put in SLEEP mode as part of runtime/system
++	 * As part of UFS power management, UFS link would be put in
+hibernate
++	 * and UFS device would be put in SLEEP mode as part of
+runtime/system
 +	 * suspend callback. But when system goes into suspend with VDD
 +	 * minimization, UFS PHY states are being reset which means UFS link
 +	 * hibernate exit command on system resume would fail.
@@ -4720,7 +4895,8 @@ index 0000000..f8eeb4c
 +	 * the UFS PHY state information before system goes into suspend and
 +	 * restoring the saved state information during system resume but
 +	 * before executing the hibern8 exit command.
-+	 * Note that this quirk will help restoring the PHY state if even when
++	 * Note that this quirk will help restoring the PHY state if even
+when
 +	 * link in not kept in hibern8 during suspend.
 +	 *
 +	 * Here is the list of steps to save/restore the configuration:
@@ -4729,14 +4905,18 @@ index 0000000..f8eeb4c
 +	 *	2. Read RMMI Attributes
 +	 * Enter into system suspend
 +	 * After exiting from system suspend:
-+	 *	1. Set UFS_PHY_SOFT_RESET bit in UFS_CFG1 register of the UFS
++	 *	1. Set UFS_PHY_SOFT_RESET bit in UFS_CFG1 register of the
+UFS
 +	 *	   Controller
-+	 *	2. Write 0x01 to the UFS_PHY_POWER_DOWN_CONTROL register in the
++	 *	2. Write 0x01 to the UFS_PHY_POWER_DOWN_CONTROL register in
+the
 +	 *	   UFS PHY
 +	 *	3. Write back the values of the PHY SWI registers
-+	 *	4. Clear UFS_PHY_SOFT_RESET bit in UFS_CFG1 register of the UFS
++	 *	4. Clear UFS_PHY_SOFT_RESET bit in UFS_CFG1 register of the
+UFS
 +	 *	   Controller
-+	 *	5. Write 0x01 to the UFS_PHY_PHY_START in the UFS PHY. This will
++	 *	5. Write 0x01 to the UFS_PHY_PHY_START in the UFS PHY. This
+will
 +	 *	   start the PLL calibration and bring-up of the PHY.
 +	 *	6. Write back the values to the PHY RMMI Attributes
 +	 *	7. Wait for UFS_PHY_PCS_READY_STATUS[0] to be '1'
@@ -4744,7 +4924,8 @@ index 0000000..f8eeb4c
 +	#define UFS_QCOM_PHY_QUIRK_CFG_RESTORE		(1 << 0)
 +
 +	/*
-+	* If UFS PHY power down is deasserted and power is restored to analog
++	* If UFS PHY power down is deasserted and power is restored to
+analog
 +	* circuits, the rx_sigdet can glitch. If the glitch is wide enough,
 +	* it can trigger the digital logic to think it saw a DIF-N and cause
 +	* it to exit Hibern8. Disabling the rx_sigdet during power-up masks
@@ -4759,7 +4940,8 @@ index 0000000..f8eeb4c
 +	* Enabling this quirk will help to solve above issue by doing
 +	* custom PHY settings just before PHY analog power collapse.
 +	*/
-+	#define UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE	(1 << 2)
++	#define UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE	(1
+<< 2)
 +
 +	char name[UFS_QCOM_PHY_NAME_LEN];
 +	struct ufs_qcom_phy_calibration *cached_regs;
@@ -4769,7 +4951,8 @@ index 0000000..f8eeb4c
 +};
 +
 +/**
-+ * struct ufs_qcom_phy_specific_ops - set of pointers to functions which have a
++ * struct ufs_qcom_phy_specific_ops - set of pointers to functions which
+have a
 + * specific implementation per phy. Each UFS phy, should implement
 + * those functions according to its spec and requirements
 + * @calibrate_phy: pointer to a function that calibrate the phy
@@ -4833,11 +5016,14 @@ index 0000000..f8eeb4c
 +			struct phy_ops *ufs_qcom_phy_gen_ops,
 +			struct ufs_qcom_phy_specific_ops *phy_spec_ops);
 +int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
-+			struct ufs_qcom_phy_calibration *tbl_A, int tbl_size_A,
-+			struct ufs_qcom_phy_calibration *tbl_B, int tbl_size_B,
++			struct ufs_qcom_phy_calibration *tbl_A, int
+tbl_size_A,
++			struct ufs_qcom_phy_calibration *tbl_B, int
+tbl_size_B,
 +			int rate);
 +#endif
-diff --git a/include/linux/scsi/ufs/ufs-qcom.h b/include/linux/scsi/ufs/ufs-qcom.h
+diff --git a/include/linux/scsi/ufs/ufs-qcom.h
+b/include/linux/scsi/ufs/ufs-qcom.h
 new file mode 100644
 index 0000000..d32a3af
 --- /dev/null
@@ -5496,7 +5682,8 @@ index 0000000..42c459a
 +};
 +
 +#endif /* End of Header */
-diff --git a/include/linux/scsi/ufs/ufshcd.h b/include/linux/scsi/ufs/ufshcd.h
+diff --git a/include/linux/scsi/ufs/ufshcd.h
+b/include/linux/scsi/ufs/ufshcd.h
 new file mode 100644
 index 0000000..51304f7
 --- /dev/null
@@ -5575,7 +5762,8 @@ index 0000000..51304f7
 +struct ufs_hba;
 +
 +/**
-+ * readl_poll_timeout - Periodically poll an address until a condition is met or a timeout occurs
++ * readl_poll_timeout - Periodically poll an address until a condition is
+met or a timeout occurs
 + * @addr: Address to poll
 + * @val: Variable to read the value into
 + * @cond: Break condition (usually involving @val)
@@ -5594,7 +5782,8 @@ index 0000000..51304f7
 +		(val) = readl(addr); \
 +		if (cond) \
 +			break; \
-+		if (timeout_us && ktime_compare(ktime_get(), timeout) > 0) { \
++		if (timeout_us && ktime_compare(ktime_get(), timeout) > 0) {
+\
 +			(val) = readl(addr); \
 +			break; \
 +		} \
@@ -5647,12 +5836,14 @@ index 0000000..51304f7
 +	UIC_LINK_HIBERN8_STATE	= 2, /* Link is in Hibernate state */
 +};
 +
-+#define ufshcd_is_link_off(hba) ((hba)->uic_link_state == UIC_LINK_OFF_STATE)
++#define ufshcd_is_link_off(hba) ((hba)->uic_link_state ==
+UIC_LINK_OFF_STATE)
 +#define ufshcd_is_link_active(hba) ((hba)->uic_link_state == \
 +				    UIC_LINK_ACTIVE_STATE)
 +#define ufshcd_is_link_hibern8(hba) ((hba)->uic_link_state == \
 +				    UIC_LINK_HIBERN8_STATE)
-+#define ufshcd_set_link_off(hba) ((hba)->uic_link_state = UIC_LINK_OFF_STATE)
++#define ufshcd_set_link_off(hba) ((hba)->uic_link_state =
+UIC_LINK_OFF_STATE)
 +#define ufshcd_set_link_active(hba) ((hba)->uic_link_state = \
 +				    UIC_LINK_ACTIVE_STATE)
 +#define ufshcd_set_link_hibern8(hba) ((hba)->uic_link_state = \
@@ -5690,7 +5881,8 @@ index 0000000..51304f7
 + * @command_type: SCSI, UFS, Query.
 + * @task_tag: Task tag of the command
 + * @lun: LUN of the command
-+ * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
++ * @intr_cmd: Interrupt command (doesn't participate in interrupt
+aggregation)
 + */
 +struct ufshcd_lrb {
 +	struct utp_transfer_req_desc *utr_descriptor_ptr;
@@ -5722,7 +5914,8 @@ index 0000000..51304f7
 +};
 +
 +/**
-+ * struct ufs_dev_cmd - all assosiated fields with device management commands
++ * struct ufs_dev_cmd - all assosiated fields with device management
+commands
 + * @type: device management command type - Query, NOP OUT
 + * @lock: lock to allow one command at a time
 + * @complete: internal commands completion
@@ -5782,9 +5975,11 @@ index 0000000..51304f7
 + * @clk_scale_notify: notifies that clks are scaled up/down
 + * @setup_clocks: called before touching any of the controller registers
 + * @setup_regulators: called before accessing the host controller
-+ * @hce_enable_notify: called before and after HCE enable bit is set to allow
++ * @hce_enable_notify: called before and after HCE enable bit is set to
+allow
 + *                     variant specific Uni-Pro initialization.
-+ * @link_startup_notify: called before and after Link startup is carried out
++ * @link_startup_notify: called before and after Link startup is carried
+out
 + *                       to allow variant specific Uni-Pro initialization.
 + * @pwr_change_notify: called before and after a power mode change
 + *			is carried out to allow vendor spesific capabilities
@@ -5827,7 +6022,8 @@ index 0000000..51304f7
 + * @is_suspended: clk gating is suspended when set to 1 which can be used
 + * during suspend/resume
 + * @delay_attr: sysfs attribute to control delay_attr
-+ * @active_reqs: number of requests that are pending and should be waited for
++ * @active_reqs: number of requests that are pending and should be waited
+for
 + * completion before gating clocks.
 + */
 +struct ufs_clk_gating {
@@ -5890,7 +6086,8 @@ index 0000000..51304f7
 + * @intr_mask: Interrupt Mask Bits
 + * @ee_ctrl_mask: Exception event control mask
 + * @is_powered: flag to check if HBA is powered
-+ * @is_init_prefetch: flag to check if data was pre-fetched in initialization
++ * @is_init_prefetch: flag to check if data was pre-fetched in
+initialization
 + * @init_prefetch_data: data pre-fetched during initialization
 + * @eh_work: Worker to handle UFS errors that require s/w attention
 + * @eeh_work: Worker to handle exception events
@@ -5921,7 +6118,8 @@ index 0000000..51304f7
 +	struct Scsi_Host *host;
 +	struct device *dev;
 +	/*
-+	 * This field is to keep a reference to "scsi_device" corresponding to
++	 * This field is to keep a reference to "scsi_device" corresponding
+to
 +	 * "UFS device" W-LU.
 +	 */
 +	struct scsi_device *sdev_ufs_device;
@@ -6063,7 +6261,8 @@ index 0000000..51304f7
 + * @val - actual value to write
 + * @reg - register address
 + */
-+static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
++static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32
+reg)
 +{
 +	u32 tmp;
 +
@@ -6137,7 +6336,8 @@ index 0000000..51304f7
 +int ufshcd_hold(struct ufs_hba *hba, bool async);
 +void ufshcd_release(struct ufs_hba *hba);
 +#endif /* End of Header */
-diff --git a/include/linux/scsi/ufs/unipro.h b/include/linux/scsi/ufs/unipro.h
+diff --git a/include/linux/scsi/ufs/unipro.h
+b/include/linux/scsi/ufs/unipro.h
 new file mode 100644
 index 0000000..3fc3e21
 --- /dev/null
@@ -6353,7 +6553,9 @@ index 0000000..3fc3e21
 -- 
 1.8.5.2
 --
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
 --
 To unsubscribe from this list: send the line "unsubscribe devicetree" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
