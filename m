@@ -1,31 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi-mq: fix hw queue hang caused by timeout
-Date: Thu, 18 Sep 2014 18:35:49 +0200
-Message-ID: <20140918163549.GB3950@lst.de>
-References: <1411055950-28657-1-git-send-email-ming.lei@canonical.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Drivers: scsi: storvsc: Get rid of warning messages
+Date: Thu, 18 Sep 2014 09:43:24 -0700
+Message-ID: <20140918164324.GA12287@infradead.org>
+References: <1409701396-20226-1-git-send-email-kys@microsoft.com>
+ <20140905054014.GA11595@infradead.org>
+ <155acb7b8a3d4532aaa280e44f62447f@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <20140917073324.GB23716@suse.com>
+ <20140917232309.GA4554@infradead.org>
+ <20140918115017.GA20884@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <1411055950-28657-1-git-send-email-ming.lei@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>
-Cc: James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@fb.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20140918115017.GA20884@suse.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Olaf Hering <ohering@suse.com>
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 18, 2014 at 11:59:10PM +0800, Ming Lei wrote:
-> If there are two requests or more timed out, the dispatch queue
-> is put into stopped state and never be recoverd, and there
-> is no such problem in non-mq mode.
+On Thu, Sep 18, 2014 at 01:50:17PM +0200, Olaf Hering wrote:
+> On Wed, Sep 17, Christoph Hellwig wrote:
 > 
-> This patch trys to recover the stopped queue when the queue
-> becomes unbusy, then the following retries can move on.
+> > Also the two patches at
+> > http://thread.gmane.org/gmane.linux.drivers.driver-project.devel/56242/
 > 
-> Basically this patch maintains same behavior for this situation
-> with non-mq mode.
+> Wasnt the outcome that this was a bad idea? Or at least doing it
+> globally is bad. In any case, its not something I can help with.
 
-This looks somewhat similar to the issues that Doug reported, and I remember
-when he was last running into boot problems it was timeout related, too.
-
-As far as the implementation is concerned I think the correct fix is
-to clear the BLK_MQ_S_STOPPED queue flags in blk_mq_kick_requeue_list.
+The outcome was that we don't want to do it globally, but it does make
+sense for the hyperv case.
