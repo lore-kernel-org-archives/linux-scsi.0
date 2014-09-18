@@ -1,110 +1,86 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH V3 01/16] scsi: support well known logical units
-Date: Thu, 18 Sep 2014 12:12:22 -0700
-Message-ID: <000301cfd374$7a1afd90$6e50f8b0$@codeaurora.org>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org> <1410350063-23267-2-git-send-email-draviv@codeaurora.org> <20140910185839.GA26364@infradead.org> <000f01cfce22$446f79c0$cd4e6d40$@codeaurora.org> <20140913185431.GB30010@infradead.org> <000401cfd364$8fa0bca0$aee235e0$@codeaurora.org>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCHv3 0/8] target: Save memory on unused se_dev_entrys and
+ se_luns
+Date: Thu, 18 Sep 2014 15:54:19 -0700
+Message-ID: <541B629B.6090406@redhat.com>
+References: <1404171587-28845-1-git-send-email-agrover@redhat.com>	 <20140729131511.GA30232@lst.de> <20140913195557.GA32118@lst.de> <1411025936.13381.183.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <000401cfd364$8fa0bca0$aee235e0$@codeaurora.org>
-Content-Language: en-us
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1411025936.13381.183.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Chris,
+On 09/18/2014 12:38 AM, Nicholas A. Bellinger wrote:
+> On Sat, 2014-09-13 at 21:55 +0200, Christoph Hellwig wrote:
+>> ping again.  We're getting closer to the end of the 3.18 merge window
+>> and there still hasn't been a response.  Should Andy just send the patches
+>> directly to Linus once 3.18 opens given that they have been out on the list
+>> since Jun 23? (with a positive review from me and no negative one)
 
-While testing with another vendor's UFS devices, I realized that SELECT
-REPORT need not to be set to 0x02 for making the device report the W-LUs.
-Even when SELECT REPORT is set 0x00, this particular UFS device reports the
-W-LUs so I looked at the SCSI specification in details and it seems ideally
-device should report all the well-known logical units (as it follows the
-extended logical unit addressing format) when SELECT REPORT is set 0x00.
-Which means one vendor's UFS devices are following SCSI spec for W-LUs
-reporting while another vendor's UFS devices don't.
+> Removing unused per WWPN endpoint LUN + per NodeACL MappedLUN memory is
+> a nice optimization to have, but I'm not yet convinced that extending
+> existing control path spinlocks to support an array of pointers is
+> ultimately worth the complexity it adds here.
 
-I have reported violation of spec to this other vendor and have also asked
-them to fix it. Until they fix their non-standard behavior, we can
-workaround their behavior using the device specific quirks in UFS driver
-itself.
+9 files changed, 250 insertions(+), 367 deletions(-).
 
-For now in this patch, we will skip modifying SELECT REPORT field but we
-would still require the other part of this patch for fixing the scsi_device
-type to wlun (sdev->type = TYPE_WLUN). Hence we will change the commit text
-accordingly to reflect the exact purpose of the change.
+This patchset removes 100+ lines of code. Furthermore, I wouldn't 
+characterize it as extending locks, so much as putting locks where they 
+should've always been. The fact that device_list[foo] is never null 
+means we've avoided crashes but not potentially incorrect accesses.
 
-Regards,
-Subhash
+> Another concern is how these changes effect active session + device I/O
+> shutdown, which is an area of regressions I'd rather avoid
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Subhash Jadavani
-Sent: Thursday, September 18, 2014 10:18 AM
-To: 'Christoph Hellwig'
-Cc: 'Dolev Raviv'; James.Bottomley@HansenPartnership.com;
-linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org;
-linux-arm-msm@vger.kernel.org; santoshsy@gmail.com; 'Sujit Reddy Thumma';
-'Martin K. Petersen'
-Subject: RE: [PATCH V3 01/16] scsi: support well known logical units
+I assume this set would spend time in your tree, followed by Linus' tree 
+before making it into a release. Also, any logic errors are likely to 
+result in a fault, so they should not remain hidden for long.
 
-> If those are the only LUs you specificly need I'd suggest you just
-manually call scsi_add_device from your driver for those instead of listing
-them in REPORT_LUNS and making them part of the normal LUN scan. 
+> if the
+> primary benefit of this series is only reducing memory footprint for
+> unused LUNs + MappedLUNs.
 
-Yes, we can do that but not sure what would be advantage of making the LLDs
-to add these ad-hoc hooks instead of scsi_scan handle it on its own and
-leaving the LLDs from adding them explicitly? Do you foresee any issues
-(other than few extra scsi_device instances which may not be useful all scsi
-devices) with scsi_scan scanning all the LUs (including well known LUs)?
+Yes it does reduce wasted memory, that should be reason enough I'd say. 
+But this patchset is also a building block for further improvements that 
+are more significant. This set transitions all lun and mappedlun checks 
+from checking a flag to checking for NULL. This is necessary before we 
+can improve from a fixed-size array to more size-scalable data 
+structures like a radix tree, or lockless, with RCU.
 
-Regards,
-Subhash
+>  Lowering the TRANSPORT_MAX_LUNS_PER_TPG value
+> at compile time today is the simple way for reducing overall memory
+> footprint for folks who need to scale up the number of targets using
+> smaller individual LUN mappings.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 'Christoph Hellwig'
-Sent: Saturday, September 13, 2014 11:55 AM
-To: Subhash Jadavani
-Cc: 'Christoph Hellwig'; 'Dolev Raviv';
-James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org;
-linux-scsi-owner@vger.kernel.org; linux-arm-msm@vger.kernel.org;
-santoshsy@gmail.com; 'Sujit Reddy Thumma'; 'Martin K. Petersen'
-Subject: Re: [PATCH V3 01/16] scsi: support well known logical units
+This is only an option for embedded. We should scale the amount of 
+memory we use with the number of allocated LUNs and mapped LUNs.
 
-On Thu, Sep 11, 2014 at 05:41:18PM -0700, Subhash Jadavani wrote:
-> 
-> UFS device has supports 4 different well known logical units:
-"REPORT_LUNS"
-> (address: 01h), "UFS Device" (address: 50h), "RPMB" (address: 44h) and 
-> "BOOT" (address: 30h).
-> 
-> UFS device's power management needs to be controlled by "POWER CONDITION"
-> field of SSU (START STOP UNIT) command. But this "power condition"  
-> field will take effect only when its sent to "UFS device" well known 
-> logical unit
-> (address: 50h) hence we require the scsi_device instance to represent 
-> this logical unit in order for the UFS host driver to send the SSU 
-> command for power management.
-> 
-> We also require the scsi_device instance for "RPMB" (Replay Protected 
-> Memory
-> Block) LU so user space process can control this LU.
+> As for something smarter, given the mostly read-only nature of LUN +
+> MappedLUN pointers to individual TPGT + NodeACLs context, I'd rather see
+> something based on RCU arrays + percpu_ref counting to avoid this type
+> of complexity to existing code, and move in the direction of dropping
+> fast-path I_T ->device_list_lock access all together.
 
-If those are the only LUs you specificly need I'd suggest you just manually
-call scsi_add_device from your driver for those instead of listing them in
-REPORT_LUNS and making them part of the normal LUN scan.  One advantage of
-the well known LUNs is that you always know where in the LUN namespace they
-are :)
+See above about pointers vs flags, this is a first step toward more 
+performant *and* space-efficient data structures.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+> Beyond these objections, there are some useful fixes + cleanups from
+> this series that I'm OK with merging soon..
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+I've pushed this patchset to
+
+git://git.kernel.org/pub/scm/linux/kernel/git/grover/linux.git
+
+on two branches against your and Linus' repos:
+against-linus
+against-target-pending-for-next
+
+(looked-over and compile-tested)
+
+For your convenience.
+
+Regards -- Andy
