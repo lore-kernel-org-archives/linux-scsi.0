@@ -1,113 +1,117 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCHv3 0/8] target: Save memory on unused se_dev_entrys and
- se_luns
-Date: Thu, 18 Sep 2014 16:17:38 -0700
-Message-ID: <1411082258.28382.17.camel@haakon3.risingtidesystems.com>
-References: <1404171587-28845-1-git-send-email-agrover@redhat.com>
-	 <20140729131511.GA30232@lst.de> <20140913195557.GA32118@lst.de>
-	 <1411025936.13381.183.camel@haakon3.risingtidesystems.com>
-	 <541B629B.6090406@redhat.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 20/22] scsi: align logging messages
+Date: Thu, 18 Sep 2014 23:58:18 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C8BDA3@G9W0745.americas.hpqcorp.net>
+References: <1409247216-76074-1-git-send-email-hare@suse.de>
+ <1409247216-76074-21-git-send-email-hare@suse.de>
+ <20140831222556.GL16432@infradead.org>
+ <94D0CD8314A33A4D9D801C0FE68B402958C2F65E@G9W0745.americas.hpqcorp.net>
+ <20140906003403.GB18426@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <541B629B.6090406@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:47280 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029AbaISAA1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Sep 2014 20:00:27 -0400
+In-Reply-To: <20140906003403.GB18426@infradead.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
-On Thu, 2014-09-18 at 15:54 -0700, Andy Grover wrote:
-> On 09/18/2014 12:38 AM, Nicholas A. Bellinger wrote:
-> > On Sat, 2014-09-13 at 21:55 +0200, Christoph Hellwig wrote:
-> >> ping again.  We're getting closer to the end of the 3.18 merge window
-> >> and there still hasn't been a response.  Should Andy just send the patches
-> >> directly to Linus once 3.18 opens given that they have been out on the list
-> >> since Jun 23? (with a positive review from me and no negative one)
-> 
-> > Removing unused per WWPN endpoint LUN + per NodeACL MappedLUN memory is
-> > a nice optimization to have, but I'm not yet convinced that extending
-> > existing control path spinlocks to support an array of pointers is
-> > ultimately worth the complexity it adds here.
-> 
-> 9 files changed, 250 insertions(+), 367 deletions(-).
-> 
-> This patchset removes 100+ lines of code. Furthermore, I wouldn't 
-> characterize it as extending locks, so much as putting locks where they 
-> should've always been. The fact that device_list[foo] is never null 
-> means we've avoided crashes but not potentially incorrect accesses.
-> 
 
-It's the extending of locks over other locks that make aspects of this
-series problematic to existing code.  Please run them with lock
-debugging on and perform a few active I/O shutdowns and you'll see what
-I mean.
 
-Not to mention the patches with the locking changes mix cleanups with
-bug-fixes, which I really dislike when reviewing patches of this nature.
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+...
+> > scmd ties the messages together so you can tell which command
+> > has gotten to which state.  grep works.
+> 
+> Can we just print the tag instead, that would be a much more human
+> readable number normally.
 
-> > Another concern is how these changes effect active session + device I/O
-> > shutdown, which is an area of regressions I'd rather avoid
-> 
-> I assume this set would spend time in your tree, followed by Linus' tree 
-> before making it into a release. Also, any logic errors are likely to 
-> result in a fault, so they should not remain hidden for long.
-> 
-> > if the
-> > primary benefit of this series is only reducing memory footprint for
-> > unused LUNs + MappedLUNs.
-> 
-> Yes it does reduce wasted memory, that should be reason enough I'd say. 
-> But this patchset is also a building block for further improvements that 
-> are more significant. This set transitions all lun and mappedlun checks 
-> from checking a flag to checking for NULL. This is necessary before we 
-> can improve from a fixed-size array to more size-scalable data 
-> structures like a radix tree, or lockless, with RCU.
+I made a local patch to add the tag (scmd->request->tag), and it does
+look good.  I endorse dropping scmd %p in favor of just the tag,
+and trying to include the tag in all the lines (here, the Done,
+Result, CDB, Sense Key, and Add. Sense lines do not)
 
-Like I said, I don't agree this is the best way to get to something
-smarter.
+[  624.607501] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.609121] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.611542] sd 2:0:0:3: [sdv] CDB: 28 00 43 03 24 98 00 00 08 00
+[  624.613637] sd 2:0:0:3: [sdv] scmd ffff880420891470 tag 1 abort scheduled
+[  624.616015] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.617510] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.619792] sd 2:0:0:3: [sdv] CDB: 28 00 52 83 20 80 00 00 08 00
+[  624.621855] sd 2:0:0:3: [sdv] scmd ffff880420893a70 tag 3 abort scheduled
+[  624.624148] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.625739] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.628062] sd 2:0:0:3: [sdv] CDB: 28 00 58 a4 64 70 00 00 08 00
+[  624.630132] sd 2:0:0:3: [sdv] scmd ffff880420894d70 tag 4 abort scheduled
+[  624.632477] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.633913] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.636291] sd 2:0:0:3: [sdv] CDB: 28 00 16 90 5c 98 00 00 08 00
+[  624.638378] sd 2:0:0:3: [sdv] scmd ffff880420899970 tag 8 abort scheduled
+...
+[  624.780177] sd 2:0:0:3: [sdv] scmd ffff880420976070 tag 161 abort scheduled
+[  624.782661] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.784092] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.786553] sd 2:0:0:3: [sdv] CDB: 28 00 1e dc 59 e0 00 00 08 00
+[  624.788617] sd 2:0:0:3: [sdv] scmd ffff880420977370 tag 162 abort scheduled
+[  624.790995] sd 2:0:0:3: [sdv] Done: TIMEOUT
+[  624.792443] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.794835] sd 2:0:0:3: [sdv] CDB: 28 00 1e 83 1f b8 00 00 08 00
+[  624.796965] sd 2:0:0:3: [sdv] scmd ffff88042099ac70 tag 191 abort scheduled 
 
-> 
-> >  Lowering the TRANSPORT_MAX_LUNS_PER_TPG value
-> > at compile time today is the simple way for reducing overall memory
-> > footprint for folks who need to scale up the number of targets using
-> > smaller individual LUN mappings.
-> 
-> This is only an option for embedded. We should scale the amount of 
-> memory we use with the number of allocated LUNs and mapped LUNs.
-> 
-> > As for something smarter, given the mostly read-only nature of LUN +
-> > MappedLUN pointers to individual TPGT + NodeACLs context, I'd rather see
-> > something based on RCU arrays + percpu_ref counting to avoid this type
-> > of complexity to existing code, and move in the direction of dropping
-> > fast-path I_T ->device_list_lock access all together.
-> 
-> See above about pointers vs flags, this is a first step toward more 
-> performant *and* space-efficient data structures.
-> 
-> > Beyond these objections, there are some useful fixes + cleanups from
-> > this series that I'm OK with merging soon..
-> 
-> I've pushed this patchset to
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/grover/linux.git
-> 
-> on two branches against your and Linus' repos:
-> against-linus
-> against-target-pending-for-next
-> 
-> (looked-over and compile-tested)
-> 
+[  624.799433] sd 2:0:0:3: [sdv] aborting scmd ffff880420891470 tag 1
+[  624.801601] sd 2:0:0:3: [sdv] scmd ffff880420891470 tag 1 abort failed, rtn FAILED
+[  624.804172] sd 2:0:0:3: [sdv] aborting scmd ffff880420893a70 tag 3
+[  624.806417] sd 2:0:0:3: [sdv] scmd ffff880420893a70 tag 3 abort failed, rtn FAILED
+[  624.808980] sd 2:0:0:3: [sdv] aborting scmd ffff880420894d70 tag 4
+[  624.811086] sd 2:0:0:3: [sdv] scmd ffff880420894d70 tag 4 abort failed, rtn FAILED
+[  624.813776] sd 2:0:0:3: [sdv] aborting scmd ffff880420899970 tag 8
+[  624.815978] sd 2:0:0:3: [sdv] scmd ffff880420899970 tag 8 abort failed, rtn FAILED
+[  624.818653] sd 2:0:0:3: [sdv] aborting scmd ffff88042089ac70 tag 9
+...
+[  624.852244] sd 2:0:0:3: [sdv] scmd ffff880420976070 tag 161 abort failed, rtn FAILED
+[  624.855200] sd 2:0:0:3: [sdv] aborting scmd ffff880420977370 tag 162
+[  624.857380] sd 2:0:0:3: [sdv] scmd ffff880420977370 tag 162 abort failed, rtn FAILED
+[  624.860057] sd 2:0:0:3: [sdv] aborting scmd ffff88042099ac70 tag 191
+[  624.862250] sd 2:0:0:3: [sdv] scmd ffff88042099ac70 tag 191 abort failed, rtn FAILED 
 
-I'm currently reviewing #2, #4, #5 and #7 and will consider merging
-these.  These cleanups account for most of the LOC reduction, and avoid
-most of the larger concerns.
+[  624.865174] scsi host2: scsi_eh_2: waking up 0/11/11
+[  624.866977] sd 2:0:0:3: scsi_eh_prt_fail_stats: cmds failed: 11, cancel: 0
+[  624.869276] scsi host2: Total of 11 commands on 1 devices require eh work
+[  624.871683] scsi host2: scsi_eh_2: Sending BDR sdev:ffff88042b162800
+[  624.974058] hpsa 0000:04:00.0: resetting scsi 2:0:0:3: Direct-Access     HP       LOGICAL VOLUME   RAID-6 SSDSmartPathCap+ En- Exp=3
+[  624.978450] sd 2:0:0:3: [sdv] scsi_eh_done scmd ffff880420891470 tag 1 result: 2
+[  624.981114] sd 2:0:0:3: [sdv] Done: SUCCESS
+[  624.982719] sd 2:0:0:3: [sdv] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[  624.985083] sd 2:0:0:3: [sdv] CDB: 00 00 00 00 00 00
+[  624.986874] sd 2:0:0:3: [sdv] Sense Key : Unit Attention [current]
+[  624.988997] sd 2:0:0:3: [sdv] Add. Sense: Bus device reset function occurred ((null)3)
 
-Also for patches like this, they really need testing on your end before
-I'll consider them merging.  Compile testing alone for these types of
-locking changes is not enough, given the history of regressions with
-these types of cleanups.
+[  624.991727] sd 2:0:0:3: [sdv] scsi_send_eh_cmnd: scmd ffff880420891470 tag 1 timeleft: 9998
+[  624.994927] sd 2:0:0:3: [sdv] scsi_send_eh_cmnd: scsi_eh_completed_normally rtn 2001
+[  624.997560] sd 2:0:0:3: [sdv] scsi_eh_tur: scmd ffff880420891470 tag 1 rtn 2001
+[  625.001243] sd 2:0:0:3: [sdv] scsi_eh_done scmd ffff880420891470 tag 1 result: 0
+[  625.003856] sd 2:0:0:3: [sdv] scsi_send_eh_cmnd: scmd ffff880420891470 tag 1 timeleft: 9997
+[  625.006864] sd 2:0:0:3: [sdv] scsi_send_eh_cmnd: scsi_eh_completed_normally rtn 2002
+[  625.009481] sd 2:0:0:3: [sdv] scsi_eh_tur: scmd ffff880420891470 tag 1 rtn 2002
+[  625.011971] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420891470 tag 1
+[  625.014925] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420893a70 tag 3
+[  625.017444] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420894d70 tag 4
+[  625.019984] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420899970 tag 8
+...
+[  625.032918] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420976070 tag 161
+[  625.035539] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff880420977370 tag 162
+[  625.138124] sd 2:0:0:3: [sdv] scsi_eh_2: flush retry scmd ffff88042099ac70 tag 191
 
-Thanks,
 
---nab
+---
+Rob Elliott    HP Server Storage
+
+
+
