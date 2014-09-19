@@ -1,62 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 20/22] scsi: align logging messages
-Date: Fri, 19 Sep 2014 13:56:24 +0200
-Message-ID: <541C19E8.1050105@suse.de>
-References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-21-git-send-email-hare@suse.de> <20140831222556.GL16432@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402958C2F65E@G9W0745.americas.hpqcorp.net> <20140906003403.GB18426@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402958C8BDA3@G9W0745.americas.hpqcorp.net> <541BCC95.1010901@suse.de> <20140919113500.GA29869@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH RFC 0/8] IB/srp: Add multichannel support
+Date: Fri, 19 Sep 2014 14:55:27 +0200
+Message-ID: <541C27BF.6070609@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49447 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbaISL42 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Sep 2014 07:56:28 -0400
-In-Reply-To: <20140919113500.GA29869@infradead.org>
+Received: from xavier.telenet-ops.be ([195.130.132.52]:46467 "EHLO
+	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbaISMze (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Sep 2014 08:55:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: linux-rdma <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>
 
-On 09/19/2014 01:35 PM, Christoph Hellwig wrote:
-> On Fri, Sep 19, 2014 at 08:26:29AM +0200, Hannes Reinecke wrote:
->> I would rather use 'scmd->tag', as this should be a straight copy
->> of scmd->request->tag, but we wouldn't need to reference the request
->> when doing so.
->
-> Yes, for now scmd->tag is correct as drivers might not be using the
-> block level tagging.  Once we get rid of the legacy request path I
-> plan to entirely remove scmd->tag, though.
->
->> But yeah, I was planning on doing the same, only I'd rather include
->> it right a the start like
->>
->> sd 2:0:0:3 [sdv] tag#1: abort scheduled
->
-> Sounds fine.
->
->> and print out a mapping when I/O is submitted
->>
->> sd 2:0:0:3 [sdv] tag#1: scmd 0xffff880420891470
->
-> I don't really see a need for that.
->
-That's mainly for debugging; it gives you a nice starting point
-for debugging crash dumps.
-Otherwise it's really hard to get to the actual commands.
+Hello,
 
-Unless you have a better idea ...
+Although the SRP protocol supports multichannel operation, although 
+since considerable time RDMA HCA's are available that support multiple 
+completion vectors and although multichannel operation yields better 
+performance than using a single channel, the Linux SRP initiator does 
+not yet support multichannel operation. While adding multichannel 
+support in the SRP initiator I encountered a few challenges of which I 
+think these need wider discussion. The topics I would like invite wider 
+discussion about are as follows:
+- How to avoid unneeded inter-socket cache traffic. Should the blk-mq
+   layer e.g. assign CPU cores to hardware queues such that all CPU cores
+   associated with a single hardware queue reside on the same CPU socket?
+   (see also patch 1/8)
+- How to pass the hardware context selected by the block layer to the
+   SCSI LLD queuecommand() callback function ? (see also patches 2/8 and
+   3/8).
+- Which approach should a SCSI LLD follow for selection of an MSI-X
+   completion vector to ensure that the interrupt handler is invoked on
+   the same CPU socket as the blk-mq hardware context data structures ?
+   As one can see patch 8/8 relies on the assumption that completion
+   vectors have been spread evenly over CPU sockets. If a HCA e.g.
+   supports eight completion vectors then that means that in a system
+   with two CPU sockets vectors 0-3 are associated with a CPU core on
+   the first CPU socket and vectors 4-7 with a CPU core on the second CPU
+   socket.
 
-Cheers,
+The patches in this series are:
+0001-blk-mq-Use-all-available-hardware-queues.patch
+0002-scsi-mq-Add-support-for-multiple-hardware-queues.patch
+0003-scsi-mq-Pass-hctx-to-low-level-SCSI-drivers.patch
+0004-IB-srp-Move-ib_destroy_cm_id-call-into-srp_free_ch_i.patch
+0005-IB-srp-Remove-stale-connection-retry-mechanism.patch
+0006-IB-srp-Avoid-that-I-O-hangs-due-to-a-cable-pull-duri.patch
+0007-IB-srp-Separate-target-and-channel-variables.patch
+0008-IB-srp-Add-multichannel-support.patch
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note: a predecessor of this patch series has been used to measure the 
+performance of Christoph's scsi-mq patches that have been merged in 
+kernel version v3.17-rc1.
