@@ -1,65 +1,76 @@
 From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH 2/8] scsi-mq: Add support for multiple hardware queues
-Date: Fri, 19 Sep 2014 21:05:53 +0300
-Message-ID: <CAF9gx6JfP2bGyMauB6LzepZP_vKEvrd-sPZc5CRuOrtgQ_UCSw@mail.gmail.com>
+Subject: Re: [PATCH 4/8] IB/srp: Move ib_destroy_cm_id() call into srp_free_ch_ib()
+Date: Fri, 19 Sep 2014 21:10:07 +0300
+Message-ID: <CAF9gx6JNKzq9EhppbGfAcZuXj=LD2TXCzU=+QtueDp8+EO+oyg@mail.gmail.com>
 References: <541C27BF.6070609@acm.org>
-	<541C281E.9090206@acm.org>
+	<541C285B.5010309@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <541C281E.9090206-HInyCGIudOg@public.gmane.org>
+In-Reply-To: <541C285B.5010309-HInyCGIudOg@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/19/2014 3:57 PM, Bart Van Assche wrote:
-> Allow a SCSI LLD to declare how many hardware queues it supports
-> by setting Scsi_Host.nr_hw_queues before calling scsi_add_host().
->
-> Note: it is assumed that each hardware queue has a queue depth of
-> shost->can_queue. In other words, the total queue depth per host
-> is (number of hardware queues) * (shost->can_queue).
+On 9/19/2014 3:58 PM, Bart Van Assche wrote:
+> The patch that adds multichannel support into the SRP initiator
+> driver introduces an additional call to srp_free_ch_ib(). This
+> patch helps to keep that later patch simple.
 >
 > Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-> Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->   drivers/scsi/scsi_lib.c  | 2 +-
->   include/scsi/scsi_host.h | 4 ++++
->   2 files changed, 5 insertions(+), 1 deletion(-)
+>   drivers/infiniband/ulp/srp/ib_srp.c | 11 ++++++-----
+>   1 file changed, 6 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index d837dc1..b0b6117 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2071,7 +2071,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index 62d2a18..d3c712f 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -555,6 +555,11 @@ static void srp_free_target_ib(struct srp_target_port *target)
+>   struct srp_device *dev = target->srp_host->srp_dev;
+>   int i;
 >
->   memset(&shost->tag_set, 0, sizeof(shost->tag_set));
->   shost->tag_set.ops = &scsi_mq_ops;
-> - shost->tag_set.nr_hw_queues = 1;
-> + shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
->   shost->tag_set.queue_depth = shost->can_queue;
->   shost->tag_set.cmd_size = cmd_size;
->   shost->tag_set.numa_node = NUMA_NO_NODE;
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index ba20347..0a867d9 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -638,6 +638,10 @@ struct Scsi_Host {
->   short unsigned int sg_prot_tablesize;
->   unsigned int max_sectors;
->   unsigned long dma_boundary;
-> + /*
-> + * In scsi-mq mode, the number of hardware queues supported by the LLD.
-> + */
-> + unsigned nr_hw_queues;
->   /*
->   * Used to assign serial numbers to the cmds.
->   * Protected by the host lock.
+> + if (target->cm_id) {
+> + ib_destroy_cm_id(target->cm_id);
+> + target->cm_id = NULL;
+> + }
+> +
+>   if (dev->use_fast_reg) {
+>   if (target->fr_pool)
+>   srp_destroy_fr_pool(target->fr_pool);
+> @@ -868,7 +873,6 @@ static void srp_remove_target(struct srp_target_port *target)
+>   scsi_remove_host(target->scsi_host);
+>   srp_stop_rport_timers(target->rport);
+>   srp_disconnect_target(target);
+> - ib_destroy_cm_id(target->cm_id);
+>   srp_free_target_ib(target);
+>   cancel_work_sync(&target->tl_err_work);
+>   srp_rport_put(target->rport);
+> @@ -3043,7 +3047,7 @@ static ssize_t srp_create_target(struct device *dev,
+>   if (ret) {
+>   shost_printk(KERN_ERR, target->scsi_host,
+>       PFX "Connection failed\n");
+> - goto err_cm_id;
+> + goto err_free_ib;
+>   }
+>
+>   ret = srp_add_target(host, target);
+> @@ -3067,9 +3071,6 @@ out:
+>   err_disconnect:
+>   srp_disconnect_target(target);
+>
+> -err_cm_id:
+> - ib_destroy_cm_id(target->cm_id);
+> -
+>   err_free_ib:
+>   srp_free_target_ib(target);
+>
 >
 
-I think this patch should be squashed with passing LLD hctx patch (in
-whatever form it ends up).
+Looks good.
+
+Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
