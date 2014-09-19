@@ -1,55 +1,76 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.17-rc6
-Date: Fri, 19 Sep 2014 15:41:02 -0700
-Message-ID: <1411166462.23258.36.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 4/4] target: Add a user-passthrough backstore
+Date: Fri, 19 Sep 2014 16:39:25 -0700
+Message-ID: <1411169965.23258.45.camel@haakon3.risingtidesystems.com>
+References: <1410822750-10717-1-git-send-email-agrover@redhat.com>
+	 <1410822750-10717-5-git-send-email-agrover@redhat.com>
+	 <1411161279.23258.26.camel@haakon3.risingtidesystems.com>
+	 <lvi81j$ud8$2@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34198 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbaISXj0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Sep 2014 19:39:26 -0400
+In-Reply-To: <lvi81j$ud8$2@ger.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alex Elsayed <eternaleye@gmail.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Linus,
+On Fri, 2014-09-19 at 14:43 -0700, Alex Elsayed wrote:
+> Nicholas A. Bellinger wrote:
+> 
+> <snip>
+> > So the idea of allowing the in-kernel CDB emulation to run after
+> > user-space has returned unsupported opcode is problematic for a couple
+> > of different reasons.
+> > 
+> > First, if the correct feature bits in standard INQUIRY + EVPD INQUIRY,
+> > etc are not populated by user-space to match what in-kernel CDB
+> > emulation actually supports, this can result in potentially undefined
+> > results initiator side.
+> > 
+> > Also for example, if user-space decided to emulate only a subset of PR
+> > operations, and leaves the rest of it up to the in-kernel emulation,
+> > there's not really a way to sync current state between the two, which
+> > also can end up with undefined results.
+> > 
+> > So that said, I think a saner approach would be two define two modes of
+> > operation for TCMU:
+> > 
+> >    *) Passthrough Mode: All CDBs are passed to user-space, and no
+> >       in-kernel emulation is done in the event of an unsupported
+> >       opcode response.
+> > 
+> >    *) I/O Mode: I/O related CDBs are passed into user-space, but
+> >       all control CDBs continue to be processed by in-kernel emulation.
+> >       This effectively limits operation to TYPE_DISK, but with this mode
+> >       it's probably OK to assume this.
+> > 
+> > This seems like the best trade-off between flexibility when everything
+> > should be handled by user-space, vs. functionality when only block
+> > remapping of I/O is occurring in user-space code.
+> 
+> The problem there is that the first case has all the issues of pscsi and 
+> simply becomes a performance optimization over tgt+iscsi client+pscsi and 
+> the latter case excludes the main use cases I'm interested in - OSDs, media 
+> changers, optical discs (the biggest thing for me), and so forth.
+> 
+> One of the main things I want to do with this is hook up a plugin that uses 
+> libmirage to handle various optical disc image formats.
+> 
 
-Here are the target pending fixes for v3.17-rc6.  Please pull from:
+Not sure I follow..  How does the proposed passthrough mode prevent
+someone from emulating OSDs, media changers, optical disks or anything
+else in userspace with TCMU..?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-Included are Sagi's long overdue fixes related to iser-target shutdown,
-along with a couple of fixes from Sebastian related to ALUA Referrals
-changes that when in during the v3.14 time-frame.
-
-Also included are a few iscsi-target fixes, most recently of which where
-found during Joern's Coverity scanning of target code.
-
-Thanks,
+The main thing that the above comments highlight is why attempting to
+combine the existing in-kernel emulation with a userspace backend
+providing it's own emulation can open up a number of problems with
+mismatched state between the two.
 
 --nab
 
-Joern Engel (1):
-  iscsi-target: avoid NULL pointer in iscsi_copy_param_list failure
-
-Nicholas Bellinger (2):
-  iscsi-target: Ignore ICF_GOT_LAST_DATAOUT during Data-Out ITT lookup
-  iscsi-target: Fix memory corruption in
-    iscsit_logout_post_handler_diffcid
-
-Sagi Grimberg (4):
-  Target/iser: Get isert_conn reference once got to connected_handler
-  Target/iser: Don't put isert_conn inside disconnected handler
-  Target/iser: Avoid calling rdma_disconnect twice
-  Target/iser: Fix initiator_depth and responder_resources
-
-Sebastian Herbszt (2):
-  target: Fix user data segment multiplier in spc_emulate_evpd_b3()
-  target: Fix inverted logic in SE_DEV_ALUA_SUPPORT_STATE_STORE
-
- drivers/infiniband/ulp/isert/ib_isert.c        |   20 +++++++++++---------
- drivers/target/iscsi/iscsi_target.c            |    4 +++-
- drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
- drivers/target/iscsi/iscsi_target_util.c       |    2 ++
- drivers/target/target_core_configfs.c          |    2 +-
- drivers/target/target_core_spc.c               |    2 +-
- 6 files changed, 19 insertions(+), 13 deletions(-)
