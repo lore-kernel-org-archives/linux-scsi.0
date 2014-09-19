@@ -1,106 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 3.17-rc5
-Date: Fri, 19 Sep 2014 14:56:47 +0100
-Message-ID: <1411135007.3764.24.camel@jarvis.home>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH] scsi-mq: fix hw queue hang caused by timeout
+Date: Fri, 19 Sep 2014 22:18:48 +0800
+Message-ID: <CACVXFVN1juQnXNkRvi5gHX89y-Eqr_Y7bLbOwHS-Shc5MKeHqg@mail.gmail.com>
+References: <1411055950-28657-1-git-send-email-ming.lei@canonical.com>
+	<20140918163549.GB3950@lst.de>
+	<541B105E.1030507@fb.com>
+	<CACVXFVP18pgz03LSwab-n2tKMAT15JmuF7Eh_O+q9TOHmhj2Qw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVP18pgz03LSwab-n2tKMAT15JmuF7Eh_O+q9TOHmhj2Qw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@parallels.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This is a set of three fixes.  One represents a nasty shared tag map
-regression (another inverted condition) caused by recent SCSI MQ
-patches, one is a longstanding potential buffer overrun in the iscsi
-data buffer and the final one is a use after free for the rare
-bidirectional commands.
+On Fri, Sep 19, 2014 at 9:07 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> On Fri, Sep 19, 2014 at 1:03 AM, Jens Axboe <axboe@fb.com> wrote:
+>> On 2014-09-18 10:35, Christoph Hellwig wrote:
+>>>
+>>> On Thu, Sep 18, 2014 at 11:59:10PM +0800, Ming Lei wrote:
+>>>>
+>>>> If there are two requests or more timed out, the dispatch queue
+>>>> is put into stopped state and never be recoverd, and there
+>>>> is no such problem in non-mq mode.
+>>>>
+>>>> This patch trys to recover the stopped queue when the queue
+>>>> becomes unbusy, then the following retries can move on.
+>>>>
+>>>> Basically this patch maintains same behavior for this situation
+>>>> with non-mq mode.
+>>>
+>>>
+>>> This looks somewhat similar to the issues that Doug reported, and I
+>>> remember
+>>> when he was last running into boot problems it was timeout related, too.
+>>>
+>>> As far as the implementation is concerned I think the correct fix is
+>>> to clear the BLK_MQ_S_STOPPED queue flags in blk_mq_kick_requeue_list.
+>>
+>>
+>> Since that's the kick part of the requeue, auto-starting the queue for that
+>> makes a lot of sense. I say that's the way we go.
+>
+> Yeah, that looks better.
+>
+> But it doesn't work after the simple change, and I need to
+> investigate further.
 
-The patch is available here:
+It is because of the timer miss, now it starts to work.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Christoph Hellwig (1):
-      fix regression that accidentally disabled block-based tcq
-
-Daniel Gryniewicz (1):
-      fix for bidi use after free
-
-Mike Christie (1):
-      libiscsi: fix potential buffer overrun in __iscsi_conn_send_pdu
-
-And the diffstat:
-
- drivers/scsi/libiscsi.c | 10 ++++++++++
- drivers/scsi/scsi_lib.c |  5 +++--
- include/scsi/scsi_tcq.h |  2 +-
- 3 files changed, 14 insertions(+), 3 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index ea025e4..191b597 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -717,11 +717,21 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 			return NULL;
- 		}
- 
-+		if (data_size > ISCSI_DEF_MAX_RECV_SEG_LEN) {
-+			iscsi_conn_printk(KERN_ERR, conn, "Invalid buffer len of %u for login task. Max len is %u\n", data_size, ISCSI_DEF_MAX_RECV_SEG_LEN);
-+			return NULL;
-+		}
-+
- 		task = conn->login_task;
- 	} else {
- 		if (session->state != ISCSI_STATE_LOGGED_IN)
- 			return NULL;
- 
-+		if (data_size != 0) {
-+			iscsi_conn_printk(KERN_ERR, conn, "Can not send data buffer of len %u for op 0x%x\n", data_size, opcode);
-+			return NULL;
-+		}
-+
- 		BUG_ON(conn->c_stage == ISCSI_CONN_INITIAL_STAGE);
- 		BUG_ON(conn->c_stage == ISCSI_CONN_STOPPED);
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d837dc1..aaea4b9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -733,12 +733,13 @@ static bool scsi_end_request(struct request *req, int error,
- 	} else {
- 		unsigned long flags;
- 
-+		if (bidi_bytes)
-+			scsi_release_bidi_buffers(cmd);
-+
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_finish_request(req, error);
- 		spin_unlock_irqrestore(q->queue_lock, flags);
- 
--		if (bidi_bytes)
--			scsi_release_bidi_buffers(cmd);
- 		scsi_release_buffers(cmd);
- 		scsi_next_command(cmd);
- 	}
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index cdcc90b..e645835 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -68,7 +68,7 @@ static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
- 		return;
- 
- 	if (!shost_use_blk_mq(sdev->host) &&
--	    blk_queue_tagged(sdev->request_queue))
-+	    !blk_queue_tagged(sdev->request_queue))
- 		blk_queue_init_tags(sdev->request_queue, depth,
- 				    sdev->host->bqt);
- 
+Thanks,
