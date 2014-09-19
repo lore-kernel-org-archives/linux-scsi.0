@@ -1,63 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 20/22] scsi: align logging messages
-Date: Fri, 19 Sep 2014 08:26:29 +0200
-Message-ID: <541BCC95.1010901@suse.de>
-References: <1409247216-76074-1-git-send-email-hare@suse.de> <1409247216-76074-21-git-send-email-hare@suse.de> <20140831222556.GL16432@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402958C2F65E@G9W0745.americas.hpqcorp.net> <20140906003403.GB18426@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402958C8BDA3@G9W0745.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43391 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755627AbaISG0d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Sep 2014 02:26:33 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958C8BDA3@G9W0745.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH][SCSI] mpt2sas: fix undefined reference to `__udivdi3' compilation errors
+Date: Fri, 19 Sep 2014 12:17:27 +0530
+Message-ID: <1411109247-18184-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, fengguang.wu@intel.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Yoshihiro Yunomae <yoshihiro.ynomae.ez@hitachi.com>
 
-On 09/19/2014 01:58 AM, Elliott, Robert (Server Storage) wrote:
->
->
->> -----Original Message-----
->> From: Christoph Hellwig [mailto:hch@infradead.org]
-> ...
->>> scmd ties the messages together so you can tell which command
->>> has gotten to which state.  grep works.
->>
->> Can we just print the tag instead, that would be a much more human
->> readable number normally.
->
-> I made a local patch to add the tag (scmd->request->tag), and it does
-> look good.  I endorse dropping scmd %p in favor of just the tag,
-> and trying to include the tag in all the lines (here, the Done,
-> Result, CDB, Sense Key, and Add. Sense lines do not)
->
-I would rather use 'scmd->tag', as this should be a straight copy
-of scmd->request->tag, but we wouldn't need to reference the request
-when doing so.
+This patch will fix the below compilation errors on i386 ARCH
 
-But yeah, I was planning on doing the same, only I'd rather include
-it right a the start like
+drivers/built-in.o: In function `_scsih_qcmd':
+mpt2sas_scsih.c:(.text+0x1e7b56): undefined reference to `__udivdi3'
+mpt2sas_scsih.c:(.text+0x1e7b8a): undefined reference to `__umoddi3'
 
-sd 2:0:0:3 [sdv] tag#1: abort scheduled
+Used sector_div() API to fix above compilation errors.
 
-and print out a mapping when I/O is submitted
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-sd 2:0:0:3 [sdv] tag#1: scmd 0xffff880420891470
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 992a224..c80ed04 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -3860,7 +3860,7 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 	struct _raid_device *raid_device, Mpi2SCSIIORequest_t *mpi_request,
+ 	u16 smid)
+ {
+-	sector_t v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
++	sector_t v_lba, p_lba, stripe_off, column, io_size;
+ 	u32 stripe_sz, stripe_exp;
+ 	u8 num_pds, cmd = scmd->cmnd[0];
+ 
+@@ -3888,9 +3888,9 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 
+ 	num_pds = raid_device->num_pds;
+ 	p_lba = v_lba >> stripe_exp;
+-	stripe_unit = p_lba / num_pds;
+-	column = p_lba % num_pds;
+-	p_lba = (stripe_unit << stripe_exp) + stripe_off;
++	column = sector_div(p_lba, num_pds);
++	p_lba = (p_lba << stripe_exp) + stripe_off;
++
+ 	mpi_request->DevHandle = cpu_to_le16(raid_device->pd_handle[column]);
+ 
+ 	if (cmd == READ_10 || cmd == WRITE_10)
+-- 
+2.0.2
