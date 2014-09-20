@@ -1,41 +1,79 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: [PATCH] scsi_host: fix comment
-Date: Sat, 20 Sep 2014 13:37:55 +0200
-Message-ID: <20140920133755.0000496a@localhost>
+From: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 5/8] IB/srp: Remove stale connection retry mechanism
+Date: Sat, 20 Sep 2014 20:45:04 +0300
+Message-ID: <CAJ3xEMhPKiut4MwZH9F7-T0+u7B6XPuh-FTZpA=Xe4ViAj5UUQ@mail.gmail.com>
+References: <541C27BF.6070609@acm.org>
+	<541C287D.1050900@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54668 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601AbaITLh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Sep 2014 07:37:59 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <541C287D.1050900-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, Sebastian Herbszt <herbszt@gmx.de>
 
-Commit 1abf635 (scsi: use 64-bit value for 'max_luns') changed the order
-of Scsi_Host members. Update the comment to reflect this.
+On Fri, Sep 19, 2014 at 3:58 PM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+> Attempting to connect three times may be insufficient after an
+> initiator system that was using multiple RDMA channels tries to
+> relogin. Additionally, this login retry mechanism is a workaround
+> for particular behavior of the IB/CM.
 
-Signed-off-by: Sebastian Herbszt <herbszt@gmx.de>
+Can you be more specific re the particular behavior of the IB CM?
+added Sean, the CM maintainer.
 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index ba20347..d4e0509 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -603,13 +603,13 @@ struct Scsi_Host {
- 	unsigned long last_reset;
- 
- 
- 	/*
- 	 * These three parameters can be used to allow for wide scsi,
- 	 * and for host adapters that support multiple busses
--	 * The first two should be set to 1 more than the actual max id
-+	 * The last two should be set to 1 more than the actual max id
- 	 * or lun (e.g. 8 for SCSI parallel systems).
- 	 */
- 	unsigned int max_channel;
- 	unsigned int max_id;
- 	u64 max_lun;
- 
+> Since the srp_daemon retries
+> a failed login attempt anyway, remove the stale connection retry
+> mechanism.
+>
+> Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+> ---
+>  drivers/infiniband/ulp/srp/ib_srp.c | 16 +++-------------
+>  1 file changed, 3 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index d3c712f..9608e7a 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -904,7 +904,6 @@ static void srp_rport_delete(struct srp_rport *rport)
+>
+>  static int srp_connect_target(struct srp_target_port *target)
+>  {
+> -       int retries = 3;
+>         int ret;
+>
+>         WARN_ON_ONCE(target->connected);
+> @@ -945,19 +944,10 @@ static int srp_connect_target(struct srp_target_port *target)
+>                         break;
+>
+>                 case SRP_STALE_CONN:
+> -                       /* Our current CM id was stale, and is now in timewait.
+> -                        * Try to reconnect with a new one.
+> -                        */
+> -                       if (!retries-- || srp_new_cm_id(target)) {
+> -                               shost_printk(KERN_ERR, target->scsi_host, PFX
+> -                                            "giving up on stale connection\n");
+> -                               target->status = -ECONNRESET;
+> -                               return target->status;
+> -                       }
+> -
+>                         shost_printk(KERN_ERR, target->scsi_host, PFX
+> -                                    "retrying stale connection\n");
+> -                       break;
+> +                                    "giving up on stale connection\n");
+> +                       target->status = -ECONNRESET;
+> +                       return target->status;
+>
+>                 default:
+>                         return target->status;
+> --
+> 1.8.4.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
