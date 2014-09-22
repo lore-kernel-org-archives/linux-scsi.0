@@ -1,61 +1,91 @@
-From: Chris J Arges <chris.j.arges@canonical.com>
-Subject: Re: [PATCH v2] mptfusion: enable no_write_same for vmware scsi disks
-Date: Mon, 22 Sep 2014 15:54:51 -0500
-Message-ID: <54208C9B.9000504@canonical.com>
-References: <20140922181929.GA11319@infradead.org> <1411418701-25025-1-git-send-email-chris.j.arges@canonical.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 4/4] target: Add a user-passthrough backstore
+Date: Mon, 22 Sep 2014 13:58:52 -0700
+Message-ID: <1411419532.24986.36.camel@haakon3.risingtidesystems.com>
+References: <1410822750-10717-1-git-send-email-agrover@redhat.com>
+	 <1410822750-10717-5-git-send-email-agrover@redhat.com>
+	 <1411161279.23258.26.camel@haakon3.risingtidesystems.com>
+	 <lvi81j$ud8$2@ger.gmane.org>
+	 <1411169965.23258.45.camel@haakon3.risingtidesystems.com>
+	 <lvifie$emi$3@ger.gmane.org> <541CCBD1.8050606@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37777 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbaIVUyw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 16:54:52 -0400
-In-Reply-To: <1411418701-25025-1-git-send-email-chris.j.arges@canonical.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <541CCBD1.8050606@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Alex Elsayed <eternaleye@gmail.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: bruce.lucas@mongodb.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, adam.radford@avagotech.com, kashyap.desai@avagotech.com
 
-On 09/22/2014 03:44 PM, Chris J Arges wrote:
-> When using a virtual SCSI disk in a VMWare VM if blkdev_issue_zeroout is used
-> data can be improperly zeroed out using the mptfusion driver. This patch
-> disables write_same for this driver and the vmware subsystem_vendor which
-> ensures that manual zeroing out is used instead.
+On Fri, 2014-09-19 at 17:35 -0700, Andy Grover wrote:
+> On 09/19/2014 04:51 PM, Alex Elsayed wrote:
 > 
-> BugLink: http://bugs.launchpad.net/bugs/1371591
-> Reported-by: Bruce Lucas <bruce.lucas@mongodb.com>
-> Tested-by: Chris J Arges <chris.j.arges@canonical.com>
-> Signed-off-by: Chris J Arges <chris.j.arges@canonical.com>
-> ---
->  drivers/message/fusion/mptspi.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+> >> Not sure I follow..  How does the proposed passthrough mode prevent
+> >> someone from emulating OSDs, media changers, optical disks or anything
+> >> else in userspace with TCMU..?
+> >>
+> >> The main thing that the above comments highlight is why attempting to
+> >> combine the existing in-kernel emulation with a userspace backend
+> >> providing it's own emulation can open up a number of problems with
+> >> mismatched state between the two.
+> >
+> > It doesn't prevent it, but it _does_ put it in the exact same place as PSCSI
+> > regarding the warnings on the wiki. It means that if someone wants to
+> > implement (say) the optical disc or OSD CDBs, they then lose out on ALUA &co
+> > unless they implement it themselves - which seems unnecessary and painful,
+> > since those should really be disjoint. In particular, an OSD backed by RADOS
+> > objects could be a very nice thing indeed, _and_ could really benefit from
+> > ALUA.
 > 
-> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-> index 787933d..fca1594 100644
-> --- a/drivers/message/fusion/mptspi.c
-> +++ b/drivers/message/fusion/mptspi.c
-> @@ -1409,6 +1409,12 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  		return 0;
->  	}
->  
-> +	/* Fix for vmware guests that do not implement write_same
-> +         */
-> +	if (pdev->subsystem_vendor == 0x15AD) {
-> +		mptspi_driver_template.no_write_same = 1;
-> +	}
-> +
->  	sh = scsi_host_alloc(&mptspi_driver_template, sizeof(MPT_SCSI_HOST));
->  
->  	if (!sh) {
+> Some possible solutions:
+> 
+> 1) The first time TCMU sees an opcode it passes it up and notes whether 
+> it is handled or not. If it was handled then future cmds with that 
+> opcode are passed up but not retried in the kernel. If it was not 
+> handled then it and all future commands with that opcode are handled by 
+> the kernel and not passed up.
 > 
 
-This is a do-no-harm patch, with a case to check for vmware
-subsystem_vendor as suggested by Christoph. Let me know if there are
-issues with this patch (do I need a define for the vendor ID? Is the
-comment a little too vague or unnecessary?)
+I'd rather avoid having to keep around a bunch of extra per-device
+state, and having to send all opcodes out to user-space first is messy.
 
-Adding those that were CC'ed in the other part of the thread.
+> 2) Same as #1 but TCMU operates on SCSI spec granularity - e.g. handling 
+> any SSC opcode means userspace must handle all SSC commands.
+> 
 
-Thanks,
---chris j arges
+It's unclear how effective this will ultimately be, given that some
+different standards include EVPD and/or mode pages specific to the
+peripheral type.
+
+> 3) Like #2 but define opcode groupings that must all be implemented 
+> together, independent of the specifications.
+> 
+
+This is overly complex, and defining the groups of opcodes is
+problematic to maintain.
+
+> 4) Have passthrough mode set at creation, but with more than two modes, 
+> either grouped by SCSI spec or our own groupings.
+> 
+
+Passthrough mode set at creation is the correct default, but grouping
+things by SCSI spec and custom opcode groupings doesn't really make alot
+of sense to me.
+
+> 5) Never pass up certain opcodes, like the ALUA ones or whatever.
+> 
+
+This hurts flexibility, given that some folks might already have their
+own ALUA implemented in a user-space driver, and would like to be able
+to run in pure passthrough mode.
+
+So I'd still like to start for an initial merge with the two different
+modes mentioned earlier.  The pure-passthrough mode where everything is
+handled by user-space, and an I/O passthrough mode where only
+SCF_SCSI_DATA_CDB is passed along to userspace, but all other control
+CDBs are handled by existing in-kernel emulation.
+
+Andy, can you re-spin a series with these two approaches in mind..?
+
+--nab
