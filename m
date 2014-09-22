@@ -1,61 +1,61 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] block: fix blk_abort_request on blk-mq
-Date: Mon, 22 Sep 2014 15:59:30 +0200
-Message-ID: <1411394371-16254-2-git-send-email-hch@lst.de>
+Subject: [PATCH 2/2] scsi: move blk_mq_start_request call earlier
+Date: Mon, 22 Sep 2014 15:59:31 +0200
+Message-ID: <1411394371-16254-3-git-send-email-hch@lst.de>
 References: <1411394371-16254-1-git-send-email-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:54542 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753879AbaIVN5M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 09:57:12 -0400
 In-Reply-To: <1411394371-16254-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+
+Some ATA drivers need the dma drain size workaround, and thus need to
+call blk_mq_start_request before the S/G mapping.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c      | 2 +-
- block/blk-timeout.c | 5 ++++-
- block/blk.h         | 2 ++
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_lib.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 966c920..aeac4b7 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -531,7 +531,7 @@ struct blk_mq_timeout_data {
- 	unsigned int next_set;
- };
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dc01ab2..56cc4b4 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1846,6 +1846,8 @@ static int scsi_mq_prep_fn(struct request *req)
+ 		next_rq->special = bidi_sdb;
+ 	}
  
--static void blk_mq_rq_timed_out(struct request *req, bool reserved)
-+void blk_mq_rq_timed_out(struct request *req, bool reserved)
- {
- 	struct blk_mq_ops *ops = req->q->mq_ops;
- 	enum blk_eh_timer_return ret = BLK_EH_RESET_TIMER;
-diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-index 8bae410..c3c14ce 100644
---- a/block/blk-timeout.c
-+++ b/block/blk-timeout.c
-@@ -158,7 +158,10 @@ void blk_abort_request(struct request *req)
- 	if (blk_mark_rq_complete(req))
- 		return;
- 	blk_delete_timer(req);
--	blk_rq_timed_out(req);
-+	if (req->q->mq_ops)
-+		blk_mq_rq_timed_out(req, false);
-+	else
-+		blk_rq_timed_out(req);
- }
- EXPORT_SYMBOL_GPL(blk_abort_request);
- 
-diff --git a/block/blk.h b/block/blk.h
-index e515a28..159e973 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -250,4 +250,6 @@ static inline int blk_throtl_init(struct request_queue *q) { return 0; }
- static inline void blk_throtl_exit(struct request_queue *q) { }
- #endif /* CONFIG_BLK_DEV_THROTTLING */
- 
-+extern void blk_mq_rq_timed_out(struct request *req, bool reserved);
++	blk_mq_start_request(req);
 +
- #endif /* BLK_INTERNAL_H */
+ 	return scsi_setup_cmnd(sdev, req);
+ }
+ 
+@@ -1880,17 +1882,19 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *req,
+ 	if (!scsi_host_queue_ready(q, shost, sdev))
+ 		goto out_dec_target_busy;
+ 
++
+ 	if (!(req->cmd_flags & REQ_DONTPREP)) {
+ 		ret = prep_to_mq(scsi_mq_prep_fn(req));
+ 		if (ret)
+ 			goto out_dec_host_busy;
+ 		req->cmd_flags |= REQ_DONTPREP;
++	} else {
++		blk_mq_start_request(req);
+ 	}
+ 
+ 	scsi_init_cmd_errh(cmd);
+ 	cmd->scsi_done = scsi_mq_done;
+ 
+-	blk_mq_start_request(req);
+ 	reason = scsi_dispatch_cmd(cmd);
+ 	if (reason) {
+ 		scsi_set_blocked(cmd, reason);
 -- 
 1.9.1
+
