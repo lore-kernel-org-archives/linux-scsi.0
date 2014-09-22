@@ -1,18 +1,22 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH] scsi: fix kconfig dependency warnings for SCSI_FC_ATTRS
-Date: Mon, 22 Sep 2014 11:49:13 -0400 (EDT)
-Message-ID: <20140922.114913.1747319060949253295.davem@davemloft.net>
+Date: Mon, 22 Sep 2014 11:56:58 -0400 (EDT)
+Message-ID: <20140922.115658.940423588560943657.davem@davemloft.net>
 References: <541CC163.3080709@infradead.org>
 	<20140922144213.GA28200@infradead.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:51764 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbaIVP5C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 11:57:02 -0400
 In-Reply-To: <20140922144213.GA28200@infradead.org>
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: hch@infradead.org
 Cc: rdunlap@infradead.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, jbottomley@parallels.com, anish@chelsio.com
-List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 Date: Mon, 22 Sep 2014 07:42:13 -0700
@@ -30,6 +34,6 @@ Date: Mon, 22 Sep 2014 07:42:13 -0700
 > CONFIG_SCSI_QLA_FC currently selects SCSI_FC_ATTRS, so we shouldn't
 > need this here. Also any reason not to switch that one over to a
 > depends as well?
-> 
 
-Yes, all selects of SCSI_FC_ATTRS have to be changed to a depends.
+Christoph, I understand your confusion now, in the networking tree SCSI_QLA_FC
+"depends" on SCSI_FC_ATTRS now, and this is what Randy's patches are against.
