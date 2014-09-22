@@ -1,73 +1,108 @@
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
-Date: Mon, 22 Sep 2014 13:23:54 -0700
-Message-ID: <2306678.TJaWkZCAc8@dtor-glaptop>
-References: <20140905174925.GA12991@mtj.dyndns.org> <20140911202354.GA2598@core.coreip.homeip.net> <20140922194906.GB9868@amd>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 4/4] target: Add a user-passthrough backstore
+Date: Mon, 22 Sep 2014 13:36:40 -0700
+Message-ID: <1411418200.24986.22.camel@haakon3.risingtidesystems.com>
+References: <1410822750-10717-1-git-send-email-agrover@redhat.com>
+	 <1410822750-10717-5-git-send-email-agrover@redhat.com>
+	 <1411161279.23258.26.camel@haakon3.risingtidesystems.com>
+	 <lvi81j$ud8$2@ger.gmane.org>
+	 <1411169965.23258.45.camel@haakon3.risingtidesystems.com>
+	 <lvifie$emi$3@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140922194906.GB9868@amd>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagote>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <lvifie$emi$3@ger.gmane.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Alex Elsayed <eternaleye@gmail.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday, September 22, 2014 09:49:06 PM Pavel Machek wrote:
-> On Thu 2014-09-11 13:23:54, Dmitry Torokhov wrote:
-> > On Thu, Sep 11, 2014 at 12:59:25PM -0700, James Bottomley wrote:
-> > > On Tue, 2014-09-09 at 16:01 -0700, Dmitry Torokhov wrote:
-> > > > On Tuesday, September 09, 2014 03:46:23 PM James Bottomley wrote:
-> > > > > On Wed, 2014-09-10 at 07:41 +0900, Tejun Heo wrote:
-> > > > > > The thing is that we have to have dynamic mechanism to listen for
-> > > > > > device attachments no matter what and such mechanism has been in
-> > > > > > place
-> > > > > > for a long time at this point.  The synchronous wait simply
-> > > > > > doesn't
-> > > > > > serve any purpose anymore and kinda gets in the way in that it
-> > > > > > makes
-> > > > > > it a possibly extremely slow process to tell whether loading of a
-> > > > > > module succeeded or not because the wait for the initial round of
-> > > > > > probe is piggybacked.
-> > > > > 
-> > > > > OK, so we just fire and forget in userland ... why bother inventing
-> > > > > an
-> > > > > elaborate new infrastructure in the kernel to do exactly what
-> > > > > 
-> > > > > modprobe <mod> &
-> > > > > 
-> > > > > would do?
-> > > > 
-> > > > Just so we do not forget: we also want the no-modules case to also be
-> > > > able
-> > > > to probe asynchronously so that a slow device does not stall kernel
-> > > > booting.> > 
-> > > Yes, but we mostly do this anyway.  SCSI for instance does asynchronous
-> > > scanning of attached devices (once the cards are probed)
-> > 
-> > What would it do it card was a bit slow to probe?
-> > 
-> > > but has a sync
-> > > point for ordering.
-> > 
-> > Quite often we do not really care about ordering of devices. I mean,
-> > does it matter if your mouse is discovered before your keyboard or
-> > after?
+On Fri, 2014-09-19 at 16:51 -0700, Alex Elsayed wrote:
+> Nicholas A. Bellinger wrote:
 > 
-> Actually yes, I suspect it does.
+> > On Fri, 2014-09-19 at 14:43 -0700, Alex Elsayed wrote:
+> >> Nicholas A. Bellinger wrote:
+> >> 
+> >> <snip>
+> >> > So the idea of allowing the in-kernel CDB emulation to run after
+> >> > user-space has returned unsupported opcode is problematic for a couple
+> >> > of different reasons.
+> >> > 
+> >> > First, if the correct feature bits in standard INQUIRY + EVPD INQUIRY,
+> >> > etc are not populated by user-space to match what in-kernel CDB
+> >> > emulation actually supports, this can result in potentially undefined
+> >> > results initiator side.
+> >> > 
+> >> > Also for example, if user-space decided to emulate only a subset of PR
+> >> > operations, and leaves the rest of it up to the in-kernel emulation,
+> >> > there's not really a way to sync current state between the two, which
+> >> > also can end up with undefined results.
+> >> > 
+> >> > So that said, I think a saner approach would be two define two modes of
+> >> > operation for TCMU:
+> >> > 
+> >> >    *) Passthrough Mode: All CDBs are passed to user-space, and no
+> >> >       in-kernel emulation is done in the event of an unsupported
+> >> >       opcode response.
+> >> > 
+> >> >    *) I/O Mode: I/O related CDBs are passed into user-space, but
+> >> >       all control CDBs continue to be processed by in-kernel emulation.
+> >> >       This effectively limits operation to TYPE_DISK, but with this
+> >> >       mode it's probably OK to assume this.
+> >> > 
+> >> > This seems like the best trade-off between flexibility when everything
+> >> > should be handled by user-space, vs. functionality when only block
+> >> > remapping of I/O is occurring in user-space code.
+> >> 
+> >> The problem there is that the first case has all the issues of pscsi and
+> >> simply becomes a performance optimization over tgt+iscsi client+pscsi and
+> >> the latter case excludes the main use cases I'm interested in - OSDs,
+> >> media changers, optical discs (the biggest thing for me), and so forth.
+> >> 
+> >> One of the main things I want to do with this is hook up a plugin that
+> >> uses libmirage to handle various optical disc image formats.
+> >> 
+> > 
+> > Not sure I follow..  How does the proposed passthrough mode prevent
+> > someone from emulating OSDs, media changers, optical disks or anything
+> > else in userspace with TCMU..?
+> > 
+> > The main thing that the above comments highlight is why attempting to
+> > combine the existing in-kernel emulation with a userspace backend
+> > providing it's own emulation can open up a number of problems with
+> > mismatched state between the two.
 > 
-> I do evtest /dev/input/eventX by hand, occassionaly. It would be
-> annoying if they moved between reboots.
+> It doesn't prevent it, but it _does_ put it in the exact same place as PSCSI 
+> regarding the warnings on the wiki.
 
-I am sorry but you will have to cope with such annoyances. It' snot like we 
-fail to boot the box here.
+Not exactly.  PSCSI has no mode where control commands are handled by
+the in-kernel emulation.
 
-The systems are now mostly hot-pluggable and userland is supposed to
-handle it, and it does, at least for input devices. If you want stable naming
-use udev facilities to rename devices as needed or add needed symlinks (by-id, 
-etc.).
+> It means that if someone wants to 
+> implement (say) the optical disc or OSD CDBs, they then lose out on ALUA &co 
+> unless they implement it themselves - which seems unnecessary and painful, 
+> since those should really be disjoint. In particular, an OSD backed by RADOS 
+> objects could be a very nice thing indeed, _and_ could really benefit from 
+> ALUA.
+> 
 
-Thanks.
+For OSD strictly speaking in the T10 sense, the use-case your describing
+would fall under the guise of I/O mode, where the OSD specific CDBs
+would be propagated into the user-space backend driver.  This would
+probably be OK, and the only thing that would need to change from the
+perspective of existing in-kernel emulation is to expose TYPE_OSD
+instead of TYPE_DISK.  Eg: AFAICT, there aren't any OSD specific EVPD or
+mode pages.
 
--- 
-Dmitry
+As for optical discs, things are more complex because of mode pages
+specific to MMC that effectively make it difficult to mark a clear
+delineation between a hybrid I/O mode approach where some CDBs are
+handed by in-kernel emulation, and some are handled in user-space.
+
+So that said, an I/O mode that passes through OSD specific CDBs into
+user-space should allow ALUA to still work as expected for TYPE_OSD,
+where with optical drives it's less clear how to make a clean split, or
+if anyone actually cares enough about ALUA emulation with TYPE_ROM.
+
+--nab
