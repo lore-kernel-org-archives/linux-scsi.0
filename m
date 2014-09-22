@@ -1,99 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] scsi: fix kconfig dependency warnings for SCSI_FC_ATTRS
-Date: Mon, 22 Sep 2014 12:11:06 -0400 (EDT)
-Message-ID: <20140922.121106.1110168028426156500.davem@davemloft.net>
-References: <541CC163.3080709@infradead.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RFC 0/8] IB/srp: Add multichannel support
+Date: Mon, 22 Sep 2014 10:31:18 -0600
+Message-ID: <54204ED6.3020204@kernel.dk>
+References: <541C27BF.6070609@acm.org> <20140922143731.GA15377@infradead.org> <54204D7A.1070305@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51863 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943AbaIVQLJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 12:11:09 -0400
-In-Reply-To: <541CC163.3080709@infradead.org>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:44709 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538AbaIVQbY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 12:31:24 -0400
+Received: by mail-pa0-f49.google.com with SMTP id lf10so4804397pab.8
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2014 09:31:23 -0700 (PDT)
+In-Reply-To: <54204D7A.1070305@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rdunlap@infradead.org
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, jbottomley@parallels.com, anish@chelsio.com
+To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>
 
-From: Randy Dunlap <rdunlap@infradead.org>
-Date: Fri, 19 Sep 2014 16:50:59 -0700
+On 2014-09-22 10:25, Bart Van Assche wrote:
+> On 22/09/2014 8:37, Christoph Hellwig wrote:
+>> One thing that is missing is generation multiqueue-aware tags at the
+>> blk-mq level, which should be as simple as always adding a queue
+>> prefix in the tag allocation code.
+>
+> Hello Christoph,
+>
+> Adding a queue prefix in the tag allocation code is an interesting idea.
+> Encoding the hardware context index in the upper bits of the 'tag' field
+> in 'struct request' is something I have considered. The reason I have
+> not done that is because I think several block drivers assume that the
+> rq->tag field is a number in the range [0..queue_depth-1]. Here is just
+> one example from the mtip32xx driver:
+>
+>          fis->sect_count  = ((rq->tag << 3) | (rq->tag >> 5));
 
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Fix kconfig dependency warnings which can lead to build errors:
-> 
-> warning: (SCSI_BNX2X_FCOE && LIBFCOE && TCM_QLA2XXX) selects LIBFC which has unmet direct dependencies (SCSI_LOWLEVEL && SCSI && SCSI_FC_ATTRS)
-> 
-> warning: (FCOE && FCOE_FNIC) selects LIBFCOE which has unmet direct dependencies (SCSI_LOWLEVEL && SCSI && SCSI_FC_ATTRS)
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Most drivers assume that the tag is within a certain range, the queue 
+prefix would only work on drivers where the tag number is just some 
+arbitrary "cookie". So for SCSI it should work, and I don't think we 
+need it anywhere else.
 
-Randy, I think we need to propagate usage of depends into LIBFC and LIBFCOE as well.
+Alternatively, we can wrap tag retrieval in some function to mask off 
+the queue prefix for the cases where we just want an index.
 
-I'm playing around with the following patch and will probably use this to resolve
-everything.
 
-Thanks.
+-- 
+Jens Axboe
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index b745012..bd85fb4 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -592,21 +592,21 @@ config LIBFC
- 
- config LIBFCOE
- 	tristate "LibFCoE module"
--	select LIBFC
-+	depends on LIBFC
- 	---help---
- 	  Library for Fibre Channel over Ethernet module
- 
- config FCOE
- 	tristate "FCoE module"
- 	depends on PCI
--	select LIBFCOE
-+	depends on LIBFCOE
- 	---help---
- 	  Fibre Channel over Ethernet module
- 
- config FCOE_FNIC
- 	tristate "Cisco FNIC Driver"
- 	depends on PCI && X86
--	select LIBFCOE
-+	depends on LIBFCOE
- 	help
- 	  This is support for the Cisco PCI-Express FCoE HBA.
- 
-diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
-index 02b0ba8..0978828 100644
---- a/drivers/scsi/bnx2fc/Kconfig
-+++ b/drivers/scsi/bnx2fc/Kconfig
-@@ -2,11 +2,11 @@ config SCSI_BNX2X_FCOE
- 	tristate "QLogic NetXtreme II FCoE support"
- 	depends on PCI
- 	depends on (IPV6 || IPV6=n)
-+	depends on LIBFC
-+	depends on LIBFCOE
- 	select NETDEVICES
- 	select ETHERNET
- 	select NET_VENDOR_BROADCOM
--	select LIBFC
--	select LIBFCOE
- 	select CNIC
- 	---help---
- 	This driver supports FCoE offload for the QLogic NetXtreme II
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
-index 7d65776..113e6c9 100644
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -31,7 +31,7 @@ config SCSI_QLA_FC
- config TCM_QLA2XXX
- 	tristate "TCM_QLA2XXX fabric module for Qlogic 2xxx series target mode HBAs"
- 	depends on SCSI_QLA_FC && TARGET_CORE
--	select LIBFC
-+	depends on LIBFC
- 	select BTREE
- 	default n
- 	---help---
