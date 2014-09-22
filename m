@@ -1,44 +1,60 @@
-From: ronnie sahlberg <ronniesahlberg@gmail.com>
-Subject: Re: SCSI test tool for linux (and others)
-Date: Mon, 22 Sep 2014 09:44:20 -0700
-Message-ID: <CAN05THS-Gw9WvUB44MxiZHwvxcgYFMM6DPVzKACjtaeYtExoDw@mail.gmail.com>
-References: <CAN05THQ9Z0sMgJ5gFZhLBP9JH+pmFYNVBr0KrgCCYF9=haFKbg@mail.gmail.com>
-	<54204F84.8090509@acm.org>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] scsi: sas_ata: change ata_<foo>_printk routines to return
+ void
+Date: Mon, 22 Sep 2014 10:01:24 -0700
+Message-ID: <1411405284.2952.42.camel@joe-AO725>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:35428 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318AbaIVQoW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 12:44:22 -0400
-Received: by mail-la0-f48.google.com with SMTP id ty20so7001557lab.21
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2014 09:44:20 -0700 (PDT)
-In-Reply-To: <54204F84.8090509@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Todd Brandt <todd.e.brandt@intel.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Mon, Sep 22, 2014 at 9:34 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> On 21/09/2014 9:58, ronnie sahlberg wrote:
->>
->> For now I populated it with a bunch of tests I copied fro the SCSI family.
->> Some, not all, tests.
->> Missing are a whole bunch of tests that require that you have multiple
->> I_T nexuses,
->> such as all the persistent reservation tests, which would be difficult
->> to implement on /dev/sg* devices. (all users of a specific /dev/sg*
->> device ends up on the same nexus, right, the nexus for kernel<->device
->> ?)
->
->
-> Hello Ronnie,
->
-> Have you considered to allow multiple /dev/sg* arguments to be specified and
-> to let the tests that require multiple I_T nexuses use one /dev/sg* argument
-> per nexus ? Do you think such a feature would be helpful for testing FC and
-> RDMA over SCSI initiator drivers in a setup with multiple storage paths
-> between initiator and target systems ?
->
+The return value is not used by callers of this function
+so change the function to return void.
 
-Good idea. I have added that as an Issue to the githup repo so I do not forget.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+This change is associated to a desire to eventually
+change printk to return void.
+
+ drivers/scsi/libsas/sas_ata.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 766098a..2a15a54 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -375,26 +375,23 @@ static int local_ata_check_ready(struct ata_link *link)
+ 	}
+ }
+ 
+-static int sas_ata_printk(const char *level, const struct domain_device *ddev,
+-			  const char *fmt, ...)
++static void sas_ata_printk(const char *level, const struct domain_device *ddev,
++			   const char *fmt, ...)
+ {
+ 	struct ata_port *ap = ddev->sata_dev.ap;
+ 	struct device *dev = &ddev->rphy->dev;
+ 	struct va_format vaf;
+ 	va_list args;
+-	int r;
+ 
+ 	va_start(args, fmt);
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	r = printk("%ssas: ata%u: %s: %pV",
+-		   level, ap->print_id, dev_name(dev), &vaf);
++	printk("%ssas: ata%u: %s: %pV",
++	       level, ap->print_id, dev_name(dev), &vaf);
+ 
+ 	va_end(args);
+-
+-	return r;
+ }
+ 
+ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
