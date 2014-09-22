@@ -1,29 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: fix kconfig dependency warnings for SCSI_FC_ATTRS
-Date: Mon, 22 Sep 2014 09:44:59 -0700
-Message-ID: <20140922164459.GA15753@infradead.org>
-References: <541CC163.3080709@infradead.org>
- <20140922144213.GA28200@infradead.org>
- <20140922.115658.940423588560943657.davem@davemloft.net>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: SCSI test tool for linux (and others)
+Date: Mon, 22 Sep 2014 10:34:12 -0600
+Message-ID: <54204F84.8090509@acm.org>
+References: <CAN05THQ9Z0sMgJ5gFZhLBP9JH+pmFYNVBr0KrgCCYF9=haFKbg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140922.115658.940423588560943657.davem@davemloft.net>
-Sender: netdev-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: hch@infradead.org, rdunlap@infradead.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, jbottomley@parallels.com, anish@chelsio.com
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sf2.bxl.stone.is ([5.134.1.239]:59212 "EHLO sf2.bxl.stone.is"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753189AbaIVQeX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2014 12:34:23 -0400
+In-Reply-To: <CAN05THQ9Z0sMgJ5gFZhLBP9JH+pmFYNVBr0KrgCCYF9=haFKbg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ronnie sahlberg <ronniesahlberg@gmail.com>, linux-scsi@vger.kernel.org
 
-On Mon, Sep 22, 2014 at 11:56:58AM -0400, David Miller wrote:
-> > CONFIG_SCSI_QLA_FC currently selects SCSI_FC_ATTRS, so we shouldn't
-> > need this here. Also any reason not to switch that one over to a
-> > depends as well?
-> 
-> Christoph, I understand your confusion now, in the networking tree SCSI_QLA_FC
-> "depends" on SCSI_FC_ATTRS now, and this is what Randy's patches are against.
+On 21/09/2014 9:58, ronnie sahlberg wrote:
+> For now I populated it with a bunch of tests I copied fro the SCSI family.
+> Some, not all, tests.
+> Missing are a whole bunch of tests that require that you have multiple
+> I_T nexuses,
+> such as all the persistent reservation tests, which would be difficult
+> to implement on /dev/sg* devices. (all users of a specific /dev/sg*
+> device ends up on the same nexus, right, the nexus for kernel<->device
+> ?)
 
-Ok.  The fixes look fine for me if you checked they make sense vs the net
-tree.
+Hello Ronnie,
 
-Acked-by: Christoph Hellwig <hch@lst.de>
+Have you considered to allow multiple /dev/sg* arguments to be specified 
+and to let the tests that require multiple I_T nexuses use one /dev/sg* 
+argument per nexus ? Do you think such a feature would be helpful for 
+testing FC and RDMA over SCSI initiator drivers in a setup with multiple 
+storage paths between initiator and target systems ?
+
+Thanks,
+
+Bart.
