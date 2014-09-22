@@ -1,61 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] scsi: move blk_mq_start_request call earlier
-Date: Mon, 22 Sep 2014 15:59:31 +0200
-Message-ID: <1411394371-16254-3-git-send-email-hch@lst.de>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: two more fixes for block/for-linus
+Date: Mon, 22 Sep 2014 08:06:49 -0600
+Message-ID: <54202CF9.7050303@kernel.dk>
 References: <1411394371-16254-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:54542 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753879AbaIVN5M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Sep 2014 09:57:12 -0400
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1411394371-16254-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Some ATA drivers need the dma drain size workaround, and thus need to
-call blk_mq_start_request before the S/G mapping.
+On 2014-09-22 07:59, Christoph Hellwig wrote:
+> Fix two regressions with the timer/blk_mq_start_request changes found
+> when using scsi-mq on an ATA device.
+>
+> Note that given how late we are in the cycle I wonder if we really should
+> push the changes in block/for-linus to Linus in this cycle.  The race
+> part of the timer fixes is extremly narrow, and the reserved request
+> part of it requires an out of tree driver update to trigger it, so it
+> doesn't sound super criticial.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I was planning on pushing it out today, I've run a lot of testing on it 
+internally last week. Ho hum, let me think about it...
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index dc01ab2..56cc4b4 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1846,6 +1846,8 @@ static int scsi_mq_prep_fn(struct request *req)
- 		next_rq->special = bidi_sdb;
- 	}
- 
-+	blk_mq_start_request(req);
-+
- 	return scsi_setup_cmnd(sdev, req);
- }
- 
-@@ -1880,17 +1882,19 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *req,
- 	if (!scsi_host_queue_ready(q, shost, sdev))
- 		goto out_dec_target_busy;
- 
-+
- 	if (!(req->cmd_flags & REQ_DONTPREP)) {
- 		ret = prep_to_mq(scsi_mq_prep_fn(req));
- 		if (ret)
- 			goto out_dec_host_busy;
- 		req->cmd_flags |= REQ_DONTPREP;
-+	} else {
-+		blk_mq_start_request(req);
- 	}
- 
- 	scsi_init_cmd_errh(cmd);
- 	cmd->scsi_done = scsi_mq_done;
- 
--	blk_mq_start_request(req);
- 	reason = scsi_dispatch_cmd(cmd);
- 	if (reason) {
- 		scsi_set_blocked(cmd, reason);
 -- 
-1.9.1
-
+Jens Axboe
