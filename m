@@ -1,91 +1,74 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
- error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
-Date: Tue, 23 Sep 2014 21:56:05 +0000
-Message-ID: <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
+From: Chris J Arges <chris.j.arges@canonical.com>
+Subject: Re: [PATCH v3] mptfusion: enable no_write_same for vmware scsi disks
+Date: Tue, 23 Sep 2014 17:11:44 -0500
+Message-ID: <5421F020.1030309@canonical.com>
+References: <20140923071154.GB3867@infradead.org> <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:46976 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754404AbaIWV4J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2014 17:56:09 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 85B9A202B8
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 21:56:08 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 6543720270
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 21:56:06 +0000 (UTC)
-In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hch@infradead.org
+Cc: bruce.lucas@mongodb.com, adam.radford@avagotech.com, kashyap.desai@avagotech.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81861
+On 09/23/2014 09:22 AM, Chris J Arges wrote:
+> When using a virtual SCSI disk in a VMWare VM if blkdev_issue_zeroout is used
+> data can be improperly zeroed out using the mptfusion driver. This patch
+> disables write_same for this driver and the vmware subsystem_vendor which
+> ensures that manual zeroing out is used instead.
+> 
+> BugLink: http://bugs.launchpad.net/bugs/1371591
+> Reported-by: Bruce Lucas <bruce.lucas@mongodb.com>
+> Tested-by: Chris J Arges <chris.j.arges@canonical.com>
+> Signed-off-by: Chris J Arges <chris.j.arges@canonical.com>
+> ---
+>  drivers/message/fusion/mptspi.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+> index 787933d..613231c 100644
+> --- a/drivers/message/fusion/mptspi.c
+> +++ b/drivers/message/fusion/mptspi.c
+> @@ -1419,6 +1419,11 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		goto out_mptspi_probe;
+>          }
+>  
+> +	/* VMWare emulation doesn't properly implement WRITE_SAME
+> +	 */
+> +	if (pdev->subsystem_vendor == 0x15AD)
+> +		sh->no_write_same = 1;
+> +
+>  	spin_lock_irqsave(&ioc->FreeQlock, flags);
+>  
+>  	/* Attach the SCSI Host to the IOC structure
+> 
 
---- Comment #16 from linux-ide@crashplan.pro ---
-When line-by-line dumping the called constants/vars from:
-469        del_q = TXQ_MODE_I | tag |
-470            (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
-471            (MVS_PHY_ID << TXQ_PHY_SHIFT) |
-472            (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+As a workaround one can do the following:
 
-using the prepended statements:
-        printk("slot=%p ", slot);
-        printk(KERN_INFO "TXQ_MODE_I=%d ", TXQ_MODE_I);
-        printk(KERN_INFO "tag=%d ", tag);
-        printk(KERN_INFO "TXQ_CMD_STP=%d ", TXQ_CMD_STP);
-        printk(KERN_INFO "TXQ_CMD_SHIFT=%d ", TXQ_CMD_SHIFT);
-        printk(KERN_INFO "MVS_PHY_ID=%d ", MVS_PHY_ID);
-        printk(KERN_INFO "TXQ_PHY_SHIFT=%d ", TXQ_PHY_SHIFT);
-        del_q = TXQ_MODE_I | tag |
-                (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
-                (MVS_PHY_ID << TXQ_PHY_SHIFT) |
-                (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+# Set the scsi disk max_write_same_blocks to 0 to disable write_same.
+(Your paths may vary...)
+echo 0 >
+/sys/devices/pci0000:00/0000:00:10.0/host32/target32:0:0/32:0:0:0/scsi_disk/32:0:0:0/max_write_same_blocks
 
-the kernel crash occurs after printing "TXQ_CMD_SHIFT" or when trying to output
-the value of "MVS_PHY_ID":
-[  529.113152] sas: DONE DISCOVERY on port 0, pid:133, result:0
-[  529.114313] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-[  529.115460] sas: ata7: end_device-6:0:28: dev error handler
-[  529.115522] sas: ata8: end_device-6:0:29: dev error handler
-[  529.118706] sas: ata9: end_device-6:0:30: dev error handler
-[  529.119840] sas: ata10: end_device-6:0:31: dev error handler
-[  529.271634] [mvi=ffff8800d3680000, mvi_dev=ffff8800d36836a0 tag=0
-slot=ffff8800d36a55b8
-[  529.271753] TXQ_MODE_I=268435456 tag=0
-[  529.272679] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
-[  529.273618] MVS_PHY_ID=32768 TXQ_PHY_SHIFT=12 tx_prod=44]
-[  529.276091] [mvi=ffff8800d3680000, mvi_dev=ffff8800d3683618 tag=1
-slot=ffff8800d36a5610
-[  529.276207] TXQ_MODE_I=268435456 tag=1
-[  529.277095] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
-[  529.278038] MVS_PHY_ID=1 TXQ_PHY_SHIFT=12 tx_prod=46]
-[  529.280271] [mvi=ffff8800d3680000, mvi_dev=ffff8800d3683618 tag=1
-slot=ffff8800d36a5610
-[  529.280385] TXQ_MODE_I=268435456 tag=1
-[  529.281445] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
-[  529.282562] MVS_PHY_ID=1 TXQ_PHY_SHIFT=12 tx_prod=48]
-[  529.284894] [mvi=ffff8800d3680000, mvi_dev=ffff8800d36837b0 tag=2
-slot=ffff8800d36a5668
-[  529.285010] TXQ_MODE_I=268435456 tag=2
-[  529.286248] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
-[  529.287555] BUG: unable to handle kernel NULL pointer dereference at
-0000000000000257
-[  529.290225] IP: [<ffffffffa02888bb>] mvs_task_prep+0x7cb/0xe50 [mvsas]
-[  529.291686] PGD 0
-[  529.293141] Oops: 0000 [#1] SMP
-[  529.294630] Modules linked in: mvsas(OF) libsas scsi_transport_sas
-x86_pkg_temp_thermal intel_powerclamp coretemp kvm crct10dif_pclmul
-crc32_pclmul ghash_clmulni_intel cryptd serio_raw lpc_ich i915 mei_me mei
-drm_kms_helper video netconsole drm configfs mac_hid i2c_algo_bit psmouse r8169
-ahci mii libahci
+# Force the dm device to reload (thus calling dm_table_set_restrictions
+and checking for the new max_write_same_blocks value)
+dmsetup table /dev/dm-0 save
+dmsetup suspend /dev/dm-0; dmsetup reload /dev/dm-0 save; dmsetup resume
+/dev/dm-0
 
-Any suggestions why accessing "MVS_PHY_ID" leads to the kernel NULL pointer
-dereference oops?
+# Now the dm device shows write_same_max_bytes as 0
+cat /sys/block/dm-0/queue/write_same_max_bytes
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+# Run the test case in the original bug, it now passes.
+
+So a few questions:
+1) Does this workaround make sense? Perhaps there is an easier way?
+2) Do we expect changing max_write_same_blocks at the scsi_disk level to
+propagate the right write_same flags to other layers such as dm?
+3) In light of this workaround, does this patch still make sense? Would
+there be a better layer to fix this?
+
+Thanks,
+--chris j arges
