@@ -1,42 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.17-fixes/core] blk-mq, percpu_ref: implement
- a kludge for SCSI blk-mq stall during probe
-Date: Tue, 23 Sep 2014 15:48:34 -0400
-Message-ID: <20140923194834.GA14111@mtj.dyndns.org>
-References: <541C8047.80705@kernel.dk>
- <20140923055554.GA10189@lst.de>
- <20140923055648.GD11740@mtj.dyndns.org>
- <20140923055924.GA10295@lst.de>
- <20140923060141.GF11740@mtj.dyndns.org>
- <20140923060906.GA10547@lst.de>
- <20140923061152.GI11740@mtj.dyndns.org>
- <5421968B.7080309@kernel.dk>
- <20140923192432.GA24441@mtj.dyndns.org>
- <5421C9FF.5030903@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 7/8] IB/srp: Separate target and channel variables
+Date: Tue, 23 Sep 2014 14:00:49 -0600
+Message-ID: <5421D171.10206@acm.org>
+References: <541C27BF.6070609@acm.org> <541C28C8.7000007@acm.org> <54219ACA.5000904@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5421C9FF.5030903@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sf1.bxl.stone.is ([87.238.167.36]:59276 "EHLO sf1.bxl.stone.is"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756312AbaIWUCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2014 16:02:36 -0400
+In-Reply-To: <54219ACA.5000904@dev.mellanox.co.il>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: linux-rdma <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>
 
-Oops, I forgot to cc Kent.  Kent, the patch is at
+On 23/09/2014 10:07, Sagi Grimberg wrote:
+> On 9/19/2014 3:59 PM, Bart Van Assche wrote:
+>> @@ -3047,24 +3098,28 @@ static ssize_t srp_create_target(struct 
+>> device *dev,
+>>       INIT_WORK(&target->tl_err_work, srp_tl_err_work);
+>>       INIT_WORK(&target->remove_work, srp_remove_work);
+>>       spin_lock_init(&target->lock);
+>
+> Hey Bart,
+>
+> You keep this target-lock around. I don't see in this patch any usage
+> of it left. Can you document what each of target->lock and ch->lock
+> protects?
+>
+> So I would imagine that target-lock manages the target-wide variables
+> such as state (what else?) while ch->lock protect channel specific free
+> requests pool which can be moved to blk-mq preallocs and avoid
+> maintaining it (not sure how req_lim would be maintained though and if
+> it is still needed?).
 
- http://lkml.kernel.org/g/20140923192432.GA24441@mtj.dyndns.org
+Hello Sagi,
 
-On Tue, Sep 23, 2014 at 01:29:03PM -0600, Jens Axboe wrote:
-> The hack looks fine to me, if it passes Christophs boot stall test. The
-> hack isn't THAT nasty, since you already have a series queued up to fix
-> it for real for 3.18.
+The use of these locks is very traditional - each lock is used to 
+protect those members of the data structure it is a member of and that 
+need to be protected against concurrent access.
 
-Yeah, then I can pull in block fixes branch into a percpu for-3.18
-branch, revert the hack and then apply the patches to implement the
-proper fix.
+Even with this patch applied "target->lock" is still used, e.g. to 
+protect target port state modifications.
 
-Thanks.
+I will convert the free request pool in the next version of this patch 
+series. The code for managing req_lim can probably be converted into 
+something based on the blk-mq reserved tag infrastructure.
 
--- 
-tejun
+Bart.
