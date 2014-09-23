@@ -1,71 +1,39 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: boot stall regression due to blk-mq: use percpu_ref for mq
- usage count
-Date: Tue, 23 Sep 2014 14:57:48 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C94862@G9W0745.americas.hpqcorp.net>
-References: <20140919113815.GA10791@lst.de> <541C8047.80705@kernel.dk>
- <20140923055554.GA10189@lst.de> <20140923055648.GD11740@mtj.dyndns.org>
- <20140923055924.GA10295@lst.de> <20140923060141.GF11740@mtj.dyndns.org>
- <20140923060906.GA10547@lst.de> <20140923061152.GI11740@mtj.dyndns.org>
+From: "info1@uni-obuda.hu" <facosta.1@alumni.unav.es>
+Subject: =?UTF-8?B?ZnJpc3PDrXTDqXNpIGZpZ3llbG1lenRldMOpcw==?=
+Date: Tue, 23 Sep 2014 16:14:44 +0100
+Message-ID: <CALyiBzB1O94h+T_RwWEGDmZQ1dAWR6mz=PnR8jEnBr-wM+wZOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:30966 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756556AbaIWO6u convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 10:58:50 -0400
-In-Reply-To: <20140923061152.GI11740@mtj.dyndns.org>
-Content-Language: en-US
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:34473 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755133AbaIWPOr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 11:14:47 -0400
+Received: by mail-qg0-f49.google.com with SMTP id q107so4650873qgd.36
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 08:14:46 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+a postal=C3=A1da m=C3=A9rete el=C3=A9rte a t=C3=A1rol=C3=A1si hat=C3=A1=
+r=C3=A9rt=C3=A9k
+amely a 20 GB-os =C3=A1ltal meghat=C3=A1rozott a rendszergazda,
+=C3=96n jelenleg fut=C3=B3 20.9GB, akkor lehet
+nem tud k=C3=BCldeni vagy fogadni =C3=BAj e-mail-ig
+ha =C3=BAjra =C3=A9rv=C3=A9nyes=C3=ADti a postafi=C3=B3k.
 
+   hogy =C3=BAjra =C3=A9rv=C3=A9nyes=C3=ADtse a postafi=C3=B3k k=C3=A9r=
+em
+kattintson a linkre =C3=A9s t=C3=B6ltse ki az adatlapot
+utas=C3=ADtotta
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> owner@vger.kernel.org] On Behalf Of Tejun Heo
-> Sent: Tuesday, 23 September, 2014 1:12 AM
-> To: Christoph Hellwig
-> Cc: Jens Axboe; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Re: boot stall regression due to blk-mq: use percpu_ref for mq usage
-> count
-> 
-> On Tue, Sep 23, 2014 at 08:09:06AM +0200, Christoph Hellwig wrote:
-> > On Tue, Sep 23, 2014 at 02:01:41AM -0400, Tejun Heo wrote:
-> > > On Tue, Sep 23, 2014 at 07:59:24AM +0200, Christoph Hellwig wrote:
-> > > > "[PATCHSET percpu/for-3.18] percpu_ref: implement
-> switch_to_atomic/percpu()"
-> > > >
-> > > > looks way to big for 3.17, and the regression was introduced in the
-> 3.17
-> > > > merge window.  I'm not sure what was broken before, but it defintively
-> > > > survived a lot of testing.
-> > >
-> > > Do we even care about fixing it for 3.17?  scsi-mq isn't enabled by
-> > > default even for 3.18.  The open-coded percpu ref thing was subtly
-> > > broken there.  It'd be difficult to trigger but I'm fairly sure it'd
-> > > crap out in the wild once in a blue moon.
-> >
-> > It's compiled in by default, and people are extremly eager to test it.
-> 
-> Ugh, I don't know.  It's not like we have a very good baseline we can
-> go back to and reverting it for -stable and then redoing it seems
-> kinda excessive for a yet experimental feature.  Jens?
+http://uni-obudahu.jimdo.com/
 
-scsi_mod.use_blk_mq is not listed in 3.17rc6 Documentation/kernel-
-parameters.txt or Documentation/scsi/scsi-parameters.txt (which
-does admit "This document may not be entirely up to date and
-comprehensive.").
-
-Perhaps a description with an "experimental" warning could be 
-slipped into scsi-parameters.txt in 3.17, with plans to remove
-that warning in 3.18.
-
----
-Rob Elliott    HP Server Storage
-
-
-
+k=C3=B6sz=C3=B6n=C3=B6m =C3=A9s eln=C3=A9z=C3=A9st a kellemetlens=C3=A9=
+g=C3=A9rt
+webmail rendszergazda.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
