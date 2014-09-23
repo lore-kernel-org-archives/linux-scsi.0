@@ -1,41 +1,46 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH fix for 3.17] uas: Add another ASM1051 usb-id to the uas blacklist
-Date: Tue, 23 Sep 2014 15:48:50 +0200
-Message-ID: <1411480130-14260-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46570 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754040AbaIWNs4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2014 09:48:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Subject: Re: [PATCH] xen: make pvscsi frontend dependant on xenbus frontend
+Date: Tue, 23 Sep 2014 15:06:52 +0100
+Message-ID: <alpine.DEB.2.02.1409231506390.15268@kaball.uk.xensource.com>
+References: <1410756301-23340-1-git-send-email-jgross@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1410756301-23340-1-git-send-email-jgross@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>
+Cc: jim.epost@gmail.com, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-As most ASM1051 based devices, this one has unfixable issues with uas too.
+On Mon, 15 Sep 2014, Juergen Gross wrote:
+> The pvscsi frontend driver requires the xenbus frontend driver. Reflect
+> this in Kconfig.
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
 
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/unusual_uas.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Reviewed-by: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 94fb09f..8511b54 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -67,3 +67,11 @@ UNUSUAL_DEV(0x152d, 0x0567, 0x0000, 0x9999,
- 		"JMS567",
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_REPORT_OPCODES),
-+
-+/* Most ASM1051 based devices have issues with uas, blacklist them all */
-+/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
-+UNUSUAL_DEV(0x174c, 0x5106, 0x0000, 0x9999,
-+		"ASMedia",
-+		"ASM1051",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_IGNORE_UAS),
--- 
-2.1.0
-
+>  drivers/scsi/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 9130df1..ff62dc1 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -579,6 +579,7 @@ config VMWARE_PVSCSI
+>  config XEN_SCSI_FRONTEND
+>  	tristate "XEN SCSI frontend driver"
+>  	depends on SCSI && XEN
+> +	select XEN_XENBUS_FRONTEND
+>  	help
+>  	  The XEN SCSI frontend driver allows the kernel to access SCSI Devices
+>  	  within another guest OS (usually Dom0).
+> -- 
+> 1.8.4.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://secure-web.cisco.com/1jE8NNDhHwOASDbIzbn-azzuN8MKBMP1e4rCG2hGFpNvqSN8uwPwleK_Lmj9tzbaylXigSiLek5R_LJBvhlKaVWIjN_cB2SWcOB2WEXe4nDTKNaIEC6vNV5stEFM1SLzyMntl4a2YTHo6X7bvUsZQqYkXr5h_oDDR84iBHb2dum8/http%3A%2F%2Fwww.tux.org%2Flkml%2F
+> 
