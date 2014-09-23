@@ -1,57 +1,57 @@
-From: Chris J Arges <chris.j.arges@canonical.com>
-Subject: Re: [PATCH v3] mptfusion: enable no_write_same for vmware scsi disks
-Date: Tue, 23 Sep 2014 10:29:30 -0500
-Message-ID: <542191DA.7090403@canonical.com>
-References: <20140923071154.GB3867@infradead.org> <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: boot stall regression due to blk-mq: use percpu_ref for mq usage
+ count
+Date: Tue, 23 Sep 2014 09:49:31 -0600
+Message-ID: <5421968B.7080309@kernel.dk>
+References: <20140919113815.GA10791@lst.de> <541C8047.80705@kernel.dk> <20140923055554.GA10189@lst.de> <20140923055648.GD11740@mtj.dyndns.org> <20140923055924.GA10295@lst.de> <20140923060141.GF11740@mtj.dyndns.org> <20140923060906.GA10547@lst.de> <20140923061152.GI11740@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42908 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753316AbaIWP3f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 11:29:35 -0400
-In-Reply-To: <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35059 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470AbaIWPtf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 11:49:35 -0400
+Received: by mail-pa0-f51.google.com with SMTP id eu11so5092917pac.24
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 08:49:34 -0700 (PDT)
+In-Reply-To: <20140923061152.GI11740@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: bruce.lucas@mongodb.com, adam.radford@avagotech.com, kashyap.desai@avagotech.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 09/23/2014 09:22 AM, Chris J Arges wrote:
-> When using a virtual SCSI disk in a VMWare VM if blkdev_issue_zeroout is used
-> data can be improperly zeroed out using the mptfusion driver. This patch
-> disables write_same for this driver and the vmware subsystem_vendor which
-> ensures that manual zeroing out is used instead.
+On 09/23/2014 12:11 AM, Tejun Heo wrote:
+> On Tue, Sep 23, 2014 at 08:09:06AM +0200, Christoph Hellwig wrote:
+>> On Tue, Sep 23, 2014 at 02:01:41AM -0400, Tejun Heo wrote:
+>>> On Tue, Sep 23, 2014 at 07:59:24AM +0200, Christoph Hellwig wrote:
+>>>> "[PATCHSET percpu/for-3.18] percpu_ref: implement switch_to_atomic/percpu()"
+>>>>
+>>>> looks way to big for 3.17, and the regression was introduced in the 3.17
+>>>> merge window.  I'm not sure what was broken before, but it defintively
+>>>> survived a lot of testing.
+>>>
+>>> Do we even care about fixing it for 3.17?  scsi-mq isn't enabled by
+>>> default even for 3.18.  The open-coded percpu ref thing was subtly
+>>> broken there.  It'd be difficult to trigger but I'm fairly sure it'd
+>>> crap out in the wild once in a blue moon.
+>>
+>> It's compiled in by default, and people are extremly eager to test it.
 > 
+> Ugh, I don't know.  It's not like we have a very good baseline we can
+> go back to and reverting it for -stable and then redoing it seems
+> kinda excessive for a yet experimental feature.  Jens?
 
-Please hold off on applying this, I'm pursuing a different approach to
-solving this bug that may be more optimal than adding this quirk.
-Thanks,
---chris j arges
+It's not just scsi-mq, there are active users of blk-mq in the current
+tree - like virtio_blk, mtip32xx. None of those are affected by the RCU
+slowdown due to these changes, so it's not a big deal to them. But it is
+a big deal if we can't tell people to test scsi-mq in 3.17, that was the
+entire point of having it there but not default to on. So yeah, this
+really should be fixed for 3.17.
 
+I'm not aware of any reports on the existing enter count breaking things
+for them. So while it may not be perfect, reverting the percpu ref count
+changes for 3.17 may be the best option that we have.
 
-> BugLink: http://bugs.launchpad.net/bugs/1371591
-> Reported-by: Bruce Lucas <bruce.lucas@mongodb.com>
-> Tested-by: Chris J Arges <chris.j.arges@canonical.com>
-> Signed-off-by: Chris J Arges <chris.j.arges@canonical.com>
-> ---
->  drivers/message/fusion/mptspi.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-> index 787933d..613231c 100644
-> --- a/drivers/message/fusion/mptspi.c
-> +++ b/drivers/message/fusion/mptspi.c
-> @@ -1419,6 +1419,11 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  		goto out_mptspi_probe;
->          }
->  
-> +	/* VMWare emulation doesn't properly implement WRITE_SAME
-> +	 */
-> +	if (pdev->subsystem_vendor == 0x15AD)
-> +		sh->no_write_same = 1;
-> +
->  	spin_lock_irqsave(&ioc->FreeQlock, flags);
->  
->  	/* Attach the SCSI Host to the IOC structure
-> 
+-- 
+Jens Axboe
+
