@@ -1,183 +1,251 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V4 05/17] scsi: ufs: add voting support for host controller power
-Date: Tue, 23 Sep 2014 10:31:27 +0300
-Message-ID: <1411457499-8074-6-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V4 07/17] scsi: ufs: improve init sequence
+Date: Tue, 23 Sep 2014 10:31:29 +0300
+Message-ID: <1411457499-8074-8-git-send-email-draviv@codeaurora.org>
 References: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40334 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:40360 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754706AbaIWHcN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 03:32:13 -0400
+	with ESMTP id S1754711AbaIWHcS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 03:32:18 -0400
 In-Reply-To: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Raviv Shvili <rshvili@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Sujit Reddy Thumma <sthumma@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-From: Raviv Shvili <rshvili@codeaurora.org>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-Add the support for voting of the regulator powering the
-host controller logic.
+In ->hce_enable_notify() callback the vendor specific initialization
+may carry out additional DME configuration using UIC commands and
+hence the UIC command completion interrupt enable bit should be set
+before the post reset notification.
+Add retries if the link-startup fails. This is required since due to
+hardware timing issues, the Uni-Pro link-startup might fail. The UFS
+HCI recovery procedure contradicts the Uni-Pro sequence. The UFS HCI
+specifies to resend DME_LINKSTARTUP command after IS.ULLS (link-lost
+interrupt) is received. The Uni-Pro specifies that if link-startup
+fails the link is in "down" state. The link-lost is indicated to the
+DME user only when the link is up. Hence, the UFS HCI recovery procedure
+of waiting for IS.ULLS and retrying link-startup may not work properly.
 
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+At the end, if detection fails, power off (disable clocks, regulators,
+phy) if the UFS device detection fails. This saves power while UFS device
+is not embedded into the system.
+
+Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index b0f791a..fb1234e 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -9,6 +9,7 @@ Required properties:
- - reg               : <registers mapping>
- 
- Optional properties:
-+- vdd-hba-supply        : phandle to UFS host controller supply regulator node
- - vcc-supply            : phandle to VCC supply regulator node
- - vccq-supply           : phandle to VCCQ supply regulator node
- - vccq2-supply          : phandle to VCCQ2 supply regulator node
-@@ -20,6 +21,7 @@ Optional properties:
- - vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
- - vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
- - vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
-+- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
- 
- - clocks                : List of phandle and clock specifier pairs
- - clock-names           : List of clock input name strings sorted in the same
-@@ -39,6 +41,8 @@ Example:
- 		reg = <0xfc598000 0x800>;
- 		interrupts = <0 28 0>;
- 
-+		vdd-hba-supply = <&xxx_reg0>;
-+		vdd-hba-fixed-regulator;
- 		vcc-supply = <&xxx_reg1>;
- 		vcc-supply-1p8;
- 		vccq-supply = <&xxx_reg2>;
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 729ce7d..9bb6919 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -385,6 +385,7 @@ struct ufs_vreg_info {
- 	struct ufs_vreg *vcc;
- 	struct ufs_vreg *vccq;
- 	struct ufs_vreg *vccq2;
-+	struct ufs_vreg *vdd_hba;
- };
- 
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 642d80f..dde4e6e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -147,6 +147,11 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 
- 	vreg->name = kstrdup(name, GFP_KERNEL);
- 
-+	/* if fixed regulator no need further initialization */
-+	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
-+	if (of_property_read_bool(np, prop_name))
-+		goto out;
-+
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
- 	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
- 	if (ret) {
-@@ -198,6 +203,10 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
- 	struct device *dev = hba->dev;
- 	struct ufs_vreg_info *info = &hba->vreg_info;
- 
-+	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba);
-+	if (err)
-+		goto out;
-+
- 	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
- 	if (err)
- 		goto out;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b033702..26301b8 100644
+index 3f2b30d..af29d4c 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3311,6 +3311,16 @@ out:
- 	return ret;
- }
+@@ -62,6 +62,12 @@
+ /* Task management command timeout */
+ #define TM_CMD_TIMEOUT	100 /* msecs */
  
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
++/* maximum number of link-startup retries */
++#define DME_LINKSTARTUP_RETRIES 3
 +
-+	if (info)
-+		return ufshcd_toggle_vreg(hba->dev, info->vdd_hba, on);
++/* maximum number of reset retries before giving up */
++#define MAX_HOST_RESET_RETRIES 5
 +
-+	return 0;
-+}
-+
- static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
-@@ -3350,6 +3360,16 @@ out:
- 	return ret;
- }
+ /* Expose the flag value from utp_upiu_query.value */
+ #define MASK_QUERY_UPIU_FLAG_LOC 0xFF
  
-+static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
+@@ -137,6 +143,8 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
+ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
++static void ufshcd_hba_exit(struct ufs_hba *hba);
++static int ufshcd_probe_hba(struct ufs_hba *hba);
+ 
+ /*
+  * ufshcd_wait_for_register - wait for register value to change
+@@ -2043,6 +2051,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ 		msleep(5);
+ 	}
+ 
++	/* enable UIC related interrupts */
++	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
 +
-+	if (info)
-+		return ufshcd_get_vreg(hba->dev, info->vdd_hba);
-+
-+	return 0;
-+}
-+
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
+ 	if (hba->vops && hba->vops->hce_enable_notify)
+ 		hba->vops->hce_enable_notify(hba, POST_CHANGE);
+ 
+@@ -2058,23 +2069,33 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ static int ufshcd_link_startup(struct ufs_hba *hba)
  {
- 	int ret = 0;
-@@ -3483,14 +3503,29 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
+ 	int ret;
++	int retries = DME_LINKSTARTUP_RETRIES;
+ 
+-	/* enable UIC related interrupts */
+-	ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
++	do {
++		if (hba->vops && hba->vops->link_startup_notify)
++			hba->vops->link_startup_notify(hba, PRE_CHANGE);
+ 
+-	if (hba->vops && hba->vops->link_startup_notify)
+-		hba->vops->link_startup_notify(hba, PRE_CHANGE);
++		ret = ufshcd_dme_link_startup(hba);
+ 
+-	ret = ufshcd_dme_link_startup(hba);
+-	if (ret)
+-		goto out;
++		/* check if device is detected by inter-connect layer */
++		if (!ret && !ufshcd_is_device_present(hba)) {
++			dev_err(hba->dev, "%s: Device not present\n", __func__);
++			ret = -ENXIO;
++			goto out;
++		}
+ 
+-	/* check if device is detected by inter-connect layer */
+-	if (!ufshcd_is_device_present(hba)) {
+-		dev_err(hba->dev, "%s: Device not present\n", __func__);
+-		ret = -ENXIO;
++		/*
++		 * DME link lost indication is only received when link is up,
++		 * but we can't be sure if the link is up until link startup
++		 * succeeds. So reset the local Uni-Pro and try again.
++		 */
++		if (ret && ufshcd_hba_enable(hba))
++			goto out;
++	} while (ret && retries--);
++
++	if (ret)
++		/* failed to get the link up... retire */
+ 		goto out;
+-	}
+ 
+ 	/* Include any host controller configuration via UIC commands */
+ 	if (hba->vops && hba->vops->link_startup_notify) {
+@@ -3139,7 +3160,6 @@ out:
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
  {
  	int err;
+-	async_cookie_t cookie;
+ 	unsigned long flags;
  
--	err = ufshcd_init_clocks(hba);
-+	/*
-+	 * Handle host controller power separately from the UFS device power
-+	 * rails as it will help controlling the UFS host controller power
-+	 * collapse easily which is different than UFS device power collapse.
-+	 * Also, enable the host controller power before we go ahead with rest
-+	 * of the initialization here.
-+	 */
-+	err = ufshcd_init_hba_vreg(hba);
- 	if (err)
+ 	/* Reset the host controller */
+@@ -3152,10 +3172,9 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
  		goto out;
  
--	err = ufshcd_setup_clocks(hba, true);
-+	err = ufshcd_setup_hba_vreg(hba, true);
- 	if (err)
- 		goto out;
- 
-+	err = ufshcd_init_clocks(hba);
-+	if (err)
-+		goto out_disable_hba_vreg;
+ 	/* Establish the link again and restore the device */
+-	cookie = async_schedule(ufshcd_async_scan, hba);
+-	/* wait for async scan to be completed */
+-	async_synchronize_cookie(++cookie);
+-	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
++	err = ufshcd_probe_hba(hba);
 +
-+	err = ufshcd_setup_clocks(hba, true);
-+	if (err)
-+		goto out_disable_hba_vreg;
-+
- 	err = ufshcd_init_vreg(hba);
- 	if (err)
- 		goto out_disable_clks;
-@@ -3509,6 +3544,8 @@ out_disable_vreg:
- 	ufshcd_setup_vreg(hba, false);
- out_disable_clks:
- 	ufshcd_setup_clocks(hba, false);
-+out_disable_hba_vreg:
-+	ufshcd_setup_hba_vreg(hba, false);
++	if (!err && (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL))
+ 		err = -EIO;
  out:
- 	return err;
- }
-@@ -3518,6 +3555,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 	ufshcd_variant_hba_exit(hba);
- 	ufshcd_setup_vreg(hba, false);
- 	ufshcd_setup_clocks(hba, false);
-+	ufshcd_setup_hba_vreg(hba, false);
+ 	if (err)
+@@ -3177,8 +3196,11 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+ {
+ 	int err = 0;
+ 	unsigned long flags;
++	int retries = MAX_HOST_RESET_RETRIES;
+ 
+-	err = ufshcd_host_reset_and_restore(hba);
++	do {
++		err = ufshcd_host_reset_and_restore(hba);
++	} while (err && --retries);
+ 
+ 	/*
+ 	 * After reset the door-bell might be cleared, complete
+@@ -3243,13 +3265,13 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
  }
  
  /**
+- * ufshcd_async_scan - asynchronous execution for link startup
+- * @data: data pointer to pass to this function
+- * @cookie: cookie data
++ * ufshcd_probe_hba - probe hba to detect device and initialize
++ * @hba: per-adapter instance
++ *
++ * Execute link-startup and verify device initialization
+  */
+-static void ufshcd_async_scan(void *data, async_cookie_t cookie)
++static int ufshcd_probe_hba(struct ufs_hba *hba)
+ {
+-	struct ufs_hba *hba = (struct ufs_hba *)data;
+ 	int ret;
+ 
+ 	ret = ufshcd_link_startup(hba);
+@@ -3275,7 +3297,26 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 		pm_runtime_put_sync(hba->dev);
+ 	}
+ out:
+-	return;
++	/*
++	 * If we failed to initialize the device or the device is not
++	 * present, turn off the power/clocks etc.
++	 */
++	if (ret && !ufshcd_eh_in_progress(hba))
++		ufshcd_hba_exit(hba);
++
++	return ret;
++}
++
++/**
++ * ufshcd_async_scan - asynchronous execution for probing hba
++ * @data: data pointer to pass to this function
++ * @cookie: cookie data
++ */
++static void ufshcd_async_scan(void *data, async_cookie_t cookie)
++{
++	struct ufs_hba *hba = (struct ufs_hba *)data;
++
++	ufshcd_probe_hba(hba);
+ }
+ 
+ static struct scsi_host_template ufshcd_driver_template = {
+@@ -3631,6 +3672,7 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
+ 	if (err)
+ 		goto out_disable_vreg;
+ 
++	hba->is_powered = true;
+ 	goto out;
+ 
+ out_disable_vreg:
+@@ -3645,10 +3687,13 @@ out:
+ 
+ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ {
+-	ufshcd_variant_hba_exit(hba);
+-	ufshcd_setup_vreg(hba, false);
+-	ufshcd_setup_clocks(hba, false);
+-	ufshcd_setup_hba_vreg(hba, false);
++	if (hba->is_powered) {
++		ufshcd_variant_hba_exit(hba);
++		ufshcd_setup_vreg(hba, false);
++		ufshcd_setup_clocks(hba, false);
++		ufshcd_setup_hba_vreg(hba, false);
++		hba->is_powered = false;
++	}
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index bc0f7ed..eddb3f3 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -228,6 +228,7 @@ struct ufs_hba_variant_ops {
+  * @eh_flags: Error handling flags
+  * @intr_mask: Interrupt Mask Bits
+  * @ee_ctrl_mask: Exception event control mask
++ * @is_powered: flag to check if HBA is powered
+  * @eh_work: Worker to handle UFS errors that require s/w attention
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
+@@ -283,6 +284,7 @@ struct ufs_hba {
+ 	u32 eh_flags;
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
++	bool is_powered;
+ 
+ 	/* Work Queues */
+ 	struct work_struct eh_work;
 -- 
 1.8.5.2
 
