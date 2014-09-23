@@ -1,74 +1,75 @@
-From: Chris J Arges <chris.j.arges@canonical.com>
-Subject: Re: [PATCH v3] mptfusion: enable no_write_same for vmware scsi disks
-Date: Tue, 23 Sep 2014 17:11:44 -0500
-Message-ID: <5421F020.1030309@canonical.com>
-References: <20140923071154.GB3867@infradead.org> <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH V4 09/17] scsi: ufs: manually add well known logical units
+Date: Tue, 23 Sep 2014 15:48:09 -0700
+Message-ID: <000801cfd780$72ee2870$58ca7950$@codeaurora.org>
+References: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>    <1411457499-8074-10-git-send-email-draviv@codeaurora.org>    <20140923083532.GB28647@infradead.org> <fe5615989f4f99067ddb8695a4a046e1.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hch@infradead.org
-Cc: bruce.lucas@mongodb.com, adam.radford@avagotech.com, kashyap.desai@avagotech.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:38005 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756759AbaIWWsL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 18:48:11 -0400
+In-Reply-To: <fe5615989f4f99067ddb8695a4a046e1.squirrel@www.codeaurora.org>
+Content-Language: en-us
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Dolev Raviv' <draviv@codeaurora.org>
+Cc: james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
 
-On 09/23/2014 09:22 AM, Chris J Arges wrote:
-> When using a virtual SCSI disk in a VMWare VM if blkdev_issue_zeroout is used
-> data can be improperly zeroed out using the mptfusion driver. This patch
-> disables write_same for this driver and the vmware subsystem_vendor which
-> ensures that manual zeroing out is used instead.
-> 
-> BugLink: http://bugs.launchpad.net/bugs/1371591
-> Reported-by: Bruce Lucas <bruce.lucas@mongodb.com>
-> Tested-by: Chris J Arges <chris.j.arges@canonical.com>
-> Signed-off-by: Chris J Arges <chris.j.arges@canonical.com>
-> ---
->  drivers/message/fusion/mptspi.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-> index 787933d..613231c 100644
-> --- a/drivers/message/fusion/mptspi.c
-> +++ b/drivers/message/fusion/mptspi.c
-> @@ -1419,6 +1419,11 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  		goto out_mptspi_probe;
->          }
->  
-> +	/* VMWare emulation doesn't properly implement WRITE_SAME
-> +	 */
-> +	if (pdev->subsystem_vendor == 0x15AD)
-> +		sh->no_write_same = 1;
-> +
->  	spin_lock_irqsave(&ioc->FreeQlock, flags);
->  
->  	/* Attach the SCSI Host to the IOC structure
-> 
+Thanks Chris. Agreed with all your suggestion, next revision will address
+your comments.
 
-As a workaround one can do the following:
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dolev Raviv
+Sent: Tuesday, September 23, 2014 4:49 AM
+To: Christoph Hellwig
+Cc: Dolev Raviv; james.bottomley@hansenpartnership.com; hch@infradead.org;
+linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org;
+linux-arm-msm@vger.kernel.org; santoshsy@gmail.com; Subhash Jadavani
+Subject: Re: [PATCH V4 09/17] scsi: ufs: manually add well known logical
+units
 
-# Set the scsi disk max_write_same_blocks to 0 to disable write_same.
-(Your paths may vary...)
-echo 0 >
-/sys/devices/pci0000:00/0000:00:10.0/host32/target32:0:0/32:0:0:0/scsi_disk/32:0:0:0/max_write_same_blocks
 
-# Force the dm device to reload (thus calling dm_table_set_restrictions
-and checking for the new max_write_same_blocks value)
-dmsetup table /dev/dm-0 save
-dmsetup suspend /dev/dm-0; dmsetup reload /dev/dm-0 save; dmsetup resume
-/dev/dm-0
+> None of the REPORT LUNS language makes sense as we're not using it.
+>
+> Can you respon the patch with a better description, and a little 
+> comment in the code on why you're adding these wluns.
 
-# Now the dm device shows write_same_max_bytes as 0
-cat /sys/block/dm-0/queue/write_same_max_bytes
+ok.
 
-# Run the test case in the original bug, it now passes.
+>
+> Also can I assume none of the later patches relies on their existance?
 
-So a few questions:
-1) Does this workaround make sense? Perhaps there is an easier way?
-2) Do we expect changing max_write_same_blocks at the scsi_disk level to
-propagate the right write_same flags to other layers such as dm?
-3) In light of this workaround, does this patch still make sense? Would
-there be a better layer to fix this?
+In UFS power management commands such as SSU, are sent to "device w- lun".
+Leaving it out should only affect the ability to suspend the device.
+Other patches are not directly affected by it.
 
-Thanks,
---chris j arges
+> If you do you need to check the error return from scsi_add_device, if 
+> not said comment should mention why it's fine to not actually find any 
+> of these.
+>
+
+Will discus it further with Subhash.
+
+> Also if you do use one of them from kernel space later it might make 
+> more sense to use __scsi_add_device and store a pointer to the 
+> scsi_device instead of looking it up later.
+>
+
+I'll review all you suggestions with Subhash.
+
+
+--
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
