@@ -1,47 +1,110 @@
-From: Kristian Hagsted Rasmussen <kristian@hagsted.dk>
-Subject: open-iSCSI with BluRay drive use sr driver scsi-1 instead of
- scsi3-mmc.
-Date: Tue, 23 Sep 2014 12:30:19 +0000
-Message-ID: <4600033142b34df8b366a4ae132beaf7@hagsted-cserver.hagsted.dk>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: Re: [PATCH V4 11/17] scsi: ufs: add UFS power management support
+Date: Tue, 23 Sep 2014 12:57:32 -0000
+Message-ID: <4bbf3e7f23b55b6609367f47d2e2fdea.squirrel@www.codeaurora.org>
+References: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>
+    <1411457499-8074-12-git-send-email-draviv@codeaurora.org>
+    <20140923101451.GA11623@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hagsted.dk ([2.108.107.22]:41013 "EHLO hagsted.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751412AbaIWMkG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 08:40:06 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20140923101451.GA11623@infradead.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: Dolev Raviv <draviv@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "To recipients. Use the Arrow keys to navigate the list, and the Enter
-	key to open a contact card." <linux-scsi@vger.kernel.org>
 
-Dear List 
 
-I have a server with a BluRay drive that is shared as an iSCSI target, with either SCST or LIO (I have tried both too see if the error was on the target implementation). It is possible for me to connect to this drive both from Linux using open-iSCSI and from windows using the MS-iSCSI-initiator. On windows I can use the drive like it was a local drive, meaning that I can play all type of content from it including encrypted DVDs and I would also be able to change the region settings on the drive if I felt for it. However on Linux with open-iSCSI I'm not able to play encrypted DVDs, unless a MS-Windows computer is also connected to the drive. I am also not able to retrieve the region settings of the drive with the regionset utility. After much poking around I found some differences between t
- he server system and the initiator system when binding the drive to the sr module. 
+>>  /**
+>>   * ufshcd_slave_alloc - handle initial SCSI device configurations
+>>   * @sdev: pointer to SCSI device
+>> @@ -2232,6 +2403,21 @@ static int ufshcd_slave_alloc(struct scsi_device
+>> *sdev)
+>>
+>>  	ufshcd_set_queue_depth(sdev);
+>>
+>> +	ufshcd_get_lu_power_on_wp_status(hba, sdev);
+>> +
+>> +	/*
+>> +	 * For selecting the UFS device power mode (Active / UFS_Sleep /
+>> +	 * UFS_PowerDown), SCSI power management command (START STOP UNIT)
+>> +	 * needs to be sent to a "UFS device" Well known Logical Unit (W-LU).
+>> +	 * As this command would be sent during the UFS host controller
+>> +	 * runtime/system PM callbacks, we need a reference to "scsi_device"
+>> +	 * associated to "UFS device" W-LU. This change saves the
+>> "scsi_device"
+>> +	 * reference for "UFS device" W-LU during slave_configure() callback
+>> +	 * from SCSI mid layer.
+>> +	 */
+>> +	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
+>> +		hba->sdev_ufs_device = sdev;
+>> +
+>
+> Storing the pointer in slave_alloc is not safe as you don't known if the
+> probing was successful.  In addition you really need a reference to a
+> scsi_device that you store somewhere as a user could easily delete the
+> device through sysfs, which any access to it invalid.
+>
+> As mention earlier you should just add this wlun using __scsi_device_add
+> which gives you a pointer and a reference to the fully probed device.
 
-For the  server system, which can play encrypted DVDs the log entries are: 
-[    6.661163] scsi 2:0:0:0: CD-ROM            Optiarc  BD ROM BC-5600S  1.82 PQ: 0 ANSI: 5 
-[    6.675635] sr0: scsi3-mmc drive: 16x/16x writer dvd-ram cd/rw xa/form2 cdda tray 
-[    6.675639] cdrom: Uniform CD-ROM driver Revision: 3.20 
-[    6.675801] sr 2:0:0:0: Attached scsi CD-ROM sr0 
-[    6.675910] sr 2:0:0:0: Attached scsi generic sg2 type 5 
+Sounds reasonable, I'll coordinate it with the previous patch.
 
-For the initiator system, which cannot play encrypted DVDs the log entries are: 
-[   36.650119] scsi 9:0:0:0: CD-ROM            Optiarc  BD ROM BC-5600S  1.82 PQ: 0 ANSI: 5 
-[   36.663525] sr0: scsi-1 drive 
-[   36.663530] cdrom: Uniform CD-ROM driver Revision: 3.20 
-[   36.663806] sr 9:0:0:0: Attached scsi CD-ROM sr0 
-[   36.664068] sr 9:0:0:0: Attached scsi generic sg4 type 5 
+>
+>> +static int
+>> +ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
+>> +{
+>> +	unsigned char cmd[6] = {REQUEST_SENSE,
+>> +				0,
+>> +				0,
+>> +				0,
+>> +				SCSI_SENSE_BUFFERSIZE,
+>> +				0};
+>> +	char *buffer;
+>> +	int ret;
+>> +
+>> +	buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
+>> +	if (!buffer) {
+>> +		ret = -ENOMEM;
+>> +		goto out;
+>> +	}
+>> +
+>> +	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
+>> +				SCSI_SENSE_BUFFERSIZE, NULL,
+>> +				msecs_to_jiffies(1000), 3, NULL, REQ_PM);
+>> +	if (ret)
+>> +		pr_err("%s: failed with err %d\n", __func__, ret);
+>> +
+>> +	kfree(buffer);
+>> +out:
+>> +	return ret;
+>> +}
+>
+> It would be good to have an explanation why you need to call
+> REQUEST SENSE from the driver.  OR your own START STOP later one.  This
+> all seems very much against the normal model of operation for SCSI
+> devices.
+>
 
-Please note here the difference in the second entry on the two systems, one says "sr0: scsi3-mmc drive" and the other "sr0: scsi-1 drive". By looking through the linux kernel code I found out that the module falls back to scsi-1 if it cannot read the capabilities mode page of the attached drive. Please refer to "drivers/scsi/sr.c" from around line 873 in the Linux source code. Is there a way to ensure that linux used the correct drive type, or enable reading of the capability mode page? 
+Let me rephrase the explanation from the commit message:
+We issue request sense before sending START_STOP_UNIT to the device
+well-known logical unit (w-lun) to make sure that the device w-lun
+unit attention condition is cleared. Otherwise START_STOP_UNIT will fail.
 
-It should be noted that I am running on Ubuntu 14.04, with libdvdread4 and libdvdcss2 installed correctly. 
+As mentioned in my previous mail (in response to [9/17] patch comments),
+UFS driver power management is controlled via device W-LUN during the
+suspend process.
+As documented in the comment above: "
+ * For selecting the UFS device power mode (Active / UFS_Sleep /
+ * UFS_PowerDown), SCSI power management command (START STOP UNIT)
+ * needs to be sent to a "UFS device" Well known Logical Unit (W-LU).
+ * As this command would be sent during the UFS host controller
+ * runtime/system PM callbacks, ....
+"
+Do you have another suggestion for making it compatible to other scsi
+drivers?
+Would you prefer this logic would go into core scsi?
 
-I hope someone can help me fix this problem as I would like to switch completely to Linux. 
-
-Please fell free to ask for further info. 
-
-Best regards Kristian Hagsted Rasmussen 
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
