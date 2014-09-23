@@ -1,27 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: two more fixes for block/for-linus
-Date: Tue, 23 Sep 2014 07:56:54 +0200
-Message-ID: <20140923055654.GB10189@lst.de>
-References: <1411394371-16254-1-git-send-email-hch@lst.de> <54202CF9.7050303@kernel.dk> <54206D0F.1010506@interlog.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: boot stall regression due to blk-mq: use percpu_ref for mq usage
+ count
+Date: Tue, 23 Sep 2014 01:57:24 -0400
+Message-ID: <20140923055724.GE11740@mtj.dyndns.org>
+References: <20140919113815.GA10791@lst.de>
+ <541C8047.80705@kernel.dk>
+ <20140923055554.GA10189@lst.de>
+ <20140923055648.GD11740@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <54206D0F.1010506@interlog.com>
+In-Reply-To: <20140923055648.GD11740@mtj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Elliott, Robert (Server Storage)" <elliott@hp.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Sep 22, 2014 at 02:40:15PM -0400, Douglas Gilbert wrote:
-> With these patches applied (actually a resync an hour
-> ago with the for-linus tree which includes them), the
-> freeze-during-boot-up problem that I have been seeing
-> with an old SATA boot disk (perhaps 1.5 Gbps) for
-> the last two weeks, has gone away.
->
-> That SATA disk is connected to the motherboard (Gigabyte
-> Z97M-D3H/Z97M-D3H, BIOS F5 05/30/2014) and has a standard
-> AHCI interface as far as I can tell. dmesg confirms that.
+On Tue, Sep 23, 2014 at 01:56:48AM -0400, Tejun Heo wrote:
+> On Tue, Sep 23, 2014 at 07:55:54AM +0200, Christoph Hellwig wrote:
+> > Jens,
+> > 
+> > can we simply get these commits reverted from now if there's no better
+> > fix?  I'd hate to have this boot stall in the first kernel with blk-mq
+> > support for scsi.
+> 
+> Patches going out right now.
 
-Should have thought of the weird ATA error handling earlier.  Sorry Doug!
+And the original implementation was broken, so...
+
+-- 
+tejun
