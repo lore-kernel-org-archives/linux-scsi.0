@@ -1,44 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: boot stall regression due to blk-mq: use percpu_ref for mq usage
- count
-Date: Tue, 23 Sep 2014 02:11:52 -0400
-Message-ID: <20140923061152.GI11740@mtj.dyndns.org>
-References: <20140919113815.GA10791@lst.de>
- <541C8047.80705@kernel.dk>
- <20140923055554.GA10189@lst.de>
- <20140923055648.GD11740@mtj.dyndns.org>
- <20140923055924.GA10295@lst.de>
- <20140923060141.GF11740@mtj.dyndns.org>
- <20140923060906.GA10547@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] mptfusion: enable no_write_same for vmware scsi disks
+Date: Tue, 23 Sep 2014 00:11:54 -0700
+Message-ID: <20140923071154.GB3867@infradead.org>
+References: <20140922181929.GA11319@infradead.org>
+ <1411418701-25025-1-git-send-email-chris.j.arges@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140923060906.GA10547@lst.de>
+In-Reply-To: <1411418701-25025-1-git-send-email-chris.j.arges@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chris J Arges <chris.j.arges@canonical.com>
+Cc: hch@infradead.org, bruce.lucas@mongodb.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 23, 2014 at 08:09:06AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 23, 2014 at 02:01:41AM -0400, Tejun Heo wrote:
-> > On Tue, Sep 23, 2014 at 07:59:24AM +0200, Christoph Hellwig wrote:
-> > > "[PATCHSET percpu/for-3.18] percpu_ref: implement switch_to_atomic/percpu()"
-> > > 
-> > > looks way to big for 3.17, and the regression was introduced in the 3.17
-> > > merge window.  I'm not sure what was broken before, but it defintively
-> > > survived a lot of testing.
-> > 
-> > Do we even care about fixing it for 3.17?  scsi-mq isn't enabled by
-> > default even for 3.18.  The open-coded percpu ref thing was subtly
-> > broken there.  It'd be difficult to trigger but I'm fairly sure it'd
-> > crap out in the wild once in a blue moon.
-> 
-> It's compiled in by default, and people are extremly eager to test it.
+Hi Chris,
 
-Ugh, I don't know.  It's not like we have a very good baseline we can
-go back to and reverting it for -stable and then redoing it seems
-kinda excessive for a yet experimental feature.  Jens?
+thanks for updating it, althugh it would need a few more updates.
 
--- 
-tejun
+> +	/* Fix for vmware guests that do not implement write_same
+> +         */
+> +	if (pdev->subsystem_vendor == 0x15AD) {
+> +		mptspi_driver_template.no_write_same = 1;
+> +	}
+> +
+
+We should set it only on th host that matches, not the whole template
+for this case.  The host is allocated just below your statement in
+the same function, so this should be easy.
+
+Also no need for braces here, and try to follow the Linux comment style:
+
+	/* The VMWare emulation doesn't properly impement WRITE SAME */
+	if (pdev->subsystem_vendor == 0x15AD)
+		sh->no_write_same = 1;
+		
+
+(and yes, it would be good to have PCI_VENDOR_ID_VMWARE in pci_ids.h,
+ but that shouldn't be done in this bug fix patch)
