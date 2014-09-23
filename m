@@ -1,151 +1,108 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V4 17/17] scsi: ufs: definitions for phy interface
-Date: Tue, 23 Sep 2014 10:31:39 +0300
-Message-ID: <1411457499-8074-18-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V4 16/17] scsi: ufs: tune bkops while power managment events
+Date: Tue, 23 Sep 2014 10:31:38 +0300
+Message-ID: <1411457499-8074-17-git-send-email-draviv@codeaurora.org>
 References: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40471 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:40463 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753304AbaIWHcn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 03:32:43 -0400
+	with ESMTP id S1753933AbaIWHcl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 03:32:41 -0400
 In-Reply-To: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-- Adding some of the definitions missing in unipro.h, including power
-  enumeration.
-- Read Modify Write Line helper function
-- Indication for the type of suspend
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+Add capability to control the auto bkops during suspend.
+If host explicitly enables the auto bkops (background operation) on device
+then only device would perform the bkops on its own. If auto bkops is not
+enabled explicitly and if the device reaches to state where it must do
+background operation, device would raise the urgent bkops exception event
+to host and then host will enable the auto bkops on device. This patch
+adds the option to choose whether auto bkops should be enabled during
+runtime suspend or not. Since we don't want to keep the device active to
+perform the non critical bkops, host will enable urgent bkops only.
+
+Keep auto-bkops enabled after resume if urgent bkops needed.
+If device bkops status shows that its in critical need of executing
+background operations, host should allow the device to continue doing
+background operations.
+
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 15ec238..ce98a21 100644
+index 70c1f5d..15ec238 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5046,6 +5046,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+@@ -4816,13 +4816,19 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	}
  
- 	ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
- out:
-+	if (!ret)
-+		hba->is_sys_suspended = true;
- 	return ret;
- }
- EXPORT_SYMBOL(ufshcd_system_suspend);
+ 	if (ufshcd_is_runtime_pm(pm_op)) {
+-		/*
+-		 * The device is idle with no requests in the queue,
+-		 * allow background operations if needed.
+-		 */
+-		ret = ufshcd_bkops_ctrl(hba, BKOPS_STATUS_NON_CRITICAL);
+-		if (ret)
+-			goto enable_gating;
++		if (ufshcd_can_autobkops_during_suspend(hba)) {
++			/*
++			 * The device is idle with no requests in the queue,
++			 * allow background operations if bkops status shows
++			 * that performance might be impacted.
++			 */
++			ret = ufshcd_urgent_bkops(hba);
++			if (ret)
++				goto enable_gating;
++		} else {
++			/* make sure that auto bkops is disabled */
++			ufshcd_disable_auto_bkops(hba);
++		}
+ 	}
+ 
+ 	if ((req_dev_pwr_mode != hba->curr_dev_pwr_mode) &&
+@@ -4970,7 +4976,11 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			goto set_old_link_state;
+ 	}
+ 
+-	ufshcd_disable_auto_bkops(hba);
++	/*
++	 * If BKOPs operations are urgently needed at this moment then
++	 * keep auto-bkops enabled or else disable it.
++	 */
++	ufshcd_urgent_bkops(hba);
+ 	hba->clk_gating.is_suspended = false;
+ 
+ 	if (ufshcd_is_clkscaling_enabled(hba))
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b94b835..d502d70 100644
+index d5699d0..b94b835 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -471,6 +471,7 @@ struct ufs_hba {
+@@ -466,6 +466,8 @@ struct ufs_hba {
+ #define UFSHCD_CAP_HIBERN8_WITH_CLK_GATING (1 << 1)
+ 	/* Allow dynamic clk scaling */
+ #define UFSHCD_CAP_CLK_SCALING	(1 << 2)
++	/* Allow auto bkops to enabled during runtime suspend */
++#define UFSHCD_CAP_AUTO_BKOPS_SUSPEND (1 << 3)
  
  	struct devfreq *devfreq;
  	struct ufs_clk_scaling clk_scaling;
-+	bool is_sys_suspended;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
-@@ -496,6 +497,23 @@ static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
- #define ufshcd_readl(hba, reg)	\
- 	readl((hba)->mmio_base + (reg))
- 
-+/**
-+ * ufshcd_rmwl - read modify write into a register
-+ * @hba - per adapter instance
-+ * @mask - mask to apply on read value
-+ * @val - actual value to write
-+ * @reg - register address
-+ */
-+static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+@@ -484,6 +486,11 @@ static inline int ufshcd_is_clkscaling_enabled(struct ufs_hba *hba)
+ {
+ 	return hba->caps & UFSHCD_CAP_CLK_SCALING;
+ }
++static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
 +{
-+	u32 tmp;
-+
-+	tmp = ufshcd_readl(hba, reg);
-+	tmp &= ~mask;
-+	tmp |= (val & mask);
-+	ufshcd_writel(hba, tmp, reg);
++	return hba->caps & UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
 +}
 +
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 0bb8041..3fc3e21 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -13,6 +13,44 @@
- #define _UNIPRO_H_
- 
- /*
-+ * M-TX Configuration Attributes
-+ */
-+#define TX_MODE					0x0021
-+#define TX_HSRATE_SERIES			0x0022
-+#define TX_HSGEAR				0x0023
-+#define TX_PWMGEAR				0x0024
-+#define TX_AMPLITUDE				0x0025
-+#define TX_HS_SLEWRATE				0x0026
-+#define TX_SYNC_SOURCE				0x0027
-+#define TX_HS_SYNC_LENGTH			0x0028
-+#define TX_HS_PREPARE_LENGTH			0x0029
-+#define TX_LS_PREPARE_LENGTH			0x002A
-+#define TX_HIBERN8_CONTROL			0x002B
-+#define TX_LCC_ENABLE				0x002C
-+#define TX_PWM_BURST_CLOSURE_EXTENSION		0x002D
-+#define TX_BYPASS_8B10B_ENABLE			0x002E
-+#define TX_DRIVER_POLARITY			0x002F
-+#define TX_HS_UNTERMINATED_LINE_DRIVE_ENABLE	0x0030
-+#define TX_LS_TERMINATED_LINE_DRIVE_ENABLE	0x0031
-+#define TX_LCC_SEQUENCER			0x0032
-+#define TX_MIN_ACTIVATETIME			0x0033
-+#define TX_PWM_G6_G7_SYNC_LENGTH		0x0034
-+
-+/*
-+ * M-RX Configuration Attributes
-+ */
-+#define RX_MODE					0x00A1
-+#define RX_HSRATE_SERIES			0x00A2
-+#define RX_HSGEAR				0x00A3
-+#define RX_PWMGEAR				0x00A4
-+#define RX_LS_TERMINATED_ENABLE			0x00A5
-+#define RX_HS_UNTERMINATED_ENABLE		0x00A6
-+#define RX_ENTER_HIBERN8			0x00A7
-+#define RX_BYPASS_8B10B_ENABLE			0x00A8
-+#define RX_TERMINATION_FORCE_ENABLE		0x0089
-+
-+#define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-+/*
-  * PHY Adpater attributes
-  */
- #define PA_ACTIVETXDATALANES	0x1560
-@@ -87,6 +125,24 @@ enum {
- 	PA_HS_MODE_B	= 2,
- };
- 
-+enum ufs_pwm_gear_tag {
-+	UFS_PWM_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_PWM_G1,		/* PWM Gear 1 (default for reset) */
-+	UFS_PWM_G2,		/* PWM Gear 2 */
-+	UFS_PWM_G3,		/* PWM Gear 3 */
-+	UFS_PWM_G4,		/* PWM Gear 4 */
-+	UFS_PWM_G5,		/* PWM Gear 5 */
-+	UFS_PWM_G6,		/* PWM Gear 6 */
-+	UFS_PWM_G7,		/* PWM Gear 7 */
-+};
-+
-+enum ufs_hs_gear_tag {
-+	UFS_HS_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_HS_G1,		/* HS Gear 1 (default for reset) */
-+	UFS_HS_G2,		/* HS Gear 2 */
-+	UFS_HS_G3,		/* HS Gear 3 */
-+};
-+
- /*
-  * Data Link Layer Attributes
-  */
+ #define ufshcd_writel(hba, val, reg)	\
+ 	writel((val), (hba)->mmio_base + (reg))
+ #define ufshcd_readl(hba, reg)	\
 -- 
 1.8.5.2
 
