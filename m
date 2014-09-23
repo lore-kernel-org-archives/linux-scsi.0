@@ -1,121 +1,91 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH V3 01/16] scsi: support well known logical units
-Date: Tue, 23 Sep 2014 14:40:03 -0700
-Message-ID: <000601cfd776$ef66d3c0$ce347b40$@codeaurora.org>
-References: <1410350063-23267-1-git-send-email-draviv@codeaurora.org> <1410350063-23267-2-git-send-email-draviv@codeaurora.org> <20140910185839.GA26364@infradead.org> <000f01cfce22$446f79c0$cd4e6d40$@codeaurora.org> <20140913185431.GB30010@infradead.org> <000401cfd364$8fa0bca0$aee235e0$@codeaurora.org> <000301cfd374$7a1afd90$6e50f8b0$@codeaurora.org> <20140922142833.GA1289@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
+ error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
+Date: Tue, 23 Sep 2014 21:56:05 +0000
+Message-ID: <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20140922142833.GA1289@infradead.org>
-Content-Language: en-us
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:46976 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754404AbaIWV4J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2014 17:56:09 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 85B9A202B8
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 21:56:08 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 6543720270
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2014 21:56:06 +0000 (UTC)
+In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Chris,
+https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
-> I don't really know devices exporting wluns by default. The wording in the
-latests SPC-4 draft I have says:
+--- Comment #16 from linux-ide@crashplan.pro ---
+When line-by-line dumping the called constants/vars from:
+469        del_q = TXQ_MODE_I | tag |
+470            (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+471            (MVS_PHY_ID << TXQ_PHY_SHIFT) |
+472            (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
 
-That's true. In fact further finding showed me this: UFS device
-specification has explicitly mentioned the purpose of SELECT REPORT field
-when its set to 00h. When SELECT REPORT field is cleared, device should only
-report LUs which support peripheral device addressing method. Even UFS
-conformance test specification seems to confirm this explicitly. Hence if
-the UFS device adhere the UFS device specification then its expected for
-device to not report the W-LUs when SELECT REPORT is 00h.
+using the prepended statements:
+        printk("slot=%p ", slot);
+        printk(KERN_INFO "TXQ_MODE_I=%d ", TXQ_MODE_I);
+        printk(KERN_INFO "tag=%d ", tag);
+        printk(KERN_INFO "TXQ_CMD_STP=%d ", TXQ_CMD_STP);
+        printk(KERN_INFO "TXQ_CMD_SHIFT=%d ", TXQ_CMD_SHIFT);
+        printk(KERN_INFO "MVS_PHY_ID=%d ", MVS_PHY_ID);
+        printk(KERN_INFO "TXQ_PHY_SHIFT=%d ", TXQ_PHY_SHIFT);
+        del_q = TXQ_MODE_I | tag |
+                (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+                (MVS_PHY_ID << TXQ_PHY_SHIFT) |
+                (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
 
-But I have seen one UFS device vendor specifically reporting w-lus even when
-select report is cleared. I am going to follow up them to fix their
-behavior. But for now, I guess we are on same page that device shouldn't
-report W-LUS when SELECT REPORT field is cleared.
+the kernel crash occurs after printing "TXQ_CMD_SHIFT" or when trying to output
+the value of "MVS_PHY_ID":
+[  529.113152] sas: DONE DISCOVERY on port 0, pid:133, result:0
+[  529.114313] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[  529.115460] sas: ata7: end_device-6:0:28: dev error handler
+[  529.115522] sas: ata8: end_device-6:0:29: dev error handler
+[  529.118706] sas: ata9: end_device-6:0:30: dev error handler
+[  529.119840] sas: ata10: end_device-6:0:31: dev error handler
+[  529.271634] [mvi=ffff8800d3680000, mvi_dev=ffff8800d36836a0 tag=0
+slot=ffff8800d36a55b8
+[  529.271753] TXQ_MODE_I=268435456 tag=0
+[  529.272679] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
+[  529.273618] MVS_PHY_ID=32768 TXQ_PHY_SHIFT=12 tx_prod=44]
+[  529.276091] [mvi=ffff8800d3680000, mvi_dev=ffff8800d3683618 tag=1
+slot=ffff8800d36a5610
+[  529.276207] TXQ_MODE_I=268435456 tag=1
+[  529.277095] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
+[  529.278038] MVS_PHY_ID=1 TXQ_PHY_SHIFT=12 tx_prod=46]
+[  529.280271] [mvi=ffff8800d3680000, mvi_dev=ffff8800d3683618 tag=1
+slot=ffff8800d36a5610
+[  529.280385] TXQ_MODE_I=268435456 tag=1
+[  529.281445] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
+[  529.282562] MVS_PHY_ID=1 TXQ_PHY_SHIFT=12 tx_prod=48]
+[  529.284894] [mvi=ffff8800d3680000, mvi_dev=ffff8800d36837b0 tag=2
+slot=ffff8800d36a5668
+[  529.285010] TXQ_MODE_I=268435456 tag=2
+[  529.286248] TXQ_CMD_STP=3 TXQ_CMD_SHIFT=29
+[  529.287555] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000257
+[  529.290225] IP: [<ffffffffa02888bb>] mvs_task_prep+0x7cb/0xe50 [mvsas]
+[  529.291686] PGD 0
+[  529.293141] Oops: 0000 [#1] SMP
+[  529.294630] Modules linked in: mvsas(OF) libsas scsi_transport_sas
+x86_pkg_temp_thermal intel_powerclamp coretemp kvm crct10dif_pclmul
+crc32_pclmul ghash_clmulni_intel cryptd serio_raw lpc_ich i915 mei_me mei
+drm_kms_helper video netconsole drm configfs mac_hid i2c_algo_bit psmouse r8169
+ahci mii libahci
 
+Any suggestions why accessing "MVS_PHY_ID" leads to the kernel NULL pointer
+dereference oops?
 
->> For now in this patch, we will skip modifying SELECT REPORT field but 
->> we would still require the other part of this patch for fixing the 
->> scsi_device type to wlun (sdev->type = TYPE_WLUN). Hence we will 
->> change the commit text accordingly to reflect the exact purpose of the
-change.
-
-> Yes, please resend this change as a separate patch with an updated
-description.  I'd love to merge the whole ufs update for this merge window,
-so a timeline resent would be appreciated.
-
-Yes, rest of the part in this patch would still remain applicable with
-updated description. We will send it soon along with one more patch in UFS
-driver which would manually add scsi_device instance for the UFS W-LUs.
-
-Regards,
-Subhash
-
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 'Christoph Hellwig'
-Sent: Monday, September 22, 2014 7:29 AM
-To: Subhash Jadavani
-Cc: 'Dolev Raviv'; James.Bottomley@HansenPartnership.com;
-linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org;
-linux-arm-msm@vger.kernel.org; santoshsy@gmail.com; 'Sujit Reddy Thumma';
-'Martin K. Petersen'
-Subject: Re: [PATCH V3 01/16] scsi: support well known logical units
-
-On Thu, Sep 18, 2014 at 12:12:22PM -0700, Subhash Jadavani wrote:
-> Hi Chris,
-> 
-> While testing with another vendor's UFS devices, I realized that 
-> SELECT REPORT need not to be set to 0x02 for making the device report the
-W-LUs.
-> Even when SELECT REPORT is set 0x00, this particular UFS device 
-> reports the W-LUs so I looked at the SCSI specification in details and 
-> it seems ideally device should report all the well-known logical units 
-> (as it follows the extended logical unit addressing format) when SELECT
-REPORT is set 0x00.
-
-I don't really know devices exporting wluns by default. The wording in the
-latests SPC-4 draft I have says:
-
-00h	The list shall contain the logical units accessible to the I_T nexus
-	with the following addressing methods (see SAM-4):
-	  a) Logical unit addressing method,
-	  b) Peripheral device addressing method; and
-	  c) Flat space addressing method.
-	If there are no logical units, the LUN LIST LENGTH field shall be
-	zero.
-01h	The list shall contain only well known logical units, if any.
-	If there are no well known logical units, the LUN LIST LENGTH field
-	shall be zero.
-02h The list shall contain all logical units accessible to the I_T nexus.
-
-
-SAM-4 defines WLUNs as their own addressing format in 4.6.11:
-
-Well known logical units are addressed using the well known logical unit
-extended address format (see table 28).
-
-
-Note that the reason I don't like reporting wluns by default is that so far
-we haven't come up with a use case for them in either the kernel or generic
-userspace.  As long as usage of the wluns you want to support is confirmed
-to ufs, which is an unusually rightly coupled implementation of the
-initiator and target side I'd like to keep it isolated to ufs.  If we ever
-come up with a more generic usage of other wluns we should also report them
-during the initial target scan.
-
-> For now in this patch, we will skip modifying SELECT REPORT field but 
-> we would still require the other part of this patch for fixing the 
-> scsi_device type to wlun (sdev->type = TYPE_WLUN). Hence we will 
-> change the commit text accordingly to reflect the exact purpose of the
-change.
-
-Yes, please resend this change as a separate patch with an updated
-description.  I'd love to merge the whole ufs update for this merge window,
-so a timeline resent would be appreciated.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
