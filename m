@@ -1,46 +1,36 @@
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-Subject: Re: [PATCH] xen: make pvscsi frontend dependant on xenbus frontend
-Date: Tue, 23 Sep 2014 15:06:52 +0100
-Message-ID: <alpine.DEB.2.02.1409231506390.15268@kaball.uk.xensource.com>
-References: <1410756301-23340-1-git-send-email-jgross@suse.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci_xgene: Fix the error print invalid resource for APM
+ X-Gene SoC AHCI SATA Host Controller driver.
+Date: Tue, 23 Sep 2014 10:22:21 -0400
+Message-ID: <20140923142221.GA19208@htj.dyndns.org>
+References: <1411390893-22911-1-git-send-email-stripathi@apm.com>
+ <1411390893-22911-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1410756301-23340-1-git-send-email-jgross@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>
-Cc: jim.epost@gmail.com, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next <linux-next@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:60292 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbaIWOWZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 10:22:25 -0400
+Content-Disposition: inline
+In-Reply-To: <1411390893-22911-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Mon, 15 Sep 2014, Juergen Gross wrote:
-> The pvscsi frontend driver requires the xenbus frontend driver. Reflect
-> this in Kconfig.
+On Mon, Sep 22, 2014 at 06:31:33PM +0530, Suman Tripathi wrote:
+> This patch fixes the error print invalid resource for the APM X-Gene
+> SoC AHCI SATA Host Controller driver. This print was due to the fact
+> that the controller 3 don't have a mux resource. This didn't result
+> in any errors but the print seems like meaningless.
 > 
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
-Reviewed-by: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Applied to libata/for-3.18.
 
->  drivers/scsi/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 9130df1..ff62dc1 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -579,6 +579,7 @@ config VMWARE_PVSCSI
->  config XEN_SCSI_FRONTEND
->  	tristate "XEN SCSI frontend driver"
->  	depends on SCSI && XEN
-> +	select XEN_XENBUS_FRONTEND
->  	help
->  	  The XEN SCSI frontend driver allows the kernel to access SCSI Devices
->  	  within another guest OS (usually Dom0).
-> -- 
-> 1.8.4.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://secure-web.cisco.com/1jE8NNDhHwOASDbIzbn-azzuN8MKBMP1e4rCG2hGFpNvqSN8uwPwleK_Lmj9tzbaylXigSiLek5R_LJBvhlKaVWIjN_cB2SWcOB2WEXe4nDTKNaIEC6vNV5stEFM1SLzyMntl4a2YTHo6X7bvUsZQqYkXr5h_oDDR84iBHb2dum8/http%3A%2F%2Fwww.tux.org%2Flkml%2F
-> 
+Thanks.
+
+-- 
+tejun
