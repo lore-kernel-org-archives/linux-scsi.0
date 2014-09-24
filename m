@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 24/35] qla2xxx: Disable laser for ISP2031 while unloading driver.
-Date: Wed, 24 Sep 2014 03:08:27 -0400
-Message-ID: <1411542518-2477-25-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 29/35] qla2xxx: Restore WWPN in case of Loop Dead.
+Date: Wed, 24 Sep 2014 03:08:32 -0400
+Message-ID: <1411542518-2477-30-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:3393 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:33185 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753270AbaIXHmr (ORCPT
+	by vger.kernel.org with ESMTP id S1753302AbaIXHmy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:42:47 -0400
+	Wed, 24 Sep 2014 03:42:54 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,104 +19,82 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.
 
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
 
-Nameserver data on FC switch is not refreshed when
-qla2xxx driver is unloaded. Disabling laser for
-ISP2031 will force FC switch to rescan ports and
-clear fdmi entries from Nameserver.
+For FA-WWPN capable device, ISP2031 and ISP27XX, when loop
+dead is detected by a driver, restore WWPN from NVRAM.
 
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
- drivers/scsi/qla2xxx/qla_def.h |    5 +++++
- drivers/scsi/qla2xxx/qla_os.c  |   31 +++++++++++++++++++++++++++++++
- 3 files changed, 37 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    3 +--
+ drivers/scsi/qla2xxx/qla_def.h  |    3 ++-
+ drivers/scsi/qla2xxx/qla_init.c |    5 +++++
+ drivers/scsi/qla2xxx/qla_isr.c  |    9 +++++++++
+ 4 files changed, 17 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 6e52a45..1a43228 100644
+index 1a43228..f3b6570 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -11,7 +11,7 @@
+@@ -11,8 +11,7 @@
   * ----------------------------------------------------------------------
   * |             Level            |   Last Value Used  |     Holes	|
   * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x017d       | 0x004b,0x0141	|
-+ * | Module Init and Probe        |       0x017d       | 0x0141		|
-  * |                              |                    | 0x0144,0x0146	|
+- * | Module Init and Probe        |       0x017d       | 0x0141		|
+- * |                              |                    | 0x0144,0x0146	|
++ * | Module Init and Probe        |       0x017d       | 0x0144,0x0146	|
   * |                              |                    | 0x015b-0x0160	|
   * |                              |                    | 0x016e-0x0170	|
+  * | Mailbox commands             |       0x118d       | 0x1115-0x1116	|
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f416c5b..62c902c 100644
+index 03da3eb..509dbd5 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -191,6 +191,11 @@
- 					     * reset-recovery completion is
- 					     * second
- 					     */
-+/* ISP2031: Values for laser on/off */
-+#define PORT_0_2031	0x00201340
-+#define PORT_1_2031	0x00201350
-+#define LASER_ON_2031	0x01800100
-+#define LASER_OFF_2031	0x01800180
+@@ -2945,7 +2945,8 @@ struct qla_hw_data {
  
- /*
-  * The ISP2312 v2 chip cannot access the FLASH/GPIO registers via MMIO in an
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index b9523dc..bf78127 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -239,6 +239,7 @@ static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
- static int qla2x00_change_queue_depth(struct scsi_device *, int, int);
- static int qla2x00_change_queue_type(struct scsi_device *, int);
- static void qla2x00_free_device(scsi_qla_host_t *);
-+static void qla83xx_disable_laser(scsi_qla_host_t *vha);
+ 		uint32_t        mr_reset_hdlr_active:1;
+ 		uint32_t        mr_intr_valid:1;
+-		/* 34 bits */
++		uint32_t	fawwpn_enabled:1;
++		/* 35 bits */
+ 	} flags;
  
- struct scsi_host_template qla2xxx_driver_template = {
- 	.module			= THIS_MODULE,
-@@ -3174,6 +3175,10 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	/* This spinlock is used to protect "io transactions", you must
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 51cabb9..23f12dd 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2202,6 +2202,11 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 		if (IS_DPORT_CAPABLE(ha))
+ 			mid_init_cb->init_cb.firmware_options_1 |=
+ 			    cpu_to_le16(BIT_7);
++		/* Enable FA-WWPN */
++		ha->flags.fawwpn_enabled =
++		    (mid_init_cb->init_cb.firmware_options_1 & BIT_6) ? 1 : 0;
++		ql_dbg(ql_dbg_init, vha, 0x0141, "FA-WWPN Support: %s.\n",
++		    (ha->flags.fawwpn_enabled) ? "enabled" : "disabled");
+ 	}
  
- 	qla84xx_put_chip(base_vha);
- 
-+	/* Laser should be disabled only for ISP2031 */
-+	if (IS_QLA2031(ha))
-+		qla83xx_disable_laser(base_vha);
+ 	rval = qla2x00_init_firmware(vha, ha->init_cb_size);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d67fcaa..cc49157 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -750,6 +750,15 @@ skip_rio:
+ 		if (atomic_read(&vha->loop_state) != LOOP_DOWN) {
+ 			atomic_set(&vha->loop_state, LOOP_DOWN);
+ 			atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
++			/*
++			 * In case of loop down, restore WWPN from
++			 * NVRAM in case of FA-WWPN capable ISP
++			 */
++			if (ha->flags.fawwpn_enabled) {
++				void *wwpn = ha->init_cb->port_name;
++				memcpy(vha->port_name, wwpn, WWN_SIZE);
++			}
 +
- 	/* Disable timer */
- 	if (base_vha->timer_active)
- 		qla2x00_stop_timer(base_vha);
-@@ -5707,6 +5712,32 @@ qla2xxx_pci_resume(struct pci_dev *pdev)
- 	ha->flags.eeh_busy = 0;
- }
- 
-+static void
-+qla83xx_disable_laser(scsi_qla_host_t *vha)
-+{
-+	uint32_t reg, data, fn;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct device_reg_24xx __iomem *isp_reg = &ha->iobase->isp24;
-+
-+	/* pci func #/port # */
-+	ql_dbg(ql_dbg_init, vha, 0x004b,
-+	    "Disabling Laser for hba: %p\n", vha);
-+
-+	fn = (RD_REG_DWORD(&isp_reg->ctrl_status) &
-+		(BIT_15|BIT_14|BIT_13|BIT_12));
-+
-+	fn = (fn >> 12);
-+
-+	if (fn & 1)
-+		reg = PORT_1_2031;
-+	else
-+		reg = PORT_0_2031;
-+
-+	data = LASER_OFF_2031;
-+
-+	qla83xx_wr_reg(vha, reg, data);
-+}
-+
- static const struct pci_error_handlers qla2xxx_err_handler = {
- 	.error_detected = qla2xxx_pci_error_detected,
- 	.mmio_enabled = qla2xxx_pci_mmio_enabled,
+ 			vha->device_flags |= DFLG_NO_CABLE;
+ 			qla2x00_mark_all_devices_lost(vha, 1);
+ 		}
 -- 
 1.7.7
 
