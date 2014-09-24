@@ -1,39 +1,74 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85101] hpsa + P410 does not show connected HP SAS port
- expanders
-Date: Wed, 24 Sep 2014 22:32:13 +0000
-Message-ID: <bug-85101-11613-6AY0dkEYw1@https.bugzilla.kernel.org/>
-References: <bug-85101-11613@https.bugzilla.kernel.org/>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH V5 11/17] scsi: ufs: add UFS power management support
+Date: Thu, 25 Sep 2014 08:11:57 +0900
+Message-ID: <CAC5umyidmPpq4r3J5yj3K1jTZdxoM_BO=ZxrLbA7Y2YoXpbHfw@mail.gmail.com>
+References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
+	<1411571653-22729-12-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42818 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871AbaIXWcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 18:32:15 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id A23E02028D
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2014 22:32:14 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 4220220274
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2014 22:32:13 +0000 (UTC)
-In-Reply-To: <bug-85101-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1411571653-22729-12-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85101
+2014-09-25 0:14 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
+> +int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>  {
+> -       struct uic_command uic_cmd = {0};
+> -       struct completion pwr_done;
+> +       struct completion uic_async_done;
+>         unsigned long flags;
+>         u8 status;
+>         int ret;
+>
+> -       uic_cmd.command = UIC_CMD_DME_SET;
+> -       uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
+> -       uic_cmd.argument3 = mode;
+> -       init_completion(&pwr_done);
+> -
+>         mutex_lock(&hba->uic_cmd_mutex);
+> +       init_completion(&uic_async_done);
+>
+>         spin_lock_irqsave(hba->host->host_lock, flags);
+> -       hba->pwr_done = &pwr_done;
+> +       hba->uic_async_done = &uic_async_done;
+> +       ret = __ufshcd_send_uic_cmd(hba, cmd);
+>         spin_unlock_irqrestore(hba->host->host_lock, flags);
 
---- Comment #3 from Robert Elliott <elliott@hp.com> ---
-Controller lockup means the firmware crashed (e.g. an ASSERT statement
-triggered).  That can be due to hardware problems or firmware bugs.  You might
-see if it boots with nothing attached; then with one expander; then with two;
-then with drives attached to the expanders.
+__ufshcd_send_uic_cmd() is called with host_lock held here, but
+host_lock is acquired again in __ufshcd_send_uic_cmd().  So it causes
+recursive deadlock.
 
-If you're not really using the P410, though, just use sg_write_buffer through
-the Adaptec 7805H HBA.
+> -       ret = __ufshcd_send_uic_cmd(hba, &uic_cmd);
+>         if (ret) {
+>                 dev_err(hba->dev,
+> -                       "pwr mode change with mode 0x%x uic error %d\n",
+> -                       mode, ret);
+> +                       "pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+> +                       cmd->command, cmd->argument3, ret);
+> +               goto out;
+> +       }
+> +       ret = ufshcd_wait_for_uic_cmd(hba, cmd);
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+ufshcd_wait_for_uic_cmd() is already called in the previous
+__ufshcd_send_uic_cmd() call.
+
+These two issues don't exist in v3.
+
+> +static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+> +                                        struct ufs_vreg *vreg)
+> +{
+> +       return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
+> +}
+> +
+> +static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+> +                                        struct ufs_vreg *vreg)
+> +{
+> +       return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+> +}
+
+I was still seeing null pointer derefence with v4 which I was reported
+(http://marc.info/?l=linux-scsi&m=141087506802548) and nothing
+changed in v5.  Could you check if the fix is needed?
