@@ -1,40 +1,28 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-3.17-fixes/core] blk-mq, percpu_ref: implement
- a kludge for SCSI blk-mq stall during probe
-Date: Wed, 24 Sep 2014 08:33:58 -0600
-Message-ID: <5422D656.7020006@kernel.dk>
-References: <20140923055554.GA10189@lst.de> <20140923055648.GD11740@mtj.dyndns.org> <20140923055924.GA10295@lst.de> <20140923060141.GF11740@mtj.dyndns.org> <20140923060906.GA10547@lst.de> <20140923061152.GI11740@mtj.dyndns.org> <5421968B.7080309@kernel.dk> <20140923192432.GA24441@mtj.dyndns.org> <20140924082348.GB8894@lst.de> <5422D589.5070009@kernel.dk> <20140924143320.GG16555@htj.dyndns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3] mptfusion: enable no_write_same for vmware scsi disks
+Date: Wed, 24 Sep 2014 11:11:42 -0400
+Message-ID: <yq1mw9prr2p.fsf@sermon.lab.mkp.net>
+References: <20140923071154.GB3867@infradead.org>
+	<1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+	<5421F020.1030309@canonical.com> <yq14mvxudbv.fsf@sermon.lab.mkp.net>
+	<20140924081837.GB14285@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:55009 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940AbaIXOeE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 10:34:04 -0400
-Received: by mail-pa0-f46.google.com with SMTP id kx10so8767461pab.5
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2014 07:34:03 -0700 (PDT)
-In-Reply-To: <20140924143320.GG16555@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140924081837.GB14285@infradead.org> (Christoph Hellwig's
+	message of "Wed, 24 Sep 2014 01:18:37 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Chris J Arges <chris.j.arges@canonical.com>, bruce.lucas@mongodb.com, adam.radford@avagotech.com, kashyap.desai@avagotech.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 09/24/2014 08:33 AM, Tejun Heo wrote:
-> On Wed, Sep 24, 2014 at 08:30:33AM -0600, Jens Axboe wrote:
->> On 09/24/2014 02:23 AM, Christoph Hellwig wrote:
->>> Thanks, this fixes the boot stall for me.
->>>
->>> Tested-by: Christoph Hellwig <hch@lst.de>
->>
->> Sweet, I'll shove this off today, so we are done for 3.17 release.
-> 
-> Cool, once it hits the block branch, I'll pull it into percpu/for-3.18
-> and apply the patches for proper fix on top.
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-It's in for-linus now.
+Christoph> I'd like to add Chris latests patch and Cc it to stable.
 
+Christoph> Martin, given that you're ok with it can you give me a
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
