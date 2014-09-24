@@ -1,186 +1,76 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V5 06/17] scsi: ufs: add voting support for host controller power
-Date: Wed, 24 Sep 2014 18:14:02 +0300
-Message-ID: <1411571653-22729-7-git-send-email-draviv@codeaurora.org>
-References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 31/35] qla2xxx: Disable PCI device in shutdown handler.
+Date: Wed, 24 Sep 2014 11:37:55 -0400
+Message-ID: <alpine.OSX.2.00.1409241134050.1504@administrators-macbook-pro.local>
+References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com> <1411542518-2477-32-git-send-email-saurav.kashyap@qlogic.com> <20140924094858.1c51718d@jlaw-desktop.mno.stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:48561 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754789AbaIXPOw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 11:14:52 -0400
-In-Reply-To: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:28659 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753527AbaIXPiM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2014 11:38:12 -0400
+In-Reply-To: <20140924094858.1c51718d@jlaw-desktop.mno.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Raviv Shvili <rshvili@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>, andrew.vasquez@qlogic.com, jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Raviv Shvili <rshvili@codeaurora.org>
 
-Add the support for voting of the regulator powering the
-host controller logic.
 
-Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+On Wed, 24 Sep 2014, Joe Lawrence wrote:
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index b0f791a..fb1234e 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -9,6 +9,7 @@ Required properties:
- - reg               : <registers mapping>
- 
- Optional properties:
-+- vdd-hba-supply        : phandle to UFS host controller supply regulator node
- - vcc-supply            : phandle to VCC supply regulator node
- - vccq-supply           : phandle to VCCQ supply regulator node
- - vccq2-supply          : phandle to VCCQ2 supply regulator node
-@@ -20,6 +21,7 @@ Optional properties:
- - vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
- - vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
- - vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
-+- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
- 
- - clocks                : List of phandle and clock specifier pairs
- - clock-names           : List of clock input name strings sorted in the same
-@@ -39,6 +41,8 @@ Example:
- 		reg = <0xfc598000 0x800>;
- 		interrupts = <0 28 0>;
- 
-+		vdd-hba-supply = <&xxx_reg0>;
-+		vdd-hba-fixed-regulator;
- 		vcc-supply = <&xxx_reg1>;
- 		vcc-supply-1p8;
- 		vccq-supply = <&xxx_reg2>;
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 729ce7d..9bb6919 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -385,6 +385,7 @@ struct ufs_vreg_info {
- 	struct ufs_vreg *vcc;
- 	struct ufs_vreg *vccq;
- 	struct ufs_vreg *vccq2;
-+	struct ufs_vreg *vdd_hba;
- };
- 
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 642d80f..dde4e6e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -147,6 +147,11 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 
- 	vreg->name = kstrdup(name, GFP_KERNEL);
- 
-+	/* if fixed regulator no need further initialization */
-+	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
-+	if (of_property_read_bool(np, prop_name))
-+		goto out;
-+
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
- 	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
- 	if (ret) {
-@@ -198,6 +203,10 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
- 	struct device *dev = hba->dev;
- 	struct ufs_vreg_info *info = &hba->vreg_info;
- 
-+	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba);
-+	if (err)
-+		goto out;
-+
- 	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
- 	if (err)
- 		goto out;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b033702..26301b8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3311,6 +3311,16 @@ out:
- 	return ret;
- }
- 
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
-+
-+	if (info)
-+		return ufshcd_toggle_vreg(hba->dev, info->vdd_hba, on);
-+
-+	return 0;
-+}
-+
- static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
-@@ -3350,6 +3360,16 @@ out:
- 	return ret;
- }
- 
-+static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
-+
-+	if (info)
-+		return ufshcd_get_vreg(hba->dev, info->vdd_hba);
-+
-+	return 0;
-+}
-+
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
- {
- 	int ret = 0;
-@@ -3483,14 +3503,29 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
- {
- 	int err;
- 
--	err = ufshcd_init_clocks(hba);
-+	/*
-+	 * Handle host controller power separately from the UFS device power
-+	 * rails as it will help controlling the UFS host controller power
-+	 * collapse easily which is different than UFS device power collapse.
-+	 * Also, enable the host controller power before we go ahead with rest
-+	 * of the initialization here.
-+	 */
-+	err = ufshcd_init_hba_vreg(hba);
- 	if (err)
- 		goto out;
- 
--	err = ufshcd_setup_clocks(hba, true);
-+	err = ufshcd_setup_hba_vreg(hba, true);
- 	if (err)
- 		goto out;
- 
-+	err = ufshcd_init_clocks(hba);
-+	if (err)
-+		goto out_disable_hba_vreg;
-+
-+	err = ufshcd_setup_clocks(hba, true);
-+	if (err)
-+		goto out_disable_hba_vreg;
-+
- 	err = ufshcd_init_vreg(hba);
- 	if (err)
- 		goto out_disable_clks;
-@@ -3509,6 +3544,8 @@ out_disable_vreg:
- 	ufshcd_setup_vreg(hba, false);
- out_disable_clks:
- 	ufshcd_setup_clocks(hba, false);
-+out_disable_hba_vreg:
-+	ufshcd_setup_hba_vreg(hba, false);
- out:
- 	return err;
- }
-@@ -3518,6 +3555,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 	ufshcd_variant_hba_exit(hba);
- 	ufshcd_setup_vreg(hba, false);
- 	ufshcd_setup_clocks(hba, false);
-+	ufshcd_setup_hba_vreg(hba, false);
- }
- 
- /**
--- 
-1.8.5.2
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+> On Wed, 24 Sep 2014 03:08:34 -0400
+> Saurav Kashyap <saurav.kashyap@qlogic.com> wrote:
+>
+>> From: Chad Dupuis <chad.dupuis@qlogic.com>
+>>
+>> Disable the PCI device during shutdown to prevent any races with
+>> other PCI code such as the AER handling code.
+>>
+>> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+>> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>> ---
+>>  drivers/scsi/qla2xxx/qla_os.c |    3 +++
+>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+>> index 08c8e9c..70445bc 100644
+>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>> @@ -3037,6 +3037,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
+>>  	qla2x00_free_irqs(vha);
+>>
+>>  	qla2x00_free_fw_dump(ha);
+>> +
+>> +	pci_disable_pcie_error_reporting(pdev);
+>> +	pci_disable_device(pdev);
+>>  }
+>>
+>>  /* Deletes all the virtual ports for a given ha */
+>
+> Hi Saurav,
+>
+> Just curious if there were any bug report instances to go along with
+> this patch?  (Or a short explanation of the race.)
 
+Joe,
+
+The race here was during reboot after taking a crash dump.  We hit an AER 
+condition so the driver's AER handler is called after we've already 
+shutdown the adapter which causes us to try to free some already freed 
+structs.  To prevent this we disable the PCI function from the shutdown 
+handler.
+
+--Chad
+
+>
+> Thanks,
+>
+> -- Joe
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
