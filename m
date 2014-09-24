@@ -1,68 +1,53 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 20/35] qla2xxx: Unload of qla2xxx driver crashes the
- machine.
-Date: Wed, 24 Sep 2014 09:41:25 -0400
-Message-ID: <20140924094125.46eac20f@jlaw-desktop.mno.stratus.com>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
-	<1411542518-2477-21-git-send-email-saurav.kashyap@qlogic.com>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Wed, 24 Sep 2014 16:43:35 +0300
+Message-ID: <5422CA87.8040100@dev.mellanox.co.il>
+References: <541C27BF.6070609@acm.org> <541C28E0.7010705@acm.org> <5421A093.1070203@dev.mellanox.co.il> <5421C3DF.5000102@acm.org> <5422B78B.4000501@dev.mellanox.co.il> <5422C395.7090902@acm.org> <5422C970.4050306@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o147.mxlogic.net ([208.65.145.80]:49786 "EHLO
-	p02c12o147.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbaIXNmb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 09:42:31 -0400
-In-Reply-To: <1411542518-2477-21-git-send-email-saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5422C970.4050306-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi Saurav,
+On 9/24/2014 4:38 PM, Sagi Grimberg wrote:
+> On 9/24/2014 4:13 PM, Bart Van Assche wrote:
+>> On 24/09/2014 6:22, Sagi Grimberg wrote:
+>>> Since SRP_LOGIN_REQ/RESP has some free bits why not declare it and
+>>> activate it when both sides *says* they support it? I'd be much calmer
+>>> knowing we're on the safe side on this...
+>>
+>> Hello Sagi,
+>>
+>> Since more than ten years the SRP protocol is an official ANSI standard.
+>> Since multichannel support has been defined in that standard my
+>> preference is to follow what has been documented in that standard with
+>> regard to multichannel operation.
+>
+> Just re-visited the r16a, srp_login request req_flags include MULTI
+> CHANNEL ACTION (Table 10) and srp login response rsp_flags include
+> MULTI-CHANNEL RESULT (Table 12).
+>
+> Did you notice those? Didn't see any reference in the patch...
+>
+>   Using one of the free bits in the SRP
+>> login request and response would involve a protocol modification. Hence
+>> the proposal to add a blacklist for non-conforming target
+>> implementations.
+>>
+>
+> So I'm not so sure we need to update SRP login sequence...
+>
 
-Will these changes conflict with those submitted in August [1] to
-Christoph's drivers-for-3.18 branch?
+Wait, yes you did reference those...
 
-In particular, "qla2xxx: Fix shost use-after-free on device
-removal" [2] fixed this same driver unload issue in a slightly
-different manner.  That change was marked for stable as the bug was
-introduced by fe1b806f4f71 ("qla2xxx: Refactor shutdown code so some
-functionality can be reused") in previous releases.
+OK, I'm on board now...
 
-Regards,
-
--- Joe
-
-[1] http://thread.gmane.org/gmane.linux.scsi/93859
-[2] http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/db7157d4cfce6edf052452fb1d327d4d11b67f4c
-
-On Wed, 24 Sep 2014 03:08:23 -0400
-Saurav Kashyap <saurav.kashyap@qlogic.com> wrote:
-
-> From: Arun Easi <arun.easi@qlogic.com>
-> 
-> Signed-off-by: Arun Easi <arun.easi@qlogic.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/qla_os.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 8846883..6539513 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -3190,10 +3190,10 @@ qla2x00_remove_one(struct pci_dev *pdev)
->  
->  	qla2x00_free_device(base_vha);
->  
-> -	scsi_host_put(base_vha->host);
-> -
->  	qla2x00_clear_drv_active(base_vha);
->  
-> +	scsi_host_put(base_vha->host);
-> +
->  	qla2x00_unmap_iobases(ha);
->  
->  	pci_release_selected_regions(ha->pdev, ha->bars);
-
+Sagi.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
