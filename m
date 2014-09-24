@@ -1,58 +1,41 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 23/35] qla2xxx: Enable diagnostic port using NVRAM parameters.
-Date: Wed, 24 Sep 2014 03:08:26 -0400
-Message-ID: <1411542518-2477-24-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 35/35] qla2xxx: Update the driver version to 8.07.00.16-k.
+Date: Wed, 24 Sep 2014 03:08:38 -0400
+Message-ID: <1411542518-2477-36-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63438 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:31761 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753059AbaIXHmx (ORCPT
+	by vger.kernel.org with ESMTP id S1753297AbaIXHmy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:42:53 -0400
+	Wed, 24 Sep 2014 03:42:54 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-
-Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |    1 +
- drivers/scsi/qla2xxx/qla_init.c |    4 ++++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f8e6507..f416c5b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3136,6 +3136,7 @@ struct qla_hw_data {
- #define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha))
- #define IS_TGT_MODE_CAPABLE(ha)	(ha->tgt.atio_q_length)
- #define IS_SHADOW_REG_CAPABLE(ha)  (IS_QLA27XX(ha))
-+#define IS_DPORT_CAPABLE(ha)  (IS_QLA83XX(ha) || IS_QLA27XX(ha))
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 4d2c98c..d88b862 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,7 +7,7 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.07.00.08-k"
++#define QLA2XXX_VERSION      "8.07.00.16-k"
  
- 	/* HBA serial number */
- 	uint8_t		serial0;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index ab22ccf..1b91771 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2196,6 +2196,10 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 		mid_init_cb->options = __constant_cpu_to_le16(BIT_1);
- 		mid_init_cb->init_cb.execution_throttle =
- 		    cpu_to_le16(ha->fw_xcb_count);
-+		/* D-Port Status */
-+		if (IS_DPORT_CAPABLE(ha))
-+			mid_init_cb->init_cb.firmware_options_1 |=
-+			    cpu_to_le16(BIT_7);
- 	}
- 
- 	rval = qla2x00_init_firmware(vha, ha->init_cb_size);
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	7
 -- 
 1.7.7
 
