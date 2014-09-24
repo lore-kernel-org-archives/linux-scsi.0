@@ -1,188 +1,122 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH V4 11/17] scsi: ufs: add UFS power management support
-Date: Tue, 23 Sep 2014 17:14:47 -0700
-Message-ID: <000c01cfd78c$8d865ca0$a89315e0$@codeaurora.org>
-References: <1411457499-8074-1-git-send-email-draviv@codeaurora.org>    <1411457499-8074-12-git-send-email-draviv@codeaurora.org>    <20140923101451.GA11623@infradead.org> <4bbf3e7f23b55b6609367f47d2e2fdea.squirrel@www.codeaurora.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z:
+ dev error handler -> general protection fault, RIP:
+ mvs_task_prep_ata+0x80/0x3a0
+Date: Wed, 24 Sep 2014 00:32:06 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C969CC@G9W0745.americas.hpqcorp.net>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
+ <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:45186 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752813AbaIXAOt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 20:14:49 -0400
-In-Reply-To: <4bbf3e7f23b55b6609367f47d2e2fdea.squirrel@www.codeaurora.org>
-Content-Language: en-us
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:2038 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752483AbaIXAec (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 20:34:32 -0400
+In-Reply-To: <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dolev Raviv' <draviv@codeaurora.org>
-Cc: james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
+To: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->> It would be good to have an explanation why you need to call REQUEST 
->> SENSE from the driver.  OR your own START STOP later one.  This all 
->> seems very much against the normal model of operation for SCSI 
->> devices.
->>
->
-> Let me rephrase the explanation from the commit message:
-> We issue request sense before sending START_STOP_UNIT to the device
-well-known logical unit (w-lun) to make sure that the device w-lun unit
-attention condition is cleared. Otherwise START_STOP_UNIT will fail.
-
-Yes, we need to clear the unit attention condition by sending request sense
-command once.
-
-
->
->As mentioned in my previous mail (in response to [9/17] patch comments),
-UFS driver power management is controlled via device W-LUN during the
-suspend process.
->As documented in the comment above: "
-> * For selecting the UFS device power mode (Active / UFS_Sleep /
-> * UFS_PowerDown), SCSI power management command (START STOP UNIT)
-> * needs to be sent to a "UFS device" Well known Logical Unit (W-LU).
-> * As this command would be sent during the UFS host controller
-> * runtime/system PM callbacks, ....
->"
->Do you have another suggestion for making it compatible to other scsi
-drivers?
->Would you prefer this logic would go into core scsi?
-
-Meaning of PC (Power Condition) field in SSU command is modified by UFS
-device specification:
-1. PC=1 means Active power mode, PC=2 means UFS_Sleep mode compared to IDLE
-mode in SBC spec & PC=3 means UFS_PowerDown compared to Standby mode in SBC
-spec.
-2. PC values from 1 to 3 only make sense if its send the "UFS device" well
-known logical unit and this power condition is applied to all the logical
-units (normal & well known) hence putting the entire UFS device into power
-mode described by PC
-
-We didn't find any similar implementation in scsi core power management and
-as meaning of PC field is quite specific to UFS device, it's better to keep
-it local at UFS driver which can take advantage of these modes better.
-Now, given above explaination, we had 2 ways to send the SSU (and request
-sense command) to device. One is to queue it to scsi mid layer and let it
-issue to LLD (the way we are doing it now) and other one was to directly
-send the command within UFS driver (rather than going through SCSI mid
-layer) but we choose the first approach as it looks cleaner.
-
-Regards,
-Subhash
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dolev Raviv
-Sent: Tuesday, September 23, 2014 5:58 AM
-To: Christoph Hellwig
-Cc: Dolev Raviv; james.bottomley@hansenpartnership.com; hch@infradead.org;
-linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org;
-linux-arm-msm@vger.kernel.org; santoshsy@gmail.com; Subhash Jadavani; Sujit
-Reddy Thumma
-Subject: Re: [PATCH V4 11/17] scsi: ufs: add UFS power management support
-
-
->>  /**
->>   * ufshcd_slave_alloc - handle initial SCSI device configurations
->>   * @sdev: pointer to SCSI device
->> @@ -2232,6 +2403,21 @@ static int ufshcd_slave_alloc(struct 
->> scsi_device
->> *sdev)
->>
->>  	ufshcd_set_queue_depth(sdev);
->>
->> +	ufshcd_get_lu_power_on_wp_status(hba, sdev);
->> +
->> +	/*
->> +	 * For selecting the UFS device power mode (Active / UFS_Sleep /
->> +	 * UFS_PowerDown), SCSI power management command (START STOP UNIT)
->> +	 * needs to be sent to a "UFS device" Well known Logical Unit
-(W-LU).
->> +	 * As this command would be sent during the UFS host controller
->> +	 * runtime/system PM callbacks, we need a reference to "scsi_device"
->> +	 * associated to "UFS device" W-LU. This change saves the
->> "scsi_device"
->> +	 * reference for "UFS device" W-LU during slave_configure() callback
->> +	 * from SCSI mid layer.
->> +	 */
->> +	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
->> +		hba->sdev_ufs_device = sdev;
->> +
->
-> Storing the pointer in slave_alloc is not safe as you don't known if 
-> the probing was successful.  In addition you really need a reference 
-> to a scsi_device that you store somewhere as a user could easily 
-> delete the device through sysfs, which any access to it invalid.
->
-> As mention earlier you should just add this wlun using 
-> __scsi_device_add which gives you a pointer and a reference to the fully
-probed device.
-
-Sounds reasonable, I'll coordinate it with the previous patch.
-
->
->> +static int
->> +ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device 
->> +*sdp) {
->> +	unsigned char cmd[6] = {REQUEST_SENSE,
->> +				0,
->> +				0,
->> +				0,
->> +				SCSI_SENSE_BUFFERSIZE,
->> +				0};
->> +	char *buffer;
->> +	int ret;
->> +
->> +	buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
->> +	if (!buffer) {
->> +		ret = -ENOMEM;
->> +		goto out;
->> +	}
->> +
->> +	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
->> +				SCSI_SENSE_BUFFERSIZE, NULL,
->> +				msecs_to_jiffies(1000), 3, NULL, REQ_PM);
->> +	if (ret)
->> +		pr_err("%s: failed with err %d\n", __func__, ret);
->> +
->> +	kfree(buffer);
->> +out:
->> +	return ret;
->> +}
->
-> It would be good to have an explanation why you need to call REQUEST 
-> SENSE from the driver.  OR your own START STOP later one.  This all 
-> seems very much against the normal model of operation for SCSI 
-> devices.
->
-
-Let me rephrase the explanation from the commit message:
-We issue request sense before sending START_STOP_UNIT to the device
-well-known logical unit (w-lun) to make sure that the device w-lun unit
-attention condition is cleared. Otherwise START_STOP_UNIT will fail.
-
-As mentioned in my previous mail (in response to [9/17] patch comments), UFS
-driver power management is controlled via device W-LUN during the suspend
-process.
-As documented in the comment above: "
- * For selecting the UFS device power mode (Active / UFS_Sleep /
- * UFS_PowerDown), SCSI power management command (START STOP UNIT)
- * needs to be sent to a "UFS device" Well known Logical Unit (W-LU).
- * As this command would be sent during the UFS host controller
- * runtime/system PM callbacks, ....
-"
-Do you have another suggestion for making it compatible to other scsi
-drivers?
-Would you prefer this logic would go into core scsi?
-
---
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBidWd6aWxsYS1kYWVtb25AYnVnemlsbGEua2VybmVsLm9yZw0K
+PiBTZW50OiBUdWVzZGF5LCAyMyBTZXB0ZW1iZXIsIDIwMTQgNDo1NiBQTQ0KPiBUbzogbGludXgt
+c2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW0J1ZyA4MTg2MV0gT29wcyBieSBtdnNh
+cyB2MC44LjE2OiBzYXM6IGF0YVg6IGVuZF9kZXZpY2UtWTowOlo6IGRldg0KPiBlcnJvciBoYW5k
+bGVyIC0+IGdlbmVyYWwgcHJvdGVjdGlvbiBmYXVsdCwgUklQOiBtdnNfdGFza19wcmVwX2F0YSsw
+eDgwLzB4M2EwDQo+IA0KPiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dp
+P2lkPTgxODYxDQo+IA0KPiAtLS0gQ29tbWVudCAjMTYgZnJvbSBsaW51eC1pZGVAY3Jhc2hwbGFu
+LnBybyAtLS0NCj4gV2hlbiBsaW5lLWJ5LWxpbmUgZHVtcGluZyB0aGUgY2FsbGVkIGNvbnN0YW50
+cy92YXJzIGZyb206DQo+IDQ2OSAgICAgICAgZGVsX3EgPSBUWFFfTU9ERV9JIHwgdGFnIHwNCj4g
+NDcwICAgICAgICAgICAgKFRYUV9DTURfU1RQIDw8IFRYUV9DTURfU0hJRlQpIHwNCj4gNDcxICAg
+ICAgICAgICAgKE1WU19QSFlfSUQgPDwgVFhRX1BIWV9TSElGVCkgfA0KPiA0NzIgICAgICAgICAg
+ICAobXZpX2Rldi0+dGFza2ZpbGVzZXQgPDwgVFhRX1NSU19TSElGVCk7DQo+IA0KPiB1c2luZyB0
+aGUgcHJlcGVuZGVkIHN0YXRlbWVudHM6DQo+ICAgICAgICAgcHJpbnRrKCJzbG90PSVwICIsIHNs
+b3QpOw0KPiAgICAgICAgIHByaW50ayhLRVJOX0lORk8gIlRYUV9NT0RFX0k9JWQgIiwgVFhRX01P
+REVfSSk7DQo+ICAgICAgICAgcHJpbnRrKEtFUk5fSU5GTyAidGFnPSVkICIsIHRhZyk7DQo+ICAg
+ICAgICAgcHJpbnRrKEtFUk5fSU5GTyAiVFhRX0NNRF9TVFA9JWQgIiwgVFhRX0NNRF9TVFApOw0K
+PiAgICAgICAgIHByaW50ayhLRVJOX0lORk8gIlRYUV9DTURfU0hJRlQ9JWQgIiwgVFhRX0NNRF9T
+SElGVCk7DQo+ICAgICAgICAgcHJpbnRrKEtFUk5fSU5GTyAiTVZTX1BIWV9JRD0lZCAiLCBNVlNf
+UEhZX0lEKTsNCj4gICAgICAgICBwcmludGsoS0VSTl9JTkZPICJUWFFfUEhZX1NISUZUPSVkICIs
+IFRYUV9QSFlfU0hJRlQpOw0KPiAgICAgICAgIGRlbF9xID0gVFhRX01PREVfSSB8IHRhZyB8DQo+
+ICAgICAgICAgICAgICAgICAoVFhRX0NNRF9TVFAgPDwgVFhRX0NNRF9TSElGVCkgfA0KPiAgICAg
+ICAgICAgICAgICAgKE1WU19QSFlfSUQgPDwgVFhRX1BIWV9TSElGVCkgfA0KPiAgICAgICAgICAg
+ICAgICAgKG12aV9kZXYtPnRhc2tmaWxlc2V0IDw8IFRYUV9TUlNfU0hJRlQpOw0KPiANCj4gdGhl
+IGtlcm5lbCBjcmFzaCBvY2N1cnMgYWZ0ZXIgcHJpbnRpbmcgIlRYUV9DTURfU0hJRlQiIG9yIHdo
+ZW4gdHJ5aW5nIHRvDQo+IG91dHB1dA0KPiB0aGUgdmFsdWUgb2YgIk1WU19QSFlfSUQiOg0KPiBb
+ICA1MjkuMTEzMTUyXSBzYXM6IERPTkUgRElTQ09WRVJZIG9uIHBvcnQgMCwgcGlkOjEzMywgcmVz
+dWx0OjANCj4gWyAgNTI5LjExNDMxM10gc2FzOiBFbnRlciBzYXNfc2NzaV9yZWNvdmVyX2hvc3Qg
+YnVzeTogMCBmYWlsZWQ6IDANCj4gWyAgNTI5LjExNTQ2MF0gc2FzOiBhdGE3OiBlbmRfZGV2aWNl
+LTY6MDoyODogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjExNTUyMl0gc2FzOiBhdGE4OiBl
+bmRfZGV2aWNlLTY6MDoyOTogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjExODcwNl0gc2Fz
+OiBhdGE5OiBlbmRfZGV2aWNlLTY6MDozMDogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjEx
+OTg0MF0gc2FzOiBhdGExMDogZW5kX2RldmljZS02OjA6MzE6IGRldiBlcnJvciBoYW5kbGVyDQo+
+IFsgIDUyOS4yNzE2MzRdIFttdmk9ZmZmZjg4MDBkMzY4MDAwMCwgbXZpX2Rldj1mZmZmODgwMGQz
+NjgzNmEwIHRhZz0wDQo+IHNsb3Q9ZmZmZjg4MDBkMzZhNTViOA0KPiBbICA1MjkuMjcxNzUzXSBU
+WFFfTU9ERV9JPTI2ODQzNTQ1NiB0YWc9MA0KPiBbICA1MjkuMjcyNjc5XSBUWFFfQ01EX1NUUD0z
+IFRYUV9DTURfU0hJRlQ9MjkNCj4gWyAgNTI5LjI3MzYxOF0gTVZTX1BIWV9JRD0zMjc2OCBUWFFf
+UEhZX1NISUZUPTEyIHR4X3Byb2Q9NDRdDQo+IFsgIDUyOS4yNzYwOTFdIFttdmk9ZmZmZjg4MDBk
+MzY4MDAwMCwgbXZpX2Rldj1mZmZmODgwMGQzNjgzNjE4IHRhZz0xDQo+IHNsb3Q9ZmZmZjg4MDBk
+MzZhNTYxMA0KPiBbICA1MjkuMjc2MjA3XSBUWFFfTU9ERV9JPTI2ODQzNTQ1NiB0YWc9MQ0KPiBb
+ICA1MjkuMjc3MDk1XSBUWFFfQ01EX1NUUD0zIFRYUV9DTURfU0hJRlQ9MjkNCj4gWyAgNTI5LjI3
+ODAzOF0gTVZTX1BIWV9JRD0xIFRYUV9QSFlfU0hJRlQ9MTIgdHhfcHJvZD00Nl0NCj4gWyAgNTI5
+LjI4MDI3MV0gW212aT1mZmZmODgwMGQzNjgwMDAwLCBtdmlfZGV2PWZmZmY4ODAwZDM2ODM2MTgg
+dGFnPTENCj4gc2xvdD1mZmZmODgwMGQzNmE1NjEwDQo+IFsgIDUyOS4yODAzODVdIFRYUV9NT0RF
+X0k9MjY4NDM1NDU2IHRhZz0xDQo+IFsgIDUyOS4yODE0NDVdIFRYUV9DTURfU1RQPTMgVFhRX0NN
+RF9TSElGVD0yOQ0KPiBbICA1MjkuMjgyNTYyXSBNVlNfUEhZX0lEPTEgVFhRX1BIWV9TSElGVD0x
+MiB0eF9wcm9kPTQ4XQ0KPiBbICA1MjkuMjg0ODk0XSBbbXZpPWZmZmY4ODAwZDM2ODAwMDAsIG12
+aV9kZXY9ZmZmZjg4MDBkMzY4MzdiMCB0YWc9Mg0KPiBzbG90PWZmZmY4ODAwZDM2YTU2NjgNCj4g
+WyAgNTI5LjI4NTAxMF0gVFhRX01PREVfST0yNjg0MzU0NTYgdGFnPTINCj4gWyAgNTI5LjI4NjI0
+OF0gVFhRX0NNRF9TVFA9MyBUWFFfQ01EX1NISUZUPTI5DQo+IFsgIDUyOS4yODc1NTVdIEJVRzog
+dW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0DQo+IDAw
+MDAwMDAwMDAwMDAyNTcNCj4gWyAgNTI5LjI5MDIyNV0gSVA6IFs8ZmZmZmZmZmZhMDI4ODhiYj5d
+IG12c190YXNrX3ByZXArMHg3Y2IvMHhlNTAgW212c2FzXQ0KPiBbICA1MjkuMjkxNjg2XSBQR0Qg
+MA0KPiBbICA1MjkuMjkzMTQxXSBPb3BzOiAwMDAwIFsjMV0gU01QDQo+IFsgIDUyOS4yOTQ2MzBd
+IE1vZHVsZXMgbGlua2VkIGluOiBtdnNhcyhPRikgbGlic2FzIHNjc2lfdHJhbnNwb3J0X3Nhcw0K
+PiB4ODZfcGtnX3RlbXBfdGhlcm1hbCBpbnRlbF9wb3dlcmNsYW1wIGNvcmV0ZW1wIGt2bSBjcmN0
+MTBkaWZfcGNsbXVsDQo+IGNyYzMyX3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGNyeXB0ZCBz
+ZXJpb19yYXcgbHBjX2ljaCBpOTE1IG1laV9tZSBtZWkNCj4gZHJtX2ttc19oZWxwZXIgdmlkZW8g
+bmV0Y29uc29sZSBkcm0gY29uZmlnZnMgbWFjX2hpZCBpMmNfYWxnb19iaXQgcHNtb3VzZQ0KPiBy
+ODE2OQ0KPiBhaGNpIG1paSBsaWJhaGNpDQo+IA0KPiBBbnkgc3VnZ2VzdGlvbnMgd2h5IGFjY2Vz
+c2luZyAiTVZTX1BIWV9JRCIgbGVhZHMgdG8gdGhlIGtlcm5lbCBOVUxMIHBvaW50ZXINCj4gZGVy
+ZWZlcmVuY2Ugb29wcz8NCg0KMS4gQWx0aG91Z2ggTVZTX1BIWV9JRCBsb29rcyBsaWtlIGEgY29u
+c3RhbnQsIGl0J3MgcmVhbGx5IG5vdDoNCiNkZWZpbmUgTVZTX1BIWV9JRCAoMVUgPDwgc2FzX3Bo
+eS0+aWQpDQoNCjIuIFRoaXMgZmF1bHQ6DQpbICAgMzIuMjcxMjE4XSBCVUc6IHVuYWJsZSB0byBo
+YW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMjU1
+DQooYWx0aG91Z2ggMjU1IGxvb2tzIGxpa2UgYSBkZWNpbWFsIG51bWJlciAweGZmLCBpdCdzIHJl
+YWxseSBoZXggMHgyNTUpDQoNCmF0IHRoaXMgbGluZToNCiAgIDB4ZmZmZmZmZmZhMDFjNDgxZSA8
+KzE4Mzg+Ogltb3YgICAgMHgyNTQoJXJieCksJWVjeA0KDQppbXBsaWVzIHRoYXQgcmJ4IGNvbnRh
+aW5zIDEsIHNvIDB4MjU0ICsgMSA9IDB4MjU1Lg0KDQozLiBwYWhvbGUgZHJpdmVycy9zY3NpL212
+c2FzL212X3Nhcy5vDQpzaG93cyB0aGVyZSBhcmUgdHdvIHN0cnVjdHVyZXMgd2l0aCBmaWVsZHMg
+YXQgb2Zmc2V0IDU5NjoNCiogYXNkX3Nhc19waHkuaWQNCiogYXNkX3Nhc19wb3J0LnNhc19hZGRy
+WzhdDQoNCjQuIG9iamR1bXAgLWRyUyBkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLm8NCnNob3dz
+IG9ubHkgYSBmZXcgbGluZXMgd2l0aCAweDI1NCglc29tZXRoaW5nKSwgb25lIG9mIHdoaWNoDQpp
+cyB0aGUgZGVsX3EgbGluZSB5b3UndmUgaWRlbnRpZmllZDoNCg0KbXZzX3Rhc2tfcHJlcF9hdGEo
+c3RydWN0IG12c19pbmZvICptdmksIHN0cnVjdCBtdnNfdGFza19leGVjX2luZm8gKnRlaSk6DQog
+ICAgICAgIHN0cnVjdCBzYXNfaGFfc3RydWN0ICpzaGEgPSBtdmktPnNhczsNCiAgICAgICAgc3Ry
+dWN0IHNhc190YXNrICp0YXNrID0gdGVpLT50YXNrOw0KICAgICAgICBzdHJ1Y3QgZG9tYWluX2Rl
+dmljZSAqZGV2ID0gdGFzay0+ZGV2Ow0KICAgICAgICBzdHJ1Y3Qgc2FzX3BoeSAqc3BoeSA9IGRl
+di0+cGh5Ow0KICAgICAgICBzdHJ1Y3QgYXNkX3Nhc19waHkgKnNhc19waHkgPSBzaGEtPnNhc19w
+aHlbc3BoeS0+bnVtYmVyXTsNCg0KICAgICAgICAuLi4NCiAgICAgICAgZGVsX3EgPSBUWFFfTU9E
+RV9JIHwgdGFnIHwNCiAgICAgICAgICAgICAgICAoVFhRX0NNRF9TVFAgPDwgVFhRX0NNRF9TSElG
+VCkgfA0KICAgICAgICAgICAgICAgIChNVlNfUEhZX0lEIDw8IFRYUV9QSFlfU0hJRlQpIHwNCiAg
+ICAgICAgICAgICAgICAobXZpX2Rldi0+dGFza2ZpbGVzZXQgPDwgVFhRX1NSU19TSElGVCk7DQog
+ICAgICAgIG12aS0+dHhbbXZpLT50eF9wcm9kXSA9IGNwdV90b19sZTMyKGRlbF9xKTsNCg0KTVZT
+X1BIWV9JRCA9DQpzYXNfcGh5LT5pZCA9DQpzaGEtPnNhc19waHlbc3BoeS0+bnVtYmVyXSA9DQpt
+dmktPnNhcy0+c2FzX3BoeVtkZXYtPnBoeS0+bnVtYmVyXSA9DQptdmktPnNhcy0+c2FzX3BoeVt0
+YXNrLT5kZXYtPnBoeS0+bnVtYmVyXS0+aWQNCm12aS0+c2FzLT5zYXNfcGh5W3RlaS0+dGFzay0+
+ZGV2LT5waHktPm51bWJlcl0tPmlkDQoNCkxvb2tpbmcgYXQgdGhlIG9mZnNldHMgcmVwb3J0ZWQg
+YnkgcGFob2xlLCB0aGF0IG1lYW5zOg0KJXJkaS0+NTYtPjM0NFslcnNpLT4wLT4wLT41Ni0+Njg4
+XS0+MjU0DQoNCm12aS0+c2FzLT5zYXNfcGh5IGlzIGEgcG9pbnRlciB0byBhIHBvaW50ZXI6DQpz
+dHJ1Y3Qgc2FzX2hhX3N0cnVjdCB7DQouLi4NCiAgICAgICAgc3RydWN0IGFzZF9zYXNfcGh5ICog
+KiAgICAgc2FzX3BoeTsgICAgICAgICAgICAgIC8qICAgMzQ0ICAgICA4ICovDQoNCllvdSBtaWdo
+dCBsb29rIGZvciBzb21ld2hlcmUgdGhhdCBjb3VsZCBhY2NpZGVudGFsbHkNCmJlIHNldHRpbmcg
+c2FzX3BoeVtzb21ldGhpbmddIHRvIGEgZm9yIGxvb3AgaW5kZXgsDQp3aXRoIGEgdHlwZWNhc3Qg
+aGlkaW5nIHRoZSBwcm9ibGVtIGZyb20gdGhlIGNvbXBpbGVyLg0KT3IsIHRoZSBwaHktPm51bWJl
+ciB2YWx1ZSBiZWluZyBwYXNzZWQgbWlnaHQgYmUNCm91dCBvZiByYW5nZTsgaWYgdGhlcmUgd2Vy
+ZSBkaXNjb3ZlcnkgZXJyb3JzLCBzb21ldGhpbmcNCm1pZ2h0IG5vdCBoYXZlIGJlZW4gaW5pdGlh
+bGl6ZWQgbGlrZSB0aGlzIGZ1bmN0aW9uIGV4cGVjdHMuDQoNCg0KLS0tDQpSb2IgRWxsaW90dCAg
+ICBIUCBTZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0KDQoNCg==
