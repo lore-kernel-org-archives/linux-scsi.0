@@ -1,66 +1,58 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 30/35] qla2xxx: Mark port lost when we receive an RSCN for it.
-Date: Wed, 24 Sep 2014 03:08:33 -0400
-Message-ID: <1411542518-2477-31-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 23/35] qla2xxx: Enable diagnostic port using NVRAM parameters.
+Date: Wed, 24 Sep 2014 03:08:26 -0400
+Message-ID: <1411542518-2477-24-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:22947 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63438 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753304AbaIXHmy (ORCPT
+	by vger.kernel.org with ESMTP id S1753059AbaIXHmx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:42:54 -0400
+	Wed, 24 Sep 2014 03:42:53 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |    1 +
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index cc49157..1ac420e 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -573,8 +573,9 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
- 	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
--	uint32_t	rscn_entry, host_pid;
-+	uint32_t	rscn_entry, host_pid, tmp_pid;
- 	unsigned long	flags;
-+	fc_port_t	*fcport = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index f8e6507..f416c5b 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3136,6 +3136,7 @@ struct qla_hw_data {
+ #define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha))
+ #define IS_TGT_MODE_CAPABLE(ha)	(ha->tgt.atio_q_length)
+ #define IS_SHADOW_REG_CAPABLE(ha)  (IS_QLA27XX(ha))
++#define IS_DPORT_CAPABLE(ha)  (IS_QLA83XX(ha) || IS_QLA27XX(ha))
  
- 	/* Setup to process RIO completion. */
- 	handle_cnt = 0;
-@@ -978,6 +979,20 @@ skip_rio:
- 		if (qla2x00_is_a_vp_did(vha, rscn_entry))
- 			break;
+ 	/* HBA serial number */
+ 	uint8_t		serial0;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ab22ccf..1b91771 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2196,6 +2196,10 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 		mid_init_cb->options = __constant_cpu_to_le16(BIT_1);
+ 		mid_init_cb->init_cb.execution_throttle =
+ 		    cpu_to_le16(ha->fw_xcb_count);
++		/* D-Port Status */
++		if (IS_DPORT_CAPABLE(ha))
++			mid_init_cb->init_cb.firmware_options_1 |=
++			    cpu_to_le16(BIT_7);
+ 	}
  
-+		/*
-+		 * Search for the rport related to this RSCN entry and mark it
-+		 * as lost.
-+		 */
-+		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+			if (atomic_read(&fcport->state) != FCS_ONLINE)
-+				continue;
-+			tmp_pid = fcport->d_id.b24;
-+			if (fcport->d_id.b24 == rscn_entry) {
-+				qla2x00_mark_device_lost(vha, fcport, 0, 0);
-+				break;
-+			}
-+		}
-+
- 		atomic_set(&vha->loop_down_timer, 0);
- 		vha->flags.management_server_logged_in = 0;
- 
+ 	rval = qla2x00_init_firmware(vha, ha->init_cb_size);
 -- 
 1.7.7
 
