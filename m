@@ -1,359 +1,322 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V5 10/17] scsi: ufs: manually add well known logical units
-Date: Wed, 24 Sep 2014 18:14:06 +0300
-Message-ID: <1411571653-22729-11-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V5 12/17] scsi: ufs: refactor configuring power mode
+Date: Wed, 24 Sep 2014 18:14:08 +0300
+Message-ID: <1411571653-22729-13-git-send-email-draviv@codeaurora.org>
 References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:48618 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752897AbaIXPPC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 11:15:02 -0400
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+Sometimes, the device shall report its maximum power and speed
+capabilities, but we might not wish to configure it to use those
+maximum capabilities.
+This change adds support for the vendor specific host driver to
+implement power change notify callback.
 
-UFS device specification requires the UFS devices to support 4 well known
-logical units:
-	"REPORT_LUNS" (address: 01h)
-	"UFS Device" (address: 50h)
-	"RPMB" (address: 44h)
-	"BOOT" (address: 30h)
+To enable configuring different power modes (number of lanes,
+gear number and fast/slow modes) it is necessary to split the
+configuration stage from the stage that reads the device max power mode.
+In addition, it is not required to read the configuration more than
+once, thus the configuration is stored after reading it once.
 
-UFS device may have standard LUs and LUN id could be from 0x00 to 0x7F.
-UFS device specification use "Peripheral Device Addressing Format"
-(SCSI SAM-5) for standard LUs.
-
-UFS device akso have the Well Known LUs (also referred as W-LU) which
-again could be from 0x00 to 0x7F. For W-LUs, UFS device specification only
-allows the "Extended Addressing Format" (SCSI SAM-5) which means the W-LUNs
-would start from 0xC100 onwards.
-
-UFS device's power management needs to be controlled by "POWER CONDITION"
-field of SSU (START STOP UNIT) command. But this "power condition" field
-will take effect only when its sent to "UFS device" well known logical unit
-hence we require the scsi_device instance to represent this logical unit in
-order for the UFS host driver to send the SSU command for power management.
-
-We also require the scsi_device instance for "RPMB" (Replay Protected
-Memory Block) LU so user space process can control this LU. User space may
-also want to have access to BOOT LU.
-
-This patch adds the scsi device instances for each of all well known LUs
-(except "REPORT LUNS" LU).
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 4ca99ed..37d64c1 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -49,9 +49,28 @@
- #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
- 			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
- 			 (byte1 << 8) | (byte0))
--
-+/*
-+ * UFS device may have standard LUs and LUN id could be from 0x00 to
-+ * 0x7F. Standard LUs use "Peripheral Device Addressing Format".
-+ * UFS device may also have the Well Known LUs (also referred as W-LU)
-+ * which again could be from 0x00 to 0x7F. For W-LUs, device only use
-+ * the "Extended Addressing Format" which means the W-LUNs would be
-+ * from 0xc100 (SCSI_W_LUN_BASE) onwards.
-+ * This means max. LUN number reported from UFS device could be 0xC17F.
-+ */
-+#define UFS_UPIU_MAX_UNIT_NUM_ID	0x7F
-+#define UFS_MAX_LUNS		(SCSI_W_LUN_BASE + UFS_UPIU_MAX_UNIT_NUM_ID)
-+#define UFS_UPIU_WLUN_ID	(1 << 7)
- #define UFS_UPIU_MAX_GENERAL_LUN	8
- 
-+/* Well known logical unit id in LUN field of UPIU */
-+enum {
-+	UFS_UPIU_REPORT_LUNS_WLUN	= 0x81,
-+	UFS_UPIU_UFS_DEVICE_WLUN	= 0xD0,
-+	UFS_UPIU_BOOT_WLUN		= 0xB0,
-+	UFS_UPIU_RPMB_WLUN		= 0xC4,
-+};
-+
- /*
-  * UFS Protocol Information Unit related definitions
-  */
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index dc89c48..eede10a 100644
+index 11c6320..6bc4996 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -100,7 +100,6 @@ static u32 ufs_query_desc_max_size[] = {
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
--	UFSHCD_MAX_LUNS		= 8,
- 	UFSHCD_CMD_PER_LUN	= 32,
- 	UFSHCD_CAN_QUEUE	= 32,
- };
-@@ -901,6 +900,32 @@ static int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	return ret;
- }
+@@ -179,6 +179,8 @@ static void ufshcd_hba_exit(struct ufs_hba *hba);
+ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+ static irqreturn_t ufshcd_intr(int irq, void *__hba);
++static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++		struct ufs_pa_layer_attr *desired_pwr_mode);
  
-+/*
-+ * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
-+ * @scsi_lun: scsi LUN id
-+ *
-+ * Returns UPIU LUN id
-+ */
-+static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
-+{
-+	if (scsi_is_wlun(scsi_lun))
-+		return (scsi_lun & UFS_UPIU_MAX_UNIT_NUM_ID)
-+			| UFS_UPIU_WLUN_ID;
-+	else
-+		return scsi_lun & UFS_UPIU_MAX_UNIT_NUM_ID;
-+}
-+
-+/**
-+ * ufshcd_upiu_wlun_to_scsi_wlun - maps UPIU W-LUN id to SCSI W-LUN ID
-+ * @scsi_lun: UPIU W-LUN id
-+ *
-+ * Returns SCSI W-LUN id
-+ */
-+static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
-+{
-+	return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
-+}
-+
- /**
-  * ufshcd_queuecommand - main entry point for SCSI requests
-  * @cmd: command from SCSI Midlayer
-@@ -959,7 +984,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
- 	lrbp->sense_buffer = cmd->sense_buffer;
- 	lrbp->task_tag = tag;
--	lrbp->lun = cmd->device->lun;
-+	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
- 	lrbp->intr_cmd = false;
- 	lrbp->command_type = UTP_CMD_TYPE_SCSI;
- 
-@@ -1513,7 +1538,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
- 	 * from 0 to 7) and RPMB Well known LU.
- 	 */
--	if (lun >= UFS_UPIU_MAX_GENERAL_LUN)
-+	if (lun != UFS_UPIU_RPMB_WLUN && (lun >= UFS_UPIU_MAX_GENERAL_LUN))
- 		return -EOPNOTSUPP;
- 
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
-@@ -2144,6 +2169,44 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- }
- 
- /**
-+ * ufshcd_set_queue_depth - set lun queue depth
-+ * @sdev: pointer to SCSI device
-+ *
-+ * Read bLUQueueDepth value and activate scsi tagged command
-+ * queueing. For WLUN, queue depth is set to 1. For best-effort
-+ * cases (bLUQueueDepth = 0) the queue depth is set to a maximum
-+ * value that host can queue.
-+ */
-+static void ufshcd_set_queue_depth(struct scsi_device *sdev)
-+{
-+	int ret = 0;
-+	u8 lun_qdepth;
-+	struct ufs_hba *hba;
-+
-+	hba = shost_priv(sdev->host);
-+
-+	lun_qdepth = hba->nutrs;
-+	ret = ufshcd_read_unit_desc_param(hba,
-+					  ufshcd_scsi_to_upiu_lun(sdev->lun),
-+					  UNIT_DESC_PARAM_LU_Q_DEPTH,
-+					  &lun_qdepth,
-+					  sizeof(lun_qdepth));
-+
-+	/* Some WLUN doesn't support unit descriptor */
-+	if (ret == -EOPNOTSUPP)
-+		lun_qdepth = 1;
-+	else if (!lun_qdepth)
-+		/* eventually, we can figure out the real queue depth */
-+		lun_qdepth = hba->nutrs;
-+	else
-+		lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
-+
-+	dev_dbg(hba->dev, "%s: activate tcq with queue depth %d\n",
-+			__func__, lun_qdepth);
-+	scsi_activate_tcq(sdev, lun_qdepth);
-+}
-+
-+/**
-  * ufshcd_slave_alloc - handle initial SCSI device configurations
-  * @sdev: pointer to SCSI device
-  *
-@@ -2152,8 +2215,6 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- static int ufshcd_slave_alloc(struct scsi_device *sdev)
+ static inline int ufshcd_enable_irq(struct ufs_hba *hba)
  {
- 	struct ufs_hba *hba;
--	u8 lun_qdepth;
--	int ret;
- 
- 	hba = shost_priv(sdev->host);
- 	sdev->tagged_supported = 1;
-@@ -2168,20 +2229,8 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 	/* REPORT SUPPORTED OPERATION CODES is not supported */
- 	sdev->no_report_opcodes = 1;
- 
--	ret = ufshcd_read_unit_desc_param(hba,
--					  sdev->lun,
--					  UNIT_DESC_PARAM_LU_Q_DEPTH,
--					  &lun_qdepth,
--					  sizeof(lun_qdepth));
--	if (!ret || !lun_qdepth)
--		/* eventually, we can figure out the real queue depth */
--		lun_qdepth = hba->nutrs;
--	else
--		lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
- 
--	dev_dbg(hba->dev, "%s: activate tcq with queue depth %d\n",
--			__func__, lun_qdepth);
--	scsi_activate_tcq(sdev, lun_qdepth);
-+	ufshcd_set_queue_depth(sdev);
- 
- 	return 0;
- }
-@@ -2961,7 +3010,10 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 					      lun_id, task_tag);
- 	task_req_upiup->header.dword_1 =
- 		UPIU_HEADER_DWORD(0, tm_function, 0, 0);
--
-+	/*
-+	 * The host shall provide the same value for LUN field in the basic
-+	 * header and for Input Parameter.
-+	 */
- 	task_req_upiup->input_param1 = cpu_to_be32(lun_id);
- 	task_req_upiup->input_param2 = cpu_to_be32(task_id);
- 
-@@ -3384,6 +3436,69 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
+@@ -1959,40 +1961,83 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
  }
  
  /**
-+ * ufshcd_scsi_add_wlus - Adds required W-LUs
+- * ufshcd_config_max_pwr_mode - Set & Change power mode with
+- *	maximum capability attribute information.
+- * @hba: per adapter instance
+- *
+- * Returns 0 on success, non-zero value on failure
++ * ufshcd_get_max_pwr_mode - reads the max power mode negotiated with device
 + * @hba: per-adapter instance
-+ *
-+ * UFS device specification requires the UFS devices to support 4 well known
-+ * logical units:
-+ *	"REPORT_LUNS" (address: 01h)
-+ *	"UFS Device" (address: 50h)
-+ *	"RPMB" (address: 44h)
-+ *	"BOOT" (address: 30h)
-+ * UFS device's power management needs to be controlled by "POWER CONDITION"
-+ * field of SSU (START STOP UNIT) command. But this "power condition" field
-+ * will take effect only when its sent to "UFS device" well known logical unit
-+ * hence we require the scsi_device instance to represent this logical unit in
-+ * order for the UFS host driver to send the SSU command for power management.
+  */
+-static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
++static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ {
+-	enum {RX = 0, TX = 1};
+-	u32 lanes[] = {1, 1};
+-	u32 gear[] = {1, 1};
+-	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
+-	int ret;
++	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
 +
-+ * We also require the scsi_device instance for "RPMB" (Replay Protected Memory
-+ * Block) LU so user space process can control this LU. User space may also
-+ * want to have access to BOOT LU.
++	if (hba->max_pwr_info.is_valid)
++		return 0;
 +
-+ * This function adds scsi device instances for each of all well known LUs
-+ * (except "REPORT LUNS" LU).
-+ *
-+ * Returns zero on success (all required W-LUs are added successfully),
-+ * non-zero error value on failure (if failed to add any of the required W-LU).
-+ */
-+static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
++	pwr_info->pwr_tx = FASTAUTO_MODE;
++	pwr_info->pwr_rx = FASTAUTO_MODE;
++	pwr_info->hs_rate = PA_HS_MODE_B;
+ 
+ 	/* Get the connected lane count */
+-	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
+-	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
++			&pwr_info->lane_rx);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
++			&pwr_info->lane_tx);
++
++	if (!pwr_info->lane_rx || !pwr_info->lane_tx) {
++		dev_err(hba->dev, "%s: invalid connected lanes value. rx=%d, tx=%d\n",
++				__func__,
++				pwr_info->lane_rx,
++				pwr_info->lane_tx);
++		return -EINVAL;
++	}
+ 
+ 	/*
+ 	 * First, get the maximum gears of HS speed.
+ 	 * If a zero value, it means there is no HSGEAR capability.
+ 	 * Then, get the maximum gears of PWM speed.
+ 	 */
+-	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
+-	if (!gear[RX]) {
+-		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
+-		pwr[RX] = SLOWAUTO_MODE;
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &pwr_info->gear_rx);
++	if (!pwr_info->gear_rx) {
++		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
++				&pwr_info->gear_rx);
++		if (!pwr_info->gear_rx) {
++			dev_err(hba->dev, "%s: invalid max pwm rx gear read = %d\n",
++				__func__, pwr_info->gear_rx);
++			return -EINVAL;
++		}
++		pwr_info->pwr_rx = SLOWAUTO_MODE;
+ 	}
+ 
+-	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
+-	if (!gear[TX]) {
++	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR),
++			&pwr_info->gear_tx);
++	if (!pwr_info->gear_tx) {
+ 		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
+-				    &gear[TX]);
+-		pwr[TX] = SLOWAUTO_MODE;
++				&pwr_info->gear_tx);
++		if (!pwr_info->gear_tx) {
++			dev_err(hba->dev, "%s: invalid max pwm tx gear read = %d\n",
++				__func__, pwr_info->gear_tx);
++			return -EINVAL;
++		}
++		pwr_info->pwr_tx = SLOWAUTO_MODE;
++	}
++
++	hba->max_pwr_info.is_valid = true;
++	return 0;
++}
++
++int ufshcd_change_power_mode(struct ufs_hba *hba,
++			     struct ufs_pa_layer_attr *pwr_mode)
 +{
-+	int ret = 0;
++	int ret;
 +
-+	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
-+		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN), NULL);
-+	if (IS_ERR(hba->sdev_ufs_device)) {
-+		ret = PTR_ERR(hba->sdev_ufs_device);
-+		hba->sdev_ufs_device = NULL;
-+		goto out;
++	/* if already configured to the requested pwr_mode */
++	if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
++	    pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
++	    pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
++	    pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
++	    pwr_mode->pwr_rx == hba->pwr_info.pwr_rx &&
++	    pwr_mode->pwr_tx == hba->pwr_info.pwr_tx &&
++	    pwr_mode->hs_rate == hba->pwr_info.hs_rate) {
++		dev_dbg(hba->dev, "%s: power already configured\n", __func__);
++		return 0;
+ 	}
+ 
+ 	/*
+@@ -2001,23 +2046,67 @@ static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
+ 	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
+ 	 * - PA_HSSERIES
+ 	 */
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
+-	if (pwr[RX] == FASTAUTO_MODE)
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), pwr_mode->gear_rx);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
++			pwr_mode->lane_rx);
++	if (pwr_mode->pwr_rx == FASTAUTO_MODE ||
++			pwr_mode->pwr_rx == FAST_MODE)
+ 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
++	else
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), FALSE);
+ 
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
+-	if (pwr[TX] == FASTAUTO_MODE)
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), pwr_mode->gear_tx);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
++			pwr_mode->lane_tx);
++	if (pwr_mode->pwr_tx == FASTAUTO_MODE ||
++			pwr_mode->pwr_tx == FAST_MODE)
+ 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
++	else
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), FALSE);
+ 
+-	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
+-		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
++	if (pwr_mode->pwr_rx == FASTAUTO_MODE ||
++	    pwr_mode->pwr_tx == FASTAUTO_MODE ||
++	    pwr_mode->pwr_rx == FAST_MODE ||
++	    pwr_mode->pwr_tx == FAST_MODE)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
++						pwr_mode->hs_rate);
+ 
+-	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
+-	if (ret)
++	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
++			| pwr_mode->pwr_tx);
++
++	if (ret) {
+ 		dev_err(hba->dev,
+-			"pwr_mode: power mode change failed %d\n", ret);
++			"%s: power mode change failed %d\n", __func__, ret);
++	} else {
++		if (hba->vops && hba->vops->pwr_change_notify)
++			hba->vops->pwr_change_notify(hba,
++				POST_CHANGE, NULL, pwr_mode);
++
++		memcpy(&hba->pwr_info, pwr_mode,
++			sizeof(struct ufs_pa_layer_attr));
 +	}
 +
-+	hba->sdev_boot = __scsi_add_device(hba->host, 0, 0,
-+		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-+	if (IS_ERR(hba->sdev_boot)) {
-+		ret = PTR_ERR(hba->sdev_boot);
-+		hba->sdev_boot = NULL;
-+		goto remove_sdev_ufs_device;
-+	}
-+
-+	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
-+		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
-+	if (IS_ERR(hba->sdev_rpmb)) {
-+		ret = PTR_ERR(hba->sdev_rpmb);
-+		hba->sdev_rpmb = NULL;
-+		goto remove_sdev_boot;
-+	}
-+	goto out;
-+
-+remove_sdev_boot:
-+	scsi_remove_device(hba->sdev_boot);
-+remove_sdev_ufs_device:
-+	scsi_remove_device(hba->sdev_ufs_device);
-+out:
 +	return ret;
 +}
 +
 +/**
-  * ufshcd_probe_hba - probe hba to detect device and initialize
-  * @hba: per-adapter instance
-  *
-@@ -3415,6 +3530,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		if (!hba->is_init_prefetch)
- 			ufshcd_init_icc_levels(hba);
- 
-+		/* Add required well known logical units to scsi mid layer */
-+		if (ufshcd_scsi_add_wlus(hba))
-+			goto out;
++ * ufshcd_config_pwr_mode - configure a new power mode
++ * @hba: per-adapter instance
++ * @desired_pwr_mode: desired power configuration
++ */
++static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
++		struct ufs_pa_layer_attr *desired_pwr_mode)
++{
++	struct ufs_pa_layer_attr final_params = { 0 };
++	int ret;
 +
- 		scsi_scan_host(hba->host);
- 		pm_runtime_put_sync(hba->dev);
- 	}
-@@ -4018,7 +4137,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	host->can_queue = hba->nutrs;
- 	host->cmd_per_lun = hba->nutrs;
- 	host->max_id = UFSHCD_MAX_ID;
--	host->max_lun = UFSHCD_MAX_LUNS;
-+	host->max_lun = UFS_MAX_LUNS;
- 	host->max_channel = UFSHCD_MAX_CHANNEL;
++	if (hba->vops && hba->vops->pwr_change_notify)
++		hba->vops->pwr_change_notify(hba,
++		     PRE_CHANGE, desired_pwr_mode, &final_params);
++	else
++		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
++
++	ret = ufshcd_change_power_mode(hba, &final_params);
+ 
+ 	return ret;
+ }
+@@ -3731,7 +3820,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	hba->wlun_dev_clr_ua = true;
+ 
+-	ufshcd_config_max_pwr_mode(hba);
++	if (ufshcd_get_max_pwr_mode(hba)) {
++		dev_err(hba->dev,
++			"%s: Failed getting max supported power mode\n",
++			__func__);
++	} else {
++		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
++		if (ret)
++			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
++					__func__, ret);
++	}
+ 
+ 	/*
+ 	 * If we are in error handling context or in power management callbacks
+@@ -4893,6 +4991,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  	host->unique_id = host->host_no;
  	host->max_cmd_len = MAX_CDB_SIZE;
+ 
++	hba->max_pwr_info.is_valid = false;
++
+ 	/* Initailize wait queue for task management */
+ 	init_waitqueue_head(&hba->tm_wq);
+ 	init_waitqueue_head(&hba->tm_tag_wq);
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8365ad4..5c25337 100644
+index e1bde05..343b18a 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -124,7 +124,7 @@ struct ufshcd_lrb {
+@@ -221,6 +221,22 @@ struct ufs_clk_info {
  
- 	int command_type;
- 	int task_tag;
--	unsigned int lun;
-+	u8 lun; /* UPIU LUN id field is only 8-bit wide */
- 	bool intr_cmd;
+ #define PRE_CHANGE      0
+ #define POST_CHANGE     1
++
++struct ufs_pa_layer_attr {
++	u32 gear_rx;
++	u32 gear_tx;
++	u32 lane_rx;
++	u32 lane_tx;
++	u32 pwr_rx;
++	u32 pwr_tx;
++	u32 hs_rate;
++};
++
++struct ufs_pwr_mode_info {
++	bool is_valid;
++	struct ufs_pa_layer_attr info;
++};
++
+ /**
+  * struct ufs_hba_variant_ops - variant specific callbacks
+  * @name: variant name
+@@ -232,6 +248,9 @@ struct ufs_clk_info {
+  *                     variant specific Uni-Pro initialization.
+  * @link_startup_notify: called before and after Link startup is carried out
+  *                       to allow variant specific Uni-Pro initialization.
++ * @pwr_change_notify: called before and after a power mode change
++ *			is carried out to allow vendor spesific capabilities
++ *			to be set.
+  * @suspend: called during host controller PM callback
+  * @resume: called during host controller PM callback
+  */
+@@ -243,6 +262,9 @@ struct ufs_hba_variant_ops {
+ 	int     (*setup_regulators)(struct ufs_hba *, bool);
+ 	int     (*hce_enable_notify)(struct ufs_hba *, bool);
+ 	int     (*link_startup_notify)(struct ufs_hba *, bool);
++	int	(*pwr_change_notify)(struct ufs_hba *,
++					bool, struct ufs_pa_layer_attr *,
++					struct ufs_pa_layer_attr *);
+ 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+ };
+@@ -302,6 +324,8 @@ struct ufs_init_prefetch {
+  * @auto_bkops_enabled: to track whether bkops is enabled in device
+  * @vreg_info: UFS device voltage regulator information
+  * @clk_list_head: UFS host controller clocks list node head
++ * @pwr_info: holds current power mode
++ * @max_pwr_info: keeps the device max valid pwm
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -387,6 +411,9 @@ struct ufs_hba {
+ 	struct list_head clk_list_head;
+ 
+ 	bool wlun_dev_clr_ua;
++
++	struct ufs_pa_layer_attr pwr_info;
++	struct ufs_pwr_mode_info max_pwr_info;
  };
  
-@@ -266,6 +266,13 @@ struct ufs_hba {
- 
- 	struct Scsi_Host *host;
- 	struct device *dev;
-+	/*
-+	 * This field is to keep a reference to "scsi_device" corresponding to
-+	 * "UFS device" W-LU.
-+	 */
-+	struct scsi_device *sdev_ufs_device;
-+	struct scsi_device *sdev_rpmb;
-+	struct scsi_device *sdev_boot;
- 
- 	struct ufshcd_lrb *lrb;
- 	unsigned long lrb_in_use;
+ #define ufshcd_writel(hba, val, reg)	\
 -- 
 1.8.5.2
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
-
