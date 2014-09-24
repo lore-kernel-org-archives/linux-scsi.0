@@ -1,107 +1,56 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 03/35] qla2xxx: ISP27xx fwdump template remove high frequency debug logs.
-Date: Wed, 24 Sep 2014 03:08:06 -0400
-Message-ID: <1411542518-2477-4-git-send-email-saurav.kashyap@qlogic.com>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH fix for 3.17 v5] uas: Add a quirk for rejecting ATA_12
+ and ATA_16 commands
+Date: Tue, 23 Sep 2014 21:39:46 -0700
+Message-ID: <20140924043946.GA13434@kroah.com>
+References: <1410789852-30567-1-git-send-email-hdegoede@redhat.com>
+ <20140915140807.GA26412@kroah.com>
+ <5416F420.9080901@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:17697 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753127AbaIXHny (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:43:54 -0400
-In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5416F420.9080901@redhat.com>
+Sender: stable-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com
-Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+On Mon, Sep 15, 2014 at 04:13:52PM +0200, Hans de Goede wrote:
+> Hi,
+> 
+> On 09/15/2014 04:08 PM, Greg Kroah-Hartman wrote:
+> > On Mon, Sep 15, 2014 at 04:04:12PM +0200, Hans de Goede wrote:
+> >> And set this quirk for the Seagate Expansion Desk (0bc2:2312), as that one
+> >> seems to hang upon receiving an ATA_12 or ATA_16 command.
+> >>
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=79511
+> >> https://bbs.archlinux.org/viewtopic.php?id=183190
+> >>
+> >> While at it also add missing documentation for the u value for usb-storage
+> >> quirks.
+> >>
+> >> Cc: stable@vger.kernel.org # 3.16
+> >> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> >>
+> >> --
+> >> Changes in v2: Add documentation for new t and u usb-storage.quirks flags
+> >> Changes in v3: Fix typo in documentation
+> >> Changes in v4: Also apply the quirk to (0bc2:3312)
+> >> Changes in v5: Rebased on 3.17-rc5, drop u documentation, already upstream
+> > 
+> > So I should wait another day for v6?  :)
+> 
+> Hehe, no I certainly hope not.
+> 
+> Chances are I there will eventually be more seagate models needing the quirk,
+> but I've none in the pipeline atm, and we can always add those with an
+> incremental patch.
+> 
+> So if this is not too late for 3.17 and you can pick up v5 that would be great.
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
- drivers/scsi/qla2xxx/qla_tmpl.c |   17 -----------------
- 2 files changed, 1 insertions(+), 18 deletions(-)
+It's too late for 3.17, but I'll mark it for stable for 3.17 and 3.16.
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 2ac81e0..35e2021 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -64,7 +64,7 @@
-  * |                              |                    | 0xb13c-0xb140  |
-  * |                              |                    | 0xb149		|
-  * | MultiQ                       |       0xc00c       |		|
-- * | Misc                         |       0xd212       | 0xd017		|
-+ * | Misc                         |       0xd212       | 0xd011-0xd017	|
-  * |                              |                    | 0xd020		|
-  * |                              |                    | 0xd030-0xd0ff	|
-  * |                              |                    | 0xd101-0xd1fe	|
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 29271cc..6da9dd2 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -151,8 +151,6 @@ qla27xx_read8(void *window, void *buf, ulong *len)
- 
- 	if (buf) {
- 		value = RD_REG_BYTE((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd011,
--		    "%s: -> %x\n", __func__, value);
- 	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -164,8 +162,6 @@ qla27xx_read16(void *window, void *buf, ulong *len)
- 
- 	if (buf) {
- 		value = RD_REG_WORD((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd012,
--		    "%s: -> %x\n", __func__, value);
- 	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -177,8 +173,6 @@ qla27xx_read32(void *window, void *buf, ulong *len)
- 
- 	if (buf) {
- 		value = RD_REG_DWORD((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd013,
--		    "%s: -> %x\n", __func__, value);
- 	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -197,10 +191,6 @@ qla27xx_read_reg(__iomem struct device_reg_24xx *reg,
- {
- 	void *window = (void *)reg + offset;
- 
--	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd014,
--		    "%s: @%x\n", __func__, offset);
--	}
- 	qla27xx_read32(window, buf, len);
- }
- 
-@@ -211,8 +201,6 @@ qla27xx_write_reg(__iomem struct device_reg_24xx *reg,
- 	__iomem void *window = reg + offset;
- 
- 	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd015,
--		    "%s: @%x <- %x\n", __func__, offset, data);
- 		WRT_REG_DWORD(window, data);
- 	}
- }
-@@ -225,11 +213,6 @@ qla27xx_read_window(__iomem struct device_reg_24xx *reg,
- 	void *window = (void *)reg + offset;
- 	void (*readn)(void *, void *, ulong *) = qla27xx_read_vector(width);
- 
--	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd016,
--		    "%s: base=%x offset=%x count=%x width=%x\n",
--		    __func__, addr, offset, count, width);
--	}
- 	qla27xx_write_reg(reg, IOBASE_ADDR, addr, buf);
- 	while (count--) {
- 		qla27xx_insert32(addr, buf, len);
--- 
-1.7.7
+thanks,
 
+greg k-h
