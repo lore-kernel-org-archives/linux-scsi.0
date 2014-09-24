@@ -1,88 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85101] New: hpsa + P410 does not show connected HP SAS port
- expanders
-Date: Wed, 24 Sep 2014 16:46:18 +0000
-Message-ID: <bug-85101-11613@https.bugzilla.kernel.org/>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH V5 10/17] scsi: ufs: manually add well known logical units
+Date: Wed, 24 Sep 2014 09:59:07 -0700
+Message-ID: <001401cfd818$db2fa060$918ee120$@codeaurora.org>
+References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org> <1411571653-22729-11-git-send-email-draviv@codeaurora.org> <20140924162444.GA20581@infradead.org> <001101cfd815$b66e0490$234a0db0$@codeaurora.org> <20140924164031.GB9474@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:51895 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751537AbaIXQqX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 12:46:23 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4504520265
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2014 16:46:21 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id D38AB20270
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2014 16:46:18 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20140924164031.GB9474@infradead.org>
+Content-Language: en-us
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85101
+> Just after the call to scsi_remove_host sounds right to me.
+> scsi_remove_host already removes all regularly scanned devices, but
+because __scsi_add_device keeps and additional reference it doesn't free
+those that you added manually.
 
-            Bug ID: 85101
-           Summary: hpsa + P410 does not show connected HP SAS port
-                    expanders
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 3.17
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: linux-ide@crashplan.pro
-        Regression: No
+Ok, we are calling scsi_remove_host() as part of ufs driver removal so we
+can remove these manually added devices immediately after it. Next patch
+revision should fix it.
 
-ASRock H81 + Intel Celeron G1840
- HP P410, firmware 6.60
-  HP SAS Expander, firmware 2.08
+-----Original Message-----
+From: 'Christoph Hellwig' [mailto:hch@infradead.org] 
+Sent: Wednesday, September 24, 2014 9:41 AM
+To: Subhash Jadavani
+Cc: 'Christoph Hellwig'; 'Dolev Raviv';
+James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org;
+linux-scsi-owner@vger.kernel.org; linux-arm-msm@vger.kernel.org;
+santoshsy@gmail.com; 'Sujit Reddy Thumma'
+Subject: Re: [PATCH V5 10/17] scsi: ufs: manually add well known logical
+units
 
-In the need for upgrading the firmware on the HP SAS expanders, the HP P410 is
-attached to this setup. However it does not see the any of the two connected HP
-SAS expander cards, only the boot drive and P410 are shown in the lsscsi
-output.
+On Wed, Sep 24, 2014 at 09:36:37AM -0700, Subhash Jadavani wrote:
+> Where do you release these references again?  It seems like they are 
+> never released on the device removal path.
+> 
+> [Subhash] That's because these are embedded/non-removable UFS devices 
+> which are always present on the board and never get removed. Do you 
+> have any suggestion on how we should handle this?
 
-Steps to reproduce:
-1. blacklist hpsa
-2. reboot
-3. modprobe -v hpsa
-4. lsscsi
-
-# lsscsi
-[0:0:0:0]    disk    ATA      OCZ-VERTEX       1.3   /dev/sda
-[4:3:0:0]    storage HP       P410             6.60  -
-
-# modprobe -v hpsa dmesg:
-[   49.567169] HP HPSA Driver (v 3.4.4-1)
-[   49.567251] hpsa 0000:01:00.0: can't disable ASPM; OS doesn't have ASPM
-control
-[   49.567389] hpsa 0000:01:00.0: enabling device (0000 -> 0003)
-[   49.567576] hpsa 0000:01:00.0: MSIX
-[   49.567649] hpsa 0000:01:00.0: irq 30 for MSI/MSI-X
-[   49.567705] hpsa 0000:01:00.0: irq 31 for MSI/MSI-X
-[   49.567799] hpsa 0000:01:00.0: Logical aborts not supported
-[   49.587966] hpsa 0000:01:00.0: hpsa0: <0x323a> at IRQ 30 using DAC
-[   55.125143] scsi host4: hpsa
-[   55.129439] hpsa 0000:01:00.0: RAID              device c4b3t0l0 added.
-[   55.129832] scsi 4:3:0:0: RAID              HP       P410             6.60
-PQ: 0 ANSI: 5
-[   55.130585] scsi 4:3:0:0: Attached scsi generic sg1 type 12
-
-Regression:
-1. changed back to kernel 3.13: no difference
-2. disconnect all other SAS (to SATA) cables: no difference
-3. attach only one HP SAS expander: no difference
-4. switch cable between P410 and SAS expander card: no differnce
-5. replace HP P410 (and cables) with Adapter 7805H or Marvell 88SE9485 SAS/SATA
-6Gb/s controller [1b4b:9485]: HP SAS expanders are shown
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Just after the call to scsi_remove_host sounds right to me.
+scsi_remove_host already removes all regularly scanned devices, but because
+__scsi_add_device keeps and additional reference it doesn't free those that
+you added manually.
