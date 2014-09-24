@@ -1,76 +1,72 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v5 1/2] arcmsr: simplify ioctl data read/write
-Date: Wed, 24 Sep 2014 17:48:11 +0200
-Message-ID: <5422E7BB.6090108@redhat.com>
-References: <1411551214.4648.51.camel@Centos6.3-64>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V5 01/17] scsi: fixing the "type" for well known LUs
+Date: Wed, 24 Sep 2014 09:04:30 -0700
+Message-ID: <20140924160430.GA13541@infradead.org>
+References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
+ <1411571653-22729-2-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1411551214.4648.51.camel@Centos6.3-64>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1411571653-22729-2-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <elliott@hp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/24/2014 11:33 AM, Ching Huang wrote:
-> From: Ching Huang <ching2048@areca.com.tw>
->
-> This patch is relative to:
-> http://git.infradead.org/users/hch/scsi-queue.git/tree/drivers-for-3.18:/drivers/scsi/arcmsr
->
-> change in v5:
-> 1. rename firstindex to getIndex, lastindex to putIndex for readability
-> 2. define ARCMSR_API_DATA_BUFLEN as 1032
-> 3. simplify ioctl data read by marcro CIRC_CNT_TO_END and CIRC_CNT
->
-> Signed-off-by: Ching Huang <ching 2048@areca.com.tw>
-> ---
->
-...
-> +		pQbuffer = &acb->wqbuffer[acb->wqbuf_putIndex];
-> +		cnt2end = ARCMSR_MAX_QBUFFER - acb->wqbuf_putIndex;
-> +		if (user_len > cnt2end) {
-> +			memcpy(pQbuffer, ptmpuserbuffer, cnt2end);
-> +			ptmpuserbuffer += cnt2end;
-> +			user_len -= cnt2end;
-> +			acb->wqbuf_putIndex = 0;
-> +			pQbuffer = acb->wqbuffer;
->  		}
-> +		memcpy(pQbuffer, ptmpuserbuffer, user_len);
-> +		acb->wqbuf_putIndex += user_len;
-> +		acb->wqbuf_putIndex %= ARCMSR_MAX_QBUFFER;
-> +		if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_CLEARED) {
-This test^ is most likely useless, it looks like you set the
-ACB_F_MESSAGE_WQBUFFER_CLEARED every time you have added some data to the buffer
-and clear it when the buffer gets empty. I think you could get rid of
-the ACB_F_MESSAGE_WQBUFFER_CLEARED completely. Also the ACB_F_MESSAGE_RQBUFFER_CLEARED doesn't
-seems to be ever evaluated.
-I'm not sure with the ACB_F_MESSAGE_WQBUFFER_READED, but that one probably is also
-a candidate for removal.
-...
-> @@ -678,15 +679,15 @@ struct AdapterControlBlock
->  	unsigned int				uncache_size;
->  	uint8_t				rqbuffer[ARCMSR_MAX_QBUFFER];
->  	/* data collection buffer for read from 80331 */
-> -	int32_t				rqbuf_firstindex;
-> +	int32_t				rqbuf_getIndex;
-What is the reason for using an exact size int32 (instead of a plain int) here?
->  	/* first of read buffer  */
-> -	int32_t				rqbuf_lastindex;
-> +	int32_t				rqbuf_putIndex;
->  	/* last of read buffer   */
->  	uint8_t				wqbuffer[ARCMSR_MAX_QBUFFER];
->  	/* data collection buffer for write to 80331  */
-> -	int32_t				wqbuf_firstindex;
-> +	int32_t				wqbuf_getIndex;
->  	/* first of write buffer */
-> -	int32_t				wqbuf_lastindex;
-> +	int32_t				wqbuf_putIndex;
->  	/* last of write buffer  */
->  	uint8_t				devstate[ARCMSR_MAX_TARGETID][ARCMSR_MAX_TARGETLUN];
->  	/* id0 ..... id15, lun0...lun7 */
+On Wed, Sep 24, 2014 at 06:13:57PM +0300, Dolev Raviv wrote:
+> From: Subhash Jadavani <subhashj@codeaurora.org>
+> 
+> Some devices may respond with wrong type for well-known logical units.
+> This patch forces well-known type for devices which doesn't report it
+> correct.
 
-The comments I've added are not directly related to this patch,
-but you may still address them in a new patch
-so -
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+This looks fine to me, as the well known LUN addresses seem to be nailed
+down nicely in t10, but let's see if Martin or Robert disagree..
+
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 56675db..a34db9e 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -805,6 +805,14 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>  	} else {
+>  		sdev->type = (inq_result[0] & 0x1f);
+>  		sdev->removable = (inq_result[1] & 0x80) >> 7;
+> +
+> +		/*
+> +		 * some devices may respond with wrong type for
+> +		 * well-known logical units. Force well-known type
+> +		 * to enumerate them correctly.
+> +		 */
+> +		if (scsi_is_wlun(sdev->lun))
+> +			sdev->type = TYPE_WLUN;
+>  	}
+>  
+>  	if (sdev->type == TYPE_RBC || sdev->type == TYPE_ROM) {
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 261e708..d17178e 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -333,6 +333,7 @@ static inline int scsi_status_is_good(int status)
+>  #define TYPE_RBC	    0x0e
+>  #define TYPE_OSD            0x11
+>  #define TYPE_ZBC            0x14
+> +#define TYPE_WLUN           0x1e    /* well-known logical unit */
+>  #define TYPE_NO_LUN         0x7f
+>  
+>  /* SCSI protocols; these are taken from SPC-3 section 7.5 */
+> -- 
+> 1.8.5.2
+> -- 
+> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+> of Code Aurora Forum, hosted by The Linux Foundation
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
