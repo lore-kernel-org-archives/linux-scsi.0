@@ -1,80 +1,76 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH 31/35] qla2xxx: Disable PCI device in shutdown handler.
-Date: Wed, 24 Sep 2014 14:23:25 -0400
-Message-ID: <20140924142325.2354188c@jlaw-desktop.mno.stratus.com>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
-	<1411542518-2477-32-git-send-email-saurav.kashyap@qlogic.com>
-	<20140924094858.1c51718d@jlaw-desktop.mno.stratus.com>
-	<alpine.OSX.2.00.1409241134050.1504@administrators-macbook-pro.local>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH V5 01/17] scsi: fixing the "type" for well known LUs
+Date: Wed, 24 Sep 2014 20:49:52 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C9BD49@G9W0745.americas.hpqcorp.net>
+References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
+ <1411571653-22729-2-git-send-email-draviv@codeaurora.org>
+ <20140924160430.GA13541@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o149.mxlogic.net ([208.65.145.72]:36181 "EHLO
-	p01c12o149.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbaIXS2U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 14:28:20 -0400
-In-Reply-To: <alpine.OSX.2.00.1409241134050.1504@administrators-macbook-pro.local>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:18141 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752584AbaIXUvT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 16:51:19 -0400
+In-Reply-To: <20140924160430.GA13541@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>, andrew.vasquez@qlogic.com, jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Wed, 24 Sep 2014 11:37:55 -0400
-Chad Dupuis <chad.dupuis@qlogic.com> wrote:
 
-> 
-> 
-> On Wed, 24 Sep 2014, Joe Lawrence wrote:
-> 
-> > On Wed, 24 Sep 2014 03:08:34 -0400
-> > Saurav Kashyap <saurav.kashyap@qlogic.com> wrote:
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+...
+> On Wed, Sep 24, 2014 at 06:13:57PM +0300, Dolev Raviv wrote:
+> > From: Subhash Jadavani <subhashj@codeaurora.org>
 > >
-> >> From: Chad Dupuis <chad.dupuis@qlogic.com>
-> >>
-> >> Disable the PCI device during shutdown to prevent any races with
-> >> other PCI code such as the AER handling code.
-> >>
-> >> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
-> >> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-> >> ---
-> >>  drivers/scsi/qla2xxx/qla_os.c |    3 +++
-> >>  1 files changed, 3 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> >> index 08c8e9c..70445bc 100644
-> >> --- a/drivers/scsi/qla2xxx/qla_os.c
-> >> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> >> @@ -3037,6 +3037,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
-> >>  	qla2x00_free_irqs(vha);
-> >>
-> >>  	qla2x00_free_fw_dump(ha);
-> >> +
-> >> +	pci_disable_pcie_error_reporting(pdev);
-> >> +	pci_disable_device(pdev);
-> >>  }
-> >>
-> >>  /* Deletes all the virtual ports for a given ha */
-> >
-> > Hi Saurav,
-> >
-> > Just curious if there were any bug report instances to go along with
-> > this patch?  (Or a short explanation of the race.)
+> > Some devices may respond with wrong type for well-known logical units.
+> > This patch forces well-known type for devices which doesn't report it
+> > correct.
 > 
-> Joe,
+> This looks fine to me, as the well known LUN addresses seem to be nailed
+> down nicely in t10, but let's see if Martin or Robert disagree..
 > 
-> The race here was during reboot after taking a crash dump.  We hit an AER 
-> condition so the driver's AER handler is called after we've already 
-> shutdown the adapter which causes us to try to free some already freed 
-> structs.  To prevent this we disable the PCI function from the shutdown 
-> handler.
+...
+> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > index 56675db..a34db9e 100644
+> > --- a/drivers/scsi/scsi_scan.c
+> > +++ b/drivers/scsi/scsi_scan.c
+> > @@ -805,6 +805,14 @@ static int scsi_add_lun(struct scsi_device *sdev,
+> unsigned char *inq_result,
+> >  	} else {
+> >  		sdev->type = (inq_result[0] & 0x1f);
+> >  		sdev->removable = (inq_result[1] & 0x80) >> 7;
+> > +
+> > +		/*
+> > +		 * some devices may respond with wrong type for
+> > +		 * well-known logical units. Force well-known type
+> > +		 * to enumerate them correctly.
+> > +		 */
+> > +		if (scsi_is_wlun(sdev->lun))
+> > +			sdev->type = TYPE_WLUN;
+> >  	}
+...
 
-Hi Chad,
+My only concern is that the peripheral device type was included
+at the outset in spc3r01 in 2001, so a design that can't get this
+right might have other problems.  A print might be justified
+to report something is amiss:
 
-Could the driver's AER handler get invoked after qla2x00_free_fw_dump,
-but before pci_disable_pcie_error_reporting (ie, is there anything to
-hold off .shutdown from running at the same time as the AER callbacks)?
+	if (scsi_is_wlun(sdev->lun) && sdev->type != TYPE_WLUN) {
+		sdev_printk(KERN_WARNING, sdev,
+			"%s: correcting incorrect peripheral device type 0x%x for W-LUN 0x%16phN\n",
+			__func__, sdev->type, sdev->lun);
+		sdev->type = TYPE_WLUN;
+	}
 
-Thanks,
 
--- Joe
+---
+Rob Elliott    HP Server Storage
+
+
+
+
+
