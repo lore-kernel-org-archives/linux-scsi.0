@@ -1,58 +1,48 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH V5 01/17] scsi: fixing the "type" for well known LUs
-Date: Wed, 24 Sep 2014 18:13:57 +0300
-Message-ID: <1411571653-22729-2-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH V5 02/17] scsi: sysfs: don't add scsi_device if its already added
+Date: Wed, 24 Sep 2014 18:13:58 +0300
+Message-ID: <1411571653-22729-3-git-send-email-draviv@codeaurora.org>
 References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:48507 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbaIXPOl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Sep 2014 11:14:41 -0400
 In-Reply-To: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
 From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Some devices may respond with wrong type for well-known logical units.
-This patch forces well-known type for devices which doesn't report it
-correct.
+If LLD has added scsi device (by calling scsi_add_device) before scheduling
+async scsi_scan_host then scsi_finish_async_scan() will end up calling
+scsi_sysfs_add_sdev for scsi device which was already added by LLD.
+This patch fixes this issue by adding a check at the start of
+scsi_sysfs_add_sdev() to skip the device add if it's already visible to
+rest of the kernel.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 56675db..a34db9e 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -805,6 +805,14 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	} else {
- 		sdev->type = (inq_result[0] & 0x1f);
- 		sdev->removable = (inq_result[1] & 0x80) >> 7;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 3524b68..00890b3 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1027,6 +1027,9 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	struct request_queue *rq = sdev->request_queue;
+ 	struct scsi_target *starget = sdev->sdev_target;
+ 
++	if (sdev->is_visible)
++		return 0;
 +
-+		/*
-+		 * some devices may respond with wrong type for
-+		 * well-known logical units. Force well-known type
-+		 * to enumerate them correctly.
-+		 */
-+		if (scsi_is_wlun(sdev->lun))
-+			sdev->type = TYPE_WLUN;
- 	}
- 
- 	if (sdev->type == TYPE_RBC || sdev->type == TYPE_ROM) {
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 261e708..d17178e 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -333,6 +333,7 @@ static inline int scsi_status_is_good(int status)
- #define TYPE_RBC	    0x0e
- #define TYPE_OSD            0x11
- #define TYPE_ZBC            0x14
-+#define TYPE_WLUN           0x1e    /* well-known logical unit */
- #define TYPE_NO_LUN         0x7f
- 
- /* SCSI protocols; these are taken from SPC-3 section 7.5 */
+ 	error = scsi_device_set_state(sdev, SDEV_RUNNING);
+ 	if (error)
+ 		return error;
 -- 
 1.8.5.2
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
+
