@@ -1,14 +1,14 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 21/35] qla2xxx: Add fix in driver unload for pending activity.
-Date: Wed, 24 Sep 2014 03:08:24 -0400
-Message-ID: <1411542518-2477-22-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 16/35] qla2xxx: Add FA-WWN functionality.
+Date: Wed, 24 Sep 2014 03:08:19 -0400
+Message-ID: <1411542518-2477-17-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:50236 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40146 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753071AbaIXHmp (ORCPT
+	by vger.kernel.org with ESMTP id S1753049AbaIXHmp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 24 Sep 2014 03:42:45 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
@@ -17,31 +17,113 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Sawan Chandak <sawan.chandak@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
+Add support for the FA-WWN (fabric assigned wwn) fabric switch feature.
+
+(Fabric Assigned World Wide Port Name)
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |    7 ++-----
+ drivers/scsi/qla2xxx/qla_fw.h  |    2 +-
+ drivers/scsi/qla2xxx/qla_mbx.c |   36 +++++++++++++++++++++++++++++++++++-
+ 3 files changed, 38 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 6539513..b9523dc 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -859,8 +859,10 @@ qla2x00_wait_for_hba_ready(scsi_qla_host_t *vha)
- {
- 	struct qla_hw_data *ha = vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 6f28981..f99042b 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -15,11 +15,8 @@
+  * |                              |                    | 0x0144,0x0146	|
+  * |                              |                    | 0x015b-0x0160	|
+  * |                              |                    | 0x016e-0x0170	|
+- * | Mailbox commands             |       0x118d       | 0x1018-0x1019	|
+- * |                              |                    | 0x10ca         |
+- * |                              |                    | 0x1115-0x1116  |
+- * |                              |                    | 0x111a-0x111b	|
+- * |                              |                    | 0x1155-0x1158  |
++ * | Mailbox commands             |       0x118d       | 0x1115-0x1116	|
++ * |                              |                    | 0x111a-0x111b  |
+  * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
+  * |                              |                    | 0x2011-0x2012, |
+  * |                              |                    | 0x2099-0x20a4  |
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index c7d1c45..e8669aa 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -317,7 +317,7 @@ struct init_cb_24xx {
+ 	 * BIT 3  = Reserved
+ 	 * BIT 4  = Enable Target Mode
+ 	 * BIT 5  = Disable Initiator Mode
+-	 * BIT 6  = Reserved
++	 * BIT 6  = Acquire FA-WWN
+ 	 * BIT 7  = Reserved
+ 	 *
+ 	 * BIT 8  = Reserved
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 365cc7c..81dd5d9 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1085,6 +1085,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
+ 	mcp->in_mb = MBX_9|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+ 	if (IS_CNA_CAPABLE(vha->hw))
+ 		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
++	if (IS_FWI2_CAPABLE(vha->hw))
++		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
+@@ -1118,6 +1120,22 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
+ 			vha->fcoe_vn_port_mac[1] = mcp->mb[13] >> 8;
+ 			vha->fcoe_vn_port_mac[0] = mcp->mb[13] & 0xff;
+ 		}
++		/* If FA-WWN supported */
++		if (mcp->mb[7] & BIT_14) {
++			vha->port_name[0] = MSB(mcp->mb[16]);
++			vha->port_name[1] = LSB(mcp->mb[16]);
++			vha->port_name[2] = MSB(mcp->mb[17]);
++			vha->port_name[3] = LSB(mcp->mb[17]);
++			vha->port_name[4] = MSB(mcp->mb[18]);
++			vha->port_name[5] = LSB(mcp->mb[18]);
++			vha->port_name[6] = MSB(mcp->mb[19]);
++			vha->port_name[7] = LSB(mcp->mb[19]);
++			fc_host_port_name(vha->host) =
++			    wwn_to_u64(vha->port_name);
++			ql_dbg(ql_dbg_mbx, vha, 0x10ca,
++			    "FA-WWN acquired %016llx\n",
++			    wwn_to_u64(vha->port_name));
++		}
+ 	}
  
--	while ((!(vha->flags.online) || ha->dpc_active ||
--	    ha->flags.mbox_busy))
-+	while (((qla2x00_reset_active(vha)) || ha->dpc_active ||
-+	    ha->flags.mbox_busy) ||
-+		test_bit(FX00_RESET_RECOVERY, &vha->dpc_flags) ||
-+		test_bit(FX00_TARGET_SCAN, &vha->dpc_flags))
- 		msleep(1000);
- }
+ 	return rval;
+@@ -3328,8 +3346,24 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
+ 		    rptid_entry->port_id[0]);
  
++		/* FA-WWN is only for physical port */
++		if (!vp_idx) {
++			void *wwpn = ha->init_cb->port_name;
++
++			if (!MSB(stat)) {
++				if (rptid_entry->vp_idx_map[1] & BIT_6)
++					wwpn = rptid_entry->reserved_4 + 8;
++			}
++			memcpy(vha->port_name, wwpn, WWN_SIZE);
++			fc_host_port_name(vha->host) =
++			    wwn_to_u64(vha->port_name);
++			ql_dbg(ql_dbg_mbx, vha, 0x1018,
++			    "FA-WWN portname %016llx (%x)\n",
++			    fc_host_port_name(vha->host), MSB(stat));
++		}
++
+ 		vp = vha;
+-		if (vp_idx == 0 && (MSB(stat) != 1))
++		if (vp_idx == 0)
+ 			goto reg_needed;
+ 
+ 		if (MSB(stat) != 0 && MSB(stat) != 2) {
 -- 
 1.7.7
 
