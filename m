@@ -1,43 +1,120 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 19/35] qla2xxx: Allow user to change ql2xfdmienable value.
-Date: Wed, 24 Sep 2014 03:08:22 -0400
-Message-ID: <1411542518-2477-20-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 05/35] qla2xxx: Add ISP27xx fwdump template entry T275 (insert buffer).
+Date: Wed, 24 Sep 2014 03:08:08 -0400
+Message-ID: <1411542518-2477-6-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:40187 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:21577 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753116AbaIXHmp (ORCPT
+	by vger.kernel.org with ESMTP id S1753291AbaIXHmx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:42:45 -0400
+	Wed, 24 Sep 2014 03:42:53 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    7 +++----
+ drivers/scsi/qla2xxx/qla_tmpl.c |   27 +++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_tmpl.h |    6 ++++++
+ 3 files changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c4513e2..8846883 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -105,7 +105,7 @@ MODULE_PARM_DESC(ql2xshiftctondsd,
- 		"based on total number of SG elements.");
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 35e2021..3c5119a 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -64,11 +64,10 @@
+  * |                              |                    | 0xb13c-0xb140  |
+  * |                              |                    | 0xb149		|
+  * | MultiQ                       |       0xc00c       |		|
+- * | Misc                         |       0xd212       | 0xd011-0xd017	|
+- * |                              |                    | 0xd020		|
+- * |                              |                    | 0xd030-0xd0ff	|
++ * | Misc                         |       0xd213       | 0xd011-0xd017	|
++ * |                              |                    | 0xd031-0xd0ff	|
+  * |                              |                    | 0xd101-0xd1fe	|
+- * |                              |                    | 0xd213-0xd2fe	|
++ * |                              |                    | 0xd214-0xd2fe	|
+  * | Target Mode		  |	  0xe078       |		|
+  * | Target Mode Management	  |	  0xf072       | 0xf002-0xf003	|
+  * |                              |                    | 0xf046-0xf049  |
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 6f2f7b2..d92ee06 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -690,6 +690,32 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ }
  
- int ql2xfdmienable=1;
--module_param(ql2xfdmienable, int, S_IRUGO);
-+module_param(ql2xfdmienable, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xfdmienable,
- 		"Enables FDMI registrations. "
- 		"0 - no FDMI. Default is 1 - perform FDMI.");
+ static int
++qla27xx_fwdt_entry_t275(struct scsi_qla_host *vha,
++	struct qla27xx_fwdt_entry *ent, void *buf, ulong *len)
++{
++	ulong offset = offsetof(typeof(*ent), t275.buffer);
++
++	ql_dbg(ql_dbg_misc, vha, 0xd213,
++	    "%s: buffer(%x) [%lx]\n", __func__, ent->t275.length, *len);
++	if (!ent->t275.length) {
++		ql_dbg(ql_dbg_misc, vha, 0xd020,
++		    "%s: buffer zero length\n", __func__);
++		qla27xx_skip_entry(ent, buf);
++		goto done;
++	}
++	if (offset + ent->t275.length > ent->hdr.entry_size) {
++		ql_dbg(ql_dbg_misc, vha, 0xd030,
++		    "%s: buffer overflow\n", __func__);
++		qla27xx_skip_entry(ent, buf);
++		goto done;
++	}
++
++	qla27xx_insertbuf(ent->t275.buffer, ent->t275.length, buf, len);
++done:
++	return false;
++}
++
++static int
+ qla27xx_fwdt_entry_other(struct scsi_qla_host *vha,
+ 	struct qla27xx_fwdt_entry *ent, void *buf, ulong *len)
+ {
+@@ -731,6 +757,7 @@ static struct qla27xx_fwdt_entry_call ql27xx_fwdt_entry_call_list[] = {
+ 	{ ENTRY_TYPE_RDREMRAM		, qla27xx_fwdt_entry_t272  } ,
+ 	{ ENTRY_TYPE_PCICFG		, qla27xx_fwdt_entry_t273  } ,
+ 	{ ENTRY_TYPE_GET_SHADOW		, qla27xx_fwdt_entry_t274  } ,
++	{ ENTRY_TYPE_WRITE_BUF		, qla27xx_fwdt_entry_t275  } ,
+ 	{ -1				, qla27xx_fwdt_entry_other }
+ };
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.h b/drivers/scsi/qla2xxx/qla_tmpl.h
+index 1967424..f19856b 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.h
++++ b/drivers/scsi/qla2xxx/qla_tmpl.h
+@@ -53,6 +53,7 @@ struct __packed qla27xx_fwdt_template {
+ #define ENTRY_TYPE_RDREMRAM		272
+ #define ENTRY_TYPE_PCICFG		273
+ #define ENTRY_TYPE_GET_SHADOW		274
++#define ENTRY_TYPE_WRITE_BUF		275
+ 
+ #define CAPTURE_FLAG_PHYS_ONLY		BIT_0
+ #define CAPTURE_FLAG_PHYS_VIRT		BIT_1
+@@ -193,6 +194,11 @@ struct __packed qla27xx_fwdt_entry {
+ 			uint8_t  queue_type;
+ 			uint8_t  reserved[3];
+ 		} t274;
++
++		struct __packed {
++			uint32_t length;
++			uint8_t  buffer[];
++		} t275;
+ 	};
+ };
+ 
 -- 
 1.7.7
 
