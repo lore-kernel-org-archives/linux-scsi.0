@@ -1,122 +1,54 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z:
- dev error handler -> general protection fault, RIP:
- mvs_task_prep_ata+0x80/0x3a0
-Date: Wed, 24 Sep 2014 00:32:06 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C969CC@G9W0745.americas.hpqcorp.net>
-References: <bug-81861-11613@https.bugzilla.kernel.org/>
- <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH 13/35] qla2xxx: Incorrect linked list semantic in qlafx00_get_fcport().
+Date: Wed, 24 Sep 2014 03:08:16 -0400
+Message-ID: <1411542518-2477-14-git-send-email-saurav.kashyap@qlogic.com>
+References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:2038 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbaIXAec (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Sep 2014 20:34:32 -0400
-In-Reply-To: <bug-81861-11613-Qg64VngHeJ@https.bugzilla.kernel.org/>
-Content-Language: en-US
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:24352 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752603AbaIXHmn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2014 03:42:43 -0400
+In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: jbottomley@parallels.com
+Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBidWd6aWxsYS1kYWVtb25AYnVnemlsbGEua2VybmVsLm9yZw0K
-PiBTZW50OiBUdWVzZGF5LCAyMyBTZXB0ZW1iZXIsIDIwMTQgNDo1NiBQTQ0KPiBUbzogbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW0J1ZyA4MTg2MV0gT29wcyBieSBtdnNh
-cyB2MC44LjE2OiBzYXM6IGF0YVg6IGVuZF9kZXZpY2UtWTowOlo6IGRldg0KPiBlcnJvciBoYW5k
-bGVyIC0+IGdlbmVyYWwgcHJvdGVjdGlvbiBmYXVsdCwgUklQOiBtdnNfdGFza19wcmVwX2F0YSsw
-eDgwLzB4M2EwDQo+IA0KPiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dp
-P2lkPTgxODYxDQo+IA0KPiAtLS0gQ29tbWVudCAjMTYgZnJvbSBsaW51eC1pZGVAY3Jhc2hwbGFu
-LnBybyAtLS0NCj4gV2hlbiBsaW5lLWJ5LWxpbmUgZHVtcGluZyB0aGUgY2FsbGVkIGNvbnN0YW50
-cy92YXJzIGZyb206DQo+IDQ2OSAgICAgICAgZGVsX3EgPSBUWFFfTU9ERV9JIHwgdGFnIHwNCj4g
-NDcwICAgICAgICAgICAgKFRYUV9DTURfU1RQIDw8IFRYUV9DTURfU0hJRlQpIHwNCj4gNDcxICAg
-ICAgICAgICAgKE1WU19QSFlfSUQgPDwgVFhRX1BIWV9TSElGVCkgfA0KPiA0NzIgICAgICAgICAg
-ICAobXZpX2Rldi0+dGFza2ZpbGVzZXQgPDwgVFhRX1NSU19TSElGVCk7DQo+IA0KPiB1c2luZyB0
-aGUgcHJlcGVuZGVkIHN0YXRlbWVudHM6DQo+ICAgICAgICAgcHJpbnRrKCJzbG90PSVwICIsIHNs
-b3QpOw0KPiAgICAgICAgIHByaW50ayhLRVJOX0lORk8gIlRYUV9NT0RFX0k9JWQgIiwgVFhRX01P
-REVfSSk7DQo+ICAgICAgICAgcHJpbnRrKEtFUk5fSU5GTyAidGFnPSVkICIsIHRhZyk7DQo+ICAg
-ICAgICAgcHJpbnRrKEtFUk5fSU5GTyAiVFhRX0NNRF9TVFA9JWQgIiwgVFhRX0NNRF9TVFApOw0K
-PiAgICAgICAgIHByaW50ayhLRVJOX0lORk8gIlRYUV9DTURfU0hJRlQ9JWQgIiwgVFhRX0NNRF9T
-SElGVCk7DQo+ICAgICAgICAgcHJpbnRrKEtFUk5fSU5GTyAiTVZTX1BIWV9JRD0lZCAiLCBNVlNf
-UEhZX0lEKTsNCj4gICAgICAgICBwcmludGsoS0VSTl9JTkZPICJUWFFfUEhZX1NISUZUPSVkICIs
-IFRYUV9QSFlfU0hJRlQpOw0KPiAgICAgICAgIGRlbF9xID0gVFhRX01PREVfSSB8IHRhZyB8DQo+
-ICAgICAgICAgICAgICAgICAoVFhRX0NNRF9TVFAgPDwgVFhRX0NNRF9TSElGVCkgfA0KPiAgICAg
-ICAgICAgICAgICAgKE1WU19QSFlfSUQgPDwgVFhRX1BIWV9TSElGVCkgfA0KPiAgICAgICAgICAg
-ICAgICAgKG12aV9kZXYtPnRhc2tmaWxlc2V0IDw8IFRYUV9TUlNfU0hJRlQpOw0KPiANCj4gdGhl
-IGtlcm5lbCBjcmFzaCBvY2N1cnMgYWZ0ZXIgcHJpbnRpbmcgIlRYUV9DTURfU0hJRlQiIG9yIHdo
-ZW4gdHJ5aW5nIHRvDQo+IG91dHB1dA0KPiB0aGUgdmFsdWUgb2YgIk1WU19QSFlfSUQiOg0KPiBb
-ICA1MjkuMTEzMTUyXSBzYXM6IERPTkUgRElTQ09WRVJZIG9uIHBvcnQgMCwgcGlkOjEzMywgcmVz
-dWx0OjANCj4gWyAgNTI5LjExNDMxM10gc2FzOiBFbnRlciBzYXNfc2NzaV9yZWNvdmVyX2hvc3Qg
-YnVzeTogMCBmYWlsZWQ6IDANCj4gWyAgNTI5LjExNTQ2MF0gc2FzOiBhdGE3OiBlbmRfZGV2aWNl
-LTY6MDoyODogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjExNTUyMl0gc2FzOiBhdGE4OiBl
-bmRfZGV2aWNlLTY6MDoyOTogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjExODcwNl0gc2Fz
-OiBhdGE5OiBlbmRfZGV2aWNlLTY6MDozMDogZGV2IGVycm9yIGhhbmRsZXINCj4gWyAgNTI5LjEx
-OTg0MF0gc2FzOiBhdGExMDogZW5kX2RldmljZS02OjA6MzE6IGRldiBlcnJvciBoYW5kbGVyDQo+
-IFsgIDUyOS4yNzE2MzRdIFttdmk9ZmZmZjg4MDBkMzY4MDAwMCwgbXZpX2Rldj1mZmZmODgwMGQz
-NjgzNmEwIHRhZz0wDQo+IHNsb3Q9ZmZmZjg4MDBkMzZhNTViOA0KPiBbICA1MjkuMjcxNzUzXSBU
-WFFfTU9ERV9JPTI2ODQzNTQ1NiB0YWc9MA0KPiBbICA1MjkuMjcyNjc5XSBUWFFfQ01EX1NUUD0z
-IFRYUV9DTURfU0hJRlQ9MjkNCj4gWyAgNTI5LjI3MzYxOF0gTVZTX1BIWV9JRD0zMjc2OCBUWFFf
-UEhZX1NISUZUPTEyIHR4X3Byb2Q9NDRdDQo+IFsgIDUyOS4yNzYwOTFdIFttdmk9ZmZmZjg4MDBk
-MzY4MDAwMCwgbXZpX2Rldj1mZmZmODgwMGQzNjgzNjE4IHRhZz0xDQo+IHNsb3Q9ZmZmZjg4MDBk
-MzZhNTYxMA0KPiBbICA1MjkuMjc2MjA3XSBUWFFfTU9ERV9JPTI2ODQzNTQ1NiB0YWc9MQ0KPiBb
-ICA1MjkuMjc3MDk1XSBUWFFfQ01EX1NUUD0zIFRYUV9DTURfU0hJRlQ9MjkNCj4gWyAgNTI5LjI3
-ODAzOF0gTVZTX1BIWV9JRD0xIFRYUV9QSFlfU0hJRlQ9MTIgdHhfcHJvZD00Nl0NCj4gWyAgNTI5
-LjI4MDI3MV0gW212aT1mZmZmODgwMGQzNjgwMDAwLCBtdmlfZGV2PWZmZmY4ODAwZDM2ODM2MTgg
-dGFnPTENCj4gc2xvdD1mZmZmODgwMGQzNmE1NjEwDQo+IFsgIDUyOS4yODAzODVdIFRYUV9NT0RF
-X0k9MjY4NDM1NDU2IHRhZz0xDQo+IFsgIDUyOS4yODE0NDVdIFRYUV9DTURfU1RQPTMgVFhRX0NN
-RF9TSElGVD0yOQ0KPiBbICA1MjkuMjgyNTYyXSBNVlNfUEhZX0lEPTEgVFhRX1BIWV9TSElGVD0x
-MiB0eF9wcm9kPTQ4XQ0KPiBbICA1MjkuMjg0ODk0XSBbbXZpPWZmZmY4ODAwZDM2ODAwMDAsIG12
-aV9kZXY9ZmZmZjg4MDBkMzY4MzdiMCB0YWc9Mg0KPiBzbG90PWZmZmY4ODAwZDM2YTU2NjgNCj4g
-WyAgNTI5LjI4NTAxMF0gVFhRX01PREVfST0yNjg0MzU0NTYgdGFnPTINCj4gWyAgNTI5LjI4NjI0
-OF0gVFhRX0NNRF9TVFA9MyBUWFFfQ01EX1NISUZUPTI5DQo+IFsgIDUyOS4yODc1NTVdIEJVRzog
-dW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0DQo+IDAw
-MDAwMDAwMDAwMDAyNTcNCj4gWyAgNTI5LjI5MDIyNV0gSVA6IFs8ZmZmZmZmZmZhMDI4ODhiYj5d
-IG12c190YXNrX3ByZXArMHg3Y2IvMHhlNTAgW212c2FzXQ0KPiBbICA1MjkuMjkxNjg2XSBQR0Qg
-MA0KPiBbICA1MjkuMjkzMTQxXSBPb3BzOiAwMDAwIFsjMV0gU01QDQo+IFsgIDUyOS4yOTQ2MzBd
-IE1vZHVsZXMgbGlua2VkIGluOiBtdnNhcyhPRikgbGlic2FzIHNjc2lfdHJhbnNwb3J0X3Nhcw0K
-PiB4ODZfcGtnX3RlbXBfdGhlcm1hbCBpbnRlbF9wb3dlcmNsYW1wIGNvcmV0ZW1wIGt2bSBjcmN0
-MTBkaWZfcGNsbXVsDQo+IGNyYzMyX3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGNyeXB0ZCBz
-ZXJpb19yYXcgbHBjX2ljaCBpOTE1IG1laV9tZSBtZWkNCj4gZHJtX2ttc19oZWxwZXIgdmlkZW8g
-bmV0Y29uc29sZSBkcm0gY29uZmlnZnMgbWFjX2hpZCBpMmNfYWxnb19iaXQgcHNtb3VzZQ0KPiBy
-ODE2OQ0KPiBhaGNpIG1paSBsaWJhaGNpDQo+IA0KPiBBbnkgc3VnZ2VzdGlvbnMgd2h5IGFjY2Vz
-c2luZyAiTVZTX1BIWV9JRCIgbGVhZHMgdG8gdGhlIGtlcm5lbCBOVUxMIHBvaW50ZXINCj4gZGVy
-ZWZlcmVuY2Ugb29wcz8NCg0KMS4gQWx0aG91Z2ggTVZTX1BIWV9JRCBsb29rcyBsaWtlIGEgY29u
-c3RhbnQsIGl0J3MgcmVhbGx5IG5vdDoNCiNkZWZpbmUgTVZTX1BIWV9JRCAoMVUgPDwgc2FzX3Bo
-eS0+aWQpDQoNCjIuIFRoaXMgZmF1bHQ6DQpbICAgMzIuMjcxMjE4XSBCVUc6IHVuYWJsZSB0byBo
-YW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMjU1
-DQooYWx0aG91Z2ggMjU1IGxvb2tzIGxpa2UgYSBkZWNpbWFsIG51bWJlciAweGZmLCBpdCdzIHJl
-YWxseSBoZXggMHgyNTUpDQoNCmF0IHRoaXMgbGluZToNCiAgIDB4ZmZmZmZmZmZhMDFjNDgxZSA8
-KzE4Mzg+Ogltb3YgICAgMHgyNTQoJXJieCksJWVjeA0KDQppbXBsaWVzIHRoYXQgcmJ4IGNvbnRh
-aW5zIDEsIHNvIDB4MjU0ICsgMSA9IDB4MjU1Lg0KDQozLiBwYWhvbGUgZHJpdmVycy9zY3NpL212
-c2FzL212X3Nhcy5vDQpzaG93cyB0aGVyZSBhcmUgdHdvIHN0cnVjdHVyZXMgd2l0aCBmaWVsZHMg
-YXQgb2Zmc2V0IDU5NjoNCiogYXNkX3Nhc19waHkuaWQNCiogYXNkX3Nhc19wb3J0LnNhc19hZGRy
-WzhdDQoNCjQuIG9iamR1bXAgLWRyUyBkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLm8NCnNob3dz
-IG9ubHkgYSBmZXcgbGluZXMgd2l0aCAweDI1NCglc29tZXRoaW5nKSwgb25lIG9mIHdoaWNoDQpp
-cyB0aGUgZGVsX3EgbGluZSB5b3UndmUgaWRlbnRpZmllZDoNCg0KbXZzX3Rhc2tfcHJlcF9hdGEo
-c3RydWN0IG12c19pbmZvICptdmksIHN0cnVjdCBtdnNfdGFza19leGVjX2luZm8gKnRlaSk6DQog
-ICAgICAgIHN0cnVjdCBzYXNfaGFfc3RydWN0ICpzaGEgPSBtdmktPnNhczsNCiAgICAgICAgc3Ry
-dWN0IHNhc190YXNrICp0YXNrID0gdGVpLT50YXNrOw0KICAgICAgICBzdHJ1Y3QgZG9tYWluX2Rl
-dmljZSAqZGV2ID0gdGFzay0+ZGV2Ow0KICAgICAgICBzdHJ1Y3Qgc2FzX3BoeSAqc3BoeSA9IGRl
-di0+cGh5Ow0KICAgICAgICBzdHJ1Y3QgYXNkX3Nhc19waHkgKnNhc19waHkgPSBzaGEtPnNhc19w
-aHlbc3BoeS0+bnVtYmVyXTsNCg0KICAgICAgICAuLi4NCiAgICAgICAgZGVsX3EgPSBUWFFfTU9E
-RV9JIHwgdGFnIHwNCiAgICAgICAgICAgICAgICAoVFhRX0NNRF9TVFAgPDwgVFhRX0NNRF9TSElG
-VCkgfA0KICAgICAgICAgICAgICAgIChNVlNfUEhZX0lEIDw8IFRYUV9QSFlfU0hJRlQpIHwNCiAg
-ICAgICAgICAgICAgICAobXZpX2Rldi0+dGFza2ZpbGVzZXQgPDwgVFhRX1NSU19TSElGVCk7DQog
-ICAgICAgIG12aS0+dHhbbXZpLT50eF9wcm9kXSA9IGNwdV90b19sZTMyKGRlbF9xKTsNCg0KTVZT
-X1BIWV9JRCA9DQpzYXNfcGh5LT5pZCA9DQpzaGEtPnNhc19waHlbc3BoeS0+bnVtYmVyXSA9DQpt
-dmktPnNhcy0+c2FzX3BoeVtkZXYtPnBoeS0+bnVtYmVyXSA9DQptdmktPnNhcy0+c2FzX3BoeVt0
-YXNrLT5kZXYtPnBoeS0+bnVtYmVyXS0+aWQNCm12aS0+c2FzLT5zYXNfcGh5W3RlaS0+dGFzay0+
-ZGV2LT5waHktPm51bWJlcl0tPmlkDQoNCkxvb2tpbmcgYXQgdGhlIG9mZnNldHMgcmVwb3J0ZWQg
-YnkgcGFob2xlLCB0aGF0IG1lYW5zOg0KJXJkaS0+NTYtPjM0NFslcnNpLT4wLT4wLT41Ni0+Njg4
-XS0+MjU0DQoNCm12aS0+c2FzLT5zYXNfcGh5IGlzIGEgcG9pbnRlciB0byBhIHBvaW50ZXI6DQpz
-dHJ1Y3Qgc2FzX2hhX3N0cnVjdCB7DQouLi4NCiAgICAgICAgc3RydWN0IGFzZF9zYXNfcGh5ICog
-KiAgICAgc2FzX3BoeTsgICAgICAgICAgICAgIC8qICAgMzQ0ICAgICA4ICovDQoNCllvdSBtaWdo
-dCBsb29rIGZvciBzb21ld2hlcmUgdGhhdCBjb3VsZCBhY2NpZGVudGFsbHkNCmJlIHNldHRpbmcg
-c2FzX3BoeVtzb21ldGhpbmddIHRvIGEgZm9yIGxvb3AgaW5kZXgsDQp3aXRoIGEgdHlwZWNhc3Qg
-aGlkaW5nIHRoZSBwcm9ibGVtIGZyb20gdGhlIGNvbXBpbGVyLg0KT3IsIHRoZSBwaHktPm51bWJl
-ciB2YWx1ZSBiZWluZyBwYXNzZWQgbWlnaHQgYmUNCm91dCBvZiByYW5nZTsgaWYgdGhlcmUgd2Vy
-ZSBkaXNjb3ZlcnkgZXJyb3JzLCBzb21ldGhpbmcNCm1pZ2h0IG5vdCBoYXZlIGJlZW4gaW5pdGlh
-bGl6ZWQgbGlrZSB0aGlzIGZ1bmN0aW9uIGV4cGVjdHMuDQoNCg0KLS0tDQpSb2IgRWxsaW90dCAg
-ICBIUCBTZXJ2ZXIgU3RvcmFnZQ0KDQoNCg0KDQoNCg==
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_mr.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 4775baa..274707d 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -1675,17 +1675,16 @@ qlafx00_get_fcport(struct scsi_qla_host *vha, int tgt_id)
+ 	fc_port_t	*fcport;
+ 
+ 	/* Check for matching device in remote port list. */
+-	fcport = NULL;
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+ 		if (fcport->tgt_id == tgt_id) {
+ 			ql_dbg(ql_dbg_async, vha, 0x5072,
+ 			    "Matching fcport(%p) found with TGT-ID: 0x%x "
+ 			    "and Remote TGT_ID: 0x%x\n",
+ 			    fcport, fcport->tgt_id, tgt_id);
+-			break;
++			return fcport;
+ 		}
+ 	}
+-	return fcport;
++	return NULL;
+ }
+ 
+ static void
+-- 
+1.7.7
+
