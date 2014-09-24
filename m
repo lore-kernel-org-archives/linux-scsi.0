@@ -1,320 +1,282 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V5 12/17] scsi: ufs: refactor configuring power mode
-Date: Wed, 24 Sep 2014 18:14:08 +0300
-Message-ID: <1411571653-22729-13-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V5 07/17] scsi: ufs: refactor query descriptor API support
+Date: Wed, 24 Sep 2014 18:14:03 +0300
+Message-ID: <1411571653-22729-8-git-send-email-draviv@codeaurora.org>
 References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Sometimes, the device shall report its maximum power and speed
-capabilities, but we might not wish to configure it to use those
-maximum capabilities.
-This change adds support for the vendor specific host driver to
-implement power change notify callback.
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-To enable configuring different power modes (number of lanes,
-gear number and fast/slow modes) it is necessary to split the
-configuration stage from the stage that reads the device max power mode.
-In addition, it is not required to read the configuration more than
-once, thus the configuration is stored after reading it once.
+Currently reading query descriptor is more tightened to each
+descriptor type. This patch generalize the approach and allows
+reading any parameter from any query descriptor.
 
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 9bb6919..f76a304 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -50,6 +50,8 @@
+ 			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
+ 			 (byte1 << 8) | (byte0))
+ 
++#define UFS_UPIU_MAX_GENERAL_LUN	8
++
+ /*
+  * UFS Protocol Information Unit related definitions
+  */
+@@ -129,10 +131,29 @@ enum desc_idn {
+ 	QUERY_DESC_IDN_RFU_1		= 0x6,
+ 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
+ 	QUERY_DESC_IDN_POWER		= 0x8,
+-	QUERY_DESC_IDN_RFU_2		= 0x9,
++	QUERY_DESC_IDN_MAX,
++};
++
++enum desc_header_offset {
++	QUERY_DESC_LENGTH_OFFSET	= 0x00,
++	QUERY_DESC_DESC_TYPE_OFFSET	= 0x01,
++};
++
++enum ufs_desc_max_size {
++	QUERY_DESC_DEVICE_MAX_SIZE		= 0x1F,
++	QUERY_DESC_CONFIGURAION_MAX_SIZE	= 0x90,
++	QUERY_DESC_UNIT_MAX_SIZE		= 0x23,
++	QUERY_DESC_INTERCONNECT_MAX_SIZE	= 0x06,
++	/*
++	 * Max. 126 UNICODE characters (2 bytes per character) plus 2 bytes
++	 * of descriptor header.
++	 */
++	QUERY_DESC_STRING_MAX_SIZE		= 0xFE,
++	QUERY_DESC_GEOMETRY_MAZ_SIZE		= 0x44,
++	QUERY_DESC_POWER_MAX_SIZE		= 0x62,
++	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
+ };
+ 
+-#define UNIT_DESC_MAX_SIZE       0x22
+ /* Unit descriptor parameters offsets in bytes*/
+ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LEN			= 0x0,
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 11c6320..6bc4996 100644
+index 26301b8..3f2b30d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -179,6 +179,8 @@ static void ufshcd_hba_exit(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
- static irqreturn_t ufshcd_intr(int irq, void *__hba);
-+static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-+		struct ufs_pa_layer_attr *desired_pwr_mode);
+@@ -78,6 +78,19 @@
+ 		_ret;                                                   \
+ 	})
  
- static inline int ufshcd_enable_irq(struct ufs_hba *hba)
- {
-@@ -1959,40 +1961,83 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
++static u32 ufs_query_desc_max_size[] = {
++	QUERY_DESC_DEVICE_MAX_SIZE,
++	QUERY_DESC_CONFIGURAION_MAX_SIZE,
++	QUERY_DESC_UNIT_MAX_SIZE,
++	QUERY_DESC_RFU_MAX_SIZE,
++	QUERY_DESC_INTERCONNECT_MAX_SIZE,
++	QUERY_DESC_STRING_MAX_SIZE,
++	QUERY_DESC_RFU_MAX_SIZE,
++	QUERY_DESC_GEOMETRY_MAZ_SIZE,
++	QUERY_DESC_POWER_MAX_SIZE,
++	QUERY_DESC_RFU_MAX_SIZE,
++};
++
+ enum {
+ 	UFSHCD_MAX_CHANNEL	= 0,
+ 	UFSHCD_MAX_ID		= 1,
+@@ -124,8 +137,6 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
+ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
+-static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
+-					struct scsi_device *sdev);
+ 
+ /*
+  * ufshcd_wait_for_register - wait for register value to change
+@@ -1393,6 +1404,115 @@ out:
  }
  
  /**
-- * ufshcd_config_max_pwr_mode - Set & Change power mode with
-- *	maximum capability attribute information.
-- * @hba: per adapter instance
-- *
-- * Returns 0 on success, non-zero value on failure
-+ * ufshcd_get_max_pwr_mode - reads the max power mode negotiated with device
-+ * @hba: per-adapter instance
-  */
--static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
-+static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
- {
--	enum {RX = 0, TX = 1};
--	u32 lanes[] = {1, 1};
--	u32 gear[] = {1, 1};
--	u8 pwr[] = {FASTAUTO_MODE, FASTAUTO_MODE};
--	int ret;
-+	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
-+
-+	if (hba->max_pwr_info.is_valid)
-+		return 0;
-+
-+	pwr_info->pwr_tx = FASTAUTO_MODE;
-+	pwr_info->pwr_rx = FASTAUTO_MODE;
-+	pwr_info->hs_rate = PA_HS_MODE_B;
- 
- 	/* Get the connected lane count */
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), &lanes[RX]);
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), &lanes[TX]);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
-+			&pwr_info->lane_rx);
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
-+			&pwr_info->lane_tx);
-+
-+	if (!pwr_info->lane_rx || !pwr_info->lane_tx) {
-+		dev_err(hba->dev, "%s: invalid connected lanes value. rx=%d, tx=%d\n",
-+				__func__,
-+				pwr_info->lane_rx,
-+				pwr_info->lane_tx);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * First, get the maximum gears of HS speed.
- 	 * If a zero value, it means there is no HSGEAR capability.
- 	 * Then, get the maximum gears of PWM speed.
- 	 */
--	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[RX]);
--	if (!gear[RX]) {
--		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR), &gear[RX]);
--		pwr[RX] = SLOWAUTO_MODE;
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &pwr_info->gear_rx);
-+	if (!pwr_info->gear_rx) {
-+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
-+				&pwr_info->gear_rx);
-+		if (!pwr_info->gear_rx) {
-+			dev_err(hba->dev, "%s: invalid max pwm rx gear read = %d\n",
-+				__func__, pwr_info->gear_rx);
-+			return -EINVAL;
-+		}
-+		pwr_info->pwr_rx = SLOWAUTO_MODE;
- 	}
- 
--	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR), &gear[TX]);
--	if (!gear[TX]) {
-+	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXHSGEAR),
-+			&pwr_info->gear_tx);
-+	if (!pwr_info->gear_tx) {
- 		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_MAXRXPWMGEAR),
--				    &gear[TX]);
--		pwr[TX] = SLOWAUTO_MODE;
-+				&pwr_info->gear_tx);
-+		if (!pwr_info->gear_tx) {
-+			dev_err(hba->dev, "%s: invalid max pwm tx gear read = %d\n",
-+				__func__, pwr_info->gear_tx);
-+			return -EINVAL;
-+		}
-+		pwr_info->pwr_tx = SLOWAUTO_MODE;
-+	}
-+
-+	hba->max_pwr_info.is_valid = true;
-+	return 0;
-+}
-+
-+int ufshcd_change_power_mode(struct ufs_hba *hba,
-+			     struct ufs_pa_layer_attr *pwr_mode)
++ * ufshcd_read_desc_param - read the specified descriptor parameter
++ * @hba: Pointer to adapter instance
++ * @desc_id: descriptor idn value
++ * @desc_index: descriptor index
++ * @param_offset: offset of the parameter to read
++ * @param_read_buf: pointer to buffer where parameter would be read
++ * @param_size: sizeof(param_read_buf)
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++static int ufshcd_read_desc_param(struct ufs_hba *hba,
++				  enum desc_idn desc_id,
++				  int desc_index,
++				  u32 param_offset,
++				  u8 *param_read_buf,
++				  u32 param_size)
 +{
 +	int ret;
++	u8 *desc_buf;
++	u32 buff_len;
++	bool is_kmalloc = true;
 +
-+	/* if already configured to the requested pwr_mode */
-+	if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
-+	    pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
-+	    pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
-+	    pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
-+	    pwr_mode->pwr_rx == hba->pwr_info.pwr_rx &&
-+	    pwr_mode->pwr_tx == hba->pwr_info.pwr_tx &&
-+	    pwr_mode->hs_rate == hba->pwr_info.hs_rate) {
-+		dev_dbg(hba->dev, "%s: power already configured\n", __func__);
-+		return 0;
- 	}
- 
- 	/*
-@@ -2001,23 +2046,67 @@ static int ufshcd_config_max_pwr_mode(struct ufs_hba *hba)
- 	 * - PA_TXGEAR, PA_ACTIVETXDATALANES, PA_TXTERMINATION,
- 	 * - PA_HSSERIES
- 	 */
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), gear[RX]);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), lanes[RX]);
--	if (pwr[RX] == FASTAUTO_MODE)
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), pwr_mode->gear_rx);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
-+			pwr_mode->lane_rx);
-+	if (pwr_mode->pwr_rx == FASTAUTO_MODE ||
-+			pwr_mode->pwr_rx == FAST_MODE)
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-+	else
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), FALSE);
- 
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), gear[TX]);
--	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), lanes[TX]);
--	if (pwr[TX] == FASTAUTO_MODE)
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), pwr_mode->gear_tx);
-+	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
-+			pwr_mode->lane_tx);
-+	if (pwr_mode->pwr_tx == FASTAUTO_MODE ||
-+			pwr_mode->pwr_tx == FAST_MODE)
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
-+	else
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), FALSE);
- 
--	if (pwr[RX] == FASTAUTO_MODE || pwr[TX] == FASTAUTO_MODE)
--		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), PA_HS_MODE_B);
-+	if (pwr_mode->pwr_rx == FASTAUTO_MODE ||
-+	    pwr_mode->pwr_tx == FASTAUTO_MODE ||
-+	    pwr_mode->pwr_rx == FAST_MODE ||
-+	    pwr_mode->pwr_tx == FAST_MODE)
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
-+						pwr_mode->hs_rate);
- 
--	ret = ufshcd_uic_change_pwr_mode(hba, pwr[RX] << 4 | pwr[TX]);
--	if (ret)
-+	ret = ufshcd_uic_change_pwr_mode(hba, pwr_mode->pwr_rx << 4
-+			| pwr_mode->pwr_tx);
++	/* safety checks */
++	if (desc_id >= QUERY_DESC_IDN_MAX)
++		return -EINVAL;
 +
-+	if (ret) {
- 		dev_err(hba->dev,
--			"pwr_mode: power mode change failed %d\n", ret);
-+			"%s: power mode change failed %d\n", __func__, ret);
++	buff_len = ufs_query_desc_max_size[desc_id];
++	if ((param_offset + param_size) > buff_len)
++		return -EINVAL;
++
++	if (!param_offset && (param_size == buff_len)) {
++		/* memory space already available to hold full descriptor */
++		desc_buf = param_read_buf;
++		is_kmalloc = false;
 +	} else {
-+		if (hba->vops && hba->vops->pwr_change_notify)
-+			hba->vops->pwr_change_notify(hba,
-+				POST_CHANGE, NULL, pwr_mode);
-+
-+		memcpy(&hba->pwr_info, pwr_mode,
-+			sizeof(struct ufs_pa_layer_attr));
++		/* allocate memory to hold full descriptor */
++		desc_buf = kmalloc(buff_len, GFP_KERNEL);
++		if (!desc_buf)
++			return -ENOMEM;
 +	}
 +
++	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
++				      desc_id, desc_index, 0, desc_buf,
++				      &buff_len);
++
++	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
++	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
++	     ufs_query_desc_max_size[desc_id])
++	    || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
++		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d param_offset %d buff_len %d ret %d",
++			__func__, desc_id, param_offset, buff_len, ret);
++		if (!ret)
++			ret = -EINVAL;
++
++		goto out;
++	}
++
++	if (is_kmalloc)
++		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
++out:
++	if (is_kmalloc)
++		kfree(desc_buf);
 +	return ret;
 +}
 +
-+/**
-+ * ufshcd_config_pwr_mode - configure a new power mode
-+ * @hba: per-adapter instance
-+ * @desired_pwr_mode: desired power configuration
-+ */
-+static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
-+		struct ufs_pa_layer_attr *desired_pwr_mode)
++static inline int ufshcd_read_desc(struct ufs_hba *hba,
++				   enum desc_idn desc_id,
++				   int desc_index,
++				   u8 *buf,
++				   u32 size)
 +{
-+	struct ufs_pa_layer_attr final_params = { 0 };
++	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
++}
++
++static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
++					 u8 *buf,
++					 u32 size)
++{
++	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
++}
++
++/**
++ * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
++ * @hba: Pointer to adapter instance
++ * @lun: lun id
++ * @param_offset: offset of the parameter to read
++ * @param_read_buf: pointer to buffer where parameter would be read
++ * @param_size: sizeof(param_read_buf)
++ *
++ * Return 0 in case of success, non-zero otherwise
++ */
++static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
++					      int lun,
++					      enum unit_desc_param param_offset,
++					      u8 *param_read_buf,
++					      u32 param_size)
++{
++	/*
++	 * Unit descriptors are only available for general purpose LUs (LUN id
++	 * from 0 to 7) and RPMB Well known LU.
++	 */
++	if (lun >= UFS_UPIU_MAX_GENERAL_LUN)
++		return -EOPNOTSUPP;
++
++	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
++				      param_offset, param_read_buf, param_size);
++}
++
++/**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
+  *
+@@ -2011,7 +2131,8 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
+ static int ufshcd_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct ufs_hba *hba;
+-	int lun_qdepth;
++	u8 lun_qdepth;
 +	int ret;
-+
-+	if (hba->vops && hba->vops->pwr_change_notify)
-+		hba->vops->pwr_change_notify(hba,
-+		     PRE_CHANGE, desired_pwr_mode, &final_params);
-+	else
-+		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
-+
-+	ret = ufshcd_change_power_mode(hba, &final_params);
  
- 	return ret;
+ 	hba = shost_priv(sdev->host);
+ 	sdev->tagged_supported = 1;
+@@ -2026,8 +2147,12 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
+ 	/* REPORT SUPPORTED OPERATION CODES is not supported */
+ 	sdev->no_report_opcodes = 1;
+ 
+-	lun_qdepth = ufshcd_read_sdev_qdepth(hba, sdev);
+-	if (lun_qdepth <= 0)
++	ret = ufshcd_read_unit_desc_param(hba,
++					  sdev->lun,
++					  UNIT_DESC_PARAM_LU_Q_DEPTH,
++					  &lun_qdepth,
++					  sizeof(lun_qdepth));
++	if (!ret || !lun_qdepth)
+ 		/* eventually, we can figure out the real queue depth */
+ 		lun_qdepth = hba->nutrs;
+ 	else
+@@ -3118,38 +3243,6 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
  }
-@@ -3731,7 +3820,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	hba->wlun_dev_clr_ua = true;
  
--	ufshcd_config_max_pwr_mode(hba);
-+	if (ufshcd_get_max_pwr_mode(hba)) {
-+		dev_err(hba->dev,
-+			"%s: Failed getting max supported power mode\n",
-+			__func__);
-+	} else {
-+		ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
-+		if (ret)
-+			dev_err(hba->dev, "%s: Failed setting power mode, err = %d\n",
-+					__func__, ret);
-+	}
- 
- 	/*
- 	 * If we are in error handling context or in power management callbacks
-@@ -4893,6 +4991,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	host->unique_id = host->host_no;
- 	host->max_cmd_len = MAX_CDB_SIZE;
- 
-+	hba->max_pwr_info.is_valid = false;
-+
- 	/* Initailize wait queue for task management */
- 	init_waitqueue_head(&hba->tm_wq);
- 	init_waitqueue_head(&hba->tm_tag_wq);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e1bde05..343b18a 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -221,6 +221,22 @@ struct ufs_clk_info {
- 
- #define PRE_CHANGE      0
- #define POST_CHANGE     1
-+
-+struct ufs_pa_layer_attr {
-+	u32 gear_rx;
-+	u32 gear_tx;
-+	u32 lane_rx;
-+	u32 lane_tx;
-+	u32 pwr_rx;
-+	u32 pwr_tx;
-+	u32 hs_rate;
-+};
-+
-+struct ufs_pwr_mode_info {
-+	bool is_valid;
-+	struct ufs_pa_layer_attr info;
-+};
-+
  /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-@@ -232,6 +248,9 @@ struct ufs_clk_info {
-  *                     variant specific Uni-Pro initialization.
-  * @link_startup_notify: called before and after Link startup is carried out
-  *                       to allow variant specific Uni-Pro initialization.
-+ * @pwr_change_notify: called before and after a power mode change
-+ *			is carried out to allow vendor spesific capabilities
-+ *			to be set.
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
-  */
-@@ -243,6 +262,9 @@ struct ufs_hba_variant_ops {
- 	int     (*setup_regulators)(struct ufs_hba *, bool);
- 	int     (*hce_enable_notify)(struct ufs_hba *, bool);
- 	int     (*link_startup_notify)(struct ufs_hba *, bool);
-+	int	(*pwr_change_notify)(struct ufs_hba *,
-+					bool, struct ufs_pa_layer_attr *,
-+					struct ufs_pa_layer_attr *);
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- };
-@@ -302,6 +324,8 @@ struct ufs_init_prefetch {
-  * @auto_bkops_enabled: to track whether bkops is enabled in device
-  * @vreg_info: UFS device voltage regulator information
-  * @clk_list_head: UFS host controller clocks list node head
-+ * @pwr_info: holds current power mode
-+ * @max_pwr_info: keeps the device max valid pwm
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -387,6 +411,9 @@ struct ufs_hba {
- 	struct list_head clk_list_head;
- 
- 	bool wlun_dev_clr_ua;
-+
-+	struct ufs_pa_layer_attr pwr_info;
-+	struct ufs_pwr_mode_info max_pwr_info;
- };
- 
- #define ufshcd_writel(hba, val, reg)	\
+- * ufshcd_read_sdev_qdepth - read the lun command queue depth
+- * @hba: Pointer to adapter instance
+- * @sdev: pointer to SCSI device
+- *
+- * Return in case of success the lun's queue depth else error.
+- */
+-static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
+-				struct scsi_device *sdev)
+-{
+-	int ret;
+-	int buff_len = UNIT_DESC_MAX_SIZE;
+-	u8 desc_buf[UNIT_DESC_MAX_SIZE];
+-
+-	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
+-			QUERY_DESC_IDN_UNIT, sdev->lun, 0, desc_buf, &buff_len);
+-
+-	if (ret || (buff_len < UNIT_DESC_PARAM_LU_Q_DEPTH)) {
+-		dev_err(hba->dev,
+-			"%s:Failed reading unit descriptor. len = %d ret = %d"
+-			, __func__, buff_len, ret);
+-		if (!ret)
+-			ret = -EINVAL;
+-
+-		goto out;
+-	}
+-
+-	ret = desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH] & 0xFF;
+-out:
+-	return ret;
+-}
+-
+-/**
+  * ufshcd_async_scan - asynchronous execution for link startup
+  * @data: data pointer to pass to this function
+  * @cookie: cookie data
 -- 
 1.8.5.2
 -- 
