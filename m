@@ -1,45 +1,47 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 26/35] qla2xxx: Force use of mailbox interface for flash access commands for ISP27xx.
-Date: Wed, 24 Sep 2014 03:08:29 -0400
-Message-ID: <1411542518-2477-27-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 20/35] qla2xxx: Unload of qla2xxx driver crashes the machine.
+Date: Wed, 24 Sep 2014 03:08:23 -0400
+Message-ID: <1411542518-2477-21-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:8433 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27335 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753184AbaIXHmv (ORCPT
+	by vger.kernel.org with ESMTP id S1753075AbaIXHmp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:42:51 -0400
+	Wed, 24 Sep 2014 03:42:45 -0400
 In-Reply-To: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 1b91771..51cabb9 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1848,7 +1848,9 @@ enable_82xx_npiv:
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8846883..6539513 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3190,10 +3190,10 @@ qla2x00_remove_one(struct pci_dev *pdev)
  
--	if (rval == QLA_SUCCESS && IS_FAC_REQUIRED(ha)) {
-+	if (IS_QLA27XX(ha))
-+		ha->flags.fac_supported = 1;
-+	else if (rval == QLA_SUCCESS && IS_FAC_REQUIRED(ha)) {
- 		uint32_t size;
+ 	qla2x00_free_device(base_vha);
  
- 		rval = qla81xx_fac_get_sector_size(vha, &size);
+-	scsi_host_put(base_vha->host);
+-
+ 	qla2x00_clear_drv_active(base_vha);
+ 
++	scsi_host_put(base_vha->host);
++
+ 	qla2x00_unmap_iobases(ha);
+ 
+ 	pci_release_selected_regions(ha->pdev, ha->bars);
 -- 
 1.7.7
 
