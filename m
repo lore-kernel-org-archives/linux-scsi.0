@@ -1,76 +1,76 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 31/35] qla2xxx: Disable PCI device in shutdown handler.
-Date: Wed, 24 Sep 2014 11:37:55 -0400
-Message-ID: <alpine.OSX.2.00.1409241134050.1504@administrators-macbook-pro.local>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com> <1411542518-2477-32-git-send-email-saurav.kashyap@qlogic.com> <20140924094858.1c51718d@jlaw-desktop.mno.stratus.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v5 1/2] arcmsr: simplify ioctl data read/write
+Date: Wed, 24 Sep 2014 17:48:11 +0200
+Message-ID: <5422E7BB.6090108@redhat.com>
+References: <1411551214.4648.51.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:28659 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753527AbaIXPiM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 11:38:12 -0400
-In-Reply-To: <20140924094858.1c51718d@jlaw-desktop.mno.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1411551214.4648.51.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>, hch@infradead.org, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>, andrew.vasquez@qlogic.com, jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
 
-
-
-On Wed, 24 Sep 2014, Joe Lawrence wrote:
-
-> On Wed, 24 Sep 2014 03:08:34 -0400
-> Saurav Kashyap <saurav.kashyap@qlogic.com> wrote:
+On 09/24/2014 11:33 AM, Ching Huang wrote:
+> From: Ching Huang <ching2048@areca.com.tw>
 >
->> From: Chad Dupuis <chad.dupuis@qlogic.com>
->>
->> Disable the PCI device during shutdown to prevent any races with
->> other PCI code such as the AER handling code.
->>
->> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
->> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->> ---
->>  drivers/scsi/qla2xxx/qla_os.c |    3 +++
->>  1 files changed, 3 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->> index 08c8e9c..70445bc 100644
->> --- a/drivers/scsi/qla2xxx/qla_os.c
->> +++ b/drivers/scsi/qla2xxx/qla_os.c
->> @@ -3037,6 +3037,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
->>  	qla2x00_free_irqs(vha);
->>
->>  	qla2x00_free_fw_dump(ha);
->> +
->> +	pci_disable_pcie_error_reporting(pdev);
->> +	pci_disable_device(pdev);
->>  }
->>
->>  /* Deletes all the virtual ports for a given ha */
+> This patch is relative to:
+> http://git.infradead.org/users/hch/scsi-queue.git/tree/drivers-for-3.18:/drivers/scsi/arcmsr
 >
-> Hi Saurav,
+> change in v5:
+> 1. rename firstindex to getIndex, lastindex to putIndex for readability
+> 2. define ARCMSR_API_DATA_BUFLEN as 1032
+> 3. simplify ioctl data read by marcro CIRC_CNT_TO_END and CIRC_CNT
 >
-> Just curious if there were any bug report instances to go along with
-> this patch?  (Or a short explanation of the race.)
+> Signed-off-by: Ching Huang <ching 2048@areca.com.tw>
+> ---
+>
+...
+> +		pQbuffer = &acb->wqbuffer[acb->wqbuf_putIndex];
+> +		cnt2end = ARCMSR_MAX_QBUFFER - acb->wqbuf_putIndex;
+> +		if (user_len > cnt2end) {
+> +			memcpy(pQbuffer, ptmpuserbuffer, cnt2end);
+> +			ptmpuserbuffer += cnt2end;
+> +			user_len -= cnt2end;
+> +			acb->wqbuf_putIndex = 0;
+> +			pQbuffer = acb->wqbuffer;
+>  		}
+> +		memcpy(pQbuffer, ptmpuserbuffer, user_len);
+> +		acb->wqbuf_putIndex += user_len;
+> +		acb->wqbuf_putIndex %= ARCMSR_MAX_QBUFFER;
+> +		if (acb->acb_flags & ACB_F_MESSAGE_WQBUFFER_CLEARED) {
+This test^ is most likely useless, it looks like you set the
+ACB_F_MESSAGE_WQBUFFER_CLEARED every time you have added some data to the buffer
+and clear it when the buffer gets empty. I think you could get rid of
+the ACB_F_MESSAGE_WQBUFFER_CLEARED completely. Also the ACB_F_MESSAGE_RQBUFFER_CLEARED doesn't
+seems to be ever evaluated.
+I'm not sure with the ACB_F_MESSAGE_WQBUFFER_READED, but that one probably is also
+a candidate for removal.
+...
+> @@ -678,15 +679,15 @@ struct AdapterControlBlock
+>  	unsigned int				uncache_size;
+>  	uint8_t				rqbuffer[ARCMSR_MAX_QBUFFER];
+>  	/* data collection buffer for read from 80331 */
+> -	int32_t				rqbuf_firstindex;
+> +	int32_t				rqbuf_getIndex;
+What is the reason for using an exact size int32 (instead of a plain int) here?
+>  	/* first of read buffer  */
+> -	int32_t				rqbuf_lastindex;
+> +	int32_t				rqbuf_putIndex;
+>  	/* last of read buffer   */
+>  	uint8_t				wqbuffer[ARCMSR_MAX_QBUFFER];
+>  	/* data collection buffer for write to 80331  */
+> -	int32_t				wqbuf_firstindex;
+> +	int32_t				wqbuf_getIndex;
+>  	/* first of write buffer */
+> -	int32_t				wqbuf_lastindex;
+> +	int32_t				wqbuf_putIndex;
+>  	/* last of write buffer  */
+>  	uint8_t				devstate[ARCMSR_MAX_TARGETID][ARCMSR_MAX_TARGETLUN];
+>  	/* id0 ..... id15, lun0...lun7 */
 
-Joe,
-
-The race here was during reboot after taking a crash dump.  We hit an AER 
-condition so the driver's AER handler is called after we've already 
-shutdown the adapter which causes us to try to free some already freed 
-structs.  To prevent this we disable the PCI function from the shutdown 
-handler.
-
---Chad
-
->
-> Thanks,
->
-> -- Joe
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The comments I've added are not directly related to this patch,
+but you may still address them in a new patch
+so -
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
