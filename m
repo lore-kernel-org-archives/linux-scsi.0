@@ -1,286 +1,183 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V6 07/18] scsi: ufs: refactor query descriptor API support
-Date: Thu, 25 Sep 2014 15:32:25 +0300
-Message-ID: <1411648356-3883-8-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V6 06/18] scsi: ufs: add voting support for host controller power
+Date: Thu, 25 Sep 2014 15:32:24 +0300
+Message-ID: <1411648356-3883-7-git-send-email-draviv@codeaurora.org>
 References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:52671 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:52656 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbaIYMdM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 08:33:12 -0400
+	with ESMTP id S1751641AbaIYMdH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 08:33:07 -0400
 In-Reply-To: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Raviv Shvili <rshvili@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+From: Raviv Shvili <rshvili@codeaurora.org>
 
-Currently reading query descriptor is more tightened to each
-descriptor type. This patch generalize the approach and allows
-reading any parameter from any query descriptor.
+Add the support for voting of the regulator powering the
+host controller logic.
 
+Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index b0f791a..fb1234e 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -9,6 +9,7 @@ Required properties:
+ - reg               : <registers mapping>
+ 
+ Optional properties:
++- vdd-hba-supply        : phandle to UFS host controller supply regulator node
+ - vcc-supply            : phandle to VCC supply regulator node
+ - vccq-supply           : phandle to VCCQ supply regulator node
+ - vccq2-supply          : phandle to VCCQ2 supply regulator node
+@@ -20,6 +21,7 @@ Optional properties:
+ - vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
+ - vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
+ - vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
++- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
+ 
+ - clocks                : List of phandle and clock specifier pairs
+ - clock-names           : List of clock input name strings sorted in the same
+@@ -39,6 +41,8 @@ Example:
+ 		reg = <0xfc598000 0x800>;
+ 		interrupts = <0 28 0>;
+ 
++		vdd-hba-supply = <&xxx_reg0>;
++		vdd-hba-fixed-regulator;
+ 		vcc-supply = <&xxx_reg1>;
+ 		vcc-supply-1p8;
+ 		vccq-supply = <&xxx_reg2>;
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 9bb6919..f76a304 100644
+index 729ce7d..9bb6919 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -50,6 +50,8 @@
- 			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
- 			 (byte1 << 8) | (byte0))
- 
-+#define UFS_UPIU_MAX_GENERAL_LUN	8
-+
- /*
-  * UFS Protocol Information Unit related definitions
-  */
-@@ -129,10 +131,29 @@ enum desc_idn {
- 	QUERY_DESC_IDN_RFU_1		= 0x6,
- 	QUERY_DESC_IDN_GEOMETRY		= 0x7,
- 	QUERY_DESC_IDN_POWER		= 0x8,
--	QUERY_DESC_IDN_RFU_2		= 0x9,
-+	QUERY_DESC_IDN_MAX,
-+};
-+
-+enum desc_header_offset {
-+	QUERY_DESC_LENGTH_OFFSET	= 0x00,
-+	QUERY_DESC_DESC_TYPE_OFFSET	= 0x01,
-+};
-+
-+enum ufs_desc_max_size {
-+	QUERY_DESC_DEVICE_MAX_SIZE		= 0x1F,
-+	QUERY_DESC_CONFIGURAION_MAX_SIZE	= 0x90,
-+	QUERY_DESC_UNIT_MAX_SIZE		= 0x23,
-+	QUERY_DESC_INTERCONNECT_MAX_SIZE	= 0x06,
-+	/*
-+	 * Max. 126 UNICODE characters (2 bytes per character) plus 2 bytes
-+	 * of descriptor header.
-+	 */
-+	QUERY_DESC_STRING_MAX_SIZE		= 0xFE,
-+	QUERY_DESC_GEOMETRY_MAZ_SIZE		= 0x44,
-+	QUERY_DESC_POWER_MAX_SIZE		= 0x62,
-+	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
+@@ -385,6 +385,7 @@ struct ufs_vreg_info {
+ 	struct ufs_vreg *vcc;
+ 	struct ufs_vreg *vccq;
+ 	struct ufs_vreg *vccq2;
++	struct ufs_vreg *vdd_hba;
  };
  
--#define UNIT_DESC_MAX_SIZE       0x22
- /* Unit descriptor parameters offsets in bytes*/
- enum unit_desc_param {
- 	UNIT_DESC_PARAM_LEN			= 0x0,
+ #endif /* End of Header */
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 642d80f..dde4e6e 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -147,6 +147,11 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 
+ 	vreg->name = kstrdup(name, GFP_KERNEL);
+ 
++	/* if fixed regulator no need further initialization */
++	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
++	if (of_property_read_bool(np, prop_name))
++		goto out;
++
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
+ 	if (ret) {
+@@ -198,6 +203,10 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+ 	struct device *dev = hba->dev;
+ 	struct ufs_vreg_info *info = &hba->vreg_info;
+ 
++	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba);
++	if (err)
++		goto out;
++
+ 	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
+ 	if (err)
+ 		goto out;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 26301b8..3f2b30d 100644
+index b033702..26301b8 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -78,6 +78,19 @@
- 		_ret;                                                   \
- 	})
- 
-+static u32 ufs_query_desc_max_size[] = {
-+	QUERY_DESC_DEVICE_MAX_SIZE,
-+	QUERY_DESC_CONFIGURAION_MAX_SIZE,
-+	QUERY_DESC_UNIT_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
-+	QUERY_DESC_INTERCONNECT_MAX_SIZE,
-+	QUERY_DESC_STRING_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
-+	QUERY_DESC_GEOMETRY_MAZ_SIZE,
-+	QUERY_DESC_POWER_MAX_SIZE,
-+	QUERY_DESC_RFU_MAX_SIZE,
-+};
-+
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
-@@ -124,8 +137,6 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
--static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
--					struct scsi_device *sdev);
- 
- /*
-  * ufshcd_wait_for_register - wait for register value to change
-@@ -1393,6 +1404,115 @@ out:
+@@ -3311,6 +3311,16 @@ out:
+ 	return ret;
  }
  
- /**
-+ * ufshcd_read_desc_param - read the specified descriptor parameter
-+ * @hba: Pointer to adapter instance
-+ * @desc_id: descriptor idn value
-+ * @desc_index: descriptor index
-+ * @param_offset: offset of the parameter to read
-+ * @param_read_buf: pointer to buffer where parameter would be read
-+ * @param_size: sizeof(param_read_buf)
-+ *
-+ * Return 0 in case of success, non-zero otherwise
-+ */
-+static int ufshcd_read_desc_param(struct ufs_hba *hba,
-+				  enum desc_idn desc_id,
-+				  int desc_index,
-+				  u32 param_offset,
-+				  u8 *param_read_buf,
-+				  u32 param_size)
++static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on)
 +{
-+	int ret;
-+	u8 *desc_buf;
-+	u32 buff_len;
-+	bool is_kmalloc = true;
++	struct ufs_vreg_info *info = &hba->vreg_info;
 +
-+	/* safety checks */
-+	if (desc_id >= QUERY_DESC_IDN_MAX)
-+		return -EINVAL;
++	if (info)
++		return ufshcd_toggle_vreg(hba->dev, info->vdd_hba, on);
 +
-+	buff_len = ufs_query_desc_max_size[desc_id];
-+	if ((param_offset + param_size) > buff_len)
-+		return -EINVAL;
-+
-+	if (!param_offset && (param_size == buff_len)) {
-+		/* memory space already available to hold full descriptor */
-+		desc_buf = param_read_buf;
-+		is_kmalloc = false;
-+	} else {
-+		/* allocate memory to hold full descriptor */
-+		desc_buf = kmalloc(buff_len, GFP_KERNEL);
-+		if (!desc_buf)
-+			return -ENOMEM;
-+	}
-+
-+	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+				      desc_id, desc_index, 0, desc_buf,
-+				      &buff_len);
-+
-+	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
-+	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
-+	     ufs_query_desc_max_size[desc_id])
-+	    || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
-+		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d param_offset %d buff_len %d ret %d",
-+			__func__, desc_id, param_offset, buff_len, ret);
-+		if (!ret)
-+			ret = -EINVAL;
-+
-+		goto out;
-+	}
-+
-+	if (is_kmalloc)
-+		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
-+out:
-+	if (is_kmalloc)
-+		kfree(desc_buf);
-+	return ret;
++	return 0;
 +}
 +
-+static inline int ufshcd_read_desc(struct ufs_hba *hba,
-+				   enum desc_idn desc_id,
-+				   int desc_index,
-+				   u8 *buf,
-+				   u32 size)
-+{
-+	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
-+}
-+
-+static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
-+					 u8 *buf,
-+					 u32 size)
-+{
-+	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
-+}
-+
-+/**
-+ * ufshcd_read_unit_desc_param - read the specified unit descriptor parameter
-+ * @hba: Pointer to adapter instance
-+ * @lun: lun id
-+ * @param_offset: offset of the parameter to read
-+ * @param_read_buf: pointer to buffer where parameter would be read
-+ * @param_size: sizeof(param_read_buf)
-+ *
-+ * Return 0 in case of success, non-zero otherwise
-+ */
-+static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
-+					      int lun,
-+					      enum unit_desc_param param_offset,
-+					      u8 *param_read_buf,
-+					      u32 param_size)
-+{
-+	/*
-+	 * Unit descriptors are only available for general purpose LUs (LUN id
-+	 * from 0 to 7) and RPMB Well known LU.
-+	 */
-+	if (lun >= UFS_UPIU_MAX_GENERAL_LUN)
-+		return -EOPNOTSUPP;
-+
-+	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
-+				      param_offset, param_read_buf, param_size);
-+}
-+
-+/**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
-  * @hba: per adapter instance
-  *
-@@ -2011,7 +2131,8 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- static int ufshcd_slave_alloc(struct scsi_device *sdev)
+ static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
  {
- 	struct ufs_hba *hba;
--	int lun_qdepth;
-+	u8 lun_qdepth;
-+	int ret;
+ 	int ret = 0;
+@@ -3350,6 +3360,16 @@ out:
+ 	return ret;
+ }
  
- 	hba = shost_priv(sdev->host);
- 	sdev->tagged_supported = 1;
-@@ -2026,8 +2147,12 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 	/* REPORT SUPPORTED OPERATION CODES is not supported */
- 	sdev->no_report_opcodes = 1;
++static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
++{
++	struct ufs_vreg_info *info = &hba->vreg_info;
++
++	if (info)
++		return ufshcd_get_vreg(hba->dev, info->vdd_hba);
++
++	return 0;
++}
++
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
+ {
+ 	int ret = 0;
+@@ -3483,14 +3503,29 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
+ {
+ 	int err;
  
--	lun_qdepth = ufshcd_read_sdev_qdepth(hba, sdev);
--	if (lun_qdepth <= 0)
-+	ret = ufshcd_read_unit_desc_param(hba,
-+					  sdev->lun,
-+					  UNIT_DESC_PARAM_LU_Q_DEPTH,
-+					  &lun_qdepth,
-+					  sizeof(lun_qdepth));
-+	if (!ret || !lun_qdepth)
- 		/* eventually, we can figure out the real queue depth */
- 		lun_qdepth = hba->nutrs;
- 	else
-@@ -3118,38 +3243,6 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+-	err = ufshcd_init_clocks(hba);
++	/*
++	 * Handle host controller power separately from the UFS device power
++	 * rails as it will help controlling the UFS host controller power
++	 * collapse easily which is different than UFS device power collapse.
++	 * Also, enable the host controller power before we go ahead with rest
++	 * of the initialization here.
++	 */
++	err = ufshcd_init_hba_vreg(hba);
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufshcd_setup_clocks(hba, true);
++	err = ufshcd_setup_hba_vreg(hba, true);
+ 	if (err)
+ 		goto out;
+ 
++	err = ufshcd_init_clocks(hba);
++	if (err)
++		goto out_disable_hba_vreg;
++
++	err = ufshcd_setup_clocks(hba, true);
++	if (err)
++		goto out_disable_hba_vreg;
++
+ 	err = ufshcd_init_vreg(hba);
+ 	if (err)
+ 		goto out_disable_clks;
+@@ -3509,6 +3544,8 @@ out_disable_vreg:
+ 	ufshcd_setup_vreg(hba, false);
+ out_disable_clks:
+ 	ufshcd_setup_clocks(hba, false);
++out_disable_hba_vreg:
++	ufshcd_setup_hba_vreg(hba, false);
+ out:
+ 	return err;
+ }
+@@ -3518,6 +3555,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ 	ufshcd_variant_hba_exit(hba);
+ 	ufshcd_setup_vreg(hba, false);
+ 	ufshcd_setup_clocks(hba, false);
++	ufshcd_setup_hba_vreg(hba, false);
  }
  
  /**
-- * ufshcd_read_sdev_qdepth - read the lun command queue depth
-- * @hba: Pointer to adapter instance
-- * @sdev: pointer to SCSI device
-- *
-- * Return in case of success the lun's queue depth else error.
-- */
--static int ufshcd_read_sdev_qdepth(struct ufs_hba *hba,
--				struct scsi_device *sdev)
--{
--	int ret;
--	int buff_len = UNIT_DESC_MAX_SIZE;
--	u8 desc_buf[UNIT_DESC_MAX_SIZE];
--
--	ret = ufshcd_query_descriptor(hba, UPIU_QUERY_OPCODE_READ_DESC,
--			QUERY_DESC_IDN_UNIT, sdev->lun, 0, desc_buf, &buff_len);
--
--	if (ret || (buff_len < UNIT_DESC_PARAM_LU_Q_DEPTH)) {
--		dev_err(hba->dev,
--			"%s:Failed reading unit descriptor. len = %d ret = %d"
--			, __func__, buff_len, ret);
--		if (!ret)
--			ret = -EINVAL;
--
--		goto out;
--	}
--
--	ret = desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH] & 0xFF;
--out:
--	return ret;
--}
--
--/**
-  * ufshcd_async_scan - asynchronous execution for link startup
-  * @data: data pointer to pass to this function
-  * @cookie: cookie data
 -- 
 1.8.5.2
 -- 
