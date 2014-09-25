@@ -1,47 +1,67 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 20/35] qla2xxx: Unload of qla2xxx driver crashes the machine.
-Date: Thu, 25 Sep 2014 05:16:51 -0400
-Message-ID: <1411636626-7566-21-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 02/35] qla2xxx: ISP27xx optimize fwdump entry table lookup.
+Date: Thu, 25 Sep 2014 05:16:33 -0400
+Message-ID: <1411636626-7566-3-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63539 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753072AbaIYJvX (ORCPT
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:35078 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752976AbaIYJvV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:51:23 -0400
+	Thu, 25 Sep 2014 05:51:21 -0400
 In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Since the entry call array is sorted in order of entry type opcode,
+the search can be terminated as soon as the search key is exceeded.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_tmpl.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 0f9dcf6..4880f0b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3193,10 +3193,10 @@ qla2x00_remove_one(struct pci_dev *pdev)
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 252de5d..29271cc 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -726,7 +726,7 @@ qla27xx_fwdt_entry_other(struct scsi_qla_host *vha,
+ }
  
- 	qla2x00_free_device(base_vha);
+ struct qla27xx_fwdt_entry_call {
+-	int type;
++	uint type;
+ 	int (*call)(
+ 	    struct scsi_qla_host *,
+ 	    struct qla27xx_fwdt_entry *,
+@@ -759,15 +759,17 @@ static struct qla27xx_fwdt_entry_call ql27xx_fwdt_entry_call_list[] = {
+ 	{ -1				, qla27xx_fwdt_entry_other }
+ };
  
--	scsi_host_put(base_vha->host);
--
- 	qla2x00_clear_drv_active(ha);
+-static inline int (*qla27xx_find_entry(int type))
++static inline int (*qla27xx_find_entry(uint type))
+ 	(struct scsi_qla_host *, struct qla27xx_fwdt_entry *, void *, ulong *)
+ {
+ 	struct qla27xx_fwdt_entry_call *list = ql27xx_fwdt_entry_call_list;
  
-+	scsi_host_put(base_vha->host);
-+
- 	qla2x00_unmap_iobases(ha);
+-	while (list->type != -1 && list->type != type)
++	while (list->type < type)
+ 		list++;
  
- 	pci_release_selected_regions(ha->pdev, ha->bars);
+-	return list->call;
++	if (list->type == type)
++		return list->call;
++	return qla27xx_fwdt_entry_other;
+ }
+ 
+ static inline void *
 -- 
 1.7.7
 
