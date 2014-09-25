@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 07/35] qla2xxx: Add endianizer to max_payload_size modifier.
-Date: Thu, 25 Sep 2014 05:16:38 -0400
-Message-ID: <1411636626-7566-8-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 13/35] qla2xxx: Incorrect linked list semantic in qlafx00_get_fcport().
+Date: Thu, 25 Sep 2014 05:16:44 -0400
+Message-ID: <1411636626-7566-14-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:28307 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:45814 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752968AbaIYJvT (ORCPT
+	by vger.kernel.org with ESMTP id S1753006AbaIYJvU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:51:19 -0400
+	Thu, 25 Sep 2014 05:51:20 -0400
 In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,76 +22,33 @@ From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_fw.h   |    2 +-
- drivers/scsi/qla2xxx/qla_init.c |   12 ++++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_mr.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index eb8f572..c7d1c45 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -91,7 +91,7 @@ struct nvram_24xx {
- 	/* Firmware Initialization Control Block. */
- 	uint16_t version;
- 	uint16_t reserved_1;
--	uint16_t frame_payload_size;
-+	__le16 frame_payload_size;
- 	uint16_t execution_throttle;
- 	uint16_t exchange_count;
- 	uint16_t hard_address;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 46990f4..748bd90 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2596,18 +2596,18 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 			nv->firmware_options[1] = BIT_7 | BIT_5;
- 			nv->add_firmware_options[0] = BIT_5;
- 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
--			nv->frame_payload_size = __constant_cpu_to_le16(2048);
-+			nv->frame_payload_size = 2048;
- 			nv->special_options[1] = BIT_7;
- 		} else if (IS_QLA2200(ha)) {
- 			nv->firmware_options[0] = BIT_2 | BIT_1;
- 			nv->firmware_options[1] = BIT_7 | BIT_5;
- 			nv->add_firmware_options[0] = BIT_5;
- 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
--			nv->frame_payload_size = __constant_cpu_to_le16(1024);
-+			nv->frame_payload_size = 1024;
- 		} else if (IS_QLA2100(ha)) {
- 			nv->firmware_options[0] = BIT_3 | BIT_1;
- 			nv->firmware_options[1] = BIT_5;
--			nv->frame_payload_size = __constant_cpu_to_le16(1024);
-+			nv->frame_payload_size = 1024;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 8ecf6de..620e60a 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -1675,17 +1675,16 @@ qlafx00_get_fcport(struct scsi_qla_host *vha, int tgt_id)
+ 	fc_port_t	*fcport;
  
- 		nv->max_iocb_allocation = __constant_cpu_to_le16(256);
-@@ -2643,7 +2643,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	 * are valid.
- 	 */
- 	if (ia64_platform_is("sn2")) {
--		nv->frame_payload_size = __constant_cpu_to_le16(2048);
-+		nv->frame_payload_size = 2048;
- 		if (IS_QLA23XX(ha))
- 			nv->special_options[1] = BIT_7;
+ 	/* Check for matching device in remote port list. */
+-	fcport = NULL;
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+ 		if (fcport->tgt_id == tgt_id) {
+ 			ql_dbg(ql_dbg_async, vha, 0x5072,
+ 			    "Matching fcport(%p) found with TGT-ID: 0x%x "
+ 			    "and Remote TGT_ID: 0x%x\n",
+ 			    fcport, fcport->tgt_id, tgt_id);
+-			break;
++			return fcport;
+ 		}
  	}
-@@ -4958,7 +4958,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
- 		memset(nv, 0, ha->nvram_size);
- 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
- 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
--		nv->frame_payload_size = __constant_cpu_to_le16(2048);
-+		nv->frame_payload_size = 2048;
- 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
- 		nv->exchange_count = __constant_cpu_to_le16(0);
- 		nv->hard_address = __constant_cpu_to_le16(124);
-@@ -5905,7 +5905,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 		memset(nv, 0, ha->nvram_size);
- 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
- 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
--		nv->frame_payload_size = __constant_cpu_to_le16(2048);
-+		nv->frame_payload_size = 2048;
- 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
- 		nv->exchange_count = __constant_cpu_to_le16(0);
- 		nv->port_name[0] = 0x21;
+-	return fcport;
++	return NULL;
+ }
+ 
+ static void
 -- 
 1.7.7
 
