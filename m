@@ -1,53 +1,88 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Re: next-20140925 build: 1 failures 106 warnings (next-20140925)
-Date: Thu, 25 Sep 2014 16:31:20 +0100
-Message-ID: <20140925153120.GX27755@sirena.org.uk>
-References: <E1XX7vn-0003PS-Vu@cassiel.sirena.org.uk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 85151] pm80xx + 7805H + HP SAS port expander =
+ mpi_smp_completion 2604:smp IO status 0x2 and sas: expander ... discovery
+ failed(0xffffffa6)
+Date: Thu, 25 Sep 2014 15:33:12 +0000
+Message-ID: <bug-85151-11613-AlbLsq6AZI@https.bugzilla.kernel.org/>
+References: <bug-85151-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="R0SsnouPYaG+7rP6"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:41613 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753072AbaIYPc2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 11:32:28 -0400
-Content-Disposition: inline
-In-Reply-To: <E1XX7vn-0003PS-Vu@cassiel.sirena.org.uk>
+Received: from mail.kernel.org ([198.145.19.201]:52573 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751937AbaIYPdT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2014 11:33:19 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 847842027D
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 15:33:14 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4AAE620204
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 15:33:12 +0000 (UTC)
+In-Reply-To: <bug-85151-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: kernel-build-reports@lists.linaro.org, linaro-kernel@lists.linaro.org, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=85151
 
---R0SsnouPYaG+7rP6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--- Comment #3 from linux-ide@crashplan.pro ---
+Regression #2: firmware upgrade for Adaptec PMC-Sierra PM8018 SAS HBA [Series
+7H] [9005:8088]:
 
-On Thu, Sep 25, 2014 at 01:13:56PM +0100, Build bot for Mark Brown wrote:
+old:
+Number of controllers = 1
+CONTROLLER_ADDRESS | VENDOR_ID | DEVICE_ID | FIRMWARE_REVISION | BIOS_VERSION
+0000:01:00.0            0x9005        0x8088       02.08.59.01    1.2.0.0234
 
-> 	arm-allmodconfig
-> ERROR: "__aeabi_uldivmod" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
+new:
+Number of controllers = 1
+CONTROLLER_ADDRESS | VENDOR_ID | DEVICE_ID | FIRMWARE_REVISION | BIOS_VERSION
+0000:01:00.0            0x9005        0x8088       02.08.60.01    1.2.0.10624
 
-Today's ARM allmodconfig fails to build due to a call to a GCC intrinsic
-being emitted from the mpt2sas module - I've not made any effort to
-investigate this myself yet, unfortunately there's been a build error in
-this configuration for arch/arm for the past week or so which means that
-the error may not have been introduced today.
+Resulting output on modprobe pm80xx:
+[   90.510311] pm80xx 0000:01:00.0: pm80xx: driver version 0.1.37
+[   90.510383] pm80xx 0000:01:00.0: enabling device (0000 -> 0002)
+[   91.371537] scsi host4: pm80xx
+[   91.371787] pm80xx 0000:01:00.0: irq 30 for MSI/MSI-X
+...
+[   91.374906] pm80xx 0000:01:00.0: irq 93 for MSI/MSI-X
+[   91.869604] sas: phy-4:0 added to port-4:0, phy_mask:0x1 (5001438023aad066)
+[   91.870157] sas: phy-4:1 added to port-4:1, phy_mask:0x2 (5001438023aad066)
+[   91.870683] sas: phy-4:2 added to port-4:2, phy_mask:0x4 (5001438023aad066)
+[   91.871211] sas: phy-4:3 added to port-4:3, phy_mask:0x8 (5001438023aad066)
+[   91.871688] sas: DOING DISCOVERY on port 0, pid:137
+[   91.875186] pm80xx mpi_smp_completion 2604:smp IO status 0x2
+[   91.875770] sas: expander 5001438023aad066 discovery failed(0xffffffa6)
+[   91.876491] sas: DONE DISCOVERY on port 0, pid:137, result:-90
+[   91.877029] sas: DOING DISCOVERY on port 1, pid:137
+[   91.878057] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.878675] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.879282] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.879883] sas: RG to ex 5001438023aad066 failed:0xffffffba
+[   91.880794] sas: DONE DISCOVERY on port 1, pid:137, result:-70
+[   91.881465] sas: DOING DISCOVERY on port 2, pid:137
+[   91.882664] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.883413] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.884154] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.884861] sas: RG to ex 5001438023aad066 failed:0xffffffba
+[   91.886227] sas: DONE DISCOVERY on port 2, pid:137, result:-70
+[   91.886957] sas: DOING DISCOVERY on port 3, pid:137
+[   91.888161] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.889470] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.890270] sas: smp_execute_task: task to dev 5001438023aad066 response:
+0xffffffff status 0x8a
+[   91.891055] sas: RG to ex 5001438023aad066 failed:0xffffffba
+[   91.892008] sas: DONE DISCOVERY on port 3, pid:137, result:-70
 
---R0SsnouPYaG+7rP6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBAgAGBQJUJDVHAAoJECTWi3JdVIfQe20H/0xvWaMdnod5BFWjguOnjdal
-uRO8Jo1pOtl+yltieijX0AevhUiVk1pSZlP4fSQvDF30z/XMhMhuYh5GGGJM3lJG
-xiaxJ3f3G8yARZh2SC19Lh8hFnJnrj1FdC2Glv6njkjUiKLLRphyAmpfGLOXgdAH
-aY/JMwh+EPqIlqwfWNFqfAKw+8cJgGrf6lxqatMxq2wijnVvmfCDJDQm7kMlE7/t
-zOdkhgGvG08bf4HPnefCwc9HgVUOrx2jymc6maLK0oJkxToSZ+DWtddJb2E1ogOw
-Kr8BryYNakgLomKYjv1aV/r0gRpcLkNj9NPMi8IyNqik/JNETG389Rd1nIWasWY=
-=7Hjn
------END PGP SIGNATURE-----
-
---R0SsnouPYaG+7rP6--
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
