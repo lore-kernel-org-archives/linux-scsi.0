@@ -1,22 +1,16 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] ipr: Errors are logged when application issues
- illegal request
-Date: Thu, 25 Sep 2014 19:02:01 +0200
-Message-ID: <20140925170201.GD17892@infradead.org>
-References: <20140924212546.034058593@linux.vnet.ibm.com>
- <20140924212614.316232779@linux.vnet.ibm.com>
+Subject: Re: [PATCH v5 1/2] arcmsr: simplify ioctl data read/write
+Date: Thu, 25 Sep 2014 19:01:54 +0200
+Message-ID: <20140925170154.GC17892@infradead.org>
+References: <1411551214.4648.51.camel@Centos6.3-64>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48794 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559AbaIYQ7i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 12:59:38 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140924212614.316232779@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1411551214.4648.51.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wenxiong@linux.vnet.ibm.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 Thanks, applied to drivers-for-3.18.
