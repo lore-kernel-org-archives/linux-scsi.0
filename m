@@ -1,50 +1,36 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
-Subject: Re: [PATCH V5 11/17] scsi: ufs: add UFS power management support
-Date: Thu, 25 Sep 2014 10:35:09 -0000
-Message-ID: <d230f9619ff72cc21f14fb687e40d3f1.squirrel@www.codeaurora.org>
-References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org>
-    <1411571653-22729-12-git-send-email-draviv@codeaurora.org>
-    <CAC5umyidmPpq4r3J5yj3K1jTZdxoM_BO=ZxrLbA7Y2YoXpbHfw@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 85101] hpsa + P410 does not show connected HP SAS port
+ expanders
+Date: Thu, 25 Sep 2014 10:48:41 +0000
+Message-ID: <bug-85101-11613-2lGQP1uiem@https.bugzilla.kernel.org/>
+References: <bug-85101-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyidmPpq4r3J5yj3K1jTZdxoM_BO=ZxrLbA7Y2YoXpbHfw@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:40174 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751237AbaIYKsr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2014 06:48:47 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 0396E20265
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 10:48:43 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 00249202B8
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 10:48:41 +0000 (UTC)
+In-Reply-To: <bug-85101-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Thanks Mita,
-You are right these are careless mistakes.
-I will fix all of them and upload a new version shortly.
+https://bugzilla.kernel.org/show_bug.cgi?id=85101
 
-> __ufshcd_send_uic_cmd() is called with host_lock held here, but
-> host_lock is acquired again in __ufshcd_send_uic_cmd().  So it causes
-> recursive deadlock.
-
-Correct I forgot to complete the fix.
-
->
-> ufshcd_wait_for_uic_cmd() is already called in the previous
-> __ufshcd_send_uic_cmd() call.
->
-> These two issues don't exist in v3.
-
-Same fix I forgot to complete from earlier comment.
-
->
-> I was still seeing null pointer derefence with v4 which I was reported
-> (http://marc.info/?l=linux-scsi&m=141087506802548) and nothing
-> changed in v5.  Could you check if the fix is needed?
->
-Sure, my mistake. I'll defiantly add a null pointer check in
-ufshcd_config_vreg_hpm & ufshcd_config_vreg_lpm, to reduce overhead when
-vregs are not initialized.
-
-Thanks,
-Dolev
+--- Comment #4 from linux-ide@crashplan.pro ---
+@Robert Elliott
+Thanks for all your help.
+The issue turns out not to be the HP P410 controller.
+Using another mainboard the same HP P410 controller is ok.
 
 -- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+You are receiving this mail because:
+You are watching the assignee of the bug.
