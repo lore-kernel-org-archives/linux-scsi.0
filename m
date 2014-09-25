@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 13/35] qla2xxx: Incorrect linked list semantic in qlafx00_get_fcport().
-Date: Thu, 25 Sep 2014 05:16:44 -0400
-Message-ID: <1411636626-7566-14-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 08/35] qla2xxx: ISP25xx multiqueue shadow register crash fix.
+Date: Thu, 25 Sep 2014 05:16:39 -0400
+Message-ID: <1411636626-7566-9-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:45814 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:24528 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753006AbaIYJvU (ORCPT
+	by vger.kernel.org with ESMTP id S1752976AbaIYJvS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:51:20 -0400
+	Thu, 25 Sep 2014 05:51:18 -0400
 In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,36 +19,36 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.
 
 From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
+When creating request/response queues from qla25xx_setup_mode(),
+the shadow index register pointers were not being initialized
+to point at the registers.
+
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mr.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_mid.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 8ecf6de..620e60a 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -1675,17 +1675,16 @@ qlafx00_get_fcport(struct scsi_qla_host *vha, int tgt_id)
- 	fc_port_t	*fcport;
- 
- 	/* Check for matching device in remote port list. */
--	fcport = NULL;
- 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
- 		if (fcport->tgt_id == tgt_id) {
- 			ql_dbg(ql_dbg_async, vha, 0x5072,
- 			    "Matching fcport(%p) found with TGT-ID: 0x%x "
- 			    "and Remote TGT_ID: 0x%x\n",
- 			    fcport, fcport->tgt_id, tgt_id);
--			break;
-+			return fcport;
- 		}
- 	}
--	return fcport;
-+	return NULL;
- }
- 
- static void
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 8999824..5c2e031 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -702,6 +702,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 	req->req_q_in = &reg->isp25mq.req_q_in;
+ 	req->req_q_out = &reg->isp25mq.req_q_out;
+ 	req->max_q_depth = ha->req_q_map[0]->max_q_depth;
++	req->out_ptr = (void *)(req->ring + req->length);
+ 	mutex_unlock(&ha->vport_lock);
+ 	ql_dbg(ql_dbg_multiq, base_vha, 0xc004,
+ 	    "ring_ptr=%p ring_index=%d, "
+@@ -811,6 +812,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 	reg = ISP_QUE_REG(ha, que_id);
+ 	rsp->rsp_q_in = &reg->isp25mq.rsp_q_in;
+ 	rsp->rsp_q_out = &reg->isp25mq.rsp_q_out;
++	rsp->in_ptr = (void *)(rsp->ring + rsp->length);
+ 	mutex_unlock(&ha->vport_lock);
+ 	ql_dbg(ql_dbg_multiq, base_vha, 0xc00b,
+ 	    "options=%x id=%d rsp_q_in=%p rsp_q_out=%p",
 -- 
 1.7.7
 
