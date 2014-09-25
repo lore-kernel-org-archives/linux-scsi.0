@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 16/35] qla2xxx: Add FA-WWN functionality.
-Date: Thu, 25 Sep 2014 05:16:47 -0400
-Message-ID: <1411636626-7566-17-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 09/35] qla2xxx: ISP27xx fwdump template error print simplification.
+Date: Thu, 25 Sep 2014 05:16:40 -0400
+Message-ID: <1411636626-7566-10-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63687 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:64944 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753034AbaIYJvW (ORCPT
+	by vger.kernel.org with ESMTP id S1753020AbaIYJvV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:51:22 -0400
+	Thu, 25 Sep 2014 05:51:21 -0400
 In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,111 +19,119 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.
 
 From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Add support for the FA-WWN (fabric assigned wwn) fabric switch feature.
-
-(Fabric Assigned World Wide Port Name)
-
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    7 ++-----
- drivers/scsi/qla2xxx/qla_fw.h  |    2 +-
- drivers/scsi/qla2xxx/qla_mbx.c |   36 +++++++++++++++++++++++++++++++++++-
- 3 files changed, 38 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    3 +++
+ drivers/scsi/qla2xxx/qla_tmpl.c |   31 ++++---------------------------
+ drivers/scsi/qla2xxx/qla_tmpl.h |    2 ++
+ 3 files changed, 9 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 28442d0..b33eec0 100644
+index fff8769..d60c1c6 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -15,11 +15,8 @@
-  * |                              |                    | 0x0144,0x0146	|
-  * |                              |                    | 0x015b-0x0160	|
-  * |                              |                    | 0x016e-0x0170	|
-- * | Mailbox commands             |       0x118d       | 0x1018-0x1019	|
-- * |                              |                    | 0x10ca         |
-- * |                              |                    | 0x1115-0x1116  |
-- * |                              |                    | 0x111a-0x111b	|
-- * |                              |                    | 0x1155-0x1158  |
-+ * | Mailbox commands             |       0x118d       | 0x1115-0x1116	|
-+ * |                              |                    | 0x111a-0x111b  |
-  * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
-  * |                              |                    | 0x2011-0x2012, |
-  * |                              |                    | 0x2099-0x20a4  |
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index c7d1c45..e8669aa 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -317,7 +317,7 @@ struct init_cb_24xx {
- 	 * BIT 3  = Reserved
- 	 * BIT 4  = Enable Target Mode
- 	 * BIT 5  = Disable Initiator Mode
--	 * BIT 6  = Reserved
-+	 * BIT 6  = Acquire FA-WWN
- 	 * BIT 7  = Reserved
- 	 *
- 	 * BIT 8  = Reserved
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index ca7f4f0..2de901b 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1085,6 +1085,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
- 	mcp->in_mb = MBX_9|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
- 	if (IS_CNA_CAPABLE(vha->hw))
- 		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
-+	if (IS_FWI2_CAPABLE(vha->hw))
-+		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
- 	mcp->tov = MBX_TOV_SECONDS;
- 	mcp->flags = 0;
- 	rval = qla2x00_mailbox_command(vha, mcp);
-@@ -1118,6 +1120,22 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
- 			vha->fcoe_vn_port_mac[1] = mcp->mb[13] >> 8;
- 			vha->fcoe_vn_port_mac[0] = mcp->mb[13] & 0xff;
+@@ -65,6 +65,9 @@
+  * |                              |                    | 0xb149		|
+  * | MultiQ                       |       0xc00c       |		|
+  * | Misc                         |       0xd213       | 0xd011-0xd017	|
++ * |                              |                    | 0xd021,0xd024	|
++ * |                              |                    | 0xd025,0xd029	|
++ * |                              |                    | 0xd02a,0xd02e	|
+  * |                              |                    | 0xd031-0xd0ff	|
+  * |                              |                    | 0xd101-0xd1fe	|
+  * |                              |                    | 0xd214-0xd2fe	|
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index d92ee06..a8c0c73 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -355,14 +355,9 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
+ 			ent->t262.start_addr = start;
+ 			ent->t262.end_addr = end;
  		}
-+		/* If FA-WWN supported */
-+		if (mcp->mb[7] & BIT_14) {
-+			vha->port_name[0] = MSB(mcp->mb[16]);
-+			vha->port_name[1] = LSB(mcp->mb[16]);
-+			vha->port_name[2] = MSB(mcp->mb[17]);
-+			vha->port_name[3] = LSB(mcp->mb[17]);
-+			vha->port_name[4] = MSB(mcp->mb[18]);
-+			vha->port_name[5] = LSB(mcp->mb[18]);
-+			vha->port_name[6] = MSB(mcp->mb[19]);
-+			vha->port_name[7] = LSB(mcp->mb[19]);
-+			fc_host_port_name(vha->host) =
-+			    wwn_to_u64(vha->port_name);
-+			ql_dbg(ql_dbg_mbx, vha, 0x10ca,
-+			    "FA-WWN acquired %016llx\n",
-+			    wwn_to_u64(vha->port_name));
-+		}
+-	} else if (ent->t262.ram_area == T262_RAM_AREA_DDR_RAM) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd021,
+-		    "%s: unsupported ddr ram\n", __func__);
+-		qla27xx_skip_entry(ent, buf);
+-		goto done;
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd022,
+-		    "%s: unknown area %u\n", __func__, ent->t262.ram_area);
++		    "%s: unknown area %x\n", __func__, ent->t262.ram_area);
+ 		qla27xx_skip_entry(ent, buf);
+ 		goto done;
+ 	}
+@@ -377,8 +372,6 @@ qla27xx_fwdt_entry_t262(struct scsi_qla_host *vha,
+ 
+ 	dwords = end - start + 1;
+ 	if (buf) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd024,
+-		    "%s: @%lx -> (%lx dwords)\n", __func__, start, dwords);
+ 		buf += *len;
+ 		qla24xx_dump_ram(vha->hw, start, buf, dwords, &buf);
+ 	}
+@@ -423,13 +416,9 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
+ 				count++;
+ 			}
+ 		}
+-	} else if (ent->t263.queue_type == T263_QUEUE_TYPE_ATIO) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd025,
+-		    "%s: unsupported atio queue\n", __func__);
+-		qla27xx_skip_entry(ent, buf);
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd026,
+-		    "%s: unknown queue %u\n", __func__, ent->t263.queue_type);
++		    "%s: unknown queue %x\n", __func__, ent->t263.queue_type);
+ 		qla27xx_skip_entry(ent, buf);
  	}
  
- 	return rval;
-@@ -3328,8 +3346,24 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
- 		    rptid_entry->port_id[0]);
+@@ -524,17 +513,9 @@ qla27xx_fwdt_entry_t268(struct scsi_qla_host *vha,
+ 			    "%s: missing eft\n", __func__);
+ 			qla27xx_skip_entry(ent, buf);
+ 		}
+-	} else if (ent->t268.buf_type == T268_BUF_TYPE_EXCH_BUFOFF) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd029,
+-		    "%s: unsupported exchange offload buffer\n", __func__);
+-		qla27xx_skip_entry(ent, buf);
+-	} else if (ent->t268.buf_type == T268_BUF_TYPE_EXTD_LOGIN) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd02a,
+-		    "%s: unsupported extended login buffer\n", __func__);
+-		qla27xx_skip_entry(ent, buf);
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd02b,
+-		    "%s: unknown buf %x\n", __func__, ent->t268.buf_type);
++		    "%s: unknown buffer %x\n", __func__, ent->t268.buf_type);
+ 		qla27xx_skip_entry(ent, buf);
+ 	}
  
-+		/* FA-WWN is only for physical port */
-+		if (!vp_idx) {
-+			void *wwpn = ha->init_cb->port_name;
-+
-+			if (!MSB(stat)) {
-+				if (rptid_entry->vp_idx_map[1] & BIT_6)
-+					wwpn = rptid_entry->reserved_4 + 8;
-+			}
-+			memcpy(vha->port_name, wwpn, WWN_SIZE);
-+			fc_host_port_name(vha->host) =
-+			    wwn_to_u64(vha->port_name);
-+			ql_dbg(ql_dbg_mbx, vha, 0x1018,
-+			    "FA-WWN portname %016llx (%x)\n",
-+			    fc_host_port_name(vha->host), MSB(stat));
-+		}
-+
- 		vp = vha;
--		if (vp_idx == 0 && (MSB(stat) != 1))
-+		if (vp_idx == 0)
- 			goto reg_needed;
+@@ -670,13 +651,9 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
+ 				count++;
+ 			}
+ 		}
+-	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_ATIO_SHAD) {
+-		ql_dbg(ql_dbg_misc, vha, 0xd02e,
+-		    "%s: unsupported atio queue\n", __func__);
+-		qla27xx_skip_entry(ent, buf);
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd02f,
+-		    "%s: unknown queue %u\n", __func__, ent->t274.queue_type);
++		    "%s: unknown queue %x\n", __func__, ent->t274.queue_type);
+ 		qla27xx_skip_entry(ent, buf);
+ 	}
  
- 		if (MSB(stat) != 0 && MSB(stat) != 2) {
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.h b/drivers/scsi/qla2xxx/qla_tmpl.h
+index f19856b..141c1c5 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.h
++++ b/drivers/scsi/qla2xxx/qla_tmpl.h
+@@ -214,6 +214,8 @@ struct __packed qla27xx_fwdt_entry {
+ #define T268_BUF_TYPE_EXTD_TRACE	1
+ #define T268_BUF_TYPE_EXCH_BUFOFF	2
+ #define T268_BUF_TYPE_EXTD_LOGIN	3
++#define T268_BUF_TYPE_REQ_MIRROR	4
++#define T268_BUF_TYPE_RSP_MIRROR	5
+ 
+ #define T274_QUEUE_TYPE_REQ_SHAD	1
+ #define T274_QUEUE_TYPE_RSP_SHAD	2
 -- 
 1.7.7
 
