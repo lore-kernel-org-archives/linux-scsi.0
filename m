@@ -1,186 +1,264 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V6 06/18] scsi: ufs: add voting support for host controller power
-Date: Thu, 25 Sep 2014 15:32:24 +0300
-Message-ID: <1411648356-3883-7-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH/RESEND V6 09/18] scsi: ufs: Active Power Mode - configuring bActiveICCLevel
+Date: Thu, 25 Sep 2014 15:32:27 +0300
+Message-ID: <1411648356-3883-10-git-send-email-draviv@codeaurora.org>
 References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:52656 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbaIYMdH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 08:33:07 -0400
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Raviv Shvili <rshvili@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Yaniv Gardi <ygardi@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Raviv Shvili <rshvili@codeaurora.org>
+From: Yaniv Gardi <ygardi@codeaurora.org>
 
-Add the support for voting of the regulator powering the
-host controller logic.
+The maximum power consumption in active is determined by bActiveICCLevel.
+The configuration is done by reading max current supported by the
+regulators connected to VCC, VCCQ and VCCQ2 rails on the boards, and
+reading the current consumption levels from the device for each rails
+(vcc/vccq/vccq2) using power descriptor.
+We configure the bActiveICCLevel attribute, with the max value that
+correspond to the minimum-of(VCC-current-level,VCCQ-current-level,
+VCCQ2-current-level).
+In order to minimize resume latency, pre-fetch icc levels and reference
+clock during initialization and avoid reading them each link startup
+during resume.
 
 Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-index b0f791a..fb1234e 100644
---- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-@@ -9,6 +9,7 @@ Required properties:
- - reg               : <registers mapping>
- 
- Optional properties:
-+- vdd-hba-supply        : phandle to UFS host controller supply regulator node
- - vcc-supply            : phandle to VCC supply regulator node
- - vccq-supply           : phandle to VCCQ supply regulator node
- - vccq2-supply          : phandle to VCCQ2 supply regulator node
-@@ -20,6 +21,7 @@ Optional properties:
- - vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
- - vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
- - vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
-+- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
- 
- - clocks                : List of phandle and clock specifier pairs
- - clock-names           : List of clock input name strings sorted in the same
-@@ -39,6 +41,8 @@ Example:
- 		reg = <0xfc598000 0x800>;
- 		interrupts = <0 28 0>;
- 
-+		vdd-hba-supply = <&xxx_reg0>;
-+		vdd-hba-fixed-regulator;
- 		vcc-supply = <&xxx_reg1>;
- 		vcc-supply-1p8;
- 		vccq-supply = <&xxx_reg2>;
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 729ce7d..9bb6919 100644
+index f76a304..4ca99ed 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -385,6 +385,7 @@ struct ufs_vreg_info {
- 	struct ufs_vreg *vcc;
- 	struct ufs_vreg *vccq;
- 	struct ufs_vreg *vccq2;
-+	struct ufs_vreg *vdd_hba;
+@@ -115,6 +115,7 @@ enum flag_idn {
+ 
+ /* Attribute idn for Query requests */
+ enum attr_idn {
++	QUERY_ATTR_IDN_ACTIVE_ICC_LVL	= 0x03,
+ 	QUERY_ATTR_IDN_BKOPS_STATUS	= 0x05,
+ 	QUERY_ATTR_IDN_EE_CONTROL	= 0x0D,
+ 	QUERY_ATTR_IDN_EE_STATUS	= 0x0E,
+@@ -174,6 +175,31 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
  };
  
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 642d80f..dde4e6e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -147,6 +147,11 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 
- 	vreg->name = kstrdup(name, GFP_KERNEL);
- 
-+	/* if fixed regulator no need further initialization */
-+	snprintf(prop_name, MAX_PROP_SIZE, "%s-fixed-regulator", name);
-+	if (of_property_read_bool(np, prop_name))
-+		goto out;
++/* bActiveICCLevel parameter current units */
++enum {
++	UFSHCD_NANO_AMP		= 0,
++	UFSHCD_MICRO_AMP	= 1,
++	UFSHCD_MILI_AMP		= 2,
++	UFSHCD_AMP		= 3,
++};
 +
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
- 	ret = of_property_read_u32(np, prop_name, &vreg->max_uA);
- 	if (ret) {
-@@ -198,6 +203,10 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
- 	struct device *dev = hba->dev;
- 	struct ufs_vreg_info *info = &hba->vreg_info;
- 
-+	err = ufshcd_populate_vreg(dev, "vdd-hba", &info->vdd_hba);
-+	if (err)
-+		goto out;
++#define POWER_DESC_MAX_SIZE			0x62
++#define POWER_DESC_MAX_ACTV_ICC_LVLS		16
 +
- 	err = ufshcd_populate_vreg(dev, "vcc", &info->vcc);
- 	if (err)
- 		goto out;
++/* Attribute  bActiveICCLevel parameter bit masks definitions */
++#define ATTR_ICC_LVL_UNIT_OFFSET	14
++#define ATTR_ICC_LVL_UNIT_MASK		(0x3 << ATTR_ICC_LVL_UNIT_OFFSET)
++#define ATTR_ICC_LVL_VALUE_MASK		0x3FF
++
++/* Power descriptor parameters offsets in bytes */
++enum power_desc_param_offset {
++	PWR_DESC_LEN			= 0x0,
++	PWR_DESC_TYPE			= 0x1,
++	PWR_DESC_ACTIVE_LVLS_VCC_0	= 0x2,
++	PWR_DESC_ACTIVE_LVLS_VCCQ_0	= 0x22,
++	PWR_DESC_ACTIVE_LVLS_VCCQ2_0	= 0x42,
++};
++
+ /* Exception event mask values */
+ enum {
+ 	MASK_EE_STATUS		= 0xFFFF,
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b033702..26301b8 100644
+index af29d4c..dc89c48 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3311,6 +3311,16 @@ out:
- 	return ret;
- }
- 
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
-+
-+	if (info)
-+		return ufshcd_toggle_vreg(hba->dev, info->vdd_hba, on);
-+
-+	return 0;
-+}
-+
- static int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg)
- {
- 	int ret = 0;
-@@ -3350,6 +3360,16 @@ out:
- 	return ret;
- }
- 
-+static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
-+{
-+	struct ufs_vreg_info *info = &hba->vreg_info;
-+
-+	if (info)
-+		return ufshcd_get_vreg(hba->dev, info->vdd_hba);
-+
-+	return 0;
-+}
-+
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
- {
- 	int ret = 0;
-@@ -3483,14 +3503,29 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
- {
- 	int err;
- 
--	err = ufshcd_init_clocks(hba);
-+	/*
-+	 * Handle host controller power separately from the UFS device power
-+	 * rails as it will help controlling the UFS host controller power
-+	 * collapse easily which is different than UFS device power collapse.
-+	 * Also, enable the host controller power before we go ahead with rest
-+	 * of the initialization here.
-+	 */
-+	err = ufshcd_init_hba_vreg(hba);
- 	if (err)
- 		goto out;
- 
--	err = ufshcd_setup_clocks(hba, true);
-+	err = ufshcd_setup_hba_vreg(hba, true);
- 	if (err)
- 		goto out;
- 
-+	err = ufshcd_init_clocks(hba);
-+	if (err)
-+		goto out_disable_hba_vreg;
-+
-+	err = ufshcd_setup_clocks(hba, true);
-+	if (err)
-+		goto out_disable_hba_vreg;
-+
- 	err = ufshcd_init_vreg(hba);
- 	if (err)
- 		goto out_disable_clks;
-@@ -3509,6 +3544,8 @@ out_disable_vreg:
- 	ufshcd_setup_vreg(hba, false);
- out_disable_clks:
- 	ufshcd_setup_clocks(hba, false);
-+out_disable_hba_vreg:
-+	ufshcd_setup_hba_vreg(hba, false);
- out:
- 	return err;
- }
-@@ -3518,6 +3555,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 	ufshcd_variant_hba_exit(hba);
- 	ufshcd_setup_vreg(hba, false);
- 	ufshcd_setup_clocks(hba, false);
-+	ufshcd_setup_hba_vreg(hba, false);
+@@ -3265,6 +3265,125 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
  }
  
  /**
++ * ufshcd_get_max_icc_level - calculate the ICC level
++ * @sup_curr_uA: max. current supported by the regulator
++ * @start_scan: row at the desc table to start scan from
++ * @buff: power descriptor buffer
++ *
++ * Returns calculated max ICC level for specific regulator
++ */
++static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
++{
++	int i;
++	int curr_uA;
++	u16 data;
++	u16 unit;
++
++	for (i = start_scan; i >= 0; i--) {
++		data = be16_to_cpu(*((u16 *)(buff + 2*i)));
++		unit = (data & ATTR_ICC_LVL_UNIT_MASK) >>
++						ATTR_ICC_LVL_UNIT_OFFSET;
++		curr_uA = data & ATTR_ICC_LVL_VALUE_MASK;
++		switch (unit) {
++		case UFSHCD_NANO_AMP:
++			curr_uA = curr_uA / 1000;
++			break;
++		case UFSHCD_MILI_AMP:
++			curr_uA = curr_uA * 1000;
++			break;
++		case UFSHCD_AMP:
++			curr_uA = curr_uA * 1000 * 1000;
++			break;
++		case UFSHCD_MICRO_AMP:
++		default:
++			break;
++		}
++		if (sup_curr_uA >= curr_uA)
++			break;
++	}
++	if (i < 0) {
++		i = 0;
++		pr_err("%s: Couldn't find valid icc_level = %d", __func__, i);
++	}
++
++	return (u32)i;
++}
++
++/**
++ * ufshcd_calc_icc_level - calculate the max ICC level
++ * In case regulators are not initialized we'll return 0
++ * @hba: per-adapter instance
++ * @desc_buf: power descriptor buffer to extract ICC levels from.
++ * @len: length of desc_buff
++ *
++ * Returns calculated ICC level
++ */
++static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
++							u8 *desc_buf, int len)
++{
++	u32 icc_level = 0;
++
++	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
++						!hba->vreg_info.vccq2) {
++		dev_err(hba->dev,
++			"%s: Regulator capability was not set, actvIccLevel=%d",
++							__func__, icc_level);
++		goto out;
++	}
++
++	if (hba->vreg_info.vcc)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vcc->max_uA,
++				POWER_DESC_MAX_ACTV_ICC_LVLS - 1,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCC_0]);
++
++	if (hba->vreg_info.vccq)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vccq->max_uA,
++				icc_level,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ_0]);
++
++	if (hba->vreg_info.vccq2)
++		icc_level = ufshcd_get_max_icc_level(
++				hba->vreg_info.vccq2->max_uA,
++				icc_level,
++				&desc_buf[PWR_DESC_ACTIVE_LVLS_VCCQ2_0]);
++out:
++	return icc_level;
++}
++
++static void ufshcd_init_icc_levels(struct ufs_hba *hba)
++{
++	int ret;
++	int buff_len = QUERY_DESC_POWER_MAX_SIZE;
++	u8 desc_buf[QUERY_DESC_POWER_MAX_SIZE];
++
++	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
++	if (ret) {
++		dev_err(hba->dev,
++			"%s: Failed reading power descriptor.len = %d ret = %d",
++			__func__, buff_len, ret);
++		return;
++	}
++
++	hba->init_prefetch_data.icc_level =
++			ufshcd_find_max_sup_active_icc_level(hba,
++			desc_buf, buff_len);
++	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
++			__func__, hba->init_prefetch_data.icc_level);
++
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
++			&hba->init_prefetch_data.icc_level);
++
++	if (ret)
++		dev_err(hba->dev,
++			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
++			__func__, hba->init_prefetch_data.icc_level , ret);
++
++}
++
++/**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+  *
+@@ -3293,9 +3412,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 	/* If we are in error handling context no need to scan the host */
+ 	if (!ufshcd_eh_in_progress(hba)) {
++		if (!hba->is_init_prefetch)
++			ufshcd_init_icc_levels(hba);
++
+ 		scsi_scan_host(hba->host);
+ 		pm_runtime_put_sync(hba->dev);
+ 	}
++
++	if (!hba->is_init_prefetch)
++		hba->is_init_prefetch = true;
++
+ out:
+ 	/*
+ 	 * If we failed to initialize the device or the device is not
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index eddb3f3..8365ad4 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -196,6 +196,15 @@ struct ufs_hba_variant_ops {
+ };
+ 
+ /**
++ * struct ufs_init_prefetch - contains data that is pre-fetched once during
++ * initialization
++ * @icc_level: icc level which was read during initialization
++ */
++struct ufs_init_prefetch {
++	u32 icc_level;
++};
++
++/**
+  * struct ufs_hba - per adapter private structure
+  * @mmio_base: UFSHCI base register address
+  * @ucdl_base_addr: UFS Command Descriptor base address
+@@ -229,6 +238,8 @@ struct ufs_hba_variant_ops {
+  * @intr_mask: Interrupt Mask Bits
+  * @ee_ctrl_mask: Exception event control mask
+  * @is_powered: flag to check if HBA is powered
++ * @is_init_prefetch: flag to check if data was pre-fetched in initialization
++ * @init_prefetch_data: data pre-fetched during initialization
+  * @eh_work: Worker to handle UFS errors that require s/w attention
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
+@@ -285,6 +296,8 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
++	bool is_init_prefetch;
++	struct ufs_init_prefetch init_prefetch_data;
+ 
+ 	/* Work Queues */
+ 	struct work_struct eh_work;
 -- 
 1.8.5.2
 -- 
 QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
-
