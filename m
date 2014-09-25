@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 11/17] qla2xxx: Host reset handling in ABTS path.
-Date: Thu, 25 Sep 2014 06:14:53 -0400
-Message-ID: <1411640099-7856-12-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 09/17] qla2xxx: Add Host reset handling in target mode.
+Date: Thu, 25 Sep 2014 06:14:51 -0400
+Message-ID: <1411640099-7856-10-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411640099-7856-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:15877 "EHLO
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:21457 "EHLO
 	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752739AbaIYKtE (ORCPT
+	by vger.kernel.org with ESMTP id S1751589AbaIYKtB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 06:49:04 -0400
+	Thu, 25 Sep 2014 06:49:01 -0400
 In-Reply-To: <1411640099-7856-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,37 +19,136 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.
 
 From: Arun Easi <arun.easi@qlogic.com>
 
-ABTS path takes path similar to regular task management, but
-reset_count was not initialized when allocating mcmd causing
-the response to get dropped in qlt_xmit_tm_rsp. Fix this by
-initializing reset_count correctly.
-
 Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c    |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h    |    1 +
+ drivers/scsi/qla2xxx/qla_os.c     |    2 +
+ drivers/scsi/qla2xxx/qla_target.c |   74 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 78 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 5f25cf0..83d47ab 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -68,7 +68,7 @@
+  * |                              |                    | 0xd101-0xd1fe	|
+  * |                              |                    | 0xd214-0xd2fe	|
+  * | Target Mode		  |	  0xe078       |		|
+- * | Target Mode Management	  |	  0xf072       | 0xf002-0xf003	|
++ * | Target Mode Management	  |	  0xf072       | 0xf002		|
+  * |                              |                    | 0xf046-0xf049  |
+  * | Target Mode Task Management  |	  0x1000b      |		|
+  * ----------------------------------------------------------------------
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 0f851de..42ea447 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -766,4 +766,5 @@ extern void qla82xx_mbx_completion(scsi_qla_host_t *, uint16_t);
+ extern int qla8044_abort_isp(scsi_qla_host_t *);
+ extern int qla8044_check_fw_alive(struct scsi_qla_host *);
+ 
++extern void qlt_host_reset_handler(struct qla_hw_data *ha);
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2c3c6af..08e5bbb 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1363,6 +1363,8 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req;
+ 
++	qlt_host_reset_handler(ha);
++
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	for (que = 0; que < ha->max_req_queues; que++) {
+ 		req = ha->req_q_map[que];
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 38f3f1f..ccd0ca2 100644
+index 1a546bc..de45126 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1185,6 +1185,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+@@ -2843,6 +2843,80 @@ static struct qla_tgt_cmd *qlt_ctio_to_cmd(struct scsi_qla_host *vha,
+ 	return cmd;
+ }
  
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
-+	mcmd->reset_count = vha->hw->chip_reset;
- 
- 	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
- 	    abts->exchange_addr_to_abort);
-@@ -3523,6 +3524,7 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 
- 	lun = a->u.isp24.fcp_cmnd.lun;
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
-+	mcmd->reset_count = vha->hw->chip_reset;
- 
- 	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, TMR_ABORT_TASK,
- 	    le16_to_cpu(iocb->u.isp2x.seq_id));
++/* hardware_lock should be held by caller. */
++static void
++qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t handle;
++
++	if (cmd->sg_mapped)
++		qlt_unmap_sg(vha, cmd);
++
++	handle = qlt_make_handle(vha);
++
++	/* TODO: fix debug message type and ids. */
++	if (cmd->state == QLA_TGT_STATE_PROCESSED) {
++		ql_dbg(ql_dbg_io, vha, 0xff00,
++		    "HOST-ABORT: handle=%d, state=PROCESSED.\n", handle);
++	} else if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
++		cmd->write_data_transferred = 0;
++		cmd->state = QLA_TGT_STATE_DATA_IN;
++
++		ql_dbg(ql_dbg_io, vha, 0xff01,
++		    "HOST-ABORT: handle=%d, state=DATA_IN.\n", handle);
++
++		ha->tgt.tgt_ops->handle_data(cmd);
++		return;
++	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
++		ql_dbg(ql_dbg_io, vha, 0xff02,
++		    "HOST-ABORT: handle=%d, state=ABORTED.\n", handle);
++	} else {
++		ql_dbg(ql_dbg_io, vha, 0xff03,
++		    "HOST-ABORT: handle=%d, state=BAD(%d).\n", handle,
++		    cmd->state);
++		dump_stack();
++	}
++
++	ha->tgt.tgt_ops->free_cmd(cmd);
++}
++
++void
++qlt_host_reset_handler(struct qla_hw_data *ha)
++{
++	struct qla_tgt_cmd *cmd;
++	unsigned long flags;
++	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
++	scsi_qla_host_t *vha = NULL;
++	struct qla_tgt *tgt = base_vha->vha_tgt.qla_tgt;
++	uint32_t i;
++
++	if (!base_vha->hw->tgt.tgt_ops)
++		return;
++
++	if (!tgt || qla_ini_mode_enabled(base_vha)) {
++		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf003,
++			"Target mode disabled\n");
++		return;
++	}
++
++	ql_dbg(ql_dbg_tgt_mgt, vha, 0xff10,
++	    "HOST-ABORT-HNDLR: base_vha->dpc_flags=%lx.\n",
++	    base_vha->dpc_flags);
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	for (i = 1; i < DEFAULT_OUTSTANDING_COMMANDS + 1; i++) {
++		cmd = qlt_get_cmd(base_vha, i);
++		if (!cmd)
++			continue;
++		/* ha->tgt.cmds entry is cleared by qlt_get_cmd. */
++		vha = cmd->vha;
++		qlt_abort_cmd_on_host_reset(vha, cmd);
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++}
++
++
+ /*
+  * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
+  */
 -- 
 1.7.7
 
