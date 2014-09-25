@@ -1,64 +1,52 @@
-From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH] libfs: Replace rcu_assign_pointer() with
- RCU_INIT_POINTER()
-Date: Thu, 25 Sep 2014 15:01:11 -0700
-Message-ID: <1411682471.2856.3.camel@vfc0>
-References: <20140818145622.GA14281@ada>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 85101] hpsa + P410 does not show connected HP SAS port
+ expanders
+Date: Thu, 25 Sep 2014 22:22:04 +0000
+Message-ID: <bug-85101-11613-r7FDruKxyT@https.bugzilla.kernel.org/>
+References: <bug-85101-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <20140818145622.GA14281@ada>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Andreea-Cristina Bernat <bernat.ada-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:45179 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751678AbaIYWWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2014 18:22:07 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 49FB5202E5
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 22:22:06 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id AEA54202B8
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 22:22:04 +0000 (UTC)
+In-Reply-To: <bug-85101-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2014-08-18 at 17:56 +0300, Andreea-Cristina Bernat wrote:
-> The uses of "rcu_assign_pointer()" are NULLing out the pointers.
-> According to RCU_INIT_POINTER()'s block comment:
-> "1.   This use of RCU_INIT_POINTER() is NULLing out the pointer"
-> it is better to use it instead of rcu_assign_pointer() because it has a
-> smaller overhead.
-> 
-> The following Coccinelle semantic patch was used:
-> @@
-> @@
-> 
-> - rcu_assign_pointer
-> + RCU_INIT_POINTER
->   (..., NULL)
-> 
-> Signed-off-by: Andreea-Cristina Bernat <bernat.ada-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/scsi/libfc/fc_libfc.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-> index 8d65a51a..c11a638 100644
-> --- a/drivers/scsi/libfc/fc_libfc.c
-> +++ b/drivers/scsi/libfc/fc_libfc.c
-> @@ -296,9 +296,9 @@ void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *prov)
->  	BUG_ON(type >= FC_FC4_PROV_SIZE);
->  	mutex_lock(&fc_prov_mutex);
->  	if (prov->recv)
-> -		rcu_assign_pointer(fc_passive_prov[type], NULL);
-> +		RCU_INIT_POINTER(fc_passive_prov[type], NULL);
->  	else
-> -		rcu_assign_pointer(fc_active_prov[type], NULL);
-> +		RCU_INIT_POINTER(fc_active_prov[type], NULL);
->  	mutex_unlock(&fc_prov_mutex);
->  	synchronize_rcu();
->  }
+https://bugzilla.kernel.org/show_bug.cgi?id=85101
 
-Looks like patch is not yet applied.
+--- Comment #6 from linux-ide@crashplan.pro ---
+The HP Smart Array P410 still has its issues: sometimes the diagnostics LED
+turns amber, other times it works ok.
 
-Acked-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+As a fall back a Marvell controller detects the HP SAS expander card fine:
+# lsscsi -g | grep HP
+[6:0:0:0]    enclosu HP       HP SAS EXP Card  2.08  -          /dev/sg1
+
+I am not able to figure out a correct sg_write_buffer command. Run from the
+directory where the unpacked binary image is stored:
+# sg_write_buffer --bpw=4096 -v --in=PUF21000.bin /dev/sg1
+tried to read 8388608 bytes from PUF21000.bin, got 1509632 bytes
+will write 1509632 bytes
+sending write buffer, mode=0x0, mspec=0, id=0,  offset=0, len=4096
+    Write buffer cmd: 3b 00 00 00 00 00 00 10 00 00
+write buffer:  Fixed format, current;  Sense key: Illegal Request
+ Additional sense: Invalid field in cdb
+Write buffer failed: Illegal request sense key, apart from Invalid opcode
+
+Any suggestions for the correct sg_write_buffer statement for writing to an HP
+SAS expander card?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
