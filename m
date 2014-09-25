@@ -1,106 +1,51 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_debug: deadlock between completions and surprise
- module removal
-Date: Thu, 25 Sep 2014 05:13:17 -0700
-Message-ID: <20140925121317.GA16303@infradead.org>
-References: <5403AB47.3040706@interlog.com>
+Subject: Re: [PATCH] hpsa: add missing pci_set_master in kdump path
+Date: Thu, 25 Sep 2014 14:20:39 +0200
+Message-ID: <20140925122039.GA11116@infradead.org>
+References: <5412EA9F.4060703@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:47243 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbaIYMSQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 08:18:16 -0400
 Content-Disposition: inline
-In-Reply-To: <5403AB47.3040706@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Milan Broz <gmazyland@gmail.com>
+In-Reply-To: <5412EA9F.4060703@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Review ping again?
+Tomas, can you also give me a signed-off-by for this one?
 
-While I think the shutdown code in scsi_debug needs a bit more of an
-overhault I'd really like to include the fix at least for 3.18 and
-3.17-stable now that we have missed the 3.17 window.
-
-On Sun, Aug 31, 2014 at 07:09:59PM -0400, Douglas Gilbert wrote:
-> A deadlock has been reported when the completion
-> of SCSI commands (simulated by a timer) was surprised
-> by a module removal. This patch removes one half of
-> the offending locks around timer deletions. This fix
-> is applied both to stop_all_queued() which is were
-> the deadlock was discovered and stop_queued_cmnd()
-> which has very similar logic.
+On Fri, Sep 12, 2014 at 02:44:15PM +0200, Tomas Henzl wrote:
+> Add a call to pci_set_master(...)  missing in the previous
+> patch "hpsa: refine the pci enable/disable handling".
+> Found thanks to Rob Elliot.
+> ---
+>  drivers/scsi/hpsa.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> This patch should be applied both to the lk 3.17 tree
-> and Christoph's drivers-for-3.18 tree.
-> 
-> Tested-and-reported-by: Milan Broz <gmazyland@gmail.com>
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
-> --- a/drivers/scsi/scsi_debug.c	2014-08-26 13:24:51.646948507 -0400
-> +++ b/drivers/scsi/scsi_debug.c	2014-08-30 18:04:54.589226679 -0400
-> @@ -2743,6 +2743,13 @@ static int stop_queued_cmnd(struct scsi_
->  		if (test_bit(k, queued_in_use_bm)) {
->  			sqcp = &queued_arr[k];
->  			if (cmnd == sqcp->a_cmnd) {
-> +				devip = (struct sdebug_dev_info *)
-> +					cmnd->device->hostdata;
-> +				if (devip)
-> +					atomic_dec(&devip->num_in_q);
-> +				sqcp->a_cmnd = NULL;
-> +				spin_unlock_irqrestore(&queued_arr_lock,
-> +						       iflags);
->  				if (scsi_debug_ndelay > 0) {
->  					if (sqcp->sd_hrtp)
->  						hrtimer_cancel(
-> @@ -2755,18 +2762,13 @@ static int stop_queued_cmnd(struct scsi_
->  					if (sqcp->tletp)
->  						tasklet_kill(sqcp->tletp);
->  				}
-> -				__clear_bit(k, queued_in_use_bm);
-> -				devip = (struct sdebug_dev_info *)
-> -					cmnd->device->hostdata;
-> -				if (devip)
-> -					atomic_dec(&devip->num_in_q);
-> -				sqcp->a_cmnd = NULL;
-> -				break;
-> +				clear_bit(k, queued_in_use_bm);
-> +				return 1;
->  			}
->  		}
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 7828834..cef5d49 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6544,7 +6544,7 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
+>  		dev_warn(&pdev->dev, "failed to enable device.\n");
+>  		return -ENODEV;
 >  	}
->  	spin_unlock_irqrestore(&queued_arr_lock, iflags);
-> -	return (k < qmax) ? 1 : 0;
-> +	return 0;
->  }
+> -
+> +	pci_set_master(pdev);
+>  	/* Reset the controller with a PCI power-cycle or via doorbell */
+>  	rc = hpsa_kdump_hard_reset_controller(pdev);
 >  
->  /* Deletes (stops) timers or tasklets of all queued commands */
-> @@ -2782,6 +2784,13 @@ static void stop_all_queued(void)
->  		if (test_bit(k, queued_in_use_bm)) {
->  			sqcp = &queued_arr[k];
->  			if (sqcp->a_cmnd) {
-> +				devip = (struct sdebug_dev_info *)
-> +					sqcp->a_cmnd->device->hostdata;
-> +				if (devip)
-> +					atomic_dec(&devip->num_in_q);
-> +				sqcp->a_cmnd = NULL;
-> +				spin_unlock_irqrestore(&queued_arr_lock,
-> +						       iflags);
->  				if (scsi_debug_ndelay > 0) {
->  					if (sqcp->sd_hrtp)
->  						hrtimer_cancel(
-> @@ -2794,12 +2803,8 @@ static void stop_all_queued(void)
->  					if (sqcp->tletp)
->  						tasklet_kill(sqcp->tletp);
->  				}
-> -				__clear_bit(k, queued_in_use_bm);
-> -				devip = (struct sdebug_dev_info *)
-> -					sqcp->a_cmnd->device->hostdata;
-> -				if (devip)
-> -					atomic_dec(&devip->num_in_q);
-> -				sqcp->a_cmnd = NULL;
-> +				clear_bit(k, queued_in_use_bm);
-> +				spin_lock_irqsave(&queued_arr_lock, iflags);
->  			}
->  		}
->  	}
-
+> -- 
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 ---end quoted text---
