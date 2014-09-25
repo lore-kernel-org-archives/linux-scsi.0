@@ -1,20 +1,17 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] hpsa: add missing pci_set_master in kdump path
-Date: Thu, 25 Sep 2014 19:01:32 +0200
-Message-ID: <20140925170132.GA17892@infradead.org>
-References: <5412EA9F.4060703@redhat.com>
+Subject: Re: [PATCH v3] mptfusion: enable no_write_same for vmware scsi disks
+Date: Thu, 25 Sep 2014 19:01:47 +0200
+Message-ID: <20140925170147.GB17892@infradead.org>
+References: <20140923071154.GB3867@infradead.org>
+ <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48776 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989AbaIYQ7K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Sep 2014 12:59:10 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5412EA9F.4060703@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1411482160-32007-1-git-send-email-chris.j.arges@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris J Arges <chris.j.arges@canonical.com>
+Cc: hch@infradead.org, bruce.lucas@mongodb.com, adam.radford@avagotech.com, kashyap.desai@avagotech.com, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, elliott@hp.com, steve.cameron@hp.com, Christoph Hellwig <hch@infradead.org>, "Handzik, Joe" <joseph.t.handzik@hp.com>
 
-Thanks, applied to drivers-for-3.18.
+Thanks, applied to drivers-for-3.18 with Cc to stable.
