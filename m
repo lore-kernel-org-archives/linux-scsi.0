@@ -1,16 +1,16 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 03/35] qla2xxx: ISP27xx fwdump template remove high frequency debug logs.
-Date: Thu, 25 Sep 2014 05:16:34 -0400
-Message-ID: <1411636626-7566-4-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 07/35] qla2xxx: Add endianizer to max_payload_size modifier.
+Date: Thu, 25 Sep 2014 05:16:38 -0400
+Message-ID: <1411636626-7566-8-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:52306 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752890AbaIYJvO (ORCPT
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:28307 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752968AbaIYJvT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:51:14 -0400
+	Thu, 25 Sep 2014 05:51:19 -0400
 In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,86 +22,76 @@ From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
- drivers/scsi/qla2xxx/qla_tmpl.c |   17 -----------------
- 2 files changed, 1 insertions(+), 18 deletions(-)
+ drivers/scsi/qla2xxx/qla_fw.h   |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c |   12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 55edaa2..61bd49f 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -64,7 +64,7 @@
-  * |                              |                    | 0xb13c-0xb140  |
-  * |                              |                    | 0xb149		|
-  * | MultiQ                       |       0xc00c       |		|
-- * | Misc                         |       0xd212       | 0xd017		|
-+ * | Misc                         |       0xd212       | 0xd011-0xd017	|
-  * |                              |                    | 0xd020		|
-  * |                              |                    | 0xd030-0xd0ff	|
-  * |                              |                    | 0xd101-0xd1fe	|
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 29271cc..6da9dd2 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -151,8 +151,6 @@ qla27xx_read8(void *window, void *buf, ulong *len)
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index eb8f572..c7d1c45 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -91,7 +91,7 @@ struct nvram_24xx {
+ 	/* Firmware Initialization Control Block. */
+ 	uint16_t version;
+ 	uint16_t reserved_1;
+-	uint16_t frame_payload_size;
++	__le16 frame_payload_size;
+ 	uint16_t execution_throttle;
+ 	uint16_t exchange_count;
+ 	uint16_t hard_address;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 46990f4..748bd90 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2596,18 +2596,18 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 			nv->firmware_options[1] = BIT_7 | BIT_5;
+ 			nv->add_firmware_options[0] = BIT_5;
+ 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = __constant_cpu_to_le16(2048);
++			nv->frame_payload_size = 2048;
+ 			nv->special_options[1] = BIT_7;
+ 		} else if (IS_QLA2200(ha)) {
+ 			nv->firmware_options[0] = BIT_2 | BIT_1;
+ 			nv->firmware_options[1] = BIT_7 | BIT_5;
+ 			nv->add_firmware_options[0] = BIT_5;
+ 			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = __constant_cpu_to_le16(1024);
++			nv->frame_payload_size = 1024;
+ 		} else if (IS_QLA2100(ha)) {
+ 			nv->firmware_options[0] = BIT_3 | BIT_1;
+ 			nv->firmware_options[1] = BIT_5;
+-			nv->frame_payload_size = __constant_cpu_to_le16(1024);
++			nv->frame_payload_size = 1024;
+ 		}
  
- 	if (buf) {
- 		value = RD_REG_BYTE((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd011,
--		    "%s: -> %x\n", __func__, value);
+ 		nv->max_iocb_allocation = __constant_cpu_to_le16(256);
+@@ -2643,7 +2643,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 	 * are valid.
+ 	 */
+ 	if (ia64_platform_is("sn2")) {
+-		nv->frame_payload_size = __constant_cpu_to_le16(2048);
++		nv->frame_payload_size = 2048;
+ 		if (IS_QLA23XX(ha))
+ 			nv->special_options[1] = BIT_7;
  	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -164,8 +162,6 @@ qla27xx_read16(void *window, void *buf, ulong *len)
- 
- 	if (buf) {
- 		value = RD_REG_WORD((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd012,
--		    "%s: -> %x\n", __func__, value);
- 	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -177,8 +173,6 @@ qla27xx_read32(void *window, void *buf, ulong *len)
- 
- 	if (buf) {
- 		value = RD_REG_DWORD((__iomem void *)window);
--		ql_dbg(ql_dbg_misc, NULL, 0xd013,
--		    "%s: -> %x\n", __func__, value);
- 	}
- 	qla27xx_insert32(value, buf, len);
- }
-@@ -197,10 +191,6 @@ qla27xx_read_reg(__iomem struct device_reg_24xx *reg,
- {
- 	void *window = (void *)reg + offset;
- 
--	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd014,
--		    "%s: @%x\n", __func__, offset);
--	}
- 	qla27xx_read32(window, buf, len);
- }
- 
-@@ -211,8 +201,6 @@ qla27xx_write_reg(__iomem struct device_reg_24xx *reg,
- 	__iomem void *window = reg + offset;
- 
- 	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd015,
--		    "%s: @%x <- %x\n", __func__, offset, data);
- 		WRT_REG_DWORD(window, data);
- 	}
- }
-@@ -225,11 +213,6 @@ qla27xx_read_window(__iomem struct device_reg_24xx *reg,
- 	void *window = (void *)reg + offset;
- 	void (*readn)(void *, void *, ulong *) = qla27xx_read_vector(width);
- 
--	if (buf) {
--		ql_dbg(ql_dbg_misc, NULL, 0xd016,
--		    "%s: base=%x offset=%x count=%x width=%x\n",
--		    __func__, addr, offset, count, width);
--	}
- 	qla27xx_write_reg(reg, IOBASE_ADDR, addr, buf);
- 	while (count--) {
- 		qla27xx_insert32(addr, buf, len);
+@@ -4958,7 +4958,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
+ 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = __constant_cpu_to_le16(2048);
++		nv->frame_payload_size = 2048;
+ 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = __constant_cpu_to_le16(0);
+ 		nv->hard_address = __constant_cpu_to_le16(124);
+@@ -5905,7 +5905,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
+ 		nv->version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = __constant_cpu_to_le16(2048);
++		nv->frame_payload_size = 2048;
+ 		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = __constant_cpu_to_le16(0);
+ 		nv->port_name[0] = 0x21;
 -- 
 1.7.7
 
