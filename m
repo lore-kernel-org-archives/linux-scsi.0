@@ -1,149 +1,63 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH/RESEND V6 18/18] scsi: ufs: definitions for phy interface
-Date: Thu, 25 Sep 2014 15:32:36 +0300
-Message-ID: <1411648356-3883-19-git-send-email-draviv@codeaurora.org>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] hpsa: add missing pci_set_master in kdump path
+Date: Thu, 25 Sep 2014 14:41:07 +0200
+Message-ID: <54240D63.7080900@redhat.com>
+References: <5412EA9F.4060703@redhat.com> <20140925122039.GA11116@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1893 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751302AbaIYMlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2014 08:41:32 -0400
+In-Reply-To: <20140925122039.GA11116@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-- Adding some of the definitions missing in unipro.h, including power
-  enumeration.
-- Read Modify Write Line helper function
-- Indication for the type of suspend
+On 09/25/2014 02:20 PM, Christoph Hellwig wrote:
+> Tomas, can you also give me a signed-off-by for this one?
 
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Oh, I forgot to add it before.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 60260e8..5c78c3d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5114,6 +5114,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
- 
- 	ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
- out:
-+	if (!ret)
-+		hba->is_sys_suspended = true;
- 	return ret;
- }
- EXPORT_SYMBOL(ufshcd_system_suspend);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index d7fec86..58ecdff 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -474,6 +474,7 @@ struct ufs_hba {
- 
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
-+	bool is_sys_suspended;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
-@@ -499,6 +500,23 @@ static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
- #define ufshcd_readl(hba, reg)	\
- 	readl((hba)->mmio_base + (reg))
- 
-+/**
-+ * ufshcd_rmwl - read modify write into a register
-+ * @hba - per adapter instance
-+ * @mask - mask to apply on read value
-+ * @val - actual value to write
-+ * @reg - register address
-+ */
-+static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
-+{
-+	u32 tmp;
-+
-+	tmp = ufshcd_readl(hba, reg);
-+	tmp &= ~mask;
-+	tmp |= (val & mask);
-+	ufshcd_writel(hba, tmp, reg);
-+}
-+
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
- void ufshcd_remove(struct ufs_hba *);
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 0bb8041..3fc3e21 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -13,6 +13,44 @@
- #define _UNIPRO_H_
- 
- /*
-+ * M-TX Configuration Attributes
-+ */
-+#define TX_MODE					0x0021
-+#define TX_HSRATE_SERIES			0x0022
-+#define TX_HSGEAR				0x0023
-+#define TX_PWMGEAR				0x0024
-+#define TX_AMPLITUDE				0x0025
-+#define TX_HS_SLEWRATE				0x0026
-+#define TX_SYNC_SOURCE				0x0027
-+#define TX_HS_SYNC_LENGTH			0x0028
-+#define TX_HS_PREPARE_LENGTH			0x0029
-+#define TX_LS_PREPARE_LENGTH			0x002A
-+#define TX_HIBERN8_CONTROL			0x002B
-+#define TX_LCC_ENABLE				0x002C
-+#define TX_PWM_BURST_CLOSURE_EXTENSION		0x002D
-+#define TX_BYPASS_8B10B_ENABLE			0x002E
-+#define TX_DRIVER_POLARITY			0x002F
-+#define TX_HS_UNTERMINATED_LINE_DRIVE_ENABLE	0x0030
-+#define TX_LS_TERMINATED_LINE_DRIVE_ENABLE	0x0031
-+#define TX_LCC_SEQUENCER			0x0032
-+#define TX_MIN_ACTIVATETIME			0x0033
-+#define TX_PWM_G6_G7_SYNC_LENGTH		0x0034
-+
-+/*
-+ * M-RX Configuration Attributes
-+ */
-+#define RX_MODE					0x00A1
-+#define RX_HSRATE_SERIES			0x00A2
-+#define RX_HSGEAR				0x00A3
-+#define RX_PWMGEAR				0x00A4
-+#define RX_LS_TERMINATED_ENABLE			0x00A5
-+#define RX_HS_UNTERMINATED_ENABLE		0x00A6
-+#define RX_ENTER_HIBERN8			0x00A7
-+#define RX_BYPASS_8B10B_ENABLE			0x00A8
-+#define RX_TERMINATION_FORCE_ENABLE		0x0089
-+
-+#define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-+/*
-  * PHY Adpater attributes
-  */
- #define PA_ACTIVETXDATALANES	0x1560
-@@ -87,6 +125,24 @@ enum {
- 	PA_HS_MODE_B	= 2,
- };
- 
-+enum ufs_pwm_gear_tag {
-+	UFS_PWM_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_PWM_G1,		/* PWM Gear 1 (default for reset) */
-+	UFS_PWM_G2,		/* PWM Gear 2 */
-+	UFS_PWM_G3,		/* PWM Gear 3 */
-+	UFS_PWM_G4,		/* PWM Gear 4 */
-+	UFS_PWM_G5,		/* PWM Gear 5 */
-+	UFS_PWM_G6,		/* PWM Gear 6 */
-+	UFS_PWM_G7,		/* PWM Gear 7 */
-+};
-+
-+enum ufs_hs_gear_tag {
-+	UFS_HS_DONT_CHANGE,	/* Don't change Gear */
-+	UFS_HS_G1,		/* HS Gear 1 (default for reset) */
-+	UFS_HS_G2,		/* HS Gear 2 */
-+	UFS_HS_G3,		/* HS Gear 3 */
-+};
-+
- /*
-  * Data Link Layer Attributes
-  */
--- 
-1.8.5.2
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Patch is 
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+
+>
+> On Fri, Sep 12, 2014 at 02:44:15PM +0200, Tomas Henzl wrote:
+>> Add a call to pci_set_master(...)  missing in the previous
+>> patch "hpsa: refine the pci enable/disable handling".
+>> Found thanks to Rob Elliot.
+>> ---
+>>  drivers/scsi/hpsa.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 7828834..cef5d49 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -6544,7 +6544,7 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
+>>  		dev_warn(&pdev->dev, "failed to enable device.\n");
+>>  		return -ENODEV;
+>>  	}
+>> -
+>> +	pci_set_master(pdev);
+>>  	/* Reset the controller with a PCI power-cycle or via doorbell */
+>>  	rc = hpsa_kdump_hard_reset_controller(pdev);
+>>  
+>> -- 
+>> 1.8.3.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
