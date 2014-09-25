@@ -1,70 +1,64 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH  V2 1/1] ipr: Errors are logged when application issues illegal request
-Date: Thu, 25 Sep 2014 14:05:15 -0500
-Message-ID: <20140925190724.440161652@linux.vnet.ibm.com>
-References: <20140925190514.179882620@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:58096 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1752204AbaIYTK4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 15:10:56 -0400
-Content-Disposition: inline; filename=fff4_fix
-Sender: linux-scsi-owner@vger.kernel.org
+From: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH] libfs: Replace rcu_assign_pointer() with
+ RCU_INIT_POINTER()
+Date: Thu, 25 Sep 2014 15:01:11 -0700
+Message-ID: <1411682471.2856.3.camel@vfc0>
+References: <20140818145622.GA14281@ada>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20140818145622.GA14281@ada>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Andreea-Cristina Bernat <bernat.ada-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-Failing Device information are logged when IOA firmware detected these
-illegal request such as IOA firmware doesn't support inquiry with page
-code 2. The patch fixes the issue.
+On Mon, 2014-08-18 at 17:56 +0300, Andreea-Cristina Bernat wrote:
+> The uses of "rcu_assign_pointer()" are NULLing out the pointers.
+> According to RCU_INIT_POINTER()'s block comment:
+> "1.   This use of RCU_INIT_POINTER() is NULLing out the pointer"
+> it is better to use it instead of rcu_assign_pointer() because it has a
+> smaller overhead.
+> 
+> The following Coccinelle semantic patch was used:
+> @@
+> @@
+> 
+> - rcu_assign_pointer
+> + RCU_INIT_POINTER
+>   (..., NULL)
+> 
+> Signed-off-by: Andreea-Cristina Bernat <bernat.ada-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+>  drivers/scsi/libfc/fc_libfc.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+> index 8d65a51a..c11a638 100644
+> --- a/drivers/scsi/libfc/fc_libfc.c
+> +++ b/drivers/scsi/libfc/fc_libfc.c
+> @@ -296,9 +296,9 @@ void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *prov)
+>  	BUG_ON(type >= FC_FC4_PROV_SIZE);
+>  	mutex_lock(&fc_prov_mutex);
+>  	if (prov->recv)
+> -		rcu_assign_pointer(fc_passive_prov[type], NULL);
+> +		RCU_INIT_POINTER(fc_passive_prov[type], NULL);
+>  	else
+> -		rcu_assign_pointer(fc_active_prov[type], NULL);
+> +		RCU_INIT_POINTER(fc_active_prov[type], NULL);
+>  	mutex_unlock(&fc_prov_mutex);
+>  	synchronize_rcu();
+>  }
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Tested-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |   10 ++++++++++
- drivers/scsi/ipr.h |    1 +
- 2 files changed, 11 insertions(+)
+Looks like patch is not yet applied.
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2014-09-23 19:32:26.000000000 -0500
-+++ b/drivers/scsi/ipr.c	2014-09-23 19:48:26.179667000 -0500
-@@ -2440,6 +2440,7 @@ static void ipr_handle_log_data(struct i
- {
- 	u32 ioasc;
- 	int error_index;
-+	struct ipr_hostrcb_type_21_error *error;
- 
- 	if (hostrcb->hcam.notify_type != IPR_HOST_RCB_NOTIF_TYPE_ERROR_LOG_ENTRY)
- 		return;
-@@ -2464,6 +2465,15 @@ static void ipr_handle_log_data(struct i
- 	if (!ipr_error_table[error_index].log_hcam)
- 		return;
- 
-+	if (ioasc == IPR_IOASC_HW_CMD_FAILED &&
-+	    hostrcb->hcam.overlay_id == IPR_HOST_RCB_OVERLAY_ID_21) {
-+		error = &hostrcb->hcam.u.error64.u.type_21_error;
-+
-+		if (((be32_to_cpu(error->sense_data[0]) & 0x0000ff00) >> 8) == ILLEGAL_REQUEST &&
-+			ioa_cfg->log_level <= IPR_DEFAULT_LOG_LEVEL)
-+				return;
-+	}
-+
- 	ipr_hcam_err(hostrcb, "%s\n", ipr_error_table[error_index].error);
- 
- 	/* Set indication we have logged an error */
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2014-09-23 19:32:26.000000000 -0500
-+++ b/drivers/scsi/ipr.h	2014-09-25 13:19:43.352079036 -0500
-@@ -130,6 +130,7 @@
- #define IPR_IOASC_HW_DEV_BUS_STATUS			0x04448500
- #define	IPR_IOASC_IOASC_MASK			0xFFFFFF00
- #define	IPR_IOASC_SCSI_STATUS_MASK		0x000000FF
-+#define IPR_IOASC_HW_CMD_FAILED			0x046E0000
- #define IPR_IOASC_IR_INVALID_REQ_TYPE_OR_PKT	0x05240000
- #define IPR_IOASC_IR_RESOURCE_HANDLE		0x05250000
- #define IPR_IOASC_IR_NO_CMDS_TO_2ND_IOA		0x05258100
-
--- 
+Acked-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
