@@ -1,95 +1,41 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 19/19] target: Implement report lun data change unit attention.
-Date: Thu, 25 Sep 2014 04:10:12 -0400
-Message-ID: <1411632612-7320-20-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 14/19] qla2xxx: Do not send SS_RESIDUAL_UNDER with SAM_STAT_BUSY
+Date: Thu, 25 Sep 2014 04:10:07 -0400
+Message-ID: <1411632612-7320-15-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411632612-7320-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:17171 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752114AbaIYIoS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 04:44:18 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1411632612-7320-1-git-send-email-saurav.kashyap@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com
+List-Id: linux-scsi@vger.kernel.org
 
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/target/target_core_fabric_configfs.c |   28 ++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 7de9f04..f97866e 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -42,6 +42,7 @@
- #include "target_core_internal.h"
- #include "target_core_alua.h"
- #include "target_core_pr.h"
-+#include "target_core_ua.h"
- 
- #define TF_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
- static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf) \
-@@ -326,6 +327,8 @@ static struct config_group *target_fabric_make_mappedlun(
- 	char *buf;
- 	unsigned long mapped_lun;
- 	int ret = 0;
-+	struct se_lun *lun;
-+	int i = 0;
- 
- 	acl_ci = &group->cg_item;
- 	if (!acl_ci) {
-@@ -400,6 +403,16 @@ static struct config_group *target_fabric_make_mappedlun(
- 		goto out;
- 	}
- 	target_stat_setup_mappedlun_default_groups(lacl);
-+	spin_lock(&se_tpg->tpg_lun_lock);
-+	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
-+		lun = se_tpg->tpg_lun_list[i];
-+		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
-+			continue;
-+		spin_unlock(&se_tpg->tpg_lun_lock);
-+		core_scsi3_ua_allocate(se_nacl, lun->unpacked_lun, 0x3f, 0xe);
-+		spin_lock(&se_tpg->tpg_lun_lock);
-+	}
-+	spin_unlock(&se_tpg->tpg_lun_lock);
- 
- 	kfree(buf);
- 	return &lacl->se_lun_group;
-@@ -419,6 +432,8 @@ static void target_fabric_drop_mappedlun(
- 	struct config_item *df_item;
- 	struct config_group *lacl_cg = NULL, *ml_stat_grp = NULL;
- 	int i;
-+	struct se_lun *lun;
-+	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg;
- 
- 	ml_stat_grp = &lacl->ml_stat_grps.stat_group;
- 	for (i = 0; ml_stat_grp->default_groups[i]; i++) {
-@@ -437,6 +452,19 @@ static void target_fabric_drop_mappedlun(
- 	kfree(lacl_cg->default_groups);
- 
- 	config_item_put(item);
-+
-+	spin_lock(&se_tpg->tpg_lun_lock);
-+	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
-+		lun = se_tpg->tpg_lun_list[i];
-+		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
-+			continue;
-+		spin_unlock(&se_tpg->tpg_lun_lock);
-+		core_scsi3_ua_allocate(lacl->se_lun_nacl, lun->unpacked_lun,
-+		    0x3f, 0xe);
-+		spin_lock(&se_tpg->tpg_lun_lock);
-+	}
-+	spin_unlock(&se_tpg->tpg_lun_lock);
-+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index fed7fef..b07b180 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -4308,12 +4308,6 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
+ 	 */
+ 	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
+ 	ctio24->u.status1.scsi_status = cpu_to_le16(status);
+-	ctio24->u.status1.residual = get_unaligned((uint32_t *)
+-	    &atio->u.isp24.fcp_cmnd.add_cdb[
+-	    atio->u.isp24.fcp_cmnd.add_cdb_len]);
+-	if (ctio24->u.status1.residual != 0)
+-		ctio24->u.status1.scsi_status |= SS_RESIDUAL_UNDER;
+-
+ 	qla2x00_start_iocbs(vha, vha->req);
+ 	return 0;
  }
- 
- static void target_fabric_nacl_base_release(struct config_item *item)
 -- 
 1.7.7
-
