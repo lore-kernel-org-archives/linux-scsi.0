@@ -1,150 +1,107 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 20/35] qla2xxx: Unload of qla2xxx driver crashes the
- machine.
-Date: Thu, 25 Sep 2014 09:08:00 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D012855F57D@AVMB1.qlogic.org>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com>
- <1411542518-2477-21-git-send-email-saurav.kashyap@qlogic.com>
- <20140924094125.46eac20f@jlaw-desktop.mno.stratus.com>
- <20140925083727.GA9227@lst.de>
- <F5D084D6342F9B479C34599BB0A03E4D012855F54E@AVMB1.qlogic.org>
- <20140925090333.GA9777@lst.de>
+Subject: [PATCH RESEND 03/35] qla2xxx: ISP27xx fwdump template remove high frequency debug logs.
+Date: Thu, 25 Sep 2014 05:16:34 -0400
+Message-ID: <1411636626-7566-4-git-send-email-saurav.kashyap@qlogic.com>
+References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D012855F57DAVMB1qlogicor_"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:6982 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:52306 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750984AbaIYJIC (ORCPT
+	by vger.kernel.org with ESMTP id S1752890AbaIYJvO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 05:08:02 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s8P915pZ002522
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 02:08:01 -0700
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1pkyhnhdf3-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 02:08:01 -0700
-In-Reply-To: <20140925090333.GA9777@lst.de>
-Content-Language: en-US
+	Thu, 25 Sep 2014 05:51:14 -0400
+In-Reply-To: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jbottomley@parallels.com
+Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
---_000_F5D084D6342F9B479C34599BB0A03E4D012855F57DAVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <6DA816B70C36984DB83682027EFF84FF@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_tmpl.c |   17 -----------------
+ 2 files changed, 1 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 55edaa2..61bd49f 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -64,7 +64,7 @@
+  * |                              |                    | 0xb13c-0xb140  |
+  * |                              |                    | 0xb149		|
+  * | MultiQ                       |       0xc00c       |		|
+- * | Misc                         |       0xd212       | 0xd017		|
++ * | Misc                         |       0xd212       | 0xd011-0xd017	|
+  * |                              |                    | 0xd020		|
+  * |                              |                    | 0xd030-0xd0ff	|
+  * |                              |                    | 0xd101-0xd1fe	|
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 29271cc..6da9dd2 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -151,8 +151,6 @@ qla27xx_read8(void *window, void *buf, ulong *len)
+ 
+ 	if (buf) {
+ 		value = RD_REG_BYTE((__iomem void *)window);
+-		ql_dbg(ql_dbg_misc, NULL, 0xd011,
+-		    "%s: -> %x\n", __func__, value);
+ 	}
+ 	qla27xx_insert32(value, buf, len);
+ }
+@@ -164,8 +162,6 @@ qla27xx_read16(void *window, void *buf, ulong *len)
+ 
+ 	if (buf) {
+ 		value = RD_REG_WORD((__iomem void *)window);
+-		ql_dbg(ql_dbg_misc, NULL, 0xd012,
+-		    "%s: -> %x\n", __func__, value);
+ 	}
+ 	qla27xx_insert32(value, buf, len);
+ }
+@@ -177,8 +173,6 @@ qla27xx_read32(void *window, void *buf, ulong *len)
+ 
+ 	if (buf) {
+ 		value = RD_REG_DWORD((__iomem void *)window);
+-		ql_dbg(ql_dbg_misc, NULL, 0xd013,
+-		    "%s: -> %x\n", __func__, value);
+ 	}
+ 	qla27xx_insert32(value, buf, len);
+ }
+@@ -197,10 +191,6 @@ qla27xx_read_reg(__iomem struct device_reg_24xx *reg,
+ {
+ 	void *window = (void *)reg + offset;
+ 
+-	if (buf) {
+-		ql_dbg(ql_dbg_misc, NULL, 0xd014,
+-		    "%s: @%x\n", __func__, offset);
+-	}
+ 	qla27xx_read32(window, buf, len);
+ }
+ 
+@@ -211,8 +201,6 @@ qla27xx_write_reg(__iomem struct device_reg_24xx *reg,
+ 	__iomem void *window = reg + offset;
+ 
+ 	if (buf) {
+-		ql_dbg(ql_dbg_misc, NULL, 0xd015,
+-		    "%s: @%x <- %x\n", __func__, offset, data);
+ 		WRT_REG_DWORD(window, data);
+ 	}
+ }
+@@ -225,11 +213,6 @@ qla27xx_read_window(__iomem struct device_reg_24xx *reg,
+ 	void *window = (void *)reg + offset;
+ 	void (*readn)(void *, void *, ulong *) = qla27xx_read_vector(width);
+ 
+-	if (buf) {
+-		ql_dbg(ql_dbg_misc, NULL, 0xd016,
+-		    "%s: base=%x offset=%x count=%x width=%x\n",
+-		    __func__, addr, offset, count, width);
+-	}
+ 	qla27xx_write_reg(reg, IOBASE_ADDR, addr, buf);
+ 	while (count--) {
+ 		qla27xx_insert32(addr, buf, len);
+-- 
+1.7.7
 
->On Thu, Sep 25, 2014 at 08:57:18AM +0000, Saurav Kashyap wrote:
->> Hi Christoph,
->> I will rebase and send an updated patch set soon.
->
->Thanks.  Did you verify the target side series sits nicely on top of this
->one as well?  I'd like to slurp in the qla2xxx patches as well if Nick
->is fine with them, although I'd prefer to leave the target core changes
->for his target tree.  As far as I can tell there is no hard dependency
->of the qla2xxx changes on those two, right?  Next time it might be good
->idea to send them as two separate series.
-
-Hi,
-I will check, if there are any conflicts, I will resend that patch set.
-
-Thanks,
-~Saurav
-
-
---_000_F5D084D6342F9B479C34599BB0A03E4D012855F57DAVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Io5JAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADYxOTcwRTZB
-MjI2MUYxNDZCMUYxRDg2RjQ2OTZGNkQ5ACMHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HCQAZAAkA
-CAAAAAQAHAEBIIADAA4AAADeBwkAGQAJAAgAAAAEABwBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEkAAABSZTogW1BBVENIIDIwLzM1XSBxbGEyeHh4OiBVbmxvYWQgb2Yg
-cWxhMnh4eCBkcml2ZXIgY3Jhc2hlcyB0aGUgbWFjaGluZS4ALRgBA5AGAJQRAAA2AAAAAgF/AAEA
-AAA+AAAAPEY1RDA4NEQ2MzQyRjlCNDc5QzM0NTk5QkIwQTAzRTREMDEyODU1RjU3REBBVk1CMS5x
-bG9naWMub3JnPgAAAAsAHw4BAAAAAgEJEAEAAAD1AgAA8QIAAEIEAABMWkZ1L7gB+mEACmZiaWQE
-AABjY8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0K
-gAjIOwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYE
-kBe2AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX
-8mJrbWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8ppsC4BlCoEhpD5PA6CQVGh1LAZRcCAOoCMi4AHQ
-MTQgGIAgMAA4OjU3OjE4QbhNICseoB6gIuFhCHAAYXYgS2FzaHlaYSMgdwNgECA6IgY+wCBIaSBD
-aAUQH2DQb3BoLCZ4SSYAAxD7AyAJcGIloBngAHAcYBIA4ylxA5F1cGQYgBxRCrC+dBHAKZEFQBkg
-AiAuIgYPIgYisABwH1AuICBEaQ3QIHkIYCAaMQaQef0cwGgZ4B9xGDArIQ3QGeBvEgAIgQQgAJB0
-BCADAGN8ZWwt8AIgHMAnoDAwZr8uAQ3xIhUCIClBBCB3MABkbD8tAEknHGAhoGvtLjFvKZAKQHIj
-IAuALgPycQtgMng0UCqUB5Ex5eszkDDATg5QayIGBAAccO8hsSiRLhAuAm0i4AdALhCtCGBnKuAy
-gnAJcGYbsf8zER5wJWAuMS4oBaEZ4BmU2zEXGuEgMPEuRnQJ0Szx/kE2kQrBMeEogB5QMFE1Uvcu
-ETpRNoFuMyAR0RxgAQDmcCmxCfBjeTEnMMIz+I86hTAzN+ApMXR3byLg+wUQOBB0MlEHwBBAHMAH
-cUszkAVAbUKyIGIZ4GfvK1ALMDYWAQBhMwMpsjdS/zHSQlEpkQqxKlEvBSuGIZX/JxAn1iiFNME1
-4CLgNZE+JK8KwClCLfAb4WYhoGMvoP8i4CiHRcUj0SqnR80slCfWHn4lJCGcFUJREAAAAB8AQgAB
-AAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwBlAAEAAAA0AAAAcwBhAHUA
-cgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAA
-AFMATQBUAFAAAAAAAAIBQQABAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIA
-YQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBh
-AHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEA
-cwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBh
-AHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAA
-HgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBh
-AHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMA
-TQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2
-ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
-AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAA
-SwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBw
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAA
-dAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAA
-AFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoA
-AQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzAB
-AAAAEAAAAGGXDmoiYfFGsfHYb0aW9tkDABcAAQAAAEAAOQAA2D80oNjPAUAACDA+e380oNjPAQsA
-AIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAA
-AGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACA
-CCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAkgAAAFIAZQA6ACAAWwBQAEEAVABD
-AEgAIAAyADAALwAzADUAXQAgAHEAbABhADIAeAB4AHgAOgAgAFUAbgBsAG8AYQBkACAAbwBmACAA
-cQBsAGEAMgB4AHgAeAAgAGQAcgBpAHYAZQByACAAYwByAGEAcwBoAGUAcwAgAHQAaABlACAAbQBh
-AGMAaABpAG4AZQAuAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAA
-PgAAADwAMgAwADEANAAwADkAMgA1ADAAOQAwADMAMwAzAC4ARwBBADkANwA3ADcAQABsAHMAdAAu
-AGQAZQA+AAAAAAACAXEAAQAAABYAAAABAc/YoDTCtT7VjR8mQbEmUEu6mDY4AAAfAHAAAQAAAIoA
-AABbAFAAQQBUAEMASAAgADIAMAAvADMANQBdACAAcQBsAGEAMgB4AHgAeAA6ACAAVQBuAGwAbwBh
-AGQAIABvAGYAIABxAGwAYQAyAHgAeAB4ACAAZAByAGkAdgBlAHIAIABjAHIAYQBzAGgAZQBzACAA
-dABoAGUAIABtAGEAYwBoAGkAbgBlAC4AAAAAAB8ANRABAAAAfAAAADwARgA1AEQAMAA4ADQARAA2
-ADMANAAyAEYAOQBCADQANwA5AEMAMwA0ADUAOQA5AEIAQgAwAEEAMAAzAEUANABEADAAMQAyADgA
-NQA1AEYANQA3AEQAQABBAFYATQBCADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAA
-AFwCAAA8ADEANAAxADEANQA0ADIANQAxADgALQAyADQANwA3AC0AMQAtAGcAaQB0AC0AcwBlAG4A
-ZAAtAGUAbQBhAGkAbAAtAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0APgAgADwAMQA0ADEAMQA1ADQAMgA1ADEAOAAtADIANAA3ADcALQAyADEALQBnAGkA
-dAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADIAMAAxADQAMAA5ADIANAAwADkANAAxADIANQAuADQA
-NgBlAGEAYwAyADAAZgBAAGoAbABhAHcALQBkAGUAcwBrAHQAbwBwAC4AbQBuAG8ALgBzAHQAcgBh
-AHQAdQBzAC4AYwBvAG0APgAgADwAMgAwADEANAAwADkAMgA1ADAAOAAzADcAMgA3AC4ARwBBADkA
-MgAyADcAQABsAHMAdAAuAGQAZQA+ACAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3
-ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMAAxADIAOAA1ADUARgA1ADQARQBAAEEA
-VgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAgADwAMgAwADEANAAwADkAMgA1ADAAOQAw
-ADMAMwAzAC4ARwBBADkANwA3ADcAQABsAHMAdAAuAGQAZQA+AAAAAwDeP59OAABAAAcwCjNxNKDY
-zwEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTQwOTI1MDkw
-ODAwWi0xNDY3MgAAAB8AFRABAAAAWAAAADYARABBADgAMQA2AEIANwAwAEMAMwA2ADkAOAA0AEQA
-QgA4ADMANgA4ADIAMAAyADcARQBGAEYAOAA0AEYARgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAC
-ARQwAQAAAAwAAABwAAAAXvzGuD4AAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgA
-eQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0
-AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEA
-NAAuADQALgA0AC4AMQA0ADAAOAAwADcAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABD
-AG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEA
-AABaAQAASQBJAD0AMAAxADAAMQBDAEYARAA4AEEAMAAzADQANQBDAEQAMAAwADIANAAwADIANwAz
-ADcANQBBADQARQA4AEIAMAA2AEIAOAA2ADQANABCAEUARQBDADkANwA5ADsAUwBCAE0ASQBEAD0A
-NAA7AFMAQgBUAD0AMgAzADsAUwAyAD0APAAxADQAMQAxADUANAAyADIAOAAxAC0AMgAzADQANwAt
-ADIAMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHMAYQB1AHIAYQB2AC4AawBhAHMA
-aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBz
-AGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAgAFMAdABhAGcA
-ZQA9AEgAOQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAt
-AGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAAB4AAABbADEAMAAu
-ADMANQAuADEAMAAyAC4AMwAwAF0AAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkA
-cwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAAA9IA==
-
---_000_F5D084D6342F9B479C34599BB0A03E4D012855F57DAVMB1qlogicor_--
