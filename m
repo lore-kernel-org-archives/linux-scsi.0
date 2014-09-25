@@ -1,7 +1,7 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH RESEND 01/17] qla2xxx: Fix sparse warnings in tcm_qla2xxx.c
-Date: Thu, 25 Sep 2014 06:14:43 -0400
-Message-ID: <1411640099-7856-2-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 04/17] qla2xxx: Increase room in request queue for sending priority packets
+Date: Thu, 25 Sep 2014 06:14:46 -0400
+Message-ID: <1411640099-7856-5-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411640099-7856-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -17,38 +17,30 @@ From: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 ---
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index e2beab9..09d2931 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -50,8 +50,12 @@
- #include "qla_target.h"
- #include "tcm_qla2xxx.h"
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 6a6867d..c787847 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1901,7 +1901,7 @@ qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
  
--struct workqueue_struct *tcm_qla2xxx_free_wq;
--struct workqueue_struct *tcm_qla2xxx_cmd_wq;
-+static struct workqueue_struct *tcm_qla2xxx_free_wq;
-+static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
-+
-+/* Local pointer to allocated TCM configfs fabric module */
-+static struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
-+static struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
+ skip_cmd_array:
+ 	/* Check for room on request queue. */
+-	if (req->cnt < req_cnt) {
++	if (req->cnt < req_cnt + 2) {
+ 		if (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha))
+ 			cnt = RD_REG_DWORD(&reg->isp25mq.req_q_out);
+ 		else if (IS_P3P_TYPE(ha))
+@@ -1920,7 +1920,7 @@ skip_cmd_array:
+ 			req->cnt = req->length -
+ 			    (req->ring_index - cnt);
+ 	}
+-	if (req->cnt < req_cnt)
++	if (req->cnt < req_cnt + 2)
+ 		goto queuing_error;
  
- /*
-  * Parse WWN.
-@@ -734,10 +738,6 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
- 	cmd->sg_mapped = 0;
- }
- 
--/* Local pointer to allocated TCM configfs fabric module */
--struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
--struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
--
- static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
- 			struct tcm_qla2xxx_nacl *, struct qla_tgt_sess *);
- /*
+ 	/* Prep packet */
 -- 
 1.7.7
