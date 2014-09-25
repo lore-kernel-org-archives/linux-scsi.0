@@ -1,88 +1,95 @@
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: [PATCH 15/19] qla2xxx: Fix hang due to cmd_kref not decrementing
-Date: Thu, 25 Sep 2014 04:10:08 -0400
-Message-ID: <1411632612-7320-16-git-send-email-saurav.kashyap@qlogic.com>
+Subject: [PATCH 19/19] target: Implement report lun data change unit attention.
+Date: Thu, 25 Sep 2014 04:10:12 -0400
+Message-ID: <1411632612-7320-20-git-send-email-saurav.kashyap@qlogic.com>
 References: <1411632612-7320-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:17171 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752114AbaIYIoS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Sep 2014 04:44:18 -0400
 In-Reply-To: <1411632612-7320-1-git-send-email-saurav.kashyap@qlogic.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@qlogic.com>
-
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c |   18 ++++++------------
- drivers/scsi/qla2xxx/qla_target.h |    1 +
- 2 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/target/target_core_fabric_configfs.c |   28 ++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b07b180..51aa888 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2404,6 +2404,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 7de9f04..f97866e 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -42,6 +42,7 @@
+ #include "target_core_internal.h"
+ #include "target_core_alua.h"
+ #include "target_core_pr.h"
++#include "target_core_ua.h"
  
+ #define TF_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
+ static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf) \
+@@ -326,6 +327,8 @@ static struct config_group *target_fabric_make_mappedlun(
+ 	char *buf;
+ 	unsigned long mapped_lun;
+ 	int ret = 0;
++	struct se_lun *lun;
++	int i = 0;
  
- 	cmd->state = QLA_TGT_STATE_PROCESSED; /* Mid-level is done processing */
-+	cmd->cmd_sent_to_fw = 1;
+ 	acl_ci = &group->cg_item;
+ 	if (!acl_ci) {
+@@ -400,6 +403,16 @@ static struct config_group *target_fabric_make_mappedlun(
+ 		goto out;
+ 	}
+ 	target_stat_setup_mappedlun_default_groups(lacl);
++	spin_lock(&se_tpg->tpg_lun_lock);
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		lun = se_tpg->tpg_lun_list[i];
++		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
++			continue;
++		spin_unlock(&se_tpg->tpg_lun_lock);
++		core_scsi3_ua_allocate(se_nacl, lun->unpacked_lun, 0x3f, 0xe);
++		spin_lock(&se_tpg->tpg_lun_lock);
++	}
++	spin_unlock(&se_tpg->tpg_lun_lock);
  
- 	qla2x00_start_iocbs(vha, vha->req);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-@@ -2479,6 +2480,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 		qlt_load_data_segments(&prm, vha);
+ 	kfree(buf);
+ 	return &lacl->se_lun_group;
+@@ -419,6 +432,8 @@ static void target_fabric_drop_mappedlun(
+ 	struct config_item *df_item;
+ 	struct config_group *lacl_cg = NULL, *ml_stat_grp = NULL;
+ 	int i;
++	struct se_lun *lun;
++	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg;
  
- 	cmd->state = QLA_TGT_STATE_NEED_DATA;
-+	cmd->cmd_sent_to_fw = 1;
+ 	ml_stat_grp = &lacl->ml_stat_grps.stat_group;
+ 	for (i = 0; ml_stat_grp->default_groups[i]; i++) {
+@@ -437,6 +452,19 @@ static void target_fabric_drop_mappedlun(
+ 	kfree(lacl_cg->default_groups);
  
- 	qla2x00_start_iocbs(vha, vha->req);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-@@ -2712,19 +2714,10 @@ static void qlt_send_term_exchange(struct scsi_qla_host *vha,
- 	if (rc == -ENOMEM)
- 		qlt_alloc_qfull_cmd(vha, atio, 0, 0);
- 	spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+ 	config_item_put(item);
 +
- done:
--	/*
--	 * Terminate exchange will tell fw to release any active CTIO
--	 * that's in FW posession and cleanup the exchange.
--	 *
--	 * "cmd->state == QLA_TGT_STATE_ABORTED" means CTIO is still
--	 * down at FW.  Free the cmd later when CTIO comes back later
--	 * w/aborted(0x2) status.
--	 *
--	 * "cmd->state != QLA_TGT_STATE_ABORTED" means CTIO is already
--	 * back w/some err.  Free the cmd now.
--	 */
--	if ((rc == 1) && (cmd->state != QLA_TGT_STATE_ABORTED)) {
-+	if (cmd && ((cmd->state != QLA_TGT_STATE_ABORTED) ||
-+	    !cmd->cmd_sent_to_fw)) {
- 		if (!ha_locked && !in_interrupt())
- 			msleep(250); /* just in case */
++	spin_lock(&se_tpg->tpg_lun_lock);
++	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
++		lun = se_tpg->tpg_lun_list[i];
++		if (lun->lun_status != TRANSPORT_LUN_STATUS_ACTIVE)
++			continue;
++		spin_unlock(&se_tpg->tpg_lun_lock);
++		core_scsi3_ua_allocate(lacl->se_lun_nacl, lun->unpacked_lun,
++		    0x3f, 0xe);
++		spin_lock(&se_tpg->tpg_lun_lock);
++	}
++	spin_unlock(&se_tpg->tpg_lun_lock);
++
+ }
  
-@@ -3066,6 +3059,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
- 
- 	se_cmd = &cmd->se_cmd;
- 	tfo = se_cmd->se_tfo;
-+	cmd->cmd_sent_to_fw = 0;
- 
- 	if (cmd->sg_mapped)
- 		qlt_unmap_sg(vha, cmd);
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 0c768f5..b07b230 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -917,6 +917,7 @@ struct qla_tgt_cmd {
- 	unsigned int ctx_dsd_alloced:1;
- 	unsigned int q_full:1;
- 	unsigned int term_exchg:1;
-+	unsigned int cmd_sent_to_fw:1;
- 
- 	struct scatterlist *sg;	/* cmd data buffer SG vector */
- 	int sg_cnt;		/* SG segments count */
+ static void target_fabric_nacl_base_release(struct config_item *item)
 -- 
 1.7.7
+
