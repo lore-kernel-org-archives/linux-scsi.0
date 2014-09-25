@@ -1,36 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85101] hpsa + P410 does not show connected HP SAS port
- expanders
-Date: Thu, 25 Sep 2014 10:48:41 +0000
-Message-ID: <bug-85101-11613-2lGQP1uiem@https.bugzilla.kernel.org/>
-References: <bug-85101-11613@https.bugzilla.kernel.org/>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: [PATCH RESEND 01/17] qla2xxx: Fix sparse warnings in tcm_qla2xxx.c
+Date: Thu, 25 Sep 2014 06:14:43 -0400
+Message-ID: <1411640099-7856-2-git-send-email-saurav.kashyap@qlogic.com>
+References: <1411640099-7856-1-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40174 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbaIYKsr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Sep 2014 06:48:47 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 0396E20265
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 10:48:43 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 00249202B8
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 10:48:41 +0000 (UTC)
-In-Reply-To: <bug-85101-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1411640099-7856-1-git-send-email-saurav.kashyap@qlogic.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: hch@lst.de, giridhar.malavali@qlogic.com, saurav.kashyap@qlogic.com, andrew.vasquez@qlogic.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85101
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
 
---- Comment #4 from linux-ide@crashplan.pro ---
-@Robert Elliott
-Thanks for all your help.
-The issue turns out not to be the HP P410 controller.
-Using another mainboard the same HP P410 controller is ok.
+Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index e2beab9..09d2931 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -50,8 +50,12 @@
+ #include "qla_target.h"
+ #include "tcm_qla2xxx.h"
+ 
+-struct workqueue_struct *tcm_qla2xxx_free_wq;
+-struct workqueue_struct *tcm_qla2xxx_cmd_wq;
++static struct workqueue_struct *tcm_qla2xxx_free_wq;
++static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
++
++/* Local pointer to allocated TCM configfs fabric module */
++static struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
++static struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
+ 
+ /*
+  * Parse WWN.
+@@ -734,10 +738,6 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
+ 	cmd->sg_mapped = 0;
+ }
+ 
+-/* Local pointer to allocated TCM configfs fabric module */
+-struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
+-struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
+-
+ static void tcm_qla2xxx_clear_sess_lookup(struct tcm_qla2xxx_lport *,
+ 			struct tcm_qla2xxx_nacl *, struct qla_tgt_sess *);
+ /*
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.7.7
