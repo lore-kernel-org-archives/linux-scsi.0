@@ -1,86 +1,53 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 31/35] qla2xxx: Disable PCI device in shutdown handler.
-Date: Wed, 24 Sep 2014 20:09:57 -0400
-Message-ID: <alpine.OSX.2.00.1409242009220.310@administrators-macbook-pro.local>
-References: <1411542518-2477-1-git-send-email-saurav.kashyap@qlogic.com> <1411542518-2477-32-git-send-email-saurav.kashyap@qlogic.com> <20140924094858.1c51718d@jlaw-desktop.mno.stratus.com> <alpine.OSX.2.00.1409241134050.1504@administrators-macbook-pro.local>
- <20140924142325.2354188c@jlaw-desktop.mno.stratus.com>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH V5 02/17] scsi: sysfs: don't add scsi_device if its already added
+Date: Wed, 24 Sep 2014 17:29:39 -0700
+Message-ID: <001601cfd857$cb656d10$62304730$@codeaurora.org>
+References: <1411571653-22729-1-git-send-email-draviv@codeaurora.org> <1411571653-22729-3-git-send-email-draviv@codeaurora.org> <20140924160825.GB13541@infradead.org> <000f01cfd814$7a6be2b0$6f43a810$@codeaurora.org> <20140924163829.GA9474@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:13978 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751028AbaIYAK7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2014 20:10:59 -0400
-In-Reply-To: <20140924142325.2354188c@jlaw-desktop.mno.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20140924163829.GA9474@infradead.org>
+Content-Language: en-us
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: Saurav Kashyap <saurav.kashyap@qlogic.com>, andrew.vasquez@qlogic.com, jbottomley@parallels.com, hch@lst.de, giridhar.malavali@qlogic.com, linux-scsi@vger.kernel.org
+
+> Ok.  Can you move the is_visible check to scsi_sysfs_add_devices, should
+be fine to place it just after the sdev_state check.
+
+Sure, will move it in next patch.
 
 
+-----Original Message-----
+From: 'Christoph Hellwig' [mailto:hch@infradead.org] 
+Sent: Wednesday, September 24, 2014 9:38 AM
+To: Subhash Jadavani
+Cc: 'Christoph Hellwig'; 'Dolev Raviv';
+James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org;
+linux-scsi-owner@vger.kernel.org; linux-arm-msm@vger.kernel.org;
+santoshsy@gmail.com
+Subject: Re: [PATCH V5 02/17] scsi: sysfs: don't add scsi_device if its
+already added
 
-On Wed, 24 Sep 2014, Joe Lawrence wrote:
+On Wed, Sep 24, 2014 at 09:27:47AM -0700, Subhash Jadavani wrote:
+> No, It happens in this sequence of events:
+> 1. LLD calls the __scsi_add_device() for well known logical units 
+> before
+> scsi_scan_host() (This is done as part of [PATCH V5 10/17] scsi: ufs:
+> manually add well known logical units). __scsi_add_device() will also 
+> add the scsi device to sysfs by calling scsi_sysfs_add_sdev() 2. Now 
+> LDD calls the scsi_scan_host() (Note that CONFIG_SCSI_SCAN_ASYNC is
+> enabled) which will schedule the async scan. Device reports only 
+> normal LUs (no w-lus reported here) when REPORT LUNs in sent with 
+> SELECT REPORT cleared. At the end of async scan, 
+> scsi_finish_async_scan() calls scsi_sysfs_add_devices(). 
+> scsi_sysfs_add_devices() iterates through all the scsi_device 
+> instances attached to Scsi_Host hence end up calling
+> scsi_sysfs_add_sdev() 2nd time for the scsi_device which were already 
+> added explicitly by LDD.
 
-> On Wed, 24 Sep 2014 11:37:55 -0400
-> Chad Dupuis <chad.dupuis@qlogic.com> wrote:
->
->>
->>
->> On Wed, 24 Sep 2014, Joe Lawrence wrote:
->>
->>> On Wed, 24 Sep 2014 03:08:34 -0400
->>> Saurav Kashyap <saurav.kashyap@qlogic.com> wrote:
->>>
->>>> From: Chad Dupuis <chad.dupuis@qlogic.com>
->>>>
->>>> Disable the PCI device during shutdown to prevent any races with
->>>> other PCI code such as the AER handling code.
->>>>
->>>> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
->>>> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->>>> ---
->>>>  drivers/scsi/qla2xxx/qla_os.c |    3 +++
->>>>  1 files changed, 3 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->>>> index 08c8e9c..70445bc 100644
->>>> --- a/drivers/scsi/qla2xxx/qla_os.c
->>>> +++ b/drivers/scsi/qla2xxx/qla_os.c
->>>> @@ -3037,6 +3037,9 @@ qla2x00_shutdown(struct pci_dev *pdev)
->>>>  	qla2x00_free_irqs(vha);
->>>>
->>>>  	qla2x00_free_fw_dump(ha);
->>>> +
->>>> +	pci_disable_pcie_error_reporting(pdev);
->>>> +	pci_disable_device(pdev);
->>>>  }
->>>>
->>>>  /* Deletes all the virtual ports for a given ha */
->>>
->>> Hi Saurav,
->>>
->>> Just curious if there were any bug report instances to go along with
->>> this patch?  (Or a short explanation of the race.)
->>
->> Joe,
->>
->> The race here was during reboot after taking a crash dump.  We hit an AER
->> condition so the driver's AER handler is called after we've already
->> shutdown the adapter which causes us to try to free some already freed
->> structs.  To prevent this we disable the PCI function from the shutdown
->> handler.
->
-> Hi Chad,
->
-> Could the driver's AER handler get invoked after qla2x00_free_fw_dump,
-> but before pci_disable_pcie_error_reporting (ie, is there anything to
-> hold off .shutdown from running at the same time as the AER callbacks)?
-
-No, not that I'm aware of.
-
->
-> Thanks,
->
-> -- Joe
->
+Ok.  Can you move the is_visible check to scsi_sysfs_add_devices, should be
+fine to place it just after the sdev_state check.
