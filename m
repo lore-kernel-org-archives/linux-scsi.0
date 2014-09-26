@@ -1,75 +1,46 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V6 02/18] scsi: sysfs: don't add scsi_device if its already
- added
-Date: Fri, 26 Sep 2014 15:41:35 +0200
-Message-ID: <54256D0F.4050604@suse.de>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org> <1411648356-3883-3-git-send-email-draviv@codeaurora.org> <20140926081434.GB22805@infradead.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Question: request tag usage
+Date: Fri, 26 Sep 2014 13:52:23 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C9FC0A@G9W0745.americas.hpqcorp.net>
+References: <542507C9.2060901@suse.de>
+ <20140926080308.GA21137@infradead.org> <542521DB.1020605@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20140926081434.GB22805@infradead.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Dolev Raviv <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:55320 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbaIZNxS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 09:53:18 -0400
+In-Reply-To: <542521DB.1020605@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On 09/26/2014 10:14 AM, Christoph Hellwig wrote:
-> Looks fine to me, just want a cross check from Martin or Hannes.
->=20
-> On Thu, Sep 25, 2014 at 03:32:20PM +0300, Dolev Raviv wrote:
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->>
->> If LLD has added scsi device (by calling scsi_add_device) before sch=
-eduling
->> async scsi_scan_host then scsi_finish_async_scan() will end up calli=
-ng
->> scsi_sysfs_add_sdev for scsi device which was already added by LLD.
->> This patch fixes this issue by skipping the call to scsi_sysfs_add_s=
-dev()
->> if it's already visible to rest of the kernel.
->>
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 1095d5a..c6c5716 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -1746,6 +1746,9 @@ static void scsi_sysfs_add_devices(struct Scsi=
-_Host *shost)
->>  		/* target removed before the device could be added */
->>  		if (sdev->sdev_state =3D=3D SDEV_DEL)
->>  			continue;
->> +		/* If device is already visible, skip adding it to sysfs */
->> +		if (sdev->is_visible)
->> +			continue;
->>  		if (!scsi_host_scan_allowed(shost) ||
->>  		    scsi_sysfs_add_sdev(sdev) !=3D 0)
->>  			__scsi_remove_device(sdev);
->> --=20
->> 1.8.5.2
->> --=20
->> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a =
-member
->> of Code Aurora Forum, hosted by The Linux Foundation
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> ---end quoted text---
-> --
-Looks okay.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Friday, September 26, 2014 3:21 AM
+> To: Christoph Hellwig
+> Cc: Elliott, Robert (Server Storage); SCSI Mailing List; Jens Axboe
+> Subject: Re: Question: request tag usage
+> 
+> On 09/26/2014 10:03 AM, Christoph Hellwig wrote:
+...
+> >
+> > I guess for now we'll need to stay with the command pointer address.
+> > We can revisit this once the old request layer is gone.
+> >
+> Too bad. The tags would have provided a really nice concise way
+> of identifying the command...
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+I would still go ahead and print the tag; it's extremely useful for
+blk-mq.
+
+How about having scmd_printk do this?
+* if tag is -1, print "scmd %p"
+* else print "tag %d"
+
