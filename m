@@ -1,89 +1,69 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Question: request tag usage
-Date: Fri, 26 Sep 2014 14:41:17 +0200
-Message-ID: <54255EED.90005@suse.de>
-References: <542507C9.2060901@suse.de>	 <20140926080308.GA21137@infradead.org> <542521DB.1020605@suse.de> <1411726343.2183.9.camel@jarvis>
+Subject: Re: [PATCH V6 02/18] scsi: sysfs: don't add scsi_device if its already
+ added
+Date: Fri, 26 Sep 2014 15:41:35 +0200
+Message-ID: <54256D0F.4050604@suse.de>
+References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org> <1411648356-3883-3-git-send-email-draviv@codeaurora.org> <20140926081434.GB22805@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36959 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbaIZMlV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2014 08:41:21 -0400
-In-Reply-To: <1411726343.2183.9.camel@jarvis>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20140926081434.GB22805@infradead.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dolev Raviv <draviv@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <elliott@hp.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On 09/26/2014 12:12 PM, James Bottomley wrote:
-> On Fri, 2014-09-26 at 10:20 +0200, Hannes Reinecke wrote:
->> On 09/26/2014 10:03 AM, Christoph Hellwig wrote:
->>> On Fri, Sep 26, 2014 at 08:29:29AM +0200, Hannes Reinecke wrote:
->>>> Hi Christoph,
->>>>
->>>> as discussed it would make sense to use the request->tag in eg
->>>> scmd_printk() to identify the command.
->>>> Which I duly did, only to figure out that the tag is always '-1', =
-ie
->>>> tagging is not in use.
->>>> (Which is okay from the SCSI side, seeing the TCQ is basically a
->>>> SCSI parallel thing).
->>>
->>> tag are still a live part of SAM for every transport, they've only
->>> been renamed to "command identifier" in SAM-4 to confuse everyone.
->>>
->>>> Looking closer I found plenty of code for handling tags in the blo=
-ck
->>>> layer (and the blk-mq stuff, of course), but virtually none of the
->>>> non-SPI driver seems to be using them.
->>>
->>> A quick grep for scsi_activate_tcq disagrees with you.
->>>
->> Yeah, I've noticed after I've written the mail.
->> However, main point still stands: using 'tag' to identify commands
->> is pointless if not all of the LLDDs use tagging ...
+On 09/26/2014 10:14 AM, Christoph Hellwig wrote:
+> Looks fine to me, just want a cross check from Martin or Hannes.
 >=20
-> Every non parallel LLD uses tagging; they all use the network request
-> response model, so they can no longer hold the bus until they get an
-> answer (which was how untagged commands work in SPI), so for most of =
-the
-> transports, untagged commands aren't legal.  Of course, some drivers
-> roll their own tags instead of using the block ones.
->=20
-Hmm, I probably will get shot for this, but we _could_ do something
-like this:
+> On Thu, Sep 25, 2014 at 03:32:20PM +0300, Dolev Raviv wrote:
+>> From: Subhash Jadavani <subhashj@codeaurora.org>
+>>
+>> If LLD has added scsi device (by calling scsi_add_device) before sch=
+eduling
+>> async scsi_scan_host then scsi_finish_async_scan() will end up calli=
+ng
+>> scsi_sysfs_add_sdev for scsi device which was already added by LLD.
+>> This patch fixes this issue by skipping the call to scsi_sysfs_add_s=
+dev()
+>> if it's already visible to rest of the kernel.
+>>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+>> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+>>
+>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>> index 1095d5a..c6c5716 100644
+>> --- a/drivers/scsi/scsi_scan.c
+>> +++ b/drivers/scsi/scsi_scan.c
+>> @@ -1746,6 +1746,9 @@ static void scsi_sysfs_add_devices(struct Scsi=
+_Host *shost)
+>>  		/* target removed before the device could be added */
+>>  		if (sdev->sdev_state =3D=3D SDEV_DEL)
+>>  			continue;
+>> +		/* If device is already visible, skip adding it to sysfs */
+>> +		if (sdev->is_visible)
+>> +			continue;
+>>  		if (!scsi_host_scan_allowed(shost) ||
+>>  		    scsi_sysfs_add_sdev(sdev) !=3D 0)
+>>  			__scsi_remove_device(sdev);
+>> --=20
+>> 1.8.5.2
+>> --=20
+>> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a =
+member
+>> of Code Aurora Forum, hosted by The Linux Foundation
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> --
+Looks okay.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index bf930f4..91570d2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2347,7 +2347,8 @@ void blk_start_request(struct request *req)
-        req->resid_len =3D blk_rq_bytes(req);
-        if (unlikely(blk_bidi_rq(req)))
-                req->next_rq->resid_len =3D blk_rq_bytes(req->next_rq);
--
-+       if (!blk_queue_tagged(req->q))
-+               req->tag =3D (++req->q->last_tag) % req->q->nr_requests=
-;
-        BUG_ON(test_bit(REQ_ATOM_COMPLETE, &req->atomic_flags));
-        blk_add_timer(req);
- }
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 518b465..e8ce575 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -418,6 +418,7 @@ struct request_queue {
-
-        struct blk_queue_tag    *queue_tags;
-        struct list_head        tag_busy_list;
-+       unsigned int            last_tag;
-
-        unsigned int            nr_sorted;
-        unsigned int            in_flight[2];
-
-I know, I know. But it would give us a rather nice command identifier.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
@@ -91,11 +71,5 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
