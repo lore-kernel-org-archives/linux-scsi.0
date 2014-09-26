@@ -1,46 +1,34 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: Question: request tag usage
-Date: Fri, 26 Sep 2014 13:52:23 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958C9FC0A@G9W0745.americas.hpqcorp.net>
-References: <542507C9.2060901@suse.de>
- <20140926080308.GA21137@infradead.org> <542521DB.1020605@suse.de>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 2/8] scsi-mq: Add support for multiple hardware queues
+Date: Fri, 26 Sep 2014 08:02:02 -0600
+Message-ID: <542571DA.9020701@acm.org>
+References: <541C27BF.6070609@acm.org>	<541C281E.9090206@acm.org>	<CAF9gx6JfP2bGyMauB6LzepZP_vKEvrd-sPZc5CRuOrtgQ_UCSw@mail.gmail.com> <CACVXFVMiYsW=dszQ6mE-o_L8fEDdkO59vJ5qeHKch5c33K_QXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:55320 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbaIZNxS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 09:53:18 -0400
-In-Reply-To: <542521DB.1020605@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CACVXFVMiYsW=dszQ6mE-o_L8fEDdkO59vJ5qeHKch5c33K_QXw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
+On 26/09/2014 5:08, Ming Lei wrote:
+>
+> I suggest to apply this patch and related scsi-mq multi hw-queue
+> enablement patches first, so that any scsi drivers capable of
+> multi hw-queue can go without waiting for passing hctx
+> patches which may take a bit long since lots of drivers are involved,
+> as Jens said, the mapping from req to hctx is quite cheap.
 
+Hello Ming,
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Friday, September 26, 2014 3:21 AM
-> To: Christoph Hellwig
-> Cc: Elliott, Robert (Server Storage); SCSI Mailing List; Jens Axboe
-> Subject: Re: Question: request tag usage
-> 
-> On 09/26/2014 10:03 AM, Christoph Hellwig wrote:
-...
-> >
-> > I guess for now we'll need to stay with the command pointer address.
-> > We can revisit this once the old request layer is gone.
-> >
-> Too bad. The tags would have provided a really nice concise way
-> of identifying the command...
+This week I have been traveling. I hope to find more time next week or 
+the week after next week to rework this patch series and to address the 
+feedback I have received from you, Jens, Christoph and Sagi.
 
-I would still go ahead and print the tag; it's extremely useful for
-blk-mq.
-
-How about having scmd_printk do this?
-* if tag is -1, print "scmd %p"
-* else print "tag %d"
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
