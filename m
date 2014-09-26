@@ -1,50 +1,55 @@
-From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 1/2] be2iscsi : Fix kernel panic during reboot/shutdown
-Date: Fri, 26 Sep 2014 15:13:55 -0400
-Message-ID: <4bc79dd1-5ea1-4956-8520-86ed5a8c78a1@CMEXHTCAS1.ad.emulex.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Question: request tag usage
+Date: Fri, 26 Sep 2014 11:12:23 +0100
+Message-ID: <1411726343.2183.9.camel@jarvis>
+References: <542507C9.2060901@suse.de>
+	 <20140926080308.GA21137@infradead.org> <542521DB.1020605@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:14006 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755007AbaIZJqa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 05:46:30 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54244 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755365AbaIZKM1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2014 06:12:27 -0400
+In-Reply-To: <542521DB.1020605@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <elliott@hp.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
- In the reboot/shutdown path, workqueue was destroyed after the
- adapter resource were freed. The task associated with workqueue
- was getting executed after resources were freed. This lead to
- kernel panic.
+On Fri, 2014-09-26 at 10:20 +0200, Hannes Reinecke wrote:
+> On 09/26/2014 10:03 AM, Christoph Hellwig wrote:
+> > On Fri, Sep 26, 2014 at 08:29:29AM +0200, Hannes Reinecke wrote:
+> >> Hi Christoph,
+> >>
+> >> as discussed it would make sense to use the request->tag in eg
+> >> scmd_printk() to identify the command.
+> >> Which I duly did, only to figure out that the tag is always '-1', ie
+> >> tagging is not in use.
+> >> (Which is okay from the SCSI side, seeing the TCQ is basically a
+> >> SCSI parallel thing).
+> > 
+> > tag are still a live part of SAM for every transport, they've only
+> > been renamed to "command identifier" in SAM-4 to confuse everyone.
+> > 
+> >> Looking closer I found plenty of code for handling tags in the block
+> >> layer (and the blk-mq stuff, of course), but virtually none of the
+> >> non-SPI driver seems to be using them.
+> > 
+> > A quick grep for scsi_activate_tcq disagrees with you.
+> > 
+> Yeah, I've noticed after I've written the mail.
+> However, main point still stands: using 'tag' to identify commands
+> is pointless if not all of the LLDDs use tagging ...
 
-Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
-Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
----
- drivers/scsi/be2iscsi/be_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Every non parallel LLD uses tagging; they all use the network request
+response model, so they can no longer hold the bus until they get an
+answer (which was how untagged commands work in SPI), so for most of the
+transports, untagged commands aren't legal.  Of course, some drivers
+roll their own tags instead of using the block ones.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index db2bd4d..30d74a0 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5223,6 +5223,7 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
- 			free_irq(phba->pcidev->irq, phba);
- 		}
- 	pci_disable_msix(phba->pcidev);
-+	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
- 
- 	for (i = 0; i < phba->num_cpus; i++) {
- 		pbe_eq = &phwi_context->be_eq[i];
-@@ -5244,7 +5245,6 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba,
- 		hwi_cleanup(phba);
- 	}
- 
--	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
- }
- 
- static void beiscsi_remove(struct pci_dev *pcidev)
--- 
-1.7.1
+James
+
 
