@@ -1,72 +1,48 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V6 01/18] scsi: fixing the "type" for well known LUs
-Date: Fri, 26 Sep 2014 01:13:43 -0700
-Message-ID: <20140926081343.GA22805@infradead.org>
+Subject: Re: [PATCH V6 02/18] scsi: sysfs: don't add scsi_device if its
+ already added
+Date: Fri, 26 Sep 2014 01:14:34 -0700
+Message-ID: <20140926081434.GB22805@infradead.org>
 References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
- <1411648356-3883-2-git-send-email-draviv@codeaurora.org>
+ <1411648356-3883-3-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49735 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753785AbaIZINn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 04:13:43 -0400
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1411648356-3883-2-git-send-email-draviv@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1411648356-3883-3-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: Dolev Raviv <draviv@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Robert Elliott <elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
-Robert, I guess this version is okay with you?
+Looks fine to me, just want a cross check from Martin or Hannes.
 
-On Thu, Sep 25, 2014 at 03:32:19PM +0300, Dolev Raviv wrote:
+On Thu, Sep 25, 2014 at 03:32:20PM +0300, Dolev Raviv wrote:
 > From: Subhash Jadavani <subhashj@codeaurora.org>
 > 
-> Some devices may respond with wrong type for well-known logical units.
-> This patch forces well-known type for devices which doesn't report it
-> correct.
+> If LLD has added scsi device (by calling scsi_add_device) before scheduling
+> async scsi_scan_host then scsi_finish_async_scan() will end up calling
+> scsi_sysfs_add_sdev for scsi device which was already added by LLD.
+> This patch fixes this issue by skipping the call to scsi_sysfs_add_sdev()
+> if it's already visible to rest of the kernel.
 > 
 > Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
 > Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 > 
 > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 56675db..1095d5a 100644
+> index 1095d5a..c6c5716 100644
 > --- a/drivers/scsi/scsi_scan.c
 > +++ b/drivers/scsi/scsi_scan.c
-> @@ -805,6 +805,19 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->  	} else {
->  		sdev->type = (inq_result[0] & 0x1f);
->  		sdev->removable = (inq_result[1] & 0x80) >> 7;
-> +
-> +		/*
-> +		 * some devices may respond with wrong type for
-> +		 * well-known logical units. Force well-known type
-> +		 * to enumerate them correctly.
-> +		 */
-> +		if (scsi_is_wlun(sdev->lun) && sdev->type != TYPE_WLUN) {
-> +			sdev_printk(KERN_WARNING, sdev,
-> +				"%s: correcting incorrect peripheral device type 0x%x for W-LUN 0x%16phN\n",
-> +				__func__, sdev->type, sdev->lun);
-> +			sdev->type = TYPE_WLUN;
-> +		}
-> +
->  	}
->  
->  	if (sdev->type == TYPE_RBC || sdev->type == TYPE_ROM) {
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 261e708..d17178e 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -333,6 +333,7 @@ static inline int scsi_status_is_good(int status)
->  #define TYPE_RBC	    0x0e
->  #define TYPE_OSD            0x11
->  #define TYPE_ZBC            0x14
-> +#define TYPE_WLUN           0x1e    /* well-known logical unit */
->  #define TYPE_NO_LUN         0x7f
->  
->  /* SCSI protocols; these are taken from SPC-3 section 7.5 */
+> @@ -1746,6 +1746,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+>  		/* target removed before the device could be added */
+>  		if (sdev->sdev_state == SDEV_DEL)
+>  			continue;
+> +		/* If device is already visible, skip adding it to sysfs */
+> +		if (sdev->is_visible)
+> +			continue;
+>  		if (!scsi_host_scan_allowed(shost) ||
+>  		    scsi_sysfs_add_sdev(sdev) != 0)
+>  			__scsi_remove_device(sdev);
 > -- 
 > 1.8.5.2
 > -- 
