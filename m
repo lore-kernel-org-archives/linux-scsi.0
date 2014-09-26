@@ -1,58 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Question: request tag usage
-Date: Fri, 26 Sep 2014 08:29:29 +0200
-Message-ID: <542507C9.2060901@suse.de>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: next-20140925 build: 1 failures 106 warnings (next-20140925)
+Date: Fri, 26 Sep 2014 12:02:03 +0530
+Message-ID: <CAK=zhgro-VnQ5v85SLg+GMH8uMoiYWF-RiiZpQnhXmuZtsS+bA@mail.gmail.com>
+References: <E1XX7vn-0003PS-Vu@cassiel.sirena.org.uk>
+	<20140925153120.GX27755@sirena.org.uk>
+	<20140925154652.GA29864@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56983 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753266AbaIZG3h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2014 02:29:37 -0400
+Received: from exprod7og128.obsmtp.com ([64.18.2.121]:38113 "EHLO
+	exprod7og128.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753771AbaIZGcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 02:32:06 -0400
+Received: by mail-oi0-f54.google.com with SMTP id a3so9149506oib.41
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 23:32:04 -0700 (PDT)
+In-Reply-To: <20140925154652.GA29864@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Robert Elliot <elliot@hp.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mark Brown <broonie@kernel.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, kernel-build-reports@lists.linaro.org, linaro-kernel@lists.linaro.org, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Joe Maloy <joe.maloy@avagotech.com>
 
-Hi Christoph,
+Hi Mark,
 
-as discussed it would make sense to use the request->tag in eg
-scmd_printk() to identify the command.
-Which I duly did, only to figure out that the tag is always '-1', ie
-tagging is not in use.
-(Which is okay from the SCSI side, seeing the TCQ is basically a
-SCSI parallel thing).
-Looking closer I found plenty of code for handling tags in the block
-layer (and the blk-mq stuff, of course), but virtually none of the
-non-SPI driver seems to be using them.
-Which makes the original idea a bit pointless, seeing that we need
-to identify the command _always_, and not just if the host happens
-to support tagging.
+Can you please let me known whether you are observing these warning
+messages even after inclusion of below patch
 
-Which leads me to some questions:
-- Is the stuff in blk-mq supposed to work as a superset of SCSI TCQ?
-- If so, should any HBAs with a queue depth > 1 (which does not
-  support TCQ) set the tag of a command?
-  (that's what I've initially thought would happen ...)
-- If not (and the ->tag field is basically unused), can't we
-  have the HBA to fill in a value here?
+http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/f78f694c34ae6fdc29f5e80abb2dbb894f961772
 
-What I would like to see is to have the '->tag' field as an
-identification for the commands in flight. IE every HBA with a queue
-depth > 1 should be setting the tags.
+Regards,
+Sreekanth
 
-Which apparently was too much to hope for ...
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, Sep 25, 2014 at 9:16 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Sep 25, 2014 at 04:31:20PM +0100, Mark Brown wrote:
+>> On Thu, Sep 25, 2014 at 01:13:56PM +0100, Build bot for Mark Brown wrote:
+>>
+>> >     arm-allmodconfig
+>> > ERROR: "__aeabi_uldivmod" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
+>>
+>> Today's ARM allmodconfig fails to build due to a call to a GCC intrinsic
+>> being emitted from the mpt2sas module - I've not made any effort to
+>> investigate this myself yet, unfortunately there's been a build error in
+>> this configuration for arch/arm for the past week or so which means that
+>> the error may not have been introduced today.
+>
+> http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/f78f694c34ae6fdc29f5e80abb2dbb894f961772
+>
+> I just need James to pull the latests scsi-queue tree changes..
+>
