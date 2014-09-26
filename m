@@ -1,25 +1,32 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [Bug 85151] pm80xx + 7805H + HP SAS port expander =
- mpi_smp_completion 2604:smp IO status 0x2 and sas: expander ... discovery failed(0xffffffa6)
-Date: Fri, 26 Sep 2014 10:33:57 +0200
-Message-ID: <CAD+HZHWzHCtf1t8XCfjmkJj=ixkC=rfDTke+y_6RGmGSS2fgVg@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 85151] pm80xx + 7805H + HP SAS port expander =
+ mpi_smp_completion 2604:smp IO status 0x2 and sas: expander ... discovery
+ failed(0xffffffa6)
+Date: Fri, 26 Sep 2014 08:34:00 +0000
+Message-ID: <bug-85151-11613-6jbBUSPbEe@https.bugzilla.kernel.org/>
 References: <bug-85151-11613@https.bugzilla.kernel.org/>
-	<bug-85151-11613-BhGKByrAcE@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:51593 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbaIZId6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 04:33:58 -0400
-Received: by mail-ie0-f170.google.com with SMTP id x19so12441129ier.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 01:33:57 -0700 (PDT)
-In-Reply-To: <bug-85151-11613-BhGKByrAcE@https.bugzilla.kernel.org/>
+Received: from mail.kernel.org ([198.145.19.201]:37103 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753297AbaIZIeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2014 04:34:07 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C5545202E6
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 08:34:01 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 63F72202F0
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 08:34:00 +0000 (UTC)
+In-Reply-To: <bug-85151-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "pmchba@pmcs.com" <pmchba@pmcs.com>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=85151
+
+--- Comment #7 from Jack Wang <xjtuwjp@gmail.com> ---
 Cc pmchba maillist.
 
 2014-09-25 18:20 GMT+02:00  <bugzilla-daemon@bugzilla.kernel.org>:
@@ -39,3 +46,7 @@ Cc pmchba maillist.
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
