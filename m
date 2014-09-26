@@ -1,49 +1,123 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: next-20140925 build: 1 failures 106 warnings (next-20140925)
-Date: Fri, 26 Sep 2014 12:02:03 +0530
-Message-ID: <CAK=zhgro-VnQ5v85SLg+GMH8uMoiYWF-RiiZpQnhXmuZtsS+bA@mail.gmail.com>
-References: <E1XX7vn-0003PS-Vu@cassiel.sirena.org.uk>
-	<20140925153120.GX27755@sirena.org.uk>
-	<20140925154652.GA29864@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
+ error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
+Date: Fri, 26 Sep 2014 07:04:54 +0000
+Message-ID: <bug-81861-11613-jrCXIyg9si@https.bugzilla.kernel.org/>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og128.obsmtp.com ([64.18.2.121]:38113 "EHLO
-	exprod7og128.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753771AbaIZGcG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 02:32:06 -0400
-Received: by mail-oi0-f54.google.com with SMTP id a3so9149506oib.41
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2014 23:32:04 -0700 (PDT)
-In-Reply-To: <20140925154652.GA29864@infradead.org>
+Received: from mail.kernel.org ([198.145.19.201]:60811 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753800AbaIZHE7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2014 03:04:59 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 586AB202D1
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 07:04:58 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 04063202E6
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 07:04:56 +0000 (UTC)
+In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Brown <broonie@kernel.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, kernel-build-reports@lists.linaro.org, linaro-kernel@lists.linaro.org, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Joe Maloy <joe.maloy@avagotech.com>
+To: linux-scsi@vger.kernel.org
 
-Hi Mark,
+https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
-Can you please let me known whether you are observing these warning
-messages even after inclusion of below patch
+Leon Woestenberg <sidebranch.linux@gmail.com> changed:
 
-http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/f78f694c34ae6fdc29f5e80abb2dbb894f961772
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sidebranch.linux@gmail.com
 
-Regards,
-Sreekanth
+--- Comment #17 from Leon Woestenberg <sidebranch.linux@gmail.com> ---
 
-On Thu, Sep 25, 2014 at 9:16 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Thu, Sep 25, 2014 at 04:31:20PM +0100, Mark Brown wrote:
->> On Thu, Sep 25, 2014 at 01:13:56PM +0100, Build bot for Mark Brown wrote:
->>
->> >     arm-allmodconfig
->> > ERROR: "__aeabi_uldivmod" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
->>
->> Today's ARM allmodconfig fails to build due to a call to a GCC intrinsic
->> being emitted from the mpt2sas module - I've not made any effort to
->> investigate this myself yet, unfortunately there's been a build error in
->> this configuration for arch/arm for the past week or so which means that
->> the error may not have been introduced today.
->
-> http://git.infradead.org/users/hch/scsi-queue.git/commitdiff/f78f694c34ae6fdc29f5e80abb2dbb894f961772
->
-> I just need James to pull the latests scsi-queue tree changes..
->
+With TXQ_PHY_SHIFT being 12, and TXQ_CMD_SHIFT being 29, it seems the PHY
+one-bit-hot coding appears in bits 12 through 28 inclusive.
+
+I.e. 16 bits or PHY ID's are supported.
+
+The register transmitted to the controller seems a 32-bit fixed register, so
+this seems a hardware limitation rather than software driver limitation.
+
+469        del_q = TXQ_MODE_I | tag |
+470            (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+471            (MVS_PHY_ID << TXQ_PHY_SHIFT) |
+472            (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+                printk("%d", mvi->tx_prod]);
+473        mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+
+Remaining question: how is this supposed to fly with port expanders where PHY
+ID's get >16?
+
+
+Thanks to an extensive debug report by e-mail from Rob Elliott (HP Server
+Storage) --- thanks! --- which I copied ad verbatim:
+
+---
+1. Although MVS_PHY_ID looks like a constant, it's really not:
+#define MVS_PHY_ID (1U << sas_phy->id)
+
+2. This fault:
+[   32.271218] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000255
+(although 255 looks like a decimal number 0xff, it's really hex 0x255)
+
+at this line:
+  0xffffffffa01c481e <+1838>:    mov    0x254(%rbx),%ecx
+
+implies that rbx contains 1, so 0x254 + 1 = 0x255.
+
+3. pahole drivers/scsi/mvsas/mv_sas.o
+shows there are two structures with fields at offset 596:
+* asd_sas_phy.id
+* asd_sas_port.sas_addr[8]
+
+4. objdump -drS drivers/scsi/mvsas/mv_sas.o
+shows only a few lines with 0x254(%something), one of which
+is the del_q line you've identified:
+
+mvs_task_prep_ata(struct mvs_info *mvi, struct mvs_task_exec_info *tei):
+       struct sas_ha_struct *sha = mvi->sas;
+       struct sas_task *task = tei->task;
+       struct domain_device *dev = task->dev;
+       struct sas_phy *sphy = dev->phy;
+       struct asd_sas_phy *sas_phy = sha->sas_phy[sphy->number];
+
+       ...
+       del_q = TXQ_MODE_I | tag |
+               (TXQ_CMD_STP << TXQ_CMD_SHIFT) |
+               (MVS_PHY_ID << TXQ_PHY_SHIFT) |
+               (mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+       mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
+
+MVS_PHY_ID =
+sas_phy->id =
+sha->sas_phy[sphy->number] =
+mvi->sas->sas_phy[dev->phy->number] =
+mvi->sas->sas_phy[task->dev->phy->number]->id
+mvi->sas->sas_phy[tei->task->dev->phy->number]->id
+
+Looking at the offsets reported by pahole, that means:
+%rdi->56->344[%rsi->0->0->56->688]->254
+
+mvi->sas->sas_phy is a pointer to a pointer:
+struct sas_ha_struct {
+...
+       struct asd_sas_phy * *     sas_phy;              /*   344     8 */
+
+You might look for somewhere that could accidentally
+be setting sas_phy[something] to a for loop index,
+with a typecast hiding the problem from the compiler.
+Or, the phy->number value being passed might be
+out of range; if there were discovery errors, something
+might not have been initialized like this function expects.
+
+
+Rob Elliott    HP Server Storage
+---
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
