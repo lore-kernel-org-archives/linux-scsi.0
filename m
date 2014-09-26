@@ -1,44 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85151] pm80xx + 7805H + HP SAS port expander =
- mpi_smp_completion 2604:smp IO status 0x2 and sas: expander ... discovery
- failed(0xffffffa6)
-Date: Fri, 26 Sep 2014 09:03:00 +0000
-Message-ID: <bug-85151-11613-apfJXI5x1l@https.bugzilla.kernel.org/>
-References: <bug-85151-11613@https.bugzilla.kernel.org/>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH 2/2] be2iscsi : Bump the driver version
+Date: Fri, 26 Sep 2014 15:14:16 -0400
+Message-ID: <f422bce2-46a6-426a-a287-bb6dfbbd2cd6@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:39228 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170AbaIZJDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2014 05:03:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 4FFDD202F8
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 09:03:02 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 0435B202EB
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2014 09:03:01 +0000 (UTC)
-In-Reply-To: <bug-85151-11613@https.bugzilla.kernel.org/>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:14006 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755085AbaIZJqk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Sep 2014 05:46:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85151
+ Bump the driver version
 
-Suresh Thiagarajan <suresntr@gmail.com> changed:
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_main.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |suresntr@gmail.com
-
---- Comment #8 from Suresh Thiagarajan <suresntr@gmail.com> ---
-The SMP failure is due to SMP overflow. Due to this overrun discovery of
-expander fails. I will try to use the same FW version for expander and check it
-locally.
-
-- Suresh
-
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 3605631..7ee0ffc 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -36,7 +36,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
+ 
+ #define DRV_NAME		"be2iscsi"
+-#define BUILD_STR		"10.4.74.0"
++#define BUILD_STR		"10.4.114.0"
+ #define BE_NAME			"Emulex OneConnect" \
+ 				"Open-iSCSI Driver version" BUILD_STR
+ #define DRV_DESC		BE_NAME " " "Driver"
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+1.7.1
+
