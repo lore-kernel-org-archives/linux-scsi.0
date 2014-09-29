@@ -1,217 +1,213 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 13/38] Implement scsi_opcode_sa_name
-Date: Mon, 29 Sep 2014 15:29:36 -0400
-Message-ID: <5429B320.2090003@interlog.com>
-References: <1411991947-130166-1-git-send-email-hare@suse.de> <1411991947-130166-14-git-send-email-hare@suse.de>
-Reply-To: dgilbert@interlog.com
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
+	support
+Date: Mon, 29 Sep 2014 23:22:08 +0200
+Message-ID: <20140929212208.GV17349@wotan.suse.de>
+References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com> <20140928150329.GC5023@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:35975 "EHLO smtp.infotech.no"
+Received: from cantor2.suse.de ([195.135.220.15]:43842 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbaI2T3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 15:29:55 -0400
-In-Reply-To: <1411991947-130166-14-git-send-email-hare@suse.de>
+	id S1751214AbaI2VWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 17:22:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20140928150329.GC5023@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: Tejun Heo <tj@kernel.org>, gregkh@linuxfoundation.org
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dmitry.torokhov@gmail.com, tiwai@suse.de, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chelsio.com>Hariprasad S <har>
 
-On 14-09-29 07:58 AM, Hannes Reinecke wrote:
-> Implement a lookup array for SERVICE ACTION commands instead
-> of hardcoding it in a large switch statement.
->
-> Reviewed-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/constants.c | 132 +++++++++++++++++++----------------------------
->   1 file changed, 54 insertions(+), 78 deletions(-)
->
-> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index 6e16b19..b9eb6a1 100644
-> --- a/drivers/scsi/constants.c
-> +++ b/drivers/scsi/constants.c
-> @@ -244,102 +244,77 @@ static const struct value_name_pair variable_length_arr[] = {
->   };
->   #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
->
-> -static const char * get_sa_name(const struct value_name_pair * arr,
-> -			        int arr_sz, int service_action)
-> +struct sa_name_list {
-> +	int cmd;
-> +	const struct value_name_pair *arr;
-> +	int arr_sz;
-> +};
-> +
-> +static struct sa_name_list sa_names_arr[] = {
-> +	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
-> +	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
-> +	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
-> +	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
-> +	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
-> +	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
-> +	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
-> +	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
-> +	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
-> +	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
-> +	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
-> +	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
-> +	{0, NULL, 0},
-> +};
-> +#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
+On Sun, Sep 28, 2014 at 11:03:29AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Sep 26, 2014 at 02:57:17PM -0700, Luis R. Rodriguez wrote:
+> ...
+> > Systemd should consider enabling async probe on device drivers
+> > it loads through systemd-udev but probably does not want to
+> > enable it for modules loaded through systemd-modules-load
+> > (modules-load.d). At least on my booting enablign async probe
+> > for all modules fails to boot as such in order to make this
+> 
+> Did you find out why boot failed with those modules?
 
-Since you placed a terminating element on sa_names_arr[] then
-you don't need the SA_NAME_LIST_SZ define any more.
+No, it seems this was early in boot and I haven't been able to capture the logs
+yet of the faults. More on this below.
 
-The for loop can become:
-   for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
-...
+> > a bit more useful we whitelist a few buses where it should be
+> > at least in theory safe to try to enable async probe. This
+> > way even if systemd tried to ask to enable async probe for all
+> > its device drivers the kernel won't blindly do this. We also
+> > have the sync_probe flag which device drivers can themselves
+> > enable *iff* its known the device driver should never async
+> > probe.
+> > 
+> > In order to help *test* things folks can use the bus.safe_mod_async_probe=1
+> > kernel parameter which will work as if userspace would have
+> > requested all modules to load with async probe. Daring folks can
+> > also use bus.force_mod_async_probe=1 which will enable asynch probe
+> > even on buses not tested in any way yet, if you use that though
+> > you're on your own.
+> 
+> If those two knobs are meant for debugging, let's please make that
+> fact immediately evident.  e.g. Make them ugly boot params like
+> "__DEVEL__driver_force_mod_async_probe".  Devel/debug options ending
+> up becoming stable interface are really nasty.
 
-Doug Gilbert
+Sure make sense, I wasn't quite sure how to make this quite clear,
+a naming convention seems good to me but I also had added at least
+a print about this on the log. Ideally I think a TAIN_DEBUG would
+be best and it seems it could be useful for many other cases in
+the kernel, we could also just re-use TAINT_CRAP as well. Thoughts?
+Greg?
 
-> +
-> +static bool scsi_opcode_sa_name(int cmd, int service_action,
-> +				const char **sa_name)
->   {
-> -	int k;
-> +	struct sa_name_list *sa_name_ptr = sa_names_arr;
-> +	const struct value_name_pair *arr = NULL;
-> +	int arr_sz, k;
-> +
-> +	for (k = 0; k < SA_NAME_LIST_SZ; ++k, ++sa_name_ptr) {
-> +		if (sa_name_ptr->cmd == cmd) {
-> +			arr = sa_name_ptr->arr;
-> +			arr_sz = sa_name_ptr->arr_sz;
-> +			break;
-> +		}
-> +	}
-> +	if (!arr)
-> +		return false;
->
->   	for (k = 0; k < arr_sz; ++k, ++arr) {
->   		if (service_action == arr->value)
->   			break;
->   	}
-> -	return (k < arr_sz) ? arr->name : NULL;
-> +	if (k < arr_sz)
-> +		*sa_name = arr->name;
-> +
-> +	return true;
->   }
->
->   /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
->   static void print_opcode_name(unsigned char * cdbp, int cdb_len)
->   {
->   	int sa, len, cdb0;
-> -	int fin_name = 0;
-> -	const char * name;
-> +	const char *name = NULL;
->
->   	cdb0 = cdbp[0];
-> -	switch(cdb0) {
-> -	case VARIABLE_LENGTH_CMD:
-> +	if (cdb0 == VARIABLE_LENGTH_CMD) {
->   		len = scsi_varlen_cdb_length(cdbp);
->   		if (len < 10) {
->   			printk("short variable length command, "
->   			       "len=%d ext_len=%d", len, cdb_len);
-> -			break;
-> +			return;
->   		}
->   		sa = (cdbp[8] << 8) + cdbp[9];
-> -		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
-> -				   sa);
-> -		if (name)
-> -			printk("%s", name);
-> -		else
-> -			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
-> -
-> -		if ((cdb_len > 0) && (len != cdb_len))
-> -			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
-> -
-> -		break;
-> -	case MAINTENANCE_IN:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case MAINTENANCE_OUT:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(maint_out_arr, MAINT_OUT_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case PERSISTENT_RESERVE_IN:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(pr_in_arr, PR_IN_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case PERSISTENT_RESERVE_OUT:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(pr_out_arr, PR_OUT_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case SERVICE_ACTION_IN_12:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(serv_in12_arr, SERV_IN12_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case SERVICE_ACTION_OUT_12:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(serv_out12_arr, SERV_OUT12_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case SERVICE_ACTION_BIDIRECTIONAL:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(serv_bidi_arr, SERV_BIDI_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case SERVICE_ACTION_IN_16:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(serv_in16_arr, SERV_IN16_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case SERVICE_ACTION_OUT_16:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(serv_out16_arr, SERV_OUT16_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case THIRD_PARTY_COPY_IN:
-> -		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(tpc_in_arr, TPC_IN_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	case THIRD_PARTY_COPY_OUT:
-> +	} else {
->   		sa = cdbp[1] & 0x1f;
-> -		name = get_sa_name(tpc_out_arr, TPC_OUT_SZ, sa);
-> -		fin_name = 1;
-> -		break;
-> -	default:
-> +		len = cdb_len;
-> +	}
-> +
-> +	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
->   		if (cdb0 < 0xc0) {
->   			name = cdb_byte0_names[cdb0];
->   			if (name)
-> @@ -348,13 +323,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
->   				printk("cdb[0]=0x%x (reserved)", cdb0);
->   		} else
->   			printk("cdb[0]=0x%x (vendor)", cdb0);
-> -		break;
-> -	}
-> -	if (fin_name) {
-> +	} else {
->   		if (name)
->   			printk("%s", name);
->   		else
->   			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
-> +
-> +		if (cdb_len > 0 && len != cdb_len)
-> +			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
->   	}
->   }
->
->
+> > +struct driver_attach_work {
+> > +	struct work_struct work;
+> > +	struct device_driver *driver;
+> > +};
+> > +
+> >  struct driver_private {
+> >  	struct kobject kobj;
+> >  	struct klist klist_devices;
+> >  	struct klist_node knode_bus;
+> >  	struct module_kobject *mkobj;
+> > +	struct driver_attach_work *attach_work;
+> >  	struct device_driver *driver;
+> >  };
+> 
+> How many bytes are we saving by allocating it separately?
 
+This saves us 24 bytes per device driver.
+
+>  Can't we just embed it in driver_private?
+
+We sure can and it is my preference to do that as well but just
+in case I wanted to take the alternative space saving approach
+as well and let folks decide. There's also the technical aspect
+of hiding that data structure from drivers, and that may be worth
+to do but I personally also prefer the simplicity of stuffing
+it on the public data structure, as you noted below we could then also
+unconditionally flush_work() on __device_release_driver().
+
+Greg, any preference?
+
+> > +static void driver_attach_workfn(struct work_struct *work)
+> > +{
+> > +	int ret;
+> > +	struct driver_attach_work *attach_work =
+> > +		container_of(work, struct driver_attach_work, work);
+> > +	struct device_driver *drv = attach_work->driver;
+> > +	ktime_t calltime, delta, rettime;
+> > +	unsigned long long duration;
+> 
+> This could just be a personal preference but I think it's easier to
+> read if local vars w/ initializers come before the ones w/o.
+
+We gotta standardize on *something*, I tend to declare them
+in the order in which they are used, in this case I failed to
+list calltime first, but yeah I'll put initialized first, I
+don't care much.
+
+> > +
+> > +	calltime = ktime_get();
+> > +
+> > +	ret = driver_attach(drv);
+> > +	if (ret != 0) {
+> > +		remove_driver_private(drv);
+> > +		bus_put(drv->bus);
+> > +	}
+> > +
+> > +	rettime = ktime_get();
+> > +	delta = ktime_sub(rettime, calltime);
+> > +	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
+> > +
+> > +	pr_debug("bus: '%s': add driver %s attach completed after %lld usecs\n",
+> > +		 drv->bus->name, drv->name, duration);
+> 
+> Why do we have the above printout for async path but not sync path?
+> It's kinda weird for the code path to diverge like this.  Shouldn't
+> the only difference be the context probes are running from?
+
+Yeah sure, I'll remove this, it was useful for me for testing purposes
+in evaluation against kthreads / sync runs, but that certainly was mostly
+for debugging.
+
+> ...
+> > +static bool drv_enable_async_probe(struct device_driver *drv,
+> > +				   struct bus_type *bus)
+> > +{
+> > +	struct module *mod;
+> > +
+> > +	if (!drv->owner || drv->sync_probe)
+> > +		return false;
+> > +
+> > +	if (force_mod_async)
+> > +		return true;
+> > +
+> > +	mod = drv->owner;
+> > +	if (!safe_mod_async && !mod->async_probe_requested)
+> > +		return false;
+> > +
+> > +	/* For now lets avoid stupid bug reports */
+> > +	if (!strcmp(bus->name, "pci") ||
+> > +	    !strcmp(bus->name, "pci_express") ||
+> > +	    !strcmp(bus->name, "hid") ||
+> > +	    !strcmp(bus->name, "sdio") ||
+> > +	    !strcmp(bus->name, "gameport") ||
+> > +	    !strcmp(bus->name, "mmc") ||
+> > +	    !strcmp(bus->name, "i2c") ||
+> > +	    !strcmp(bus->name, "platform") ||
+> > +	    !strcmp(bus->name, "usb"))
+> > +		return true;
+> 
+> Ugh... things like this tend to become permanent.  Do we really need
+> this?  And how are we gonna find out what's broken why w/o bug
+> reports?
+
+Yeah... well we have two options, one is have something like this to
+at least make it generally useful or remove this and let folks who
+care start fixing async for all modules. The downside to removing
+this is it makes async probe pretty much useless on most systems
+right now, it would mean systemd would have to probably consider
+the list above if they wanted to start using this without expecting
+systems to not work.
+
+Let me know what is preferred.
+
+> > diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> > index e4ffbcf..7999aba 100644
+> > --- a/drivers/base/dd.c
+> > +++ b/drivers/base/dd.c
+> > @@ -507,6 +507,13 @@ static void __device_release_driver(struct device *dev)
+> >  
+> >  	drv = dev->driver;
+> >  	if (drv) {
+> > +		if (drv->owner && !drv->sync_probe) {
+> > +			struct module *mod = drv->owner;
+> > +			struct driver_private *priv = drv->p;
+> > +
+> > +			if (mod->async_probe_requested)
+> > +				flush_work(&priv->attach_work->work);
+> 
+> This can be unconditional flush_work(&priv->attach_work) if attach_work
+> isn't separately allocated.
+
+Indeed.
+
+> >  static int unknown_module_param_cb(char *param, char *val, const char *modname,
+> >  				   void *arg)
+> >  {
+> > +	int ret;
+> > +	struct module *mod = arg;
+> 
+> Ditto with the order of definitions.
+
+Amended.
+
+> Generally looks good to me.
+> 
+> Thanks a lot for doing this! :)
+
+Thanks for the review and pointers so far.
+
+  Luis
