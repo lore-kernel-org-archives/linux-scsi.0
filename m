@@ -1,54 +1,100 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 33/38] libata: use __scsi_print_command()
-Date: Mon, 29 Sep 2014 10:11:44 -0400
-Message-ID: <20140929141144.GC15925@htj.dyndns.org>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
- <1411991947-130166-34-git-send-email-hare@suse.de>
- <20140929140606.GB15925@htj.dyndns.org>
- <54296856.2020104@suse.de>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+Date: Mon, 29 Sep 2014 15:17:10 +0100
+Message-ID: <542969E6.1010104@citrix.com>
+References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:61255 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbaI2OLt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2014 10:11:49 -0400
-Content-Disposition: inline
-In-Reply-To: <54296856.2020104@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20140929140229.GA28279@laptop.dumpdata.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: ian.campbell@citrix.com, wei.liu2@citrix.com, boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com, yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com, xen-devel@lists.xenproject.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Sep 29, 2014 at 04:10:30PM +0200, Hannes Reinecke wrote:
-> On 09/29/2014 04:06 PM, Tejun Heo wrote:
-> > On Mon, Sep 29, 2014 at 01:59:02PM +0200, Hannes Reinecke wrote:
-> >> libata already uses an internal buffer, so we should be using
-> >> __scsi_print_command() here.
-> >>
-> >> Cc: Tejun Heo <tj@kernel.org>
-> >> Cc: linux-ide@vger.kernel.org
-> >> Cc: LKML <linux-kernel@vger.kernel.org>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > 
-> > Applied to libata/for-3.18.
-> > 
-> > Thanks.
-> > 
-> Errm.
-> Nice that you did, but it sort of relies for patches 01-32 to be
-> applied previously.
-> I'd rather apply your Signed-off-by: to the patch and have it
-> routed through the SCSI tree; that way we're sure it'll only be
-> applied if the previous patches are in.
+On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
+> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
 > 
-> Can you please pull it from libata to avoid build issues?
+> Only on the first depth, not on the subsequent ones (as in if
+> the first xenbus_switch_fail fails, it won't try to call
+> xenbus_switch_state again and again).
+> 
+>> internally, so need not return any status value, then use 'void' instead
+>> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+> 
+> When that switch occurs (to XenbusStateConnected) won't the watches
+> fire - meaning we MUST make sure that the watch functions - if they
+> use the xenbus_switch_state() they MUST not hold any locks - because
+> they could be executed once more?
+> 
+> Oh wait, we don't have to worry about that right now as the callbacks
+> that pick up the messages from the XenBus are all gated on one mutex
+> anyhow.
+> 
+> Hm, anyhow, I would add this extra piece of information to the patch:
+> 
+> 
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index c214daa..f7399fd 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+>  
+>  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+>  	case XenbusStateInitWait:
+> +		/*
+> +		 * xenbus_switch_state can call xenbus_switch_fatal which will
+> +		 * immediately set the state to XenbusStateClosing which
+> +		 * means if we were reading for it here we MUST drop any
+> +		 * locks so that we don't dead-lock.
+> +		 */
 
-Ah, okay, pulled it.  Please feel free to add
+Watches are asynchronous and serialised by the xenwatch thread.  I can't
+see what deadlock you're talking about here.  Particularly since the
+backend doesn't watch its own state node (it watches the frontend one).
 
- Acked-by: Tejun Heo <tj@kernel.org>
+>  		xen_pcibk_setup_backend(pdev);
+>  		break;
+>  
+>>
+>> Also need be sure that all callers which check the return value must let
+>> 'err' be 0.
+> 
+> I am bit uncomfortable with that, that is due to:
+> 
+> 
+> .. snip..
+>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+>> index 9c47b89..b5c3d47 100644
+>> --- a/drivers/net/xen-netback/xenbus.c
+>> +++ b/drivers/net/xen-netback/xenbus.c
+>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>>  	if (err)
+>>  		pr_debug("Error writing multi-queue-max-queues\n");
+>>  
+>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>> -	if (err)
+>> -		goto fail;
+>> -
+>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+> 
+> Which if it fails it won't call:
+> 
+> 354 fail:                                                                           
+> 355         pr_debug("failed\n");                                                   
+> 356         netback_remove(dev);                                                    
+> 357         return err;         
+> 
+> 
+> And since there is no watch on the backend state to go in Closing it won't
+> ever call those and we leak memory.
 
-Thanks.
+It's not leaking the memory.  All resources will be recovered when the
+device is removed.
 
--- 
-tejun
+> The same is for xen-blkback mechanism in the probe function.
+
+David
