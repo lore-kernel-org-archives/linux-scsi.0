@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/38] Implement scsi_opcode_sa_name
-Date: Mon, 29 Sep 2014 13:58:42 +0200
-Message-ID: <1411991947-130166-14-git-send-email-hare@suse.de>
+Subject: [PATCH 11/38] scsi: use 'bool' as return value for scsi_normalize_sense()
+Date: Mon, 29 Sep 2014 13:58:40 +0200
+Message-ID: <1411991947-130166-12-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59335 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59341 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753611AbaI2L7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753673AbaI2L7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 29 Sep 2014 07:59:14 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,190 +14,110 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Implement a lookup array for SERVICE ACTION commands instead
-of hardcoding it in a large switch statement.
+Convert scsi_normalize_sense() and frieds to return 'bool'
+instead of an integer.
 
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 132 +++++++++++++++++++----------------------------
- 1 file changed, 54 insertions(+), 78 deletions(-)
+ drivers/scsi/scsi_error.c | 14 +++++++-------
+ drivers/scsi/scsi_lib.c   |  2 +-
+ include/scsi/scsi_eh.h    | 14 +++++++-------
+ 3 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 6e16b19..b9eb6a1 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -244,102 +244,77 @@ static const struct value_name_pair variable_length_arr[] = {
- };
- #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
- 
--static const char * get_sa_name(const struct value_name_pair * arr,
--			        int arr_sz, int service_action)
-+struct sa_name_list {
-+	int cmd;
-+	const struct value_name_pair *arr;
-+	int arr_sz;
-+};
-+
-+static struct sa_name_list sa_names_arr[] = {
-+	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
-+	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
-+	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
-+	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
-+	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
-+	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
-+	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
-+	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
-+	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
-+	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
-+	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
-+	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
-+	{0, NULL, 0},
-+};
-+#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
-+
-+static bool scsi_opcode_sa_name(int cmd, int service_action,
-+				const char **sa_name)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 6c99624..8a6d382 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2408,20 +2408,20 @@ EXPORT_SYMBOL(scsi_reset_provider);
+  *	responded to a SCSI command with the CHECK_CONDITION status.
+  *
+  * Return value:
+- *	1 if valid sense data information found, else 0;
++ *	true if valid sense data information found, else false;
+  */
+-int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+-                         struct scsi_sense_hdr *sshdr)
++bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
++			  struct scsi_sense_hdr *sshdr)
  {
--	int k;
-+	struct sa_name_list *sa_name_ptr = sa_names_arr;
-+	const struct value_name_pair *arr = NULL;
-+	int arr_sz, k;
-+
-+	for (k = 0; k < SA_NAME_LIST_SZ; ++k, ++sa_name_ptr) {
-+		if (sa_name_ptr->cmd == cmd) {
-+			arr = sa_name_ptr->arr;
-+			arr_sz = sa_name_ptr->arr_sz;
-+			break;
-+		}
-+	}
-+	if (!arr)
+ 	if (!sense_buffer || !sb_len)
+-		return 0;
 +		return false;
  
- 	for (k = 0; k < arr_sz; ++k, ++arr) {
- 		if (service_action == arr->value)
- 			break;
+ 	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
+ 
+ 	sshdr->response_code = (sense_buffer[0] & 0x7f);
+ 
+ 	if (!scsi_sense_valid(sshdr))
+-		return 0;
++		return false;
+ 
+ 	if (sshdr->response_code >= 0x72) {
+ 		/*
+@@ -2451,11 +2451,11 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+ 		}
  	}
--	return (k < arr_sz) ? arr->name : NULL;
-+	if (k < arr_sz)
-+		*sa_name = arr->name;
-+
+ 
+-	return 1;
 +	return true;
  }
+ EXPORT_SYMBOL(scsi_normalize_sense);
  
- /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+-int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
++bool scsi_command_normalize_sense(struct scsi_cmnd *cmd,
+ 				 struct scsi_sense_hdr *sshdr)
  {
- 	int sa, len, cdb0;
--	int fin_name = 0;
--	const char * name;
-+	const char *name = NULL;
+ 	return scsi_normalize_sense(cmd->sense_buffer,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c3220b7..b853659 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -830,7 +830,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+ 	struct scsi_sense_hdr sshdr;
+-	int sense_valid = 0;
++	bool sense_valid = false;
+ 	int sense_deferred = 0;
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 06a8790..ffb69ee 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -27,10 +27,10 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
+ 	u8 additional_length;	/* always 0 for fixed sense format */
+ };
  
- 	cdb0 = cdbp[0];
--	switch(cdb0) {
--	case VARIABLE_LENGTH_CMD:
-+	if (cdb0 == VARIABLE_LENGTH_CMD) {
- 		len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
- 			printk("short variable length command, "
- 			       "len=%d ext_len=%d", len, cdb_len);
--			break;
-+			return;
- 		}
- 		sa = (cdbp[8] << 8) + cdbp[9];
--		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
--				   sa);
--		if (name)
--			printk("%s", name);
--		else
--			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
--
--		if ((cdb_len > 0) && (len != cdb_len))
--			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
--
--		break;
--	case MAINTENANCE_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case MAINTENANCE_OUT:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(maint_out_arr, MAINT_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	case PERSISTENT_RESERVE_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(pr_in_arr, PR_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case PERSISTENT_RESERVE_OUT:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(pr_out_arr, PR_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_IN_12:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_in12_arr, SERV_IN12_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_OUT_12:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_out12_arr, SERV_OUT12_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_BIDIRECTIONAL:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_bidi_arr, SERV_BIDI_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_IN_16:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_in16_arr, SERV_IN16_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_OUT_16:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_out16_arr, SERV_OUT16_SZ, sa);
--		fin_name = 1;
--		break;
--	case THIRD_PARTY_COPY_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(tpc_in_arr, TPC_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case THIRD_PARTY_COPY_OUT:
-+	} else {
- 		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(tpc_out_arr, TPC_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	default:
-+		len = cdb_len;
-+	}
-+
-+	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
- 		if (cdb0 < 0xc0) {
- 			name = cdb_byte0_names[cdb0];
- 			if (name)
-@@ -348,13 +323,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 				printk("cdb[0]=0x%x (reserved)", cdb0);
- 		} else
- 			printk("cdb[0]=0x%x (vendor)", cdb0);
--		break;
--	}
--	if (fin_name) {
-+	} else {
- 		if (name)
- 			printk("%s", name);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
-+
-+		if (cdb_len > 0 && len != cdb_len)
-+			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
- 	}
+-static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
++static inline bool scsi_sense_valid(struct scsi_sense_hdr *sshdr)
+ {
+ 	if (!sshdr)
+-		return 0;
++		return false;
+ 
+ 	return (sshdr->response_code & 0x70) == 0x70;
  }
+@@ -42,12 +42,12 @@ extern void scsi_eh_flush_done_q(struct list_head *done_q);
+ extern void scsi_report_bus_reset(struct Scsi_Host *, int);
+ extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
+ extern int scsi_block_when_processing_errors(struct scsi_device *);
+-extern int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+-		struct scsi_sense_hdr *sshdr);
+-extern int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
+-		struct scsi_sense_hdr *sshdr);
++extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
++				 struct scsi_sense_hdr *sshdr);
++extern bool scsi_command_normalize_sense(struct scsi_cmnd *cmd,
++					 struct scsi_sense_hdr *sshdr);
  
+-static inline int scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
++static inline bool scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
+ {
+ 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
+ }
 -- 
 1.8.5.2
 
