@@ -1,37 +1,86 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 29/38] Introduce dev_printk_string() and
- dev_printk_header()
-Date: Mon, 29 Sep 2014 12:58:43 -0400
-Message-ID: <20140929165843.GA13163@kroah.com>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
- <1411991947-130166-30-git-send-email-hare@suse.de>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Mon, 29 Sep 2014 17:08:59 +0000
+Message-ID: <1412010538.6067.6.camel@jarvis.lan>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
+	 <54298E3E.40509@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1411991947-130166-30-git-send-email-hare@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:55736 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591AbaI2RJA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2014 13:09:00 -0400
+In-Reply-To: <54298E3E.40509@hp.com>
+Content-Language: en-US
+Content-ID: <6855095848253F44912214DEF8B8A202@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "webbnh@hp.com" <webbnh@hp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>
 
-On Mon, Sep 29, 2014 at 01:58:58PM +0200, Hannes Reinecke wrote:
-> Introducing dev_printk_string() and dev_printk_header() to allow
-> using an external buffer for printing via dev_printk().
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Cc: LKML <linux-kernel@vger.kernel.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/base/core.c    | 24 ++++++++++++++++++++++++
->  include/linux/device.h | 12 ++++++++++++
->  2 files changed, 36 insertions(+)
-
-I don't understand, what are you trying to do with this?  I don't see
-any follow-on patches that use this, nor can I find a 00/38 patch for
-this series...
-
-thanks,
-
-greg k-h
+T24gTW9uLCAyMDE0LTA5LTI5IGF0IDEyOjUyIC0wNDAwLCBXZWJiIFNjYWxlcyB3cm90ZToNCj4g
+W0hhbm5lcywgSmFtZXMsIENocmlzdG9waDogIHNvcnJ5IGZvciB0aGUgZXh0cmEgY29waWVzIC0t
+IG15IG1haWwgY2xpZW50IA0KPiBkaWRuJ3QgYXV0b21hdGljYWxseSBjb252ZXJ0IHRvIHBsYWlu
+LXRleHQgZm9yIHRoZSBsaXN0LCBzbyBpdCBib3VuY2VkLl0NCj4gDQo+IENvdWxkIHNvbWVvbmUg
+ZW5saWdodGVuIG1lIG9uIHdoZW4gYW5kIHdoZXJlIGEgZHJpdmVyIG1pZ2h0IHdhbnQgdG8gb3Ig
+DQo+IGJlIHJlcXVpcmVkIHRvIHNldCB0aGUgInRhZ2dlZF9zdXBwb3J0ZWQiIGZsYWc/DQo+IA0K
+PiBBIHF1aWNrIGdyZXAgeWllbGRzIGEgbnVtYmVyIG9mIHBsYWNlcyB3aGVyZSB0aGUgZmxhZyB2
+YWx1ZSBpcyBzZXQgb3IgDQo+IGNsZWFyZWQuDQo+IA0KPiBUaGlzIGxvb2tzIGxpa2UgdGhlIG1l
+Y2hhbmlzbSB3aGljaCBpcyBzdXBwb3NlZCB0byBzZXQgdGhlIGZsYWcgKGUuZy4sIA0KPiBpZiB0
+aGUgZGV2aWNlL0xVTiBjaGFyYWN0ZXJpc3RpY3Mgc3VnZ2VzdCB0aGF0IGl0J3MgYXBwcm9wcmlh
+dGUpLCBhbmQgc28gDQo+IEknbSBub3Qgc3VyZSB3aGVuL3doeSB0aGUgZHJpdmVyIHdvdWxkIHdh
+bnQgdG8gZG8gaXQgZXhwbGljaXRseToNCj4gDQo+IC4vZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5j
+OiAgICAgICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gc2Nz
+aV9hZGRfbHVuKCldDQoNClRoYXQncyBzZXQgYmFzZWQgb24gZGV2aWNlIGNhcGFiaWxpdGllcy4N
+Cg0KPiBUaGVzZSBsb29rIGxpa2UgYXR0ZW1wdHMgdG8gb3ZlcnJpZGUgdGhlIFNDU0kgbWlkLWxh
+eWVyOg0KPiANCj4gLi9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX21haW4uYzogICAgICAgIHNkZXYt
+PnRhZ2dlZF9zdXBwb3J0ZWQgPSAxOyAgICAgICAgIFtpbiAnX3NsYXZlX2FsbG9jKCldDQo+IC4v
+ZHJpdmVycy9zY3NpL3N0ZXguYzogICAgICAgICAgICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9y
+dGVkID0gMTsgICAgICAgICBbaW4gJ19zbGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZlcnMvc2NzaS9z
+dGV4LmM6ICAgICAgICAgICAgICAgICAgc2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDE7ICAgICAg
+ICAgW2luICdfc2xhdmVfY29uZmlndXJlKCldDQo+IC4vZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0
+X29zLmM6ICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gJ19z
+bGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9vcy5jOiAgICAgICAg
+c2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDE7ICAgICAgICAgW2luICdfc2xhdmVfY29uZmlndXJl
+KCldDQo+IC4vZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYzogICAgICAgICAgICBzZGV2LT50YWdn
+ZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gJ19zbGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZl
+cnMvc2NzaS9zY3NpX2RlYnVnLmM6ICAgICAgICAgICAgc2RwLT50YWdnZWRfc3VwcG9ydGVkID0g
+MTsgICAgICAgICAgW2luICdfc2xhdmVfY29uZmlndXJlKCldDQoNClNsYXZlIGNvbmZpZ3VyZSBp
+cyBhbGxvd2VkIHRvIG92ZXJyaWRlIHRoaXMsIHNvIHRoZXkgYWxsIGhhdmUgcmVhc29ucyBJDQp3
+b3VsZCBzdXNwZWN0IChxbGEgaXMgYmVjYXVzZSB0YXBlIGlzIHVudGFnZ2VkLCBidXQgcWxhIHN0
+aWxsIG5lZWRzIGENCnRhZyBmb3IgdGhlIGludGVybmFsIHF1ZXVlLCBmb3IgaW5zdGFuY2UpLg0K
+DQo+IA0KPiBIb3dldmVyLCBpdCBzdHJpa2VzIG1lIHRoYXQgaXQncyB1bm5lY2Vzc2FyeSB0byBz
+ZXQgdGhlIGZsYWcgaW4gL2JvdGgvIA0KPiAnX3NsYXZlX2FsbG9jKCkgYW5kICdfc2xhdmVfY29u
+ZmlndXJlKCkgLS0gSSB0aGluayB0aGF0IGVpdGhlciBvbmUgDQo+IHNob3VsZCB3b3JrLCBhbmQg
+J19zbGF2ZV9jb25maWd1cmUoKSBzZWVtcyBsaWtlIHRoZSBhcHByb3ByaWF0ZSBjaG9pY2UuICAN
+Cj4gKEJ1dCwgSSdtIGxlZnQgd29uZGVyaW5nIHdoeSB0aGVzZSBkcml2ZXJzIG5lZWQgdG8gb3Zl
+cnJpZGUgdGhlIFNDU0kgDQo+IE1MJ3MgY2hvaWNlLi4uLikNCg0KU3RleCBpcyB0aGUgb25seSBv
+bmUgdGhhdCBkb2VzIHRoaXM7IGl0J3MgcHJvYmFibHkganVzdCBhIG1ha2Ugc3VyZQ0KdGhpbmcu
+ICBZb3UgbWlnaHQgd2FudCB0byBzZXQgaW4gc2xhdmUgYWxsb2MgaWYgeW91IG5lZWQgYSB0YWdn
+ZWQNCklucXVpcnkgY29tbWFuZC4NCg0KPiBUaGVzZSBhcmUgaW50ZXJlc3RpbmcsIGJ1dCBub3Qg
+cGVydGluZW50IHRvIHRoZSBkaXNjdXNzaW9uIGF0IGhhbmQgKHRoZXkgDQo+IHNlZW0gdG8gYmUg
+ZmFsbC1iYWNrcyB0cmlnZ2VyZWQgZHVyaW5nIGVycm9yIHJlY292ZXJ5KToNCj4gDQo+IC4vZHJp
+dmVycy9zY3NpL2F0YXJpX05DUjUzODAuYzogICAgICAgICBjbWQtPmRldmljZS0+dGFnZ2VkX3N1
+cHBvcnRlZCA9IDA7ICBbZXJyb3IgcmVjb3Zlcnk/XQ0KPiAuL2RyaXZlcnMvc2NzaS81M2M3MDAu
+YzogICAgICAgICAgICAgICAgU0NwLT5kZXZpY2UtPnRhZ2dlZF9zdXBwb3J0ZWQgPSAwOyAgW2Vy
+cm9yIHJlY292ZXJ5P10NCj4gLi9kcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6ICAgICAgICAg
+IGNtZC0+ZGV2aWNlLT50YWdnZWRfc3VwcG9ydGVkID0gMDsgIFtlcnJvciByZWNvdmVyeT9dDQoN
+ClNQSSBhbGxvd3MgdGhlIGRldmljZSB0byByZWplY3QgdGhlIHRhZyBlbmFibGluZyBtZXNzYWdl
+cyAuLi4gdGhhdCdzDQp3aGF0IHRoaXMgbG90IGFyZSBhbGwgZG9pbmcuDQoNCj4gQW5kLCB0aGlz
+IG9uZSBsb29rcyBzcHVyaW91cyAodGhhdCBpcywgSSBiZWxpZXZlIGl0J3MgY2xlYXJpbmcgdGhl
+IGZsYWcgDQo+IHdoZW4gaXQncyBhbHJlYWR5IGNsZWFyKToNCj4gDQo+IC4vZHJpdmVycy9zY3Np
+L2xpYnNhcy9zYXNfc2NzaV9ob3N0LmM6ICBzY3NpX2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDA7
+ICAgICBbbG9va3Mgc3B1cmlvdXNdDQoNClBvaW50bGVzcyBidXQgaGFybWxlc3MuDQoNCj4gU28s
+IHRha2luZyB0aGUgcGF0Y2ggYmVsb3csIGZvciBleGFtcGxlLCB3aHkgaXMgdGFnZ2VkX3N1cHBv
+cnRlZCBiZWluZyANCj4gc2V0IGluIC9ib3RoLyB0aGUgJ19zbGF2ZV9hbGxvYygpIGFuZCB0aGUg
+J19zbGF2ZV9jb25maWd1cmUoKSByb3V0aW5lcywgDQo+IGFuZCwgaW4gZmFjdCwgd2h5IGlzIGl0
+IGJlaW5nIHNldCBhdCBhbGwgLS0gd2h5IGRvZXNuJ3QgdGhlIFNDU0kgDQo+IG1pZC1sYXllciBz
+ZXQgaXQgY29ycmVjdGx5IGluIHRoaXMgY2FzZT8NCg0KQmVjYXVzZSB0aGluZ3MgbGlrZSB0aGUg
+cWxhIGhhdmUgdG8gaGF2ZSB0YWdnZWQgaW5xdWlyeSBiZWNhdXNlIGl0J3MgYQ0Kc2hhcmVkIGhv
+c3QgdGFnIG1hcCB1c2VkIHRvIGxhYmVsIHRoZSBpc3N1ZSBxdWV1ZS4gIFNldHRpbmcgaXQgdHdp
+Y2UgaXMNCm92ZXJraWxsIGJlY2F1c2Ugd2UgZG9uJ3QgYWN0dWFsbHkgdHVybiBpdCBvZmYsIGJ1
+dCBpdCBjb3VsZCBiZQ0KY29uc3RydWVkIGFzIHBydWRlbnQgaW4gY2FzZSB3ZSBkaWQgKHdlIGNv
+dWxkIG1ha2UgdGFnZ2VkX3N1cHBvcnRlZA0KZXhhY3RseSByZWZsZWN0IHRoZSBzdGF0ZSBvZiB0
+aGUgQ21kUXVlIGJpdCBmb3IgaW5zdGFuY2UpLg0KDQpKYW1lcw0KDQo=
