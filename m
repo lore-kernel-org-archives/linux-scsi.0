@@ -1,66 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/38] Remove scsi_cmd_print_sense_hdr()
-Date: Mon, 29 Sep 2014 13:58:30 +0200
-Message-ID: <1411991947-130166-2-git-send-email-hare@suse.de>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59327 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753465AbaI2L7N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:13 -0400
-In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return of xenbus_switch_state()
+Date: Mon, 29 Sep 2014 07:35:45 -0600
+Message-ID: <CAErSpo6YEMg1E5KQxFxBTekwAcDvmE0hvsg9MzU-8HJrO9TDAA@mail.gmail.com>
+References: <5425961A.5000604@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5425961A.5000604@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: David Vrabel <david.vrabel@citrix.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, Ian Campbell <ian.campbell@citrix.com>, wei.liu2@citrix.com, Boris Ostrovsky <boris.ostrovsky@oracle.com>, jgross@suse.com, Wei Yongjun <yongjun_wei@trendmicro.com.cn>, mukesh.rathor@oracle.com, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Unused.
+On Fri, Sep 26, 2014 at 10:36 AM, Chen Gang <gang.chen.5i5j@gmail.com> wrote:
+> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> internally, so need not return any status value, then use 'void' instead
+> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+>
+> Also need be sure that all callers which check the return value must let
+> 'err' be 0.
+>
+> And also need change the related comments for xenbus_switch_state().
+>
+> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+> ---
+>  drivers/block/xen-blkback/xenbus.c |  9 ++-------
+>  drivers/net/xen-netback/xenbus.c   |  5 +----
+>  drivers/pci/xen-pcifront.c         | 15 ++++++---------
+>  drivers/xen/xen-pciback/xenbus.c   | 21 ++++-----------------
+>  drivers/xen/xen-scsiback.c         |  5 +----
+>  drivers/xen/xenbus/xenbus_client.c | 16 ++++++++--------
+>  include/xen/xenbus.h               |  3 ++-
+>  7 files changed, 24 insertions(+), 50 deletions(-)
 
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/constants.c | 14 --------------
- include/scsi/scsi_dbg.h  |  2 --
- 2 files changed, 16 deletions(-)
+I don't know enough to review this, but as far as I'm concerned, the
+Xen folks own drivers/pci/xen-pcifront.c, so whatever they want to do
+is fine with me.
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index d35a5d6..2f44707 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
- }
- EXPORT_SYMBOL(scsi_print_sense_hdr);
- 
--/*
-- * Print normalized SCSI sense header with device information and a prefix.
-- */
--void
--scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
--			  struct scsi_sense_hdr *sshdr)
--{
--	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
--	scsi_show_sense_hdr(sshdr);
--	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
--	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
--}
--EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
--
- static void
- scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
- 		       struct scsi_sense_hdr *sshdr)
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index e89844c..5a43a4c 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
- extern void scsi_show_extd_sense(unsigned char, unsigned char);
- extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
- extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
--extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
--				     struct scsi_sense_hdr *);
- extern void scsi_print_sense(char *, struct scsi_cmnd *);
- extern void __scsi_print_sense(const char *name,
- 			       const unsigned char *sense_buffer,
--- 
-1.8.5.2
-
+Bjorn
