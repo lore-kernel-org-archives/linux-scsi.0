@@ -1,86 +1,121 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/38] scsi: remove scsi_print_status()
-Date: Mon, 29 Sep 2014 13:58:41 +0200
-Message-ID: <1411991947-130166-13-git-send-email-hare@suse.de>
+Subject: [PATCH 23/38] scsi_trace: add tracepoint for completion
+Date: Mon, 29 Sep 2014 13:58:52 +0200
+Message-ID: <1411991947-130166-24-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59329 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59332 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753484AbaI2L7N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:13 -0400
+	id S1753792AbaI2L7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 07:59:15 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so we can remove it.
+A tracepoint should be inserted upon completion to make tracing
+equivalent to logging.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 35 -----------------------------------
- include/scsi/scsi_dbg.h  |  1 -
- 2 files changed, 36 deletions(-)
+ drivers/scsi/scsi_lib.c     |  1 +
+ drivers/scsi/scsi_trace.c   | 16 ++++++++++++++++
+ include/trace/events/scsi.h | 31 +++++++++++++++++++++++++++++++
+ 3 files changed, 48 insertions(+)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 55ece2a..6e16b19 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2df485f..5c67e4e 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1626,6 +1626,7 @@ static void scsi_softirq_done(struct request *rq)
+ 	}
+ 
+ 	scsi_log_completion(cmd, disposition);
++	trace_scsi_cmd_completion(cmd, disposition);
+ 
+ 	switch (disposition) {
+ 		case SUCCESS:
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 503594e..51a7737 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -286,3 +286,19 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
+ 		return scsi_trace_misc(p, cdb, len);
+ 	}
  }
- EXPORT_SYMBOL(scsi_print_command);
++
++const char *
++scsi_trace_mlreturn_name(struct trace_seq *p, int rtn)
++{
++	const char *ret = trace_seq_buffer_ptr(p);
++	const char *mlstr = scsi_mlreturn_string(rtn);
++
++	if (mlstr)
++		trace_seq_printf(p, "%s", mlstr);
++	else
++		trace_seq_printf(p, "UNKNOWN (0x%x)", rtn);
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index db6c935..8df94d3 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -6,6 +6,7 @@
  
--/**
-- *	scsi_print_status - print scsi status description
-- *	@scsi_status: scsi status value
-- *
-- *	If the status is recognized, the description is printed.
-- *	Otherwise "Unknown status" is output. No trailing space.
-- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
-- *	(e.g. "0x2" for Check Condition).
-- **/
--void
--scsi_print_status(unsigned char scsi_status) {
--#ifdef CONFIG_SCSI_CONSTANTS
--	const char * ccp;
--
--	switch (scsi_status) {
--	case 0:    ccp = "Good"; break;
--	case 0x2:  ccp = "Check Condition"; break;
--	case 0x4:  ccp = "Condition Met"; break;
--	case 0x8:  ccp = "Busy"; break;
--	case 0x10: ccp = "Intermediate"; break;
--	case 0x14: ccp = "Intermediate-Condition Met"; break;
--	case 0x18: ccp = "Reservation Conflict"; break;
--	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
--	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
--	case 0x30: ccp = "ACA Active"; break;
--	case 0x40: ccp = "Task Aborted"; break;
--	default:   ccp = "Unknown status";
--	}
--	printk(KERN_INFO "%s", ccp);
--#else
--	printk(KERN_INFO "0x%0x", scsi_status);
--#endif
--}
--EXPORT_SYMBOL(scsi_print_status);
--
- #ifdef CONFIG_SCSI_CONSTANTS
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_dbg.h>
+ #include <linux/tracepoint.h>
+ #include <linux/trace_seq.h>
  
- struct error_info {
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index cd0c873..44bea15 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,7 +19,6 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
--extern void scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+@@ -195,6 +196,9 @@
+ 		scsi_prot_op_name(SCSI_PROT_READ_PASS),		\
+ 		scsi_prot_op_name(SCSI_PROT_WRITE_PASS))
+ 
++const char *scsi_trace_mlreturn_name(struct trace_seq *, int);
++#define __mlreturn_name(rtn) scsi_trace_mlreturn_name(p, rtn)
++
+ const char *scsi_trace_parse_cdb(struct trace_seq*, unsigned char*, int);
+ #define __parse_cdb(cdb, len) scsi_trace_parse_cdb(p, cdb, len)
+ 
+@@ -342,6 +346,33 @@ DEFINE_EVENT(scsi_cmd_done_timeout_template, scsi_dispatch_cmd_timeout,
+ 	     TP_PROTO(struct scsi_cmnd *cmd),
+ 	     TP_ARGS(cmd));
+ 
++TRACE_EVENT(scsi_cmd_completion,
++
++	TP_PROTO(struct scsi_cmnd *cmd, int rtn),
++
++	TP_ARGS(cmd, rtn),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	host_no	)
++		__field( unsigned int,	channel	)
++		__field( unsigned int,	id	)
++		__field( unsigned int,	lun	)
++		__field( int,		rtn	)
++	),
++
++	TP_fast_assign(
++		__entry->host_no	= cmd->device->host->host_no;
++		__entry->channel	= cmd->device->channel;
++		__entry->id		= cmd->device->id;
++		__entry->lun		= cmd->device->lun;
++		__entry->rtn		= rtn;
++	),
++
++	TP_printk("host_no=%u channel=%u id=%u lun=%u disposition=%s",
++		  __entry->host_no, __entry->channel, __entry->id,
++		  __entry->lun, __mlreturn_name(__entry->rtn))
++);
++
+ TRACE_EVENT(scsi_eh_wakeup,
+ 
+ 	TP_PROTO(struct Scsi_Host *shost),
 -- 
 1.8.5.2
 
