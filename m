@@ -1,127 +1,221 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/38] scsi: separate out scsi_(host|driver)byte_string()
-Date: Mon, 29 Sep 2014 13:58:47 +0200
-Message-ID: <1411991947-130166-19-git-send-email-hare@suse.de>
+Subject: [PATCH 21/38] scsi: fixup logging messages in scsi_error.c
+Date: Mon, 29 Sep 2014 13:58:50 +0200
+Message-ID: <1411991947-130166-22-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59346 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59348 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753228AbaI2L7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:14 -0400
+	id S1753800AbaI2L7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 07:59:15 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Export functions for later use.
+Use the matching scope for logging messages to allow for
+better command tracing.
 
+Suggested-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
- include/scsi/scsi_dbg.h  |  2 ++
- 2 files changed, 46 insertions(+), 14 deletions(-)
+ drivers/scsi/hosts.c      |  4 +--
+ drivers/scsi/scsi_error.c | 82 +++++++++++++++++++++++++----------------------
+ 2 files changed, 45 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 713e1e0..d3e1900 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1404,38 +1404,68 @@ static const char * const hostbyte_table[]={
- "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
- "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
- "DID_NEXUS_FAILURE" };
--#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 6de80e3..06030e1 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -485,8 +485,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 					    WQ_UNBOUND | WQ_MEM_RECLAIM,
+ 					   1, shost->host_no);
+ 	if (!shost->tmf_work_q) {
+-		printk(KERN_WARNING "scsi%d: failed to create tmf workq\n",
+-		       shost->host_no);
++		shost_printk(KERN_WARNING, shost,
++			     "failed to create tmf workq\n");
+ 		goto fail_kthread;
+ 	}
+ 	scsi_proc_hostdir_add(shost->hostt);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 8a6d382..4d3f55c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1156,9 +1156,10 @@ int scsi_eh_get_sense(struct list_head *work_q,
+ 		shost = scmd->device->host;
+ 		if (scsi_host_eh_past_deadline(shost)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++				scmd_printk(KERN_INFO, scmd,
++					    "%s: skip request sense, "
++					     "past eh deadline\n",
++					     current->comm));
+ 			break;
+ 		}
+ 		if (status_byte(scmd->result) != CHECK_CONDITION)
+@@ -1265,9 +1266,10 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+ 				/* Push items back onto work_q */
+ 				list_splice_init(cmd_list, work_q);
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+-					shost_printk(KERN_INFO, sdev->host,
+-						     "skip %s, past eh deadline",
+-						     __func__));
++					sdev_printk(KERN_INFO, sdev,
++						    "%s: skip test device, "
++						    "past eh deadline",
++						    current->comm));
+ 				break;
+ 			}
+ 		}
+@@ -1318,21 +1320,22 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
+ 		if (scsi_host_eh_past_deadline(shost)) {
+ 			list_splice_init(&check_list, work_q);
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++				scmd_printk(KERN_INFO, scmd,
++					    "%s: skip aborting cmd, "
++					    "past eh deadline\n",
++					    current->comm));
+ 			return list_empty(work_q);
+ 		}
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+-			shost_printk(KERN_INFO, shost,
+-				     "%s: aborting cmd: 0x%p\n",
++			scmd_printk(KERN_INFO, scmd,
++				     "%s: aborting cmd\n",
+ 				     current->comm, scmd));
+ 		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+ 		if (rtn == FAILED) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					     "%s: aborting cmd failed: 0x%p\n",
+-					     current->comm, scmd));
++				scmd_printk(KERN_INFO, scmd,
++					    "%s: aborting cmd failed\n",
++					     current->comm));
+ 			list_splice_init(&check_list, work_q);
+ 			return list_empty(work_q);
+ 		}
+@@ -1390,9 +1393,10 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 	shost_for_each_device(sdev, shost) {
+ 		if (scsi_host_eh_past_deadline(shost)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++				sdev_printk(KERN_INFO, sdev,
++					    "%s: skip START_UNIT, "
++					    "past eh deadline\n",
++					    current->comm));
+ 			break;
+ 		}
+ 		stu_scmd = NULL;
+@@ -1407,9 +1411,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			continue;
  
- static const char * const driverbyte_table[]={
- "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
- "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
--#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+-			shost_printk(KERN_INFO, shost,
+-				     "%s: Sending START_UNIT to sdev: 0x%p\n",
+-				     current->comm, sdev));
++			sdev_printk(KERN_INFO, sdev,
++				     "%s: Sending START_UNIT\n",
++				     current->comm));
  
--void scsi_show_result(int result)
-+#endif
-+
-+const char *scsi_hostbyte_string(int result)
- {
-+	const char *hb_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
- 	int hb = host_byte(result);
--	int db = driver_byte(result);
+ 		if (!scsi_eh_try_stu(stu_scmd)) {
+ 			if (!scsi_device_online(sdev) ||
+@@ -1423,9 +1427,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			}
+ 		} else {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					     "%s: START_UNIT failed to sdev:"
+-					     " 0x%p\n", current->comm, sdev));
++				sdev_printk(KERN_INFO, sdev,
++					    "%s: START_UNIT failed\n",
++					    current->comm));
+ 		}
+ 	}
  
--	printk("Result: hostbyte=%s driverbyte=%s\n",
--	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
--	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
-+	if (hb < ARRAY_SIZE(hostbyte_table))
-+		hb_string = hostbyte_table[hb];
-+#endif
-+	return hb_string;
- }
-+EXPORT_SYMBOL(scsi_hostbyte_string);
+@@ -1456,9 +1460,9 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 	shost_for_each_device(sdev, shost) {
+ 		if (scsi_host_eh_past_deadline(shost)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++				sdev_printk(KERN_INFO, sdev,
++					    "%s: skip BDR, past eh deadline\n",
++					     current->comm));
+ 			break;
+ 		}
+ 		bdr_scmd = NULL;
+@@ -1472,9 +1476,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			continue;
  
--#else
-+const char *scsi_driverbyte_string(int result)
-+{
-+	const char *db_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
-+	int db = driver_byte(result);
-+
-+	if (db < ARRAY_SIZE(driverbyte_table))
-+		db_string = driverbyte_table[db];
-+#endif
-+	return db_string;
-+}
-+EXPORT_SYMBOL(scsi_driverbyte_string);
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+-			shost_printk(KERN_INFO, shost,
+-				     "%s: Sending BDR sdev: 0x%p\n",
+-				     current->comm, sdev));
++			sdev_printk(KERN_INFO, sdev,
++				     "%s: Sending BDR\n", current->comm));
+ 		rtn = scsi_try_bus_device_reset(bdr_scmd);
+ 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+ 			if (!scsi_device_online(sdev) ||
+@@ -1490,9 +1493,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 			}
+ 		} else {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				shost_printk(KERN_INFO, shost,
+-					     "%s: BDR failed sdev: 0x%p\n",
+-					     current->comm, sdev));
++				sdev_printk(KERN_INFO, sdev,
++					    "%s: BDR failed\n", current->comm));
+ 		}
+ 	}
  
- void scsi_show_result(int result)
- {
--	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--	       host_byte(result), driver_byte(result));
--}
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
+@@ -1528,8 +1530,9 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+ 			list_splice_init(&tmp_list, work_q);
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++					    "%s: Skip target reset, "
++					     "past eh deadline\n",
++					     current->comm));
+ 			return list_empty(work_q);
+ 		}
  
--#endif
-+	if (hb_string || db_string)
-+		printk("Result: hostbyte=%s driverbyte=%s\n",
-+		       hb_string ? hb_string : "invalid",
-+		       db_string ? db_string : "invalid");
-+	else
-+		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+		       host_byte(result), driver_byte(result));
-+}
- EXPORT_SYMBOL(scsi_show_result);
+@@ -1591,8 +1594,8 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
+ 			list_splice_init(&check_list, work_q);
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				shost_printk(KERN_INFO, shost,
+-					    "skip %s, past eh deadline\n",
+-					     __func__));
++					    "%s: skip BRST, past eh deadline\n",
++					     current->comm));
+ 			return list_empty(work_q);
+ 		}
  
+@@ -2189,9 +2192,10 @@ int scsi_error_handler(void *data)
+ 		 */
+ 		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+-				printk(KERN_ERR "Error handler scsi_eh_%d "
+-						"unable to autoresume\n",
+-						shost->host_no));
++				shost_printk(KERN_ERR, shost,
++					     "scsi_eh_%d: "
++					     "unable to autoresume\n",
++					     shost->host_no));
+ 			continue;
+ 		}
  
- void scsi_print_result(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_INFO, cmd, " ");
--	scsi_show_result(cmd->result);
-+	const char *hb_string = scsi_hostbyte_string(cmd->result);
-+	const char *db_string = scsi_driverbyte_string(cmd->result);
-+
-+	if (hb_string || db_string)
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=%s driverbyte=%s",
-+			    hb_string ? hb_string : "invalid",
-+			    db_string ? db_string : "invalid");
-+	else
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
-+			    host_byte(cmd->result), driver_byte(cmd->result));
- }
- EXPORT_SYMBOL(scsi_print_result);
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 44bea15..fb3e0d4 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,6 +19,8 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
-+extern const char *scsi_hostbyte_string(int);
-+extern const char *scsi_driverbyte_string(int);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
 -- 
 1.8.5.2
 
