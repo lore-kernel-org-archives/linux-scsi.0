@@ -1,40 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/38] sd: Remove scsi_print_sense() in sd_done()
-Date: Mon, 29 Sep 2014 13:58:31 +0200
-Message-ID: <1411991947-130166-3-git-send-email-hare@suse.de>
+Subject: [PATCH 01/38] Remove scsi_cmd_print_sense_hdr()
+Date: Mon, 29 Sep 2014 13:58:30 +0200
+Message-ID: <1411991947-130166-2-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59300 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59327 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326AbaI2L7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:11 -0400
+	id S1753465AbaI2L7N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 07:59:13 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-sd_done() was calling scsi_print_sense() for a sense code
-of 'NO_SENSE'.
+Unused.
 
 Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/constants.c | 14 --------------
+ include/scsi/scsi_dbg.h  |  2 --
+ 2 files changed, 16 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 0cb5c9f..0ccb459 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1730,7 +1730,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		 * unknown amount of data was transferred so treat it as an
- 		 * error.
- 		 */
--		scsi_print_sense("sd", SCpnt);
- 		SCpnt->result = 0;
- 		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 		break;
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index d35a5d6..2f44707 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
+ }
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
+ 
+-/*
+- * Print normalized SCSI sense header with device information and a prefix.
+- */
+-void
+-scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+-			  struct scsi_sense_hdr *sshdr)
+-{
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+-}
+-EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+-
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 		       struct scsi_sense_hdr *sshdr)
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index e89844c..5a43a4c 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_show_extd_sense(unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+-extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+-				     struct scsi_sense_hdr *);
+ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
 -- 
 1.8.5.2
 
