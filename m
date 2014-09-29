@@ -1,147 +1,165 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 34/38] scsi: Remove command pointer argument from logging messages
-Date: Mon, 29 Sep 2014 13:59:03 +0200
-Message-ID: <1411991947-130166-35-git-send-email-hare@suse.de>
+Subject: [PATCH 14/38] scsi: merge print_opcode_name()
+Date: Mon, 29 Sep 2014 13:58:43 +0200
+Message-ID: <1411991947-130166-15-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59340 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59344 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753869AbaI2L7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:18 -0400
+	id S1753689AbaI2L7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 07:59:14 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Printing out the command pointer during logging messages doesn't
-serve any real purpose, but only takes up space.
-So we should remove it and rely on the generic logging functions
-to distinguish the command for us.
+Instead of having two versions of print_opcode_name() we
+should be consolidating them into one version.
 
-Suggested-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 33 +++++++++++++--------------------
- drivers/scsi/scsi_lib.c   |  2 +-
- 2 files changed, 14 insertions(+), 21 deletions(-)
+ drivers/scsi/constants.c | 91 ++++++++++++++++++------------------------------
+ 1 file changed, 34 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9daaf2a..0d977d3 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -123,50 +123,45 @@ scmd_eh_abort_handler(struct work_struct *work)
- 	if (scsi_host_eh_past_deadline(sdev->host)) {
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
--				    "scmd %p eh timeout, not aborting\n",
--				    scmd));
-+				    "eh timeout, not aborting\n"));
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index b9eb6a1..c1cdfab 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -30,6 +30,11 @@
+ #define THIRD_PARTY_COPY_IN 0x84
+ 
+ 
++struct sa_name_list {
++	int cmd;
++	const struct value_name_pair *arr;
++	int arr_sz;
++};
+ 
+ #ifdef CONFIG_SCSI_CONSTANTS
+ static const char * cdb_byte0_names[] = {
+@@ -244,12 +249,6 @@ static const struct value_name_pair variable_length_arr[] = {
+ };
+ #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
+ 
+-struct sa_name_list {
+-	int cmd;
+-	const struct value_name_pair *arr;
+-	int arr_sz;
+-};
+-
+ static struct sa_name_list sa_names_arr[] = {
+ 	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
+ 	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
+@@ -265,7 +264,26 @@ static struct sa_name_list sa_names_arr[] = {
+ 	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
+ 	{0, NULL, 0},
+ };
+-#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
++
++#else /* ifndef CONFIG_SCSI_CONSTANTS */
++static const char *cdb_byte0_names[];
++
++static struct sa_name_list sa_names_arr[] = {
++	{VARIABLE_LENGTH_CMD, NULL, 0},
++	{MAINTENANCE_IN, NULL, 0},
++	{MAINTENANCE_OUT, NULL, 0},
++	{PERSISTENT_RESERVE_IN, NULL, 0},
++	{PERSISTENT_RESERVE_OUT, NULL, 0},
++	{SERVICE_ACTION_IN_12, NULL, 0},
++	{SERVICE_ACTION_OUT_12, NULL, 0},
++	{SERVICE_ACTION_BIDIRECTIONAL, NULL, 0},
++	{SERVICE_ACTION_IN_16, NULL, 0},
++	{SERVICE_ACTION_OUT_16, NULL, 0},
++	{THIRD_PARTY_COPY_IN, NULL, 0},
++	{THIRD_PARTY_COPY_OUT, NULL, 0},
++	{0, NULL, 0},
++};
++#endif /* CONFIG_SCSI_CONSTANTS */
+ 
+ static bool scsi_opcode_sa_name(int cmd, int service_action,
+ 				const char **sa_name)
+@@ -274,7 +292,7 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
+ 	const struct value_name_pair *arr = NULL;
+ 	int arr_sz, k;
+ 
+-	for (k = 0; k < SA_NAME_LIST_SZ; ++k, ++sa_name_ptr) {
++	for (k = 0; k < ARRAY_SIZE(sa_names_arr); ++k, ++sa_name_ptr) {
+ 		if (sa_name_ptr->cmd == cmd) {
+ 			arr = sa_name_ptr->arr;
+ 			arr_sz = sa_name_ptr->arr_sz;
+@@ -316,11 +334,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 
+ 	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+ 		if (cdb0 < 0xc0) {
+-			name = cdb_byte0_names[cdb0];
+-			if (name)
+-				printk("%s", name);
+-			else
+-				printk("cdb[0]=0x%x (reserved)", cdb0);
++			if (ARRAY_SIZE(cdb_byte0_names)) {
++				name = cdb_byte0_names[cdb0];
++				if (name)
++					printk("%s", name);
++				else
++					printk("cdb[0]=0x%x (reserved)", cdb0);
++			} else
++				printk("cdb[0]=0x%x", cdb0);
+ 		} else
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
  	} else {
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
--				    "aborting command %p\n", scmd));
-+				    "aborting command\n"));
- 		rtn = scsi_try_to_abort_cmd(sdev->host->hostt, scmd);
- 		if (rtn == SUCCESS) {
- 			set_host_byte(scmd, DID_TIME_OUT);
- 			if (scsi_host_eh_past_deadline(sdev->host)) {
- 				SCSI_LOG_ERROR_RECOVERY(3,
- 					scmd_printk(KERN_INFO, scmd,
--						    "scmd %p eh timeout, "
-+						    "eh timeout, "
- 						    "not retrying aborted "
--						    "command\n", scmd));
-+						    "command\n"));
- 			} else if (!scsi_noretry_cmd(scmd) &&
- 			    (++scmd->retries <= scmd->allowed)) {
- 				SCSI_LOG_ERROR_RECOVERY(3,
- 					scmd_printk(KERN_WARNING, scmd,
--						    "scmd %p retry "
--						    "aborted command\n", scmd));
-+						    "retry aborted command\n"));
- 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
- 				return;
- 			} else {
- 				SCSI_LOG_ERROR_RECOVERY(3,
- 					scmd_printk(KERN_WARNING, scmd,
--						    "scmd %p finish "
--						    "aborted command\n", scmd));
-+						    "command aborted\n"));
- 				scsi_finish_command(scmd);
- 				return;
- 			}
- 		} else {
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				scmd_printk(KERN_INFO, scmd,
--					    "scmd %p abort failed, rtn %d\n",
--					    scmd, rtn));
-+					    "abort failed, rtn %d\n", rtn));
- 		}
+@@ -334,50 +355,6 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
  	}
- 
- 	if (!scsi_eh_scmd_add(scmd, 0)) {
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_WARNING, scmd,
--				    "scmd %p terminate "
--				    "aborted command\n", scmd));
-+				    "terminate aborted command\n"));
- 		set_host_byte(scmd, DID_TIME_OUT);
- 		scsi_finish_command(scmd);
- 	}
-@@ -192,7 +187,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 		scmd->eh_eflags &= ~SCSI_EH_ABORT_SCHEDULED;
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
--				    "scmd %p previous abort failed\n", scmd));
-+				    "previous abort failed\n"));
- 		BUG_ON(delayed_work_pending(&scmd->abort_work));
- 		return FAILED;
- 	}
-@@ -206,8 +201,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
--				    "scmd %p not aborting, host in recovery\n",
--				    scmd));
-+				    "not aborting, host in recovery\n"));
- 		return FAILED;
- 	}
- 
-@@ -217,8 +211,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
- 
- 	scmd->eh_eflags |= SCSI_EH_ABORT_SCHEDULED;
- 	SCSI_LOG_ERROR_RECOVERY(3,
--		scmd_printk(KERN_INFO, scmd,
--			    "scmd %p abort scheduled\n", scmd));
-+		scmd_printk(KERN_INFO, scmd, "abort scheduled\n"));
- 	queue_delayed_work(shost->tmf_work_q, &scmd->abort_work, HZ / 100);
- 	return SUCCESS;
  }
-@@ -740,8 +733,8 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- 	struct completion *eh_action;
  
- 	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
--			"%s scmd: %p result: %x\n",
--			__func__, scmd, scmd->result));
-+			"%s result: %x\n",
-+			__func__, scmd->result));
- 
- 	eh_action = scmd->device->host->eh_action;
- 	if (eh_action)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5c67e4e..0290b7522 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -144,7 +144,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
- 	unsigned long flags;
- 
- 	SCSI_LOG_MLQUEUE(1, scmd_printk(KERN_INFO, cmd,
--		"Inserting command %p into mlqueue\n", cmd));
-+		"Inserting into mlqueue\n"));
- 
- 	scsi_set_blocked(cmd, reason);
- 
+-#else /* ifndef CONFIG_SCSI_CONSTANTS */
+-
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+-{
+-	int sa, len, cdb0;
+-
+-	cdb0 = cdbp[0];
+-	switch(cdb0) {
+-	case VARIABLE_LENGTH_CMD:
+-		len = scsi_varlen_cdb_length(cdbp);
+-		if (len < 10) {
+-			printk("short opcode=0x%x command, len=%d "
+-			       "ext_len=%d", cdb0, len, cdb_len);
+-			break;
+-		}
+-		sa = (cdbp[8] << 8) + cdbp[9];
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		if (len != cdb_len)
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-		break;
+-	case MAINTENANCE_IN:
+-	case MAINTENANCE_OUT:
+-	case PERSISTENT_RESERVE_IN:
+-	case PERSISTENT_RESERVE_OUT:
+-	case SERVICE_ACTION_IN_12:
+-	case SERVICE_ACTION_OUT_12:
+-	case SERVICE_ACTION_BIDIRECTIONAL:
+-	case SERVICE_ACTION_IN_16:
+-	case SERVICE_ACTION_OUT_16:
+-	case THIRD_PARTY_COPY_IN:
+-	case THIRD_PARTY_COPY_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		break;
+-	default:
+-		if (cdb0 < 0xc0)
+-			printk("cdb[0]=0x%x", cdb0);
+-		else
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		break;
+-	}
+-}
+-#endif
+-
+ void __scsi_print_command(unsigned char *cdb)
+ {
+ 	int k, len;
 -- 
 1.8.5.2
 
