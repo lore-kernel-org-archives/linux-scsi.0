@@ -1,111 +1,79 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
- of xenbus_switch_state()
-Date: Mon, 29 Sep 2014 18:14:18 +0100
-Message-ID: <5429936A.7050905@citrix.com>
-References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com> <542969E6.1010104@citrix.com> <20140929154055.GA31952@laptop.dumpdata.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140929154055.GA31952@laptop.dumpdata.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>, ian.campbell@citrix.com, wei.liu2@citrix.com, boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com, yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com, xen-devel@lists.xenproject.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 2/2] iscsi_tcp: export port being used
+Date: Mon, 29 Sep 2014 13:55:42 -0500
+Message-ID: <1412016942-4759-3-git-send-email-michaelc@cs.wisc.edu>
+References: <1412016942-4759-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42698 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753898AbaI2S4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 14:56:48 -0400
+Received: from localhost.localdomain (c-24-245-27-162.hsd1.mn.comcast.net [24.245.27.162])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id s8TItn1e028576
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2014 13:56:47 -0500
+In-Reply-To: <1412016942-4759-1-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 29/09/14 16:40, Konrad Rzeszutek Wilk wrote:
-> On Mon, Sep 29, 2014 at 03:17:10PM +0100, David Vrabel wrote:
->> On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
->>> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
->>>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
->>>
->>> Only on the first depth, not on the subsequent ones (as in if
->>> the first xenbus_switch_fail fails, it won't try to call
->>> xenbus_switch_state again and again).
->>>
->>>> internally, so need not return any status value, then use 'void' instead
->>>> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
->>>
->>> When that switch occurs (to XenbusStateConnected) won't the watches
->>> fire - meaning we MUST make sure that the watch functions - if they
->>> use the xenbus_switch_state() they MUST not hold any locks - because
->>> they could be executed once more?
->>>
->>> Oh wait, we don't have to worry about that right now as the callbacks
->>> that pick up the messages from the XenBus are all gated on one mutex
->>> anyhow.
->>>
->>> Hm, anyhow, I would add this extra piece of information to the patch:
->>>
->>>
->>> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
->>> index c214daa..f7399fd 100644
->>> --- a/drivers/xen/xen-pciback/xenbus.c
->>> +++ b/drivers/xen/xen-pciback/xenbus.c
->>> @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
->>>  
->>>  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
->>>  	case XenbusStateInitWait:
->>> +		/*
->>> +		 * xenbus_switch_state can call xenbus_switch_fatal which will
->>> +		 * immediately set the state to XenbusStateClosing which
->>> +		 * means if we were reading for it here we MUST drop any
->>> +		 * locks so that we don't dead-lock.
->>> +		 */
->>
->> Watches are asynchronous and serialised by the xenwatch thread.  I can't
->> see what deadlock you're talking about here.  Particularly since the
->> backend doesn't watch its own state node (it watches the frontend one).
->>
->>>  		xen_pcibk_setup_backend(pdev);
->>>  		break;
->>>  
->>>>
->>>> Also need be sure that all callers which check the return value must let
->>>> 'err' be 0.
->>>
->>> I am bit uncomfortable with that, that is due to:
->>>
->>>
->>> .. snip..
->>>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
->>>> index 9c47b89..b5c3d47 100644
->>>> --- a/drivers/net/xen-netback/xenbus.c
->>>> +++ b/drivers/net/xen-netback/xenbus.c
->>>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
->>>>  	if (err)
->>>>  		pr_debug("Error writing multi-queue-max-queues\n");
->>>>  
->>>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
->>>> -	if (err)
->>>> -		goto fail;
->>>> -
->>>> +	xenbus_switch_state(dev, XenbusStateInitWait);
->>>
->>> Which if it fails it won't call:
->>>
->>> 354 fail:                                                                           
->>> 355         pr_debug("failed\n");                                                   
->>> 356         netback_remove(dev);                                                    
->>> 357         return err;         
->>>
->>>
->>> And since there is no watch on the backend state to go in Closing it won't
->>> ever call those and we leak memory.
->>
->> It's not leaking the memory.  All resources will be recovered when the
->> device is removed.
-> 
-> I presume you mean when the XenBus entries are torn down? It does look
-> like it would call the .remove functionality. That should take care of that.
-> 
-> In which case we can just remove all of the 'netback_remove()' and also
-> remove some of the labels.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-No.  If the final xenbus_switch_state() fails then at least the device
-is in a consistent state, waiting for the other end to notice.
+This just has iscsi_tcp support ISCSI_PARAM_LOCAL_PORT which
+exports the local port being used by the iscsi connection.
 
-We don't want to return success from a probe with a half-setup device.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/iscsi_tcp.c |   10 ++++++++--
+ drivers/scsi/libiscsi.c  |    1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-David
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index a669f2d..427af0f 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -726,13 +726,18 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	switch(param) {
+ 	case ISCSI_PARAM_CONN_PORT:
+ 	case ISCSI_PARAM_CONN_ADDRESS:
++	case ISCSI_PARAM_LOCAL_PORT:
+ 		spin_lock_bh(&conn->session->frwd_lock);
+ 		if (!tcp_sw_conn || !tcp_sw_conn->sock) {
+ 			spin_unlock_bh(&conn->session->frwd_lock);
+ 			return -ENOTCONN;
+ 		}
+-		rc = kernel_getpeername(tcp_sw_conn->sock,
+-					(struct sockaddr *)&addr, &len);
++		if (param == ISCSI_PARAM_LOCAL_PORT)
++			rc = kernel_getsockname(tcp_sw_conn->sock,
++						(struct sockaddr *)&addr, &len);
++		else
++			rc = kernel_getpeername(tcp_sw_conn->sock,
++						(struct sockaddr *)&addr, &len);
+ 		spin_unlock_bh(&conn->session->frwd_lock);
+ 		if (rc)
+ 			return rc;
+@@ -895,6 +900,7 @@ static umode_t iscsi_sw_tcp_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_DATADGST_EN:
+ 		case ISCSI_PARAM_CONN_ADDRESS:
+ 		case ISCSI_PARAM_CONN_PORT:
++		case ISCSI_PARAM_LOCAL_PORT:
+ 		case ISCSI_PARAM_EXP_STATSN:
+ 		case ISCSI_PARAM_PERSISTENT_ADDRESS:
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 191b597..0d8bc6c 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3505,6 +3505,7 @@ int iscsi_conn_get_addr_param(struct sockaddr_storage *addr,
+ 			len = sprintf(buf, "%pI6\n", &sin6->sin6_addr);
+ 		break;
+ 	case ISCSI_PARAM_CONN_PORT:
++	case ISCSI_PARAM_LOCAL_PORT:
+ 		if (sin)
+ 			len = sprintf(buf, "%hu\n", be16_to_cpu(sin->sin_port));
+ 		else
+-- 
+1.7.1
+
