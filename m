@@ -1,86 +1,111 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Mon, 29 Sep 2014 17:08:59 +0000
-Message-ID: <1412010538.6067.6.camel@jarvis.lan>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
-	 <54298E3E.40509@hp.com>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+Date: Mon, 29 Sep 2014 18:14:18 +0100
+Message-ID: <5429936A.7050905@citrix.com>
+References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com> <542969E6.1010104@citrix.com> <20140929154055.GA31952@laptop.dumpdata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:55736 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591AbaI2RJA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2014 13:09:00 -0400
-In-Reply-To: <54298E3E.40509@hp.com>
-Content-Language: en-US
-Content-ID: <6855095848253F44912214DEF8B8A202@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140929154055.GA31952@laptop.dumpdata.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>, ian.campbell@citrix.com, wei.liu2@citrix.com, boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com, yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com, xen-devel@lists.xenproject.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "webbnh@hp.com" <webbnh@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>
 
-T24gTW9uLCAyMDE0LTA5LTI5IGF0IDEyOjUyIC0wNDAwLCBXZWJiIFNjYWxlcyB3cm90ZToNCj4g
-W0hhbm5lcywgSmFtZXMsIENocmlzdG9waDogIHNvcnJ5IGZvciB0aGUgZXh0cmEgY29waWVzIC0t
-IG15IG1haWwgY2xpZW50IA0KPiBkaWRuJ3QgYXV0b21hdGljYWxseSBjb252ZXJ0IHRvIHBsYWlu
-LXRleHQgZm9yIHRoZSBsaXN0LCBzbyBpdCBib3VuY2VkLl0NCj4gDQo+IENvdWxkIHNvbWVvbmUg
-ZW5saWdodGVuIG1lIG9uIHdoZW4gYW5kIHdoZXJlIGEgZHJpdmVyIG1pZ2h0IHdhbnQgdG8gb3Ig
-DQo+IGJlIHJlcXVpcmVkIHRvIHNldCB0aGUgInRhZ2dlZF9zdXBwb3J0ZWQiIGZsYWc/DQo+IA0K
-PiBBIHF1aWNrIGdyZXAgeWllbGRzIGEgbnVtYmVyIG9mIHBsYWNlcyB3aGVyZSB0aGUgZmxhZyB2
-YWx1ZSBpcyBzZXQgb3IgDQo+IGNsZWFyZWQuDQo+IA0KPiBUaGlzIGxvb2tzIGxpa2UgdGhlIG1l
-Y2hhbmlzbSB3aGljaCBpcyBzdXBwb3NlZCB0byBzZXQgdGhlIGZsYWcgKGUuZy4sIA0KPiBpZiB0
-aGUgZGV2aWNlL0xVTiBjaGFyYWN0ZXJpc3RpY3Mgc3VnZ2VzdCB0aGF0IGl0J3MgYXBwcm9wcmlh
-dGUpLCBhbmQgc28gDQo+IEknbSBub3Qgc3VyZSB3aGVuL3doeSB0aGUgZHJpdmVyIHdvdWxkIHdh
-bnQgdG8gZG8gaXQgZXhwbGljaXRseToNCj4gDQo+IC4vZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5j
-OiAgICAgICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gc2Nz
-aV9hZGRfbHVuKCldDQoNClRoYXQncyBzZXQgYmFzZWQgb24gZGV2aWNlIGNhcGFiaWxpdGllcy4N
-Cg0KPiBUaGVzZSBsb29rIGxpa2UgYXR0ZW1wdHMgdG8gb3ZlcnJpZGUgdGhlIFNDU0kgbWlkLWxh
-eWVyOg0KPiANCj4gLi9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX21haW4uYzogICAgICAgIHNkZXYt
-PnRhZ2dlZF9zdXBwb3J0ZWQgPSAxOyAgICAgICAgIFtpbiAnX3NsYXZlX2FsbG9jKCldDQo+IC4v
-ZHJpdmVycy9zY3NpL3N0ZXguYzogICAgICAgICAgICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9y
-dGVkID0gMTsgICAgICAgICBbaW4gJ19zbGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZlcnMvc2NzaS9z
-dGV4LmM6ICAgICAgICAgICAgICAgICAgc2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDE7ICAgICAg
-ICAgW2luICdfc2xhdmVfY29uZmlndXJlKCldDQo+IC4vZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0
-X29zLmM6ICAgICAgICBzZGV2LT50YWdnZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gJ19z
-bGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9vcy5jOiAgICAgICAg
-c2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDE7ICAgICAgICAgW2luICdfc2xhdmVfY29uZmlndXJl
-KCldDQo+IC4vZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYzogICAgICAgICAgICBzZGV2LT50YWdn
-ZWRfc3VwcG9ydGVkID0gMTsgICAgICAgICBbaW4gJ19zbGF2ZV9hbGxvYygpXQ0KPiAuL2RyaXZl
-cnMvc2NzaS9zY3NpX2RlYnVnLmM6ICAgICAgICAgICAgc2RwLT50YWdnZWRfc3VwcG9ydGVkID0g
-MTsgICAgICAgICAgW2luICdfc2xhdmVfY29uZmlndXJlKCldDQoNClNsYXZlIGNvbmZpZ3VyZSBp
-cyBhbGxvd2VkIHRvIG92ZXJyaWRlIHRoaXMsIHNvIHRoZXkgYWxsIGhhdmUgcmVhc29ucyBJDQp3
-b3VsZCBzdXNwZWN0IChxbGEgaXMgYmVjYXVzZSB0YXBlIGlzIHVudGFnZ2VkLCBidXQgcWxhIHN0
-aWxsIG5lZWRzIGENCnRhZyBmb3IgdGhlIGludGVybmFsIHF1ZXVlLCBmb3IgaW5zdGFuY2UpLg0K
-DQo+IA0KPiBIb3dldmVyLCBpdCBzdHJpa2VzIG1lIHRoYXQgaXQncyB1bm5lY2Vzc2FyeSB0byBz
-ZXQgdGhlIGZsYWcgaW4gL2JvdGgvIA0KPiAnX3NsYXZlX2FsbG9jKCkgYW5kICdfc2xhdmVfY29u
-ZmlndXJlKCkgLS0gSSB0aGluayB0aGF0IGVpdGhlciBvbmUgDQo+IHNob3VsZCB3b3JrLCBhbmQg
-J19zbGF2ZV9jb25maWd1cmUoKSBzZWVtcyBsaWtlIHRoZSBhcHByb3ByaWF0ZSBjaG9pY2UuICAN
-Cj4gKEJ1dCwgSSdtIGxlZnQgd29uZGVyaW5nIHdoeSB0aGVzZSBkcml2ZXJzIG5lZWQgdG8gb3Zl
-cnJpZGUgdGhlIFNDU0kgDQo+IE1MJ3MgY2hvaWNlLi4uLikNCg0KU3RleCBpcyB0aGUgb25seSBv
-bmUgdGhhdCBkb2VzIHRoaXM7IGl0J3MgcHJvYmFibHkganVzdCBhIG1ha2Ugc3VyZQ0KdGhpbmcu
-ICBZb3UgbWlnaHQgd2FudCB0byBzZXQgaW4gc2xhdmUgYWxsb2MgaWYgeW91IG5lZWQgYSB0YWdn
-ZWQNCklucXVpcnkgY29tbWFuZC4NCg0KPiBUaGVzZSBhcmUgaW50ZXJlc3RpbmcsIGJ1dCBub3Qg
-cGVydGluZW50IHRvIHRoZSBkaXNjdXNzaW9uIGF0IGhhbmQgKHRoZXkgDQo+IHNlZW0gdG8gYmUg
-ZmFsbC1iYWNrcyB0cmlnZ2VyZWQgZHVyaW5nIGVycm9yIHJlY292ZXJ5KToNCj4gDQo+IC4vZHJp
-dmVycy9zY3NpL2F0YXJpX05DUjUzODAuYzogICAgICAgICBjbWQtPmRldmljZS0+dGFnZ2VkX3N1
-cHBvcnRlZCA9IDA7ICBbZXJyb3IgcmVjb3Zlcnk/XQ0KPiAuL2RyaXZlcnMvc2NzaS81M2M3MDAu
-YzogICAgICAgICAgICAgICAgU0NwLT5kZXZpY2UtPnRhZ2dlZF9zdXBwb3J0ZWQgPSAwOyAgW2Vy
-cm9yIHJlY292ZXJ5P10NCj4gLi9kcml2ZXJzL3Njc2kvc3VuM19OQ1I1MzgwLmM6ICAgICAgICAg
-IGNtZC0+ZGV2aWNlLT50YWdnZWRfc3VwcG9ydGVkID0gMDsgIFtlcnJvciByZWNvdmVyeT9dDQoN
-ClNQSSBhbGxvd3MgdGhlIGRldmljZSB0byByZWplY3QgdGhlIHRhZyBlbmFibGluZyBtZXNzYWdl
-cyAuLi4gdGhhdCdzDQp3aGF0IHRoaXMgbG90IGFyZSBhbGwgZG9pbmcuDQoNCj4gQW5kLCB0aGlz
-IG9uZSBsb29rcyBzcHVyaW91cyAodGhhdCBpcywgSSBiZWxpZXZlIGl0J3MgY2xlYXJpbmcgdGhl
-IGZsYWcgDQo+IHdoZW4gaXQncyBhbHJlYWR5IGNsZWFyKToNCj4gDQo+IC4vZHJpdmVycy9zY3Np
-L2xpYnNhcy9zYXNfc2NzaV9ob3N0LmM6ICBzY3NpX2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCA9IDA7
-ICAgICBbbG9va3Mgc3B1cmlvdXNdDQoNClBvaW50bGVzcyBidXQgaGFybWxlc3MuDQoNCj4gU28s
-IHRha2luZyB0aGUgcGF0Y2ggYmVsb3csIGZvciBleGFtcGxlLCB3aHkgaXMgdGFnZ2VkX3N1cHBv
-cnRlZCBiZWluZyANCj4gc2V0IGluIC9ib3RoLyB0aGUgJ19zbGF2ZV9hbGxvYygpIGFuZCB0aGUg
-J19zbGF2ZV9jb25maWd1cmUoKSByb3V0aW5lcywgDQo+IGFuZCwgaW4gZmFjdCwgd2h5IGlzIGl0
-IGJlaW5nIHNldCBhdCBhbGwgLS0gd2h5IGRvZXNuJ3QgdGhlIFNDU0kgDQo+IG1pZC1sYXllciBz
-ZXQgaXQgY29ycmVjdGx5IGluIHRoaXMgY2FzZT8NCg0KQmVjYXVzZSB0aGluZ3MgbGlrZSB0aGUg
-cWxhIGhhdmUgdG8gaGF2ZSB0YWdnZWQgaW5xdWlyeSBiZWNhdXNlIGl0J3MgYQ0Kc2hhcmVkIGhv
-c3QgdGFnIG1hcCB1c2VkIHRvIGxhYmVsIHRoZSBpc3N1ZSBxdWV1ZS4gIFNldHRpbmcgaXQgdHdp
-Y2UgaXMNCm92ZXJraWxsIGJlY2F1c2Ugd2UgZG9uJ3QgYWN0dWFsbHkgdHVybiBpdCBvZmYsIGJ1
-dCBpdCBjb3VsZCBiZQ0KY29uc3RydWVkIGFzIHBydWRlbnQgaW4gY2FzZSB3ZSBkaWQgKHdlIGNv
-dWxkIG1ha2UgdGFnZ2VkX3N1cHBvcnRlZA0KZXhhY3RseSByZWZsZWN0IHRoZSBzdGF0ZSBvZiB0
-aGUgQ21kUXVlIGJpdCBmb3IgaW5zdGFuY2UpLg0KDQpKYW1lcw0KDQo=
+On 29/09/14 16:40, Konrad Rzeszutek Wilk wrote:
+> On Mon, Sep 29, 2014 at 03:17:10PM +0100, David Vrabel wrote:
+>> On 29/09/14 15:02, Konrad Rzeszutek Wilk wrote:
+>>> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
+>>>> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+>>>
+>>> Only on the first depth, not on the subsequent ones (as in if
+>>> the first xenbus_switch_fail fails, it won't try to call
+>>> xenbus_switch_state again and again).
+>>>
+>>>> internally, so need not return any status value, then use 'void' instead
+>>>> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+>>>
+>>> When that switch occurs (to XenbusStateConnected) won't the watches
+>>> fire - meaning we MUST make sure that the watch functions - if they
+>>> use the xenbus_switch_state() they MUST not hold any locks - because
+>>> they could be executed once more?
+>>>
+>>> Oh wait, we don't have to worry about that right now as the callbacks
+>>> that pick up the messages from the XenBus are all gated on one mutex
+>>> anyhow.
+>>>
+>>> Hm, anyhow, I would add this extra piece of information to the patch:
+>>>
+>>>
+>>> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+>>> index c214daa..f7399fd 100644
+>>> --- a/drivers/xen/xen-pciback/xenbus.c
+>>> +++ b/drivers/xen/xen-pciback/xenbus.c
+>>> @@ -661,6 +661,12 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+>>>  
+>>>  	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+>>>  	case XenbusStateInitWait:
+>>> +		/*
+>>> +		 * xenbus_switch_state can call xenbus_switch_fatal which will
+>>> +		 * immediately set the state to XenbusStateClosing which
+>>> +		 * means if we were reading for it here we MUST drop any
+>>> +		 * locks so that we don't dead-lock.
+>>> +		 */
+>>
+>> Watches are asynchronous and serialised by the xenwatch thread.  I can't
+>> see what deadlock you're talking about here.  Particularly since the
+>> backend doesn't watch its own state node (it watches the frontend one).
+>>
+>>>  		xen_pcibk_setup_backend(pdev);
+>>>  		break;
+>>>  
+>>>>
+>>>> Also need be sure that all callers which check the return value must let
+>>>> 'err' be 0.
+>>>
+>>> I am bit uncomfortable with that, that is due to:
+>>>
+>>>
+>>> .. snip..
+>>>> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
+>>>> index 9c47b89..b5c3d47 100644
+>>>> --- a/drivers/net/xen-netback/xenbus.c
+>>>> +++ b/drivers/net/xen-netback/xenbus.c
+>>>> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
+>>>>  	if (err)
+>>>>  		pr_debug("Error writing multi-queue-max-queues\n");
+>>>>  
+>>>> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
+>>>> -	if (err)
+>>>> -		goto fail;
+>>>> -
+>>>> +	xenbus_switch_state(dev, XenbusStateInitWait);
+>>>
+>>> Which if it fails it won't call:
+>>>
+>>> 354 fail:                                                                           
+>>> 355         pr_debug("failed\n");                                                   
+>>> 356         netback_remove(dev);                                                    
+>>> 357         return err;         
+>>>
+>>>
+>>> And since there is no watch on the backend state to go in Closing it won't
+>>> ever call those and we leak memory.
+>>
+>> It's not leaking the memory.  All resources will be recovered when the
+>> device is removed.
+> 
+> I presume you mean when the XenBus entries are torn down? It does look
+> like it would call the .remove functionality. That should take care of that.
+> 
+> In which case we can just remove all of the 'netback_remove()' and also
+> remove some of the labels.
+
+No.  If the final xenbus_switch_state() fails then at least the device
+is in a consistent state, waiting for the other end to notice.
+
+We don't want to return success from a probe with a half-setup device.
+
+David
