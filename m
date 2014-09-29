@@ -1,67 +1,39 @@
-From: Greg KH <gregkh@linuxfoundation.org>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe support
-Date: Mon, 29 Sep 2014 17:59:45 -0400
-Message-ID: <20140929215945.GA1628@kroah.com>
+Date: Mon, 29 Sep 2014 15:10:22 -0700
+Message-ID: <CAB=NE6XKeoDnnBxupLSAXz9w3TXVgAW+Yw3o8-ugzzUgH7j13A@mail.gmail.com>
 References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com>
  <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com>
- <20140928150329.GC5023@mtj.dyndns.org>
- <20140929212208.GV17349@wotan.suse.de>
+ <20140928150329.GC5023@mtj.dyndns.org> <20140929212208.GV17349@wotan.suse.de> <20140929215945.GA1628@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140929212208.GV17349@wotan.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dmitry.torokhov@gmail.com, tiwai@suse.de, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chel>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35613 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751215AbaI2WKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Sep 2014 18:10:43 -0400
+In-Reply-To: <20140929215945.GA1628@kroah.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, Tom Gundersen <teg@jklm.no>, rmilasan@suse.com, werner@suse.com, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Petr Mladek <pmladek@suse.cz>, dbueso@suse.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech>
 
-On Mon, Sep 29, 2014 at 11:22:08PM +0200, Luis R. Rodriguez wrote:
-> On Sun, Sep 28, 2014 at 11:03:29AM -0400, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Fri, Sep 26, 2014 at 02:57:17PM -0700, Luis R. Rodriguez wrote:
-> > ...
-> > > Systemd should consider enabling async probe on device drivers
-> > > it loads through systemd-udev but probably does not want to
-> > > enable it for modules loaded through systemd-modules-load
-> > > (modules-load.d). At least on my booting enablign async probe
-> > > for all modules fails to boot as such in order to make this
-> > 
-> > Did you find out why boot failed with those modules?
-> 
-> No, it seems this was early in boot and I haven't been able to capture the logs
-> yet of the faults. More on this below.
-> 
-> > > a bit more useful we whitelist a few buses where it should be
-> > > at least in theory safe to try to enable async probe. This
-> > > way even if systemd tried to ask to enable async probe for all
-> > > its device drivers the kernel won't blindly do this. We also
-> > > have the sync_probe flag which device drivers can themselves
-> > > enable *iff* its known the device driver should never async
-> > > probe.
-> > > 
-> > > In order to help *test* things folks can use the bus.safe_mod_async_probe=1
-> > > kernel parameter which will work as if userspace would have
-> > > requested all modules to load with async probe. Daring folks can
-> > > also use bus.force_mod_async_probe=1 which will enable asynch probe
-> > > even on buses not tested in any way yet, if you use that though
-> > > you're on your own.
-> > 
-> > If those two knobs are meant for debugging, let's please make that
-> > fact immediately evident.  e.g. Make them ugly boot params like
-> > "__DEVEL__driver_force_mod_async_probe".  Devel/debug options ending
-> > up becoming stable interface are really nasty.
-> 
-> Sure make sense, I wasn't quite sure how to make this quite clear,
-> a naming convention seems good to me but I also had added at least
-> a print about this on the log. Ideally I think a TAIN_DEBUG would
-> be best and it seems it could be useful for many other cases in
-> the kernel, we could also just re-use TAINT_CRAP as well. Thoughts?
-> Greg?
+On Mon, Sep 29, 2014 at 2:59 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> Sure make sense, I wasn't quite sure how to make this quite clear,
+>> a naming convention seems good to me but I also had added at least
+>> a print about this on the log. Ideally I think a TAIN_DEBUG would
+>> be best and it seems it could be useful for many other cases in
+>> the kernel, we could also just re-use TAINT_CRAP as well. Thoughts?
+>> Greg?
+>
+> TAINT_CRAP is for drivers/staging/ code, don't try to repurpose it for
+> some other horrid option.  There's no reason we can't add more taint
+> flags for this.
 
-TAINT_CRAP is for drivers/staging/ code, don't try to repurpose it for
-some other horrid option.  There's no reason we can't add more taint
-flags for this.
+OK thanks, I'll add TAINT_DEBUG. Any preference where to stuff struct
+driver_attach_work *attach_work ? On the private data structure as
+this patch currently implements, saving us 24 bytes and hiding it from
+drivers, or stuffing it on the device driver and simplifying the core
+code?
 
-greg k-h
+ Luis
