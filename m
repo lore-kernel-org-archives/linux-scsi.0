@@ -1,221 +1,91 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/38] scsi: fixup logging messages in scsi_error.c
-Date: Mon, 29 Sep 2014 13:58:50 +0200
-Message-ID: <1411991947-130166-22-git-send-email-hare@suse.de>
+Subject: [PATCH 07/38] fas216: Update logging messages
+Date: Mon, 29 Sep 2014 13:58:36 +0200
+Message-ID: <1411991947-130166-8-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59348 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59332 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753800AbaI2L7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2014 07:59:15 -0400
+	id S1753536AbaI2L7N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Sep 2014 07:59:13 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Use the matching scope for logging messages to allow for
-better command tracing.
+Update logging messages to use dev_printk() variants for correct
+device annotations.
 
-Suggested-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/hosts.c      |  4 +--
- drivers/scsi/scsi_error.c | 82 +++++++++++++++++++++++++----------------------
- 2 files changed, 45 insertions(+), 41 deletions(-)
+ drivers/scsi/arm/fas216.c | 31 ++++++++++++++-----------------
+ 1 file changed, 14 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 6de80e3..06030e1 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -485,8 +485,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 					    WQ_UNBOUND | WQ_MEM_RECLAIM,
- 					   1, shost->host_no);
- 	if (!shost->tmf_work_q) {
--		printk(KERN_WARNING "scsi%d: failed to create tmf workq\n",
--		       shost->host_no);
-+		shost_printk(KERN_WARNING, shost,
-+			     "failed to create tmf workq\n");
- 		goto fail_kthread;
- 	}
- 	scsi_proc_hostdir_add(shost->hostt);
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 8a6d382..4d3f55c 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1156,9 +1156,10 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 		shost = scmd->device->host;
- 		if (scsi_host_eh_past_deadline(shost)) {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+				scmd_printk(KERN_INFO, scmd,
-+					    "%s: skip request sense, "
-+					     "past eh deadline\n",
-+					     current->comm));
- 			break;
- 		}
- 		if (status_byte(scmd->result) != CHECK_CONDITION)
-@@ -1265,9 +1266,10 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
- 				/* Push items back onto work_q */
- 				list_splice_init(cmd_list, work_q);
- 				SCSI_LOG_ERROR_RECOVERY(3,
--					shost_printk(KERN_INFO, sdev->host,
--						     "skip %s, past eh deadline",
--						     __func__));
-+					sdev_printk(KERN_INFO, sdev,
-+						    "%s: skip test device, "
-+						    "past eh deadline",
-+						    current->comm));
- 				break;
- 			}
- 		}
-@@ -1318,21 +1320,22 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 		if (scsi_host_eh_past_deadline(shost)) {
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+				scmd_printk(KERN_INFO, scmd,
-+					    "%s: skip aborting cmd, "
-+					    "past eh deadline\n",
-+					    current->comm));
- 			return list_empty(work_q);
- 		}
- 		SCSI_LOG_ERROR_RECOVERY(3,
--			shost_printk(KERN_INFO, shost,
--				     "%s: aborting cmd: 0x%p\n",
-+			scmd_printk(KERN_INFO, scmd,
-+				     "%s: aborting cmd\n",
- 				     current->comm, scmd));
- 		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
- 		if (rtn == FAILED) {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					     "%s: aborting cmd failed: 0x%p\n",
--					     current->comm, scmd));
-+				scmd_printk(KERN_INFO, scmd,
-+					    "%s: aborting cmd failed\n",
-+					     current->comm));
- 			list_splice_init(&check_list, work_q);
- 			return list_empty(work_q);
- 		}
-@@ -1390,9 +1393,10 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 	shost_for_each_device(sdev, shost) {
- 		if (scsi_host_eh_past_deadline(shost)) {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+				sdev_printk(KERN_INFO, sdev,
-+					    "%s: skip START_UNIT, "
-+					    "past eh deadline\n",
-+					    current->comm));
- 			break;
- 		}
- 		stu_scmd = NULL;
-@@ -1407,9 +1411,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 			continue;
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 71cfb1e..b2fd18e 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -308,8 +308,7 @@ static void fas216_log_command(FAS216_Info *info, int level,
+ 	fas216_do_log(info, '0' + SCpnt->device->id, fmt, args);
+ 	va_end(args);
  
- 		SCSI_LOG_ERROR_RECOVERY(3,
--			shost_printk(KERN_INFO, shost,
--				     "%s: Sending START_UNIT to sdev: 0x%p\n",
--				     current->comm, sdev));
-+			sdev_printk(KERN_INFO, sdev,
-+				     "%s: Sending START_UNIT\n",
-+				     current->comm));
+-	printk(" CDB: ");
+-	__scsi_print_command(SCpnt->cmnd);
++	scsi_print_command(SCpnt);
+ }
  
- 		if (!scsi_eh_try_stu(stu_scmd)) {
- 			if (!scsi_device_online(sdev) ||
-@@ -1423,9 +1427,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 			}
- 		} else {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					     "%s: START_UNIT failed to sdev:"
--					     " 0x%p\n", current->comm, sdev));
-+				sdev_printk(KERN_INFO, sdev,
-+					    "%s: START_UNIT failed\n",
-+					    current->comm));
+ static void
+@@ -2079,14 +2078,13 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
+ 			break;
+ 
+ 		default:
+-			printk(KERN_ERR "scsi%d.%c: incomplete data transfer "
+-				"detected: res=%08X ptr=%p len=%X CDB: ",
+-				info->host->host_no, '0' + SCpnt->device->id,
+-				SCpnt->result, info->scsi.SCp.ptr,
+-				info->scsi.SCp.this_residual);
+-			__scsi_print_command(SCpnt->cmnd);
+-			SCpnt->result &= ~(255 << 16);
+-			SCpnt->result |= DID_BAD_TARGET << 16;
++			scmd_printk(KERN_ERR, SCpnt,
++				    "incomplete data transfer "
++				    "detected: res=%08X ptr=%p len=%X\n",
++				    SCpnt->result, info->scsi.SCp.ptr,
++				    info->scsi.SCp.this_residual);
++			scsi_print_command(SCpnt);
++			set_host_byte(SCpnt, DID_ERROR);
+ 			goto request_sense;
  		}
  	}
- 
-@@ -1456,9 +1460,9 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 	shost_for_each_device(sdev, shost) {
- 		if (scsi_host_eh_past_deadline(shost)) {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+				sdev_printk(KERN_INFO, sdev,
-+					    "%s: skip BDR, past eh deadline\n",
-+					     current->comm));
- 			break;
- 		}
- 		bdr_scmd = NULL;
-@@ -1472,9 +1476,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 			continue;
- 
- 		SCSI_LOG_ERROR_RECOVERY(3,
--			shost_printk(KERN_INFO, shost,
--				     "%s: Sending BDR sdev: 0x%p\n",
--				     current->comm, sdev));
-+			sdev_printk(KERN_INFO, sdev,
-+				     "%s: Sending BDR\n", current->comm));
- 		rtn = scsi_try_bus_device_reset(bdr_scmd);
- 		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
- 			if (!scsi_device_online(sdev) ||
-@@ -1490,9 +1493,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 			}
- 		} else {
- 			SCSI_LOG_ERROR_RECOVERY(3,
--				shost_printk(KERN_INFO, shost,
--					     "%s: BDR failed sdev: 0x%p\n",
--					     current->comm, sdev));
-+				sdev_printk(KERN_INFO, sdev,
-+					    "%s: BDR failed\n", current->comm));
- 		}
+@@ -2158,12 +2156,12 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
+ 	 * to transfer, we should not have a valid pointer.
+ 	 */
+ 	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
+-		printk("scsi%d.%c: zero bytes left to transfer, but "
+-		       "buffer pointer still valid: ptr=%p len=%08x CDB: ",
+-		       info->host->host_no, '0' + SCpnt->device->id,
+-		       info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
++		scmd_printk(KERN_INFO, SCpnt,
++			    "zero bytes left to transfer, but "
++			    "buffer pointer still valid: ptr=%p len=%08x\n",
++			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+ 		info->scsi.SCp.ptr = NULL;
+-		__scsi_print_command(SCpnt->cmnd);
++		scsi_print_command(SCpnt);
  	}
  
-@@ -1528,8 +1530,9 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 			list_splice_init(&tmp_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+					    "%s: Skip target reset, "
-+					     "past eh deadline\n",
-+					     current->comm));
- 			return list_empty(work_q);
- 		}
+ 	/*
+@@ -2664,8 +2662,7 @@ int fas216_eh_host_reset(struct scsi_cmnd *SCpnt)
  
-@@ -1591,8 +1594,8 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 			list_splice_init(&check_list, work_q);
- 			SCSI_LOG_ERROR_RECOVERY(3,
- 				shost_printk(KERN_INFO, shost,
--					    "skip %s, past eh deadline\n",
--					     __func__));
-+					    "%s: skip BRST, past eh deadline\n",
-+					     current->comm));
- 			return list_empty(work_q);
- 		}
+ 	fas216_checkmagic(info);
  
-@@ -2189,9 +2192,10 @@ int scsi_error_handler(void *data)
- 		 */
- 		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
--				printk(KERN_ERR "Error handler scsi_eh_%d "
--						"unable to autoresume\n",
--						shost->host_no));
-+				shost_printk(KERN_ERR, shost,
-+					     "scsi_eh_%d: "
-+					     "unable to autoresume\n",
-+					     shost->host_no));
- 			continue;
- 		}
+-	printk("scsi%d.%c: %s: resetting host\n",
+-		info->host->host_no, '0' + SCpnt->device->id, __func__);
++	fas216_log(info, LOG_ERROR, "resetting host");
  
+ 	/*
+ 	 * Reset the SCSI chip.
 -- 
 1.8.5.2
 
