@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 32/38] scsi: use external buffer for command logging
-Date: Mon, 29 Sep 2014 13:59:01 +0200
-Message-ID: <1411991947-130166-33-git-send-email-hare@suse.de>
+Subject: [PATCH 35/38] scsi: use seq_buf for formatting sense buffer
+Date: Mon, 29 Sep 2014 13:59:04 +0200
+Message-ID: <1411991947-130166-36-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59373 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59370 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753928AbaI2L7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753880AbaI2L7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 29 Sep 2014 07:59:18 -0400
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,319 +14,338 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Use an external buffer for __scsi_print_command() and
-move command logging over to seq_buf. With that we can
-guarantee to have the command always in one line,
-and can even print out a variable length command
-correctly across several lines.
+Convert sense buffer logging to use seq_buf to
+avoid line breakup.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/ch.c           |  6 ++-
- drivers/scsi/constants.c    | 72 +----------------------------------
- drivers/scsi/scsi_logging.c | 93 +++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/sr_ioctl.c     | 13 +++++--
- include/scsi/scsi.h         |  3 ++
- include/scsi/scsi_dbg.h     |  5 ++-
- 6 files changed, 113 insertions(+), 79 deletions(-)
+ drivers/scsi/constants.c    | 107 --------------------------------------------
+ drivers/scsi/osst.c         |   4 +-
+ drivers/scsi/scsi_logging.c | 104 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c           |   7 +--
+ drivers/scsi/sg.c           |   2 +-
+ drivers/scsi/st.c           |   4 +-
+ include/scsi/scsi_dbg.h     |   2 +-
+ 7 files changed, 112 insertions(+), 118 deletions(-)
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 53621a3..67a81c0 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -195,8 +195,10 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
-  retry:
- 	errno = 0;
- 	if (debug) {
--		DPRINTK("command: ");
--		__scsi_print_command(cmd);
-+		char logbuf[SCSI_LOG_BUFSIZE];
-+
-+		__scsi_print_command(logbuf, SCSI_LOG_BUFSIZE, cmd);
-+		DPRINTK("command: %s", logbuf);
- 	}
- 
- 	result = scsi_execute_req(ch->device, cmd, direction, buffer,
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 207ebef..f854b7e 100644
+index f854b7e..0f02abe 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -29,8 +29,6 @@
- #define THIRD_PARTY_COPY_OUT 0x83
- #define THIRD_PARTY_COPY_IN 0x84
- 
--#define VENDOR_SPECIFIC_CDB 0xc0
--
- struct sa_name_list {
- 	int cmd;
- 	const struct value_name_pair *arr;
-@@ -286,8 +284,8 @@ static struct sa_name_list sa_names_arr[] = {
- };
- #endif /* CONFIG_SCSI_CONSTANTS */
- 
--static bool scsi_opcode_sa_name(int cmd, int service_action,
--				const char **cdb_name, const char **sa_name)
-+bool scsi_opcode_sa_name(int cmd, int service_action,
-+			 const char **cdb_name, const char **sa_name)
- {
- 	struct sa_name_list *sa_name_ptr = sa_names_arr;
- 	const struct value_name_pair *arr = NULL;
-@@ -320,72 +318,6 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
- 	return true;
+@@ -1221,113 +1221,6 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
  }
+ EXPORT_SYMBOL(scsi_extd_sense_format);
  
--static void print_opcode_name(unsigned char *cdbp)
+-void
+-scsi_show_extd_sense(struct scsi_device *sdev, const char *name,
+-		     unsigned char asc, unsigned char ascq)
 -{
--	int sa, cdb0;
--	const char *cdb_name = NULL, *sa_name = NULL;
+-	const char *extd_sense_fmt = NULL;
+-	const char *extd_sense_str = scsi_extd_sense_format(asc, ascq,
+-							    &extd_sense_fmt);
 -
--	cdb0 = cdbp[0];
--	if (cdb0 == VARIABLE_LENGTH_CMD) {
--		int len = scsi_varlen_cdb_length(cdbp);
--		if (len < 10) {
--			printk("short variable length command, len=%d", len);
--			return;
--		}
--		sa = (cdbp[8] << 8) + cdbp[9];
--	} else
--		sa = cdbp[1] & 0x1f;
--
--	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
--		if (cdb_name)
--			printk("%s", cdb_name);
--		else if (cdb0 > VENDOR_SPECIFIC_CDB)
--			printk("cdb[0]=0x%x (vendor)", cdb0);
--		else if (cdb0 > 0x60 && cdb0 < 0x7e)
--			printk("cdb[0]=0x%x (reserved)", cdb0);
+-	if (extd_sense_str) {
+-		if (extd_sense_fmt)
+-			sdev_prefix_printk(KERN_INFO, sdev, name,
+-					   "Add. Sense: %s (%s%x)",
+-					   extd_sense_str, extd_sense_fmt,
+-					   ascq);
 -		else
--			printk("cdb[0]=0x%x", cdb0);
+-			sdev_prefix_printk(KERN_INFO, sdev, name,
+-					   "Add. Sense: %s", extd_sense_str);
+-
 -	} else {
--		if (sa_name)
--			printk("%s", sa_name);
--		else if (cdb_name)
--			printk("%s, sa=0x%x", cdb_name, sa);
--		else
--			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		sdev_prefix_printk(KERN_INFO, sdev, name,
+-				   "%sASC=0x%x %sASCQ=0x%x\n",
+-				   asc >= 0x80 ? "<<vendor>> " : "", asc,
+-				   ascq >= 0x80 ? "<<vendor>> " : "", ascq);
 -	}
 -}
+-EXPORT_SYMBOL(scsi_show_extd_sense);
 -
--void __scsi_print_command(unsigned char *cdb)
+-void
+-scsi_show_sense_hdr(struct scsi_device *sdev, const char *name,
+-		    struct scsi_sense_hdr *sshdr)
 -{
--	int k, len;
+-	const char *sense_txt;
 -
--	print_opcode_name(cdb);
--	len = scsi_command_size(cdb);
--	/* print out all bytes in cdb */
--	for (k = 0; k < len; ++k)
--		printk(" %02x", cdb[k]);
--	printk("\n");
+-	sense_txt = scsi_sense_key_string(sshdr->sense_key);
+-	if (sense_txt)
+-		sdev_prefix_printk(KERN_INFO, sdev, name,
+-				   "Sense Key : %s [%s]%s\n", sense_txt,
+-				   scsi_sense_is_deferred(sshdr) ?
+-				   "deferred" : "current",
+-				   sshdr->response_code >= 0x72 ?
+-				   " [descriptor]" : "");
+-	else
+-		sdev_prefix_printk(KERN_INFO, sdev, name,
+-				   "Sense Key : 0x%x [%s]%s", sshdr->sense_key,
+-				   scsi_sense_is_deferred(sshdr) ?
+-				   "deferred" : "current",
+-				   sshdr->response_code >= 0x72 ?
+-				   " [descriptor]" : "");
 -}
--EXPORT_SYMBOL(__scsi_print_command);
+-EXPORT_SYMBOL(scsi_show_sense_hdr);
 -
--void scsi_print_command(struct scsi_cmnd *cmd)
+-/*
+- * Print normalized SCSI sense header with a prefix.
+- */
+-void
+-scsi_print_sense_hdr(struct scsi_device *sdev, const char *name,
+-		     struct scsi_sense_hdr *sshdr)
 -{
--	int k;
+-	scsi_show_sense_hdr(sdev, name, sshdr);
+-	scsi_show_extd_sense(sdev, name, sshdr->asc, sshdr->ascq);
+-}
+-EXPORT_SYMBOL(scsi_print_sense_hdr);
 -
--	if (cmd->cmnd == NULL)
+-static void
+-scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
+-{
+-	int k, num;
+-
+-	num = (sense_len < 32) ? sense_len : 32;
+-	printk("Unrecognized sense data (in hex):");
+-	for (k = 0; k < num; ++k) {
+-		if (0 == (k % 16)) {
+-			printk("\n");
+-			printk(KERN_INFO "        ");
+-		}
+-		printk("%02x ", sense_buffer[k]);
+-	}
+-	printk("\n");
+-	return;
+-}
+-
+-/* Normalize and print sense buffer with name prefix */
+-void __scsi_print_sense(struct scsi_device *sdev, const char *name,
+-			const unsigned char *sense_buffer, int sense_len)
+-{
+-	struct scsi_sense_hdr sshdr;
+-
+-	if (!scsi_normalize_sense(sense_buffer, sense_len, &sshdr)) {
+-		scsi_dump_sense_buffer(sense_buffer, sense_len);
 -		return;
--
--	scmd_printk(KERN_INFO, cmd, "CDB: ");
--	print_opcode_name(cmd->cmnd);
--
--	/* print out all bytes in cdb */
--	printk(":");
--	for (k = 0; k < cmd->cmd_len; ++k)
--		printk(" %02x", cmd->cmnd[k]);
--	printk("\n");
+-	}
+-	scsi_show_sense_hdr(sdev, name, &sshdr);
+-	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
 -}
--EXPORT_SYMBOL(scsi_print_command);
+-EXPORT_SYMBOL(__scsi_print_sense);
+-
+-/* Normalize and print sense buffer in SCSI command */
+-void scsi_print_sense(struct scsi_cmnd *cmd)
+-{
+-	struct gendisk *disk = cmd->request->rq_disk;
+-	const char *disk_name = disk ? disk->disk_name : NULL;
+-
+-	__scsi_print_sense(cmd->device, disk_name, cmd->sense_buffer,
+-			   SCSI_SENSE_BUFFERSIZE);
+-}
+-EXPORT_SYMBOL(scsi_print_sense);
 -
  #ifdef CONFIG_SCSI_CONSTANTS
  
- struct error_info {
+ static const char * const hostbyte_table[]={
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 4ba2a9f..3616633 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -261,7 +261,7 @@ static int osst_chk_result(struct osst_tape * STp, struct osst_request * SRpnt)
+ 		if (scode) printk(OSST_DEB_MSG "%s:D: Sense: %02x, ASC: %02x, ASCQ: %02x\n",
+ 				  name, scode, sense[12], sense[13]);
+ 		if (cmdstatp->have_sense)
+-			__scsi_print_sense(STp->device, name,
++			__scsi_print_sense(STp->device, name, -1,
+ 					   SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 	}
+ 	else
+@@ -276,7 +276,7 @@ static int osst_chk_result(struct osst_tape * STp, struct osst_request * SRpnt)
+ 		 SRpnt->cmd[0] != TEST_UNIT_READY)) { /* Abnormal conditions for tape */
+ 		if (cmdstatp->have_sense) {
+ 			printk(KERN_WARNING "%s:W: Command with sense data:\n", name);
+-			__scsi_print_sense(STp->device, name,
++			__scsi_print_sense(STp->device, name, -1,
+ 					   SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 		}
+ 		else {
 diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index e07367e..9bc0aa6 100644
+index 9bc0aa6..c3672e5 100644
 --- a/drivers/scsi/scsi_logging.c
 +++ b/drivers/scsi/scsi_logging.c
-@@ -13,9 +13,11 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_eh.h>
- #include <scsi/scsi_dbg.h>
- 
--#define SCSI_LOG_BUFSIZE 512
-+#define scmd_format_header(b, s, d, t) \
-+	sdev_format_header(b, s, (d) ? (d)->disk_name : NULL, t)
- 
- static void sdev_format_header(struct seq_buf *s, struct scsi_device *sdev,
- 			       const char *disk_name, int tag)
-@@ -71,11 +73,96 @@ int scmd_printk(const char *level, struct scsi_cmnd *scmd,
- 		return 0;
- 
- 	seq_buf_init(&s, logbuf, SCSI_LOG_BUFSIZE);
--	sdev_format_header(&s, scmd->device, disk ? disk->disk_name : NULL,
--			   scmd->request->tag);
-+	scmd_format_header(&s, scmd->device, disk, scmd->request->tag);
- 	va_start(args, fmt);
- 	seq_buf_vprintf(&s, fmt, args);
- 	va_end(args);
- 	return sdev_seq_printk(level, scmd->device, &s);
+@@ -166,3 +166,107 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 	sdev_seq_printk(KERN_INFO, cmd->device, &s);
  }
- EXPORT_SYMBOL_GPL(scmd_printk);
+ EXPORT_SYMBOL(scsi_print_command);
 +
-+static void scsi_format_opcode_name(struct seq_buf *s, unsigned char *cdbp)
++void
++scsi_format_extd_sense(struct seq_buf *s,
++		       unsigned char asc, unsigned char ascq)
 +{
-+	int sa, cdb0;
-+	const char *cdb_name = NULL, *sa_name = NULL;
++	const char *extd_sense_fmt = NULL;
++	const char *extd_sense_str = scsi_extd_sense_format(asc, ascq,
++							    &extd_sense_fmt);
 +
-+	cdb0 = cdbp[0];
-+	if (cdb0 == VARIABLE_LENGTH_CMD) {
-+		int len = scsi_varlen_cdb_length(cdbp);
-+
-+		if (len < 10) {
-+			seq_buf_printf(s, "short variable length command,"
-+				       " len=%d", len);
-+			return;
-+		}
-+		sa = (cdbp[8] << 8) + cdbp[9];
-+	} else
-+		sa = cdbp[1] & 0x1f;
-+
-+	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
-+		if (cdb_name)
-+			seq_buf_printf(s, "%s", cdb_name);
-+		else if (cdb0 > VENDOR_SPECIFIC_CDB)
-+			seq_buf_printf(s, "cdb[0]=0x%x (vendor)", cdb0);
-+		else if (cdb0 > 0x60 && cdb0 < 0x7e)
-+			seq_buf_printf(s, "cdb[0]=0x%x (reserved)", cdb0);
-+		else
-+			seq_buf_printf(s, "cdb[0]=0x%x", cdb0);
++	if (extd_sense_str) {
++		seq_buf_printf(s, "Add. Sense: %s", extd_sense_str);
++		if (extd_sense_fmt)
++			seq_buf_printf(s, "(%s%x)", extd_sense_fmt, ascq);
 +	} else {
-+		if (sa_name)
-+			seq_buf_printf(s, "%s", sa_name);
-+		else if (cdb_name)
-+			seq_buf_printf(s, "%s, sa=0x%x", cdb_name, sa);
-+		else
-+			seq_buf_printf(s, "cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++		if (asc >= 0x80)
++			seq_buf_printf(s, "<<vendor>>");
++		seq_buf_printf(s, "ASC=0x%x ", asc);
++		if (ascq >= 0x80)
++			seq_buf_printf(s, "<<vendor>>");
++		seq_buf_printf(s, "ASCQ=0x%x ", ascq);
 +	}
 +}
 +
-+size_t __scsi_print_command(char *logbuf, size_t logbuf_size,
-+			    unsigned char *cdb)
++void
++scsi_format_sense_hdr(struct seq_buf *s, struct scsi_sense_hdr *sshdr)
 +{
-+	int len;
-+	struct seq_buf s;
++	const char *sense_txt;
 +
-+	seq_buf_init(&s, logbuf, logbuf_size);
-+	scsi_format_opcode_name(&s, cdb);
-+	len = scsi_command_size(cdb);
-+	/* print out all bytes in cdb */
-+	seq_buf_putmem_hex(&s, cdb, len);
-+	return s.len;
++	seq_buf_printf(s, "Sense Key : ");
++	sense_txt = scsi_sense_key_string(sshdr->sense_key);
++	if (sense_txt)
++		seq_buf_printf(s, "%s ", sense_txt);
++	else
++		seq_buf_printf(s, "0x%x ", sshdr->sense_key);
++	seq_buf_printf(s, "[%s] ",
++		   scsi_sense_is_deferred(sshdr) ? "deferred" : "current");
++	if (sshdr->response_code >= 0x72)
++		seq_buf_printf(s, "[descriptor] ");
 +}
-+EXPORT_SYMBOL(__scsi_print_command);
 +
-+void scsi_print_command(struct scsi_cmnd *cmd)
++static void __sdev_print_sense(struct seq_buf *s, struct scsi_device *sdev,
++			       const char *name, int tag,
++			       struct scsi_sense_hdr *sshdr)
 +{
-+	struct gendisk *disk = cmd->request->rq_disk;
-+	int k;
++	sdev_format_header(s, sdev, name, tag);
++	scsi_format_sense_hdr(s, sshdr);
++	sdev_seq_printk(KERN_INFO, sdev, s);
++
++	sdev_format_header(s, sdev, name, tag);
++	scsi_format_extd_sense(s, sshdr->asc, sshdr->ascq);
++	sdev_seq_printk(KERN_INFO, sdev, s);
++}
++
++/*
++ * Print normalized SCSI sense header with a prefix.
++ */
++void
++scsi_print_sense_hdr(struct scsi_device *sdev, const char *name,
++		     struct scsi_sense_hdr *sshdr)
++{
 +	char logbuf[SCSI_LOG_BUFSIZE];
 +	struct seq_buf s;
-+
-+	if (cmd->cmnd == NULL)
-+		return;
 +
 +	seq_buf_init(&s, logbuf, SCSI_LOG_BUFSIZE);
-+	scmd_format_header(&s, cmd->device, disk, cmd->request->tag);
-+	seq_buf_printf(&s, "CDB: ");
-+	scsi_format_opcode_name(&s, cmd->cmnd);
-+	/* print out all bytes in cdb */
-+	if (cmd->cmd_len > 16) {
-+		for (k = 0; k < cmd->cmd_len; ++k) {
-+			if ((k % 16) == 0) {
-+				sdev_seq_printk(KERN_INFO, cmd->device, &s);
-+				scmd_format_header(&s, cmd->device, disk,
-+						   cmd->request->tag);
-+				seq_buf_printf(&s, "CDB[%u]: ", k / 16);
-+			}
-+			seq_buf_printf(&s, " %02x", cmd->cmnd[k]);
-+		}
-+	} else {
-+		for (k = 0; k < cmd->cmd_len; ++k)
-+			seq_buf_printf(&s, " %02x", cmd->cmnd[k]);
-+	}
-+
-+	sdev_seq_printk(KERN_INFO, cmd->device, &s);
++	__sdev_print_sense(&s, sdev, name, -1, sshdr);
 +}
-+EXPORT_SYMBOL(scsi_print_command);
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index 17e0c2b..b68366b 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -188,6 +188,7 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 	struct scsi_sense_hdr sshdr;
- 	int result, err = 0, retries = 0;
- 	struct request_sense *sense = cgc->sense;
-+	char logbuf[SCSI_LOG_BUFSIZE];
- 
- 	SDev = cd->device;
- 
-@@ -257,14 +258,20 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 				/* sense: Invalid command operation code */
- 				err = -EDRIVE_CANT_DO_THIS;
- #ifdef DEBUG
--			__scsi_print_command(cgc->cmd);
-+			__scsi_print_command(logbuf, SCSI_LOG_BUFSIZE,
-+					     cgc->cmd);
-+			sr_printk(KERN_INFO, cd,
-+				  "CDROM (ioctl) invalid command: %s\n",
-+				  logbuf);
- 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
- #endif
- 			break;
- 		default:
-+			__scsi_print_command(logbuf, SCSI_LOG_BUFSIZE,
-+					     cgc->cmd);
- 			sr_printk(KERN_ERR, cd,
--				  "CDROM (ioctl) error, command: ");
--			__scsi_print_command(cgc->cmd);
-+				  "CDROM (ioctl) error, command: %s\n",
-+				  logbuf);
- 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
- 			err = -EIO;
- 		}
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 261e708..4f80064 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -191,6 +191,9 @@ enum scsi_timeouts {
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
- #define	ATA_12		      0xa1	/* 12-byte pass-thru */
- 
-+/* Vendor specific CDBs start here */
-+#define VENDOR_SPECIFIC_CDB 0xc0
++EXPORT_SYMBOL(scsi_print_sense_hdr);
 +
- /*
-  *	SCSI command lengths
-  */
++/* Normalize and print sense buffer with name prefix */
++void __scsi_print_sense(struct scsi_device *sdev, const char *name, int tag,
++			const unsigned char *sense_buffer, int sense_len)
++{
++	struct scsi_sense_hdr sshdr;
++	char logbuf[SCSI_LOG_BUFSIZE];
++	struct seq_buf s;
++
++	seq_buf_init(&s, logbuf, SCSI_LOG_BUFSIZE);
++
++	if (!scsi_normalize_sense(sense_buffer, sense_len, &sshdr)) {
++		int i;
++
++		for (i = 0; i < sense_len; i += 16) {
++			int len = min(sense_len - i, 16);
++
++			sdev_format_header(&s, sdev, name, tag);
++			seq_buf_putmem_hex(&s, &sense_buffer[i], len);
++			sdev_seq_printk(KERN_INFO, sdev, &s);
++		}
++		return;
++	}
++	__sdev_print_sense(&s, sdev, name, tag, &sshdr);
++}
++EXPORT_SYMBOL(__scsi_print_sense);
++
++/* Normalize and print sense buffer in SCSI command */
++void scsi_print_sense(struct scsi_cmnd *cmd)
++{
++	struct gendisk *disk = cmd->request->rq_disk;
++	const char *disk_name = disk ? disk->disk_name : NULL;
++
++	__scsi_print_sense(cmd->device, disk_name, cmd->request->tag,
++			   cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
++}
++EXPORT_SYMBOL(scsi_print_sense);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2cc8703..754419f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3312,11 +3312,8 @@ module_exit(exit_sd);
+ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
+ 			       struct scsi_sense_hdr *sshdr)
+ {
+-	scsi_show_sense_hdr(sdkp->device,
+-			    sdkp->disk ? sdkp->disk->disk_name : NULL, sshdr);
+-	scsi_show_extd_sense(sdkp->device,
+-			     sdkp->disk ? sdkp->disk->disk_name : NULL,
+-			     sshdr->asc, sshdr->ascq);
++	scsi_print_sense_hdr(sdkp->device,
++			     sdkp->disk ? sdkp->disk->disk_name : NULL, sshdr);
+ }
+ 
+ static void sd_print_result(struct scsi_disk *sdkp, const char *msg,
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index fde1f18..cc60f90 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1360,7 +1360,7 @@ sg_rq_end_io(struct request *rq, int uptodate)
+ 		if ((sdp->sgdebug > 0) &&
+ 		    ((CHECK_CONDITION == srp->header.masked_status) ||
+ 		     (COMMAND_TERMINATED == srp->header.masked_status)))
+-			__scsi_print_sense(sdp->device, __func__, sense,
++			__scsi_print_sense(sdp->device, __func__, -1, sense,
+ 					   SCSI_SENSE_BUFFERSIZE);
+ 
+ 		/* Following if statement is a patch supplied by Eric Youngdale */
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 052d1f9..2ee9fbb 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -373,7 +373,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+ 			    SRpnt->cmd[0], SRpnt->cmd[1], SRpnt->cmd[2],
+ 			    SRpnt->cmd[3], SRpnt->cmd[4], SRpnt->cmd[5]);
+ 		if (cmdstatp->have_sense)
+-			__scsi_print_sense(STp->device, name,
++			__scsi_print_sense(STp->device, name, -1,
+ 					   SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 	} ) /* end DEB */
+ 	if (!debugging) { /* Abnormal conditions for tape */
+@@ -390,7 +390,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+ 			 SRpnt->cmd[0] != MODE_SENSE &&
+ 			 SRpnt->cmd[0] != TEST_UNIT_READY) {
+ 
+-			__scsi_print_sense(STp->device, name,
++			__scsi_print_sense(STp->device, name, -1,
+ 					   SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 		}
+ 	}
 diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index d624ed0..0281842 100644
+index 0281842..2a5f9b2 100644
 --- a/include/scsi/scsi_dbg.h
 +++ b/include/scsi/scsi_dbg.h
-@@ -5,8 +5,11 @@ struct scsi_cmnd;
- struct scsi_device;
- struct scsi_sense_hdr;
- 
-+#define SCSI_LOG_BUFSIZE 512
-+
-+extern bool scsi_opcode_sa_name(int, int, const char **, const char **);
- extern void scsi_print_command(struct scsi_cmnd *);
--extern void __scsi_print_command(unsigned char *);
-+extern size_t __scsi_print_command(char *, size_t, unsigned char *);
- extern void scsi_show_extd_sense(struct scsi_device *, const char *,
- 				 unsigned char, unsigned char);
- extern void scsi_show_sense_hdr(struct scsi_device *, const char *,
+@@ -17,7 +17,7 @@ extern void scsi_show_sense_hdr(struct scsi_device *, const char *,
+ extern void scsi_print_sense_hdr(struct scsi_device *, const char *,
+ 				 struct scsi_sense_hdr *);
+ extern void scsi_print_sense(struct scsi_cmnd *);
+-extern void __scsi_print_sense(struct scsi_device *, const char *name,
++extern void __scsi_print_sense(struct scsi_device *, const char *name, int tag,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
+ extern void scsi_print_result(struct scsi_cmnd *, const char *, int);
 -- 
 1.8.5.2
 
