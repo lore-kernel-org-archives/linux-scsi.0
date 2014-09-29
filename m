@@ -1,66 +1,98 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 27/38] Rearrange buffer formatting in printk()
-Date: Mon, 29 Sep 2014 13:58:56 +0200
-Message-ID: <1411991947-130166-28-git-send-email-hare@suse.de>
+Subject: [PATCH 29/38] Introduce dev_printk_string() and dev_printk_header()
+Date: Mon, 29 Sep 2014 13:58:58 +0200
+Message-ID: <1411991947-130166-30-git-send-email-hare@suse.de>
 References: <1411991947-130166-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1411991947-130166-1-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Move buffer formatting to the start of the function as it
-doesn't require to be done under any locks.
-No functional change, required by the next patch.
+Introducing dev_printk_string() and dev_printk_header() to allow
+using an external buffer for printing via dev_printk().
 
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: Steven Rostedt <rostedt@goodmis.org>
 Cc: LKML <linux-kernel@vger.kernel.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- kernel/printk/printk.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/base/core.c    | 24 ++++++++++++++++++++++++
+ include/linux/device.h | 12 ++++++++++++
+ 2 files changed, 36 insertions(+)
 
-diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index 1ce7706..d13675e 100644
---- a/kernel/printk/printk.c
-+++ b/kernel/printk/printk.c
-@@ -1633,8 +1633,18 @@ asmlinkage int vprintk_emit(int facility, int level,
- 	if (level == SCHED_MESSAGE_LOGLEVEL) {
- 		level = -1;
- 		in_sched = true;
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 20da3ad..e8aecf0 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2041,6 +2041,19 @@ create_syslog_header(const struct device *dev, char *hdr, size_t hdrlen)
+ 	return pos;
+ }
+ 
++int dev_printk_string(int level, const struct device *dev,
++		      char *msg, size_t msg_len)
++{
++	char hdr[128];
++	size_t hdrlen;
 +
-+		/*
-+		 * The printf needs to come first; we need the syslog
-+		 * prefix which might be passed-in as a parameter.
-+		 */
-+		text_len = scnprintf(text, sizeof(textbuf),
-+				     KERN_WARNING "[sched_delayed] ");
- 	}
- 
-+	text_len += vscnprintf(text + text_len,
-+			       sizeof(textbuf) - text_len, fmt, args);
++	hdrlen = create_syslog_header(dev, hdr, sizeof(hdr));
 +
- 	boot_delay_msec(level);
- 	printk_delay();
++	return printk_emit_string(0, level, hdrlen ? hdr : NULL, hdrlen,
++				  msg, msg_len);
++}
++EXPORT_SYMBOL(dev_printk_string);
++
+ int dev_vprintk_emit(int level, const struct device *dev,
+ 		     const char *fmt, va_list args)
+ {
+@@ -2068,6 +2081,17 @@ int dev_printk_emit(int level, const struct device *dev, const char *fmt, ...)
+ }
+ EXPORT_SYMBOL(dev_printk_emit);
  
-@@ -1676,17 +1686,6 @@ asmlinkage int vprintk_emit(int facility, int level,
- 					 strlen(recursion_msg));
- 	}
++int dev_printk_header(char *buf, size_t buf_len, const struct device *dev)
++{
++	size_t off = 0;
++
++	if (dev)
++		off = scnprintf(buf, buf_len, "%s %s: ",
++				dev_driver_string(dev), dev_name(dev));
++	return off;
++}
++EXPORT_SYMBOL(dev_printk_header);
++
+ static int __dev_printk(const char *level, const struct device *dev,
+ 			struct va_format *vaf)
+ {
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 43d183a..47f3b62 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1025,6 +1025,9 @@ extern const char *dev_driver_string(const struct device *dev);
  
--	/*
--	 * The printf needs to come first; we need the syslog
--	 * prefix which might be passed-in as a parameter.
--	 */
--	if (in_sched)
--		text_len = scnprintf(text, sizeof(textbuf),
--				     KERN_WARNING "[sched_delayed] ");
--
--	text_len += vscnprintf(text + text_len,
--			       sizeof(textbuf) - text_len, fmt, args);
--
- 	/* mark and strip a trailing newline */
- 	if (text_len && text[text_len-1] == '\n') {
- 		text_len--;
+ #ifdef CONFIG_PRINTK
+ 
++int dev_printk_string(int level, const struct device *dev,
++		      char *msg, size_t msg_len);
++int dev_printk_header(char *buf, size_t buf_len, const struct device *dev);
+ extern __printf(3, 0)
+ int dev_vprintk_emit(int level, const struct device *dev,
+ 		     const char *fmt, va_list args);
+@@ -1051,6 +1054,15 @@ int _dev_info(const struct device *dev, const char *fmt, ...);
+ 
+ #else
+ 
++static inline
++int dev_printk_string(int level, const struct device *dev,
++		      char *msg, size_t msg_len)
++{ return 0; }
++
++static inline
++int dev_printk_header(char *buf, size_t buf_len, const struct device *dev)
++{ return 0; }
++
+ static inline __printf(3, 0)
+ int dev_vprintk_emit(int level, const struct device *dev,
+ 		     const char *fmt, va_list args)
 -- 
 1.8.5.2
