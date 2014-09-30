@@ -1,141 +1,111 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 28/38] Externalize string buffer for printk
-Date: Tue, 30 Sep 2014 20:52:40 +0200
-Message-ID: <542AFBF8.1070004@suse.de>
-References: <1411991947-130166-1-git-send-email-hare@suse.de> <1411991947-130166-29-git-send-email-hare@suse.de> <20140930163931.GG2707@dhcp128.suse.cz>
+From: Petr Mladek <pmladek@suse.cz>
+Subject: Re: [PATCH 27/38] Rearrange buffer formatting in printk()
+Date: Tue, 30 Sep 2014 21:37:14 +0200
+Message-ID: <20140930193714.GH2707@dhcp128.suse.cz>
+References: <1411991947-130166-1-git-send-email-hare@suse.de>
+ <1411991947-130166-28-git-send-email-hare@suse.de>
+ <20140930161619.GF2707@dhcp128.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140930163931.GG2707@dhcp128.suse.cz>
+Content-Disposition: inline
+In-Reply-To: <20140930161619.GF2707@dhcp128.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Petr Mladek <pmladek@suse.cz>
+To: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Steven Rostedt <rostedt@goodmis.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/30/2014 06:39 PM, Petr Mladek wrote:
-> On Mon 29-09-14 13:58:57, Hannes Reinecke wrote:
->> This patch splits off the actual logging from vprintk_emit()
->> into printk_emit_string(), with vprintk_emit() just being a
->> simple wrapper for formatting the message into a
->> static buffer.
->>
->> With that the caller can pass in a local buffer for
->> printk_emit_string() without increasing the overall stack size.
->>
->> Cc: Steven Rostedt <rostedt@goodmis.org>
->> Cc: LKML <linux-kernel@vger.kernel.org>
->
-> Adding Andrew into CC here as well.
->
-> There is one potential problem, see below.
->
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   include/linux/printk.h |  5 +++++
->>   kernel/printk/printk.c | 36 ++++++++++++++++++++++++------------
->>   2 files changed, 29 insertions(+), 12 deletions(-)
->>
->> diff --git a/include/linux/printk.h b/include/linux/printk.h
->> index d78125f..9639900 100644
->> --- a/include/linux/printk.h
->> +++ b/include/linux/printk.h
->> @@ -130,6 +130,11 @@ int vprintk_emit(int facility, int level,
->>   		 const char *dict, size_t dictlen,
->>   		 const char *fmt, va_list args);
->>
->> +asmlinkage
->> +int printk_emit_string(int facility, int level,
->> +		       const char *dict, size_t dictlen,
->> +		       char *textbuf, size_t text_len);
->> +
->>   asmlinkage __printf(1, 0)
->>   int vprintk(const char *fmt, va_list args);
->>
->> diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
->> index d13675e..303a1fe 100644
->> --- a/kernel/printk/printk.c
->> +++ b/kernel/printk/printk.c
->> @@ -1618,22 +1618,11 @@ asmlinkage int vprintk_emit(int facility, in=
-t level,
->>   			    const char *dict, size_t dictlen,
->>   			    const char *fmt, va_list args)
->>   {
->> -	static int recursion_bug;
->>   	static char textbuf[LOG_LINE_MAX];
->>
->>   	char *text =3D textbuf;
->>   	size_t text_len =3D 0;
->> -	enum log_flags lflags =3D 0;
->> -	unsigned long flags;
->> -	int this_cpu;
->> -	int printed_len =3D 0;
->> -	bool in_sched =3D false;
->> -	/* cpu currently holding logbuf_lock in this function */
->> -	static volatile unsigned int logbuf_cpu =3D UINT_MAX;
->>
->>   	if (level =3D=3D SCHED_MESSAGE_LOGLEVEL) {
->> -		level =3D -1;
->> -		in_sched =3D true;
->> -
->>   		/*
->>   		 * The printf needs to come first; we need the syslog
->>   		 * prefix which might be passed-in as a parameter.
->> @@ -1644,6 +1633,24 @@ asmlinkage int vprintk_emit(int facility, int=
- level,
->>
->>   	text_len +=3D vscnprintf(text + text_len,
->>   			       sizeof(textbuf) - text_len, fmt, args);
->> +	return printk_emit_string(facility, level, dict, dictlen,
->> +				  textbuf, text_len);
->> +}
->> +EXPORT_SYMBOL(vprintk_emit);
->> +
->> +asmlinkage int printk_emit_string(int facility, int level,
->> +				  const char *dict, size_t dictlen,
->> +				  char *textbuf, size_t text_len)
->> +{
->> +	static int recursion_bug;
->> +	char *text =3D textbuf;
->> +	enum log_flags lflags =3D 0;
->> +	unsigned long flags;
->> +	int this_cpu;
->> +	int printed_len =3D 0;
->> +	bool in_sched =3D false;
->> +	/* cpu currently holding logbuf_lock in this function */
->> +	static volatile unsigned int logbuf_cpu =3D UINT_MAX;
->
-> We should make sure that text_len is lower or equal LOG_LINE_MAX.
->
-> I am afraid that printk() code is not able to process longer
-> lines. For example, syslog_print() does:
->
->         text =3D kmalloc(LOG_LINE_MAX + PREFIX_MAX, GFP_KERNEL);
->
-> Then it calls msg_print_text() that works with entire messages. So,
-> any longer message would freeze syslog_print() because it would newer
-> fit into the buffer.
->
-Ah. Okay, I haven't thought about this. But yes, you are right.
+On Tue 30-09-14 18:16:20, Petr Mladek wrote:
+> On Mon 29-09-14 13:58:56, Hannes Reinecke wrote:
+> > Move buffer formatting to the start of the function as it
+> > doesn't require to be done under any locks.
+> > No functional change, required by the next patch.
+> > 
+> > Cc: Steven Rostedt <rostedt@goodmis.org>
+> > Cc: LKML <linux-kernel@vger.kernel.org>
+> 
+> printk stuff is maintained by Andrew in mm tree, so adding him into CC.
+> 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> Reviewed-by: Petr Mladek <pmladek@suse.cz>
 
-> I guess that there are more locations like this.
->
-> Maybe, we should make LOG_LINE_MAX public, so it could be used on the
-> other location either to allocate the buffer or to check the size.
->
-Well, for starters we should be truncating the buffer to LOG_LINE_MAX i=
-n=20
-printk_emit_string().
-And document that it will only handle messages up to that length.
+I have just realized that textbuf[LOG_LINE_MAX] is a static variable.
+It means that it must be used under the lock and this patch is wrong.
+I want to take back the Reviewed-by and instead do
 
-I'll be posting an updated patchset.
+Nacked->by: Petr Mladek <pmladek@suse.cz>
 
-Cheers,
+also it means that it does not take the extra space on the stack
+and you probably does not need the two patches at all.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Best Regards,
+Petr
+ 
+> I do not see any obvious problem. Just note that
+> [sched_delayed] has already been removed in -mm tree. You might
+> want to base this patch on top of the commit 460d73c35ffa17979422290
+> ("printk: git rid of [sched_delayed] message for printk_deferred")
+> from linux-next.
+> 
+> Best Regards,
+> Petr
+> 
+> > ---
+> >  kernel/printk/printk.c | 21 ++++++++++-----------
+> >  1 file changed, 10 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
+> > index 1ce7706..d13675e 100644
+> > --- a/kernel/printk/printk.c
+> > +++ b/kernel/printk/printk.c
+> > @@ -1633,8 +1633,18 @@ asmlinkage int vprintk_emit(int facility, int level,
+> >  	if (level == SCHED_MESSAGE_LOGLEVEL) {
+> >  		level = -1;
+> >  		in_sched = true;
+> > +
+> > +		/*
+> > +		 * The printf needs to come first; we need the syslog
+> > +		 * prefix which might be passed-in as a parameter.
+> > +		 */
+> > +		text_len = scnprintf(text, sizeof(textbuf),
+> > +				     KERN_WARNING "[sched_delayed] ");
+> >  	}
+> >  
+> > +	text_len += vscnprintf(text + text_len,
+> > +			       sizeof(textbuf) - text_len, fmt, args);
+> > +
+> >  	boot_delay_msec(level);
+> >  	printk_delay();
+> >  
+> > @@ -1676,17 +1686,6 @@ asmlinkage int vprintk_emit(int facility, int level,
+> >  					 strlen(recursion_msg));
+> >  	}
+> >  
+> > -	/*
+> > -	 * The printf needs to come first; we need the syslog
+> > -	 * prefix which might be passed-in as a parameter.
+> > -	 */
+> > -	if (in_sched)
+> > -		text_len = scnprintf(text, sizeof(textbuf),
+> > -				     KERN_WARNING "[sched_delayed] ");
+> > -
+> > -	text_len += vscnprintf(text + text_len,
+> > -			       sizeof(textbuf) - text_len, fmt, args);
+> > -
+> >  	/* mark and strip a trailing newline */
+> >  	if (text_len && text[text_len-1] == '\n') {
+> >  		text_len--;
+> > -- 
+> > 1.8.5.2
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
