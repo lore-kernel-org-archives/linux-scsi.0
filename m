@@ -1,71 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 23/23] scsi_trace: add tracepoint for completion
-Date: Tue, 30 Sep 2014 08:21:23 -0700
-Message-ID: <20140930152123.GD28330@infradead.org>
-References: <1412077852-40893-1-git-send-email-hare@suse.de>
- <1412077852-40893-24-git-send-email-hare@suse.de>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: targetcli do not show iscsi
+Date: Tue, 30 Sep 2014 08:21:16 -0700
+Message-ID: <542ACA6C.104@redhat.com>
+References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com> <542A722E.5030109@gmail.com> <542A73BE.2080501@netiant.com> <542A75F1.8070706@gmail.com> <542A77D6.4090109@netiant.com> <542A7ADD.3040804@gmail.com> <542A7BC9.2050708@netiant.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33753 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750782AbaI3PVY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 11:21:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1412077852-40893-24-git-send-email-hare@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:62858 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbaI3PVZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2014 11:21:25 -0400
+In-Reply-To: <542A7BC9.2050708@netiant.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: Jerome Martin <jxm@netiant.com>, Luigi Tarenga <luigi.tarenga@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Tue, Sep 30, 2014 at 01:50:52PM +0200, Hannes Reinecke wrote:
-> A tracepoint should be inserted upon completion to make tracing
-> equivalent to logging.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_lib.c     |  1 +
->  drivers/scsi/scsi_trace.c   | 16 ++++++++++++++++
->  include/trace/events/scsi.h | 31 +++++++++++++++++++++++++++++++
->  3 files changed, 48 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 2df485f..5c67e4e 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1626,6 +1626,7 @@ static void scsi_softirq_done(struct request *rq)
->  	}
->  
->  	scsi_log_completion(cmd, disposition);
-> +	trace_scsi_cmd_completion(cmd, disposition);
->  
->  	switch (disposition) {
->  		case SUCCESS:
-> diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-> index 503594e..51a7737 100644
-> --- a/drivers/scsi/scsi_trace.c
-> +++ b/drivers/scsi/scsi_trace.c
-> @@ -286,3 +286,19 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
->  		return scsi_trace_misc(p, cdb, len);
->  	}
->  }
-> +
-> +const char *
-> +scsi_trace_mlreturn_name(struct trace_seq *p, int rtn)
-> +{
-> +	const char *ret = trace_seq_buffer_ptr(p);
-> +	const char *mlstr = scsi_mlreturn_string(rtn);
-> +
-> +	if (mlstr)
-> +		trace_seq_printf(p, "%s", mlstr);
-> +	else
-> +		trace_seq_printf(p, "UNKNOWN (0x%x)", rtn);
-> +
-> +	trace_seq_putc(p, 0);
-> +
-> +	return ret;
-> +}
+On 09/30/2014 02:45 AM, Jerome Martin wrote:
+>
+>
+> On 09/30/2014 11:41 AM, Luigi Tarenga wrote:
+>>
+>> On 09/30/2014 11:28 AM, Jerome Martin wrote:
+>>> Luigi,
+>>>
+>>> Out of curiosity, does it work as expected with the stock fedora
+>>> packaged kernel ?
+>>>
+>>> Best,
+>>> --
+>>> Jerome
+>>>
+>>
+>> didn't test that configuration and since I can't find module
+>> iscsi_target_mod in stock
 
-Nak, again this doesn't do the right thing for binary tracing.  Please
-use __print_symbolic instead.
+iscsi is not a supported fabric on rhel/centos 6. Only FCoE uses LIO. 
+scsi-target-utils (tgt) is the supported iscsi target on rhel6. rhel7 
+uses LIO for both, as does Fedora.
+
+Regards -- Andy
 
