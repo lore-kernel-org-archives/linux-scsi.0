@@ -1,111 +1,55 @@
-From: Petr Mladek <pmladek@suse.cz>
-Subject: Re: [PATCH 27/38] Rearrange buffer formatting in printk()
-Date: Tue, 30 Sep 2014 21:37:14 +0200
-Message-ID: <20140930193714.GH2707@dhcp128.suse.cz>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
- <1411991947-130166-28-git-send-email-hare@suse.de>
- <20140930161619.GF2707@dhcp128.suse.cz>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if not OOM
+Date: Tue, 30 Sep 2014 23:06:34 +0200
+Message-ID: <20140930210634.GC14283@amd>
+References: <20140905174925.GA12991@mtj.dyndns.org>
+ <20140911202354.GA2598@core.coreip.homeip.net>
+ <20140922194906.GB9868@amd>
+ <2306678.TJaWkZCAc8@dtor-glaptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140930161619.GF2707@dhcp128.suse.cz>
+In-Reply-To: <2306678.TJaWkZCAc8@dtor-glaptop>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Steven Rostedt <rostedt@goodmis.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Lennart Poettering <lennart@poettering.net>, Kay Sievers <kay@vrfy.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare@suse.com, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagote>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue 30-09-14 18:16:20, Petr Mladek wrote:
-> On Mon 29-09-14 13:58:56, Hannes Reinecke wrote:
-> > Move buffer formatting to the start of the function as it
-> > doesn't require to be done under any locks.
-> > No functional change, required by the next patch.
+
+On Mon 2014-09-22 13:23:54, Dmitry Torokhov wrote:
+> On Monday, September 22, 2014 09:49:06 PM Pavel Machek wrote:
+> > On Thu 2014-09-11 13:23:54, Dmitry Torokhov wrote:
+> > > On Thu, Sep 11, 2014 at 12:59:25PM -0700, James Bottomley wrote:
+
+> > > > Yes, but we mostly do this anyway.  SCSI for instance does asynchronous
+> > > > scanning of attached devices (once the cards are probed)
+> > > 
+> > > What would it do it card was a bit slow to probe?
+> > > 
+> > > > but has a sync
+> > > > point for ordering.
+> > > 
+> > > Quite often we do not really care about ordering of devices. I mean,
+> > > does it matter if your mouse is discovered before your keyboard or
+> > > after?
 > > 
-> > Cc: Steven Rostedt <rostedt@goodmis.org>
-> > Cc: LKML <linux-kernel@vger.kernel.org>
-> 
-> printk stuff is maintained by Andrew in mm tree, so adding him into CC.
-> 
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
-> Reviewed-by: Petr Mladek <pmladek@suse.cz>
-
-I have just realized that textbuf[LOG_LINE_MAX] is a static variable.
-It means that it must be used under the lock and this patch is wrong.
-I want to take back the Reviewed-by and instead do
-
-Nacked->by: Petr Mladek <pmladek@suse.cz>
-
-also it means that it does not take the extra space on the stack
-and you probably does not need the two patches at all.
-
-Best Regards,
-Petr
- 
-> I do not see any obvious problem. Just note that
-> [sched_delayed] has already been removed in -mm tree. You might
-> want to base this patch on top of the commit 460d73c35ffa17979422290
-> ("printk: git rid of [sched_delayed] message for printk_deferred")
-> from linux-next.
-> 
-> Best Regards,
-> Petr
-> 
-> > ---
-> >  kernel/printk/printk.c | 21 ++++++++++-----------
-> >  1 file changed, 10 insertions(+), 11 deletions(-)
+> > Actually yes, I suspect it does.
 > > 
-> > diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-> > index 1ce7706..d13675e 100644
-> > --- a/kernel/printk/printk.c
-> > +++ b/kernel/printk/printk.c
-> > @@ -1633,8 +1633,18 @@ asmlinkage int vprintk_emit(int facility, int level,
-> >  	if (level == SCHED_MESSAGE_LOGLEVEL) {
-> >  		level = -1;
-> >  		in_sched = true;
-> > +
-> > +		/*
-> > +		 * The printf needs to come first; we need the syslog
-> > +		 * prefix which might be passed-in as a parameter.
-> > +		 */
-> > +		text_len = scnprintf(text, sizeof(textbuf),
-> > +				     KERN_WARNING "[sched_delayed] ");
-> >  	}
-> >  
-> > +	text_len += vscnprintf(text + text_len,
-> > +			       sizeof(textbuf) - text_len, fmt, args);
-> > +
-> >  	boot_delay_msec(level);
-> >  	printk_delay();
-> >  
-> > @@ -1676,17 +1686,6 @@ asmlinkage int vprintk_emit(int facility, int level,
-> >  					 strlen(recursion_msg));
-> >  	}
-> >  
-> > -	/*
-> > -	 * The printf needs to come first; we need the syslog
-> > -	 * prefix which might be passed-in as a parameter.
-> > -	 */
-> > -	if (in_sched)
-> > -		text_len = scnprintf(text, sizeof(textbuf),
-> > -				     KERN_WARNING "[sched_delayed] ");
-> > -
-> > -	text_len += vscnprintf(text + text_len,
-> > -			       sizeof(textbuf) - text_len, fmt, args);
-> > -
-> >  	/* mark and strip a trailing newline */
-> >  	if (text_len && text[text_len-1] == '\n') {
-> >  		text_len--;
-> > -- 
-> > 1.8.5.2
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> > I do evtest /dev/input/eventX by hand, occassionaly. It would be
+> > annoying if they moved between reboots.
+> 
+> I am sorry but you will have to cope with such annoyances. It' snot like we 
+> fail to boot the box here.
+> 
+> The systems are now mostly hot-pluggable and userland is supposed to
+> handle it, and it does, at least for input devices. If you want stable naming
+> use udev facilities to rename devices as needed or add needed symlinks (by-id, 
+> etc.).
+
+Well, it would be nice if udev was not mandatory. Do the sync points
+for ordering actually cost us something?
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
