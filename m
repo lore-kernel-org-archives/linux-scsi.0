@@ -1,155 +1,105 @@
-From: Petr Mladek <pmladek@suse.cz>
-Subject: Re: [PATCH 28/38] Externalize string buffer for printk
-Date: Tue, 30 Sep 2014 18:39:32 +0200
-Message-ID: <20140930163931.GG2707@dhcp128.suse.cz>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
- <1411991947-130166-29-git-send-email-hare@suse.de>
+From: Luigi Tarenga <luigi.tarenga@gmail.com>
+Subject: Re: targetcli do not show iscsi
+Date: Tue, 30 Sep 2014 18:49:33 +0200
+Message-ID: <542ADF1D.1020003@gmail.com>
+References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com> <542A722E.5030109@gmail.com> <542A73BE.2080501@netiant.com> <542A75F1.8070706@gmail.com> <542A77D6.4090109@netiant.com> <542A7ADD.3040804@gmail.com> <542A7BC9.2050708@netiant.com> <542ACA6C.104@redhat.com> <542ACDAE.3080307@gmail.com> <542AD1C2.8070105@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1411991947-130166-29-git-send-email-hare@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Steven Rostedt <rostedt@goodmis.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:43951 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbaI3Qtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 12:49:52 -0400
+In-Reply-To: <542AD1C2.8070105@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Jerome Martin <jxm@netiant.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Mon 29-09-14 13:58:57, Hannes Reinecke wrote:
-> This patch splits off the actual logging from vprintk_emit()
-> into printk_emit_string(), with vprintk_emit() just being a
-> simple wrapper for formatting the message into a
-> static buffer.
-> 
-> With that the caller can pass in a local buffer for
-> printk_emit_string() without increasing the overall stack size.
-> 
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Cc: LKML <linux-kernel@vger.kernel.org>
 
-Adding Andrew into CC here as well.
-
-There is one potential problem, see below.
-
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  include/linux/printk.h |  5 +++++
->  kernel/printk/printk.c | 36 ++++++++++++++++++++++++------------
->  2 files changed, 29 insertions(+), 12 deletions(-)
-> 
-> diff --git a/include/linux/printk.h b/include/linux/printk.h
-> index d78125f..9639900 100644
-> --- a/include/linux/printk.h
-> +++ b/include/linux/printk.h
-> @@ -130,6 +130,11 @@ int vprintk_emit(int facility, int level,
->  		 const char *dict, size_t dictlen,
->  		 const char *fmt, va_list args);
->  
-> +asmlinkage
-> +int printk_emit_string(int facility, int level,
-> +		       const char *dict, size_t dictlen,
-> +		       char *textbuf, size_t text_len);
-> +
->  asmlinkage __printf(1, 0)
->  int vprintk(const char *fmt, va_list args);
->  
-> diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-> index d13675e..303a1fe 100644
-> --- a/kernel/printk/printk.c
-> +++ b/kernel/printk/printk.c
-> @@ -1618,22 +1618,11 @@ asmlinkage int vprintk_emit(int facility, int level,
->  			    const char *dict, size_t dictlen,
->  			    const char *fmt, va_list args)
->  {
-> -	static int recursion_bug;
->  	static char textbuf[LOG_LINE_MAX];
+>>> iscsi is not a supported fabric on rhel/centos 6. Only FCoE uses 
+>>> LIO. scsi-target-utils (tgt) is the supported iscsi target on rhel6. 
+>>> rhel7 uses LIO for both, as does Fedora.
+>>>
+>>> Regards -- Andy
+>>>
+>> Hi Andy,
+>> I see LIO is a technology preview on rhel 6 but I'm not looking for 
+>> official support, just play with it :)
+>> that said I have a custom kernel compiled from vanilla so if we 
+>> esclude some problem with
+>> udev or other userspace services only kernel modules and targetcli is 
+>> involved in this configuration.
+>> I hope someone that maintain this module have some time to help me to 
+>> get it running otherwise
+>> I will try to use scst  (actually I compiled and installed it but 
+>> still have to configure it).
+>>
+>> My final goal is to have a litttle lab that let me write an 
+>> integration module for my failover cluster
+>> manager ( https://code.google.com/p/back-to-work/ ). I need to 
+>> implement scsi fencing without
+>> destroying a production server connected to a real SAN :P
+>>
+>> Luigi
 >
->  	char *text = textbuf;
->  	size_t text_len = 0;
-> -	enum log_flags lflags = 0;
-> -	unsigned long flags;
-> -	int this_cpu;
-> -	int printed_len = 0;
-> -	bool in_sched = false;
-> -	/* cpu currently holding logbuf_lock in this function */
-> -	static volatile unsigned int logbuf_cpu = UINT_MAX;
->  
->  	if (level == SCHED_MESSAGE_LOGLEVEL) {
-> -		level = -1;
-> -		in_sched = true;
-> -
->  		/*
->  		 * The printf needs to come first; we need the syslog
->  		 * prefix which might be passed-in as a parameter.
-> @@ -1644,6 +1633,24 @@ asmlinkage int vprintk_emit(int facility, int level,
->  
->  	text_len += vscnprintf(text + text_len,
->  			       sizeof(textbuf) - text_len, fmt, args);
-> +	return printk_emit_string(facility, level, dict, dictlen,
-> +				  textbuf, text_len);
-> +}
-> +EXPORT_SYMBOL(vprintk_emit);
-> +
-> +asmlinkage int printk_emit_string(int facility, int level,
-> +				  const char *dict, size_t dictlen,
-> +				  char *textbuf, size_t text_len)
-> +{
-> +	static int recursion_bug;
-> +	char *text = textbuf;
-> +	enum log_flags lflags = 0;
-> +	unsigned long flags;
-> +	int this_cpu;
-> +	int printed_len = 0;
-> +	bool in_sched = false;
-> +	/* cpu currently holding logbuf_lock in this function */
-> +	static volatile unsigned int logbuf_cpu = UINT_MAX;
+> Maybe I misunderstood your statement. Are you saying that
+> the targetcli I'm using (fb16) does not support iscsi fabric?
+> In this case I will try to use the git version.
+>
+> Luigi
+>
 
-We should make sure that text_len is lower or equal LOG_LINE_MAX.
+got it working :D
 
-I am afraid that printk() code is not able to process longer
-lines. For example, syslog_print() does:
+# targetcli
+targetcli shell version 2.1.fb37
+Copyright 2011-2013 by Datera, Inc and others.
+For help on commands, type 'help'.
 
-       text = kmalloc(LOG_LINE_MAX + PREFIX_MAX, GFP_KERNEL);
+/> ls
+o- / 
+...................................................................................................................... 
+[...]
+   o- backstores 
+........................................................................................................... 
+[...]
+   | o- block 
+............................................................................................... 
+[Storage Objects: 0]
+   | o- fileio 
+.............................................................................................. 
+[Storage Objects: 0]
+   | o- pscsi 
+............................................................................................... 
+[Storage Objects: 0]
+   | o- ramdisk 
+............................................................................................. 
+[Storage Objects: 0]
+   o- iscsi 
+......................................................................................................... 
+[Targets: 0]
+   o- loopback 
+...................................................................................................... 
+[Targets: 0]
+   o- sbp 
+........................................................................................................... 
+[Targets: 0]
+   o- vhost 
+......................................................................................................... 
+[Targets: 0]
+/>
 
-Then it calls msg_print_text() that works with entire messages. So,
-any longer message would freeze syslog_print() because it would newer
-fit into the buffer.
+I installed the last version from 
+https://fedorahosted.org/releases/t/a/targetcli-fb/
+and fortunally I had  python2.7 installed in /usr/local (I don't 
+remember why I installed it :D)
 
-I guess that there are more locations like this.
+builded and installed using python2.7
 
-Maybe, we should make LOG_LINE_MAX public, so it could be used on the
-other location either to allocate the buffer or to check the size.
+Thanks Andy for your hint and excuse me if I seemed stubborn :)
+Thank to Martin too for his support!
 
-Best Regards,
-Petr
-  
->  	boot_delay_msec(level);
->  	printk_delay();
-> @@ -1652,6 +1659,11 @@ asmlinkage int vprintk_emit(int facility, int level,
->  	local_irq_save(flags);
->  	this_cpu = smp_processor_id();
->  
-> +	if (level == SCHED_MESSAGE_LOGLEVEL) {
-> +		level = -1;
-> +		in_sched = true;
-> +	}
-> +
->  	/*
->  	 * Ouch, printk recursed into itself!
->  	 */
-> @@ -1789,7 +1801,7 @@ asmlinkage int vprintk_emit(int facility, int level,
->  
->  	return printed_len;
->  }
-> -EXPORT_SYMBOL(vprintk_emit);
-> +EXPORT_SYMBOL(printk_emit_string);
->  
->  asmlinkage int vprintk(const char *fmt, va_list args)
->  {
-> -- 
-> 1.8.5.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+regards
+Luigi
