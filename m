@@ -1,95 +1,30 @@
-From: Jerome Martin <jxm@netiant.com>
-Subject: Re: targetcli do not show iscsi
-Date: Tue, 30 Sep 2014 11:45:45 +0200
-Message-ID: <542A7BC9.2050708@netiant.com>
-References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com> <542A722E.5030109@gmail.com> <542A73BE.2080501@netiant.com> <542A75F1.8070706@gmail.com> <542A77D6.4090109@netiant.com> <542A7ADD.3040804@gmail.com>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
+ of xenbus_switch_state()
+Date: Tue, 30 Sep 2014 10:55:26 +0100
+Message-ID: <542A7E0E.9050702@citrix.com>
+References: <5425961A.5000604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <542A7ADD.3040804@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Luigi Tarenga <luigi.tarenga@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5425961A.5000604@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>, konrad.wilk@oracle.com, ian.campbell@citrix.com, wei.liu2@citrix.com, boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com, yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com
+Cc: xen-devel@lists.xenproject.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 26/09/14 17:36, Chen Gang wrote:
+> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
+> internally, so need not return any status value, then use 'void' instead
+> of 'int' for xenbus_switch_state() and __xenbus_switch_state().
+> 
+> Also need be sure that all callers which check the return value must let
+> 'err' be 0.
+> 
+> And also need change the related comments for xenbus_switch_state().
 
+Since this patch does not fix a bug and there is no unanimous agreement
+on the API change I'm not going to apply it (nor the previous version).
 
-On 09/30/2014 11:41 AM, Luigi Tarenga wrote:
->
-> On 09/30/2014 11:28 AM, Jerome Martin wrote:
->> Luigi,
->>
->> Out of curiosity, does it work as expected with the stock fedora
->> packaged kernel ?
->>
->> Best,
->> --
->> Jerome
->>
->
-> didn't test that configuration and since I can't find module
-> iscsi_target_mod in stock
-
-ok
-
-> kernel I would have to recompile it against centos kernel. It's worth
-> trying?
-
-Sure :-)
-
->
-> btw, I saw that after loading the module and manually create the iscsi
-> directory this
-> content automatically appear:
->
-> # ll /sys/kernel/config/target/iscsi/
-> total 0
-> drwxr-xr-x 2 root root    0 Sep 30 11:38 discovery_auth
-> -r--r--r-- 1 root root 4096 Sep 30 11:39 lio_version
-
-Yes, it means that the iscsi module is correctly loaded.
-
->
-> I start suspecting a problem with targetcli or  configshell. I
-> regenerated the log.txt file:
-
-Yes, as I said earlier I'll have to reproduce your setup and/or wait for 
-Andy to come around.
-
->
-> # targetcli /iscsi info
-> No such path /iscsi
->
-> # cat log.txt
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:932 run_cmdline()
-> Running command line '/iscsi info'.
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:837
-> _parse_cmdline() Parsing commandline.
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:844
-> _parse_cmdline() [('path', 0, 6, []), ('command', 7, 11, None)]
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:848
-> _parse_cmdline() Found path token /iscsi.
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:848
-> _parse_cmdline() Found command token info.
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/shell.py:861
-> _parse_cmdline() Parse gave path='/iscsi' command='info' pparams=[]
-> kparams={}
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/node.py:1857 get_node()
-> Looking for path '/iscsi'
-> [DEBUG] 2014-30-09 11:40:52
-> /usr/lib/python2.6/site-packages/configshell/node.py:1857 get_node()
-> Looking for path 'iscsi'
-> [ERROR] 2014-30-09 11:40:52 No such path /iscsi
->
-> Luigi
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+David
