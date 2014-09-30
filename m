@@ -1,89 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/38] Implement scsi_opcode_sa_name
-Date: Tue, 30 Sep 2014 07:50:40 +0200
-Message-ID: <542A44B0.5000907@suse.de>
-References: <1411991947-130166-1-git-send-email-hare@suse.de> <1411991947-130166-14-git-send-email-hare@suse.de> <5429B320.2090003@interlog.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
+	support
+Date: Tue, 30 Sep 2014 09:15:55 +0200
+Message-ID: <20140930071555.GB14081@wotan.suse.de>
+References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com> <20140928192247.GA28033@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50172 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091AbaI3Fun (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2014 01:50:43 -0400
-In-Reply-To: <5429B320.2090003@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140928192247.GA28033@core.coreip.homeip.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, gregkh@linuxfoundation.org, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
 
-On 09/29/2014 09:29 PM, Douglas Gilbert wrote:
-> On 14-09-29 07:58 AM, Hannes Reinecke wrote:
->> Implement a lookup array for SERVICE ACTION commands instead
->> of hardcoding it in a large switch statement.
->>
->> Reviewed-by: Christoph Hellwig <hch@infradead.org>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/constants.c | 132
->> +++++++++++++++++++----------------------------
->>   1 file changed, 54 insertions(+), 78 deletions(-)
->>
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index 6e16b19..b9eb6a1 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -244,102 +244,77 @@ static const struct value_name_pair
->> variable_length_arr[] =3D {
->>   };
->>   #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
->>
->> -static const char * get_sa_name(const struct value_name_pair * arr,
->> -                    int arr_sz, int service_action)
->> +struct sa_name_list {
->> +    int cmd;
->> +    const struct value_name_pair *arr;
->> +    int arr_sz;
->> +};
->> +
->> +static struct sa_name_list sa_names_arr[] =3D {
->> +    {VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
->> +    {MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
->> +    {MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
->> +    {PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
->> +    {PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
->> +    {SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
->> +    {SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
->> +    {SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
->> +    {SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
->> +    {SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
->> +    {THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
->> +    {THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
->> +    {0, NULL, 0},
->> +};
->> +#define SA_NAME_LIST_SZ ARRAY_SIZE(sa_names_arr)
->
-> Since you placed a terminating element on sa_names_arr[] then
-> you don't need the SA_NAME_LIST_SZ define any more.
->
-> The for loop can become:
->    for (sa_name_ptr =3D sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr=
-) {
-> ...
->
-Good point. Will be including this for the next round.
+On Sun, Sep 28, 2014 at 12:22:47PM -0700, Dmitry Torokhov wrote:
+> Hi Luis,
+> 
+> On Fri, Sep 26, 2014 at 02:57:17PM -0700, Luis R. Rodriguez wrote:
+> > +static bool drv_enable_async_probe(struct device_driver *drv,
+> > +				   struct bus_type *bus)
+> > +{
+> > +	struct module *mod;
+> > +
+> > +	if (!drv->owner || drv->sync_probe)
+> > +		return false;
+> 
+> This bit is one of the biggest issues I have with the patch set. Why async
+> probing is limited to modules only?
 
-Cheers,
+Because Tejun wanted to address this separately, so its not that we will restrict
+this but we should have non-module solution added as an evolution on top of this,
+as a secondary step.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I mentioned several times that we need
+> async probing for built-in drivers and the way you are structuring the flags
+> (async by default for modules, possibly opt-out of async for modules, forcibly
+> sync for built-in) it is hard to extend the infrastructure for built-in case.
+
+I confess I haven't tried enabling built-in as a secondary step but its just
+due to lack of time right now but I don't think impossible and think actually
+think it should be fairly trivial. Are there real blockers to do this that
+you see as an evolutionary step?
+
+> Also, as far as I can see, you are only considering the case where driver is
+> being bound to already registered devices. If you have a module that creates a
+> device for a driver that is already loaded and takes long time to probe you
+> would still be probing synchronously even if driver/module requested async
+> behavior.
+
+Can you provide an example code path hit here? I'll certainly like to address
+that as well.
+
+  Luis
