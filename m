@@ -1,105 +1,41 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/23] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
-Date: Tue, 30 Sep 2014 13:50:44 +0200
-Message-ID: <1412077852-40893-16-git-send-email-hare@suse.de>
+Subject: [PATCH 22/23] scsi: use shost argument in scsi_eh_prt_fail_stats
+Date: Tue, 30 Sep 2014 13:50:51 +0200
+Message-ID: <1412077852-40893-23-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57133 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57173 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbaI3LvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2014 07:51:05 -0400
+	id S1751131AbaI3LvH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2014 07:51:07 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
-so that we don't have to call several functions to figure
-out the CDB opcode string.
+The EH statistics are per host, so we should be using
+shost_printk() here.
 
-Reviewed-by: Christoph Hellweg <hch@lst.de>
+Suggested-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index c1cdfab..2110d61 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -29,6 +29,7 @@
- #define THIRD_PARTY_COPY_OUT 0x83
- #define THIRD_PARTY_COPY_IN 0x84
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4d3f55c..9daaf2a 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -355,7 +355,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
  
-+#define VENDOR_SPECIFIC_CDB 0xc0
- 
- struct sa_name_list {
- 	int cmd;
-@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
- #endif /* CONFIG_SCSI_CONSTANTS */
- 
- static bool scsi_opcode_sa_name(int cmd, int service_action,
--				const char **sa_name)
-+				const char **cdb_name, const char **sa_name)
- {
- 	struct sa_name_list *sa_name_ptr = sa_names_arr;
- 	const struct value_name_pair *arr = NULL;
- 	int arr_sz, k;
- 
-+	*cdb_name = NULL;
-+	if (cmd >= VENDOR_SPECIFIC_CDB)
-+		return false;
-+
-+	if (cmd < ARRAY_SIZE(cdb_byte0_names))
-+		*cdb_name = cdb_byte0_names[cmd];
-+
- 	for (k = 0; k < ARRAY_SIZE(sa_names_arr); ++k, ++sa_name_ptr) {
- 		if (sa_name_ptr->cmd == cmd) {
- 			arr = sa_name_ptr->arr;
-@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- {
- 	int sa, len, cdb0;
--	const char *name = NULL;
-+	const char *cdb_name = NULL, *sa_name = NULL;
- 
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
-@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 		len = cdb_len;
- 	}
- 
--	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
--		if (cdb0 < 0xc0) {
--			if (ARRAY_SIZE(cdb_byte0_names)) {
--				name = cdb_byte0_names[cdb0];
--				if (name)
--					printk("%s", name);
--				else
--					printk("cdb[0]=0x%x (reserved)", cdb0);
--			} else
--				printk("cdb[0]=0x%x", cdb0);
--		} else
-+	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
-+		if (cdb_name)
-+			printk("%s", cdb_name);
-+		else if (cdb0 > VENDOR_SPECIFIC_CDB)
- 			printk("cdb[0]=0x%x (vendor)", cdb0);
-+		else if (cdb0 > 0x60 && cdb0 < 0x7e)
-+			printk("cdb[0]=0x%x (reserved)", cdb0);
-+		else
-+			printk("cdb[0]=0x%x", cdb0);
- 	} else {
--		if (name)
--			printk("%s", name);
-+		if (sa_name)
-+			printk("%s", sa_name);
-+		else if (cdb_name)
-+			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
- 
+ 		if (cmd_cancel || cmd_failed) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				sdev_printk(KERN_INFO, sdev,
++				shost_printk(KERN_INFO, shost,
+ 					    "%s: cmds failed: %d, cancel: %d\n",
+ 					    __func__, cmd_failed,
+ 					    cmd_cancel));
 -- 
 1.8.5.2
 
