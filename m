@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/23] scsi: use 'bool' as return value for scsi_normalize_sense()
-Date: Tue, 30 Sep 2014 13:50:40 +0200
-Message-ID: <1412077852-40893-12-git-send-email-hare@suse.de>
+Subject: [PATCH 12/23] scsi: remove scsi_print_status()
+Date: Tue, 30 Sep 2014 13:50:41 +0200
+Message-ID: <1412077852-40893-13-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57141 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57142 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751520AbaI3LvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751557AbaI3LvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 30 Sep 2014 07:51:04 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,110 +14,73 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Convert scsi_normalize_sense() and frieds to return 'bool'
-instead of an integer.
+Last caller is gone, so we can remove it.
 
-Reviewed-by: Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 14 +++++++-------
- drivers/scsi/scsi_lib.c   |  2 +-
- include/scsi/scsi_eh.h    | 14 +++++++-------
- 3 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/constants.c | 35 -----------------------------------
+ include/scsi/scsi_dbg.h  |  1 -
+ 2 files changed, 36 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 6c99624..8a6d382 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2408,20 +2408,20 @@ EXPORT_SYMBOL(scsi_reset_provider);
-  *	responded to a SCSI command with the CHECK_CONDITION status.
-  *
-  * Return value:
-- *	1 if valid sense data information found, else 0;
-+ *	true if valid sense data information found, else false;
-  */
--int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--                         struct scsi_sense_hdr *sshdr)
-+bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+			  struct scsi_sense_hdr *sshdr)
- {
- 	if (!sense_buffer || !sb_len)
--		return 0;
-+		return false;
- 
- 	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
- 
- 	sshdr->response_code = (sense_buffer[0] & 0x7f);
- 
- 	if (!scsi_sense_valid(sshdr))
--		return 0;
-+		return false;
- 
- 	if (sshdr->response_code >= 0x72) {
- 		/*
-@@ -2451,11 +2451,11 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		}
- 	}
- 
--	return 1;
-+	return true;
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 55ece2a..6e16b19 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
  }
- EXPORT_SYMBOL(scsi_normalize_sense);
+ EXPORT_SYMBOL(scsi_print_command);
  
--int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
-+bool scsi_command_normalize_sense(struct scsi_cmnd *cmd,
- 				 struct scsi_sense_hdr *sshdr)
- {
- 	return scsi_normalize_sense(cmd->sense_buffer,
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c3220b7..b853659 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -830,7 +830,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	struct request *req = cmd->request;
- 	int error = 0;
- 	struct scsi_sense_hdr sshdr;
--	int sense_valid = 0;
-+	bool sense_valid = false;
- 	int sense_deferred = 0;
- 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
- 	      ACTION_DELAYED_RETRY} action;
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 06a8790..ffb69ee 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -27,10 +27,10 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 additional_length;	/* always 0 for fixed sense format */
- };
+-/**
+- *	scsi_print_status - print scsi status description
+- *	@scsi_status: scsi status value
+- *
+- *	If the status is recognized, the description is printed.
+- *	Otherwise "Unknown status" is output. No trailing space.
+- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
+- *	(e.g. "0x2" for Check Condition).
+- **/
+-void
+-scsi_print_status(unsigned char scsi_status) {
+-#ifdef CONFIG_SCSI_CONSTANTS
+-	const char * ccp;
+-
+-	switch (scsi_status) {
+-	case 0:    ccp = "Good"; break;
+-	case 0x2:  ccp = "Check Condition"; break;
+-	case 0x4:  ccp = "Condition Met"; break;
+-	case 0x8:  ccp = "Busy"; break;
+-	case 0x10: ccp = "Intermediate"; break;
+-	case 0x14: ccp = "Intermediate-Condition Met"; break;
+-	case 0x18: ccp = "Reservation Conflict"; break;
+-	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
+-	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
+-	case 0x30: ccp = "ACA Active"; break;
+-	case 0x40: ccp = "Task Aborted"; break;
+-	default:   ccp = "Unknown status";
+-	}
+-	printk(KERN_INFO "%s", ccp);
+-#else
+-	printk(KERN_INFO "0x%0x", scsi_status);
+-#endif
+-}
+-EXPORT_SYMBOL(scsi_print_status);
+-
+ #ifdef CONFIG_SCSI_CONSTANTS
  
--static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
-+static inline bool scsi_sense_valid(struct scsi_sense_hdr *sshdr)
- {
- 	if (!sshdr)
--		return 0;
-+		return false;
- 
- 	return (sshdr->response_code & 0x70) == 0x70;
- }
-@@ -42,12 +42,12 @@ extern void scsi_eh_flush_done_q(struct list_head *done_q);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
--extern int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--		struct scsi_sense_hdr *sshdr);
--extern int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
--		struct scsi_sense_hdr *sshdr);
-+extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+				 struct scsi_sense_hdr *sshdr);
-+extern bool scsi_command_normalize_sense(struct scsi_cmnd *cmd,
-+					 struct scsi_sense_hdr *sshdr);
- 
--static inline int scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
-+static inline bool scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
- {
- 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
- }
+ struct error_info {
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index cd0c873..44bea15 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -19,7 +19,6 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
+ 			       int sense_len);
+ extern void scsi_show_result(int);
+ extern void scsi_print_result(struct scsi_cmnd *);
+-extern void scsi_print_status(unsigned char);
+ extern const char *scsi_sense_key_string(unsigned char);
+ extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
+ 					  const char **);
 -- 
 1.8.5.2
 
