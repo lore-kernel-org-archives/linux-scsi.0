@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/23] scsi: remove last argument from print_opcode_name()
-Date: Tue, 30 Sep 2014 13:50:45 +0200
-Message-ID: <1412077852-40893-17-git-send-email-hare@suse.de>
+Subject: [PATCH 17/23] scsi: Remove scsi_print_command when calling abort
+Date: Tue, 30 Sep 2014 13:50:46 +0200
+Message-ID: <1412077852-40893-18-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57155 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57134 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629AbaI3LvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751304AbaI3LvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 30 Sep 2014 07:51:05 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,78 +14,166 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-print_opcode_name() was only ever called with a '0' argument
-from LLDDs and ULDs which were _not_ supporting variable length
-CDBs, so the 'if' clause was never triggered.
+Calling scsi_print_command should not be necessary during abort;
+if the information is required one should enable scsi logging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+ drivers/scsi/53c700.c        |  4 +---
+ drivers/scsi/NCR5380.c       |  5 ++---
+ drivers/scsi/arm/fas216.c    | 10 +++-------
+ drivers/scsi/atari_NCR5380.c |  3 +--
+ drivers/scsi/ps3rom.c        |  4 ----
+ drivers/scsi/stex.c          |  9 +++------
+ drivers/scsi/sun3_NCR5380.c  |  3 +--
+ 7 files changed, 11 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 2110d61..713e1e0 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -320,25 +320,21 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
- 	return true;
- }
- 
--/* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
--static void print_opcode_name(unsigned char * cdbp, int cdb_len)
-+static void print_opcode_name(unsigned char *cdbp)
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 179a24e..474cc6d 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -1906,9 +1906,7 @@ NCR_700_abort(struct scsi_cmnd * SCp)
  {
--	int sa, len, cdb0;
-+	int sa, cdb0;
- 	const char *cdb_name = NULL, *sa_name = NULL;
+ 	struct NCR_700_command_slot *slot;
  
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
--		len = scsi_varlen_cdb_length(cdbp);
-+		int len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
--			printk("short variable length command, "
--			       "len=%d ext_len=%d", len, cdb_len);
-+			printk("short variable length command, len=%d", len);
- 			return;
- 		}
- 		sa = (cdbp[8] << 8) + cdbp[9];
--	} else {
-+	} else
- 		sa = cdbp[1] & 0x1f;
--		len = cdb_len;
--	}
+-	scmd_printk(KERN_INFO, SCp,
+-		"New error handler wants to abort command\n\t");
+-	scsi_print_command(SCp);
++	scmd_printk(KERN_INFO, SCp, "abort command\n");
  
- 	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
- 		if (cdb_name)
-@@ -356,9 +352,6 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 	slot = (struct NCR_700_command_slot *)SCp->host_scribble;
+ 
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 45da3c8..50873bb 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -2666,9 +2666,8 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 	Scsi_Cmnd *tmp, **prev;
+-	
+-	printk(KERN_WARNING "scsi%d : aborting command\n", instance->host_no);
+-	scsi_print_command(cmd);
++
++	scmd_printk(KERN_WARNING, cmd, "aborting command\n");
+ 
+ 	NCR5380_print_status(instance);
+ 
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index b2fd18e..c16aca1 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2425,14 +2425,11 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 
+ 	info->stats.aborts += 1;
+ 
+-	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
+-	__scsi_print_command(SCpnt->cmnd);
++	sdev_printk(KERN_WARNING, SCpnt, "abort command\n");
+ 
+ 	print_debug_list();
+ 	fas216_dumpstate(info);
+ 
+-	printk(KERN_WARNING "scsi%d: abort %p ", info->host->host_no, SCpnt);
 -
--		if (cdb_len > 0 && len != cdb_len)
--			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+ 	switch (fas216_find_command(info, SCpnt)) {
+ 	/*
+ 	 * We found the command, and cleared it out.  Either
+@@ -2440,7 +2437,7 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 	 * target, or the busylun bit is not set.
+ 	 */
+ 	case res_success:
+-		printk("success\n");
++		sdev_printk(KERN_WARNING, SCpnt, "abort %p success\n", SCpnt);
+ 		result = SUCCESS;
+ 		break;
+ 
+@@ -2450,14 +2447,13 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 	 * if the bus is free.
+ 	 */
+ 	case res_hw_abort:
+-		
+ 
+ 	/*
+ 	 * We are unable to abort the command for some reason.
+ 	 */
+ 	default:
+ 	case res_failed:
+-		printk("failed\n");
++		sdev_printk(KERN_WARNING, SCpnt, "abort %p failed\n", SCpnt);
+ 		break;
  	}
+ 
+diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+index 79e6f04..322f361 100644
+--- a/drivers/scsi/atari_NCR5380.c
++++ b/drivers/scsi/atari_NCR5380.c
+@@ -2623,8 +2623,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
+ 	Scsi_Cmnd *tmp, **prev;
+ 	unsigned long flags;
+ 
+-	printk(KERN_NOTICE "scsi%d: aborting command\n", HOSTNO);
+-	scsi_print_command(cmd);
++	sdev_printk(KERN_NOTICE, cmd, "aborting command\n");
+ 
+ 	NCR5380_print_status(instance);
+ 
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index ef23fab..b3b48b5 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -220,10 +220,6 @@ static int ps3rom_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	unsigned char opcode;
+ 	int res;
+ 
+-#ifdef DEBUG
+-	scsi_print_command(cmd);
+-#endif
+-
+ 	priv->curr_cmd = cmd;
+ 	cmd->scsi_done = done;
+ 
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1aa4bef..713af13 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1162,9 +1162,7 @@ static int stex_abort(struct scsi_cmnd *cmd)
+ 	int result = SUCCESS;
+ 	unsigned long flags;
+ 
+-	printk(KERN_INFO DRV_NAME
+-		"(%s): aborting command\n", pci_name(hba->pdev));
+-	scsi_print_command(cmd);
++	scmd_printk(KERN_INFO, cmd, "aborting command\n");
+ 
+ 	base = hba->mmio_base;
+ 	spin_lock_irqsave(host->host_lock, flags);
+@@ -1352,9 +1350,8 @@ static int stex_reset(struct scsi_cmnd *cmd)
+ 
+ 	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
+ 
+-	printk(KERN_INFO DRV_NAME
+-		"(%s): resetting host\n", pci_name(hba->pdev));
+-	scsi_print_command(cmd);
++	shost_printk(KERN_INFO, cmd->device->host,
++		     "resetting host\n");
+ 
+ 	return stex_do_reset(hba) ? FAILED : SUCCESS;
  }
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 1a2367a..68d0e1a 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -2608,8 +2608,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
+     struct scsi_cmnd *tmp, **prev;
+     unsigned long flags;
  
-@@ -366,7 +359,7 @@ void __scsi_print_command(unsigned char *cdb)
- {
- 	int k, len;
+-    printk(KERN_NOTICE "scsi%d: aborting command\n", HOSTNO);
+-    scsi_print_command(cmd);
++    sdev_printk(KERN_NOTICE, cmd, "aborting command\n");
  
--	print_opcode_name(cdb, 0);
-+	print_opcode_name(cdb);
- 	len = scsi_command_size(cdb);
- 	/* print out all bytes in cdb */
- 	for (k = 0; k < len; ++k)
-@@ -383,7 +376,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 		return;
+     NCR5380_print_status (instance);
  
- 	scmd_printk(KERN_INFO, cmd, "CDB: ");
--	print_opcode_name(cmd->cmnd, cmd->cmd_len);
-+	print_opcode_name(cmd->cmnd);
- 
- 	/* print out all bytes in cdb */
- 	printk(":");
 -- 
 1.8.5.2
 
