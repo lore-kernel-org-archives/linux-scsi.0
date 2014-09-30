@@ -1,80 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Tue, 30 Sep 2014 00:43:29 -0700
-Message-ID: <20140930074329.GA10290@infradead.org>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
+	support
+Date: Tue, 30 Sep 2014 09:47:35 +0200
+Message-ID: <20140930074735.GE14081@wotan.suse.de>
+References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com> <CAG-2HqWmVODJ6Q46t96mS9ALbeFjRcQ18ypwejY=ug0wCUVv-Q@mail.gmail.com> <20140930022751.GA14081@wotan.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38056 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109AbaI3Hnb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 03:43:31 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1411991272-129962-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20140930022751.GA14081@wotan.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tom Gundersen <teg@jklm.no>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Michal Hocko <mhocko@suse.cz>, Greg KH <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Takashi Iwai <tiwai@suse.de>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@linux.intel.com>, Robert Milasan <rmilasan@suse.com>, werner@suse.com, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, pmladek@suse.cz, dbueso@suse.com, LKML <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@avagotech.com>
 
-On Mon, Sep 29, 2014 at 01:47:52PM +0200, Hannes Reinecke wrote:
-> Megaraid_sas uses a shared pool of commands per HBA, so we
-> should be enabling a shared tag map.
-> This will allow the I/O scheduler to make better scheduling
-> decisions and will avoid BUSY states in the driver.
-
-What exact problem did you see?  Do you have a link to a bugzilla entry
-or similar?  Was this observed on real hardware or your qemu emulation?
-
+On Tue, Sep 30, 2014 at 04:27:51AM +0200, Luis R. Rodriguez wrote:
+> On Sun, Sep 28, 2014 at 07:07:24PM +0200, Tom Gundersen wrote:
+> > On Fri, Sep 26, 2014 at 11:57 PM, Luis R. Rodriguez
+> > <mcgrof@do-not-panic.com> wrote:
+> > > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > > 0) Not all drivers are killed, the signal is just sent and
+> > >    the kill will only be acted upoon if the driver you loaded
+> > >    happens to have some code path that either uses kthreads (which
+> > >    as of 786235ee are now killable), or uses some code which checks for
+> > >    fatal_signal_pending() on the kernel somewhere -- i.e: pci_read_vpd().
+> > 
+> > Shouldn't this be seen as something to be fixed in the kernel?
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 34 ++++++++++++++++++++++++++++++-
->  1 file changed, 33 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index f6a69a3..996fa9a 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1659,7 +1659,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
->  	*/
->  	blk_queue_rq_timeout(sdev->request_queue,
->  		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
-> -
-> +	sdev->tagged_supported = 1;
+> That's a great question. In practice now after CVE-2012-4398 and its series of
+> patches added which enabled OOM to kill things followed by 786235ee to also
+> handle OOM on kthreads it seems imperative we strive towards this, in practive
+> however if you're getting OOMs on boot you have far more serious issue to be
+> concerned over than handling CVE-2012-4398. Another issue is that even if we
+> wanted to address this a critical right now on module loading driver error
+> paths tend to be pretty buggy and we'd probably end up causing more issues than
+> fixing anything if the sigkill that triggered this was an arbitrary timeout,
+> specially if the timeout is not properly justified.
 
-> +	/* We have a shared tag map, so TCQ is always supported */
-> +	sdev->tagged_supported = 1;
-> +
+<-- snip -->
 
-Why doesn't the device return the proper data in the INQUIRY response?
+> So extending the kill onto more drivers *because* of the timeout is probably
+> not a good reason as it would probably create more issue than fix anything
+> right now.
 
-And more importantly why do you want to do this twice?
+A bit more on this. Tejun had added devres while trying to convert libata to
+use iomap but in that process also help address buggy failure paths on drivers [0].
+Even with devres in place and devm functions being available they actually
+haven't been popularized until recent kernels [1]. There is even further
+research on precicely these sorts of errors, such as "Hector: Detecting
+Resource-Release Omission Faults in error-handling code for systems software" [2]
+but unfortunately there is no data over time. Another paper is "An approach to
+improving the structure of error-handling code in the Linux kernel" [3] which
+tries to address moving error handling code in the middle of the function to gotos
+to shared code at the end of the function...
 
->  	instance = megasas_lookup_instance(sdev->host->host_no);
->  	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
->  		/*
-> @@ -1677,13 +1681,20 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
->  			sdev->id;
->  		if (instance->pd_list[pd_index].driveState ==
->  					MR_PD_STATE_SYSTEM) {
-> +			scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
->  			return 0;
->  		}
->  		return -ENXIO;
->  	}
-> +	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
->  	return 0;
+So we have buggy error paths on drivers and trusting them unfortunately isn't
+a good idea at this point. They should be fixed but saying we should equally
+kill all drivers right now would likley introduce more issues than anything.
 
-Please refactor the code so that the first case falls through to the
-second, something like:
+[0] http://lwn.net/Articles/215861/
+[1] http://www.slideshare.net/ennael/kernel-recipes-2013?qid=f0888b85-377b-4b29-95c3-f4e59822f5b3&v=default&b=&from_search=6
+    See slide 6 on graph usage of devm functions over time
+[2] http://coccinelle.lip6.fr/papers/dsn2013.pdf
+[3] http://coccinelle.lip6.fr/papers/lctes11.pdf
 
-
-		if (instance->pd_list[pd_index].driveState !=
-					MR_PD_STATE_SYSTEM)
-			return -ENXIO;
-	}
-
-	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
-	return 0;
-
+  Luis
