@@ -1,127 +1,105 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/23] scsi: separate out scsi_(host|driver)byte_string()
-Date: Tue, 30 Sep 2014 13:50:47 +0200
-Message-ID: <1412077852-40893-19-git-send-email-hare@suse.de>
+Subject: [PATCH 15/23] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
+Date: Tue, 30 Sep 2014 13:50:44 +0200
+Message-ID: <1412077852-40893-16-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57158 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57133 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645AbaI3LvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2014 07:51:06 -0400
+	id S1751625AbaI3LvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2014 07:51:05 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Export functions for later use.
+Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
+so that we don't have to call several functions to figure
+out the CDB opcode string.
 
+Reviewed-by: Christoph Hellweg <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
- include/scsi/scsi_dbg.h  |  2 ++
- 2 files changed, 46 insertions(+), 14 deletions(-)
+ drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 713e1e0..d3e1900 100644
+index c1cdfab..2110d61 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -1404,38 +1404,68 @@ static const char * const hostbyte_table[]={
- "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
- "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
- "DID_NEXUS_FAILURE" };
--#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
+@@ -29,6 +29,7 @@
+ #define THIRD_PARTY_COPY_OUT 0x83
+ #define THIRD_PARTY_COPY_IN 0x84
  
- static const char * const driverbyte_table[]={
- "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
- "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
--#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
++#define VENDOR_SPECIFIC_CDB 0xc0
  
--void scsi_show_result(int result)
-+#endif
-+
-+const char *scsi_hostbyte_string(int result)
+ struct sa_name_list {
+ 	int cmd;
+@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
+ #endif /* CONFIG_SCSI_CONSTANTS */
+ 
+ static bool scsi_opcode_sa_name(int cmd, int service_action,
+-				const char **sa_name)
++				const char **cdb_name, const char **sa_name)
  {
-+	const char *hb_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
- 	int hb = host_byte(result);
--	int db = driver_byte(result);
+ 	struct sa_name_list *sa_name_ptr = sa_names_arr;
+ 	const struct value_name_pair *arr = NULL;
+ 	int arr_sz, k;
  
--	printk("Result: hostbyte=%s driverbyte=%s\n",
--	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
--	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
-+	if (hb < ARRAY_SIZE(hostbyte_table))
-+		hb_string = hostbyte_table[hb];
-+#endif
-+	return hb_string;
- }
-+EXPORT_SYMBOL(scsi_hostbyte_string);
- 
--#else
-+const char *scsi_driverbyte_string(int result)
-+{
-+	const char *db_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
-+	int db = driver_byte(result);
++	*cdb_name = NULL;
++	if (cmd >= VENDOR_SPECIFIC_CDB)
++		return false;
 +
-+	if (db < ARRAY_SIZE(driverbyte_table))
-+		db_string = driverbyte_table[db];
-+#endif
-+	return db_string;
-+}
-+EXPORT_SYMBOL(scsi_driverbyte_string);
- 
- void scsi_show_result(int result)
- {
--	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--	       host_byte(result), driver_byte(result));
--}
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
- 
--#endif
-+	if (hb_string || db_string)
-+		printk("Result: hostbyte=%s driverbyte=%s\n",
-+		       hb_string ? hb_string : "invalid",
-+		       db_string ? db_string : "invalid");
-+	else
-+		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+		       host_byte(result), driver_byte(result));
-+}
- EXPORT_SYMBOL(scsi_show_result);
- 
- 
- void scsi_print_result(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_INFO, cmd, " ");
--	scsi_show_result(cmd->result);
-+	const char *hb_string = scsi_hostbyte_string(cmd->result);
-+	const char *db_string = scsi_driverbyte_string(cmd->result);
++	if (cmd < ARRAY_SIZE(cdb_byte0_names))
++		*cdb_name = cdb_byte0_names[cmd];
 +
-+	if (hb_string || db_string)
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=%s driverbyte=%s",
-+			    hb_string ? hb_string : "invalid",
-+			    db_string ? db_string : "invalid");
-+	else
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
-+			    host_byte(cmd->result), driver_byte(cmd->result));
- }
- EXPORT_SYMBOL(scsi_print_result);
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 44bea15..fb3e0d4 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,6 +19,8 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
-+extern const char *scsi_hostbyte_string(int);
-+extern const char *scsi_driverbyte_string(int);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+ 	for (k = 0; k < ARRAY_SIZE(sa_names_arr); ++k, ++sa_name_ptr) {
+ 		if (sa_name_ptr->cmd == cmd) {
+ 			arr = sa_name_ptr->arr;
+@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
+ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ {
+ 	int sa, len, cdb0;
+-	const char *name = NULL;
++	const char *cdb_name = NULL, *sa_name = NULL;
+ 
+ 	cdb0 = cdbp[0];
+ 	if (cdb0 == VARIABLE_LENGTH_CMD) {
+@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 		len = cdb_len;
+ 	}
+ 
+-	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+-		if (cdb0 < 0xc0) {
+-			if (ARRAY_SIZE(cdb_byte0_names)) {
+-				name = cdb_byte0_names[cdb0];
+-				if (name)
+-					printk("%s", name);
+-				else
+-					printk("cdb[0]=0x%x (reserved)", cdb0);
+-			} else
+-				printk("cdb[0]=0x%x", cdb0);
+-		} else
++	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
++		if (cdb_name)
++			printk("%s", cdb_name);
++		else if (cdb0 > VENDOR_SPECIFIC_CDB)
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
++		else if (cdb0 > 0x60 && cdb0 < 0x7e)
++			printk("cdb[0]=0x%x (reserved)", cdb0);
++		else
++			printk("cdb[0]=0x%x", cdb0);
+ 	} else {
+-		if (name)
+-			printk("%s", name);
++		if (sa_name)
++			printk("%s", sa_name);
++		else if (cdb_name)
++			printk("%s, sa=0x%x", cdb_name, sa);
+ 		else
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 
 -- 
 1.8.5.2
 
