@@ -1,89 +1,150 @@
-From: Jerome Martin <jxm@netiant.com>
+From: Luigi Tarenga <luigi.tarenga@gmail.com>
 Subject: Re: targetcli do not show iscsi
-Date: Tue, 30 Sep 2014 10:56:23 +0200
-Message-ID: <542A7037.6050909@netiant.com>
-References: <542A6F44.3070802@gmail.com>
+Date: Tue, 30 Sep 2014 11:04:46 +0200
+Message-ID: <542A722E.5030109@gmail.com>
+References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:50274 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170AbaI3I43 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 04:56:29 -0400
-In-Reply-To: <542A6F44.3070802@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <542A7037.6050909@netiant.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Jerome Martin <jxm@netiant.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luigi Tarenga <luigi.tarenga@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-Hi Luigi,
+Hi Jerome,
+thanks for the promptly reply. I'm not using the -fb branch.
+I have installed targetcli from centos rpm:
+# rpm -qi fcoe-target-utils-2.0rc1.fb16-5.el6.noarch
+Name        : fcoe-target-utils            Relocations: (not relocatable)
+Version     : 2.0rc1.fb16                       Vendor: CentOS
+Release     : 5.el6                         Build Date: Fri 22 Nov 2013 
+06:52:35 PM CET
+Install Date: Mon 29 Sep 2014 03:13:11 PM CEST      Build Host: 
+c6b9.bsys.dev.centos.org
+Group       : System Environment/Libraries   Source RPM: 
+fcoe-target-utils-2.0rc1.fb16-5.el6.src.rpm
+Size        : 188886                           License: AGPLv3
+Signature   : RSA/SHA1, Sun 24 Nov 2013 08:29:11 PM CET, Key ID 
+0946fca2c105b9de
+Packager    : CentOS BuildSystem <http://bugs.centos.org>
+URL         : https://github.com/agrover/targetcli-fb
+Summary     : An administration shell for FCoE storage targets
+Description :
+An administration shell for TCM/LIO storage targets, most notably
+Fiber Channel over Ethernet (FCoE) targets.
 
-I am not 100% sure of that, as you are using the -fb branch, but it 
-seems to me you haven't got the /sys/kernel/config/target/iscsi/ 
-directory. Normally this is created by the initscript.
+I'm not sure what is the initscript you mention. I have in /etc/init.d/:
+# ls fcoe-target iscsi*
+fcoe-target  iscsi  iscsid
 
-Can you either try creating it manually, and/or starting the target 
-service susing the initscript ?
+but afaik those are for the initiatior or fcoe-target...
 
-Best,
---
-Jerome
+I tryed to manually create the directory but nothing changed:
+# ll /sys/kernel/config/target/
+total 0
+drwxr-xr-x 3 root root    0 Sep 30 10:25 core
+drwxr-xr-x 3 root root    0 Sep 30 10:59 iscsi
+-r--r--r-- 1 root root 4096 Sep 30 10:59 version
+[root@lizard init.d]#
+[root@lizard init.d]# targetcli ls
+o- / 
+......................................................................................................................... 
+[...]
+   o- backstores 
+.............................................................................................................. 
+[...]
+   | o- block 
+.................................................................................................... 
+[0 Storage Object]
+   | o- fileio 
+................................................................................................... 
+[0 Storage Object]
+   | o- pscsi 
+.................................................................................................... 
+[0 Storage Object]
+   o- loopback 
+.......................................................................................................... 
+[0 Targets]
 
-On 09/30/2014 10:52 AM, Luigi Tarenga wrote:
-> hi everybody,
-> I write to you for a problem that sound as my simple mistake
-> but I can't really find a solution after googling and reading
-> official doc.
+the only difference I see is that the module is now used:
+iscsi_target_mod      205464  1
+
+and I can't rmmod it.
+
+Luigi
+
+On 09/30/2014 10:56 AM, Jerome Martin wrote:
+> Hi Luigi,
 >
-> I'm trying to configure a iscsi target on a centos 6.5 box with
-> a custom kernel compiled from vanilla 3.16.3.
+> I am not 100% sure of that, as you are using the -fb branch, but it 
+> seems to me you haven't got the /sys/kernel/config/target/iscsi/ 
+> directory. Normally this is created by the initscript.
 >
-> I have compile:
-> CONFIG_TARGET_CORE=m
-> CONFIG_ISCSI_TARGET=m
-> CONFIG_CONFIGFS_FS=m
+> Can you either try creating it manually, and/or starting the target 
+> service susing the initscript ?
 >
-> I mount configfs:
-> # mount | grep config
-> configfs on /sys/kernel/config type configfs (rw)
+> Best,
+> -- 
+> Jerome
 >
-> manually load iscsi_target_mod (and this show nothing in dmesg)
->
-> and when I run targetcli ls command this is the output:
-> # targetcli ls
-> o- /
-> ..................................................................... [...]
->    o- backstores
-> .......................................................... [...]
->    | o- block ................................................ [0
-> Storage Object]
->    | o- fileio ............................................... [0
-> Storage Object]
->    | o- pscsi ................................................ [0
-> Storage Object]
->    o- loopback ...................................................... [0
-> Targets]
->
-> I can't see "o- iscsi" so I can't create the iscsi target i need...
->
-> # targetcli version
-> targetcli version 2.0rc1.fb16
->
-> $ ls /sys/kernel/config/target/
-> core  version
->
-> # lsmod | grep scsi
-> iscsi_target_mod      205464  0
-> target_core_mod       229493  1 iscsi_target_mod
-> configfs               22151  3 iscsi_target_mod,target_core_mod
-> scsi_mod               93246  6
-> iscsi_target_mod,target_core_mod,sg,sd_mod,sr_mod,libata
->
-> any idea of what I can check?
->
-> many thanks in advance
-> Luigi
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On 09/30/2014 10:52 AM, Luigi Tarenga wrote:
+>> hi everybody,
+>> I write to you for a problem that sound as my simple mistake
+>> but I can't really find a solution after googling and reading
+>> official doc.
+>>
+>> I'm trying to configure a iscsi target on a centos 6.5 box with
+>> a custom kernel compiled from vanilla 3.16.3.
+>>
+>> I have compile:
+>> CONFIG_TARGET_CORE=m
+>> CONFIG_ISCSI_TARGET=m
+>> CONFIG_CONFIGFS_FS=m
+>>
+>> I mount configfs:
+>> # mount | grep config
+>> configfs on /sys/kernel/config type configfs (rw)
+>>
+>> manually load iscsi_target_mod (and this show nothing in dmesg)
+>>
+>> and when I run targetcli ls command this is the output:
+>> # targetcli ls
+>> o- /
+>> ..................................................................... 
+>> [...]
+>>    o- backstores
+>> .......................................................... [...]
+>>    | o- block ................................................ [0
+>> Storage Object]
+>>    | o- fileio ............................................... [0
+>> Storage Object]
+>>    | o- pscsi ................................................ [0
+>> Storage Object]
+>>    o- loopback ...................................................... [0
+>> Targets]
+>>
+>> I can't see "o- iscsi" so I can't create the iscsi target i need...
+>>
+>> # targetcli version
+>> targetcli version 2.0rc1.fb16
+>>
+>> $ ls /sys/kernel/config/target/
+>> core  version
+>>
+>> # lsmod | grep scsi
+>> iscsi_target_mod      205464  0
+>> target_core_mod       229493  1 iscsi_target_mod
+>> configfs               22151  3 iscsi_target_mod,target_core_mod
+>> scsi_mod               93246  6
+>> iscsi_target_mod,target_core_mod,sg,sd_mod,sr_mod,libata
+>>
+>> any idea of what I can check?
+>>
+>> many thanks in advance
+>> Luigi
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> target-devel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
