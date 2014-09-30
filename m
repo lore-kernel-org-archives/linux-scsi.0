@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V6 02/18] scsi: sysfs: don't add scsi_device if its already added
-Date: Tue, 30 Sep 2014 17:54:48 -0400
-Message-ID: <yq1iok4n593.fsf@sermon.lab.mkp.net>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-	<1411648356-3883-3-git-send-email-draviv@codeaurora.org>
-	<20140926081434.GB22805@infradead.org>
+Subject: Re: [PATCH] scsi: add a CONFIG_SCSI_MQ_DEFAULT option
+Date: Tue, 30 Sep 2014 17:57:09 -0400
+Message-ID: <yq1egusn556.fsf@sermon.lab.mkp.net>
+References: <1412090453-24484-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37228 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754649AbaI3VzW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 17:55:22 -0400
-In-Reply-To: <20140926081434.GB22805@infradead.org> (Christoph Hellwig's
-	message of "Fri, 26 Sep 2014 01:14:34 -0700")
+Received: from userp1040.oracle.com ([156.151.31.81]:17808 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708AbaI3V5Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 17:57:16 -0400
+In-Reply-To: <1412090453-24484-1-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Tue, 30 Sep 2014 17:20:53 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dolev Raviv <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Subhash Jadavani <subhashj@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
->> If LLD has added scsi device (by calling scsi_add_device) before
->> scheduling async scsi_scan_host then scsi_finish_async_scan() will
->> end up calling scsi_sysfs_add_sdev for scsi device which was already
->> added by LLD.  This patch fixes this issue by skipping the call to
->> scsi_sysfs_add_sdev() if it's already visible to rest of the kernel.
+Christoph> Add a Kconfig option to enable the blk-mq path for SCSI by
+Christoph> default to ease testing and deployment in setups that know
+Christoph> they benefit from blk-mq.
+
+Looks OK to me.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
