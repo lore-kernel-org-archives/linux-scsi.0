@@ -1,29 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 19/23] sd: Cleanup logging
-Date: Tue, 30 Sep 2014 07:58:58 -0700
-Message-ID: <20140930145858.GI1206@infradead.org>
-References: <1412077852-40893-1-git-send-email-hare@suse.de>
- <1412077852-40893-20-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] scsi: add a CONFIG_SCSI_MQ_DEFAULT option
+Date: Tue, 30 Sep 2014 17:20:05 +0200
+Message-ID: <1412090405-24436-2-git-send-email-hch@lst.de>
+References: <1412090405-24436-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44332 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbaI3O7A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 10:59:00 -0400
-Content-Disposition: inline
-In-Reply-To: <1412077852-40893-20-git-send-email-hare@suse.de>
+Received: from casper.infradead.org ([85.118.1.10]:45022 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963AbaI3PRl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 11:17:41 -0400
+In-Reply-To: <1412090405-24436-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 
-On Tue, Sep 30, 2014 at 01:50:48PM +0200, Hannes Reinecke wrote:
-> Open-code scsi_print_result in sd.c, and cleanup logging to
-> not print duplicate informations.
-> 
-> With that we can remove scsi_show_result in constants.c
+Add a Kconfig option to enable the blk-mq path for SCSI by default
+to ease testing and deployment in setups that know they benefit
+from blk-mq.
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/Kconfig | 11 +++++++++++
+ drivers/scsi/scsi.c  |  4 ++++
+ 2 files changed, 15 insertions(+)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 18a3358..71b0877 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -45,6 +45,17 @@ config SCSI_NETLINK
+ 	default	n
+ 	select NET
+ 
++config SCSI_MQ_DEFAULT
++	bool "SCSI: use blk-mq I/O path by default"
++	depends on SCSI
++	---help---
++	  This option enables the new blk-mq based I/O path for SCSI
++	  devices by default.  With the option the scsi_mod.use_blk_mq
++	  module/boot option defaults to Y, without it to N, but it can
++	  still be overriden either way.
++
++	  If unsure say N.
++
+ config SCSI_PROC_FS
+ 	bool "legacy /proc/scsi/ support"
+ 	depends on SCSI && PROC_FS
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 1423cb1..79c77b4 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1367,7 +1367,11 @@ MODULE_LICENSE("GPL");
+ module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(scsi_logging_level, "a bit mask of logging levels");
+ 
++#ifdef CONFIG_SCSI_MQ_DEFAULT
++bool scsi_use_blk_mq = true;
++#else
+ bool scsi_use_blk_mq = false;
++#endif
+ module_param_named(use_blk_mq, scsi_use_blk_mq, bool, S_IWUSR | S_IRUGO);
+ 
+ static int __init init_scsi(void)
+-- 
+1.9.1
+
