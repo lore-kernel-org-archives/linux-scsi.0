@@ -1,86 +1,84 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/23] scsi: remove scsi_print_status()
-Date: Tue, 30 Sep 2014 13:50:41 +0200
-Message-ID: <1412077852-40893-13-git-send-email-hare@suse.de>
+Subject: [PATCH 09/23] scsi: stop decoding if scsi_normalize_sense() fails
+Date: Tue, 30 Sep 2014 13:50:38 +0200
+Message-ID: <1412077852-40893-10-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57142 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57115 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751557AbaI3LvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2014 07:51:04 -0400
+	id S1751304AbaI3LvC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2014 07:51:02 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so we can remove it.
+If scsi_normalize_sense() fails we couldn't decode the sense
+buffer, and the scsi_sense_hdr fields are invalid.
+For those cases we should rather dump the sense buffer
+and not try to decode invalid fields.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 35 -----------------------------------
- include/scsi/scsi_dbg.h  |  1 -
- 2 files changed, 36 deletions(-)
+ drivers/scsi/constants.c | 34 ++++++++++++++++------------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 55ece2a..6e16b19 100644
+index dab8d74..a8d5962 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+@@ -1435,26 +1435,21 @@ scsi_print_sense_hdr(struct scsi_device *sdev, const char *name,
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
+ 
+ static void
+-scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+-		       struct scsi_sense_hdr *sshdr)
++scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
+ {
+-	int k, num, res;
+-
+-	res = scsi_normalize_sense(sense_buffer, sense_len, sshdr);
+-	if (0 == res) {
+-		/* this may be SCSI-1 sense data */
+-		num = (sense_len < 32) ? sense_len : 32;
+-		printk("Unrecognized sense data (in hex):");
+-		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
++	int k, num;
++
++	num = (sense_len < 32) ? sense_len : 32;
++	printk("Unrecognized sense data (in hex):");
++	for (k = 0; k < num; ++k) {
++		if (0 == (k % 16)) {
++			printk("\n");
++			printk(KERN_INFO "        ");
+ 		}
+-		printk("\n");
+-		return;
++		printk("%02x ", sense_buffer[k]);
+ 	}
++	printk("\n");
++	return;
  }
- EXPORT_SYMBOL(scsi_print_command);
  
--/**
-- *	scsi_print_status - print scsi status description
-- *	@scsi_status: scsi status value
-- *
-- *	If the status is recognized, the description is printed.
-- *	Otherwise "Unknown status" is output. No trailing space.
-- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
-- *	(e.g. "0x2" for Check Condition).
-- **/
--void
--scsi_print_status(unsigned char scsi_status) {
--#ifdef CONFIG_SCSI_CONSTANTS
--	const char * ccp;
--
--	switch (scsi_status) {
--	case 0:    ccp = "Good"; break;
--	case 0x2:  ccp = "Check Condition"; break;
--	case 0x4:  ccp = "Condition Met"; break;
--	case 0x8:  ccp = "Busy"; break;
--	case 0x10: ccp = "Intermediate"; break;
--	case 0x14: ccp = "Intermediate-Condition Met"; break;
--	case 0x18: ccp = "Reservation Conflict"; break;
--	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
--	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
--	case 0x30: ccp = "ACA Active"; break;
--	case 0x40: ccp = "Task Aborted"; break;
--	default:   ccp = "Unknown status";
--	}
--	printk(KERN_INFO "%s", ccp);
--#else
--	printk(KERN_INFO "0x%0x", scsi_status);
--#endif
--}
--EXPORT_SYMBOL(scsi_print_status);
--
- #ifdef CONFIG_SCSI_CONSTANTS
+ static void
+@@ -1524,7 +1519,10 @@ void __scsi_print_sense(struct scsi_device *sdev, const char *name,
+ {
+ 	struct scsi_sense_hdr sshdr;
  
- struct error_info {
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index cd0c873..44bea15 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,7 +19,6 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
--extern void scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+-	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr);
++	if (!scsi_normalize_sense(sense_buffer, sense_len, &sshdr)) {
++		scsi_dump_sense_buffer(sense_buffer, sense_len);
++		return;
++	}
+ 	scsi_show_sense_hdr(sdev, name, &sshdr);
+ 	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+ 	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
 -- 
 1.8.5.2
 
