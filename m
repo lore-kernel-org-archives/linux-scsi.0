@@ -1,52 +1,80 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
-	support
-Date: Tue, 30 Sep 2014 09:21:59 +0200
-Message-ID: <20140930072159.GC14081@wotan.suse.de>
-References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com> <20140928150329.GC5023@mtj.dyndns.org> <20140929212208.GV17349@wotan.suse.de> <20140929212601.GF15925@htj.dyndns.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Tue, 30 Sep 2014 00:43:29 -0700
+Message-ID: <20140930074329.GA10290@infradead.org>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:38056 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbaI3Hnb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 03:43:31 -0400
 Content-Disposition: inline
-In-Reply-To: <20140929212601.GF15925@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: gregkh@linuxfoundation.org, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dmitry.torokhov@gmail.com, tiwai@suse.de, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@che>
+In-Reply-To: <1411991272-129962-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Sumit Saxena <sumit.saxena@avagotech.com>
 
-On Mon, Sep 29, 2014 at 05:26:01PM -0400, Tejun Heo wrote:
-> Hello, Luis.
+On Mon, Sep 29, 2014 at 01:47:52PM +0200, Hannes Reinecke wrote:
+> Megaraid_sas uses a shared pool of commands per HBA, so we
+> should be enabling a shared tag map.
+> This will allow the I/O scheduler to make better scheduling
+> decisions and will avoid BUSY states in the driver.
+
+What exact problem did you see?  Do you have a link to a bugzilla entry
+or similar?  Was this observed on real hardware or your qemu emulation?
+
 > 
-> On Mon, Sep 29, 2014 at 11:22:08PM +0200, Luis R. Rodriguez wrote:
-> > > > +	/* For now lets avoid stupid bug reports */
-> > > > +	if (!strcmp(bus->name, "pci") ||
-> > > > +	    !strcmp(bus->name, "pci_express") ||
-> > > > +	    !strcmp(bus->name, "hid") ||
-> > > > +	    !strcmp(bus->name, "sdio") ||
-> > > > +	    !strcmp(bus->name, "gameport") ||
-> > > > +	    !strcmp(bus->name, "mmc") ||
-> > > > +	    !strcmp(bus->name, "i2c") ||
-> > > > +	    !strcmp(bus->name, "platform") ||
-> > > > +	    !strcmp(bus->name, "usb"))
-> > > > +		return true;
-> > > 
-> > > Ugh... things like this tend to become permanent.  Do we really need
-> > > this?  And how are we gonna find out what's broken why w/o bug
-> > > reports?
-> > 
-> > Yeah... well we have two options, one is have something like this to
-> > at least make it generally useful or remove this and let folks who
-> > care start fixing async for all modules. The downside to removing
-> > this is it makes async probe pretty much useless on most systems
-> > right now, it would mean systemd would have to probably consider
-> > the list above if they wanted to start using this without expecting
-> > systems to not work.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 34 ++++++++++++++++++++++++++++++-
+>  1 file changed, 33 insertions(+), 1 deletion(-)
 > 
-> So, I'd much prefer blacklist approach if something like this is a
-> necessity.  That way, we'd at least know what doesn't work.
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index f6a69a3..996fa9a 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -1659,7 +1659,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+>  	*/
+>  	blk_queue_rq_timeout(sdev->request_queue,
+>  		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
+> -
+> +	sdev->tagged_supported = 1;
 
-For buses? Or do you mean you'd want to wait until we have a decent
-list of drivers with the sync probe flag set? If the later it may take
-a while to get that list for this to be somewhat useful.
+> +	/* We have a shared tag map, so TCQ is always supported */
+> +	sdev->tagged_supported = 1;
+> +
 
-  Luis
+Why doesn't the device return the proper data in the INQUIRY response?
+
+And more importantly why do you want to do this twice?
+
+>  	instance = megasas_lookup_instance(sdev->host->host_no);
+>  	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+>  		/*
+> @@ -1677,13 +1681,20 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+>  			sdev->id;
+>  		if (instance->pd_list[pd_index].driveState ==
+>  					MR_PD_STATE_SYSTEM) {
+> +			scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
+>  			return 0;
+>  		}
+>  		return -ENXIO;
+>  	}
+> +	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
+>  	return 0;
+
+Please refactor the code so that the first case falls through to the
+second, something like:
+
+
+		if (instance->pd_list[pd_index].driveState !=
+					MR_PD_STATE_SYSTEM)
+			return -ENXIO;
+	}
+
+	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
+	return 0;
+
