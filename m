@@ -1,54 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/23] 53c700: remove scsi_print_sense() usage
-Date: Tue, 30 Sep 2014 13:50:37 +0200
-Message-ID: <1412077852-40893-9-git-send-email-hare@suse.de>
+Subject: [PATCH 01/23] Remove scsi_cmd_print_sense_hdr()
+Date: Tue, 30 Sep 2014 13:50:30 +0200
+Message-ID: <1412077852-40893-2-git-send-email-hare@suse.de>
 References: <1412077852-40893-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57134 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:57113 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbaI3LvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2014 07:51:04 -0400
+	id S1751380AbaI3LvC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2014 07:51:02 -0400
 In-Reply-To: <1412077852-40893-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-The 53c700 driver would be using scsi_print_sense() in a debug
-statement, which was never compiled in. Plus the same information
-can get retrieved with logging. So remove it.
+Unused.
 
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/53c700.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ drivers/scsi/constants.c | 14 --------------
+ include/scsi/scsi_dbg.h  |  2 --
+ 2 files changed, 16 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 68bf423..179a24e 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -592,19 +592,14 @@ NCR_700_scsi_done(struct NCR_700_Host_Parameters *hostdata,
- 	hostdata->cmd = NULL;
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index d35a5d6..2f44707 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
+ }
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
  
- 	if(SCp != NULL) {
--		struct NCR_700_command_slot *slot = 
-+		struct NCR_700_command_slot *slot =
- 			(struct NCR_700_command_slot *)SCp->host_scribble;
--		
-+
- 		dma_unmap_single(hostdata->dev, slot->pCmd,
- 				 MAX_COMMAND_SIZE, DMA_TO_DEVICE);
- 		if (slot->flags == NCR_700_FLAG_AUTOSENSE) {
- 			char *cmnd = NCR_700_get_sense_cmnd(SCp->device);
--#ifdef NCR_700_DEBUG
--			printk(" ORIGINAL CMD %p RETURNED %d, new return is %d sense is\n",
--			       SCp, SCp->cmnd[7], result);
--			scsi_print_sense(SCp);
- 
--#endif
- 			dma_unmap_single(hostdata->dev, slot->dma_handle,
- 					 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
- 			/* restore the old result if the request sense was
+-/*
+- * Print normalized SCSI sense header with device information and a prefix.
+- */
+-void
+-scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+-			  struct scsi_sense_hdr *sshdr)
+-{
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+-}
+-EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+-
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 		       struct scsi_sense_hdr *sshdr)
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index e89844c..5a43a4c 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_show_extd_sense(unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+-extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+-				     struct scsi_sense_hdr *);
+ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
 -- 
 1.8.5.2
 
