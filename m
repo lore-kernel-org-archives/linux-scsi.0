@@ -1,76 +1,69 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH] xen/xenbus: Use 'void' instead of 'int' for the return
- of xenbus_switch_state()
-Date: Tue, 30 Sep 2014 16:04:33 +0800
-Message-ID: <542A6411.5040201@gmail.com>
-References: <5425961A.5000604@gmail.com> <20140929140229.GA28279@laptop.dumpdata.com>
+From: Luigi Tarenga <luigi.tarenga@gmail.com>
+Subject: targetcli do not show iscsi
+Date: Tue, 30 Sep 2014 10:52:20 +0200
+Message-ID: <542A6F44.3070802@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20140929140229.GA28279@laptop.dumpdata.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: David Vrabel <david.vrabel@citrix.com>, ian.campbell@citrix.com, wei.liu2@citrix.com, boris.ostrovsky@oracle.com, bhelgaas@google.com, jgross@suse.com, yongjun_wei@trendmicro.com.cn, mukesh.rathor@oracle.com, xen-devel@lists.xenproject.org, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:64205 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869AbaI3IwS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Sep 2014 04:52:18 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On 9/29/14 22:02, Konrad Rzeszutek Wilk wrote:
-> On Sat, Sep 27, 2014 at 12:36:42AM +0800, Chen Gang wrote:
->> When xenbus_switch_state() fails, it will call xenbus_switch_fatal()
-> 
-> Only on the first depth, not on the subsequent ones (as in if
-> the first xenbus_switch_fail fails, it won't try to call
-> xenbus_switch_state again and again).
-> 
+hi everybody,
+I write to you for a problem that sound as my simple mistake
+but I can't really find a solution after googling and reading
+official doc.
 
-Yeah, I guess you want to give more completion for this comment, do not
-mean the original comments is incorrect.
+I'm trying to configure a iscsi target on a centos 6.5 box with
+a custom kernel compiled from vanilla 3.16.3.
 
-[...]
->>
->> Also need be sure that all callers which check the return value must let
->> 'err' be 0.
-> 
-> I am bit uncomfortable with that, that is due to:
-> 
-> 
-> .. snip..
->> diff --git a/drivers/net/xen-netback/xenbus.c b/drivers/net/xen-netback/xenbus.c
->> index 9c47b89..b5c3d47 100644
->> --- a/drivers/net/xen-netback/xenbus.c
->> +++ b/drivers/net/xen-netback/xenbus.c
->> @@ -337,10 +337,7 @@ static int netback_probe(struct xenbus_device *dev,
->>  	if (err)
->>  		pr_debug("Error writing multi-queue-max-queues\n");
->>  
->> -	err = xenbus_switch_state(dev, XenbusStateInitWait);
->> -	if (err)
->> -		goto fail;
->> -
->> +	xenbus_switch_state(dev, XenbusStateInitWait);
-> 
-> Which if it fails it won't call:
-> 
-> 354 fail:                                                                           
-> 355         pr_debug("failed\n");                                                   
-> 356         netback_remove(dev);                                                    
-> 357         return err;         
-> 
+I have compile:
+CONFIG_TARGET_CORE=m
+CONFIG_ISCSI_TARGET=m
+CONFIG_CONFIGFS_FS=m
 
-Originally, I intended left 'fail' code block for the next patch (which
-I thought the next patch would need it).
+I mount configfs:
+# mount | grep config
+configfs on /sys/kernel/config type configfs (rw)
 
-Hmm... but any way, originally, I really need give additional comments
-for it.
+manually load iscsi_target_mod (and this show nothing in dmesg)
 
-[...]
+and when I run targetcli ls command this is the output:
+# targetcli ls
+o- / 
+..................................................................... [...]
+   o- backstores 
+.......................................................... [...]
+   | o- block ................................................ [0 
+Storage Object]
+   | o- fileio ............................................... [0 
+Storage Object]
+   | o- pscsi ................................................ [0 
+Storage Object]
+   o- loopback ...................................................... [0 
+Targets]
 
-I skip all other contents which have already discussed by maintainers,
-if I really miss something, please let me know.
+I can't see "o- iscsi" so I can't create the iscsi target i need...
 
+# targetcli version
+targetcli version 2.0rc1.fb16
 
-Thanks.
--- 
-Chen Gang
+$ ls /sys/kernel/config/target/
+core  version
 
-Open, share, and attitude like air, water, and life which God blessed
+# lsmod | grep scsi
+iscsi_target_mod      205464  0
+target_core_mod       229493  1 iscsi_target_mod
+configfs               22151  3 iscsi_target_mod,target_core_mod
+scsi_mod               93246  6 
+iscsi_target_mod,target_core_mod,sg,sd_mod,sr_mod,libata
+
+any idea of what I can check?
+
+many thanks in advance
+Luigi
