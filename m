@@ -1,66 +1,34 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: RE: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Wed, 1 Oct 2014 17:22:38 +0000
-Message-ID: <1442C3287A121140B690F7F20F94463D39FD8F@nice.asicdesigners.com>
-References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
-	 <20140922144547.GA32651@infradead.org>
-	 <525DB349B3FB5444AE057A887CB2A8D88F76D1@nice.asicdesigners.com>
-	,<20141001074919.GA14826@infradead.org>
-	 <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>,<1412163405.5299.4.camel@jarvis>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: uas breakage when using scsi_mod.blk_mq=Y
+Date: Wed, 1 Oct 2014 10:31:05 -0700
+Message-ID: <20141001173105.GA4193@infradead.org>
+References: <542BB8A5.4000308@redhat.com>
+ <20141001124543.GB14872@infradead.org>
+ <542C2366.30700@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:26676
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751763AbaJARXE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 13:23:04 -0400
-In-Reply-To: <1412163405.5299.4.camel@jarvis>
-Content-Language: en-US
+Received: from bombadil.infradead.org ([198.137.202.9]:39609 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978AbaJARbH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 13:31:07 -0400
+Content-Disposition: inline
+In-Reply-To: <542C2366.30700@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Anish Bhatt <anish@chelsio.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Manoj Malviya <manojmalviya@chelsio.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-James, the bug is that with iscsi running, if ipv6 is provisioned on system, the kernel would oops on "scheduling while atomic". So it could be hit easily if ipv6 is used.
+On Wed, Oct 01, 2014 at 05:53:10PM +0200, Hans de Goede wrote:
+> So let me see if I understand this correctly, blk-mq will never queue
+> more then qdepth commands, but it will use higher tag numbers ?
 
-The changeset does look big, but it really just split a list original protected by mutex lock into two list, The 2nd list uses rcu lock.
+Correct.
 
-Karen
+> If that is the case fixing this should be easy, uas already has
+> an array to map stream-ids to scsi cmnds so that when it gets a status
+> urb, it can find the scsi cmnd which belongs to that status urb. We
+> can just search for a free slot in that array.
 
-________________________________________
-From: James Bottomley [James.Bottomley@HansenPartnership.com]
-Sent: Wednesday, October 01, 2014 4:36 AM
-To: Anish Bhatt
-Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Karen Xie; Manoj Malviya
-Subject: Re: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-
-On Wed, 2014-10-01 at 08:08 +0000, Anish Bhatt wrote:
-> James,
->     This is bugfix  and prevents a "scheduling while atomic" bug that can be
-> hit when using an ipv6 address with cxgb4i, and can possibly be seen without
-> Chelsio hardware. Could this be cherry picked for 3.17 please ?
-
-Can you describe the bug it's fixing (what are the consequences) and how
-often is it seen?
-
-If it's not something everyone hits, it may be better to go via stable,
-because the code change is quite large, so validating that nothing else
-breaks with it at this stage (a week away from release) is quite
-important.
-
-> Christoph,
->    My bad, this is a bugfix for code that was added for 3.17, and I assumed the
-> bugfixes would automatically be picked for the next rc. If James doesn't pick
-> this up, I'll send it to stable when appropriate.
-
-You said in your change log:
-
-        Applies on top of core-for-3.18
-
-So the natural assumption would be this is for the merge window queue.
-
-James
-
+That sounds good.
 
