@@ -1,89 +1,105 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/24] fas216: Update logging messages
-Date: Wed,  1 Oct 2014 08:22:44 +0200
-Message-ID: <1412144580-72880-9-git-send-email-hare@suse.de>
+Subject: [PATCH 16/24] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
+Date: Wed,  1 Oct 2014 08:22:52 +0200
+Message-ID: <1412144580-72880-17-git-send-email-hare@suse.de>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52325 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52368 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053AbaJAGXF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 02:23:05 -0400
+	id S1751236AbaJAGXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2014 02:23:08 -0400
 In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Update logging messages to use dev_printk() variants for correct
-device annotations.
+Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
+so that we don't have to call several functions to figure
+out the CDB opcode string.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellweg <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/arm/fas216.c | 28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+ drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 7fc6fd3..b2fd18e 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -308,8 +308,7 @@ static void fas216_log_command(FAS216_Info *info, int level,
- 	fas216_do_log(info, '0' + SCpnt->device->id, fmt, args);
- 	va_end(args);
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index c1cdfab..2110d61 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -29,6 +29,7 @@
+ #define THIRD_PARTY_COPY_OUT 0x83
+ #define THIRD_PARTY_COPY_IN 0x84
  
--	printk(" CDB: ");
--	__scsi_print_command(SCpnt->cmnd);
-+	scsi_print_command(SCpnt);
- }
++#define VENDOR_SPECIFIC_CDB 0xc0
  
- static void
-@@ -2079,12 +2078,12 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
- 			break;
+ struct sa_name_list {
+ 	int cmd;
+@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
+ #endif /* CONFIG_SCSI_CONSTANTS */
  
- 		default:
--			printk(KERN_ERR "scsi%d.%c: incomplete data transfer "
--				"detected: res=%08X ptr=%p len=%X CDB: ",
--				info->host->host_no, '0' + SCpnt->device->id,
--				SCpnt->result, info->scsi.SCp.ptr,
--				info->scsi.SCp.this_residual);
--			__scsi_print_command(SCpnt->cmnd);
-+			scmd_printk(KERN_ERR, SCpnt,
-+				    "incomplete data transfer "
-+				    "detected: res=%08X ptr=%p len=%X\n",
-+				    SCpnt->result, info->scsi.SCp.ptr,
-+				    info->scsi.SCp.this_residual);
-+			scsi_print_command(SCpnt);
- 			set_host_byte(SCpnt, DID_ERROR);
- 			goto request_sense;
- 		}
-@@ -2157,12 +2156,12 @@ static void fas216_done(FAS216_Info *info, unsigned int result)
- 	 * to transfer, we should not have a valid pointer.
- 	 */
- 	if (info->scsi.SCp.ptr && info->scsi.SCp.this_residual == 0) {
--		printk("scsi%d.%c: zero bytes left to transfer, but "
--		       "buffer pointer still valid: ptr=%p len=%08x CDB: ",
--		       info->host->host_no, '0' + SCpnt->device->id,
--		       info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
-+		scmd_printk(KERN_INFO, SCpnt,
-+			    "zero bytes left to transfer, but "
-+			    "buffer pointer still valid: ptr=%p len=%08x\n",
-+			    info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
- 		info->scsi.SCp.ptr = NULL;
--		__scsi_print_command(SCpnt->cmnd);
-+		scsi_print_command(SCpnt);
+ static bool scsi_opcode_sa_name(int cmd, int service_action,
+-				const char **sa_name)
++				const char **cdb_name, const char **sa_name)
+ {
+ 	struct sa_name_list *sa_name_ptr = sa_names_arr;
+ 	const struct value_name_pair *arr = NULL;
+ 	int arr_sz, k;
+ 
++	*cdb_name = NULL;
++	if (cmd >= VENDOR_SPECIFIC_CDB)
++		return false;
++
++	if (cmd < ARRAY_SIZE(cdb_byte0_names))
++		*cdb_name = cdb_byte0_names[cmd];
++
+ 	for (k = 0; k < ARRAY_SIZE(sa_names_arr); ++k, ++sa_name_ptr) {
+ 		if (sa_name_ptr->cmd == cmd) {
+ 			arr = sa_name_ptr->arr;
+@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
+ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ {
+ 	int sa, len, cdb0;
+-	const char *name = NULL;
++	const char *cdb_name = NULL, *sa_name = NULL;
+ 
+ 	cdb0 = cdbp[0];
+ 	if (cdb0 == VARIABLE_LENGTH_CMD) {
+@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 		len = cdb_len;
  	}
  
- 	/*
-@@ -2663,8 +2662,7 @@ int fas216_eh_host_reset(struct scsi_cmnd *SCpnt)
+-	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+-		if (cdb0 < 0xc0) {
+-			if (ARRAY_SIZE(cdb_byte0_names)) {
+-				name = cdb_byte0_names[cdb0];
+-				if (name)
+-					printk("%s", name);
+-				else
+-					printk("cdb[0]=0x%x (reserved)", cdb0);
+-			} else
+-				printk("cdb[0]=0x%x", cdb0);
+-		} else
++	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
++		if (cdb_name)
++			printk("%s", cdb_name);
++		else if (cdb0 > VENDOR_SPECIFIC_CDB)
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
++		else if (cdb0 > 0x60 && cdb0 < 0x7e)
++			printk("cdb[0]=0x%x (reserved)", cdb0);
++		else
++			printk("cdb[0]=0x%x", cdb0);
+ 	} else {
+-		if (name)
+-			printk("%s", name);
++		if (sa_name)
++			printk("%s", sa_name);
++		else if (cdb_name)
++			printk("%s, sa=0x%x", cdb_name, sa);
+ 		else
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
  
- 	fas216_checkmagic(info);
- 
--	printk("scsi%d.%c: %s: resetting host\n",
--		info->host->host_no, '0' + SCpnt->device->id, __func__);
-+	fas216_log(info, LOG_ERROR, "resetting host");
- 
- 	/*
- 	 * Reset the SCSI chip.
 -- 
 1.8.5.2
 
