@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/24] scsi: remove last argument from print_opcode_name()
-Date: Wed,  1 Oct 2014 08:22:53 +0200
-Message-ID: <1412144580-72880-18-git-send-email-hare@suse.de>
+Subject: [PATCH 10/24] scsi: stop decoding if scsi_normalize_sense() fails
+Date: Wed,  1 Oct 2014 08:22:46 +0200
+Message-ID: <1412144580-72880-11-git-send-email-hare@suse.de>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52343 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52344 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214AbaJAGXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751208AbaJAGXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 1 Oct 2014 02:23:08 -0400
 In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,79 +14,72 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-print_opcode_name() was only ever called with a '0' argument
-from LLDDs and ULDs which were _not_ supporting variable length
-CDBs, so the 'if' clause was never triggered.
+If scsi_normalize_sense() fails we couldn't decode the sense
+buffer, and the scsi_sense_hdr fields are invalid.
+For those cases we should rather dump the sense buffer
+and not try to decode invalid fields.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+ drivers/scsi/constants.c | 34 ++++++++++++++++------------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 2110d61..713e1e0 100644
+index dab8d74..a8d5962 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -320,25 +320,21 @@ static bool scsi_opcode_sa_name(int cmd, int service_action,
- 	return true;
- }
+@@ -1435,26 +1435,21 @@ scsi_print_sense_hdr(struct scsi_device *sdev, const char *name,
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
  
--/* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
--static void print_opcode_name(unsigned char * cdbp, int cdb_len)
-+static void print_opcode_name(unsigned char *cdbp)
+ static void
+-scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+-		       struct scsi_sense_hdr *sshdr)
++scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
  {
--	int sa, len, cdb0;
-+	int sa, cdb0;
- 	const char *cdb_name = NULL, *sa_name = NULL;
- 
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
--		len = scsi_varlen_cdb_length(cdbp);
-+		int len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
--			printk("short variable length command, "
--			       "len=%d ext_len=%d", len, cdb_len);
-+			printk("short variable length command, len=%d", len);
- 			return;
- 		}
- 		sa = (cdbp[8] << 8) + cdbp[9];
--	} else {
-+	} else
- 		sa = cdbp[1] & 0x1f;
--		len = cdb_len;
--	}
- 
- 	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
- 		if (cdb_name)
-@@ -356,9 +352,6 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-	int k, num, res;
 -
--		if (cdb_len > 0 && len != cdb_len)
--			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-	res = scsi_normalize_sense(sense_buffer, sense_len, sshdr);
+-	if (0 == res) {
+-		/* this may be SCSI-1 sense data */
+-		num = (sense_len < 32) ? sense_len : 32;
+-		printk("Unrecognized sense data (in hex):");
+-		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
++	int k, num;
++
++	num = (sense_len < 32) ? sense_len : 32;
++	printk("Unrecognized sense data (in hex):");
++	for (k = 0; k < num; ++k) {
++		if (0 == (k % 16)) {
++			printk("\n");
++			printk(KERN_INFO "        ");
+ 		}
+-		printk("\n");
+-		return;
++		printk("%02x ", sense_buffer[k]);
  	}
++	printk("\n");
++	return;
  }
  
-@@ -366,7 +359,7 @@ void __scsi_print_command(unsigned char *cdb)
+ static void
+@@ -1524,7 +1519,10 @@ void __scsi_print_sense(struct scsi_device *sdev, const char *name,
  {
- 	int k, len;
+ 	struct scsi_sense_hdr sshdr;
  
--	print_opcode_name(cdb, 0);
-+	print_opcode_name(cdb);
- 	len = scsi_command_size(cdb);
- 	/* print out all bytes in cdb */
- 	for (k = 0; k < len; ++k)
-@@ -383,7 +376,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 		return;
- 
- 	scmd_printk(KERN_INFO, cmd, "CDB: ");
--	print_opcode_name(cmd->cmnd, cmd->cmd_len);
-+	print_opcode_name(cmd->cmnd);
- 
- 	/* print out all bytes in cdb */
- 	printk(":");
+-	scsi_decode_sense_buffer(sense_buffer, sense_len, &sshdr);
++	if (!scsi_normalize_sense(sense_buffer, sense_len, &sshdr)) {
++		scsi_dump_sense_buffer(sense_buffer, sense_len);
++		return;
++	}
+ 	scsi_show_sense_hdr(sdev, name, &sshdr);
+ 	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+ 	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
 -- 
 1.8.5.2
 
