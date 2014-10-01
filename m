@@ -1,67 +1,126 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: uas breakage when using scsi_mod.blk_mq=Y
-Date: Wed, 01 Oct 2014 17:53:10 +0200
-Message-ID: <542C2366.30700@redhat.com>
-References: <542BB8A5.4000308@redhat.com> <20141001124543.GB14872@infradead.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Wed, 01 Oct 2014 18:08:43 +0200
+Message-ID: <542C270B.5020002@acm.org>
+References: <541C27BF.6070609@acm.org>	<541C28E0.7010705@acm.org>	<CACVXFVPzz37J-613NZCfPStUBxf0rLOtz71LJ07PpCxYg5nn+g@mail.gmail.com>	<541C49EC.6030404@acm.org> <CACVXFVPH_qPFUTT+796BZmWxeeG4tJ-Pyp8hqGqqSwt3YYkEqA@mail.gmail.com> <541C4D2F.9060907@acm.org> <541C4DF1.4090604@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35225 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851AbaJAPxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 11:53:38 -0400
-In-Reply-To: <20141001124543.GB14872@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <541C4DF1.4090604-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-Hi,
-
-On 10/01/2014 02:45 PM, Christoph Hellwig wrote:
-> On Wed, Oct 01, 2014 at 10:17:41AM +0200, Hans de Goede wrote:
->> The problematic part here, which I believe is caused by scsi_mod.blk_mq=Y,
->> is the tag number 33. uas.c does the following in slave_configure:
->>
->> 	scsi_activate_tcq(sdev, devinfo->qdepth - 2);
->>
->> Where qdepth is 32, so 30 gets passed in. uas.c stranslates scsi tags
->> to uas stream ids, which means it adds 2 (stream ids start at 1 not 0,
->> and 1 is reserved for untagged commands).
->>
->> So the tag 33 above, means that the scsi subsys has called uas.c with
->> a tagged command with a tag of 31, which should not happen when using
->> scsi_activate_tcq(sdev, 30).
->>
->> So should the uas.c code do something different with blk-mq to tell
->> it to only use tags 0-29, or is this a blk-mq bug ?
+On 09/19/14 17:38, Jens Axboe wrote:
+> ctx was meant to be private, unfortunately it's leaked a bit into other
+> parts of block/. But it's still private within that, at least.
 > 
-> This is a mismatch between the (undocumented) existing behavior and
-> what blk-mq implements.  In the old code unless you use host-shared
-> maps you would never see a tag number greater than the queue depth
-> when using block layer tags.  With blk-mq we also use host-wide maps,
-> so you can easily see tag numbers bigger than the queue depth.
+> Lets not add more stuff to struct request, it's already way too large.
+> We could add an exported
 > 
-> So far it seems uas is the only driver with this expectation.
-> Given how it maps tags to a non-scsi concept it might be better to
-> just use a separate bitmaps for the streams inside uas than reusing
-> the tags.
+> struct blk_mq_hw_ctx *blk_mq_request_to_hctx(struct request *rq)
+> {
+> 	struct request_queue *q = rq->q;
+> 
+> 	return q->mq_ops->map_queue(q, rq->mq_ctx->cpu);
+> }
+> 
+> for this.
 
-So let me see if I understand this correctly, blk-mq will never queue
-more then qdepth commands, but it will use higher tag numbers ?
+How about the patch below ? That patch makes it easy for SCSI LLDs to obtain
+the hardware context index.
+ 
+[PATCH] blk-mq: Add blk_get_mq_tag()
 
-If that is the case fixing this should be easy, uas already has
-an array to map stream-ids to scsi cmnds so that when it gets a status
-urb, it can find the scsi cmnd which belongs to that status urb. We
-can just search for a free slot in that array.
+The queuecommand() callback functions in SCSI low-level drivers
+must know which hardware context has been selected by the block
+layer. Since passing the hctx pointer directly to the queuecommand
+callback function would require modification of all SCSI LLDs,
+add a function to the block layer that allows to query the hardware
+context index.
 
-> Is this mapping an implementation detail of the Linux uas
-> driver or part of the spec?
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+---
+ block/blk-mq-tag.c     | 24 ++++++++++++++++++++++++
+ include/linux/blk-mq.h | 16 ++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
-The mapping is a Linux uas implementation detail, the spec is
-silent on how to map things.
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index c1b9242..5618759 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -595,6 +595,30 @@ int blk_mq_tag_update_depth(struct blk_mq_tags *tags, unsigned int tdepth)
+ 	return 0;
+ }
+ 
++/**
++ * blk_get_mq_tag() - return a tag that is unique queue-wide
++ *
++ * The tag field in struct request is unique per hardware queue but not
++ * queue-wide. Hence this function. It is not only safe to use this function
++ * for multiqueue request queues but also for single-queue request queues.
++ * Note: rq->tag == -1 if tagging is not enabled for single-queue request
++ * queues.
++ */
++struct blk_mq_tag blk_get_mq_tag(struct request *rq)
++{
++	struct request_queue *q = rq->q;
++	struct blk_mq_tag tag = { rq->tag & ((1 << 16) - 1) };
++	struct blk_mq_hw_ctx *hctx;
++
++	if (q->mq_ops) {
++		hctx = q->mq_ops->map_queue(q, rq->mq_ctx->cpu);
++		tag.tag |= hctx->queue_num << 16;
++	}
++
++	return tag;
++}
++EXPORT_SYMBOL(blk_get_mq_tag);
++
+ ssize_t blk_mq_tag_sysfs_show(struct blk_mq_tags *tags, char *page)
+ {
+ 	char *orig_page = page;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index eac4f31..eb419bc 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -88,6 +88,13 @@ struct blk_mq_tag_set {
+ 	struct list_head	tag_list;
+ };
+ 
++/**
++ * struct blk_mq_tag - hardware queue index and per-queue tag
++ */
++struct blk_mq_tag {
++	u32 tag;
++};
++
+ typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
+ typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
+ typedef int (init_hctx_fn)(struct blk_mq_hw_ctx *, void *, unsigned int);
+@@ -166,6 +173,15 @@ bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
+ struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
+ 		gfp_t gfp, bool reserved);
+ struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags, unsigned int tag);
++struct blk_mq_tag blk_get_mq_tag(struct request *rq);
++static inline u16 blk_mq_tag_to_hwq(struct blk_mq_tag t)
++{
++	return t.tag >> 16;
++}
++static inline u16 blk_mq_tag_to_tag(struct blk_mq_tag t)
++{
++	return t.tag & ((1 << 16) - 1);
++}
+ 
+ struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *, const int ctx_index);
+ struct blk_mq_hw_ctx *blk_mq_alloc_single_hw_queue(struct blk_mq_tag_set *, unsigned int, int);
+-- 
+1.8.4.5
 
-Regards,
 
-Hans
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
