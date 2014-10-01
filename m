@@ -1,93 +1,128 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH RFC] scsi_tcq.h: Add support for multiple hardware queues
-Date: Wed, 01 Oct 2014 18:14:38 +0200
-Message-ID: <542C286E.6080603@acm.org>
-References: <541C27BF.6070609@acm.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Wed, 01 Oct 2014 10:54:28 -0600
+Message-ID: <542C31C4.1020702@kernel.dk>
+References: <541C27BF.6070609@acm.org>	<541C28E0.7010705@acm.org>	<CACVXFVPzz37J-613NZCfPStUBxf0rLOtz71LJ07PpCxYg5nn+g@mail.gmail.com>	<541C49EC.6030404@acm.org> <CACVXFVPH_qPFUTT+796BZmWxeeG4tJ-Pyp8hqGqqSwt3YYkEqA@mail.gmail.com> <541C4D2F.9060907@acm.org> <541C4DF1.4090604@kernel.dk> <542C270B.5020002@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <541C27BF.6070609-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:54937 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751667AbaJAQyc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 12:54:32 -0400
+Received: by mail-pa0-f50.google.com with SMTP id kx10so579461pab.23
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Oct 2014 09:54:32 -0700 (PDT)
+In-Reply-To: <542C270B.5020002@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@canonical.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Robert Elliott <Elliott@hp.com>
 
-The eight patches I had posted so far did not modify the tag lookup
-functions in include/scsi/scsi_tcq.h. However, these functions have
-to be modified in order to become usable in SCSI LLDs that support
-multiple hardware queues. How about the patch below, which adds
-support for multiqueue tag lookup without requiring any modifications
-in existing SCSI LLD drivers ?
+On 2014-10-01 10:08, Bart Van Assche wrote:
+> On 09/19/14 17:38, Jens Axboe wrote:
+>> ctx was meant to be private, unfortunately it's leaked a bit into other
+>> parts of block/. But it's still private within that, at least.
+>>
+>> Lets not add more stuff to struct request, it's already way too large.
+>> We could add an exported
+>>
+>> struct blk_mq_hw_ctx *blk_mq_request_to_hctx(struct request *rq)
+>> {
+>> 	struct request_queue *q = rq->q;
+>>
+>> 	return q->mq_ops->map_queue(q, rq->mq_ctx->cpu);
+>> }
+>>
+>> for this.
+>
+> How about the patch below ? That patch makes it easy for SCSI LLDs to obtain
+> the hardware context index.
+>
+> [PATCH] blk-mq: Add blk_get_mq_tag()
+>
+> The queuecommand() callback functions in SCSI low-level drivers
+> must know which hardware context has been selected by the block
+> layer. Since passing the hctx pointer directly to the queuecommand
+> callback function would require modification of all SCSI LLDs,
+> add a function to the block layer that allows to query the hardware
+> context index.
+>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   block/blk-mq-tag.c     | 24 ++++++++++++++++++++++++
+>   include/linux/blk-mq.h | 16 ++++++++++++++++
+>   2 files changed, 40 insertions(+)
+>
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index c1b9242..5618759 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -595,6 +595,30 @@ int blk_mq_tag_update_depth(struct blk_mq_tags *tags, unsigned int tdepth)
+>   	return 0;
+>   }
+>
+> +/**
+> + * blk_get_mq_tag() - return a tag that is unique queue-wide
+> + *
+> + * The tag field in struct request is unique per hardware queue but not
+> + * queue-wide. Hence this function. It is not only safe to use this function
+> + * for multiqueue request queues but also for single-queue request queues.
+> + * Note: rq->tag == -1 if tagging is not enabled for single-queue request
+> + * queues.
+> + */
+> +struct blk_mq_tag blk_get_mq_tag(struct request *rq)
+> +{
+> +	struct request_queue *q = rq->q;
+> +	struct blk_mq_tag tag = { rq->tag & ((1 << 16) - 1) };
+> +	struct blk_mq_hw_ctx *hctx;
+> +
+> +	if (q->mq_ops) {
+> +		hctx = q->mq_ops->map_queue(q, rq->mq_ctx->cpu);
+> +		tag.tag |= hctx->queue_num << 16;
+> +	}
+> +
+> +	return tag;
+> +}
+> +EXPORT_SYMBOL(blk_get_mq_tag);
 
----
- include/scsi/scsi_tcq.h | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+Lets get rid of the blk_mq_tag struct and just have it be an u32 or 
+something. We could potentially typedef it, but I'd prefer to just have 
+it be an unsigned 32-bit int.
 
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index e645835..8e3bec34 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -111,18 +111,21 @@ static inline int scsi_populate_tag_msg(struct scsi_cmnd *cmd, char *msg)
- }
- 
- static inline struct scsi_cmnd *scsi_mq_find_tag(struct Scsi_Host *shost,
--		unsigned int hw_ctx, int tag)
-+						 int tag)
- {
-+	struct blk_mq_tag mq_tag = { tag };
-+	u16 hwq = blk_mq_tag_to_hwq(mq_tag);
- 	struct request *req;
- 
--	req = blk_mq_tag_to_rq(shost->tag_set.tags[hw_ctx], tag);
-+	req = blk_mq_tag_to_rq(shost->tag_set.tags[hwq],
-+			       blk_mq_tag_to_tag(mq_tag));
- 	return req ? (struct scsi_cmnd *)req->special : NULL;
- }
- 
- /**
-  * scsi_find_tag - find a tagged command by device
-  * @SDpnt:	pointer to the ScSI device
-- * @tag:	the tag number
-+ * @tag:	tag generated by blk_get_mq_tag()
-  *
-  * Notes:
-  *	Only works with tags allocated by the generic blk layer.
-@@ -133,9 +136,9 @@ static inline struct scsi_cmnd *scsi_find_tag(struct scsi_device *sdev, int tag)
- 
-         if (tag != SCSI_NO_TAG) {
- 		if (shost_use_blk_mq(sdev->host))
--			return scsi_mq_find_tag(sdev->host, 0, tag);
-+			return scsi_mq_find_tag(sdev->host, tag);
- 
--        	req = blk_queue_find_tag(sdev->request_queue, tag);
-+		req = blk_queue_find_tag(sdev->request_queue, tag);
- 	        return req ? (struct scsi_cmnd *)req->special : NULL;
- 	}
- 
-@@ -174,7 +177,7 @@ static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
- /**
-  * scsi_host_find_tag - find the tagged command by host
-  * @shost:	pointer to scsi_host
-- * @tag:	tag of the scsi_cmnd
-+ * @tag:	tag generated by blk_get_mq_tag()
-  *
-  * Notes:
-  *	Only works with tags allocated by the generic blk layer.
-@@ -186,7 +189,7 @@ static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
- 
- 	if (tag != SCSI_NO_TAG) {
- 		if (shost_use_blk_mq(shost))
--			return scsi_mq_find_tag(shost, 0, tag);
-+			return scsi_mq_find_tag(shost, tag);
- 		req = blk_map_queue_find_tag(shost->bqt, tag);
- 		return req ? (struct scsi_cmnd *)req->special : NULL;
- 	}
+Probably also need some init time safety checks that 16-bits is enough 
+to hold BLK_MQ_MAX_DEPTH. Just in case that is ever bumped, or the queue 
+prefixing changes.
+
+And I think we need to name this better. Your comment correctly 
+describes that this generates a unique tag queue wide, but the name of 
+the function implies that we just return the request tag. Most drivers 
+wont use this. Perhaps add a queue flag that tells us that we should 
+generate these tags and have it setup ala:
+
+u32 blk_mq_unique_rq_tag(struct request *rq)
+{
+	struct request_queue *q = rq->q;
+	u32 tag = rq->tag & ((1 << 16) - 1);
+	struct blk_mq_hw_ctx *hctx;
+
+	hctx = q->mq_ops->map_queue(q, rq->mq_ctx->cpu);	
+	return tag | (hctx->queue_num << 16);
+}
+
+u32 blk_mq_rq_tag(struct request *rq)
+{
+	struct request_queue *q = rq->q;
+
+	if (q->mq_ops &&
+	    test_bit(QUEUE_FLAG_UNIQUE_TAGS, &q->queue_flags))
+		return blk_mq_unique_rq_tag(rq);
+
+	return rq->tag;
+}
+
+Totally untested, just typed in email.
+
 -- 
-1.8.4.5
+Jens Axboe
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
