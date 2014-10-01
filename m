@@ -1,89 +1,62 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 2/8] scsi: remove scsi_next_command
-Date: Wed, 01 Oct 2014 14:06:03 +0200
-Message-ID: <542BEE2B.6030105@acm.org>
-References: <1410107469-896-1-git-send-email-hch@lst.de> <1410107469-896-3-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 3/8] scsi: clean up S/G table freeing
+Date: Wed, 01 Oct 2014 14:22:18 +0200
+Message-ID: <542BF1FA.5050908@acm.org>
+References: <1410107469-896-1-git-send-email-hch@lst.de> <1410107469-896-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:40253 "EHLO
-	michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbaJAMGF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 08:06:05 -0400
-In-Reply-To: <1410107469-896-3-git-send-email-hch@lst.de>
+Received: from baptiste.telenet-ops.be ([195.130.132.51]:51604 "EHLO
+	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaJAMWV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 08:22:21 -0400
+In-Reply-To: <1410107469-896-4-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
 On 09/07/14 18:31, Christoph Hellwig wrote:
-> There's only one caller left, so inline it and reduce the blk-mq vs !blk-mq
-> diff a litte bit.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/scsi_lib.c  | 18 ++++--------------
->   drivers/scsi/scsi_priv.h |  1 -
->   2 files changed, 4 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 8b76231..f21e661 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -542,17 +542,6 @@ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
->   	put_device(&sdev->sdev_gendev);
->   }
->
-> -void scsi_next_command(struct scsi_cmnd *cmd)
+> -static void scsi_release_buffers(struct scsi_cmnd *cmd)
 > -{
-> -	struct scsi_device *sdev = cmd->device;
-> -	struct request_queue *q = sdev->request_queue;
+> -	if (cmd->sdb.table.nents)
+> -		scsi_free_sgtable(&cmd->sdb, false);
 > -
-> -	scsi_put_command(cmd);
-> -	scsi_run_queue(q);
+> -	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
 > -
-> -	put_device(&sdev->sdev_gendev);
+> -	if (scsi_prot_sg_count(cmd))
+> -		scsi_free_sgtable(cmd->prot_sdb, false);
 > -}
 > -
->   void scsi_run_host_queues(struct Scsi_Host *shost)
->   {
->   	struct scsi_device *sdev;
-> @@ -730,8 +719,6 @@ static bool scsi_end_request(struct request *req, int error,
->   			kblockd_schedule_work(&sdev->requeue_work);
->   		else
->   			blk_mq_start_stopped_hw_queues(q, true);
+> -static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
+> -{
+> -	struct scsi_data_buffer *bidi_sdb = cmd->request->next_rq->special;
 > -
-> -		put_device(&sdev->sdev_gendev);
->   	} else {
->   		unsigned long flags;
->
-> @@ -742,9 +729,12 @@ static bool scsi_end_request(struct request *req, int error,
->   		if (bidi_bytes)
->   			scsi_release_bidi_buffers(cmd);
->   		scsi_release_buffers(cmd);
-> -		scsi_next_command(cmd);
-> +
-> +		scsi_put_command(cmd);
-> +		scsi_run_queue(q);
->   	}
->
-> +	put_device(&sdev->sdev_gendev);
->   	return false;
->   }
->
-> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-> index 12b8e1b..2a382c1 100644
-> --- a/drivers/scsi/scsi_priv.h
-> +++ b/drivers/scsi/scsi_priv.h
-> @@ -84,7 +84,6 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
->   extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
->   extern void scsi_device_unbusy(struct scsi_device *sdev);
->   extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-> -extern void scsi_next_command(struct scsi_cmnd *cmd);
->   extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
->   extern void scsi_run_host_queues(struct Scsi_Host *shost);
->   extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
->
+> -	scsi_free_sgtable(bidi_sdb, false);
+> -	kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+> -	cmd->request->next_rq->special = NULL;
+> -}
 
+I can see that the scsi_free_sgtable(&cmd->sdb, false) call, the 
+scsi_free_sgtable(cmd->prot_sdb, false) call and the 
+scsi_free_sgtable(bidi_sdb, false) call are now performed by the new 
+function scsi_free_sgtables(). But what's not clear to me is to which 
+function the kmem_cache_free(scsi_sdb_cache, bidi_sdb) call has been moved ?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> +		scsi_free_sgtables(cmd);
+>   		if (q->mq_ops) {
+>   			cmd->request->cmd_flags &= ~REQ_DONTPREP;
+>   			scsi_mq_uninit_cmd(cmd);
+>   			scsi_mq_requeue_cmd(cmd);
+> -		} else {
+> -			scsi_release_buffers(cmd);
+> +		} else
+>   			scsi_requeue_command(q, cmd);
+> -		}
+
+Apparently braces have been removed from around the else-part. Isn't the 
+preferred style to use braces around single-line else-clauses if the 
+if-clause consists of multiple statements ?
+
+Bart.
+
