@@ -1,51 +1,96 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Wed, 01 Oct 2014 07:36:45 -0400
-Message-ID: <1412163405.5299.4.camel@jarvis>
-References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
-	 <20140922144547.GA32651@infradead.org>
-	 <525DB349B3FB5444AE057A887CB2A8D88F76D1@nice.asicdesigners.com>
-	,<20141001074919.GA14826@infradead.org>
-	 <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>
+From: Jerome Martin <jxm@netiant.com>
+Subject: Re: targetcli do not show iscsi
+Date: Wed, 01 Oct 2014 13:49:40 +0200
+Message-ID: <542BEA54.50903@netiant.com>
+References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com> <542A722E.5030109@gmail.com> <542A73BE.2080501@netiant.com> <542A75F1.8070706@gmail.com> <542A77D6.4090109@netiant.com> <542A7ADD.3040804@gmail.com> <542A7BC9.2050708@netiant.com> <542ACA6C.104@redhat.com> <542ACDAE.3080307@gmail.com> <542AD1C2.8070105@gmail.com> <542ADF1D.1020003@gmail.com> <542ADFDB.3010300@netiant.com> <542AE206.4000808@gmail.com> <542AE3E2.1080609@netiant.com> <542BE74F.3080102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44527 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751222AbaJALgs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 07:36:48 -0400
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <542BE74F.3080102@gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Luigi Tarenga <luigi.tarenga@gmail.com>, linux-scsi@vger.kernel.org, "target-devel@vger.kernel.org >> target-devel" <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Wed, 2014-10-01 at 08:08 +0000, Anish Bhatt wrote:
-> James, 
->     This is bugfix  and prevents a "scheduling while atomic" bug that can be
-> hit when using an ipv6 address with cxgb4i, and can possibly be seen without
-> Chelsio hardware. Could this be cherry picked for 3.17 please ?
+Hi Luigi,
 
-Can you describe the bug it's fixing (what are the consequences) and how
-often is it seen?
+On 10/01/2014 01:36 PM, Luigi Tarenga wrote:
+> Hi Jerome,
+> I did some test with 3.x version but I have some problem.
+> Let's start saying i cloned your git repos.
+>
+> I have a problem generating the rpm with all 3 package (configshell,
+> rtslib, targetcli):
+> # make rpm
+> Exporting the repository files...
+> Cleaning up the target tree...
+> Fixing version string...
+> Generating rpm specfile from template...
+> Generating rpm changelog...
+> Generating debian changelog...
+> Generated release tarball:
+>      dist/configshell-1.5-4-g0827baa.tar.gz
+> Building rpm packages...
+> error: line 7: Illegal char '-' in: Version:        1.5-4-g0827baa
+> make: *** [build/rpm-stamp] Error 1
+>
+> the error is the same, seem you can't use a hyphen in the version.
 
-If it's not something everyone hits, it may be better to go via stable,
-because the code change is quite large, so validating that nothing else
-breaks with it at this stage (a week away from release) is quite
-important.
+Ah, right.
+I need to update that, there were some changes in the versionning that 
+breaks the included RPM packaging. Typically the packaging from the git 
+repo is only used for development as distros tend to bin it and replace 
+with their own. I will fix that ASAP.
 
-> Christoph,
->    My bad, this is a bugfix for code that was added for 3.17, and I assumed the
-> bugfixes would automatically be picked for the next rc. If James doesn't pick 
-> this up, I'll send it to stable when appropriate.
+> For now I gave up building rpm and did a simple ./setup.py install:
 
-You said in your change log:
+Great :-)
+However, you should generate a release first (make release) and then do 
+the install from the generated tarball, as this will extract version 
+information etc. from the git repo. Also, you will need to install the 
+initscript manually.
 
-        Applies on top of core-for-3.18
+> still having an issue about the listing of iscsi fabric:
+> # /usr/bin/targetcli ls
+> o- /
+> .........................................................................................................................
+> [...]
+>    o- backstores
+> ..............................................................................................................
+> [...]
+>      o- fileio
+> ...................................................................................................
+> [0 Storage Object]
+>      o- iblock
+> ...................................................................................................
+> [0 Storage Object]
+>      o- pscsi
+> ....................................................................................................
+> [0 Storage Object]
+>      o- rd_mcp
+> ...................................................................................................
+> [0 Storage Object]
+>
+> # /usr/bin/targetcli version
+> Cannot find configshell version. The configshell package has probably
+> not been built properly from either the git repository or a public tarball.
+> Cannot find rtslib version. The rtslib package has probably not been
+> built properly from either the git repository or a public tarball.
+> Cannot find targetcli version. The targetcli package has probably not
+> been built properly from either the git repository or a public tarball.
 
-So the natural assumption would be this is for the merge window queue.
+This is what I was talking about above, you need to generate a release 
+tarball first (make release).
 
-James
+>
+> I tried with both python (stock from centos) and python2.7 (compiled
+> from source in /usr/local)
 
+So, again, I would like to reproduce and solve this on CentOS / RHEL.
+Can you confirm this is version 6.5 with custom-built kernel 3.16.3 ?
 
+In any case, thanks for testing, I need that badly :-)
+
+Best Regards,
+--
+Jerome
