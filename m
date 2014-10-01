@@ -1,43 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/2] wd719x: Introduce Western Digital WD7193/7197/7296
- PCI SCSI card driver
-Date: Wed, 1 Oct 2014 11:19:07 -0700
-Message-ID: <20141001181907.GA668@infradead.org>
-References: <1411757808-12530-1-git-send-email-linux@rainbow-software.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: PC partition tables are little endian
+Date: Wed,  1 Oct 2014 20:31:01 +0200
+Message-ID: <1412188261-29632-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:43772 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582AbaJASTJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 14:19:09 -0400
-Content-Disposition: inline
-In-Reply-To: <1411757808-12530-1-git-send-email-linux@rainbow-software.org>
+Received: from casper.infradead.org ([85.118.1.10]:52338 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753358AbaJAS2f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 14:28:35 -0400
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1XZOde-0007mT-B8
+	for linux-scsi@vger.kernel.org; Wed, 01 Oct 2014 18:28:34 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Kernel development list <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Sep 26, 2014 at 08:56:46PM +0200, Ondrej Zary wrote:
-> The card requires firmware that can be cut out of the Windows NT driver that 
-> can be downloaded from WD at: 
-> http://support.wdc.com/product/download.asp?groupid=801&sid=27&lang=en
-> There is no license anywhere in the file or on the page - so I guess that the 
-> firmware cannot be added to linux-firmware.
-> 
-> This script downloads and extracts the firmware:
-> 
-> #!/bin/sh
-> wget http://support.wdc.com/download/archive/pciscsi.exe
-> lha xi pciscsi.exe pci-scsi.exe
-> lha xi pci-scsi.exe nt/wd7296a.sys
-> rm pci-scsi.exe
-> dd if=wd7296a.sys of=wd719x-risc.bin bs=1 skip=5760 count=14336
-> dd if=wd7296a.sys of=wd719x-wcs.bin bs=1 skip=20096 count=514
-> rm wd7296a.sys
+As sparse correctly pointed out scsi_partsize should use get_unaligned_le32
+to read PC partition tables from disk, as they are little endian.
 
-Might be worth to add this script to the tree somewhere.
+The result of this bug is that we returned incorrect geometries on big
+endian systems when using the scsicam variant.  Which probably doesn't
+matter as only old x86 systems every cared about the geometry.
 
-I'd be happy to merge the driver, but I'd love to get a second review
-for it first.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsicam.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index 92d24d6..910f4a7 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -163,8 +163,8 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
+ 		    end_head * end_sector + end_sector;
+ 
+ 		/* This is the actual _sector_ number at the end */
+-		logical_end = get_unaligned(&largest->start_sect)
+-		    + get_unaligned(&largest->nr_sects);
++		logical_end = get_unaligned_le32(&largest->start_sect)
++		    + get_unaligned_le32(&largest->nr_sects);
+ 
+ 		/* This is for >1023 cylinders */
+ 		ext_cyl = (logical_end - (end_head * end_sector + end_sector))
+-- 
+1.9.1
 
