@@ -1,141 +1,146 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [PATCH RESEND 00/35] qla2xxx: Patches for 3.18 scsi "misc"
- branch.
-Date: Wed, 1 Oct 2014 18:30:50 +0000
-Message-ID: <D63B9804CB63AD4FAAD96603769566464734904D@avmb2.qlogic.org>
-References: <1411636626-7566-1-git-send-email-saurav.kashyap@qlogic.com>
- <20140925170129.GA1336@lst.de>
+From: Webb Scales <webbnh@hp.com>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Wed, 01 Oct 2014 14:51:31 -0400
+Message-ID: <542C4D33.2030401@hp.com>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_D63B9804CB63AD4FAAD96603769566464734904Davmb2qlogicorg_"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:23218 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751930AbaJASaw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 14:30:52 -0400
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id s91ITjLp025172
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Oct 2014 11:30:52 -0700
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1pq9eqbm4e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 01 Oct 2014 11:30:52 -0700
-In-Reply-To: <20140925170129.GA1336@lst.de>
-Content-Language: en-US
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:49875 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaJASvf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 14:51:35 -0400
+Received: from g5t1627.atlanta.hp.com (g5t1627.atlanta.hp.com [15.192.137.10])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 211B1632EA
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Oct 2014 18:51:35 +0000 (UTC)
+In-Reply-To: <1411991272-129962-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Saurav Kashyap <saurav.kashyap@qlogic.com>
-Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
---_000_D63B9804CB63AD4FAAD96603769566464734904Davmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F46EBEA0863E854F9CC61DA95204F23E@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Hannes,
 
-Christoph,=20
+In megasas_change_queue_type(), is it possible for sdev->queue_depth to 
+be greater than 256?
 
-In order to synchronize with our internal testing and minimize the
-regression, we are planning to fix those sparse errors in a staggered
-phase.
+Unless I'm misunderstanding the SCSI code, we can request a 
+queue-depth/tag-map-size which is greater than 256, but, since the 
+scsi_cmnd::tag field is an unsigned char, depths greater than 256 may 
+overflow the field when high-numbered tags are used...do I have that right?
 
-We will update what can be fixed for 3.19.
 
-Hope this approach works.
+             Thanks,
 
--- Giri
+                 Webb
 
-On 9/25/14 10:01 AM, "Christoph Hellwig" <hch@lst.de> wrote:
 
->Thanks, I've applied both qla2xxx series to drivers-for-3.18.
+
+On 9/29/14 7:47 AM, Hannes Reinecke wrote:
+> Megaraid_sas uses a shared pool of commands per HBA, so we
+> should be enabling a shared tag map.
+> This will allow the I/O scheduler to make better scheduling
+> decisions and will avoid BUSY states in the driver.
 >
->I've noticed a lot of existing sparse endianess warnings
->(from make C=3D2 CF=3D"-D__CHECK_ENDIAN__" SUBDIRS=3Ddrivers/scsi/qla2xxx)
->when compiling the driver, any chance you could try to fix those up
->for 3.19?
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/megaraid/megaraid_sas_base.c | 34 ++++++++++++++++++++++++++++++-
+>   1 file changed, 33 insertions(+), 1 deletion(-)
 >
-
-
---_000_D63B9804CB63AD4FAAD96603769566464734904Davmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+ItN7AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADU2QTY1M0Ix
-QkY1Mjg2NEI4MTEzRTg1QTNCMzIwMTU5APkGAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HCgABABIA
-HgAyAAMAVQEBIIADAA4AAADeBwoAAQASAB4AMgADAFUBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAEcAAABSZTogW1BBVENIIFJFU0VORCAwMC8zNV0gcWxhMnh4eDogUGF0
-Y2hlcyBmb3IgMy4xOCBzY3NpICJtaXNjIiBicmFuY2guADoVAQOQBgD0DwAANgAAAAIBfwABAAAA
-PAAAADxENjNCOTgwNENCNjNBRDRGQUFEOTY2MDM3Njk1NjY0NjQ3MzQ5MDREQGF2bWIyLnFsb2dp
-Yy5vcmc+AAsAHw4BAAAAAgEJEAEAAADyAgAA7gIAABMEAABMWkZ147lGAGEACmZiaWQEAABjY8Bw
-ZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwli
-MTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhBy
-AMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsG
-cwGQACAgQk1fQuBFR0lOfQr8AfEL8RggQ2gFEB9gb3BoaiwDMGwLgGUKgSJkSQ8DoAWwBIEcwG8g
-c3lubhHAA2ADAHoZ4APwdLZoI1AIcCALgBuhbgdAZxzBH2ALgGcgAHAcYG3vC4AHcCRyJNBlIlUJ
-cAnB7QQQaQIgIjB3GeAKwBngHQtRbgMAJiEjwWZpePcnERkQGeBzCrEqIQSQA2DfEfAlMSZAI+AB
-kGcYMAlxqyJVIhBhEgAuIlxXJJLibAMgdXBkGIAkkRHQ9wVAHlADoGIZ4CmxHFIFsewzLhZwLN1I
-IgAnAgQAuSZAcHADYADQJOB3BbCDH1As3S0tIEdpBRAlIlxPA6A5Lw6gLzEENCAekDowMSBBik0i
-MCIhpyBIZS4QQQPwZyIgPGgRwEDqbB9gLgEAPiSgA2AQIHI6Ilw+VBmhH1AiMEl+JxowMdIiYBxR
-BuAk0XH5C2AyeDuQI+AGcQeRI8GmZAUQGjFzLRrhLTAR2jgs1j45NjozbjiADlC/HFErYAkABUAZ
-MCqweCHRvyYSKlYdwAcwGFAEEXcKwLcpMg4AOUUoHIMAwGsZ4AhDPTIhkEY9Ii0ARF9fQ0hFQ0uA
-X0VORElBTkPQETdwU1VCRHBSUz2tPHUvBPAAkC87VSk5NucusAnwG9FtcAMQKUMnMHc8ZSIwAHB5
-G9AZoT8QICZ5CGAb0XVsHGB0ct9JECmLLkA5Ni/WPz2NIlUDFUJOIAAAHwBCAAEAAAAkAAAARwBp
-AHIAaQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwBlAAEAAAA6AAAAZwBpAHIAaQBkAGgA
-YQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwBkAAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgFBAAEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIA
-aQBkAGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAu
-AG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADoAAABnAGkA
-cgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
-AOVfAQAAAEIAAABzAGkAcAA6AGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAJAAAAEcAaQByAGkAZABoAGEAcgAgAE0AYQBs
-AGEAdgBhAGwAaQAAAB8AHwwBAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwA
-aQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwB
-AAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcAaQByAGkAZABoAGEAcgAgAE0AYQBsAGEA
-dgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA6AAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwA
-YQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwD4PwEAAAAkAAAARwBpAHIAaQBk
-AGgAYQByACAATQBhAGwAYQB2AGEAbABpAAAAHwAjQAEAAAA6AAAAZwBpAHIAaQBkAGgAYQByAC4A
-bQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAiQAEAAAAKAAAAUwBN
-AFQAUAAAAAAAAgH5PwEAAACAAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARwBpAHIAaQBkAGgA
-YQByACAATQBhAGwAYQB2AGEAbABpAAAAUwBNAFQAUAAAAGcAaQByAGkAZABoAGEAcgAuAG0AYQBs
-AGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADoAAABnAGkAcgBpAGQA
-aABhAHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfADFAAQAA
-AAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8A
-dABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAABWplOxv1KGS4ET6Fo7
-MgFZAwAXAAEAAABAADkAAGk306XdzwFAAAgw34k/06XdzwELAACACCAGAAAAAADAAAAAAAAARgAA
-AAAUhQAAAQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBn
-AHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
-BoUAAAAAAAAfADcAAQAAAI4AAABSAGUAOgAgAFsAUABBAFQAQwBIACAAUgBFAFMARQBOAEQAIAAw
-ADAALwAzADUAXQAgAHEAbABhADIAeAB4AHgAOgAgAFAAYQB0AGMAaABlAHMAIABmAG8AcgAgADMA
-LgAxADgAIABzAGMAcwBpACAAIgBtAGkAcwBjACIAIABiAHIAYQBuAGMAaAAuAAAAAAAfAD0AAQAA
-AAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAPgAAADwAMgAwADEANAAwADkAMgA1ADEA
-NwAwADEAMgA5AC4ARwBBADEAMwAzADYAQABsAHMAdAAuAGQAZQA+AAAAAAACAXEAAQAAABYAAAAB
-Ac/dpdOk3M5WecYPSZIYsFNn5hD6AAAfAHAAAQAAAIYAAABbAFAAQQBUAEMASAAgAFIARQBTAEUA
-TgBEACAAMAAwAC8AMwA1AF0AIABxAGwAYQAyAHgAeAB4ADoAIABQAGEAdABjAGgAZQBzACAAZgBv
-AHIAIAAzAC4AMQA4ACAAcwBjAHMAaQAgACIAbQBpAHMAYwAiACAAYgByAGEAbgBjAGgALgAAAAAA
-HwA1EAEAAAB4AAAAPABEADYAMwBCADkAOAAwADQAQwBCADYAMwBBAEQANABGAEEAQQBEADkANgA2
-ADAAMwA3ADYAOQA1ADYANgA0ADYANAA3ADMANAA5ADAANABEAEAAYQB2AG0AYgAyAC4AcQBsAG8A
-ZwBpAGMALgBvAHIAZwA+AAAAHwA5EAEAAAC4AAAAPAAxADQAMQAxADYAMwA2ADYAMgA2AC0ANwA1
-ADYANgAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADIAMAAxADQAMAA5ADIANQAx
-ADcAMAAxADIAOQAuAEcAQQAxADMAMwA2AEAAbABzAHQALgBkAGUAPgAAAAMA3j+fTgAAQAAHMBzH
-OtOl3c8BAwAmAAAAAAACAUcAAQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIyLTE0MTAw
-MTE4MzA1MFotMTg2NDQAAAAfABUQAQAAAFgAAABGADQANgBFAEIARQBBADAAOAA2ADMARQA4ADUA
-NABGADkAQwBDADYAMQBEAEEAOQA1ADIAMAA0AEYAMgAzAEUAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAAgEUMAEAAAAMAAAATwAAAJIOKBBDAAAAHwD6PwEAAAAkAAAARwBpAHIAaQBkAGgAYQByACAA
-TQBhAGwAYQB2AGEAbABpAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBh
-AGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8A
-bwBrAC8AMQA0AC4ANAAuADQALgAxADQAMAA4ADAANwAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMB
-AAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcA
-RQB4AAAAAQAAAA4BAABJAEkAPQAwADEAMAAxAEMARgBEAEQAQQA1AEQAMwA5ADUAMgA2AEMANgA3
-ADQAQwAxAEMAQwA2ADkANABBADgANgBCADMAMgAxAEMAQQA5ADgARQBBADkANgA3ADMAOwBTAEIA
-TQBJAEQAPQA5ADsAUwAxAD0APAAyADAAMQA0ADAAOQAyADUAMQA3ADAAMQAyADkALgBHAEEAMQAz
-ADMANgBAAGwAcwB0AC4AZABlAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEA
-NAAuADIAIAAoAEIAdQBpAGwAZAAgADMAOAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADMAAAAA
-AAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEA
-dAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBv
-AHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEA
-MABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAA
-AAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAADjX
-
---_000_D63B9804CB63AD4FAAD96603769566464734904Davmb2qlogicorg_--
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index f6a69a3..996fa9a 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -1659,7 +1659,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+>   	*/
+>   	blk_queue_rq_timeout(sdev->request_queue,
+>   		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
+> -
+> +	sdev->tagged_supported = 1;
+>   	return 0;
+>   }
+>   
+> @@ -1667,6 +1667,10 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+>   {
+>   	u16             pd_index = 0;
+>   	struct megasas_instance *instance ;
+> +
+> +	/* We have a shared tag map, so TCQ is always supported */
+> +	sdev->tagged_supported = 1;
+> +
+>   	instance = megasas_lookup_instance(sdev->host->host_no);
+>   	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+>   		/*
+> @@ -1677,13 +1681,20 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+>   			sdev->id;
+>   		if (instance->pd_list[pd_index].driveState ==
+>   					MR_PD_STATE_SYSTEM) {
+> +			scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
+>   			return 0;
+>   		}
+>   		return -ENXIO;
+>   	}
+> +	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
+>   	return 0;
+>   }
+>   
+> +static void megasas_slave_destroy(struct scsi_device *sdev)
+> +{
+> +	scsi_deactivate_tcq(sdev, 1);
+> +}
+> +
+>   void megaraid_sas_kill_hba(struct megasas_instance *instance)
+>   {
+>   	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+> @@ -2746,6 +2757,21 @@ struct device_attribute *megaraid_host_attrs[] = {
+>   	NULL,
+>   };
+>   
+> +static int megasas_change_queue_type(struct scsi_device *sdev, int tag_type)
+> +{
+> +	if (sdev->host->bqt && sdev->tagged_supported) {
+> +		scsi_set_tag_type(sdev, tag_type);
+> +
+> +		if (tag_type)
+> +			scsi_activate_tcq(sdev, sdev->queue_depth);
+> +		else
+> +			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+> +	} else
+> +		tag_type = 0;
+> +
+> +	return tag_type;
+> +}
+> +
+>   /*
+>    * Scsi host template for megaraid_sas driver
+>    */
+> @@ -2756,6 +2782,7 @@ static struct scsi_host_template megasas_template = {
+>   	.proc_name = "megaraid_sas",
+>   	.slave_configure = megasas_slave_configure,
+>   	.slave_alloc = megasas_slave_alloc,
+> +	.slave_destroy = megasas_slave_destroy,
+>   	.queuecommand = megasas_queue_command,
+>   	.eh_device_reset_handler = megasas_reset_device,
+>   	.eh_bus_reset_handler = megasas_reset_bus_host,
+> @@ -2765,6 +2792,7 @@ static struct scsi_host_template megasas_template = {
+>   	.bios_param = megasas_bios_param,
+>   	.use_clustering = ENABLE_CLUSTERING,
+>   	.change_queue_depth = megasas_change_queue_depth,
+> +	.change_queue_type = megasas_change_queue_type,
+>   	.no_write_same = 1,
+>   };
+>   
+> @@ -4909,6 +4937,10 @@ static int megasas_io_attach(struct megasas_instance *instance)
+>   	host->this_id = instance->init_id;
+>   	host->sg_tablesize = instance->max_num_sge;
+>   
+> +	if (!scsi_init_shared_tag_map(host, host->can_queue))
+> +		printk(KERN_WARNING "megasas: enable TCQ support, depth %d",
+> +			host->can_queue);
+> +
+>   	if (instance->fw_support_ieee)
+>   		instance->max_sectors_per_req = MEGASAS_MAX_SECTORS_IEEE;
+>   
