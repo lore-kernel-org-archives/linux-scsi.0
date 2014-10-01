@@ -1,146 +1,113 @@
-From: Webb Scales <webbnh@hp.com>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Wed, 01 Oct 2014 14:51:31 -0400
-Message-ID: <542C4D33.2030401@hp.com>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH] block: remove artifical max_hw_sectors cap
+Date: Wed, 1 Oct 2014 18:59:34 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CC7BAB@G4W3202.americas.hpqcorp.net>
+References: <1410044885-14893-1-git-send-email-hch@lst.de>
+ <20141001130822.GA5362@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:49875 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbaJASvf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 14:51:35 -0400
-Received: from g5t1627.atlanta.hp.com (g5t1627.atlanta.hp.com [15.192.137.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 211B1632EA
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Oct 2014 18:51:35 +0000 (UTC)
-In-Reply-To: <1411991272-129962-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141001130822.GA5362@infradead.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Wu Fengguang <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
-
-Hannes,
-
-In megasas_change_queue_type(), is it possible for sdev->queue_depth to 
-be greater than 256?
-
-Unless I'm misunderstanding the SCSI code, we can request a 
-queue-depth/tag-map-size which is greater than 256, but, since the 
-scsi_cmnd::tag field is an unsigned char, depths greater than 256 may 
-overflow the field when high-numbered tags are used...do I have that right?
-
-
-             Thanks,
-
-                 Webb
 
 
 
-On 9/29/14 7:47 AM, Hannes Reinecke wrote:
-> Megaraid_sas uses a shared pool of commands per HBA, so we
-> should be enabling a shared tag map.
-> This will allow the I/O scheduler to make better scheduling
-> decisions and will avoid BUSY states in the driver.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/megaraid/megaraid_sas_base.c | 34 ++++++++++++++++++++++++++++++-
->   1 file changed, 33 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index f6a69a3..996fa9a 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1659,7 +1659,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
->   	*/
->   	blk_queue_rq_timeout(sdev->request_queue,
->   		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
-> -
-> +	sdev->tagged_supported = 1;
->   	return 0;
->   }
->   
-> @@ -1667,6 +1667,10 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
->   {
->   	u16             pd_index = 0;
->   	struct megasas_instance *instance ;
-> +
-> +	/* We have a shared tag map, so TCQ is always supported */
-> +	sdev->tagged_supported = 1;
-> +
->   	instance = megasas_lookup_instance(sdev->host->host_no);
->   	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
->   		/*
-> @@ -1677,13 +1681,20 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
->   			sdev->id;
->   		if (instance->pd_list[pd_index].driveState ==
->   					MR_PD_STATE_SYSTEM) {
-> +			scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
->   			return 0;
->   		}
->   		return -ENXIO;
->   	}
-> +	scsi_activate_tcq(sdev, MEGASAS_DEFAULT_CMD_PER_LUN);
->   	return 0;
->   }
->   
-> +static void megasas_slave_destroy(struct scsi_device *sdev)
-> +{
-> +	scsi_deactivate_tcq(sdev, 1);
-> +}
-> +
->   void megaraid_sas_kill_hba(struct megasas_instance *instance)
->   {
->   	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
-> @@ -2746,6 +2757,21 @@ struct device_attribute *megaraid_host_attrs[] = {
->   	NULL,
->   };
->   
-> +static int megasas_change_queue_type(struct scsi_device *sdev, int tag_type)
-> +{
-> +	if (sdev->host->bqt && sdev->tagged_supported) {
-> +		scsi_set_tag_type(sdev, tag_type);
-> +
-> +		if (tag_type)
-> +			scsi_activate_tcq(sdev, sdev->queue_depth);
-> +		else
-> +			scsi_deactivate_tcq(sdev, sdev->queue_depth);
-> +	} else
-> +		tag_type = 0;
-> +
-> +	return tag_type;
-> +}
-> +
->   /*
->    * Scsi host template for megaraid_sas driver
->    */
-> @@ -2756,6 +2782,7 @@ static struct scsi_host_template megasas_template = {
->   	.proc_name = "megaraid_sas",
->   	.slave_configure = megasas_slave_configure,
->   	.slave_alloc = megasas_slave_alloc,
-> +	.slave_destroy = megasas_slave_destroy,
->   	.queuecommand = megasas_queue_command,
->   	.eh_device_reset_handler = megasas_reset_device,
->   	.eh_bus_reset_handler = megasas_reset_bus_host,
-> @@ -2765,6 +2792,7 @@ static struct scsi_host_template megasas_template = {
->   	.bios_param = megasas_bios_param,
->   	.use_clustering = ENABLE_CLUSTERING,
->   	.change_queue_depth = megasas_change_queue_depth,
-> +	.change_queue_type = megasas_change_queue_type,
->   	.no_write_same = 1,
->   };
->   
-> @@ -4909,6 +4937,10 @@ static int megasas_io_attach(struct megasas_instance *instance)
->   	host->this_id = instance->init_id;
->   	host->sg_tablesize = instance->max_num_sge;
->   
-> +	if (!scsi_init_shared_tag_map(host, host->can_queue))
-> +		printk(KERN_WARNING "megasas: enable TCQ support, depth %d",
-> +			host->can_queue);
-> +
->   	if (instance->fw_support_ieee)
->   		instance->max_sectors_per_req = MEGASAS_MAX_SECTORS_IEEE;
->   
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: Wednesday, 01 October, 2014 8:08 AM
+> To: Jens Axboe; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Wu
+> Fengguang
+> Subject: Re: [PATCH] block: remove artifical max_hw_sectors cap
+> 
+> As we still haven't made any progress on this let me explain why
+> the limit does not make sense:  It only applies to _FS request,
+> which basically have three use cases:
+> 
+>  - metadata I/O.  Generally small enough that the limit does not
+>    matter at all.
+>  - buffered reads/writes.  We already have a self-tuning algorithm
+>    that limits writeback size, and a readahead size tunable that
+>    caps read sizes.  Imposing another confusing limit that does
+>    not interact with the visible tunables here is not helpful
+>  - direct I/O.  Users should get something resembling their request
+>    as closely as possible on the write, and this is where our
+>    stupid limitation causes the most problems.
+
+One supporting example: A low limit interferes with creation of
+full stripe writes for RAID controllers.
+
+
+
+> On Sat, Sep 06, 2014 at 04:08:05PM -0700, Christoph Hellwig wrote:
+> > Set max_sectors to the value the drivers provides as hardware limit by
+> > default.  Linux had proper I/O throttling for a long time and doesn't
+> > rely on a artifically small maximum I/O size anymore.  By not limiting
+> > the I/O size by default we remove an annoying tuning step required for
+> > most Linux installation.
+> >
+> > Note that both the user, and if absolutely required the driver can still
+> > impose a limit for FS requests below max_hw_sectors_kb.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  block/blk-settings.c       | 4 +---
+> >  drivers/block/aoe/aoeblk.c | 2 +-
+> >  include/linux/blkdev.h     | 1 -
+> >  3 files changed, 2 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/block/blk-settings.c b/block/blk-settings.c
+> > index f1a1795..f52c223 100644
+> > --- a/block/blk-settings.c
+> > +++ b/block/blk-settings.c
+> > @@ -257,9 +257,7 @@ void blk_limits_max_hw_sectors(struct queue_limits
+> *limits, unsigned int max_hw_
+> >  		       __func__, max_hw_sectors);
+> >  	}
+> >
+> > -	limits->max_hw_sectors = max_hw_sectors;
+> > -	limits->max_sectors = min_t(unsigned int, max_hw_sectors,
+> > -				    BLK_DEF_MAX_SECTORS);
+> > +	limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
+> >  }
+> >  EXPORT_SYMBOL(blk_limits_max_hw_sectors);
+
+1. Documentation/block/biodoc.txt needs some updates:
+
+        blk_queue_max_sectors(q, max_sectors)
+                Sets two variables that limit the size of the request.
+
+                - The request queue's max_sectors, which is a soft size in
+                units of 512 byte sectors, and could be dynamically varied
+                by the core kernel.
+
+                - The request queue's max_hw_sectors, which is a hard limit
+                and reflects the maximum size request a driver can handle
+                in units of 512 byte sectors.
+
+                The default for both max_sectors and max_hw_sectors is
+                255. The upper limit of max_sectors is 1024.
+
+There is no function with that name (it is now called
+blk_queue_max_hw_sectors), the upper limit of max_sectors
+is max_hw_sectors, and the default is misleading (255
+is the default if the LLD doesn't provide max_hw_sectors).
+
+2. Testing with hpsa and mpt3sas, this patch works as expected
+for this setting.  I/O sizes are still limited by max_segments, 
+which is expected.  Something else is still limiting I/O sizes
+to 1 MiB, though; probably bio_get_nr_vecs enforcing a maximum
+size per bio of BIO_MAX_PAGES 256 (which is 1 MiB with 4 KiB
+pages).
+
+
+Otherwise,
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Tested-by: Robert Elliott <elliott@hp.com>
+
+---
+Rob Elliott    HP Server Storage
