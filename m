@@ -1,34 +1,55 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Wed, 1 Oct 2014 05:22:59 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D88F76D1@nice.asicdesigners.com>
-References: <1410828258-14692-1-git-send-email-anish@chelsio.com>,<20140922144547.GA32651@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 09/24] 53c700: remove scsi_print_sense() usage
+Date: Wed,  1 Oct 2014 08:22:45 +0200
+Message-ID: <1412144580-72880-10-git-send-email-hare@suse.de>
+References: <1412144580-72880-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:27943
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751187AbaJAFX0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 01:23:26 -0400
-In-Reply-To: <20140922144547.GA32651@infradead.org>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:52323 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbaJAGXF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2014 02:23:05 -0400
+In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Little late, but I was hoping this would be pushed as part of fixes to 3.17. 
-Is it too late for that ?
--Anish
-________________________________________
-From: Christoph Hellwig [hch@infradead.org]
-Sent: Monday, September 22, 2014 7:45 AM
-To: Anish Bhatt
-Cc: linux-scsi@vger.kernel.org; JBottomley@parallels.com; Karen Xie; Manoj Malviya
-Subject: Re: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
+The 53c700 driver would be using scsi_print_sense() in a debug
+statement, which was never compiled in. Plus the same information
+can get retrieved with logging. So remove it.
 
-Thanks,
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/53c700.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-applied.
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 68bf423..179a24e 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -592,19 +592,14 @@ NCR_700_scsi_done(struct NCR_700_Host_Parameters *hostdata,
+ 	hostdata->cmd = NULL;
+ 
+ 	if(SCp != NULL) {
+-		struct NCR_700_command_slot *slot = 
++		struct NCR_700_command_slot *slot =
+ 			(struct NCR_700_command_slot *)SCp->host_scribble;
+-		
++
+ 		dma_unmap_single(hostdata->dev, slot->pCmd,
+ 				 MAX_COMMAND_SIZE, DMA_TO_DEVICE);
+ 		if (slot->flags == NCR_700_FLAG_AUTOSENSE) {
+ 			char *cmnd = NCR_700_get_sense_cmnd(SCp->device);
+-#ifdef NCR_700_DEBUG
+-			printk(" ORIGINAL CMD %p RETURNED %d, new return is %d sense is\n",
+-			       SCp, SCp->cmnd[7], result);
+-			scsi_print_sense(SCp);
+ 
+-#endif
+ 			dma_unmap_single(hostdata->dev, slot->dma_handle,
+ 					 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
+ 			/* restore the old result if the request sense was
+-- 
+1.8.5.2
+
