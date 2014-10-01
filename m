@@ -1,86 +1,111 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/24] scsi: remove scsi_print_status()
-Date: Wed,  1 Oct 2014 08:22:49 +0200
-Message-ID: <1412144580-72880-14-git-send-email-hare@suse.de>
+Subject: [PATCH 11/24] scsi: do not decode sense extras
+Date: Wed,  1 Oct 2014 08:22:47 +0200
+Message-ID: <1412144580-72880-12-git-send-email-hare@suse.de>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52354 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52348 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192AbaJAGXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 02:23:08 -0400
+	id S1751180AbaJAGXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2014 02:23:07 -0400
 In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so we can remove it.
+Currently we're only decoding sense extras for tape devices.
+And even there only for fixed format sense formats.
+As this is of rather limited use in the general case we should
+be stop trying to decode sense extras; the tape driver does
+its own decoding anyway.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 35 -----------------------------------
- include/scsi/scsi_dbg.h  |  1 -
- 2 files changed, 36 deletions(-)
+ drivers/scsi/constants.c | 62 ------------------------------------------------
+ 1 file changed, 62 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 55ece2a..6e16b19 100644
+index a8d5962..55ece2a 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+@@ -1452,67 +1452,6 @@ scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
+ 	return;
  }
- EXPORT_SYMBOL(scsi_print_command);
  
--/**
-- *	scsi_print_status - print scsi status description
-- *	@scsi_status: scsi status value
-- *
-- *	If the status is recognized, the description is printed.
-- *	Otherwise "Unknown status" is output. No trailing space.
-- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
-- *	(e.g. "0x2" for Check Condition).
-- **/
--void
--scsi_print_status(unsigned char scsi_status) {
--#ifdef CONFIG_SCSI_CONSTANTS
--	const char * ccp;
+-static void
+-scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
+-			 struct scsi_sense_hdr *sshdr)
+-{
+-	int k, num, res;
 -
--	switch (scsi_status) {
--	case 0:    ccp = "Good"; break;
--	case 0x2:  ccp = "Check Condition"; break;
--	case 0x4:  ccp = "Condition Met"; break;
--	case 0x8:  ccp = "Busy"; break;
--	case 0x10: ccp = "Intermediate"; break;
--	case 0x14: ccp = "Intermediate-Condition Met"; break;
--	case 0x18: ccp = "Reservation Conflict"; break;
--	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
--	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
--	case 0x30: ccp = "ACA Active"; break;
--	case 0x40: ccp = "Task Aborted"; break;
--	default:   ccp = "Unknown status";
+-	if (sshdr->response_code < 0x72)
+-	{
+-		/* only decode extras for "fixed" format now */
+-		char buff[80];
+-		int blen, fixed_valid;
+-		unsigned int info;
+-
+-		fixed_valid = sense_buffer[0] & 0x80;
+-		info = ((sense_buffer[3] << 24) | (sense_buffer[4] << 16) |
+-			(sense_buffer[5] << 8) | sense_buffer[6]);
+-		res = 0;
+-		memset(buff, 0, sizeof(buff));
+-		blen = sizeof(buff) - 1;
+-		if (fixed_valid)
+-			res += snprintf(buff + res, blen - res,
+-					"Info fld=0x%x", info);
+-		if (sense_buffer[2] & 0x80) {
+-			/* current command has read a filemark */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "FMK");
+-		}
+-		if (sense_buffer[2] & 0x40) {
+-			/* end-of-medium condition exists */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "EOM");
+-		}
+-		if (sense_buffer[2] & 0x20) {
+-			/* incorrect block length requested */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "ILI");
+-		}
+-		if (res > 0)
+-			printk("%s\n", buff);
+-	} else if (sshdr->additional_length > 0) {
+-		/* descriptor format with sense descriptors */
+-		num = 8 + sshdr->additional_length;
+-		num = (sense_len < num) ? sense_len : num;
+-		printk("Descriptor sense data with sense descriptors "
+-		       "(in hex):");
+-		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
+-		}
+-
+-		printk("\n");
 -	}
--	printk(KERN_INFO "%s", ccp);
--#else
--	printk(KERN_INFO "0x%0x", scsi_status);
--#endif
--}
--EXPORT_SYMBOL(scsi_print_status);
 -
- #ifdef CONFIG_SCSI_CONSTANTS
- 
- struct error_info {
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index cd0c873..44bea15 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,7 +19,6 @@ extern void __scsi_print_sense(struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
--extern void scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+-}
+-
+ /* Normalize and print sense buffer with name prefix */
+ void __scsi_print_sense(struct scsi_device *sdev, const char *name,
+ 			const unsigned char *sense_buffer, int sense_len)
+@@ -1524,7 +1463,6 @@ void __scsi_print_sense(struct scsi_device *sdev, const char *name,
+ 		return;
+ 	}
+ 	scsi_show_sense_hdr(sdev, name, &sshdr);
+-	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+ 	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
+ }
+ EXPORT_SYMBOL(__scsi_print_sense);
 -- 
 1.8.5.2
 
