@@ -1,38 +1,25 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Wed, 1 Oct 2014 14:10:03 -0700
-Message-ID: <20141001211003.GA24820@infradead.org>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
- <542C4D33.2030401@hp.com>
+Subject: Re: [PATCH] block: remove artifical max_hw_sectors cap
+Date: Wed, 1 Oct 2014 14:12:58 -0700
+Message-ID: <20141001211258.GB24820@infradead.org>
+References: <1410044885-14893-1-git-send-email-hch@lst.de>
+ <20141001130822.GA5362@infradead.org>
+ <94D0CD8314A33A4D9D801C0FE68B402958CC7BAB@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52549 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbaJAVKG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 17:10:06 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <542C4D33.2030401@hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958CC7BAB@G4W3202.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Wu Fengguang <fengguang.wu@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Webb Scales <webbnh@hp.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Wed, Oct 01, 2014 at 02:51:31PM -0400, Webb Scales wrote:
-> Hannes,
-> 
-> In megasas_change_queue_type(), is it possible for sdev->queue_depth to be
-> greater than 256?
-> 
-> Unless I'm misunderstanding the SCSI code, we can request a
-> queue-depth/tag-map-size which is greater than 256, but, since the
-> scsi_cmnd::tag field is an unsigned char, depths greater than 256 may
-> overflow the field when high-numbered tags are used...do I have that right?
+On Wed, Oct 01, 2014 at 06:59:34PM +0000, Elliott, Robert (Server Storage) wrote:
+> One supporting example: A low limit interferes with creation of
+> full stripe writes for RAID controllers.
 
-Yes, we really need to increase the size of the tag field.  SAM allows
-a transport specific limit of up to 64 _bytes_ for it, although I don't
-know implementation that large.  Given that the block layer can generate
-up to 32-bit tags both for the old blk-tag.c code and the new
-blk-mq-tag.c version it would be good to use a u32 there.  Can you send
-me a patch?
-
+Yes, both Linux mdraid and parity raids are often crippled by the
+default.  The mdadm default of 512kb for each chunk combined with
+the default limit very much guarantees a horrible out of the box
+experience.
