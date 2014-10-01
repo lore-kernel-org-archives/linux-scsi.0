@@ -1,51 +1,59 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: RE: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
-Date: Wed, 1 Oct 2014 08:08:32 +0000
-Message-ID: <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>
-References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
- <20140922144547.GA32651@infradead.org>
- <525DB349B3FB5444AE057A887CB2A8D88F76D1@nice.asicdesigners.com>,<20141001074919.GA14826@infradead.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: uas breakage when using scsi_mod.blk_mq=Y
+Date: Wed, 01 Oct 2014 10:17:41 +0200
+Message-ID: <542BB8A5.4000308@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:18750
-	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751047AbaJAII5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2014 04:08:57 -0400
-In-Reply-To: <20141001074919.GA14826@infradead.org>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:63779 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750998AbaJAISH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2014 04:18:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "JBottomley@parallels.com" <JBottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-James, 
-    This is bugfix  and prevents a "scheduling while atomic" bug that can be
-hit when using an ipv6 address with cxgb4i, and can possibly be seen without
-Chelsio hardware. Could this be cherry picked for 3.17 please ?
+Hi Christoph,
 
-Christoph,
-   My bad, this is a bugfix for code that was added for 3.17, and I assumed the
-bugfixes would automatically be picked for the next rc. If James doesn't pick 
-this up, I'll send it to stable when appropriate.
--Anish
-________________________________________
-From: Christoph Hellwig [hch@infradead.org]
-Sent: Wednesday, October 01, 2014 12:49 AM
-To: Anish Bhatt
-Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; JBottomley@parallels.com; Karen Xie; Manoj Malviya
-Subject: Re: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
+Douglas Gilbert (in the CC), has been testing uas with
+scsi_mod.blk_mq=Y and this fails. When it fails the following
+messages appear in dmesg:
 
-On Wed, Oct 01, 2014 at 05:22:59AM +0000, Anish Bhatt wrote:
-> Little late, but I was hoping this would be pushed as part of fixes to 3.17.
-> Is it too late for that ?
+kernel: scsi host8: uas
+kernel: blk-mq: reduced tag depth to 10240
+mtp-probe: checking bus 2, device 3: "/sys/devices/pci0000:00/0000:00:14.0/usb2/2-1"
+mtp-probe: bus: 2, device: 3 was not an MTP device
+kernel: scsi 8:0:0:0: Direct-Access     INTEL SS DSA2M080G2GC     2CV1 PQ: 0 ANSI: 6
+kernel: sd 8:0:0:0: [sdb] 156301484 512-byte logical blocks: (80.0 GB/74.5 GiB)
+kernel: sd 8:0:0:0: Attached scsi generic sg1 type 0
+kernel: sd 8:0:0:0: [sdb] Write Protect is off
+kernel: sd 8:0:0:0: [sdb] Mode Sense: 31 00 00 00
+kernel: sd 8:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdb: sdb1 sdb2
+kernel: sd 8:0:0:0: [sdb] Attached SCSI disk
+kernel: xhci_hcd 0000:00:14.0: WARN: Slot ID 8, ep index 14 has stream IDs 1 to 32 allocated, but stream ID 33 is requested.
+kernel: sd 8:0:0:0: [sdb] sense submit err -22 tag 33 inflight: s-st a-in s-in a-cmd s-cmd
+kernel: sd 8:0:0:0: [sdb] CDB:
+kernel: Read(10): 28 00 00 00 01 6c 00 00 04 00
 
-It's in the drivers-for-3.18 tree as there was no indication you wanted
-it for 3.17.  In fact the description said "Applies on top of
-core-for-3.18".  You can try to persuade James to cherry pick if for
-3.17, but given how late we are in the cycle that might need very good
-argument.  You can always send it to stable@vger.kernel.org as soon as
-Linus pulls the SCSI update for 3.18, though.
+The problematic part here, which I believe is caused by scsi_mod.blk_mq=Y,
+is the tag number 33. uas.c does the following in slave_configure:
 
+	scsi_activate_tcq(sdev, devinfo->qdepth - 2);
+
+Where qdepth is 32, so 30 gets passed in. uas.c stranslates scsi tags
+to uas stream ids, which means it adds 2 (stream ids start at 1 not 0,
+and 1 is reserved for untagged commands).
+
+So the tag 33 above, means that the scsi subsys has called uas.c with
+a tagged command with a tag of 31, which should not happen when using
+scsi_activate_tcq(sdev, 30).
+
+So should the uas.c code do something different with blk-mq to tell
+it to only use tags 0-29, or is this a blk-mq bug ?
+
+Regards,
+
+Hans
