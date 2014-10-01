@@ -1,93 +1,195 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: remove artifical max_hw_sectors cap
-Date: Wed, 1 Oct 2014 06:08:22 -0700
-Message-ID: <20141001130822.GA5362@infradead.org>
-References: <1410044885-14893-1-git-send-email-hch@lst.de>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: [PATCH v1 1/1] [SCSI] enclosure: Handle non-unique element descriptors
+Date: Wed, 1 Oct 2014 15:10:21 +0000
+Message-ID: <be2f680f-81da-4f33-9454-4555de3c179d@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1410044885-14893-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Wu Fengguang <fengguang.wu@intel.com>
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-91568154-4097-4f57-88d4-5cca782cb3a9"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailrelay.collogia.de ([194.8.207.98]:38713 "HELO
+	mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751236AbaJAPQG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 11:16:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-As we still haven't made any progress on this let me explain why
-the limit does not make sense:  It only applies to _FS request,
-which basically have three use cases:
 
- - metadata I/O.  Generally small enough that the limit does not
-   matter at all.
- - buffered reads/writes.  We already have a self-tuning algorithm
-   that limits writeback size, and a readahead size tunable that
-   caps read sizes.  Imposing another confusing limit that does
-   not interact with the visible tunables here is not helpful
- - direct I/O.  Users should get something resembling their request
-   as closely as possible on the write, and this is where our
-   stupid limitation causes the most problems.
+This is a multi-part message in MIME format.
 
-On Sat, Sep 06, 2014 at 04:08:05PM -0700, Christoph Hellwig wrote:
-> Set max_sectors to the value the drivers provides as hardware limit by
-> default.  Linux had proper I/O throttling for a long time and doesn't
-> rely on a artifically small maximum I/O size anymore.  By not limiting
-> the I/O size by default we remove an annoying tuning step required for
-> most Linux installation.
-> 
-> Note that both the user, and if absolutely required the driver can still
-> impose a limit for FS requests below max_hw_sectors_kb.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-settings.c       | 4 +---
->  drivers/block/aoe/aoeblk.c | 2 +-
->  include/linux/blkdev.h     | 1 -
->  3 files changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index f1a1795..f52c223 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -257,9 +257,7 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
->  		       __func__, max_hw_sectors);
->  	}
->  
-> -	limits->max_hw_sectors = max_hw_sectors;
-> -	limits->max_sectors = min_t(unsigned int, max_hw_sectors,
-> -				    BLK_DEF_MAX_SECTORS);
-> +	limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
->  }
->  EXPORT_SYMBOL(blk_limits_max_hw_sectors);
->  
-> diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
-> index dd73e1f..46c282f 100644
-> --- a/drivers/block/aoe/aoeblk.c
-> +++ b/drivers/block/aoe/aoeblk.c
-> @@ -395,7 +395,7 @@ aoeblk_gdalloc(void *vp)
->  	WARN_ON(d->flags & DEVFL_TKILL);
->  	WARN_ON(d->gd);
->  	WARN_ON(d->flags & DEVFL_UP);
-> -	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
-> +	blk_queue_max_hw_sectors(q, 1024);
->  	q->backing_dev_info.name = "aoe";
->  	q->backing_dev_info.ra_pages = READ_AHEAD / PAGE_CACHE_SIZE;
->  	d->bufpool = mp;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 518b465..7e3c172 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1192,7 +1192,6 @@ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
->  enum blk_default_limits {
->  	BLK_MAX_SEGMENTS	= 128,
->  	BLK_SAFE_MAX_SECTORS	= 255,
-> -	BLK_DEF_MAX_SECTORS	= 1024,
->  	BLK_MAX_SEGMENT_SIZE	= 65536,
->  	BLK_SEG_BOUNDARY_MASK	= 0xFFFFFFFFUL,
->  };
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+------=_NextPartTM-000-91568154-4097-4f57-88d4-5cca782cb3a9
+Content-Type: text/plain
+
+[SCSI] enclosure: Handle non-unique element descriptors
+
+Some SES devices give non-unique Element Descriptors as part of the
+Element Descriptor diag page. Since we use these for creating sysfs
+entries, they need to be unique. The specification doesn't require
+these to be unique.
+
+Eg:
+$ sg_ses -p 7 /dev/sg0
+  FTS CORP  TXS6_SAS20BPX12   0500
+    enclosure services device
+Element descriptor In diagnostic page:
+  generation code: 0x0
+  element descriptor by type list
+    Element type: Array device, subenclosure id: 0
+      Overall descriptor: ArrayDevicesInSubEnclsr0
+      Element 1 descriptor: ArrayDevice00
+      Element 2 descriptor: ArrayDevice01
+      Element 3 descriptor: ArrayDevice02
+      Element 4 descriptor: ArrayDevice03
+      Element 5 descriptor: ArrayDevice03
+      Element 6 descriptor: ArrayDevice03
+      Element 7 descriptor: ArrayDevice03
+      Element 8 descriptor: ArrayDevice03
+      Element 9 descriptor: ArrayDevice03
+      Element 10 descriptor: ArrayDevice03
+      Element 11 descriptor: ArrayDevice03
+      Element 12 descriptor: ArrayDevice03
+
+Based on http://thread.gmane.org/gmane.linux.scsi/69289. This
+version implements James' ideas about the naming convention
+
+Signed-off-by: Markus Stockhausen <stockhausen@collogia.de>
+
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 2cf2bbc..824a8d7 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -187,6 +187,7 @@ void enclosure_unregister(struct enclosure_device *edev)
+ EXPORT_SYMBOL_GPL(enclosure_unregister);
+ 
+ #define ENCLOSURE_NAME_SIZE	64
++#define COMPONENT_NAME_SIZE	64
+ 
+ static void enclosure_link_name(struct enclosure_component *cdev, char *name)
+ {
+@@ -246,6 +247,29 @@ static void enclosure_component_release(struct device *dev)
+ 	put_device(dev->parent);
+ }
+ 
++struct enclosure_component *
++enclosure_component_find_by_name(struct enclosure_device *edev,
++				const char *name)
++{
++	int i;
++	const char *cname;
++	struct enclosure_component *ecomp;
++
++	if (!edev || !name || !name[0])
++		return NULL;
++
++	for (i=0; i<edev->components; i++) {
++		ecomp = &edev->component[i];
++		cname = dev_name(&ecomp->cdev);
++		if (ecomp->number != -1 &&
++		    cname && cname[0] &&
++		    !strcmp(cname, name))
++			return ecomp;
++	}
++
++	return NULL;
++}
++
+ static const struct attribute_group *enclosure_component_groups[];
+ 
+ /**
+@@ -269,7 +293,8 @@ enclosure_component_register(struct enclosure_device *edev,
+ {
+ 	struct enclosure_component *ecomp;
+ 	struct device *cdev;
+-	int err;
++	int err, i;
++	char newname[COMPONENT_NAME_SIZE];
+ 
+ 	if (number >= edev->components)
+ 		return ERR_PTR(-EINVAL);
+@@ -283,9 +308,21 @@ enclosure_component_register(struct enclosure_device *edev,
+ 	ecomp->number = number;
+ 	cdev = &ecomp->cdev;
+ 	cdev->parent = get_device(&edev->edev);
+-	if (name && name[0])
+-		dev_set_name(cdev, "%s", name);
+-	else
++
++	if (name && name[0]) {
++		/* Some hardware (e.g. enclosure in RX300 S6) has components
++		 * with non unique names. Registering duplicates in sysfs
++		 * will lead to warnings during bootup. So make the names
++		 * unique by appending consecutive numbers -1, -2, ... */
++		i = 1;
++		snprintf(newname, COMPONENT_NAME_SIZE,
++			 "%s", name);
++		while (i < 255 &&
++		       enclosure_component_find_by_name (edev, newname))
++			snprintf(newname, COMPONENT_NAME_SIZE,
++				 "%s-%i", name, i++);
++		dev_set_name(cdev, "%s", newname);
++	} else
+ 		dev_set_name(cdev, "%u", number);
+ 
+ 	cdev->release = enclosure_component_release;
+
+------=_NextPartTM-000-91568154-4097-4f57-88d4-5cca782cb3a9
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-91568154-4097-4f57-88d4-5cca782cb3a9--
