@@ -1,33 +1,69 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
-Date: Wed, 1 Oct 2014 14:14:23 -0700
-Message-ID: <20141001211423.GD24820@infradead.org>
-References: <541C27BF.6070609@acm.org>
- <541C28E0.7010705@acm.org>
- <CACVXFVPzz37J-613NZCfPStUBxf0rLOtz71LJ07PpCxYg5nn+g@mail.gmail.com>
- <541C49EC.6030404@acm.org>
- <CACVXFVPH_qPFUTT+796BZmWxeeG4tJ-Pyp8hqGqqSwt3YYkEqA@mail.gmail.com>
- <541C4D2F.9060907@acm.org>
- <541C4DF1.4090604@kernel.dk>
- <542C270B.5020002@acm.org>
- <542C31C4.1020702@kernel.dk>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 1/2] Target/transport: SCSI Status Respond being
+ sent to Initiator twice.
+Date: Wed, 01 Oct 2014 14:24:34 -0700
+Message-ID: <1412198674.5120.1.camel@haakon3.risingtidesystems.com>
+References: <1411640549-8013-1-git-send-email-saurav.kashyap@qlogic.com>
+	 <1411640549-8013-2-git-send-email-saurav.kashyap@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52709 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbaJAVO0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 17:14:26 -0400
-Content-Disposition: inline
-In-Reply-To: <542C31C4.1020702@kernel.dk>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56086 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaJAVYm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 17:24:42 -0400
+In-Reply-To: <1411640549-8013-2-git-send-email-saurav.kashyap@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Robert Elliott <Elliott@hp.com>
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com
 
-On Wed, Oct 01, 2014 at 10:54:28AM -0600, Jens Axboe wrote:
-> Lets get rid of the blk_mq_tag struct and just have it be an u32 or
-> something. We could potentially typedef it, but I'd prefer to just have it
-> be an unsigned 32-bit int.
+Hi Saurav,
 
-Agreed.
+Apologies for the delayed response, comments are below.
+
+On Thu, 2014-09-25 at 06:22 -0400, Saurav Kashyap wrote:
+> From: Quinn Tran <quinn.tran@qlogic.com>
+> 
+> During temporary resource starvation at lower transport layer, command
+> is placed on queue full retry path, which expose this problem.  The TCM
+> Qfull handling send the same cmd twice to lower layer.  The 1st time
+> led to cmd normal free path.  The 2nd time cause Null pointer access.
+> 
+> Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+> Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+> ---
+>  drivers/target/target_core_transport.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 7fa62fc..ab61014 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1877,8 +1877,7 @@ static void transport_complete_qf(struct se_cmd *cmd)
+>  	if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) {
+>  		trace_target_cmd_complete(cmd);
+>  		ret = cmd->se_tfo->queue_status(cmd);
+> -		if (ret)
+> -			goto out;
+> +		goto out;
+>  	}
+>  
+>  	switch (cmd->data_direction) {
+
+Applied to target-pending/for-next with a CC' to v3.1 stable, as the bug
+was introduced as a regression in:
+
+  commit e057f53308a5f071556ee80586b99ee755bf07f5
+  Author: Christoph Hellwig <hch@infradead.org>
+  Date:   Mon Oct 17 13:56:41 2011 -0400
+
+Thank you,
+
+--nab
+
+
+
+
+
