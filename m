@@ -1,47 +1,51 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: ext4: 3.17? problems
-Date: Wed, 1 Oct 2014 10:50:18 +0200
-Message-ID: <20141001085018.GB17405@quack.suse.cz>
-References: <20140929114408.GC2738@quack.suse.cz>
- <87iok6ojis.fsf@openvz.org>
- <20140928124658.GB6694@thunk.org>
- <20140930210108.GB14283@amd>
- <20140930231801.GB729@khazad-dum.debian.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH scsi] cxgb4i : Avoid holding mutex in interrupt context
+Date: Wed, 01 Oct 2014 07:36:45 -0400
+Message-ID: <1412163405.5299.4.camel@jarvis>
+References: <1410828258-14692-1-git-send-email-anish@chelsio.com>
+	 <20140922144547.GA32651@infradead.org>
+	 <525DB349B3FB5444AE057A887CB2A8D88F76D1@nice.asicdesigners.com>
+	,<20141001074919.GA14826@infradead.org>
+	 <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140930231801.GB729@khazad-dum.debian.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Pavel Machek <pavel@ucw.cz>, Theodore Ts'o <tytso@mit.edu>, kernel list <linux-kernel@vger.kernel.org>, jack@suse.cz, linux-ext4@vger.kernel.org, adilger.kernel@dilger.ca, Dmitry Monakhov <dmonakhov@openvz.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44527 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751222AbaJALgs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 07:36:48 -0400
+In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D88F78E8@nice.asicdesigners.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Tue 30-09-14 20:18:01, Henrique de Moraes Holschuh wrote:
-> On Tue, 30 Sep 2014, Pavel Machek wrote:
-> > > > So I had to hard power-down the machine. That should be perfectly
-> > > > safe, as ext4 has a journal, and this is plain SATA disk, right?
-> > >   Yes, it should be safe.
-> > 
-> > Good.
-> 
-> ...
-> 
-> > Is there some phase during shutdown where journalling no longer
-> > protects fs integrity?
-> 
-> Hmm... what kind of backing device?  Because I have Crucial/Micron M500 SSDs
-> here that _always_ complain (in a SMART counter/attribute) that they have
-> been subject to a sudden poweroff *when subject to a normal system
-> shutdown*.
-> 
-> This is scaring me a great deal.  Are we doing something different for SSDs
-> in the scsi-sd or libata shutdown paths?
-  Nothing I'm aware of but this is more a question for SCSI guys (added to
-CC).
+On Wed, 2014-10-01 at 08:08 +0000, Anish Bhatt wrote:
+> James, 
+>     This is bugfix  and prevents a "scheduling while atomic" bug that can be
+> hit when using an ipv6 address with cxgb4i, and can possibly be seen without
+> Chelsio hardware. Could this be cherry picked for 3.17 please ?
 
-								Honza
+Can you describe the bug it's fixing (what are the consequences) and how
+often is it seen?
 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+If it's not something everyone hits, it may be better to go via stable,
+because the code change is quite large, so validating that nothing else
+breaks with it at this stage (a week away from release) is quite
+important.
+
+> Christoph,
+>    My bad, this is a bugfix for code that was added for 3.17, and I assumed the
+> bugfixes would automatically be picked for the next rc. If James doesn't pick 
+> this up, I'll send it to stable when appropriate.
+
+You said in your change log:
+
+        Applies on top of core-for-3.18
+
+So the natural assumption would be this is for the merge window queue.
+
+James
+
+
