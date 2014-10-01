@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/24] fas216: Return DID_ERROR for incomplete data transfer
-Date: Wed,  1 Oct 2014 08:22:43 +0200
-Message-ID: <1412144580-72880-8-git-send-email-hare@suse.de>
+Subject: [PATCH 01/24] Remove scsi_cmd_print_sense_hdr()
+Date: Wed,  1 Oct 2014 08:22:37 +0200
+Message-ID: <1412144580-72880-2-git-send-email-hare@suse.de>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52346 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52344 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751155AbaJAGXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1750998AbaJAGXH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 1 Oct 2014 02:23:07 -0400
 In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,30 +14,53 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-fas216 returns DID_BAD_TARGET for an incomplete data
-transfer. The midlayer uses DID_BAD_TARGET to signal
-a non-existing or not reachable target. So we should
-rather be using DID_ERROR here.
+Unused.
 
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/arm/fas216.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/constants.c | 14 --------------
+ include/scsi/scsi_dbg.h  |  2 --
+ 2 files changed, 16 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 71cfb1e..7fc6fd3 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2085,8 +2085,7 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
- 				SCpnt->result, info->scsi.SCp.ptr,
- 				info->scsi.SCp.this_residual);
- 			__scsi_print_command(SCpnt->cmnd);
--			SCpnt->result &= ~(255 << 16);
--			SCpnt->result |= DID_BAD_TARGET << 16;
-+			set_host_byte(SCpnt, DID_ERROR);
- 			goto request_sense;
- 		}
- 	}
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index d35a5d6..2f44707 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1428,20 +1428,6 @@ scsi_print_sense_hdr(const char *name, struct scsi_sense_hdr *sshdr)
+ }
+ EXPORT_SYMBOL(scsi_print_sense_hdr);
+ 
+-/*
+- * Print normalized SCSI sense header with device information and a prefix.
+- */
+-void
+-scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *desc,
+-			  struct scsi_sense_hdr *sshdr)
+-{
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_sense_hdr(sshdr);
+-	scmd_printk(KERN_INFO, scmd, "%s: ", desc);
+-	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+-}
+-EXPORT_SYMBOL(scsi_cmd_print_sense_hdr);
+-
+ static void
+ scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
+ 		       struct scsi_sense_hdr *sshdr)
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index e89844c..5a43a4c 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -9,8 +9,6 @@ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_show_extd_sense(unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(struct scsi_sense_hdr *);
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+-extern void scsi_cmd_print_sense_hdr(struct scsi_cmnd *, const char *,
+-				     struct scsi_sense_hdr *);
+ extern void scsi_print_sense(char *, struct scsi_cmnd *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
 -- 
 1.8.5.2
 
