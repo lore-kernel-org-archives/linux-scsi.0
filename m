@@ -1,33 +1,26 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 24/24] scsi_error: document scsi_try_to_abort_cmd
-Date: Wed, 1 Oct 2014 00:59:33 -0700
-Message-ID: <20141001075933.GB5694@infradead.org>
-References: <1412144580-72880-1-git-send-email-hare@suse.de>
- <1412144580-72880-25-git-send-email-hare@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi: add a CONFIG_SCSI_MQ_DEFAULT option
+Date: Wed, 1 Oct 2014 10:08:09 +0200
+Message-ID: <20141001080809.GA20498@lst.de>
+References: <1412090453-24484-1-git-send-email-hch@lst.de> <94D0CD8314A33A4D9D801C0FE68B402958CC5E9E@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36831 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbaJAH7e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 03:59:34 -0400
+Received: from verein.lst.de ([213.95.11.211]:41654 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750884AbaJAIIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Oct 2014 04:08:12 -0400
 Content-Disposition: inline
-In-Reply-To: <1412144580-72880-25-git-send-email-hare@suse.de>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958CC5E9E@G4W3202.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Wed, Oct 01, 2014 at 08:23:00AM +0200, Hannes Reinecke wrote:
-> scsi_try_to_abort_cmd() should only return
-> SUCCESS or FAILED. So document that in the
-> function description and simplify the
-> logging message.
-> 
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Cc: Robert Elliott <elliott@hp.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+On Wed, Oct 01, 2014 at 01:02:32AM +0000, Elliott, Robert (Server Storage) wrote:
+> A printk indicating the choice would be helpful; there's no indication
+> in the "Command line" or "Kernel command line" lines after this patch.
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+No need for a printk to further increase the gigantic kernel log at boot
+time, you can easily find the indicator in the use_blk_mq sysfs attributes,
+both on the module, and each individual host.
