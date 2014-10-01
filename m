@@ -1,96 +1,70 @@
-From: Jerome Martin <jxm@netiant.com>
-Subject: Re: targetcli do not show iscsi
-Date: Wed, 01 Oct 2014 13:49:40 +0200
-Message-ID: <542BEA54.50903@netiant.com>
-References: <542A6F44.3070802@gmail.com> <542A7037.6050909@netiant.com> <542A722E.5030109@gmail.com> <542A73BE.2080501@netiant.com> <542A75F1.8070706@gmail.com> <542A77D6.4090109@netiant.com> <542A7ADD.3040804@gmail.com> <542A7BC9.2050708@netiant.com> <542ACA6C.104@redhat.com> <542ACDAE.3080307@gmail.com> <542AD1C2.8070105@gmail.com> <542ADF1D.1020003@gmail.com> <542ADFDB.3010300@netiant.com> <542AE206.4000808@gmail.com> <542AE3E2.1080609@netiant.com> <542BE74F.3080102@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/8] scsi: don't use scsi_next_command in scsi_reset_provider
+Date: Wed, 01 Oct 2014 14:03:45 +0200
+Message-ID: <542BEDA1.3070003@acm.org>
+References: <1410107469-896-1-git-send-email-hch@lst.de> <1410107469-896-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <542BE74F.3080102@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Luigi Tarenga <luigi.tarenga@gmail.com>, linux-scsi@vger.kernel.org, "target-devel@vger.kernel.org >> target-devel" <target-devel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from albert.telenet-ops.be ([195.130.137.90]:37897 "EHLO
+	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbaJAMDs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2014 08:03:48 -0400
+In-Reply-To: <1410107469-896-2-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Hi Luigi,
-
-On 10/01/2014 01:36 PM, Luigi Tarenga wrote:
-> Hi Jerome,
-> I did some test with 3.x version but I have some problem.
-> Let's start saying i cloned your git repos.
+On 09/07/14 18:31, Christoph Hellwig wrote:
+> scsi_reset_provider already manually runs all queues for the given host,
+> so it doesn't need the scsi_run_queues call from it, and it doesn't need
+> a reference on the device because it's synchronous.
 >
-> I have a problem generating the rpm with all 3 package (configshell,
-> rtslib, targetcli):
-> # make rpm
-> Exporting the repository files...
-> Cleaning up the target tree...
-> Fixing version string...
-> Generating rpm specfile from template...
-> Generating rpm changelog...
-> Generating debian changelog...
-> Generated release tarball:
->      dist/configshell-1.5-4-g0827baa.tar.gz
-> Building rpm packages...
-> error: line 7: Illegal char '-' in: Version:        1.5-4-g0827baa
-> make: *** [build/rpm-stamp] Error 1
+> So let's just call scsi_put_command directly and avoid the device reference
+> dance to simplify the code.
 >
-> the error is the same, seem you can't use a hyphen in the version.
-
-Ah, right.
-I need to update that, there were some changes in the versionning that 
-breaks the included RPM packaging. Typically the packaging from the git 
-repo is only used for development as distros tend to bin it and replace 
-with their own. I will fix that ASAP.
-
-> For now I gave up building rpm and did a simple ./setup.py install:
-
-Great :-)
-However, you should generate a release first (make release) and then do 
-the install from the generated tarball, as this will extract version 
-information etc. from the git repo. Also, you will need to install the 
-initscript manually.
-
-> still having an issue about the listing of iscsi fabric:
-> # /usr/bin/targetcli ls
-> o- /
-> .........................................................................................................................
-> [...]
->    o- backstores
-> ..............................................................................................................
-> [...]
->      o- fileio
-> ...................................................................................................
-> [0 Storage Object]
->      o- iblock
-> ...................................................................................................
-> [0 Storage Object]
->      o- pscsi
-> ....................................................................................................
-> [0 Storage Object]
->      o- rd_mcp
-> ...................................................................................................
-> [0 Storage Object]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   drivers/scsi/scsi_error.c | 9 +--------
+>   1 file changed, 1 insertion(+), 8 deletions(-)
 >
-> # /usr/bin/targetcli version
-> Cannot find configshell version. The configshell package has probably
-> not been built properly from either the git repository or a public tarball.
-> Cannot find rtslib version. The rtslib package has probably not been
-> built properly from either the git repository or a public tarball.
-> Cannot find targetcli version. The targetcli package has probably not
-> been built properly from either the git repository or a public tarball.
-
-This is what I was talking about above, you need to generate a release 
-tarball first (make release).
-
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 6b20ef3..14cece9 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -2317,15 +2317,9 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+>   	if (scsi_autopm_get_host(shost) < 0)
+>   		return FAILED;
 >
-> I tried with both python (stock from centos) and python2.7 (compiled
-> from source in /usr/local)
+> -	if (!get_device(&dev->sdev_gendev)) {
+> -		rtn = FAILED;
+> -		goto out_put_autopm_host;
+> -	}
+> -
+>   	scmd = scsi_get_command(dev, GFP_KERNEL);
+>   	if (!scmd) {
+>   		rtn = FAILED;
+> -		put_device(&dev->sdev_gendev);
+>   		goto out_put_autopm_host;
+>   	}
+>
+> @@ -2381,10 +2375,9 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+>   			     "waking up host to restart after TMF\n"));
+>
+>   	wake_up(&shost->host_wait);
+> -
+>   	scsi_run_host_queues(shost);
+>
+> -	scsi_next_command(scmd);
+> +	scsi_put_command(scmd);
+>   out_put_autopm_host:
+>   	scsi_autopm_put_host(shost);
+>   	return rtn;
 
-So, again, I would like to reproduce and solve this on CentOS / RHEL.
-Can you confirm this is version 6.5 with custom-built kernel 3.16.3 ?
+This patch looks fine to me.
 
-In any case, thanks for testing, I need that badly :-)
+A minor nit: if this patch has to be resent, please insert a blank line 
+above the out_put_autopm_host label.
 
-Best Regards,
---
-Jerome
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
