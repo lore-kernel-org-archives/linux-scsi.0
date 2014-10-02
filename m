@@ -1,205 +1,69 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 19/29] mac_scsi: Add module option to Kconfig
-Date: Thu, 02 Oct 2014 16:56:47 +1000
-Message-ID: <20141002065632.816184892@telegraphics.com.au>
-References: <20141002065628.256592712@telegraphics.com.au>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Thu, 2 Oct 2014 13:06:50 +0000
+Message-ID: <1412255209.6343.10.camel@jarvis>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
+		 <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org>
+		 <542CF5E8.3030601@suse.de> <1412251542.6343.6.camel@jarvis>
+	 <542D419B.5080406@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33734 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752868AbaJBNEP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 09:04:15 -0400
-Content-Disposition: inline; filename=mac_scsi-module-option
+Received: from mx2.parallels.com ([199.115.105.18]:38837 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbaJBNGx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 09:06:53 -0400
+In-Reply-To: <542D419B.5080406@suse.de>
+Content-Language: en-US
+Content-ID: <2CCF313FA933A14AAFE8E9B94F90FB13@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "webbnh@hp.com" <webbnh@hp.com>
 
-Allow mac_scsi to be built as a module. Replace the old validation of
-__setup options with code that validates both module and __setup options.
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
- drivers/scsi/Kconfig    |    2 
- drivers/scsi/mac_scsi.c |  112 +++++++++++++++---------------------------------
- 2 files changed, 38 insertions(+), 76 deletions(-)
-
-Index: linux/drivers/scsi/Kconfig
-===================================================================
---- linux.orig/drivers/scsi/Kconfig	2014-10-02 16:55:28.000000000 +1000
-+++ linux/drivers/scsi/Kconfig	2014-10-02 16:56:17.000000000 +1000
-@@ -1644,7 +1644,7 @@ config ATARI_SCSI_RESET_BOOT
- 	  that leave the devices with SCSI operations partway completed.
- 
- config MAC_SCSI
--	bool "Macintosh NCR5380 SCSI"
-+	tristate "Macintosh NCR5380 SCSI"
- 	depends on MAC && SCSI=y
- 	select SCSI_SPI_ATTRS
- 	help
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-10-02 16:56:17.000000000 +1000
-+++ linux/drivers/scsi/mac_scsi.c	2014-10-02 16:56:17.000000000 +1000
-@@ -62,15 +62,18 @@
- static void mac_scsi_reset_boot(struct Scsi_Host *instance);
- #endif
- 
--static int setup_called = 0;
- static int setup_can_queue = -1;
-+module_param(setup_can_queue, int, 0);
- static int setup_cmd_per_lun = -1;
-+module_param(setup_cmd_per_lun, int, 0);
- static int setup_sg_tablesize = -1;
-+module_param(setup_sg_tablesize, int, 0);
- static int setup_use_pdma = -1;
--#ifdef SUPPORT_TAGS
-+module_param(setup_use_pdma, int, 0);
- static int setup_use_tagged_queuing = -1;
--#endif
-+module_param(setup_use_tagged_queuing, int, 0);
- static int setup_hostid = -1;
-+module_param(setup_hostid, int, 0);
- 
- /* Time (in jiffies) to wait after a reset; the SCSI standard calls for 250ms,
-  * we usually do 0.5s to be on the safe side. But Toshiba CD-ROMs once more
-@@ -102,72 +105,34 @@ static __inline__ void macscsi_write(str
-   out_8(instance->io_port + (reg<<4), value);
- }
- 
--/*
-- * Function : mac_scsi_setup(char *str)
-- *
-- * Purpose : booter command line initialization of the overrides array,
-- *
-- * Inputs : str - comma delimited list of options
-- *
-- */
--
--static int __init mac_scsi_setup(char *str) {
-+#ifndef MODULE
-+static int __init mac_scsi_setup(char *str)
-+{
- 	int ints[7];
--	
--	(void)get_options( str, ARRAY_SIZE(ints), ints);
--	
--	if (setup_called++ || ints[0] < 1 || ints[0] > 6) {
--	    printk(KERN_WARNING "scsi: <mac5380>"
--		" Usage: mac5380=<can_queue>[,<cmd_per_lun>,<sg_tablesize>,<hostid>,<use_tags>,<use_pdma>]\n");
--	    printk(KERN_ALERT "scsi: <mac5380> Bad Penguin parameters?\n");
--	    return 0;
--	}
--	    
--	if (ints[0] >= 1) {
--		if (ints[1] > 0)
--			/* no limits on this, just > 0 */
--			setup_can_queue = ints[1];
--	}
--	if (ints[0] >= 2) {
--		if (ints[2] > 0)
--			setup_cmd_per_lun = ints[2];
--	}
--	if (ints[0] >= 3) {
--		if (ints[3] >= 0) {
--			setup_sg_tablesize = ints[3];
--			/* Must be <= SG_ALL (255) */
--			if (setup_sg_tablesize > SG_ALL)
--				setup_sg_tablesize = SG_ALL;
--		}
--	}
--	if (ints[0] >= 4) {
--		/* Must be between 0 and 7 */
--		if (ints[4] >= 0 && ints[4] <= 7)
--			setup_hostid = ints[4];
--		else if (ints[4] > 7)
--			printk(KERN_WARNING "mac_scsi_setup: invalid host ID %d !\n", ints[4] );
--	}
--#ifdef SUPPORT_TAGS	
--	if (ints[0] >= 5) {
--		if (ints[5] >= 0)
--			setup_use_tagged_queuing = !!ints[5];
-+
-+	(void)get_options(str, ARRAY_SIZE(ints), ints);
-+
-+	if (ints[0] < 1 || ints[0] > 6) {
-+		pr_err("Usage: mac5380=<can_queue>[,<cmd_per_lun>[,<sg_tablesize>[,<hostid>[,<use_tags>[,<use_pdma>]]]]]\n");
-+		return 0;
- 	}
--	
--	if (ints[0] == 6) {
--	    if (ints[6] >= 0)
-+	if (ints[0] >= 1)
-+		setup_can_queue = ints[1];
-+	if (ints[0] >= 2)
-+		setup_cmd_per_lun = ints[2];
-+	if (ints[0] >= 3)
-+		setup_sg_tablesize = ints[3];
-+	if (ints[0] >= 4)
-+		setup_hostid = ints[4];
-+	if (ints[0] >= 5)
-+		setup_use_tagged_queuing = ints[5];
-+	if (ints[0] >= 6)
- 		setup_use_pdma = ints[6];
--	}
--#else
--	if (ints[0] == 5) {
--	    if (ints[5] >= 0)
--		setup_use_pdma = ints[5];
--	}
--#endif /* SUPPORT_TAGS */
--	
- 	return 1;
- }
- 
- __setup("mac5380=", mac_scsi_setup);
-+#endif /* !MODULE */
- 
- /*
-  * Function : int macscsi_detect(struct scsi_host_template * tpnt)
-@@ -199,13 +164,8 @@ int __init macscsi_detect(struct scsi_ho
- 		tpnt->cmd_per_lun = setup_cmd_per_lun;
- 	if (setup_sg_tablesize >= 0)
- 		tpnt->sg_tablesize = setup_sg_tablesize;
--
--    if (setup_hostid >= 0)
--	tpnt->this_id = setup_hostid;
--    else {
--	/* use 7 as default */
--	tpnt->this_id = 7;
--    }
-+	if (setup_hostid >= 0)
-+		tpnt->this_id = setup_hostid & 7;
- 
- #ifdef SUPPORT_TAGS
-     if (setup_use_tagged_queuing < 0)
-@@ -219,15 +179,15 @@ int __init macscsi_detect(struct scsi_ho
- 	return 0;
- 
-     if (macintosh_config->ident == MAC_MODEL_IIFX) {
--	mac_scsi_regp  = via1+0x8000;
--	mac_scsi_drq   = via1+0xE000;
--	mac_scsi_nodrq = via1+0xC000;
-+	mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x8000;
-+	mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0xE000;
-+	mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0xC000;
- 	/* The IIFX should be able to do true DMA, but pseudo-dma doesn't work */
- 	flags = FLAG_NO_PSEUDO_DMA;
-     } else {
--	mac_scsi_regp  = via1+0x10000;
--	mac_scsi_drq   = via1+0x6000;
--	mac_scsi_nodrq = via1+0x12000;
-+	mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x10000;
-+	mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0x6000;
-+	mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0x12000;
-     }
- 
-     if (! setup_use_pdma)
-@@ -520,3 +480,5 @@ static struct scsi_host_template driver_
- 
- 
- #include "scsi_module.c"
-+
-+MODULE_LICENSE("GPL");
-
-
+T24gVGh1LCAyMDE0LTEwLTAyIGF0IDE0OjE0ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEwLzAyLzIwMTQgMDI6MDUgUE0sIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gPiBP
+biBUaHUsIDIwMTQtMTAtMDIgYXQgMDg6NTEgKzAyMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToN
+Cj4gPj4gT24gMTAvMDEvMjAxNCAxMToxMCBQTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+
+ID4+PiBPbiBXZWQsIE9jdCAwMSwgMjAxNCBhdCAwMjo1MTozMVBNIC0wNDAwLCBXZWJiIFNjYWxl
+cyB3cm90ZToNCj4gPj4+PiBIYW5uZXMsDQo+ID4+Pj4NCj4gPj4+PiBJbiBtZWdhc2FzX2NoYW5n
+ZV9xdWV1ZV90eXBlKCksIGlzIGl0IHBvc3NpYmxlIGZvciBzZGV2LT5xdWV1ZV9kZXB0aCB0byBi
+ZQ0KPiA+Pj4+IGdyZWF0ZXIgdGhhbiAyNTY/DQo+ID4+Pj4NCj4gPj4+PiBVbmxlc3MgSSdtIG1p
+c3VuZGVyc3RhbmRpbmcgdGhlIFNDU0kgY29kZSwgd2UgY2FuIHJlcXVlc3QgYQ0KPiA+Pj4+IHF1
+ZXVlLWRlcHRoL3RhZy1tYXAtc2l6ZSB3aGljaCBpcyBncmVhdGVyIHRoYW4gMjU2LCBidXQsIHNp
+bmNlIHRoZQ0KPiA+Pj4+IHNjc2lfY21uZDo6dGFnIGZpZWxkIGlzIGFuIHVuc2lnbmVkIGNoYXIs
+IGRlcHRocyBncmVhdGVyIHRoYW4gMjU2IG1heQ0KPiA+Pj4+IG92ZXJmbG93IHRoZSBmaWVsZCB3
+aGVuIGhpZ2gtbnVtYmVyZWQgdGFncyBhcmUgdXNlZC4uLmRvIEkgaGF2ZSB0aGF0IHJpZ2h0Pw0K
+PiA+Pj4NCj4gPj4+IFllcywgd2UgcmVhbGx5IG5lZWQgdG8gaW5jcmVhc2UgdGhlIHNpemUgb2Yg
+dGhlIHRhZyBmaWVsZC4gIFNBTSBhbGxvd3MNCj4gPj4+IGEgdHJhbnNwb3J0IHNwZWNpZmljIGxp
+bWl0IG9mIHVwIHRvIDY0IF9ieXRlc18gZm9yIGl0LCBhbHRob3VnaCBJIGRvbid0DQo+ID4+PiBr
+bm93IGltcGxlbWVudGF0aW9uIHRoYXQgbGFyZ2UuICBHaXZlbiB0aGF0IHRoZSBibG9jayBsYXll
+ciBjYW4gZ2VuZXJhdGUNCj4gPj4+IHVwIHRvIDMyLWJpdCB0YWdzIGJvdGggZm9yIHRoZSBvbGQg
+YmxrLXRhZy5jIGNvZGUgYW5kIHRoZSBuZXcNCj4gPj4+IGJsay1tcS10YWcuYyB2ZXJzaW9uIGl0
+IHdvdWxkIGJlIGdvb2QgdG8gdXNlIGEgdTMyIHRoZXJlLiAgQ2FuIHlvdSBzZW5kDQo+ID4+PiBt
+ZSBhIHBhdGNoPw0KPiA+Pj4NCj4gPj4gV2VlZWxsbCAuLi4NCj4gPj4NCj4gPj4gSSdtIGFmcmFp
+ZCBpdCdzIG5vdCBfdGhhdF8gZWFzeS4NCj4gPj4gU0NTSS1JSSB0YWdnZWQgcXVldWVpbmcgaGFz
+IHNvbWUgc3BlY2lmaWMgdGFnIHZhbHVlczoNCj4gPj4NCj4gPj4gI2RlZmluZSBTSU1QTEVfUVVF
+VUVfVEFHICAgIDB4MjANCj4gPj4gI2RlZmluZSBIRUFEX09GX1FVRVVFX1RBRyAgIDB4MjENCj4g
+Pj4gI2RlZmluZSBPUkRFUkVEX1FVRVVFX1RBRyAgIDB4MjINCj4gPj4NCj4gPj4gZHJpdmVycy9z
+Y3NpL3Ztd19wdnNjc2kuYzoNCj4gPj4gCWUtPnRhZyA9IFNJTVBMRV9RVUVVRV9UQUc7DQo+ID4+
+IAlpZiAoc2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCAmJg0KPiA+PiAJICAgIChjbWQtPnRhZyA9PSBI
+RUFEX09GX1FVRVVFX1RBRyB8fA0KPiA+PiAJICAgICBjbWQtPnRhZyA9PSBPUkRFUkVEX1FVRVVF
+X1RBRykpDQo+ID4+IAkJZS0+dGFnID0gY21kLT50YWc7DQo+ID4gDQo+ID4gQSBTQ1NJLTIgdGFn
+IGlzIGEgU1BJIHR3byBieXRlIG1lc3NhZ2UuICBUaGUgZmlyc3QgYnl0ZSBpcyB0aGUgbWVzc2Fn
+ZQ0KPiA+IHR5cGUuICBUaGUgdmFsdWVzIHlvdSBoYXZlIGFib3ZlIGlkZW50aWZ5IHRoZSBtZXNz
+YWdlIHR5cGUgZm9yIHNpbXBsZSwNCj4gPiBvcmRlcmVkIGFuZCBoZWFkIG9mIHF1ZXVlIHRhZ3Mu
+ICBUaGUgKnNlY29uZCogYnl0ZSBpcyB0aGUgdGFnIHZhbHVlLg0KPiA+IA0KPiA+IFNlZSBwYWdl
+IDU1IGFuZCA1NiBvZiB0aGUgU0NTSS0yIHN0YW5kYXJkLiAgVGhlcmUncyBubyBjb25uZWN0aW9u
+IChvcg0KPiA+IHNob3VsZG4ndCBiZSkgYmV0d2VlbiB0aGUgbWVzc2FnZSB0eXBlIGFuZCB0aGUg
+dGFnIHZhbHVlLCBzbyBpdCBsb29rcw0KPiA+IGxpa2UgYSBidWcgaW4gdGhlIHB2c2NzaSBkcml2
+ZXIuDQo+ID4gDQo+IEl0IGlzLiBJJ3ZlIGFscmVhZHkgc2VudCBhIHBhdGNoLg0KPiANCj4gQnV0
+IHRoYXQganVzdCBwcm92ZXMgdGhlIHNjbWQtPnRhZyBpcyBlc3NlbnRpYWxseSBhIGR1cGxpY2F0
+ZQ0KPiBhbmQgd2Ugc2hvdWxkIGJlIHJlbW92aW5nIGl0Lg0KDQpZZXMsIGl0IHdhcyB0aGUgb3Jp
+Z2luYWwgdGFnIGZpZWxkLCB3aGljaCB0aGVuIGdvdCByZXBsYWNlZCBieSB0aGUgYmxvY2sNCm9u
+ZSBhbmQgdGhlIGFjY2Vzc29yIGNvbW1hbmRzLiAgc2NzaV9wb3B1bGF0ZV90YWdfbXNnICh3aGlj
+aCBpcyByZWFsbHkNCmFuIFNQSSBjb25zdHJ1Y3QpIG1lYW50IHRoYXQgZHJpdmVycyBmdWxseSBh
+ZG9wdGluZyB0aGUgbW9kZWwgZGlkbid0DQpldmVuIG5lZWQgdG8gbG9vayBhdCBjbWQtPnRhZyBh
+bnkgbW9yZS4gIEknbSBmaW5lIHdpdGggZHJvcHBpbmcgaXQgaW4NCmZhdm91ciBvZiByZXEtPnRh
+Zy4NCg0KSmFtZXMNCg0K
