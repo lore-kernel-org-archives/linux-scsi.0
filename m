@@ -1,69 +1,28 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Thu, 2 Oct 2014 13:06:50 +0000
-Message-ID: <1412255209.6343.10.camel@jarvis>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
-		 <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org>
-		 <542CF5E8.3030601@suse.de> <1412251542.6343.6.camel@jarvis>
-	 <542D419B.5080406@suse.de>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] uas: Make uas work with blk-mq
+Date: Thu, 2 Oct 2014 06:06:55 -0700
+Message-ID: <20141002130654.GA17051@infradead.org>
+References: <1412244280-15111-1-git-send-email-hdegoede@redhat.com>
+ <1412244280-15111-2-git-send-email-hdegoede@redhat.com>
+ <20141002112627.GC17628@infradead.org>
+ <542D467E.2020400@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:38837 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbaJBNGx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 09:06:53 -0400
-In-Reply-To: <542D419B.5080406@suse.de>
-Content-Language: en-US
-Content-ID: <2CCF313FA933A14AAFE8E9B94F90FB13@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <542D467E.2020400-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "webbnh@hp.com" <webbnh@hp.com>
 
-T24gVGh1LCAyMDE0LTEwLTAyIGF0IDE0OjE0ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IE9uIDEwLzAyLzIwMTQgMDI6MDUgUE0sIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gPiBP
-biBUaHUsIDIwMTQtMTAtMDIgYXQgMDg6NTEgKzAyMDAsIEhhbm5lcyBSZWluZWNrZSB3cm90ZToN
-Cj4gPj4gT24gMTAvMDEvMjAxNCAxMToxMCBQTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+
-ID4+PiBPbiBXZWQsIE9jdCAwMSwgMjAxNCBhdCAwMjo1MTozMVBNIC0wNDAwLCBXZWJiIFNjYWxl
-cyB3cm90ZToNCj4gPj4+PiBIYW5uZXMsDQo+ID4+Pj4NCj4gPj4+PiBJbiBtZWdhc2FzX2NoYW5n
-ZV9xdWV1ZV90eXBlKCksIGlzIGl0IHBvc3NpYmxlIGZvciBzZGV2LT5xdWV1ZV9kZXB0aCB0byBi
-ZQ0KPiA+Pj4+IGdyZWF0ZXIgdGhhbiAyNTY/DQo+ID4+Pj4NCj4gPj4+PiBVbmxlc3MgSSdtIG1p
-c3VuZGVyc3RhbmRpbmcgdGhlIFNDU0kgY29kZSwgd2UgY2FuIHJlcXVlc3QgYQ0KPiA+Pj4+IHF1
-ZXVlLWRlcHRoL3RhZy1tYXAtc2l6ZSB3aGljaCBpcyBncmVhdGVyIHRoYW4gMjU2LCBidXQsIHNp
-bmNlIHRoZQ0KPiA+Pj4+IHNjc2lfY21uZDo6dGFnIGZpZWxkIGlzIGFuIHVuc2lnbmVkIGNoYXIs
-IGRlcHRocyBncmVhdGVyIHRoYW4gMjU2IG1heQ0KPiA+Pj4+IG92ZXJmbG93IHRoZSBmaWVsZCB3
-aGVuIGhpZ2gtbnVtYmVyZWQgdGFncyBhcmUgdXNlZC4uLmRvIEkgaGF2ZSB0aGF0IHJpZ2h0Pw0K
-PiA+Pj4NCj4gPj4+IFllcywgd2UgcmVhbGx5IG5lZWQgdG8gaW5jcmVhc2UgdGhlIHNpemUgb2Yg
-dGhlIHRhZyBmaWVsZC4gIFNBTSBhbGxvd3MNCj4gPj4+IGEgdHJhbnNwb3J0IHNwZWNpZmljIGxp
-bWl0IG9mIHVwIHRvIDY0IF9ieXRlc18gZm9yIGl0LCBhbHRob3VnaCBJIGRvbid0DQo+ID4+PiBr
-bm93IGltcGxlbWVudGF0aW9uIHRoYXQgbGFyZ2UuICBHaXZlbiB0aGF0IHRoZSBibG9jayBsYXll
-ciBjYW4gZ2VuZXJhdGUNCj4gPj4+IHVwIHRvIDMyLWJpdCB0YWdzIGJvdGggZm9yIHRoZSBvbGQg
-YmxrLXRhZy5jIGNvZGUgYW5kIHRoZSBuZXcNCj4gPj4+IGJsay1tcS10YWcuYyB2ZXJzaW9uIGl0
-IHdvdWxkIGJlIGdvb2QgdG8gdXNlIGEgdTMyIHRoZXJlLiAgQ2FuIHlvdSBzZW5kDQo+ID4+PiBt
-ZSBhIHBhdGNoPw0KPiA+Pj4NCj4gPj4gV2VlZWxsbCAuLi4NCj4gPj4NCj4gPj4gSSdtIGFmcmFp
-ZCBpdCdzIG5vdCBfdGhhdF8gZWFzeS4NCj4gPj4gU0NTSS1JSSB0YWdnZWQgcXVldWVpbmcgaGFz
-IHNvbWUgc3BlY2lmaWMgdGFnIHZhbHVlczoNCj4gPj4NCj4gPj4gI2RlZmluZSBTSU1QTEVfUVVF
-VUVfVEFHICAgIDB4MjANCj4gPj4gI2RlZmluZSBIRUFEX09GX1FVRVVFX1RBRyAgIDB4MjENCj4g
-Pj4gI2RlZmluZSBPUkRFUkVEX1FVRVVFX1RBRyAgIDB4MjINCj4gPj4NCj4gPj4gZHJpdmVycy9z
-Y3NpL3Ztd19wdnNjc2kuYzoNCj4gPj4gCWUtPnRhZyA9IFNJTVBMRV9RVUVVRV9UQUc7DQo+ID4+
-IAlpZiAoc2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCAmJg0KPiA+PiAJICAgIChjbWQtPnRhZyA9PSBI
-RUFEX09GX1FVRVVFX1RBRyB8fA0KPiA+PiAJICAgICBjbWQtPnRhZyA9PSBPUkRFUkVEX1FVRVVF
-X1RBRykpDQo+ID4+IAkJZS0+dGFnID0gY21kLT50YWc7DQo+ID4gDQo+ID4gQSBTQ1NJLTIgdGFn
-IGlzIGEgU1BJIHR3byBieXRlIG1lc3NhZ2UuICBUaGUgZmlyc3QgYnl0ZSBpcyB0aGUgbWVzc2Fn
-ZQ0KPiA+IHR5cGUuICBUaGUgdmFsdWVzIHlvdSBoYXZlIGFib3ZlIGlkZW50aWZ5IHRoZSBtZXNz
-YWdlIHR5cGUgZm9yIHNpbXBsZSwNCj4gPiBvcmRlcmVkIGFuZCBoZWFkIG9mIHF1ZXVlIHRhZ3Mu
-ICBUaGUgKnNlY29uZCogYnl0ZSBpcyB0aGUgdGFnIHZhbHVlLg0KPiA+IA0KPiA+IFNlZSBwYWdl
-IDU1IGFuZCA1NiBvZiB0aGUgU0NTSS0yIHN0YW5kYXJkLiAgVGhlcmUncyBubyBjb25uZWN0aW9u
-IChvcg0KPiA+IHNob3VsZG4ndCBiZSkgYmV0d2VlbiB0aGUgbWVzc2FnZSB0eXBlIGFuZCB0aGUg
-dGFnIHZhbHVlLCBzbyBpdCBsb29rcw0KPiA+IGxpa2UgYSBidWcgaW4gdGhlIHB2c2NzaSBkcml2
-ZXIuDQo+ID4gDQo+IEl0IGlzLiBJJ3ZlIGFscmVhZHkgc2VudCBhIHBhdGNoLg0KPiANCj4gQnV0
-IHRoYXQganVzdCBwcm92ZXMgdGhlIHNjbWQtPnRhZyBpcyBlc3NlbnRpYWxseSBhIGR1cGxpY2F0
-ZQ0KPiBhbmQgd2Ugc2hvdWxkIGJlIHJlbW92aW5nIGl0Lg0KDQpZZXMsIGl0IHdhcyB0aGUgb3Jp
-Z2luYWwgdGFnIGZpZWxkLCB3aGljaCB0aGVuIGdvdCByZXBsYWNlZCBieSB0aGUgYmxvY2sNCm9u
-ZSBhbmQgdGhlIGFjY2Vzc29yIGNvbW1hbmRzLiAgc2NzaV9wb3B1bGF0ZV90YWdfbXNnICh3aGlj
-aCBpcyByZWFsbHkNCmFuIFNQSSBjb25zdHJ1Y3QpIG1lYW50IHRoYXQgZHJpdmVycyBmdWxseSBh
-ZG9wdGluZyB0aGUgbW9kZWwgZGlkbid0DQpldmVuIG5lZWQgdG8gbG9vayBhdCBjbWQtPnRhZyBh
-bnkgbW9yZS4gIEknbSBmaW5lIHdpdGggZHJvcHBpbmcgaXQgaW4NCmZhdm91ciBvZiByZXEtPnRh
-Zy4NCg0KSmFtZXMNCg0K
+On Thu, Oct 02, 2014 at 02:35:10PM +0200, Hans de Goede wrote:
+> This patch sits on top of a whole bunch of uas cleanups / fixes which
+> are going into 3.18, and which are to big of a change to backport.
+
+Can add a patch to set disable_blk_mq for uas on 3.17 then?
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
