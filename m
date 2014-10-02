@@ -1,161 +1,236 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCHv5 00/24] scsi logging update (the boring part)
-Date: Thu, 2 Oct 2014 18:53:54 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCABD2@G4W3202.americas.hpqcorp.net>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 22/24] scsi: fixup logging messages in scsi_error.c
+Date: Thu, 02 Oct 2014 15:02:19 -0400
+Message-ID: <1412276539.5241.84.camel@localhost.localdomain>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
+	 <1412144580-72880-23-git-send-email-hare@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:32780 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483AbaJBSyz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 14:54:55 -0400
-In-Reply-To: <1412144580-72880-1-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:54026 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751489AbaJBTCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Oct 2014 15:02:49 -0400
+In-Reply-To: <1412144580-72880-23-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
 
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Wednesday, 01 October, 2014 1:23 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Elliott, Robert (Server
-> Storage); Hannes Reinecke
-> Subject: [PATCHv5 00/24] scsi logging update (the boring part)
+On Wed, 2014-10-01 at 08:22 +0200, Hannes Reinecke wrote:
+> Use the matching scope for logging messages to allow for
+> better command tracing.
 > 
-> This is the next iteration of my scsi logging patchset.
-> The patchset just contains some logging updates, code
-> reshuffling and sanity fixes. Nothing major.
+> Suggested-by: Robert Elliott <elliott@hp.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/hosts.c      |  4 +--
+>  drivers/scsi/scsi_error.c | 82 +++++++++++++++++++++++++----------------------
+>  2 files changed, 45 insertions(+), 41 deletions(-)
+
+See below.  I think there is another line that needs to be changed.
+
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+
 > 
-> The second part of this patchset (the printk bit)
-> has been vetoed for the moment, so I'll have to
-> work on that. But in any case this patchset is
-> pretty much independent.
-> 
-> Difference to v4:
-> - Add 'Reviewed-by' tags from hch where applicable
-> - Split off the fas216 patch into two different patches
-> - Added a patch to document scsi_try_to_abort_cmd
-> 
-> Hannes Reinecke (24):
->   Remove scsi_cmd_print_sense_hdr()
->   sd: Remove scsi_print_sense() in sd_done()
->   aha152x: Debug output update and whitespace cleanup
->   scsi: introduce sdev_prefix_printk()
->   scsi: Use sdev as argument for sense code printing
->   acornscsi: use scsi_print_command()
->   fas216: Return DID_ERROR for incomplete data transfer
->   fas216: Update logging messages
->   53c700: remove scsi_print_sense() usage
->   scsi: stop decoding if scsi_normalize_sense() fails
->   scsi: do not decode sense extras
->   scsi: use 'bool' as return value for scsi_normalize_sense()
->   scsi: remove scsi_print_status()
->   Implement scsi_opcode_sa_name
->   scsi: merge print_opcode_name()
->   scsi: consolidate opcode lookup in scsi_opcode_sa_name()
->   scsi: remove last argument from print_opcode_name()
->   scsi: Remove scsi_print_command when calling abort
->   scsi: separate out scsi_(host|driver)byte_string()
->   sd: Cleanup logging
->   scsi: simplify scsi_log_(send|completion)
->   scsi: fixup logging messages in scsi_error.c
->   scsi: use shost argument in scsi_eh_prt_fail_stats
->   scsi_error: document scsi_try_to_abort_cmd
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 6de80e3..06030e1 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -485,8 +485,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>  					    WQ_UNBOUND | WQ_MEM_RECLAIM,
+>  					   1, shost->host_no);
+>  	if (!shost->tmf_work_q) {
+> -		printk(KERN_WARNING "scsi%d: failed to create tmf workq\n",
+> -		       shost->host_no);
+> +		shost_printk(KERN_WARNING, shost,
+> +			     "failed to create tmf workq\n");
+>  		goto fail_kthread;
+>  	}
+>  	scsi_proc_hostdir_add(shost->hostt);
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 554f885..7e1e190 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -1156,9 +1156,10 @@ int scsi_eh_get_sense(struct list_head *work_q,
+>  		shost = scmd->device->host;
+>  		if (scsi_host_eh_past_deadline(shost)) {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +				scmd_printk(KERN_INFO, scmd,
+> +					    "%s: skip request sense, "
+> +					     "past eh deadline\n",
+> +					     current->comm));
+>  			break;
+>  		}
+>  		if (status_byte(scmd->result) != CHECK_CONDITION)
+> @@ -1265,9 +1266,10 @@ static int scsi_eh_test_devices(struct list_head *cmd_list,
+>  				/* Push items back onto work_q */
+>  				list_splice_init(cmd_list, work_q);
+>  				SCSI_LOG_ERROR_RECOVERY(3,
+> -					shost_printk(KERN_INFO, sdev->host,
+> -						     "skip %s, past eh deadline",
+> -						     __func__));
+> +					sdev_printk(KERN_INFO, sdev,
+> +						    "%s: skip test device, "
+> +						    "past eh deadline",
+> +						    current->comm));
+>  				break;
+>  			}
+>  		}
+> @@ -1318,21 +1320,22 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
+>  		if (scsi_host_eh_past_deadline(shost)) {
+>  			list_splice_init(&check_list, work_q);
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +				scmd_printk(KERN_INFO, scmd,
+> +					    "%s: skip aborting cmd, "
+> +					    "past eh deadline\n",
+> +					    current->comm));
+>  			return list_empty(work_q);
+>  		}
+>  		SCSI_LOG_ERROR_RECOVERY(3,
+> -			shost_printk(KERN_INFO, shost,
+> -				     "%s: aborting cmd: 0x%p\n",
+> +			scmd_printk(KERN_INFO, scmd,
+> +				     "%s: aborting cmd\n",
+>  				     current->comm, scmd));
 
-With this 24-part series applied to 3.17rc7, with the 
-kernel set to print timestamps (e.g., printk.time=y on the kernel
-command line), the prints still end up trickling out a byte
-at a time, interleaved from different threads, when the system 
-is overloaded.
+I got a compile error on this, I think you need to change the above line
+to be "					current->comm));", removing scmd
 
-Maybe that's addressed by the part that is deferred?
-
-Example serial log excerpt:
-
-[74465.705193] sd 2:0:0:0: [sdr] CDB:
-[74465.705194] :
-[74465.705196]  0
-                 [74465.705196] sd 2:0:0:0: [sdr] (null)FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[74465.705197]  00
-[74465.705198] :
-[74465.705198] :
-[74465.705199]  00
-[74465.705200] Read(10)
-[74465.705201]  28
-[74465.705202]  f4
-[74465.705202] sd 2:0:0:0: [sdr] Sense Key : Hardware Error [current]
-[74465.705204]  b2
-[74465.705204]  28
-[74465.705205]  28
-[74465.705206]  01
-[74465.705207] :
-[74465.705207]  00
-[74465.705208]  70
-[74465.705209]  f8
-[74465.705210] sd 2:0:0:0: [sdr] Add. Sense: Logical unit failure
-[74465.705211]  00
-[74465.705211]  00
-[74465.705212]  2f
-[74465.705213]  28
-[74465.705214]  00
-[74465.705215]  00
-[74465.705215]  00
-[74465.705217]  00
-[74465.705217] sd 2:0:0:0: [sdr] CDB:
-[74465.705218]  00
-[74465.705219]  70
-[74465.705219]  00
-[74465.705220]  00
-[74465.705221]  00
-[74465.705221]  00
-[74465.705222]  01
-[74465.705223] Read(10)
-[74465.705223]  01
-[74465.705224]  00
-[74465.705225]  00
-[74465.705226]  9c
-[74465.705227]  08
-[74465.705227]  08
-[74465.705228]  81
-[74465.705229] :
-[74465.705229]  9d
-[74465.705230]  00
-[74465.705231]  01
-[74465.705232]  70
-[74465.705232]  00
-[74465.705233]  00
-[74465.705234]  50
-[74465.705234]  28
-[74465.705235]  e8
-[74465.705236]  08
-[74465.705237]  9f
-[74465.705237]  00
-[74465.705238]
-[74465.705238]
-[74465.705239]  00
-[74465.705240]  00
-[74465.705240]  00
-[74465.705241]  00
-[74465.705242]  68
-[74465.705243]  00
-[74465.705243]  00
-[74465.705244]  00
-[74465.705245]  00
-[74465.705245]
-[74465.705246]  00
-[74465.705247]  08
-[74465.705247]  08
-[74465.705248]  01
-[74465.705249]  08
-[74465.705250]  00
-[74465.705250]  00
-[74465.705251]  00
-[74465.705253]  33
-[74465.705253] sd 2:0:0:0: [sdr] Done: SUCCESS Result: hostbyte=DID_TARGET_FAILURE driverbyte=DRIVER_OK
+>  		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+>  		if (rtn == FAILED) {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					     "%s: aborting cmd failed: 0x%p\n",
+> -					     current->comm, scmd));
+> +				scmd_printk(KERN_INFO, scmd,
+> +					    "%s: aborting cmd failed\n",
+> +					     current->comm));
+>  			list_splice_init(&check_list, work_q);
+>  			return list_empty(work_q);
+>  		}
+> @@ -1390,9 +1393,10 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+>  	shost_for_each_device(sdev, shost) {
+>  		if (scsi_host_eh_past_deadline(shost)) {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +				sdev_printk(KERN_INFO, sdev,
+> +					    "%s: skip START_UNIT, "
+> +					    "past eh deadline\n",
+> +					    current->comm));
+>  			break;
+>  		}
+>  		stu_scmd = NULL;
+> @@ -1407,9 +1411,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+>  			continue;
+>  
+>  		SCSI_LOG_ERROR_RECOVERY(3,
+> -			shost_printk(KERN_INFO, shost,
+> -				     "%s: Sending START_UNIT to sdev: 0x%p\n",
+> -				     current->comm, sdev));
+> +			sdev_printk(KERN_INFO, sdev,
+> +				     "%s: Sending START_UNIT\n",
+> +				     current->comm));
+>  
+>  		if (!scsi_eh_try_stu(stu_scmd)) {
+>  			if (!scsi_device_online(sdev) ||
+> @@ -1423,9 +1427,9 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+>  			}
+>  		} else {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					     "%s: START_UNIT failed to sdev:"
+> -					     " 0x%p\n", current->comm, sdev));
+> +				sdev_printk(KERN_INFO, sdev,
+> +					    "%s: START_UNIT failed\n",
+> +					    current->comm));
+>  		}
+>  	}
+>  
+> @@ -1456,9 +1460,9 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>  	shost_for_each_device(sdev, shost) {
+>  		if (scsi_host_eh_past_deadline(shost)) {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +				sdev_printk(KERN_INFO, sdev,
+> +					    "%s: skip BDR, past eh deadline\n",
+> +					     current->comm));
+>  			break;
+>  		}
+>  		bdr_scmd = NULL;
+> @@ -1472,9 +1476,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>  			continue;
+>  
+>  		SCSI_LOG_ERROR_RECOVERY(3,
+> -			shost_printk(KERN_INFO, shost,
+> -				     "%s: Sending BDR sdev: 0x%p\n",
+> -				     current->comm, sdev));
+> +			sdev_printk(KERN_INFO, sdev,
+> +				     "%s: Sending BDR\n", current->comm));
+>  		rtn = scsi_try_bus_device_reset(bdr_scmd);
+>  		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+>  			if (!scsi_device_online(sdev) ||
+> @@ -1490,9 +1493,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>  			}
+>  		} else {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+> -				shost_printk(KERN_INFO, shost,
+> -					     "%s: BDR failed sdev: 0x%p\n",
+> -					     current->comm, sdev));
+> +				sdev_printk(KERN_INFO, sdev,
+> +					    "%s: BDR failed\n", current->comm));
+>  		}
+>  	}
+>  
+> @@ -1528,8 +1530,9 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+>  			list_splice_init(&tmp_list, work_q);
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+>  				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +					    "%s: Skip target reset, "
+> +					     "past eh deadline\n",
+> +					     current->comm));
+>  			return list_empty(work_q);
+>  		}
+>  
+> @@ -1591,8 +1594,8 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
+>  			list_splice_init(&check_list, work_q);
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+>  				shost_printk(KERN_INFO, shost,
+> -					    "skip %s, past eh deadline\n",
+> -					     __func__));
+> +					    "%s: skip BRST, past eh deadline\n",
+> +					     current->comm));
+>  			return list_empty(work_q);
+>  		}
+>  
+> @@ -2191,9 +2194,10 @@ int scsi_error_handler(void *data)
+>  		 */
+>  		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
+>  			SCSI_LOG_ERROR_RECOVERY(1,
+> -				printk(KERN_ERR "Error handler scsi_eh_%d "
+> -						"unable to autoresume\n",
+> -						shost->host_no));
+> +				shost_printk(KERN_ERR, shost,
+> +					     "scsi_eh_%d: "
+> +					     "unable to autoresume\n",
+> +					     shost->host_no));
+>  			continue;
+>  		}
+>  
 
 
