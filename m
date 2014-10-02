@@ -1,260 +1,85 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/5] scsi: Remove references to linked commands
-Date: Thu,  2 Oct 2014 12:43:10 +0200
-Message-ID: <1412246593-107001-3-git-send-email-hare@suse.de>
+Subject: [PATCH 4/5] tcm_loop: Fixup tag handling
+Date: Thu,  2 Oct 2014 12:43:12 +0200
+Message-ID: <1412246593-107001-5-git-send-email-hare@suse.de>
 References: <1412246593-107001-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59426 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59419 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751797AbaJBKnR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Oct 2014 06:43:17 -0400
+	id S1752383AbaJBKnQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Oct 2014 06:43:16 -0400
 In-Reply-To: <1412246593-107001-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: James Bottomley <jbottomley@parallels.com>, Sagi Grimberg <sagig@dev.mellanox.co.il>, Webb Scales <webbnh@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Some NCR5380-based drivers implement support for linked commands
-via a 'next_link' pointer in struct scsi_cmnd. This pointer has
-long since removed, rendering the code pointless.
-So remove it.
+The SCSI command tag is set to the tag assigned from the block
+layer, not the SCSI-II tag message. So we need to convert
+it into the correct SCSI-II tag message based on the
+device flags, not the tag value itself.
 
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/NCR5380.c       | 40 -------------------------------
- drivers/scsi/atari_NCR5380.c | 57 --------------------------------------------
- drivers/scsi/sun3_NCR5380.c  | 57 --------------------------------------------
- 3 files changed, 154 deletions(-)
+ drivers/target/loopback/tcm_loop.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index c8aa935..a0c8c5d 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -104,7 +104,6 @@
- #endif
- 
- #ifndef notyet
--#undef LINKED
- #undef REAL_DMA
- #endif
- 
-@@ -216,8 +215,6 @@
-  *      these transfers, we might need this to give reasonable interrupt
-  *      service time if the transfer size gets too large.
-  *
-- * LINKED - if defined, linked commands are supported.
-- *
-  * PSEUDO_DMA - if defined, PSEUDO DMA is used during the data transfer phases.
-  *
-  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
-@@ -2210,43 +2207,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance) {
- 				cmd->SCp.Message = tmp;
- 
- 				switch (tmp) {
--					/*
--					 * Linking lets us reduce the time required to get the
--					 * next command out to the device, hopefully this will
--					 * mean we don't waste another revolution due to the delays
--					 * required by ARBITRATION and another SELECTION.
--					 *
--					 * In the current implementation proposal, low level drivers
--					 * merely have to start the next command, pointed to by
--					 * next_link, done() is called as with unlinked commands.
--					 */
--#ifdef LINKED
--				case LINKED_CMD_COMPLETE:
--				case LINKED_FLG_CMD_COMPLETE:
--					/* Accept message by clearing ACK */
--					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked command complete.\n", instance->host_no, cmd->device->id, cmd->device->lun);
--					/*
--					 * Sanity check : A linked command should only terminate with
--					 * one of these messages if there are more linked commands
--					 * available.
--					 */
--					if (!cmd->next_link) {
--					    printk("scsi%d : target %d lun %llu linked command complete, no next_link\n" instance->host_no, cmd->device->id, cmd->device->lun);
--						sink = 1;
--						do_abort(instance);
--						return;
--					}
--					initialize_SCp(cmd->next_link);
--					/* The next command is still part of this process */
--					cmd->next_link->tag = cmd->tag;
--					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
--					dprintk(NDEBUG_LINKED, "scsi%d : target %d lun %llu linked request done, calling scsi_done().\n", instance->host_no, cmd->device->id, cmd->device->lun);
--					collect_stats(hostdata, cmd);
--					cmd->scsi_done(cmd);
--					cmd = hostdata->connected;
--					break;
--#endif				/* def LINKED */
- 				case ABORT:
- 				case COMMAND_COMPLETE:
- 					/* Accept message by clearing ACK */
-diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
-index 79e6f04..d11c271 100644
---- a/drivers/scsi/atari_NCR5380.c
-+++ b/drivers/scsi/atari_NCR5380.c
-@@ -97,10 +97,6 @@
- #define REMOVE(w,x,y,z)
- #endif
- 
--#ifndef notyet
--#undef LINKED
--#endif
--
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 340de9d..c2a9370 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -153,18 +153,11 @@ static int tcm_loop_change_queue_type(struct scsi_device *sdev, int tag)
  /*
-  * Design
-  * Issues :
-@@ -211,8 +207,6 @@
-  * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
-  *	for commands that return with a CHECK CONDITION status.
-  *
-- * LINKED - if defined, linked commands are supported.
-- *
-  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
-  *
-  * SUPPORT_TAGS - if defined, SCSI-2 tagged queuing is used where possible
-@@ -2101,57 +2095,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				cmd->SCp.Message = tmp;
+  * Locate the SAM Task Attr from struct scsi_cmnd *
+  */
+-static int tcm_loop_sam_attr(struct scsi_cmnd *sc)
+-{
+-	if (sc->device->tagged_supported) {
+-		switch (sc->tag) {
+-		case HEAD_OF_QUEUE_TAG:
+-			return MSG_HEAD_TAG;
+-		case ORDERED_QUEUE_TAG:
+-			return MSG_ORDERED_TAG;
+-		default:
+-			break;
+-		}
+-	}
++static int tcm_loop_sam_attr(struct scsi_cmnd *sc, int tag)
++{
++	if (sc->device->tagged_supported &&
++	    sc->device->ordered_tags && tag >= 0)
++		return MSG_ORDERED_TAG;
  
- 				switch (tmp) {
--				/*
--				 * Linking lets us reduce the time required to get the
--				 * next command out to the device, hopefully this will
--				 * mean we don't waste another revolution due to the delays
--				 * required by ARBITRATION and another SELECTION.
--				 *
--				 * In the current implementation proposal, low level drivers
--				 * merely have to start the next command, pointed to by
--				 * next_link, done() is called as with unlinked commands.
--				 */
--#ifdef LINKED
--				case LINKED_CMD_COMPLETE:
--				case LINKED_FLG_CMD_COMPLETE:
--					/* Accept message by clearing ACK */
--					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--
--					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked command "
--						   "complete.\n", HOSTNO, cmd->device->id, cmd->device->lun);
--
--					/* Enable reselect interrupts */
--					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--					/*
--					 * Sanity check : A linked command should only terminate
--					 * with one of these messages if there are more linked
--					 * commands available.
--					 */
--
--					if (!cmd->next_link) {
--						 printk(KERN_NOTICE "scsi%d: target %d lun %llu "
--							"linked command complete, no next_link\n",
--							HOSTNO, cmd->device->id, cmd->device->lun);
--						sink = 1;
--						do_abort(instance);
--						return;
--					}
--
--					initialize_SCp(cmd->next_link);
--					/* The next command is still part of this process; copy it
--					 * and don't free it! */
--					cmd->next_link->tag = cmd->tag;
--					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
--					dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked request "
--						   "done, calling scsi_done().\n",
--						   HOSTNO, cmd->device->id, cmd->device->lun);
--#ifdef NCR5380_STATS
--					collect_stats(hostdata, cmd);
--#endif
--					cmd->scsi_done(cmd);
--					cmd = hostdata->connected;
--					break;
--#endif /* def LINKED */
- 				case ABORT:
- 				case COMMAND_COMPLETE:
- 					/* Accept message by clearing ACK */
-diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
-index 1a2367a..efdc555 100644
---- a/drivers/scsi/sun3_NCR5380.c
-+++ b/drivers/scsi/sun3_NCR5380.c
-@@ -84,10 +84,6 @@
- #define REMOVE(w,x,y,z)
- #endif
+ 	return MSG_SIMPLE_TAG;
+ }
+@@ -227,7 +220,7 @@ static void tcm_loop_submission_work(struct work_struct *work)
  
--#ifndef notyet
--#undef LINKED
--#endif
--
- /*
-  * Design
-  * Issues :
-@@ -198,8 +194,6 @@
-  * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
-  *	for commands that return with a CHECK CONDITION status. 
-  *
-- * LINKED - if defined, linked commands are supported.
-- *
-  * REAL_DMA - if defined, REAL DMA is used during the data transfer phases.
-  *
-  * SUPPORT_TAGS - if defined, SCSI-2 tagged queuing is used where possible
-@@ -2065,57 +2059,6 @@ static void NCR5380_information_transfer (struct Scsi_Host *instance)
- 		cmd->SCp.Message = tmp;
- 		
- 		switch (tmp) {
--		/*
--		 * Linking lets us reduce the time required to get the 
--		 * next command out to the device, hopefully this will
--		 * mean we don't waste another revolution due to the delays
--		 * required by ARBITRATION and another SELECTION.
--		 *
--		 * In the current implementation proposal, low level drivers
--		 * merely have to start the next command, pointed to by 
--		 * next_link, done() is called as with unlinked commands.
--		 */
--#ifdef LINKED
--		case LINKED_CMD_COMPLETE:
--		case LINKED_FLG_CMD_COMPLETE:
--		    /* Accept message by clearing ACK */
--		    NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--		    
--		    dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked command "
--			       "complete.\n", HOSTNO, cmd->device->id, cmd->device->lun);
--
--		    /* Enable reselect interrupts */
--		    NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--		    /*
--		     * Sanity check : A linked command should only terminate
--		     * with one of these messages if there are more linked
--		     * commands available.
--		     */
--
--		    if (!cmd->next_link) {
--			 printk(KERN_NOTICE "scsi%d: target %d lun %llu "
--				"linked command complete, no next_link\n",
--				HOSTNO, cmd->device->id, cmd->device->lun);
--			    sink = 1;
--			    do_abort (instance);
--			    return;
--		    }
--
--		    initialize_SCp(cmd->next_link);
--		    /* The next command is still part of this process; copy it
--		     * and don't free it! */
--		    cmd->next_link->tag = cmd->tag;
--		    cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8); 
--		    dprintk(NDEBUG_LINKED, "scsi%d: target %d lun %llu linked request "
--			       "done, calling scsi_done().\n",
--			       HOSTNO, cmd->device->id, cmd->device->lun);
--#ifdef NCR5380_STATS
--		    collect_stats(hostdata, cmd);
--#endif
--		    cmd->scsi_done(cmd);
--		    cmd = hostdata->connected;
--		    break;
--#endif /* def LINKED */
- 		case ABORT:
- 		case COMMAND_COMPLETE: 
- 		    /* Accept message by clearing ACK */
+ 	rc = target_submit_cmd_map_sgls(se_cmd, tl_nexus->se_sess, sc->cmnd,
+ 			&tl_cmd->tl_sense_buf[0], tl_cmd->sc->device->lun,
+-			transfer_length, tcm_loop_sam_attr(sc),
++			transfer_length, tcm_loop_sam_attr(sc, tl_cmd->sc_cmd_tag),
+ 			sc->sc_data_direction, 0,
+ 			scsi_sglist(sc), scsi_sg_count(sc),
+ 			sgl_bidi, sgl_bidi_count,
+@@ -266,7 +259,7 @@ static int tcm_loop_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+ 	}
+ 
+ 	tl_cmd->sc = sc;
+-	tl_cmd->sc_cmd_tag = sc->tag;
++	tl_cmd->sc_cmd_tag = sc->request->tag;
+ 	INIT_WORK(&tl_cmd->work, tcm_loop_submission_work);
+ 	queue_work(tcm_loop_workqueue, &tl_cmd->work);
+ 	return 0;
+@@ -370,7 +363,7 @@ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
+ 	 */
+ 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
+ 	ret = tcm_loop_issue_tmr(tl_tpg, tl_nexus, sc->device->lun,
+-				 sc->tag, TMR_ABORT_TASK);
++				 sc->request->tag, TMR_ABORT_TASK);
+ 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
+ }
+ 
 -- 
 1.8.5.2
 
