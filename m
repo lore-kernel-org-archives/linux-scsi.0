@@ -1,62 +1,125 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Thu, 02 Oct 2014 11:50:42 +0200
-Message-ID: <542D1FF2.1010307@suse.de>
-References: <1411991272-129962-1-git-send-email-hare@suse.de> <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org> <542CF5E8.3030601@suse.de> <20141002091916.GA13227@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 1/2] uas: Reduce number of function arguments for uas_alloc_foo functions
+Date: Thu,  2 Oct 2014 12:04:39 +0200
+Message-ID: <1412244280-15111-1-git-send-email-hdegoede@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58521 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:12933 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751176AbaJBJuo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Oct 2014 05:50:44 -0400
-In-Reply-To: <20141002091916.GA13227@infradead.org>
+	id S1751192AbaJBKFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Oct 2014 06:05:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Webb Scales <webbnh@hp.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-On 10/02/2014 11:19 AM, Christoph Hellwig wrote:
-> On Thu, Oct 02, 2014 at 08:51:20AM +0200, Hannes Reinecke wrote:
->>
->> I'm afraid it's not _that_ easy.
->> SCSI-II tagged queueing has some specific tag values:
->>
->> #define SIMPLE_QUEUE_TAG    0x20
->> #define HEAD_OF_QUEUE_TAG   0x21
->> #define ORDERED_QUEUE_TAG   0x22
->=20
-> These are not tag values.  These are message codes set in the first b=
-yte
-> of the Queue tag message, the second byte is the actual tag.
->=20
->> The recommendation here is to use 'scmd->request->tag' whenever
->> you want to get to the tag number, and 'scmd->tag' if you have to
->> play around with SCSI-II TCQ.
->> But if not I would strongly advise to leave 'scmd->tag' alone.
->=20
-> Or kill off scmd->tag..  Let's see how feasible that is.
->=20
-I'm about to.
-(See my last two patches).
-There are now two instances left:
-NCR5380 (and derived LLDDs) and fnic.
-=46or some weird reasons fnic decided to duplicate blk-tag
-functionality. Looking into it.
+The stream_id and pipe are already present in uas_cmd_info resp uas_dev_info,
+so there is no need to pass a copy along.
 
-And NCR5380 tag support can be safely ignored, it never worked anyway.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/uas.c | 29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
-Cheers,
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index b27fe21..d1dbe88 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -412,20 +412,22 @@ static void uas_cmd_cmplt(struct urb *urb)
+ }
+ 
+ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+-				      unsigned int pipe, u16 stream_id,
+ 				      struct scsi_cmnd *cmnd,
+ 				      enum dma_data_direction dir)
+ {
+ 	struct usb_device *udev = devinfo->udev;
++	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct urb *urb = usb_alloc_urb(0, gfp);
+ 	struct scsi_data_buffer *sdb = (dir == DMA_FROM_DEVICE)
+ 		? scsi_in(cmnd) : scsi_out(cmnd);
++	unsigned int pipe = (dir == DMA_FROM_DEVICE)
++		? devinfo->data_in_pipe : devinfo->data_out_pipe;
+ 
+ 	if (!urb)
+ 		goto out;
+ 	usb_fill_bulk_urb(urb, udev, pipe, NULL, sdb->length,
+ 			  uas_data_cmplt, cmnd);
+-	urb->stream_id = stream_id;
++	urb->stream_id = cmdinfo->stream;
+ 	urb->num_sgs = udev->bus->sg_tablesize ? sdb->table.nents : 0;
+ 	urb->sg = sdb->table.sgl;
+  out:
+@@ -433,9 +435,10 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ }
+ 
+ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+-				       struct Scsi_Host *shost, u16 stream_id)
++				       struct scsi_cmnd *cmnd)
+ {
+ 	struct usb_device *udev = devinfo->udev;
++	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct urb *urb = usb_alloc_urb(0, gfp);
+ 	struct sense_iu *iu;
+ 
+@@ -447,8 +450,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 		goto free;
+ 
+ 	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
+-						uas_stat_cmplt, shost);
+-	urb->stream_id = stream_id;
++			  uas_stat_cmplt, cmnd->device->host);
++	urb->stream_id = cmdinfo->stream;
+ 	urb->transfer_flags |= URB_FREE_BUFFER;
+  out:
+ 	return urb;
+@@ -500,15 +503,13 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+  * daft to me.
+  */
+ 
+-static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd,
+-					gfp_t gfp, unsigned int stream)
++static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
+ {
+-	struct Scsi_Host *shost = cmnd->device->host;
+-	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
++	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+ 	struct urb *urb;
+ 	int err;
+ 
+-	urb = uas_alloc_sense_urb(devinfo, gfp, shost, stream);
++	urb = uas_alloc_sense_urb(devinfo, gfp, cmnd);
+ 	if (!urb)
+ 		return NULL;
+ 	usb_anchor_urb(urb, &devinfo->sense_urbs);
+@@ -531,7 +532,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 
+ 	lockdep_assert_held(&devinfo->lock);
+ 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+-		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
++		urb = uas_submit_sense_urb(cmnd, gfp);
+ 		if (!urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~SUBMIT_STATUS_URB;
+@@ -539,8 +540,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 
+ 	if (cmdinfo->state & ALLOC_DATA_IN_URB) {
+ 		cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, gfp,
+-					devinfo->data_in_pipe, cmdinfo->stream,
+-					cmnd, DMA_FROM_DEVICE);
++							cmnd, DMA_FROM_DEVICE);
+ 		if (!cmdinfo->data_in_urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~ALLOC_DATA_IN_URB;
+@@ -560,8 +560,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 
+ 	if (cmdinfo->state & ALLOC_DATA_OUT_URB) {
+ 		cmdinfo->data_out_urb = uas_alloc_data_urb(devinfo, gfp,
+-					devinfo->data_out_pipe, cmdinfo->stream,
+-					cmnd, DMA_TO_DEVICE);
++							cmnd, DMA_TO_DEVICE);
+ 		if (!cmdinfo->data_out_urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~ALLOC_DATA_OUT_URB;
+-- 
+2.1.0
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
