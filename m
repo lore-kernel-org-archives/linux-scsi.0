@@ -1,36 +1,41 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH v2 10/24] uas: zap_pending: data urbs should have
- completed at this time
-Date: Thu, 02 Oct 2014 10:56:25 +0200
-Message-ID: <1412240185.32060.12.camel@linux-0dmf.site>
-References: <1410604011-3828-1-git-send-email-hdegoede@redhat.com>
-	 <1410604011-3828-11-git-send-email-hdegoede@redhat.com>
-	 <54149BA6.3010305@cogentembedded.com> <54155F49.8060904@redhat.com>
-	 <1410690587.2270.2.camel@jarvis> <54156EDA.6050106@redhat.com>
-	 <1410690872.2270.6.camel@jarvis>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Thu, 2 Oct 2014 02:19:16 -0700
+Message-ID: <20141002091916.GA13227@infradead.org>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
+ <542C4D33.2030401@hp.com>
+ <20141001211003.GA24820@infradead.org>
+ <542CF5E8.3030601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:54316 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaJBJKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 05:10:04 -0400
-In-Reply-To: <1410690872.2270.6.camel@jarvis>
+Received: from bombadil.infradead.org ([198.137.202.9]:51506 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbaJBJTV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 05:19:21 -0400
+Content-Disposition: inline
+In-Reply-To: <542CF5E8.3030601@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Webb Scales <webbnh@hp.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Sun, 2014-09-14 at 11:34 +0100, James Bottomley wrote:
+On Thu, Oct 02, 2014 at 08:51:20AM +0200, Hannes Reinecke wrote:
+> 
+> I'm afraid it's not _that_ easy.
+> SCSI-II tagged queueing has some specific tag values:
+> 
+> #define SIMPLE_QUEUE_TAG    0x20
+> #define HEAD_OF_QUEUE_TAG   0x21
+> #define ORDERED_QUEUE_TAG   0x22
 
-> I'm agnostic on that.  I was just combatting the impression that you had
-> to be careful about side effects in known macro statements.
+These are not tag values.  These are message codes set in the first byte
+of the Queue tag message, the second byte is the actual tag.
 
-No you haven't. But it is very good practice to not have side effects
-in warnings, as people, not compilers, like to remove them.
+> The recommendation here is to use 'scmd->request->tag' whenever
+> you want to get to the tag number, and 'scmd->tag' if you have to
+> play around with SCSI-II TCQ.
+> But if not I would strongly advise to leave 'scmd->tag' alone.
 
-	Regards
-		Oliver
-
+Or kill off scmd->tag..  Let's see how feasible that is.
 
