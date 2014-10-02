@@ -1,65 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
+From: James Bottomley <jbottomley@parallels.com>
 Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Thu, 02 Oct 2014 14:00:32 +0200
-Message-ID: <542D3E60.40009@suse.de>
-References: <1411991272-129962-1-git-send-email-hare@suse.de> <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org> <542CF5E8.3030601@suse.de> <20141002091916.GA13227@infradead.org> <542D1FF2.1010307@suse.de> <20141002113652.GB26897@infradead.org>
+Date: Thu, 2 Oct 2014 12:05:43 +0000
+Message-ID: <1412251542.6343.6.camel@jarvis>
+References: <1411991272-129962-1-git-send-email-hare@suse.de>
+	 <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org>
+	 <542CF5E8.3030601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32773 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751343AbaJBMAe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Oct 2014 08:00:34 -0400
-In-Reply-To: <20141002113652.GB26897@infradead.org>
+Received: from mx2.parallels.com ([199.115.105.18]:33674 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbaJBMFp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 08:05:45 -0400
+In-Reply-To: <542CF5E8.3030601@suse.de>
+Content-Language: en-US
+Content-ID: <9DA4990F667F7843919DD10D81F8BF26@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Webb Scales <webbnh@hp.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "webbnh@hp.com" <webbnh@hp.com>
 
-On 10/02/2014 01:36 PM, Christoph Hellwig wrote:
-> On Thu, Oct 02, 2014 at 11:50:42AM +0200, Hannes Reinecke wrote:
->> NCR5380 (and derived LLDDs) and fnic.
->=20
-> fnic needs a tag for a device reset, which we don't provide if it
-> is issue by ioctl.  This is also showed up during the blk-mq work.
->=20
-Actually, I've hit a similar issue for megaraid_sas (and I guess
-others which implement a host-wide tag map might suffer here, too):
-tags need to be used even for internal commands.
-But tag allocation is done exclusively in the block layer, so one
-cannot readily influence this.
-(Or, if you do, you'll end up with code duplication like the fnic
-driver).
-Thing is, for internal commands we typically do not _need_ a fully
-formed request, we just need to tag number.
-
-So we could try to implement a function like 'blk_tag_reserve'
-to return the next free tag.
-
-But even with that we'd be hitting a tag starvation issue; when
-all command tags are in use we cannot send internal commands.
-And if the command abort happens to be modelled with an internal
-command, we cannot even abort commands anymore.
-Which is probably _not_ what we want.
-(And I think fnic will suffer from this, too ...)
-
-So I guess we need to set aside a reserved tag pool from which
-the internal commands will be allocated.
-(Bit like the emergency network skb pool).
-With that the tag starvation issue will be resolved, and
-we should be able to remove the custom code in fnic.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gVGh1LCAyMDE0LTEwLTAyIGF0IDA4OjUxICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IE9uIDEwLzAxLzIwMTQgMTE6MTAgUE0sIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOg0KPiA+
+IE9uIFdlZCwgT2N0IDAxLCAyMDE0IGF0IDAyOjUxOjMxUE0gLTA0MDAsIFdlYmIgU2NhbGVzIHdy
+b3RlOg0KPiA+PiBIYW5uZXMsDQo+ID4+DQo+ID4+IEluIG1lZ2FzYXNfY2hhbmdlX3F1ZXVlX3R5
+cGUoKSwgaXMgaXQgcG9zc2libGUgZm9yIHNkZXYtPnF1ZXVlX2RlcHRoIHRvIGJlDQo+ID4+IGdy
+ZWF0ZXIgdGhhbiAyNTY/DQo+ID4+DQo+ID4+IFVubGVzcyBJJ20gbWlzdW5kZXJzdGFuZGluZyB0
+aGUgU0NTSSBjb2RlLCB3ZSBjYW4gcmVxdWVzdCBhDQo+ID4+IHF1ZXVlLWRlcHRoL3RhZy1tYXAt
+c2l6ZSB3aGljaCBpcyBncmVhdGVyIHRoYW4gMjU2LCBidXQsIHNpbmNlIHRoZQ0KPiA+PiBzY3Np
+X2NtbmQ6OnRhZyBmaWVsZCBpcyBhbiB1bnNpZ25lZCBjaGFyLCBkZXB0aHMgZ3JlYXRlciB0aGFu
+IDI1NiBtYXkNCj4gPj4gb3ZlcmZsb3cgdGhlIGZpZWxkIHdoZW4gaGlnaC1udW1iZXJlZCB0YWdz
+IGFyZSB1c2VkLi4uZG8gSSBoYXZlIHRoYXQgcmlnaHQ/DQo+ID4gDQo+ID4gWWVzLCB3ZSByZWFs
+bHkgbmVlZCB0byBpbmNyZWFzZSB0aGUgc2l6ZSBvZiB0aGUgdGFnIGZpZWxkLiAgU0FNIGFsbG93
+cw0KPiA+IGEgdHJhbnNwb3J0IHNwZWNpZmljIGxpbWl0IG9mIHVwIHRvIDY0IF9ieXRlc18gZm9y
+IGl0LCBhbHRob3VnaCBJIGRvbid0DQo+ID4ga25vdyBpbXBsZW1lbnRhdGlvbiB0aGF0IGxhcmdl
+LiAgR2l2ZW4gdGhhdCB0aGUgYmxvY2sgbGF5ZXIgY2FuIGdlbmVyYXRlDQo+ID4gdXAgdG8gMzIt
+Yml0IHRhZ3MgYm90aCBmb3IgdGhlIG9sZCBibGstdGFnLmMgY29kZSBhbmQgdGhlIG5ldw0KPiA+
+IGJsay1tcS10YWcuYyB2ZXJzaW9uIGl0IHdvdWxkIGJlIGdvb2QgdG8gdXNlIGEgdTMyIHRoZXJl
+LiAgQ2FuIHlvdSBzZW5kDQo+ID4gbWUgYSBwYXRjaD8NCj4gPiANCj4gV2VlZWxsbCAuLi4NCj4g
+DQo+IEknbSBhZnJhaWQgaXQncyBub3QgX3RoYXRfIGVhc3kuDQo+IFNDU0ktSUkgdGFnZ2VkIHF1
+ZXVlaW5nIGhhcyBzb21lIHNwZWNpZmljIHRhZyB2YWx1ZXM6DQo+IA0KPiAjZGVmaW5lIFNJTVBM
+RV9RVUVVRV9UQUcgICAgMHgyMA0KPiAjZGVmaW5lIEhFQURfT0ZfUVVFVUVfVEFHICAgMHgyMQ0K
+PiAjZGVmaW5lIE9SREVSRURfUVVFVUVfVEFHICAgMHgyMg0KPiANCj4gZHJpdmVycy9zY3NpL3Zt
+d19wdnNjc2kuYzoNCj4gCWUtPnRhZyA9IFNJTVBMRV9RVUVVRV9UQUc7DQo+IAlpZiAoc2Rldi0+
+dGFnZ2VkX3N1cHBvcnRlZCAmJg0KPiAJICAgIChjbWQtPnRhZyA9PSBIRUFEX09GX1FVRVVFX1RB
+RyB8fA0KPiAJICAgICBjbWQtPnRhZyA9PSBPUkRFUkVEX1FVRVVFX1RBRykpDQo+IAkJZS0+dGFn
+ID0gY21kLT50YWc7DQoNCkEgU0NTSS0yIHRhZyBpcyBhIFNQSSB0d28gYnl0ZSBtZXNzYWdlLiAg
+VGhlIGZpcnN0IGJ5dGUgaXMgdGhlIG1lc3NhZ2UNCnR5cGUuICBUaGUgdmFsdWVzIHlvdSBoYXZl
+IGFib3ZlIGlkZW50aWZ5IHRoZSBtZXNzYWdlIHR5cGUgZm9yIHNpbXBsZSwNCm9yZGVyZWQgYW5k
+IGhlYWQgb2YgcXVldWUgdGFncy4gIFRoZSAqc2Vjb25kKiBieXRlIGlzIHRoZSB0YWcgdmFsdWUu
+DQoNClNlZSBwYWdlIDU1IGFuZCA1NiBvZiB0aGUgU0NTSS0yIHN0YW5kYXJkLiAgVGhlcmUncyBu
+byBjb25uZWN0aW9uIChvcg0Kc2hvdWxkbid0IGJlKSBiZXR3ZWVuIHRoZSBtZXNzYWdlIHR5cGUg
+YW5kIHRoZSB0YWcgdmFsdWUsIHNvIGl0IGxvb2tzDQpsaWtlIGEgYnVnIGluIHRoZSBwdnNjc2kg
+ZHJpdmVyLg0KDQpKYW1lcw0KDQo=
