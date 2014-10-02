@@ -1,209 +1,39 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] uas: Make uas work with blk-mq
-Date: Thu,  2 Oct 2014 12:04:40 +0200
-Message-ID: <1412244280-15111-2-git-send-email-hdegoede@redhat.com>
-References: <1412244280-15111-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1412244280-15111-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 5/8] IB/srp: Remove stale connection retry mechanism
+Date: Thu, 02 Oct 2014 12:34:36 +0200
+Message-ID: <542D2A3C.2080009@acm.org>
+References: <541C27BF.6070609@acm.org>	<541C287D.1050900@acm.org> <CAJ3xEMhPKiut4MwZH9F7-T0+u7B6XPuh-FTZpA=Xe4ViAj5UUQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAJ3xEMhPKiut4MwZH9F7-T0+u7B6XPuh-FTZpA=Xe4ViAj5UUQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-With uas over usb-3 the tags inside the uas iu-s must match the usb-3 stream
-ids, and those go from 1 - qdepth.
+On 09/20/14 19:45, Or Gerlitz wrote:
+> On Fri, Sep 19, 2014 at 3:58 PM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+>> Attempting to connect three times may be insufficient after an
+>> initiator system that was using multiple RDMA channels tries to
+>> relogin. Additionally, this login retry mechanism is a workaround
+>> for particular behavior of the IB/CM.
+>
+> Can you be more specific re the particular behavior of the IB CM?
+> added Sean, the CM maintainer.
 
-Before blk-mq calling scsi_activate_tcq(sdev, qdepth) guaranteed that we would
-only get cmnd->request->tag from 0 - (qdepth - 1), and we used those as
-uas-tags / stream-ids.
+Let's focus on the software behavior instead of the people who are 
+involved. What I have observed several times is that after a power cycle 
+of the initiator system the first few login attempts are rejected. I was 
+assuming that this was due to the IB/CM implementation but now that I 
+have had another look at the logs I see that there is not enough 
+information in the system logs to draw this conclusion. I will add 
+additional logging statements in the initiator and target kernel code 
+such that I can determine the root cause of this behavior.
 
-With blk-mq however we are guaranteed to never get more then qdepth commands
-queued at the same time, but the cmnd->request->tag values may be much larger,
-which breaks uas.
-
-This commit fixes this by generating uas tags in the 1 - qdepth range ourselves
-instead of using cmnd->request->tag.
-
-While touching all involved code anyways also rename the uas_cmd_info stream
-field to uas_tag, because when using uas over usb-2 streams are not used.
-
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Reported-by: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/usb/storage/uas.c | 57 +++++++++++++++++++----------------------------
- 1 file changed, 23 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index d1dbe88..004ebc1 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -66,7 +66,7 @@ enum {
- /* Overrides scsi_pointer */
- struct uas_cmd_info {
- 	unsigned int state;
--	unsigned int stream;
-+	unsigned int uas_tag;
- 	struct urb *cmd_urb;
- 	struct urb *data_in_urb;
- 	struct urb *data_out_urb;
-@@ -173,30 +173,15 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
- 	cmnd->result = sense_iu->status;
- }
- 
--/*
-- * scsi-tags go from 0 - (nr_tags - 1), uas tags need to match stream-ids,
-- * which go from 1 - nr_streams. And we use 1 for untagged commands.
-- */
--static int uas_get_tag(struct scsi_cmnd *cmnd)
--{
--	int tag;
--
--	if (blk_rq_tagged(cmnd->request))
--		tag = cmnd->request->tag + 2;
--	else
--		tag = 1;
--
--	return tag;
--}
--
- static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *prefix,
- 			      int status)
- {
- 	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 
- 	scmd_printk(KERN_INFO, cmnd,
--		    "%s %d tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
--		    prefix, status, uas_get_tag(cmnd),
-+		    "%s %d uas-tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
-+		    prefix, status, cmdinfo->uas_tag,
- 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
- 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
- 		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
-@@ -242,7 +227,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 			      DATA_OUT_URB_INFLIGHT |
- 			      COMMAND_ABORTED))
- 		return -EBUSY;
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	uas_free_unsubmitted_urbs(cmnd);
- 	cmnd->scsi_done(cmnd);
- 	return 0;
-@@ -289,7 +274,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 	idx = be16_to_cpup(&iu->tag) - 1;
- 	if (idx >= MAX_CMNDS || !devinfo->cmnd[idx]) {
- 		dev_err(&urb->dev->dev,
--			"stat urb: no pending cmd for tag %d\n", idx + 1);
-+			"stat urb: no pending cmd for uas-tag %d\n", idx + 1);
- 		goto out;
- 	}
- 
-@@ -427,7 +412,8 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 		goto out;
- 	usb_fill_bulk_urb(urb, udev, pipe, NULL, sdb->length,
- 			  uas_data_cmplt, cmnd);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
- 	urb->num_sgs = udev->bus->sg_tablesize ? sdb->table.nents : 0;
- 	urb->sg = sdb->table.sgl;
-  out:
-@@ -451,7 +437,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 
- 	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
- 			  uas_stat_cmplt, cmnd->device->host);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
- 	urb->transfer_flags |= URB_FREE_BUFFER;
-  out:
- 	return urb;
-@@ -465,6 +452,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- {
- 	struct usb_device *udev = devinfo->udev;
- 	struct scsi_device *sdev = cmnd->device;
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct command_iu *iu;
- 	int len;
-@@ -481,7 +469,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 		goto free;
- 
- 	iu->iu_id = IU_ID_COMMAND;
--	iu->tag = cpu_to_be16(uas_get_tag(cmnd));
-+	iu->tag = cpu_to_be16(cmdinfo->uas_tag);
- 	iu->prio_attr = UAS_SIMPLE_TAG;
- 	iu->len = len;
- 	int_to_scsilun(sdev->lun, &iu->lun);
-@@ -608,8 +596,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	struct uas_dev_info *devinfo = sdev->hostdata;
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	unsigned long flags;
--	unsigned int stream;
--	int err;
-+	int idx, err;
- 
- 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
- 
-@@ -635,8 +622,12 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		return 0;
- 	}
- 
--	stream = uas_get_tag(cmnd);
--	if (devinfo->cmnd[stream - 1]) {
-+	/* Find a free uas-tag */
-+	for (idx = 0; idx < devinfo->qdepth; idx++) {
-+		if (!devinfo->cmnd[idx])
-+			break;
-+	}
-+	if (idx == devinfo->qdepth) {
- 		spin_unlock_irqrestore(&devinfo->lock, flags);
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
-@@ -644,7 +635,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	cmnd->scsi_done = done;
- 
- 	memset(cmdinfo, 0, sizeof(*cmdinfo));
--	cmdinfo->stream = stream;
-+	cmdinfo->uas_tag = idx + 1; /* uas-tag == usb-stream-id, so 1 based */
- 	cmdinfo->state = SUBMIT_STATUS_URB | ALLOC_CMD_URB | SUBMIT_CMD_URB;
- 
- 	switch (cmnd->sc_data_direction) {
-@@ -659,10 +650,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		break;
- 	}
- 
--	if (!devinfo->use_streams) {
-+	if (!devinfo->use_streams)
- 		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB);
--		cmdinfo->stream = 0;
--	}
- 
- 	err = uas_submit_urbs(cmnd, devinfo, GFP_ATOMIC);
- 	if (err) {
-@@ -674,7 +663,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		uas_add_work(cmdinfo);
- 	}
- 
--	devinfo->cmnd[stream - 1] = cmnd;
-+	devinfo->cmnd[idx] = cmnd;
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- 	return 0;
- }
-@@ -702,7 +691,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	cmdinfo->state |= COMMAND_ABORTED;
- 
- 	/* Drop all refs to this cmnd, kill data urbs to break their ref */
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
- 		data_in_urb = usb_get_urb(cmdinfo->data_in_urb);
- 	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
--- 
-2.1.0
-
+Bart.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
