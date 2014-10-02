@@ -1,47 +1,51 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: ufs: Add support for clock gating
-Date: Thu, 2 Oct 2014 18:30:54 +0300
-Message-ID: <20141002153054.GA11534@mwanda>
+Subject: re: ufs: definitions for phy interface
+Date: Thu, 2 Oct 2014 18:31:38 +0300
+Message-ID: <20141002153138.GC11534@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37277 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:37804 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754426AbaJBPbH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 11:31:07 -0400
+	with ESMTP id S1754218AbaJBPbw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 11:31:52 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stummala@codeaurora.org
+To: draviv@codeaurora.org
 Cc: linux-scsi@vger.kernel.org
 
-Hello Sahitya Tummala,
+Hello Dolev Raviv,
 
-The patch 1ab27c9cf8b6: "ufs: Add support for clock gating" from Sep
-25, 2014, leads to the following static checker warning:
+This is a semi-automatic email about new static checker warnings.
 
-	drivers/scsi/ufs/ufshcd.c:4474 __ufshcd_setup_clocks()
-	warn: we tested 'ret' before and it was 'false'
+The patch e785060ea3a1: "ufs: definitions for phy interface" from Sep 
+25, 2014, leads to the following Smatch complaint:
+
+drivers/scsi/ufs/ufshcd.c:5118 ufshcd_system_suspend()
+	 error: we previously assumed 'hba' could be null (see line 5089)
 
 drivers/scsi/ufs/ufshcd.c
-  4467                  ret = hba->vops->setup_clocks(hba, on);
-  4468  out:
-  4469          if (ret) {
-  4470                  list_for_each_entry(clki, head, list) {
-  4471                          if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
-  4472                                  clk_disable_unprepare(clki->clk);
-  4473                  }
-  4474          } else if (!ret && on) {
-                           ^^^^
-Not needed.
+  5088	
+  5089		if (!hba || !hba->is_powered)
+                    ^^^^
+Existing check for NULL.
 
-  4475                  spin_lock_irqsave(hba->host->host_lock, flags);
-  4476                  hba->clk_gating.state = CLKS_ON;
-  4477                  spin_unlock_irqrestore(hba->host->host_lock, flags);
-  4478          }
-  4479          return ret;
-  4480  }
+  5090			goto out;
+  5091	
 
+[ snip ]
+
+  5115		ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
+  5116	out:
+  5117		if (!ret)
+  5118			hba->is_sys_suspended = true;
+                        ^^^^^^^^^^^^^^^^^^^^^
+New unchecked dereference.  This is a One Err Bug caused by "out" label
+style error handling.
+
+  5119		return ret;
+  5120	}
 
 regards,
 dan carpenter
