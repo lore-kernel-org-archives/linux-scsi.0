@@ -1,201 +1,57 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 20/24] sd: Cleanup logging
-Date: Thu, 2 Oct 2014 23:20:57 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBCC5@G4W3202.americas.hpqcorp.net>
-References: <1412144580-72880-1-git-send-email-hare@suse.de>
- <1412144580-72880-21-git-send-email-hare@suse.de>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
+	support
+Date: Fri, 3 Oct 2014 01:29:44 +0200
+Message-ID: <20141002232944.GT14081@wotan.suse.de>
+References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com> <20140928150329.GC5023@mtj.dyndns.org> <20140929212208.GV17349@wotan.suse.de> <20140929212601.GF15925@htj.dyndns.org> <20140930072159.GC14081@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:22506 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbaJBXWj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 19:22:39 -0400
-In-Reply-To: <1412144580-72880-21-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140930072159.GC14081@wotan.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: gregkh@linuxfoundation.org, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, dmitry.torokhov@gmail.com, tiwai@suse.de, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@che>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-> From: Hannes Reinecke [mailto:hare@suse.de]
-...
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 848b17d..2cc8703 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -116,7 +116,7 @@ static int sd_eh_action(struct scsi_cmnd *, int);
->  static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
->  static void scsi_disk_release(struct device *cdev);
->  static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
-> -static void sd_print_result(struct scsi_disk *, int);
-> +static void sd_print_result(struct scsi_disk *, const char *, int);
+On Tue, Sep 30, 2014 at 09:21:59AM +0200, Luis R. Rodriguez wrote:
+> On Mon, Sep 29, 2014 at 05:26:01PM -0400, Tejun Heo wrote:
+> > Hello, Luis.
+> > 
+> > On Mon, Sep 29, 2014 at 11:22:08PM +0200, Luis R. Rodriguez wrote:
+> > > > > +	/* For now lets avoid stupid bug reports */
+> > > > > +	if (!strcmp(bus->name, "pci") ||
+> > > > > +	    !strcmp(bus->name, "pci_express") ||
+> > > > > +	    !strcmp(bus->name, "hid") ||
+> > > > > +	    !strcmp(bus->name, "sdio") ||
+> > > > > +	    !strcmp(bus->name, "gameport") ||
+> > > > > +	    !strcmp(bus->name, "mmc") ||
+> > > > > +	    !strcmp(bus->name, "i2c") ||
+> > > > > +	    !strcmp(bus->name, "platform") ||
+> > > > > +	    !strcmp(bus->name, "usb"))
+> > > > > +		return true;
+> > > > 
+> > > > Ugh... things like this tend to become permanent.  Do we really need
+> > > > this?  And how are we gonna find out what's broken why w/o bug
+> > > > reports?
+> > > 
+> > > Yeah... well we have two options, one is have something like this to
+> > > at least make it generally useful or remove this and let folks who
+> > > care start fixing async for all modules. The downside to removing
+> > > this is it makes async probe pretty much useless on most systems
+> > > right now, it would mean systemd would have to probably consider
+> > > the list above if they wanted to start using this without expecting
+> > > systems to not work.
+> > 
+> > So, I'd much prefer blacklist approach if something like this is a
+> > necessity.  That way, we'd at least know what doesn't work.
 > 
->  static DEFINE_SPINLOCK(sd_index_lock);
->  static DEFINE_IDA(sd_index_ida);
-> @@ -1479,7 +1479,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  	}
-> 
->  	if (res) {
-> -		sd_print_result(sdkp, res);
-> +		sd_print_result(sdkp, "SYNCHRONIZE_CACHE failed", res);
+> For buses? Or do you mean you'd want to wait until we have a decent
+> list of drivers with the sync probe flag set? If the later it may take
+> a while to get that list for this to be somewhat useful.
 
-The cdb_byte0_names[] array in constants.c capitalizes
-the candidates as:
-	Synchronize Cache(10)
-	Synchronize cache(16)
+OK I'm removing this part and it works well for me now on my laptop
+and an AMD server without a white list, so all the junk above will
+be removed in the next series.
 
-Here, it's specifically the 10 byte version (so far), so
-	Synchronize Cache(10) failed
-might be a better string.  Or, if following SCSI standards,
-	SYNCHRONIZE CACHE(10)
-without the _ would be better.
-
-Consider changing cdb_byte0_names to Synchronize Cache(16) too.
-(it has a lot of inconsistent capitalization)
-
-> 
->  		if (driver_byte(res) & DRIVER_SENSE)
->  			sd_print_sense_hdr(sdkp, &sshdr);
-> @@ -1700,17 +1700,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  		if (sense_valid)
->  			sense_deferred = scsi_sense_is_deferred(&sshdr);
->  	}
-> -#ifdef CONFIG_SCSI_LOGGING
-> -	SCSI_LOG_HLCOMPLETE(1, scsi_print_result(SCpnt));
-> -	if (sense_valid) {
-> -		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
-> -						   "sd_done: sb[respc,sk,asc,"
-> -						   "ascq]=%x,%x,%x,%x\n",
-> -						   sshdr.response_code,
-> -						   sshdr.sense_key, sshdr.asc,
-> -						   sshdr.ascq));
-> -	}
-> -#endif
-> +	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
-> +					   "sd_done: completed %d bytes\n",
-> +					   good_bytes));
-
-Printing good_bytes here is misleading, because it is 
-subsequently changed from 0 to nonzero in these cases:
-* HARDWARE ERROR sense key
-* MEDIUM ERROR sense key
-* RECOVERED ERROR sense key
-* ABORTED COMMAND sense key for ASC 0x10
-* ILLEGAL REQUEST sense key for ASC 0x10
-* ILLEGAL REQUEST sense key for ASC/ASCQ 0x20/0x24 
-	for WRITE SAME without the UNMAP bit
-
-Suggestions:
-1. Move the print down after the out: label, when good_bytes
-has reached its final value.
-
-2. Indicate if the command was able to transfer all the bytes
-by adding:
-	"%d of %d bytes" good_bytes, scsi_bufflen(SCpnt) 
-
->  	sdkp->medium_access_timed_out = 0;
-> 
->  	if (driver_byte(result) != DRIVER_SENSE &&
-> @@ -1820,12 +1812,12 @@ sd_spinup_disk(struct scsi_disk *sdkp)
->  			/* no sense, TUR either succeeded or failed
->  			 * with a status error */
->  			if(!spintime && !scsi_status_is_good(the_result)) {
-> -				sd_printk(KERN_NOTICE, sdkp, "Unit Not Ready\n");
-> -				sd_print_result(sdkp, the_result);
-> +				sd_print_result(sdkp, "Unit Not Ready",
-> +						the_result);
-
-"unit" by itself is not a real SCSI term.  "Logical Unit Not 
-Ready" would be better, but this is printed for all non-GOOD 
-status values, not just CHECK CONDITION status with a sense 
-key of NOT READY and one of many additional sense codes with 
-"LOGICAL UNIT NOT READY" in their names.
-
-Following the other prints in this patch, how about this?
-	"TEST UNIT READY failed"
-
->  			}
->  			break;
->  		}
-> -
-> +
->  		/*
->  		 * The device does not want the automatic start to be issued.
->  		 */
-> @@ -1941,7 +1933,7 @@ static void read_capacity_error(struct scsi_disk *sdkp,
-> struct scsi_device *sdp,
->  			struct scsi_sense_hdr *sshdr, int sense_valid,
->  			int the_result)
->  {
-> -	sd_print_result(sdkp, the_result);
-> +	sd_print_result(sdkp, "READ CAPACITY failed", the_result);
-
-The cdb_byte0_names[] array in constants.c capitalizes
-the candidates as:
-	Read Capacity(10)
-	Read capacity(16)
-
-The two callers to this function already print the opcode
-name, using all caps and not printing "(10)", at the
-KERN_NOTICE level:
-                sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
-                read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
-
-                sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
-                read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
-
-sd_print_result uses the KERN_INFO level.
-
-To follow cdb_byte0_names, use "Read Capacity(10)" and
-"Read capacity(16)" in the callers.
-
-To follow SCSI standards, add "(10)" in the second caller.
-
-Consider changing cdb_byte0_names to "Read Capacity(16)" too.
-
->  	if (driver_byte(the_result) & DRIVER_SENSE)
->  		sd_print_sense_hdr(sdkp, sshdr);
->  	else
-> @@ -3126,8 +3118,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp,
-> int start)
->  	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
->  			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
->  	if (res) {
-> -		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
-> -		sd_print_result(sdkp, res);
-> +		sd_print_result(sdkp, "START_STOP failed", res);
-
-To follow cdb_byte0_names, use "Start/Stop Unit".
-To follow SCSI standards, use "START STOP UNIT".
-
-Since this command can request start, stop, or
-various power conditions, it might be helpful to include:
-	start=%d pwr_cond=0x%x",
-		cmd[4] & 0x1,
-		cmd[4] >> 4 & 0xf
-
-
->  		if (driver_byte(res) & DRIVER_SENSE)
->  			sd_print_sense_hdr(sdkp, &sshdr);
->  		if (scsi_sense_valid(&sshdr) &&
-> @@ -3328,9 +3319,19 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
->  			     sshdr->asc, sshdr->ascq);
->  }
-> 
-> -static void sd_print_result(struct scsi_disk *sdkp, int result)
-> +static void sd_print_result(struct scsi_disk *sdkp, const char *msg,
-> +			    int result)
-...
-
-Since what sdkp points to is not modified, the first argument 
-could be:
-	const struct scsi_disk *sdkp
-
-
----
-Rob Elliott    HP Server Storage
-
-
-
+  Luis
