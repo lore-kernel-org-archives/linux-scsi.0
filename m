@@ -1,49 +1,117 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
-Date: Thu, 2 Oct 2014 07:32:56 -0700
-Message-ID: <20141002143256.GB6419@infradead.org>
-References: <1411991272-129962-1-git-send-email-hare@suse.de>
- <542C4D33.2030401@hp.com>
- <20141001211003.GA24820@infradead.org>
- <542CF5E8.3030601@suse.de>
- <20141002091916.GA13227@infradead.org>
- <542D1FF2.1010307@suse.de>
- <20141002113652.GB26897@infradead.org>
- <542D3E60.40009@suse.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: ufs: Add freq-table-hz property for UFS device
+Date: Thu, 2 Oct 2014 18:23:15 +0300
+Message-ID: <20141002152315.GA27277@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51272 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbaJBOc6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 10:32:58 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:20247 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754422AbaJBPXa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 11:23:30 -0400
 Content-Disposition: inline
-In-Reply-To: <542D3E60.40009@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Webb Scales <webbnh@hp.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: stummala@codeaurora.org
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Oct 02, 2014 at 02:00:32PM +0200, Hannes Reinecke wrote:
-> Actually, I've hit a similar issue for megaraid_sas (and I guess
-> others which implement a host-wide tag map might suffer here, too):
-> tags need to be used even for internal commands.
-> But tag allocation is done exclusively in the block layer, so one
-> cannot readily influence this.
-> (Or, if you do, you'll end up with code duplication like the fnic
-> driver).
-> Thing is, for internal commands we typically do not _need_ a fully
-> formed request, we just need to tag number.
+Hello Sahitya Tummala,
 
-blk-mq allows a driver to reserve tags, and allocate them using
-blk_mq_alloc_request with the reserved flag.  Take a look at the
-mtip32xx driver, which is using that feature.
+The patch 4cff6d991e4a: "ufs: Add freq-table-hz property for UFS
+device" from Sep 25, 2014, leads to the following static checker
+warning:
 
-The lockless hpsa series has a patch to expose the nr of reserved
-tags to scsi, but there is no equivalent in the old blk code yet.
+	drivers/scsi/ufs/ufshcd-pltfrm.c:138 ufshcd_parse_clock_info()
+	warn: passing devm_ allocated variable to kfree. 'clkfreq'
 
-Another issue is that we only setup the tag allocator at scsi_add_host
-time, and to fully support drivers that needs tags during initialization
-we need move it to scsi_host_alloc time, which doesn't sound like a
-major problem.
+drivers/scsi/ufs/ufshcd-pltfrm.c
+   102          clkfreq = devm_kzalloc(dev, sz * sizeof(*clkfreq),
+   103                          GFP_KERNEL);
+                          ^^^^^^^^^^^^^
+   104          if (!clkfreq) {
+   105                  dev_err(dev, "%s: no memory\n", "freq-table-hz");
 
+Don't print an error.  It just wastes ram.  Error messages are often
+buggy.  If we delete it then the code is shorter and easier to read.
+Kmalloc() has its own more useful error message already.
+
+   106                  ret = -ENOMEM;
+   107                  goto out;
+
+Out labels are the worst.  The name is too vague.  They are a sign of
+either One Err type error handling where you have one label handle
+everything or they are a just a do-nothing goto where it returns
+directly.
+
+One Err type error handling causes bugs.
+
+Do-nothing gotos are just annoying.  You're reading the code and you see
+a "goto out;" and you think "What does "out" do?"  But the name doesn't
+provide any hints.  You scroll down to the bottom of the function.  "Oh
+it was just a waste of time."  Now you have lost your place and your
+train of thought.
+
+Also people constantly forget to set "ret" before the goto out.  If you
+just write:
+
+
+	if (!of_get_property(np, "freq-table-hz", &len)) {
+		dev_info(dev, "freq-table-hz property not specified\n");
+		return 0;
+	}
+
+	if (len <= 0)
+		return 0;
+
+Then it's totally clear what we intended to return.  But in the current
+code it's ambiguous because maybe we just forgot to set ret?  Who
+knows.  Out labels make the code hard to understand.
+
+Anyway, in this case, originally "out" was doing One Err error handling
+but now it's just there to waste our time and cause bugs when this code
+is modified in the future.
+
+   108          }
+   109  
+   110          ret = of_property_read_u32_array(np, "freq-table-hz",
+   111                          clkfreq, sz);
+   112          if (ret && (ret != -EINVAL)) {
+   113                  dev_err(dev, "%s: error reading array %d\n",
+   114                                  "freq-table-hz", ret);
+   115                  goto free_clkfreq;
+   116          }
+   117  
+   118          for (i = 0; i < sz; i += 2) {
+   119                  ret = of_property_read_string_index(np,
+   120                                  "clock-names", i/2, (const char **)&name);
+   121                  if (ret)
+   122                          goto free_clkfreq;
+   123  
+   124                  clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
+   125                  if (!clki) {
+   126                          ret = -ENOMEM;
+   127                          goto free_clkfreq;
+   128                  }
+   129  
+   130                  clki->min_freq = clkfreq[i];
+   131                  clki->max_freq = clkfreq[i+1];
+   132                  clki->name = kstrdup(name, GFP_KERNEL);
+
+Where is name freed?  There are definitely certain error paths where it
+is leaked.  Can we use devm_kstrdup() here?
+
+   133                  dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
+   134                                  clki->min_freq, clki->max_freq, clki->name);
+   135                  list_add_tail(&clki->list, &hba->clk_list_head);
+   136          }
+   137  free_clkfreq:
+   138          kfree(clkfreq);
+                ^^^^^^^^^^^^^
+Just delete this.
+
+   139  out:
+   140          return ret;
+   141  }
+
+regards,
+dan carpenter
