@@ -1,87 +1,100 @@
-From: Tom Gundersen <teg@jklm.no>
-Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe support
-Date: Thu, 2 Oct 2014 08:12:37 +0200
-Message-ID: <CAG-2HqVBnXUKSRBrJE=gEKA3St5KMfdgAbx2vRfpF3qw_teLOg@mail.gmail.com>
-References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com>
- <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com>
- <CAG-2HqWmVODJ6Q46t96mS9ALbeFjRcQ18ypwejY=ug0wCUVv-Q@mail.gmail.com>
- <20140930022751.GA14081@wotan.suse.de> <CAG-2HqUdFWBPUrHg2yezVVu7xedqTQDBxAW5nuYWKWJCTkZSBg@mail.gmail.com>
- <20140930152419.GF14081@wotan.suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] megaraid_sas: Enable shared tag map
+Date: Thu, 02 Oct 2014 08:51:20 +0200
+Message-ID: <542CF5E8.3030601@suse.de>
+References: <1411991272-129962-1-git-send-email-hare@suse.de> <542C4D33.2030401@hp.com> <20141001211003.GA24820@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:41186 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbaJBGM7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 02:12:59 -0400
-Received: by mail-yh0-f51.google.com with SMTP id 29so433259yhl.38
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Oct 2014 23:12:58 -0700 (PDT)
-In-Reply-To: <20140930152419.GF14081@wotan.suse.de>
+Received: from cantor2.suse.de ([195.135.220.15]:54602 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750954AbaJBGvX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Oct 2014 02:51:23 -0400
+In-Reply-To: <20141001211003.GA24820@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, Michal Hocko <mhocko@suse.cz>, Greg KH <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Takashi Iwai <tiwai@suse.de>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@linux.intel.com>, Robert Milasan <rmilasan@suse.com>, werner@suse.com, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, pmladek@suse.cz, dbueso@suse.com, LKML <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotec>
+To: Christoph Hellwig <hch@infradead.org>, Webb Scales <webbnh@hp.com>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 30, 2014 at 5:24 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> > commit e64fae5573e566ce4fd9b23c68ac8f3096603314
->> > Author: Kay Sievers <kay.sievers@vrfy.org>
->> > Date:   Wed Jan 18 05:06:18 2012 +0100
->> >
->> >     udevd: kill hanging event processes after 30 seconds
->> >
->> >     Some broken kernel drivers load firmware synchronously in the module init
->> >     path and block modprobe until the firmware request is fulfilled.
->> >     <...>
+On 10/01/2014 11:10 PM, Christoph Hellwig wrote:
+> On Wed, Oct 01, 2014 at 02:51:31PM -0400, Webb Scales wrote:
+>> Hannes,
 >>
->> This was a workaround to avoid a deadlock between udev and the kernel.
->> The 180 s timeout was already in place before this change, and was not
->> motivated by firmware loading. Also note that this patch was not about
->> "tracking device drivers", just about avoiding dead-lock.
->
-> Thanks, can you elaborate on how a deadlock can occur if the kmod
-> worker is not at some point sigkilled?
+>> In megasas_change_queue_type(), is it possible for sdev->queue_depth=
+ to be
+>> greater than 256?
+>>
+>> Unless I'm misunderstanding the SCSI code, we can request a
+>> queue-depth/tag-map-size which is greater than 256, but, since the
+>> scsi_cmnd::tag field is an unsigned char, depths greater than 256 ma=
+y
+>> overflow the field when high-numbered tags are used...do I have that=
+ right?
+>=20
+> Yes, we really need to increase the size of the tag field.  SAM allow=
+s
+> a transport specific limit of up to 64 _bytes_ for it, although I don=
+'t
+> know implementation that large.  Given that the block layer can gener=
+ate
+> up to 32-bit tags both for the old blk-tag.c code and the new
+> blk-mq-tag.c version it would be good to use a u32 there.  Can you se=
+nd
+> me a patch?
+>=20
+Weeelll ...
 
-This was only relevant whet udev did the firmware loading. modprobe
-would wait for the kernel, which would wait for the firmware loading,
-which would wait for modprobe. This is no longer a problem as udev
-does not do firmware loading any more.
+I'm afraid it's not _that_ easy.
+SCSI-II tagged queueing has some specific tag values:
 
-> Is the issue that if there is no extra worker available and all are
-> idling on sleep / synchronous long work boot will potentially hang
-> unless a new worker becomes available to do more work?
+#define SIMPLE_QUEUE_TAG    0x20
+#define HEAD_OF_QUEUE_TAG   0x21
+#define ORDERED_QUEUE_TAG   0x22
 
-Correct.
+drivers/scsi/vmw_pvscsi.c:
+	e->tag =3D SIMPLE_QUEUE_TAG;
+	if (sdev->tagged_supported &&
+	    (cmd->tag =3D=3D HEAD_OF_QUEUE_TAG ||
+	     cmd->tag =3D=3D ORDERED_QUEUE_TAG))
+		e->tag =3D cmd->tag;
 
-> If so I can
-> see the sigkill helping for hanging tasks but it doesn't necessarily
-> mean its a good idea to kill modules loading taking a while. Also
-> what if the sigkill is just avoided for *just* kmod workers?
+So we cannot translate between them easily.
+Unless we move the SCSI-II values to negative and use the positive
+values for 'real' tag numbers.
 
-Depending on the number of devices you have, I suppose we could still
-exhaust the workers.
+The recommendation here is to use 'scmd->request->tag' whenever
+you want to get to the tag number, and 'scmd->tag' if you have to
+play around with SCSI-II TCQ.
+But if not I would strongly advise to leave 'scmd->tag' alone.
 
->> The way I see it, the current status from systemd's side is: our
->> short-term work-around is to increase the timeout, and at the moment
->> it appears no long-term solution is needed (i.e., it seems like the
->> right thing to do is to make sure insmod can be near instantaneous, it
->> appears people are working towards this goal, and so far no examples
->> have cropped up showing that it is fundamentally impossible (once/if
->> they do, we should of course revisit the problem)).
->
-> That again would be reactive behaviour, what would prevent avoiding the
-> sigkill only for kmod workers? Is it known the deadlock is immiment?
-> If the amount of workers for kmod that would hit the timeout is
-> considered low I don't see how that's possible and why not just lift
-> the sigkill.
+Speaking of which:
+We have
 
-Making kmod a special case is of course possible. However, as long as
-there is no fundamental reason why kmod should get this special
-treatment, this just looks like a work-around to me. We already have a
-work-around, which is to increase the global timeout. If you still
-think we should do something different in systemd, it is probably best
-to take the discussion to systemd-devel to make sure all the relevant
-people are involved.
+drivers/scsi/scsi_lib.c:scsi_get_cmd_from_request()
+
+        /* pull a tag out of the request if we have one */
+        cmd->tag =3D req->tag;
+        cmd->request =3D req;
+
+What would happen if the block layer decides to use tag number 0x22?
+Wouldn't that completely bugger up the TCQ logic?
+Why do we need to pull the request tag into the scmd tag, anyway?
+I'd rather leave that alone, so that the SCSI midlayer can insert
+whatever magic it'll decide to do here ...
+
+James?
 
 Cheers,
 
-Tom
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
