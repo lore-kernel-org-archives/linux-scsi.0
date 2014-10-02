@@ -1,365 +1,250 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 15/29] ncr5380: Remove *_RELEASE macros
-Date: Thu, 02 Oct 2014 16:56:43 +1000
-Message-ID: <20141002065631.866173651@telegraphics.com.au>
+Subject: [PATCH 28/29] atari_NCR5380: Refactor Falcon special cases
+Date: Thu, 02 Oct 2014 16:56:56 +1000
+Message-ID: <20141002065634.956141656@telegraphics.com.au>
 References: <20141002065628.256592712@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-RELEASE-macros
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33732 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889AbaJBNEP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 09:04:15 -0400
+Content-Disposition: inline; filename=atari_NCR5380-refactor-falcon-special-case
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-The *_RELEASE macros don't tell me anything. In some cases the version in
-the macro contradicts the version in the comments. Anyway, the Linux kernel
-version is sufficient information. Remove these macros to improve readability.
+Make the atari_NCR5380.c core driver usable by sun3_scsi, mac_scsi and others
+by moving some of the Falcon-specific code out of the core driver: !IS_A_TT,
+atari_read_overruns and falcon_dont_release. Replace these with hostdata 
+variables and flags. FLAG_CHECK_LAST_BYTE_SENT is unused in atari_NCR5380.c
+so don't set it.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   18 ------------------
- drivers/scsi/NCR5380.h       |    5 -----
- drivers/scsi/arm/cumana_1.c  |    2 --
- drivers/scsi/arm/oak.c       |    2 --
- drivers/scsi/atari_NCR5380.c |    4 ----
- drivers/scsi/dtc.c           |    5 -----
- drivers/scsi/dtc.h           |    2 --
- drivers/scsi/g_NCR5380.c     |    2 --
- drivers/scsi/g_NCR5380.h     |    5 -----
- drivers/scsi/mac_scsi.c      |    2 --
- drivers/scsi/mac_scsi.h      |    4 ----
- drivers/scsi/pas16.h         |    2 --
- drivers/scsi/sun3_NCR5380.c  |    4 ----
- drivers/scsi/sun3_scsi.c     |    2 --
- drivers/scsi/sun3_scsi.h     |    4 ----
- drivers/scsi/t128.c          |    2 --
- drivers/scsi/t128.h          |    4 ----
- 17 files changed, 69 deletions(-)
+ drivers/scsi/NCR5380.h       |    4 ++++
+ drivers/scsi/atari_NCR5380.c |   30 +++++++++++++++---------------
+ drivers/scsi/atari_scsi.c    |   21 ++++++++++++---------
+ 3 files changed, 31 insertions(+), 24 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/drivers/scsi/atari_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2014-10-02 16:56:09.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.c	2014-10-02 16:56:11.000000000 +1000
-@@ -11,8 +11,6 @@
-  *      drew@colorado.edu
-  *      +1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6. 
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -736,22 +734,6 @@ static int __maybe_unused NCR5380_show_i
+--- linux.orig/drivers/scsi/atari_scsi.c	2014-10-02 16:56:24.000000000 +1000
++++ linux/drivers/scsi/atari_scsi.c	2014-10-02 16:56:25.000000000 +1000
+@@ -196,8 +196,6 @@ static char		*atari_dma_orig_addr;
+ /* mask for address bits that can't be used with the ST-DMA */
+ static unsigned long	atari_dma_stram_mask;
+ #define STRAM_ADDR(a)	(((a) & atari_dma_stram_mask) == 0)
+-/* number of bytes to cut from a transfer to handle NCR overruns */
+-static int atari_read_overruns;
+ #endif
  
- 	hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ static int setup_can_queue = -1;
+@@ -446,8 +444,6 @@ static void atari_scsi_fetch_restbytes(v
+ #endif /* REAL_DMA */
  
--	SPRINTF("NCR5380 core release=%d.   ", NCR5380_PUBLIC_RELEASE);
--	if (((struct NCR5380_hostdata *) instance->hostdata)->flags & FLAG_NCR53C400)
--		SPRINTF("ncr53c400 release=%d.  ", NCR53C400_PUBLIC_RELEASE);
--#ifdef DTC_PUBLIC_RELEASE
--	SPRINTF("DTC 3180/3280 release %d", DTC_PUBLIC_RELEASE);
--#endif
--#ifdef T128_PUBLIC_RELEASE
--	SPRINTF("T128 release %d", T128_PUBLIC_RELEASE);
--#endif
--#ifdef GENERIC_NCR5380_PUBLIC_RELEASE
--	SPRINTF("Generic5380 release %d", GENERIC_NCR5380_PUBLIC_RELEASE);
--#endif
--#ifdef PAS16_PUBLIC_RELEASE
--	SPRINTF("PAS16 release=%d", PAS16_PUBLIC_RELEASE);
--#endif
+ 
+-static int falcon_dont_release = 0;
 -
- #ifdef PSEUDO_DMA
- 	SPRINTF("Highwater I/O busy spin counts: write %d, read %d\n",
- 	        hostdata->spin_max_w, hostdata->spin_max_r);
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-02 16:56:11.000000000 +1000
-@@ -11,8 +11,6 @@
-  *	drew@colorado.edu
-  *	+1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6.
-- *
-  * For more information, please consult
-  *
-  * NCR 5380 Family
-@@ -739,7 +737,6 @@ static void NCR5380_print_status(struct
+ /* This function releases the lock on the DMA chip if there is no
+  * connected command and the disconnected queue is empty.
+  */
+@@ -464,7 +460,7 @@ static void falcon_release_lock_if_possi
+ 	if (!hostdata->disconnected_queue &&
+ 	    !hostdata->issue_queue &&
+ 	    !hostdata->connected &&
+-	    !falcon_dont_release &&
++	    !hostdata->retain_dma_intr &&
+ 	    stdma_is_locked_by(scsi_falcon_intr))
+ 		stdma_release();
  
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+@@ -846,6 +842,7 @@ static int __init atari_scsi_probe(struc
+ {
+ 	struct Scsi_Host *instance;
+ 	int error;
++	int host_flags = 0;
  
--	printk("\nNCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	printk("NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-@@ -783,7 +780,6 @@ static int __maybe_unused NCR5380_show_i
+ 	if (!MACH_IS_ATARI)
+ 		return -ENODEV;
+@@ -945,7 +942,9 @@ static int __init atari_scsi_probe(struc
+ 	else
+ 		instance->irq = IRQ_NONE;
  
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
+-	NCR5380_init(instance, 0);
++	host_flags |= IS_A_TT() ? 0 : FLAG_LATE_DMA_SETUP;
++
++	NCR5380_init(instance, host_flags);
  
--	seq_printf(m, "NCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	seq_printf(m, "NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-10-02 16:56:11.000000000 +1000
-@@ -13,8 +13,6 @@
-  * 	drew@colorado.edu
-  *	+1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6. 
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -685,7 +683,6 @@ static void NCR5380_print_status(struct
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	printk("\nNCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	printk("NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-@@ -729,7 +726,6 @@ static int __maybe_unused NCR5380_show_i
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	seq_printf(m, "NCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	seq_printf(m, "NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
+ 	if (IS_A_TT()) {
+ 		error = request_irq(instance->irq, scsi_tt_intr, 0,
+@@ -968,12 +967,16 @@ static int __init atari_scsi_probe(struc
+ 		 *
+ 		 * In principle it should be sufficient to do max. 1 byte with
+ 		 * PIO, but there is another problem on the Medusa with the DMA
+-		 * rest data register. So 'atari_read_overruns' is currently set
++		 * rest data register. So read_overruns is currently set
+ 		 * to 4 to avoid having transfers that aren't a multiple of 4.
+ 		 * If the rest data bug is fixed, this can be lowered to 1.
+ 		 */
+-		if (MACH_IS_MEDUSA)
+-			atari_read_overruns = 4;
++		if (MACH_IS_MEDUSA) {
++			struct NCR5380_hostdata *hostdata =
++				shost_priv(instance);
++
++			hostdata->read_overruns = 4;
++		}
+ #endif
+ 	} else {
+ 		/* Nothing to do for the interrupt: the ST-DMA is initialized
 Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-10-02 16:56:09.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.h	2014-10-02 16:56:11.000000000 +1000
-@@ -7,8 +7,6 @@
-  * 	drew@colorado.edu
-  *      +1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 7
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -27,9 +25,6 @@
- #include <linux/interrupt.h>
- #include <scsi/scsi_eh.h>
+--- linux.orig/drivers/scsi/NCR5380.h	2014-10-02 16:56:14.000000000 +1000
++++ linux/drivers/scsi/NCR5380.h	2014-10-02 16:56:25.000000000 +1000
+@@ -237,6 +237,7 @@
+ #define FLAG_NCR53C400			4	/* NCR53c400 */
+ #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
+ #define FLAG_DTC3181E			16	/* DTC3181E */
++#define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
  
--#define NCR5380_PUBLIC_RELEASE 7
--#define NCR53C400_PUBLIC_RELEASE 2
--
- #define NDEBUG_ARBITRATION	0x1
- #define NDEBUG_AUTOSENSE	0x2
- #define NDEBUG_DMA		0x4
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/arm/cumana_1.c	2014-10-02 16:56:11.000000000 +1000
-@@ -20,8 +20,6 @@
- 
- #define PSEUDO_DMA
- 
--#define CUMANASCSI_PUBLIC_RELEASE 1
--
- #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
- #define NCR5380_local_declare()		struct Scsi_Host *_instance
- #define NCR5380_setup(instance)		_instance = instance
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2014-10-02 16:56:09.000000000 +1000
-+++ linux/drivers/scsi/arm/oak.c	2014-10-02 16:56:11.000000000 +1000
-@@ -18,8 +18,6 @@
- #include <scsi/scsi_host.h>
- 
- /*#define PSEUDO_DMA*/
--
--#define OAKSCSI_PUBLIC_RELEASE 1
- #define DONT_USE_INTR
- 
- #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2014-10-02 16:56:09.000000000 +1000
-+++ linux/drivers/scsi/dtc.c	2014-10-02 16:56:11.000000000 +1000
-@@ -17,8 +17,6 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * DISTRIBUTION RELEASE 1.
-  */
- 
- /*
-@@ -66,9 +64,6 @@
- #define AUTOPROBE_IRQ
- #include "NCR5380.h"
- 
--
--#define DTC_PUBLIC_RELEASE 2
--
- /*
-  * The DTC3180 & 3280 boards are memory mapped.
-  * 
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/g_NCR5380.h	2014-10-02 16:56:11.000000000 +1000
-@@ -9,16 +9,11 @@
-  *
-  * NCR53C400 extensions (c) 1994,1995,1996, Kevin Lentin
-  *    K.Lentin@cs.monash.edu.au
-- *
-- * ALPHA RELEASE 1. 
-  */
- 
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
--
--#define GENERIC_NCR5380_PUBLIC_RELEASE 1
--
- #ifdef NCR53C400
- #define BIOSPARAM
- #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
-Index: linux/drivers/scsi/mac_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.h	2014-10-02 16:56:10.000000000 +1000
-+++ linux/drivers/scsi/mac_scsi.h	2014-10-02 16:56:11.000000000 +1000
-@@ -6,15 +6,11 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * ALPHA RELEASE 1.
-  */
- 
- #ifndef MAC_NCR5380_H
- #define MAC_NCR5380_H
- 
--#define MACSCSI_PUBLIC_RELEASE 2
--
  #ifndef ASM
- 
- #include <scsi/scsicam.h>
-Index: linux/drivers/scsi/pas16.h
+ struct NCR5380_hostdata {
+@@ -265,6 +266,9 @@ struct NCR5380_hostdata {
+ 	struct delayed_work coroutine;		/* our co-routine */
+ 	struct scsi_eh_save ses;
+ 	char info[256];
++	int read_overruns;                /* number of bytes to cut from a
++	                                   * transfer to handle chip overruns */
++	int retain_dma_intr;
+ #ifdef PSEUDO_DMA
+ 	unsigned spin_max_r;
+ 	unsigned spin_max_w;
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/pas16.h	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/pas16.h	2014-10-02 16:56:11.000000000 +1000
-@@ -24,8 +24,6 @@
- #ifndef PAS16_H
- #define PAS16_H
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-02 16:56:24.000000000 +1000
++++ linux/drivers/scsi/atari_NCR5380.c	2014-10-02 16:56:25.000000000 +1000
+@@ -837,7 +837,7 @@ static int __init NCR5380_init(struct Sc
+ 	hostdata->connected = NULL;
+ 	hostdata->issue_queue = NULL;
+ 	hostdata->disconnected_queue = NULL;
+-	hostdata->flags = FLAG_CHECK_LAST_BYTE_SENT;
++	hostdata->flags = flags;
  
--#define PAS16_PUBLIC_RELEASE 3
--
- #define PDEBUG_INIT	0x1
- #define PDEBUG_TRANSFER 0x2
+ 	if (!the_template) {
+ 		the_template = instance->hostt;
+@@ -1053,7 +1053,7 @@ static void NCR5380_main(struct work_str
+ 						hostdata->issue_queue = NEXT(tmp);
+ 					}
+ 					SET_NEXT(tmp, NULL);
+-					falcon_dont_release++;
++					hostdata->retain_dma_intr++;
  
-Index: linux/drivers/scsi/sun3_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.h	2014-10-02 16:56:10.000000000 +1000
-+++ linux/drivers/scsi/sun3_scsi.h	2014-10-02 16:56:11.000000000 +1000
-@@ -13,15 +13,11 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * ALPHA RELEASE 1.
-  */
+ 					/* reenable interrupts after finding one */
+ 					local_irq_restore(flags);
+@@ -1081,7 +1081,7 @@ static void NCR5380_main(struct work_str
+ 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
+ #endif
+ 					if (!NCR5380_select(instance, tmp)) {
+-						falcon_dont_release--;
++						hostdata->retain_dma_intr--;
+ 						/* release if target did not response! */
+ 						falcon_release_lock_if_possible(hostdata);
+ 						break;
+@@ -1093,7 +1093,7 @@ static void NCR5380_main(struct work_str
+ #ifdef SUPPORT_TAGS
+ 						cmd_free_tag(tmp);
+ #endif
+-						falcon_dont_release--;
++						hostdata->retain_dma_intr--;
+ 						local_irq_restore(flags);
+ 						dprintk(NDEBUG_MAIN, "scsi%d: main(): select() failed, "
+ 							    "returned to issue_queue\n", HOSTNO);
+@@ -1150,7 +1150,7 @@ static void NCR5380_dma_complete(struct
+ 		return;
+ 	}
  
- #ifndef SUN3_SCSI_H
- #define SUN3_SCSI_H
+-	if (atari_read_overruns) {
++	if (hostdata->read_overruns) {
+ 		p = hostdata->connected->SCp.phase;
+ 		if (p & SR_IO) {
+ 			udelay(10);
+@@ -1180,9 +1180,9 @@ static void NCR5380_dma_complete(struct
+ 	*data += transfered;
+ 	*count -= transfered;
  
--#define SUN3SCSI_PUBLIC_RELEASE 1
--
- /*
-  * Int: level 2 autovector
-  * IO: type 1, base 0x00140000, 5 bits phys space: A<4..0>
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/t128.h	2014-10-02 16:56:11.000000000 +1000
-@@ -8,8 +8,6 @@
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-  *
-- * DISTRIBUTION RELEASE 3.
-- *
-  * For more information, please consult
-  *
-  * Trantor Systems, Ltd.
-@@ -25,8 +23,6 @@
- #ifndef T128_H
- #define T128_H
+-	if (atari_read_overruns) {
++	if (hostdata->read_overruns) {
+ 		if ((NCR5380_read(STATUS_REG) & PHASE_MASK) == p && (p & SR_IO)) {
+-			cnt = toPIO = atari_read_overruns;
++			cnt = toPIO = hostdata->read_overruns;
+ 			if (overrun) {
+ 				dprintk(NDEBUG_DMA, "Got an input overrun, using saved byte\n");
+ 				*(*data)++ = saved_data;
+@@ -1837,8 +1837,8 @@ static int NCR5380_transfer_dma(struct S
+ 		return -1;
+ 	}
  
--#define T128_PUBLIC_RELEASE 3
--
- #define TDEBUG		0
- #define TDEBUG_INIT	0x1
- #define TDEBUG_TRANSFER 0x2
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/dtc.h	2014-10-02 16:56:11.000000000 +1000
-@@ -5,8 +5,6 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * DISTRIBUTION RELEASE 2. 
-  */
+-	if (atari_read_overruns && (p & SR_IO))
+-		c -= atari_read_overruns;
++	if (hostdata->read_overruns && (p & SR_IO))
++		c -= hostdata->read_overruns;
  
- #ifndef DTC3280_H
-Index: linux/drivers/scsi/g_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/g_NCR5380.c	2014-10-02 16:56:11.000000000 +1000
-@@ -18,8 +18,6 @@
-  *
-  * Added ISAPNP support for DTC436 adapters,
-  * Thomas Sailer, sailer@ife.ee.ethz.ch
-- *
-- * ALPHA RELEASE 1. 
-  */
+ 	dprintk(NDEBUG_DMA, "scsi%d: initializing DMA for %s, %d bytes %s %p\n",
+ 		   HOSTNO, (p & SR_IO) ? "reading" : "writing",
+@@ -1850,7 +1850,7 @@ static int NCR5380_transfer_dma(struct S
+ 	NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+ #endif /* def REAL_DMA  */
  
- /* 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-10-02 16:56:10.000000000 +1000
-+++ linux/drivers/scsi/mac_scsi.c	2014-10-02 16:56:11.000000000 +1000
-@@ -9,8 +9,6 @@
-  * Generic Generic NCR5380 driver
-  *
-  * Copyright 1995, Russell King
-- *
-- * ALPHA RELEASE 1.
-  */
+-	if (IS_A_TT()) {
++	if (!(hostdata->flags & FLAG_LATE_DMA_SETUP)) {
+ 		/* On the Medusa, it is a must to initialize the DMA before
+ 		 * starting the NCR. This is also the cleaner way for the TT.
+ 		 */
+@@ -1868,7 +1868,7 @@ static int NCR5380_transfer_dma(struct S
+ 		NCR5380_write(START_DMA_SEND_REG, 0);
+ 	}
  
- #include <linux/types.h>
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-02 16:56:10.000000000 +1000
-+++ linux/drivers/scsi/sun3_scsi.c	2014-10-02 16:56:11.000000000 +1000
-@@ -20,8 +20,6 @@
-  * Generic Generic NCR5380 driver
-  *
-  * Copyright 1995, Russell King
-- *
-- * ALPHA RELEASE 1.
-  */
+-	if (!IS_A_TT()) {
++	if (hostdata->flags & FLAG_LATE_DMA_SETUP) {
+ 		/* On the Falcon, the DMA setup must be done after the last */
+ 		/* NCR access, else the DMA setup gets trashed!
+ 		 */
+@@ -2083,7 +2083,7 @@ static void NCR5380_information_transfer
+ 					/* Accept message by clearing ACK */
+ 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 					/* ++guenther: possible race with Falcon locking */
+-					falcon_dont_release++;
++					hostdata->retain_dma_intr++;
+ 					hostdata->connected = NULL;
+ 					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d, lun %d "
+ 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
+@@ -2166,7 +2166,7 @@ static void NCR5380_information_transfer
+ 					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
+ 						barrier();
  
- #include <linux/types.h>
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2014-10-02 16:56:05.000000000 +1000
-+++ linux/drivers/scsi/t128.c	2014-10-02 16:56:11.000000000 +1000
-@@ -11,8 +11,6 @@
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-  *
-- * DISTRIBUTION RELEASE 3.
-- *
-  * For more information, please consult 
-  *
-  * Trantor Systems, Ltd.
+-					falcon_dont_release--;
++					hostdata->retain_dma_intr--;
+ 					/* ++roman: For Falcon SCSI, release the lock on the
+ 					 * ST-DMA here if no other commands are waiting on the
+ 					 * disconnected queue.
+@@ -2473,7 +2473,7 @@ static void NCR5380_reselect(struct Scsi
+ #endif
+ 		    ) {
+ 			/* ++guenther: prevent race with falcon_release_lock */
+-			falcon_dont_release++;
++			hostdata->retain_dma_intr++;
+ 			if (prev) {
+ 				REMOVE(prev, NEXT(prev), tmp, NEXT(tmp));
+ 				SET_NEXT(prev, NEXT(tmp));
+@@ -2511,7 +2511,7 @@ static void NCR5380_reselect(struct Scsi
+ 	hostdata->connected = tmp;
+ 	dprintk(NDEBUG_RESELECTION, "scsi%d: nexus established, target = %d, lun = %d, tag = %d\n",
+ 		   HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
+-	falcon_dont_release--;
++	hostdata->retain_dma_intr--;
+ }
+ 
+ 
+
+
