@@ -1,36 +1,47 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] uas: Make uas work with blk-mq
-Date: Thu, 02 Oct 2014 14:35:10 +0200
-Message-ID: <542D467E.2020400@redhat.com>
-References: <1412244280-15111-1-git-send-email-hdegoede@redhat.com> <1412244280-15111-2-git-send-email-hdegoede@redhat.com> <20141002112627.GC17628@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20141002112627.GC17628-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 01/29] ncr5380: Use printk() not pr_debug()
+Date: Thu, 02 Oct 2014 16:56:29 +1000
+Message-ID: <20141002065628.506518628@telegraphics.com.au>
+References: <20141002065628.256592712@telegraphics.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33694 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbaJBNDn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 09:03:43 -0400
+Content-Disposition: inline; filename=ncr5380-use-printk-not-pr_debug
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-Hi,
+Having defined NDEBUG, and having set the console log level, I'd like to see
+some output. Don't use pr_debug(), it's annoying to have to define DEBUG as
+well.
 
-On 10/02/2014 01:26 PM, Christoph Hellwig wrote:
-> Looks fine to me (and actually removes code..)
-> 
-> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> 
-> It's fairly late in 3.17 to get something like this in, but would you
-> consider Ccing it to stable so we can get it into the first 3.17 stable
-> release?
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-This patch sits on top of a whole bunch of uas cleanups / fixes which
-are going into 3.18, and which are to big of a change to backport.
+---
 
-Regards,
+Use of pr_debug() here was a bad idea of mine. Joe was right when
+he questioned it.
 
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ drivers/scsi/NCR5380.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2014-10-02 16:55:29.000000000 +1000
++++ linux/drivers/scsi/NCR5380.h	2014-10-02 16:55:49.000000000 +1000
+@@ -296,7 +296,8 @@ struct NCR5380_hostdata {
+ #endif
+ 
+ #define dprintk(flg, fmt, ...) \
+-	do { if ((NDEBUG) & (flg)) pr_debug(fmt, ## __VA_ARGS__); } while (0)
++	do { if ((NDEBUG) & (flg)) \
++		printk(KERN_DEBUG fmt, ## __VA_ARGS__); } while (0)
+ 
+ #if NDEBUG
+ #define NCR5380_dprint(flg, arg) \
+
+
