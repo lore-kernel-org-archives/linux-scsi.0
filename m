@@ -1,19 +1,18 @@
 From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 12/24] scsi: use 'bool' as return value for
- scsi_normalize_sense()
-Date: Fri, 3 Oct 2014 01:15:41 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBDB8@G4W3202.americas.hpqcorp.net>
+Subject: RE: [PATCH 14/24] Implement scsi_opcode_sa_name
+Date: Fri, 3 Oct 2014 01:26:20 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBDD9@G4W3202.americas.hpqcorp.net>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
- <1412144580-72880-13-git-send-email-hare@suse.de>
+ <1412144580-72880-15-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:53855 "EHLO
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:1491 "EHLO
 	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696AbaJCBRW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 21:17:22 -0400
-In-Reply-To: <1412144580-72880-13-git-send-email-hare@suse.de>
+	with ESMTP id S1751493AbaJCB2e convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 21:28:34 -0400
+In-Reply-To: <1412144580-72880-15-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,57 +23,36 @@ Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-s
 
 > -----Original Message-----
 > From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Wednesday, 01 October, 2014 1:23 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Elliott, Robert (Server
-> Storage); Hannes Reinecke
-> Subject: [PATCH 12/24] scsi: use 'bool' as return value for
-> scsi_normalize_sense()
-> 
-> Convert scsi_normalize_sense() and frieds to return 'bool'
-> instead of an integer.
-
-frieds should be friends
-
 ...
-> -int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
-> +bool scsi_command_normalize_sense(struct scsi_cmnd *cmd,
->  				 struct scsi_sense_hdr *sshdr)
+> +struct sa_name_list {
+> +	int cmd;
+> +	const struct value_name_pair *arr;
+> +	int arr_sz;
+> +};
 
-Add const for *cmd since what it points to is not
-modified.  (prototype in scsi_eh.h)
+cmd usually refers to a whole structure and is usually 
+a pointer variable.  grep searches will be easier if 
+you name that field "opcode".
 
+> +
+> +static struct sa_name_list sa_names_arr[] = {
+> +	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
+> +	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
+> +	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
+> +	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
+> +	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
+> +	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
+> +	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
+> +	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
+> +	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
+> +	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
+> +	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
+> +	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
+> +	{0, NULL, 0},
+> +};
+> +
+> +static bool scsi_opcode_sa_name(int cmd, int service_action,
+> +				const char **sa_name)
 ...
-> -static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
-> +static inline bool scsi_sense_valid(struct scsi_sense_hdr *sshdr)
->  {
->  	if (!sshdr)
-> -		return 0;
-> +		return false;
-> 
->  	return (sshdr->response_code & 0x70) == 0x70;
->  }
-
-Add const to the argument, since what it points to is not
-changed by this function:
-	const struct scsi_sense_hdr *sshdr
-
-
-> -static inline int scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
-> +static inline bool scsi_sense_is_deferred(struct scsi_sense_hdr *sshdr)
->  {
->  	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
->  }
-
-Add const to the argument, since what it points to is not
-changed by this function:
-	const struct scsi_sense_hdr *sshdr
-
-(also mentioned in reply to PATCH 4)
-
-
----
-Rob Elliott    HP Server Storage
-
 
 
