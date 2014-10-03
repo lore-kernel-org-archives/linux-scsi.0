@@ -1,228 +1,126 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v2 2/2] uas: Make uas work with blk-mq
-Date: Fri,  3 Oct 2014 12:08:57 +0200
-Message-ID: <1412330937-22630-2-git-send-email-hdegoede@redhat.com>
-References: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18208 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314AbaJCKJZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Oct 2014 06:09:25 -0400
-In-Reply-To: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 1/2] uas: Reduce number of function arguments for uas_alloc_foo functions
+Date: Fri,  3 Oct 2014 12:08:56 +0200
+Message-ID: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-With uas over usb-3 the tags inside the uas iu-s must match the usb-3 stream
-ids, and those go from 1 - qdepth.
+The stream_id and pipe are already present in uas_cmd_info resp uas_dev_info,
+so there is no need to pass a copy along.
 
-Before blk-mq calling scsi_activate_tcq(sdev, qdepth) guaranteed that we would
-only get cmnd->request->tag from 0 - (qdepth - 1), and we used those as
-uas-tags / stream-ids.
-
-With blk-mq however we are guaranteed to never get more then qdepth commands
-queued at the same time, but the cmnd->request->tag values may be much larger,
-which breaks uas.
-
-This commit fixes this by generating uas tags in the 1 - qdepth range ourselves
-instead of using cmnd->request->tag.
-
-While touching all involved code anyways also rename the uas_cmd_info stream
-field to uas_tag, because when using uas over usb-2 streams are not used.
-
-Cc: Christoph Hellwig <hch@infradead.org>
-Reported-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
---
-Changes in v2:
--Remove ".disable_blk_mq = true" from uas_host_template
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/usb/storage/uas.c | 64 +++++++++++++++++------------------------------
- 1 file changed, 23 insertions(+), 41 deletions(-)
+ drivers/usb/storage/uas.c | 29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 89b2434..004ebc1 100644
+index f62ef61..89b2434 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -66,7 +66,7 @@ enum {
- /* Overrides scsi_pointer */
- struct uas_cmd_info {
- 	unsigned int state;
--	unsigned int stream;
-+	unsigned int uas_tag;
- 	struct urb *cmd_urb;
- 	struct urb *data_in_urb;
- 	struct urb *data_out_urb;
-@@ -173,30 +173,15 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
- 	cmnd->result = sense_iu->status;
+@@ -412,20 +412,22 @@ static void uas_cmd_cmplt(struct urb *urb)
  }
  
--/*
-- * scsi-tags go from 0 - (nr_tags - 1), uas tags need to match stream-ids,
-- * which go from 1 - nr_streams. And we use 1 for untagged commands.
-- */
--static int uas_get_tag(struct scsi_cmnd *cmnd)
--{
--	int tag;
--
--	if (blk_rq_tagged(cmnd->request))
--		tag = cmnd->request->tag + 2;
--	else
--		tag = 1;
--
--	return tag;
--}
--
- static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *prefix,
- 			      int status)
+ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+-				      unsigned int pipe, u16 stream_id,
+ 				      struct scsi_cmnd *cmnd,
+ 				      enum dma_data_direction dir)
  {
- 	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
+ 	struct usb_device *udev = devinfo->udev;
 +	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct urb *urb = usb_alloc_urb(0, gfp);
+ 	struct scsi_data_buffer *sdb = (dir == DMA_FROM_DEVICE)
+ 		? scsi_in(cmnd) : scsi_out(cmnd);
++	unsigned int pipe = (dir == DMA_FROM_DEVICE)
++		? devinfo->data_in_pipe : devinfo->data_out_pipe;
  
- 	scmd_printk(KERN_INFO, cmnd,
--		    "%s %d tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
--		    prefix, status, uas_get_tag(cmnd),
-+		    "%s %d uas-tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
-+		    prefix, status, cmdinfo->uas_tag,
- 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
- 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
- 		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
-@@ -242,7 +227,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 			      DATA_OUT_URB_INFLIGHT |
- 			      COMMAND_ABORTED))
- 		return -EBUSY;
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	uas_free_unsubmitted_urbs(cmnd);
- 	cmnd->scsi_done(cmnd);
- 	return 0;
-@@ -289,7 +274,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 	idx = be16_to_cpup(&iu->tag) - 1;
- 	if (idx >= MAX_CMNDS || !devinfo->cmnd[idx]) {
- 		dev_err(&urb->dev->dev,
--			"stat urb: no pending cmd for tag %d\n", idx + 1);
-+			"stat urb: no pending cmd for uas-tag %d\n", idx + 1);
- 		goto out;
- 	}
- 
-@@ -427,7 +412,8 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	if (!urb)
  		goto out;
  	usb_fill_bulk_urb(urb, udev, pipe, NULL, sdb->length,
  			  uas_data_cmplt, cmnd);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
+-	urb->stream_id = stream_id;
++	urb->stream_id = cmdinfo->stream;
  	urb->num_sgs = udev->bus->sg_tablesize ? sdb->table.nents : 0;
  	urb->sg = sdb->table.sgl;
   out:
-@@ -451,7 +437,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+@@ -433,9 +435,10 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ }
+ 
+ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+-				       struct Scsi_Host *shost, u16 stream_id)
++				       struct scsi_cmnd *cmnd)
+ {
+ 	struct usb_device *udev = devinfo->udev;
++	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct urb *urb = usb_alloc_urb(0, gfp);
+ 	struct sense_iu *iu;
+ 
+@@ -447,8 +450,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 		goto free;
  
  	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
- 			  uas_stat_cmplt, cmnd->device->host);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
+-						uas_stat_cmplt, shost);
+-	urb->stream_id = stream_id;
++			  uas_stat_cmplt, cmnd->device->host);
++	urb->stream_id = cmdinfo->stream;
  	urb->transfer_flags |= URB_FREE_BUFFER;
   out:
  	return urb;
-@@ -465,6 +452,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+@@ -500,15 +503,13 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+  * daft to me.
+  */
+ 
+-static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd,
+-					gfp_t gfp, unsigned int stream)
++static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
  {
- 	struct usb_device *udev = devinfo->udev;
- 	struct scsi_device *sdev = cmnd->device;
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct command_iu *iu;
- 	int len;
-@@ -481,7 +469,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 		goto free;
+-	struct Scsi_Host *shost = cmnd->device->host;
+-	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
++	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+ 	struct urb *urb;
+ 	int err;
  
- 	iu->iu_id = IU_ID_COMMAND;
--	iu->tag = cpu_to_be16(uas_get_tag(cmnd));
-+	iu->tag = cpu_to_be16(cmdinfo->uas_tag);
- 	iu->prio_attr = UAS_SIMPLE_TAG;
- 	iu->len = len;
- 	int_to_scsilun(sdev->lun, &iu->lun);
-@@ -608,8 +596,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	struct uas_dev_info *devinfo = sdev->hostdata;
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	unsigned long flags;
--	unsigned int stream;
--	int err;
-+	int idx, err;
+-	urb = uas_alloc_sense_urb(devinfo, gfp, shost, stream);
++	urb = uas_alloc_sense_urb(devinfo, gfp, cmnd);
+ 	if (!urb)
+ 		return NULL;
+ 	usb_anchor_urb(urb, &devinfo->sense_urbs);
+@@ -531,7 +532,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
  
- 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
+ 	lockdep_assert_held(&devinfo->lock);
+ 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+-		urb = uas_submit_sense_urb(cmnd, gfp, cmdinfo->stream);
++		urb = uas_submit_sense_urb(cmnd, gfp);
+ 		if (!urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~SUBMIT_STATUS_URB;
+@@ -539,8 +540,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
  
-@@ -635,8 +622,12 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		return 0;
- 	}
+ 	if (cmdinfo->state & ALLOC_DATA_IN_URB) {
+ 		cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, gfp,
+-					devinfo->data_in_pipe, cmdinfo->stream,
+-					cmnd, DMA_FROM_DEVICE);
++							cmnd, DMA_FROM_DEVICE);
+ 		if (!cmdinfo->data_in_urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~ALLOC_DATA_IN_URB;
+@@ -560,8 +560,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
  
--	stream = uas_get_tag(cmnd);
--	if (devinfo->cmnd[stream - 1]) {
-+	/* Find a free uas-tag */
-+	for (idx = 0; idx < devinfo->qdepth; idx++) {
-+		if (!devinfo->cmnd[idx])
-+			break;
-+	}
-+	if (idx == devinfo->qdepth) {
- 		spin_unlock_irqrestore(&devinfo->lock, flags);
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
-@@ -644,7 +635,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	cmnd->scsi_done = done;
- 
- 	memset(cmdinfo, 0, sizeof(*cmdinfo));
--	cmdinfo->stream = stream;
-+	cmdinfo->uas_tag = idx + 1; /* uas-tag == usb-stream-id, so 1 based */
- 	cmdinfo->state = SUBMIT_STATUS_URB | ALLOC_CMD_URB | SUBMIT_CMD_URB;
- 
- 	switch (cmnd->sc_data_direction) {
-@@ -659,10 +650,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		break;
- 	}
- 
--	if (!devinfo->use_streams) {
-+	if (!devinfo->use_streams)
- 		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB);
--		cmdinfo->stream = 0;
--	}
- 
- 	err = uas_submit_urbs(cmnd, devinfo, GFP_ATOMIC);
- 	if (err) {
-@@ -674,7 +663,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		uas_add_work(cmdinfo);
- 	}
- 
--	devinfo->cmnd[stream - 1] = cmnd;
-+	devinfo->cmnd[idx] = cmnd;
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- 	return 0;
- }
-@@ -702,7 +691,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	cmdinfo->state |= COMMAND_ABORTED;
- 
- 	/* Drop all refs to this cmnd, kill data urbs to break their ref */
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
- 		data_in_urb = usb_get_urb(cmdinfo->data_in_urb);
- 	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
-@@ -818,13 +807,6 @@ static struct scsi_host_template uas_host_template = {
- 	.cmd_per_lun = 1,	/* until we override it */
- 	.skip_settle_delay = 1,
- 	.ordered_tag = 1,
--
--	/*
--	 * The uas drivers expects tags not to be bigger than the maximum
--	 * per-device queue depth, which is not true with the blk-mq tag
--	 * allocator.
--	 */
--	.disable_blk_mq = true,
- };
- 
- #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
+ 	if (cmdinfo->state & ALLOC_DATA_OUT_URB) {
+ 		cmdinfo->data_out_urb = uas_alloc_data_urb(devinfo, gfp,
+-					devinfo->data_out_pipe, cmdinfo->stream,
+-					cmnd, DMA_TO_DEVICE);
++							cmnd, DMA_TO_DEVICE);
+ 		if (!cmdinfo->data_out_urb)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~ALLOC_DATA_OUT_URB;
 -- 
 2.1.0
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
