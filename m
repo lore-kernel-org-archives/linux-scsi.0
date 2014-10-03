@@ -1,116 +1,66 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Fri, 3 Oct 2014 21:10:06 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1410032054150.12643@nippy.intranet>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 19/29] mac_scsi: Add module option to Kconfig
+Date: Fri, 3 Oct 2014 13:31:20 +0200
+Message-ID: <CAMuHMdV5rkZyoOxswAY1mkUwMv-=-sJz3GJnQfU=QBubp8=C0g@mail.gmail.com>
+References: <20141002065628.256592712@telegraphics.com.au>
+	<20141002065632.816184892@telegraphics.com.au>
+	<CAMuHMdUKQ8z6=jo5DH_Rg6kUrCw6Ap6VyHg9n14J41GXVHdykQ@mail.gmail.com>
+	<alpine.LNX.2.00.1410032047040.12643@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com>
+In-Reply-To: <alpine.LNX.2.00.1410032047040.12643@nippy.intranet>
 Sender: linux-m68k-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Finn Thain <fthain@telegraphics.com.au>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, Oct 3, 2014 at 12:49 PM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> On Fri, 3 Oct 2014, Geert Uytterhoeven wrote:
+>> On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>> > Allow mac_scsi to be built as a module. Replace the old validation of
+>> > __setup options with code that validates both module and __setup options.
+>>
+>> > --- linux.orig/drivers/scsi/mac_scsi.c  2014-10-02 16:56:17.000000000 +1000
+>> > +++ linux/drivers/scsi/mac_scsi.c       2014-10-02 16:56:17.000000000 +1000
+>>
+>> > @@ -219,15 +179,15 @@ int __init macscsi_detect(struct scsi_ho
+>> >         return 0;
+>> >
+>> >      if (macintosh_config->ident == MAC_MODEL_IIFX) {
+>> > -       mac_scsi_regp  = via1+0x8000;
+>> > -       mac_scsi_drq   = via1+0xE000;
+>> > -       mac_scsi_nodrq = via1+0xC000;
+>> > +       mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x8000;
+>> > +       mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0xE000;
+>> > +       mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0xC000;
+>> >         /* The IIFX should be able to do true DMA, but pseudo-dma doesn't work */
+>> >         flags = FLAG_NO_PSEUDO_DMA;
+>> >      } else {
+>> > -       mac_scsi_regp  = via1+0x10000;
+>> > -       mac_scsi_drq   = via1+0x6000;
+>> > -       mac_scsi_nodrq = via1+0x12000;
+>> > +       mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x10000;
+>> > +       mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0x6000;
+>> > +       mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0x12000;
+>> >      }
+>> >
+>> >      if (! setup_use_pdma)
+>>
+>> I don't think the above chunk belongs in this patch.
+>
+> via1 is not an exported symbol, so this allows mac_scsi to be linked as a
+> module.
 
-On Fri, 3 Oct 2014, Geert Uytterhoeven wrote:
+OK.
 
-> > +       if (ATARIHW_PRESENT(TT_SCSI)) {
-> > +               atari_scsi_reg_read  = atari_scsi_tt_reg_read;
-> > +               atari_scsi_reg_write = atari_scsi_tt_reg_write;
-> > +       } else if (ATARIHW_PRESENT(ST_SCSI)) {
-> > +               atari_scsi_reg_read  = atari_scsi_falcon_reg_read;
-> > +               atari_scsi_reg_write = atari_scsi_falcon_reg_write;
-> 
-> Can these be handled through the platform_device's resources?
-> 
+Gr{oetje,eeting}s,
 
-I don't know.
+                        Geert
 
-> > +       /* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary.
-> > +        * Higher values should work, too; try it!
-> > +        * (But cmd_per_lun costs memory!)
-> > +        *
-> > +        * But there seems to be a bug somewhere that requires CAN_QUEUE to be
-> > +        * 2*CMD_PER_LUN. At least on a TT, no spurious timeouts seen since
-> > +        * changed CMD_PER_LUN...
-> > +        *
-> > +        * Note: The Falcon currently uses 8/1 setting due to unsolved problems
-> > +        * with cmd_per_lun != 1
-> > +        */
-> > +       if (IS_A_TT()) {
-> > +               atari_scsi_template.can_queue    = 16;
-> > +               atari_scsi_template.cmd_per_lun  = 8;
-> > +               atari_scsi_template.sg_tablesize = SG_ALL;
-> > +       } else {
-> > +               atari_scsi_template.can_queue    = 8;
-> > +               atari_scsi_template.cmd_per_lun  = 1;
-> > +               atari_scsi_template.sg_tablesize = SG_NONE;
-> > +       }
-> 
-> Shouldn't this be in platform data?
-> 
-> > +       /* Leave sg_tablesize at 0 on a Falcon! */
-> > +       if (IS_A_TT() && setup_sg_tablesize >= 0)
-> > +               atari_scsi_template.sg_tablesize = setup_sg_tablesize;
-> 
-> I think the IS_A_TT() check can just be removed.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-Well, ST DMA will break if scatter/gather is enabled by the user.
-
-> 
-> > +#ifdef REAL_DMA
-> > +       /* If running on a Falcon and if there's TT-Ram (i.e., more than one
-> > +        * memory block, since there's always ST-Ram in a Falcon), then
-> > +        * allocate a STRAM_BUFFER_SIZE byte dribble buffer for transfers
-> > +        * from/to alternative Ram.
-> > +        */
-> > +       if (ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(EXTD_DMA) &&
-> > +           m68k_num_memory > 1) {
-> > +               atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
-> > +               if (!atari_dma_buffer) {
-> > +                       pr_err(PFX "can't allocate ST-RAM double buffer\n");
-> > +                       return -ENOMEM;
-> > +               }
-> > +               atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
-> > +               atari_dma_orig_addr = 0;
-> > +       }
-> > +#endif
-> 
-> More platform data?
-> 
-> > +       if (IS_A_TT())
-> > +               instance->irq = IRQ_TT_MFP_SCSI;
-> > +       else
-> > +               instance->irq = IRQ_NONE;
-> 
-> platform_device resource?
-
-If I thought it possible to parameterize the driver such that it never had 
-to test IS_A_TT(), I'd probably agree that this would be more elegant.
-
-Otherwise I'd prefer not to have parts of the logic separated off into the 
-platform resources while the remaining logic remains in the driver itself.
-
-While I don't think platform resources are desirable in this driver, I 
-would like to hear Michael's views.
-
-Aside from TT and ST, is there a third configuration that might benefit 
-from a more data driven configuration?
-
-> 
-> (and IRQ_NONE is wrong, you should use 0)
-> 
-> > +       if (IS_A_TT()) {
-> 
-> Check for instance->irq instead?
-
-Yes, you'd think so, but a later patch (not in this set) would have 
-to change it back to IS_A_TT().
-
-Further patches align atari_NCR5380.c with NCR5380.c, such that the core 
-driver then checks host->irq to find out whether an IRQ is in use. For 
-Atari ST, request_irq() is not called even though the ST DMA irq is in 
-use.
-
--- 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
