@@ -1,57 +1,87 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 19/29] mac_scsi: Add module option to Kconfig
-Date: Fri, 3 Oct 2014 10:44:01 +0200
-Message-ID: <CAMuHMdUKQ8z6=jo5DH_Rg6kUrCw6Ap6VyHg9n14J41GXVHdykQ@mail.gmail.com>
-References: <20141002065628.256592712@telegraphics.com.au>
-	<20141002065632.816184892@telegraphics.com.au>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] uas: Make uas work with blk-mq
+Date: Fri, 3 Oct 2014 01:47:09 -0700
+Message-ID: <20141003084709.GA21274@infradead.org>
+References: <1412244280-15111-1-git-send-email-hdegoede@redhat.com>
+ <1412244280-15111-2-git-send-email-hdegoede@redhat.com>
+ <20141002112627.GC17628@infradead.org>
+ <542D467E.2020400@redhat.com>
+ <20141002130654.GA17051@infradead.org>
+ <542D4E58.5000809@redhat.com>
+ <20141002131259.GA930@infradead.org>
+ <542D5096.9010503@redhat.com>
+ <1412256350.6343.18.camel@jarvis>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20141002065632.816184892@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:33018 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbaJCIrM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2014 04:47:12 -0400
+Content-Disposition: inline
+In-Reply-To: <1412256350.6343.18.camel@jarvis>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Christoph Hellwig <hch@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> Allow mac_scsi to be built as a module. Replace the old validation of
-> __setup options with code that validates both module and __setup options.
+On Thu, Oct 02, 2014 at 09:25:50AM -0400, James Bottomley wrote:
+> OK, so 3.17 should be on sunday giving three days or so to sort this
+> out.  If you're happy with blk-mq being disabled so the bug never
+> triggers unless the user activates it, doing nothing is my preferred
+> outcome ... but that also means no need to backport to stable.  
+> 
+> If you want a it fixed in 3.17, then we need a patch from you now.
+> Ultimately you have to judge the necessity for us, since it's your
+> driver.
 
-> --- linux.orig/drivers/scsi/mac_scsi.c  2014-10-02 16:56:17.000000000 +1000
-> +++ linux/drivers/scsi/mac_scsi.c       2014-10-02 16:56:17.000000000 +1000
+scsi-mq might be new and not default, but I wouldn't really consider it
+"experimental" in the sense that people should expect crashes if they
+attach a usb device.
 
-> @@ -219,15 +179,15 @@ int __init macscsi_detect(struct scsi_ho
->         return 0;
->
->      if (macintosh_config->ident == MAC_MODEL_IIFX) {
-> -       mac_scsi_regp  = via1+0x8000;
-> -       mac_scsi_drq   = via1+0xE000;
-> -       mac_scsi_nodrq = via1+0xC000;
-> +       mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x8000;
-> +       mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0xE000;
-> +       mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0xC000;
->         /* The IIFX should be able to do true DMA, but pseudo-dma doesn't work */
->         flags = FLAG_NO_PSEUDO_DMA;
->      } else {
-> -       mac_scsi_regp  = via1+0x10000;
-> -       mac_scsi_drq   = via1+0x6000;
-> -       mac_scsi_nodrq = via1+0x12000;
-> +       mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x10000;
-> +       mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0x6000;
-> +       mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0x12000;
->      }
->
->      if (! setup_use_pdma)
+Please consider applying the patch below for 3.17, as there is a cxgb
+patch pending anyway:
 
-I don't think the above chunk belongs in this patch.
+---
+>From 8a42ea1369701960a821b7fa9a3da5c68e7e4366 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Fri, 3 Oct 2014 10:45:10 +0200
+Subject: uas: disable use of blk-mq I/O path
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Gr{oetje,eeting}s,
+The uas driver uses the block layer tag for USB3 stream IDs.  With
+blk-mq we can get larger tag numbers that the queue depth, which breaks
+this assumption.  A fix is under way for 3.18, but sits on top of
+large changes so can't easily be backported.   Set the disable_blk_mq
+path so that a uas device can't easily crash the system when using
+blk-mq for SCSI.
 
-                        Geert
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/uas.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 3f42785..9bfa725 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -970,6 +970,13 @@ static struct scsi_host_template uas_host_template = {
+ 	.cmd_per_lun = 1,	/* until we override it */
+ 	.skip_settle_delay = 1,
+ 	.ordered_tag = 1,
++
++	/*
++	 * The uas drivers expects tags not to be bigger than the maximum
++	 * per-device queue depth, which is not true with the blk-mq tag
++	 * allocator.
++	 */
++	.disable_blk_mq = true,
+ };
+ 
+ #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
+-- 
+1.9.1
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
