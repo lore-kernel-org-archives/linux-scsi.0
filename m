@@ -1,46 +1,95 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: Error message should say scsi_host_alloc
- not scsi_register
-Date: Fri, 03 Oct 2014 12:02:36 -0400
-Message-ID: <542EC89C.5030708@interlog.com>
-References: <alpine.LNX.2.00.1410011653220.25690@nippy.intranet>
-Reply-To: dgilbert@interlog.com
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
+Date: Sat, 4 Oct 2014 01:16:16 +0900
+Message-ID: <CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
+References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
+	<1411648356-3883-11-git-send-email-draviv@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49819 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752954AbaJCQC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Oct 2014 12:02:57 -0400
-In-Reply-To: <alpine.LNX.2.00.1410011653220.25690@nippy.intranet>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1411648356-3883-11-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, trivial@kernel.org
 
-On 14-10-02 09:43 PM, Finn Thain wrote:
->
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+2014-09-25 21:32 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
 
-> ---
->   drivers/scsi/scsi_debug.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Index: linux/drivers/scsi/scsi_debug.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/scsi_debug.c	2014-09-29 10:55:44.000000000 +1000
-> +++ linux/drivers/scsi/scsi_debug.c	2014-10-01 16:33:23.000000000 +1000
-> @@ -3967,7 +3967,7 @@ static int sdebug_driver_probe(struct de
->   		sdebug_driver_template.use_clustering = ENABLE_CLUSTERING;
->   	hpnt = scsi_host_alloc(&sdebug_driver_template, sizeof(sdbg_host));
->   	if (NULL == hpnt) {
-> -		printk(KERN_ERR "%s: scsi_register failed\n", __func__);
-> +		pr_err("%s: scsi_host_alloc failed\n", __func__);
->   		error = -ENODEV;
->   		return error;
->   	}
-> --
+> +static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+> +{
+> +       int ret = 0;
+> +
+> +       hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN), NULL);
+> +       if (IS_ERR(hba->sdev_ufs_device)) {
+> +               ret = PTR_ERR(hba->sdev_ufs_device);
+> +               hba->sdev_ufs_device = NULL;
+> +               goto out;
+> +       }
+> +
+> +       hba->sdev_boot = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+> +       if (IS_ERR(hba->sdev_boot)) {
+> +               ret = PTR_ERR(hba->sdev_boot);
+> +               hba->sdev_boot = NULL;
+> +               goto remove_sdev_ufs_device;
+> +       }
+> +
+> +       hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
 
+These __scsi_add_device() calls for W-LUs increase the module reference
+count of ufshcd.ko by three.  But no one calls scsi_device_put() for
+these W-LUs, so it is impossible to unload ufshcd.ko.
 
+There are scsi_remove_device() calls for W-LUs in ufshcd_scsi_remove_wlus(),
+But these calls do nothing (please see a comment below).
+
+I could fix this issue by putting scsi_device_put() just after each
+__scsi_add_device() call.  I'll prepare a patch if I haven't missed
+something.
+
+> +       if (IS_ERR(hba->sdev_rpmb)) {
+> +               ret = PTR_ERR(hba->sdev_rpmb);
+> +               hba->sdev_rpmb = NULL;
+> +               goto remove_sdev_boot;
+> +       }
+> +       goto out;
+> +
+> +remove_sdev_boot:
+> +       scsi_remove_device(hba->sdev_boot);
+> +remove_sdev_ufs_device:
+> +       scsi_remove_device(hba->sdev_ufs_device);
+> +out:
+> +       return ret;
+> +}
+> +
+> +/**
+> + * ufshcd_scsi_remove_wlus - Removes the W-LUs which were added by
+> + *                          ufshcd_scsi_add_wlus()
+> + * @hba: per-adapter instance
+> + *
+> + */
+> +static void ufshcd_scsi_remove_wlus(struct ufs_hba *hba)
+> +{
+> +       if (hba->sdev_ufs_device) {
+> +               scsi_remove_device(hba->sdev_ufs_device);
+> +               hba->sdev_ufs_device = NULL;
+> +       }
+> +
+> +       if (hba->sdev_boot) {
+> +               scsi_remove_device(hba->sdev_boot);
+> +               hba->sdev_boot = NULL;
+> +       }
+> +
+> +       if (hba->sdev_rpmb) {
+> +               scsi_remove_device(hba->sdev_rpmb);
+> +               hba->sdev_rpmb = NULL;
+> +       }
+> +}
+
+When ufshcd_scsi_remove_wlus() is called in ufshcd_remove(), these
+three W-LU devices have already been deleted by scsi_remove_host() which
+is called just before ufshcd_scsi_remove_wlus().  The scsi
+device state of these W-LU devices is SDEV_DEL at this time, and
+scsi_remove_device() does nothing.
