@@ -1,44 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
-Date: Fri, 3 Oct 2014 09:35:34 -0700
-Message-ID: <20141003163534.GA25051@infradead.org>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
- <1411648356-3883-11-git-send-email-draviv@codeaurora.org>
- <CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH/RESEND V6 13/18] scsi: ufs: refactor configuring power mode
+Date: Fri, 3 Oct 2014 09:42:35 -0700
+Message-ID: <001001cfdf29$098de0e0$1ca9a2a0$@codeaurora.org>
+References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>	<1411648356-3883-14-git-send-email-draviv@codeaurora.org> <CAC5umyjk=ugd58B4FXg+c3-Y1ZE0gLLKVMHepC7y+fHDWF=1ZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34178 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139AbaJCQfh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2014 12:35:37 -0400
-Content-Disposition: inline
-In-Reply-To: <CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyjk=ugd58B4FXg+c3-Y1ZE0gLLKVMHepC7y+fHDWF=1ZQ@mail.gmail.com>
+Content-Language: en-us
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: 'Akinobu Mita' <akinobu.mita@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>
+Cc: 'Jej B' <James.Bottomley@hansenpartnership.com>, 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'Santosh Y' <santoshsy@gmail.com>, 'Yaniv Gardi' <ygardi@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>, Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>
 
-On Sat, Oct 04, 2014 at 01:16:16AM +0900, Akinobu Mita wrote:
-> These __scsi_add_device() calls for W-LUs increase the module reference
-> count of ufshcd.ko by three.  But no one calls scsi_device_put() for
-> these W-LUs, so it is impossible to unload ufshcd.ko.
-> 
-> There are scsi_remove_device() calls for W-LUs in ufshcd_scsi_remove_wlus(),
-> But these calls do nothing (please see a comment below).
-> 
-> I could fix this issue by putting scsi_device_put() just after each
-> __scsi_add_device() call.  I'll prepare a patch if I haven't missed
-> something.
+> If the UFS Power management level 5 is chosen, the UIC link is down during suspend.  And the power mode should be configured during resume again.  Unfortunately, it will not be configured because the above condition hits unintentionally.
 
+Yes, it seems a bug.
 
-> When ufshcd_scsi_remove_wlus() is called in ufshcd_remove(), these
-> three W-LU devices have already been deleted by scsi_remove_host() which
-> is called just before ufshcd_scsi_remove_wlus().  The scsi
-> device state of these W-LU devices is SDEV_DEL at this time, and
-> scsi_remove_device() does nothing.
+> I would like to propose a fix which changes the type of hba->pwr_info to struct ufs_pwr_mode_info, and turn off hba->pwr_info.is_valid when UIC link is down and add check for hba->pwr_info.is_valid in above condition.
 
+Agreed, Please send your fix on git://git.infradead.org/users/hch/scsi-queue.git -b drivers-for-3.18.
 
-No, we need to keep a reference to avoid them going away due to a manual
-delete.  We need a scsi_device_put where we currently call
-scsi_remove_device I guess.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Akinobu Mita
+Sent: Friday, October 03, 2014 9:20 AM
+To: Dolev Raviv
+Cc: Jej B; Christoph Hellwig; linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org; linux-arm-msm@vger.kernel.org; Santosh Y; Yaniv Gardi
+Subject: Re: [PATCH/RESEND V6 13/18] scsi: ufs: refactor configuring power mode
+
+2014-09-25 21:32 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
+
+> +int ufshcd_change_power_mode(struct ufs_hba *hba,
+> +                            struct ufs_pa_layer_attr *pwr_mode) {
+> +       int ret;
+> +
+> +       /* if already configured to the requested pwr_mode */
+> +       if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
+> +           pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
+> +           pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
+> +           pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
+> +           pwr_mode->pwr_rx == hba->pwr_info.pwr_rx &&
+> +           pwr_mode->pwr_tx == hba->pwr_info.pwr_tx &&
+> +           pwr_mode->hs_rate == hba->pwr_info.hs_rate) {
+> +               dev_dbg(hba->dev, "%s: power already configured\n", __func__);
+> +               return 0;
+>         }
+
+If the UFS Power management level 5 is chosen, the UIC link is down during suspend.  And the power mode should be configured during resume again.  Unfortunately, it will not be configured because the above condition hits unintentionally.
+
+I would like to propose a fix which changes the type of hba->pwr_info to struct ufs_pwr_mode_info, and turn off hba->pwr_info.is_valid when UIC link is down and add check for hba->pwr_info.is_valid in above condition.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
