@@ -1,128 +1,100 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: RE: [PATCH 04/24] scsi: introduce sdev_prefix_printk()
-Date: Fri, 03 Oct 2014 12:31:20 -0400
-Message-ID: <1412353880.5241.136.camel@localhost.localdomain>
-References: <1412144580-72880-1-git-send-email-hare@suse.de>
-	 <1412144580-72880-5-git-send-email-hare@suse.de>
-	 <94D0CD8314A33A4D9D801C0FE68B402958CCAB53@G4W3202.americas.hpqcorp.net>
-Reply-To: emilne@redhat.com
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
+Date: Fri, 3 Oct 2014 09:35:30 -0700
+Message-ID: <000e01cfdf28$0ca52870$25ef7950$@codeaurora.org>
+References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>	<1411648356-3883-11-git-send-email-draviv@codeaurora.org> <CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50770 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753845AbaJCQbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Oct 2014 12:31:50 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958CCAB53@G4W3202.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
+Content-Language: en-us
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: 'Akinobu Mita' <akinobu.mita@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>
+Cc: 'Jej B' <James.Bottomley@hansenpartnership.com>, 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, 'Santosh Y' <santoshsy@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2014-10-02 at 18:37 +0000, Elliott, Robert (Server Storage)
-wrote:
-> > -----Original Message-----
-> > From: Hannes Reinecke [mailto:hare@suse.de]
-> ...
-> > diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> > index 4c3ab83..c01dc89 100644
-> > --- a/drivers/scsi/sd.h
-> > +++ b/drivers/scsi/sd.h
-> > @@ -103,9 +103,10 @@ static inline struct scsi_disk *scsi_disk(struct gendisk
-> > *disk)
-> > 
-> >  #define sd_printk(prefix, sdsk, fmt, a...)				\
-> >          (sdsk)->disk ?							\
-> > -	sdev_printk(prefix, (sdsk)->device, "[%s] " fmt,		\
-> > -		    (sdsk)->disk->disk_name, ##a) :			\
-> > -	sdev_printk(prefix, (sdsk)->device, fmt, ##a)
-> > +	      sdev_prefix_printk(prefix, (sdsk)->device,		\
-> > +				 (sdsk)->disk->disk_name, fmt, ##a) :	\
-> > +	      sdev_prefix_printk(prefix, (sdsk)->device,		\
-> > +				 NULL, fmt, ##a)
-> > 
-> >  #define sd_first_printk(prefix, sdsk, fmt, a...)			\
-> >  	do {								\
-> ...
-> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > index 27ecee7..0b18a09 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -244,6 +244,15 @@ struct scsi_dh_data {
-> >  #define sdev_dbg(sdev, fmt, a...) \
-> >  	dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
-> > 
-> > +/*
-> > + * like scmd_printk, but the device name is passed in
-> > + * as a string pointer
-> > + */
-> > +#define sdev_prefix_printk(l, sdev, p, fmt, a...)			\
-> > +	(p) ?								\
-> > +	sdev_printk(l, sdev, "[%s] " fmt, p, ##a) :			\
-> > +	sdev_printk(l, sdev, fmt, ##a)
-> > +
-> >  #define scmd_printk(prefix, scmd, fmt, a...)				\
-> >          (scmd)->request->rq_disk ?					\
-> >  	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
-> > --
-> > 1.8.5.2
-> 
-> This triggers lots of compiler warnings with gcc 4.4.7 like:
-> 
-> drivers/scsi/sd.c: In function 'sd_open':
-> drivers/scsi/sd.c:1179: warning: reading through null pointer (argument 4)
-> drivers/scsi/sd.c:1179: warning: format '%s' expects type 'char *', but argument 4 has type 'void *'
-> 
-> 
-> That is from:
->         SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_open\n"));
-> 
-> Since:
-> #define NULL ((void *)0)
-> 
-> gcc probably doesn't realize the (p)? prevents the NULL (a void *) 
-> from being passed to sdev_printk.
-> 
-> Passing "" rather than NULL eliminates the compiler warnings.
+> I could fix this issue by putting scsi_device_put() just after each __scsi_add_device() call.  I'll prepare a patch if I haven't missed something.
 
-It eliminates the warnings, but unfortunately we then get log messages
-that look like:
+Thanks Akinobu for fixing it. We were always compiling the driver statically in kernel so didn't notice this. Yes, I would be happy to ACK your change. BTW, these patches are already merged into I could fix this issue by putting git://git.infradead.org/users/hch/scsi-queue.git -b drivers-for-3.18, so you may  to base your fix on it.
 
-Oct  3 11:30:08 rhel-storage-01 kernel: sd 10:0:0:0: [sde] (null)FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+-----Original Message-----
+From: Akinobu Mita [mailto:akinobu.mita@gmail.com] 
+Sent: Friday, October 03, 2014 9:16 AM
+To: Dolev Raviv
+Cc: Jej B; Christoph Hellwig; linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org; linux-arm-msm@vger.kernel.org; Santosh Y; Subhash Jadavani
+Subject: Re: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
 
-                                                           ^^^^^^
+2014-09-25 21:32 GMT+09:00 Dolev Raviv <draviv@codeaurora.org>:
 
-Changing it to (char *)NULL, like this:
+> +static int ufshcd_scsi_add_wlus(struct ufs_hba *hba) {
+> +       int ret = 0;
+> +
+> +       hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN), NULL);
+> +       if (IS_ERR(hba->sdev_ufs_device)) {
+> +               ret = PTR_ERR(hba->sdev_ufs_device);
+> +               hba->sdev_ufs_device = NULL;
+> +               goto out;
+> +       }
+> +
+> +       hba->sdev_boot = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+> +       if (IS_ERR(hba->sdev_boot)) {
+> +               ret = PTR_ERR(hba->sdev_boot);
+> +               hba->sdev_boot = NULL;
+> +               goto remove_sdev_ufs_device;
+> +       }
+> +
+> +       hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+> +               ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), 
+> + NULL);
 
-#define sd_printk(prefix, sdsk, fmt, a...)                              \
-        (sdsk)->disk ?                                                  \
-              sdev_prefix_printk(prefix, (sdsk)->device,                \
-                                 (sdsk)->disk->disk_name, fmt, ##a) :   \
-              sdev_prefix_printk(prefix, (sdsk)->device,                \
-                                 (char *)NULL, fmt, ##a)
+These __scsi_add_device() calls for W-LUs increase the module reference count of ufshcd.ko by three.  But no one calls scsi_device_put() for these W-LUs, so it is impossible to unload ufshcd.ko.
 
-doesn't work either.  The compiler gives an error:
+There are scsi_remove_device() calls for W-LUs in ufshcd_scsi_remove_wlus(), But these calls do nothing (please see a comment below).
 
-drivers/scsi/sd.c: In function 'sd_open':
-drivers/scsi/sd.c:1158:2: error: reading through null pointer (argument 4) [-Werror=format=]
-  SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_open\n"));
-  ^
+I could fix this issue by putting scsi_device_put() just after each
+__scsi_add_device() call.  I'll prepare a patch if I haven't missed something.
 
--Ewan
+> +       if (IS_ERR(hba->sdev_rpmb)) {
+> +               ret = PTR_ERR(hba->sdev_rpmb);
+> +               hba->sdev_rpmb = NULL;
+> +               goto remove_sdev_boot;
+> +       }
+> +       goto out;
+> +
+> +remove_sdev_boot:
+> +       scsi_remove_device(hba->sdev_boot);
+> +remove_sdev_ufs_device:
+> +       scsi_remove_device(hba->sdev_ufs_device);
+> +out:
+> +       return ret;
+> +}
+> +
+> +/**
+> + * ufshcd_scsi_remove_wlus - Removes the W-LUs which were added by
+> + *                          ufshcd_scsi_add_wlus()
+> + * @hba: per-adapter instance
+> + *
+> + */
+> +static void ufshcd_scsi_remove_wlus(struct ufs_hba *hba) {
+> +       if (hba->sdev_ufs_device) {
+> +               scsi_remove_device(hba->sdev_ufs_device);
+> +               hba->sdev_ufs_device = NULL;
+> +       }
+> +
+> +       if (hba->sdev_boot) {
+> +               scsi_remove_device(hba->sdev_boot);
+> +               hba->sdev_boot = NULL;
+> +       }
+> +
+> +       if (hba->sdev_rpmb) {
+> +               scsi_remove_device(hba->sdev_rpmb);
+> +               hba->sdev_rpmb = NULL;
+> +       }
+> +}
 
-> 
-> There should probably be a () around p in the sdev_printk call, too.
-> 
-> 
-> ---
-> Rob Elliott    HP Server Storage
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+When ufshcd_scsi_remove_wlus() is called in ufshcd_remove(), these three W-LU devices have already been deleted by scsi_remove_host() which is called just before ufshcd_scsi_remove_wlus().  The scsi device state of these W-LU devices is SDEV_DEL at this time, and
+scsi_remove_device() does nothing.
