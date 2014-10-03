@@ -1,40 +1,66 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 07/29] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
-Date: Fri, 3 Oct 2014 20:12:17 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1410032005540.12643@nippy.intranet>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065629.926686164@telegraphics.com.au> <CAMuHMdUKkyj-27iqrhSZS9GpaB1GHpztnScW+0X4Fi62AdwOvw@mail.gmail.com>
+Subject: Re: [PATCH 10/29] ncr5380: Fix SCSI_IRQ_NONE bugs
+Date: Fri, 3 Oct 2014 20:42:57 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1410032021110.12643@nippy.intranet>
+References: <20141002065628.256592712@telegraphics.com.au> <20141002065630.639025422@telegraphics.com.au> <CAMuHMdWHkGFamsnxJAi++WFqx8OAZ-qyuQDQN66Gi8JJunB0dw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAMuHMdUKkyj-27iqrhSZS9GpaB1GHpztnScW+0X4Fi62AdwOvw@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:42046 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334AbaJCKoK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2014 06:44:10 -0400
+In-Reply-To: <CAMuHMdWHkGFamsnxJAi++WFqx8OAZ-qyuQDQN66Gi8JJunB0dw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 
 On Fri, 3 Oct 2014, Geert Uytterhoeven wrote:
 
-> On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> > --- linux.orig/drivers/scsi/NCR5380.h   2014-10-02 16:55:55.000000000 +1000
-> > +++ linux/drivers/scsi/NCR5380.h        2014-10-02 16:55:57.000000000 +1000
-> > @@ -224,14 +224,11 @@
-> >  #define DISCONNECT_LONG                2
+> On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> 
+> wrote:
+> > Oak scsi doesn't use any IRQ, but it sets irq = IRQ_NONE rather than
+> > SCSI_IRQ_NONE. Problem is, the core NCR5380 driver expects SCSI_IRQ_NONE
+> > if it is to issue IDENTIFY commands that prevent target disconnection.
 > >
-> >  /*
-> > - * These are "special" values for the tag parameter passed to NCR5380_select.
-> > + * "Special" value for the (unsigned char) command tag, to indicate
-> > + * I_T_L nexus instead of I_T_L_Q.
-> >   */
+> > Other drivers, when they can't get an IRQ or can't use one, will set
+> > host->irq = SCSI_IRQ_NONE (that is, 255). But when they exit they will
+> > attempt to free IRQ 255 which was never requested.
+> >
+> > Fix these bugs by using IRQ_NONE in place of SCSI_IRQ_NONE. This means
+> > IRQ 0 is no longer probed by ISA drivers but I don't think this matters.
 > 
-> I guess the above comment can just be removed instead of changed, as the 
-> I_T_L nexus definitions below are removed?
+> IRQ_NONE is part of enum irqreturn. I guess you meant NO_IRQ?
+> 
+> But NO_IRQ is deprecated, and not available on all architectures.
+> The recommended way is to just use 0, like in "if (instance->irq) ...".
+> 
+> Note that some drivers do
+> 
+> #ifndef NO_IRQ
+> #define NO_IRQ  (-1)
+> #endif
+> 
+> and others do
+> 
+> #ifndef NO_IRQ
+> #define NO_IRQ  0
+> #endif
+> 
 
-When I wrote this patch I didn't realize that the tag member in struct 
-scsi_cmnd was going to be removed in favour of cmd->request.tag. I will 
-rewrite this patch to remove all of the cmd->tag stuff.
+Well, the question becomes, is it better to replace SCSI_IRQ_NONE with 0 
+or with NO_IRQ?
 
-When I sent this patch I knew I'd have to revise it, but I wanted to get 
-the entire series out there anyway to avoid further duplication of effort.
+I guess drivers use #ifndef in case the architecture brings its own 
+definition of NO_IRQ (presumably because it can't use 0).
+
+Since NCR5380 drivers cover a variety of architectures (ARM, m68k, ISA, 
+PCI...) it seems that the more prudent option is,
+
+#ifndef NO_IRQ
+#define NO_IRQ  0
+#endif
 
 -- 
