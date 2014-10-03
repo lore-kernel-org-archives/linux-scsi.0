@@ -1,75 +1,28 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH V6 01/18] scsi: fixing the "type" for well known LUs
-Date: Fri, 3 Oct 2014 18:40:28 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCCE9C@G4W3202.americas.hpqcorp.net>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
- <1411648356-3883-2-git-send-email-draviv@codeaurora.org>
- <20140926081343.GA22805@infradead.org>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v1 5/5] driver-core: add driver asynchronous probe
+	support
+Date: Fri, 3 Oct 2014 22:11:26 +0200
+Message-ID: <20141003201126.GW14081@wotan.suse.de>
+References: <1411768637-6809-1-git-send-email-mcgrof@do-not-panic.com> <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:57084 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbaJCSlm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2014 14:41:42 -0400
-In-Reply-To: <20140926081343.GA22805@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1411768637-6809-6-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com, teg@jklm.no, rmilasan@suse.com, werner@suse.com, oleg@redhat.com, hare@suse.com, bpoirier@suse.de, santosh@chelsio.com, pmladek@suse.cz, dbueso@suse.com, linux-kernel@vger.kernel.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <haripra>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Dolev Raviv <draviv@codeaurora.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, "santoshsy@gmail.com" <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
+On Fri, Sep 26, 2014 at 02:57:17PM -0700, Luis R. Rodriguez wrote:
+> +	queue_work(system_unbound_wq, &priv->attach_work->work);
 
+Tejun,
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Friday, 26 September, 2014 3:14 AM
-> To: Dolev Raviv
-> Cc: James.Bottomley@HansenPartnership.com; hch@infradead.org; linux-
-> scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org; linux-arm-
-> msm@vger.kernel.org; santoshsy@gmail.com; Subhash Jadavani; Sujit Reddy
-> Thumma; Elliott, Robert (Server Storage); Martin K. Petersen
-> Subject: Re: [PATCH V6 01/18] scsi: fixing the "type" for well known LUs
-> 
-> Robert, I guess this version is okay with you?
-> 
-> On Thu, Sep 25, 2014 at 03:32:19PM +0300, Dolev Raviv wrote:
-> > From: Subhash Jadavani <subhashj@codeaurora.org>
-> >
-> > Some devices may respond with wrong type for well-known logical units.
-> > This patch forces well-known type for devices which doesn't report it
-> > correct.
-> >
-> > Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> > Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> > Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> >
-> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > index 56675db..1095d5a 100644
-> > --- a/drivers/scsi/scsi_scan.c
-> > +++ b/drivers/scsi/scsi_scan.c
-> > @@ -805,6 +805,19 @@ static int scsi_add_lun(struct scsi_device *sdev,
-> unsigned char *inq_result,
-> >  	} else {
-> >  		sdev->type = (inq_result[0] & 0x1f);
-> >  		sdev->removable = (inq_result[1] & 0x80) >> 7;
-> > +
-> > +		/*
-> > +		 * some devices may respond with wrong type for
-> > +		 * well-known logical units. Force well-known type
-> > +		 * to enumerate them correctly.
-> > +		 */
-> > +		if (scsi_is_wlun(sdev->lun) && sdev->type != TYPE_WLUN) {
-> > +			sdev_printk(KERN_WARNING, sdev,
-> > +				"%s: correcting incorrect peripheral device type
-> 0x%x for W-LUN 0x%16phN\n",
-> > +				__func__, sdev->type, sdev->lun);
-> > +			sdev->type = TYPE_WLUN;
-> > +		}
-> > +
+based on my testing so far using system_highpri_wq instead of
+system_unbound_wq yields close to par / better boot times
+than synchronous probe support for all modules. How set are
+you on using system_unbound_wq? About to punt out a new
+series which also addresses built-in.
 
-Yes, that looks good.
-
-Reviewed-by: Robert Elliott <elliott@hp.com>
-
+  Luis
