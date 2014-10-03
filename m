@@ -1,162 +1,228 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Fri, 3 Oct 2014 11:34:21 +0200
-Message-ID: <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com>
-References: <20141002065628.256592712@telegraphics.com.au>
-	<20141002065633.766165263@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20141002065633.766165263@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH v2 2/2] uas: Make uas work with blk-mq
+Date: Fri,  3 Oct 2014 12:08:57 +0200
+Message-ID: <1412330937-22630-2-git-send-email-hdegoede@redhat.com>
+References: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18208 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314AbaJCKJZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Oct 2014 06:09:25 -0400
+In-Reply-To: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> Convert atari_scsi to platform device and eliminate scsi_register().
->
-> Validate __setup options later on so that module options are checked as well.
->
-> Remove the comment about the scsi mid-layer disabling the host irq as it
-> is no longer true (AFAICT). Also remove the obsolete slow interrupt stuff
-> (IRQ_TYPE_SLOW == 0 anyway).
+With uas over usb-3 the tags inside the uas iu-s must match the usb-3 stream
+ids, and those go from 1 - qdepth.
 
-> --- linux.orig/drivers/scsi/atari_scsi.c        2014-10-02 16:56:20.000000000 +1000
-> +++ linux/drivers/scsi/atari_scsi.c     2014-10-02 16:56:21.000000000 +1000
+Before blk-mq calling scsi_activate_tcq(sdev, qdepth) guaranteed that we would
+only get cmnd->request->tag from 0 - (qdepth - 1), and we used those as
+uas-tags / stream-ids.
 
-> +static int __init atari_scsi_probe(struct platform_device *pdev)
-> +{
-> +       struct Scsi_Host *instance;
-> +       int error;
-> +
-> +       if (!MACH_IS_ATARI)
-> +               return -ENODEV;
+With blk-mq however we are guaranteed to never get more then qdepth commands
+queued at the same time, but the cmnd->request->tag values may be much larger,
+which breaks uas.
 
-This test is not needed.
+This commit fixes this by generating uas tags in the 1 - qdepth range ourselves
+instead of using cmnd->request->tag.
 
-> +       if (ATARIHW_PRESENT(TT_SCSI)) {
-> +               atari_scsi_reg_read  = atari_scsi_tt_reg_read;
-> +               atari_scsi_reg_write = atari_scsi_tt_reg_write;
-> +       } else if (ATARIHW_PRESENT(ST_SCSI)) {
-> +               atari_scsi_reg_read  = atari_scsi_falcon_reg_read;
-> +               atari_scsi_reg_write = atari_scsi_falcon_reg_write;
+While touching all involved code anyways also rename the uas_cmd_info stream
+field to uas_tag, because when using uas over usb-2 streams are not used.
 
-Can these be handled through the platform_device's resources?
-
-> +       } else
-> +               return -ENODEV;
-
-This branch should not be there.
-
-> +       /* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary.
-> +        * Higher values should work, too; try it!
-> +        * (But cmd_per_lun costs memory!)
-> +        *
-> +        * But there seems to be a bug somewhere that requires CAN_QUEUE to be
-> +        * 2*CMD_PER_LUN. At least on a TT, no spurious timeouts seen since
-> +        * changed CMD_PER_LUN...
-> +        *
-> +        * Note: The Falcon currently uses 8/1 setting due to unsolved problems
-> +        * with cmd_per_lun != 1
-> +        */
-> +       if (IS_A_TT()) {
-> +               atari_scsi_template.can_queue    = 16;
-> +               atari_scsi_template.cmd_per_lun  = 8;
-> +               atari_scsi_template.sg_tablesize = SG_ALL;
-> +       } else {
-> +               atari_scsi_template.can_queue    = 8;
-> +               atari_scsi_template.cmd_per_lun  = 1;
-> +               atari_scsi_template.sg_tablesize = SG_NONE;
-> +       }
-
-Shouldn't this be in platform data?
-
-> +       /* Leave sg_tablesize at 0 on a Falcon! */
-> +       if (IS_A_TT() && setup_sg_tablesize >= 0)
-> +               atari_scsi_template.sg_tablesize = setup_sg_tablesize;
-
-I think the IS_A_TT() check can just be removed.
-
-> +#ifdef REAL_DMA
-> +       /* If running on a Falcon and if there's TT-Ram (i.e., more than one
-> +        * memory block, since there's always ST-Ram in a Falcon), then
-> +        * allocate a STRAM_BUFFER_SIZE byte dribble buffer for transfers
-> +        * from/to alternative Ram.
-> +        */
-> +       if (ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(EXTD_DMA) &&
-> +           m68k_num_memory > 1) {
-> +               atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
-> +               if (!atari_dma_buffer) {
-> +                       pr_err(PFX "can't allocate ST-RAM double buffer\n");
-> +                       return -ENOMEM;
-> +               }
-> +               atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
-> +               atari_dma_orig_addr = 0;
-> +       }
-> +#endif
-
-More platform data?
-
-> +       if (IS_A_TT())
-> +               instance->irq = IRQ_TT_MFP_SCSI;
-> +       else
-> +               instance->irq = IRQ_NONE;
-
-platform_device resource?
-
-(and IRQ_NONE is wrong, you should use 0)
-
-> +       if (IS_A_TT()) {
-
-Check for instance->irq instead?
-
-> +               error = request_irq(instance->irq, scsi_tt_intr, 0,
-> +                                   "NCR5380", instance);
-> +               if (error) {
-> +                       pr_err(PFX "request irq %d failed, aborting\n",
-> +                              instance->irq);
-> +                       goto fail_irq;
-> +               }
-> +               tt_mfp.active_edge |= 0x80;     /* SCSI int on L->H */
-> +#ifdef REAL_DMA
-> +               tt_scsi_dma.dma_ctrl = 0;
-> +               atari_dma_residual = 0;
-> +
-> +               /* While the read overruns (described by Drew Eckhardt in
-> +                * NCR5380.c) never happened on TTs, they do in fact on the
-> +                * Medusa (This was the cause why SCSI didn't work right for
-> +                * so long there.) Since handling the overruns slows down
-> +                * a bit, I turned the #ifdef's into a runtime condition.
-> +                *
-> +                * In principle it should be sufficient to do max. 1 byte with
-> +                * PIO, but there is another problem on the Medusa with the DMA
-> +                * rest data register. So 'atari_read_overruns' is currently set
-> +                * to 4 to avoid having transfers that aren't a multiple of 4.
-> +                * If the rest data bug is fixed, this can be lowered to 1.
-> +                */
-> +               if (MACH_IS_MEDUSA)
-> +                       atari_read_overruns = 4;
-> +#endif
-> +       } else {
-> +               /* Nothing to do for the interrupt: the ST-DMA is initialized
-> +                * already.
-> +                */
-> +#ifdef REAL_DMA
-> +               atari_dma_residual = 0;
-> +               atari_dma_active = 0;
-> +               atari_dma_stram_mask = (ATARIHW_PRESENT(EXTD_DMA) ? 0x00000000
-> +                                       : 0xff000000);
-> +#endif
-> +       }
-
-Gr{oetje,eeting}s,
-
-                        Geert
+Cc: Christoph Hellwig <hch@infradead.org>
+Reported-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 --
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Changes in v2:
+-Remove ".disable_blk_mq = true" from uas_host_template
+---
+ drivers/usb/storage/uas.c | 64 +++++++++++++++++------------------------------
+ 1 file changed, 23 insertions(+), 41 deletions(-)
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 89b2434..004ebc1 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -66,7 +66,7 @@ enum {
+ /* Overrides scsi_pointer */
+ struct uas_cmd_info {
+ 	unsigned int state;
+-	unsigned int stream;
++	unsigned int uas_tag;
+ 	struct urb *cmd_urb;
+ 	struct urb *data_in_urb;
+ 	struct urb *data_out_urb;
+@@ -173,30 +173,15 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
+ 	cmnd->result = sense_iu->status;
+ }
+ 
+-/*
+- * scsi-tags go from 0 - (nr_tags - 1), uas tags need to match stream-ids,
+- * which go from 1 - nr_streams. And we use 1 for untagged commands.
+- */
+-static int uas_get_tag(struct scsi_cmnd *cmnd)
+-{
+-	int tag;
+-
+-	if (blk_rq_tagged(cmnd->request))
+-		tag = cmnd->request->tag + 2;
+-	else
+-		tag = 1;
+-
+-	return tag;
+-}
+-
+ static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *prefix,
+ 			      int status)
+ {
+ 	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
++	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 
+ 	scmd_printk(KERN_INFO, cmnd,
+-		    "%s %d tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
+-		    prefix, status, uas_get_tag(cmnd),
++		    "%s %d uas-tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
++		    prefix, status, cmdinfo->uas_tag,
+ 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
+ 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
+ 		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
+@@ -242,7 +227,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
+ 			      DATA_OUT_URB_INFLIGHT |
+ 			      COMMAND_ABORTED))
+ 		return -EBUSY;
+-	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
++	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
+ 	uas_free_unsubmitted_urbs(cmnd);
+ 	cmnd->scsi_done(cmnd);
+ 	return 0;
+@@ -289,7 +274,7 @@ static void uas_stat_cmplt(struct urb *urb)
+ 	idx = be16_to_cpup(&iu->tag) - 1;
+ 	if (idx >= MAX_CMNDS || !devinfo->cmnd[idx]) {
+ 		dev_err(&urb->dev->dev,
+-			"stat urb: no pending cmd for tag %d\n", idx + 1);
++			"stat urb: no pending cmd for uas-tag %d\n", idx + 1);
+ 		goto out;
+ 	}
+ 
+@@ -427,7 +412,8 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 		goto out;
+ 	usb_fill_bulk_urb(urb, udev, pipe, NULL, sdb->length,
+ 			  uas_data_cmplt, cmnd);
+-	urb->stream_id = cmdinfo->stream;
++	if (devinfo->use_streams)
++		urb->stream_id = cmdinfo->uas_tag;
+ 	urb->num_sgs = udev->bus->sg_tablesize ? sdb->table.nents : 0;
+ 	urb->sg = sdb->table.sgl;
+  out:
+@@ -451,7 +437,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 
+ 	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
+ 			  uas_stat_cmplt, cmnd->device->host);
+-	urb->stream_id = cmdinfo->stream;
++	if (devinfo->use_streams)
++		urb->stream_id = cmdinfo->uas_tag;
+ 	urb->transfer_flags |= URB_FREE_BUFFER;
+  out:
+ 	return urb;
+@@ -465,6 +452,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ {
+ 	struct usb_device *udev = devinfo->udev;
+ 	struct scsi_device *sdev = cmnd->device;
++	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	struct urb *urb = usb_alloc_urb(0, gfp);
+ 	struct command_iu *iu;
+ 	int len;
+@@ -481,7 +469,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 		goto free;
+ 
+ 	iu->iu_id = IU_ID_COMMAND;
+-	iu->tag = cpu_to_be16(uas_get_tag(cmnd));
++	iu->tag = cpu_to_be16(cmdinfo->uas_tag);
+ 	iu->prio_attr = UAS_SIMPLE_TAG;
+ 	iu->len = len;
+ 	int_to_scsilun(sdev->lun, &iu->lun);
+@@ -608,8 +596,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 	struct uas_dev_info *devinfo = sdev->hostdata;
+ 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	unsigned long flags;
+-	unsigned int stream;
+-	int err;
++	int idx, err;
+ 
+ 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
+ 
+@@ -635,8 +622,12 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 		return 0;
+ 	}
+ 
+-	stream = uas_get_tag(cmnd);
+-	if (devinfo->cmnd[stream - 1]) {
++	/* Find a free uas-tag */
++	for (idx = 0; idx < devinfo->qdepth; idx++) {
++		if (!devinfo->cmnd[idx])
++			break;
++	}
++	if (idx == devinfo->qdepth) {
+ 		spin_unlock_irqrestore(&devinfo->lock, flags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
+@@ -644,7 +635,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 	cmnd->scsi_done = done;
+ 
+ 	memset(cmdinfo, 0, sizeof(*cmdinfo));
+-	cmdinfo->stream = stream;
++	cmdinfo->uas_tag = idx + 1; /* uas-tag == usb-stream-id, so 1 based */
+ 	cmdinfo->state = SUBMIT_STATUS_URB | ALLOC_CMD_URB | SUBMIT_CMD_URB;
+ 
+ 	switch (cmnd->sc_data_direction) {
+@@ -659,10 +650,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 		break;
+ 	}
+ 
+-	if (!devinfo->use_streams) {
++	if (!devinfo->use_streams)
+ 		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB);
+-		cmdinfo->stream = 0;
+-	}
+ 
+ 	err = uas_submit_urbs(cmnd, devinfo, GFP_ATOMIC);
+ 	if (err) {
+@@ -674,7 +663,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 		uas_add_work(cmdinfo);
+ 	}
+ 
+-	devinfo->cmnd[stream - 1] = cmnd;
++	devinfo->cmnd[idx] = cmnd;
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ 	return 0;
+ }
+@@ -702,7 +691,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+ 	cmdinfo->state |= COMMAND_ABORTED;
+ 
+ 	/* Drop all refs to this cmnd, kill data urbs to break their ref */
+-	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
++	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
+ 	if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
+ 		data_in_urb = usb_get_urb(cmdinfo->data_in_urb);
+ 	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
+@@ -818,13 +807,6 @@ static struct scsi_host_template uas_host_template = {
+ 	.cmd_per_lun = 1,	/* until we override it */
+ 	.skip_settle_delay = 1,
+ 	.ordered_tag = 1,
+-
+-	/*
+-	 * The uas drivers expects tags not to be bigger than the maximum
+-	 * per-device queue depth, which is not true with the blk-mq tag
+-	 * allocator.
+-	 */
+-	.disable_blk_mq = true,
+ };
+ 
+ #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
+-- 
+2.1.0
+
