@@ -1,87 +1,125 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] uas: Make uas work with blk-mq
-Date: Fri, 3 Oct 2014 01:47:09 -0700
-Message-ID: <20141003084709.GA21274@infradead.org>
-References: <1412244280-15111-1-git-send-email-hdegoede@redhat.com>
- <1412244280-15111-2-git-send-email-hdegoede@redhat.com>
- <20141002112627.GC17628@infradead.org>
- <542D467E.2020400@redhat.com>
- <20141002130654.GA17051@infradead.org>
- <542D4E58.5000809@redhat.com>
- <20141002131259.GA930@infradead.org>
- <542D5096.9010503@redhat.com>
- <1412256350.6343.18.camel@jarvis>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 21/29] mac_scsi: Convert to platform device
+Date: Fri, 3 Oct 2014 11:08:33 +0200
+Message-ID: <CAMuHMdUN-FdTro7wQWXbGmqrKe=dec1xJNgAkQGhFw7CEVRUsQ@mail.gmail.com>
+References: <20141002065628.256592712@telegraphics.com.au>
+	<20141002065633.296184897@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33018 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbaJCIrM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Oct 2014 04:47:12 -0400
-Content-Disposition: inline
-In-Reply-To: <1412256350.6343.18.camel@jarvis>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Christoph Hellwig <hch@infradead.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On Thu, Oct 02, 2014 at 09:25:50AM -0400, James Bottomley wrote:
-> OK, so 3.17 should be on sunday giving three days or so to sort this
-> out.  If you're happy with blk-mq being disabled so the bug never
-> triggers unless the user activates it, doing nothing is my preferred
-> outcome ... but that also means no need to backport to stable.  
-> 
-> If you want a it fixed in 3.17, then we need a patch from you now.
-> Ultimately you have to judge the necessity for us, since it's your
-> driver.
-
-scsi-mq might be new and not default, but I wouldn't really consider it
-"experimental" in the sense that people should expect crashes if they
-attach a usb device.
-
-Please consider applying the patch below for 3.17, as there is a cxgb
-patch pending anyway:
-
----
->From 8a42ea1369701960a821b7fa9a3da5c68e7e4366 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Fri, 3 Oct 2014 10:45:10 +0200
-Subject: uas: disable use of blk-mq I/O path
-MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20141002065633.296184897@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-The uas driver uses the block layer tag for USB3 stream IDs.  With
-blk-mq we can get larger tag numbers that the queue depth, which breaks
-this assumption.  A fix is under way for 3.18, but sits on top of
-large changes so can't easily be backported.   Set the disable_blk_mq
-path so that a uas device can't easily crash the system when using
-blk-mq for SCSI.
+On Thu, Oct 2, 2014 at 8:56 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> Convert mac_scsi to platform device and eliminate scsi_register().
+>
+> Platform resources for chip registers now follow the documentation. This
+> should fix issues with the Mac IIci (and possibly other models too).
+>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>
+> ---
+>
+> The new hwreg_present() call is not protected by local_irq_save/restore.
+> This assumes Geert's patch, "Disable/restore interrupts in
+> hwreg_present()/hwreg_write()":
+> http://marc.info/?l=linux-kernel&m=141189640826704&w=2
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/uas.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+OK, so this cannot go in before v3.18-rc1.
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 3f42785..9bfa725 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -970,6 +970,13 @@ static struct scsi_host_template uas_host_template = {
- 	.cmd_per_lun = 1,	/* until we override it */
- 	.skip_settle_delay = 1,
- 	.ordered_tag = 1,
-+
-+	/*
-+	 * The uas drivers expects tags not to be bigger than the maximum
-+	 * per-device queue depth, which is not true with the blk-mq tag
-+	 * allocator.
-+	 */
-+	.disable_blk_mq = true,
- };
- 
- #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
--- 
-1.9.1
+> --- linux.orig/drivers/scsi/mac_scsi.c  2014-10-02 16:56:18.000000000 +1000
+> +++ linux/drivers/scsi/mac_scsi.c       2014-10-02 16:56:19.000000000 +1000
 
+> @@ -480,7 +380,117 @@ static struct scsi_host_template driver_
+>         .use_clustering                 = DISABLE_CLUSTERING
+>  };
+>
+> +static int __init mac_scsi_probe(struct platform_device *pdev)
+> +{
+> +       struct Scsi_Host *instance;
+> +       int error;
+> +       int host_flags = 0;
+> +       struct resource *irq, *pio_mem, *pdma_mem = NULL;
+> +
+> +       if (!MACH_IS_MAC)
+> +               return -ENODEV;
+
+This check is not needed, asuming you'll only instantiate the platform
+device when running on a Mac.
+
+> --- linux.orig/arch/m68k/mac/config.c   2014-10-02 16:55:28.000000000 +1000
+> +++ linux/arch/m68k/mac/config.c        2014-10-02 16:56:19.000000000 +1000
+
+> @@ -929,6 +929,36 @@ static struct platform_device swim_pdev
+>         .resource       = &swim_rsrc,
+>  };
+>
+> +static struct resource mac_scsi_0_rsrc[] = {
+> +       {
+> +               .flags = IORESOURCE_IRQ,
+> +               .start = IRQ_MAC_SCSI,
+> +               .end   = IRQ_MAC_SCSI,
+> +       },
+> +       { .flags = IORESOURCE_MEM },
+> +       { .flags = IORESOURCE_MEM },
+> +};
+> +
+> +static struct resource mac_scsi_1_rsrc[] = {
+> +       /* IRQ_NUBUS_E maybe? */
+> +       { .flags = IORESOURCE_MEM },
+> +       { .flags = IORESOURCE_MEM },
+> +};
+> +
+> +static struct platform_device mac_scsi_0_pdev = {
+> +       .name           = "mac_scsi",
+> +       .id             = 0,
+> +       .resource       = mac_scsi_0_rsrc,
+> +       .num_resources  = ARRAY_SIZE(mac_scsi_0_rsrc),
+> +};
+> +
+> +static struct platform_device mac_scsi_1_pdev = {
+> +       .name           = "mac_scsi",
+> +       .id             = 1,
+> +       .resource       = mac_scsi_1_rsrc,
+> +       .num_resources  = ARRAY_SIZE(mac_scsi_1_rsrc),
+> +};
+> +
+>  static struct platform_device esp_0_pdev = {
+>         .name           = "mac_esp",
+>         .id             = 0,
+> @@ -1000,6 +1030,53 @@ int __init mac_platform_init(void)
+>                     (macintosh_config->ident == MAC_MODEL_Q950))
+>                         platform_device_register(&esp_1_pdev);
+>                 break;
+> +       case MAC_SCSI_IIFX:
+> +               /* Addresses from The Guide to Mac Family Hardware. */
+> +               mac_scsi_0_rsrc[1].start = 0x50008000; /* SCSI DMA */
+> +               mac_scsi_0_rsrc[1].end = mac_scsi_0_rsrc[1].start + 0x1FFF;
+> +               /* $5000 E000 - $5000 FFFF: Alternate SCSI (Hsk) */
+> +               /* $5000 C000 - $5000 DFFF: Alternate SCSI (DMA) */
+> +               /* The SCSI DMA custom IC embeds the 53C80 core. mac_scsi does
+> +                * not make use of its DMA or hardware handshaking logic.
+> +                */
+> +               mac_scsi_0_pdev.num_resources--;
+> +               platform_device_register(&mac_scsi_0_pdev);
+
+What about removing the static mac_scsi_0_pdev and mac_scsi_1_pdev,
+and calling platform_device_register_simple() instead?
+That way you
+(a) don't have to fiddle with mac_scsi_0_pdev.num_resources, and
+(b) the resources can become const and __initconst, as a copy will be
+    allocated dynamically.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
