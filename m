@@ -1,76 +1,87 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 15/24] scsi: merge print_opcode_name()
-Date: Fri, 3 Oct 2014 01:37:03 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBDFF@G4W3202.americas.hpqcorp.net>
-References: <1412144580-72880-1-git-send-email-hare@suse.de>
- <1412144580-72880-16-git-send-email-hare@suse.de>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] scsi: Fix "choir" and "beeing" malaprops
+Date: Fri, 3 Oct 2014 11:42:17 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1410011653440.25690@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:5960 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882AbaJCBjQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 21:39:16 -0400
-In-Reply-To: <1412144580-72880-16-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:38955 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbaJCBnb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 21:43:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>, "Juergen E. Fischer" <fischer@norbit.de>, linux-scsi@vger.kernel.org, trivial@kernel.org
 
 
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> +struct sa_name_list {
-> +	int cmd;
-> +	const struct value_name_pair *arr;
-> +	int arr_sz;
-> +};
-
-The suggestion to rename cmd to opcode in patch 14 would
-follow the movements here.
-
-...
-> @@ -273,7 +292,7 @@ static bool scsi_opcode_sa_name(int cmd, int
-> service_action,
->  	const struct value_name_pair *arr = NULL;
->  	int arr_sz, k;
-> 
-> -	for (k = 0; sa_name_ptr->arr; ++k, ++sa_name_ptr) {
-> +	for (k = 0; k < ARRAY_SIZE(sa_names_arr); ++k, ++sa_name_ptr) {
->  		if (sa_name_ptr->cmd == cmd) {
->  			arr = sa_name_ptr->arr;
->  			arr_sz = sa_name_ptr->arr_sz;
-> @@ -315,11 +334,14 @@ static void print_opcode_name(unsigned char * cdbp, int
-> cdb_len)
-> 
->  	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
->  		if (cdb0 < 0xc0) {
-> -			name = cdb_byte0_names[cdb0];
-> -			if (name)
-> -				printk("%s", name);
-> -			else
-> -				printk("cdb[0]=0x%x (reserved)", cdb0);
-> +			if (ARRAY_SIZE(cdb_byte0_names)) {
-> +				name = cdb_byte0_names[cdb0];
-> +				if (name)
-> +					printk("%s", name);
-> +				else
-> +					printk("cdb[0]=0x%x (reserved)", cdb0);
-> +			} else
-> +				printk("cdb[0]=0x%x", cdb0);
-
-Just ARRAY_SIZE(cdb_byte0_names) is not right - that array 
-is always defined and the statement is always true.
-
-Patch 16 replaces that block of code and eliminates that
-issue.
-
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
-Rob Elliott    HP Server Storage
+ Documentation/scsi/scsi_eh.txt |    4 ++--
+ drivers/scsi/aha152x.c         |    2 +-
+ drivers/scsi/mac_scsi.c        |    2 +-
+ include/scsi/scsi_host.h       |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-
-
+Index: linux/Documentation/scsi/scsi_eh.txt
+===================================================================
+--- linux.orig/Documentation/scsi/scsi_eh.txt	2014-09-29 10:55:44.000000000 +1000
++++ linux/Documentation/scsi/scsi_eh.txt	2014-10-01 16:33:24.000000000 +1000
+@@ -172,7 +172,7 @@ ways.
+ 
+  - eh_strategy_handler() callback
+ 	This is one big callback which should perform whole error
+-	handling.  As such, it should do all choirs SCSI midlayer
++	handling.  As such, it should do all chores the SCSI midlayer
+ 	performs during recovery.  This will be discussed in [2-2].
+ 
+  Once recovery is complete, SCSI EH resumes normal operation by
+@@ -428,7 +428,7 @@ scmd->allowed.
+ scsi_unjam_host() and it is responsible for whole recovery process.
+ On completion, the handler should have made lower layers forget about
+ all failed scmds and either ready for new commands or offline.  Also,
+-it should perform SCSI EH maintenance choirs to maintain integrity of
++it should perform SCSI EH maintenance chores to maintain integrity of
+ SCSI midlayer.  IOW, of the steps described in [2-1-2], all steps
+ except for #1 must be implemented by eh_strategy_handler().
+ 
+Index: linux/drivers/scsi/aha152x.c
+===================================================================
+--- linux.orig/drivers/scsi/aha152x.c	2014-09-29 10:55:44.000000000 +1000
++++ linux/drivers/scsi/aha152x.c	2014-10-01 16:33:24.000000000 +1000
+@@ -345,7 +345,7 @@ CMD_INC_RESID(struct scsi_cmnd *cmd, int
+ 
+ enum {
+ 	not_issued	= 0x0001,	/* command not yet issued */
+-	selecting	= 0x0002, 	/* target is beeing selected */
++	selecting	= 0x0002,	/* target is being selected */
+ 	identified	= 0x0004,	/* IDENTIFY was sent */
+ 	disconnected	= 0x0008,	/* target disconnected */
+ 	completed	= 0x0010,	/* target sent COMMAND COMPLETE */ 
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-10-01 16:32:58.000000000 +1000
++++ linux/drivers/scsi/mac_scsi.c	2014-10-01 16:33:24.000000000 +1000
+@@ -360,7 +360,7 @@ const char * macscsi_info (struct Scsi_H
+    XXX: Since bus errors in the PDMA routines never happen on my 
+    computer, the bus error code is untested. 
+    If the code works as intended, a bus error results in Pseudo-DMA 
+-   beeing disabled, meaning that the driver switches to slow handshake. 
++   being disabled, meaning that the driver switches to slow handshake.
+    If bus errors are NOT extremely rare, this has to be changed. 
+ */
+ 
+Index: linux/include/scsi/scsi_host.h
+===================================================================
+--- linux.orig/include/scsi/scsi_host.h	2014-09-29 10:55:44.000000000 +1000
++++ linux/include/scsi/scsi_host.h	2014-10-01 16:33:24.000000000 +1000
+@@ -572,7 +572,7 @@ struct Scsi_Host {
+ 	 * __devices is protected by the host_lock, but you should
+ 	 * usually use scsi_device_lookup / shost_for_each_device
+ 	 * to access it and don't care about locking yourself.
+-	 * In the rare case of beeing in irq context you can use
++	 * In the rare case of being in irq context you can use
+ 	 * their __ prefixed variants with the lock held. NEVER
+ 	 * access this list directly from a driver.
+ 	 */
