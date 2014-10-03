@@ -1,18 +1,18 @@
 From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 22/24] scsi: fixup logging messages in scsi_error.c
-Date: Fri, 3 Oct 2014 02:39:30 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBF0A@G4W3202.americas.hpqcorp.net>
+Subject: RE: [PATCH 24/24] scsi_error: document scsi_try_to_abort_cmd
+Date: Fri, 3 Oct 2014 02:54:00 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CCBF23@G4W3202.americas.hpqcorp.net>
 References: <1412144580-72880-1-git-send-email-hare@suse.de>
- <1412144580-72880-23-git-send-email-hare@suse.de>
+ <1412144580-72880-25-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:53530 "EHLO
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:1851 "EHLO
 	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120AbaJCClV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 22:41:21 -0400
-In-Reply-To: <1412144580-72880-23-git-send-email-hare@suse.de>
+	with ESMTP id S1751990AbaJCCzx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2014 22:55:53 -0400
+In-Reply-To: <1412144580-72880-25-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,121 +23,88 @@ Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-s
 
 > -----Original Message-----
 > From: Hannes Reinecke [mailto:hare@suse.de]
-...
+> Sent: Wednesday, 01 October, 2014 1:23 AM
+> To: James Bottomley
+> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Elliott, Robert (Server
+> Storage); Hannes Reinecke
+> Subject: [PATCH 24/24] scsi_error: document scsi_try_to_abort_cmd
+> 
+> scsi_try_to_abort_cmd() should only return
+> SUCCESS or FAILED. So document that in the
+> function description and simplify the
+> logging message.
+> 
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Cc: Robert Elliott <elliott@hp.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_error.c | 20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
+> 
 > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 554f885..7e1e190 100644
+> index a41ef5b..75dd203 100644
 > --- a/drivers/scsi/scsi_error.c
 > +++ b/drivers/scsi/scsi_error.c
-> @@ -1156,9 +1156,10 @@ int scsi_eh_get_sense(struct list_head *work_q,
->  		shost = scmd->device->host;
->  		if (scsi_host_eh_past_deadline(shost)) {
+> @@ -157,8 +157,7 @@ scmd_eh_abort_handler(struct work_struct *work)
+>  		} else {
 >  			SCSI_LOG_ERROR_RECOVERY(3,
-> -				shost_printk(KERN_INFO, shost,
-> -					    "skip %s, past eh deadline\n",
-> -					     __func__));
-> +				scmd_printk(KERN_INFO, scmd,
-> +					    "%s: skip request sense, "
-> +					     "past eh deadline\n",
-
-checkpatch lets you keep strings on one line.
-
-> +					     current->comm));
->  			break;
+>  				scmd_printk(KERN_INFO, scmd,
+> -					    "scmd %p abort failed, rtn %d\n",
+> -					    scmd, rtn));
+> +					    "scmd %p abort failed\n", scmd));
 >  		}
->  		if (status_byte(scmd->result) != CHECK_CONDITION)
-> @@ -1265,9 +1266,10 @@ static int scsi_eh_test_devices(struct list_head
-> *cmd_list,
->  				/* Push items back onto work_q */
->  				list_splice_init(cmd_list, work_q);
->  				SCSI_LOG_ERROR_RECOVERY(3,
-> -					shost_printk(KERN_INFO, sdev->host,
-> -						     "skip %s, past eh deadline",
-> -						     __func__));
-> +					sdev_printk(KERN_INFO, sdev,
-> +						    "%s: skip test device, "
-> +						    "past eh deadline",
+>  	}
+> 
+> @@ -869,7 +868,22 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd
+> *scmd)
+>  	return rtn;
+>  }
+> 
+> -static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt, struct
+> scsi_cmnd *scmd)
+> +/**
+> + * scsi_try_to_abort_cmd - Ask host to abort a SCSI command
+> + * @scmd:	SCSI cmd used to send a target reset
+> + *
+> + * Return value:
+> + *	SUCCESS or FAILED
+> + *
+> + * Notes:
+> + *    SUCCESS does not necessarily indicate that the command
+> + *    has been aborted; it only indicates that the LLDDs
+> + *    has cleared all references to that command.
+> + *    LLDDs should return FAILED only if an abort was required
+> + *    but could not be executed.
+> + */
+> +static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
+> +				 struct scsi_cmnd *scmd)
+>  {
+>  	if (!hostt->eh_abort_handler)
+>  		return FAILED;
 
-checkpatch lets you keep strings on one line.
+Since the rest of that function is just:
+        return hostt->eh_abort_handler(scmd);
 
-> +						    current->comm));
->  				break;
->  			}
->  		}
-> @@ -1318,21 +1320,22 @@ static int scsi_eh_abort_cmds(struct list_head
-> *work_q,
->  		if (scsi_host_eh_past_deadline(shost)) {
->  			list_splice_init(&check_list, work_q);
->  			SCSI_LOG_ERROR_RECOVERY(3,
-> -				shost_printk(KERN_INFO, shost,
-> -					    "skip %s, past eh deadline\n",
-> -					     __func__));
-> +				scmd_printk(KERN_INFO, scmd,
-> +					    "%s: skip aborting cmd, "
-> +					    "past eh deadline\n",
+this relies on the LLD to use only those values:
+#define SUCCESS         0x2002
+#define FAILED          0x2003
 
-checkpatch lets you keep strings on one line.
+which is hard to ensure.
 
-> +					    current->comm));
->  			return list_empty(work_q);
->  		}
->  		SCSI_LOG_ERROR_RECOVERY(3,
-> -			shost_printk(KERN_INFO, shost,
-> -				     "%s: aborting cmd: 0x%p\n",
-> +			scmd_printk(KERN_INFO, scmd,
-> +				     "%s: aborting cmd\n",
->  				     current->comm, scmd));
+Randomly picking on one, megaraid.c registers this
+function:
+	.eh_abort_handler               = megaraid_abort,
 
-As noted by Ewan, the extra scmd argument causes compiler
-warnings.
+megaraid_abort returns the return code from 
+megaraid_abort_and_reset, which returns TRUE or FALSE, 
+not SUCCESS and FAILED.
 
-...
-> @@ -1390,9 +1393,10 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
->  	shost_for_each_device(sdev, shost) {
->  		if (scsi_host_eh_past_deadline(shost)) {
->  			SCSI_LOG_ERROR_RECOVERY(3,
-> -				shost_printk(KERN_INFO, shost,
-> -					    "skip %s, past eh deadline\n",
-> -					     __func__));
-> +				sdev_printk(KERN_INFO, sdev,
-> +					    "%s: skip START_UNIT, "
-> +					    "past eh deadline\n",
-
-checkpatch lets you keep strings on one line.
-
-> +					    current->comm));
->  			break;
->  		}
->  		stu_scmd = NULL;
-...
-> @@ -1528,8 +1530,9 @@ static int scsi_eh_target_reset(struct Scsi_Host
-> *shost,
->  			list_splice_init(&tmp_list, work_q);
->  			SCSI_LOG_ERROR_RECOVERY(3,
->  				shost_printk(KERN_INFO, shost,
-> -					    "skip %s, past eh deadline\n",
-> -					     __func__));
-> +					    "%s: Skip target reset, "
-> +					     "past eh deadline\n",
-
-checkpatch lets you keep strings on one line.
-
-...
-> @@ -2191,9 +2194,10 @@ int scsi_error_handler(void *data)
->  		 */
->  		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
->  			SCSI_LOG_ERROR_RECOVERY(1,
-> -				printk(KERN_ERR "Error handler scsi_eh_%d "
-> -						"unable to autoresume\n",
-> -						shost->host_no));
-> +				shost_printk(KERN_ERR, shost,
-> +					     "scsi_eh_%d: "
-> +					     "unable to autoresume\n",
-
-checkpatch lets you keep strings on one line.
-
+Printing the return value helps expose such problems
+(if the code path is exercised).
 
 ---
 Rob Elliott    HP Server Storage
+
 
 
 
