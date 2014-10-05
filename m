@@ -1,119 +1,59 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH -next] scsi: ufs: fix configuring power mode after UIC link down
-Date: Sun,  5 Oct 2014 16:20:38 +0900
-Message-ID: <1412493638-24522-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:63347 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898AbaJEHVL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2014 03:21:11 -0400
-Received: by mail-pd0-f178.google.com with SMTP id y10so1677646pdj.37
-        for <linux-scsi@vger.kernel.org>; Sun, 05 Oct 2014 00:21:10 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
+Date: Sun, 5 Oct 2014 16:31:01 +0900
+Message-ID: <CAC5umyjwu-v_Zgs3PdMyoW+zHJ_h3BxXyp3uZOWiAfnY3+2YnQ@mail.gmail.com>
+References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
+	<1411648356-3883-11-git-send-email-draviv@codeaurora.org>
+	<CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
+	<20141003163534.GA25051@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20141003163534.GA25051@infradead.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dolev Raviv <draviv@codeaurora.org>, Jej B <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Santosh Y <santoshsy@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-If the UFS Power management level 5 is chosen, the UIC link is down
-during suspend.  And the power mode should be configured again during
-resume.  Unfortunately, it will not be configured because
-ufshcd_change_power_mode() tries to avoid unnecessary power mode change
-if the requested power mode and current power mode are same, but it
-can't detect there has been UIC link down.
+2014-10-04 1:35 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
+> On Sat, Oct 04, 2014 at 01:16:16AM +0900, Akinobu Mita wrote:
+>> These __scsi_add_device() calls for W-LUs increase the module reference
+>> count of ufshcd.ko by three.  But no one calls scsi_device_put() for
+>> these W-LUs, so it is impossible to unload ufshcd.ko.
+>>
+>> There are scsi_remove_device() calls for W-LUs in ufshcd_scsi_remove_wlus(),
+>> But these calls do nothing (please see a comment below).
+>>
+>> I could fix this issue by putting scsi_device_put() just after each
+>> __scsi_add_device() call.  I'll prepare a patch if I haven't missed
+>> something.
+>
+>
+>> When ufshcd_scsi_remove_wlus() is called in ufshcd_remove(), these
+>> three W-LU devices have already been deleted by scsi_remove_host() which
+>> is called just before ufshcd_scsi_remove_wlus().  The scsi
+>> device state of these W-LU devices is SDEV_DEL at this time, and
+>> scsi_remove_device() does nothing.
+>
+>
+> No, we need to keep a reference to avoid them going away due to a manual
+> delete.  We need a scsi_device_put where we currently call
+> scsi_remove_device I guess.
 
-This fixes it by changing the type of hba->pwr_info to struct
-ufs_pwr_mode_info in order to detect UIC link down in
-ufshcd_change_power_mode(), and turn off hba->pwr_info.is_valid when UIC
-link is down.
+This also works for now.  But there is a concern.
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Santosh Y <santoshsy@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd.c | 22 +++++++++++++---------
- drivers/scsi/ufs/ufshcd.h |  2 +-
- 2 files changed, 14 insertions(+), 10 deletions(-)
+In the previous email, I said that __scsi_add_device() calls for W-LUs
+increase the module reference count of ufshcd.ko by three.  But the
+module reference count of ufshcd-pci.ko (or ufshcd-pltfrm.ko) should be
+increased instead of ufshcd.ko.  Because ufshcd.ko is core driver and
+it just provides library function for the actual LLD (ufshcd-pci.ko and
+ufshcd-pltfrm.ko).
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 497c38a..2d81578 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2240,6 +2240,7 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	if (ret) {
- 		ufshcd_set_link_off(hba);
-+		hba->pwr_info.is_valid = false;
- 		ret = ufshcd_host_reset_and_restore(hba);
- 	}
- 
-@@ -2315,13 +2316,14 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 	int ret;
- 
- 	/* if already configured to the requested pwr_mode */
--	if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
--	    pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
--	    pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
--	    pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
--	    pwr_mode->pwr_rx == hba->pwr_info.pwr_rx &&
--	    pwr_mode->pwr_tx == hba->pwr_info.pwr_tx &&
--	    pwr_mode->hs_rate == hba->pwr_info.hs_rate) {
-+	if (hba->pwr_info.is_valid &&
-+	    pwr_mode->gear_rx == hba->pwr_info.info.gear_rx &&
-+	    pwr_mode->gear_tx == hba->pwr_info.info.gear_tx &&
-+	    pwr_mode->lane_rx == hba->pwr_info.info.lane_rx &&
-+	    pwr_mode->lane_tx == hba->pwr_info.info.lane_tx &&
-+	    pwr_mode->pwr_rx == hba->pwr_info.info.pwr_rx &&
-+	    pwr_mode->pwr_tx == hba->pwr_info.info.pwr_tx &&
-+	    pwr_mode->hs_rate == hba->pwr_info.info.hs_rate) {
- 		dev_dbg(hba->dev, "%s: power already configured\n", __func__);
- 		return 0;
- 	}
-@@ -2368,8 +2370,8 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			hba->vops->pwr_change_notify(hba,
- 				POST_CHANGE, NULL, pwr_mode);
- 
--		memcpy(&hba->pwr_info, pwr_mode,
--			sizeof(struct ufs_pa_layer_attr));
-+		hba->pwr_info.info = *pwr_mode;
-+		hba->pwr_info.is_valid = true;
- 	}
- 
- 	return ret;
-@@ -4755,6 +4757,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		 * controller is reset
- 		 */
- 		ufshcd_set_link_off(hba);
-+		hba->pwr_info.is_valid = false;
- 	}
- 
- out:
-@@ -5463,6 +5466,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	host->unique_id = host->host_no;
- 	host->max_cmd_len = MAX_CDB_SIZE;
- 
-+	hba->pwr_info.is_valid = false;
- 	hba->max_pwr_info.is_valid = false;
- 
- 	/* Initailize wait queue for task management */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 58ecdff..b514f25 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -457,7 +457,7 @@ struct ufs_hba {
- 
- 	bool wlun_dev_clr_ua;
- 
--	struct ufs_pa_layer_attr pwr_info;
-+	struct ufs_pwr_mode_info pwr_info;
- 	struct ufs_pwr_mode_info max_pwr_info;
- 
- 	struct ufs_clk_gating clk_gating;
--- 
-1.9.1
+Once this problem is fixed (by setting correct ufshcd_driver_template.module
+or else way), it is impossible to unload ufshcd-pci.ko (or
+ufshcd-pltfrm.ko).
 
+So the fix I proposed in the previous email plus additional work to
+avoid breakage with manual delete of W-LUs (specifically, correct mutal
+exclusion for hba->sdev_ufs_device accesses from ufshcd_slave_destroy()
+and from ufshcd_set_dev_pwr_mode()) is acceptable?
