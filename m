@@ -1,59 +1,78 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH V6 10/18] scsi: ufs: manually add well known logical units
-Date: Sun, 5 Oct 2014 16:31:01 +0900
-Message-ID: <CAC5umyjwu-v_Zgs3PdMyoW+zHJ_h3BxXyp3uZOWiAfnY3+2YnQ@mail.gmail.com>
-References: <1411648356-3883-1-git-send-email-draviv@codeaurora.org>
-	<1411648356-3883-11-git-send-email-draviv@codeaurora.org>
-	<CAC5umyhYko5woZhkroi3zm4ow8qp=DeCX62hcr0n3oxw4w8fjw@mail.gmail.com>
-	<20141003163534.GA25051@infradead.org>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] uas: Make uas work with blk-mq
+Date: Sun, 05 Oct 2014 11:06:00 +0200
+Message-ID: <543109F8.3030303@redhat.com>
+References: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>	 <1412330937-22630-2-git-send-email-hdegoede@redhat.com>	 <20141003214712.GA3579@kroah.com> <542FB590.4030902@redhat.com> <1412433981.21548.6.camel@jarvis.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20141003163534.GA25051@infradead.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dolev Raviv <draviv@codeaurora.org>, Jej B <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1412433981.21548.6.camel-doHRWNlmrt9+urZeOPWqwQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-2014-10-04 1:35 GMT+09:00 Christoph Hellwig <hch@infradead.org>:
-> On Sat, Oct 04, 2014 at 01:16:16AM +0900, Akinobu Mita wrote:
->> These __scsi_add_device() calls for W-LUs increase the module reference
->> count of ufshcd.ko by three.  But no one calls scsi_device_put() for
->> these W-LUs, so it is impossible to unload ufshcd.ko.
+Hi,
+
+On 10/04/2014 04:46 PM, James Bottomley wrote:
+> On Sat, 2014-10-04 at 10:53 +0200, Hans de Goede wrote:
+>> Hi,
 >>
->> There are scsi_remove_device() calls for W-LUs in ufshcd_scsi_remove_wlus(),
->> But these calls do nothing (please see a comment below).
+>> On 10/03/2014 11:47 PM, Greg Kroah-Hartman wrote:
+>>> On Fri, Oct 03, 2014 at 12:08:57PM +0200, Hans de Goede wrote:
+>>>> With uas over usb-3 the tags inside the uas iu-s must match the usb-3 stream
+>>>> ids, and those go from 1 - qdepth.
+>>>>
+>>>> Before blk-mq calling scsi_activate_tcq(sdev, qdepth) guaranteed that we would
+>>>> only get cmnd->request->tag from 0 - (qdepth - 1), and we used those as
+>>>> uas-tags / stream-ids.
+>>>>
+>>>> With blk-mq however we are guaranteed to never get more then qdepth commands
+>>>> queued at the same time, but the cmnd->request->tag values may be much larger,
+>>>> which breaks uas.
+>>>>
+>>>> This commit fixes this by generating uas tags in the 1 - qdepth range ourselves
+>>>> instead of using cmnd->request->tag.
+>>>>
+>>>> While touching all involved code anyways also rename the uas_cmd_info stream
+>>>> field to uas_tag, because when using uas over usb-2 streams are not used.
+>>>>
+>>>> Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+>>>> Reported-by: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+>>>> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>>> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+>>>
+>>> This doesn't apply to my usb-next branch of usb.git, care to refresh it
+>>> and resend?
 >>
->> I could fix this issue by putting scsi_device_put() just after each
->> __scsi_add_device() call.  I'll prepare a patch if I haven't missed
->> something.
->
->
->> When ufshcd_scsi_remove_wlus() is called in ufshcd_remove(), these
->> three W-LU devices have already been deleted by scsi_remove_host() which
->> is called just before ufshcd_scsi_remove_wlus().  The scsi
->> device state of these W-LU devices is SDEV_DEL at this time, and
->> scsi_remove_device() does nothing.
->
->
-> No, we need to keep a reference to avoid them going away due to a manual
-> delete.  We need a scsi_device_put where we currently call
-> scsi_remove_device I guess.
+>> I did this v2 to resolve a conflict with a last minute fix for 3.17 which
+>> James Bottomley pushed out yesterday. So if this does not apply that likely
+>> is because that fix is not (yet) in next. See:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/log/?h=fixes
+>>
+>> And specifically:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?h=fixes&id=2c2d831c81ec75a7b0d8e28caa8e3d9c1fe546f9
+>>
+>> I'm not sure how to proceed here, maybe the best thing is to cherry pick
+>> that fix into usb-next (should disappear on merge), and then apply
+>> this one on top ?
+> 
+> Depends:  The fixes tree is based on -rc1, so you could just use that as
+> the base for the topic branch uas goes in.  That's the usual way.  Or we
+> could just do it via the SCSI tree, which will have the necessary base.
+> 
+> Which would you prefer?
 
-This also works for now.  But there is a concern.
+This patch sits on top of a lot of other uas fixes which are already
+in usb-next, so this needs to go in through usb-next.
 
-In the previous email, I said that __scsi_add_device() calls for W-LUs
-increase the module reference count of ufshcd.ko by three.  But the
-module reference count of ufshcd-pci.ko (or ufshcd-pltfrm.ko) should be
-increased instead of ufshcd.ko.  Because ufshcd.ko is core driver and
-it just provides library function for the actual LLD (ufshcd-pci.ko and
-ufshcd-pltfrm.ko).
+Regards,
 
-Once this problem is fixed (by setting correct ufshcd_driver_template.module
-or else way), it is impossible to unload ufshcd-pci.ko (or
-ufshcd-pltfrm.ko).
-
-So the fix I proposed in the previous email plus additional work to
-avoid breakage with manual delete of W-LUs (specifically, correct mutal
-exclusion for hba->sdev_ufs_device accesses from ufshcd_slave_destroy()
-and from ufshcd_set_dev_pwr_mode()) is acceptable?
+Hans
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
