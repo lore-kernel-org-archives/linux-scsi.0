@@ -1,105 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 21/24] scsi: simplify scsi_log_(send|completion)
-Date: Mon, 06 Oct 2014 08:40:57 +0200
-Message-ID: <54323979.9080909@suse.de>
-References: <1412144580-72880-1-git-send-email-hare@suse.de> <1412144580-72880-22-git-send-email-hare@suse.de> <94D0CD8314A33A4D9D801C0FE68B402958CCBEE9@G4W3202.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39543 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbaJFGk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Oct 2014 02:40:59 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402958CCBEE9@G4W3202.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suman Tripathi <stripathi@apm.com>
+Subject: (unknown)
+Date: Mon,  6 Oct 2014 12:26:02 +0530
+Message-ID: <1412578562-11749-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Subject: 
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>, Ben Hutchings <ben@decadent.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/03/2014 04:32 AM, Elliott, Robert (Server Storage) wrote:
->=20
->=20
->> -----Original Message-----
->> From: Hannes Reinecke [mailto:hare@suse.de]
->> Sent: Wednesday, 01 October, 2014 1:23 AM
->> To: James Bottomley
->> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Elliott, Robert (=
-Server
->> Storage); Hannes Reinecke
->> Subject: [PATCH 21/24] scsi: simplify scsi_log_(send|completion)
->>
->> Simplify scsi_log_(send|completion) by externalizing
->> scsi_mlreturn_string() and always print the command address.
->>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/scsi/constants.c | 39 ++++++++++++++++++++++++++++++++++++-=
---
->>  drivers/scsi/scsi.c      | 43 ++++++-------------------------------=
-------
->>  drivers/scsi/scsi_lib.c  | 13 ++++++++++---
->>  include/scsi/scsi_dbg.h  |  3 ++-
->>  4 files changed, 54 insertions(+), 44 deletions(-)
->>
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index b131900..207ebef 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -1437,19 +1437,52 @@ const char *scsi_driverbyte_string(int resul=
-t)
->>  }
->>  EXPORT_SYMBOL(scsi_driverbyte_string);
->>
->> -void scsi_print_result(struct scsi_cmnd *cmd)
->> +#ifdef CONFIG_SCSI_CONSTANTS
->> +#define scsi_mlreturn_name(result)	{ result, #result }
->> +static const struct value_name_pair scsi_mlreturn_arr[] =3D {
->> +	scsi_mlreturn_name(NEEDS_RETRY),
->> +	scsi_mlreturn_name(SUCCESS),
->> +	scsi_mlreturn_name(FAILED),
->> +	scsi_mlreturn_name(QUEUED),
->> +	scsi_mlreturn_name(SOFT_ERROR),
->> +	scsi_mlreturn_name(ADD_TO_MLQUEUE),
->> +	scsi_mlreturn_name(TIMEOUT_ERROR),
->> +	scsi_mlreturn_name(SCSI_RETURN_NOT_HANDLED),
->> +	scsi_mlreturn_name(FAST_IO_FAIL)
->> +};
->=20
-> SUCCESS is a misleading name to print on commands that were
-> really not successful.  Example:
-> [ 5978.573297] sd 2:0:0:8: [sdz] tag#209 Done: SUCCESS Result: hostby=
-te=3DDID_OK driverbyte=3DDRIVER_OK
-> [ 5978.576335] sd 2:0:0:8: [sdz] tag#209 CDB: Test Unit Ready 00 00 0=
-0 00 00 00
-> [ 5978.578721] sd 2:0:0:8: [sdz] tag#209 Sense Key : Unit Attention [=
-current]
-> [ 5978.581177] sd 2:0:0:8: [sdz] tag#209 Add. Sense: Bus device reset=
- function occurred
->=20
-> Maybe that mlreturn value should be printed as=20
-> "COMPLETE" since it is similar to the SAM service
-> responses called COMMAND COMPLETE and FUNCTION COMPLETE.
-> That is a more neutral term.
->=20
-I do agree that SUCCESS is rather misleading here.
-However, the midlayer always used 'SUCCESS' here, and changing that
-would be a different patch as it's bound to induce quite some
-discussion.
-I'm happy to send such a patch, but preferably _after_ this
-patchset is in.
+commit 72f79f9e35bd3f78ee8853f2fcacaa197d23ebac upstream.
+Subject: [PATCH 3.16 350/357] ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
 
-Cheers,
+This patch removes the NCQ support from the APM X-Gene SoC AHCI
+Host Controller driver as it doesn't support it.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+[bwh: Backported to 3.16: host flags are passed to ahci_platform_init_host()]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Acked-by: Suman Tripathi <stripathi@apm.com>
+
+---
+ drivers/ata/ahci_xgene.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -337,7 +337,7 @@ static struct ata_port_operations xgene_
+ };
+ 
+ static const struct ata_port_info xgene_ahci_port_info = {
+-	.flags = AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.flags = AHCI_FLAG_COMMON,
+ 	.pio_mask = ATA_PIO4,
+ 	.udma_mask = ATA_UDMA6,
+ 	.port_ops = &xgene_ahci_ops,
+@@ -484,7 +484,7 @@ static int xgene_ahci_probe(struct platf
+ 		goto disable_resources;
+ 	}
+ 
+-	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
++	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+ 				     hflags, 0, 0);
