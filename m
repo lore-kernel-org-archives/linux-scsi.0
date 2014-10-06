@@ -1,39 +1,29 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 28/29] atari_NCR5380: Refactor Falcon special cases
-Date: Mon, 06 Oct 2014 11:28:11 +0200
-Message-ID: <543260AB.3020307@suse.de>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065634.956141656@telegraphics.com.au>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Mon, 06 Oct 2014 13:16:49 +0200
+Message-ID: <54327A21.6070202@acm.org>
+References: <541C27BF.6070609@acm.org> <541C28E0.7010705@acm.org> <CACVXFVPzz37J-613NZCfPStUBxf0rLOtz71LJ07PpCxYg5nn+g@mail.gmail.com> <541C49EC.6030404@acm.org> <CACVXFVPH_qPFUTT+796BZmWxeeG4tJ-Pyp8hqGqqSwt3YYkEqA@mail.gmail.com> <541C4D2F.9060907@acm.org> <541C4DF1.4090604@kernel.dk> <542C270B.5020002@acm.org> <542C31C4.1020702@kernel.dk> <542D8143.3050305@acm.org> <20141002173044.GB25437@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20141002065634.956141656@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from andre.telenet-ops.be ([195.130.132.53]:33775 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbaJFLQ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2014 07:16:58 -0400
+In-Reply-To: <20141002173044.GB25437@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, Robert Elliott <Elliott@hp.com>, Roland Dreier <roland@kernel.org>
 
-On 10/02/2014 08:56 AM, Finn Thain wrote:
-> Make the atari_NCR5380.c core driver usable by sun3_scsi, mac_scsi an=
-d others
-> by moving some of the Falcon-specific code out of the core driver: !I=
-S_A_TT,
-> atari_read_overruns and falcon_dont_release. Replace these with hostd=
-ata=20
-> variables and flags. FLAG_CHECK_LAST_BYTE_SENT is unused in atari_NCR=
-5380.c
-> so don't set it.
->=20
-Hmm. Shouldn't there be some more patches for sun3_scsi and mac_scsi
-to actually make use of this?
+On 10/02/14 19:30, Christoph Hellwig wrote:
+> Also if we want to merge scsi LLDDs that can take advantage of
+> multiqueue support it would probably be best if I take this via the SCSI
+> tree.
 
-I'd _love_ to get rid of all of this NCR5380 code duplication ...
+Sending these patches to you is fine with me, at least if Roland agrees.
 
-Cheers,
+Bart.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
