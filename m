@@ -1,64 +1,116 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 28/29] atari_NCR5380: Refactor Falcon special cases
-Date: Mon, 6 Oct 2014 15:41:36 +0200
-Message-ID: <201410061541.36522.linux@rainbow-software.org>
-References: <20141002065628.256592712@telegraphics.com.au> <543260AB.3020307@suse.de> <alpine.LNX.2.00.1410062121430.27616@nippy.intranet>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [dm-devel] [PATCH 1/1] multipath-tools: Change path checker for
+ IBM IPR devices
+Date: Mon, 06 Oct 2014 10:22:13 -0500
+Message-ID: <5432B3A5.4080001@linux.vnet.ibm.com>
+References: <20140924195721.148637349@linux.vnet.ibm.com> <20140924195752.289011902@linux.vnet.ibm.com> <5423B664.2020007@suse.de> <5424472E.4060300@linux.vnet.ibm.com> <20140925165743.GA20621@infradead.org> <20140930140547.Horde.m7EONeG2u3AJYXxG2TLrmQ3@ltc.linux.ibm.com> <20141001125134.GB31067@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:57768 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512AbaJFNmV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2014 09:42:21 -0400
-In-Reply-To: <alpine.LNX.2.00.1410062121430.27616@nippy.intranet>
-Content-Disposition: inline
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:49167 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752723AbaJFPWV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2014 11:22:21 -0400
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 6 Oct 2014 11:22:20 -0400
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8EC32C90048
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2014 11:10:58 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s96FMEi22621884
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2014 15:22:14 GMT
+Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s96FMDql001077
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2014 11:22:14 -0400
+In-Reply-To: <20141001125134.GB31067@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, wenxiong@linux.vnet.ibm.com
+Cc: device-mapper development <dm-devel@redhat.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On Monday 06 October 2014, Finn Thain wrote:
-> On Mon, 6 Oct 2014, Hannes Reinecke wrote:
-> > On 10/02/2014 08:56 AM, Finn Thain wrote:
-> > > Make the atari_NCR5380.c core driver usable by sun3_scsi, mac_scsi and
-> > > others by moving some of the Falcon-specific code out of the core
-> > > driver: !IS_A_TT, atari_read_overruns and falcon_dont_release. Replace
-> > > these with hostdata variables and flags. FLAG_CHECK_LAST_BYTE_SENT is
-> > > unused in atari_NCR5380.c so don't set it.
-> >
-> > Hmm. Shouldn't there be some more patches for sun3_scsi and mac_scsi to
-> > actually make use of this?
->
-> Yes, I think you are right, some of those patches should be included.
->
-> I've done some testing of mac_scsi and dmx3191d using the atari_NCR5380.c
-> core driver but this isn't working adequately yet. It's not yet a proof of
-> concept.
->
-> To convert sun3_scsi to use the atari_NCR5380 core driver is easier.
->
-> If I had atari and sun3 hardware to test on, everything would be done in
-> one patch set and I could test the end result rather than asking others to
-> test it in stages on the appropriate hardware.
->
-> Anyway, I will include more patches when I re-submit: not just the
-> sun3_NCR5380.c removal (which is ugly but hopefully Sam can simplify it)
-> but also some more work on atari_NCR5380.c (to minimise testing effort).
->
-> > I'd _love_ to get rid of all of this NCR5380 code duplication ...
->
-> My reading is that if mac_scsi can work with atari_NCR5380 then the same
-> is very likely true for the ARM drivers (oak, cumana_1) and also dmx3191d.
->
-> To merge atari_NCR5380.c with NCR5380.c would be much more difficult. If
-> someone who has the hardware were to take an interest in the remaining
-> drivers (just the ISA card drivers, dtc, pas16, g_NCR5380, t128), perhaps
-> it would be feasible.
+On 10/01/2014 07:51 AM, Christoph Hellwig wrote:
+> Unfortunately the patch wasn't quite correct - all TEST_UNIT_READY
+> commands are sent as BLOCK_PC, so this would basically revert James'
+> original fix for the SATL case.
+> 
+> Am I right to assume you only need the call to scsi_dh->check_sense and
+> not the rest of the handling for the multipath path checker?  If that's
+> the case something like the patch below sould work:
 
-I have some NCR5380 ISA cards and did some fixes to the driver a couple of 
-years ago.
+This would work if we also duplicated the 02/04/02 K/C/Q check in alua_check_sense
+handler.
 
--- 
-Ondrej Zary
+Wendy - can you try my patch below, along with Christoph's latest patch here
+and see if that resolves the issue?
+
+Thanks,
+
+Brian
+
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 5db8454..399c1c8 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -459,14 +459,6 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>  	if (! scsi_command_normalize_sense(scmd, &sshdr))
+>  		return FAILED;	/* no valid sense data */
+> 
+> -	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
+> -		/*
+> -		 * nasty: for mid-layer issued TURs, we need to return the
+> -		 * actual sense data without any recovery attempt.  For eh
+> -		 * issued ones, we need to try to recover and interpret
+> -		 */
+> -		return SUCCESS;
+> -
+>  	scsi_report_sense(sdev, &sshdr);
+> 
+>  	if (scsi_sense_is_deferred(&sshdr))
+> @@ -482,6 +474,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>  		/* handler does not care. Drop down to default handling */
+>  	}
+> 
+> +	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
+> +		/*
+> +		 * nasty: for mid-layer issued TURs, we need to return the
+> +		 * actual sense data without any recovery attempt.  For eh
+> +		 * issued ones, we need to try to recover and interpret
+> +		 */
+> +		return SUCCESS;
+> +
+>  	/*
+>  	 * Previous logic looked for FILEMARK, EOM or ILI which are
+>  	 * mainly associated with tapes and returned SUCCESS.
+> 
+
+
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/device_handler/scsi_dh_alua.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff -puN drivers/scsi/device_handler/scsi_dh_alua.c~alua_allow_restart drivers/scsi/device_handler/scsi_dh_alua.c
+--- linux/drivers/scsi/device_handler/scsi_dh_alua.c~alua_allow_restart	2014-10-06 10:19:16.184798305 -0500
++++ linux-bjking1/drivers/scsi/device_handler/scsi_dh_alua.c	2014-10-06 10:20:35.743165951 -0500
+@@ -474,6 +474,13 @@ static int alua_check_sense(struct scsi_
+ 			 * LUN Not Ready -- Offline
+ 			 */
+ 			return SUCCESS;
++		if (sdev->allow_restart &&
++		    (sense_hdr->asc == 0x04) && (sense_hdr->ascq == 0x02))
++			/*
++			 * if the device is not started, we need to wake
++			 * the error handler to start the motor
++			 */
++			return FAILED;
+ 		break;
+ 	case UNIT_ATTENTION:
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
+_
+
