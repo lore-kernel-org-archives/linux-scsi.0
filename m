@@ -1,114 +1,60 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Mon, 06 Oct 2014 21:14:48 +1300
-Message-ID: <54324F78.6090303@gmail.com>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com> <alpine.LNX.2.00.1410032054150.12643@nippy.intranet> <54308629.6060800@gmail.com> <alpine.LNX.2.00.1410061754280.26699@nippy.intranet>
+Date: Mon, 6 Oct 2014 10:36:21 +0200
+Message-ID: <CAMuHMdWMJ5C7focerL-d1arsXH0jmhC4E1k-ggkmziA15Y=PEg@mail.gmail.com>
+References: <20141002065628.256592712@telegraphics.com.au>
+	<20141002065633.766165263@telegraphics.com.au>
+	<CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com>
+	<alpine.LNX.2.00.1410032054150.12643@nippy.intranet>
+	<54308629.6060800@gmail.com>
+	<alpine.LNX.2.00.1410061754280.26699@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-m68k-owner@vger.kernel.org>
 In-Reply-To: <alpine.LNX.2.00.1410061754280.26699@nippy.intranet>
 Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
-
->>>> Can these be handled through the platform_device's resources?
->>>>
->>>>     
->>>>         
->>> I don't know.
->>>   
->>>       
->> Should be possible - I've seen that used in the ISP116x HCD driver 
->> (arch-dependent post-register access delay function passed via platform 
->> data).
->>     
+On Mon, Oct 6, 2014 at 9:05 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+>> > > > +       if (IS_A_TT())
+>> > > > +               instance->irq = IRQ_TT_MFP_SCSI;
+>> > > > +       else
+>> > > > +               instance->irq = IRQ_NONE;
+>> > > >
+>> > > platform_device resource?
+>> > >
+>> >
+>> > If I thought it possible to parameterize the driver such that it never
+>> > had to test IS_A_TT(), I'd probably agree that this would be more
+>> > elegant.
+>> >
+>> > Otherwise I'd prefer not to have parts of the logic separated off into
+>> > the platform resources while the remaining logic remains in the driver
+>> > itself.
+>> >
+>> > While I don't think platform resources are desirable in this driver, I
+>> > would like to hear Michael's views.
+>> >
+>>
+>> The IRQ is a good candidate to be passed via platform data.
 >
-> Yes, possible, but is it desirable?
->   
+> Geert didn't say so, but after thinking about his review comments I
+> imagine that he wants all the Atari IRQ numbers kept in one place and all
+> the Mac IRQ numbers in a different place, and so on. Makes sense.
 
-Only long term, i.e. if we can find a way to fold all the separate 
-*_NCR5380 drivers into a core one.
+In the end, it's the same SCSI chip.
 
+The "only" differences are resources, interrupts, DMA, and glue logic.
 
->
-> If there's no third configuration then I see little to be gained from 
-> completely parameterizing the driver using a bunch of resources.
->
-> What am I missing? Why would it be desirable to have bits of driver code 
-> in arch/m68k/ and other bits of the same driver kept elsewhere in the 
-> tree (in drivers/)?
->
->   
+Gr{oetje,eeting}s,
 
-Again, only makes sense if the goal is to reduce the driver to a core 
-driver with implementation bits separate.
+                        Geert
 
->>>> (and IRQ_NONE is wrong, you should use 0)
->>>>
->>>>     
->>>>         
->>>>> +       if (IS_A_TT()) {
->>>>>       
->>>>>           
->>>> Check for instance->irq instead?
->>>>     
->>>>         
->>> Yes, you'd think so, but a later patch (not in this set) would have to 
->>> change it back to IS_A_TT().
->>>
->>> Further patches align atari_NCR5380.c with NCR5380.c, such that the 
->>> core driver then checks host->irq to find out whether an IRQ is in 
->>> use. For Atari ST, request_irq() is not called even though the ST DMA 
->>> irq is in use.
->>>   
->>>       
->> That's why the IRQ is set to 0, I guess? Works for me.
->>     
->
-> My patch tests for IS_A_TT not 0 because 0 has a different meaning 
-> depending on which core driver you use. I don't want to support three 
-> forks of NCR5380.c. One of the objectives of this patch series is to try 
-> to move toward convergence on a common core driver.
->   
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-I wasn't talking about the use of IS_A_TT() here, rather about what 
-host->irq = 0 achieves. Anyway, in the context of atari_scsi.c, 
-host->irq == 0 is synonymous with !IS_A_TT(). If
-host->irq == 0 is problematic with the long term goal of a singe 5380 
-core driver, we'll just have to pick a value which means 'driver uses 
-IRQ but you're not to fiddle with it'.
->> The old code states that setting instance->irq = 0 keeps the midlevel 
->> from tampering with the SCSI IRQ during queuecmd which would interfere 
->> with IDE and floppy.
->>     
->
-> I don't know what you mean. AFAIK, the SCSI mid layer doesn't care about 
-> instance->irq.
->   
-
-You're right - that's another obsolete comment then. The midlevel uses 
-spinlocks now for ages, this means we can set instance->irq to the 
-actual IRQ used.
-
->> I guess this is still relevant - I would not have seen the ST-DMA locked 
->> by IDE during SCSI queuecmd otherwise.
->>     
->
-> Lock-ups were due to disabling local IRQs. Please see,
->   
-
-Absolutely right, but that's not what I meant. I assumed the midlevel 
-disabled interrupts during queuecommand - it does not, so the point is 
-moot. If using the actual IRQ for instance->irq helps at all, no 
-objection to that.
-
-SCSI commands can still be queued while IDE IO is in flight - that is 
-what the 'ST-DMA locked by IDE' above refers to.
-
-Cheers,
-
-    Michael
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
