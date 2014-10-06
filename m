@@ -1,12 +1,12 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 28/29] atari_NCR5380: Refactor Falcon special cases
-Date: Mon, 6 Oct 2014 22:34:15 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1410062121430.27616@nippy.intranet>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065634.956141656@telegraphics.com.au> <543260AB.3020307@suse.de>
+Subject: Re: [PATCH 07/29] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
+Date: Mon, 6 Oct 2014 23:26:15 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1410062235510.27616@nippy.intranet>
+References: <20141002065628.256592712@telegraphics.com.au> <20141002065629.926686164@telegraphics.com.au> <54325E9B.3050906@suse.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <543260AB.3020307@suse.de>
+In-Reply-To: <54325E9B.3050906@suse.de>
 Sender: linux-m68k-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
@@ -16,46 +16,30 @@ List-Id: linux-scsi@vger.kernel.org
 On Mon, 6 Oct 2014, Hannes Reinecke wrote:
 
 > On 10/02/2014 08:56 AM, Finn Thain wrote:
-> > Make the atari_NCR5380.c core driver usable by sun3_scsi, mac_scsi and 
-> > others by moving some of the Falcon-specific code out of the core 
-> > driver: !IS_A_TT, atari_read_overruns and falcon_dont_release. Replace 
-> > these with hostdata variables and flags. FLAG_CHECK_LAST_BYTE_SENT is 
-> > unused in atari_NCR5380.c so don't set it.
+> > Both atari_NCR5380.c and sun3_NCR5380.c core drivers #undef TAG_NONE 
+> > and then redefine it. But the original definition is unused because 
+> > NCR5380.c lacks support for tagged queueing. So just define it once.
 > > 
-> Hmm. Shouldn't there be some more patches for sun3_scsi and mac_scsi to 
-> actually make use of this?
+> > The TAG_NEXT macro only appears in the arguments to NCR5380_select() 
+> > calls. But that routine doesn't use its tag argument as the tag was 
+> > already assigned in NCR5380_main(). So remove the unused argument and 
+> > the macro.
+> > 
+> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> > 
+> Why not use 'SCSI_NO_TAG' from include/scsi/scsi_tcq.h ?
 
-Yes, I think you are right, some of those patches should be included.
+I didn't use SCSI_NO_TAG because it seemed to relate to the int tag member 
+in struct request and not the unsigned char tag member in struct 
+scsi_cmnd.
 
-I've done some testing of mac_scsi and dmx3191d using the atari_NCR5380.c 
-core driver but this isn't working adequately yet. It's not yet a proof of 
-concept.
+In light of the plan to remove the tag member from struct scsi_cmnd, I 
+don't know what to do with this patch. It doesn't really help with that 
+plan so I figured it would be NAK'd.
 
-To convert sun3_scsi to use the atari_NCR5380 core driver is easier.
-
-If I had atari and sun3 hardware to test on, everything would be done in 
-one patch set and I could test the end result rather than asking others to 
-test it in stages on the appropriate hardware.
-
-Anyway, I will include more patches when I re-submit: not just the 
-sun3_NCR5380.c removal (which is ugly but hopefully Sam can simplify it) 
-but also some more work on atari_NCR5380.c (to minimise testing effort).
-
-> 
-> I'd _love_ to get rid of all of this NCR5380 code duplication ...
-
-My reading is that if mac_scsi can work with atari_NCR5380 then the same 
-is very likely true for the ARM drivers (oak, cumana_1) and also dmx3191d.
-
-To merge atari_NCR5380.c with NCR5380.c would be much more difficult. If 
-someone who has the hardware were to take an interest in the remaining 
-drivers (just the ISA card drivers, dtc, pas16, g_NCR5380, t128), perhaps 
-it would be feasible.
+I haven't given any thought to the problem of converting drivers to block 
+layer tags (which might involve SCSI_NO_TAG, I guess). I have too much 
+other work in progress. That's why I suggested commenting out #define 
+SUPPORT_TAGS until they could be converted.
 
 -- 
-
-> 
-> Cheers,
-> 
-> Hannes
-> 
