@@ -1,116 +1,244 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [dm-devel] [PATCH 1/1] multipath-tools: Change path checker for
- IBM IPR devices
-Date: Mon, 06 Oct 2014 10:22:13 -0500
-Message-ID: <5432B3A5.4080001@linux.vnet.ibm.com>
-References: <20140924195721.148637349@linux.vnet.ibm.com> <20140924195752.289011902@linux.vnet.ibm.com> <5423B664.2020007@suse.de> <5424472E.4060300@linux.vnet.ibm.com> <20140925165743.GA20621@infradead.org> <20140930140547.Horde.m7EONeG2u3AJYXxG2TLrmQ3@ltc.linux.ibm.com> <20141001125134.GB31067@infradead.org>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH 21/26] scsi: simplify scsi_log_(send|completion)
+Date: Mon, 06 Oct 2014 15:53:03 -0400
+Message-ID: <1412625183.5241.148.camel@localhost.localdomain>
+References: <1412586086-129821-1-git-send-email-hare@suse.de>
+	 <1412586086-129821-22-git-send-email-hare@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:49167 "EHLO e7.ny.us.ibm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64405 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752723AbaJFPWV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Oct 2014 11:22:21 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Mon, 6 Oct 2014 11:22:20 -0400
-Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8EC32C90048
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2014 11:10:58 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s96FMEi22621884
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2014 15:22:14 GMT
-Received: from d01av02.pok.ibm.com (localhost [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s96FMDql001077
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2014 11:22:14 -0400
-In-Reply-To: <20141001125134.GB31067@infradead.org>
+	id S1750720AbaJFTxf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2014 15:53:35 -0400
+In-Reply-To: <1412586086-129821-22-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, wenxiong@linux.vnet.ibm.com
-Cc: device-mapper development <dm-devel@redhat.com>, James Bottomley <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
 
-On 10/01/2014 07:51 AM, Christoph Hellwig wrote:
-> Unfortunately the patch wasn't quite correct - all TEST_UNIT_READY
-> commands are sent as BLOCK_PC, so this would basically revert James'
-> original fix for the SATL case.
+Rats.  I found another case of "(null)" appearing in the log messages
+where I think you really just wanted no text at all to appear.
+Sorry I didn't find it last time along with the other one...
+
+-Ewan
+
+On Mon, 2014-10-06 at 11:01 +0200, Hannes Reinecke wrote:
+> Simplify scsi_log_(send|completion) by externalizing
+> scsi_mlreturn_string() and always print the command address.
 > 
-> Am I right to assume you only need the call to scsi_dh->check_sense and
-> not the rest of the handling for the multipath path checker?  If that's
-> the case something like the patch below sould work:
-
-This would work if we also duplicated the 02/04/02 K/C/Q check in alua_check_sense
-handler.
-
-Wendy - can you try my patch below, along with Christoph's latest patch here
-and see if that resolves the issue?
-
-Thanks,
-
-Brian
-
+> Reviewed-by: Robert Elliott <elliott@hp.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/constants.c | 39 ++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/scsi.c      | 43 ++++++-------------------------------------
+>  drivers/scsi/scsi_lib.c  | 13 ++++++++++---
+>  include/scsi/scsi_dbg.h  |  3 ++-
+>  4 files changed, 54 insertions(+), 44 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 5db8454..399c1c8 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -459,14 +459,6 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
->  	if (! scsi_command_normalize_sense(scmd, &sshdr))
->  		return FAILED;	/* no valid sense data */
-> 
-> -	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
-> -		/*
-> -		 * nasty: for mid-layer issued TURs, we need to return the
-> -		 * actual sense data without any recovery attempt.  For eh
-> -		 * issued ones, we need to try to recover and interpret
-> -		 */
-> -		return SUCCESS;
-> -
->  	scsi_report_sense(sdev, &sshdr);
-> 
->  	if (scsi_sense_is_deferred(&sshdr))
-> @@ -482,6 +474,14 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
->  		/* handler does not care. Drop down to default handling */
->  	}
-> 
-> +	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
-> +		/*
-> +		 * nasty: for mid-layer issued TURs, we need to return the
-> +		 * actual sense data without any recovery attempt.  For eh
-> +		 * issued ones, we need to try to recover and interpret
-> +		 */
-> +		return SUCCESS;
+> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+> index 1ebdc5d..59b7f9e 100644
+> --- a/drivers/scsi/constants.c
+> +++ b/drivers/scsi/constants.c
+> @@ -1439,19 +1439,52 @@ const char *scsi_driverbyte_string(int result)
+>  }
+>  EXPORT_SYMBOL(scsi_driverbyte_string);
+>  
+> -void scsi_print_result(struct scsi_cmnd *cmd)
+> +#ifdef CONFIG_SCSI_CONSTANTS
+> +#define scsi_mlreturn_name(result)	{ result, #result }
+> +static const struct value_name_pair scsi_mlreturn_arr[] = {
+> +	scsi_mlreturn_name(NEEDS_RETRY),
+> +	scsi_mlreturn_name(SUCCESS),
+> +	scsi_mlreturn_name(FAILED),
+> +	scsi_mlreturn_name(QUEUED),
+> +	scsi_mlreturn_name(SOFT_ERROR),
+> +	scsi_mlreturn_name(ADD_TO_MLQUEUE),
+> +	scsi_mlreturn_name(TIMEOUT_ERROR),
+> +	scsi_mlreturn_name(SCSI_RETURN_NOT_HANDLED),
+> +	scsi_mlreturn_name(FAST_IO_FAIL)
+> +};
+> +#endif
 > +
->  	/*
->  	 * Previous logic looked for FILEMARK, EOM or ILI which are
->  	 * mainly associated with tapes and returned SUCCESS.
-> 
+> +const char *scsi_mlreturn_string(int result)
+> +{
+> +#ifdef CONFIG_SCSI_CONSTANTS
+> +	const struct value_name_pair *arr = scsi_mlreturn_arr;
+> +	int k;
+> +
+> +	for (k = 0; k < ARRAY_SIZE(scsi_mlreturn_arr); ++k, ++arr) {
+> +		if (result == arr->value)
+> +			return arr->name;
+> +	}
+> +#endif
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL(scsi_mlreturn_string);
+> +
+> +void scsi_print_result(struct scsi_cmnd *cmd, const char *msg, int disposition)
+>  {
+> +	const char *mlret_string = scsi_mlreturn_string(disposition);
+>  	const char *hb_string = scsi_hostbyte_string(cmd->result);
+>  	const char *db_string = scsi_driverbyte_string(cmd->result);
+>  
+>  	if (hb_string || db_string)
+>  		scmd_printk(KERN_INFO, cmd,
+> -			    "Result: hostbyte=%s driverbyte=%s",
+> +			    "%s%s Result: hostbyte=%s driverbyte=%s",
+> +			    msg, mlret_string ? mlret_string : "UNKNOWN",
+>  			    hb_string ? hb_string : "invalid",
+>  			    db_string ? db_string : "invalid");
+>  	else
+>  		scmd_printk(KERN_INFO, cmd,
+> -			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
+> +			    "%s%s Result: hostbyte=0x%02x driverbyte=0x%02x",
+> +			    msg, mlret_string ? mlret_string : "UNKNOWN",
+>  			    host_byte(cmd->result), driver_byte(cmd->result));
+>  }
+>  EXPORT_SYMBOL(scsi_print_result);
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 61aeaf1..3d81a07 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -527,9 +527,9 @@ void scsi_log_send(struct scsi_cmnd *cmd)
+>  	 *
+>  	 * 1: nothing (match completion)
+>  	 *
+> -	 * 2: log opcode + command of all commands
+> +	 * 2: log opcode + command of all commands + cmd address
+>  	 *
+> -	 * 3: same as 2 plus dump cmd address
+> +	 * 3: same as 2
+>  	 *
+>  	 * 4: same as 3 plus dump extra junk
+>  	 */
+> @@ -537,10 +537,8 @@ void scsi_log_send(struct scsi_cmnd *cmd)
+>  		level = SCSI_LOG_LEVEL(SCSI_LOG_MLQUEUE_SHIFT,
+>  				       SCSI_LOG_MLQUEUE_BITS);
+>  		if (level > 1) {
+> -			scmd_printk(KERN_INFO, cmd, "Send: ");
+> -			if (level > 2)
+> -				printk("0x%p ", cmd);
+> -			printk("\n");
+> +			scmd_printk(KERN_INFO, cmd,
+> +				    "Send: scmd 0x%p\n", cmd);
+>  			scsi_print_command(cmd);
+>  			if (level > 3) {
+>  				printk(KERN_INFO "buffer = 0x%p, bufflen = %d,"
+> @@ -565,7 +563,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+>  	 *
+>  	 * 2: same as 1 but for all command completions.
+>  	 *
+> -	 * 3: same as 2 plus dump cmd address
+> +	 * 3: same as 2
+>  	 *
+>  	 * 4: same as 3 plus dump extra junk
+>  	 */
+> @@ -574,36 +572,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+>  				       SCSI_LOG_MLCOMPLETE_BITS);
+>  		if (((level > 0) && (cmd->result || disposition != SUCCESS)) ||
+>  		    (level > 1)) {
+> -			scmd_printk(KERN_INFO, cmd, "Done: ");
+> -			if (level > 2)
+> -				printk("0x%p ", cmd);
+> -			/*
+> -			 * Dump truncated values, so we usually fit within
+> -			 * 80 chars.
+> -			 */
+> -			switch (disposition) {
+> -			case SUCCESS:
+> -				printk("SUCCESS\n");
+> -				break;
+> -			case NEEDS_RETRY:
+> -				printk("RETRY\n");
+> -				break;
+> -			case ADD_TO_MLQUEUE:
+> -				printk("MLQUEUE\n");
+> -				break;
+> -			case FAILED:
+> -				printk("FAILED\n");
+> -				break;
+> -			case TIMEOUT_ERROR:
+> -				/* 
+> -				 * If called via scsi_times_out.
+> -				 */
+> -				printk("TIMEOUT\n");
+> -				break;
+> -			default:
+> -				printk("UNKNOWN\n");
+> -			}
+> -			scsi_print_result(cmd);
+> +			scsi_print_result(cmd, "Done: ", disposition);
+>  			scsi_print_command(cmd);
+>  			if (status_byte(cmd->result) & CHECK_CONDITION)
+>  				scsi_print_sense(cmd);
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index b853659..2df485f 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -831,7 +831,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  	int error = 0;
+>  	struct scsi_sense_hdr sshdr;
+>  	bool sense_valid = false;
+> -	int sense_deferred = 0;
+> +	int sense_deferred = 0, level = 0;
+>  	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+>  	      ACTION_DELAYED_RETRY} action;
+>  	unsigned long wait_for = (cmd->allowed + 1) * req->timeout;
+> @@ -1037,8 +1037,15 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  	switch (action) {
+>  	case ACTION_FAIL:
+>  		/* Give up and fail the remainder of the request */
+> -		if (!(req->cmd_flags & REQ_QUIET)) {
+> -			scsi_print_result(cmd);
+> +		if (unlikely(scsi_logging_level))
+> +			level = SCSI_LOG_LEVEL(SCSI_LOG_MLQUEUE_SHIFT,
+> +					       SCSI_LOG_MLQUEUE_BITS);
+> +		/*
+> +		 * if logging is enabled the failure will be printed
+> +		 * in scsi_log_completion(), so avoid duplicate messages
+> +		 */
+> +		if (!level && !(req->cmd_flags & REQ_QUIET)) {
+> +			scsi_print_result(cmd, NULL, FAILED);
+
+                                                 ^^^^--
+
+I think this is what is causing other undesirable log messages:
+
+Oct  6 15:30:51 rhel-storage-01 kernel: [ 1257.681129] sd 9:0:0:0: [sde] (null)FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+
+                                                                         ^^^^^^--- here
+
+because scsi_print_result() is using "%s%s" and the "msg" argument is NULL
+
+                scmd_printk(KERN_INFO, cmd,
+                            "%s%s Result: hostbyte=%s driverbyte=%s",
+                            msg, mlret_string ? mlret_string : "UNKNOWN",
+                            hb_string ? hb_string : "invalid",
+                            db_string ? db_string : "invalid");
 
 
+>  			if (driver_byte(result) & DRIVER_SENSE)
+>  				scsi_print_sense(cmd);
+>  			scsi_print_command(cmd);
+> diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+> index f41a86b..7982795 100644
+> --- a/include/scsi/scsi_dbg.h
+> +++ b/include/scsi/scsi_dbg.h
+> @@ -17,9 +17,10 @@ extern void scsi_print_sense(const struct scsi_cmnd *);
+>  extern void __scsi_print_sense(const struct scsi_device *, const char *name,
+>  			       const unsigned char *sense_buffer,
+>  			       int sense_len);
+> -extern void scsi_print_result(struct scsi_cmnd *);
+> +extern void scsi_print_result(struct scsi_cmnd *, const char *, int);
+>  extern const char *scsi_hostbyte_string(int);
+>  extern const char *scsi_driverbyte_string(int);
+> +extern const char *scsi_mlreturn_string(int);
+>  extern const char *scsi_sense_key_string(unsigned char);
+>  extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
+>  					  const char **);
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/device_handler/scsi_dh_alua.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff -puN drivers/scsi/device_handler/scsi_dh_alua.c~alua_allow_restart drivers/scsi/device_handler/scsi_dh_alua.c
---- linux/drivers/scsi/device_handler/scsi_dh_alua.c~alua_allow_restart	2014-10-06 10:19:16.184798305 -0500
-+++ linux-bjking1/drivers/scsi/device_handler/scsi_dh_alua.c	2014-10-06 10:20:35.743165951 -0500
-@@ -474,6 +474,13 @@ static int alua_check_sense(struct scsi_
- 			 * LUN Not Ready -- Offline
- 			 */
- 			return SUCCESS;
-+		if (sdev->allow_restart &&
-+		    (sense_hdr->asc == 0x04) && (sense_hdr->ascq == 0x02))
-+			/*
-+			 * if the device is not started, we need to wake
-+			 * the error handler to start the motor
-+			 */
-+			return FAILED;
- 		break;
- 	case UNIT_ATTENTION:
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-_
 
