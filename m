@@ -1,62 +1,58 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH 1/1] ufs: scsi: fix sparse errors in ufshcd_system_suspend
-Date: Sun, 5 Oct 2014 15:44:16 -0700
-Message-ID: <000301cfe0ed$e5221200$af663600$@codeaurora.org>
-References: <1412518207-27135-1-git-send-email-draviv@codeaurora.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 2/2] uas: Make uas work with blk-mq
+Date: Sun, 5 Oct 2014 17:10:20 -0700
+Message-ID: <20141006001020.GA32273@kroah.com>
+References: <1412330937-22630-1-git-send-email-hdegoede@redhat.com>
+ <1412330937-22630-2-git-send-email-hdegoede@redhat.com>
+ <20141003214712.GA3579@kroah.com>
+ <542FB590.4030902@redhat.com>
+ <1412433981.21548.6.camel@jarvis.lan>
+ <543109F8.3030303@redhat.com>
+ <20141005091015.GA29855@infradead.org>
+ <54310CF9.8040503@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1412518207-27135-1-git-send-email-draviv@codeaurora.org>
-Content-Language: en-us
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35044 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768AbaJFAKV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2014 20:10:21 -0400
+Content-Disposition: inline
+In-Reply-To: <54310CF9.8040503@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Looks good, Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+On Sun, Oct 05, 2014 at 11:18:49AM +0200, Hans de Goede wrote:
+> Hi,
+> 
+> On 10/05/2014 11:10 AM, Christoph Hellwig wrote:
+> > On Sun, Oct 05, 2014 at 11:06:00AM +0200, Hans de Goede wrote:
+> >> This patch sits on top of a lot of other uas fixes which are already
+> >> in usb-next, so this needs to go in through usb-next.
+> > 
+> > What is the actual conflict? If it's just your revert of the
+> > disable_blk_mq flag
+> 
+> Yes, the conclict is just my revert of the disable_blk_mq flag
+> 
+> > you might want to skip that for this pull request
+> > and send it on after both scsi and usb trees make it to Linus.
+> 
+> Since the patch with the conclict actually makes the flag unnecessary,
+> to me this belongs in the same patch.
+> 
+> > If there's more conflict around the host template you could cherry pick
+> > my patch for your tree.
+> 
+> Yes, Greg cherry picking the patch in question into his tree to resolv
+> the conflict would be my preferred solution to this, but ultimately
+> that is Greg's call.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dolev Raviv
-Sent: Sunday, October 05, 2014 7:10 AM
-To: James.Bottomley@HansenPartnership.com; hch@infradead.org
-Cc: linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org;
-santoshsy@gmail.com; Dolev Raviv
-Subject: [PATCH 1/1] ufs: scsi: fix sparse errors in ufshcd_system_suspend
+I'm not going to do that, just resend it to me after 3.18-rc1 is out, my
+tree is closed for the -rc1 merge window now anyway.
 
-This patch fixes newly introduced sparse warning in ufshcd_system_suspend,
-introduced by UFS power management series.
+thanks,
 
-Sparse warning:
-drivers/scsi/ufs/ufshcd.c:5118 ufshcd_system_suspend()
-error: we previously assumed 'hba' could be null (see line 5089)
-
-To fix it, we return 0 in case HBA is not initialized or is not powered.
-
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-497c38a..836ea72 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5087,7 +5087,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
- 	int ret = 0;
- 
- 	if (!hba || !hba->is_powered)
--		goto out;
-+		return 0;
- 
- 	if (pm_runtime_suspended(hba->dev)) {
- 		if (hba->rpm_lvl == hba->spm_lvl)
---
-1.8.5.2
---
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+greg k-h
