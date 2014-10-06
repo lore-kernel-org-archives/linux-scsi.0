@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/26] sd: Cleanup logging
-Date: Mon,  6 Oct 2014 11:01:20 +0200
-Message-ID: <1412586086-129821-21-git-send-email-hare@suse.de>
+Subject: [PATCH 17/26] scsi: repurpose the last argument from print_opcode_name()
+Date: Mon,  6 Oct 2014 11:01:17 +0200
+Message-ID: <1412586086-129821-18-git-send-email-hare@suse.de>
 References: <1412586086-129821-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44082 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:44081 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752376AbaJFJBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752358AbaJFJBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 6 Oct 2014 05:01:35 -0400
 In-Reply-To: <1412586086-129821-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,161 +14,230 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Open-code scsi_print_result in sd.c, and cleanup logging to
-not print duplicate informations.
-
-With that we can remove scsi_show_result in constants.c
+print_opcode_name() was only ever called with a '0' argument
+from LLDDs and ULDs which were _not_ supporting variable length
+CDBs, so the 'if' clause was never triggered.
+Instead we should be using the last argument to specify
+the cdb length to avoid accidental overflow when reading
+the cdb buffer.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 16 ----------------
- drivers/scsi/sd.c        | 46 ++++++++++++++++++++++++----------------------
- include/scsi/scsi_dbg.h  |  1 -
- 3 files changed, 24 insertions(+), 39 deletions(-)
+ drivers/scsi/arm/fas216.c |  2 +-
+ drivers/scsi/ch.c         | 24 +++++++++++++-----------
+ drivers/scsi/constants.c  | 25 ++++++++++---------------
+ drivers/scsi/sr_ioctl.c   |  4 ++--
+ include/scsi/scsi_dbg.h   |  2 +-
+ 5 files changed, 27 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index cea3463..d2581cb 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2424,7 +2424,7 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 	info->stats.aborts += 1;
+ 
+ 	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
+-	__scsi_print_command(SCpnt->cmnd);
++	__scsi_print_command(SCpnt->cmnd, SCpnt->cmd_len);
+ 
+ 	print_debug_list();
+ 	fas216_dumpstate(info);
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 53621a3..226ef77 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -182,7 +182,7 @@ static int ch_find_errno(struct scsi_sense_hdr *sshdr)
+ }
+ 
+ static int
+-ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
++ch_do_scsi(scsi_changer *ch, unsigned char *cmd, int cmd_len,
+ 	   void *buffer, unsigned buflength,
+ 	   enum dma_data_direction direction)
+ {
+@@ -196,7 +196,7 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
+ 	errno = 0;
+ 	if (debug) {
+ 		DPRINTK("command: ");
+-		__scsi_print_command(cmd);
++		__scsi_print_command(cmd, cmd_len);
+ 	}
+ 
+ 	result = scsi_execute_req(ch->device, cmd, direction, buffer,
+@@ -257,7 +257,8 @@ ch_read_element_status(scsi_changer *ch, u_int elem, char *data)
+ 	cmd[3] = elem        & 0xff;
+ 	cmd[5] = 1;
+ 	cmd[9] = 255;
+-	if (0 == (result = ch_do_scsi(ch, cmd, buffer, 256, DMA_FROM_DEVICE))) {
++	if (0 == (result = ch_do_scsi(ch, cmd, 12,
++				      buffer, 256, DMA_FROM_DEVICE))) {
+ 		if (((buffer[16] << 8) | buffer[17]) != elem) {
+ 			DPRINTK("asked for element 0x%02x, got 0x%02x\n",
+ 				elem,(buffer[16] << 8) | buffer[17]);
+@@ -287,7 +288,7 @@ ch_init_elem(scsi_changer *ch)
+ 	memset(cmd,0,sizeof(cmd));
+ 	cmd[0] = INITIALIZE_ELEMENT_STATUS;
+ 	cmd[1] = (ch->device->lun & 0x7) << 5;
+-	err = ch_do_scsi(ch, cmd, NULL, 0, DMA_NONE);
++	err = ch_do_scsi(ch, cmd, 6, NULL, 0, DMA_NONE);
+ 	VPRINTK(KERN_INFO, "... finished\n");
+ 	return err;
+ }
+@@ -309,10 +310,10 @@ ch_readconfig(scsi_changer *ch)
+ 	cmd[1] = (ch->device->lun & 0x7) << 5;
+ 	cmd[2] = 0x1d;
+ 	cmd[4] = 255;
+-	result = ch_do_scsi(ch, cmd, buffer, 255, DMA_FROM_DEVICE);
++	result = ch_do_scsi(ch, cmd, 10, buffer, 255, DMA_FROM_DEVICE);
+ 	if (0 != result) {
+ 		cmd[1] |= (1<<3);
+-		result  = ch_do_scsi(ch, cmd, buffer, 255, DMA_FROM_DEVICE);
++		result  = ch_do_scsi(ch, cmd, 10, buffer, 255, DMA_FROM_DEVICE);
+ 	}
+ 	if (0 == result) {
+ 		ch->firsts[CHET_MT] =
+@@ -437,7 +438,7 @@ ch_position(scsi_changer *ch, u_int trans, u_int elem, int rotate)
+ 	cmd[4]  = (elem  >> 8) & 0xff;
+ 	cmd[5]  =  elem        & 0xff;
+ 	cmd[8]  = rotate ? 1 : 0;
+-	return ch_do_scsi(ch, cmd, NULL, 0, DMA_NONE);
++	return ch_do_scsi(ch, cmd, 10, NULL, 0, DMA_NONE);
+ }
+ 
+ static int
+@@ -458,7 +459,7 @@ ch_move(scsi_changer *ch, u_int trans, u_int src, u_int dest, int rotate)
+ 	cmd[6]  = (dest  >> 8) & 0xff;
+ 	cmd[7]  =  dest        & 0xff;
+ 	cmd[10] = rotate ? 1 : 0;
+-	return ch_do_scsi(ch, cmd, NULL,0, DMA_NONE);
++	return ch_do_scsi(ch, cmd, 12, NULL,0, DMA_NONE);
+ }
+ 
+ static int
+@@ -484,7 +485,7 @@ ch_exchange(scsi_changer *ch, u_int trans, u_int src,
+ 	cmd[9]  =  dest2       & 0xff;
+ 	cmd[10] = (rotate1 ? 1 : 0) | (rotate2 ? 2 : 0);
+ 
+-	return ch_do_scsi(ch, cmd, NULL,0, DMA_NONE);
++	return ch_do_scsi(ch, cmd, 12, NULL, 0, DMA_NONE);
+ }
+ 
+ static void
+@@ -534,7 +535,7 @@ ch_set_voltag(scsi_changer *ch, u_int elem,
+ 	memcpy(buffer,tag,32);
+ 	ch_check_voltag(buffer);
+ 
+-	result = ch_do_scsi(ch, cmd, buffer, 256, DMA_TO_DEVICE);
++	result = ch_do_scsi(ch, cmd, 12, buffer, 256, DMA_TO_DEVICE);
+ 	kfree(buffer);
+ 	return result;
+ }
+@@ -765,7 +766,8 @@ static long ch_ioctl(struct file *file,
+ 		ch_cmd[5] = 1;
+ 		ch_cmd[9] = 255;
+ 
+-		result = ch_do_scsi(ch, ch_cmd, buffer, 256, DMA_FROM_DEVICE);
++		result = ch_do_scsi(ch, ch_cmd, 12,
++				    buffer, 256, DMA_FROM_DEVICE);
+ 		if (!result) {
+ 			cge.cge_status = buffer[18];
+ 			cge.cge_flags = 0;
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 3244ec2..1ebdc5d 100644
+index 6d34d1f..84b2614 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -1439,22 +1439,6 @@ const char *scsi_driverbyte_string(int result)
+@@ -320,25 +320,21 @@ static bool scsi_opcode_sa_name(int opcode, int service_action,
+ 	return true;
  }
- EXPORT_SYMBOL(scsi_driverbyte_string);
  
--void scsi_show_result(int result)
--{
--	const char *hb_string = scsi_hostbyte_string(result);
--	const char *db_string = scsi_driverbyte_string(result);
--
--	if (hb_string || db_string)
--		printk("Result: hostbyte=%s driverbyte=%s\n",
--		       hb_string ? hb_string : "invalid",
--		       db_string ? db_string : "invalid");
--	else
--		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--		       host_byte(result), driver_byte(result));
--}
--EXPORT_SYMBOL(scsi_show_result);
--
--
- void scsi_print_result(struct scsi_cmnd *cmd)
+-/* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
++static void print_opcode_name(const unsigned char *cdbp, size_t cdb_len)
  {
- 	const char *hb_string = scsi_hostbyte_string(cmd->result);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 848b17d..20b0539 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -116,7 +116,7 @@ static int sd_eh_action(struct scsi_cmnd *, int);
- static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
- static void scsi_disk_release(struct device *cdev);
- static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
--static void sd_print_result(struct scsi_disk *, int);
-+static void sd_print_result(struct scsi_disk *, const char *, int);
+-	int sa, len, cdb0;
++	int sa, cdb0;
+ 	const char *cdb_name = NULL, *sa_name = NULL;
  
- static DEFINE_SPINLOCK(sd_index_lock);
- static DEFINE_IDA(sd_index_ida);
-@@ -1479,7 +1479,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 	}
- 
- 	if (res) {
--		sd_print_result(sdkp, res);
-+		sd_print_result(sdkp, "SYNCHRONIZE_CACHE failed", res);
- 
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
-@@ -1700,17 +1700,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		if (sense_valid)
- 			sense_deferred = scsi_sense_is_deferred(&sshdr);
- 	}
--#ifdef CONFIG_SCSI_LOGGING
--	SCSI_LOG_HLCOMPLETE(1, scsi_print_result(SCpnt));
--	if (sense_valid) {
--		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
--						   "sd_done: sb[respc,sk,asc,"
--						   "ascq]=%x,%x,%x,%x\n",
--						   sshdr.response_code,
--						   sshdr.sense_key, sshdr.asc,
--						   sshdr.ascq));
--	}
--#endif
-+	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
-+					   "sd_done: completed %d bytes\n",
-+					   good_bytes));
- 	sdkp->medium_access_timed_out = 0;
- 
- 	if (driver_byte(result) != DRIVER_SENSE &&
-@@ -1820,12 +1812,12 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
- 			if(!spintime && !scsi_status_is_good(the_result)) {
--				sd_printk(KERN_NOTICE, sdkp, "Unit Not Ready\n");
--				sd_print_result(sdkp, the_result);
-+				sd_print_result(sdkp, "Unit Not Ready",
-+						the_result);
- 			}
- 			break;
+ 	cdb0 = cdbp[0];
+ 	if (cdb0 == VARIABLE_LENGTH_CMD) {
+-		len = scsi_varlen_cdb_length(cdbp);
+-		if (len < 10) {
+-			printk("short variable length command, "
+-			       "len=%d ext_len=%d", len, cdb_len);
++		if (cdb_len < 10) {
++			printk("short variable length command, len=%zu",
++			       cdb_len);
+ 			return;
  		}
--					
-+
- 		/*
- 		 * The device does not want the automatic start to be issued.
- 		 */
-@@ -1941,7 +1933,7 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 			struct scsi_sense_hdr *sshdr, int sense_valid,
- 			int the_result)
- {
--	sd_print_result(sdkp, the_result);
-+	sd_print_result(sdkp, "READ CAPACITY failed", the_result);
- 	if (driver_byte(the_result) & DRIVER_SENSE)
- 		sd_print_sense_hdr(sdkp, sshdr);
- 	else
-@@ -3126,8 +3118,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
- 			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 	if (res) {
--		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
--		sd_print_result(sdkp, res);
-+		sd_print_result(sdkp, "START_STOP failed", res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
- 		if (scsi_sense_valid(&sshdr) &&
-@@ -3328,9 +3319,20 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
- 			     sshdr->asc, sshdr->ascq);
+ 		sa = (cdbp[8] << 8) + cdbp[9];
+-	} else {
++	} else
+ 		sa = cdbp[1] & 0x1f;
+-		len = cdb_len;
+-	}
+ 
+ 	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
+ 		if (cdb_name)
+@@ -356,18 +352,17 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 			printk("%s, sa=0x%x", cdb_name, sa);
+ 		else
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-
+-		if (cdb_len > 0 && len != cdb_len)
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+ 	}
  }
  
--static void sd_print_result(struct scsi_disk *sdkp, int result)
-+static void sd_print_result(struct scsi_disk *sdkp, const char *msg,
-+			    int result)
+-void __scsi_print_command(unsigned char *cdb)
++void __scsi_print_command(const unsigned char *cdb, size_t cdb_len)
  {
--	sd_printk(KERN_INFO, sdkp, " ");
--	scsi_show_result(result);
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
-+
-+	if (hb_string || db_string)
-+		sd_printk(KERN_INFO, sdkp,
-+			  "%s: Result: hostbyte=%s driverbyte=%s\n", msg,
-+			  hb_string ? hb_string : "invalid",
-+			  db_string ? db_string : "invalid");
-+	else
-+		sd_printk(KERN_INFO, sdkp,
-+			  "%s: Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+			  msg, host_byte(result), driver_byte(result));
- }
+ 	int k, len;
  
+-	print_opcode_name(cdb, 0);
++	print_opcode_name(cdb, cdb_len);
+ 	len = scsi_command_size(cdb);
++	if (cdb_len < len)
++		len = cdb_len;
+ 	/* print out all bytes in cdb */
+ 	for (k = 0; k < len; ++k)
+ 		printk(" %02x", cdb[k]);
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index 17e0c2b..fb929fa 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -257,14 +257,14 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ 				/* sense: Invalid command operation code */
+ 				err = -EDRIVE_CANT_DO_THIS;
+ #ifdef DEBUG
+-			__scsi_print_command(cgc->cmd);
++			__scsi_print_command(cgc->cmd, CDROM_PACKET_SIZE);
+ 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
+ #endif
+ 			break;
+ 		default:
+ 			sr_printk(KERN_ERR, cd,
+ 				  "CDROM (ioctl) error, command: ");
+-			__scsi_print_command(cgc->cmd);
++			__scsi_print_command(cgc->cmd, CDROM_PACKET_SIZE);
+ 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
+ 			err = -EIO;
+ 		}
 diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 50f4d85..f41a86b 100644
+index 386474e..81d0418 100644
 --- a/include/scsi/scsi_dbg.h
 +++ b/include/scsi/scsi_dbg.h
-@@ -17,7 +17,6 @@ extern void scsi_print_sense(const struct scsi_cmnd *);
- extern void __scsi_print_sense(const struct scsi_device *, const char *name,
- 			       const unsigned char *sense_buffer,
- 			       int sense_len);
--extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
- extern const char *scsi_hostbyte_string(int);
- extern const char *scsi_driverbyte_string(int);
+@@ -6,7 +6,7 @@ struct scsi_device;
+ struct scsi_sense_hdr;
+ 
+ extern void scsi_print_command(struct scsi_cmnd *);
+-extern void __scsi_print_command(unsigned char *);
++extern void __scsi_print_command(const unsigned char *, size_t);
+ extern void scsi_show_extd_sense(const struct scsi_device *, const char *,
+ 				 unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(const struct scsi_device *, const char *,
 -- 
 1.8.5.2
 
