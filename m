@@ -1,106 +1,129 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 26/26] scsi: correct return values for .eh_abort_handler implementations
-Date: Mon,  6 Oct 2014 11:01:26 +0200
-Message-ID: <1412586086-129821-27-git-send-email-hare@suse.de>
+Subject: [PATCH 19/26] scsi: separate out scsi_(host|driver)byte_string()
+Date: Mon,  6 Oct 2014 11:01:19 +0200
+Message-ID: <1412586086-129821-20-git-send-email-hare@suse.de>
 References: <1412586086-129821-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44112 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:44094 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752507AbaJFJBj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Oct 2014 05:01:39 -0400
+	id S1752441AbaJFJBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2014 05:01:35 -0400
 In-Reply-To: <1412586086-129821-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-The .eh_abort_handler needs to return SUCCESS, FAILED, or
-FAST_IO_FAIL. So fixup all callers to adhere to this requirement.
+Export functions for later use.
 
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/NCR5380.c            | 2 +-
- drivers/scsi/aha1740.c            | 2 +-
- drivers/scsi/esas2r/esas2r_main.c | 2 +-
- drivers/scsi/megaraid.c           | 8 ++++----
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
+ include/scsi/scsi_dbg.h  |  2 ++
+ 2 files changed, 46 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 50873bb..e2c9e73 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2703,7 +2703,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
-  * aborted flag and get back into our main loop.
-  */
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 84b2614..3244ec2 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1406,38 +1406,68 @@ static const char * const hostbyte_table[]={
+ "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
+ "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
+ "DID_NEXUS_FAILURE" };
+-#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
  
--		return 0;
-+		return SUCCESS;
- 	}
- #endif
+ static const char * const driverbyte_table[]={
+ "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
+ "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
+-#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
  
-diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
-index 5f31017..31ace4b 100644
---- a/drivers/scsi/aha1740.c
-+++ b/drivers/scsi/aha1740.c
-@@ -531,7 +531,7 @@ static int aha1740_eh_abort_handler (Scsi_Cmnd *dummy)
-  * quiet as possible...
-  */
+-void scsi_show_result(int result)
++#endif
++
++const char *scsi_hostbyte_string(int result)
+ {
++	const char *hb_string = NULL;
++#ifdef CONFIG_SCSI_CONSTANTS
+ 	int hb = host_byte(result);
+-	int db = driver_byte(result);
  
--	return 0;
-+	return SUCCESS;
+-	printk("Result: hostbyte=%s driverbyte=%s\n",
+-	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
+-	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
++	if (hb < ARRAY_SIZE(hostbyte_table))
++		hb_string = hostbyte_table[hb];
++#endif
++	return hb_string;
  }
++EXPORT_SYMBOL(scsi_hostbyte_string);
  
- static struct scsi_host_template aha1740_template = {
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 6504a19..45aa684 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -1057,7 +1057,7 @@ int esas2r_eh_abort(struct scsi_cmnd *cmd)
+-#else
++const char *scsi_driverbyte_string(int result)
++{
++	const char *db_string = NULL;
++#ifdef CONFIG_SCSI_CONSTANTS
++	int db = driver_byte(result);
++
++	if (db < ARRAY_SIZE(driverbyte_table))
++		db_string = driverbyte_table[db];
++#endif
++	return db_string;
++}
++EXPORT_SYMBOL(scsi_driverbyte_string);
  
- 		cmd->scsi_done(cmd);
+ void scsi_show_result(int result)
+ {
+-	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
+-	       host_byte(result), driver_byte(result));
+-}
++	const char *hb_string = scsi_hostbyte_string(result);
++	const char *db_string = scsi_driverbyte_string(result);
  
--		return 0;
-+		return SUCCESS;
- 	}
+-#endif
++	if (hb_string || db_string)
++		printk("Result: hostbyte=%s driverbyte=%s\n",
++		       hb_string ? hb_string : "invalid",
++		       db_string ? db_string : "invalid");
++	else
++		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
++		       host_byte(result), driver_byte(result));
++}
+ EXPORT_SYMBOL(scsi_show_result);
  
- 	spin_lock_irqsave(&a->queue_lock, flags);
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index ac5d94c..2485255 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1945,7 +1945,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 	     cmd->device->id, (u32)cmd->device->lun);
  
- 	if(list_empty(&adapter->pending_list))
--		return FALSE;
-+		return FAILED;
- 
- 	list_for_each_safe(pos, next, &adapter->pending_list) {
- 
-@@ -1968,7 +1968,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 					(aor==SCB_ABORT) ? "ABORTING":"RESET",
- 					scb->idx);
- 
--				return FALSE;
-+				return FAILED;
- 			}
- 			else {
- 
-@@ -1993,12 +1993,12 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 				list_add_tail(SCSI_LIST(cmd),
- 						&adapter->completed_list);
- 
--				return TRUE;
-+				return SUCCESS;
- 			}
- 		}
- 	}
- 
--	return FALSE;
-+	return FAILED;
+ void scsi_print_result(struct scsi_cmnd *cmd)
+ {
+-	scmd_printk(KERN_INFO, cmd, " ");
+-	scsi_show_result(cmd->result);
++	const char *hb_string = scsi_hostbyte_string(cmd->result);
++	const char *db_string = scsi_driverbyte_string(cmd->result);
++
++	if (hb_string || db_string)
++		scmd_printk(KERN_INFO, cmd,
++			    "Result: hostbyte=%s driverbyte=%s",
++			    hb_string ? hb_string : "invalid",
++			    db_string ? db_string : "invalid");
++	else
++		scmd_printk(KERN_INFO, cmd,
++			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
++			    host_byte(cmd->result), driver_byte(cmd->result));
  }
- 
- static inline int
+ EXPORT_SYMBOL(scsi_print_result);
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index 81d0418..50f4d85 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -19,6 +19,8 @@ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
+ 			       int sense_len);
+ extern void scsi_show_result(int);
+ extern void scsi_print_result(struct scsi_cmnd *);
++extern const char *scsi_hostbyte_string(int);
++extern const char *scsi_driverbyte_string(int);
+ extern const char *scsi_sense_key_string(unsigned char);
+ extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
+ 					  const char **);
 -- 
 1.8.5.2
 
