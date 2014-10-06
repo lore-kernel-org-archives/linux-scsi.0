@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 19/26] scsi: separate out scsi_(host|driver)byte_string()
-Date: Mon,  6 Oct 2014 11:01:19 +0200
-Message-ID: <1412586086-129821-20-git-send-email-hare@suse.de>
+Subject: [PATCH 23/26] scsi: use shost argument in scsi_eh_prt_fail_stats
+Date: Mon,  6 Oct 2014 11:01:23 +0200
+Message-ID: <1412586086-129821-24-git-send-email-hare@suse.de>
 References: <1412586086-129821-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44094 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:44083 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752441AbaJFJBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752412AbaJFJBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 6 Oct 2014 05:01:35 -0400
 In-Reply-To: <1412586086-129821-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,116 +14,30 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Export functions for later use.
+The EH statistics are per host, so we should be using
+shost_printk() here.
 
+Suggested-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
- include/scsi/scsi_dbg.h  |  2 ++
- 2 files changed, 46 insertions(+), 14 deletions(-)
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 84b2614..3244ec2 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1406,38 +1406,68 @@ static const char * const hostbyte_table[]={
- "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
- "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
- "DID_NEXUS_FAILURE" };
--#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 087ca02..c485f28 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -355,7 +355,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
  
- static const char * const driverbyte_table[]={
- "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
- "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
--#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
- 
--void scsi_show_result(int result)
-+#endif
-+
-+const char *scsi_hostbyte_string(int result)
- {
-+	const char *hb_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
- 	int hb = host_byte(result);
--	int db = driver_byte(result);
- 
--	printk("Result: hostbyte=%s driverbyte=%s\n",
--	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
--	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
-+	if (hb < ARRAY_SIZE(hostbyte_table))
-+		hb_string = hostbyte_table[hb];
-+#endif
-+	return hb_string;
- }
-+EXPORT_SYMBOL(scsi_hostbyte_string);
- 
--#else
-+const char *scsi_driverbyte_string(int result)
-+{
-+	const char *db_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
-+	int db = driver_byte(result);
-+
-+	if (db < ARRAY_SIZE(driverbyte_table))
-+		db_string = driverbyte_table[db];
-+#endif
-+	return db_string;
-+}
-+EXPORT_SYMBOL(scsi_driverbyte_string);
- 
- void scsi_show_result(int result)
- {
--	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--	       host_byte(result), driver_byte(result));
--}
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
- 
--#endif
-+	if (hb_string || db_string)
-+		printk("Result: hostbyte=%s driverbyte=%s\n",
-+		       hb_string ? hb_string : "invalid",
-+		       db_string ? db_string : "invalid");
-+	else
-+		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+		       host_byte(result), driver_byte(result));
-+}
- EXPORT_SYMBOL(scsi_show_result);
- 
- 
- void scsi_print_result(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_INFO, cmd, " ");
--	scsi_show_result(cmd->result);
-+	const char *hb_string = scsi_hostbyte_string(cmd->result);
-+	const char *db_string = scsi_driverbyte_string(cmd->result);
-+
-+	if (hb_string || db_string)
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=%s driverbyte=%s",
-+			    hb_string ? hb_string : "invalid",
-+			    db_string ? db_string : "invalid");
-+	else
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
-+			    host_byte(cmd->result), driver_byte(cmd->result));
- }
- EXPORT_SYMBOL(scsi_print_result);
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 81d0418..50f4d85 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,6 +19,8 @@ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
-+extern const char *scsi_hostbyte_string(int);
-+extern const char *scsi_driverbyte_string(int);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
+ 		if (cmd_cancel || cmd_failed) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+-				sdev_printk(KERN_INFO, sdev,
++				shost_printk(KERN_INFO, shost,
+ 					    "%s: cmds failed: %d, cancel: %d\n",
+ 					    __func__, cmd_failed,
+ 					    cmd_cancel));
 -- 
 1.8.5.2
 
