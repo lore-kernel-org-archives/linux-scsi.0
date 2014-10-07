@@ -1,35 +1,51 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [Bug 85751] iSCSI initiator lockup during logout
-Date: Tue, 07 Oct 2014 20:29:49 +0200
-Message-ID: <5434311D.5040801@acm.org>
-References: <bug-85751-11613@https.bugzilla.kernel.org/> <bug-85751-11613-AIXQdLQp7t@https.bugzilla.kernel.org/> <54341CF9.609@cs.wisc.edu>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH v2 7/7] driver-core: add preferred async probe option for
+ built-in and modules
+Date: Tue, 7 Oct 2014 11:55:16 -0700
+Message-ID: <CAB=NE6V_1yyYPhzbV_yRzt7fg=_8yF2YYNBz4qH_2TbH0nozcw@mail.gmail.com>
+References: <1412372683-2003-1-git-send-email-mcgrof@do-not-panic.com>
+ <1412372683-2003-8-git-send-email-mcgrof@do-not-panic.com>
+ <20141006201926.GF18303@htj.dyndns.org> <20141006203627.GZ14081@wotan.suse.de>
+ <20141006210118.GG18303@htj.dyndns.org> <20141006231046.GD14081@wotan.suse.de>
+ <20141007173404.GB31328@mtj.dyndns.org> <20141007175010.GH14081@wotan.suse.de>
+ <20141007175503.GE31328@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:47316 "EHLO
-	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbaJGS3w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2014 14:29:52 -0400
-In-Reply-To: <54341CF9.609@cs.wisc.edu>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:40896 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754939AbaJGSzj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2014 14:55:39 -0400
+In-Reply-To: <20141007175503.GE31328@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, Tom Gundersen <teg@jklm.no>, Robert Milasan <rmilasan@suse.com>, werner@suse.com, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Petr Mladek <pmladek@suse.cz>, dbueso@suse.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen
 
-On 10/07/14 19:03, Mike Christie wrote:
-> On 10/07/2014 11:42 AM, bugzilla-daemon@bugzilla.kernel.org wrote:
->> * iscsiadm -m discovery -p 192.168.1.124 -t st
->> * iscsiadm -m node -p 192.168.1.124 -l
->> (something went wrong at the target side and the iSCSI initiator tried to
->> relogin)
+On Tue, Oct 7, 2014 at 10:55 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
 >
-> Did this login command ever complete normally? Did you ctrl-c it or did
-> you run the logout command below in another terminal?
+> On Tue, Oct 07, 2014 at 07:50:10PM +0200, Luis R. Rodriguez wrote:
+>> On Tue, Oct 07, 2014 at 01:34:04PM -0400, Tejun Heo wrote:
+>> > But you can create a new workqueue and queue all the async probing
+>> > work items there and flush the workqueue right after
+>> > async_synchronize_full().
+>>
+>> On second thought I would prefer to avoid this, I see this being good
+>> to help with old userspace but other than that I don't see a requirement
+>> for new userspace. Do you?
+>
+> Hmmm... we batch up and do everything parallel, so I'm not sure how
+> much gain we'd be looking at by not waiting for at the end before
+> jumping into the userland.  Also, it's a bit of an orthogonal issue.
+> If we wanna skip such synchornization point before passing control to
+> userland, why are we applying that to this but not
+> async_synchronize_full() which has a far larger impact?  It's weird to
+> synchronize one while not the other, so yeah, if there are actual
+> benefits we can consider it but let's do it separately.
 
-Hello Mike,
+OK I'll just kill bus.enable_kern_async=1 to enable built-in async
+probe support *and* also have prefer_async_probe *always* be
+respected, whether modular or not.
 
-Thanks for jumping in. I had indeed interrupted login via Ctrl-C because 
-login took longer than expected.
-
-Bart.
-
+  Luis
