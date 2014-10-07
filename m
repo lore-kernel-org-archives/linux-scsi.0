@@ -1,203 +1,129 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/26] Implement scsi_opcode_sa_name
-Date: Tue,  7 Oct 2014 11:03:13 +0200
-Message-ID: <1412672605-42868-15-git-send-email-hare@suse.de>
+Subject: [PATCH 19/26] scsi: separate out scsi_(host|driver)byte_string()
+Date: Tue,  7 Oct 2014 11:03:18 +0200
+Message-ID: <1412672605-42868-20-git-send-email-hare@suse.de>
 References: <1412672605-42868-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42694 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42704 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753507AbaJGJDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2014 05:03:35 -0400
+	id S1753511AbaJGJDg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2014 05:03:36 -0400
 In-Reply-To: <1412672605-42868-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Implement a lookup array for SERVICE ACTION commands instead
-of hardcoding it in a large switch statement.
+Export functions for later use.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 131 +++++++++++++++++++----------------------------
- 1 file changed, 53 insertions(+), 78 deletions(-)
+ drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
+ include/scsi/scsi_dbg.h  |  2 ++
+ 2 files changed, 46 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 8253f7b..092ea56 100644
+index ea391f8..0fe50b4 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -244,102 +244,76 @@ static const struct value_name_pair variable_length_arr[] = {
- };
- #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
+@@ -1406,38 +1406,68 @@ static const char * const hostbyte_table[]={
+ "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
+ "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
+ "DID_NEXUS_FAILURE" };
+-#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
  
--static const char * get_sa_name(const struct value_name_pair * arr,
--			        int arr_sz, int service_action)
-+struct sa_name_list {
-+	int opcode;
-+	const struct value_name_pair *arr;
-+	int arr_sz;
-+};
+ static const char * const driverbyte_table[]={
+ "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
+ "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
+-#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
+ 
+-void scsi_show_result(int result)
++#endif
 +
-+static struct sa_name_list sa_names_arr[] = {
-+	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
-+	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
-+	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
-+	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
-+	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
-+	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
-+	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
-+	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
-+	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
-+	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
-+	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
-+	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
-+	{0, NULL, 0},
-+};
-+
-+static bool scsi_opcode_sa_name(int opcode, int service_action,
-+				const char **sa_name)
++const char *scsi_hostbyte_string(int result)
  {
--	int k;
-+	struct sa_name_list *sa_name_ptr;
-+	const struct value_name_pair *arr = NULL;
-+	int arr_sz, k;
-+
-+	for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
-+		if (sa_name_ptr->opcode == opcode) {
-+			arr = sa_name_ptr->arr;
-+			arr_sz = sa_name_ptr->arr_sz;
-+			break;
-+		}
-+	}
-+	if (!arr)
-+		return false;
++	const char *hb_string = NULL;
++#ifdef CONFIG_SCSI_CONSTANTS
+ 	int hb = host_byte(result);
+-	int db = driver_byte(result);
  
- 	for (k = 0; k < arr_sz; ++k, ++arr) {
- 		if (service_action == arr->value)
- 			break;
- 	}
--	return (k < arr_sz) ? arr->name : NULL;
-+	if (k < arr_sz)
-+		*sa_name = arr->name;
-+
-+	return true;
+-	printk("Result: hostbyte=%s driverbyte=%s\n",
+-	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
+-	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
++	if (hb < ARRAY_SIZE(hostbyte_table))
++		hb_string = hostbyte_table[hb];
++#endif
++	return hb_string;
  }
++EXPORT_SYMBOL(scsi_hostbyte_string);
  
- /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+-#else
++const char *scsi_driverbyte_string(int result)
++{
++	const char *db_string = NULL;
++#ifdef CONFIG_SCSI_CONSTANTS
++	int db = driver_byte(result);
++
++	if (db < ARRAY_SIZE(driverbyte_table))
++		db_string = driverbyte_table[db];
++#endif
++	return db_string;
++}
++EXPORT_SYMBOL(scsi_driverbyte_string);
+ 
+ void scsi_show_result(int result)
  {
- 	int sa, len, cdb0;
--	int fin_name = 0;
--	const char * name;
-+	const char *name = NULL;
+-	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
+-	       host_byte(result), driver_byte(result));
+-}
++	const char *hb_string = scsi_hostbyte_string(result);
++	const char *db_string = scsi_driverbyte_string(result);
  
- 	cdb0 = cdbp[0];
--	switch(cdb0) {
--	case VARIABLE_LENGTH_CMD:
-+	if (cdb0 == VARIABLE_LENGTH_CMD) {
- 		len = scsi_varlen_cdb_length(cdbp);
- 		if (len < 10) {
- 			printk("short variable length command, "
- 			       "len=%d ext_len=%d", len, cdb_len);
--			break;
-+			return;
- 		}
- 		sa = (cdbp[8] << 8) + cdbp[9];
--		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
--				   sa);
--		if (name)
--			printk("%s", name);
--		else
--			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
--
--		if ((cdb_len > 0) && (len != cdb_len))
--			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
--
--		break;
--	case MAINTENANCE_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case MAINTENANCE_OUT:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(maint_out_arr, MAINT_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	case PERSISTENT_RESERVE_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(pr_in_arr, PR_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case PERSISTENT_RESERVE_OUT:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(pr_out_arr, PR_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_IN_12:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_in12_arr, SERV_IN12_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_OUT_12:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_out12_arr, SERV_OUT12_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_BIDIRECTIONAL:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_bidi_arr, SERV_BIDI_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_IN_16:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_in16_arr, SERV_IN16_SZ, sa);
--		fin_name = 1;
--		break;
--	case SERVICE_ACTION_OUT_16:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(serv_out16_arr, SERV_OUT16_SZ, sa);
--		fin_name = 1;
--		break;
--	case THIRD_PARTY_COPY_IN:
--		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(tpc_in_arr, TPC_IN_SZ, sa);
--		fin_name = 1;
--		break;
--	case THIRD_PARTY_COPY_OUT:
-+	} else {
- 		sa = cdbp[1] & 0x1f;
--		name = get_sa_name(tpc_out_arr, TPC_OUT_SZ, sa);
--		fin_name = 1;
--		break;
--	default:
-+		len = cdb_len;
-+	}
+-#endif
++	if (hb_string || db_string)
++		printk("Result: hostbyte=%s driverbyte=%s\n",
++		       hb_string ? hb_string : "invalid",
++		       db_string ? db_string : "invalid");
++	else
++		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
++		       host_byte(result), driver_byte(result));
++}
+ EXPORT_SYMBOL(scsi_show_result);
+ 
+ 
+ void scsi_print_result(struct scsi_cmnd *cmd)
+ {
+-	scmd_printk(KERN_INFO, cmd, " ");
+-	scsi_show_result(cmd->result);
++	const char *hb_string = scsi_hostbyte_string(cmd->result);
++	const char *db_string = scsi_driverbyte_string(cmd->result);
 +
-+	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
- 		if (cdb0 < 0xc0) {
- 			name = cdb_byte0_names[cdb0];
- 			if (name)
-@@ -348,13 +322,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 				printk("cdb[0]=0x%x (reserved)", cdb0);
- 		} else
- 			printk("cdb[0]=0x%x (vendor)", cdb0);
--		break;
--	}
--	if (fin_name) {
-+	} else {
- 		if (name)
- 			printk("%s", name);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
-+
-+		if (cdb_len > 0 && len != cdb_len)
-+			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
- 	}
++	if (hb_string || db_string)
++		scmd_printk(KERN_INFO, cmd,
++			    "Result: hostbyte=%s driverbyte=%s",
++			    hb_string ? hb_string : "invalid",
++			    db_string ? db_string : "invalid");
++	else
++		scmd_printk(KERN_INFO, cmd,
++			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
++			    host_byte(cmd->result), driver_byte(cmd->result));
  }
- 
+ EXPORT_SYMBOL(scsi_print_result);
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index 81d0418..50f4d85 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -19,6 +19,8 @@ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
+ 			       int sense_len);
+ extern void scsi_show_result(int);
+ extern void scsi_print_result(struct scsi_cmnd *);
++extern const char *scsi_hostbyte_string(int);
++extern const char *scsi_driverbyte_string(int);
+ extern const char *scsi_sense_key_string(unsigned char);
+ extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
+ 					  const char **);
 -- 
 1.8.5.2
 
