@@ -1,32 +1,33 @@
-From: =?utf-8?Q?Dayse_Ver=C3=B3nica_Ram=C3=B3n_Plasencia?=
-	<dayse_ramon@mrl.gob.ec>
-Subject: Ponovno potvrditi svoju e-mail
-Date: Tue, 7 Oct 2014 05:38:46 -0500 (ECT)
-Message-ID: <89319173.26.1412678326035.JavaMail.root@webmail.mrl.gob.ec>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Tue, 07 Oct 2014 14:51:01 +0200
+Message-ID: <5433E1B5.1030103@acm.org>
+References: <541C27BF.6070609@acm.org> <541C28E0.7010705@acm.org> <5421A093.1070203@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webmail.mrl.gob.ec ([190.152.249.215]:49553 "EHLO
-	webmail.mrl.gob.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825AbaJGKtF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2014 06:49:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5421A093.1070203-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Dragi vlasnik ra=C4=8Duna e-po=C5=A1te ,
-Molim vas , morate ponovno potvrditi i ponovno potvrdili svoju e-mail a=
-dresu kako bi se izbjeglo deaktivaciju svoju e-mail , kako bi potvrdili=
- i produljiti svoju e-mail adresu morate kliknuti ili kopirajte i zalij=
-epite link u nastavku u svoj preglednik i prijavite se na svoj po=C5=A1=
-tanski sandu=C4=8Di=C4=87 na produljiti ,
+On 09/23/14 18:32, Sagi Grimberg wrote:
+> Since you don't seem to negotiate/declare multichannel with the target,
+> did you test this code with some target implementations other than SCST
+> that happen to be out there?
 
-https://qtrial2014az1.az1.qualtrics.com/SE/?SID=3DSV_do12EAJCoFaNlZP
+(replying to an e-mail of two weeks ago)
 
-kako bi se izbjegao deaktivaciju , prijavite se na svoj e-mail s linkom=
- gore ponovno potvrditi i provjeriti svoj =E2=80=8B=E2=80=8Be-mail sada
+Hello Sagi,
+
+I have just verified that the multichannel code in this patch series 
+works fine in combination with the upstream SRP target driver.
+
+Bart.
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
