@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/26] scsi: remove scsi_print_status()
-Date: Tue,  7 Oct 2014 11:03:12 +0200
-Message-ID: <1412672605-42868-14-git-send-email-hare@suse.de>
+Subject: [PATCH 14/26] Implement scsi_opcode_sa_name
+Date: Tue,  7 Oct 2014 11:03:13 +0200
+Message-ID: <1412672605-42868-15-git-send-email-hare@suse.de>
 References: <1412672605-42868-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42695 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42694 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504AbaJGJDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753507AbaJGJDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 7 Oct 2014 05:03:35 -0400
 In-Reply-To: <1412672605-42868-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,74 +14,190 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Last caller is gone, so we can remove it.
+Implement a lookup array for SERVICE ACTION commands instead
+of hardcoding it in a large switch statement.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 35 -----------------------------------
- include/scsi/scsi_dbg.h  |  1 -
- 2 files changed, 36 deletions(-)
+ drivers/scsi/constants.c | 131 +++++++++++++++++++----------------------------
+ 1 file changed, 53 insertions(+), 78 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index ec69ec8..8253f7b 100644
+index 8253f7b..092ea56 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -433,41 +433,6 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+@@ -244,102 +244,76 @@ static const struct value_name_pair variable_length_arr[] = {
+ };
+ #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
+ 
+-static const char * get_sa_name(const struct value_name_pair * arr,
+-			        int arr_sz, int service_action)
++struct sa_name_list {
++	int opcode;
++	const struct value_name_pair *arr;
++	int arr_sz;
++};
++
++static struct sa_name_list sa_names_arr[] = {
++	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
++	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
++	{MAINTENANCE_OUT, maint_out_arr, MAINT_OUT_SZ},
++	{PERSISTENT_RESERVE_IN, pr_in_arr, PR_IN_SZ},
++	{PERSISTENT_RESERVE_OUT, pr_out_arr, PR_OUT_SZ},
++	{SERVICE_ACTION_IN_12, serv_in12_arr, SERV_IN12_SZ},
++	{SERVICE_ACTION_OUT_12, serv_out12_arr, SERV_OUT12_SZ},
++	{SERVICE_ACTION_BIDIRECTIONAL, serv_bidi_arr, SERV_BIDI_SZ},
++	{SERVICE_ACTION_IN_16, serv_in16_arr, SERV_IN16_SZ},
++	{SERVICE_ACTION_OUT_16, serv_out16_arr, SERV_OUT16_SZ},
++	{THIRD_PARTY_COPY_IN, tpc_in_arr, TPC_IN_SZ},
++	{THIRD_PARTY_COPY_OUT, tpc_out_arr, TPC_OUT_SZ},
++	{0, NULL, 0},
++};
++
++static bool scsi_opcode_sa_name(int opcode, int service_action,
++				const char **sa_name)
+ {
+-	int k;
++	struct sa_name_list *sa_name_ptr;
++	const struct value_name_pair *arr = NULL;
++	int arr_sz, k;
++
++	for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
++		if (sa_name_ptr->opcode == opcode) {
++			arr = sa_name_ptr->arr;
++			arr_sz = sa_name_ptr->arr_sz;
++			break;
++		}
++	}
++	if (!arr)
++		return false;
+ 
+ 	for (k = 0; k < arr_sz; ++k, ++arr) {
+ 		if (service_action == arr->value)
+ 			break;
+ 	}
+-	return (k < arr_sz) ? arr->name : NULL;
++	if (k < arr_sz)
++		*sa_name = arr->name;
++
++	return true;
  }
- EXPORT_SYMBOL(scsi_print_command);
  
--/**
-- *	scsi_print_status - print scsi status description
-- *	@scsi_status: scsi status value
-- *
-- *	If the status is recognized, the description is printed.
-- *	Otherwise "Unknown status" is output. No trailing space.
-- *	If CONFIG_SCSI_CONSTANTS is not set, then print status in hex
-- *	(e.g. "0x2" for Check Condition).
-- **/
--void
--scsi_print_status(unsigned char scsi_status) {
--#ifdef CONFIG_SCSI_CONSTANTS
--	const char * ccp;
+ /* attempt to guess cdb length if cdb_len==0 . No trailing linefeed. */
+ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ {
+ 	int sa, len, cdb0;
+-	int fin_name = 0;
+-	const char * name;
++	const char *name = NULL;
+ 
+ 	cdb0 = cdbp[0];
+-	switch(cdb0) {
+-	case VARIABLE_LENGTH_CMD:
++	if (cdb0 == VARIABLE_LENGTH_CMD) {
+ 		len = scsi_varlen_cdb_length(cdbp);
+ 		if (len < 10) {
+ 			printk("short variable length command, "
+ 			       "len=%d ext_len=%d", len, cdb_len);
+-			break;
++			return;
+ 		}
+ 		sa = (cdbp[8] << 8) + cdbp[9];
+-		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ,
+-				   sa);
+-		if (name)
+-			printk("%s", name);
+-		else
+-			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
 -
--	switch (scsi_status) {
--	case 0:    ccp = "Good"; break;
--	case 0x2:  ccp = "Check Condition"; break;
--	case 0x4:  ccp = "Condition Met"; break;
--	case 0x8:  ccp = "Busy"; break;
--	case 0x10: ccp = "Intermediate"; break;
--	case 0x14: ccp = "Intermediate-Condition Met"; break;
--	case 0x18: ccp = "Reservation Conflict"; break;
--	case 0x22: ccp = "Command Terminated"; break;	/* obsolete */
--	case 0x28: ccp = "Task set Full"; break;	/* was: Queue Full */
--	case 0x30: ccp = "ACA Active"; break;
--	case 0x40: ccp = "Task Aborted"; break;
--	default:   ccp = "Unknown status";
+-		if ((cdb_len > 0) && (len != cdb_len))
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-
+-		break;
+-	case MAINTENANCE_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case MAINTENANCE_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(maint_out_arr, MAINT_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case PERSISTENT_RESERVE_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(pr_in_arr, PR_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case PERSISTENT_RESERVE_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(pr_out_arr, PR_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_IN_12:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_in12_arr, SERV_IN12_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_OUT_12:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_out12_arr, SERV_OUT12_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_BIDIRECTIONAL:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_bidi_arr, SERV_BIDI_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_IN_16:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_in16_arr, SERV_IN16_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case SERVICE_ACTION_OUT_16:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(serv_out16_arr, SERV_OUT16_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case THIRD_PARTY_COPY_IN:
+-		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(tpc_in_arr, TPC_IN_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	case THIRD_PARTY_COPY_OUT:
++	} else {
+ 		sa = cdbp[1] & 0x1f;
+-		name = get_sa_name(tpc_out_arr, TPC_OUT_SZ, sa);
+-		fin_name = 1;
+-		break;
+-	default:
++		len = cdb_len;
++	}
++
++	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+ 		if (cdb0 < 0xc0) {
+ 			name = cdb_byte0_names[cdb0];
+ 			if (name)
+@@ -348,13 +322,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 				printk("cdb[0]=0x%x (reserved)", cdb0);
+ 		} else
+ 			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		break;
 -	}
--	printk(KERN_INFO "%s", ccp);
--#else
--	printk(KERN_INFO "0x%0x", scsi_status);
--#endif
--}
--EXPORT_SYMBOL(scsi_print_status);
--
- #ifdef CONFIG_SCSI_CONSTANTS
+-	if (fin_name) {
++	} else {
+ 		if (name)
+ 			printk("%s", name);
+ 		else
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
++
++		if (cdb_len > 0 && len != cdb_len)
++			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+ 	}
+ }
  
- struct error_info {
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 6cbd179..386474e 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,7 +19,6 @@ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
--extern void scsi_print_status(unsigned char);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
 -- 
 1.8.5.2
 
