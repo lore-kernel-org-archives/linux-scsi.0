@@ -1,7 +1,7 @@
 From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH v2 05/12] IB/srp: Move ib_destroy_cm_id() call into srp_free_ch_ib()
-Date: Tue, 07 Oct 2014 15:04:25 +0200
-Message-ID: <5433E4D9.60500@acm.org>
+Subject: [PATCH v2 06/12] IB/srp: Remove stale connection retry mechanism
+Date: Tue, 07 Oct 2014 15:04:43 +0200
+Message-ID: <5433E4EB.1090506@acm.org>
 References: <5433E43D.3010107@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -13,60 +13,54 @@ To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The patch that adds multichannel support into the SRP initiator
-driver introduces an additional call to srp_free_ch_ib(). This
-patch helps to keep that later patch simple.
+Attempting to connect three times may be insufficient after an
+initiator system tries to relogin, especially if the relogin
+attempt occurs before the SRP target service ID has been
+registered. Since the srp_daemon retries a failed login attempt
+anyway, remove the stale connection retry mechanism.
 
 Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 62d2a18..d3c712f 100644
+index d3c712f..9608e7a 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -555,6 +555,11 @@ static void srp_free_target_ib(struct srp_target_port *target)
- 	struct srp_device *dev = target->srp_host->srp_dev;
- 	int i;
+@@ -904,7 +904,6 @@ static void srp_rport_delete(struct srp_rport *rport)
  
-+	if (target->cm_id) {
-+		ib_destroy_cm_id(target->cm_id);
-+		target->cm_id = NULL;
-+	}
-+
- 	if (dev->use_fast_reg) {
- 		if (target->fr_pool)
- 			srp_destroy_fr_pool(target->fr_pool);
-@@ -868,7 +873,6 @@ static void srp_remove_target(struct srp_target_port *target)
- 	scsi_remove_host(target->scsi_host);
- 	srp_stop_rport_timers(target->rport);
- 	srp_disconnect_target(target);
--	ib_destroy_cm_id(target->cm_id);
- 	srp_free_target_ib(target);
- 	cancel_work_sync(&target->tl_err_work);
- 	srp_rport_put(target->rport);
-@@ -3043,7 +3047,7 @@ static ssize_t srp_create_target(struct device *dev,
- 	if (ret) {
- 		shost_printk(KERN_ERR, target->scsi_host,
- 			     PFX "Connection failed\n");
--		goto err_cm_id;
-+		goto err_free_ib;
- 	}
+ static int srp_connect_target(struct srp_target_port *target)
+ {
+-	int retries = 3;
+ 	int ret;
  
- 	ret = srp_add_target(host, target);
-@@ -3067,9 +3071,6 @@ out:
- err_disconnect:
- 	srp_disconnect_target(target);
+ 	WARN_ON_ONCE(target->connected);
+@@ -945,19 +944,10 @@ static int srp_connect_target(struct srp_target_port *target)
+ 			break;
  
--err_cm_id:
--	ib_destroy_cm_id(target->cm_id);
+ 		case SRP_STALE_CONN:
+-			/* Our current CM id was stale, and is now in timewait.
+-			 * Try to reconnect with a new one.
+-			 */
+-			if (!retries-- || srp_new_cm_id(target)) {
+-				shost_printk(KERN_ERR, target->scsi_host, PFX
+-					     "giving up on stale connection\n");
+-				target->status = -ECONNRESET;
+-				return target->status;
+-			}
 -
- err_free_ib:
- 	srp_free_target_ib(target);
+ 			shost_printk(KERN_ERR, target->scsi_host, PFX
+-				     "retrying stale connection\n");
+-			break;
++				     "giving up on stale connection\n");
++			target->status = -ECONNRESET;
++			return target->status;
  
+ 		default:
+ 			return target->status;
 -- 
 1.8.4.5
 
