@@ -1,70 +1,168 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH v2 06/12] IB/srp: Remove stale connection retry mechanism
-Date: Tue, 07 Oct 2014 15:04:43 +0200
-Message-ID: <5433E4EB.1090506@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 07/12] IB/srp: Avoid that I/O hangs due to a cable pull
+ during LUN scanning
+Date: Tue, 07 Oct 2014 15:05:08 +0200
+Message-ID: <5433E504.1070306@acm.org>
 References: <5433E43D.3010107@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5433E43D.3010107-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xavier.telenet-ops.be ([195.130.132.52]:48000 "EHLO
+	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905AbaJGNFJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2014 09:05:09 -0400
+In-Reply-To: <5433E43D.3010107@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-Attempting to connect three times may be insufficient after an
-initiator system tries to relogin, especially if the relogin
-attempt occurs before the SRP target service ID has been
-registered. Since the srp_daemon retries a failed login attempt
-anyway, remove the stale connection retry mechanism.
+If a cable is pulled during LUN scanning it can happen that the
+SRP rport and the SCSI host have been created but no LUNs have been
+added to the SCSI host. Since multipathd only sends SCSI commands
+to a SCSI target if one or more SCSI devices are present and since
+there is no keepalive mechanism for IB queue pairs this means that
+after a LUN scan failed and after a reconnect has succeeded no
+data will be sent over the QP and hence that a subsequent cable
+pull will not be detected. Avoid this by not creating an rport or
+SCSI host if a cable is pulled during a SCSI LUN scan.
 
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+Note: so far the above behavior has only been observed with the
+kernel module parameter ch_count set to a value >= 2.
+
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c | 60 +++++++++++++++++++++++++++++++------
+ drivers/infiniband/ulp/srp/ib_srp.h |  1 +
+ 2 files changed, 52 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index d3c712f..9608e7a 100644
+index 9608e7a..a662c29 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -904,7 +904,6 @@ static void srp_rport_delete(struct srp_rport *rport)
+@@ -1111,6 +1111,10 @@ static int srp_rport_reconnect(struct srp_rport *rport)
+ 	int i, ret;
  
- static int srp_connect_target(struct srp_target_port *target)
+ 	srp_disconnect_target(target);
++
++	if (target->state == SRP_TARGET_SCANNING)
++		return -ENODEV;
++
+ 	/*
+ 	 * Now get a new local CM ID so that we avoid confusing the target in
+ 	 * case things are really fouled up. Doing so also ensures that all CM
+@@ -2607,11 +2611,23 @@ static struct scsi_host_template srp_template = {
+ 	.shost_attrs			= srp_host_attrs
+ };
+ 
++static int srp_sdev_count(struct Scsi_Host *host)
++{
++	struct scsi_device *sdev;
++	int c = 0;
++
++	shost_for_each_device(sdev, host)
++		c++;
++
++	return c;
++}
++
+ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
  {
--	int retries = 3;
- 	int ret;
+ 	struct srp_rport_identifiers ids;
+ 	struct srp_rport *rport;
  
- 	WARN_ON_ONCE(target->connected);
-@@ -945,19 +944,10 @@ static int srp_connect_target(struct srp_target_port *target)
- 			break;
++	target->state = SRP_TARGET_SCANNING;
+ 	sprintf(target->target_name, "SRP.T10:%016llX",
+ 		 (unsigned long long) be64_to_cpu(target->id_ext));
  
- 		case SRP_STALE_CONN:
--			/* Our current CM id was stale, and is now in timewait.
--			 * Try to reconnect with a new one.
--			 */
--			if (!retries-- || srp_new_cm_id(target)) {
--				shost_printk(KERN_ERR, target->scsi_host, PFX
--					     "giving up on stale connection\n");
--				target->status = -ECONNRESET;
--				return target->status;
--			}
+@@ -2634,11 +2650,26 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
+ 	list_add_tail(&target->list, &host->target_list);
+ 	spin_unlock(&host->target_lock);
+ 
+-	target->state = SRP_TARGET_LIVE;
 -
- 			shost_printk(KERN_ERR, target->scsi_host, PFX
--				     "retrying stale connection\n");
--			break;
-+				     "giving up on stale connection\n");
-+			target->status = -ECONNRESET;
-+			return target->status;
+ 	scsi_scan_target(&target->scsi_host->shost_gendev,
+ 			 0, target->scsi_id, SCAN_WILD_CARD, 0);
  
- 		default:
- 			return target->status;
++	if (!target->connected || target->qp_in_error) {
++		shost_printk(KERN_INFO, target->scsi_host,
++			     PFX "SCSI scan failed - removing SCSI host\n");
++		srp_queue_remove_work(target);
++		goto out;
++	}
++
++	pr_debug(PFX "%s: SCSI scan succeeded - detected %d LUNs\n",
++		 dev_name(&target->scsi_host->shost_gendev),
++		 srp_sdev_count(target->scsi_host));
++
++	spin_lock_irq(&target->lock);
++	if (target->state == SRP_TARGET_SCANNING)
++		target->state = SRP_TARGET_LIVE;
++	spin_unlock_irq(&target->lock);
++
++out:
+ 	return 0;
+ }
+ 
+@@ -2982,6 +3013,12 @@ static ssize_t srp_create_target(struct device *dev,
+ 	target->tl_retry_count	= 7;
+ 	target->queue_size	= SRP_DEFAULT_QUEUE_SIZE;
+ 
++	/*
++	 * Avoid that the SCSI host can be removed by srp_remove_target()
++	 * before this function returns.
++	 */
++	scsi_host_get(target->scsi_host);
++
+ 	mutex_lock(&host->add_target_mutex);
+ 
+ 	ret = srp_parse_options(buf, target);
+@@ -3044,18 +3081,23 @@ static ssize_t srp_create_target(struct device *dev,
+ 	if (ret)
+ 		goto err_disconnect;
+ 
+-	shost_printk(KERN_DEBUG, target->scsi_host, PFX
+-		     "new target: id_ext %016llx ioc_guid %016llx pkey %04x service_id %016llx sgid %pI6 dgid %pI6\n",
+-		     be64_to_cpu(target->id_ext),
+-		     be64_to_cpu(target->ioc_guid),
+-		     be16_to_cpu(target->path.pkey),
+-		     be64_to_cpu(target->service_id),
+-		     target->path.sgid.raw, target->path.dgid.raw);
++	if (target->state != SRP_TARGET_REMOVED) {
++		shost_printk(KERN_DEBUG, target->scsi_host, PFX
++			     "new target: id_ext %016llx ioc_guid %016llx pkey %04x service_id %016llx sgid %pI6 dgid %pI6\n",
++			     be64_to_cpu(target->id_ext),
++			     be64_to_cpu(target->ioc_guid),
++			     be16_to_cpu(target->path.pkey),
++			     be64_to_cpu(target->service_id),
++			     target->path.sgid.raw, target->orig_dgid);
++	}
+ 
+ 	ret = count;
+ 
+ out:
+ 	mutex_unlock(&host->add_target_mutex);
++
++	scsi_host_put(target->scsi_host);
++
+ 	return ret;
+ 
+ err_disconnect:
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
+index e46ecb1..00c7c48 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.h
++++ b/drivers/infiniband/ulp/srp/ib_srp.h
+@@ -73,6 +73,7 @@ enum {
+ };
+ 
+ enum srp_target_state {
++	SRP_TARGET_SCANNING,
+ 	SRP_TARGET_LIVE,
+ 	SRP_TARGET_REMOVED,
+ };
 -- 
 1.8.4.5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
