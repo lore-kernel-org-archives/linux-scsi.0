@@ -1,56 +1,112 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/26] 53c700: remove scsi_print_sense() usage
-Date: Tue,  7 Oct 2014 11:03:08 +0200
-Message-ID: <1412672605-42868-10-git-send-email-hare@suse.de>
+Subject: [PATCH 11/26] scsi: do not decode sense extras
+Date: Tue,  7 Oct 2014 11:03:10 +0200
+Message-ID: <1412672605-42868-12-git-send-email-hare@suse.de>
 References: <1412672605-42868-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42645 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42657 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753488AbaJGJDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2014 05:03:30 -0400
+	id S1753493AbaJGJDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2014 05:03:31 -0400
 In-Reply-To: <1412672605-42868-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-The 53c700 driver would be using scsi_print_sense() in a debug
-statement, which was never compiled in. Plus the same information
-can get retrieved with logging. So remove it.
+Currently we're only decoding sense extras for tape devices.
+And even there only for fixed format sense formats.
+As this is of rather limited use in the general case we should
+be stop trying to decode sense extras; the tape driver does
+its own decoding anyway.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/53c700.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ drivers/scsi/constants.c | 62 ------------------------------------------------
+ 1 file changed, 62 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 68bf423..179a24e 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -592,19 +592,14 @@ NCR_700_scsi_done(struct NCR_700_Host_Parameters *hostdata,
- 	hostdata->cmd = NULL;
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 0b74e94..ec69ec8 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1452,67 +1452,6 @@ scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
+ 	return;
+ }
  
- 	if(SCp != NULL) {
--		struct NCR_700_command_slot *slot = 
-+		struct NCR_700_command_slot *slot =
- 			(struct NCR_700_command_slot *)SCp->host_scribble;
--		
-+
- 		dma_unmap_single(hostdata->dev, slot->pCmd,
- 				 MAX_COMMAND_SIZE, DMA_TO_DEVICE);
- 		if (slot->flags == NCR_700_FLAG_AUTOSENSE) {
- 			char *cmnd = NCR_700_get_sense_cmnd(SCp->device);
--#ifdef NCR_700_DEBUG
--			printk(" ORIGINAL CMD %p RETURNED %d, new return is %d sense is\n",
--			       SCp, SCp->cmnd[7], result);
--			scsi_print_sense(SCp);
- 
--#endif
- 			dma_unmap_single(hostdata->dev, slot->dma_handle,
- 					 SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
- 			/* restore the old result if the request sense was
+-static void
+-scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
+-			 struct scsi_sense_hdr *sshdr)
+-{
+-	int k, num, res;
+-
+-	if (sshdr->response_code < 0x72)
+-	{
+-		/* only decode extras for "fixed" format now */
+-		char buff[80];
+-		int blen, fixed_valid;
+-		unsigned int info;
+-
+-		fixed_valid = sense_buffer[0] & 0x80;
+-		info = ((sense_buffer[3] << 24) | (sense_buffer[4] << 16) |
+-			(sense_buffer[5] << 8) | sense_buffer[6]);
+-		res = 0;
+-		memset(buff, 0, sizeof(buff));
+-		blen = sizeof(buff) - 1;
+-		if (fixed_valid)
+-			res += snprintf(buff + res, blen - res,
+-					"Info fld=0x%x", info);
+-		if (sense_buffer[2] & 0x80) {
+-			/* current command has read a filemark */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "FMK");
+-		}
+-		if (sense_buffer[2] & 0x40) {
+-			/* end-of-medium condition exists */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "EOM");
+-		}
+-		if (sense_buffer[2] & 0x20) {
+-			/* incorrect block length requested */
+-			if (res > 0)
+-				res += snprintf(buff + res, blen - res, ", ");
+-			res += snprintf(buff + res, blen - res, "ILI");
+-		}
+-		if (res > 0)
+-			printk("%s\n", buff);
+-	} else if (sshdr->additional_length > 0) {
+-		/* descriptor format with sense descriptors */
+-		num = 8 + sshdr->additional_length;
+-		num = (sense_len < num) ? sense_len : num;
+-		printk("Descriptor sense data with sense descriptors "
+-		       "(in hex):");
+-		for (k = 0; k < num; ++k) {
+-			if (0 == (k % 16)) {
+-				printk("\n");
+-				printk(KERN_INFO "        ");
+-			}
+-			printk("%02x ", sense_buffer[k]);
+-		}
+-
+-		printk("\n");
+-	}
+-
+-}
+-
+ /* Normalize and print sense buffer with name prefix */
+ void __scsi_print_sense(const struct scsi_device *sdev, const char *name,
+ 			const unsigned char *sense_buffer, int sense_len)
+@@ -1524,7 +1463,6 @@ void __scsi_print_sense(const struct scsi_device *sdev, const char *name,
+ 		return;
+ 	}
+ 	scsi_show_sense_hdr(sdev, name, &sshdr);
+-	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
+ 	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
+ }
+ EXPORT_SYMBOL(__scsi_print_sense);
 -- 
 1.8.5.2
 
