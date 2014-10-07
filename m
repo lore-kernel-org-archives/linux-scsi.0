@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/26] scsi: do not decode sense extras
-Date: Tue,  7 Oct 2014 11:03:10 +0200
-Message-ID: <1412672605-42868-12-git-send-email-hare@suse.de>
+Subject: [PATCH 12/26] scsi: use 'bool' as return value for scsi_normalize_sense()
+Date: Tue,  7 Oct 2014 11:03:11 +0200
+Message-ID: <1412672605-42868-13-git-send-email-hare@suse.de>
 References: <1412672605-42868-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42657 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42658 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493AbaJGJDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753494AbaJGJDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 7 Oct 2014 05:03:31 -0400
 In-Reply-To: <1412672605-42868-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,99 +14,113 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Currently we're only decoding sense extras for tape devices.
-And even there only for fixed format sense formats.
-As this is of rather limited use in the general case we should
-be stop trying to decode sense extras; the tape driver does
-its own decoding anyway.
+Convert scsi_normalize_sense() and frieds to return 'bool'
+instead of an integer.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 62 ------------------------------------------------
- 1 file changed, 62 deletions(-)
+ drivers/scsi/scsi_error.c | 16 ++++++++--------
+ drivers/scsi/scsi_lib.c   |  2 +-
+ include/scsi/scsi_eh.h    | 14 +++++++-------
+ 3 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0b74e94..ec69ec8 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1452,67 +1452,6 @@ scsi_dump_sense_buffer(const unsigned char *sense_buffer, int sense_len)
- 	return;
- }
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 6c99624..a113e99 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2408,20 +2408,20 @@ EXPORT_SYMBOL(scsi_reset_provider);
+  *	responded to a SCSI command with the CHECK_CONDITION status.
+  *
+  * Return value:
+- *	1 if valid sense data information found, else 0;
++ *	true if valid sense data information found, else false;
+  */
+-int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+-                         struct scsi_sense_hdr *sshdr)
++bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
++			  struct scsi_sense_hdr *sshdr)
+ {
+ 	if (!sense_buffer || !sb_len)
+-		return 0;
++		return false;
  
--static void
--scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
--			 struct scsi_sense_hdr *sshdr)
--{
--	int k, num, res;
--
--	if (sshdr->response_code < 0x72)
--	{
--		/* only decode extras for "fixed" format now */
--		char buff[80];
--		int blen, fixed_valid;
--		unsigned int info;
--
--		fixed_valid = sense_buffer[0] & 0x80;
--		info = ((sense_buffer[3] << 24) | (sense_buffer[4] << 16) |
--			(sense_buffer[5] << 8) | sense_buffer[6]);
--		res = 0;
--		memset(buff, 0, sizeof(buff));
--		blen = sizeof(buff) - 1;
--		if (fixed_valid)
--			res += snprintf(buff + res, blen - res,
--					"Info fld=0x%x", info);
--		if (sense_buffer[2] & 0x80) {
--			/* current command has read a filemark */
--			if (res > 0)
--				res += snprintf(buff + res, blen - res, ", ");
--			res += snprintf(buff + res, blen - res, "FMK");
--		}
--		if (sense_buffer[2] & 0x40) {
--			/* end-of-medium condition exists */
--			if (res > 0)
--				res += snprintf(buff + res, blen - res, ", ");
--			res += snprintf(buff + res, blen - res, "EOM");
--		}
--		if (sense_buffer[2] & 0x20) {
--			/* incorrect block length requested */
--			if (res > 0)
--				res += snprintf(buff + res, blen - res, ", ");
--			res += snprintf(buff + res, blen - res, "ILI");
--		}
--		if (res > 0)
--			printk("%s\n", buff);
--	} else if (sshdr->additional_length > 0) {
--		/* descriptor format with sense descriptors */
--		num = 8 + sshdr->additional_length;
--		num = (sense_len < num) ? sense_len : num;
--		printk("Descriptor sense data with sense descriptors "
--		       "(in hex):");
--		for (k = 0; k < num; ++k) {
--			if (0 == (k % 16)) {
--				printk("\n");
--				printk(KERN_INFO "        ");
--			}
--			printk("%02x ", sense_buffer[k]);
--		}
--
--		printk("\n");
--	}
--
--}
--
- /* Normalize and print sense buffer with name prefix */
- void __scsi_print_sense(const struct scsi_device *sdev, const char *name,
- 			const unsigned char *sense_buffer, int sense_len)
-@@ -1524,7 +1463,6 @@ void __scsi_print_sense(const struct scsi_device *sdev, const char *name,
- 		return;
+ 	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
+ 
+ 	sshdr->response_code = (sense_buffer[0] & 0x7f);
+ 
+ 	if (!scsi_sense_valid(sshdr))
+-		return 0;
++		return false;
+ 
+ 	if (sshdr->response_code >= 0x72) {
+ 		/*
+@@ -2451,12 +2451,12 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+ 		}
  	}
- 	scsi_show_sense_hdr(sdev, name, &sshdr);
--	scsi_decode_sense_extras(sense_buffer, sense_len, &sshdr);
- 	scsi_show_extd_sense(sdev, name, sshdr.asc, sshdr.ascq);
+ 
+-	return 1;
++	return true;
  }
- EXPORT_SYMBOL(__scsi_print_sense);
+ EXPORT_SYMBOL(scsi_normalize_sense);
+ 
+-int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
+-				 struct scsi_sense_hdr *sshdr)
++bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
++				  struct scsi_sense_hdr *sshdr)
+ {
+ 	return scsi_normalize_sense(cmd->sense_buffer,
+ 			SCSI_SENSE_BUFFERSIZE, sshdr);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c3220b7..b853659 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -830,7 +830,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	struct request *req = cmd->request;
+ 	int error = 0;
+ 	struct scsi_sense_hdr sshdr;
+-	int sense_valid = 0;
++	bool sense_valid = false;
+ 	int sense_deferred = 0;
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
+ 	      ACTION_DELAYED_RETRY} action;
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 3d720ca..1d3c254 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -27,10 +27,10 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
+ 	u8 additional_length;	/* always 0 for fixed sense format */
+ };
+ 
+-static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
++static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
+ {
+ 	if (!sshdr)
+-		return 0;
++		return false;
+ 
+ 	return (sshdr->response_code & 0x70) == 0x70;
+ }
+@@ -42,12 +42,12 @@ extern void scsi_eh_flush_done_q(struct list_head *done_q);
+ extern void scsi_report_bus_reset(struct Scsi_Host *, int);
+ extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
+ extern int scsi_block_when_processing_errors(struct scsi_device *);
+-extern int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+-		struct scsi_sense_hdr *sshdr);
+-extern int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
+-		struct scsi_sense_hdr *sshdr);
++extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
++				 struct scsi_sense_hdr *sshdr);
++extern bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
++					 struct scsi_sense_hdr *sshdr);
+ 
+-static inline int scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
++static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
+ {
+ 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
+ }
 -- 
 1.8.5.2
 
