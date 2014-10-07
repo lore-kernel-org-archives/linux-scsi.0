@@ -1,106 +1,74 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/26] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
-Date: Tue,  7 Oct 2014 11:03:15 +0200
-Message-ID: <1412672605-42868-17-git-send-email-hare@suse.de>
+Subject: [PATCH 24/26] scsi_error: document scsi_try_to_abort_cmd
+Date: Tue,  7 Oct 2014 11:03:23 +0200
+Message-ID: <1412672605-42868-25-git-send-email-hare@suse.de>
 References: <1412672605-42868-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42698 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42645 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830AbaJGJDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2014 05:03:35 -0400
+	id S1753484AbaJGJDh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2014 05:03:37 -0400
 In-Reply-To: <1412672605-42868-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
-so that we don't have to call several functions to figure
-out the CDB opcode string.
+scsi_try_to_abort_cmd() should only return
+SUCCESS, FAILED, or FAST_IO_FAIL. So document
+that in the function description and simplify the
+logging message.
 
-Reviewed_by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellweg <hch@lst.de>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/scsi_error.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0982df7..80a9942 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -29,6 +29,7 @@
- #define THIRD_PARTY_COPY_OUT 0x83
- #define THIRD_PARTY_COPY_IN 0x84
- 
-+#define VENDOR_SPECIFIC_CDB 0xc0
- 
- struct sa_name_list {
- 	int opcode;
-@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
- #endif /* CONFIG_SCSI_CONSTANTS */
- 
- static bool scsi_opcode_sa_name(int opcode, int service_action,
--				const char **sa_name)
-+				const char **cdb_name, const char **sa_name)
- {
- 	struct sa_name_list *sa_name_ptr;
- 	const struct value_name_pair *arr = NULL;
- 	int arr_sz, k;
- 
-+	*cdb_name = NULL;
-+	if (opcode >= VENDOR_SPECIFIC_CDB)
-+		return false;
-+
-+	if (opcode < ARRAY_SIZE(cdb_byte0_names))
-+		*cdb_name = cdb_byte0_names[opcode];
-+
- 	for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
- 		if (sa_name_ptr->opcode == opcode) {
- 			arr = sa_name_ptr->arr;
-@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int opcode, int service_action,
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- {
- 	int sa, len, cdb0;
--	const char *name = NULL;
-+	const char *cdb_name = NULL, *sa_name = NULL;
- 
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
-@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 		len = cdb_len;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c485f28..9209407 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -157,8 +157,9 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 		} else {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+-					    "scmd %p abort failed, rtn %d\n",
+-					    scmd, rtn));
++					    "scmd %p abort %s\n", scmd,
++					    (rtn == FAST_IO_FAIL) ?
++					    "not send" : "failed"));
+ 		}
  	}
  
--	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
--		if (cdb0 < 0xc0) {
--			if (ARRAY_SIZE(cdb_byte0_names) > 1) {
--				name = cdb_byte0_names[cdb0];
--				if (name)
--					printk("%s", name);
--				else
--					printk("cdb[0]=0x%x (reserved)", cdb0);
--			} else
--				printk("cdb[0]=0x%x", cdb0);
--		} else
-+	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
-+		if (cdb_name)
-+			printk("%s", cdb_name);
-+		else if (cdb0 >= VENDOR_SPECIFIC_CDB)
- 			printk("cdb[0]=0x%x (vendor)", cdb0);
-+		else if (cdb0 >= 0x60 && cdb0 < 0x7e)
-+			printk("cdb[0]=0x%x (reserved)", cdb0);
-+		else
-+			printk("cdb[0]=0x%x", cdb0);
- 	} else {
--		if (name)
--			printk("%s", name);
-+		if (sa_name)
-+			printk("%s", sa_name);
-+		else if (cdb_name)
-+			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+@@ -869,7 +870,24 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+ 	return rtn;
+ }
  
+-static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt, struct scsi_cmnd *scmd)
++/**
++ * scsi_try_to_abort_cmd - Ask host to abort a SCSI command
++ * @scmd:	SCSI cmd used to send a target reset
++ *
++ * Return value:
++ *	SUCCESS, FAILED, or FAST_IO_FAIL
++ *
++ * Notes:
++ *    SUCCESS does not necessarily indicate that the command
++ *    has been aborted; it only indicates that the LLDDs
++ *    has cleared all references to that command.
++ *    LLDDs should return FAILED only if an abort was required
++ *    but could not be executed. LLDDs should return FAST_IO_FAIL
++ *    if the device is temporarily unavailable (eg due to a
++ *    link down on FibreChannel)
++ */
++static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
++				 struct scsi_cmnd *scmd)
+ {
+ 	if (!hostt->eh_abort_handler)
+ 		return FAILED;
 -- 
 1.8.5.2
 
