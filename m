@@ -1,33 +1,40 @@
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v2 7/7] driver-core: add preferred async probe option for
- built-in and modules
-Date: Tue, 7 Oct 2014 12:07:29 -0700
-Message-ID: <CAB=NE6X1zf6JYxiitvoOi-7OcmvhSJyP2oVE4gCF5JgfqhAyQA@mail.gmail.com>
-References: <1412372683-2003-1-git-send-email-mcgrof@do-not-panic.com>
- <1412372683-2003-8-git-send-email-mcgrof@do-not-panic.com>
- <20141006201926.GF18303@htj.dyndns.org> <20141006203627.GZ14081@wotan.suse.de>
- <20141006210118.GG18303@htj.dyndns.org> <20141006231046.GD14081@wotan.suse.de>
- <20141007173404.GB31328@mtj.dyndns.org> <20141007175010.GH14081@wotan.suse.de>
- <20141007175503.GE31328@mtj.dyndns.org> <CAB=NE6V_1yyYPhzbV_yRzt7fg=_8yF2YYNBz4qH_2TbH0nozcw@mail.gmail.com>
+From: Zach Brown <zab@zabbo.net>
+Subject: Re: [PATCH] target/file: fix inclusive vfs_fsync_range() end
+Date: Tue, 7 Oct 2014 12:12:44 -0700
+Message-ID: <20141007191244.GA10366@lenny.home.zabbo.net>
+References: <1412638813-13285-1-git-send-email-zab@zabbo.net>
+ <20141007063945.GA4185@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:58053 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754325AbaJGTHv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2014 15:07:51 -0400
-In-Reply-To: <CAB=NE6V_1yyYPhzbV_yRzt7fg=_8yF2YYNBz4qH_2TbH0nozcw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20141007063945.GA4185@infradead.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Takashi Iwai <tiwai@suse.de>, Arjan van de Ven <arjan@linux.intel.com>, Tom Gundersen <teg@jklm.no>, Robert Milasan <rmilasan@suse.com>, werner@suse.com, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Petr Mladek <pmladek@suse.cz>, dbueso@suse.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Andrew Morton <akpm@linux-foundation.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen
 
-On Tue, Oct 7, 2014 at 11:55 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> OK I'll just kill bus.enable_kern_async=1 to enable built-in async
-> probe support *and* also have prefer_async_probe *always* be
-> respected, whether modular or not.
+On Mon, Oct 06, 2014 at 11:39:45PM -0700, Christoph Hellwig wrote:
+> On Mon, Oct 06, 2014 at 04:40:13PM -0700, Zach Brown wrote:
+> > Both of the file target's calls to vfs_fsync_range() got the end offset
+> > off by one.  The range is inclusive, not exclusive.  It would sync a bit
+> > more data than was required.
+> > 
+> > The sync path already tested the length of the range and fell back to
+> > LLONG_MAX so I copied that pattern in the rw path.
+> > 
+> > This is untested. I found the errors by inspection while following other
+> > code.
+> 
+> Maybe it's time to move vfs_fsync_range to a more normal calling
+> convention?
 
-Well and I just realized you *do* want to flush, so will throw that in
-too without an option to skip it.
+Yeah, I wanted to just fix the bugs before going too far.  
 
- Luis
+The current interface does seem like a bad fit.  3 of the 5 non-core
+callers got it wrong.  They all generate start,end from off,count and
+fall back to LLONG_MAX.
+
+I'll put something together if no one beats me to it.
+
+- z
