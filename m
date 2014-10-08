@@ -1,76 +1,33 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Wed, 8 Oct 2014 22:59:16 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1410081443410.15753@nippy.intranet>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com> <alpine.LNX.2.00.1410032054150.12643@nippy.intranet> <54308629.6060800@gmail.com>
- <alpine.LNX.2.00.1410061754280.26699@nippy.intranet> <54324F78.6090303@gmail.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH v2 01/12] blk-mq: Use all available hardware queues
+Date: Wed, 08 Oct 2014 15:21:56 +0200
+Message-ID: <54353A74.7040406@acm.org>
+References: <5433E43D.3010107@acm.org> <5433E473.4020102@acm.org> <5433FA8F.3050100@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <54324F78.6090303@gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Ondrej Zary <linux@rainbow-software.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5433FA8F.3050100-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 10/07/14 16:37, Jens Axboe wrote:
+> Lets do this separate, as explained last time, it needs to be evaluated
+> on its own and doesn't really belong in this series of patches.
 
-On Mon, 6 Oct 2014, Michael Schmitz wrote:
+Hello Jens,
 
-> > > > > Can these be handled through the platform_device's resources?
-> > > > 
-> > > > I don't know.
-> > > 
-> > > Should be possible - I've seen that used in the ISP116x HCD driver 
-> > > (arch-dependent post-register access delay function passed via 
-> > > platform data).
-> >
-> > Yes, possible, but is it desirable?
-> 
-> Only long term, i.e. if we can find a way to fold all the separate 
-> *_NCR5380 drivers into a core one.
+A few minutes ago I have resent this patch to you with the LKML in CC. I 
+hope that Christoph agrees with leaving out this patch from this series 
+without me having to resend this series. BTW, Sagi promised me off-list 
+to review the other patches in this series.
 
-But would it improve the ISA drivers to paramaterize the core driver using 
-platform data? I don't know the answer, so I tend to think of code 
-duplication as a separate issue.
+Bart.
 
-> >
-> > If there's no third configuration then I see little to be gained from 
-> > completely parameterizing the driver using a bunch of resources.
-> >
-> > What am I missing? Why would it be desirable to have bits of driver 
-> > code in arch/m68k/ and other bits of the same driver kept elsewhere in 
-> > the tree (in drivers/)?
-> 
-> Again, only makes sense if the goal is to reduce the driver to a core 
-> driver with implementation bits separate.
-> 
 
-I think it makes sense if it completely eliminates modules like 
-{atari,mac,sun3}_scsi and replaces them with a generic ncr5380 platform 
-driver entirely parameterized by mac/atari/sun3 platform data.
-
-Or maybe that would only amount to a complicated renaming, as the 
-{atari,mac,sun3}_scsi driver logic would presumably just move from 
-drivers/scsi to arch/m68k.
-
-Anyway, that's a long way off. To begin with, it would require the 
-elimination of all the macros (e.g. SUN3_SCSI_VME, REAL_DMA etc, and
-NCR5380_{read,write,dma_read_setup,etc}) and all the static variables 
-(setup_use_tagged_queuing, atari_read_overruns etc).
-
-I have written patches that eliminate static variables because that 
-enables atari_NCR5380.c to support multiple chips, and it helps fix a 
-compiler warning, and also helps cleanup the *RELEASE macros.
-
-Replacing all the macros with flags and an ops struct/plataform data is 
-not too difficult for atari_NCR5380.c at present but will be more 
-difficult after sun3_NCR5380.c is merged into it.
-
-The same goes for NCR5380.c and the ISA drivers.
-
-I don't yet see a good way to merge all three core drivers, and if I did, 
-I wouldn't be able to test the results. Hence I've taken a more gradual 
-approach. This patch set eliminates scsi_register() from 
-{atari,mac,sun3}_scsi at least.
-
--- 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
