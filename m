@@ -1,80 +1,76 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH] iser-target: Disable TX completion interrupt coalescing
-Date: Wed, 08 Oct 2014 12:59:09 +0300
-Message-ID: <54350AED.7000105@dev.mellanox.co.il>
-References: <1412561711-31344-1-git-send-email-nab@daterainc.com>	 <54338F00.8050902@dev.mellanox.co.il> <1412748088.31947.35.camel@haakon3.risingtidesystems.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
+Date: Wed, 8 Oct 2014 22:59:16 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1410081443410.15753@nippy.intranet>
+References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <CAMuHMdWmxEUMabRrbQpjhWTE1W4WD4CDkmXZNem06C0ScnKkFw@mail.gmail.com> <alpine.LNX.2.00.1410032054150.12643@nippy.intranet> <54308629.6060800@gmail.com>
+ <alpine.LNX.2.00.1410061754280.26699@nippy.intranet> <54324F78.6090303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:41726 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754601AbaJHJ7O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2014 05:59:14 -0400
-Received: by mail-wg0-f46.google.com with SMTP id l18so11230856wgh.5
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Oct 2014 02:59:13 -0700 (PDT)
-In-Reply-To: <1412748088.31947.35.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <54324F78.6090303@gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Ondrej Zary <linux@rainbow-software.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Moussa Ba <moussaba@micron.com>
 
-On 10/8/2014 9:01 AM, Nicholas A. Bellinger wrote:
-> On Tue, 2014-10-07 at 09:58 +0300, Sagi Grimberg wrote:
->> On 10/6/2014 5:15 AM, Nicholas A. Bellinger wrote:
->>> From: Nicholas Bellinger <nab@linux-iscsi.org>
->>>
->>> This patch explicitly disables TX completion interrupt coalescing logic
->>> in isert_put_response() and isert_put_datain() that was originally added
->>> as an efficiency optimization in commit 95b60f07.
->>>
->>> It has been reported that this change can trigger ABORT_TASK timeouts
->>> under certain small block workloads, where disabling coalescing was
->>> required for stability.  According to Sagi, this doesn't impact
->>> overall performance, so go ahead and disable it for now.
->>>
->>> Reported-by: Moussa Ba <moussaba@micron.com>
->>> Cc: Moussa Ba <moussaba@micron.com>
->>> Reported-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
->>> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
->>> Cc: <stable@vger.kernel.org> # 3.13+
->>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
->>> ---
->>>    drivers/infiniband/ulp/isert/ib_isert.c |    4 ++--
->>>    1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
->>> index 40969b6..f719112 100644
->>> --- a/drivers/infiniband/ulp/isert/ib_isert.c
->>> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
->>> @@ -2183,7 +2183,7 @@ isert_put_response(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
->>>    		isert_cmd->tx_desc.num_sge = 2;
->>>    	}
->>>
->>> -	isert_init_send_wr(isert_conn, isert_cmd, send_wr, true);
->>> +	isert_init_send_wr(isert_conn, isert_cmd, send_wr, false);
->>
->> I Would like to avoid taking the conn_mutex in the IO path.
->
-> Yes, please.
->
->> Care to respin this with avoiding taking the mutex? Or you want me to?
->
-> Let's keep this patch as is for -rc1 so it can be easily picked up for
-> stable, especially considering that it's been verified by Moussa for
-> some time.
 
-OK we can do that.
+On Mon, 6 Oct 2014, Michael Schmitz wrote:
 
-But I do plan to remove this code altogether.
-I have some fixes and optimizations I want to add
-and it will be much easier without this code (given
-its not active).
+> > > > > Can these be handled through the platform_device's resources?
+> > > > 
+> > > > I don't know.
+> > > 
+> > > Should be possible - I've seen that used in the ISP116x HCD driver 
+> > > (arch-dependent post-register access delay function passed via 
+> > > platform data).
+> >
+> > Yes, possible, but is it desirable?
+> 
+> Only long term, i.e. if we can find a way to fold all the separate 
+> *_NCR5380 drivers into a core one.
 
-Once those are in, I think it would be easier to handle
-TX completions coalescing.
+But would it improve the ISA drivers to paramaterize the core driver using 
+platform data? I don't know the answer, so I tend to think of code 
+duplication as a separate issue.
 
-You can add:
-acked-by: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> >
+> > If there's no third configuration then I see little to be gained from 
+> > completely parameterizing the driver using a bunch of resources.
+> >
+> > What am I missing? Why would it be desirable to have bits of driver 
+> > code in arch/m68k/ and other bits of the same driver kept elsewhere in 
+> > the tree (in drivers/)?
+> 
+> Again, only makes sense if the goal is to reduce the driver to a core 
+> driver with implementation bits separate.
+> 
 
-Sagi.
+I think it makes sense if it completely eliminates modules like 
+{atari,mac,sun3}_scsi and replaces them with a generic ncr5380 platform 
+driver entirely parameterized by mac/atari/sun3 platform data.
+
+Or maybe that would only amount to a complicated renaming, as the 
+{atari,mac,sun3}_scsi driver logic would presumably just move from 
+drivers/scsi to arch/m68k.
+
+Anyway, that's a long way off. To begin with, it would require the 
+elimination of all the macros (e.g. SUN3_SCSI_VME, REAL_DMA etc, and
+NCR5380_{read,write,dma_read_setup,etc}) and all the static variables 
+(setup_use_tagged_queuing, atari_read_overruns etc).
+
+I have written patches that eliminate static variables because that 
+enables atari_NCR5380.c to support multiple chips, and it helps fix a 
+compiler warning, and also helps cleanup the *RELEASE macros.
+
+Replacing all the macros with flags and an ops struct/plataform data is 
+not too difficult for atari_NCR5380.c at present but will be more 
+difficult after sun3_NCR5380.c is merged into it.
+
+The same goes for NCR5380.c and the ISA drivers.
+
+I don't yet see a good way to merge all three core drivers, and if I did, 
+I wouldn't be able to test the results. Hence I've taken a more gradual 
+approach. This patch set eliminates scsi_register() from 
+{atari,mac,sun3}_scsi at least.
+
+-- 
