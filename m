@@ -1,91 +1,87 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 21/26] scsi: simplify scsi_log_(send|completion)
-Date: Wed, 8 Oct 2014 20:41:37 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CDC959@G4W3202.americas.hpqcorp.net>
-References: <1412672605-42868-1-git-send-email-hare@suse.de>
- <1412672605-42868-22-git-send-email-hare@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: ips.c: use 64-bit time types
+Date: Wed, 08 Oct 2014 13:44:55 -0700
+Message-ID: <1412801095.32718.13.camel@jarvis>
+References: <1412799248-17181-1-git-send-email-ebru.akagunduz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:38364 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753516AbaJHUm4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2014 16:42:56 -0400
-In-Reply-To: <1412672605-42868-22-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1412799248-17181-1-git-send-email-ebru.akagunduz@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+Cc: arnd@arndb.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, opw-kernel@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Tuesday, 07 October, 2014 4:03 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Elliott, Robert (Server
-> Storage); Hannes Reinecke
-> Subject: [PATCH 21/26] scsi: simplify scsi_log_(send|completion)
+On Wed, 2014-10-08 at 23:14 +0300, Ebru Akagunduz wrote:
+> This patch changes 32-bit time types to 64-bit in
+> ips.c
 > 
-> Simplify scsi_log_(send|completion) by externalizing
-> scsi_mlreturn_string() and always print the command address.
+> time_t can only represent signed 32-bit dates but
+> the driver should represent dates that are after
+> January 2038.
 > 
-...
+> Use time64_t type instead of time_t.
+> 
+> Signed-off-by: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+> ---
+>  drivers/scsi/ips.c | 6 ++++--
+>  drivers/scsi/ips.h | 2 +-
+>  2 files changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 52a216f..8a2cf68 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -195,6 +195,8 @@
+>  
+>  #include <linux/smp.h>
+>  
+> +#include <linux/time64.h>
+> +
+>  #ifdef MODULE
+>  static char *ips = NULL;
+>  module_param(ips, charp, 0);
+> @@ -297,7 +299,7 @@ static void ips_freescb(ips_ha_t *, ips_scb_t *);
+>  static void ips_setup_funclist(ips_ha_t *);
+>  static void ips_statinit(ips_ha_t *);
+>  static void ips_statinit_memio(ips_ha_t *);
+> -static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time_t);
+> +static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time64_t);
+>  static void ips_ffdc_reset(ips_ha_t *, int);
+>  static void ips_ffdc_time(ips_ha_t *);
+>  static uint32_t ips_statupd_copperhead(ips_ha_t *);
+> @@ -6000,7 +6002,7 @@ ips_ffdc_time(ips_ha_t * ha)
+>  /*                                                                          */
+>  /****************************************************************************/
+>  static void
+> -ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time_t current_time)
+> +ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time64_t current_time)
+>  {
+>  	long days;
+>  	long rem;
+> diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+> index 45b9566..ff2a0b3 100644
+> --- a/drivers/scsi/ips.h
+> +++ b/drivers/scsi/ips.h
+> @@ -1054,7 +1054,7 @@ typedef struct ips_ha {
+>     uint8_t            active;
+>     int                ioctl_reset;        /* IOCTL Requested Reset Flag */
+>     uint16_t           reset_count;        /* number of resets           */
+> -   time_t             last_ffdc;          /* last time we sent ffdc info*/
+> +   time64_t             last_ffdc;          /* last time we sent ffdc info*/
+>     uint8_t            slot_num;           /* PCI Slot Number            */
+>     int                ioctl_len;          /* size of ioctl buffer       */
+>     dma_addr_t         ioctl_busaddr;      /* dma address of ioctl buffer*/
 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b853659..2df485f 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -831,7 +831,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned
-> int good_bytes)
->  	int error = 0;
->  	struct scsi_sense_hdr sshdr;
->  	bool sense_valid = false;
-> -	int sense_deferred = 0;
-> +	int sense_deferred = 0, level = 0;
->  	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
->  	      ACTION_DELAYED_RETRY} action;
->  	unsigned long wait_for = (cmd->allowed + 1) * req->timeout;
-> @@ -1037,8 +1037,15 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-> unsigned int good_bytes)
->  	switch (action) {
->  	case ACTION_FAIL:
->  		/* Give up and fail the remainder of the request */
-> -		if (!(req->cmd_flags & REQ_QUIET)) {
-> -			scsi_print_result(cmd);
-> +		if (unlikely(scsi_logging_level))
-> +			level = SCSI_LOG_LEVEL(SCSI_LOG_MLQUEUE_SHIFT,
-> +					       SCSI_LOG_MLQUEUE_BITS);
+This is completely pointless, isn't it?  All the ips driver cares about
+is that we send a FFDC time update every eight hours or so, so we can
+happily truncate the number of seconds to 32 bits for that calculation
+just keep the variable at 32 bits and do a time_after thing for the
+comparison.
 
-scsi_log_completion prints based on SCSI_LOG_MLCOMPLETE,
-not SCSI_LOG_MLQUEUE, so this is not accomplishing what
-the next comment says.
+However, what the code *should* be doing is using jiffies and
+time_before/after since the interval is so tiny rather than a
+do_gettimeofday() call in the fast path.
 
-> +		/*
-> +		 * if logging is enabled the failure will be printed
-> +		 * in scsi_log_completion(), so avoid duplicate messages
-> +		 */
-> +		if (!level && !(req->cmd_flags & REQ_QUIET)) {
-> +			scsi_print_result(cmd, NULL, FAILED);
->  			if (driver_byte(result) & DRIVER_SENSE)
->  				scsi_print_sense(cmd);
->  			scsi_print_command(cmd);
-
-This still results in prints on every completion with ACTION_FAIL.  
-Since they're not ratelimited, the massive number of prints after
-a device failure under heavy load causes other timeouts.  Since
-the block layer also prints errors, with ratelimiting, these are
-not really necessary (although they're more informative than the
-block layer prints).  There needs to be a way to turn these off,
-both in scsi_log_completion and here - maybe different MLCOMPLETE
-levels?
-
-The issue will be mitigated if the next patch series makes these
-ratelimited.
-
-
----
-Rob Elliott    HP Server Storage
-
-
-
+James
