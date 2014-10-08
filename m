@@ -1,33 +1,71 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v2 01/12] blk-mq: Use all available hardware queues
-Date: Wed, 08 Oct 2014 15:21:56 +0200
-Message-ID: <54353A74.7040406@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E473.4020102@acm.org> <5433FA8F.3050100@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5433FA8F.3050100-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+Subject: [PATCH] scsi: ips.c: use 64-bit time types
+Date: Wed,  8 Oct 2014 23:14:08 +0300
+Message-ID: <1412799248-17181-1-git-send-email-ebru.akagunduz@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: arnd@arndb.de
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, opw-kernel@googlegroups.com, Ebru Akagunduz <ebru.akagunduz@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/07/14 16:37, Jens Axboe wrote:
-> Lets do this separate, as explained last time, it needs to be evaluated
-> on its own and doesn't really belong in this series of patches.
+This patch changes 32-bit time types to 64-bit in
+ips.c
 
-Hello Jens,
+time_t can only represent signed 32-bit dates but
+the driver should represent dates that are after
+January 2038.
 
-A few minutes ago I have resent this patch to you with the LKML in CC. I 
-hope that Christoph agrees with leaving out this patch from this series 
-without me having to resend this series. BTW, Sagi promised me off-list 
-to review the other patches in this series.
+Use time64_t type instead of time_t.
 
-Bart.
+Signed-off-by: Ebru Akagunduz <ebru.akagunduz@gmail.com>
+---
+ drivers/scsi/ips.c | 6 ++++--
+ drivers/scsi/ips.h | 2 +-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 52a216f..8a2cf68 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -195,6 +195,8 @@
+ 
+ #include <linux/smp.h>
+ 
++#include <linux/time64.h>
++
+ #ifdef MODULE
+ static char *ips = NULL;
+ module_param(ips, charp, 0);
+@@ -297,7 +299,7 @@ static void ips_freescb(ips_ha_t *, ips_scb_t *);
+ static void ips_setup_funclist(ips_ha_t *);
+ static void ips_statinit(ips_ha_t *);
+ static void ips_statinit_memio(ips_ha_t *);
+-static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time_t);
++static void ips_fix_ffdc_time(ips_ha_t *, ips_scb_t *, time64_t);
+ static void ips_ffdc_reset(ips_ha_t *, int);
+ static void ips_ffdc_time(ips_ha_t *);
+ static uint32_t ips_statupd_copperhead(ips_ha_t *);
+@@ -6000,7 +6002,7 @@ ips_ffdc_time(ips_ha_t * ha)
+ /*                                                                          */
+ /****************************************************************************/
+ static void
+-ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time_t current_time)
++ips_fix_ffdc_time(ips_ha_t * ha, ips_scb_t * scb, time64_t current_time)
+ {
+ 	long days;
+ 	long rem;
+diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+index 45b9566..ff2a0b3 100644
+--- a/drivers/scsi/ips.h
++++ b/drivers/scsi/ips.h
+@@ -1054,7 +1054,7 @@ typedef struct ips_ha {
+    uint8_t            active;
+    int                ioctl_reset;        /* IOCTL Requested Reset Flag */
+    uint16_t           reset_count;        /* number of resets           */
+-   time_t             last_ffdc;          /* last time we sent ffdc info*/
++   time64_t             last_ffdc;          /* last time we sent ffdc info*/
+    uint8_t            slot_num;           /* PCI Slot Number            */
+    int                ioctl_len;          /* size of ioctl buffer       */
+    dma_addr_t         ioctl_busaddr;      /* dma address of ioctl buffer*/
+-- 
+1.9.1
