@@ -1,36 +1,38 @@
 From: Mark Knibbs <markk@clara.co.uk>
-Subject: [PATCH] Fix comment typo in Scsi_Host struct definition
-Date: Thu, 9 Oct 2014 12:40:07 +0100
-Message-ID: <20141009124007.14ea0a3d09813fc593e1dc21@clara.co.uk>
+Subject: [PATCH] Fix trivial typos in scsi_scan.c comment
+Date: Thu, 9 Oct 2014 12:39:40 +0100
+Message-ID: <20141009123940.5b385e69e14564dc1c42194a@clara.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [195.8.89.34] ([195.8.89.34]:43601 "EHLO
-	claranet-outbound-smtp01.uk.clara.net" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751312AbaJILlL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 07:41:11 -0400
+Received: from [195.8.89.42] ([195.8.89.42]:59904 "EHLO
+	claranet-outbound-smtp09.uk.clara.net" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750858AbaJILlI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 07:41:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 Hi,
 
-The comment for the max_channel, max_id and max_lun parameters
-refers to the first two, but actually means the last two.
+Not much to say really...
 
 Signed-off-by: Mark Knibbs <markk@clara.co.uk>
 
 ---
-$ diff -upN linux-3.17/include/scsi/scsi_host.h.orig linux-3.17/include/scsi/scsi_host.h
---- linux-3.17/include/scsi/scsi_host.h.orig	2014-10-05 20:23:04.000000000 +0100
-+++ linux-3.17/include/scsi/scsi_host.h	2014-10-09 12:18:47.000000000 +0100
-@@ -606,7 +606,7 @@ struct Scsi_Host {
+diff -upN linux-3.17/drivers/scsi/scsi_scan.c.orig linux-3.17/drivers/scsi/scsi_scan.c
+--- linux-3.17/drivers/scsi/scsi_scan.c.orig	2014-10-05 20:23:04.000000000 +0100
++++ linux-3.17/drivers/scsi/scsi_scan.c	2014-10-09 12:32:53.000000000 +0100
+@@ -1191,9 +1191,9 @@ static void scsi_sequential_lun_scan(str
+ 		sparse_lun = 0;
+ 
  	/*
- 	 * These three parameters can be used to allow for wide scsi,
- 	 * and for host adapters that support multiple busses
--	 * The first two should be set to 1 more than the actual max id
-+	 * The last two should be set to 1 more than the actual max id
- 	 * or lun (e.g. 8 for SCSI parallel systems).
- 	 */
- 	unsigned int max_channel;
+-	 * If less than SCSI_1_CSS, and no special lun scaning, stop
++	 * If less than SCSI_1_CCS, and no special lun scanning, stop
+ 	 * scanning; this matches 2.4 behaviour, but could just be a bug
+-	 * (to continue scanning a SCSI_1_CSS device).
++	 * (to continue scanning a SCSI_1_CCS device).
+ 	 *
+ 	 * This test is broken.  We might not have any device on lun0 for
+ 	 * a sparselun device, and if that's the case then how would we
