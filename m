@@ -1,38 +1,85 @@
-From: Mark Knibbs <markk@clara.co.uk>
-Subject: [PATCH] Fix trivial typos in scsi_scan.c comment
-Date: Thu, 9 Oct 2014 12:39:40 +0100
-Message-ID: <20141009123940.5b385e69e14564dc1c42194a@clara.co.uk>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: ips.c: use 64-bit time types
+Date: Thu, 09 Oct 2014 06:40:26 -0700
+Message-ID: <1412862026.32718.19.camel@jarvis>
+References: <1412799248-17181-1-git-send-email-ebru.akagunduz@gmail.com>
+	 <1412801095.32718.13.camel@jarvis> <9985506.Mg7cltjCP9@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [195.8.89.42] ([195.8.89.42]:59904 "EHLO
-	claranet-outbound-smtp09.uk.clara.net" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750858AbaJILlI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 07:41:08 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34947 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751834AbaJINk2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 09:40:28 -0400
+In-Reply-To: <9985506.Mg7cltjCP9@wuerfel>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ebru Akagunduz <ebru.akagunduz@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, opw-kernel@googlegroups.com
 
-Hi,
+On Wed, 2014-10-08 at 22:58 +0200, Arnd Bergmann wrote:
+> On Wednesday 08 October 2014 13:44:55 James Bottomley wrote:
+> > > diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+> > > index 45b9566..ff2a0b3 100644
+> > > --- a/drivers/scsi/ips.h
+> > > +++ b/drivers/scsi/ips.h
+> > > @@ -1054,7 +1054,7 @@ typedef struct ips_ha {
+> > >     uint8_t            active;
+> > >     int                ioctl_reset;        /* IOCTL Requested Reset Flag */
+> > >     uint16_t           reset_count;        /* number of resets           */
+> > > -   time_t             last_ffdc;          /* last time we sent ffdc info*/
+> > > +   time64_t             last_ffdc;          /* last time we sent ffdc info*/
+> > >     uint8_t            slot_num;           /* PCI Slot Number            */
+> > >     int                ioctl_len;          /* size of ioctl buffer       */
+> > >     dma_addr_t         ioctl_busaddr;      /* dma address of ioctl buffer*/
+> > 
+> > This is completely pointless, isn't it?  All the ips driver cares about
+> > is that we send a FFDC time update every eight hours or so, so we can
+> > happily truncate the number of seconds to 32 bits for that calculation
+> > just keep the variable at 32 bits and do a time_after thing for the
+> > comparison.
+> 
+> Good point. The same has come up in a few other places, so I wonder if we
+> should introduce a proper way to do it that doesn't involve time_t.
 
-Not much to say really...
+We have, it's jiffies ... that's why I'm slightly non-plussed that this
+driver is using gettimeofday for something like this ... it was clearly
+a review failure when we put it in.
 
-Signed-off-by: Mark Knibbs <markk@clara.co.uk>
+or are you thinking we need a time_t_time_before doing for time_t what
+we do for jiffies?
 
----
-diff -upN linux-3.17/drivers/scsi/scsi_scan.c.orig linux-3.17/drivers/scsi/scsi_scan.c
---- linux-3.17/drivers/scsi/scsi_scan.c.orig	2014-10-05 20:23:04.000000000 +0100
-+++ linux-3.17/drivers/scsi/scsi_scan.c	2014-10-09 12:32:53.000000000 +0100
-@@ -1191,9 +1191,9 @@ static void scsi_sequential_lun_scan(str
- 		sparse_lun = 0;
- 
- 	/*
--	 * If less than SCSI_1_CSS, and no special lun scaning, stop
-+	 * If less than SCSI_1_CCS, and no special lun scanning, stop
- 	 * scanning; this matches 2.4 behaviour, but could just be a bug
--	 * (to continue scanning a SCSI_1_CSS device).
-+	 * (to continue scanning a SCSI_1_CCS device).
- 	 *
- 	 * This test is broken.  We might not have any device on lun0 for
- 	 * a sparselun device, and if that's the case then how would we
+> While the current code works, we will have to audit 2000 other locations
+> in which time_t/timespec/timeval are used in the kernel, so we are going
+> to need some form of annotation to make sure we don't get everyone to
+> look at the driver again just to come to the same conclusion after working
+> on a patch first.
+> 
+> > However, what the code *should* be doing is using jiffies and
+> > time_before/after since the interval is so tiny rather than a
+> > do_gettimeofday() call in the fast path.
+> 
+> Yes, this would probably be best for this particular driver, it also
+> means we end up with a monotonic clock source rather than a wall-clock.
+
+Right, and it's a 32 bit read instead of a system call every time the
+thing dispatches a command ... to be honest the overhead of 64 bit
+arithmetic is peanuts to making a syscall in the fast path.
+
+James
+
+> Ebru, when I explained the various data types we have for timekeeping,
+> I failed to mention jiffies. That is one that is very fast to access
+> and has a resolution between 1 and 10 milliseconds but will overflow
+> within a few months, so it can only be used in places where overflow
+> is known to be handled safely, as time_before() does.
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
