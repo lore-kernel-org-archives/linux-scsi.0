@@ -1,30 +1,36 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] vhost-scsi: Take configfs group dependency during VHOST_SCSI_SET_ENDPOINT
-Date: Thu, 09 Oct 2014 12:49:20 +0200
-Message-ID: <54366830.4050009@redhat.com>
-References: <1412825695-15134-1-git-send-email-nab@daterainc.com> <1412828062.31947.50.camel@haakon3.risingtidesystems.com> <54364C2B.5000206@redhat.com>
+From: Mark Knibbs <markk@clara.co.uk>
+Subject: [PATCH] Fix off-by-one LUN check in scsi_scan_host_selected()
+Date: Thu, 9 Oct 2014 12:39:48 +0100
+Message-ID: <20141009123948.ed14b2f96456fecdb4af960b@clara.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:54444 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaJIKtd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 06:49:33 -0400
-In-Reply-To: <54364C2B.5000206@redhat.com>
+Received: from [195.8.89.37] ([195.8.89.37]:57530 "EHLO
+	claranet-outbound-smtp04.uk.clara.net" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750839AbaJILlI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 07:41:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-Il 09/10/2014 10:49, Paolo Bonzini ha scritto:
-> 
-> It does not happen if you close QEMU with SIGTERM, ctrl-c, or with the
-> "quit" command, because no attempt is done to bring down the VM data
-> structures (or free memory, or close file descriptors) in case of a
-> fatal exit.  The kernel should do that for us.
+Hi,
 
-... and in the case of vhost-scsi, doesn't it do that when
-vhost_scsi_release calls vhost_scsi_clear_endpoint?
+The Scsi_Host structure max_lun field is the maximum allowed LUN plus 1. So
+a LUN value is invalid if >= max_lun.
 
-Paolo
+Signed-off-by: Mark Knibbs <markk@clara.co.uk>
+
+---
+diff -upN linux-3.17/drivers/scsi/scsi_scan.c.orig linux-3.17/drivers/scsi/scsi_scan.c
+--- linux-3.17/drivers/scsi/scsi_scan.c.orig	2014-10-05 20:23:04.000000000 +0100
++++ linux-3.17/drivers/scsi/scsi_scan.c	2014-10-09 12:26:45.000000000 +0100
+@@ -1704,7 +1704,7 @@ int scsi_scan_host_selected(struct Scsi_
+ 
+ 	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
+ 	    ((id != SCAN_WILD_CARD) && (id >= shost->max_id)) ||
+-	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
++	    ((lun != SCAN_WILD_CARD) && (lun >= shost->max_lun)))
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&shost->scan_mutex);
