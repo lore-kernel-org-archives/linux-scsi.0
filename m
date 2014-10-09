@@ -1,15 +1,15 @@
 From: ADMINISTRATOR <daip@daip.uvt.ro>
 Subject: potvrditi svoju e-mail
-Date: Thu, 09 Oct 2014 12:07:35 +0300 (EEST)
-Message-ID: <43f488b0-afb2-420b-b272-471c24f58d06@hercules.uvt.ro>
+Date: Thu, 09 Oct 2014 12:12:42 +0300 (EEST)
+Message-ID: <1f2b5fa1-291f-46f8-881c-edc6405312ec@hercules.uvt.ro>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw.uvt.ro ([85.120.205.138]:41325 "EHLO mail-gw.uvt.ro"
+Received: from mail-gw.uvt.ro ([85.120.205.138]:43489 "EHLO mail-gw.uvt.ro"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115AbaJIJIO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 05:08:14 -0400
+	id S1750942AbaJIJN0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 05:13:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
