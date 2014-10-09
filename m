@@ -1,31 +1,40 @@
-From: ADMINISTRATOR <daip@daip.uvt.ro>
-Subject: potvrditi svoju e-mail
-Date: Thu, 09 Oct 2014 11:27:23 +0300 (EEST)
-Message-ID: <a29b745c-b89d-42ec-8b9a-4f0e29418910@hercules.uvt.ro>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] vhost-scsi: Take configfs group dependency during VHOST_SCSI_SET_ENDPOINT
+Date: Thu, 09 Oct 2014 10:49:47 +0200
+Message-ID: <54364C2B.5000206@redhat.com>
+References: <1412825695-15134-1-git-send-email-nab@daterainc.com> <1412828062.31947.50.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw.uvt.ro ([85.120.205.138]:54525 "EHLO mail-gw.uvt.ro"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873AbaJIIfW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Oct 2014 04:35:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1412828062.31947.50.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Va=C5=A1 email je prema=C5=A1io granicu za pohranu , morate potvrditi s=
-voju e-mail kako bi se izbjegla deaktivaciju svoj =E2=80=8B=E2=80=8Bra=C4=
-=8Dun e-po=C5=A1te , za produljenje valjanosti ovla=C5=A1tenja morate k=
-liknuti na donjoj stranice link ili kopirajte i pro=C5=A1losti link u s=
-voj preglednik i prijava na svoje e-mail preko veze ,
+Il 09/10/2014 06:14, Nicholas A. Bellinger ha scritto:
+> AFAICT from qemu code, the ioctl VHOST_SCSI_CLEAR_ENDPOINT is always
+> called during shutdown in order to release the endpoint and drop this
+> new configfs dependency.
 
-http://www.smartsurvey.co.uk/s/130174OUBFJ
+As far as I can see, the only path leading to the ioctl is
+vhost_scsi_set_status->vhost_scsi_stop.  That only happens if the guest
+driver resets the device upon shutdown, or via vhost_scsi_unrealize as
+you pointed out.  But unrealize() is only called when a device is
+hot-unplugged.
 
-Morate se prijaviti na svoju e-mail kroz gornji link i ponovno potvrdit=
-i svoju e-mail kako bi se izbjeglo e- de- aktivaciju
+It does not happen if you close QEMU with SIGTERM, ctrl-c, or with the
+"quit" command, because no attempt is done to bring down the VM data
+structures (or free memory, or close file descriptors) in case of a
+fatal exit.  The kernel should do that for us.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Besides that...
+
+> The question is, what happens when qemu crashes..?  Is there currently
+> an assurance that VHOST_SCSI_CLEAR_ENDPOINT is called via the normal
+> VirtioDeviceClass->unrealize() when qemu exits abnormally..?
+
+... of course nothing is called if you SIGKILL QEMU.
+
+Paolo
