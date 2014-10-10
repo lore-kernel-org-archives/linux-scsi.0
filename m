@@ -1,61 +1,69 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85151] pm80xx + 7805H + HP SAS port expander =
- mpi_smp_completion 2604:smp IO status 0x2 and sas: expander ... discovery
- failed(0xffffffa6)
-Date: Fri, 10 Oct 2014 22:00:12 +0000
-Message-ID: <bug-85151-11613-oWP3K9UUT3@https.bugzilla.kernel.org/>
-References: <bug-85151-11613@https.bugzilla.kernel.org/>
+From: Tom Gundersen <teg@jklm.no>
+Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if
+	not OOM
+Date: Sat, 11 Oct 2014 00:45:17 +0200
+Message-ID: <CAG-2HqXdxHrx4OL4E0TnzA1Fb6zK6J+qowfD0RHCwviGUv-_ng@mail.gmail.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+ <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
+ <20140905141241.GC10455@mtj.dyndns.org>
+ <20140905164405.GA28964@core.coreip.homeip.net>
+ <20140905174925.GA12991@mtj.dyndns.org>
+ <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
+ <20140905224047.GC15723@mtj.dyndns.org>
+ <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
+ <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
+ <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
+ <1410291346.13298.16.camel@jarvis.lan>
+ <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
+ <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
+ <CAB=NE6UprJH69hzc1mjqyq6PAn+7LZmX65Z8CDwUdJ73nDusHg@mail.gmail.com>
+ <CAG-2HqUzCvd55mq=M3=tXbHAjc2QnVuRtbFZMWTz9k_6BmmngQ@mail.gmail.com>
+ <CAB=NE6XmFaWMKuW3vJ7QMZ1BmmWrAPezTYYsqatX4mMNdMjpog@mail.gmail.com>
+ <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
+ <CAB=NE6XS9pWmfO7xjTpLFG1OdOJ=UktbOK5pjJCK8hzfXagfXQ@mail.gmail.com>
+ <CAOMFOmVSwPAbPtNzPn93QGjbXh1B3QC7B2Ahd1Qxc=gWb6H7fQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:43904 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754941AbaJJWAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2014 18:00:16 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 26B6820204
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2014 22:00:15 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 9DCD020212
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2014 22:00:12 +0000 (UTC)
-In-Reply-To: <bug-85151-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAOMFOmVSwPAbPtNzPn93QGjbXh1B3QC7B2Ahd1Qxc=gWb6H7fQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: Anatol Pomozov <anatol.pomozov@gmail.com>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd Mailing List <systemd-devel@lists.freedesk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85151
+On Fri, Oct 10, 2014 at 11:54 PM, Anatol Pomozov
+<anatol.pomozov@gmail.com> wrote:
+> 1) Why not to make the timeout configurable through config file? There
+> is already udev.conf you can put config option there. Thus people with
+> modprobe issues can easily "fix" the problem. And then decrease
+> default timeout back to 30 seconds. I agree that long module loading
+> (more than 30 secs) is abnormal and should be investigated by driver
+> authors.
 
---- Comment #13 from linux-ide@crashplan.pro ---
-Note: having 2 pieces of the HP SAS expander connected at the same time, one to
-each port of the Adaptec 7805H, results in a kernel oops:
+We can already configure this either on the udev or kernel
+commandline, is that not sufficient (I don't object to also adding it
+to the config file, just asking)?
 
-   35.475138] sas: DONE DISCOVERY on port 7, pid:137, result:-70
-[   35.477301] scsi 4:0:0:0: Enclosure         HP       HP SAS EXP Card  2.10
-PQ: 0 ANSI: 5
-[   35.479756] scsi 4:0:0:0: Attached scsi generic sg1 type 13
-[   35.490335] ses 4:0:0:0: Attached Enclosure device
-[   35.525143] BUG: unable to handle kernel NULL pointer dereference at
-0000000000000290
-[   35.525889] IP: [<ffffffffc05c9f44>] pm8001_dev_gone_notify+0x24/0x210
-[pm80xx]
-[   35.526618] PGD 0
-[   35.527324] Oops: 0000 [#1] SMP
-...
-[   35.530609] CPU: 0 PID: 36 Comm: kworker/0:1 Tainted: G           OE 
-3.17.0-031700rc7-generic #201409281835
+> 2) Could you add 'echo w > /proc/sysrq-trigger' to udev code right
+> before killing the "modprobe" thread? sysrq will print information
+> about stuck threads (including modprobe itself) this will make
+> debugging easier. e.g. dmesg here
+> https://bugs.archlinux.org/task/40454 says nothing where the threads
+> were stuck.
 
-And with the later mainline kernel:
-[  153.518720] sas: DONE DISCOVERY on port 7, pid:127, result:-70
-[  153.521380] scsi 4:0:0:0: Enclosure         HP       HP SAS EXP Card  2.10
-PQ: 0 ANSI: 5
-[  153.526442] scsi 4:0:0:0: Attached scsi generic sg1 type 13
-[  153.539380] ses 4:0:0:0: Attached Enclosure device
-[  153.551072] general protection fault: 0000 [#1] SMP
-...
-[  153.555559] CPU: 0 PID: 36 Comm: kworker/0:1 Tainted: G           OE 
-3.17.0-999-generic #201409282205
+Are the current warnings (in udev git) sufficient (should tell you
+which module is taking long, but still won't tell you which kernel
+thread of course)?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Cheers,
+
+Tom
