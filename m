@@ -1,27 +1,51 @@
-From: "Mrs. Santos" <j.m.ash@barid.com>
-Subject: memo
-Date: Fri, 10 Oct 2014 00:18:16 -0400
-Message-ID: <20141010035637.704826E91A7A@mail.okinawabb.com>
-Reply-To: scard22@qq.com
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Fri, 10 Oct 2014 08:49:01 +0100
+Message-ID: <20141010074901.GA32028@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 203.143.122.148.static.zoot.jp ([203.143.122.148]:51650 "EHLO
-	mail.okinawabb.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982AbaJJGtN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2014 02:49:13 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <j.m.ash@barid.com>
 
-I am Mrs Santos R. Cardenas, a credit and accounts officer of Land Bank,Central Luzon - PAMPANGA Branch, Philippines.
+Microsoft Hyper-V virtual disks currently only claim SPC-2 compliance
+even though they implement post SPC-2 features (such as thin
+provisioning) which means the Linux kernel does not go on to test for
+those features even though they are advertised.
 
-I handle all our Investor's Direct Capital Funds and secretly extract 1.2% Excess Maximum Return Capital Profit (EMRCP) per annum on each of the Investor's Capital Funds. As an expert, I have made a substaintial amount from Investor's EMRCP and hereby looking for someone to trust who will stand as an Investor to receive the funds as Investment Proceeds.
+A previous patch attempted to add a quirk to workaround this but the
+quirk was only enabled after the features had been scanned for, wouldn't
+work for "small" disks and would quirk on  all Hyper-V SCSI devices
+(e.g. passthrough disks).
 
-If you have any question, feel free to contact me & also indicate your interest and capability of handling this arrangement.
+The new patches partially revert the previous effort, add the quirk in a
+more traditional manner to only Hyper-V virtual disks and work on small
+virtual disks.
 
-Kind regards,
+Sitsofe Wheeler (3):
+  Revert "Drivers: add blist flags"
+  scsi: add try_rc16 blacklist flag
+  scsi: Use try_rc16 and try_vpd_pages quirks on Hyper-V virtual disks
 
-Mrs. Santos R. Cardenas.
+ drivers/scsi/scsi_devinfo.c |  1 +
+ drivers/scsi/scsi_scan.c    |  3 +++
+ drivers/scsi/sd.c           |  3 +++
+ drivers/scsi/storvsc_drv.c  | 10 ----------
+ include/scsi/scsi_device.h  |  1 +
+ include/scsi/scsi_devinfo.h |  1 +
+ 6 files changed, 9 insertions(+), 10 deletions(-)
+
+-- 
+1.9.3
