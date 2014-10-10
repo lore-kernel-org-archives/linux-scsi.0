@@ -1,69 +1,89 @@
-From: Tom Gundersen <teg@jklm.no>
-Subject: Re: [RFC v2 3/6] kthread: warn on kill signal if
-	not OOM
-Date: Sat, 11 Oct 2014 00:45:17 +0200
-Message-ID: <CAG-2HqXdxHrx4OL4E0TnzA1Fb6zK6J+qowfD0RHCwviGUv-_ng@mail.gmail.com>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
- <CAB=NE6Wti1RpAFk5q_YeZn2F9Rd=wsiwhyPszu74nG9fXwH5vQ@mail.gmail.com>
- <20140905141241.GC10455@mtj.dyndns.org>
- <20140905164405.GA28964@core.coreip.homeip.net>
- <20140905174925.GA12991@mtj.dyndns.org>
- <CAB=NE6VPTV39pNujOgO422wbUvU44HZ7s=aaxPVraNECqA6e4Q@mail.gmail.com>
- <20140905224047.GC15723@mtj.dyndns.org>
- <CAB=NE6Uz1VD5qpMFSBfQRV8ih9FQcCUhNtWMvD38t5hdDvix4Q@mail.gmail.com>
- <20140909011059.GB11706@mtj.dyndns.org> <1410241109.2028.22.camel@jarvis.lan>
- <CAB=NE6WGAMvffGDTkN5x5Cd+YOtD-Cmo3v7_8FmJ5cvCRbFEpw@mail.gmail.com>
- <1410291346.13298.16.camel@jarvis.lan>
- <CAB=NE6U6v-GhAaZv3yXn9uVFvBvE4Uq8z7MQU8N+CyW19WpnNQ@mail.gmail.com>
- <CAG-2HqUiUksdT4UyeDsdc1Q74=2BiX2TuzzGh_hoLiO5_DOvXQ@mail.gmail.com>
- <CAB=NE6UprJH69hzc1mjqyq6PAn+7LZmX65Z8CDwUdJ73nDusHg@mail.gmail.com>
- <CAG-2HqUzCvd55mq=M3=tXbHAjc2QnVuRtbFZMWTz9k_6BmmngQ@mail.gmail.com>
- <CAB=NE6XmFaWMKuW3vJ7QMZ1BmmWrAPezTYYsqatX4mMNdMjpog@mail.gmail.com>
- <CAG-2HqWYXo+uRtOk_XW-Bi5aXcTLphEMLCMy8a2THuEg9dHPzw@mail.gmail.com>
- <CAB=NE6XS9pWmfO7xjTpLFG1OdOJ=UktbOK5pjJCK8hzfXagfXQ@mail.gmail.com>
- <CAOMFOmVSwPAbPtNzPn93QGjbXh1B3QC7B2Ahd1Qxc=gWb6H7fQ@mail.gmail.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: Concurrent SG_SCSI_RESET ioctls
+Date: Fri, 10 Oct 2014 23:32:26 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAOMFOmVSwPAbPtNzPn93QGjbXh1B3QC7B2Ahd1Qxc=gWb6H7fQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Anatol Pomozov <anatol.pomozov@gmail.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Takashi Iwai <tiwai@suse.de>, Kay Sievers <kay@vrfy.org>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, hare <hare@suse.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Wu Zhangjin <falcon@meizu.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, "mpt-fusionlinux.pdl" <MPT-FusionLinux.pdl@avagotech.com>, Tim Gardner <tim.gardner@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Casey Leedom <leedom@chelsio.com>, Hariprasad S <hariprasad@chelsio.com>, Pierre Fersing <pierre-fersing@pierref.org>, Arjan van de Ven <arjan@linux.intel.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, systemd Mailing List <systemd-devel@lists.freedesk>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:34626 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbaJJXfc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Oct 2014 19:35:32 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
 
-On Fri, Oct 10, 2014 at 11:54 PM, Anatol Pomozov
-<anatol.pomozov@gmail.com> wrote:
-> 1) Why not to make the timeout configurable through config file? There
-> is already udev.conf you can put config option there. Thus people with
-> modprobe issues can easily "fix" the problem. And then decrease
-> default timeout back to 30 seconds. I agree that long module loading
-> (more than 30 secs) is abnormal and should be investigated by driver
-> authors.
+The sg3_utils command
+	sg_reset --device /dev/sda
 
-We can already configure this either on the udev or kernel
-commandline, is that not sufficient (I don't object to also adding it
-to the config file, just asking)?
+invokes an ioctl with SG_SCSI_RESET, an argument of
+SG_SCSI_RESET_DEVICE, on a device opened with O_NDELAY.
 
-> 2) Could you add 'echo w > /proc/sysrq-trigger' to udev code right
-> before killing the "modprobe" thread? sysrq will print information
-> about stuck threads (including modprobe itself) this will make
-> debugging easier. e.g. dmesg here
-> https://bugs.archlinux.org/task/40454 says nothing where the threads
-> were stuck.
+The call chain is like this:
 
-Are the current warnings (in udev git) sufficient (should tell you
-which module is taking long, but still won't tell you which kernel
-thread of course)?
+sd_ioctl					[sd.c]
+	scsi_nonblockable_ioctl		[scsi_ioctl.c]
+		if (ndelay) {			[this is true]
+			if (scsi_host_in_recovery(sdev->host))
+				return -ENODEV;
+			}
+		scsi_reset_provider		[scsi_error.c]
+			shost->tmf_in_progress = 1;
+			scsi_try_bus_device_reset [scsi_error.c]
+				hostt->eh_device_reset_handler [LLD]
+			shost->tmf_in_progress = 1;
+	if that returns 0, return; otherwise try:
+	scsi_cmd_blk_ioctl
+	scsi_ioctl
+		sdev->host->hostt->ioctl	[LLD]
 
-Cheers,
+where scsi_host_in_recovery is:
 
-Tom
+static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
+{
+        return shost->shost_state == SHOST_RECOVERY ||
+                shost->shost_state == SHOST_CANCEL_RECOVERY ||
+                shost->shost_state == SHOST_DEL_RECOVERY ||
+                shost->tmf_in_progress;
+}
+
+Problem
+=======
+If you run sg_reset --device concurrently to multiple
+devices on the same host, then some of them will run
+into tmf_in_progress and have scsi_nonblockable_ioctl
+return -ENODEV.  This causes sd_ioctl to send the ioctl
+request to the LLD's ioctl function, where it gets
+rejected as unsupported with -ENOTTY.  sg_reset ends
+up displaying:
+	sg_reset: SG_SCSI_RESET failed: Inappropriate ioctl for device
+
+Any suggestions for how to fix this?  
+
+Is the check of scsi_host_in_recovery, which includes
+tmf_in_progress, too strong?  Most LLDs are not parallel
+SCSI where you can just have one TMF on the bus at a
+time anymore.
+
+Is returning -ENODEV if the host is in recovery the
+wrong code?  There might be a device there...it's
+just that access is temporarily blocked.
+
+Should sd_ioctl not proceed to scsi_ioctl in so many
+cases? Perhaps it should:
+  * proceed if it gets back -EINVAL (and maybe -ENOTTY)
+    indicating the ioctl specified was bad
+  * return if it gets back any other error (e.g., -ENODEV,
+    -EACCESS, or -EIO) 
+That would at least result in a more meaningful error.
+
+Also, should scsi_nonblockable_ioctl return -ENOTTY rather
+than -ENODEV if cmd is unsupported?  There's not really
+a no-device problem.
+
+---
+Rob Elliott    HP Server Storage
+
