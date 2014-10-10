@@ -1,51 +1,39 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: [PATCH 3/3] scsi: Use try_rc16 and try_vpd_pages quirks on Hyper-V
- virtual disks
-Date: Fri, 10 Oct 2014 08:55:02 +0100
-Message-ID: <20141010075502.GD32028@sucs.org>
-References: <20141010074901.GA32028@sucs.org>
+From: Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 8/8] IB/srp: Add multichannel support
+Date: Fri, 10 Oct 2014 13:16:23 -0700
+Message-ID: <CAL1RGDXTpAvwrgRvfLh4J+-+2LiOvDpRngQAVBRmvLdKmoY_CA@mail.gmail.com>
+References: <541C27BF.6070609@acm.org> <541C28E0.7010705@acm.org>
+ <CACVXFVPzz37J-613NZCfPStUBxf0rLOtz71LJ07PpCxYg5nn+g@mail.gmail.com>
+ <541C49EC.6030404@acm.org> <CACVXFVPH_qPFUTT+796BZmWxeeG4tJ-Pyp8hqGqqSwt3YYkEqA@mail.gmail.com>
+ <541C4D2F.9060907@acm.org> <541C4DF1.4090604@kernel.dk> <542C270B.5020002@acm.org>
+ <542C31C4.1020702@kernel.dk> <542D8143.3050305@acm.org> <20141002173044.GB25437@infradead.org>
+ <54327A21.6070202@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20141010074901.GA32028@sucs.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54327A21.6070202-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Microsoft Hyper-V virtual disks currently only claim SPC-2 compliance causing
-feature tests not to be run (even though those features are correctly announced
-elsewhere). Make Hyper-V virtual disks quirk past READ CAPACITY(16) and VPD
-page guards so appropriate tests are performed.
+On Mon, Oct 6, 2014 at 4:16 AM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+> On 10/02/14 19:30, Christoph Hellwig wrote:
+>> Also if we want to merge scsi LLDDs that can take advantage of
+>> multiqueue support it would probably be best if I take this via the SCSI
+>> tree.
 
-This only impacts Hyper-V's VHD/VHDX virtual disks and not passthrough devices.
+> Sending these patches to you is fine with me, at least if Roland agrees.
 
-Signed-off-by: Sitsofe Wheeler <sitsofe@yahoo.com>
----
- drivers/scsi/scsi_devinfo.c | 1 +
- 1 file changed, 1 insertion(+)
+That's fine with me.  Christoph/Bart should I just let you guys handle
+all the pending SRP patches, or is there anything I should pick up via
+the InfiniBand tree?
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 49014a1..3eadcb1 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -210,6 +210,7 @@ static struct {
- 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
- 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
- 	{"MICROP", "4110", NULL, BLIST_NOTQ},
-+	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES | BLIST_TRY_RC16},
- 	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
- 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
- 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
--- 
-1.9.3
+Everything that's in flight looks reasonable to me, so I'm fine with
+however you guys want to merge it.
+
+ - R.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
