@@ -1,27 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 02/12] blk-mq: Add blk_mq_unique_tag()
-Date: Sat, 11 Oct 2014 04:08:41 -0700
-Message-ID: <20141011110841.GA9593@infradead.org>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 01/12] blk-mq: Use all available hardware queues
+Date: Sat, 11 Oct 2014 04:11:14 -0700
+Message-ID: <20141011111114.GB9593@infradead.org>
 References: <5433E43D.3010107@acm.org>
- <5433E493.9030304@acm.org>
+ <5433E473.4020102@acm.org>
+ <5433FA8F.3050100@kernel.dk>
+ <54353A74.7040406@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:47257 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795AbaJKLIu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Oct 2014 07:08:50 -0400
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <5433E493.9030304@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <54353A74.7040406-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-> +static inline u32 blk_mq_build_unique_tag(int hwq, int tag)
-> +{
-> +	return (hwq << BLK_MQ_UNIQUE_TAG_BITS) | (tag & BLK_MQ_UNIQUE_TAG_MASK);
-> +}
+On Wed, Oct 08, 2014 at 03:21:56PM +0200, Bart Van Assche wrote:
+> On 10/07/14 16:37, Jens Axboe wrote:
+> >Lets do this separate, as explained last time, it needs to be evaluated
+> >on its own and doesn't really belong in this series of patches.
+> 
+> Hello Jens,
+> 
+> A few minutes ago I have resent this patch to you with the LKML in CC. I
+> hope that Christoph agrees with leaving out this patch from this series
+> without me having to resend this series. BTW, Sagi promised me off-list to
+> review the other patches in this series.
 
-Is there any value in having this as a separate helper?
+Ignoring patches is one of the easier tasks, np.  Do you want me to
+merge all the srp updates?  They normally go through the IB tree, but
+I can pick them up this time so that we don't need to synchronize the
+two trees.
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
