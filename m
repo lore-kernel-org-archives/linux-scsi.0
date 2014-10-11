@@ -1,15 +1,16 @@
-From: KY Srinivasan <kys@microsoft.com>
+From: "Jeff Leung" <jleung@v10networks.ca>
 Subject: RE: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-Date: Sat, 11 Oct 2014 19:48:10 +0000
-Message-ID: <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
+Date: Sat, 11 Oct 2014 13:22:11 -0700
+Message-ID: <A70AC0C1B7E7FD478A6BF19705461AA01109B3@IMBER.smb.curriegrad2004.ca>
 References: <20141010074901.GA32028@sucs.org>
  <20141011173902.GA1946@infradead.org> <1413049313.2068.48.camel@jarvis.lan>
+ <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1413049313.2068.48.camel@jarvis.lan>
-Content-Language: en-US
+Content-class: urn:content-classes:message
+In-Reply-To: <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -19,50 +20,21 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Christoph Hellwig <hch@lst.de>, Sitsofe Wheeler <sitsofe@gmail.com>
+To: KY Srinivasan <kys@microsoft.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>, Sitsofe Wheeler <sitsofe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
-> Sent: Saturday, October 11, 2014 10:42 AM
-> To: Christoph Hellwig
-> Cc: Sitsofe Wheeler; KY Srinivasan; Haiyang Zhang; Christoph Hellwig; Hannes
-> Reinecke; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-> 
-> On Sat, 2014-10-11 at 10:39 -0700, Christoph Hellwig wrote:
-> > On Fri, Oct 10, 2014 at 08:49:01AM +0100, Sitsofe Wheeler wrote:
-> > > Microsoft Hyper-V virtual disks currently only claim SPC-2
-> > > compliance even though they implement post SPC-2 features (such as
-> > > thin
-> > > provisioning) which means the Linux kernel does not go on to test
-> > > for those features even though they are advertised.
-> > >
-> > > A previous patch attempted to add a quirk to workaround this but the
-> > > quirk was only enabled after the features had been scanned for,
-> > > wouldn't work for "small" disks and would quirk on  all Hyper-V SCSI
-> > > devices (e.g. passthrough disks).
-> > >
-> > > The new patches partially revert the previous effort, add the quirk
-> > > in a more traditional manner to only Hyper-V virtual disks and work
-> > > on small virtual disks.
-> >
-> > This seems like might want a quirk to simply "force" a SPC3 compliance
-> > level?
-> 
-> This was initially suggested, but rejected by Microsoft because of other
-> problems advertising SPC-3 compliance brings.  Perhaps the hyper-v
-> emulator has matured sufficiently that it will now work OK?
-
-James,
-
-On the current release of Windows (windows 10), we are advertising SPC3 compliance.
-We are ok with declaring compliance to SPC3 in our drivers. 
-
-Regards,
-
-K. Y
+PiBPbiB0aGUgY3VycmVudCByZWxlYXNlIG9mIFdpbmRvd3MgKHdpbmRvd3MgMTApLCB3ZSBhcmUg
+YWR2ZXJ0aXNpbmcgU1BDMyBjb21wbGlhbmNlLg0KPiBXZSBhcmUgb2sgd2l0aCBkZWNsYXJpbmcg
+Y29tcGxpYW5jZSB0byBTUEMzIGluIG91ciBkcml2ZXJzLg0KSWYgeW91IGFyZSBnb2luZyB0byBk
+ZWNsYXJlIFNQQzMgY29tcGxpYW5jZSBpbiB0aGUgZHJpdmVycywgYXJlIHlvdSBnb2luZyB0byBw
+dXQgaW4NCmNoZWNrcyB0byBlbnN1cmUgdGhhdCBTUEMtMyBjb21wbGlhbmNlIGRvZXNuJ3QgZ2V0
+IGFjY2lkZW50YWxseSBlbmFibGVkIGZvciBoeXBlcnZpc29ycyBiZWxvdw0KV2luMTA/IA0KDQpJ
+IGRvIGtub3cgZm9yIGEgZmFjdCB0aGF0IFVidW50dSdzIGtlcm5lbHMgYWxyZWFkeSBmb3JjZSBT
+UEMzIGNvbXBsaWFuY2UgdG8gZW5hYmxlIHNwZWNpZmljDQpmZWF0dXJlcyBzdWNoIGFzIFRSSU0g
+b24gZWFybGllciB2ZXJzaW9ucyBvZiBIeXBlci1WIChOYW1lbHkgSHlwZXItViAyMDEyIGFuZCAy
+MDEyIFIyKS4NCg0KLS1KZWZmDQoNCj4gUmVnYXJkcywNCj4gDQo+IEsuIFkNCj4gDQo+IA0KPiBO
+cnnYslh22JYpe27HiXt6WBd9emo6diB6Wnpmfnp32qIpG2p5QQ0KPiANCj4gD2kNCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRldmVsIG1haWxpbmcgbGlz
+dApkZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnCmh0dHA6Ly9kcml2ZXJkZXYubGludXhkcml2
+ZXJwcm9qZWN0Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaXZlcmRldi1kZXZlbAo=
