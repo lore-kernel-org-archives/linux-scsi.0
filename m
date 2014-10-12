@@ -1,51 +1,66 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: [PATCH v3 19/25] virtio_console: enable VQs early on restore
-Date: Sun, 12 Oct 2014 14:48:06 +0300
-Message-ID: <1413114332-626-20-git-send-email-mst@redhat.com>
-References: <1413114332-626-1-git-send-email-mst@redhat.com>
+From: "Herr Juan Morato" <no-reply@mx2.4shared.com>
+Subject: Persoenlichen Brief:   /
+Date: Sun, 12 Oct 2014 17:25:48 +0200
+Message-ID: <20141012142558.C463A11F40C__24841.6470633403$1413124386$gmane$org@mail.smn.gov.ar>
+Reply-To: juan_morato@yahoo.es
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1413114332-626-1-git-send-email-mst@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, virtualization@lists.linux-foundation.org, Arnd Bergmann <arnd@arndb.de>, Paolo Bonzini <pbonzini@redhat.com>, Amit Shah <amit.shah@redhat.com>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host3.smn.gob.ar ([200.16.116.3]:2444 "EHLO mail.smn.gov.ar"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751324AbaJLOco convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Oct 2014 10:32:44 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <no-reply@mx2.4shared.com>
 
-virtio spec requires drivers to set DRIVER_OK before using VQs.
-This is set automatically after resume returns, virtio console violated this
-rule by adding inbufs, which causes the VQ to be used directly within
-restore.
+Guten Tag,=20
 
-To fix, call virtio_enable_vqs_early before using VQs.
+Ich bin Herr Juan Morato, der Auditor General von Unicaja Bank Madrid. =
+Im Zuge meiner Abschlusspruefung, entdeckte ich eine schwimmende Fonds =
+auf einem Konto, das 1990 bei der Cam Bank eroeffnet wurde, bevor der B=
+esitz von Unicaja Gruppe gekauft wurde,  ich bin der Abschlusspruefer d=
+er einem toten Auslaender Herr Kenny, der im Jahr 2004 starb, zugeteilt=
+ wurde. Jede Anstrengung , ein Mitglied seiner Familie oder einen naech=
+sten Angehoerigen zu Ermitteln sind gescheitert .Bei meinen Ermittlunge=
+n habe ich festgestellt , dass Sie zu den  naechsten Angehoerigen gehoe=
+ren , da Sie den gleichen Nachnamen tragen. Er verstarb ohne Nachkommen=
+ oder einen Testament .
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/char/virtio_console.c | 2 ++
- 1 file changed, 2 insertions(+)
+Meine Absicht ist es, diese Summe von 5,5 Mio. von den oben genannten K=
+onto auf ein sicheres Konto  zu ueberweisen. Ich schlage daher vor, das=
+s ich Sie als stillen Teilhaber eintrage und Sie mir ein Konto zur Verf=
+uegung stellen, oder ein neues Konto eroeffnen um dieses Geld dorthin z=
+u ueberweisen. Fuer Ihre Unterst=FCtzung bei diesem Vorhaben, bin ich b=
+ereit, mit einem guten Prozentsatz des gesamten Fonds zu trennen. Beim =
+durchsehen der Aufzeichnungen und Akten der verstorbenen Person, entdec=
+kte ich dass=20
 
-diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
-index 6ebe8f6..2ae843f 100644
---- a/drivers/char/virtio_console.c
-+++ b/drivers/char/virtio_console.c
-@@ -2184,6 +2184,8 @@ static int virtcons_restore(struct virtio_device *vdev)
- 	if (ret)
- 		return ret;
- 
-+	virtio_enable_vqs_early(portdev->vdev);
-+
- 	if (use_multiport(portdev))
- 		fill_queue(portdev->c_ivq, &portdev->c_ivq_lock);
- 
--- 
-MST
+(1) Niemand dieses Konto seit 2004 betrieben hat
+(2) Er starb ohne Erben, daher das Geld weiter floss.
+(3) Keine andere Person =FCber dieses Konto bescheid weiss und auch kei=
+n Empfaenger eingetragen ist=20
+
+Wenn ich mich nicht schnellstens dieser Angelegenheit annehme, wird die=
+ses Geld verfallen und anschliessend in Gesellschaftsmitteln fliessen, =
+von denen nur die Regisseure meiner Firma profitieren werden. Ich kann =
+Ihnen dieses Geld rechtlich zukommen lassen, wenn Sie einige notwendige=
+n Genehmigungen, die auf Ihren Namen zugelassen sind ausfuellen, wobei =
+ich Ihnen selbstverstaendlich behilflich sein werde.
+
+Bitte geben Sie mir eine Antwort auf meine private E-Mail juan.morato1@=
+1email.eu oder Fax 00 34 917 692 656, so dass ich Ihnen detaillierte In=
+formationen ueber die Modalit=E4ten meines Vorschlages zu senden kann. =
+Ich bitte Sie eingehend dieses Schreiben absolut vertraulich zu behande=
+ln. Bitte senden Sie mir Ihre Telefonnummer auf der sie leicht zu errei=
+chen sind. Ich freue mich auf Ihre baldige Antwort.
+
+Mit freundlichen Gruessen
+Herr Juan Morato
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
