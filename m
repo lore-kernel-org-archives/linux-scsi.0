@@ -1,228 +1,104 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v3] uas: Make uas work with blk-mq
-Date: Sun, 12 Oct 2014 12:19:40 +0200
-Message-ID: <1413109180-10522-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54601 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751032AbaJLKUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Oct 2014 06:20:08 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: [PATCH v3 00/25] virtio: fix spec compliance issues
+Date: Sun, 12 Oct 2014 14:46:08 +0300
+Message-ID: <1413114332-626-1-git-send-email-mst@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, virtualization@lists.linux-foundation.org, Paolo Bonzini <pbonzini@redhat.com>, Amit Shah <amit.shah@redhat.com>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-With uas over usb-3 the tags inside the uas iu-s must match the usb-3 stream
-ids, and those go from 1 - qdepth.
+Rusty, please review this, and consider for this merge window.
 
-Before blk-mq calling scsi_activate_tcq(sdev, qdepth) guaranteed that we would
-only get cmnd->request->tag from 0 - (qdepth - 1), and we used those as
-uas-tags / stream-ids.
+This fixes the following virtio spec compliance issues:
+1. on restore, drivers use device before setting ACKNOWLEDGE and DRIVER bits
+2. on probe, drivers aren't prepared to handle config interrupts
+   arriving before probe returns
+3. on probe, drivers use device before DRIVER_OK it set
 
-With blk-mq however we are guaranteed to never get more then qdepth commands
-queued at the same time, but the cmnd->request->tag values may be much larger,
-which breaks uas.
+Note that 1 is a clear violation of virtio spec 0.9 and 1.0,
+so I am proposing the fix for stable. OTOH 2 is against 1.0 rules but
+is a known documented bug in many drivers, so let's fix it going
+forward, but it does not seem to be worth it to backport
+the changes.
 
-This commit fixes this by generating uas tags in the 1 - qdepth range ourselves
-instead of using cmnd->request->tag.
+An error handling bugfix for virtio-net and a fix for a
+theoretical race condition in virtio scsi is also included.
 
-While touching all involved code anyways also rename the uas_cmd_info stream
-field to uas_tag, because when using uas over usb-2 streams are not used.
+2 is merely a theoretical race condition, but it seems important
+to address to make sure that changes to address 3 do not introduce
+instability.
 
-Cc: Christoph Hellwig <hch@infradead.org>
-Reported-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I also included patch to drop scan callback use from virtio
+scsi: using this callback creates asymmetry between probe
+and resume, and we actually had to add code comments so
+people can figure out the flow. Code flow becomes clearer
+with the new API.
 
---
-Changes in v2:
--Remove ".disable_blk_mq = true" from uas_host_template
-Changes in v3:
--Rebased on top of Linus' current master branch
----
- drivers/usb/storage/uas.c | 64 +++++++++++++++++------------------------------
- 1 file changed, 23 insertions(+), 41 deletions(-)
+After this change, the only user of the scan callback is virtio rng.
+It's possible to modify it trivially and then drop scan callback
+from core, but I'm rather inclined to look at ways to
+make some rng core changes so that we don't need to
+have so many variables tracking device state.
+So this is deferred for now.
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 89b2434..004ebc1 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -66,7 +66,7 @@ enum {
- /* Overrides scsi_pointer */
- struct uas_cmd_info {
- 	unsigned int state;
--	unsigned int stream;
-+	unsigned int uas_tag;
- 	struct urb *cmd_urb;
- 	struct urb *data_in_urb;
- 	struct urb *data_out_urb;
-@@ -173,30 +173,15 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
- 	cmnd->result = sense_iu->status;
- }
- 
--/*
-- * scsi-tags go from 0 - (nr_tags - 1), uas tags need to match stream-ids,
-- * which go from 1 - nr_streams. And we use 1 for untagged commands.
-- */
--static int uas_get_tag(struct scsi_cmnd *cmnd)
--{
--	int tag;
--
--	if (blk_rq_tagged(cmnd->request))
--		tag = cmnd->request->tag + 2;
--	else
--		tag = 1;
--
--	return tag;
--}
--
- static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *prefix,
- 			      int status)
- {
- 	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 
- 	scmd_printk(KERN_INFO, cmnd,
--		    "%s %d tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
--		    prefix, status, uas_get_tag(cmnd),
-+		    "%s %d uas-tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
-+		    prefix, status, cmdinfo->uas_tag,
- 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
- 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
- 		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
-@@ -242,7 +227,7 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- 			      DATA_OUT_URB_INFLIGHT |
- 			      COMMAND_ABORTED))
- 		return -EBUSY;
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	uas_free_unsubmitted_urbs(cmnd);
- 	cmnd->scsi_done(cmnd);
- 	return 0;
-@@ -289,7 +274,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 	idx = be16_to_cpup(&iu->tag) - 1;
- 	if (idx >= MAX_CMNDS || !devinfo->cmnd[idx]) {
- 		dev_err(&urb->dev->dev,
--			"stat urb: no pending cmd for tag %d\n", idx + 1);
-+			"stat urb: no pending cmd for uas-tag %d\n", idx + 1);
- 		goto out;
- 	}
- 
-@@ -427,7 +412,8 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 		goto out;
- 	usb_fill_bulk_urb(urb, udev, pipe, NULL, sdb->length,
- 			  uas_data_cmplt, cmnd);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
- 	urb->num_sgs = udev->bus->sg_tablesize ? sdb->table.nents : 0;
- 	urb->sg = sdb->table.sgl;
-  out:
-@@ -451,7 +437,8 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 
- 	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
- 			  uas_stat_cmplt, cmnd->device->host);
--	urb->stream_id = cmdinfo->stream;
-+	if (devinfo->use_streams)
-+		urb->stream_id = cmdinfo->uas_tag;
- 	urb->transfer_flags |= URB_FREE_BUFFER;
-  out:
- 	return urb;
-@@ -465,6 +452,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- {
- 	struct usb_device *udev = devinfo->udev;
- 	struct scsi_device *sdev = cmnd->device;
-+	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct command_iu *iu;
- 	int len;
-@@ -481,7 +469,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 		goto free;
- 
- 	iu->iu_id = IU_ID_COMMAND;
--	iu->tag = cpu_to_be16(uas_get_tag(cmnd));
-+	iu->tag = cpu_to_be16(cmdinfo->uas_tag);
- 	iu->prio_attr = UAS_SIMPLE_TAG;
- 	iu->len = len;
- 	int_to_scsilun(sdev->lun, &iu->lun);
-@@ -608,8 +596,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	struct uas_dev_info *devinfo = sdev->hostdata;
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	unsigned long flags;
--	unsigned int stream;
--	int err;
-+	int idx, err;
- 
- 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
- 
-@@ -635,8 +622,12 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		return 0;
- 	}
- 
--	stream = uas_get_tag(cmnd);
--	if (devinfo->cmnd[stream - 1]) {
-+	/* Find a free uas-tag */
-+	for (idx = 0; idx < devinfo->qdepth; idx++) {
-+		if (!devinfo->cmnd[idx])
-+			break;
-+	}
-+	if (idx == devinfo->qdepth) {
- 		spin_unlock_irqrestore(&devinfo->lock, flags);
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
-@@ -644,7 +635,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	cmnd->scsi_done = done;
- 
- 	memset(cmdinfo, 0, sizeof(*cmdinfo));
--	cmdinfo->stream = stream;
-+	cmdinfo->uas_tag = idx + 1; /* uas-tag == usb-stream-id, so 1 based */
- 	cmdinfo->state = SUBMIT_STATUS_URB | ALLOC_CMD_URB | SUBMIT_CMD_URB;
- 
- 	switch (cmnd->sc_data_direction) {
-@@ -659,10 +650,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		break;
- 	}
- 
--	if (!devinfo->use_streams) {
-+	if (!devinfo->use_streams)
- 		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB);
--		cmdinfo->stream = 0;
--	}
- 
- 	err = uas_submit_urbs(cmnd, devinfo, GFP_ATOMIC);
- 	if (err) {
-@@ -674,7 +663,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 		uas_add_work(cmdinfo);
- 	}
- 
--	devinfo->cmnd[stream - 1] = cmnd;
-+	devinfo->cmnd[idx] = cmnd;
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- 	return 0;
- }
-@@ -702,7 +691,7 @@ static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	cmdinfo->state |= COMMAND_ABORTED;
- 
- 	/* Drop all refs to this cmnd, kill data urbs to break their ref */
--	devinfo->cmnd[uas_get_tag(cmnd) - 1] = NULL;
-+	devinfo->cmnd[cmdinfo->uas_tag - 1] = NULL;
- 	if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
- 		data_in_urb = usb_get_urb(cmdinfo->data_in_urb);
- 	if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
-@@ -818,13 +807,6 @@ static struct scsi_host_template uas_host_template = {
- 	.cmd_per_lun = 1,	/* until we override it */
- 	.skip_settle_delay = 1,
- 	.ordered_tag = 1,
--
--	/*
--	 * The uas drivers expects tags not to be bigger than the maximum
--	 * per-device queue depth, which is not true with the blk-mq tag
--	 * allocator.
--	 */
--	.disable_blk_mq = true,
- };
- 
- #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
+Michael S. Tsirkin (24):
+  virtio_pci: fix virtio spec compliance on restore
+  virtio: unify config_changed handling
+  virtio-pci: move freeze/restore to virtio core
+  virtio: defer config changed notifications
+  virtio_blk: drop config_enable
+  virtio-blk: drop config_mutex
+  virtio_net: drop config_enable
+  virtio-net: drop config_mutex
+  virtio_net: minor cleanup
+  virtio: add API to enable VQs early
+  virtio_net: enable VQs early
+  virtio_blk: enable VQs early
+  virtio_console: enable VQs early
+  9p/trans_virtio: enable VQs early
+  virtio_net: fix use after free on allocation failure
+  virtio_scsi: move kick event out from virtscsi_init
+  virtio_blk: enable VQs early on restore
+  virtio_scsi: enable VQs early on restore
+  virtio_console: enable VQs early on restore
+  virtio_net: enable VQs early on restore
+  virtio_scsi: fix race on device removal
+  virtio_balloon: enable VQs early on restore
+  virtio_scsi: drop scan callback
+  virtio-rng: refactor probe error handling
+
+Paolo Bonzini (1):
+  virito_scsi: use freezable WQ for events
+
+ include/linux/virtio.h              |  14 +++++
+ include/linux/virtio_config.h       |  17 ++++++
+ drivers/block/virtio_blk.c          |  40 ++++----------
+ drivers/char/hw_random/virtio-rng.c |  15 +++---
+ drivers/char/virtio_console.c       |   4 ++
+ drivers/misc/mic/card/mic_virtio.c  |   6 +--
+ drivers/net/virtio_net.c            |  44 +++++-----------
+ drivers/s390/kvm/kvm_virtio.c       |   9 +---
+ drivers/s390/kvm/virtio_ccw.c       |   6 +--
+ drivers/scsi/virtio_scsi.c          |  42 +++++++++------
+ drivers/virtio/virtio.c             | 102 ++++++++++++++++++++++++++++++++++++
+ drivers/virtio/virtio_balloon.c     |   2 +
+ drivers/virtio/virtio_mmio.c        |   7 +--
+ drivers/virtio/virtio_pci.c         |  33 ++----------
+ net/9p/trans_virtio.c               |   2 +
+ 15 files changed, 206 insertions(+), 137 deletions(-)
+
 -- 
-2.1.0
-
+MST
