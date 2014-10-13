@@ -1,42 +1,78 @@
 From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: [PATCH v4 13/25] virtio_console: enable VQs early
-Date: Mon, 13 Oct 2014 10:50:47 +0300
-Message-ID: <1413114332-626-14-git-send-email-mst-v4@redhat.com>
+Subject: [PATCH v4 16/25] virtio_scsi: move kick event out from virtscsi_init
+Date: Mon, 13 Oct 2014 10:51:04 +0300
+Message-ID: <1413114332-626-17-git-send-email-mst-v4@redhat.com>
 References: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29941 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753770AbaJMHrw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Oct 2014 03:47:52 -0400
 Content-Disposition: inline
 In-Reply-To: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Rusty Russell <rusty@rustcorp.com.au>, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, v9fs-developer@lists.sourceforge.net, netdev@vger.kernel.org, kvm@vger.kernel.org, Amit Shah <amit.shah@redhat.com>, Cornelia Huck <cornelia.huck@de.ibm.com>, Christian Borntraeger <borntraeger@de.ibm.com>, "David S. Miller" <davem@davemloft.net>, Paolo Bonzini <pbonzini@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Rusty Russell <rusty@rustcorp.com.au>, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, v9fs-developer@lists.sourceforge.net, netdev@vger.kernel.org, kvm@vger.kernel.org, Amit Shah <amit.shah@redhat.com>, Cornelia Huck <cornelia.huck@de.ibm.com>, Christian Borntraeger <borntraeger@de.ibm.com>, "David S. Miller" <davem@davemloft.net>, Paolo Bonzini <pbonzini@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-virtio spec requires drivers to set DRIVER_OK before using VQs.
-This is set automatically after probe returns, virtio console violated this
-rule by adding inbufs, which causes the VQ to be used directly within
-probe.
+We currently kick event within virtscsi_init,
+before host is fully initialized.
 
-To fix, call virtio_device_ready before using VQs.
+This can in theory confuse guest if device
+consumes the buffers immediately.
+
+To fix,  move virtscsi_kick_event_all out to scan/restore.
 
 Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/char/virtio_console.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/virtio_scsi.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
-index b585b47..6ebe8f6 100644
---- a/drivers/char/virtio_console.c
-+++ b/drivers/char/virtio_console.c
-@@ -1449,6 +1449,8 @@ static int add_port(struct ports_device *portdev, u32 id)
- 	spin_lock_init(&port->outvq_lock);
- 	init_waitqueue_head(&port->waitqueue);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index eee1bc0..0642ce3 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -853,7 +853,11 @@ static void virtscsi_init_vq(struct virtio_scsi_vq *virtscsi_vq,
  
-+	virtio_device_ready(portdev->vdev);
+ static void virtscsi_scan(struct virtio_device *vdev)
+ {
+-	struct Scsi_Host *shost = (struct Scsi_Host *)vdev->priv;
++	struct Scsi_Host *shost = virtio_scsi_host(vdev);
++	struct virtio_scsi *vscsi = shost_priv(shost);
 +
- 	/* Fill the in_vq with buffers so the host can send us data. */
- 	nr_added_bufs = fill_queue(port->in_vq, &port->inbuf_lock);
- 	if (!nr_added_bufs) {
++	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
++		virtscsi_kick_event_all(vscsi);
+ 
+ 	scsi_scan_host(shost);
+ }
+@@ -916,9 +920,6 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
+ 	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
+ 
+-	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
+-		virtscsi_kick_event_all(vscsi);
+-
+ 	err = 0;
+ 
+ out:
+@@ -1048,8 +1049,13 @@ static int virtscsi_restore(struct virtio_device *vdev)
+ 		return err;
+ 
+ 	err = register_hotcpu_notifier(&vscsi->nb);
+-	if (err)
++	if (err) {
+ 		vdev->config->del_vqs(vdev);
++		return err;
++	}
++
++	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
++		virtscsi_kick_event_all(vscsi);
+ 
+ 	return err;
+ }
 -- 
 MST
+
+
