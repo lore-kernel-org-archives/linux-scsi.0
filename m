@@ -1,54 +1,45 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: [PATCH 2/2] ipr: set coherent DMA mask
-Date: Mon, 13 Oct 2014 20:14:36 +1100
-Message-ID: <1413191676-1663-2-git-send-email-anton@samba.org>
-References: <1413191676-1663-1-git-send-email-anton@samba.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: Concurrent SG_SCSI_RESET ioctls
+Date: Mon, 13 Oct 2014 11:15:19 +0200
+Message-ID: <543B9827.2060305@acm.org>
+References: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net> <20141011161110.GA16812@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:60552 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309AbaJMJOl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Oct 2014 05:14:41 -0400
-In-Reply-To: <1413191676-1663-1-git-send-email-anton@samba.org>
+Received: from andre.telenet-ops.be ([195.130.132.53]:51113 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982AbaJMJP0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2014 05:15:26 -0400
+In-Reply-To: <20141011161110.GA16812@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, scottwood@freescale.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
 
-Use dma_set_mask_and_coherent() to set both the DMA and coherent
-DMA mask.
+On 10/11/14 18:11, Christoph Hellwig wrote:
+> Hi Robert,
+>
+> can you take a look at the patches at:
+>
+> http://git.infradead.org/users/hch/scsi.git/shortlog/refs/heads/scsi-ioctl
+>
+> and confirm if they fix your issue?
 
-Signed-off-by: Anton Blanchard <anton@samba.org>
----
- drivers/scsi/ipr.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Hello Christoph,
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 3aa28bd..15f4575 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9611,16 +9611,17 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
- 	ipr_init_regs(ioa_cfg);
- 
- 	if (ioa_cfg->sis64) {
--		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-+		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
- 		if (rc < 0) {
--			dev_dbg(&pdev->dev, "Failed to set 64 bit PCI DMA mask\n");
--			rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+			dev_dbg(&pdev->dev, "Failed to set 64 bit DMA mask\n");
-+			rc = dma_set_mask_and_coherent(&pdev->dev,
-+						       DMA_BIT_MASK(32));
- 		}
- 	} else
--		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 
- 	if (rc < 0) {
--		dev_err(&pdev->dev, "Failed to set PCI DMA mask\n");
-+		dev_err(&pdev->dev, "Failed to set DMA mask\n");
- 		goto cleanup_nomem;
- 	}
- 
--- 
-1.9.1
+At least to me patches 1/4..3/4 look like nice cleanup patches. 
+Regarding patch 4/4: I'm not sure yet what's the best way for addressing 
+potentially concurrent SG_SCSI_RESET ioctl calls. As far as I know many 
+SCSI LLDs have been implemented assuming that eh_*_reset_handler() calls 
+are serialized per SCSI host. Does this mean that a mutex has to be 
+added to avoid that an eh_*_reset_handler() call can be triggered via an 
+ioctl while at the same time the SCSI error handler thread is invoking 
+one of the eh_*_reset_handler() callback functions due to SCSI error 
+handling ?
+
+For a prior discussion of this topic, see also 
+http://thread.gmane.org/gmane.linux.scsi/82582/focus=82747.
+
+Bart.
 
