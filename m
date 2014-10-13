@@ -1,76 +1,67 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: [PATCH v4 22/25] virtio_scsi: fix race on device removal
-Date: Mon, 13 Oct 2014 10:51:34 +0300
-Message-ID: <1413114332-626-23-git-send-email-mst-v4@redhat.com>
-References: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH 1/1] IB/iser: Remove hard coded values for cqe and send_wr
+Date: Mon, 13 Oct 2014 11:15:53 +0300
+Message-ID: <543B8A39.5040102@dev.mellanox.co.il>
+References: <1412728888-13100-1-git-send-email-jkallickal@emulex.com>	<5434D272.8090007@dev.mellanox.co.il> <CAEc=gqbKrqK_PdN8XOfkaNZgscMeODL=i6oFU+SwQrMxT2gixg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, virtualization@lists.linux-foundation.org, Paolo Bonzini <pbonzini@redhat.com>, Amit Shah <amit.shah@redhat.com>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAEc=gqbKrqK_PdN8XOfkaNZgscMeODL=i6oFU+SwQrMxT2gixg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Jayamohan.K" <jayamohank-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Minh Tran <minhduc.tran-laKkSmNT4hbQT0dZR+AlfA@public.gmane.org>, Jayamohan Kallickal <jayamohan.kallickal-laKkSmNT4hbQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We cancel event work on device removal, but an interrupt
-could trigger immediately after this, and queue it
-again.
+On 10/9/2014 8:14 AM, Jayamohan.K wrote:
+<SNIP>
+>     Hi Minh and Jayamohan,
+>
+>     So I agree that we would want to take device capabilities into account
+>     here, but we need to be able to adjust scsi_cmds_max (can_queue) in case
+>     the max wqe supported is lower than scsi_cmds_max * num_posts_per_cmd.
+>
+>
+>
+> I feel we should be fine as long as we support the max_cmds of 128
+> supported by open-iscsi layer.
+>
 
-To fix, set a flag.
+The cmds_max can be modified by the user, so we should be fine in this
+case as well.
 
-Loosely based on patch by Paolo Bonzini
+> I see the iser layer uses a value of 512 though it only serves as a
+> limit check.
 
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+So if iser supports less than 512 (due to device capability) the
+boundary check should be modified as well.
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 501838d..327eba0 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -110,6 +110,9 @@ struct virtio_scsi {
- 	/* CPU hotplug notifier */
- 	struct notifier_block nb;
- 
-+	/* Protected by event_vq lock */
-+	bool stop_events;
-+
- 	struct virtio_scsi_vq ctrl_vq;
- 	struct virtio_scsi_vq event_vq;
- 	struct virtio_scsi_vq req_vqs[];
-@@ -303,6 +306,11 @@ static void virtscsi_cancel_event_work(struct virtio_scsi *vscsi)
- {
- 	int i;
- 
-+	/* Stop scheduling work before calling cancel_work_sync.  */
-+	spin_lock_irq(&vscsi->event_vq.vq_lock);
-+	vscsi->stop_events = true;
-+	spin_unlock_irq(&vscsi->event_vq.vq_lock);
-+
- 	for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++)
- 		cancel_work_sync(&vscsi->event_list[i].work);
- }
-@@ -390,7 +398,8 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_event_node *event_node = buf;
- 
--	queue_work(system_freezable_wq, &event_node->work);
-+	if (!vscsi->stop_events)
-+		queue_work(system_freezable_wq, &event_node->work);
- }
- 
- static void virtscsi_event_done(struct virtqueue *vq)
--- 
-MST
+>
+>
+>     So generally I agree with this approach, but we need to take care of
+>     stuff later when the session is created.
+>
+>     One more thing, this is not rebased on the latest iser patches please
+>     send v1 on top of:
+>     http://marc.info/?l=linux-__rdma&m=141216135013146&w=2
+>     <http://marc.info/?l=linux-rdma&m=141216135013146&w=2>
+>
+>
+> Yes, I will recreate the patch and send on top of this
+
+Great!
+
+>
+>
+>
+>     P.S.
+>     What device did you test with (that supports less than iSER needs)?
+>
+
+This question still holds.
+
+Sagi.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
