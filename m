@@ -1,268 +1,54 @@
 From: Anton Blanchard <anton@samba.org>
-Subject: [PATCH 1/2] ipr: Convert to generic DMA API
-Date: Mon, 13 Oct 2014 20:14:35 +1100
-Message-ID: <1413191676-1663-1-git-send-email-anton@samba.org>
+Subject: [PATCH 2/2] ipr: set coherent DMA mask
+Date: Mon, 13 Oct 2014 20:14:36 +1100
+Message-ID: <1413191676-1663-2-git-send-email-anton@samba.org>
+References: <1413191676-1663-1-git-send-email-anton@samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:43878 "EHLO ozlabs.org"
+Received: from ozlabs.org ([103.22.144.67]:60552 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309AbaJMJOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Oct 2014 05:14:39 -0400
+	id S1753309AbaJMJOl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Oct 2014 05:14:41 -0400
+In-Reply-To: <1413191676-1663-1-git-send-email-anton@samba.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, scottwood@freescale.com
 Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 
-Even though the ipr driver is only used on PCI, convert it
-to use the generic DMA API.
+Use dma_set_mask_and_coherent() to set both the DMA and coherent
+DMA mask.
 
 Signed-off-by: Anton Blanchard <anton@samba.org>
 ---
- drivers/scsi/ipr.c | 101 +++++++++++++++++++++++++++--------------------------
- drivers/scsi/ipr.h |   2 +-
- 2 files changed, 53 insertions(+), 50 deletions(-)
+ drivers/scsi/ipr.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 924b0ba..3aa28bd 100644
+index 3aa28bd..15f4575 100644
 --- a/drivers/scsi/ipr.c
 +++ b/drivers/scsi/ipr.c
-@@ -3932,8 +3932,9 @@ static int ipr_update_ioa_ucode(struct ipr_ioa_cfg *ioa_cfg,
- 		return -EIO;
- 	}
- 
--	sglist->num_dma_sg = pci_map_sg(ioa_cfg->pdev, sglist->scatterlist,
--					sglist->num_sg, DMA_TO_DEVICE);
-+	sglist->num_dma_sg = dma_map_sg(&ioa_cfg->pdev->dev,
-+					sglist->scatterlist, sglist->num_sg,
-+					DMA_TO_DEVICE);
- 
- 	if (!sglist->num_dma_sg) {
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-@@ -5575,7 +5576,7 @@ static int ipr_build_ioadl64(struct ipr_ioa_cfg *ioa_cfg,
- 	nseg = scsi_dma_map(scsi_cmd);
- 	if (nseg < 0) {
- 		if (printk_ratelimit())
--			dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
-+			dev_err(&ioa_cfg->pdev->dev, "scsi_dma_map failed!\n");
- 		return -1;
- 	}
- 
-@@ -5626,7 +5627,7 @@ static int ipr_build_ioadl(struct ipr_ioa_cfg *ioa_cfg,
- 
- 	nseg = scsi_dma_map(scsi_cmd);
- 	if (nseg < 0) {
--		dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
-+		dev_err(&ioa_cfg->pdev->dev, "scsi_dma_map failed!\n");
- 		return -1;
- 	}
- 
-@@ -8421,7 +8422,7 @@ static int ipr_reset_ucode_download_done(struct ipr_cmnd *ipr_cmd)
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_sglist *sglist = ioa_cfg->ucode_sglist;
- 
--	pci_unmap_sg(ioa_cfg->pdev, sglist->scatterlist,
-+	dma_unmap_sg(&ioa_cfg->pdev->dev, sglist->scatterlist,
- 		     sglist->num_sg, DMA_TO_DEVICE);
- 
- 	ipr_cmd->job_step = ipr_reset_alert;
-@@ -8861,7 +8862,7 @@ static void ipr_free_cmd_blks(struct ipr_ioa_cfg *ioa_cfg)
- 
- 	for (i = 0; i < IPR_NUM_CMD_BLKS; i++) {
- 		if (ioa_cfg->ipr_cmnd_list[i])
--			pci_pool_free(ioa_cfg->ipr_cmd_pool,
-+			dma_pool_free(ioa_cfg->ipr_cmd_pool,
- 				      ioa_cfg->ipr_cmnd_list[i],
- 				      ioa_cfg->ipr_cmnd_list_dma[i]);
- 
-@@ -8869,7 +8870,7 @@ static void ipr_free_cmd_blks(struct ipr_ioa_cfg *ioa_cfg)
- 	}
- 
- 	if (ioa_cfg->ipr_cmd_pool)
--		pci_pool_destroy(ioa_cfg->ipr_cmd_pool);
-+		dma_pool_destroy(ioa_cfg->ipr_cmd_pool);
- 
- 	kfree(ioa_cfg->ipr_cmnd_list);
- 	kfree(ioa_cfg->ipr_cmnd_list_dma);
-@@ -8890,25 +8891,24 @@ static void ipr_free_mem(struct ipr_ioa_cfg *ioa_cfg)
- 	int i;
- 
- 	kfree(ioa_cfg->res_entries);
--	pci_free_consistent(ioa_cfg->pdev, sizeof(struct ipr_misc_cbs),
--			    ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
-+	dma_free_coherent(&ioa_cfg->pdev->dev, sizeof(struct ipr_misc_cbs),
-+			  ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
- 	ipr_free_cmd_blks(ioa_cfg);
- 
- 	for (i = 0; i < ioa_cfg->hrrq_num; i++)
--		pci_free_consistent(ioa_cfg->pdev,
--					sizeof(u32) * ioa_cfg->hrrq[i].size,
--					ioa_cfg->hrrq[i].host_rrq,
--					ioa_cfg->hrrq[i].host_rrq_dma);
-+		dma_free_coherent(&ioa_cfg->pdev->dev,
-+				  sizeof(u32) * ioa_cfg->hrrq[i].size,
-+				  ioa_cfg->hrrq[i].host_rrq,
-+				  ioa_cfg->hrrq[i].host_rrq_dma);
- 
--	pci_free_consistent(ioa_cfg->pdev, ioa_cfg->cfg_table_size,
--			    ioa_cfg->u.cfg_table,
--			    ioa_cfg->cfg_table_dma);
-+	dma_free_coherent(&ioa_cfg->pdev->dev, ioa_cfg->cfg_table_size,
-+			  ioa_cfg->u.cfg_table, ioa_cfg->cfg_table_dma);
- 
- 	for (i = 0; i < IPR_NUM_HCAMS; i++) {
--		pci_free_consistent(ioa_cfg->pdev,
--				    sizeof(struct ipr_hostrcb),
--				    ioa_cfg->hostrcb[i],
--				    ioa_cfg->hostrcb_dma[i]);
-+		dma_free_coherent(&ioa_cfg->pdev->dev,
-+				  sizeof(struct ipr_hostrcb),
-+				  ioa_cfg->hostrcb[i],
-+				  ioa_cfg->hostrcb_dma[i]);
- 	}
- 
- 	ipr_free_dump(ioa_cfg);
-@@ -8969,7 +8969,7 @@ static int ipr_alloc_cmd_blks(struct ipr_ioa_cfg *ioa_cfg)
- 	dma_addr_t dma_addr;
- 	int i, entries_each_hrrq, hrrq_id = 0;
- 
--	ioa_cfg->ipr_cmd_pool = pci_pool_create(IPR_NAME, ioa_cfg->pdev,
-+	ioa_cfg->ipr_cmd_pool = dma_pool_create(IPR_NAME, &ioa_cfg->pdev->dev,
- 						sizeof(struct ipr_cmnd), 512, 0);
- 
- 	if (!ioa_cfg->ipr_cmd_pool)
-@@ -9019,7 +9019,7 @@ static int ipr_alloc_cmd_blks(struct ipr_ioa_cfg *ioa_cfg)
- 	}
- 
- 	for (i = 0; i < IPR_NUM_CMD_BLKS; i++) {
--		ipr_cmd = pci_pool_alloc(ioa_cfg->ipr_cmd_pool, GFP_KERNEL, &dma_addr);
-+		ipr_cmd = dma_pool_alloc(ioa_cfg->ipr_cmd_pool, GFP_KERNEL, &dma_addr);
- 
- 		if (!ipr_cmd) {
- 			ipr_free_cmd_blks(ioa_cfg);
-@@ -9090,9 +9090,10 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 		ioa_cfg->res_entries[i].ioa_cfg = ioa_cfg;
- 	}
- 
--	ioa_cfg->vpd_cbs = pci_alloc_consistent(ioa_cfg->pdev,
--						sizeof(struct ipr_misc_cbs),
--						&ioa_cfg->vpd_cbs_dma);
-+	ioa_cfg->vpd_cbs = dma_alloc_coherent(&pdev->dev,
-+					      sizeof(struct ipr_misc_cbs),
-+					      &ioa_cfg->vpd_cbs_dma,
-+					      GFP_KERNEL);
- 
- 	if (!ioa_cfg->vpd_cbs)
- 		goto out_free_res_entries;
-@@ -9101,13 +9102,14 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 		goto out_free_vpd_cbs;
- 
- 	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
--		ioa_cfg->hrrq[i].host_rrq = pci_alloc_consistent(ioa_cfg->pdev,
-+		ioa_cfg->hrrq[i].host_rrq = dma_alloc_coherent(&pdev->dev,
- 					sizeof(u32) * ioa_cfg->hrrq[i].size,
--					&ioa_cfg->hrrq[i].host_rrq_dma);
-+					&ioa_cfg->hrrq[i].host_rrq_dma,
-+					GFP_KERNEL);
- 
- 		if (!ioa_cfg->hrrq[i].host_rrq)  {
- 			while (--i > 0)
--				pci_free_consistent(pdev,
-+				dma_free_coherent(&pdev->dev,
- 					sizeof(u32) * ioa_cfg->hrrq[i].size,
- 					ioa_cfg->hrrq[i].host_rrq,
- 					ioa_cfg->hrrq[i].host_rrq_dma);
-@@ -9116,17 +9118,19 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 		ioa_cfg->hrrq[i].ioa_cfg = ioa_cfg;
- 	}
- 
--	ioa_cfg->u.cfg_table = pci_alloc_consistent(ioa_cfg->pdev,
--						    ioa_cfg->cfg_table_size,
--						    &ioa_cfg->cfg_table_dma);
-+	ioa_cfg->u.cfg_table = dma_alloc_coherent(&pdev->dev,
-+						  ioa_cfg->cfg_table_size,
-+						  &ioa_cfg->cfg_table_dma,
-+						  GFP_KERNEL);
- 
- 	if (!ioa_cfg->u.cfg_table)
- 		goto out_free_host_rrq;
- 
- 	for (i = 0; i < IPR_NUM_HCAMS; i++) {
--		ioa_cfg->hostrcb[i] = pci_alloc_consistent(ioa_cfg->pdev,
--							   sizeof(struct ipr_hostrcb),
--							   &ioa_cfg->hostrcb_dma[i]);
-+		ioa_cfg->hostrcb[i] = dma_alloc_coherent(&pdev->dev,
-+							 sizeof(struct ipr_hostrcb),
-+							 &ioa_cfg->hostrcb_dma[i],
-+							 GFP_KERNEL);
- 
- 		if (!ioa_cfg->hostrcb[i])
- 			goto out_free_hostrcb_dma;
-@@ -9150,25 +9154,24 @@ out:
- 
- out_free_hostrcb_dma:
- 	while (i-- > 0) {
--		pci_free_consistent(pdev, sizeof(struct ipr_hostrcb),
--				    ioa_cfg->hostrcb[i],
--				    ioa_cfg->hostrcb_dma[i]);
-+		dma_free_coherent(&pdev->dev, sizeof(struct ipr_hostrcb),
-+				  ioa_cfg->hostrcb[i],
-+				  ioa_cfg->hostrcb_dma[i]);
- 	}
--	pci_free_consistent(pdev, ioa_cfg->cfg_table_size,
--			    ioa_cfg->u.cfg_table,
--			    ioa_cfg->cfg_table_dma);
-+	dma_free_coherent(&pdev->dev, ioa_cfg->cfg_table_size,
-+			  ioa_cfg->u.cfg_table, ioa_cfg->cfg_table_dma);
- out_free_host_rrq:
- 	for (i = 0; i < ioa_cfg->hrrq_num; i++) {
--		pci_free_consistent(pdev,
--				sizeof(u32) * ioa_cfg->hrrq[i].size,
--				ioa_cfg->hrrq[i].host_rrq,
--				ioa_cfg->hrrq[i].host_rrq_dma);
-+		dma_free_coherent(&pdev->dev,
-+				  sizeof(u32) * ioa_cfg->hrrq[i].size,
-+				  ioa_cfg->hrrq[i].host_rrq,
-+				  ioa_cfg->hrrq[i].host_rrq_dma);
- 	}
- out_ipr_free_cmd_blocks:
- 	ipr_free_cmd_blks(ioa_cfg);
- out_free_vpd_cbs:
--	pci_free_consistent(pdev, sizeof(struct ipr_misc_cbs),
--			    ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
-+	dma_free_coherent(&pdev->dev, sizeof(struct ipr_misc_cbs),
-+			  ioa_cfg->vpd_cbs, ioa_cfg->vpd_cbs_dma);
- out_free_res_entries:
- 	kfree(ioa_cfg->res_entries);
- 	goto out;
-@@ -9608,13 +9611,13 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+@@ -9611,16 +9611,17 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
  	ipr_init_regs(ioa_cfg);
  
  	if (ioa_cfg->sis64) {
--		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-+		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+-		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
++		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
  		if (rc < 0) {
- 			dev_dbg(&pdev->dev, "Failed to set 64 bit PCI DMA mask\n");
--			rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+			rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-			dev_dbg(&pdev->dev, "Failed to set 64 bit PCI DMA mask\n");
+-			rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
++			dev_dbg(&pdev->dev, "Failed to set 64 bit DMA mask\n");
++			rc = dma_set_mask_and_coherent(&pdev->dev,
++						       DMA_BIT_MASK(32));
  		}
  	} else
--		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
++		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
  
  	if (rc < 0) {
- 		dev_err(&pdev->dev, "Failed to set PCI DMA mask\n");
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index 31ed126..14f62c8 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -1548,7 +1548,7 @@ struct ipr_ioa_cfg {
- 	struct ipr_misc_cbs *vpd_cbs;
- 	dma_addr_t vpd_cbs_dma;
+-		dev_err(&pdev->dev, "Failed to set PCI DMA mask\n");
++		dev_err(&pdev->dev, "Failed to set DMA mask\n");
+ 		goto cleanup_nomem;
+ 	}
  
--	struct pci_pool *ipr_cmd_pool;
-+	struct dma_pool *ipr_cmd_pool;
- 
- 	struct ipr_cmnd *reset_cmd;
- 	int (*reset) (struct ipr_cmnd *);
 -- 
 1.9.1
 
