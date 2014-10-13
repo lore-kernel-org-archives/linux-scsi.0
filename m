@@ -1,45 +1,37 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: Concurrent SG_SCSI_RESET ioctls
-Date: Mon, 13 Oct 2014 11:15:19 +0200
-Message-ID: <543B9827.2060305@acm.org>
-References: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net> <20141011161110.GA16812@infradead.org>
+Subject: Re: [PATCH v2 02/12] blk-mq: Add blk_mq_unique_tag()
+Date: Mon, 13 Oct 2014 11:21:54 +0200
+Message-ID: <543B99B2.1010307@acm.org>
+References: <5433E43D.3010107@acm.org> <5433E493.9030304@acm.org> <20141011110841.GA9593@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:51113 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982AbaJMJP0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2014 05:15:26 -0400
-In-Reply-To: <20141011161110.GA16812@infradead.org>
+Received: from laurent.telenet-ops.be ([195.130.137.89]:34451 "EHLO
+	laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753251AbaJMJ1A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2014 05:27:00 -0400
+In-Reply-To: <20141011110841.GA9593@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On 10/11/14 18:11, Christoph Hellwig wrote:
-> Hi Robert,
+On 10/11/14 13:08, Christoph Hellwig wrote:
+>> +static inline u32 blk_mq_build_unique_tag(int hwq, int tag)
+>> +{
+>> +	return (hwq << BLK_MQ_UNIQUE_TAG_BITS) | (tag & BLK_MQ_UNIQUE_TAG_MASK);
+>> +}
 >
-> can you take a look at the patches at:
->
-> http://git.infradead.org/users/hch/scsi.git/shortlog/refs/heads/scsi-ioctl
->
-> and confirm if they fix your issue?
+> Is there any value in having this as a separate helper?
 
 Hello Christoph,
 
-At least to me patches 1/4..3/4 look like nice cleanup patches. 
-Regarding patch 4/4: I'm not sure yet what's the best way for addressing 
-potentially concurrent SG_SCSI_RESET ioctl calls. As far as I know many 
-SCSI LLDs have been implemented assuming that eh_*_reset_handler() calls 
-are serialized per SCSI host. Does this mean that a mutex has to be 
-added to avoid that an eh_*_reset_handler() call can be triggered via an 
-ioctl while at the same time the SCSI error handler thread is invoking 
-one of the eh_*_reset_handler() callback functions due to SCSI error 
-handling ?
-
-For a prior discussion of this topic, see also 
-http://thread.gmane.org/gmane.linux.scsi/82582/focus=82747.
+With the approach for block layer tag management proposed in this patch 
+series SCSI LLDs no longer need to call this function. This means that 
+the blk_mq_build_unique_tag() function can be eliminated by inlining it 
+into blk_mq_unique_tag(). Would you like me to rework this patch 
+accordingly ?
 
 Bart.
 
