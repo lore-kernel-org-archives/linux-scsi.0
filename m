@@ -1,36 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Concurrent SG_SCSI_RESET ioctls
-Date: Mon, 13 Oct 2014 03:23:39 -0700
-Message-ID: <20141013102339.GA8765@infradead.org>
-References: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net>
- <20141011161110.GA16812@infradead.org>
- <543B9827.2060305@acm.org>
+From: "Mr chin sang" <chinsang327@gmail.com>
+Subject: guten Tag
+Date: Tue, 14 Oct 2014 01:33:41 +0900
+Message-ID: <522ef8aebc9a2c24affe4670a639516a.squirrel@157.7.234.84>
+Reply-To: chinsang709@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60981 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbaJMKXt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2014 06:23:49 -0400
-Content-Disposition: inline
-In-Reply-To: <543B9827.2060305@acm.org>
+Received: from v157-7-234-84.z1d6.static.cnode.jp ([157.7.234.84]:41191 "EHLO
+	ns1.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754066AbaJMRwJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Oct 2014 13:52:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
 
-On Mon, Oct 13, 2014 at 11:15:19AM +0200, Bart Van Assche wrote:
-> At least to me patches 1/4..3/4 look like nice cleanup patches. Regarding
-> patch 4/4: I'm not sure yet what's the best way for addressing potentially
-> concurrent SG_SCSI_RESET ioctl calls. As far as I know many SCSI LLDs have
-> been implemented assuming that eh_*_reset_handler() calls are serialized per
-> SCSI host. Does this mean that a mutex has to be added to avoid that an
-> eh_*_reset_handler() call can be triggered via an ioctl while at the same
-> time the SCSI error handler thread is invoking one of the
-> eh_*_reset_handler() callback functions due to SCSI error handling ?
 
-Both the existing code and my new code still serialize
-eh_*_reset_handler callers using the crude tmf_in_progress flag. Using
-a proper lock for it would seem preferable to me, as would be bouncing
-the work for SG_SCSI_RESET to the EH thread.
+guten Tag
 
+
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Ich bin =FCber dieses Medium, um Sie =FCber di=
+e Transaktion f=FCr den
+Transfer von $ 21500000 (Einundzwanzig Millionen f=FCnfhunderttausend
+US-Dollar) in meiner Bank in China, um Sie als Empf=E4nger zu informier=
+en.
+Sie wird zu 100% sicher, dass der Finanzvorstand des verstorbenen Kunde=
+n.
+
+
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Bitte auf meine private E-Mail kontaktieren un=
+ter f=FCr Fragen und
+weitere Informationen.
+
+
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Mit freundlichen Gr=FC=DFen,
+
+
+
+=A0=A0=A0=A0=A0=A0=A0=A0 sang Chin
+
+=A0=A0=A0=A0=A0=A0=A0=A0 E-Mail: chinsang709@gmail.com
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
