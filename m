@@ -1,66 +1,49 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH] target: iscsi: iscsi_target_tpg.c: Cleaning up possible
- size overwriting in conjunction with sprintf
-Date: Sun, 12 Oct 2014 21:32:04 +0200
-Message-ID: <CAFo99gY9QBxwj_nM4xddpMze7hbY5dOu1f6_ZvErCrzwOo4LHg@mail.gmail.com>
-References: <1413136558-20790-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <1413137923.22149.27.camel@joe-AO725>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v3 10/25] virtio: add API to enable VQs early
+Date: Mon, 13 Oct 2014 17:22:39 +1030
+Message-ID: <8738asea14.fsf@rustcorp.com.au>
+References: <1413114332-626-1-git-send-email-mst@redhat.com>
+	<1413114332-626-11-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1413137923.22149.27.camel@joe-AO725>
-Sender: target-devel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>, Thomas Glanzmann <thomas@glanzmann.de>, Christophe Vu-Brugier <cvubrugier@yahoo.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1413114332-626-11-git-send-email-mst@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, virtualization@lists.linux-foundation.org, Paolo Bonzini <pbonzini@redhat.com>, Amit Shah <amit.shah@redhat.com>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
 
-2014-10-12 20:18 GMT+02:00 Joe Perches <joe@perches.com>:
-> On Sun, 2014-10-12 at 19:55 +0200, Rickard Strandqvist wrote:
->> Changed same snprintf and sprintf to strlcpy and strlcat.
->> This will guarantee that the string size is not overwritten,
->> and they are significantly faster than sprintf also.
+"Michael S. Tsirkin" <mst@redhat.com> writes:
+> virtio spec 0.9.X requires DRIVER_OK to be set before
+> VQs are used, but some drivers use VQs before probe
+> function returns.
+> Since DRIVER_OK is set after probe, this violates the spec.
 >
-> I don't disagree with the change, but I think the changelog is
-> misleading.
+> Even though under virtio 1.0 transitional devices support this
+> behaviour, we want to make it possible for those early callers to become
+> spec compliant and eventually support non-transitional devices.
 >
-> strlcpy(ptr, ...) then strlcat(ptr, ...) does not use the known
-> length of the first copied string and is generally not faster than
-> ptr += snprintf(ptr, ...) then sprintf(ptr,...)
+> Add API for drivers to call before using VQs.
 >
-> And a couple slightly unrelated bits:
+> Sets DRIVER_OK internally.
 >
->> diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
->> index c3cb5c1..6fc8bfe 100644
->> --- a/drivers/target/iscsi/iscsi_target_tpg.c
->> +++ b/drivers/target/iscsi/iscsi_target_tpg.c
->> @@ -608,7 +608,6 @@ int iscsit_tpg_set_initiator_node_queue_depth(
->>  int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authentication)
->
-> This function could be made static and the prototype removed from
-> the .h file if it is moved above its one caller in this file.
->
->>  {
->>       unsigned char buf1[256], buf2[256], *none = NULL;
->
-> Moderately large stack use here.
->
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Reviewed-by: Cornelia Huck <cornelia.huck@de.ibm.com>
 
+OK, this all looks good, but I think we should do two things:
 
+1) rename virtio_enable_vqs_early() to virtio_device_ready().
+2) Add a BUG_ON in the virtio_ring code to make sure device is ready
+   before any ops are called.
 
-Hi
-
-Can not agree with you about speed.
-But regardless of that, it is ironically precisely the behavior you
-describe that is a part of the problem.
-Form the man page for snprintf
-"If the output was truncated due to this limit then the return value
-is the number of characters (excluding the terminating null byte)
-which would have been written to the final string if enough space had
-been available"
-
-Switching to static funktion sounds good.
-And less use of static memory, anyone have a more reasonable idea of a size?
-
-
-Kind regards
-Rickard Strandqvist
+Cheers,
+Rusty.
