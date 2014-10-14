@@ -1,55 +1,107 @@
-From: Jayamohan Kallickal <Jayamohan.Kallickal-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/1] IB/iser: Remove hard coded values for cqe and
- send_wr
-Date: Tue, 14 Oct 2014 05:19:13 +0000
-Message-ID: <12daeb47-f7a3-4774-b4c0-e96600b479e1@CMEXHTCAS1.ad.emulex.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v4 04/25] virtio: defer config changed notifications
+Date: Tue, 14 Oct 2014 11:01:12 +1030
+Message-ID: <87lhojcx0v.fsf@rustcorp.com.au>
+References: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
+	<1413114332-626-5-git-send-email-mst-v4@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org> (sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org)" <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Minh Duc Tran <MinhDuc.Tran-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>, Jayamohan Kallickal <Jayamohan.Kallickal-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1413114332-626-5-git-send-email-mst-v4@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, virtualization@lists.linux-foundation.org, Paolo Bonzini <pbonzini@redhat.com>, Amit Shah <amit.shah@redhat.com>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
 
+"Michael S. Tsirkin" <mst@redhat.com> writes:
+> Defer config changed notifications that arrive during
+> probe/scan/freeze/restore.
+>
+> This will allow drivers to set DRIVER_OK earlier, without worrying about
+> racing with config change interrupts.
+>
+> This change will also benefit old hypervisors (before 2009)
+> that send interrupts without checking DRIVER_OK: previously,
+> the callback could race with driver-specific initialization.
+>
+> This will also help simplify drivers.
 
->On Tue, Oct 7, 2014 at 10:58 PM, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org> wrote:
->>On 10/8/2014 3:41 AM, Jay Kallickal wrote:
->>From: Jayamohan Kallickal <jayamohank-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+But AFAICT you never *read* dev->config_changed.
 
->>      This patch allows the underlying hardware to choose
->>values other than  hard coded max values for cqe and send_wr
->>while preventing them from exceeding max supported values.
+You unconditionally trigger a config_changed event in
+virtio_config_enable().  That's a bit weird, but probably OK.
 
->Hi Minh and Jayamohan,
+How about the following change (on top of your patch).  I
+think the renaming is clearer, and note the added if() test in
+virtio_config_enable().
 
->So I agree that we would want to take device capabilities into account
->here, but we need to be able to adjust scsi_cmds_max (can_queue) in case
->the max wqe supported is lower than scsi_cmds_max * num_posts_per_cmd.
+If you approve, I'll fold it in.
 
+Cheers,
+Rusty.
 
-I feel we should be fine as long as we support the max_cmds of 128 supported by open-iscsi layer.
-
-I see the iser layer uses a value of 512 though it only serves as a limit check. 
-
-
->So generally I agree with this approach, but we need to take care of
->stuff later when the session is created.
-
->One more thing, this is not rebased on the latest iser patches please
->send v1 on top of: http://marc.info/?l=linux-rdma&m=141216135013146&w=2
-
-Yes, I will recreate the patch and send on top of this
-
-
-Resending:
- Looks like my response got dropped by the filters.
-
-Am travelling . Minh is working on the patches and would respond 
--Jay
---
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
+index 2536701b098b..df598dd8c5c8 100644
+--- a/drivers/virtio/virtio.c
++++ b/drivers/virtio/virtio.c
+@@ -122,7 +122,7 @@ static void __virtio_config_changed(struct virtio_device *dev)
+ 	struct virtio_driver *drv = drv_to_virtio(dev->dev.driver);
+ 
+ 	if (!dev->config_enabled)
+-		dev->config_changed = true;
++		dev->config_change_pending = true;
+ 	else if (drv && drv->config_changed)
+ 		drv->config_changed(dev);
+ }
+@@ -148,8 +148,9 @@ static void virtio_config_enable(struct virtio_device *dev)
+ {
+ 	spin_lock_irq(&dev->config_lock);
+ 	dev->config_enabled = true;
+-	__virtio_config_changed(dev);
+-	dev->config_changed = false;
++	if (dev->config_change_pending)
++		__virtio_config_changed(dev);
++	dev->config_change_pending = false;
+ 	spin_unlock_irq(&dev->config_lock);
+ }
+ 
+@@ -253,7 +254,7 @@ int register_virtio_device(struct virtio_device *dev)
+ 
+ 	spin_lock_init(&dev->config_lock);
+ 	dev->config_enabled = false;
+-	dev->config_changed = false;
++	dev->config_change_pending = false;
+ 
+ 	/* We always start by resetting the device, in case a previous
+ 	 * driver messed it up.  This also tests that code path a little. */
+diff --git a/include/linux/virtio.h b/include/linux/virtio.h
+index 5636b119dc25..65261a7244fc 100644
+--- a/include/linux/virtio.h
++++ b/include/linux/virtio.h
+@@ -80,7 +80,7 @@ bool virtqueue_is_broken(struct virtqueue *vq);
+  * @index: unique position on the virtio bus
+  * @failed: saved value for CONFIG_S_FAILED bit (for restore)
+  * @config_enabled: configuration change reporting enabled
+- * @config_changed: configuration change reported while disabled
++ * @config_change_pending: configuration change reported while disabled
+  * @config_lock: protects configuration change reporting
+  * @dev: underlying device.
+  * @id: the device type identification (used to match it with a driver).
+@@ -94,7 +94,7 @@ struct virtio_device {
+ 	int index;
+ 	bool failed;
+ 	bool config_enabled;
+-	bool config_changed;
++	bool config_change_pending;
+ 	spinlock_t config_lock;
+ 	struct device dev;
+ 	struct virtio_device_id id;
