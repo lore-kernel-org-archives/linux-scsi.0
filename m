@@ -1,44 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Concurrent SG_SCSI_RESET ioctls
-Date: Tue, 14 Oct 2014 12:42:26 -0400
-Message-ID: <543D5272.5080102@interlog.com>
-References: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net> <20141011161110.GA16812@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402958CEB20A@G4W3202.americas.hpqcorp.net> <20141014111354.GA3022@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: Graber Christian <chr.graber@tsn.at>
+Subject: viimeinen varoitus!
+Date: Tue, 14 Oct 2014 23:28:03 +0000
+Message-ID: <B14478C5B90E644C90B3284F6C16821C1937A3D1@tsnexch1.tsn.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56881 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752906AbaJNQmv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Oct 2014 12:42:51 -0400
-In-Reply-To: <20141014111354.GA3022@infradead.org>
+Received: from flaschenpost2.tsn.at ([193.170.198.126]:42620 "EHLO
+	flaschenpost2.tsn.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbaJNXjp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Oct 2014 19:39:45 -0400
+Content-Language: de-DE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
 
-On 14-10-14 07:13 AM, Christoph Hellwig wrote:
-> On Sat, Oct 11, 2014 at 10:06:47PM +0000, Elliott, Robert (Server Storage) wrote:
->> Thanks.  That's a bit better, but sg_reset can now run into
->> "No such device" errors.
->
-> That's the -ENODEV we return if another reset is in progress.  Given
-> that I suspect sg_reset is the prime if not only user of this interface
-> I'm happy to change the error code we return here to anything Doug
-> agrees to.
 
-I don't mind if you change it. However I plan to release
-sg3_utils-1.40 in the next 2 or 3 weeks, so that would
-be the earliest a revised sg_reset would be available for
-distros. Improving error reports is something I always
-like to do (so ENODEV for the "in progress" case seems a
-bit strident).
 
-On the other hand, the existing sg_reset code with --no-esc
-has been in place since sg3_utils-1.36 [20130531]. So there
-is a good chance current distributions have that version or
-later.
 
-Doug Gilbert
+Huom meid=E4n s=E4hk=F6posti k=E4ytt=E4j=E4!=20
 
+olet ylitt=E4nyt kiinti=F6n postilaatikkoon. Olemme poistamalla ja lait=
+toi alas t=E4m=E4 postilaatikko 24 tunnin kuluessa, koska se on liian p=
+unnittu meid=E4n rele verkon virhekoodi: 556. P=E4ivitt=E4=E4 postilaat=
+ikon kiinti=F6 seuraavaa linkki=E4, jos haluat jatkaa nauttien postipal=
+velut http://www.webbber.site90.net=20
+Huom: t=E4m=E4 on huollon ja p=E4ivityksen tarkoitukseen.=20
+
+Klikkaa t=E4st=E4 http://www.webbber.site90.net=20
+Huom koet kyvytt=F6myys p=E4=E4st=E4 postilaatikkoon noudattamatta j=E4=
+tt=E4misest=E4 t=E4m=E4n varoituksen.=20
+
+Kiitos yhteisty=F6ss=E4 toimineiden!=20
+postipalvelu joukkue--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
