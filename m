@@ -1,28 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net v2 0/4] ipv6 and related cleanup for cxgb4/cxgb4i
-Date: Wed, 15 Oct 2014 00:30:48 -0400 (EDT)
-Message-ID: <20141015.003048.958582830964017464.davem@davemloft.net>
-References: <1413342444-16388-1-git-send-email-anish@chelsio.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH v4 03/25] virtio-pci: move freeze/restore to virtio core
+Date: Wed, 15 Oct 2014 09:05:14 +0200
+Message-ID: <1413356714.27272.3.camel@x220>
+References: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
+	 <1413114332-626-4-git-send-email-mst-v4@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1413342444-16388-1-git-send-email-anish@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: anish@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, jbottomley@parallels.com, kxie@chelsio.com, manojmalviya@chelsio.com, hariprasad@chelsio.com, leedom@chelsio.com, swise@opengridcomputing.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1413114332-626-4-git-send-email-mst-v4@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Valentin Rothberg <valentinrothberg@gmail.com>, linux-kernel@vger.kernel.org, Rusty Russell <rusty@rustcorp.com.au>, virtualization@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, v9fs-developer@lists.sourceforge.net, netdev@vger.kernel.org, kvm@vger.kernel.org, Amit Shah <amit.shah@redhat.com>, Cornelia Huck <cornelia.huck@de.ibm.com>, Christian Borntraeger <borntraeger@de.ibm.com>, "David S. Miller" <davem@davemloft.net>, Paolo Bonzini <pbonzini@redhat.com>, Heinz Graalfs <graalfs@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Anish Bhatt <anish@chelsio.com>
-Date: Tue, 14 Oct 2014 20:07:20 -0700
-
-> This patch set removes some duplicated/extraneous code from cxgb4i, guards
-> cxgb4 against compilation failure based on ipv6 tristate, make ipv6 related
-> code no longer be enabled by default irrespective of ipv6 tristate and fixes
-> a refcnt issue.
-> -Anish
+On Mon, 2014-10-13 at 10:48 +0300, Michael S. Tsirkin wrote:
+> This is in preparation to extending config changed event handling
+> in core.
+> Wrapping these in an API also seems to make for a cleaner code.
 > 
-> v2 : Provide more detailed commit messages, make subject more concise as 
-> recommended by Dave Miller.
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Reviewed-by: Cornelia Huck <cornelia.huck@de.ibm.com>
 
-Much better, series applied, thanks!
+This patch landed in today's linux-next (next-20141015).
+
+>  include/linux/virtio.h      |  6 +++++
+>  drivers/virtio/virtio.c     | 54 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/virtio/virtio_pci.c | 54 ++-------------------------------------------
+>  3 files changed, 62 insertions(+), 52 deletions(-)
+> 
+> diff --git a/include/linux/virtio.h b/include/linux/virtio.h
+> index 3c19bd3..8df7ba8 100644
+> --- a/include/linux/virtio.h
+> +++ b/include/linux/virtio.h
+> @@ -78,6 +78,7 @@ bool virtqueue_is_broken(struct virtqueue *vq);
+>  /**
+>   * virtio_device - representation of a device using virtio
+>   * @index: unique position on the virtio bus
+> + * @failed: saved value for CONFIG_S_FAILED bit (for restore)
+
+s/CONFIG_S_FAILED/VIRTIO_CONFIG_S_FAILED/?
+
+>   * @dev: underlying device.
+>   * @id: the device type identification (used to match it with a driver).
+>   * @config: the configuration ops for this device.
+
+
+Paul Bolle
