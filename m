@@ -1,40 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Sparc ESP problem with blk-mq
-Date: Wed, 15 Oct 2014 16:53:24 -0400 (EDT)
-Message-ID: <20141015.165324.1768019967735260346.davem@davemloft.net>
-References: <alpine.LRH.2.11.1410140102230.18488@adalberg.ut.ee>
-	<543D355A.3030605@kernel.dk>
-	<20141015133551.GA15539@infradead.org>
+From: Don Brace <Don.Brace@pmcs.com>
+Subject: [PATCH] MAINTAINERS: Change hpsa and cciss maintainer
+Date: Wed, 15 Oct 2014 22:32:41 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB8287F3@BBYEXM02.pmc-sierra.internal>
+References: <20141015221720.56148.30371.stgit@don-ProLiant-MicroServer-Gen8>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54199 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876AbaJOUx3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Oct 2014 16:53:29 -0400
-In-Reply-To: <20141015133551.GA15539@infradead.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:44507 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751033AbaJOXB4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Oct 2014 19:01:56 -0400
+In-Reply-To: <20141015221720.56148.30371.stgit@don-ProLiant-MicroServer-Gen8>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: axboe@kernel.dk, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, dl Team ESD Storage Dev Support <storagedev@pmcs.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
 
-From: Christoph Hellwig <hch@infradead.org>
-Date: Wed, 15 Oct 2014 06:35:51 -0700
-
-> On Tue, Oct 14, 2014 at 08:38:18AM -0600, Jens Axboe wrote:
->> Christoph, any idea on this? The command just times out, for some reason.
->> Only thing I could think of was related to perhaps missing bouncing or
->> similar, but I don't think that's the case. But the hba must not like the
->> request somehow. Or perhaps it sets up the wrong number of segments.
-> 
-> Seems like this is the first command we send.  I don't really have an
-> idea at the moment, but it would be good to increase the scsi_logging
-> level to the maximum and/or add some traces to the esp driver to figure
-> out where the command gets lost.
-
-I'll set aside some time to see if I can find anything obvious.
-
-The ESP driver already has a deep, extensive, debug logging facility.
-Just set the "esp_debug=xxx" option to something.  You can turn
-everything on just by using something like "esp_debug=0x7ff"
+Q2hhbmdlIG93bmVyc2hpcCBvZiB0aGUgaHBzYSBkcml2ZXINCmZyb20gU3RlcGhlbiBNLiBDYW1l
+cm9uIChIZXdsZXR0LVBhY2thcmQpDQp0byBEb24gQnJhY2UgKFBNQy1TaWVycmEpLg0KDQpDaGFu
+Z2Ugb3duZXJzaGlwIG9mIHRoZSBjY2lzcyBkcml2ZXINCmZyb20gTWlrZSBNaWxsZXIgKEhld2xl
+dHQtUGFja2FyZCkNCnRvIERvbiBCcmFjZSAoUE1DLVNpZXJyYSkuDQoNClJldmlld2VkLWJ5OiBS
+b2JlcnQgRWxsaW90dCA8ZWxsaW90dEBocC5jb20+DQpTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2Ug
+PGRvbi5icmFjZUBwbWNzLmNvbT4NCi0tLQ0KIE1BSU5UQUlORVJTIHwgICAgOCArKysrKystLQ0K
+IDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQoNCmRpZmYg
+LS1naXQgYS9NQUlOVEFJTkVSUyBiL01BSU5UQUlORVJTDQppbmRleCBlZTFiYzViLi4wNzg4MzY5
+IDEwMDY0NA0KLS0tIGEvTUFJTlRBSU5FUlMNCisrKyBiL01BSU5UQUlORVJTDQpAQCAtNDMwOSw4
+ICs0MzA5LDEwIEBAIEY6CURvY3VtZW50YXRpb24vYmxvY2tkZXYvY3BxYXJyYXkudHh0DQogRjoJ
+ZHJpdmVycy9ibG9jay9jcHFhcnJheS4qDQogDQogSEVXTEVUVC1QQUNLQVJEIFNNQVJUIEFSUkFZ
+IFJBSUQgRFJJVkVSIChocHNhKQ0KLU06CSJTdGVwaGVuIE0uIENhbWVyb24iIDxzY2FtZXJvbkBi
+ZWFyZG9nLmNjZS5ocC5jb20+DQorTToJRG9uIEJyYWNlIDxkb24uYnJhY2VAcG1jcy5jb20+DQog
+TDoJaXNzX3N0b3JhZ2VkZXZAaHAuY29tDQorTDoJc3RvcmFnZWRldkBwbWNzLmNvbQ0KK0w6CWxp
+bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQogUzoJU3VwcG9ydGVkDQogRjoJRG9jdW1lbnRhdGlv
+bi9zY3NpL2hwc2EudHh0DQogRjoJZHJpdmVycy9zY3NpL2hwc2EqLltjaF0NCkBAIC00MzE4LDgg
+KzQzMjAsMTAgQEAgRjoJaW5jbHVkZS9saW51eC9jY2lzcyouaA0KIEY6CWluY2x1ZGUvdWFwaS9s
+aW51eC9jY2lzcyouaA0KIA0KIEhFV0xFVFQtUEFDS0FSRCBTTUFSVCBDSVNTIFJBSUQgRFJJVkVS
+IChjY2lzcykNCi1NOglNaWtlIE1pbGxlciA8bWlrZS5taWxsZXJAaHAuY29tPg0KK006CURvbiBC
+cmFjZSA8ZG9uLmJyYWNlQHBtY3MuY29tPg0KIEw6CWlzc19zdG9yYWdlZGV2QGhwLmNvbQ0KK0w6
+CXN0b3JhZ2VkZXZAcG1jcy5jb20NCitMOglsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KIFM6
+CVN1cHBvcnRlZA0KIEY6CURvY3VtZW50YXRpb24vYmxvY2tkZXYvY2Npc3MudHh0DQogRjoJZHJp
+dmVycy9ibG9jay9jY2lzcyoNCg0K
