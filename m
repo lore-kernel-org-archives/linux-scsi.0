@@ -1,38 +1,34 @@
-From: Graber Christian <chr.graber@tsn.at>
-Subject: viimeinen varoitus!
-Date: Tue, 14 Oct 2014 23:28:03 +0000
-Message-ID: <B14478C5B90E644C90B3284F6C16821C1937A3D1@tsnexch1.tsn.at>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Tue, 14 Oct 2014 21:06:37 -0400
+Message-ID: <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
+References: <20141010074901.GA32028@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flaschenpost2.tsn.at ([193.170.198.126]:42620 "EHLO
-	flaschenpost2.tsn.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752936AbaJNXjp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Oct 2014 19:39:45 -0400
-Content-Language: de-DE
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20141010074901.GA32028@sucs.org> (Sitsofe Wheeler's message of
+ "Fri, 10 Oct 2014 08:49:01 +0100")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
+>>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
 
+Sitsofe> A previous patch attempted to add a quirk to workaround this
+Sitsofe> but the quirk was only enabled after the features had been
+Sitsofe> scanned for, wouldn't work for "small" disks 
 
+What does that mean, exactly?
 
-Huom meid=E4n s=E4hk=F6posti k=E4ytt=E4j=E4!=20
-
-olet ylitt=E4nyt kiinti=F6n postilaatikkoon. Olemme poistamalla ja lait=
-toi alas t=E4m=E4 postilaatikko 24 tunnin kuluessa, koska se on liian p=
-unnittu meid=E4n rele verkon virhekoodi: 556. P=E4ivitt=E4=E4 postilaat=
-ikon kiinti=F6 seuraavaa linkki=E4, jos haluat jatkaa nauttien postipal=
-velut http://www.webbber.site90.net=20
-Huom: t=E4m=E4 on huollon ja p=E4ivityksen tarkoitukseen.=20
-
-Klikkaa t=E4st=E4 http://www.webbber.site90.net=20
-Huom koet kyvytt=F6myys p=E4=E4st=E4 postilaatikkoon noudattamatta j=E4=
-tt=E4misest=E4 t=E4m=E4n varoituksen.=20
-
-Kiitos yhteisty=F6ss=E4 toimineiden!=20
-postipalvelu joukkue--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Martin K. Petersen	Oracle Linux Engineering
