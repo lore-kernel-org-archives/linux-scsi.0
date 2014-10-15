@@ -1,44 +1,40 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 2/3] scsi: add try_rc16 blacklist flag
-Date: Wed, 15 Oct 2014 02:07:21 +0000
-Message-ID: <30375c9b3e144580b4b98cf71f64e5b0@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <20141010074901.GA32028@sucs.org>
-	<20141010075251.GC32028@sucs.org> <yq1mw8y6sxf.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1mw8y6sxf.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+From: Anish Bhatt <anish@chelsio.com>
+Subject: [PATCH net v2 4/4] cxgb4i: Remove duplicate call to dst_neigh_lookup()
+Date: Tue, 14 Oct 2014 20:07:24 -0700
+Message-ID: <1413342444-16388-5-git-send-email-anish@chelsio.com>
+References: <1413342444-16388-1-git-send-email-anish@chelsio.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1413342444-16388-1-git-send-email-anish@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, hch@infradead.org, jbottomley@parallels.com, kxie@chelsio.com, manojmalviya@chelsio.com, hariprasad@chelsio.com, leedom@chelsio.com, swise@opengridcomputing.com, Anish Bhatt <anish@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
 
+There is an extra call to dst_neigh_lookup() leftover in cxgb4i that can cause 
+an unreleased refcnt issue. Remove extraneous call.
 
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Tuesday, October 14, 2014 6:08 PM
-> To: Sitsofe Wheeler
-> Cc: KY Srinivasan; Haiyang Zhang; Christoph Hellwig; Hannes Reinecke; linux-
-> scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; James E.J. Bottomley
-> Subject: Re: [PATCH 2/3] scsi: add try_rc16 blacklist flag
-> 
-> >>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
-> 
-> Sitsofe> Microsoft Hyper-V virtual disks currently only claim SPC-2
-> Sitsofe> compliance causing the kernel skip checks for features such as
-> Sitsofe> thin provisioning even though the virtual disk advertises them.
-> 
-> Last time around we identified this as a problem with Microsoft's
-> interpretation of the T10 SBC spec. And they promised that they are going to
-> fix that.
+Fixes : 759a0cc5a3e1b ('cxgb4i: Add ipv6 code to driver, call into libcxgbi ipv6 api')
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-It has been fixed in windows 10 and a bug has been opened for earlier hosts.
-
-K. Y
-> 
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index df176f0..8c3003b 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1317,11 +1317,6 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
+ 
+-	n = dst_neigh_lookup(csk->dst, &csk->daddr.sin_addr.s_addr);
+-	if (!n) {
+-		pr_err("%s, can't get neighbour of csk->dst.\n", ndev->name);
+-		goto rel_resource;
+-	}
+ 	csk->l2t = cxgb4_l2t_get(lldi->l2t, n, ndev, 0);
+ 	if (!csk->l2t) {
+ 		pr_err("%s, cannot alloc l2t.\n", ndev->name);
+-- 
+2.1.2
