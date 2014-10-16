@@ -1,53 +1,112 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 0/5] block/scsi/lio support for COMPARE_AND_WRITE
-Date: Thu, 16 Oct 2014 20:12:56 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295930E5A3@G4W3296.americas.hpqcorp.net>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
- <543FA05C.6060200@interlog.com> <54402421.8060808@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54402421.8060808@interlog.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: Hannes Reinecke <hare@suse.de>
+From: Anish Bhatt <anish@chelsio.com>
+Subject: [PATCH scsi] libcxgbi : support ipv6 address host_param
+Date: Thu, 16 Oct 2014 15:59:19 -0700
+Message-ID: <1413500359-27521-1-git-send-email-anish@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:47783
+	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751116AbaJPXBt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2014 19:01:49 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
+libcxgbi was always returning an ipv4 address for ISCSI_HOST_PARAM_IPADDRESS,
+return appropriate address based on address family
 
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
-> Sent: Thursday, 16 October, 2014 3:02 PM
-...
-> On 14-10-16 12:39 PM, Douglas Gilbert wrote:
-...
-> > The COMPARE AND WRITE command may fail for other reasons
-> > such as a transport problem or a Unit Attention, so the
-> > SCSI eh logic may need to know about it.
-> 
-> Elaborating ...
-> 
-> Hannes will enjoy this one: say a COMPARE AND WRITE (CAW) fails
-> due to a transport error or timeout. What should the EH do *** ?
-> Answer: read that LBA(s) to see whether the command succeeded
-> (i.e. wrote the new data)! If it did, do nothing; if it didn't,
-> repeat the CAW command. And naturally that second CAW may
-> yield a MISCOMPARE.
-
-I don't think that is safe.. detecting the write data is in
-place doesn't prove the COMPARE AND WRITE really worked as
-a whole.
-
-Example: if two applications do this:
-* application 1: COMPARE AND WRITE: change 4 to 6
-* application 2: COMPARE AND WRITE: change 5 to 6
-
-and they both run into transport errors, then they'll 
-both read back 6 and think their commands worked when
-really only one of them worked.
-
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
+Signed-off-by: Karen Xie <kxie@chelsio.com>
 ---
-Rob Elliott    HP Server Storage
+ drivers/scsi/cxgbi/libcxgbi.c | 42 +++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/cxgbi/libcxgbi.h |  5 -----
+ 2 files changed, 37 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 6a2001d..403330a 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -397,6 +397,35 @@ EXPORT_SYMBOL_GPL(cxgbi_hbas_add);
+  *   If the source port is outside our allocation range, the caller is
+  *   responsible for keeping track of their port usage.
+  */
++
++static struct cxgbi_sock *find_sock_on_port(struct cxgbi_device *cdev,
++					    unsigned char port_id)
++{
++	struct cxgbi_ports_map *pmap = &cdev->pmap;
++	unsigned int i;
++	unsigned int used;
++
++	if (!pmap->max_connect || !pmap->used)
++		return NULL;
++
++	spin_lock_bh(&pmap->lock);
++	used = pmap->used;
++	for (i = 0; used && i < pmap->max_connect; i++) {
++		struct cxgbi_sock *csk = pmap->port_csk[i];
++
++		if (csk) {
++			if (csk->port_id == port_id) {
++				spin_unlock_bh(&pmap->lock);
++				return csk;
++			}
++			used--;
++		}
++	}
++	spin_unlock_bh(&pmap->lock);
++
++	return NULL;
++}
++
+ static int sock_get_port(struct cxgbi_sock *csk)
+ {
+ 	struct cxgbi_device *cdev = csk->cdev;
+@@ -747,6 +776,7 @@ static struct cxgbi_sock *cxgbi_check_route6(struct sockaddr *dst_addr)
+ 	csk->daddr6.sin6_addr = daddr6->sin6_addr;
+ 	csk->daddr6.sin6_port = daddr6->sin6_port;
+ 	csk->daddr6.sin6_family = daddr6->sin6_family;
++	csk->saddr6.sin6_family = daddr6->sin6_family;
+ 	csk->saddr6.sin6_addr = pref_saddr;
+ 
+ 	neigh_release(n);
+@@ -2645,12 +2675,14 @@ int cxgbi_get_host_param(struct Scsi_Host *shost, enum iscsi_host_param param,
+ 		break;
+ 	case ISCSI_HOST_PARAM_IPADDRESS:
+ 	{
+-		__be32 addr;
+-
+-		addr = cxgbi_get_iscsi_ipv4(chba);
+-		len = sprintf(buf, "%pI4", &addr);
++		struct cxgbi_sock *csk = find_sock_on_port(chba->cdev,
++							   chba->port_id);
++		if (csk) {
++			len = sprintf(buf, "%pIS",
++				      (struct sockaddr *)&csk->saddr);
++		}
+ 		log_debug(1 << CXGBI_DBG_ISCSI,
+-			"hba %s, ipv4 %pI4.\n", chba->ndev->name, &addr);
++			  "hba %s, addr %s.\n", chba->ndev->name, buf);
+ 		break;
+ 	}
+ 	default:
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 1d98fad..2c7cb1c 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -700,11 +700,6 @@ static inline void cxgbi_set_iscsi_ipv4(struct cxgbi_hba *chba, __be32 ipaddr)
+ 			chba->ndev->name);
+ }
+ 
+-static inline __be32 cxgbi_get_iscsi_ipv4(struct cxgbi_hba *chba)
+-{
+-	return chba->ipv4addr;
+-}
+-
+ struct cxgbi_device *cxgbi_device_register(unsigned int, unsigned int);
+ void cxgbi_device_unregister(struct cxgbi_device *);
+ void cxgbi_device_unregister_all(unsigned int flag);
+-- 
+2.1.2
+
