@@ -1,113 +1,52 @@
-From: Brian Foster <bfoster@redhat.com>
-Subject: virtio_blk - kernel BUG at drivers/virtio/virtio_ring.c:160!
-Date: Thu, 16 Oct 2014 11:17:39 -0400
-Message-ID: <20141016151738.GC57207@bfoster.bfoster>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscim: Remove unused SCSI_IRQ_NONE macro definition
+Date: Thu, 16 Oct 2014 21:12:22 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1410162109160.16927@axis700.grange>
+References: <alpine.LNX.2.00.1410011654020.25690@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17244 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.15.18]:63293 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbaJPPRm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2014 11:17:42 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9GFHeZt003174
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2014 11:17:41 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id s9GFHeV8018246
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2014 11:17:40 -0400
-Content-Disposition: inline
+	id S1751798AbaJPTMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2014 15:12:30 -0400
+In-Reply-To: <alpine.LNX.2.00.1410011654020.25690@nippy.intranet>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org, trivial@kernel.org
 
-Hi all,
+On Fri, 3 Oct 2014, Finn Thain wrote:
 
-Hopefully this is the right list for this report...
+> 
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-I hit the following kernel bug reliably by running xfstests test
-generic/234 against XFS using 10GB LVM test/scratch volumes on top of a
-~100GB virtio_blk block device. The virt block device is file-backed on
-the host.
+Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
->From the console:
+Thanks
+Guennadi
 
-------------[ cut here ]------------
-kernel BUG at drivers/virtio/virtio_ring.c:160!
-invalid opcode: 0000 [#1] SMP
-Modules linked in: xfs libcrc32c cfg80211 rfkill snd_hda_codec_generic ppdev snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm snd_timer snd serio_raw virtio_balloon soundcore virtio_console parport_pc parport i2c_piix4 sunrpc virtio_blk virtio_net qxl drm_kms_helper ttm ata_generic virtio_pci virtio_ring drm virtio pata_acpi
-CPU: 0 PID: 1442 Comm: xfsaild/dm-3 Not tainted 3.17.0+ #97
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-task: ffff8800c6483460 ti: ffff880118034000 task.ti: ffff880118034000
-RIP: 0010:[<ffffffffa00729e5>]  [<ffffffffa00729e5>] virtqueue_add_sgs+0x415/0x430 [virtio_ring]
-RSP: 0018:ffff880118037678  EFLAGS: 00010002
-RAX: ffff88011808b000 RBX: ffff8801180377e8 RCX: 0000000000000003
-RDX: ffffea0003667102 RSI: ffff8801180377d0 RDI: ffff880118037730
-RBP: ffff8801180376e8 R08: ffff8800d78caf70 R09: 0000000000000020
-R10: ffff8800c6483460 R11: ffff8800c6484050 R12: ffff8801180377e8
-R13: 0000000000000002 R14: 0000000000000081 R15: 0000000000000020
-FS:  0000000000000000(0000) GS:ffff88011ae00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007fffa85ff0c0 CR3: 0000000001e14000 CR4: 00000000000006f0
-Stack:
- ffff880118037698 0000000000000304 ffff8800d78caf70 ffff8801180377d0
- 0000000300000000 ffff88011808b000 ffff880118037730 ffff880000000002
- ffff8801180376e8 ffff8800d78caf70 ffff880118037730 0000000000000002
-Call Trace:
- [<ffffffffa006a42f>] __virtblk_add_req+0xdf/0x1c0 [virtio_blk]
- [<ffffffffa006a5f2>] ? virtio_queue_rq+0xe2/0x280 [virtio_blk]
- [<ffffffffa006a616>] virtio_queue_rq+0x106/0x280 [virtio_blk]
- [<ffffffff813d71f1>] __blk_mq_run_hw_queue+0x1d1/0x350
- [<ffffffff813d7bb0>] blk_mq_run_hw_queue+0x70/0xa0
- [<ffffffff813d8a6d>] blk_mq_insert_requests+0xfd/0x2d0
- [<ffffffff813d9a2b>] blk_mq_flush_plug_list+0x13b/0x160
- [<ffffffff813cd5c1>] blk_flush_plug_list+0xc1/0x240
- [<ffffffff813d8f2a>] blk_sq_make_request+0x2ea/0x5d0
- [<ffffffff81656395>] ? dm_get_live_table+0x5/0xb0
- [<ffffffff813c7760>] generic_make_request+0xe0/0x130
- [<ffffffff813c7828>] submit_bio+0x78/0x160
- [<ffffffffa02ffcc6>] _xfs_buf_ioapply+0x2e6/0x420 [xfs]
- [<ffffffffa0300328>] ? __xfs_buf_delwri_submit+0x1d8/0x5b0 [xfs]
- [<ffffffffa02fff22>] xfs_buf_submit+0xd2/0x300 [xfs]
- [<ffffffffa0300328>] __xfs_buf_delwri_submit+0x1d8/0x5b0 [xfs]
- [<ffffffffa03021af>] ? xfs_buf_delwri_submit_nowait+0x2f/0x50 [xfs]
- [<ffffffffa03021af>] xfs_buf_delwri_submit_nowait+0x2f/0x50 [xfs]
- [<ffffffffa0340635>] xfsaild+0x275/0xe30 [xfs]
- [<ffffffffa03403c0>] ? xfs_trans_ail_cursor_first+0xb0/0xb0 [xfs]
- [<ffffffff810cda79>] kthread+0xf9/0x110
- [<ffffffff810cd980>] ? kthread_create_on_node+0x250/0x250
- [<ffffffff8182717c>] ret_from_fork+0x7c/0xb0
- [<ffffffff810cd980>] ? kthread_create_on_node+0x250/0x250
-Code: ff 0f 1f 44 00 00 eb 84 48 8b 4d b8 8b 55 b0 48 c7 c6 19 42 07 a0 48 c7 c7 78 50 07 a0 31 c0 31 db e8 10 5d 3b e1 e9 4d fd ff ff <0f> 0b bb fb ff ff ff e9 41 fd ff ff 66 66 66 66 66 66 2e 0f 1f
-RIP  [<ffffffffa00729e5>] virtqueue_add_sgs+0x415/0x430 [virtio_ring]
- RSP <ffff880118037678>
----[ end trace 823f74f9a11abe26 ]---
-
-This occurs on the latest tot kernel (commit 0429fbc0bdc2) but appears
-to originate sometime during the 3.16 development cycle. A bisect lands
-on the following commit:
-
-05f1dd53 block: add queue flag for disabling SG merging
-
-To corroborate that, the appended diff appears to work around the
-problem for me (included as a data point, not a fix, as I'm not familiar
-with the block layer). Let me know if I can provide any more info,
-thanks!
-
-Brian
-
----8<---
-
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 0a58140..5861bd72 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -634,7 +634,7 @@ static int virtblk_probe(struct virtio_device *vdev)
- 	vblk->tag_set.ops = &virtio_mq_ops;
- 	vblk->tag_set.queue_depth = virtblk_queue_depth;
- 	vblk->tag_set.numa_node = NUMA_NO_NODE;
--	vblk->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
-+	vblk->tag_set.flags = BLK_MQ_F_SHOULD_MERGE|BLK_MQ_F_SG_MERGE;
- 	vblk->tag_set.cmd_size =
- 		sizeof(struct virtblk_req) +
- 		sizeof(struct scatterlist) * sg_elems;
+> 
+> ---
+> 
+> This macro is only used in the NCR5380 drivers and they don't include
+> this header.
+> 
+> ---
+>  drivers/scsi/tmscsim.h |    2 --
+>  1 file changed, 2 deletions(-)
+> 
+> Index: linux/drivers/scsi/tmscsim.h
+> ===================================================================
+> --- linux.orig/drivers/scsi/tmscsim.h	2014-09-29 10:55:44.000000000 +1000
+> +++ linux/drivers/scsi/tmscsim.h	2014-10-01 16:33:25.000000000 +1000
+> @@ -10,8 +10,6 @@
+>  
+>  #include <linux/types.h>
+>  
+> -#define SCSI_IRQ_NONE 255
+> -
+>  #define MAX_ADAPTER_NUM 	4
+>  #define MAX_SG_LIST_BUF 	16	/* Not used */
+>  #define MAX_SCSI_ID		8
+> 
