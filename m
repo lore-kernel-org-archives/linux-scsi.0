@@ -1,134 +1,162 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/5] block: set the nr of sectors a dev can compare and write atomically
-Date: Thu, 16 Oct 2014 00:37:11 -0500
-Message-ID: <1413437835-13778-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/5] scsi: add support for COMPARE_AND_WRITE
+Date: Thu, 16 Oct 2014 00:37:13 -0500
+Message-ID: <1413437835-13778-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39637 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750951AbaJPFha (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2014 01:37:30 -0400
 In-Reply-To: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
-Sender: target-devel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This adds blk settings helpers to allow drivers to tell the block layer
-how many sectors it can process in a COMPARE_AND_WRITE/ATS request.
+This patch adds support to detect if a device supports COMPARE_AND_WRITE
+and execute REQ_COMPARE_AND_WRITE commands.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- block/blk-settings.c   |   20 ++++++++++++++++++++
- block/blk-sysfs.c      |   11 +++++++++++
- include/linux/blkdev.h |    3 +++
- 3 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_lib.c |    7 +++++
+ drivers/scsi/sd.c       |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h       |    1 +
+ 3 files changed, 71 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f1a1795..b33cf1c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -114,6 +114,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->max_segment_size = BLK_MAX_SEGMENT_SIZE;
- 	lim->max_sectors = lim->max_hw_sectors = BLK_SAFE_MAX_SECTORS;
- 	lim->chunk_sectors = 0;
-+	lim->max_cmp_and_write_sectors = 0;
- 	lim->max_write_same_sectors = 0;
- 	lim->max_discard_sectors = 0;
- 	lim->discard_granularity = 0;
-@@ -147,6 +148,7 @@ void blk_set_stacking_limits(struct queue_limits *lim)
- 	lim->max_hw_sectors = UINT_MAX;
- 	lim->max_segment_size = UINT_MAX;
- 	lim->max_sectors = UINT_MAX;
-+	lim->max_cmp_and_write_sectors = UINT_MAX;
- 	lim->max_write_same_sectors = UINT_MAX;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d837dc1..9e7ba4f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1021,6 +1021,13 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			/* See SSC3rXX or current. */
+ 			action = ACTION_FAIL;
+ 			break;
++		case MISCOMPARE:
++			/* miscompare during verify */
++			if (sshdr.asc == 0x1d)
++				/* TODO: better error code to use ??? */
++				error = -ECANCELED;
++			action = ACTION_FAIL;
++			break;
+ 		default:
+ 			action = ACTION_FAIL;
+ 			break;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2c2041c..d1fa4ef 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -477,6 +477,16 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
  }
- EXPORT_SYMBOL(blk_set_stacking_limits);
-@@ -298,6 +300,22 @@ void blk_queue_chunk_sectors(struct request_queue *q, unsigned int chunk_sectors
- EXPORT_SYMBOL(blk_queue_chunk_sectors);
+ static DEVICE_ATTR_RW(max_write_same_blocks);
  
- /**
-+ * blk_queue_max_cmp_and_write_sectors - set max sectors for a single request
-+ * @q:  the request queue for the device
-+ * @max_cmp_and_write_sectors: maximum number of 512b sectors to cmp and write
-+ *
-+ * Description:
-+ *    This sets the total number of sectors that the device can process
-+ *    in a compare and write operation.
-+ **/
-+void blk_queue_max_cmp_and_write_sectors(struct request_queue *q,
-+					 unsigned int max_cmp_and_write_sectors)
++static ssize_t
++max_cmp_and_write_blocks_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
 +{
-+	q->limits.max_cmp_and_write_sectors = max_cmp_and_write_sectors;
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->max_cmp_and_write_blocks);
 +}
-+EXPORT_SYMBOL(blk_queue_max_cmp_and_write_sectors);
++static DEVICE_ATTR_RO(max_cmp_and_write_blocks);
++
+ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_cache_type.attr,
+ 	&dev_attr_FUA.attr,
+@@ -488,6 +498,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_thin_provisioning.attr,
+ 	&dev_attr_provisioning_mode.attr,
+ 	&dev_attr_max_write_same_blocks.attr,
++	&dev_attr_max_cmp_and_write_blocks.attr,
+ 	&dev_attr_max_medium_access_timeouts.attr,
+ 	NULL,
+ };
+@@ -635,6 +646,54 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
+ 	scsi_set_prot_type(scmd, dif);
+ }
+ 
++static void sd_config_cmp_and_write(struct scsi_disk *sdkp)
++{
++	if (sdkp->max_cmp_and_write_blocks > sdkp->max_xfer_blocks) {
++		/* Invalid settings returned. Do not try to support for now */
++		blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue, 0);
++		return;
++	}
++
++	/*
++	 * mult by 2, because the block layer wants the total number of
++	 * sectors that will be put in bios and transferred.
++	 */
++	blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue,
++					2 * sdkp->max_cmp_and_write_blocks *
++					(sdkp->device->sector_size  >> 9));
++}
 +
 +/**
-  * blk_queue_max_discard_sectors - set max sectors for a single discard
-  * @q:  the request queue for the device
-  * @max_discard_sectors: maximum number of sectors to discard
-@@ -548,6 +566,8 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 	t->max_hw_sectors = min_not_zero(t->max_hw_sectors, b->max_hw_sectors);
- 	t->max_write_same_sectors = min(t->max_write_same_sectors,
- 					b->max_write_same_sectors);
-+	t->max_cmp_and_write_sectors = min(t->max_cmp_and_write_sectors,
-+					   b->max_cmp_and_write_sectors);
- 	t->bounce_pfn = min_not_zero(t->bounce_pfn, b->bounce_pfn);
- 
- 	t->seg_boundary_mask = min_not_zero(t->seg_boundary_mask,
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 17f5c84..c546400 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -161,6 +161,11 @@ static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
- 		(unsigned long long)q->limits.max_write_same_sectors << 9);
- }
- 
-+static ssize_t queue_cmp_and_write_max_show(struct request_queue *q, char *page)
++ * sd_setup_cmp_and_write_cmnd - compare and write data
++ * @cmd: scsi_cmnd to prepare
++ **/
++static int sd_setup_cmd_and_write_cmd(struct scsi_cmnd *cmd)
 +{
-+	return sprintf(page, "%llu\n",
-+		(unsigned long long)q->limits.max_cmp_and_write_sectors << 9);
-+}
- 
- static ssize_t
- queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
-@@ -374,6 +379,11 @@ static struct queue_sysfs_entry queue_write_same_max_entry = {
- 	.show = queue_write_same_max_show,
- };
- 
-+static struct queue_sysfs_entry queue_cmp_and_write_max_entry = {
-+	.attr = {.name = "cmp_and_write_max_bytes", .mode = S_IRUGO },
-+	.show = queue_cmp_and_write_max_show,
-+};
++	struct request *rq = cmd->request;
++	struct scsi_device *sdp = cmd->device;
++	sector_t sector = blk_rq_pos(rq);
++	unsigned int nr_sectors = blk_rq_sectors(rq);
 +
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_show_nonrot,
-@@ -422,6 +432,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_discard_max_entry.attr,
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_write_same_max_entry.attr,
-+	&queue_cmp_and_write_max_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 518b465..6d03206 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -290,6 +290,7 @@ struct queue_limits {
- 	unsigned int		io_opt;
- 	unsigned int		max_discard_sectors;
- 	unsigned int		max_write_same_sectors;
-+	unsigned int		max_cmp_and_write_sectors;
- 	unsigned int		discard_granularity;
- 	unsigned int		discard_alignment;
++	sector >>= ilog2(sdp->sector_size) - 9;
++	nr_sectors >>= ilog2(sdp->sector_size) - 9;
++
++	cmd->cmnd[0] = COMPARE_AND_WRITE;
++	put_unaligned_be64(sector, &cmd->cmnd[2]);
++	/*
++	 * rq/bio contains total data to transfer, but the nr LBAs field
++	 * is only the data to be compared/written in each step of the
++	 * operation.
++	 */
++	cmd->cmnd[13] = nr_sectors >> 1;
++	/* TODO - wrprotect and FUA and DPO flags */
++
++	cmd->transfersize = sdp->sector_size;
++	cmd->allowed = SD_MAX_RETRIES;
++	rq->timeout = SD_TIMEOUT;
++
++	return scsi_init_io(cmd, GFP_ATOMIC);
++}
++
+ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ {
+ 	struct request_queue *q = sdkp->disk->queue;
+@@ -1134,6 +1193,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+ 		return sd_setup_write_same_cmnd(cmd);
+ 	else if (rq->cmd_flags & REQ_FLUSH)
+ 		return sd_setup_flush_cmnd(cmd);
++	else if (rq->cmd_flags & REQ_CMP_AND_WRITE)
++		return sd_setup_cmd_and_write_cmd(cmd);
+ 	else
+ 		return sd_setup_read_write_cmnd(cmd);
+ }
+@@ -2596,6 +2657,8 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			 get_unaligned_be16(&buffer[6]) * sector_sz);
+ 	blk_queue_io_opt(sdkp->disk->queue,
+ 			 get_unaligned_be32(&buffer[12]) * sector_sz);
++	sdkp->max_cmp_and_write_blocks = buffer[5];
++	sd_config_cmp_and_write(sdkp);
  
-@@ -1009,6 +1010,8 @@ extern void blk_queue_max_hw_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_chunk_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_max_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
-+extern void blk_queue_max_cmp_and_write_sectors(struct request_queue *,
-+		unsigned int max_cmp_and_write_sectors);
- extern void blk_queue_max_discard_sectors(struct request_queue *q,
- 		unsigned int max_discard_sectors);
- extern void blk_queue_max_write_same_sectors(struct request_queue *q,
+ 	if (buffer[3] == 0x3c) {
+ 		unsigned int lba_count, desc_count;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 4c3ab83..fe04ac8 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -68,6 +68,7 @@ struct scsi_disk {
+ 	sector_t	capacity;	/* size in 512-byte sectors */
+ 	u32		max_xfer_blocks;
+ 	u32		max_ws_blocks;
++	u32		max_cmp_and_write_blocks;
+ 	u32		max_unmap_blocks;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
 -- 
 1.7.1
+
