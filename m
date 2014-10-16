@@ -1,63 +1,53 @@
 From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] aic7xxx: replace kmalloc/memset by kzalloc
-Date: Thu, 16 Oct 2014 20:05:58 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net>
-References: <1413486878-375-1-git-send-email-michael.opdenacker@free-electrons.com>
- <1413487720.15773.1.camel@perches.com> <54401CE3.8000307@free-electrons.com>
+Subject: RE: [PATCH 0/5] block/scsi/lio support for COMPARE_AND_WRITE
+Date: Thu, 16 Oct 2014 20:12:56 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295930E5A3@G4W3296.americas.hpqcorp.net>
+References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
+ <543FA05C.6060200@interlog.com> <54402421.8060808@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54401CE3.8000307@free-electrons.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <54402421.8060808@interlog.com>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Opdenacker <michael.opdenacker@free-electrons.com>, Joe Perches <joe@perches.com>
-Cc: "hare@suse.de" <hare@suse.de>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "julia.lawall@lip6.fr" <julia.lawall@lip6.fr>
+Sender: target-devel-owner@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
+
+
 
 > -----Original Message-----
 > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Michael Opdenacker
-> Sent: Thursday, 16 October, 2014 2:31 PM
+> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+> Sent: Thursday, 16 October, 2014 3:02 PM
 ...
-> On 10/16/2014 09:28 PM, Joe Perches wrote:
-> > On Thu, 2014-10-16 at 21:14 +0200, Michael Opdenacker wrote:
-> >
-> >
-> >  	/* Allocate SCB resources */
-> > -	scb_data->scbarray = kmalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC,
-> GFP_ATOMIC);
-> > +	scb_data->scbarray = kzalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC,
-> > +				GFP_ATOMIC);
+> On 14-10-16 12:39 PM, Douglas Gilbert wrote:
 ...
-> >
-> > Probably better as kcalloc.
+> > The COMPARE AND WRITE command may fail for other reasons
+> > such as a transport problem or a Unit Attention, so the
+> > SCSI eh logic may need to know about it.
 > 
-> Hey, well spotted! Thanks for your review. I will post a new version soon.
+> Elaborating ...
+> 
+> Hannes will enjoy this one: say a COMPARE AND WRITE (CAW) fails
+> due to a transport error or timeout. What should the EH do *** ?
+> Answer: read that LBA(s) to see whether the command succeeded
+> (i.e. wrote the new data)! If it did, do nothing; if it didn't,
+> repeat the CAW command. And naturally that second CAW may
+> yield a MISCOMPARE.
 
-kcalloc is helpful when one of the values is a variable that 
-might cause the multiply to overflow during runtime.  Here, 
-two constants are being multiplied together, which can
-be done and checked by the compiler at compile time.  
+I don't think that is safe.. detecting the write data is in
+place doesn't prove the COMPARE AND WRITE really worked as
+a whole.
 
-Since kcalloc and kmalloc_array are both static inline 
-functions:
-static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
-{
-        if (size != 0 && n > SIZE_MAX / size)
-                return NULL;
-        return __kmalloc(n * size, flags);
-}
-static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
-{
-        return kmalloc_array(n, size, flags | __GFP_ZERO);
-}
+Example: if two applications do this:
+* application 1: COMPARE AND WRITE: change 4 to 6
+* application 2: COMPARE AND WRITE: change 5 to 6
 
-a compiler that detects an overflow will probably just reduce
-that to an inlined "return NULL."
-	
-BUILD_BUG_ON could be used to trigger a compile-time error,
-instead of building a kernel that returns a run-time error.
+and they both run into transport errors, then they'll 
+both read back 6 and think their commands worked when
+really only one of them worked.
 
 ---
 Rob Elliott    HP Server Storage
