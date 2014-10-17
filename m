@@ -1,44 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] block: add function to issue compare and write
-Date: Fri, 17 Oct 2014 02:55:55 -0700
-Message-ID: <20141017095555.GA360@infradead.org>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
- <1413437835-13778-3-git-send-email-michaelc@cs.wisc.edu>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
+Date: Fri, 17 Oct 2014 03:58:58 -0700
+Message-ID: <20141017105858.GA7819@infradead.org>
+References: <5433E43D.3010107@acm.org>
+ <5433E557.3010505@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1413437835-13778-3-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+In-Reply-To: <5433E557.3010505-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 16, 2014 at 12:37:12AM -0500, michaelc@cs.wisc.edu wrote:
-> @@ -160,7 +160,7 @@ enum rq_flag_bits {
->  	__REQ_DISCARD,		/* request to discard sectors */
->  	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
->  	__REQ_WRITE_SAME,	/* write same block many times */
-> -
-> +	__REQ_CMP_AND_WRITE,	/* compare data and write if matched */
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index cc0bf83b..224ef25 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -853,7 +853,6 @@ static int srp_alloc_req_data(struct srp_rdma_ch *ch)
+>  			goto out;
+>  
+>  		req->indirect_dma_addr = dma_addr;
+> -		req->index = i;
+>  		list_add_tail(&req->list, &ch->free_reqs);
+>  	}
 
-I think it's time that we stop overloading the request flags with
-request types.
+Seems like a nice optimization for the future would be to preallocate
+the srp requests with the block ones and the scsi command.
 
-We already have req->cmd_type which actually is a fairly good
-description of what we get except for REQ_TYPE_FS, which is a horrible
-overload using req->cmd_flags.
-
-Given that you're just one of many currently ongoing patches to add
-more flags here I think you need to byte the bullet and fix this up
-by replacing REQ_TYPE_FS with:
-
-REQ_TYPE_WRITE
-REQ_TYPE_READ
-REQ_TYPE_FLUSH
-REQ_TYPE_DISCARD
-REQ_TYPE_WRITE_SAME
-REQ_TYPE_CMP_AND_WRITE
-
-sd.c is a nice guide of what should be a flag and what a type since my
-last refactoring of the command_init function.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
