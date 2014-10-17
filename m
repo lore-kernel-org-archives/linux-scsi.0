@@ -1,125 +1,89 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Sparc ESP problem with blk-mq
-Date: Fri, 17 Oct 2014 15:56:12 -0400 (EDT)
-Message-ID: <20141017.155612.266274322805506383.davem@davemloft.net>
-References: <20141015133551.GA15539@infradead.org>
-	<20141015.165324.1768019967735260346.davem@davemloft.net>
-	<alpine.LRH.2.11.1410160942150.13273@adalberg.ut.ee>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH]: add debug flag parameter for SCSI tape driver - 2nd
+ request
+Date: Fri, 17 Oct 2014 16:20:29 -0400 (EDT)
+Message-ID: <753462044.46450262.1413577229927.JavaMail.zimbra@redhat.com>
+References: <101311718.17236924.1402433475036.JavaMail.zimbra@redhat.com> <1374689615.17272341.1402444113231.JavaMail.zimbra@redhat.com> <1CAC495F-3A9A-45B1-8E15-4B6D3F17114D@kolumbus.fi>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.11.1410160942150.13273@adalberg.ut.ee>
-Sender: sparclinux-owner@vger.kernel.org
-To: mroos@linux.ee
-Cc: hch@infradead.org, axboe@kernel.dk, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:54445 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752596AbaJQUUo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2014 16:20:44 -0400
+In-Reply-To: <1CAC495F-3A9A-45B1-8E15-4B6D3F17114D@kolumbus.fi>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>, Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: mroos@linux.ee
-Date: Thu, 16 Oct 2014 09:43:34 +0300 (EEST)
+Hello Kai
 
-> [  158.730919] ESP: tgt[6] lun[0] scsi_cmd [ 12 00 00 00 24 00 ]
-> [  158.799397] ESP: intr sreg[87] seqreg[00] sreg2[00] ireg[18]
+You have seen this patch before. The first time around, given that we don't enable DEBUG by default, I let it go.
+However we have been looking into defining DEBUG 1 by default here at Redhat and then setting the default to disabled.
 
-Target 6 responds, Bus Service + Function Done interrupt.
+Are you open to considering changing the driver based on this patch.
+i.e. default DEFINE 1 and adding this code with default set to off.
 
-Status register 1 indicates interrupt pending, phase is MESSAGE IN.
+Note that with DEBUG 0, as you know you need to change that and recompile. 
+That is exactly what I am trying to avoid with Enterprise customers.
 
-> [  158.866964] ESP: intr sreg[87] seqreg[02] sreg2[00] ireg[08]
+This patch adds a debug_flag parameter that can be set on module load, and allows the DEBUG facility without a module recompile.
+Note that now DEBUG 1 is the default with this patch.
 
-Another interrupt, just plain Function Done, we're getting the
-message-in byte.  Phase is unchanged.
+Usage: modprobe st debug_flag=1
 
-> [  158.934651] ESP: Got msgin byte 7
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
 
-Receive MESSAGE_REJECT (0x7).
-
-> [  158.974329] ESP: intr sreg[86] seqreg[02] sreg2[00] ireg[10]
-
-Bus Service interrupt, we've moved to Message Out phase.
-
-> [  159.041950] ESP: Sending message [ 06 ]
-
-Sending ABORT_TASK_SET message.
-
-> [  159.087894] ESP: intr sreg[80] seqreg[02] sreg2[00] ireg[20]
-
-Disconnect interrupt.
-
-> [  159.155522] ESP: start data addr[c01f1100] len[36] write(0)
-> [  159.222248] ESP: intr sreg[80] seqreg[02] sreg2[00] ireg[40]
-> [  159.289891] ESP: unexpected IREG 40
-
-We attempt some kind of data transfer (maybe for the status block)
-and the device gives us an illegal-command interrupt.
-
-More details in the event log that gets dumped:
-
-[  161.208873] esp: esp0: ent[31] EVENT val[0d] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[0c]
-
-Check Phase
-
-[  161.318255] esp: esp0: ent[0] EVENT val[06] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[0d]
-
-Message In
-
-[  161.426599] esp: esp0: ent[1] CMD val[01] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[06]
-
-Give FIFO flush ESP command
-
-[  161.532860] esp: esp0: ent[2] CMD val[10] sreg[87] seqreg[02] sreg2[00] ireg[18] ss[00] event[06]
-
-Give "transfer information" ESP command.
-
-[  161.639125] esp: esp0: ent[3] CMD val[1a] sreg[87] seqreg[02] sreg2[00] ireg[08] ss[00] event[06]
-
-Give "Set ATN" command to move to message-out to give the chip the
-ABORT message.
-
-[  161.745386] esp: esp0: ent[4] CMD val[12] sreg[87] seqreg[02] sreg2[00] ireg[08] ss[00] event[06]
-
-Give "Message OK" command to ACK the message-in from the device.
-
-[  161.851643] esp: esp0: ent[5] EVENT val[0d] sreg[87] seqreg[02] sreg2[00] ireg[08] ss[00] event[06]
-
-Check Phase.
-
-[  161.959990] esp: esp0: ent[6] EVENT val[09] sreg[86] seqreg[02] sreg2[00] ireg[10] ss[00] event[0d]
-
-Message Out.
-
-[  162.068332] esp: esp0: ent[7] CMD val[01] sreg[86] seqreg[02] sreg2[00] ireg[10] ss[00] event[09]
-
-Flush FIFO
-
-[  162.174593] esp: esp0: ent[8] CMD val[10] sreg[86] seqreg[02] sreg2[00] ireg[10] ss[00] event[09]
-
-Transfer Information
-
-[  162.280854] esp: esp0: ent[9] EVENT val[0a] sreg[86] seqreg[02] sreg2[00] ireg[10] ss[00] event[09]
-
-Message Out done.
-
-[  162.389204] esp: esp0: ent[10] EVENT val[0d] sreg[80] seqreg[02] sreg2[00] ireg[20] ss[00] event[0a]
-
-Check Phase.
-
-[  162.498588] esp: esp0: ent[11] EVENT val[04] sreg[80] seqreg[02] sreg2[00] ireg[20] ss[00] event[0d]
-
-Data Out.
-
-[  162.607977] esp: esp0: ent[12] CMD val[90] sreg[80] seqreg[02] sreg2[00] ireg[20] ss[00] event[04]
-
-Perform DMA based Transfer Information
-
-[  162.715275] esp: esp0: ent[13] EVENT val[05] sreg[80] seqreg[02] sreg2[00] ireg[20] ss[00] event[04]
-
-Data done.
-
-What's really weird is that we disconnected as per the next-to-last interrupt in the top-level
-trace, but then we try to send the device data.  I wonder why we don't pick up on this :-/
-It seems the interrupt processing only picks up cleanly if we have not selected successfully
-yet, and this code path things we have (via esp->select_state).
-
-I'll try to see if there is anything about the blk-mq code paths that
-might shed some more light on this.
+diff -Nur a/st.c b/st.c
+--- a/st.c	2014-10-17 16:15:54.103810627 -0400
++++ b/st.c	2014-10-17 16:22:12.303810392 -0400
+@@ -56,7 +56,7 @@
+ 
+ /* The driver prints some debugging information on the console if DEBUG
+    is defined and non-zero. */
+-#define DEBUG 0
++#define DEBUG 1
+ 
+ #define ST_DEB_MSG  KERN_NOTICE
+ #if DEBUG
+@@ -80,6 +80,7 @@
+ static int try_direct_io = TRY_DIRECT_IO;
+ static int try_rdio = 1;
+ static int try_wdio = 1;
++static int debug_flag = 0;
+ 
+ static struct class st_sysfs_class;
+ static const struct attribute_group *st_dev_groups[];
+@@ -100,6 +101,9 @@
+ MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather segments to use (256)");
+ module_param_named(try_direct_io, try_direct_io, int, 0);
+ MODULE_PARM_DESC(try_direct_io, "Try direct I/O between user buffer and tape drive (1)");
++module_param_named(debug_flag, debug_flag, int, 0);
++MODULE_PARM_DESC(debug_flag, "Enable DEBUG, same as setting debugging=1");
++
+ 
+ /* Extra parameters for testing */
+ module_param_named(try_rdio, try_rdio, int, 0);
+@@ -124,6 +128,9 @@
+ 	},
+ 	{
+ 		"try_direct_io", &try_direct_io
++        },
++        {
++                "debug_flag", &debug_flag
+ 	}
+ };
+ #endif
+@@ -4306,6 +4313,11 @@
+ 
+ 	validate_options();
+ 
++        debugging = (debug_flag > 0) ? debug_flag : DEBUG;
++         if (debugging)
++                printk(KERN_INFO "st: Debugging enabled debug_flag = %d\n",debugging);
++
++
+ 	printk(KERN_INFO "st: Version %s, fixed bufsize %d, s/g segs %d\n",
+ 		verstr, st_fixed_buffer_size, st_max_sg_segs);
