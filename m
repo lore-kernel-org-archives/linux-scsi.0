@@ -1,33 +1,28 @@
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Subject: Re: [PATCH] scsi: Resolve some missing-field-initializers warnings
-Date: Fri, 17 Oct 2014 22:44:36 +0000
-Message-ID: <C69957AC-DB35-467C-85B1-091B740C74C9@intel.com>
-References: <1413293933-31164-1-git-send-email-jeffrey.t.kirsher@intel.com>,<20141017132611.GM16538@infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] Fix off-by-one LUN check in scsi_scan_host_selected()
+Date: Fri, 17 Oct 2014 19:30:56 -0400
+Message-ID: <yq1r3y62s0f.fsf@sermon.lab.mkp.net>
+References: <20141009123948.ed14b2f96456fecdb4af960b@clara.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65341 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbaJQWoi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2014 18:44:38 -0400
-In-Reply-To: <20141017132611.GM16538@infradead.org>
-Content-Language: en-US
+Received: from userp1040.oracle.com ([156.151.31.81]:29507 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751335AbaJQXbF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2014 19:31:05 -0400
+In-Reply-To: <20141009123948.ed14b2f96456fecdb4af960b@clara.co.uk> (Mark
+	Knibbs's message of "Thu, 9 Oct 2014 12:39:48 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Mark Knibbs <markk@clara.co.uk>
+Cc: linux-scsi@vger.kernel.org
 
-The warning appears in W=2 builds. I had another way to silence it by using diagnostic control macros, but those macros were not accepted. Using a single designated initialization also silences it.
+>>>>> "Mark" == Mark Knibbs <markk@clara.co.uk> writes:
 
-Sent from my iPhone
+Mark> Hi, The Scsi_Host structure max_lun field is the maximum allowed
+Mark> LUN plus 1. So a LUN value is invalid if >= max_lun.
 
-> On Oct 17, 2014, at 8:26 AM, "Christoph Hellwig" <hch@infradead.org> wrote:
-> 
->> On Tue, Oct 14, 2014 at 06:38:53AM -0700, Jeff Kirsher wrote:
->> From: Mark Rustad <mark.d.rustad@intel.com>
->> 
->> Resolve some missing-field-initializers warnings by using
->> designated initialization.
-> 
-> What tool is warning about these?  This construct is perfectly valid C.
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
