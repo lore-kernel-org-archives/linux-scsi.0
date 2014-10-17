@@ -1,37 +1,50 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH v2 01/12] blk-mq: Use all available hardware queues
-Date: Fri, 17 Oct 2014 17:11:40 +0300
-Message-ID: <04EB7E61-5273-433D-9730-EA4EB963D2BD@dev.mellanox.co.il>
-References: <5433E43D.3010107@acm.org> <5433E473.4020102@acm.org> <5433FA8F.3050100@kernel.dk> <54353A74.7040406@acm.org> <20141011111114.GB9593@infradead.org> <543B9F47.2090204@acm.org> <20141017132053.GF16538@infradead.org>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20141017132053.GF16538-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: PC partition tables are little endian
+Date: Fri, 17 Oct 2014 17:24:03 +0200
+Message-ID: <54413493.9050702@suse.de>
+References: <1412188261-29632-1-git-send-email-hch@lst.de> <20141017131349.GB16538@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:47756 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751408AbaJQPYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Oct 2014 11:24:07 -0400
+In-Reply-To: <20141017131349.GB16538@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
 
+On 10/17/2014 03:13 PM, Christoph Hellwig wrote:
+> ping?
+>
+> On Wed, Oct 01, 2014 at 08:31:01PM +0200, Christoph Hellwig wrote:
+>> As sparse correctly pointed out scsi_partsize should use get_unalign=
+ed_le32
+>> to read PC partition tables from disk, as they are little endian.
+>>
+>> The result of this bug is that we returned incorrect geometries on b=
+ig
+>> endian systems when using the scsicam variant.  Which probably doesn=
+'t
+>> matter as only old x86 systems every cared about the geometry.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
->> On Mon, Oct 13, 2014 at 11:45:43AM +0200, Bart Van Assche wrote:
->> Since patch 1/12 already has been sent separately to Jens patches
->> 2/12..12/12 remain. The SRP initiator changes in this series depend on the
->> blk-mq and scsi-mq features added in patches 2/12..4/12. I think we should
->> avoid splitting these patches over multiple kernel trees to avoid having to
->> deal with dependencies between kernel trees.
-> 
-> I'd like to pull it in and Roland already did indicate that he's fine
-> with it.
-> 
-> Sagi, can I get a review from you for the remaining SRP patches?
+Cheers,
 
-As I promised Bart, it's on my todo list. Unfortunately this week I was violently pulled to another project...
-It's a holiday here in Israel, so I'm planning to review the set by mid next week.
-
-Sagi.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
