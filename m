@@ -1,38 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/5] block: add function to issue compare and write
-Date: Fri, 17 Oct 2014 19:38:37 -0400
-Message-ID: <yq1egu62rnm.fsf@sermon.lab.mkp.net>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
-	<1413437835-13778-3-git-send-email-michaelc@cs.wisc.edu>
-	<20141017095555.GA360@infradead.org>
+Subject: Re: [PATCH] scsi: PC partition tables are little endian
+Date: Fri, 17 Oct 2014 19:47:25 -0400
+Message-ID: <yq161fi2r8y.fsf@sermon.lab.mkp.net>
+References: <1412188261-29632-1-git-send-email-hch@lst.de>
+	<20141017131349.GB16538@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20141017095555.GA360@infradead.org> (Christoph Hellwig's message
-	of "Fri, 17 Oct 2014 02:55:55 -0700")
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45553 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbaJQXr5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Oct 2014 19:47:57 -0400
+In-Reply-To: <20141017131349.GB16538@infradead.org> (Christoph Hellwig's
+	message of "Fri, 17 Oct 2014 06:13:50 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
 
 >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-Christoph> We already have req->cmd_type which actually is a fairly good
-Christoph> description of what we get except for REQ_TYPE_FS, which is a
-Christoph> horrible overload using req->cmd_flags.
+>> As sparse correctly pointed out scsi_partsize should use
+>> get_unaligned_le32 to read PC partition tables from disk, as they are
+>> little endian.
+>> 
+>> The result of this bug is that we returned incorrect geometries on
+>> big endian systems when using the scsicam variant.  Which probably
+>> doesn't matter as only old x86 systems every cared about the
+>> geometry.
 
-Christoph> Given that you're just one of many currently ongoing patches
-Christoph> to add more flags here I think you need to byte the bullet
-Christoph> and fix this up by replacing REQ_TYPE_FS with:
-
-Christoph> REQ_TYPE_WRITE REQ_TYPE_READ REQ_TYPE_FLUSH REQ_TYPE_DISCARD
-Christoph> REQ_TYPE_WRITE_SAME REQ_TYPE_CMP_AND_WRITE
-
-The problem with this is that, as it stands, a bio has no type. And it
-would suck if we couldn't keep bio rw and request flags in sync.
-
-I wonder if it would make more sense to move the remaining rq types to
-cmd_flags after I'm done with the 64-bit conversion?
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
