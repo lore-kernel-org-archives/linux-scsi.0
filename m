@@ -1,75 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/5] block/scsi/lio support for COMPARE_AND_WRITE
-Date: Sat, 18 Oct 2014 15:32:12 -0500
-Message-ID: <5442CE4C.9090301@cs.wisc.edu>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu> <544220C3.2010900@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <ceph-devel-owner@vger.kernel.org>
-In-Reply-To: <544220C3.2010900@acm.org>
-Sender: ceph-devel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk, Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH 2/5] scsi: bfa: bfa_fcs_lport.c:  Cleaning up missing null-terminate by switching from strncpy to strzcpy
+Date: Sun, 19 Oct 2014 00:13:10 +0200
+Message-ID: <1413670390-6259-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andi Kleen <ak@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Dan Carpenter <dan.carpenter@oracle.com>, Grant Likely <grant.likely@linaro.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/18/2014 03:11 AM, Bart Van Assche wrote:
-> On 10/16/14 07:37, michaelc@cs.wisc.edu wrote:
->> The following patches implement the SCSI command COMPARE_AND_WRITE as
->> a new
->> bio/request type REQ_CMP_AND_WRITE. COMPARE_AND_WRITE is defined in the
->> SCSI SBC (SCSI block command) specs as:
->>
->> The COMPARE AND WRITE command requests that the device server perform the
->> following as an uninterrupted series of actions:
->>
->> 1) perform the following operations:
->>          A) read the specified logical blocks; and
->>          B) transfer the specified number of logical blocks from the
->> Data-Out
->>          Buffer (i.e., the verify instance of the data is transferred
->> from the
->>          Data-Out Buffer);
->>
->> 2) compare the data read from the specified logical blocks with the
->> verify
->> instance of the data; and
->> 3) If the compared data matches, then perform the following operations:
->>          1) transfer the specified number of logical blocks from the
->> Data-Out
->>          Buffer (i.e., the write instance of the data transferred from
->> the
->>          Data-Out Buffer); and
->>          2) write those logical blocks.
-> 
-> Hello Mike,
-> 
-> Just below the above text one can find the following additional
-> requirement in SBC-4:
-> <quote>
-> 4) if the compare operation does not indicate a match, then terminate
->    the command with CHECK CONDITION status with the sense key set to
->    MISCOMPARE and the additional sense code set to MISCOMPARE DURING
->    VERIFY OPERATION. In the sense data (see 4.18 and SPC-4) the offset
->    from the start of the Data-Out Buffer to the first byte of data that
->    was not equal shall be reported in the INFORMATION field.
-> </quote>
-> 
-> What I'm wondering now is how requirement (4) can be supported if
-> REQ_CMP_AND_WRITE doesn't return the offset of the first byte that
-> didn't match ? Additionally, shouldn't compare_and_write_callback() be
-> fixed such that it returns the miscompare offset to its caller ?
-> 
+Ensures that the string is null-terminate in connection with the
+use of strncpy, by switching from strncpy to strzcpy.
 
-Yeah, Hannes pointed out that the original LIO code did not support
-this. For the original code, I will fix that in another patchset to keep
-this one smaller and focused. For what I need, I have been trying to
-think of a nice way to pass additional info around. I think the options are:
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-1. Instead of making it bio/request based, make it a
-request_queue->compare_and_write function. We then just stack them and
-can add whatever arguments/return values are necessary and do not have
-to mess with the bio/request structs and function chains.
-
-2. Add another argument to the end io functions that can be used to pass
-back bio/request type specific info.
-
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index ff75ef8..78af89e 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -2633,7 +2633,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+ 	strncpy(hba_attr->driver_version, (char *)driver_info->version,
+ 		sizeof(hba_attr->driver_version));
+ 
+-	strncpy(hba_attr->os_name, driver_info->host_os_name,
++	strzcpy(hba_attr->os_name, driver_info->host_os_name,
+ 		sizeof(hba_attr->os_name));
+ 
+ 	/*
+-- 
+1.7.10.4
