@@ -1,33 +1,40 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH scsi] libcxgbi : support ipv6 address host_param
-Date: Sat, 18 Oct 2014 08:12:03 -0700
-Message-ID: <20141018151203.GA30355@infradead.org>
-References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
- <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] vmw_pvscsi: fixup tagging
+Date: Sat, 18 Oct 2014 08:13:29 -0700
+Message-ID: <20141018151329.GB30355@infradead.org>
+References: <1412234501-78199-1-git-send-email-hare@suse.de>
+ <20141017131651.GD16538@infradead.org>
+ <41c186a1dcd04732a87f8bc47336a5d7@EX13-MBX-025.vmware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56413 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:56439 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaJRPMG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Oct 2014 11:12:06 -0400
+	with ESMTP id S1751054AbaJRPNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Oct 2014 11:13:35 -0400
 Content-Disposition: inline
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
+In-Reply-To: <41c186a1dcd04732a87f8bc47336a5d7@EX13-MBX-025.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: Hannes Reinecke <hare@suse.de>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 17, 2014 at 07:43:34PM +0000, Anish Bhatt wrote:
-> I actually wanted to get some clarification on how the branches on scsi-queue
->  work. The core/drivers separation is easy enough, but the current branches 
-> are confusing. If say I am submitting a bug fix for the next 3.17 release, what
->  branch should I be basing my changes on ? Is there a preferred procedure for
->  submitting bug fixes vs new features ?
+On Fri, Oct 17, 2014 at 06:34:48PM +0000, Arvind Kumar wrote:
+> Hi Christoph,
+> 
+> Thanks for the change. Sorry for the delay. The change looks fine to me. I just have a question.
+> 
+> The comment in include/scsi/scsi_cmnd.h says:
+> 
+> struct scsi_cmnd {
+> ...
+>              unsigned char tag; /* SCSI-II queued command tag */
+> }
+> 
+> Is that comment not right? Should we update that too?
 
+The comment looks very confusing and I'm fine with a patch that just
+removes the comment.  That being said Hannes has patches to remove the
+whole field which I'd like to merge once he fixes up the remaining
+issues, so it might not worth the effort.
 
-Anything that is an urgent and/or very small fix should just be against
-Linus' current tree and will go into the drivers branch for that tree.
-
-Anything bigger and/or less urgent should be sent against the drivers
-branch for the next release.
