@@ -1,30 +1,63 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH scsi] libcxgbi : support ipv6 address host_param
-Date: Sat, 18 Oct 2014 08:18:43 -0700
-Message-ID: <20141018151843.GA4262@infradead.org>
-References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
- <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
- <20141018151203.GA30355@infradead.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Sparc ESP problem with blk-mq
+Date: Sat, 18 Oct 2014 13:31:32 -0400 (EDT)
+Message-ID: <20141018.133132.1505060820853861420.davem@davemloft.net>
+References: <20141015.165324.1768019967735260346.davem@davemloft.net>
+	<alpine.LRH.2.11.1410160942150.13273@adalberg.ut.ee>
+	<20141017.155612.266274322805506383.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56578 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaJRPSn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Oct 2014 11:18:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20141018151203.GA30355@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20141017.155612.266274322805506383.davem@davemloft.net>
+Sender: sparclinux-owner@vger.kernel.org
+To: mroos@linux.ee
+Cc: hch@infradead.org, axboe@kernel.dk, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Sat, Oct 18, 2014 at 08:12:03AM -0700, hch@infradead.org wrote:
-> Anything that is an urgent and/or very small fix should just be against
-> Linus' current tree and will go into the drivers branch for that tree.
-> 
-> Anything bigger and/or less urgent should be sent against the drivers
-> branch for the next release.
 
-Oh, and anything that should go into the current -rc should have an
-indicator for that, preferably in the [0/n] intro mail.
+Christoph, I don't see how the new tagging code with blk-mq can
+be providing compatible behavior for existing SCSI drivers.
+
+Do you know that scsi_populate_tag_msg() is always going to provide a
+tag?  Unconditionally, every time, when using blk-mq?
+
+This is because the test:
+
+	if (blk_rq_tagged(req))
+
+is always true if a blk-mq context is attached to the request.
+
+And every scsi request will have a blk-mq context.
+
+scsi_execute() {
+	req = blk_get_request(sdev->request_queue, write, __GFP_WAIT);
+	blk_get_request() {
+		if (q->mq_ops)
+			return blk_mq_alloc_request(q, rw, gfp_mask, false);
+		blk_mq_alloc_request() {
+			rq = __blk_mq_alloc_request(&alloc_data, rw);
+			__blk_mq_alloc_request() {
+				blk_mq_rq_ctx_init() {
+					rq->mq_ctx = ctx;
+
+and therefore:
+
+#define blk_rq_tagged(rq) \
+	((rq)->mq_ctx || ((rq)->cmd_flags & REQ_QUEUED))
+
+will always evaluate to true.
+
+This cannot work, because we can't put a TAG into the initial SCSI bus
+scanning messages for example.
+
+It is a common pattern in SCSI drivers to see if scsi_populate_tag_msg()
+succeeds and gives us a non-zero tag, to determine whether to enable
+DISCONNECT, whether to send the TAG in the initial MESSAGE_OUT phase
+after selection, etc.
+
+It has to be conditional upon the SCSI tcq state, perhaps a test on
+whether the queue_depth has been set to a non-zero value.
+
+scsi_populate_tag_msg() is giving out tags even when
+sdev->tagged_supported is false, which is bogus.
