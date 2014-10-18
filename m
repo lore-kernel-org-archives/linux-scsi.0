@@ -1,35 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] block: add function to issue compare and write
-Date: Sat, 18 Oct 2014 08:16:39 -0700
-Message-ID: <20141018151639.GF30355@infradead.org>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
- <1413437835-13778-3-git-send-email-michaelc@cs.wisc.edu>
- <20141017095555.GA360@infradead.org>
- <yq1egu62rnm.fsf@sermon.lab.mkp.net>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH scsi] libcxgbi : support ipv6 address host_param
+Date: Sat, 18 Oct 2014 08:18:43 -0700
+Message-ID: <20141018151843.GA4262@infradead.org>
+References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
+ <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
+ <20141018151203.GA30355@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56534 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:56578 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbaJRPQn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Oct 2014 11:16:43 -0400
+	with ESMTP id S1751151AbaJRPSn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Oct 2014 11:18:43 -0400
 Content-Disposition: inline
-In-Reply-To: <yq1egu62rnm.fsf@sermon.lab.mkp.net>
+In-Reply-To: <20141018151203.GA30355@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Fri, Oct 17, 2014 at 07:38:37PM -0400, Martin K. Petersen wrote:
-> The problem with this is that, as it stands, a bio has no type. And it
-> would suck if we couldn't keep bio rw and request flags in sync.
+On Sat, Oct 18, 2014 at 08:12:03AM -0700, hch@infradead.org wrote:
+> Anything that is an urgent and/or very small fix should just be against
+> Linus' current tree and will go into the drivers branch for that tree.
 > 
-> I wonder if it would make more sense to move the remaining rq types to
-> cmd_flags after I'm done with the 64-bit conversion?
+> Anything bigger and/or less urgent should be sent against the drivers
+> branch for the next release.
 
-I'd prefer adding a cmd_type to the bio as well and avoid the 64-bit
-flag conversion.  While we'll probably grow more types of I/Os (e.g.
-copy offload) I hope we can actually reduce the number of real flags,
-and it's easier to read for sure if we can switch on the command type
-in the driver.
-
+Oh, and anything that should go into the current -rc should have an
+indicator for that, preferably in the [0/n] intro mail.
