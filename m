@@ -1,31 +1,41 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH scsi] libcxgbi : support ipv6 address host_param
-Date: Sun, 19 Oct 2014 07:17:40 -0700
-Message-ID: <20141019141740.GB2485@infradead.org>
-References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
- <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
- <20141018151203.GA30355@infradead.org>
- <20141018151843.GA4262@infradead.org>
- <525DB349B3FB5444AE057A887CB2A8D8921883@nice.asicdesigners.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34857 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbaJSORm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Oct 2014 10:17:42 -0400
-Content-Disposition: inline
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D8921883@nice.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] Revert "block: all blk-mq requests are tagged"
+Date: Sun, 19 Oct 2014 17:13:57 +0200
+Message-ID: <1413731638-28305-2-git-send-email-hch@lst.de>
+References: <1413731638-28305-1-git-send-email-hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1413731638-28305-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Meelis Roos <mroos@linux.ee>
+Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anish Bhatt <anish@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Sun, Oct 19, 2014 at 04:07:59AM +0000, Anish Bhatt wrote:
-> Aah, thanks for the clarification. I have made mistakenly made this patch 
-> against drivers-for-3.18 then, but it applies cleanly to drivers-for-3.17 as 
-> well, please apply this to drivers-for-3.17.
+This reverts commit fb3ccb5da71273e7f0d50b50bc879e50cedd60e7.
 
-Linux 3.17 has been released.  The current merge window is the one for
-3.18, expected to be closed in about a week.  So urgent patches go into
-that, maybe with a Cc to stable@vger.kernel.org if they fix regressions.
+SCSI-2/SPI actually needs the tagged/untagged flag in the request to
+work properly.  Revert this patch and add a follow on to set it in
+the right place.
+
+Reported-by: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
+---
+ include/linux/blkdev.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0207a78..51d0dc2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1136,8 +1136,7 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
+ /*
+  * tag stuff
+  */
+-#define blk_rq_tagged(rq) \
+-	((rq)->mq_ctx || ((rq)->cmd_flags & REQ_QUEUED))
++#define blk_rq_tagged(rq)		((rq)->cmd_flags & REQ_QUEUED)
+ extern int blk_queue_start_tag(struct request_queue *, struct request *);
+ extern struct request *blk_queue_find_tag(struct request_queue *, int);
+ extern void blk_queue_end_tag(struct request_queue *, struct request *);
+-- 
+1.9.1
