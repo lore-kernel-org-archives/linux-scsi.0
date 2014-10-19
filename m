@@ -1,30 +1,48 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH v2 11/12] IB/srp: Eliminate free_reqs list
-Date: Sun, 19 Oct 2014 19:59:30 +0300
-Message-ID: <5443EDF2.8060109@dev.mellanox.co.il>
-References: <5433E43D.3010107@acm.org> <5433E56E.6010600@acm.org> <20141017105939.GB7819@infradead.org>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: [PATCH 1/2] MAINTAINERS: Change Boaz Harrosh's email
+Date: Sun, 19 Oct 2014 20:26:44 +0300
+Message-ID: <5443F454.4020107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20141017105939.GB7819-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: open-osd <osd-dev@open-osd.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, NFS list <linux-nfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/17/2014 1:59 PM, Christoph Hellwig wrote:
-> On Tue, Oct 07, 2014 at 03:06:54PM +0200, Bart Van Assche wrote:
->> The free_reqs list is no longer needed now that we are using
->> tags assigned by the block layer. Hence remove it.
->
-> Is there any good reason not to fold this into the previous patch?
->
+From: Boaz Harrosh <ooo@electrozaur.com>
 
-Agree.
+I have moved on, and do no longer have Panasas email access.
+Update to an email that can reach me.
 
-Sagi.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So change bharrosh@panasas.com => ooo@electrozaur.com
+
+Explain of email address:
+* electrozaur.com is a domain owned by me.
+* ooo - Stands for Open Osd . Org
+
+Another email alias that can be used is:
+	openosd@gmail.com
+
+CC: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Boaz Harrosh <ooo@electrozaur.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f10ed39..fc2c9a8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6725,7 +6725,7 @@ S:	Orphan
+ F:	drivers/net/wireless/orinoco/
+ 
+ OSD LIBRARY and FILESYSTEM
+-M:	Boaz Harrosh <bharrosh@panasas.com>
++M:	Boaz Harrosh <ooo@electrozaur.com>
+ M:	Benny Halevy <bhalevy@primarydata.com>
+ L:	osd-dev@open-osd.org
+ W:	http://open-osd.org
+-- 
+1.9.3
+
