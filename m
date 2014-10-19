@@ -1,44 +1,44 @@
-From: Boaz Harrosh <openosd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 3/3] Boaz Harrosh - fix email in Documentation
-Date: Sun, 19 Oct 2014 20:40:41 +0300
-Message-ID: <5443F799.6030203@gmail.com>
-References: <5443F454.4020107@gmail.com> <5443F4B9.7050807@gmail.com>
+From: Anish Bhatt <anish@chelsio.com>
+Subject: RE: [PATCH scsi] libcxgbi : support ipv6 address host_param
+Date: Sun, 19 Oct 2014 17:51:49 +0000
+Message-ID: <525DB349B3FB5444AE057A887CB2A8D8921B05@nice.asicdesigners.com>
+References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
+ <525DB349B3FB5444AE057A887CB2A8D8920F15@nice.asicdesigners.com>
+ <20141018151203.GA30355@infradead.org> <20141018151843.GA4262@infradead.org>
+ <525DB349B3FB5444AE057A887CB2A8D8921883@nice.asicdesigners.com>,<20141019141740.GB2485@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5443F4B9.7050807-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: open-osd <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, NFS list <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 99-65-72-228.uvs.sntcca.sbcglobal.net ([99.65.72.228]:21446
+	"EHLO stargate.chelsio.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751490AbaJSRx1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Oct 2014 13:53:27 -0400
+In-Reply-To: <20141019141740.GB2485@infradead.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-From: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
+>> Anything that is an urgent and/or very small fix should just be against
+>> Linus' current tree and will go into the drivers branch for that tree.
+> 
+>> Anything bigger and/or less urgent should be sent against the drivers
+>> branch for the next release.
 
-I forgot to update Documentation/*.txt
+> Linux 3.17 has been released.  The current merge window is the one for
+> 3.18, expected to be closed in about a week.  So urgent patches go into
+> that, maybe with a Cc to stable@vger.kernel.org if they fix regressions.
 
-Signed-off-by: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
----
- Documentation/scsi/osd.txt | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I may not have understood you correctly. My understanding is "Linus' current 
+ tree and will go into the drivers branch for that tree." would imply 
+scsi-queue/drivers-for-3.17.
 
-diff --git a/Documentation/scsi/osd.txt b/Documentation/scsi/osd.txt
-index da162f7..5a9879b 100644
---- a/Documentation/scsi/osd.txt
-+++ b/Documentation/scsi/osd.txt
-@@ -184,8 +184,7 @@ Any problems, questions, bug reports, lonely OSD nights, please email:
- More up-to-date information can be found on:
- http://open-osd.org
- 
--Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
--Benny Halevy <bhalevy-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-+Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
- 
- References
- ==========
--- 
-1.9.3
+"drivers branch for next release" would imply be scsi-queue/drivers-for-3.18
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So all patches go into drivers-for-3.18, but the ones fixing regressions need a
+CC to stable@vger.kernel.org ? Either way, drivers-for-3.18 is fine. Please 
+apply there
+-Anish
