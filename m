@@ -1,62 +1,70 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH 2/5] scsi: bfa: bfa_fcs_lport.c: Cleaning up missing
- null-terminate by switching from strncpy to strzcpy
-Date: Mon, 20 Oct 2014 23:10:09 +0200
-Message-ID: <CAFo99gYAcfa47CLkQWLs7V8gTEOZfSOSXmjVC_3j_8Ugw4xk4w@mail.gmail.com>
-References: <1413670390-6259-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <20141020153707.GX26918@mwanda>
+From: Arvind Kumar <arvindkumar@vmware.com>
+Subject: RE: [PATCH] vmw_pvscsi: fixup tagging
+Date: Mon, 20 Oct 2014 22:12:46 +0000
+Message-ID: <1690691e34434a6d9cb690a655897613@EX13-MBX-025.vmware.com>
+References: <1412234501-78199-1-git-send-email-hare@suse.de>,<20141017131651.GD16538@infradead.org>
+ <41c186a1dcd04732a87f8bc47336a5d7@EX13-MBX-025.vmware.com>,<5442A671.3080704@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141020153707.GX26918@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andi Kleen <ak@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Grant Likely <grant.likely@linaro.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:37030 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753362AbaJTWNA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Oct 2014 18:13:00 -0400
+In-Reply-To: <5442A671.3080704@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: "pv-drivers@vmware.com" <pv-drivers@vmware.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-2014-10-20 17:37 GMT+02:00 Dan Carpenter <dan.carpenter@oracle.com>:
-> On Sun, Oct 19, 2014 at 12:13:10AM +0200, Rickard Strandqvist wrote:
->> Ensures that the string is null-terminate in connection with the
->> use of strncpy, by switching from strncpy to strzcpy.
->>
+Thanks Hannes and Christoph for the answers. The patch to vmw_pvscsi.c =
+looks fine to me.
+
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+
+Thanks!
+Arvind
+________________________________________
+=46rom: Hannes Reinecke <hare@suse.de>
+Sent: Saturday, October 18, 2014 10:42 AM
+To: Arvind Kumar; Christoph Hellwig
+Cc: pv-drivers@vmware.com; James Bottomley; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] vmw_pvscsi: fixup tagging
+
+On 10/17/2014 08:34 PM, Arvind Kumar wrote:
+> Hi Christoph,
 >
-> I wish the changelogs were more clear that we have no reason to think
-> this is a real issue.
+> Thanks for the change. Sorry for the delay. The change looks fine to =
+me. I just have a question.
 >
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
->> index ff75ef8..78af89e 100644
->> --- a/drivers/scsi/bfa/bfa_fcs_lport.c
->> +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
->> @@ -2633,7 +2633,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
->>       strncpy(hba_attr->driver_version, (char *)driver_info->version,
->>               sizeof(hba_attr->driver_version));
+> The comment in include/scsi/scsi_cmnd.h says:
 >
-> Why do we not change this one?
+> struct scsi_cmnd {
+> ...
+>               unsigned char tag; /* SCSI-II queued command tag */
+> }
 >
->>
->> -     strncpy(hba_attr->os_name, driver_info->host_os_name,
->> +     strzcpy(hba_attr->os_name, driver_info->host_os_name,
->>               sizeof(hba_attr->os_name));
+> Is that comment not right? Should we update that too?
 >
-> strlcpy() would also be totally safe here.  It's also safe for patch
-> patch 3 and patch 4.  Patch 5 is trickier to audit so I don't know if
-> strlcpy() is safe.
+The 'tag' field from the scsi_cmnd is indeed meant for the SCSI-II
+queued command tag. But due to recent changes 'struct request' also
+contains a tag number which is used to implement a tag map.
+So the 'tag; field from struct scsi_cmnd is basically obsolete,
+and we're working on removing it.
 
+Cheers,
 
-Hi Dan
-
-It was a miss, should have done this on both strncpy.
-
-After becoming quite attacked for having changed to strlcpy I am very
-careful with it now.
-But ok, then I submit 2 3 4 with strlcpy instead.
-
-But this is a little bad example for strzcpy though :-(
-
-Kind regards
-Rickard Strandqvist
+Hannes
+--
+Dr. Hannes Reinecke                   zSeries & Storage
+hare@suse.de                          +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
