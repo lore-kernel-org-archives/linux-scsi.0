@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 24/27] scsi_error: document scsi_try_to_abort_cmd
-Date: Mon, 20 Oct 2014 08:52:27 +0200
-Message-ID: <1413787950-14659-25-git-send-email-hare@suse.de>
+Subject: [PATCH 25/27] scsi: check for correct return code in scsi_eh_abort_cmds()
+Date: Mon, 20 Oct 2014 08:52:28 +0200
+Message-ID: <1413787950-14659-26-git-send-email-hare@suse.de>
 References: <1413787950-14659-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51408 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51356 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752503AbaJTGwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752855AbaJTGwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 20 Oct 2014 02:52:40 -0400
 In-Reply-To: <1413787950-14659-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,61 +14,29 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-scsi_try_to_abort_cmd() should only return
-SUCCESS, FAILED, or FAST_IO_FAIL. So document
-that in the function description and simplify the
-logging message.
+scsi_try_to_abort_cmd() might return SUCCESS, FAILED, or
+FAST_IO_FAIL. So just checking for FAILED will treat
+FAST_IO_FAIL as SUCCESS, which is wrong.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Cc: Robert Elliott <elliott@hp.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 24 +++++++++++++++++++++---
- 1 file changed, 21 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c485f28..9209407 100644
+index 9209407..06cd624 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -157,8 +157,9 @@ scmd_eh_abort_handler(struct work_struct *work)
- 		} else {
+@@ -1345,7 +1345,7 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
+ 			scmd_printk(KERN_INFO, scmd,
+ 				     "%s: aborting cmd\n", current->comm));
+ 		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+-		if (rtn == FAILED) {
++		if (rtn != SUCCESS) {
  			SCSI_LOG_ERROR_RECOVERY(3,
  				scmd_printk(KERN_INFO, scmd,
--					    "scmd %p abort failed, rtn %d\n",
--					    scmd, rtn));
-+					    "scmd %p abort %s\n", scmd,
-+					    (rtn == FAST_IO_FAIL) ?
-+					    "not send" : "failed"));
- 		}
- 	}
- 
-@@ -869,7 +870,24 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- 	return rtn;
- }
- 
--static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt, struct scsi_cmnd *scmd)
-+/**
-+ * scsi_try_to_abort_cmd - Ask host to abort a SCSI command
-+ * @scmd:	SCSI cmd used to send a target reset
-+ *
-+ * Return value:
-+ *	SUCCESS, FAILED, or FAST_IO_FAIL
-+ *
-+ * Notes:
-+ *    SUCCESS does not necessarily indicate that the command
-+ *    has been aborted; it only indicates that the LLDDs
-+ *    has cleared all references to that command.
-+ *    LLDDs should return FAILED only if an abort was required
-+ *    but could not be executed. LLDDs should return FAST_IO_FAIL
-+ *    if the device is temporarily unavailable (eg due to a
-+ *    link down on FibreChannel)
-+ */
-+static int scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
-+				 struct scsi_cmnd *scmd)
- {
- 	if (!hostt->eh_abort_handler)
- 		return FAILED;
+ 					    "%s: aborting cmd failed\n",
 -- 
 1.8.5.2
 
