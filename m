@@ -1,46 +1,114 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: EH action after scsi_remove_host, was: Re: [PATCH v2 12/12] IB/srp:
- Add multichannel support
-Date: Mon, 20 Oct 2014 15:53:38 +0200
-Message-ID: <544513E2.6050406@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <20141017110102.GC7819@infradead.org>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH v4 13/25] virtio_console: enable VQs early
+Date: Mon, 20 Oct 2014 17:04:11 +0300
+Message-ID: <20141020140410.GA10994@redhat.com>
+References: <1413114332-626-1-git-send-email-mst-v4@redhat.com>
+	<1413114332-626-14-git-send-email-mst-v4@redhat.com>
+	<20141020120750.GA18561@casper.infradead.org>
+	<20141020144223.5655dcbc.cornelia.huck@de.ibm.com>
+	<20141020133555.GA27111@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:35837 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbaJTNxn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Oct 2014 09:53:43 -0400
-In-Reply-To: <20141017110102.GC7819@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20141020133555.GA27111@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Cornelia Huck <cornelia.huck@de.ibm.com>
+Cc: linux-s390@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, Amit Shah <amit.shah@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd Bergmann <arnd@arndb.de>, Paolo Bonzini <pbonzini@redhat.com>, Thomas Graf <tgraf@suug.ch>, v9fs-developer@lists.sourceforge.net, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/17/14 13:01, Christoph Hellwig wrote:
-> On Tue, Oct 07, 2014 at 03:07:17PM +0200, Bart Van Assche wrote:
->> +	/*
->> +	 * Avoid that the SCSI error handler tries to use this channel after
->> +	 * it has been freed. The SCSI error handler can namely continue
->> +	 * trying to perform recovery actions after scsi_remove_host()
->> +	 * returned.
->> +	 */
->> +	ch->target = NULL;
->
-> Do you have a reproducer for that?  I think we should fix the root
-> cause.
+On Mon, Oct 20, 2014 at 04:35:55PM +0300, Michael S. Tsirkin wrote:
+> On Mon, Oct 20, 2014 at 02:42:23PM +0200, Cornelia Huck wrote:
+> > On Mon, 20 Oct 2014 13:07:50 +0100
+> > Thomas Graf <tgraf@suug.ch> wrote:
+> > 
+> > > On 10/13/14 at 10:50am, Michael S. Tsirkin wrote:
+> > > > virtio spec requires drivers to set DRIVER_OK before using VQs.
+> > > > This is set automatically after probe returns, virtio console violated this
+> > > > rule by adding inbufs, which causes the VQ to be used directly within
+> > > > probe.
+> > > > 
+> > > > To fix, call virtio_device_ready before using VQs.
+> > > > 
+> > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > > > ---
+> > > >  drivers/char/virtio_console.c | 2 ++
+> > > >  1 file changed, 2 insertions(+)
+> > > > 
+> > > > diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
+> > > > index b585b47..6ebe8f6 100644
+> > > > --- a/drivers/char/virtio_console.c
+> > > > +++ b/drivers/char/virtio_console.c
+> > > > @@ -1449,6 +1449,8 @@ static int add_port(struct ports_device *portdev, u32 id)
+> > > >  	spin_lock_init(&port->outvq_lock);
+> > > >  	init_waitqueue_head(&port->waitqueue);
+> > > >  
+> > > > +	virtio_device_ready(portdev->vdev);
+> > > > +
+> > > >  	/* Fill the in_vq with buffers so the host can send us data. */
+> > > >  	nr_added_bufs = fill_queue(port->in_vq, &port->inbuf_lock);
+> > > >  	if (!nr_added_bufs) {
+> > > 
+> > > Seems like probe and add_port() now both set VIRTIO_CONFIG_S_DRIVER_OK
+> > 
+> > I think we need to set this in the probe function instead, otherwise we
+> > fail for multiqueue (which also wants to use the control queue early).
+> > 
+> > Completely untested patch below; I can send this with proper s-o-b if
+> > it helps.
+> > 
+> > diff --git a/drivers/char/virtio_console.c b/drivers/char/virtio_console.c
+> > index bfa6400..cf7a561 100644
+> > --- a/drivers/char/virtio_console.c
+> > +++ b/drivers/char/virtio_console.c
+> > @@ -1449,8 +1449,6 @@ static int add_port(struct ports_device *portdev, u32 id)
+> >  	spin_lock_init(&port->outvq_lock);
+> >  	init_waitqueue_head(&port->waitqueue);
+> >  
+> > -	virtio_device_ready(portdev->vdev);
+> > -
+> >  	/* Fill the in_vq with buffers so the host can send us data. */
+> >  	nr_added_bufs = fill_queue(port->in_vq, &port->inbuf_lock);
+> >  	if (!nr_added_bufs) {
+> > @@ -2026,6 +2024,8 @@ static int virtcons_probe(struct virtio_device *vdev)
+> >  	spin_lock_init(&portdev->ports_lock);
+> >  	INIT_LIST_HEAD(&portdev->ports);
+> >  
+> > +	virtio_device_ready(portdev->vdev);
+> > +
+> >  	if (multiport) {
+> >  		unsigned int nr_added_bufs;
+> >  
+> 
+> I wanted to set DRIVER_OK as late as possible, to both reduce
+> the chance it can fail after DRIVER_OK and to reduce  the risk of
+> introducing a regression since old qemu might only start sending
+> interrupts after DRIVER_OK is set.
+> 
+> So I wanted everything completely initialized before DRIVER_OK.
+> 
+> You patch makes sense to me since nothing can fail,
+> and we won't get interrupts before we add inbufs.
+> 
+> Reviewed-by: Michael S. Tsirkin <mst@redhat.com>
+> 
+> Testig will report shortly, pls send with sob line.
 
-Hello Christoph,
+Sure enough, this helps:
 
-The above assignment statement has been reported to fix a kernel oops 
-that could be triggered by cable pulling. Regarding fixing the root 
-cause: some time ago I had posted a patch series that makes 
-scsi_remove_host() wait until all error handler callback functions have 
-finished and also that prevents that any new error handler function 
-calls are initiated after scsi_remove_host() has finished 
-(http://thread.gmane.org/gmane.linux.scsi/82572/focus=87985). Should I 
-repost that patch series ?
+Tested-by: Michael S. Tsirkin <mst@redhat.com>
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
 
-Bart.
+Pls repost as a top-level patch.
 
+> -- 
+> MST
