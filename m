@@ -1,106 +1,103 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/27] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
-Date: Mon, 20 Oct 2014 08:52:19 +0200
-Message-ID: <1413787950-14659-17-git-send-email-hare@suse.de>
+Subject: [PATCH 26/27] scsi: correct return values for .eh_abort_handler implementations
+Date: Mon, 20 Oct 2014 08:52:29 +0200
+Message-ID: <1413787950-14659-27-git-send-email-hare@suse.de>
 References: <1413787950-14659-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51347 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752834AbaJTGwh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2014 02:52:37 -0400
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1413787950-14659-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
-so that we don't have to call several functions to figure
-out the CDB opcode string.
+The .eh_abort_handler needs to return SUCCESS, FAILED, or
+FAST_IO_FAIL. So fixup all callers to adhere to this requirement.
 
-Reviewed_by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellweg <hch@lst.de>
+Cc: Robert Elliott <elliott@hp.com>
+Cc: <stable@vger.kernel.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/NCR5380.c            | 2 +-
+ drivers/scsi/aha1740.c            | 2 +-
+ drivers/scsi/esas2r/esas2r_main.c | 2 +-
+ drivers/scsi/megaraid.c           | 8 ++++----
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0982df7..80a9942 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -29,6 +29,7 @@
- #define THIRD_PARTY_COPY_OUT 0x83
- #define THIRD_PARTY_COPY_IN 0x84
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 50873bb..e2c9e73 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -2703,7 +2703,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
+  * aborted flag and get back into our main loop.
+  */
  
-+#define VENDOR_SPECIFIC_CDB 0xc0
+-		return 0;
++		return SUCCESS;
+ 	}
+ #endif
  
- struct sa_name_list {
- 	int opcode;
-@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
- #endif /* CONFIG_SCSI_CONSTANTS */
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index 5f31017..31ace4b 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -531,7 +531,7 @@ static int aha1740_eh_abort_handler (Scsi_Cmnd *dummy)
+  * quiet as possible...
+  */
  
- static bool scsi_opcode_sa_name(int opcode, int service_action,
--				const char **sa_name)
-+				const char **cdb_name, const char **sa_name)
- {
- 	struct sa_name_list *sa_name_ptr;
- 	const struct value_name_pair *arr = NULL;
- 	int arr_sz, k;
+-	return 0;
++	return SUCCESS;
+ }
  
-+	*cdb_name = NULL;
-+	if (opcode >= VENDOR_SPECIFIC_CDB)
-+		return false;
-+
-+	if (opcode < ARRAY_SIZE(cdb_byte0_names))
-+		*cdb_name = cdb_byte0_names[opcode];
-+
- 	for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
- 		if (sa_name_ptr->opcode == opcode) {
- 			arr = sa_name_ptr->arr;
-@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int opcode, int service_action,
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- {
- 	int sa, len, cdb0;
--	const char *name = NULL;
-+	const char *cdb_name = NULL, *sa_name = NULL;
+ static struct scsi_host_template aha1740_template = {
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index 6504a19..45aa684 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -1057,7 +1057,7 @@ int esas2r_eh_abort(struct scsi_cmnd *cmd)
  
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
-@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 		len = cdb_len;
+ 		cmd->scsi_done(cmd);
+ 
+-		return 0;
++		return SUCCESS;
  	}
  
--	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
--		if (cdb0 < 0xc0) {
--			if (ARRAY_SIZE(cdb_byte0_names) > 1) {
--				name = cdb_byte0_names[cdb0];
--				if (name)
--					printk("%s", name);
--				else
--					printk("cdb[0]=0x%x (reserved)", cdb0);
--			} else
--				printk("cdb[0]=0x%x", cdb0);
--		} else
-+	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
-+		if (cdb_name)
-+			printk("%s", cdb_name);
-+		else if (cdb0 >= VENDOR_SPECIFIC_CDB)
- 			printk("cdb[0]=0x%x (vendor)", cdb0);
-+		else if (cdb0 >= 0x60 && cdb0 < 0x7e)
-+			printk("cdb[0]=0x%x (reserved)", cdb0);
-+		else
-+			printk("cdb[0]=0x%x", cdb0);
- 	} else {
--		if (name)
--			printk("%s", name);
-+		if (sa_name)
-+			printk("%s", sa_name);
-+		else if (cdb_name)
-+			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+ 	spin_lock_irqsave(&a->queue_lock, flags);
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index ac5d94c..2485255 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1945,7 +1945,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ 	     cmd->device->id, (u32)cmd->device->lun);
  
+ 	if(list_empty(&adapter->pending_list))
+-		return FALSE;
++		return FAILED;
+ 
+ 	list_for_each_safe(pos, next, &adapter->pending_list) {
+ 
+@@ -1968,7 +1968,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ 					(aor==SCB_ABORT) ? "ABORTING":"RESET",
+ 					scb->idx);
+ 
+-				return FALSE;
++				return FAILED;
+ 			}
+ 			else {
+ 
+@@ -1993,12 +1993,12 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ 				list_add_tail(SCSI_LIST(cmd),
+ 						&adapter->completed_list);
+ 
+-				return TRUE;
++				return SUCCESS;
+ 			}
+ 		}
+ 	}
+ 
+-	return FALSE;
++	return FAILED;
+ }
+ 
+ static inline int
 -- 
 1.8.5.2
-
