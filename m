@@ -1,129 +1,89 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 19/27] scsi: separate out scsi_(host|driver)byte_string()
-Date: Mon, 20 Oct 2014 08:52:22 +0200
-Message-ID: <1413787950-14659-20-git-send-email-hare@suse.de>
-References: <1413787950-14659-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51349 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673AbaJTGwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2014 02:52:38 -0400
-In-Reply-To: <1413787950-14659-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 0/5] block/scsi/lio support for COMPARE_AND_WRITE
+Date: Mon, 20 Oct 2014 10:18:24 +0300
+Message-ID: <5444B740.5040700@dev.mellanox.co.il>
+References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu> <544220C3.2010900@acm.org> <5442CE4C.9090301@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5442CE4C.9090301@cs.wisc.edu>
+Sender: target-devel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, ceph-devel@vger.kernel.org, axboe@kernel.dk, Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>
 
-Export functions for later use.
+On 10/18/2014 11:32 PM, Mike Christie wrote:
+> On 10/18/2014 03:11 AM, Bart Van Assche wrote:
+>> On 10/16/14 07:37, michaelc@cs.wisc.edu wrote:
+>>> The following patches implement the SCSI command COMPARE_AND_WRITE as
+>>> a new
+>>> bio/request type REQ_CMP_AND_WRITE. COMPARE_AND_WRITE is defined in the
+>>> SCSI SBC (SCSI block command) specs as:
+>>>
+>>> The COMPARE AND WRITE command requests that the device server perform the
+>>> following as an uninterrupted series of actions:
+>>>
+>>> 1) perform the following operations:
+>>>           A) read the specified logical blocks; and
+>>>           B) transfer the specified number of logical blocks from the
+>>> Data-Out
+>>>           Buffer (i.e., the verify instance of the data is transferred
+>>> from the
+>>>           Data-Out Buffer);
+>>>
+>>> 2) compare the data read from the specified logical blocks with the
+>>> verify
+>>> instance of the data; and
+>>> 3) If the compared data matches, then perform the following operations:
+>>>           1) transfer the specified number of logical blocks from the
+>>> Data-Out
+>>>           Buffer (i.e., the write instance of the data transferred from
+>>> the
+>>>           Data-Out Buffer); and
+>>>           2) write those logical blocks.
+>>
+>> Hello Mike,
+>>
+>> Just below the above text one can find the following additional
+>> requirement in SBC-4:
+>> <quote>
+>> 4) if the compare operation does not indicate a match, then terminate
+>>     the command with CHECK CONDITION status with the sense key set to
+>>     MISCOMPARE and the additional sense code set to MISCOMPARE DURING
+>>     VERIFY OPERATION. In the sense data (see 4.18 and SPC-4) the offset
+>>     from the start of the Data-Out Buffer to the first byte of data that
+>>     was not equal shall be reported in the INFORMATION field.
+>> </quote>
+>>
+>> What I'm wondering now is how requirement (4) can be supported if
+>> REQ_CMP_AND_WRITE doesn't return the offset of the first byte that
+>> didn't match ? Additionally, shouldn't compare_and_write_callback() be
+>> fixed such that it returns the miscompare offset to its caller ?
+>>
+>
+> Yeah, Hannes pointed out that the original LIO code did not support
+> this. For the original code, I will fix that in another patchset to keep
+> this one smaller and focused. For what I need, I have been trying to
+> think of a nice way to pass additional info around. I think the options are:
+>
 
-Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/constants.c | 58 ++++++++++++++++++++++++++++++++++++------------
- include/scsi/scsi_dbg.h  |  2 ++
- 2 files changed, 46 insertions(+), 14 deletions(-)
+Thanks Bart for bringing this up,
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index ea391f8..0fe50b4 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1406,38 +1406,68 @@ static const char * const hostbyte_table[]={
- "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE",
- "DID_TRANSPORT_DISRUPTED", "DID_TRANSPORT_FAILFAST", "DID_TARGET_FAILURE",
- "DID_NEXUS_FAILURE" };
--#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
- 
- static const char * const driverbyte_table[]={
- "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
- "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
--#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
- 
--void scsi_show_result(int result)
-+#endif
-+
-+const char *scsi_hostbyte_string(int result)
- {
-+	const char *hb_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
- 	int hb = host_byte(result);
--	int db = driver_byte(result);
- 
--	printk("Result: hostbyte=%s driverbyte=%s\n",
--	       (hb < NUM_HOSTBYTE_STRS ? hostbyte_table[hb]     : "invalid"),
--	       (db < NUM_DRIVERBYTE_STRS ? driverbyte_table[db] : "invalid"));
-+	if (hb < ARRAY_SIZE(hostbyte_table))
-+		hb_string = hostbyte_table[hb];
-+#endif
-+	return hb_string;
- }
-+EXPORT_SYMBOL(scsi_hostbyte_string);
- 
--#else
-+const char *scsi_driverbyte_string(int result)
-+{
-+	const char *db_string = NULL;
-+#ifdef CONFIG_SCSI_CONSTANTS
-+	int db = driver_byte(result);
-+
-+	if (db < ARRAY_SIZE(driverbyte_table))
-+		db_string = driverbyte_table[db];
-+#endif
-+	return db_string;
-+}
-+EXPORT_SYMBOL(scsi_driverbyte_string);
- 
- void scsi_show_result(int result)
- {
--	printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--	       host_byte(result), driver_byte(result));
--}
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
- 
--#endif
-+	if (hb_string || db_string)
-+		printk("Result: hostbyte=%s driverbyte=%s\n",
-+		       hb_string ? hb_string : "invalid",
-+		       db_string ? db_string : "invalid");
-+	else
-+		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+		       host_byte(result), driver_byte(result));
-+}
- EXPORT_SYMBOL(scsi_show_result);
- 
- 
- void scsi_print_result(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_INFO, cmd, " ");
--	scsi_show_result(cmd->result);
-+	const char *hb_string = scsi_hostbyte_string(cmd->result);
-+	const char *db_string = scsi_driverbyte_string(cmd->result);
-+
-+	if (hb_string || db_string)
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=%s driverbyte=%s",
-+			    hb_string ? hb_string : "invalid",
-+			    db_string ? db_string : "invalid");
-+	else
-+		scmd_printk(KERN_INFO, cmd,
-+			    "Result: hostbyte=0x%02x driverbyte=0x%02x",
-+			    host_byte(cmd->result), driver_byte(cmd->result));
- }
- EXPORT_SYMBOL(scsi_print_result);
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 81d0418..50f4d85 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -19,6 +19,8 @@ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
- 			       int sense_len);
- extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
-+extern const char *scsi_hostbyte_string(int);
-+extern const char *scsi_driverbyte_string(int);
- extern const char *scsi_sense_key_string(unsigned char);
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
- 					  const char **);
--- 
-1.8.5.2
+Actually Mike the lio code does support providing information field with
+offset sector in sense data. I added it for PI but it can be used for
+other errors such as miscompare (checkout
+transport_send_check_condition_and_sense for
+TCM_LOGICAL_BLOCK_[GUARD|APP_TAG|REF_TAG]_CHECK_FAILED error codes).
 
+> 1. Instead of making it bio/request based, make it a
+> request_queue->compare_and_write function. We then just stack them and
+> can add whatever arguments/return values are necessary and do not have
+> to mess with the bio/request structs and function chains.
+>
+> 2. Add another argument to the end io functions that can be used to pass
+> back bio/request type specific info.
+
+I'm for (2), can we standardize the way to provide the extra info?
+so target iblock code can do the same thing for all?
+
+Sagi.
