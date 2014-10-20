@@ -1,35 +1,35 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH v3] SG_SCSI_RESET ioctl: add no_escalate values
-Date: Mon, 20 Oct 2014 13:15:39 -0500
-Message-ID: <5445514B.2010401@tributary.com>
-References: <5442C969.4060504@interlog.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
+Date: Tue, 21 Oct 2014 07:34:30 +1300
+Message-ID: <CAOmrzk+_pujcr_SPfijV5Z5fp057tkbtbZHq0URWFh9RKpNdUQ@mail.gmail.com>
+References: <20141002065628.256592712@telegraphics.com.au>
+	<20141002065633.766165263@telegraphics.com.au>
+	<5444BAB7.5000908@gmail.com>
+	<alpine.LNX.2.00.1410202217270.18012@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay05.mycloudmailbox.com ([199.244.76.202]:49272 "EHLO
-	relay05.mycloudmailbox.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751680AbaJTSZf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Oct 2014 14:25:35 -0400
-In-Reply-To: <5442C969.4060504@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1410202217270.18012@nippy.intranet>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: "Elliott, Robert (Server Storage)" <elliott@hp.com>
 
-Reviewed-by: Jeremy Linton <jlinton@tributary.com>
+Hi Finn,
 
-I will test it (next week or so) when I have access to a configuration that can
-test it in a meaningful way.
+>> not certain it is related to this exact patch - the driver crashes
+>> pretty much on the spot when selecting the first target on the bus.
+>
+> If it isn't that exact patch then it will probably be one of the other
+> atari_scsi patches. Most of the other relevant stuff was covered by my own
+> testing.
+>
+> Anyway, thanks for testing and for sending the backtrace. I'll figure out
+> what went wrong and fix it before I send a new patch set.
 
-Thanks,
+Let me know what I can do to help - e.g. can the platform device patch
+be backed out without upsetting the rest of the series?
 
+Cheers,
 
-
-
-
-
-
-
-
+  Michael
