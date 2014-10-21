@@ -1,19 +1,19 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-Date: Tue, 21 Oct 2014 05:45:50 +0100
-Message-ID: <20141021044550.GC11691@sucs.org>
+From: "Jeff Leung" <jleung@v10networks.ca>
+Subject: RE: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Mon, 20 Oct 2014 22:19:31 -0700
+Message-ID: <A70AC0C1B7E7FD478A6BF19705461AA01109B5@IMBER.smb.curriegrad2004.ca>
 References: <20141010074901.GA32028@sucs.org>
- <20141011173902.GA1946@infradead.org>
- <1413049313.2068.48.camel@jarvis.lan>
+ <20141011173902.GA1946@infradead.org> <1413049313.2068.48.camel@jarvis.lan>
  <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
  <A70AC0C1B7E7FD478A6BF19705461AA01109B3@IMBER.smb.curriegrad2004.ca>
  <da5106ddc725481784ed12bccb594980@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <20141021044550.GC11691@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <da5106ddc725481784ed12bccb594980@BY2PR0301MB0711.namprd03.prod.outlook.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <20141021044550.GC11691@sucs.org>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -23,75 +23,14 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: KY Srinivasan <kys@microsoft.com>
-Cc: Jeff Leung <jleung@v10networks.ca>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Christoph Hellwig <hch@lst.de>
+To: Sitsofe Wheeler <sitsofe@gmail.com>, KY Srinivasan <kys@microsoft.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU3VuLCBPY3QgMTIsIDIwMTQgYXQgMDE6MjE6MDFBTSArMDAwMCwgS1kgU3Jpbml2YXNhbiB3
-cm90ZToKPiAKPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4gPiBGcm9tOiBKZWZmIExl
-dW5nIFttYWlsdG86amxldW5nQHYxMG5ldHdvcmtzLmNhXQo+ID4gU2VudDogU2F0dXJkYXksIE9j
-dG9iZXIgMTEsIDIwMTQgMToyMiBQTQo+ID4gCj4gPiA+IE9uIHRoZSBjdXJyZW50IHJlbGVhc2Ug
-b2YgV2luZG93cyAod2luZG93cyAxMCksIHdlIGFyZSBhZHZlcnRpc2luZwo+ID4gPiBTUEMzIGNv
-bXBsaWFuY2UuCj4gPiA+IFdlIGFyZSBvayB3aXRoIGRlY2xhcmluZyBjb21wbGlhbmNlIHRvIFNQ
-QzMgaW4gb3VyIGRyaXZlcnMuCj4gPiBJZiB5b3UgYXJlIGdvaW5nIHRvIGRlY2xhcmUgU1BDMyBj
-b21wbGlhbmNlIGluIHRoZSBkcml2ZXJzLCBhcmUgeW91IGdvaW5nIHRvCj4gPiBwdXQgaW4gY2hl
-Y2tzIHRvIGVuc3VyZSB0aGF0IFNQQy0zIGNvbXBsaWFuY2UgZG9lc24ndCBnZXQgYWNjaWRlbnRh
-bGx5Cj4gPiBlbmFibGVkIGZvciBoeXBlcnZpc29ycyBiZWxvdyBXaW4xMD8KPiA+IAo+ID4gSSBk
-byBrbm93IGZvciBhIGZhY3QgdGhhdCBVYnVudHUncyBrZXJuZWxzIGFscmVhZHkgZm9yY2UgU1BD
-MyBjb21wbGlhbmNlIHRvCj4gPiBlbmFibGUgc3BlY2lmaWMgZmVhdHVyZXMgc3VjaCBhcyBUUklN
-IG9uIGVhcmxpZXIgdmVyc2lvbnMgb2YgSHlwZXItViAoTmFtZWx5Cj4gPiBIeXBlci1WIDIwMTIg
-YW5kIDIwMTIgUjIpLgo+IFlvdSBhcmUgcmlnaHQ7IFVidW50dSBoYXMgYmVlbiBjYXJyeWluZyBh
-IHBhdGNoICB0aGF0IHdhcyBkb2luZyBqdXN0Cj4gdGhpcyBhbmQgdGhpcyBoYXMgYmVlbiB3b3Jr
-aW5nIHdpdGhvdXQgYW55IGlzc3VlcyBvbiBtYW55IGVhcmxpZXIKPiB2ZXJzaW9ucyBvZiBXaW5k
-b3dzLiAoMjAxMiBhbmQgMjAxMiBSMikuICBPbiB3aW5kb3dzIDEwIHdlIGRvbid0IG5lZWQKPiBh
-bnkgY2hhbmdlcyBpbiB0aGUgTGludXggZHJpdmVyIGFzIHRoZSBob3N0IGl0c2VsZiBpcyBhZHZl
-cnRpc2luZyBTUEMzCj4gY29tcGxpYW5jZS4gQmFzZWQgb24gdGhlIHRlc3Rpbmcgd2UgaGF2ZSBk
-b25lIHdpdGggVWJ1bnR1LCB3ZSBhcmUKPiBjb21mb3J0YWJsZSBwaWNraW5nIHVwIHRoYXQgcGF0
-Y2guCgpPSyB0aGlzIHNlZW1zIHRvIGJlIHRoZSBwYXRjaCBjdXJyZW50bHkgY2FycmllZCBieSBV
-YnVudHU6CgpGcm9tIGZmMmM1ZmEzZmE5YWRmMGI5MTliOTQyNWU3MWE4YmEwNDRjMzFhN2QgTW9u
-IFNlcCAxNyAwMDowMDowMCAyMDAxCkZyb206IEFuZHkgV2hpdGNyb2Z0IDxhcHdAY2Fub25pY2Fs
-LmNvbT4KRGF0ZTogRnJpLCAxMyBTZXAgMjAxMyAxNzo0OToxNiArMDEwMApTdWJqZWN0OiBbUEFU
-Q0hdIHNjc2k6IGh5cGVyLXYgc3RvcnN2YyBzd2l0Y2ggdXAgdG8gU1BDLTMKClN1Z2dlc3RlZC1C
-eTogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29t
-PgpTaWduZWQtb2ZmLWJ5OiBBbmR5IFdoaXRjcm9mdCA8YXB3QGNhbm9uaWNhbC5jb20+Ci0tLQog
-ZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgICA4ICsrKysrKysrCiAxIGZpbGUgY2hhbmdl
-ZCwgOCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2
-LmMgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYwppbmRleCA5OTY5ZmExLi4zOTAzYzhhIDEw
-MDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYworKysgYi9kcml2ZXJzL3Njc2kv
-c3RvcnZzY19kcnYuYwpAQCAtMTQ0MSw2ICsxNDQxLDE0IEBAIHN0YXRpYyBpbnQgc3RvcnZzY19k
-ZXZpY2VfY29uZmlndXJlKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldmljZSkKIAogCXNkZXZpY2Ut
-Pm5vX3dyaXRlX3NhbWUgPSAxOwogCisJLyoKKwkgKiBoeXBlci12IGxpZXMgYWJvdXQgaXRzIGNh
-cGFiaWxpdGllcyBpbmRpY2F0aW5nIGl0IGlzIG9ubHkgU1BDLTIKKwkgKiBjb21wbGlhbnQsIGJ1
-dCBhY3R1YWxseSBpbXBsZW1lbnRzIHRoZSBjb3JlIFNQQy0zIGZlYXR1cmVzLgorCSAqIElmIHdl
-IHByZXRlbmQgdG8gYmUgU1BDLTMsIHdlIHNlbmQgUkMxNiB3aGljaCBhY3RpdmF0ZXMgdHJpbSBh
-bmQKKwkgKiB3aWxsIHF1ZXJ5IHRoZSBhcHByb3ByaWF0ZSBWUEQgcGFnZXMgdG8gZW5hYmxlIHRy
-aW0uCisJICovCisJc2RldmljZS0+c2NzaV9sZXZlbCA9IFNDU0lfU1BDXzM7CisKIAlyZXR1cm4g
-MDsKIH0KIAotLSAKMS43LjkuNQoKKERvd25sb2FkZWQgZnJvbQpodHRwOi8va2VybmVsLnVidW50
-dS5jb20vZ2l0P3A9anNhbGlzYnVyeS9zdGFibGUvdHJ1c3R5L3VidW50dS10cnVzdHkuZ2l0O2E9
-cGF0Y2g7aD1mZjJjNWZhM2ZhOWFkZjBiOTE5Yjk0MjVlNzFhOGJhMDQ0YzMxYTdkCikuCgpJIHRo
-aW5rIGl0J3MgdW53aXNlIHRvIG92ZXJyaWRlIHRoZSBzY3NpX2xldmVsIGF0IHRoaXMgcGFydGlj
-dWxhciBwb2ludApiZWNhdXNlIHlvdSBhcmUgZ29pbmcgdG8gZG8gaXQgZm9yIEFMTCBIeXBlci1W
-ICJkaXNrcyIgKHBlcmhhcHMgYWxsCkh5cGVyLVYgU0NTSSBkZXZpY2VzPykuLi4KCkhlcmUncyB0
-aGUgU0NTSSBpbnF1aXJ5IGluZm9ybWF0aW9uIHJlcG9ydGVkIGJ5IGEgVVNCIDIgaGFyZCBkaXNr
-IGJlaW5nCnBhc3NlZCBwYXNzZWQtdGhyb3VnaCBieSBvbmUgb2YgbXkgMjAxMiBSMiBob3N0czoK
-CiMgc2dfaW5xIC9kZXYvc2RjCnN0YW5kYXJkIElOUVVJUlk6CiAgUFF1YWw9MCAgRGV2aWNlX3R5
-cGU9MCAgUk1CPTAgIHZlcnNpb249MHgwMiAgW1NDU0ktMl0KICBbQUVSQz0wXSAgW1RybVRzaz0w
-XSAgTm9ybUFDQT0wICBIaVNVUD0wICBSZXNwX2RhdGFfZm9ybWF0PTEKICBTQ0NTPTAgIEFDQz0w
-ICBUUEdTPTAgIDNQQz0wICBQcm90ZWN0PTAgIFtCUXVlPTBdCiAgRW5jU2Vydj0wICBNdWx0aVA9
-MCAgW01DaG5ncj0wXSAgW0FDS1JFUVE9MF0gIEFkZHIxNj0wCiAgW1JlbEFkcj0wXSAgV0J1czE2
-PTAgIFN5bmM9MCAgTGlua2VkPTAgIFtUcmFuRGlzPTBdICBDbWRRdWU9MAogICAgbGVuZ3RoPTM2
-ICgweDI0KSAgIFBlcmlwaGVyYWwgZGV2aWNlIHR5cGU6IGRpc2sKIFZlbmRvciBpZGVudGlmaWNh
-dGlvbjogTURUIE1ENTAKIFByb2R1Y3QgaWRlbnRpZmljYXRpb246IDAwQUFLUy0wMFRNQTAgICAK
-IFByb2R1Y3QgcmV2aXNpb24gbGV2ZWw6IAoKSXMgaXQgT0sgdG8gcmVwbGFjZSBhIHNjc2lfbGV2
-ZWwgb2YgU0NTSS0yIHdpdGggU0NTSV9TUENfMz8gQWRkaXRpb25hbGx5CmlzIGl0IGFsc28gT0sg
-dG8gZm9yY2UgU0NTSV9TUENfMyBvbiBIeXBlci1WIDIwMDg/Cgo+ID4gPiBOcnnYslh22JYpe27H
-iXt6WBd9emo6diB6Wnpmfnp32qIpG2p5QQo+ID4gPgo+ID4gPiAPaQo+IE4/Pz8/P3I/P3k/Pz8/
-Yj9YPz/Hp3Y/Xj8p3rp7Lm4/Kz8/Pz97Pz8/P3pYPz8XPz/cqH0/Pz/GoHo/Jmo6K3Y/Pz8HPz8/
-P3paKz8/K3pmPz8/aD8/P34/Pz8/aT8/P3o/Hj93Pz8/Pz8/Pz8/Jj8p36IbZj8/XmrHq3k/bT8/
-QEE/YT8/fz8MMD8/aD8PPz9pfwoKXl5eIFdoZXJlIGRvIHRoZXNlIGNoYXJhY3RlcnMgY29tZSBm
-cm9tPyBJJ3ZlIG9jY2FzaW9uYWxseSBzZWVuIHRoZW0gb24KZW1haWxzIGZyb20gb3RoZXIgTWlj
-cm9zb2Z0IGZvbGtzIHBvc3RpbmcgdG8gTEtNTCB0b28uLi4KCi0tIApTaXRzb2ZlIHwgaHR0cDov
-L3N1Y3Mub3JnL35zaXRzLwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwpkZXZlbCBtYWlsaW5nIGxpc3QKZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZwpo
-dHRwOi8vZHJpdmVyZGV2LmxpbnV4ZHJpdmVycHJvamVjdC5vcmcvbWFpbG1hbi9saXN0aW5mby9k
-cml2ZXJkZXYtZGV2ZWwK
+> Is it OK to replace a scsi_level of SCSI-2 with SCSI_SPC_3? Additionally is it also OK to force
+> SCSI_SPC_3 on Hyper-V 2008?
+
+I would patch the driver accordingly to force the SPC-3 flag.
+
+For a Win2k8 host, I don't know what the side effects are, so it's safe to say it's not a good idea to
+Force SCSI_SPC_3
