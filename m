@@ -1,78 +1,51 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
-Date: Tue, 21 Oct 2014 18:46:43 +0000
-Message-ID: <84a680528eb44a38824175118f9c561e@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <1413869964-38940-1-git-send-email-jleung@v10networks.ca>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH 1/1] ufs: scsi: fix sparse errors in ufshcd_system_suspend
+Date: Tue, 21 Oct 2014 11:50:17 -0700
+Message-ID: <000a01cfed5f$dbf36070$93da2150$@codeaurora.org>
+References: <1412518207-27135-1-git-send-email-draviv@codeaurora.org> <000301cfe0ed$e5221200$af663600$@codeaurora.org> <20141011110629.GA9161@infradead.org> <20141021140556.GA11823@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1413869964-38940-1-git-send-email-jleung@v10networks.ca>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Jeff Leung <jleung@v10networks.ca>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20141021140556.GA11823@infradead.org>
+Content-Language: en-us
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
+> Are you going to prepare a set of fixups for 3.18, or should I try to cram
+them together?  I supect you'd do a much better job than I could.
 
+Agreed. There are 3 patches already posted for sparse warning fixes but then
+there were 5 new reports of sparse warning. So we (Dolev Raviv and myself)
+would try to fix them soon and post all 8 patches as single patch series so
+that it would be easy trace. In addition, there will be one more fix for the
+issue reported by Akinobu Mita, will include it in the same in patch series.
+We should be able to send you these fixes by early next week if not earlier.
 
-> -----Original Message-----
-> From: Jeff Leung [mailto:jleung@v10networks.ca]
-> Sent: Monday, October 20, 2014 10:39 PM
-> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org
-> Cc: KY Srinivasan; James.Bottomley@HansenPartnership.com; Jeff Leung
-> Subject: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
-> 
-> This patch forces SPC-3 for Hyper-V disks on the VMBus. As Windows 10's
-> virtual SAS bus is SPC-3 compliant and there are no negative side effects on
-> forcing SPC-3 compliance for Win8 hosts, this patch enables SPC-3 compliance
-> by forcing it on for hosts with versions later than Win8.
-> 
-> Forcing SPC-3 compliance for hosts earlier than Win10 also enables TRIM
-> support.
-> 
-> Suggested by: James Bottomley
-> <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Jeff Leung <jleung@v10networks.ca>
-> ---
->  drivers/scsi/storvsc_drv.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
-> ed0f899..afcc68e 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1449,6 +1449,15 @@ static int storvsc_device_configure(struct
-> scsi_device *sdevice)
-> 
->  	sdevice->no_write_same = 1;
-> 
-> +	/*
-> +	 * If the host is Win2k12 or later, we pretend to be SPC-3 compliant
-> +	 * and send RC16 which activates TRIM. We will only enable this on a
-> +	 * host with levels greater than VERSION_WIN8
-> +	 */
-> +	if (vmbus_proto_version >= VERSION_WIN8) {
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Tuesday, October 21, 2014 7:06 AM
+To: Subhash Jadavani
+Cc: 'Dolev Raviv'; James.Bottomley@HansenPartnership.com;
+linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org;
+santoshsy@gmail.com
+Subject: Re: [PATCH 1/1] ufs: scsi: fix sparse errors in
+ufshcd_system_suspend
 
-I would want this hack not to be in Windows 10. We can have this hack if the host is either
-Ws2012 or ws2012 r2 (VERSION_WIN8 or VERSION_WIN8_1). Also this hack should apply only 
-to VHD's being presented and not pass through devices.
-
-K. Y
-> +		sdevice->scsi_level = SCSI_SPC_3;
-> +	}
-> +
->  	return 0;
->  }
+On Sat, Oct 11, 2014 at 04:06:29AM -0700, Christoph Hellwig wrote:
+> On Sun, Oct 05, 2014 at 03:44:16PM -0700, Subhash Jadavani wrote:
+> > Looks good, Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 > 
-> --
-> 1.7.2.5
+> I'm getting a bit lost with all the UFS fixes, can you prepared a 
+> series with all the fixups required for 3.18 for me please?
+
+Are you going to prepare a set of fixups for 3.18, or should I try to cram
+them together?  I supect you'd do a much better job than I could.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
