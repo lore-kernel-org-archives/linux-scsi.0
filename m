@@ -1,30 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Tue, 21 Oct 2014 01:49:39 -0700
-Message-ID: <20141021084939.GB10407@infradead.org>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 04/12] scsi_tcq.h: Add support for multiple hardware
+ queues
+Date: Tue, 21 Oct 2014 01:49:52 -0700
+Message-ID: <20141021084952.GC10407@infradead.org>
 References: <5433E43D.3010107@acm.org>
- <5433E585.607@acm.org>
- <20141017110627.GD7819@infradead.org>
- <5444F8A1.4060701@acm.org>
+ <5433E4C4.4030104@acm.org>
+ <5443E2DF.1040605@dev.mellanox.co.il>
+ <5444F995.5080407@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49974 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbaJUItn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 04:49:43 -0400
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <5444F8A1.4060701@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <5444F995.5080407-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On Mon, Oct 20, 2014 at 01:57:21PM +0200, Bart Van Assche wrote:
-> That pr_err() statement was convenient while debugging the multiqueue code
-> in the SRP initiator driver but can be left out. Would you agree with
-> leaving the above three lines of debug code out instead of adding an
-> additional argument to scsi_host_find_tag() ?
+On Mon, Oct 20, 2014 at 02:01:25PM +0200, Bart Van Assche wrote:
+> On 10/19/14 18:12, Sagi Grimberg wrote:
+> >On 10/7/2014 4:04 PM, Bart Van Assche wrote:
+> >>-            req = blk_queue_find_tag(sdev->request_queue, tag);
+> >>+        req = blk_queue_find_tag(sdev->request_queue, tag);
+> >
+> >Why is this line different?
+> 
+> This is because the indentation has been modified from "8x<space><tab>" into
+> "<tab><tab>". I can leave out that change if you want.
 
-Feel free to remove the check.
+Please keep it.
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
