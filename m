@@ -1,18 +1,13 @@
 From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-Date: Tue, 21 Oct 2014 18:30:30 +0000
-Message-ID: <c7c3284a40234f399b653d199a39e92b@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <20141010074901.GA32028@sucs.org>
- <20141011173902.GA1946@infradead.org> <1413049313.2068.48.camel@jarvis.lan>
- <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <A70AC0C1B7E7FD478A6BF19705461AA01109B3@IMBER.smb.curriegrad2004.ca>
- <da5106ddc725481784ed12bccb594980@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <20141021044550.GC11691@sucs.org>
+Subject: RE: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
+Date: Tue, 21 Oct 2014 18:46:43 +0000
+Message-ID: <84a680528eb44a38824175118f9c561e@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1413869964-38940-1-git-send-email-jleung@v10networks.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20141021044550.GC11691@sucs.org>
+In-Reply-To: <1413869964-38940-1-git-send-email-jleung@v10networks.ca>
 Content-Language: en-US
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
@@ -23,92 +18,61 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: Jeff Leung <jleung@v10networks.ca>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Christoph Hellwig <hch@lst.de>
+To: Jeff Leung <jleung@v10networks.ca>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU2l0c29mZSBXaGVlbGVy
-IFttYWlsdG86c2l0c29mZUBnbWFpbC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgT2N0b2JlciAyMCwg
-MjAxNCA5OjQ2IFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENjOiBKZWZmIExldW5nOyBKYW1l
-cyBCb3R0b21sZXk7IENocmlzdG9waCBIZWxsd2lnOyBIYWl5YW5nIFpoYW5nOyBDaHJpc3RvcGgN
-Cj4gSGVsbHdpZzsgSGFubmVzIFJlaW5lY2tlOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsg
-bGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVj
-dC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzNdIHNjc2k6IEFkZCBIeXBlci1WIGxvZ2lj
-YWwgYmxvY2sgcHJvdmlzaW9uaW5nIHF1aXJrcw0KPiANCj4gT24gU3VuLCBPY3QgMTIsIDIwMTQg
-YXQgMDE6MjE6MDFBTSArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToNCj4gPg0KPiA+ID4gLS0t
-LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEplZmYgTGV1bmcgW21haWx0bzpq
-bGV1bmdAdjEwbmV0d29ya3MuY2FdDQo+ID4gPiBTZW50OiBTYXR1cmRheSwgT2N0b2JlciAxMSwg
-MjAxNCAxOjIyIFBNDQo+ID4gPg0KPiA+ID4gPiBPbiB0aGUgY3VycmVudCByZWxlYXNlIG9mIFdp
-bmRvd3MgKHdpbmRvd3MgMTApLCB3ZSBhcmUgYWR2ZXJ0aXNpbmcNCj4gPiA+ID4gU1BDMyBjb21w
-bGlhbmNlLg0KPiA+ID4gPiBXZSBhcmUgb2sgd2l0aCBkZWNsYXJpbmcgY29tcGxpYW5jZSB0byBT
-UEMzIGluIG91ciBkcml2ZXJzLg0KPiA+ID4gSWYgeW91IGFyZSBnb2luZyB0byBkZWNsYXJlIFNQ
-QzMgY29tcGxpYW5jZSBpbiB0aGUgZHJpdmVycywgYXJlIHlvdQ0KPiA+ID4gZ29pbmcgdG8gcHV0
-IGluIGNoZWNrcyB0byBlbnN1cmUgdGhhdCBTUEMtMyBjb21wbGlhbmNlIGRvZXNuJ3QgZ2V0DQo+
-ID4gPiBhY2NpZGVudGFsbHkgZW5hYmxlZCBmb3IgaHlwZXJ2aXNvcnMgYmVsb3cgV2luMTA/DQo+
-ID4gPg0KPiA+ID4gSSBkbyBrbm93IGZvciBhIGZhY3QgdGhhdCBVYnVudHUncyBrZXJuZWxzIGFs
-cmVhZHkgZm9yY2UgU1BDMw0KPiA+ID4gY29tcGxpYW5jZSB0byBlbmFibGUgc3BlY2lmaWMgZmVh
-dHVyZXMgc3VjaCBhcyBUUklNIG9uIGVhcmxpZXINCj4gPiA+IHZlcnNpb25zIG9mIEh5cGVyLVYg
-KE5hbWVseSBIeXBlci1WIDIwMTIgYW5kIDIwMTIgUjIpLg0KPiA+IFlvdSBhcmUgcmlnaHQ7IFVi
-dW50dSBoYXMgYmVlbiBjYXJyeWluZyBhIHBhdGNoICB0aGF0IHdhcyBkb2luZyBqdXN0DQo+ID4g
-dGhpcyBhbmQgdGhpcyBoYXMgYmVlbiB3b3JraW5nIHdpdGhvdXQgYW55IGlzc3VlcyBvbiBtYW55
-IGVhcmxpZXINCj4gPiB2ZXJzaW9ucyBvZiBXaW5kb3dzLiAoMjAxMiBhbmQgMjAxMiBSMikuICBP
-biB3aW5kb3dzIDEwIHdlIGRvbid0IG5lZWQNCj4gPiBhbnkgY2hhbmdlcyBpbiB0aGUgTGludXgg
-ZHJpdmVyIGFzIHRoZSBob3N0IGl0c2VsZiBpcyBhZHZlcnRpc2luZyBTUEMzDQo+ID4gY29tcGxp
-YW5jZS4gQmFzZWQgb24gdGhlIHRlc3Rpbmcgd2UgaGF2ZSBkb25lIHdpdGggVWJ1bnR1LCB3ZSBh
-cmUNCj4gPiBjb21mb3J0YWJsZSBwaWNraW5nIHVwIHRoYXQgcGF0Y2guDQo+IA0KPiBPSyB0aGlz
-IHNlZW1zIHRvIGJlIHRoZSBwYXRjaCBjdXJyZW50bHkgY2FycmllZCBieSBVYnVudHU6DQo+IA0K
-PiBGcm9tIGZmMmM1ZmEzZmE5YWRmMGI5MTliOTQyNWU3MWE4YmEwNDRjMzFhN2QgTW9uIFNlcCAx
-NyAwMDowMDowMCAyMDAxDQo+IEZyb206IEFuZHkgV2hpdGNyb2Z0IDxhcHdAY2Fub25pY2FsLmNv
-bT4NCj4gRGF0ZTogRnJpLCAxMyBTZXAgMjAxMyAxNzo0OToxNiArMDEwMA0KPiBTdWJqZWN0OiBb
-UEFUQ0hdIHNjc2k6IGh5cGVyLXYgc3RvcnN2YyBzd2l0Y2ggdXAgdG8gU1BDLTMNCj4gDQo+IFN1
-Z2dlc3RlZC1CeTogSmFtZXMgQm90dG9tbGV5DQo+IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFy
-dG5lcnNoaXAuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBBbmR5IFdoaXRjcm9mdCA8YXB3QGNhbm9u
-aWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgICA4ICsr
-KysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspDQo+IA0KPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19k
-cnYuYyBpbmRleA0KPiA5OTY5ZmExLi4zOTAzYzhhIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Nj
-c2kvc3RvcnZzY19kcnYuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiBA
-QCAtMTQ0MSw2ICsxNDQxLDE0IEBAIHN0YXRpYyBpbnQgc3RvcnZzY19kZXZpY2VfY29uZmlndXJl
-KHN0cnVjdA0KPiBzY3NpX2RldmljZSAqc2RldmljZSkNCj4gDQo+ICAJc2RldmljZS0+bm9fd3Jp
-dGVfc2FtZSA9IDE7DQo+IA0KPiArCS8qDQo+ICsJICogaHlwZXItdiBsaWVzIGFib3V0IGl0cyBj
-YXBhYmlsaXRpZXMgaW5kaWNhdGluZyBpdCBpcyBvbmx5IFNQQy0yDQo+ICsJICogY29tcGxpYW50
-LCBidXQgYWN0dWFsbHkgaW1wbGVtZW50cyB0aGUgY29yZSBTUEMtMyBmZWF0dXJlcy4NCj4gKwkg
-KiBJZiB3ZSBwcmV0ZW5kIHRvIGJlIFNQQy0zLCB3ZSBzZW5kIFJDMTYgd2hpY2ggYWN0aXZhdGVz
-IHRyaW0gYW5kDQo+ICsJICogd2lsbCBxdWVyeSB0aGUgYXBwcm9wcmlhdGUgVlBEIHBhZ2VzIHRv
-IGVuYWJsZSB0cmltLg0KPiArCSAqLw0KPiArCXNkZXZpY2UtPnNjc2lfbGV2ZWwgPSBTQ1NJX1NQ
-Q18zOw0KPiArDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+IA0KPiAtLQ0KPiAxLjcuOS41DQo+IA0K
-PiAoRG93bmxvYWRlZCBmcm9tDQo+IGh0dHA6Ly9rZXJuZWwudWJ1bnR1LmNvbS9naXQ/cD1qc2Fs
-aXNidXJ5L3N0YWJsZS90cnVzdHkvdWJ1bnR1LQ0KPiB0cnVzdHkuZ2l0O2E9cGF0Y2g7aD1mZjJj
-NWZhM2ZhOWFkZjBiOTE5Yjk0MjVlNzFhOGJhMDQ0YzMxYTdkDQo+ICkuDQo+IA0KPiBJIHRoaW5r
-IGl0J3MgdW53aXNlIHRvIG92ZXJyaWRlIHRoZSBzY3NpX2xldmVsIGF0IHRoaXMgcGFydGljdWxh
-ciBwb2ludCBiZWNhdXNlDQo+IHlvdSBhcmUgZ29pbmcgdG8gZG8gaXQgZm9yIEFMTCBIeXBlci1W
-ICJkaXNrcyIgKHBlcmhhcHMgYWxsIEh5cGVyLVYgU0NTSQ0KPiBkZXZpY2VzPykuLi4NCg0KSSBh
-Z3JlZSB3aXRoIHlvdS4gSSB3YXMgb25seSByZWZlcnJpbmcgdmlydHVhbCBoYXJkIGRpc2tzIChW
-SERzKSBiZWluZyBwcmVzZW50ZWQgdG8gdGhlIGd1ZXN0IGFuZA0Kbm90IHBhc3MtdGhyb3VnaCBk
-ZXZpY2VzLiBGdXJ0aGVybW9yZSwgd2Ugd291bGQgZml4IHVwIHRoZSBzY3NpIGNvbmZvcm1hbmNl
-IGxldmVsIGJhc2VkIG9uIHRoZQ0KdmVyc2lvbiBvZiB0aGUgaG9zdCB3ZSBhcmUgcnVubmluZyBv
-bi4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gSGVyZSdzIHRoZSBTQ1NJIGlucXVpcnkgaW5m
-b3JtYXRpb24gcmVwb3J0ZWQgYnkgYSBVU0IgMiBoYXJkIGRpc2sgYmVpbmcNCj4gcGFzc2VkIHBh
-c3NlZC10aHJvdWdoIGJ5IG9uZSBvZiBteSAyMDEyIFIyIGhvc3RzOg0KPiANCj4gIyBzZ19pbnEg
-L2Rldi9zZGMNCj4gc3RhbmRhcmQgSU5RVUlSWToNCj4gICBQUXVhbD0wICBEZXZpY2VfdHlwZT0w
-ICBSTUI9MCAgdmVyc2lvbj0weDAyICBbU0NTSS0yXQ0KPiAgIFtBRVJDPTBdICBbVHJtVHNrPTBd
-ICBOb3JtQUNBPTAgIEhpU1VQPTAgIFJlc3BfZGF0YV9mb3JtYXQ9MQ0KPiAgIFNDQ1M9MCAgQUND
-PTAgIFRQR1M9MCAgM1BDPTAgIFByb3RlY3Q9MCAgW0JRdWU9MF0NCj4gICBFbmNTZXJ2PTAgIE11
-bHRpUD0wICBbTUNobmdyPTBdICBbQUNLUkVRUT0wXSAgQWRkcjE2PTANCj4gICBbUmVsQWRyPTBd
-ICBXQnVzMTY9MCAgU3luYz0wICBMaW5rZWQ9MCAgW1RyYW5EaXM9MF0gIENtZFF1ZT0wDQo+ICAg
-ICBsZW5ndGg9MzYgKDB4MjQpICAgUGVyaXBoZXJhbCBkZXZpY2UgdHlwZTogZGlzaw0KPiAgVmVu
-ZG9yIGlkZW50aWZpY2F0aW9uOiBNRFQgTUQ1MA0KPiAgUHJvZHVjdCBpZGVudGlmaWNhdGlvbjog
-MDBBQUtTLTAwVE1BMA0KPiAgUHJvZHVjdCByZXZpc2lvbiBsZXZlbDoNCj4gDQo+IElzIGl0IE9L
-IHRvIHJlcGxhY2UgYSBzY3NpX2xldmVsIG9mIFNDU0ktMiB3aXRoIFNDU0lfU1BDXzM/IEFkZGl0
-aW9uYWxseSBpcyBpdA0KPiBhbHNvIE9LIHRvIGZvcmNlIFNDU0lfU1BDXzMgb24gSHlwZXItViAy
-MDA4Pw0KPiANCj4gPiA+ID4gTnJ52LJYdtiWKXtux4l7elgXfXpqOnYgelp6Zn56d9qiKRtqeUEN
-Cj4gPiA+ID4NCj4gPiA+ID4gD2kNCj4gPiBOPz8/Pz9yPz95Pz8/P2I/WD8/x6d2P14/Kd66ey5u
-Pys/Pz8/ez8/Pz96WD8/Fz8/3Kh9Pz8/xqB6PyZqOit2Pz8/DQo+ID8/Pz96Wis/Pyt6Zj8/P2g/
-Pz9+Pz8/P2k/Pz96Px4/dz8/Pz8/Pz8/PyY/Kd+iG2Y/P15qx6t5P20/P0BBP2E/P38NCj4gPw0K
-PiANCj4gMD8/aD8PPz9pfw0KPiANCj4gXl5eIFdoZXJlIGRvIHRoZXNlIGNoYXJhY3RlcnMgY29t
-ZSBmcm9tPyBJJ3ZlIG9jY2FzaW9uYWxseSBzZWVuIHRoZW0gb24NCj4gZW1haWxzIGZyb20gb3Ro
-ZXIgTWljcm9zb2Z0IGZvbGtzIHBvc3RpbmcgdG8gTEtNTCB0b28uLi4NCj4gDQo+IC0tDQo+IFNp
-dHNvZmUgfCBodHRwOi8vc3Vjcy5vcmcvfnNpdHMvDQpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpkZXZlbCBtYWlsaW5nIGxpc3QKZGV2ZWxAbGludXhkcml2
-ZXJwcm9qZWN0Lm9yZwpodHRwOi8vZHJpdmVyZGV2LmxpbnV4ZHJpdmVycHJvamVjdC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9kcml2ZXJkZXYtZGV2ZWwK
+
+
+> -----Original Message-----
+> From: Jeff Leung [mailto:jleung@v10networks.ca]
+> Sent: Monday, October 20, 2014 10:39 PM
+> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org
+> Cc: KY Srinivasan; James.Bottomley@HansenPartnership.com; Jeff Leung
+> Subject: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
+> 
+> This patch forces SPC-3 for Hyper-V disks on the VMBus. As Windows 10's
+> virtual SAS bus is SPC-3 compliant and there are no negative side effects on
+> forcing SPC-3 compliance for Win8 hosts, this patch enables SPC-3 compliance
+> by forcing it on for hosts with versions later than Win8.
+> 
+> Forcing SPC-3 compliance for hosts earlier than Win10 also enables TRIM
+> support.
+> 
+> Suggested by: James Bottomley
+> <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Jeff Leung <jleung@v10networks.ca>
+> ---
+>  drivers/scsi/storvsc_drv.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
+> ed0f899..afcc68e 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1449,6 +1449,15 @@ static int storvsc_device_configure(struct
+> scsi_device *sdevice)
+> 
+>  	sdevice->no_write_same = 1;
+> 
+> +	/*
+> +	 * If the host is Win2k12 or later, we pretend to be SPC-3 compliant
+> +	 * and send RC16 which activates TRIM. We will only enable this on a
+> +	 * host with levels greater than VERSION_WIN8
+> +	 */
+> +	if (vmbus_proto_version >= VERSION_WIN8) {
+
+I would want this hack not to be in Windows 10. We can have this hack if the host is either
+Ws2012 or ws2012 r2 (VERSION_WIN8 or VERSION_WIN8_1). Also this hack should apply only 
+to VHD's being presented and not pass through devices.
+
+K. Y
+> +		sdevice->scsi_level = SCSI_SPC_3;
+> +	}
+> +
+>  	return 0;
+>  }
+> 
+> --
+> 1.7.2.5
