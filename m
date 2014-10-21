@@ -1,46 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv7 00/27] scsi logging update (the boring part)
-Date: Tue, 21 Oct 2014 13:02:48 +0200
-Message-ID: <54463D58.60906@suse.de>
-References: <1413787950-14659-1-git-send-email-hare@suse.de> <20141021105538.GA1950@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [dm-devel] [PATCH 1/1] multipath-tools: Change path checker for
+ IBM IPR devices
+Date: Tue, 21 Oct 2014 04:03:03 -0700
+Message-ID: <20141021110303.GC1950@infradead.org>
+References: <20140924195721.148637349@linux.vnet.ibm.com>
+ <20140924195752.289011902@linux.vnet.ibm.com>
+ <5423B664.2020007@suse.de>
+ <5424472E.4060300@linux.vnet.ibm.com>
+ <20140925165743.GA20621@infradead.org>
+ <20140930140547.Horde.m7EONeG2u3AJYXxG2TLrmQ3@ltc.linux.ibm.com>
+ <20141001125134.GB31067@infradead.org>
+ <5432B3A5.4080001@linux.vnet.ibm.com>
+ <20141006175032.Horde.YOAhPr63sPbLDmxx24U30w9@ltc.linux.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47659 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751283AbaJULCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Oct 2014 07:02:49 -0400
-In-Reply-To: <20141021105538.GA1950@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42529 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754971AbaJULDF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 07:03:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20141006175032.Horde.YOAhPr63sPbLDmxx24U30w9@ltc.linux.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: wenxiong@linux.vnet.ibm.com
+Cc: device-mapper development <dm-devel@redhat.com>, Brian King <brking@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <JBottomley@parallels.com>
 
-On 10/21/2014 12:55 PM, Christoph Hellwig wrote:
-> On Mon, Oct 20, 2014 at 08:52:03AM +0200, Hannes Reinecke wrote:
->> here is now the seventh iteration of my scsi logging update.
->> With this I've included another patch for ratelimiting
->> I/O error messages, which resolves the outstanding issue
->> noted by Robert Elliot.
->=20
-> What tree is this against?  This doesn't seem to touch the ufs driver=
-,
-> which in 3.18-rc has grown calls to some of the functions you remove.
->=20
-Hmm. I _thought_ to have it done against core-for-3.18; but I'll
-double check ...
+On Mon, Oct 06, 2014 at 05:50:32PM -0400, wenxiong@linux.vnet.ibm.com wrote:
+> Sorry it took some time since we need to re-config the systems for this test.
+> 
+> With Christoph's new patch only, still saw the failure.
+> With Christoph's new patch + Brian's patch, works fine, didn't see the
+> failure.
 
-Cheers,
+Can one of you send me a tested series with both patches?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
