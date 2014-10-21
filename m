@@ -1,39 +1,95 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH v2 04/12] scsi_tcq.h: Add support for multiple hardware
- queues
-Date: Tue, 21 Oct 2014 11:59:27 +0300
-Message-ID: <5446206F.7020401@dev.mellanox.co.il>
-References: <5433E43D.3010107@acm.org> <5433E4C4.4030104@acm.org> <5443E2DF.1040605@dev.mellanox.co.il> <5444F995.5080407@acm.org> <20141021084952.GC10407@infradead.org>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
+Date: Tue, 21 Oct 2014 12:10:22 +0300
+Message-ID: <544622FE.5040906@dev.mellanox.co.il>
+References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:50418 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730AbaJUI7d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 04:59:33 -0400
-Received: by mail-wi0-f175.google.com with SMTP id d1so9390027wiv.8
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2014 01:59:32 -0700 (PDT)
-In-Reply-To: <20141021084952.GC10407@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54450690.709-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bvanassche@acm.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On 10/21/2014 11:49 AM, Christoph Hellwig wrote:
-> On Mon, Oct 20, 2014 at 02:01:25PM +0200, Bart Van Assche wrote:
->> On 10/19/14 18:12, Sagi Grimberg wrote:
->>> On 10/7/2014 4:04 PM, Bart Van Assche wrote:
->>>> -            req = blk_queue_find_tag(sdev->request_queue, tag);
->>>> +        req = blk_queue_find_tag(sdev->request_queue, tag);
->>>
->>> Why is this line different?
+On 10/20/2014 3:56 PM, Bart Van Assche wrote:
+> On 10/19/14 19:36, Sagi Grimberg wrote:
+>> On 10/7/2014 4:07 PM, Bart Van Assche wrote:
+>>>           * comp_vector, a number in the range 0..n-1 specifying the
+>>> -          MSI-X completion vector. Some HCA's allocate multiple (n)
+>>> -          MSI-X vectors per HCA port. If the IRQ affinity masks of
+>>> -          these interrupts have been configured such that each MSI-X
+>>> -          interrupt is handled by a different CPU then the comp_vector
+>>> -          parameter can be used to spread the SRP completion workload
+>>> -          over multiple CPU's.
+>>> +          MSI-X completion vector of the first RDMA channel. Some
+>>> +          HCA's allocate multiple (n) MSI-X vectors per HCA port. If
+>>> +          the IRQ affinity masks of these interrupts have been
+>>> +          configured such that each MSI-X interrupt is handled by a
+>>> +          different CPU then the comp_vector parameter can be used to
+>>> +          spread the SRP completion workload over multiple CPU's.
 >>
->> This is because the indentation has been modified from "8x<space><tab>" into
->> "<tab><tab>". I can leave out that change if you want.
+>> This is fairly not trivial for the user...
+>>
+>> Aren't we requesting a bit too much awareness here?
+>> Can't we just "make it work"? The user hands out ch_count - why can't
+>> you do some least-used logic here?
+>>
+>> Maybe we can even go with per-cpu QPs and discard comp_vector argument?
+>> this would probably bring the best performance, wouldn't it?
+>> (fallback to least-used logic in case HW support less vectors)
 >
-> Please keep it.
+> Hello Sagi,
 >
+> The only reason the comp_vector parameter is still supported is because
+> of backwards compatibility. What I expect is that users will set the
+> ch_count parameter but not the comp_vector parameter.
 
-I don't have a big objection on this, but the problem with leaving this
-stuff is that it tends to screw up git blame...
+Agreed...
+
+>
+> Using one QP per CPU thread does not necessarily result in the best
+> performance. In the tests I ran performance was about 4% better when
+> using one QP for each pair of CPU threads (with hyperthreading enabled).
+
+I usually don't like using defaults based on empirical experiments on
+specific workloads. IMO, going either full blown MQ (per-cpu), or
+go SQ for default.
+
+But that is just my opinion...
+you call it.
+
+>
+>>> +static unsigned ch_count;
+>>> +module_param(ch_count, uint, 0444);
+>>> +MODULE_PARM_DESC(ch_count,
+>>> +         "Number of RDMA channels to use for communication with an
+>>> SRP target. Using more than one channel improves performance if the
+>>> HCA supports multiple completion vectors. The default value is the
+>>> minimum of four times the number of online CPU sockets and the number
+>>> of completion vectors supported by the HCA.");
+>>
+>> Why? how did you get to this magic equation?
+>
+> On the systems I have access to measurements have shown that this choice
+> for the ch_count parameter results in a significant performance
+> improvement without consuming too many system resources. The performance
+> difference when using more than four channels was small. This means that
+> the exact value of this parameter is not that important. What matters to
+> me is that users can benefit from improved performance even if the
+> ch_count kernel module parameter has been left to its default value.
+
+I do like the idea of giving users high performance out-of-the-box. But
+as I wrote below, I less like the idea of basing your choice on
+experiments.
+
+Sagi.
+
+>
+> Bart.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
