@@ -1,51 +1,62 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH 1/1] ufs: scsi: fix sparse errors in ufshcd_system_suspend
-Date: Tue, 21 Oct 2014 11:50:17 -0700
-Message-ID: <000a01cfed5f$dbf36070$93da2150$@codeaurora.org>
-References: <1412518207-27135-1-git-send-email-draviv@codeaurora.org> <000301cfe0ed$e5221200$af663600$@codeaurora.org> <20141011110629.GA9161@infradead.org> <20141021140556.GA11823@infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] vhost-scsi: Take configfs group dependency during
+ VHOST_SCSI_SET_ENDPOINT
+Date: Tue, 21 Oct 2014 12:05:31 -0700
+Message-ID: <1413918331.19021.27.camel@haakon3.risingtidesystems.com>
+References: <1412825695-15134-1-git-send-email-nab@daterainc.com>
+	 <1412828062.31947.50.camel@haakon3.risingtidesystems.com>
+	 <54364C2B.5000206@redhat.com> <54366830.4050009@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20141021140556.GA11823@infradead.org>
-Content-Language: en-us
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'Dolev Raviv' <draviv@codeaurora.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <54366830.4050009@redhat.com>
+Sender: kvm-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> Are you going to prepare a set of fixups for 3.18, or should I try to cram
-them together?  I supect you'd do a much better job than I could.
+Hey Paolo,
 
-Agreed. There are 3 patches already posted for sparse warning fixes but then
-there were 5 new reports of sparse warning. So we (Dolev Raviv and myself)
-would try to fix them soon and post all 8 patches as single patch series so
-that it would be easy trace. In addition, there will be one more fix for the
-issue reported by Akinobu Mita, will include it in the same in patch series.
-We should be able to send you these fixes by early next week if not earlier.
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Tuesday, October 21, 2014 7:06 AM
-To: Subhash Jadavani
-Cc: 'Dolev Raviv'; James.Bottomley@HansenPartnership.com;
-linux-scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org;
-santoshsy@gmail.com
-Subject: Re: [PATCH 1/1] ufs: scsi: fix sparse errors in
-ufshcd_system_suspend
-
-On Sat, Oct 11, 2014 at 04:06:29AM -0700, Christoph Hellwig wrote:
-> On Sun, Oct 05, 2014 at 03:44:16PM -0700, Subhash Jadavani wrote:
-> > Looks good, Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+On Thu, 2014-10-09 at 12:49 +0200, Paolo Bonzini wrote:
+> Il 09/10/2014 10:49, Paolo Bonzini ha scritto:
+> > 
+> > It does not happen if you close QEMU with SIGTERM, ctrl-c, or with the
+> > "quit" command, because no attempt is done to bring down the VM data
+> > structures (or free memory, or close file descriptors) in case of a
+> > fatal exit.  The kernel should do that for us.
 > 
-> I'm getting a bit lost with all the UFS fixes, can you prepared a 
-> series with all the fixups required for 3.18 for me please?
+> ... and in the case of vhost-scsi, doesn't it do that when
+> vhost_scsi_release calls vhost_scsi_clear_endpoint?
+> 
 
-Are you going to prepare a set of fixups for 3.18, or should I try to cram
-them together?  I supect you'd do a much better job than I could.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
-body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+Thanks for the extra clarifications here.
+
+The SIGTERM, ctrl-c and "quit" command cases happen as you describe, and
+invoke vhost_scsi_release() -> vhost_scsi_clear_endpoint() to drop the
+endpoint reference.
+
+AFAICT, it's the SIGKILL case that is problematic both with and without
+this patch.  With the patch, the configfs dependency on the vhost-scsi
+endpoint group is left in place, thus preventing the group (and
+underlying target_core_mod) from being removed until a
+VHOST_SCSI_CLEAR_ENDPOINT with the same wwpn is called to drop the
+original reference.
+
+Without the patch, the group can still be removed at any time, but any
+subsequent VHOST_SCSI_SET_ENDPOINT attempts with the original wwpn will
+fail after SIGKILL, because the original reference is still in place.
+
+So I held off on pushing this patch to -rc1 for the moment, but even
+with the above limitation preventing group shutdown after SIGKILL, I
+think it's still better to obtain the configfs dependency to prevent the
+removal of endpoints while there are active references.
+
+That said, I'm still unsure how to address the SIGKILL case, and what's
+the most sane way to drop dead references after it happens, and how
+vhost-scsi should be differentiating between dead and active references.
+
+Any ideas..?
+
+--nab
+
