@@ -1,89 +1,69 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [GIT PULL] osd: Boaz Harrosh - change of email
-Date: Tue, 21 Oct 2014 23:04:12 +0200
-Message-ID: <1413925452.5312.3.camel@jarvis.int.hansenpartnership.com>
-References: <5446682C.50201@electrozaur.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH] vhost-scsi: Take configfs group dependency during
+ VHOST_SCSI_SET_ENDPOINT
+Date: Wed, 22 Oct 2014 01:23:28 +0300
+Message-ID: <20141021222328.GA18051@redhat.com>
+References: <1412825695-15134-1-git-send-email-nab@daterainc.com>
+ <1412828062.31947.50.camel@haakon3.risingtidesystems.com>
+ <54364C2B.5000206@redhat.com>
+ <54366830.4050009@redhat.com>
+ <1413918331.19021.27.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5446682C.50201-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, open-osd <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, NFS list <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kvm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1413918331.19021.27.camel@haakon3.risingtidesystems.com>
+Sender: kvm-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Stefan Hajnoczi <stefanha@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2014-10-21 at 17:05 +0300, Boaz Harrosh wrote:
-> Hi Sir Linus
+On Tue, Oct 21, 2014 at 12:05:31PM -0700, Nicholas A. Bellinger wrote:
+> Hey Paolo,
 > 
-> A small administrative stuff, was on vacation and the old email bounced on me.
-> I was hoping to still make the 3 weeks merge window, but it was 2 weeks at the
-> end.
-> Your call if to make this wait for next window. Needless to say that it is
-> ZERO risk, just change of email.
+> On Thu, 2014-10-09 at 12:49 +0200, Paolo Bonzini wrote:
+> > Il 09/10/2014 10:49, Paolo Bonzini ha scritto:
+> > > 
+> > > It does not happen if you close QEMU with SIGTERM, ctrl-c, or with the
+> > > "quit" command, because no attempt is done to bring down the VM data
+> > > structures (or free memory, or close file descriptors) in case of a
+> > > fatal exit.  The kernel should do that for us.
+> > 
+> > ... and in the case of vhost-scsi, doesn't it do that when
+> > vhost_scsi_release calls vhost_scsi_clear_endpoint?
+> > 
 > 
-> Based on commit [bfe01a5b] Linux 3.17
+> Thanks for the extra clarifications here.
 > 
-> 3 patches available in the git repository at:
+> The SIGTERM, ctrl-c and "quit" command cases happen as you describe, and
+> invoke vhost_scsi_release() -> vhost_scsi_clear_endpoint() to drop the
+> endpoint reference.
 > 
->   git://git.open-osd.org/linux-open-osd.git for-linus
+> AFAICT, it's the SIGKILL case that is problematic both with and without
+> this patch.  With the patch, the configfs dependency on the vhost-scsi
+> endpoint group is left in place, thus preventing the group (and
+> underlying target_core_mod) from being removed until a
+> VHOST_SCSI_CLEAR_ENDPOINT with the same wwpn is called to drop the
+> original reference.
 > 
-> for you to fetch changes up to 1fa3a002b2546c42c343c77c144871285896ced5:
+> Without the patch, the group can still be removed at any time, but any
+> subsequent VHOST_SCSI_SET_ENDPOINT attempts with the original wwpn will
+> fail after SIGKILL, because the original reference is still in place.
 > 
->   Boaz Harrosh - fix email in Documentation (2014-10-19 20:36:36 +0300)
+> So I held off on pushing this patch to -rc1 for the moment, but even
+> with the above limitation preventing group shutdown after SIGKILL, I
+> think it's still better to obtain the configfs dependency to prevent the
+> removal of endpoints while there are active references.
 > 
-> ----------------------------------------------------------------
-> Boaz Harrosh (3):
->       MAINTAINERS: Change Boaz Harrosh's email
->       Boaz Harrosh - Fix broken email address
->       Boaz Harrosh - fix email in Documentation
+> That said, I'm still unsure how to address the SIGKILL case, and what's
+> the most sane way to drop dead references after it happens, and how
+> vhost-scsi should be differentiating between dead and active references.
 > 
->  Documentation/scsi/osd.txt          | 3 +--
->  MAINTAINERS                         | 2 +-
->  drivers/scsi/osd/Kbuild             | 2 +-
->  drivers/scsi/osd/Kconfig            | 2 +-
->  drivers/scsi/osd/osd_debug.h        | 2 +-
->  drivers/scsi/osd/osd_initiator.c    | 4 ++--
->  drivers/scsi/osd/osd_uld.c          | 4 ++--
->  fs/exofs/Kbuild                     | 2 +-
->  fs/exofs/common.h                   | 2 +-
->  fs/exofs/dir.c                      | 2 +-
->  fs/exofs/exofs.h                    | 2 +-
->  fs/exofs/file.c                     | 2 +-
->  fs/exofs/inode.c                    | 2 +-
->  fs/exofs/namei.c                    | 2 +-
->  fs/exofs/ore.c                      | 4 ++--
->  fs/exofs/ore_raid.c                 | 2 +-
->  fs/exofs/ore_raid.h                 | 2 +-
->  fs/exofs/super.c                    | 2 +-
->  fs/exofs/symlink.c                  | 2 +-
->  fs/exofs/sys.c                      | 2 +-
->  fs/nfs/objlayout/objio_osd.c        | 2 +-
->  fs/nfs/objlayout/objlayout.c        | 2 +-
->  fs/nfs/objlayout/objlayout.h        | 2 +-
->  fs/nfs/objlayout/pnfs_osd_xdr_cli.c | 2 +-
->  include/linux/pnfs_osd_xdr.h        | 2 +-
->  include/scsi/osd_initiator.h        | 2 +-
->  include/scsi/osd_ore.h              | 2 +-
->  include/scsi/osd_protocol.h         | 4 ++--
->  include/scsi/osd_sec.h              | 2 +-
->  include/scsi/osd_sense.h            | 2 +-
->  include/scsi/osd_types.h            | 2 +-
->  31 files changed, 35 insertions(+), 36 deletions(-)
+> Any ideas..?
+> 
+> --nab
 
-This is a bit of an unnecessary massive churn.  No one expects the
-author named in the file to stay up to date, especially because the
-@domain.com usually credits the company who paid for the code, so it's
-left in as a kind of mark of respect for them.  I'm not saying it
-applies in your case, just that it creates the common expectation of
-in-file authors needing to be traced through the MAINTAINERS file.
+Need to use some other file (not sysfs), cleanup on release.
 
-Could you not just update the MAINTAINERS file only, like everyone else?
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+MST
