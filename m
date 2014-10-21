@@ -1,36 +1,53 @@
-From: "Jeff Leung" <jleung@v10networks.ca>
-Subject: RE: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-Date: Mon, 20 Oct 2014 22:19:31 -0700
-Message-ID: <A70AC0C1B7E7FD478A6BF19705461AA01109B5@IMBER.smb.curriegrad2004.ca>
-References: <20141010074901.GA32028@sucs.org>
- <20141011173902.GA1946@infradead.org> <1413049313.2068.48.camel@jarvis.lan>
- <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <A70AC0C1B7E7FD478A6BF19705461AA01109B3@IMBER.smb.curriegrad2004.ca>
- <da5106ddc725481784ed12bccb594980@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <20141021044550.GC11691@sucs.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20141021044550.GC11691@sucs.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sitsofe Wheeler <sitsofe@gmail.com>, KY Srinivasan <kys@microsoft.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
+From: Jeff Leung <jleung@v10networks.ca>
+Subject: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
+Date: Tue, 21 Oct 2014 05:39:24 +0000
+Message-ID: <1413869964-38940-1-git-send-email-jleung@v10networks.ca>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:45989 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814AbaJUFjb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 01:39:31 -0400
+Received: by mail-pa0-f50.google.com with SMTP id kx10so639187pab.9
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Oct 2014 22:39:30 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Cc: kys@microsoft.com, James.Bottomley@HansenPartnership.com, Jeff Leung <jleung@v10networks.ca>
 
-> Is it OK to replace a scsi_level of SCSI-2 with SCSI_SPC_3? Additionally is it also OK to force
-> SCSI_SPC_3 on Hyper-V 2008?
+This patch forces SPC-3 for Hyper-V disks on the VMBus. As Windows 10's
+virtual SAS bus is SPC-3 compliant and there are no negative side effects
+on forcing SPC-3 compliance for Win8 hosts, this patch enables SPC-3
+compliance by forcing it on for hosts with versions later than Win8.
 
-I would patch the driver accordingly to force the SPC-3 flag.
+Forcing SPC-3 compliance for hosts earlier than Win10 also enables
+TRIM support.
 
-For a Win2k8 host, I don't know what the side effects are, so it's safe to say it's not a good idea to
-Force SCSI_SPC_3
+Suggested by: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Jeff Leung <jleung@v10networks.ca>
+---
+ drivers/scsi/storvsc_drv.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ed0f899..afcc68e 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1449,6 +1449,15 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	sdevice->no_write_same = 1;
+ 
++	/*
++	 * If the host is Win2k12 or later, we pretend to be SPC-3 compliant
++	 * and send RC16 which activates TRIM. We will only enable this on a
++	 * host with levels greater than VERSION_WIN8
++	 */
++	if (vmbus_proto_version >= VERSION_WIN8) {
++		sdevice->scsi_level = SCSI_SPC_3;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.2.5
+
