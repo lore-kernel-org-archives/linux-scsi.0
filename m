@@ -1,28 +1,23 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv7 00/27] scsi logging update (the boring part)
-Date: Tue, 21 Oct 2014 03:55:38 -0700
-Message-ID: <20141021105538.GA1950@infradead.org>
-References: <1413787950-14659-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/2] ipr: Convert to generic DMA API
+Date: Tue, 21 Oct 2014 03:59:16 -0700
+Message-ID: <20141021105916.GB1950@infradead.org>
+References: <1413191676-1663-1-git-send-email-anton@samba.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:35901 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:37045 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755160AbaJUKzk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 06:55:40 -0400
+	with ESMTP id S1754922AbaJUK72 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 06:59:28 -0400
 Content-Disposition: inline
-In-Reply-To: <1413787950-14659-1-git-send-email-hare@suse.de>
+In-Reply-To: <1413191676-1663-1-git-send-email-anton@samba.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>
+To: Anton Blanchard <anton@samba.org>
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, scottwood@freescale.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 
-On Mon, Oct 20, 2014 at 08:52:03AM +0200, Hannes Reinecke wrote:
-> here is now the seventh iteration of my scsi logging update.
-> With this I've included another patch for ratelimiting
-> I/O error messages, which resolves the outstanding issue
-> noted by Robert Elliot.
+Wendy, Brian,
 
-What tree is this against?  This doesn't seem to touch the ufs driver,
-which in 3.18-rc has grown calls to some of the functions you remove.
+can you give me an ACK for this series?
 
