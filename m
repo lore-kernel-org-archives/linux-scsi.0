@@ -1,53 +1,60 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [RFC v2 2/6] driver-core: add driver async_probe support
-Date: Tue, 21 Oct 2014 01:43:25 +0200
-Message-ID: <CAB=NE6VV97M=iXRQZpGUhEksrqE4JBVDSAU1Wjx_viqatsirmw@mail.gmail.com>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
- <1409899047-13045-3-git-send-email-mcgrof@do-not-panic.com> <20140905221029.GA35667@core.coreip.homeip.net>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Tue, 21 Oct 2014 05:17:08 +0100
+Message-ID: <20141021041707.GA11691@sucs.org>
+References: <20141010074901.GA32028@sucs.org>
+ <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140905221029.GA35667@core.coreip.homeip.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wu Zhangjin <falcon@meizu.com>, Takashi Iwai <tiwai@suse.de>, Tejun Heo <tj@kernel.org>, Arjan van de Ven <arjan@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, hare <hare@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Joseph Salisbury <joseph.salisbury@canonical.com>, Benjamin Poirier <bpoirier@suse.de>, Santosh Rastapur <santosh@chelsio.com>, Kay Sievers <kay@vrfy.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tim Gardner <tim.gardner@canonical.com>, Pierre Fersing <pierre-fersing@pierref.org>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhi>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-> diff --git a/drivers/base/bus.c b/drivers/base/bus.c
-> index 83e910a..49fe573 100644
-> --- a/drivers/base/bus.c
-> +++ b/drivers/base/bus.c
-> @@ -10,6 +10,7 @@
->   *
->   */
->
-> +#include <linux/async.h>
->  #include <linux/device.h>
->  #include <linux/module.h>
->  #include <linux/errno.h>
-> @@ -547,15 +548,12 @@ void bus_probe_device(struct device *dev)
->  {
->         struct bus_type *bus = dev->bus;
->         struct subsys_interface *sif;
-> -       int ret;
->
->         if (!bus)
->                 return;
->
-> -       if (bus->p->drivers_autoprobe) {
-> -               ret = device_attach(dev);
-> -               WARN_ON(ret < 0);
-> -       }
-> +       if (bus->p->drivers_autoprobe)
-> +               device_initial_probe(dev);
->
->         mutex_lock(&bus->p->mutex);
->         list_for_each_entry(sif, &bus->p->interfaces, node)
-> @@ -657,6 +655,17 @@ static ssize_t uevent_store(struct device_driver *drv, const char *buf,
->  }
->  static DRIVER_ATTR_WO(uevent);
+On Tue, Oct 14, 2014 at 09:06:37PM -0400, Martin K. Petersen wrote:
+> >>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
+> 
+> Sitsofe> A previous patch attempted to add a quirk to workaround this
+> Sitsofe> but the quirk was only enabled after the features had been
+> Sitsofe> scanned for, wouldn't work for "small" disks 
+> 
+> What does that mean, exactly?
 
-Based on my review with my latest changes this is what I was missing,
-I'll be sure to address this.
+It means:
 
- Luis
+1. The committed patches never worked because the running of the code to
+test whether the quirk should be enabled happened after the probing code
+the quirk would have affected ran. So roughly:
+
+bflag = 0;
+if (feature || bflag) {
+	do_stuff();
+}
+if (matching_dev) {
+	bflag = 1; // Too late...
+}
+
+See https://lkml.org/lkml/2014/7/23/615 for prior details.
+
+2. On top of the above, when a disk is "small" (has less than 2^32
+sectors which is typically < 2 TBytes in size) READ CAPACITY(16) won't
+be triggered. If READ CAPACITY(16) isn't triggered then the lbpme bytes
+won't be checked, thin provisioning will never be enabled and the
+committed patch would doubly not work for such disks.
+
+Apologies for the delay in replying.
+
+-- 
+Sitsofe | http://sucs.org/~sits/
