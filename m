@@ -1,15 +1,15 @@
 From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
-Date: Tue, 21 Oct 2014 05:17:08 +0100
-Message-ID: <20141021041707.GA11691@sucs.org>
-References: <20141010074901.GA32028@sucs.org>
- <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 2/3] scsi: add try_rc16 blacklist flag
+Date: Tue, 21 Oct 2014 05:21:08 +0100
+Message-ID: <20141021042108.GB11691@sucs.org>
+References: <20141010074901.GA32028@sucs.org> <20141010075251.GC32028@sucs.org>
+ <yq1mw8y6sxf.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
+In-Reply-To: <yq1mw8y6sxf.fsf@sermon.lab.mkp.net>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -23,38 +23,21 @@ To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, devel@linuxdriverproject.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Oct 14, 2014 at 09:06:37PM -0400, Martin K. Petersen wrote:
+On Tue, Oct 14, 2014 at 09:08:28PM -0400, Martin K. Petersen wrote:
 > >>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
 > 
-> Sitsofe> A previous patch attempted to add a quirk to workaround this
-> Sitsofe> but the quirk was only enabled after the features had been
-> Sitsofe> scanned for, wouldn't work for "small" disks 
+> Sitsofe> Microsoft Hyper-V virtual disks currently only claim SPC-2
+> Sitsofe> compliance causing the kernel skip checks for features such as
+> Sitsofe> thin provisioning even though the virtual disk advertises them.
 > 
-> What does that mean, exactly?
+> Last time around we identified this as a problem with Microsoft's
+> interpretation of the T10 SBC spec. And they promised that they are
+> going to fix that.
 
-It means:
-
-1. The committed patches never worked because the running of the code to
-test whether the quirk should be enabled happened after the probing code
-the quirk would have affected ran. So roughly:
-
-bflag = 0;
-if (feature || bflag) {
-	do_stuff();
-}
-if (matching_dev) {
-	bflag = 1; // Too late...
-}
-
-See https://lkml.org/lkml/2014/7/23/615 for prior details.
-
-2. On top of the above, when a disk is "small" (has less than 2^32
-sectors which is typically < 2 TBytes in size) READ CAPACITY(16) won't
-be triggered. If READ CAPACITY(16) isn't triggered then the lbpme bytes
-won't be checked, thin provisioning will never be enabled and the
-committed patch would doubly not work for such disks.
-
-Apologies for the delay in replying.
+OK but if we were happy to wait for Microsoft to fix the problem on the
+host why were the (broken and incomplete) BLIST_SKIP_VPD_PAGES patches
+committed to 3.17 rather than withdrawn? What's going to be done about
+those patches now?
 
 -- 
 Sitsofe | http://sucs.org/~sits/
