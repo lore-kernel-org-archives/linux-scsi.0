@@ -1,36 +1,30 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2 04/12] scsi_tcq.h: Add support for multiple hardware
- queues
-Date: Tue, 21 Oct 2014 01:49:52 -0700
-Message-ID: <20141021084952.GC10407@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 07/12] IB/srp: Avoid that I/O hangs due to a cable
+ pull during LUN scanning
+Date: Tue, 21 Oct 2014 01:50:33 -0700
+Message-ID: <20141021085033.GD10407@infradead.org>
 References: <5433E43D.3010107@acm.org>
- <5433E4C4.4030104@acm.org>
- <5443E2DF.1040605@dev.mellanox.co.il>
- <5444F995.5080407@acm.org>
+ <5433E504.1070306@acm.org>
+ <5443E66F.7050901@dev.mellanox.co.il>
+ <5444FCCB.2030503@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:50294 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbaJUIui (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 04:50:38 -0400
 Content-Disposition: inline
-In-Reply-To: <5444F995.5080407-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <5444FCCB.2030503@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On Mon, Oct 20, 2014 at 02:01:25PM +0200, Bart Van Assche wrote:
-> On 10/19/14 18:12, Sagi Grimberg wrote:
-> >On 10/7/2014 4:04 PM, Bart Van Assche wrote:
-> >>-            req = blk_queue_find_tag(sdev->request_queue, tag);
-> >>+        req = blk_queue_find_tag(sdev->request_queue, tag);
-> >
-> >Why is this line different?
-> 
-> This is because the indentation has been modified from "8x<space><tab>" into
-> "<tab><tab>". I can leave out that change if you want.
+On Mon, Oct 20, 2014 at 02:15:07PM +0200, Bart Van Assche wrote:
+> How about renaming this function into shost_sdev_count() and moving its
+> declaration to <scsi/scsi_device.h> and its implementation to
+> drivers/scsi/scsi_lib.c ?
 
-Please keep it.
+I'd prefer to defer this until we have an actual need for it elsewhere.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
