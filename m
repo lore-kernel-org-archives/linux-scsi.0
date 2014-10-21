@@ -1,72 +1,82 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 27/27] scsi: ratelimit I/O error messages
-Date: Tue, 21 Oct 2014 17:53:13 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295931CF6D@G4W3296.americas.hpqcorp.net>
-References: <1413787950-14659-1-git-send-email-hare@suse.de>
- <1413787950-14659-28-git-send-email-hare@suse.de>
- <94D0CD8314A33A4D9D801C0FE68B40295931CCBB@G4W3296.americas.hpqcorp.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [GIT PULL] target updates for v3.18-rc2
+Date: Tue, 21 Oct 2014 10:54:58 -0700
+Message-ID: <1413914098.19021.3.camel@haakon3.risingtidesystems.com>
+References: <1413848357.16343.35.camel@haakon3.risingtidesystems.com>
+	 <5446266B.4080800@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58458 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933312AbaJURyL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 13:54:11 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295931CCBB@G4W3296.americas.hpqcorp.net>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <5446266B.4080800@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Tue, 2014-10-21 at 12:24 +0300, Sagi Grimberg wrote:
+> On 10/21/2014 2:39 AM, Nicholas A. Bellinger wrote:
+> > Hi Linus,
+> >
+> > Here are the target updates for v3.18-rc2 code.  These where originally
+> > destined for -rc1, but due to the combination of travel last week for
+> > KVM Forum and my mistake of taking the three week merge window
+> > literally, the pull request slipped..  Apologies for that.
+> >
+> > A heads-up that you'll hit one minor conflict with scsi.git, that was
+> > caught by sfr in linux-next here:
+> >
+> > http://marc.info/?l=linux-next&m=141223868207635&w=2
+> >
+> > Please go ahead and pull from:
+> >
+> >     git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+> >
+> > Things where reasonably quiet this round.  The highlights include:
+> >
+> >    - New userspace backend driver (target_core_user.ko) by Shaohua Li
+> >      and Andy Grover
+> >    - A number of cleanups in target, iscsi-taret and qla_target code
+> >      from Joern Engel
+> >    - Fix an OOPs related to queue full handling with CHECK_CONDITION
+> >      status from Quinn Tran
+> >    - Fix to disable TX completion interrupt coalescing in iser-target,
+> >      that was causing problems on some hardware
+> >    - Fix for PR APTPL metadata handling with demo-mode ACLs
+> >
+> > I'm most excited about the new backend driver that uses UIO + shared
+> > memory ring to dispatch I/O and control commands into user-space.  This
+> > was probably the most requested feature by users over the last couple of
+> > years, and opens up a new area of development + porting of existing
+> > user-space storage applications to LIO.  Thanks to Shaohua + Andy for
+> > making this happen.
+> >
+> > Also another honorable mention, a new Xen PV SCSI driver was merged via
+> > the xen/tip.git tree recently, which puts us now at 10 target drivers in
+> > upstream!  Thanks to David Vrabel + Juergen Gross for their work to get
+> > this code merged.
+> >
+> > Thank you,
+> >
+> 
+> Nic,
+> 
+> Why are these fixes are not included?
+> 
+> Target/iser: Fix initiator_depth and responder_resources
+> Target/iser: Avoid calling rdma_disconnect twice
+> Target/iser: Don't put isert_conn inside disconnected handler
+> Target/iser: Get isert_conn reference once got to connected_handler
+> 
+> They are sitting around for some time and  were supposed to make it to
+> 3.17, I don't want these to miss 3.18 too...
+> 
 
+Those went in for v3.17 with the appropriate CC's for stable.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Elliott, Robert (Server Storage)
-...
-> With scsi_logging_level --set --error=5, there are:
-> * 10 "FAILED Result" prints
->   * the first has no CDB
->   * at the end, there is a much later CDB print not preceded by a
-> FAILED print
-> * 10 "blk_update_request: critical target error" prints
->   * their sector number matches the preceding CDB print
-> * 1 "blk_update_request: 539 callbacks suppressed" print
-> * fio printed 33 io_u errors
->   * the first at offset 27118616, matching the first print
->   * one of the later ones is at offset 28297168, matching the last
-> print
-> * no "callbacks suppressed" messages from scsi_io_completion
-...
-> [49190.337402] sd 2:0:0:1: [sds] FAILED Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [49190.337404] sd 2:0:0:1: [sds] Sense Key : Hardware Error [current]
-> [49190.337406] sd 2:0:0:1: [sds] Add. Sense: Logical unit failure
-> [49190.337408] sd 2:0:0:1: [sds] CDB:
-> [49190.337412] Read(10): 28 00 01 9d cc 58 00 00 08 00
-> [49190.337413] blk_update_request: critical target error, dev sds,
-> sector 27118680 <0x19dcc58>
-> [49190.337417] blk_update_request: critical target error, dev sds,
-> sector 27118688 <0x19dcc60>
-> [49190.554043] sd 2:0:0:1: [sds] CDB:
-> [49190.555178] Read(10): 28 00 01 af c7 d0 00 00 08 00 <28297168>
-...
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=c2f88b17a1d97ca4ecd96cc22333a7a4f1407d39
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=0fc4ea701fcf5bc51ace4e288af5be741465f776
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=38a8316b5d80ddee071d493bae567185c07de359
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=1a92e17e39b9a5d476e0a7aa52280e76321834ee
 
-After triggering another error after lunch, a ratelimit message
-for scsi_io_completion did finally appear:
-[57601.577000] scsi_io_completion: 536 callbacks suppressed
-[57601.578865] sd 2:0:0:0: [sdr] FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[57601.581535] sd 2:0:0:0: [sdr] Sense Key : Hardware Error [current]
-[57601.584406] sd 2:0:0:0: [sdr] Add. Sense: Logical unit failure
-[57601.586419] sd 2:0:0:0: [sdr] CDB:
-[57601.587662] Read(10): 28 00 2e 92 90 00 00 00 08 00
-
----
-Rob Elliott    HP Server Storage
-
-
-
-
-
+--nab
