@@ -1,82 +1,114 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target updates for v3.18-rc2
-Date: Tue, 21 Oct 2014 10:54:58 -0700
-Message-ID: <1413914098.19021.3.camel@haakon3.risingtidesystems.com>
-References: <1413848357.16343.35.camel@haakon3.risingtidesystems.com>
-	 <5446266B.4080800@dev.mellanox.co.il>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Tue, 21 Oct 2014 18:30:30 +0000
+Message-ID: <c7c3284a40234f399b653d199a39e92b@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <20141010074901.GA32028@sucs.org>
+ <20141011173902.GA1946@infradead.org> <1413049313.2068.48.camel@jarvis.lan>
+ <b0069f11bbe64ebc8c9981ea90429014@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <A70AC0C1B7E7FD478A6BF19705461AA01109B3@IMBER.smb.curriegrad2004.ca>
+ <da5106ddc725481784ed12bccb594980@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <20141021044550.GC11691@sucs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <5446266B.4080800@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20141021044550.GC11691@sucs.org>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: Jeff Leung <jleung@v10networks.ca>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2014-10-21 at 12:24 +0300, Sagi Grimberg wrote:
-> On 10/21/2014 2:39 AM, Nicholas A. Bellinger wrote:
-> > Hi Linus,
-> >
-> > Here are the target updates for v3.18-rc2 code.  These where originally
-> > destined for -rc1, but due to the combination of travel last week for
-> > KVM Forum and my mistake of taking the three week merge window
-> > literally, the pull request slipped..  Apologies for that.
-> >
-> > A heads-up that you'll hit one minor conflict with scsi.git, that was
-> > caught by sfr in linux-next here:
-> >
-> > http://marc.info/?l=linux-next&m=141223868207635&w=2
-> >
-> > Please go ahead and pull from:
-> >
-> >     git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-> >
-> > Things where reasonably quiet this round.  The highlights include:
-> >
-> >    - New userspace backend driver (target_core_user.ko) by Shaohua Li
-> >      and Andy Grover
-> >    - A number of cleanups in target, iscsi-taret and qla_target code
-> >      from Joern Engel
-> >    - Fix an OOPs related to queue full handling with CHECK_CONDITION
-> >      status from Quinn Tran
-> >    - Fix to disable TX completion interrupt coalescing in iser-target,
-> >      that was causing problems on some hardware
-> >    - Fix for PR APTPL metadata handling with demo-mode ACLs
-> >
-> > I'm most excited about the new backend driver that uses UIO + shared
-> > memory ring to dispatch I/O and control commands into user-space.  This
-> > was probably the most requested feature by users over the last couple of
-> > years, and opens up a new area of development + porting of existing
-> > user-space storage applications to LIO.  Thanks to Shaohua + Andy for
-> > making this happen.
-> >
-> > Also another honorable mention, a new Xen PV SCSI driver was merged via
-> > the xen/tip.git tree recently, which puts us now at 10 target drivers in
-> > upstream!  Thanks to David Vrabel + Juergen Gross for their work to get
-> > this code merged.
-> >
-> > Thank you,
-> >
-> 
-> Nic,
-> 
-> Why are these fixes are not included?
-> 
-> Target/iser: Fix initiator_depth and responder_resources
-> Target/iser: Avoid calling rdma_disconnect twice
-> Target/iser: Don't put isert_conn inside disconnected handler
-> Target/iser: Get isert_conn reference once got to connected_handler
-> 
-> They are sitting around for some time and  were supposed to make it to
-> 3.17, I don't want these to miss 3.18 too...
-> 
-
-Those went in for v3.17 with the appropriate CC's for stable.
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=c2f88b17a1d97ca4ecd96cc22333a7a4f1407d39
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=0fc4ea701fcf5bc51ace4e288af5be741465f776
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=38a8316b5d80ddee071d493bae567185c07de359
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/infiniband/ulp/isert?id=1a92e17e39b9a5d476e0a7aa52280e76321834ee
-
---nab
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU2l0c29mZSBXaGVlbGVy
+IFttYWlsdG86c2l0c29mZUBnbWFpbC5jb21dDQo+IFNlbnQ6IE1vbmRheSwgT2N0b2JlciAyMCwg
+MjAxNCA5OjQ2IFBNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+IENjOiBKZWZmIExldW5nOyBKYW1l
+cyBCb3R0b21sZXk7IENocmlzdG9waCBIZWxsd2lnOyBIYWl5YW5nIFpoYW5nOyBDaHJpc3RvcGgN
+Cj4gSGVsbHdpZzsgSGFubmVzIFJlaW5lY2tlOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsg
+bGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGxpbnV4ZHJpdmVycHJvamVj
+dC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzNdIHNjc2k6IEFkZCBIeXBlci1WIGxvZ2lj
+YWwgYmxvY2sgcHJvdmlzaW9uaW5nIHF1aXJrcw0KPiANCj4gT24gU3VuLCBPY3QgMTIsIDIwMTQg
+YXQgMDE6MjE6MDFBTSArMDAwMCwgS1kgU3Jpbml2YXNhbiB3cm90ZToNCj4gPg0KPiA+ID4gLS0t
+LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEplZmYgTGV1bmcgW21haWx0bzpq
+bGV1bmdAdjEwbmV0d29ya3MuY2FdDQo+ID4gPiBTZW50OiBTYXR1cmRheSwgT2N0b2JlciAxMSwg
+MjAxNCAxOjIyIFBNDQo+ID4gPg0KPiA+ID4gPiBPbiB0aGUgY3VycmVudCByZWxlYXNlIG9mIFdp
+bmRvd3MgKHdpbmRvd3MgMTApLCB3ZSBhcmUgYWR2ZXJ0aXNpbmcNCj4gPiA+ID4gU1BDMyBjb21w
+bGlhbmNlLg0KPiA+ID4gPiBXZSBhcmUgb2sgd2l0aCBkZWNsYXJpbmcgY29tcGxpYW5jZSB0byBT
+UEMzIGluIG91ciBkcml2ZXJzLg0KPiA+ID4gSWYgeW91IGFyZSBnb2luZyB0byBkZWNsYXJlIFNQ
+QzMgY29tcGxpYW5jZSBpbiB0aGUgZHJpdmVycywgYXJlIHlvdQ0KPiA+ID4gZ29pbmcgdG8gcHV0
+IGluIGNoZWNrcyB0byBlbnN1cmUgdGhhdCBTUEMtMyBjb21wbGlhbmNlIGRvZXNuJ3QgZ2V0DQo+
+ID4gPiBhY2NpZGVudGFsbHkgZW5hYmxlZCBmb3IgaHlwZXJ2aXNvcnMgYmVsb3cgV2luMTA/DQo+
+ID4gPg0KPiA+ID4gSSBkbyBrbm93IGZvciBhIGZhY3QgdGhhdCBVYnVudHUncyBrZXJuZWxzIGFs
+cmVhZHkgZm9yY2UgU1BDMw0KPiA+ID4gY29tcGxpYW5jZSB0byBlbmFibGUgc3BlY2lmaWMgZmVh
+dHVyZXMgc3VjaCBhcyBUUklNIG9uIGVhcmxpZXINCj4gPiA+IHZlcnNpb25zIG9mIEh5cGVyLVYg
+KE5hbWVseSBIeXBlci1WIDIwMTIgYW5kIDIwMTIgUjIpLg0KPiA+IFlvdSBhcmUgcmlnaHQ7IFVi
+dW50dSBoYXMgYmVlbiBjYXJyeWluZyBhIHBhdGNoICB0aGF0IHdhcyBkb2luZyBqdXN0DQo+ID4g
+dGhpcyBhbmQgdGhpcyBoYXMgYmVlbiB3b3JraW5nIHdpdGhvdXQgYW55IGlzc3VlcyBvbiBtYW55
+IGVhcmxpZXINCj4gPiB2ZXJzaW9ucyBvZiBXaW5kb3dzLiAoMjAxMiBhbmQgMjAxMiBSMikuICBP
+biB3aW5kb3dzIDEwIHdlIGRvbid0IG5lZWQNCj4gPiBhbnkgY2hhbmdlcyBpbiB0aGUgTGludXgg
+ZHJpdmVyIGFzIHRoZSBob3N0IGl0c2VsZiBpcyBhZHZlcnRpc2luZyBTUEMzDQo+ID4gY29tcGxp
+YW5jZS4gQmFzZWQgb24gdGhlIHRlc3Rpbmcgd2UgaGF2ZSBkb25lIHdpdGggVWJ1bnR1LCB3ZSBh
+cmUNCj4gPiBjb21mb3J0YWJsZSBwaWNraW5nIHVwIHRoYXQgcGF0Y2guDQo+IA0KPiBPSyB0aGlz
+IHNlZW1zIHRvIGJlIHRoZSBwYXRjaCBjdXJyZW50bHkgY2FycmllZCBieSBVYnVudHU6DQo+IA0K
+PiBGcm9tIGZmMmM1ZmEzZmE5YWRmMGI5MTliOTQyNWU3MWE4YmEwNDRjMzFhN2QgTW9uIFNlcCAx
+NyAwMDowMDowMCAyMDAxDQo+IEZyb206IEFuZHkgV2hpdGNyb2Z0IDxhcHdAY2Fub25pY2FsLmNv
+bT4NCj4gRGF0ZTogRnJpLCAxMyBTZXAgMjAxMyAxNzo0OToxNiArMDEwMA0KPiBTdWJqZWN0OiBb
+UEFUQ0hdIHNjc2k6IGh5cGVyLXYgc3RvcnN2YyBzd2l0Y2ggdXAgdG8gU1BDLTMNCj4gDQo+IFN1
+Z2dlc3RlZC1CeTogSmFtZXMgQm90dG9tbGV5DQo+IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFy
+dG5lcnNoaXAuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBBbmR5IFdoaXRjcm9mdCA8YXB3QGNhbm9u
+aWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgfCAgICA4ICsr
+KysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspDQo+IA0KPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9zY3NpL3N0b3J2c2NfZHJ2LmMgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19k
+cnYuYyBpbmRleA0KPiA5OTY5ZmExLi4zOTAzYzhhIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Nj
+c2kvc3RvcnZzY19kcnYuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc3RvcnZzY19kcnYuYw0KPiBA
+QCAtMTQ0MSw2ICsxNDQxLDE0IEBAIHN0YXRpYyBpbnQgc3RvcnZzY19kZXZpY2VfY29uZmlndXJl
+KHN0cnVjdA0KPiBzY3NpX2RldmljZSAqc2RldmljZSkNCj4gDQo+ICAJc2RldmljZS0+bm9fd3Jp
+dGVfc2FtZSA9IDE7DQo+IA0KPiArCS8qDQo+ICsJICogaHlwZXItdiBsaWVzIGFib3V0IGl0cyBj
+YXBhYmlsaXRpZXMgaW5kaWNhdGluZyBpdCBpcyBvbmx5IFNQQy0yDQo+ICsJICogY29tcGxpYW50
+LCBidXQgYWN0dWFsbHkgaW1wbGVtZW50cyB0aGUgY29yZSBTUEMtMyBmZWF0dXJlcy4NCj4gKwkg
+KiBJZiB3ZSBwcmV0ZW5kIHRvIGJlIFNQQy0zLCB3ZSBzZW5kIFJDMTYgd2hpY2ggYWN0aXZhdGVz
+IHRyaW0gYW5kDQo+ICsJICogd2lsbCBxdWVyeSB0aGUgYXBwcm9wcmlhdGUgVlBEIHBhZ2VzIHRv
+IGVuYWJsZSB0cmltLg0KPiArCSAqLw0KPiArCXNkZXZpY2UtPnNjc2lfbGV2ZWwgPSBTQ1NJX1NQ
+Q18zOw0KPiArDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+IA0KPiAtLQ0KPiAxLjcuOS41DQo+IA0K
+PiAoRG93bmxvYWRlZCBmcm9tDQo+IGh0dHA6Ly9rZXJuZWwudWJ1bnR1LmNvbS9naXQ/cD1qc2Fs
+aXNidXJ5L3N0YWJsZS90cnVzdHkvdWJ1bnR1LQ0KPiB0cnVzdHkuZ2l0O2E9cGF0Y2g7aD1mZjJj
+NWZhM2ZhOWFkZjBiOTE5Yjk0MjVlNzFhOGJhMDQ0YzMxYTdkDQo+ICkuDQo+IA0KPiBJIHRoaW5r
+IGl0J3MgdW53aXNlIHRvIG92ZXJyaWRlIHRoZSBzY3NpX2xldmVsIGF0IHRoaXMgcGFydGljdWxh
+ciBwb2ludCBiZWNhdXNlDQo+IHlvdSBhcmUgZ29pbmcgdG8gZG8gaXQgZm9yIEFMTCBIeXBlci1W
+ICJkaXNrcyIgKHBlcmhhcHMgYWxsIEh5cGVyLVYgU0NTSQ0KPiBkZXZpY2VzPykuLi4NCg0KSSBh
+Z3JlZSB3aXRoIHlvdS4gSSB3YXMgb25seSByZWZlcnJpbmcgdmlydHVhbCBoYXJkIGRpc2tzIChW
+SERzKSBiZWluZyBwcmVzZW50ZWQgdG8gdGhlIGd1ZXN0IGFuZA0Kbm90IHBhc3MtdGhyb3VnaCBk
+ZXZpY2VzLiBGdXJ0aGVybW9yZSwgd2Ugd291bGQgZml4IHVwIHRoZSBzY3NpIGNvbmZvcm1hbmNl
+IGxldmVsIGJhc2VkIG9uIHRoZQ0KdmVyc2lvbiBvZiB0aGUgaG9zdCB3ZSBhcmUgcnVubmluZyBv
+bi4NCg0KUmVnYXJkcywNCg0KSy4gWQ0KPiANCj4gSGVyZSdzIHRoZSBTQ1NJIGlucXVpcnkgaW5m
+b3JtYXRpb24gcmVwb3J0ZWQgYnkgYSBVU0IgMiBoYXJkIGRpc2sgYmVpbmcNCj4gcGFzc2VkIHBh
+c3NlZC10aHJvdWdoIGJ5IG9uZSBvZiBteSAyMDEyIFIyIGhvc3RzOg0KPiANCj4gIyBzZ19pbnEg
+L2Rldi9zZGMNCj4gc3RhbmRhcmQgSU5RVUlSWToNCj4gICBQUXVhbD0wICBEZXZpY2VfdHlwZT0w
+ICBSTUI9MCAgdmVyc2lvbj0weDAyICBbU0NTSS0yXQ0KPiAgIFtBRVJDPTBdICBbVHJtVHNrPTBd
+ICBOb3JtQUNBPTAgIEhpU1VQPTAgIFJlc3BfZGF0YV9mb3JtYXQ9MQ0KPiAgIFNDQ1M9MCAgQUND
+PTAgIFRQR1M9MCAgM1BDPTAgIFByb3RlY3Q9MCAgW0JRdWU9MF0NCj4gICBFbmNTZXJ2PTAgIE11
+bHRpUD0wICBbTUNobmdyPTBdICBbQUNLUkVRUT0wXSAgQWRkcjE2PTANCj4gICBbUmVsQWRyPTBd
+ICBXQnVzMTY9MCAgU3luYz0wICBMaW5rZWQ9MCAgW1RyYW5EaXM9MF0gIENtZFF1ZT0wDQo+ICAg
+ICBsZW5ndGg9MzYgKDB4MjQpICAgUGVyaXBoZXJhbCBkZXZpY2UgdHlwZTogZGlzaw0KPiAgVmVu
+ZG9yIGlkZW50aWZpY2F0aW9uOiBNRFQgTUQ1MA0KPiAgUHJvZHVjdCBpZGVudGlmaWNhdGlvbjog
+MDBBQUtTLTAwVE1BMA0KPiAgUHJvZHVjdCByZXZpc2lvbiBsZXZlbDoNCj4gDQo+IElzIGl0IE9L
+IHRvIHJlcGxhY2UgYSBzY3NpX2xldmVsIG9mIFNDU0ktMiB3aXRoIFNDU0lfU1BDXzM/IEFkZGl0
+aW9uYWxseSBpcyBpdA0KPiBhbHNvIE9LIHRvIGZvcmNlIFNDU0lfU1BDXzMgb24gSHlwZXItViAy
+MDA4Pw0KPiANCj4gPiA+ID4gTnJ52LJYdtiWKXtux4l7elgXfXpqOnYgelp6Zn56d9qiKRtqeUEN
+Cj4gPiA+ID4NCj4gPiA+ID4gD2kNCj4gPiBOPz8/Pz9yPz95Pz8/P2I/WD8/x6d2P14/Kd66ey5u
+Pys/Pz8/ez8/Pz96WD8/Fz8/3Kh9Pz8/xqB6PyZqOit2Pz8/DQo+ID8/Pz96Wis/Pyt6Zj8/P2g/
+Pz9+Pz8/P2k/Pz96Px4/dz8/Pz8/Pz8/PyY/Kd+iG2Y/P15qx6t5P20/P0BBP2E/P38NCj4gPw0K
+PiANCj4gMD8/aD8PPz9pfw0KPiANCj4gXl5eIFdoZXJlIGRvIHRoZXNlIGNoYXJhY3RlcnMgY29t
+ZSBmcm9tPyBJJ3ZlIG9jY2FzaW9uYWxseSBzZWVuIHRoZW0gb24NCj4gZW1haWxzIGZyb20gb3Ro
+ZXIgTWljcm9zb2Z0IGZvbGtzIHBvc3RpbmcgdG8gTEtNTCB0b28uLi4NCj4gDQo+IC0tDQo+IFNp
+dHNvZmUgfCBodHRwOi8vc3Vjcy5vcmcvfnNpdHMvDQpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpkZXZlbCBtYWlsaW5nIGxpc3QKZGV2ZWxAbGludXhkcml2
+ZXJwcm9qZWN0Lm9yZwpodHRwOi8vZHJpdmVyZGV2LmxpbnV4ZHJpdmVycHJvamVjdC5vcmcvbWFp
+bG1hbi9saXN0aW5mby9kcml2ZXJkZXYtZGV2ZWwK
