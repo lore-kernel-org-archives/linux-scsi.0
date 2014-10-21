@@ -1,46 +1,30 @@
-From: Jeff Leung <jleung@v10networks.ca>
-Subject: [PATCH] scsi: storvsc: Force SPC-3 for Win8 Hosts or Later
-Date: Tue, 21 Oct 2014 05:32:03 +0000
-Message-ID: <1413869523-38783-1-git-send-email-jleung@v10networks.ca>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
-Cc: kys@microsoft.com, James.Bottomley@HansenPartnership.com, Jeff Leung <jleung@v10networks.ca>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 11/12] IB/srp: Eliminate free_reqs list
+Date: Tue, 21 Oct 2014 01:49:21 -0700
+Message-ID: <20141021084921.GA10407@infradead.org>
+References: <5433E43D.3010107@acm.org>
+ <5433E56E.6010600@acm.org>
+ <20141017105939.GB7819@infradead.org>
+ <5444F669.1020803@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:49837 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbaJUItZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 04:49:25 -0400
+Content-Disposition: inline
+In-Reply-To: <5444F669.1020803@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-This patch forces SPC-3 for Hyper-V disks on the VMBus. As Windows 10's
-virtual SAS bus is SPC-3 compliant and there are no negative side effects
-on forcing SPC-3 compliance for Win8 hosts, this patch enables SPC-3
-compliance by forcing it on for hosts with versions later than Win8.
+On Mon, Oct 20, 2014 at 01:47:53PM +0200, Bart Van Assche wrote:
+> The only reason why patches 10/12 and 11/12 are separate patches
+> is to reduce the size of individual patches and hence to make it
+> easier to review these patches. If everyone agrees I'm fine with
+> folding patch 11/12 into patch 10/12.
 
-Forcing SPC-3 compliance for hosts earlier than Win10 also enables
-TRIM support.
+I would prefer to merge the two patches.
 
-Suggested by: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Jeff Leung <jleung@v10networks.ca>
----
- drivers/scsi/storvsc_drv.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ed0f899..afcc68e 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1449,6 +1449,15 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 
- 	sdevice->no_write_same = 1;
- 
-+	/*
-+	 * If the host is Win2k12 or later, we pretend to be SPC-3 compliant
-+	 * and send RC16 which activates TRIM. We will only enable this on a
-+	 * host with levels greater than VERSION_WIN8
-+	 */
-+	if (vmbus_proto_version >= VERSION_WIN8) {
-+		sdevice->scsi_level = SCSI_SPC_3;
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.7.2.5
