@@ -1,7 +1,7 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 6/18] block copy: report the amount of copied data
-Date: Wed, 22 Oct 2014 09:27:27 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1410220927100.31351@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 7/18] block copy: use a timer to fix a theoretical deadlock
+Date: Wed, 22 Oct 2014 09:28:02 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1410220927340.31351@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -12,192 +12,100 @@ To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, J
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch changes blkdev_issue_copy so that it returns the number of
-copied sectors in the variable "copied".
+The block layer creates two bios for each copy operation. The bios travel
+independently through the storage stack and they are paired at the block
+device.
 
-The kernel makes best effort to copy as much data as possible, but because
-of device mapper mapping, it may be possible that copying fails at some
-stage. If we just returned the error number, the caller wouldn't know if
-all or part of the operation failed and the caller would be required to
-redo the whole copy operation.
+There is a theoretical problem with this - the block device stack only
+guarantees forward progress for a single bio. When two bios are sent, it
+is possible (though very unlikely) that the first bio exhausts some
+mempool and the second bio waits until there is free space in the mempool
+(and thus it waits until the first bio finishes).
 
-We return the number of copied sectors so that the caller can skip these
-sectors when doing the copy manually. On success (zero return code), the
-number of copied sectors is equal to the number of requested sectors. On
-error (negative return code), the number of copied sectors is smaller than
-the number of requested sectors.
+To avoid this deadlock, we introduce a timer. If the two bios are not
+paired at the physical block device within 10 seconds, the copy operation
+is aborted and the bio that waits to be paired is released with an error.
 
-The number of copied bytes is returned as a fourth uint64_t argument in
-the BLKCOPY ioctl.
+Note that there is no guarantee that any XCOPY operation succeed, so
+aborting an operation with an error shouldn't cause any problems - the
+caller is supposed to perform the copy manually if XCOPY fails.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- block/blk-lib.c           |   30 +++++++++++++++++++++++++-----
- block/ioctl.c             |   25 ++++++++++++++++---------
+ block/blk-lib.c           |   27 +++++++++++++++++++++++++++
  include/linux/blk_types.h |    2 ++
- include/linux/blkdev.h    |    3 ++-
- 4 files changed, 45 insertions(+), 15 deletions(-)
+ 2 files changed, 29 insertions(+)
 
-Index: linux-3.18-rc1/block/blk-lib.c
+Index: linux-3.16-rc5/block/blk-lib.c
 ===================================================================
---- linux-3.18-rc1.orig/block/blk-lib.c	2014-10-21 00:48:51.000000000 +0200
-+++ linux-3.18-rc1/block/blk-lib.c	2014-10-21 00:48:58.000000000 +0200
-@@ -327,8 +327,17 @@ static void bio_copy_end_io(struct bio *
- 	bio_put(bio);
- 	if (atomic_dec_and_test(&bc->in_flight)) {
- 		struct bio_batch *bb = bc->private;
--		if (unlikely(bc->error < 0) && !ACCESS_ONCE(bb->error))
--			ACCESS_ONCE(bb->error) = bc->error;
-+		if (unlikely(bc->error < 0)) {
-+			u64 first_error;
-+			if (!ACCESS_ONCE(bb->error))
-+				ACCESS_ONCE(bb->error) = bc->error;
-+			do {
-+				first_error = atomic64_read(bc->first_error);
-+				if (bc->offset >= first_error)
-+					break;
-+			} while (unlikely(atomic64_cmpxchg(bc->first_error,
-+				first_error, bc->offset) != first_error));
-+		}
+--- linux-3.16-rc5.orig/block/blk-lib.c	2014-07-15 15:27:49.000000000 +0200
++++ linux-3.16-rc5/block/blk-lib.c	2014-07-15 15:27:51.000000000 +0200
+@@ -305,6 +305,30 @@ int blkdev_issue_zeroout(struct block_de
+ }
+ EXPORT_SYMBOL(blkdev_issue_zeroout);
+ 
++#define BLK_COPY_TIMEOUT	(10 * HZ)
++
++static void blk_copy_timeout(unsigned long bc_)
++{
++	struct bio_copy *bc = (struct bio_copy *)bc_;
++	struct bio *bio0 = NULL, *bio1 = NULL;
++
++	WARN_ON(!irqs_disabled());
++
++	spin_lock(&bc->spinlock);	/* the timer is IRQSAFE */
++	if (bc->error == 1) {
++		bc->error = -ETIMEDOUT;
++		bio0 = bc->pair[0];
++		bio1 = bc->pair[1];
++		bc->pair[0] = bc->pair[1] = NULL;
++	}
++	spin_unlock(&bc->spinlock);
++
++	if (bio0)
++		bio_endio(bio0, -ETIMEDOUT);
++	if (bio1)
++		bio_endio(bio1, -ETIMEDOUT);
++}
++
+ static void bio_copy_end_io(struct bio *bio, int error)
+ {
+ 	struct bio_copy *bc = bio->bi_copy;
+@@ -338,6 +362,7 @@ static void bio_copy_end_io(struct bio *
+ 			} while (unlikely(atomic64_cmpxchg(bc->first_error,
+ 				first_error, bc->offset) != first_error));
+ 		}
++		del_timer_sync(&bc->timer);
  		kfree(bc);
  		if (atomic_dec_and_test(&bb->done))
  			complete(bb->wait);
-@@ -349,7 +358,7 @@ static void bio_copy_end_io(struct bio *
-  */
- int blkdev_issue_copy(struct block_device *src_bdev, sector_t src_sector,
- 		      struct block_device *dst_bdev, sector_t dst_sector,
--		      unsigned int nr_sects, gfp_t gfp_mask)
-+		      sector_t nr_sects, gfp_t gfp_mask, sector_t *copied)
- {
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request_queue *sq = bdev_get_queue(src_bdev);
-@@ -357,6 +366,11 @@ int blkdev_issue_copy(struct block_devic
- 	unsigned int max_copy_sectors;
- 	struct bio_batch bb;
- 	int ret = 0;
-+	atomic64_t first_error = ATOMIC64_INIT(nr_sects);
-+	sector_t offset = 0;
-+
-+	if (copied)
-+		*copied = 0;
- 
- 	if (!sq || !dq)
- 		return -ENXIO;
-@@ -380,10 +394,10 @@ int blkdev_issue_copy(struct block_devic
- 	bb.error = 0;
- 	bb.wait = &wait;
- 
--	while (nr_sects) {
-+	while (nr_sects && !ACCESS_ONCE(bb.error)) {
- 		struct bio *read_bio, *write_bio;
- 		struct bio_copy *bc;
--		unsigned int chunk = min(nr_sects, max_copy_sectors);
-+		unsigned chunk = (unsigned)min(nr_sects, (sector_t)max_copy_sectors);
- 
- 		bc = kmalloc(sizeof(struct bio_copy), gfp_mask);
- 		if (!bc) {
-@@ -411,6 +425,8 @@ int blkdev_issue_copy(struct block_devic
- 		bc->pair[0] = NULL;
- 		bc->pair[1] = NULL;
- 		bc->private = &bb;
-+		bc->first_error = &first_error;
-+		bc->offset = offset;
+@@ -428,6 +453,8 @@ int blkdev_issue_copy(struct block_devic
+ 		bc->first_error = &first_error;
+ 		bc->offset = offset;
  		spin_lock_init(&bc->spinlock);
++		__setup_timer(&bc->timer, blk_copy_timeout, (unsigned long)bc, TIMER_IRQSAFE);
++		mod_timer(&bc->timer, jiffies + BLK_COPY_TIMEOUT);
  
  		read_bio->bi_iter.bi_sector = src_sector;
-@@ -432,12 +448,16 @@ int blkdev_issue_copy(struct block_devic
- 		src_sector += chunk;
- 		dst_sector += chunk;
- 		nr_sects -= chunk;
-+		offset += chunk;
- 	}
- 
- 	/* Wait for bios in-flight */
- 	if (!atomic_dec_and_test(&bb.done))
- 		wait_for_completion_io(&wait);
- 
-+	if (copied)
-+		*copied = min((sector_t)atomic64_read(&first_error), offset);
-+
- 	if (likely(!ret))
- 		ret = bb.error;
- 
-Index: linux-3.18-rc1/include/linux/blk_types.h
+ 		read_bio->bi_iter.bi_size = chunk << 9;
+Index: linux-3.16-rc5/include/linux/blk_types.h
 ===================================================================
---- linux-3.18-rc1.orig/include/linux/blk_types.h	2014-10-21 00:48:51.000000000 +0200
-+++ linux-3.18-rc1/include/linux/blk_types.h	2014-10-21 00:48:58.000000000 +0200
-@@ -49,6 +49,8 @@ struct bio_copy {
- 	atomic_t in_flight;
- 	struct bio *pair[2];
- 	void *private;
-+	atomic64_t *first_error;
-+	sector_t offset;
+--- linux-3.16-rc5.orig/include/linux/blk_types.h	2014-07-15 15:27:49.000000000 +0200
++++ linux-3.16-rc5/include/linux/blk_types.h	2014-07-15 15:27:51.000000000 +0200
+@@ -6,6 +6,7 @@
+ #define __LINUX_BLK_TYPES_H
+ 
+ #include <linux/types.h>
++#include <linux/timer.h>
+ 
+ struct bio_set;
+ struct bio;
+@@ -52,6 +53,7 @@ struct bio_copy {
+ 	atomic64_t *first_error;
+ 	sector_t offset;
  	spinlock_t spinlock;
++	struct timer_list timer;
  };
  
-Index: linux-3.18-rc1/include/linux/blkdev.h
-===================================================================
---- linux-3.18-rc1.orig/include/linux/blkdev.h	2014-10-21 00:47:03.000000000 +0200
-+++ linux-3.18-rc1/include/linux/blkdev.h	2014-10-21 00:48:58.000000000 +0200
-@@ -1171,7 +1171,8 @@ extern int blkdev_issue_discard(struct b
- extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
- extern int blkdev_issue_copy(struct block_device *, sector_t,
--		struct block_device *, sector_t, unsigned int, gfp_t);
-+		struct block_device *, sector_t, sector_t, gfp_t,
-+		sector_t *);
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			sector_t nr_sects, gfp_t gfp_mask);
- static inline int sb_issue_discard(struct super_block *sb, sector_t block,
-Index: linux-3.18-rc1/block/ioctl.c
-===================================================================
---- linux-3.18-rc1.orig/block/ioctl.c	2014-10-21 00:47:03.000000000 +0200
-+++ linux-3.18-rc1/block/ioctl.c	2014-10-21 00:48:58.000000000 +0200
-@@ -202,8 +202,13 @@ static int blk_ioctl_zeroout(struct bloc
- }
- 
- static int blk_ioctl_copy(struct block_device *bdev, uint64_t src_offset,
--			  uint64_t dst_offset, uint64_t len)
-+			  uint64_t dst_offset, uint64_t len, uint64_t *copied)
- {
-+	int ret;
-+	sector_t copied_sec;
-+
-+	*copied = 0;
-+
- 	if (src_offset & 511)
- 		return -EINVAL;
- 	if (dst_offset & 511)
-@@ -222,8 +227,12 @@ static int blk_ioctl_copy(struct block_d
- 	    unlikely(dst_offset + len > (i_size_read(bdev->bd_inode) >> 9)))
- 		return -EINVAL;
- 
--	return blkdev_issue_copy(bdev, src_offset, bdev, dst_offset, len,
--				 GFP_KERNEL);
-+	ret = blkdev_issue_copy(bdev, src_offset, bdev, dst_offset, len,
-+				GFP_KERNEL, &copied_sec);
-+
-+	*copied = (uint64_t)copied_sec << 9;
-+
-+	return ret;
- }
- 
- static int put_ushort(unsigned long arg, unsigned short val)
-@@ -368,12 +377,10 @@ int blkdev_ioctl(struct block_device *bd
- 		if (copy_from_user(range, (void __user *)arg, 24))
- 			return -EFAULT;
- 
--		ret = blk_ioctl_copy(bdev, range[0], range[1], range[2]);
--		if (!ret) {
--			range[3] = range[2];
--			if (copy_to_user((void __user *)(arg + 24), &range[3], 8))
--				return -EFAULT;
--		}
-+		ret = blk_ioctl_copy(bdev, range[0], range[1], range[2], &range[3]);
-+
-+		if (copy_to_user((void __user *)(arg + 24), &range[3], 8))
-+			return -EFAULT;
- 
- 		return ret;
- 	}
+ /*
