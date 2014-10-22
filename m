@@ -1,39 +1,24 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
-Date: Wed, 22 Oct 2014 09:30:26 +0200
-Message-ID: <1413963026-25974-1-git-send-email-jack@suse.cz>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+From: "Mrs Christy Walton" <saul.perez@rionegro.gub.uy>
+Subject: My Dearest
+Date: Wed, 22 Oct 2014 00:40:31 -0700
+Message-ID: <20141022073338.B8127153290C__19412.7059112818$1413966963$gmane$org@mail.rionegro.gub.uy>
+Reply-To: mrswalton001@hotmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.rionegro.gub.uy ([200.40.198.211]:33909 "EHLO
+	mail.rionegro.gub.uy" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754756AbaJVIfU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2014 04:35:20 -0400
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <saul.perez@rionegro.gub.uy>
 
-When sg_scsi_ioctl() fails to prepare request to submit in
-blk_rq_map_kern() we jump to a label where we just end up copying
-(luckily zeroed-out) kernel buffer to userspace instead of reporting
-error. Fix the problem by jumping to the right label.
+I'm Mrs. Christy Walton. I have a charity proposal for you to help humanity contact: mrswalton001@hotmail.com
 
-CC: Jens Axboe <axboe@kernel.dk>
-CC: linux-scsi@vger.kernel.org
-CC: stable@vger.kernel.org
-Coverity-id: 1226871
-Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- block/scsi_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This email is free from viruses and malware because avast! Antivirus protection is active.
+http://www.avast.com
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index abb2e65b24cc..cc7927a1a62e 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -508,7 +508,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
- 
- 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
- 		err = DRIVER_ERROR << 24;
--		goto out;
-+		goto error;
- 	}
- 
- 	memset(sense, 0, sizeof(sense));
--- 
-1.8.1.4
