@@ -1,7 +1,7 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 2/18] dm: introduce dm_ask_for_duplicate_bios
-Date: Wed, 22 Oct 2014 09:25:39 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1410220925120.31351@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 3/18] blk-lib: fix error reporting
+Date: Wed, 22 Oct 2014 09:26:04 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1410220925440.31351@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -12,101 +12,110 @@ To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, J
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This function can be used if the target needs to receive another duplicate
-of the current bio.
+The function bio_batch_end_io ignores -EOPNOTSUPP. It doesn't matter for
+discard (the device isn't required to discard anything, so missing the
+error code and reporting success shouldn't cause any trouble). However,
+for WRITE SAME command, missing the error code is obviously wrong. It may
+fool the user into thinking that the data were written while in fact they
+weren't.
+
+Note that in device mapper, devices may be dynamically reconfigured, so a
+device that supports WRITE SAME may stop supporting it at any time and
+return -EOPNOTSUPP. Ignoring -EOPNOTSUPP is wrong.
+
+This patch changes bio_batch->flags to an error field and stores the last
+error there - so that the error is reported accurately and it isn't
+ignored.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
 
 ---
- drivers/md/dm.c               |   24 +++++++++++++++++++-----
- include/linux/device-mapper.h |    2 ++
- 2 files changed, 21 insertions(+), 5 deletions(-)
+ block/blk-lib.c |   25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-Index: linux-3.18-rc1/drivers/md/dm.c
+Index: linux-3.16-rc3/block/blk-lib.c
 ===================================================================
---- linux-3.18-rc1.orig/drivers/md/dm.c	2014-10-21 00:42:31.000000000 +0200
-+++ linux-3.18-rc1/drivers/md/dm.c	2014-10-21 00:44:13.000000000 +0200
-@@ -1284,9 +1284,9 @@ EXPORT_SYMBOL_GPL(dm_set_target_max_io_l
-  *	 to make it empty)
-  * The target requires that region 3 is to be sent in the next bio.
-  *
-- * If the target wants to receive multiple copies of the bio (via num_*bios, etc),
-- * the partially processed part (the sum of regions 1+2) must be the same for all
-- * copies of the bio.
-+ * If the target wants to receive multiple copies of the bio with num_*_bios or
-+ * dm_ask_for_duplicate_bio, the partially processed part (the sum of regions
-+ * 1+2) must be the same for all copies of the bio.
-  */
- void dm_accept_partial_bio(struct bio *bio, unsigned n_sectors)
- {
-@@ -1300,6 +1300,17 @@ void dm_accept_partial_bio(struct bio *b
- }
- EXPORT_SYMBOL_GPL(dm_accept_partial_bio);
+--- linux-3.16-rc3.orig/block/blk-lib.c	2014-07-03 18:17:21.000000000 +0200
++++ linux-3.16-rc3/block/blk-lib.c	2014-07-03 18:36:52.000000000 +0200
+@@ -11,7 +11,7 @@
  
-+/*
-+ * The target driver can call this function only from the map routine. The
-+ * target driver requests that the dm sends more duplicates of the current bio.
-+ */
-+void dm_ask_for_duplicate_bios(struct bio *bio, unsigned n_duplicates)
-+{
-+	struct dm_target_io *tio = container_of(bio, struct dm_target_io, clone);
-+	(*tio->num_bios) += n_duplicates;
-+}
-+EXPORT_SYMBOL_GPL(dm_ask_for_duplicate_bios);
-+
- static void __map_bio(struct dm_target_io *tio)
- {
- 	int r;
-@@ -1390,12 +1401,14 @@ static struct dm_target_io *alloc_tio(st
- 
- static void __clone_and_map_simple_bio(struct clone_info *ci,
- 				       struct dm_target *ti,
--				       unsigned target_bio_nr, unsigned *len)
-+				       unsigned target_bio_nr, unsigned *len,
-+				       unsigned *num_bios)
- {
- 	struct dm_target_io *tio = alloc_tio(ci, ti, target_bio_nr);
- 	struct bio *clone = &tio->clone;
- 
- 	tio->len_ptr = len;
-+	tio->num_bios = num_bios;
- 
- 	__bio_clone_fast(clone, ci->bio);
- 	if (len)
-@@ -1410,7 +1423,7 @@ static void __send_duplicate_bios(struct
- 	unsigned target_bio_nr;
- 
- 	for (target_bio_nr = 0; target_bio_nr < num_bios; target_bio_nr++)
--		__clone_and_map_simple_bio(ci, ti, target_bio_nr, len);
-+		__clone_and_map_simple_bio(ci, ti, target_bio_nr, len, &num_bios);
- }
- 
- static int __send_empty_flush(struct clone_info *ci)
-@@ -1436,6 +1449,7 @@ static void __clone_and_map_data_bio(str
- 	for (target_bio_nr = 0; target_bio_nr < num_target_bios; target_bio_nr++) {
- 		tio = alloc_tio(ci, ti, target_bio_nr);
- 		tio->len_ptr = len;
-+		tio->num_bios = &num_target_bios;
- 		clone_bio(tio, bio, sector, *len);
- 		__map_bio(tio);
- 	}
-Index: linux-3.18-rc1/include/linux/device-mapper.h
-===================================================================
---- linux-3.18-rc1.orig/include/linux/device-mapper.h	2014-10-21 00:42:31.000000000 +0200
-+++ linux-3.18-rc1/include/linux/device-mapper.h	2014-10-21 00:42:40.000000000 +0200
-@@ -271,6 +271,7 @@ struct dm_target_io {
- 	struct dm_target *ti;
- 	unsigned target_bio_nr;
- 	unsigned *len_ptr;
-+	unsigned *num_bios;
- 	struct bio clone;
+ struct bio_batch {
+ 	atomic_t		done;
+-	unsigned long		flags;
++	int			error;
+ 	struct completion	*wait;
  };
  
-@@ -382,6 +383,7 @@ struct gendisk *dm_disk(struct mapped_de
- int dm_suspended(struct dm_target *ti);
- int dm_noflush_suspending(struct dm_target *ti);
- void dm_accept_partial_bio(struct bio *bio, unsigned n_sectors);
-+void dm_ask_for_duplicate_bios(struct bio *bio, unsigned n_duplicates);
- union map_info *dm_get_rq_mapinfo(struct request *rq);
+@@ -19,8 +19,8 @@ static void bio_batch_end_io(struct bio 
+ {
+ 	struct bio_batch *bb = bio->bi_private;
  
- struct queue_limits *dm_get_queue_limits(struct mapped_device *md);
+-	if (err && (err != -EOPNOTSUPP))
+-		clear_bit(BIO_UPTODATE, &bb->flags);
++	if (unlikely(err))
++		ACCESS_ONCE(bb->error) = err;
+ 	if (atomic_dec_and_test(&bb->done))
+ 		complete(bb->wait);
+ 	bio_put(bio);
+@@ -78,7 +78,7 @@ int blkdev_issue_discard(struct block_de
+ 	}
+ 
+ 	atomic_set(&bb.done, 1);
+-	bb.flags = 1 << BIO_UPTODATE;
++	bb.error = 0;
+ 	bb.wait = &wait;
+ 
+ 	blk_start_plug(&plug);
+@@ -134,8 +134,8 @@ int blkdev_issue_discard(struct block_de
+ 	if (!atomic_dec_and_test(&bb.done))
+ 		wait_for_completion_io(&wait);
+ 
+-	if (!test_bit(BIO_UPTODATE, &bb.flags))
+-		ret = -EIO;
++	if (likely(!ret))
++		ret = bb.error;
+ 
+ 	return ret;
+ }
+@@ -172,7 +172,7 @@ int blkdev_issue_write_same(struct block
+ 		return -EOPNOTSUPP;
+ 
+ 	atomic_set(&bb.done, 1);
+-	bb.flags = 1 << BIO_UPTODATE;
++	bb.error = 0;
+ 	bb.wait = &wait;
+ 
+ 	while (nr_sects) {
+@@ -208,8 +208,8 @@ int blkdev_issue_write_same(struct block
+ 	if (!atomic_dec_and_test(&bb.done))
+ 		wait_for_completion_io(&wait);
+ 
+-	if (!test_bit(BIO_UPTODATE, &bb.flags))
+-		ret = -ENOTSUPP;
++	if (likely(!ret))
++		ret = bb.error;
+ 
+ 	return ret;
+ }
+@@ -236,7 +236,7 @@ static int __blkdev_issue_zeroout(struct
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 
+ 	atomic_set(&bb.done, 1);
+-	bb.flags = 1 << BIO_UPTODATE;
++	bb.error = 0;
+ 	bb.wait = &wait;
+ 
+ 	ret = 0;
+@@ -270,9 +270,8 @@ static int __blkdev_issue_zeroout(struct
+ 	if (!atomic_dec_and_test(&bb.done))
+ 		wait_for_completion_io(&wait);
+ 
+-	if (!test_bit(BIO_UPTODATE, &bb.flags))
+-		/* One of bios in the batch was completed with error.*/
+-		ret = -EIO;
++	if (likely(!ret))
++		ret = bb.error;
+ 
+ 	return ret;
+ }
