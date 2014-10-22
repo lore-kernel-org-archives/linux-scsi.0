@@ -1,88 +1,92 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: virtio_blk - kernel BUG at drivers/virtio/virtio_ring.c:160!
-Date: Wed, 22 Oct 2014 08:57:07 +0800
-Message-ID: <CACVXFVMkyRb=ZKCzmn28s=MtwJwktWtqgtHh+yQ6WBnYm83OiQ@mail.gmail.com>
-References: <20141016151738.GC57207@bfoster.bfoster>
-	<20141017132721.GN16538@infradead.org>
-	<5446BC7C.9080607@kernel.dk>
+From: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
+Subject: Re: [GIT PULL] osd: Boaz Harrosh - change of email
+Date: Tue, 21 Oct 2014 23:08:44 -0400
+Message-ID: <20141022030843.GA27195@fieldses.org>
+References: <5446682C.50201@electrozaur.com>
+ <1413925452.5312.3.camel@jarvis.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a113d2bf25a80620505f86dc5
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:50982 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbaJVA5I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Oct 2014 20:57:08 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wn1so2055826obc.20
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2014 17:57:08 -0700 (PDT)
-In-Reply-To: <5446BC7C.9080607@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1413925452.5312.3.camel-C6iyyF0KYce4QyraIDI6QxZ6zOqQc5uzQEtWbHrHlFE@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, open-osd <osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, NFS list <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
---001a113d2bf25a80620505f86dc5
-Content-Type: text/plain; charset=UTF-8
+On Tue, Oct 21, 2014 at 11:04:12PM +0200, James Bottomley wrote:
+> On Tue, 2014-10-21 at 17:05 +0300, Boaz Harrosh wrote:
+> > Hi Sir Linus
+> > 
+> > A small administrative stuff, was on vacation and the old email bounced on me.
+> > I was hoping to still make the 3 weeks merge window, but it was 2 weeks at the
+> > end.
+> > Your call if to make this wait for next window. Needless to say that it is
+> > ZERO risk, just change of email.
+> > 
+> > Based on commit [bfe01a5b] Linux 3.17
+> > 
+> > 3 patches available in the git repository at:
+> > 
+> >   git://git.open-osd.org/linux-open-osd.git for-linus
+> > 
+> > for you to fetch changes up to 1fa3a002b2546c42c343c77c144871285896ced5:
+> > 
+> >   Boaz Harrosh - fix email in Documentation (2014-10-19 20:36:36 +0300)
+> > 
+> > ----------------------------------------------------------------
+> > Boaz Harrosh (3):
+> >       MAINTAINERS: Change Boaz Harrosh's email
+> >       Boaz Harrosh - Fix broken email address
+> >       Boaz Harrosh - fix email in Documentation
+> > 
+> >  Documentation/scsi/osd.txt          | 3 +--
+> >  MAINTAINERS                         | 2 +-
+> >  drivers/scsi/osd/Kbuild             | 2 +-
+> >  drivers/scsi/osd/Kconfig            | 2 +-
+> >  drivers/scsi/osd/osd_debug.h        | 2 +-
+> >  drivers/scsi/osd/osd_initiator.c    | 4 ++--
+> >  drivers/scsi/osd/osd_uld.c          | 4 ++--
+> >  fs/exofs/Kbuild                     | 2 +-
+> >  fs/exofs/common.h                   | 2 +-
+> >  fs/exofs/dir.c                      | 2 +-
+> >  fs/exofs/exofs.h                    | 2 +-
+> >  fs/exofs/file.c                     | 2 +-
+> >  fs/exofs/inode.c                    | 2 +-
+> >  fs/exofs/namei.c                    | 2 +-
+> >  fs/exofs/ore.c                      | 4 ++--
+> >  fs/exofs/ore_raid.c                 | 2 +-
+> >  fs/exofs/ore_raid.h                 | 2 +-
+> >  fs/exofs/super.c                    | 2 +-
+> >  fs/exofs/symlink.c                  | 2 +-
+> >  fs/exofs/sys.c                      | 2 +-
+> >  fs/nfs/objlayout/objio_osd.c        | 2 +-
+> >  fs/nfs/objlayout/objlayout.c        | 2 +-
+> >  fs/nfs/objlayout/objlayout.h        | 2 +-
+> >  fs/nfs/objlayout/pnfs_osd_xdr_cli.c | 2 +-
+> >  include/linux/pnfs_osd_xdr.h        | 2 +-
+> >  include/scsi/osd_initiator.h        | 2 +-
+> >  include/scsi/osd_ore.h              | 2 +-
+> >  include/scsi/osd_protocol.h         | 4 ++--
+> >  include/scsi/osd_sec.h              | 2 +-
+> >  include/scsi/osd_sense.h            | 2 +-
+> >  include/scsi/osd_types.h            | 2 +-
+> >  31 files changed, 35 insertions(+), 36 deletions(-)
+> 
+> This is a bit of an unnecessary massive churn.  No one expects the
+> author named in the file to stay up to date, especially because the
+> @domain.com usually credits the company who paid for the code, so it's
+> left in as a kind of mark of respect for them.  I'm not saying it
+> applies in your case, just that it creates the common expectation of
+> in-file authors needing to be traced through the MAINTAINERS file.
+> 
+> Could you not just update the MAINTAINERS file only, like everyone else?
 
-On Wed, Oct 22, 2014 at 4:05 AM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 10/17/2014 07:27 AM, Christoph Hellwig wrote:
->> On Thu, Oct 16, 2014 at 11:17:39AM -0400, Brian Foster wrote:
->>> Hi all,
->>>
->>> Hopefully this is the right list for this report...
->>>
->>> I hit the following kernel bug reliably by running xfstests test
->>> generic/234 against XFS using 10GB LVM test/scratch volumes on top of a
->>> ~100GB virtio_blk block device. The virt block device is file-backed on
->>> the host.
->>
->> Jens, I thought the segment merging bug was fixed a while ago.  Did we
->> manage to not include parts of it for 3.17?
->
-> Mings patch went in after 3.17, iirc. Ming?
+I guess there's also .mailmap, though it doesn't look like that's being
+used much.
 
-Sorry, that patch is wrong[1], attachment patch should fix the issue.
-
-[1] http://marc.info/?l=linux-kernel&m=141290430004361&w=2
-
-
-Thanks,
--- 
-Ming Lei
-
---001a113d2bf25a80620505f86dc5
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-blk-merge-recaculate-segment-if-it-isn-t-less-than-m.patch"
-Content-Disposition: attachment;
-	filename="0001-blk-merge-recaculate-segment-if-it-isn-t-less-than-m.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i1jz09iz0
-
-RnJvbSBkZGUxOTU0OTM1MmRhM2ZlYTUxNmQ4OWJiZmEyNWQwOGI3ODRlMjI5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBNaW5nIExlaSA8dG9tLmxlaW1pbmdAZ21haWwuY29tPgpEYXRl
-OiBXZWQsIDIyIE9jdCAyMDE0IDA4OjMwOjMwICswODAwClN1YmplY3Q6IFtQQVRDSF0gYmxrLW1l
-cmdlOiByZWNhY3VsYXRlIHNlZ21lbnQgaWYgaXQgaXNuJ3QgbGVzcyB0aGFuIG1heAogc2VnbWVu
-dHMKClRoZSBwcm9ibGVtIGlzIGludHJvZHVjZWQgYnkgY29tbWl0IDc2NGY2MTJjNmMzYzIzMWIo
-YmxrLW1lcmdlOgpkb24ndCBjb21wdXRlIGJpX3BoeXNfc2VnbWVudHMgZnJvbSBiaV92Y250IGZv
-ciBjbG9uZWQgYmlvKSwKYW5kIG1lcmdlIGlzIG5lZWRlZCBpZiBudW1iZXIgb2YgY3VycmVudCBz
-ZWdtZW50IGlzbid0IGxlc3MgdGhhbgptYXggc2VnbWVudHMuCgpTdHJpY3RseSBzcGVha2luZywg
-YmlvLT5iaV92Y250IHNob3VsZG4ndCBiZSB1c2VkIGhlcmUgc2luY2UKaXQgbWF5IG5vdCBiZSBh
-Y2N1cmF0ZSBpbiBjYXNlcyBvZiBib3RoIGNsb25lZCBiaW8gb3IgYmlvIGNsb25lZApmcm9tLCBi
-dXQgYmlvX3NlZ21lbnRzKCkgaXMgYSBiaXQgZXhwZW5zaXZlLCBhbmQgYmlfdmNudCBpcyBzdGls
-bAp0aGUgYmlnZ2VzdCBudW1iZXIsIHNvIHRoZSBhcHByb2FjaCBzaG91bGQgd29yay4KClNpZ25l
-ZC1vZmYtYnk6IE1pbmcgTGVpIDx0b20ubGVpbWluZ0BnbWFpbC5jb20+Ci0tLQogYmxvY2svYmxr
-LW1lcmdlLmMgfCAgICA1ICsrKy0tCiAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAy
-IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1tZXJnZS5jIGIvYmxvY2svYmxr
-LW1lcmdlLmMKaW5kZXggYmE5OTM1MS4uYjNhYzQwYSAxMDA2NDQKLS0tIGEvYmxvY2svYmxrLW1l
-cmdlLmMKKysrIGIvYmxvY2svYmxrLW1lcmdlLmMKQEAgLTk5LDE2ICs5OSwxNyBAQCB2b2lkIGJs
-a19yZWNvdW50X3NlZ21lbnRzKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBzdHJ1Y3QgYmlvICpi
-aW8pCiB7CiAJYm9vbCBub19zZ19tZXJnZSA9ICEhdGVzdF9iaXQoUVVFVUVfRkxBR19OT19TR19N
-RVJHRSwKIAkJCSZxLT5xdWV1ZV9mbGFncyk7CisJYm9vbCBtZXJnZV9ub3RfbmVlZCA9IGJpby0+
-YmlfdmNudCA8IHF1ZXVlX21heF9zZWdtZW50cyhxKTsKIAogCWlmIChub19zZ19tZXJnZSAmJiAh
-YmlvX2ZsYWdnZWQoYmlvLCBCSU9fQ0xPTkVEKSAmJgotCQkJYmlvLT5iaV92Y250IDwgcXVldWVf
-bWF4X3NlZ21lbnRzKHEpKQorCQkJbWVyZ2Vfbm90X25lZWQpCiAJCWJpby0+YmlfcGh5c19zZWdt
-ZW50cyA9IGJpby0+YmlfdmNudDsKIAllbHNlIHsKIAkJc3RydWN0IGJpbyAqbnh0ID0gYmlvLT5i
-aV9uZXh0OwogCiAJCWJpby0+YmlfbmV4dCA9IE5VTEw7CiAJCWJpby0+YmlfcGh5c19zZWdtZW50
-cyA9IF9fYmxrX3JlY2FsY19ycV9zZWdtZW50cyhxLCBiaW8sCi0JCQkJbm9fc2dfbWVyZ2UpOwor
-CQkJCW5vX3NnX21lcmdlICYmIG1lcmdlX25vdF9uZWVkKTsKIAkJYmlvLT5iaV9uZXh0ID0gbnh0
-OwogCX0KIAotLSAKMS43LjkuNQoK
---001a113d2bf25a80620505f86dc5--
+--b.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
