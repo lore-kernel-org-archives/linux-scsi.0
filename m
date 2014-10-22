@@ -1,119 +1,103 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 6/6] scsi: use dev_printk variants where possible
-Date: Wed, 22 Oct 2014 22:29:35 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295932131A@G4W3296.americas.hpqcorp.net>
-References: <1401794577-102277-1-git-send-email-hare@suse.de>
- <1401794577-102277-7-git-send-email-hare@suse.de>
+From: Song Liu <songliubraving@fb.com>
+Subject: RE: [PATCH 0/5] Feature enhancements for ses module
+Date: Wed, 22 Oct 2014 23:01:35 +0000
+Message-ID: <C709E4D363AAB64590BFAC54D4C478AAEBC7D124@PRN-MBX02-4.TheFacebook.com>
+References: <1408987546-2418-1-git-send-email-songliubraving@fb.com>
+ <C709E4D363AAB64590BFAC54D4C478AAEBC4ABA5@PRN-MBX02-4.TheFacebook.com>
+ <54480181.1010001@fb.com> <54482F99.6070306@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:56593 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932887AbaJVWaz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Oct 2014 18:30:55 -0400
-In-Reply-To: <1401794577-102277-7-git-send-email-hare@suse.de>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:3347 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932743AbaJVXCH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2014 19:02:07 -0400
+In-Reply-To: <54482F99.6070306@interlog.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, Jens Axboe <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>
 
+Hi Doug, 
 
+I am not sure whether I fully understand the scenario. Actually patch 5 tries to clear all reserved bits:
+
++ dest_desc[0] = 0;
++ /* only clear byte 1 for ENCLOSURE_COMPONENT_DEVICE */
++ if (ecomp->type == ENCLOSURE_COMPONENT_DEVICE)
++   dest_desc[1] = 0;
++ dest_desc[2] &= 0xde;
++ dest_desc[3] &= 0x3c;
+
+Would this work for device that rejects request with 1 in RESERVED areas? 
+
+Thanks,
+Song
 
 > -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Tuesday, 03 June, 2014 6:23 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Hannes Reinecke
-> Subject: [PATCH 6/6] scsi: use dev_printk variants where possible
+> From: Douglas Gilbert [mailto:dgilbert@interlog.com]
+> Sent: Wednesday, October 22, 2014 3:29 PM
+> To: Jens Axboe; Song Liu; linux-scsi@vger.kernel.org
+> Cc: Hannes Reinecke; Dan Williams; Christoph Hellwig
+> Subject: Re: [PATCH 0/5] Feature enhancements for ses module
 > 
-> Using dev_printk variants prefixes the logging message with
-> the originating device, which makes debugging easier.
+> On 14-10-22 09:12 PM, Jens Axboe wrote:
+> > On 08/25/2014 11:34 AM, Song Liu wrote:
+> >> From: Song Liu [mailto:songliubraving@fb.com]
+> >> Sent: Monday, August 25, 2014 10:26 AM
+> >> To: Song Liu
+> >> Subject: [PATCH 0/5] Feature enhancements for ses module
+> >>
+> >> These patches include a few enhancements to ses module:
+> >>
+> >> 1: close potential race condition by at enclosure race condition
+> >>
+> >> 2,3,4: add enclosure id and device slot, so we can create symlink
+> >>         in /dev/disk/by-slot:
+> >>    # ls -d /dev/disk/by-slot/*
+> >>      /dev/disk/by-slot/enclosure-0x5000ae41fc1310ff-slot0
+> >>
+> >> 5: add ability to power on/off device with power_status file in
+> >>     sysfs.
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-...
-
-This patch (91921e016a2199e7afe5933c94bd9f723d946598
-in the kernel) has left the devname[64] variable in this 
-function unused.  There is an sprintf setting it, but it is 
-never read.
-
-	char devname[64];
-	...
-	sprintf(devname, "host %d channel %d id %d",
-                shost->host_no, sdev->channel, sdev->id);
-
-Here are the former uses:
-
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index e02b3aa..46563b1 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-...
-> @@ -1430,17 +1433,19 @@ static int scsi_report_lun_scan(struct
-> scsi_target *starget, int bflags,
->  	 * a retry.
->  	 */
->  	for (retries = 0; retries < 3; retries++) {
-> -		SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan:
-> Sending"
-> -				" REPORT LUNS to %s (try %d)\n", devname,
-> +		SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
-> +				"scsi scan: Sending REPORT LUNS to (try
-> %d)\n",
->  				retries));
-
-The word "to" remains from:
-	"to %s", devname 
-
-but the switch to sdev_printk probably meant to delete "to" too.
-
-...
-> @@ -1466,10 +1471,11 @@ static int scsi_report_lun_scan(struct
-> scsi_target *starget, int bflags,
+> Had a rude awakening with sg_ses recently when setting a field in the
+> enclosure control dpage. That is what is being done in point 5: above.
 > 
->  	num_luns = (length / sizeof(struct scsi_lun));
->  	if (num_luns > max_scsi_report_luns) {
-> -		printk(KERN_WARNING "scsi: On %s only %d
-> (max_scsi_report_luns)"
-> -		       " of %d luns reported, try increasing"
-> -		       " max_scsi_report_luns.\n", devname,
-> -		       max_scsi_report_luns, num_luns);
-> +		sdev_printk(KERN_WARNING, sdev,
-> +			    "Only %d (max_scsi_report_luns)"
-> +			    " of %d luns reported, try increasing"
-> +			    " max_scsi_report_luns.\n",
-> +			    max_scsi_report_luns, num_luns);
->  		num_luns = max_scsi_report_luns;
->  	}
+> The time honoured technique is to read the corresponding enclosure status
+> dpage, find the correct element, twiddle the field of interest, set the SELECT bit
+> and write it back. The idea is maintain any other field settings in that element.
+> And this is what the ses module does.
 > 
-> @@ -1495,15 +1501,15 @@ static int scsi_report_lun_scan(struct
-> scsi_target *starget, int bflags,
->  			 * this differs from what linux would print for the
->  			 * integer LUN value.
->  			 */
-> -			printk(KERN_WARNING "scsi: %s lun 0x", devname);
-> -			data = (char *)lunp->scsi_lun;
-> -			for (i = 0; i < sizeof(struct scsi_lun); i++)
-> -				printk("%02x", data[i]);
-> -			printk(" has a LUN larger than currently
-> supported.\n");
-> +			sdev_printk(KERN_WARNING, sdev,
-> +				    "lun 0x%8phN has a LUN larger"
-> +				    " than currently supported.\n",
-> +				    lunp->scsi_lun);
->  		} else if (lun > sdev->host->max_lun) {
-> -			printk(KERN_WARNING "scsi: %s lun%d has a LUN
-> larger"
-> -			       " than allowed by the host adapter\n",
-> -			       devname, lun);
-> +			sdev_printk(KERN_WARNING, sdev,
-> +				    "lun 0x%8phN has a LUN larger"
-> +				    " than allowed by the host adapter\n",
-> +				    lunp->scsi_lun);
->  		} else {
->  			int res;
+> There is at least one SES device out there that rejects the write if there are bits
+> set in RESERVED locations. According to SPC-4 a device may do that. Look at
+> the status (read) and control (write) variants of each element type: many times
+> the control variant has less fields.
 > 
-...
+> To fix that the read-modify-write cycle needs to be changed to a read-mask-
+> modify-write cycle where the "mask" is the allowable write mask (there would
+> be one for each element type).
+> 
+> This is ugly and may create problems in the future if and when
+> T10 adds a new field in an element. About that time T10 should think about
+> refining the meaning of RESERVED in SES to outlaw SES devices creating this
+> particular time waster.
+> 
+> Doug Gilbert
+> 
+> >> Dan Williams (4):
+> >>    SES: close potential registration race
+> >>    SES: generate KOBJ_CHANGE on enclosure attach
+> >>    SES: add enclosure logical id
+> >>    SES: add reliable slot attribute
+> >>
+> >> Song Liu (1):
+> >>    SES: Add power_status to SES enclosure component
+> >
+> > Guys, where are we with these? Seemed like they got reviewed (and
+> > updates/fixes posted), then nothing else happened. Would be nice to
+> > get these upstream, so we don't have to carry them at FB.
+> >
+
