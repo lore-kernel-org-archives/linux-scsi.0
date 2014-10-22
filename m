@@ -1,105 +1,154 @@
 From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH 11/18] scsi xcopy: keep cache of failures
-Date: Wed, 22 Oct 2014 09:29:54 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1410220929260.31351@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: [PATCH 12/18] dm: implement copy
+Date: Wed, 22 Oct 2014 09:30:42 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1410220930110.31351@file01.intranet.prod.int.rdu2.redhat.com>
 References: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56253 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750987AbaJVNaU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2014 09:30:20 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
 Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-If xcopy between two devices fails, it is pointless to send more xcopy
-command between there two devices because they take time and they will
-likely also fail.
+This patch implements basic copy support for device mapper core.
+Individual targets can enable copy support by setting ti->copy_supported.
 
-This patch keeps a cache of (source_device,destination_device) pairs where
-copying failed and makes sure that no xcopy command is sooner than 30
-seconds after the last failure.
+Device mapper device advertises copy support if at least one target
+supports copy and for this target, at least one underlying device supports
+copy.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- drivers/scsi/sd.c |   35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/md/dm-table.c         |    9 +++++++++
+ drivers/md/dm.c               |   42 +++++++++++++++++++++++++++++++++++++++---
+ include/linux/device-mapper.h |    5 +++++
+ 3 files changed, 53 insertions(+), 3 deletions(-)
 
-Index: linux-3.18-rc1/drivers/scsi/sd.c
+Index: linux-3.18-rc1/drivers/md/dm.c
 ===================================================================
---- linux-3.18-rc1.orig/drivers/scsi/sd.c	2014-10-21 00:49:21.000000000 +0200
-+++ linux-3.18-rc1/drivers/scsi/sd.c	2014-10-21 00:49:24.000000000 +0200
-@@ -943,6 +943,26 @@ static void sd_config_copy(struct scsi_d
- 				   (logical_block_size >> 9));
+--- linux-3.18-rc1.orig/drivers/md/dm.c	2014-10-21 00:46:30.000000000 +0200
++++ linux-3.18-rc1/drivers/md/dm.c	2014-10-21 00:49:09.000000000 +0200
+@@ -1559,6 +1559,31 @@ static int __send_write_same(struct clon
+ 	return __send_changing_extent_only(ci, get_num_write_same_bios, NULL);
  }
  
-+#define SD_COPY_DISABLED_CACHE_TIME		(HZ * 30)
-+#define SD_COPY_DISABLED_CACHE_HASH_BITS	6
-+#define SD_COPY_DISABLED_CACHE_HASH		(1 << SD_COPY_DISABLED_CACHE_HASH_BITS)
-+
-+struct sd_copy_disabled_cache_entry {
-+	struct scsi_device *src;
-+	struct scsi_device *dst;
-+	unsigned long jiffies;
-+};
-+
-+static struct sd_copy_disabled_cache_entry sd_copy_disabled_cache[SD_COPY_DISABLED_CACHE_HASH];
-+
-+static struct sd_copy_disabled_cache_entry *sd_copy_disabled_cache_hash(
-+	struct scsi_device *src, struct scsi_device *dst)
++static int __send_copy(struct clone_info *ci)
 +{
-+	return &sd_copy_disabled_cache[
-+		hash_long((unsigned long)src + ((unsigned long)dst >> 1), SD_COPY_DISABLED_CACHE_HASH_BITS)
-+	];
++	struct dm_target *ti;
++	sector_t bound;
++
++	ti = dm_table_find_target(ci->map, ci->sector);
++	if (!dm_target_is_valid(ti))
++		return -EIO;
++
++	if (!ti->copy_supported)
++		return -EOPNOTSUPP;
++
++	bound = max_io_len(ci->sector, ti);
++
++	if (unlikely(ci->sector_count > bound))
++		return -EOPNOTSUPP;
++
++	__clone_and_map_simple_bio(ci, ti, 0, NULL, NULL);
++
++	ci->sector += ci->sector_count;
++	ci->sector_count = 0;
++
++	return 0;
 +}
 +
- static int sd_setup_copy_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = cmd->request;
-@@ -955,6 +975,7 @@ static int sd_setup_copy_cmnd(struct scs
- 	struct bio *bio = rq->bio;
- 	struct page *page;
- 	unsigned char *buf;
-+	struct sd_copy_disabled_cache_entry *e;
+ /*
+  * Select the correct strategy for processing a non-flush bio.
+  */
+@@ -1572,6 +1597,8 @@ static int __split_and_process_non_flush
+ 		return __send_discard(ci);
+ 	else if (unlikely(bio->bi_rw & REQ_WRITE_SAME))
+ 		return __send_write_same(ci);
++	else if (unlikely(bio->bi_rw & REQ_COPY))
++		return __send_copy(ci);
  
- 	dst_sdp = scsi_disk(rq->rq_disk)->device;
- 	dst_queue = rq->rq_disk->queue;
-@@ -974,6 +995,12 @@ static int sd_setup_copy_cmnd(struct scs
- 	if (src_sdp->sector_size != dst_sdp->sector_size)
- 		return BLKPREP_KILL;
+ 	ti = dm_table_find_target(ci->map, ci->sector);
+ 	if (!dm_target_is_valid(ti))
+@@ -1656,6 +1683,11 @@ static int dm_merge_bvec(struct request_
+ 	if (!dm_target_is_valid(ti))
+ 		goto out;
  
-+	/* The copy failed in the past, so do not retry it for some time */
-+	e = sd_copy_disabled_cache_hash(src_sdp, dst_sdp);
-+	if (unlikely(jiffies - ACCESS_ONCE(e->jiffies) < SD_COPY_DISABLED_CACHE_TIME) &&
-+	    likely(ACCESS_ONCE(e->src) == src_sdp) && likely(ACCESS_ONCE(e->dst) == dst_sdp))
-+		return BLKPREP_KILL;
++	if (unlikely((bvm->bi_rw & REQ_COPY) != 0)) {
++		if (!ti->copy_supported)
++			goto out_ret_max_size;
++	}
 +
- 	dst_lba = blk_rq_pos(rq) >> (ilog2(dst_sdp->sector_size) - 9);
- 	src_lba = bio->bi_copy->pair[0]->bi_iter.bi_sector >> (ilog2(src_sdp->sector_size) - 9);
- 	nr_blocks = blk_rq_sectors(rq) >> (ilog2(dst_sdp->sector_size) - 9);
-@@ -1937,11 +1964,19 @@ static int sd_done(struct scsi_cmnd *SCp
- 			}
- 		} else if (sshdr.asc == 0x26) {
- 			switch (op) {
-+				struct sd_copy_disabled_cache_entry *e;
-+				struct scsi_device *src_sdp, *dst_sdp;
- 			/*
- 			 * Copying between two arrays that support XCOPY, but
- 			 * cannot access each other.
- 			 */
- 			case EXTENDED_COPY:
-+				dst_sdp = sdkp->device;
-+				src_sdp = scsi_disk(req->bio->bi_copy->pair[0]->bi_bdev->bd_disk)->device;
-+				e = sd_copy_disabled_cache_hash(src_sdp, dst_sdp);
-+				ACCESS_ONCE(e->src) = src_sdp;
-+				ACCESS_ONCE(e->dst) = dst_sdp;
-+				ACCESS_ONCE(e->jiffies) = jiffies;
- 				good_bytes = 0;
- 				req->__data_len = blk_rq_bytes(req);
- 				req->cmd_flags |= REQ_QUIET;
-
+ 	/*
+ 	 * Find maximum amount of I/O that won't need splitting
+ 	 */
+@@ -1679,17 +1711,21 @@ static int dm_merge_bvec(struct request_
+ 	 * entries.  So always set max_size to 0, and the code below allows
+ 	 * just one page.
+ 	 */
+-	else if (queue_max_hw_sectors(q) <= PAGE_SIZE >> 9)
++	else if (likely(!(bvm->bi_rw & REQ_COPY)) &&
++		 queue_max_hw_sectors(q) <= PAGE_SIZE >> 9)
+ 		max_size = 0;
+ 
+ out:
+-	dm_put_live_table_fast(md);
+ 	/*
+ 	 * Always allow an entire first page
+ 	 */
+-	if (max_size <= biovec->bv_len && !(bvm->bi_size >> SECTOR_SHIFT))
++	if (likely(!(bvm->bi_rw & REQ_COPY)) &&
++	    max_size <= biovec->bv_len && !(bvm->bi_size >> SECTOR_SHIFT))
+ 		max_size = biovec->bv_len;
+ 
++out_ret_max_size:
++	dm_put_live_table_fast(md);
++
+ 	return max_size;
+ }
+ 
+Index: linux-3.18-rc1/include/linux/device-mapper.h
+===================================================================
+--- linux-3.18-rc1.orig/include/linux/device-mapper.h	2014-10-21 00:42:40.000000000 +0200
++++ linux-3.18-rc1/include/linux/device-mapper.h	2014-10-21 00:49:09.000000000 +0200
+@@ -251,6 +251,11 @@ struct dm_target {
+ 	 * Set if this target does not return zeroes on discarded blocks.
+ 	 */
+ 	bool discard_zeroes_data_unsupported:1;
++
++	/*
++	 * Set if the target supports XCOPY.
++	 */
++	bool copy_supported:1;
+ };
+ 
+ /* Each target can link one of these into the table */
+Index: linux-3.18-rc1/drivers/md/dm-table.c
+===================================================================
+--- linux-3.18-rc1.orig/drivers/md/dm-table.c	2014-10-21 00:34:45.000000000 +0200
++++ linux-3.18-rc1/drivers/md/dm-table.c	2014-10-21 00:49:09.000000000 +0200
+@@ -443,6 +443,11 @@ static int dm_set_device_limits(struct d
+ 		       q->limits.alignment_offset,
+ 		       (unsigned long long) start << SECTOR_SHIFT);
+ 
++	if (ti->copy_supported)
++		limits->max_copy_sectors =
++			min_not_zero(limits->max_copy_sectors,
++				bdev_get_queue(bdev)->limits.max_copy_sectors);
++
+ 	/*
+ 	 * Check if merge fn is supported.
+ 	 * If not we'll force DM to use PAGE_SIZE or
+@@ -1264,6 +1269,10 @@ combine_limits:
+ 			       dm_device_name(table->md),
+ 			       (unsigned long long) ti->begin,
+ 			       (unsigned long long) ti->len);
++
++		limits->max_copy_sectors =
++					min_not_zero(limits->max_copy_sectors,
++					ti_limits.max_copy_sectors);
+ 	}
+ 
+ 	return validate_hardware_logical_block_alignment(table, limits);
