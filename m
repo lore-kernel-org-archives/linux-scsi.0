@@ -1,46 +1,30 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH 1/1] SCSI-QLA2XXX: Deletion of unnecessary
- checks before the function call "vfree"
-Date: Wed, 22 Oct 2014 20:55:32 +0200
-Message-ID: <5447FDA4.4020106@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net>
+Subject: Re: [PATCH 1/1] SCSI-QLA2...: Deletion of unnecessary checks before
+ the function call "vfree"
+Date: Wed, 22 Oct 2014 21:10:21 +0200
+Message-ID: <5448011D.1000500@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <cocci-bounces@systeme.lip6.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <5317A59D.4@users.sourceforge.net>
-List-Unsubscribe: <https://systeme.lip6.fr/mailman/options/cocci>,
- <mailto:cocci-request@systeme.lip6.fr?subject=unsubscribe>
-List-Archive: <https://systeme.lip6.fr/pipermail/cocci>
-List-Post: <mailto:cocci@systeme.lip6.fr>
-List-Help: <mailto:cocci-request@systeme.lip6.fr?subject=help>
-List-Subscribe: <https://systeme.lip6.fr/mailman/listinfo/cocci>,
- <mailto:cocci-request@systeme.lip6.fr?subject=subscribe>
-Sender: cocci-bounces@systeme.lip6.fr
-Errors-To: cocci-bounces@systeme.lip6.fr
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E. J. Bottomley" <JBottomley@parallels.com>, qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org
-Cc: trivial@kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, Coccinelle <cocci@systeme.lip6.fr>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, trivial@kernel.org, Coccinelle <cocci@systeme.lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
 >> If you are convinced that dropping the null tests is a good idea, then you 
 >> can submit the patch that makes the change to the relevant maintainers and 
 >> mailing lists.
+
+I resent the request once more because another "Triple-X" software development
+adventure might follow ...?
+
+Regards,
+Markus
+
 
 >From ff44962f88ac2dae9324e30819629da4fb33f0ff Mon Sep 17 00:00:00 2001
 From: Markus Elfring <elfring@users.sourceforge.net>
