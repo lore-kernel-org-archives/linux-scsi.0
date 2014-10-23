@@ -1,41 +1,31 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: fix blk-mq for SPI hosts
-Date: Thu, 23 Oct 2014 11:16:11 -0600
-Message-ID: <544937DB.7060803@kernel.dk>
-References: <1413731638-28305-1-git-send-email-hch@lst.de> <20141023084530.GB20233@infradead.org> <alpine.LRH.2.11.1410231151160.2821@adalberg.ut.ee> <20141023171454.GA16990@infradead.org>
+From: Webb Scales <webb.scales@hp.com>
+Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
+Date: Thu, 23 Oct 2014 13:43:54 -0400
+Message-ID: <54493E5A.7050803@hp.com>
+References: <5433E43D.3010107@acm.org> <5433E557.3010505@acm.org> <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net> <5448AB4F.40507@acm.org>
+Reply-To: webbnh@hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:56608 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752971AbaJWRQL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 13:16:11 -0400
-Received: by mail-pd0-f179.google.com with SMTP id g10so686982pdj.24
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2014 10:16:10 -0700 (PDT)
-In-Reply-To: <20141023171454.GA16990@infradead.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:22774 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366AbaJWRoE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 13:44:04 -0400
+In-Reply-To: <5448AB4F.40507@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Meelis Roos <mroos@linux.ee>
-Cc: Christoph Hellwig <hch@lst.de>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
 
-On 10/23/2014 11:14 AM, Christoph Hellwig wrote:
-> On Thu, Oct 23, 2014 at 01:49:07PM +0300, Meelis Roos wrote:
->>> ping?
->>
->> Sorry, forgot to reply. Yes, it worked fine, on the initial Ultra 1 and 
->> additionally on Ultra 2 too.
-> 
-> Thanks!
-> 
-> Can I get a review from Jens and some SCSI developers, too?
+On 10/23/14 3:16 AM, Bart Van Assche wrote:
+> All my tests with use_blk_mq=n were run with a WARN_ON_ONCE(req->tag < 
+> 0) statement present in srp_queuecommand(). I haven't seen any kernel 
+> warning being triggered during the tests I ran.
+Bart, what's the data type of "req->tag", here?  (E.g., if it 
+"unsigned", it will never be less than zero, right?)
 
-Yes, I did read them, you can add my reviewed/acked.
 
-> Jens, are you fine taking the blkdev.h revert through the SCSI tree?
+             Thanks,
 
-Sure, that seems to be the easiest way to do it.
-
--- 
-Jens Axboe
-
+                 Webb
