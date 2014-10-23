@@ -1,45 +1,35 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: ufs: add UFS power management support
-Date: Thu, 23 Oct 2014 13:06:30 +0300
-Message-ID: <20141023100630.GI26918@mwanda>
-References: <20141002153112.GB11534@mwanda>
- <009c01cfee93$00a96b60$01fc4220$@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46820 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbaJWKGo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 06:06:44 -0400
-Content-Disposition: inline
-In-Reply-To: <009c01cfee93$00a96b60$01fc4220$@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dolev Raviv <draviv@codeaurora.org>
+Subject: [PATCH 0/6] various fixes for UFS-PM series
+Date: Thu, 23 Oct 2014 13:25:11 +0300
+Message-ID: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: subhashj@codeaurora.org, linux-scsi@vger.kernel.org
 
-On Thu, Oct 23, 2014 at 10:28:52AM +0300, Dolev Raviv wrote:
-> Hi Dan,
-> This seem like a false alarm, please let me know if it requires a fix.
-> 
+Contains a couple of bug fixes reported by Akinobu Mita, In adition to
+"static checker" warnings reported by Dan Carpenter.
 
-It may not indicate a bug, but it is correct in that the code could be
-re-written:
+Akinobu Mita (1):
+  scsi: ufs: fix reference counting of W-LUs
 
-Old:
+Dolev Raviv (4):
+  scsi: ufs: fix static checker errors in ufshcd_system_suspend
+  scsi: ufs: fix static checker warning in ufshcd_populate_vreg
+  scsi: ufs: fix static checker warning in __ufshcd_setup_clocks
+  scsi: ufs: fix static checker warning in ufshcd_parse_clock_info
 
-	else if ((req_link_state == UIC_LINK_OFF_STATE) &&
-		(!check_for_bkops || (check_for_bkops &&
-		!hba->auto_bkops_enabled))) {
+Yaniv Gardi (1):
+  scsi: ufs: fix power info after link start-up
 
-Proposed:
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 15 +++----
+ drivers/scsi/ufs/ufshcd.c        | 96 +++++++++++++++++++++++-----------------
+ drivers/scsi/ufs/ufshcd.h        |  2 -
+ 3 files changed, 61 insertions(+), 52 deletions(-)
 
-	else if ((req_link_state == UIC_LINK_OFF_STATE) &&
-		 (!check_for_bkops || !hba->auto_bkops_enabled)) {
-
-Those two are the same.
-
-regards,
-dan carpenter
-
-
+-- 
+1.8.5.2
+-- 
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
