@@ -1,22 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] tmscim: Remove unused SCSI_IRQ_NONE macro definition
-Date: Thu, 23 Oct 2014 10:13:46 -0700
-Message-ID: <20141023171346.GG16015@infradead.org>
-References: <alpine.LNX.2.00.1410011654020.25690@nippy.intranet>
+Subject: Re: fix blk-mq for SPI hosts
+Date: Thu, 23 Oct 2014 10:14:54 -0700
+Message-ID: <20141023171454.GA16990@infradead.org>
+References: <1413731638-28305-1-git-send-email-hch@lst.de>
+ <20141023084530.GB20233@infradead.org>
+ <alpine.LRH.2.11.1410231151160.2821@adalberg.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:39091 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659AbaJWRNt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 13:13:49 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1410011654020.25690@nippy.intranet>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.11.1410231151160.2821@adalberg.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Kurt Garloff <garloff@suse.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org, trivial@kernel.org
 
-Thanks,
+On Thu, Oct 23, 2014 at 01:49:07PM +0300, Meelis Roos wrote:
+> > ping?
+> 
+> Sorry, forgot to reply. Yes, it worked fine, on the initial Ultra 1 and 
+> additionally on Ultra 2 too.
 
-applied to the drivers-for-3.19 branch.
+Thanks!
+
+Can I get a review from Jens and some SCSI developers, too?
+
+Jens, are you fine taking the blkdev.h revert through the SCSI tree?
