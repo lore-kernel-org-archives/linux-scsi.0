@@ -1,41 +1,46 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: fix blk-mq for SPI hosts
-Date: Thu, 23 Oct 2014 13:49:07 +0300 (EEST)
-Message-ID: <alpine.LRH.2.11.1410231151160.2821@adalberg.ut.ee>
-References: <1413731638-28305-1-git-send-email-hch@lst.de> <20141023084530.GB20233@infradead.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:39402 "EHLO smtp2.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755187AbaJWKtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2014 06:49:11 -0400
-In-Reply-To: <20141023084530.GB20233@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] uas: Add US_FL_NO_ATA_1X quirk for 2 more Seagate models
+Date: Thu, 23 Oct 2014 14:40:57 +0200
+Message-ID: <1414068057-30936-1-git-send-email-hdegoede@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, stable@vger.kernel.org.#.3.16
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 
-> ping?
+These drives hang when receiving ATA12 commands, so set the US_FL_NO_ATA_1X
+quirk to filter these out.
 
-Sorry, forgot to reply. Yes, it worked fine, on the initial Ultra 1 and 
-additionally on Ultra 2 too.
+Cc: stable@vger.kernel.org # 3.16
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/unusual_uas.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-> On Sun, Oct 19, 2014 at 05:13:56PM +0200, Christoph Hellwig wrote:
-> > Fix the assumption that we can treat all blk-mq requests as tagged.  For
-> > traditional SCSI that's wrong, as being tagged has a very explicit meaning
-> > on the wire.
-> > 
-> > This is a little bit different from the version Meelis tested earlier, but
-> > the concept is the same.  I didn't want to add a Tested-by tag as it's
-> > different enough, though.
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> ---end quoted text---
-> 
-
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index a801850..44ab3289 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -54,6 +54,20 @@ UNUSUAL_DEV(0x0bc2, 0x3312, 0x0000, 0x9999,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_ATA_1X),
+ 
++/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
++UNUSUAL_DEV(0x0bc2, 0x3320, 0x0000, 0x9999,
++		"Seagate",
++		"Expansion Desk",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_NO_ATA_1X),
++
++/* Reported-by: Bogdan Mihalcea <bogdan.mihalcea@infim.ro> */
++UNUSUAL_DEV(0x0bc2, 0xa003, 0x0000, 0x9999,
++		"Seagate",
++		"Backup Plus",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_NO_ATA_1X),
++
+ /* https://bbs.archlinux.org/viewtopic.php?id=183190 */
+ UNUSUAL_DEV(0x0bc2, 0xab20, 0x0000, 0x9999,
+ 		"Seagate",
 -- 
-Meelis Roos (mroos@linux.ee)
+2.1.0
