@@ -1,67 +1,47 @@
 From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH 2/6] scsi: ufs: fix power info after link start-up
-Date: Thu, 23 Oct 2014 13:25:13 +0300
-Message-ID: <1414059917-13831-3-git-send-email-draviv@codeaurora.org>
+Subject: [PATCH 3/6] scsi: ufs: fix static checker errors in ufshcd_system_suspend
+Date: Thu, 23 Oct 2014 13:25:14 +0300
+Message-ID: <1414059917-13831-4-git-send-email-draviv@codeaurora.org>
 References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:60789 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbaJWKZg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 06:25:36 -0400
 In-Reply-To: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 
-From: Yaniv Gardi <ygardi@codeaurora.org>
+This patch fixes newly introduced sparse warning in
+ufshcd_system_suspend, introduced by UFS power management series.
 
-After link start-up power mode will always be PWM G1. This is not
-reflected in the pwr_info struct which will keep the previous values.
-Since ufshcd_change_power_mode() tries to avoid unnecessary power mode
-change if the requested power mode and current power mode are same,
-power mode change won't execute again after driver initialization.
+Sparse warning:
+drivers/scsi/ufs/ufshcd.c:5118 ufshcd_system_suspend()
+error: we previously assumed 'hba' could be null (see line 5089)
 
-This patch solves the problem by setting pwr_info to PWM G1 after link
-start-up.
+To fix it, we return 0 in case HBA is not initialized or is
+not powered.
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 59b6544..77a4e38 100644
+index 77a4e38..d3f6ddb 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2246,6 +2246,22 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	return ret;
- }
+@@ -5104,7 +5104,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 	int ret = 0;
  
-+ /**
-+ * ufshcd_init_pwr_info - setting the POR (power on reset)
-+ * values in hba power info
-+ * @hba: per-adapter instance
-+ */
-+static void ufshcd_init_pwr_info(struct ufs_hba *hba)
-+{
-+	hba->pwr_info.gear_rx = UFS_PWM_G1;
-+	hba->pwr_info.gear_tx = UFS_PWM_G1;
-+	hba->pwr_info.lane_rx = 1;
-+	hba->pwr_info.lane_tx = 1;
-+	hba->pwr_info.pwr_rx = SLOWAUTO_MODE;
-+	hba->pwr_info.pwr_tx = SLOWAUTO_MODE;
-+	hba->pwr_info.hs_rate = 0;
-+}
-+
- /**
-  * ufshcd_get_max_pwr_mode - reads the max power mode negotiated with device
-  * @hba: per-adapter instance
-@@ -4118,6 +4134,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	if (ret)
- 		goto out;
+ 	if (!hba || !hba->is_powered)
+-		goto out;
++		return 0;
  
-+	ufshcd_init_pwr_info(hba);
-+
- 	/* UniPro link is active now */
- 	ufshcd_set_link_active(hba);
- 
+ 	if (pm_runtime_suspended(hba->dev)) {
+ 		if (hba->rpm_lvl == hba->spm_lvl)
 -- 
 1.8.5.2
 -- 
 Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+
