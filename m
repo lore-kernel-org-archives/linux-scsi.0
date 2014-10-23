@@ -1,73 +1,41 @@
-From: Dolev Raviv <draviv@codeaurora.org>
-Subject: [PATCH 6/6] scsi: ufs: fix static checker warning in ufshcd_parse_clock_info
-Date: Thu, 23 Oct 2014 13:25:17 +0300
-Message-ID: <1414059917-13831-7-git-send-email-draviv@codeaurora.org>
-References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: fix blk-mq for SPI hosts
+Date: Thu, 23 Oct 2014 13:49:07 +0300 (EEST)
+Message-ID: <alpine.LRH.2.11.1410231151160.2821@adalberg.ut.ee>
+References: <1413731638-28305-1-git-send-email-hch@lst.de> <20141023084530.GB20233@infradead.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:39402 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755187AbaJWKtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Oct 2014 06:49:11 -0400
+In-Reply-To: <20141023084530.GB20233@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 
-This patch fixes newly introduced static checker warning in
-ufshcd_parse_clock_info, introduced by UFS power management series.
+> ping?
 
-Warning:
-drivers/scsi/ufs/ufshcd-pltfrm.c:138 ufshcd_parse_clock_info()
-warn: passing devm_ allocated variable to kfree. 'clkfreq'
+Sorry, forgot to reply. Yes, it worked fine, on the initial Ultra 1 and 
+additionally on Ultra 2 too.
 
-To fix it we remove the kfree(clkfreq) statement.
-In addition we removed the redundant goto label.
+> On Sun, Oct 19, 2014 at 05:13:56PM +0200, Christoph Hellwig wrote:
+> > Fix the assumption that we can treat all blk-mq requests as tagged.  For
+> > traditional SCSI that's wrong, as being tagged has a very explicit meaning
+> > on the wire.
+> > 
+> > This is a little bit different from the version Meelis tested earlier, but
+> > the concept is the same.  I didn't want to add a Tested-by tag as it's
+> > different enough, though.
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---end quoted text---
+> 
 
-Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 2cdec78..1c3467b 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -102,7 +102,6 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	clkfreq = devm_kzalloc(dev, sz * sizeof(*clkfreq),
- 			GFP_KERNEL);
- 	if (!clkfreq) {
--		dev_err(dev, "%s: no memory\n", "freq-table-hz");
- 		ret = -ENOMEM;
- 		goto out;
- 	}
-@@ -112,19 +111,19 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	if (ret && (ret != -EINVAL)) {
- 		dev_err(dev, "%s: error reading array %d\n",
- 				"freq-table-hz", ret);
--		goto free_clkfreq;
-+		return ret;
- 	}
- 
- 	for (i = 0; i < sz; i += 2) {
- 		ret = of_property_read_string_index(np,
- 				"clock-names", i/2, (const char **)&name);
- 		if (ret)
--			goto free_clkfreq;
-+			goto out;
- 
- 		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
- 		if (!clki) {
- 			ret = -ENOMEM;
--			goto free_clkfreq;
-+			goto out;
- 		}
- 
- 		clki->min_freq = clkfreq[i];
-@@ -134,8 +133,6 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 				clki->min_freq, clki->max_freq, clki->name);
- 		list_add_tail(&clki->list, &hba->clk_list_head);
- 	}
--free_clkfreq:
--	kfree(clkfreq);
- out:
- 	return ret;
- }
 -- 
-1.8.5.2
--- 
-Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Meelis Roos (mroos@linux.ee)
