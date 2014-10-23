@@ -1,33 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
-Date: Thu, 23 Oct 2014 01:47:44 -0700
-Message-ID: <20141023084744.GA24965@infradead.org>
-References: <5433E43D.3010107@acm.org>
- <5433E557.3010505@acm.org>
- <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Thu, 23 Oct 2014 10:03:31 +0100
+Message-ID: <CALjAwxjKED_5MEEN_=UPHAGWqm3kKDkFD_0Y8GjEoJYHYrwbhw@mail.gmail.com>
+References: <20141010074901.GA32028@sucs.org>
+ <yq1r3ya6t0i.fsf@sermon.lab.mkp.net>
+ <20141021041707.GA11691@sucs.org>
+ <yq1a94nwo4h.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51524 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbaJWIrt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 04:47:49 -0400
-Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <yq1a94nwo4h.fsf@sermon.lab.mkp.net>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, "Scales, Webb" <webb.scales@hp.com>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
 
-On Wed, Oct 22, 2014 at 10:03:24PM +0000, Elliott, Robert (Server Storage) wrote:
-> Have you tested this with scsi_mod.use_blk_mq=n?
-> 
-> Trying similar changes in hpsa, we still receive some INQUIRY commands 
-> submitted through queuecommand with tag -1.  They are for devices for
-> which slave_alloc has not yet been run, implying this work needs to 
-> be done even earlier.  Maybe the midlayer is missing a slave_alloc
-> call somewhere?
+On 23 October 2014 02:50, Martin K. Petersen <martin.petersen@oracle.com> wrote:
+>>>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
+>
+> Sitsofe> 2. On top of the above, when a disk is "small" (has less than
+> Sitsofe>    2^32 sectors which is typically < 2 TBytes in size) READ
+> Sitsofe>    CAPACITY(16) won't be triggered.
+>
+> static int sd_try_rc16_first(struct scsi_device *sdp)
+> {
+>         if (sdp->host->max_cmd_len < 16)
+>                 return 0;
+>         if (sdp->try_rc_10_first)
+>                 return 0;
+>         if (sdp->scsi_level > SCSI_SPC_2)
+>                 return 1;
+>         if (scsi_device_protection(sdp))
+>                 return 1;
+>         return 0;
+> }
 
-Did that version of hpsa really enable tagging in slave_alloc
-or just in slave_configure?  The latter would cause INQUIRY to be
-sent untagged.
+Yes but since SCSI_SPC_2 was being advertised by the Hyper-V virtual
+disk (and presumably device protection isn't advertised either) this
+function was returning 0. That's why the patch in
+https://lkml.org/lkml/2014/10/10/49 added yet another quirk. If if
+SPC_3 were correctly advertised on Hyper-V  virtual disks would
+TRY_VPD_PAGES still be needed to cope correctly with passthrough
+disks?
+
+What I didn't realise was that the TRY_VPD_PAGES quirk was purely to
+fix WRITE_SAME Hyper-V issues and not to address anything thin
+provisioning related. Having said that, why was the TRY_VPD_PAGES
+quirk back-ported 3.14 without any users -
+https://lkml.org/lkml/2014/9/15/733 ?
+
+-- 
+Sitsofe | http://sucs.org/~sits/
