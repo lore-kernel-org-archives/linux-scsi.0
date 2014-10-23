@@ -1,69 +1,83 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
-Date: Thu, 23 Oct 2014 09:16:31 +0200
-Message-ID: <5448AB4F.40507@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E557.3010505@acm.org> <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: RE: ufs: add UFS power management support
+Date: Thu, 23 Oct 2014 10:28:52 +0300
+Message-ID: <009c01cfee93$00a96b60$01fc4220$@codeaurora.org>
+References: <20141002153112.GB11534@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B4029593212E0-wwDBVnaDRpYSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Scales, Webb" <webb.scales-VXdhtT5mjnY@public.gmane.org>, "Don Brace (PMC)" <Don.Brace-PwyqCcigF0Q@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:38532 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbaJWH24 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2014 03:28:56 -0400
+In-Reply-To: <20141002153112.GB11534@mwanda>
+Content-Language: en-us
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Dan Carpenter' <dan.carpenter@oracle.com>, subhashj@codeaurora.org
+Cc: linux-scsi@vger.kernel.org
 
-On 10/23/14 00:03, Elliott, Robert (Server Storage) wrote:
->> -----Original Message-----
->> From: Bart Van Assche [mailto:bvanassche-HInyCGIudOg@public.gmane.org]
->> Sent: Tuesday, 07 October, 2014 8:07 AM
-> ...
->> @@ -1927,7 +1931,7 @@ static int srp_queuecommand(struct Scsi_Host
->> *shost, struct scsi_cmnd *scmnd)
->>
->>   	cmd->opcode = SRP_CMD;
->>   	cmd->lun    = cpu_to_be64((u64) scmnd->device->lun << 48);
->> -	cmd->tag    = req->index;
->> +	cmd->tag    = tag;
->>   	memcpy(cmd->cdb, scmnd->cmnd, scmnd->cmd_len);
->>
->>   	req->scmnd    = scmnd;
-> ...
->>
->> +static int srp_slave_alloc(struct scsi_device *sdev)
->> +{
->> +	sdev->tagged_supported = 1;
->> +
->> +	scsi_activate_tcq(sdev, sdev->queue_depth);
->> +
->> +	return 0;
->> +}
->> +
->
-> Have you tested this with scsi_mod.use_blk_mq=n?
->
-> Trying similar changes in hpsa, we still receive some INQUIRY commands
-> submitted through queuecommand with tag -1.  They are for devices for
-> which slave_alloc has not yet been run, implying this work needs to
-> be done even earlier.  Maybe the midlayer is missing a slave_alloc
-> call somewhere?
+Hi Dan,
+This seem like a false alarm, please let me know if it requires a fix.
 
-Hello Rob,
+Thanks,
+Dolev
+-- 
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum, 
+a Linux Foundation Collaborative Project 
 
-All my tests with use_blk_mq=n were run with a WARN_ON_ONCE(req->tag < 
-0) statement present in srp_queuecommand(). I haven't seen any kernel 
-warning being triggered during the tests I ran.
+-----Original Message-----
+From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
+Sent: Thursday, October 02, 2014 6:31 PM
+To: subhashj@codeaurora.org
+Cc: linux-scsi@vger.kernel.org
+Subject: re: ufs: add UFS power management support
 
-I also had a look at scsi_alloc_sdev() in drivers/scsi/scsi_scan.c. The 
-number of statements between queue allocation and the slave_alloc() call 
-is limited. The only scenario I can think of which could cause 
-queuecommand() to be invoked before slave_alloc() is a LUN scan 
-initiated from user space via sysfs due to 
-scsi_sysfs_device_initialize() being invoked before slave_alloc(). Does 
-that make sense to you ?
+Hello Subhash Jadavani,
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The patch 57d104c153d3: "ufs: add UFS power management support" from Sep 25,
+2014, leads to the following static checker warning:
+
+	drivers/scsi/ufs/ufshcd.c:4746 ufshcd_link_state_transition()
+	warn: we tested 'check_for_bkops' before and it was 'true'
+
+drivers/scsi/ufs/ufshcd.c
+  4734          if (req_link_state == UIC_LINK_HIBERN8_STATE) {
+  4735                  ret = ufshcd_uic_hibern8_enter(hba);
+  4736                  if (!ret)
+  4737                          ufshcd_set_link_hibern8(hba);
+  4738                  else
+  4739                          goto out;
+  4740          }
+  4741          /*
+  4742           * If autobkops is enabled, link can't be turned off because
+  4743           * turning off the link would also turn off the device.
+  4744           */
+  4745          else if ((req_link_state == UIC_LINK_OFF_STATE) &&
+  4746                     (!check_for_bkops || (check_for_bkops &&
+                                                 ^^^^^^^^^^^^^^^ Not needed.
+
+  4747                      !hba->auto_bkops_enabled))) {
+  4748                  /*
+  4749                   * Change controller state to "reset state" which
+  4750                   * should also put the link in off/reset state
+  4751                   */
+  4752                  ufshcd_hba_stop(hba);
+  4753                  /*
+  4754                   * TODO: Check if we need any delay to make sure
+that
+  4755                   * controller is reset
+  4756                   */
+  4757                  ufshcd_set_link_off(hba);
+  4758          }
+  4759
+  4760  out:
+  4761          return ret;
+  4762  }
+
+regards,
+dan carpenter
+
