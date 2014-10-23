@@ -1,16 +1,15 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/3] scsi: add try_rc16 blacklist flag
-Date: Wed, 22 Oct 2014 21:46:32 -0400
-Message-ID: <yq1egtzwoav.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 0/3] scsi: Add Hyper-V logical block provisioning quirks
+Date: Wed, 22 Oct 2014 21:50:22 -0400
+Message-ID: <yq1a94nwo4h.fsf@sermon.lab.mkp.net>
 References: <20141010074901.GA32028@sucs.org>
- <20141010075251.GC32028@sucs.org> <yq1mw8y6sxf.fsf@sermon.lab.mkp.net>
- <20141021042108.GB11691@sucs.org>
+ <yq1r3ya6t0i.fsf@sermon.lab.mkp.net> <20141021041707.GA11691@sucs.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20141021042108.GB11691@sucs.org> (Sitsofe Wheeler's message of
- "Tue, 21 Oct 2014 05:21:08 +0100")
+In-Reply-To: <20141021041707.GA11691@sucs.org> (Sitsofe Wheeler's message of
+ "Tue, 21 Oct 2014 05:17:08 +0100")
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -26,24 +25,22 @@ List-Id: linux-scsi@vger.kernel.org
 
 >>>>> "Sitsofe" == Sitsofe Wheeler <sitsofe@gmail.com> writes:
 
->> Last time around we identified this as a problem with Microsoft's
->> interpretation of the T10 SBC spec. And they promised that they are
->> going to fix that.
+Sitsofe> 2. On top of the above, when a disk is "small" (has less than
+Sitsofe>    2^32 sectors which is typically < 2 TBytes in size) READ
+Sitsofe>    CAPACITY(16) won't be triggered.
 
-Sitsofe> OK but if we were happy to wait for Microsoft to fix the
-Sitsofe> problem on the host why were the (broken and incomplete)
-Sitsofe> BLIST_SKIP_VPD_PAGES patches committed to 3.17 rather than
-Sitsofe> withdrawn? What's going to be done about those patches now?
-
-There are two orthogonal problems. One being that the driver advertised
-conformance to an old SCSI spec. That's being addressed with the
-separate SPC-3 patch.
-
-The other issue is that thin provisioning is being incorrectly
-advertised. Because that's being addressed by Microsoft and is an
-isolated use case I'm hesitant to add quirk for it. Whereas I know
-several other devices that will benefit from the TRY_VPD_PAGES blacklist
-option.
+static int sd_try_rc16_first(struct scsi_device *sdp)
+{
+        if (sdp->host->max_cmd_len < 16)
+                return 0;
+        if (sdp->try_rc_10_first)
+                return 0;
+        if (sdp->scsi_level > SCSI_SPC_2)
+                return 1;
+        if (scsi_device_protection(sdp))
+                return 1;
+        return 0;
+}
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
