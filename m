@@ -1,37 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Concurrent SG_SCSI_RESET ioctls
-Date: Fri, 24 Oct 2014 07:51:31 -0700
-Message-ID: <20141024145131.GA2940@infradead.org>
-References: <94D0CD8314A33A4D9D801C0FE68B402958CE9B54@G4W3202.americas.hpqcorp.net>
- <20141011161110.GA16812@infradead.org>
- <94D0CD8314A33A4D9D801C0FE68B402958CEB20A@G4W3202.americas.hpqcorp.net>
- <20141014111354.GA3022@infradead.org>
- <543D5272.5080102@interlog.com>
+Subject: Re: [PATCHv8 00/27] scsi logging update (the boring part)
+Date: Fri, 24 Oct 2014 07:54:15 -0700
+Message-ID: <20141024145415.GB2940@infradead.org>
+References: <1414153627-2863-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36497 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:39335 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932187AbaJXOvg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Oct 2014 10:51:36 -0400
+	with ESMTP id S1756369AbaJXOyR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Oct 2014 10:54:17 -0400
 Content-Disposition: inline
-In-Reply-To: <543D5272.5080102@interlog.com>
+In-Reply-To: <1414153627-2863-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "James Bottomley (jbottomley@parallels.com)" <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>, "Scales, Webb" <webb.scales@hp.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 14, 2014 at 12:42:26PM -0400, Douglas Gilbert wrote:
-> I don't mind if you change it. However I plan to release
-> sg3_utils-1.40 in the next 2 or 3 weeks, so that would
-> be the earliest a revised sg_reset would be available for
-> distros. Improving error reports is something I always
-> like to do (so ENODEV for the "in progress" case seems a
-> bit strident).
+On Fri, Oct 24, 2014 at 02:26:40PM +0200, Hannes Reinecke wrote:
+> here is now the eigth iteration of my scsi logging update.
+> With this I've updated the patch to ratelimit I/O error messages
+> as suggested by Robert Elliott.
+> Additionally I've updated it to core-for-3.19 and included the
+> missing hunks for ufs as requested by Christoph Hellwig.
 
-Doug, are you fine with changing the error code to EAGAIN
-similar to what we get elsewhere when a O_NONBLOCK open
-would have to block?  If that's something you can prepare
-sg3_utils for I'd like to send a patch for it for the 3.19 merge
-window.
-
+This looks good to me.  I'll apply it once Robert gives me ACKs for the
+new patches at the end of the series and it passes local sanity testing.
