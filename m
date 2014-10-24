@@ -1,42 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
-Date: Thu, 23 Oct 2014 23:45:14 -0700
-Message-ID: <20141024064514.GA15654@infradead.org>
-References: <5433E43D.3010107@acm.org>
- <5433E557.3010505@acm.org>
- <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
- <20141023084744.GA24965@infradead.org>
- <94D0CD8314A33A4D9D801C0FE68B402959324A17@G4W3296.americas.hpqcorp.net>
+Date: Fri, 24 Oct 2014 08:45:05 +0200
+Message-ID: <5449F571.7080308@acm.org>
+References: <5433E43D.3010107@acm.org> <5433E557.3010505@acm.org> <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net> <5448AB4F.40507@acm.org> <54493E5A.7050803@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54835 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbaJXGpc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Oct 2014 02:45:32 -0400
-Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402959324A17@G4W3296.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54493E5A.7050803-VXdhtT5mjnY@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: webbnh-VXdhtT5mjnY@public.gmane.org, "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Don Brace (PMC)" <Don.Brace-PwyqCcigF0Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>, "Scales, Webb" <webb.scales@hp.com>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
 
-On Fri, Oct 24, 2014 at 04:43:15AM +0000, Elliott, Robert (Server Storage) wrote:
-> However, it was looking at scmd->tag, which is always 0xff (at 
-> least in those early discovery commands).  scmd->request->tag 
-> looks like it is the field that has the correct values.
-> 
-> Also, I noticed that scmd->tag is just an 8 bit field, so
-> it could never represent a large number of tags.
+On 10/23/14 19:43, Webb Scales wrote:
+> On 10/23/14 3:16 AM, Bart Van Assche wrote:
+>> All my tests with use_blk_mq=n were run with a WARN_ON_ONCE(req->tag <
+>> 0) statement present in srp_queuecommand(). I haven't seen any kernel
+>> warning being triggered during the tests I ran.
+>
+> Bart, what's the data type of "req->tag", here?  (E.g., if it
+> "unsigned", it will never be less than zero, right?)
 
-Yes, we need to get rid of scmd->tag.  Hannes had a patchset to get
-started on it, and I hope either he or someone else will have time to
-get back to it ASAP.
+Hello Webb,
 
-> Just to confirm: After calling scsi_init_shared_tag_map()
-> in non-mq mode, will scmd->request->tag be based on 
-> controller-wide tag allocation (never using the same
-> value at the same time for the request queues of multiple
-> devices in that controller)?
+This is what I found in "struct request" in <linux/blkdev.h>:
 
-Yes.
+struct request {
+	[ ... ]
+	int tag;
+	[ ... ]
+};
+
+Bart.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
