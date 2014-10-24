@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/27] Remove scsi_show_result()
-Date: Fri, 24 Oct 2014 14:27:00 +0200
-Message-ID: <1414153627-2863-21-git-send-email-hare@suse.de>
+Subject: [PATCH 18/27] scsi: Remove scsi_print_command when calling abort
+Date: Fri, 24 Oct 2014 14:26:58 +0200
+Message-ID: <1414153627-2863-19-git-send-email-hare@suse.de>
 References: <1414153627-2863-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51978 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51977 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756564AbaJXM1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756559AbaJXM1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 24 Oct 2014 08:27:18 -0400
 In-Reply-To: <1414153627-2863-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,204 +14,168 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Open-code scsi_print_result in sd.c, and cleanup logging to
-not print duplicate informations.
-Also remove the call to scsi_show_result() in ufshcd.c
-to be consistent with other callers of scsi_execute().
-
-With that we can remove scsi_show_result in constants.c
+Calling scsi_print_command should not be necessary during abort;
+if the information is required one should enable scsi logging.
 
 Reviewed-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c  | 16 ---------------
- drivers/scsi/sd.c         | 50 ++++++++++++++++++++++++-----------------------
- drivers/scsi/ufs/ufshcd.c |  4 ++--
- include/scsi/scsi_dbg.h   |  1 -
- 4 files changed, 28 insertions(+), 43 deletions(-)
+ drivers/scsi/53c700.c        |  4 +---
+ drivers/scsi/NCR5380.c       |  5 ++---
+ drivers/scsi/arm/fas216.c    | 10 +++-------
+ drivers/scsi/atari_NCR5380.c |  3 +--
+ drivers/scsi/ps3rom.c        |  4 ----
+ drivers/scsi/stex.c          |  9 +++------
+ drivers/scsi/sun3_NCR5380.c  |  3 +--
+ 7 files changed, 11 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0fe50b4..5e64afc 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1439,22 +1439,6 @@ const char *scsi_driverbyte_string(int result)
- }
- EXPORT_SYMBOL(scsi_driverbyte_string);
- 
--void scsi_show_result(int result)
--{
--	const char *hb_string = scsi_hostbyte_string(result);
--	const char *db_string = scsi_driverbyte_string(result);
--
--	if (hb_string || db_string)
--		printk("Result: hostbyte=%s driverbyte=%s\n",
--		       hb_string ? hb_string : "invalid",
--		       db_string ? db_string : "invalid");
--	else
--		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
--		       host_byte(result), driver_byte(result));
--}
--EXPORT_SYMBOL(scsi_show_result);
--
--
- void scsi_print_result(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 179a24e..474cc6d 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -1906,9 +1906,7 @@ NCR_700_abort(struct scsi_cmnd * SCp)
  {
- 	const char *hb_string = scsi_hostbyte_string(cmd->result);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3ae7540..242f9b1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -116,7 +116,7 @@ static int sd_eh_action(struct scsi_cmnd *, int);
- static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
- static void scsi_disk_release(struct device *cdev);
- static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
--static void sd_print_result(struct scsi_disk *, int);
-+static void sd_print_result(const struct scsi_disk *, const char *, int);
+ 	struct NCR_700_command_slot *slot;
  
- static DEFINE_SPINLOCK(sd_index_lock);
- static DEFINE_IDA(sd_index_ida);
-@@ -1492,7 +1492,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 	}
+-	scmd_printk(KERN_INFO, SCp,
+-		"New error handler wants to abort command\n\t");
+-	scsi_print_command(SCp);
++	scmd_printk(KERN_INFO, SCp, "abort command\n");
  
- 	if (res) {
--		sd_print_result(sdkp, res);
-+		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
+ 	slot = (struct NCR_700_command_slot *)SCp->host_scribble;
  
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
-@@ -1713,17 +1713,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		if (sense_valid)
- 			sense_deferred = scsi_sense_is_deferred(&sshdr);
- 	}
--#ifdef CONFIG_SCSI_LOGGING
--	SCSI_LOG_HLCOMPLETE(1, scsi_print_result(SCpnt));
--	if (sense_valid) {
--		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
--						   "sd_done: sb[respc,sk,asc,"
--						   "ascq]=%x,%x,%x,%x\n",
--						   sshdr.response_code,
--						   sshdr.sense_key, sshdr.asc,
--						   sshdr.ascq));
--	}
--#endif
- 	sdkp->medium_access_timed_out = 0;
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 45da3c8..50873bb 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -2666,9 +2666,8 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 	Scsi_Cmnd *tmp, **prev;
+-	
+-	printk(KERN_WARNING "scsi%d : aborting command\n", instance->host_no);
+-	scsi_print_command(cmd);
++
++	scmd_printk(KERN_WARNING, cmd, "aborting command\n");
  
- 	if (driver_byte(result) != DRIVER_SENSE &&
-@@ -1778,6 +1767,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	NCR5380_print_status(instance);
+ 
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index d2581cb..e64c3af 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2423,14 +2423,11 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 
+ 	info->stats.aborts += 1;
+ 
+-	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
+-	__scsi_print_command(SCpnt->cmnd, SCpnt->cmd_len);
++	scmd_printk(KERN_WARNING, SCpnt, "abort command\n");
+ 
+ 	print_debug_list();
+ 	fas216_dumpstate(info);
+ 
+-	printk(KERN_WARNING "scsi%d: abort %p ", info->host->host_no, SCpnt);
+-
+ 	switch (fas216_find_command(info, SCpnt)) {
+ 	/*
+ 	 * We found the command, and cleared it out.  Either
+@@ -2438,7 +2435,7 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 	 * target, or the busylun bit is not set.
+ 	 */
+ 	case res_success:
+-		printk("success\n");
++		scmd_printk(KERN_WARNING, SCpnt, "abort %p success\n", SCpnt);
+ 		result = SUCCESS;
+ 		break;
+ 
+@@ -2448,14 +2445,13 @@ int fas216_eh_abort(struct scsi_cmnd *SCpnt)
+ 	 * if the bus is free.
+ 	 */
+ 	case res_hw_abort:
+-		
+ 
+ 	/*
+ 	 * We are unable to abort the command for some reason.
+ 	 */
+ 	default:
+ 	case res_failed:
+-		printk("failed\n");
++		scmd_printk(KERN_WARNING, SCpnt, "abort %p failed\n", SCpnt);
  		break;
  	}
-  out:
-+	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
-+					   "sd_done: completed %d of %d bytes\n",
-+					   good_bytes, scsi_bufflen(SCpnt)));
-+
- 	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
- 		sd_dif_complete(SCpnt, good_bytes);
  
-@@ -1833,12 +1826,12 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
- 			if(!spintime && !scsi_status_is_good(the_result)) {
--				sd_printk(KERN_NOTICE, sdkp, "Unit Not Ready\n");
--				sd_print_result(sdkp, the_result);
-+				sd_print_result(sdkp, "Test Unit Ready failed",
-+						the_result);
- 			}
- 			break;
- 		}
--					
-+
- 		/*
- 		 * The device does not want the automatic start to be issued.
- 		 */
-@@ -1954,7 +1947,6 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 			struct scsi_sense_hdr *sshdr, int sense_valid,
- 			int the_result)
- {
--	sd_print_result(sdkp, the_result);
- 	if (driver_byte(the_result) & DRIVER_SENSE)
- 		sd_print_sense_hdr(sdkp, sshdr);
- 	else
-@@ -2035,7 +2027,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	} while (the_result && retries);
+diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+index 79e6f04..229c61b 100644
+--- a/drivers/scsi/atari_NCR5380.c
++++ b/drivers/scsi/atari_NCR5380.c
+@@ -2623,8 +2623,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
+ 	Scsi_Cmnd *tmp, **prev;
+ 	unsigned long flags;
  
- 	if (the_result) {
--		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
-+		sd_print_result(sdkp, "Read Capacity(16) failed", the_result);
- 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
- 		return -EINVAL;
- 	}
-@@ -2117,7 +2109,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	} while (the_result && retries);
+-	printk(KERN_NOTICE "scsi%d: aborting command\n", HOSTNO);
+-	scsi_print_command(cmd);
++	scmd_printk(KERN_NOTICE, cmd, "aborting command\n");
  
- 	if (the_result) {
--		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
-+		sd_print_result(sdkp, "Read Capacity(10) failed", the_result);
- 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
- 		return -EINVAL;
- 	}
-@@ -3141,8 +3133,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
- 			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
- 	if (res) {
--		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
--		sd_print_result(sdkp, res);
-+		sd_print_result(sdkp, "Start/Stop Unit failed", res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
- 		if (scsi_sense_valid(&sshdr) &&
-@@ -3343,9 +3334,20 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
- 			     sshdr->asc, sshdr->ascq);
+ 	NCR5380_print_status(instance);
+ 
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index ef23fab..b3b48b5 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -220,10 +220,6 @@ static int ps3rom_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	unsigned char opcode;
+ 	int res;
+ 
+-#ifdef DEBUG
+-	scsi_print_command(cmd);
+-#endif
+-
+ 	priv->curr_cmd = cmd;
+ 	cmd->scsi_done = done;
+ 
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1aa4bef..713af13 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1162,9 +1162,7 @@ static int stex_abort(struct scsi_cmnd *cmd)
+ 	int result = SUCCESS;
+ 	unsigned long flags;
+ 
+-	printk(KERN_INFO DRV_NAME
+-		"(%s): aborting command\n", pci_name(hba->pdev));
+-	scsi_print_command(cmd);
++	scmd_printk(KERN_INFO, cmd, "aborting command\n");
+ 
+ 	base = hba->mmio_base;
+ 	spin_lock_irqsave(host->host_lock, flags);
+@@ -1352,9 +1350,8 @@ static int stex_reset(struct scsi_cmnd *cmd)
+ 
+ 	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
+ 
+-	printk(KERN_INFO DRV_NAME
+-		"(%s): resetting host\n", pci_name(hba->pdev));
+-	scsi_print_command(cmd);
++	shost_printk(KERN_INFO, cmd->device->host,
++		     "resetting host\n");
+ 
+ 	return stex_do_reset(hba) ? FAILED : SUCCESS;
  }
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 1a2367a..3abd796 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -2608,8 +2608,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
+     struct scsi_cmnd *tmp, **prev;
+     unsigned long flags;
  
--static void sd_print_result(struct scsi_disk *sdkp, int result)
-+static void sd_print_result(const struct scsi_disk *sdkp, const char *msg,
-+			    int result)
- {
--	sd_printk(KERN_INFO, sdkp, " ");
--	scsi_show_result(result);
-+	const char *hb_string = scsi_hostbyte_string(result);
-+	const char *db_string = scsi_driverbyte_string(result);
-+
-+	if (hb_string || db_string)
-+		sd_printk(KERN_INFO, sdkp,
-+			  "%s: Result: hostbyte=%s driverbyte=%s\n", msg,
-+			  hb_string ? hb_string : "invalid",
-+			  db_string ? db_string : "invalid");
-+	else
-+		sd_printk(KERN_INFO, sdkp,
-+			  "%s: Result: hostbyte=0x%02x driverbyte=0x%02x\n",
-+			  msg, host_byte(result), driver_byte(result));
- }
+-    printk(KERN_NOTICE "scsi%d: aborting command\n", HOSTNO);
+-    scsi_print_command(cmd);
++    scmd_printk(KERN_NOTICE, cmd, "aborting command\n");
  
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index eb3997e..9da3191 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4707,8 +4707,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 				     START_STOP_TIMEOUT, 0, NULL, REQ_PM);
- 	if (ret) {
- 		sdev_printk(KERN_WARNING, sdp,
--			  "START_STOP failed for power mode: %d\n", pwr_mode);
--		scsi_show_result(ret);
-+			    "START_STOP failed for power mode: %d, result %x\n",
-+			    pwr_mode, ret);
- 		if (driver_byte(ret) & DRIVER_SENSE) {
- 			scsi_show_sense_hdr(sdp, NULL, &sshdr);
- 			scsi_show_extd_sense(sdp, NULL, sshdr.asc, sshdr.ascq);
-diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 50f4d85..f41a86b 100644
---- a/include/scsi/scsi_dbg.h
-+++ b/include/scsi/scsi_dbg.h
-@@ -17,7 +17,6 @@ extern void scsi_print_sense(const struct scsi_cmnd *);
- extern void __scsi_print_sense(const struct scsi_device *, const char *name,
- 			       const unsigned char *sense_buffer,
- 			       int sense_len);
--extern void scsi_show_result(int);
- extern void scsi_print_result(struct scsi_cmnd *);
- extern const char *scsi_hostbyte_string(int);
- extern const char *scsi_driverbyte_string(int);
+     NCR5380_print_status (instance);
+ 
 -- 
 1.8.5.2
 
