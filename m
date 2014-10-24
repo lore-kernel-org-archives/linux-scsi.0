@@ -1,103 +1,217 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 26/27] scsi: correct return values for .eh_abort_handler implementations
-Date: Fri, 24 Oct 2014 14:27:06 +0200
-Message-ID: <1414153627-2863-27-git-send-email-hare@suse.de>
+Subject: [PATCH 20/27] Remove scsi_show_result()
+Date: Fri, 24 Oct 2014 14:27:00 +0200
+Message-ID: <1414153627-2863-21-git-send-email-hare@suse.de>
 References: <1414153627-2863-1-git-send-email-hare@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51978 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756564AbaJXM1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:27:18 -0400
 In-Reply-To: <1414153627-2863-1-git-send-email-hare@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The .eh_abort_handler needs to return SUCCESS, FAILED, or
-FAST_IO_FAIL. So fixup all callers to adhere to this requirement.
+Open-code scsi_print_result in sd.c, and cleanup logging to
+not print duplicate informations.
+Also remove the call to scsi_show_result() in ufshcd.c
+to be consistent with other callers of scsi_execute().
 
-Cc: Robert Elliott <elliott@hp.com>
-Cc: <stable@vger.kernel.org>
+With that we can remove scsi_show_result in constants.c
+
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/NCR5380.c            | 2 +-
- drivers/scsi/aha1740.c            | 2 +-
- drivers/scsi/esas2r/esas2r_main.c | 2 +-
- drivers/scsi/megaraid.c           | 8 ++++----
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/constants.c  | 16 ---------------
+ drivers/scsi/sd.c         | 50 ++++++++++++++++++++++++-----------------------
+ drivers/scsi/ufs/ufshcd.c |  4 ++--
+ include/scsi/scsi_dbg.h   |  1 -
+ 4 files changed, 28 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 50873bb..e2c9e73 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2703,7 +2703,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
-  * aborted flag and get back into our main loop.
-  */
- 
--		return 0;
-+		return SUCCESS;
- 	}
- #endif
- 
-diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
-index 5f31017..31ace4b 100644
---- a/drivers/scsi/aha1740.c
-+++ b/drivers/scsi/aha1740.c
-@@ -531,7 +531,7 @@ static int aha1740_eh_abort_handler (Scsi_Cmnd *dummy)
-  * quiet as possible...
-  */
- 
--	return 0;
-+	return SUCCESS;
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 0fe50b4..5e64afc 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1439,22 +1439,6 @@ const char *scsi_driverbyte_string(int result)
  }
+ EXPORT_SYMBOL(scsi_driverbyte_string);
  
- static struct scsi_host_template aha1740_template = {
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 6504a19..45aa684 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -1057,7 +1057,7 @@ int esas2r_eh_abort(struct scsi_cmnd *cmd)
+-void scsi_show_result(int result)
+-{
+-	const char *hb_string = scsi_hostbyte_string(result);
+-	const char *db_string = scsi_driverbyte_string(result);
+-
+-	if (hb_string || db_string)
+-		printk("Result: hostbyte=%s driverbyte=%s\n",
+-		       hb_string ? hb_string : "invalid",
+-		       db_string ? db_string : "invalid");
+-	else
+-		printk("Result: hostbyte=0x%02x driverbyte=0x%02x\n",
+-		       host_byte(result), driver_byte(result));
+-}
+-EXPORT_SYMBOL(scsi_show_result);
+-
+-
+ void scsi_print_result(struct scsi_cmnd *cmd)
+ {
+ 	const char *hb_string = scsi_hostbyte_string(cmd->result);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3ae7540..242f9b1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -116,7 +116,7 @@ static int sd_eh_action(struct scsi_cmnd *, int);
+ static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+ static void scsi_disk_release(struct device *cdev);
+ static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+-static void sd_print_result(struct scsi_disk *, int);
++static void sd_print_result(const struct scsi_disk *, const char *, int);
  
- 		cmd->scsi_done(cmd);
- 
--		return 0;
-+		return SUCCESS;
+ static DEFINE_SPINLOCK(sd_index_lock);
+ static DEFINE_IDA(sd_index_ida);
+@@ -1492,7 +1492,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
  	}
  
- 	spin_lock_irqsave(&a->queue_lock, flags);
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index ac5d94c..2485255 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1945,7 +1945,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 	     cmd->device->id, (u32)cmd->device->lun);
+ 	if (res) {
+-		sd_print_result(sdkp, res);
++		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
  
- 	if(list_empty(&adapter->pending_list))
--		return FALSE;
-+		return FAILED;
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+@@ -1713,17 +1713,6 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 		if (sense_valid)
+ 			sense_deferred = scsi_sense_is_deferred(&sshdr);
+ 	}
+-#ifdef CONFIG_SCSI_LOGGING
+-	SCSI_LOG_HLCOMPLETE(1, scsi_print_result(SCpnt));
+-	if (sense_valid) {
+-		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
+-						   "sd_done: sb[respc,sk,asc,"
+-						   "ascq]=%x,%x,%x,%x\n",
+-						   sshdr.response_code,
+-						   sshdr.sense_key, sshdr.asc,
+-						   sshdr.ascq));
+-	}
+-#endif
+ 	sdkp->medium_access_timed_out = 0;
  
- 	list_for_each_safe(pos, next, &adapter->pending_list) {
+ 	if (driver_byte(result) != DRIVER_SENSE &&
+@@ -1778,6 +1767,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 		break;
+ 	}
+  out:
++	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
++					   "sd_done: completed %d of %d bytes\n",
++					   good_bytes, scsi_bufflen(SCpnt)));
++
+ 	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
+ 		sd_dif_complete(SCpnt, good_bytes);
  
-@@ -1968,7 +1968,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 					(aor==SCB_ABORT) ? "ABORTING":"RESET",
- 					scb->idx);
- 
--				return FALSE;
-+				return FAILED;
+@@ -1833,12 +1826,12 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 			/* no sense, TUR either succeeded or failed
+ 			 * with a status error */
+ 			if(!spintime && !scsi_status_is_good(the_result)) {
+-				sd_printk(KERN_NOTICE, sdkp, "Unit Not Ready\n");
+-				sd_print_result(sdkp, the_result);
++				sd_print_result(sdkp, "Test Unit Ready failed",
++						the_result);
  			}
- 			else {
- 
-@@ -1993,12 +1993,12 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- 				list_add_tail(SCSI_LIST(cmd),
- 						&adapter->completed_list);
- 
--				return TRUE;
-+				return SUCCESS;
- 			}
+ 			break;
  		}
- 	}
+-					
++
+ 		/*
+ 		 * The device does not want the automatic start to be issued.
+ 		 */
+@@ -1954,7 +1947,6 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 			struct scsi_sense_hdr *sshdr, int sense_valid,
+ 			int the_result)
+ {
+-	sd_print_result(sdkp, the_result);
+ 	if (driver_byte(the_result) & DRIVER_SENSE)
+ 		sd_print_sense_hdr(sdkp, sshdr);
+ 	else
+@@ -2035,7 +2027,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	} while (the_result && retries);
  
--	return FALSE;
-+	return FAILED;
+ 	if (the_result) {
+-		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY(16) failed\n");
++		sd_print_result(sdkp, "Read Capacity(16) failed", the_result);
+ 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
+ 		return -EINVAL;
+ 	}
+@@ -2117,7 +2109,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	} while (the_result && retries);
+ 
+ 	if (the_result) {
+-		sd_printk(KERN_NOTICE, sdkp, "READ CAPACITY failed\n");
++		sd_print_result(sdkp, "Read Capacity(10) failed", the_result);
+ 		read_capacity_error(sdkp, sdp, &sshdr, sense_valid, the_result);
+ 		return -EINVAL;
+ 	}
+@@ -3141,8 +3133,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+ 			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, REQ_PM);
+ 	if (res) {
+-		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
+-		sd_print_result(sdkp, res);
++		sd_print_result(sdkp, "Start/Stop Unit failed", res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+ 		if (scsi_sense_valid(&sshdr) &&
+@@ -3343,9 +3334,20 @@ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
+ 			     sshdr->asc, sshdr->ascq);
  }
  
- static inline int
+-static void sd_print_result(struct scsi_disk *sdkp, int result)
++static void sd_print_result(const struct scsi_disk *sdkp, const char *msg,
++			    int result)
+ {
+-	sd_printk(KERN_INFO, sdkp, " ");
+-	scsi_show_result(result);
++	const char *hb_string = scsi_hostbyte_string(result);
++	const char *db_string = scsi_driverbyte_string(result);
++
++	if (hb_string || db_string)
++		sd_printk(KERN_INFO, sdkp,
++			  "%s: Result: hostbyte=%s driverbyte=%s\n", msg,
++			  hb_string ? hb_string : "invalid",
++			  db_string ? db_string : "invalid");
++	else
++		sd_printk(KERN_INFO, sdkp,
++			  "%s: Result: hostbyte=0x%02x driverbyte=0x%02x\n",
++			  msg, host_byte(result), driver_byte(result));
+ }
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index eb3997e..9da3191 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4707,8 +4707,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 				     START_STOP_TIMEOUT, 0, NULL, REQ_PM);
+ 	if (ret) {
+ 		sdev_printk(KERN_WARNING, sdp,
+-			  "START_STOP failed for power mode: %d\n", pwr_mode);
+-		scsi_show_result(ret);
++			    "START_STOP failed for power mode: %d, result %x\n",
++			    pwr_mode, ret);
+ 		if (driver_byte(ret) & DRIVER_SENSE) {
+ 			scsi_show_sense_hdr(sdp, NULL, &sshdr);
+ 			scsi_show_extd_sense(sdp, NULL, sshdr.asc, sshdr.ascq);
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index 50f4d85..f41a86b 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -17,7 +17,6 @@ extern void scsi_print_sense(const struct scsi_cmnd *);
+ extern void __scsi_print_sense(const struct scsi_device *, const char *name,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
+-extern void scsi_show_result(int);
+ extern void scsi_print_result(struct scsi_cmnd *);
+ extern const char *scsi_hostbyte_string(int);
+ extern const char *scsi_driverbyte_string(int);
 -- 
 1.8.5.2
+
