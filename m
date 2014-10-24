@@ -1,106 +1,156 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/27] scsi: consolidate opcode lookup in scsi_opcode_sa_name()
-Date: Fri, 24 Oct 2014 14:26:56 +0200
-Message-ID: <1414153627-2863-17-git-send-email-hare@suse.de>
+Subject: [PATCH 15/27] scsi: merge print_opcode_name()
+Date: Fri, 24 Oct 2014 14:26:55 +0200
+Message-ID: <1414153627-2863-16-git-send-email-hare@suse.de>
 References: <1414153627-2863-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51929 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51974 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756369AbaJXM1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2014 08:27:14 -0400
+	id S1756541AbaJXM1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:27:18 -0400
 In-Reply-To: <1414153627-2863-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Consolidate the CDB opcode lookup in scsi_opcode_sa_name(),
-so that we don't have to call several functions to figure
-out the CDB opcode string.
+Instead of having two versions of print_opcode_name() we
+should be consolidating them into one version.
 
-Reviewed_by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellweg <hch@lst.de>
+Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/constants.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/constants.c | 88 ++++++++++++++++++------------------------------
+ 1 file changed, 33 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0982df7..80a9942 100644
+index 092ea56..0982df7 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -29,6 +29,7 @@
- #define THIRD_PARTY_COPY_OUT 0x83
+@@ -30,6 +30,11 @@
  #define THIRD_PARTY_COPY_IN 0x84
  
-+#define VENDOR_SPECIFIC_CDB 0xc0
  
- struct sa_name_list {
- 	int opcode;
-@@ -286,12 +287,19 @@ static struct sa_name_list sa_names_arr[] = {
- #endif /* CONFIG_SCSI_CONSTANTS */
++struct sa_name_list {
++	int opcode;
++	const struct value_name_pair *arr;
++	int arr_sz;
++};
  
+ #ifdef CONFIG_SCSI_CONSTANTS
+ static const char * cdb_byte0_names[] = {
+@@ -244,12 +249,6 @@ static const struct value_name_pair variable_length_arr[] = {
+ };
+ #define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
+ 
+-struct sa_name_list {
+-	int opcode;
+-	const struct value_name_pair *arr;
+-	int arr_sz;
+-};
+-
+ static struct sa_name_list sa_names_arr[] = {
+ 	{VARIABLE_LENGTH_CMD, variable_length_arr, VARIABLE_LENGTH_SZ},
+ 	{MAINTENANCE_IN, maint_in_arr, MAINT_IN_SZ},
+@@ -266,6 +265,26 @@ static struct sa_name_list sa_names_arr[] = {
+ 	{0, NULL, 0},
+ };
+ 
++#else /* ifndef CONFIG_SCSI_CONSTANTS */
++static const char *cdb_byte0_names[];
++
++static struct sa_name_list sa_names_arr[] = {
++	{VARIABLE_LENGTH_CMD, NULL, 0},
++	{MAINTENANCE_IN, NULL, 0},
++	{MAINTENANCE_OUT, NULL, 0},
++	{PERSISTENT_RESERVE_IN, NULL, 0},
++	{PERSISTENT_RESERVE_OUT, NULL, 0},
++	{SERVICE_ACTION_IN_12, NULL, 0},
++	{SERVICE_ACTION_OUT_12, NULL, 0},
++	{SERVICE_ACTION_BIDIRECTIONAL, NULL, 0},
++	{SERVICE_ACTION_IN_16, NULL, 0},
++	{SERVICE_ACTION_OUT_16, NULL, 0},
++	{THIRD_PARTY_COPY_IN, NULL, 0},
++	{THIRD_PARTY_COPY_OUT, NULL, 0},
++	{0, NULL, 0},
++};
++#endif /* CONFIG_SCSI_CONSTANTS */
++
  static bool scsi_opcode_sa_name(int opcode, int service_action,
--				const char **sa_name)
-+				const char **cdb_name, const char **sa_name)
+ 				const char **sa_name)
  {
- 	struct sa_name_list *sa_name_ptr;
- 	const struct value_name_pair *arr = NULL;
- 	int arr_sz, k;
+@@ -315,11 +334,14 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
  
-+	*cdb_name = NULL;
-+	if (opcode >= VENDOR_SPECIFIC_CDB)
-+		return false;
-+
-+	if (opcode < ARRAY_SIZE(cdb_byte0_names))
-+		*cdb_name = cdb_byte0_names[opcode];
-+
- 	for (sa_name_ptr = sa_names_arr; sa_name_ptr->arr; ++sa_name_ptr) {
- 		if (sa_name_ptr->opcode == opcode) {
- 			arr = sa_name_ptr->arr;
-@@ -316,7 +324,7 @@ static bool scsi_opcode_sa_name(int opcode, int service_action,
- static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- {
- 	int sa, len, cdb0;
--	const char *name = NULL;
-+	const char *cdb_name = NULL, *sa_name = NULL;
- 
- 	cdb0 = cdbp[0];
- 	if (cdb0 == VARIABLE_LENGTH_CMD) {
-@@ -332,21 +340,20 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
- 		len = cdb_len;
- 	}
- 
--	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
--		if (cdb0 < 0xc0) {
--			if (ARRAY_SIZE(cdb_byte0_names) > 1) {
--				name = cdb_byte0_names[cdb0];
--				if (name)
--					printk("%s", name);
--				else
--					printk("cdb[0]=0x%x (reserved)", cdb0);
--			} else
--				printk("cdb[0]=0x%x", cdb0);
--		} else
-+	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
-+		if (cdb_name)
-+			printk("%s", cdb_name);
-+		else if (cdb0 >= VENDOR_SPECIFIC_CDB)
+ 	if (!scsi_opcode_sa_name(cdb0, sa, &name)) {
+ 		if (cdb0 < 0xc0) {
+-			name = cdb_byte0_names[cdb0];
+-			if (name)
+-				printk("%s", name);
+-			else
+-				printk("cdb[0]=0x%x (reserved)", cdb0);
++			if (ARRAY_SIZE(cdb_byte0_names) > 1) {
++				name = cdb_byte0_names[cdb0];
++				if (name)
++					printk("%s", name);
++				else
++					printk("cdb[0]=0x%x (reserved)", cdb0);
++			} else
++				printk("cdb[0]=0x%x", cdb0);
+ 		} else
  			printk("cdb[0]=0x%x (vendor)", cdb0);
-+		else if (cdb0 >= 0x60 && cdb0 < 0x7e)
-+			printk("cdb[0]=0x%x (reserved)", cdb0);
-+		else
-+			printk("cdb[0]=0x%x", cdb0);
  	} else {
--		if (name)
--			printk("%s", name);
-+		if (sa_name)
-+			printk("%s", sa_name);
-+		else if (cdb_name)
-+			printk("%s, sa=0x%x", cdb_name, sa);
- 		else
- 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+@@ -333,50 +355,6 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 	}
+ }
  
+-#else /* ifndef CONFIG_SCSI_CONSTANTS */
+-
+-static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+-{
+-	int sa, len, cdb0;
+-
+-	cdb0 = cdbp[0];
+-	switch(cdb0) {
+-	case VARIABLE_LENGTH_CMD:
+-		len = scsi_varlen_cdb_length(cdbp);
+-		if (len < 10) {
+-			printk("short opcode=0x%x command, len=%d "
+-			       "ext_len=%d", cdb0, len, cdb_len);
+-			break;
+-		}
+-		sa = (cdbp[8] << 8) + cdbp[9];
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		if (len != cdb_len)
+-			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+-		break;
+-	case MAINTENANCE_IN:
+-	case MAINTENANCE_OUT:
+-	case PERSISTENT_RESERVE_IN:
+-	case PERSISTENT_RESERVE_OUT:
+-	case SERVICE_ACTION_IN_12:
+-	case SERVICE_ACTION_OUT_12:
+-	case SERVICE_ACTION_BIDIRECTIONAL:
+-	case SERVICE_ACTION_IN_16:
+-	case SERVICE_ACTION_OUT_16:
+-	case THIRD_PARTY_COPY_IN:
+-	case THIRD_PARTY_COPY_OUT:
+-		sa = cdbp[1] & 0x1f;
+-		printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-		break;
+-	default:
+-		if (cdb0 < 0xc0)
+-			printk("cdb[0]=0x%x", cdb0);
+-		else
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		break;
+-	}
+-}
+-#endif
+-
+ void __scsi_print_command(unsigned char *cdb)
+ {
+ 	int k, len;
 -- 
 1.8.5.2
 
