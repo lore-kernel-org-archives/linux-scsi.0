@@ -1,126 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/27] scsi: use 'bool' as return value for scsi_normalize_sense()
-Date: Fri, 24 Oct 2014 14:26:52 +0200
-Message-ID: <1414153627-2863-13-git-send-email-hare@suse.de>
+Subject: [PATCH 25/27] scsi: check for correct return code in scsi_eh_abort_cmds()
+Date: Fri, 24 Oct 2014 14:27:05 +0200
+Message-ID: <1414153627-2863-26-git-send-email-hare@suse.de>
 References: <1414153627-2863-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51922 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51989 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756540AbaJXM1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2014 08:27:18 -0400
+	id S1756584AbaJXM1T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:27:19 -0400
 In-Reply-To: <1414153627-2863-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Convert scsi_normalize_sense() and friends to return 'bool'
-instead of an integer.
+scsi_try_to_abort_cmd() might return SUCCESS, FAILED, or
+FAST_IO_FAIL. So just checking for FAILED will treat
+FAST_IO_FAIL as SUCCESS, which is wrong.
 
-Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Yoshihiro Yunomae <yoshihiro.yunomae.ez@hitachi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Robert Elliott <elliott@hp.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_error.c | 16 ++++++++--------
- drivers/scsi/scsi_lib.c   |  2 +-
- include/scsi/scsi_eh.h    | 14 +++++++-------
- 3 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index f1d03c6..de99225 100644
+index fa7b5ec..e94baf1 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -2420,20 +2420,20 @@ EXPORT_SYMBOL(scsi_reset_provider);
-  *	responded to a SCSI command with the CHECK_CONDITION status.
-  *
-  * Return value:
-- *	1 if valid sense data information found, else 0;
-+ *	true if valid sense data information found, else false;
-  */
--int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--                         struct scsi_sense_hdr *sshdr)
-+bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+			  struct scsi_sense_hdr *sshdr)
- {
- 	if (!sense_buffer || !sb_len)
--		return 0;
-+		return false;
- 
- 	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
- 
- 	sshdr->response_code = (sense_buffer[0] & 0x7f);
- 
- 	if (!scsi_sense_valid(sshdr))
--		return 0;
-+		return false;
- 
- 	if (sshdr->response_code >= 0x72) {
- 		/*
-@@ -2463,12 +2463,12 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		}
- 	}
- 
--	return 1;
-+	return true;
- }
- EXPORT_SYMBOL(scsi_normalize_sense);
- 
--int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
--				 struct scsi_sense_hdr *sshdr)
-+bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
-+				  struct scsi_sense_hdr *sshdr)
- {
- 	return scsi_normalize_sense(cmd->sense_buffer,
- 			SCSI_SENSE_BUFFERSIZE, sshdr);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1950ae3..ddfda73 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -831,7 +831,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	struct request *req = cmd->request;
- 	int error = 0;
- 	struct scsi_sense_hdr sshdr;
--	int sense_valid = 0;
-+	bool sense_valid = false;
- 	int sense_deferred = 0;
- 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
- 	      ACTION_DELAYED_RETRY} action;
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 5e598f0..2562481 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -27,10 +27,10 @@ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 additional_length;	/* always 0 for fixed sense format */
- };
- 
--static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
-+static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
- {
- 	if (!sshdr)
--		return 0;
-+		return false;
- 
- 	return (sshdr->response_code & 0x70) == 0x70;
- }
-@@ -42,12 +42,12 @@ extern void scsi_eh_flush_done_q(struct list_head *done_q);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
--extern int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
--		struct scsi_sense_hdr *sshdr);
--extern int scsi_command_normalize_sense(struct scsi_cmnd *cmd,
--		struct scsi_sense_hdr *sshdr);
-+extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
-+				 struct scsi_sense_hdr *sshdr);
-+extern bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
-+					 struct scsi_sense_hdr *sshdr);
- 
--static inline int scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
-+static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
- {
- 	return ((sshdr->response_code >= 0x70) && (sshdr->response_code & 1));
- }
+@@ -1345,7 +1345,7 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
+ 			scmd_printk(KERN_INFO, scmd,
+ 				     "%s: aborting cmd\n", current->comm));
+ 		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
+-		if (rtn == FAILED) {
++		if (rtn != SUCCESS) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					    "%s: aborting cmd failed\n",
 -- 
 1.8.5.2
 
