@@ -1,25 +1,23 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
-Date: Fri, 24 Oct 2014 02:22:51 -0700
-Message-ID: <20141024092251.GA22849@infradead.org>
-References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
- <20141023171536.GB16990@infradead.org>
- <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH] lib/scatterlist: fix memory leak with scsi-mq
+Date: Fri, 24 Oct 2014 02:25:05 -0700
+Message-ID: <20141024092505.GA28925@infradead.org>
+References: <5449529D.5070804@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
+In-Reply-To: <5449529D.5070804@cybernetics.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Oct 24, 2014 at 07:53:23AM -0000, Dolev Raviv wrote:
-> The first patch is Akinobu Mita's patch.
-> You can add my ack on it.
+On Thu, Oct 23, 2014 at 03:10:21PM -0400, Tony Battersby wrote:
+> Fix a memory leak with scsi-mq triggered by commands with large data
+> transfer length.
 
-Given that you passed them on to me you should normally sign off on them
-as well.
+Thanks, this was indeed caused by a last minute change due to someone
+complaining about my earlier version being a little too convoluted.
 
-Btw, MAINTAINERS doesn't mention you for the ufs driver, should it?
+Thanks for tracking this down!
