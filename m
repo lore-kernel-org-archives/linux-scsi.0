@@ -1,23 +1,85 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] lib/scatterlist: fix memory leak with scsi-mq
-Date: Fri, 24 Oct 2014 02:25:05 -0700
-Message-ID: <20141024092505.GA28925@infradead.org>
-References: <5449529D.5070804@cybernetics.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5449529D.5070804@cybernetics.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv8 00/27] scsi logging update (the boring part)
+Date: Fri, 24 Oct 2014 14:26:40 +0200
+Message-ID: <1414153627-2863-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51913 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756240AbaJXM1L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2014 08:27:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Thu, Oct 23, 2014 at 03:10:21PM -0400, Tony Battersby wrote:
-> Fix a memory leak with scsi-mq triggered by commands with large data
-> transfer length.
+here is now the eigth iteration of my scsi logging update.
+With this I've updated the patch to ratelimit I/O error messages
+as suggested by Robert Elliott.
+Additionally I've updated it to core-for-3.19 and included the
+missing hunks for ufs as requested by Christoph Hellwig.
 
-Thanks, this was indeed caused by a last minute change due to someone
-complaining about my earlier version being a little too convoluted.
+Hannes Reinecke (27):
+  Remove scsi_cmd_print_sense_hdr()
+  sd: Remove scsi_print_sense() in sd_done()
+  aha152x: Debug output update and whitespace cleanup
+  scsi: introduce sdev_prefix_printk()
+  scsi: Use sdev as argument for sense code printing
+  acornscsi: use scsi_print_command()
+  fas216: Return DID_ERROR for incomplete data transfer
+  fas216: Update logging messages
+  53c700: remove scsi_print_sense() usage
+  scsi: stop decoding if scsi_normalize_sense() fails
+  scsi: do not decode sense extras
+  scsi: use 'bool' as return value for scsi_normalize_sense()
+  scsi: remove scsi_print_status()
+  Implement scsi_opcode_sa_name
+  scsi: merge print_opcode_name()
+  scsi: consolidate opcode lookup in scsi_opcode_sa_name()
+  scsi: repurpose the last argument from print_opcode_name()
+  scsi: Remove scsi_print_command when calling abort
+  scsi: separate out scsi_(host|driver)byte_string()
+  Remove scsi_show_result()
+  scsi: simplify scsi_log_(send|completion)
+  scsi: fixup logging messages in scsi_error.c
+  scsi: use shost argument in scsi_eh_prt_fail_stats
+  scsi_error: document scsi_try_to_abort_cmd
+  scsi: check for correct return code in scsi_eh_abort_cmds()
+  scsi: correct return values for .eh_abort_handler implementations
+  scsi: ratelimit I/O error messages
 
-Thanks for tracking this down!
+ drivers/scsi/53c700.c             |  13 +-
+ drivers/scsi/NCR5380.c            |   7 +-
+ drivers/scsi/aha152x.c            | 994 +++++++++-----------------------------
+ drivers/scsi/aha1740.c            |   2 +-
+ drivers/scsi/arm/acornscsi.c      |  12 +-
+ drivers/scsi/arm/fas216.c         |  39 +-
+ drivers/scsi/atari_NCR5380.c      |   3 +-
+ drivers/scsi/ch.c                 |  29 +-
+ drivers/scsi/constants.c          | 578 +++++++++-------------
+ drivers/scsi/esas2r/esas2r_main.c |   2 +-
+ drivers/scsi/hosts.c              |   4 +-
+ drivers/scsi/megaraid.c           |   8 +-
+ drivers/scsi/osst.c               |   8 +-
+ drivers/scsi/ps3rom.c             |   4 -
+ drivers/scsi/scsi.c               |  45 +-
+ drivers/scsi/scsi_error.c         | 123 ++---
+ drivers/scsi/scsi_ioctl.c         |   2 +-
+ drivers/scsi/scsi_lib.c           |  29 +-
+ drivers/scsi/sd.c                 |  60 +--
+ drivers/scsi/sd.h                 |   6 +-
+ drivers/scsi/sg.c                 |   6 +-
+ drivers/scsi/sr.h                 |   3 +-
+ drivers/scsi/sr_ioctl.c           |  10 +-
+ drivers/scsi/st.c                 |   9 +-
+ drivers/scsi/stex.c               |   9 +-
+ drivers/scsi/storvsc_drv.c        |   3 +-
+ drivers/scsi/sun3_NCR5380.c       |   3 +-
+ drivers/scsi/ufs/ufshcd.c         |   8 +-
+ include/scsi/scsi_dbg.h           |  28 +-
+ include/scsi/scsi_device.h        |   9 +
+ include/scsi/scsi_eh.h            |  14 +-
+ 31 files changed, 703 insertions(+), 1367 deletions(-)
+
+-- 
+1.8.5.2
+
