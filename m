@@ -1,40 +1,34 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
-Date: Fri, 24 Oct 2014 08:45:05 +0200
-Message-ID: <5449F571.7080308@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E557.3010505@acm.org> <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net> <5448AB4F.40507@acm.org> <54493E5A.7050803@hp.com>
+From: "Dolev Raviv" <draviv@codeaurora.org>
+Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
+Date: Fri, 24 Oct 2014 07:53:23 -0000
+Message-ID: <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
+References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
+    <20141023171536.GB16990@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <54493E5A.7050803-VXdhtT5mjnY@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: webbnh-VXdhtT5mjnY@public.gmane.org, "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Don Brace (PMC)" <Don.Brace-PwyqCcigF0Q@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <20141023171536.GB16990@infradead.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: Dolev Raviv <draviv@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/23/14 19:43, Webb Scales wrote:
-> On 10/23/14 3:16 AM, Bart Van Assche wrote:
->> All my tests with use_blk_mq=n were run with a WARN_ON_ONCE(req->tag <
->> 0) statement present in srp_queuecommand(). I haven't seen any kernel
->> warning being triggered during the tests I ran.
+
+> On Thu, Oct 23, 2014 at 01:25:11PM +0300, Dolev Raviv wrote:
+>> Contains a couple of bug fixes reported by Akinobu Mita, In adition to
+>> "static checker" warnings reported by Dan Carpenter.
 >
-> Bart, what's the data type of "req->tag", here?  (E.g., if it
-> "unsigned", it will never be less than zero, right?)
+> Any reason you didn't add a signoff to the first patch?
 
-Hello Webb,
+The first patch is Akinobu Mita's patch.
+You can add my ack on it.
 
-This is what I found in "struct request" in <linux/blkdev.h>:
+>
+> I'll happily apply these after I get a second review for them,
+> preferably from the ufs community.
+>
 
-struct request {
-	[ ... ]
-	int tag;
-	[ ... ]
-};
 
-Bart.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
