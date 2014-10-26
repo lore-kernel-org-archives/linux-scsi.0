@@ -1,45 +1,30 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Sun, 26 Oct 2014 20:37:05 +1300
-Message-ID: <544CA4A1.6050802@gmail.com>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <5444BAB7.5000908@gmail.com> <alpine.LNX.2.00.1410202217270.18012@nippy.intranet>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [dm-devel] [PATCH 0/18] SCSI XCOPY support for the kernel and
+ device mapper
+Date: Sun, 26 Oct 2014 11:51:55 +0100
+Message-ID: <544CD24B.2020505@acm.org>
+References: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1410202217270.18012@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.02.1410220913280.31351@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Edward Thornber <thornber@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Finn,
-> On Mon, 20 Oct 2014, Michael Schmitz wrote:
+On 10/22/14 15:24, Mikulas Patocka wrote:
+> I uploaded the new version of SCSI/device-mapper XCOPY patches here:
+> http://people.redhat.com/~mpatocka/patches/kernel/xcopy/series.html
 >
->   
->> Hi Finn,
->>
->> not certain it is related to this exact patch - the driver crashes 
->> pretty much on the spot when selecting the first target on the bus.
->>     
->
-> If it isn't that exact patch then it will probably be one of the other 
-> atari_scsi patches. Most of the other relevant stuff was covered by my own 
-> testing.
->
-> Anyway, thanks for testing and for sending the backtrace. I'll figure out 
-> what went wrong and fix it before I send a new patch set.
->
->   
+> I am also sending the patches in the following emails.
 
-Turns out I missed a reject in patch 29 of the series (hunk #4) which 
-caused a local_irq_save(flags) to go AWOL. Both commenting out the 
-resulting lone local_irq_restore(flags), as well as fixing the reject 
-properly makes the driver behave as it should.
+Hello Mikulas,
 
-No locking races, and no more warnings about bytes stuck in the DMA 
-fifo. We might be on to a winner here :-)
+Which is the base commit of this patch series ? Patch 5/18 fails to 
+apply on top of kernel v3.18-rc1 + patches 1..4.
 
-Cheers,
+Thanks,
 
-    Michael
+Bart.
