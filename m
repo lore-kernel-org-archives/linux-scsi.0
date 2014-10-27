@@ -1,351 +1,382 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 08/36] ncr5380: Remove redundant AUTOSENSE macro
-Date: Mon, 27 Oct 2014 16:26:15 +1100
-Message-ID: <20141027052609.075424749@telegraphics.com.au>
+Subject: [PATCH v2 09/36] ncr5380: Remove duplicate comments
+Date: Mon, 27 Oct 2014 16:26:16 +1100
+Message-ID: <20141027052609.315420492@telegraphics.com.au>
 References: <20141027052607.105914311@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48325 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48327 "EHLO
 	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752242AbaJ0Kbv (ORCPT
+	with ESMTP id S1752247AbaJ0Kbv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:31:51 -0400
-Content-Disposition: inline; filename=ncr5380-remove-AUTOSENSE-macro
+Content-Disposition: inline; filename=ncr5380-remove-duplicate-comments
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-Every NCR5380 driver sets AUTOSENSE so it need not be optional (and the
-mid-layer expects it). Remove this redundant macro to improve readability.
+The LIMIT_TRANSFERSIZE, PSEUDO_DMA, PARITY and UNSAFE options are all
+documented in the core drivers where they are used. The same goes for the
+chip databook reference. Remove the duplicate comments.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   14 +-------------
- drivers/scsi/NCR5380.h       |    5 -----
- drivers/scsi/arm/cumana_1.c  |    1 -
- drivers/scsi/arm/oak.c       |    1 -
- drivers/scsi/atari_NCR5380.c |   15 +--------------
- drivers/scsi/atari_scsi.c    |    1 -
- drivers/scsi/dmx3191d.c      |    1 -
- drivers/scsi/dtc.c           |    4 ----
- drivers/scsi/g_NCR5380.c     |    2 --
- drivers/scsi/mac_scsi.c      |    2 --
- drivers/scsi/pas16.c         |    4 ----
- drivers/scsi/sun3_NCR5380.c  |   16 +---------------
- drivers/scsi/sun3_scsi.c     |    2 --
- drivers/scsi/t128.c          |    4 ----
- 14 files changed, 3 insertions(+), 69 deletions(-)
+ drivers/scsi/dtc.c       |   17 +----------------
+ drivers/scsi/dtc.h       |   16 ----------------
+ drivers/scsi/g_NCR5380.c |   16 ----------------
+ drivers/scsi/g_NCR5380.h |   12 ------------
+ drivers/scsi/mac_scsi.c  |   12 ------------
+ drivers/scsi/mac_scsi.h  |   12 ------------
+ drivers/scsi/pas16.c     |   31 -------------------------------
+ drivers/scsi/pas16.h     |   12 ------------
+ drivers/scsi/sun3_scsi.c |   21 ---------------------
+ drivers/scsi/sun3_scsi.h |   12 ------------
+ drivers/scsi/t128.c      |   23 -----------------------
+ drivers/scsi/t128.h      |   12 ------------
+ 12 files changed, 1 insertion(+), 195 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2014-10-27 16:25:17.000000000 +1100
-@@ -627,9 +627,6 @@ NCR5380_print_options(struct Scsi_Host *
- #ifdef AUTOPROBE_IRQ
- 	       " AUTOPROBE_IRQ"
- #endif
--#ifdef AUTOSENSE
--	       " AUTOSENSE"
--#endif
- #ifdef DIFFERENTIAL
- 	       " DIFFERENTIAL"
- #endif
-@@ -857,12 +854,6 @@ static int NCR5380_init(struct Scsi_Host
- 	hostdata->host = instance;
- 	hostdata->time_expires = 0;
- 
--#ifndef AUTOSENSE
--	if ((instance->cmd_per_lun > 1) || instance->can_queue > 1)
--		    printk(KERN_WARNING "scsi%d : WARNING : support for multiple outstanding commands enabled\n" "         without AUTOSENSE option, contingent allegiance conditions may\n"
--		    	   "         be incorrectly cleared.\n", instance->host_no);
--#endif				/* def AUTOSENSE */
--
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
-@@ -2260,7 +2251,6 @@ static void NCR5380_information_transfer
- 					else if (status_byte(cmd->SCp.Status) != GOOD)
- 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
- 
--#ifdef AUTOSENSE
- 					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
- 						hostdata->ses.cmd_len) {
- 						scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-@@ -2277,9 +2267,7 @@ static void NCR5380_information_transfer
- 						    hostdata->issue_queue;
- 						hostdata->issue_queue = (Scsi_Cmnd *) cmd;
- 						dprintk(NDEBUG_QUEUES, "scsi%d : REQUEST SENSE added to head of issue queue\n", instance->host_no);
--					} else
--#endif				/* def AUTOSENSE */
--					{
-+					} else {
- 						collect_stats(hostdata, cmd);
- 						cmd->scsi_done(cmd);
- 					}
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:25:16.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:25:17.000000000 +1100
-@@ -25,10 +25,7 @@
- #define NCR5380_H
- 
- #include <linux/interrupt.h>
--
--#ifdef AUTOSENSE
- #include <scsi/scsi_eh.h>
--#endif
- 
- #define NCR5380_PUBLIC_RELEASE 7
- #define NCR53C400_PUBLIC_RELEASE 2
-@@ -281,9 +278,7 @@ struct NCR5380_hostdata {
- 	unsigned pendingr;
- 	unsigned pendingw;
- #endif
--#ifdef AUTOSENSE
- 	struct scsi_eh_save ses;
--#endif
- };
- 
- #ifdef __KERNEL__
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2014-10-27 16:18:00.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2014-10-27 16:25:17.000000000 +1100
-@@ -18,7 +18,6 @@
- 
- #include <scsi/scsicam.h>
- 
--#define AUTOSENSE
- #define PSEUDO_DMA
- 
- #define CUMANASCSI_PUBLIC_RELEASE 1
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2014-10-27 16:25:09.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2014-10-27 16:25:17.000000000 +1100
-@@ -17,7 +17,6 @@
- #include "../scsi.h"
- #include <scsi/scsi_host.h>
- 
--#define AUTOSENSE
- /*#define PSEUDO_DMA*/
- 
- #define OAKSCSI_PUBLIC_RELEASE 1
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:17.000000000 +1100
-@@ -683,9 +683,6 @@ static inline void NCR5380_all_init(void
- static void __init NCR5380_print_options(struct Scsi_Host *instance)
- {
- 	printk(" generic options"
--#ifdef AUTOSENSE
--	       " AUTOSENSE"
--#endif
- #ifdef REAL_DMA
- 	       " REAL DMA"
- #endif
-@@ -842,13 +839,6 @@ static int __init NCR5380_init(struct Sc
- 		first_instance = instance;
- 	}
- 
--#ifndef AUTOSENSE
--	if ((instance->cmd_per_lun > 1) || (instance->can_queue > 1))
--		printk("scsi%d: WARNING : support for multiple outstanding commands enabled\n"
--		       "        without AUTOSENSE option, contingent allegiance conditions may\n"
--		       "        be incorrectly cleared.\n", HOSTNO);
--#endif /* def AUTOSENSE */
--
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
-@@ -2199,7 +2189,6 @@ static void NCR5380_information_transfer
- 					else if (status_byte(cmd->SCp.Status) != GOOD)
- 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
- 
--#ifdef AUTOSENSE
- 					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
- 						hostdata->ses.cmd_len) {
- 						scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-@@ -2219,9 +2208,7 @@ static void NCR5380_information_transfer
- 						local_irq_restore(flags);
- 						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
- 							  "issue queue\n", H_NO(cmd));
--					} else
--#endif /* def AUTOSENSE */
--					{
-+					} else {
- #ifdef NCR5380_STATS
- 						collect_stats(hostdata, cmd);
- #endif
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:25:17.000000000 +1100
-@@ -67,7 +67,6 @@
- 
- #include <linux/module.h>
- 
--#define AUTOSENSE
- /* For the Atari version, use only polled IO or REAL_DMA */
- #define	REAL_DMA
- /* Support tagged queuing? (on devices that are able to... :-) */
-Index: linux/drivers/scsi/dmx3191d.c
-===================================================================
---- linux.orig/drivers/scsi/dmx3191d.c	2014-10-27 16:25:07.000000000 +1100
-+++ linux/drivers/scsi/dmx3191d.c	2014-10-27 16:25:17.000000000 +1100
-@@ -33,7 +33,6 @@
- /*
-  * Definitions for the generic 5380 driver.
-  */
--#define AUTOSENSE
- 
- #define NCR5380_read(reg)		inb(port + reg)
- #define NCR5380_write(reg, value)	outb(value, port + reg)
 Index: linux/drivers/scsi/dtc.c
 ===================================================================
---- linux.orig/drivers/scsi/dtc.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2014-10-27 16:25:17.000000000 +1100
-@@ -1,5 +1,4 @@
- 
--#define AUTOSENSE
- #define PSEUDO_DMA
- #define DONT_USE_INTR
- #define UNSAFE			/* Leave interrupts enabled during pseudo-dma I/O */
-@@ -30,9 +29,6 @@
+--- linux.orig/drivers/scsi/dtc.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2014-10-27 16:25:20.000000000 +1100
+@@ -19,24 +19,9 @@
+  *      +1 (303) 440-4894
+  *
+  * DISTRIBUTION RELEASE 1.
+- *
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+-*/
++ */
  
  /*
-  * Options : 
-- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
-- *      for commands that return with a CHECK CONDITION status. 
+- * Options : 
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
 - *
-  * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
-  * increase compared to polled I/O.
-  *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers. 
+- *		You probably want this.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - since the board is memory mapped, 
+  *     a BIOS signature is scanned for to locate the registers.
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:12.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:17.000000000 +1100
-@@ -80,8 +80,6 @@
- #define USLEEP_WAITLONG	500
- 
- #define AUTOPROBE_IRQ
--#define AUTOSENSE
--
- 
- #ifdef CONFIG_SCSI_GENERIC_NCR53C400
- #define NCR53C400_PSEUDO_DMA 1
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:12.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:25:17.000000000 +1100
-@@ -48,8 +48,6 @@
- #include <scsi/scsi_host.h>
- #include "mac_scsi.h"
- 
--/* These control the behaviour of the generic 5380 core */
--#define AUTOSENSE
- #define PSEUDO_DMA
- 
- #include "NCR5380.h"
-Index: linux/drivers/scsi/pas16.c
-===================================================================
---- linux.orig/drivers/scsi/pas16.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2014-10-27 16:25:17.000000000 +1100
-@@ -1,4 +1,3 @@
--#define AUTOSENSE
- #define PSEUDO_DMA
- #define UNSAFE  /* Not unsafe for PAS16 -- use it */
- #define PDEBUG 0
-@@ -39,9 +38,6 @@
- 
- /*
-  * Options : 
-- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
-- *      for commands that return with a CHECK CONDITION status. 
+--- linux.orig/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:20.000000000 +1100
+@@ -20,18 +20,6 @@
+  * Thomas Sailer, sailer@ife.ee.ethz.ch
+  *
+  * ALPHA RELEASE 1. 
 - *
-  * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
-  *      bytes at a time.  Since interrupts are disabled by default during
-  *      these transfers, we might need this to give reasonable interrupt
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:17.000000000 +1100
-@@ -629,9 +629,6 @@ static inline void NCR5380_all_init (voi
- static void __init NCR5380_print_options (struct Scsi_Host *instance)
- {
-     printk(" generic options"
--#ifdef AUTOSENSE 
--    " AUTOSENSE"
--#endif
- #ifdef REAL_DMA
-     " REAL DMA"
- #endif
-@@ -788,14 +785,6 @@ static int __init NCR5380_init(struct Sc
- 	first_instance = instance;
-     }
- 	
--
--#ifndef AUTOSENSE
--    if ((instance->cmd_per_lun > 1) || (instance->can_queue > 1))
--	 printk("scsi%d: WARNING : support for multiple outstanding commands enabled\n"
--	        "        without AUTOSENSE option, contingent allegiance conditions may\n"
--	        "        be incorrectly cleared.\n", HOSTNO);
--#endif /* def AUTOSENSE */
--
-     NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-     NCR5380_write(MODE_REG, MR_BASE);
-     NCR5380_write(TARGET_COMMAND_REG, 0);
-@@ -2161,7 +2150,6 @@ static void NCR5380_information_transfer
- 		    else if (status_byte(cmd->SCp.Status) != GOOD)
- 			cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
- 		    
--#ifdef AUTOSENSE
- 		    if ((cmd->cmnd[0] == REQUEST_SENSE) &&
- 			                        hostdata->ses.cmd_len) {
- 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-@@ -2185,9 +2173,7 @@ static void NCR5380_information_transfer
- 		        local_irq_restore(flags);
- 			dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
- 				  "issue queue\n", H_NO(cmd));
--		   } else
--#endif /* def AUTOSENSE */
--		   {
-+		   } else {
- #ifdef NCR5380_STATS
- 		       collect_stats(hostdata, cmd);
- #endif
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:12.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:17.000000000 +1100
-@@ -45,8 +45,6 @@
-  * PARITY - enable parity checking.  Not supported.
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
   */
  
--#define AUTOSENSE
+ /* 
+@@ -40,10 +28,6 @@
+  */
+ 
+ /*
+- * Options :
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  With command line overrides - NCR5380=port,irq may be 
+  *     used on the LILO command line to override the defaults.
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2014-10-27 16:25:20.000000000 +1100
+@@ -22,40 +22,9 @@
+  * Media Vision
+  * (510) 770-8600
+  * (800) 348-7116
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ /*
+- * Options : 
+- * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
+- *      bytes at a time.  Since interrupts are disabled by default during
+- *      these transfers, we might need this to give reasonable interrupt
+- *      service time if the transfer size gets too large.
+- *
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers.  This
+- *	    parameter comes from the NCR5380 code.  It is NOT unsafe with
+- *	    the PAS16 and you should use it.  If you don't you will have
+- *	    a problem with dropped characters during high speed
+- *	    communications during SCSI transfers.  If you really don't
+- *	    want to use UNSAFE you can try defining LIMIT_TRANSFERSIZE or
+- *	    twiddle with the transfer size in the high level code.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - There are many different models of
+  *     the Pro Audio Spectrum/Studio 16, and I only have one of
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:20.000000000 +1100
+@@ -22,27 +22,6 @@
+  * Copyright 1995, Russell King
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+- */
 -
+-
+-/*
+- * This is from mac_scsi.h, but hey, maybe this is useful for Sun3 too! :)
+- *
+- * Options :
+- *
+- * PARITY - enable parity checking.  Not supported.
+  */
+ 
  #include <linux/types.h>
- #include <linux/stddef.h>
- #include <linux/ctype.h>
 Index: linux/drivers/scsi/t128.c
 ===================================================================
---- linux.orig/drivers/scsi/t128.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2014-10-27 16:25:17.000000000 +1100
-@@ -1,4 +1,3 @@
--#define AUTOSENSE
- #define PSEUDO_DMA
- 
- /*
-@@ -40,9 +39,6 @@
- 
- /*
-  * Options : 
-- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
-- *      for commands that return with a CHECK CONDITION status. 
+--- linux.orig/drivers/scsi/t128.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/t128.c	2014-10-27 16:25:20.000000000 +1100
+@@ -23,32 +23,9 @@
+  * 5415 Randall Place
+  * Fremont, CA 94538
+  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- * 
+- * and 
 - *
-  * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
-  * increase compared to polled I/O.
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ /*
+- * Options : 
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers.  You
+- *          only really want to use this if you're having a problem with
+- *          dropped characters during high speed communications, and even
+- *          then, you're going to be better off twiddling with transfersize.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - since the board is memory mapped, 
+  *     a BIOS signature is scanned for to locate the registers.
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2014-10-27 16:25:12.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2014-10-27 16:25:20.000000000 +1100
+@@ -7,22 +7,6 @@
+  *      +1 (303) 440-4894
   *
+  * DISTRIBUTION RELEASE 2. 
+- *
+- * For more information, please consult 
+- *
+- * 
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef DTC3280_H
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:12.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:20.000000000 +1100
+@@ -11,18 +11,6 @@
+  *    K.Lentin@cs.monash.edu.au
+  *
+  * ALPHA RELEASE 1. 
+- *
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef GENERIC_NCR5380_H
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:17.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:25:20.000000000 +1100
+@@ -11,18 +11,6 @@
+  * Copyright 1995, Russell King
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #include <linux/types.h>
+Index: linux/drivers/scsi/mac_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.h	2014-10-27 16:25:07.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.h	2014-10-27 16:25:20.000000000 +1100
+@@ -8,18 +8,6 @@
+  *      +1 (303) 440-4894
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef MAC_NCR5380_H
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2014-10-27 16:25:12.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2014-10-27 16:25:20.000000000 +1100
+@@ -18,18 +18,6 @@
+  * Media Vision
+  * (510) 770-8600
+  * (800) 348-7116
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ 
+Index: linux/drivers/scsi/sun3_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:12.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:20.000000000 +1100
+@@ -15,18 +15,6 @@
+  *      +1 (303) 440-4894
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef SUN3_SCSI_H
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2014-10-27 16:25:12.000000000 +1100
++++ linux/drivers/scsi/t128.h	2014-10-27 16:25:20.000000000 +1100
+@@ -20,18 +20,6 @@
+  * 5415 Randall Place
+  * Fremont, CA 94538
+  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- *
+- * and
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef T128_H
 
 
