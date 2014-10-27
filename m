@@ -1,233 +1,261 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 33/36] atari_NCR5380: Introduce FLAG_TAGGED_QUEUING
-Date: Mon, 27 Oct 2014 16:26:40 +1100
-Message-ID: <20141027052615.105777702@telegraphics.com.au>
+Subject: [PATCH v2 35/36] atari_NCR5380: Move static co-routine variables to host data
+Date: Mon, 27 Oct 2014 16:26:42 +1100
+Message-ID: <20141027052615.575437286@telegraphics.com.au>
 References: <20141027052607.105914311@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48351 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48361 "EHLO
 	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbaJ0KcI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:32:08 -0400
-Content-Disposition: inline; filename=atari_NCR5380-introduce-FLAG_TAGGED_QUEUING
+	with ESMTP id S1752474AbaJ0KcX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:32:23 -0400
+Content-Disposition: inline; filename=atari_NCR5380-move-coroutine-variables
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-The static variable setup_use_tagged_queuing is declared in mac_scsi.c,
-sun3_scsi.c and atari_scsi.c and doesn't belong in the core driver.
-None of the other NCR5380 drivers suffer from this layering issue which
-makes merging the core drivers more difficult and will likely hinder plans
-for future use of platform data to configure the driver.
+Unlike NCR5380.c, the atari_NCR5380.c core driver is limited to a single
+instance because co-routine state is stored globally.
 
-Replace the static variable with a host flag. This way it can be reported
-along with the other flags.
+Fix this by removing the static scsi host pointer. For the co-routine,
+obtain this pointer from the work_struct pointer instead. For the interrupt
+handler, obtain it from the dev_id argument.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.h       |    1 +
- drivers/scsi/atari_NCR5380.c |   22 +++++++++++++---------
- drivers/scsi/atari_scsi.c    |    8 ++++----
- drivers/scsi/mac_scsi.c      |    8 ++++----
- drivers/scsi/sun3_scsi.c     |   12 ++++++------
- 5 files changed, 28 insertions(+), 23 deletions(-)
+ drivers/scsi/NCR5380.h       |    2 +
+ drivers/scsi/atari_NCR5380.c |   61 +++++++++++++++----------------------------
+ drivers/scsi/atari_scsi.c    |    8 ++---
+ 3 files changed, 28 insertions(+), 43 deletions(-)
 
 Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:25:54.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:26:00.000000000 +1100
-@@ -242,6 +242,7 @@
- #define FLAG_NO_PSEUDO_DMA		8	/* Inhibit DMA */
- #define FLAG_DTC3181E			16	/* DTC3181E */
- #define FLAG_LATE_DMA_SETUP		32	/* Setup NCR before DMA H/W */
-+#define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
- 
- #ifndef ASM
- struct NCR5380_hostdata {
+--- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:26:02.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:26:03.000000000 +1100
+@@ -283,6 +283,8 @@ struct NCR5380_hostdata {
+ 	int read_overruns;                /* number of bytes to cut from a
+ 	                                   * transfer to handle chip overruns */
+ 	int retain_dma_intr;
++	struct work_struct main_task;
++	volatile int main_running;
+ #ifdef SUPPORT_TAGS
+ 	struct tag_alloc TagAlloc[8][8];	/* 8 targets and 8 LUNs */
+ #endif
 Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:59.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:26:00.000000000 +1100
-@@ -283,12 +283,12 @@ typedef struct {
- static TAG_ALLOC TagAlloc[8][8];	/* 8 targets and 8 LUNs */
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:26:02.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:26:03.000000000 +1100
+@@ -221,9 +221,6 @@
+  * possible) function may be used.
+  */
  
+-static struct Scsi_Host *first_instance = NULL;
+-static struct scsi_host_template *the_template = NULL;
+-
+ /* Macros ease life... :-) */
+ #define	SETUP_HOSTDATA(in)				\
+     struct NCR5380_hostdata *hostdata =			\
+@@ -595,32 +592,19 @@ static void NCR5380_print_phase(struct S
+ #include <linux/workqueue.h>
+ #include <linux/interrupt.h>
  
--static void __init init_tags(void)
-+static void __init init_tags(struct NCR5380_hostdata *hostdata)
+-static volatile int main_running;
+-static DECLARE_WORK(NCR5380_tqueue, NCR5380_main);
+-
+-static inline void queue_main(void)
++static inline void queue_main(struct NCR5380_hostdata *hostdata)
  {
- 	int target, lun;
- 	TAG_ALLOC *ta;
- 
--	if (!setup_use_tagged_queuing)
-+	if (!(hostdata->flags & FLAG_TAGGED_QUEUING))
- 		return;
- 
- 	for (target = 0; target < 8; ++target) {
-@@ -321,7 +321,8 @@ static int is_lun_busy(struct scsi_cmnd
- 	if (hostdata->busy[cmd->device->id] & (1 << lun))
- 		return 1;
- 	if (!should_be_tagged ||
--	    !setup_use_tagged_queuing || !cmd->device->tagged_supported)
-+	    !(hostdata->flags & FLAG_TAGGED_QUEUING) ||
-+	    !cmd->device->tagged_supported)
- 		return 0;
- 	if (TagAlloc[cmd->device->id][lun].nr_allocated >=
- 	    TagAlloc[cmd->device->id][lun].queue_size) {
-@@ -347,7 +348,8 @@ static void cmd_get_tag(struct scsi_cmnd
- 	 * an untagged command.
- 	 */
- 	if (!should_be_tagged ||
--	    !setup_use_tagged_queuing || !cmd->device->tagged_supported) {
-+	    !(hostdata->flags & FLAG_TAGGED_QUEUING) ||
-+	    !cmd->device->tagged_supported) {
- 		cmd->tag = TAG_NONE;
- 		hostdata->busy[cmd->device->id] |= (1 << lun);
- 		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d now allocated by untagged "
-@@ -392,12 +394,12 @@ static void cmd_free_tag(struct scsi_cmn
+-	if (!main_running) {
++	if (!hostdata->main_running) {
+ 		/* If in interrupt and NCR5380_main() not already running,
+ 		   queue it on the 'immediate' task queue, to be processed
+ 		   immediately after the current interrupt processing has
+ 		   finished. */
+-		schedule_work(&NCR5380_tqueue);
++		schedule_work(&hostdata->main_task);
+ 	}
+ 	/* else: nothing to do: the running NCR5380_main() will pick up
+ 	   any newly queued command. */
  }
  
+-
+-static inline void NCR5380_all_init(void)
+-{
+-	static int done = 0;
+-	if (!done) {
+-		dprintk(NDEBUG_INIT, "scsi : NCR5380_all_init()\n");
+-		done = 1;
+-	}
+-}
+-
+ /**
+  * NCR58380_info - report driver and host information
+  * @instance: relevant scsi host instance
+@@ -703,7 +687,7 @@ static void NCR5380_print_status(struct
  
--static void free_all_tags(void)
-+static void free_all_tags(struct NCR5380_hostdata *hostdata)
- {
- 	int target, lun;
- 	TAG_ALLOC *ta;
+ 	local_irq_save(flags);
+ 	printk("NCR5380: coroutine is%s running.\n",
+-		main_running ? "" : "n't");
++		hostdata->main_running ? "" : "n't");
+ 	if (!hostdata->connected)
+ 		printk("scsi%d: no currently connected command\n", HOSTNO);
+ 	else
+@@ -746,7 +730,7 @@ static int __maybe_unused NCR5380_show_i
  
--	if (!setup_use_tagged_queuing)
-+	if (!(hostdata->flags & FLAG_TAGGED_QUEUING))
- 		return;
+ 	local_irq_save(flags);
+ 	seq_printf(m, "NCR5380: coroutine is%s running.\n",
+-		main_running ? "" : "n't");
++		hostdata->main_running ? "" : "n't");
+ 	if (!hostdata->connected)
+ 		seq_printf(m, "scsi%d: no currently connected command\n", HOSTNO);
+ 	else
+@@ -783,8 +767,7 @@ static int __init NCR5380_init(struct Sc
+ 	int i;
+ 	SETUP_HOSTDATA(instance);
  
- 	for (target = 0; target < 8; ++target) {
-@@ -653,11 +655,13 @@ static void prepare_info(struct Scsi_Hos
- 	         "base 0x%lx, irq %d, "
- 	         "can_queue %d, cmd_per_lun %d, "
- 	         "sg_tablesize %d, this_id %d, "
-+	         "flags { %s}, "
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
- 	         instance->base, instance->irq,
- 	         instance->can_queue, instance->cmd_per_lun,
- 	         instance->sg_tablesize, instance->this_id,
-+	         hostdata->flags & FLAG_TAGGED_QUEUING ? "TAGGED_QUEUING " : "",
- #ifdef DIFFERENTIAL
- 	         "DIFFERENTIAL "
- #endif
-@@ -799,7 +803,7 @@ static int __init NCR5380_init(struct Sc
- 	for (i = 0; i < 8; ++i)
- 		hostdata->busy[i] = 0;
- #ifdef SUPPORT_TAGS
--	init_tags();
-+	init_tags(hostdata);
- #endif
- #if defined (REAL_DMA)
- 	hostdata->dma_len = 0;
-@@ -2569,7 +2573,7 @@ static void NCR5380_reselect(struct Scsi
- 	 * SIMPLE_QUEUE_TAG for the I_T_L_Q nexus.
- 	 */
- 	tag = TAG_NONE;
--	if (phase == PHASE_MSGIN && setup_use_tagged_queuing) {
-+	if (phase == PHASE_MSGIN && (hostdata->flags & FLAG_TAGGED_QUEUING)) {
- 		/* Accept previous IDENTIFY message by clearing ACK */
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		len = 2;
-@@ -3025,7 +3029,7 @@ static int NCR5380_bus_reset(struct scsi
- 	hostdata->connected = NULL;
+-	NCR5380_all_init();
+-
++	hostdata->host = instance;
+ 	hostdata->aborted = 0;
+ 	hostdata->id_mask = 1 << instance->this_id;
+ 	hostdata->id_higher_mask = 0;
+@@ -805,10 +788,7 @@ static int __init NCR5380_init(struct Sc
  	hostdata->disconnected_queue = NULL;
- #ifdef SUPPORT_TAGS
--	free_all_tags();
-+	free_all_tags(hostdata);
- #endif
- 	for (i = 0; i < 8; ++i)
- 		hostdata->busy[i] = 0;
+ 	hostdata->flags = flags;
+ 
+-	if (!the_template) {
+-		the_template = instance->hostt;
+-		first_instance = instance;
+-	}
++	INIT_WORK(&hostdata->main_task, NCR5380_main);
+ 
+ 	prepare_info(instance);
+ 
+@@ -829,7 +809,9 @@ static int __init NCR5380_init(struct Sc
+ 
+ static void NCR5380_exit(struct Scsi_Host *instance)
+ {
+-	cancel_work_sync(&NCR5380_tqueue);
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	cancel_work_sync(&hostdata->main_task);
+ }
+ 
+ /**
+@@ -926,9 +908,9 @@ static int NCR5380_queue_command(struct
+ 	 * unconditionally, because it cannot be already running.
+ 	 */
+ 	if (in_interrupt() || irqs_disabled())
+-		queue_main();
++		queue_main(hostdata);
+ 	else
+-		NCR5380_main(NULL);
++		NCR5380_main(&hostdata->main_task);
+ 	return 0;
+ }
+ 
+@@ -957,9 +939,10 @@ static inline void maybe_release_dma_irq
+ 
+ static void NCR5380_main(struct work_struct *work)
+ {
++	struct NCR5380_hostdata *hostdata =
++		container_of(work, struct NCR5380_hostdata, main_task);
++	struct Scsi_Host *instance = hostdata->host;
+ 	struct scsi_cmnd *tmp, *prev;
+-	struct Scsi_Host *instance = first_instance;
+-	struct NCR5380_hostdata *hostdata = HOSTDATA(instance);
+ 	int done;
+ 	unsigned long flags;
+ 
+@@ -984,9 +967,9 @@ static void NCR5380_main(struct work_str
+ 	   'main_running' is set here, and queues/executes main via the
+ 	   task queue, it doesn't do any harm, just this instance of main
+ 	   won't find any work left to do. */
+-	if (main_running)
++	if (hostdata->main_running)
+ 		return;
+-	main_running = 1;
++	hostdata->main_running = 1;
+ 
+ 	local_save_flags(flags);
+ 	do {
+@@ -1105,7 +1088,7 @@ static void NCR5380_main(struct work_str
+ 	/* Better allow ints _after_ 'main_running' has been cleared, else
+ 	   an interrupt could believe we'll pick up the work it left for
+ 	   us, but we won't see it anymore here... */
+-	main_running = 0;
++	hostdata->main_running = 0;
+ 	local_irq_restore(flags);
+ }
+ 
+@@ -1219,7 +1202,7 @@ static void NCR5380_dma_complete(struct
+ 
+ static irqreturn_t NCR5380_intr(int irq, void *dev_id)
+ {
+-	struct Scsi_Host *instance = first_instance;
++	struct Scsi_Host *instance = dev_id;
+ 	int done = 1, handled = 0;
+ 	unsigned char basr;
+ 
+@@ -1291,7 +1274,7 @@ static irqreturn_t NCR5380_intr(int irq,
+ 	if (!done) {
+ 		dprintk(NDEBUG_INTR, "scsi%d: in int routine, calling main\n", HOSTNO);
+ 		/* Put a call to NCR5380_main() on the queue... */
+-		queue_main();
++		queue_main(shost_priv(instance));
+ 	}
+ 	return IRQ_RETVAL(handled);
+ }
+@@ -1771,7 +1754,7 @@ static int NCR5380_transfer_pio(struct S
+  * Returns : 0 on success, -1 on failure.
+  */
+ 
+-static int do_abort(struct Scsi_Host *host)
++static int do_abort(struct Scsi_Host *instance)
+ {
+ 	unsigned char tmp, *msgptr, phase;
+ 	int len;
+@@ -1806,7 +1789,7 @@ static int do_abort(struct Scsi_Host *ho
+ 	msgptr = &tmp;
+ 	len = 1;
+ 	phase = PHASE_MSGOUT;
+-	NCR5380_transfer_pio(host, &phase, &len, &msgptr);
++	NCR5380_transfer_pio(instance, &phase, &len, &msgptr);
+ 
+ 	/*
+ 	 * If we got here, and the command completed successfully,
 Index: linux/drivers/scsi/atari_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:25:56.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:26:00.000000000 +1100
-@@ -891,10 +891,6 @@ static int __init atari_scsi_probe(struc
- 		}
+--- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:26:00.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:26:03.000000000 +1100
+@@ -110,7 +110,7 @@
+ #define NCR5380_dma_xfer_len(instance, cmd, phase) \
+         atari_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
+ 
+-#define NCR5380_acquire_dma_irq(instance)      falcon_get_lock()
++#define NCR5380_acquire_dma_irq(instance)      falcon_get_lock(instance)
+ #define NCR5380_release_dma_irq(instance)      falcon_release_lock()
+ 
+ #include "NCR5380.h"
+@@ -468,15 +468,15 @@ static void falcon_release_lock(void)
+  * command immediately but tell the SCSI mid-layer to defer.
+  */
+ 
+-static int falcon_get_lock(void)
++static int falcon_get_lock(struct Scsi_Host *instance)
+ {
+ 	if (IS_A_TT())
+ 		return 1;
+ 
+ 	if (in_interrupt()) {
+-		return stdma_try_lock(scsi_falcon_intr, NULL);
++		return stdma_try_lock(scsi_falcon_intr, instance);
+ 	} else {
+-		stdma_lock(scsi_falcon_intr, NULL);
++		stdma_lock(scsi_falcon_intr, instance);
+ 		return 1;
  	}
- 
--#ifdef SUPPORT_TAGS
--	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = 0;
--#endif
- 
- #ifdef REAL_DMA
- 	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
-@@ -930,6 +926,10 @@ static int __init atari_scsi_probe(struc
- 
- 	host_flags |= IS_A_TT() ? 0 : FLAG_LATE_DMA_SETUP;
- 
-+#ifdef SUPPORT_TAGS
-+	host_flags |= setup_use_tagged_queuing > 0 ? FLAG_TAGGED_QUEUING : 0;
-+#endif
-+
- 	NCR5380_init(instance, host_flags);
- 
- 	if (IS_A_TT()) {
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:58.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:26:00.000000000 +1100
-@@ -522,6 +522,7 @@ static int __init sun3_scsi_probe(struct
- 	int error;
- 	struct resource *irq, *mem;
- 	unsigned char *ioaddr;
-+	int host_flags = 0;
- #ifdef SUN3_SCSI_VME
- 	int i;
- #endif
-@@ -535,11 +536,6 @@ static int __init sun3_scsi_probe(struct
- 	if (setup_hostid >= 0)
- 		sun3_scsi_template.this_id = setup_hostid & 7;
- 
--#ifdef SUPPORT_TAGS
--	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = 1;
--#endif
--
- #ifdef SUN3_SCSI_VME
- 	ioaddr = NULL;
- 	for (i = 0; i < 2; i++) {
-@@ -601,7 +597,11 @@ static int __init sun3_scsi_probe(struct
- 	instance->io_port = (unsigned long)ioaddr;
- 	instance->irq = irq->start;
- 
--	NCR5380_init(instance, 0);
-+#ifdef SUPPORT_TAGS
-+	host_flags |= setup_use_tagged_queuing > 0 ? FLAG_TAGGED_QUEUING : 0;
-+#endif
-+
-+	NCR5380_init(instance, host_flags);
- 
- 	error = request_irq(instance->irq, scsi_sun3_intr, 0,
- 	                    "NCR5380", instance);
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:44.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:26:00.000000000 +1100
-@@ -411,10 +411,6 @@ static int __init mac_scsi_probe(struct
- 		mac_scsi_template.sg_tablesize = setup_sg_tablesize;
- 	if (setup_hostid >= 0)
- 		mac_scsi_template.this_id = setup_hostid & 7;
--#ifdef SUPPORT_TAGS
--	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = 0;
--#endif
- 	if (setup_use_pdma < 0)
- 		setup_use_pdma = 0;
- 
-@@ -440,6 +436,10 @@ static int __init mac_scsi_probe(struct
- 	mac_scsi_reset_boot(instance);
- #endif
- 
-+#ifdef SUPPORT_TAGS
-+	host_flags |= setup_use_tagged_queuing > 0 ? FLAG_TAGGED_QUEUING : 0;
-+#endif
-+
- 	NCR5380_init(instance, host_flags);
- 
- 	if (instance->irq != NO_IRQ) {
+ }
 
 
