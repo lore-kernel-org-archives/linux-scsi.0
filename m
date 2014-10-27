@@ -1,31 +1,26 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
-Date: Mon, 27 Oct 2014 02:50:54 -0700
-Message-ID: <20141027095054.GC31604@infradead.org>
-References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
- <20141023171536.GB16990@infradead.org>
- <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
- <20141024092251.GA22849@infradead.org>
- <e3ee043b87cc2e043cf23f52ca4772f1.squirrel@www.codeaurora.org>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH scsi] libcxgbi : support ipv6 address host_param
+Date: Mon, 27 Oct 2014 02:56:21 -0700
+Message-ID: <20141027095621.GA23416@infradead.org>
+References: <1413500359-27521-1-git-send-email-anish@chelsio.com>
+ <5446AF5D.8010307@cs.wisc.edu>
+ <525DB349B3FB5444AE057A887CB2A8D8928974@nice.asicdesigners.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:39595 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785AbaJ0J41 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 05:56:27 -0400
 Content-Disposition: inline
-In-Reply-To: <e3ee043b87cc2e043cf23f52ca4772f1.squirrel@www.codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Dolev Raviv <draviv@codeaurora.org>
-Cc: Christoph Hellwig <hch@infradead.org>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Vinayak Holikatti <vinholikatti@gmail.com>
+In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D8928974@nice.asicdesigners.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, Karen Xie <kxie@chelsio.com>, Manoj Malviya <manojmalviya@chelsio.com>
 
-On Sun, Oct 26, 2014 at 11:04:06AM -0000, Dolev Raviv wrote:
-> > Btw, MAINTAINERS doesn't mention you for the ufs driver, should it?
-> 
-> No it shouldn't.
+On Sat, Oct 25, 2014 at 12:06:32AM +0000, Anish Bhatt wrote:
+> Pinging for visibility.
 
-It seems like I'm getting a lot of the series from you and your signoff,
-why shouldn't you be listed in MAINTAINERS?  From the list activity it
-seems like you and Sujit are the defator maintainers.
-
-Santosh just send a patch to remove himself, and I only see very little
-activity from Vinayak, with his last ACK in early July and a few
-more earlier in the year.
+I've queued this up for 3.18, but I'm still waiting for review on
+the other patches I'd like to throw into that tree.
