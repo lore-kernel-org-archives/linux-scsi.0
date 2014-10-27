@@ -1,268 +1,224 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 07/36] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
-Date: Mon, 27 Oct 2014 16:26:14 +1100
-Message-ID: <20141027052608.825920884@telegraphics.com.au>
+Subject: [PATCH v2 13/36] ncr5380: Move static PDMA spin counters to host data
+Date: Mon, 27 Oct 2014 16:26:20 +1100
+Message-ID: <20141027052610.275439151@telegraphics.com.au>
 References: <20141027052607.105914311@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48326 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48331 "EHLO
 	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbaJ0Kbv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:31:51 -0400
-Content-Disposition: inline; filename=ncr5380-cleanup-TAG_NONE-and-TAG_NEXT
+	with ESMTP id S1752256AbaJ0Kbw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:31:52 -0400
+Content-Disposition: inline; filename=ncr5380-move-pdma-spin-counters
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 
-Both atari_NCR5380.c and sun3_NCR5380.c core drivers #undef TAG_NONE and
-then redefine it. But the original definition is unused because NCR5380.c
-lacks support for tagged queueing. So just define it once.
+Static variables from dtc.c and pas16.c should not appear in the core
+NCR5380.c driver. Aside from being a layering issue this worsens the
+divergence between the three core driver variants (atari_NCR5380.c and
+sun3_NCR5380.c don't support PSEUDO_DMA) and it can mean multiple hosts
+share the same counters.
 
-The TAG_NEXT macro only appears in the arguments to NCR5380_select() calls.
-But that routine doesn't use its tag argument as the tag was already
-assigned in NCR5380_main(). So remove the unused argument and the macro.
+Fix this by making the pseudo DMA spin counters in the core more generic.
+This also avoids the abuse of the {DTC,PAS16}_PUBLIC_RELEASE macros, so
+they can be removed.
+
+oak.c doesn't use PDMA and hence it doesn't use the counters and hence it
+needs no write_info() method. Remove it.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   29 +++++++++++++----------------
- drivers/scsi/NCR5380.h       |   11 ++++-------
- drivers/scsi/atari_NCR5380.c |   19 +++++--------------
- drivers/scsi/sun3_NCR5380.c  |   19 +++++--------------
- 4 files changed, 27 insertions(+), 51 deletions(-)
+ drivers/scsi/NCR5380.c |   22 ++++++++++------------
+ drivers/scsi/NCR5380.h |    4 ++++
+ drivers/scsi/arm/oak.c |    2 --
+ drivers/scsi/dtc.c     |   13 ++++++-------
+ drivers/scsi/pas16.c   |   12 ++++++------
+ 5 files changed, 26 insertions(+), 27 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-@@ -316,10 +316,6 @@ static struct scsi_host_template *the_te
-  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
-  */
- 
--/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
--#undef TAG_NONE
--#define TAG_NONE 0xff
--
- typedef struct {
- 	DECLARE_BITMAP(allocated, MAX_TAGS);
- 	int nr_allocated;
-@@ -1118,9 +1114,7 @@ static void NCR5380_main(struct work_str
- #ifdef SUPPORT_TAGS
- 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
- #endif
--					if (!NCR5380_select(instance, tmp,
--					    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE :
--					    TAG_NEXT)) {
-+					if (!NCR5380_select(instance, tmp)) {
- 						falcon_dont_release--;
- 						/* release if target did not response! */
- 						falcon_release_lock_if_possible(hostdata);
-@@ -1351,17 +1345,14 @@ static void collect_stats(struct NCR5380
- #endif
- 
- /*
-- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd,
-- *	int tag);
-+ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *	including ARBITRATION, SELECTION, and initial message out for
-  *	IDENTIFY and queue messages.
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this
-- *	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for
-- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for
-- *	the command that is presently connected.
-+ *	target lives, cmd - SCSI command to execute.
-  *
-  * Returns : -1 if selection could not execute for some reason,
-  *	0 if selection succeeded or failed because the target
-@@ -1381,7 +1372,7 @@ static void collect_stats(struct NCR5380
-  *		cmd->result host byte set to DID_BAD_TARGET.
-  */
- 
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd, int tag)
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
- {
- 	SETUP_HOSTDATA(instance);
- 	unsigned char tmp[3], phase;
-@@ -2758,7 +2749,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
- 			local_irq_restore(flags);
- 			dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
- 
--			if (NCR5380_select(instance, cmd, (int)cmd->tag))
-+			if (NCR5380_select(instance, cmd))
- 				return FAILED;
- 
- 			dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-@@ -305,10 +305,6 @@ static struct scsi_host_template *the_te
-  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
-  */
- 
--/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
--#undef TAG_NONE
--#define TAG_NONE 0xff
--
- /* For the m68k, the number of bits in 'allocated' must be a multiple of 32! */
- #if (MAX_TAGS % 32) != 0
- #error "MAX_TAGS must be a multiple of 32!"
-@@ -1057,9 +1053,7 @@ static void NCR5380_main (struct work_st
- #ifdef SUPPORT_TAGS
- 		    cmd_get_tag( tmp, tmp->cmnd[0] != REQUEST_SENSE );
- #endif
--		    if (!NCR5380_select(instance, tmp, 
--			    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : 
--			    TAG_NEXT)) {
-+		    if (!NCR5380_select(instance, tmp)) {
- 			break;
- 		    } else {
- 			local_irq_disable();
-@@ -1292,16 +1286,14 @@ static void collect_stats(struct NCR5380
- 
- /* 
-  * Function : int NCR5380_select(struct Scsi_Host *instance,
-- * 				 struct scsi_cmnd *cmd,	int tag);
-+ *				 struct scsi_cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *	including ARBITRATION, SELECTION, and initial message out for 
-  *	IDENTIFY and queue messages. 
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this 
-- * 	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
-- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
-- *	the command that is presently connected.
-+ *	target lives, cmd - SCSI command to execute.
-  * 
-  * Returns : -1 if selection could not execute for some reason,
-  *	0 if selection succeeded or failed because the target 
-@@ -1321,8 +1313,7 @@ static void collect_stats(struct NCR5380
-  *		cmd->result host byte set to DID_BAD_TARGET.
-  */
- 
--static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd,
--			  int tag)
-+static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- {
-     SETUP_HOSTDATA(instance);
-     unsigned char tmp[3], phase;
-@@ -2736,7 +2727,7 @@ static int NCR5380_abort(struct scsi_cmn
-             local_irq_restore(flags);
- 	    dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
-   
--            if (NCR5380_select (instance, cmd, (int) cmd->tag)) 
-+	    if (NCR5380_select(instance, cmd))
- 		return FAILED;
- 
- 	    dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2014-10-27 16:25:09.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2014-10-27 16:25:16.000000000 +1100
-@@ -1073,14 +1073,14 @@ static void NCR5380_main(struct work_str
- 					hostdata->selecting = NULL;
- 					/* RvC: have to preset this to indicate a new command is being performed */
+--- linux.orig/drivers/scsi/NCR5380.c	2014-10-27 16:25:26.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2014-10-27 16:25:30.000000000 +1100
+@@ -692,6 +692,7 @@ static void NCR5380_print_status(struct
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+ }
  
--					if (!NCR5380_select(instance, tmp,
--							    /* 
--							     * REQUEST SENSE commands are issued without tagged
--							     * queueing, even on SCSI-II devices because the 
--							     * contingent allegiance condition exists for the 
--							     * entire unit.
--							     */
--							    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
-+					/*
-+					 * REQUEST SENSE commands are issued without tagged
-+					 * queueing, even on SCSI-II devices because the
-+					 * contingent allegiance condition exists for the
-+					 * entire unit.
-+					 */
-+
-+					if (!NCR5380_select(instance, tmp)) {
- 						break;
- 					} else {
- 						LIST(tmp, hostdata->issue_queue);
-@@ -1097,7 +1097,7 @@ static void NCR5380_main(struct work_str
- 		if (hostdata->selecting) {
- 			tmp = (Scsi_Cmnd *) hostdata->selecting;
- 			/* Selection will drop and retake the lock */
--			if (!NCR5380_select(instance, tmp, (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
-+			if (!NCR5380_select(instance, tmp)) {
- 				/* Ok ?? */
- 			} else {
- 				/* RvC: device failed, so we wait a long time
-@@ -1246,17 +1246,14 @@ static void collect_stats(struct NCR5380
- 
- 
- /* 
-- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd, 
-- *      int tag);
-+ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *      including ARBITRATION, SELECTION, and initial message out for 
-  *      IDENTIFY and queue messages. 
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this 
-- *      target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
-- *      new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
-- *      the command that is presently connected.
-+ *      target lives, cmd - SCSI command to execute.
-  * 
-  * Returns : -1 if selection could not execute for some reason,
-  *      0 if selection succeeded or failed because the target 
-@@ -1278,7 +1275,7 @@ static void collect_stats(struct NCR5380
-  *	Locks: caller holds hostdata lock in IRQ mode
-  */
-  
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag) 
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
++#ifdef PSEUDO_DMA
+ /******************************************/
+ /*
+  * /proc/scsi/[dtc pas16 t128 generic]/[0-ASC_NUM_BOARD_SUPPORTED]
+@@ -709,14 +710,13 @@ static void NCR5380_print_status(struct
+ static int __maybe_unused NCR5380_write_info(struct Scsi_Host *instance,
+ 	char *buffer, int length)
  {
- 	NCR5380_local_declare();
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-@@ -2774,7 +2771,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd
- 		if (cmd == tmp) {
- 			dprintk(NDEBUG_ABORT, "scsi%d : aborting disconnected command.\n", instance->host_no);
+-#ifdef DTC_PUBLIC_RELEASE
+-	dtc_wmaxi = dtc_maxi = 0;
+-#endif
+-#ifdef PAS16_PUBLIC_RELEASE
+-	pas_wmaxi = pas_maxi = 0;
+-#endif
+-	return (-ENOSYS);	/* Currently this is a no-op */
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	hostdata->spin_max_r = 0;
++	hostdata->spin_max_w = 0;
++	return 0;
+ }
++#endif
  
--			if (NCR5380_select(instance, cmd, (int) cmd->tag))
-+			if (NCR5380_select(instance, cmd))
- 				return FAILED;
- 			dprintk(NDEBUG_ABORT, "scsi%d : nexus reestablished.\n", instance->host_no);
+ #undef SPRINTF
+ #define SPRINTF(args...) seq_printf(m, ## args)
+@@ -751,11 +751,9 @@ static int __maybe_unused NCR5380_show_i
+ 	SPRINTF("PAS16 release=%d", PAS16_PUBLIC_RELEASE);
+ #endif
  
+-#ifdef DTC_PUBLIC_RELEASE
+-	SPRINTF("Highwater I/O busy_spin_counts -- write: %d  read: %d\n", dtc_wmaxi, dtc_maxi);
+-#endif
+-#ifdef PAS16_PUBLIC_RELEASE
+-	SPRINTF("Highwater I/O busy_spin_counts -- write: %d  read: %d\n", pas_wmaxi, pas_maxi);
++#ifdef PSEUDO_DMA
++	SPRINTF("Highwater I/O busy spin counts: write %d, read %d\n",
++	        hostdata->spin_max_w, hostdata->spin_max_r);
+ #endif
+ 	spin_lock_irq(instance->host_lock);
+ 	if (!hostdata->connected)
 Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:25:14.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:25:16.000000000 +1100
-@@ -224,14 +224,11 @@
- #define DISCONNECT_LONG		2
+--- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:25:26.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:25:30.000000000 +1100
+@@ -274,6 +274,10 @@ struct NCR5380_hostdata {
+ 	struct delayed_work coroutine;		/* our co-routine */
+ 	struct scsi_eh_save ses;
+ 	char info[256];
++#ifdef PSEUDO_DMA
++	unsigned spin_max_r;
++	unsigned spin_max_w;
++#endif
+ };
  
- /* 
-- * These are "special" values for the tag parameter passed to NCR5380_select.
-+ * "Special" value for the (unsigned char) command tag, to indicate
-+ * I_T_L nexus instead of I_T_L_Q.
-  */
+ #ifdef __KERNEL__
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2014-10-27 16:25:26.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2014-10-27 16:25:30.000000000 +1100
+@@ -332,13 +332,11 @@ static int dtc_biosparam(struct scsi_dev
+  * 	timeout.
+ */
  
--#define TAG_NEXT	-1	/* Use next free tag */
--#define TAG_NONE	-2	/* 
--				 * Establish I_T_L nexus instead of I_T_L_Q
--				 * even on SCSI-II devices.
--				 */
-+#define TAG_NONE	0xff
+-static int dtc_maxi = 0;
+-static int dtc_wmaxi = 0;
+-
+ static inline int NCR5380_pread(struct Scsi_Host *instance, unsigned char *dst, int len)
+ {
+ 	unsigned char *d = dst;
+ 	int i;			/* For counting time spent in the poll-loop */
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(instance);
  
- /*
-  * These are "special" values for the irq and dma_channel fields of the 
-@@ -323,7 +320,7 @@ static irqreturn_t NCR5380_intr(int irq,
- static void NCR5380_main(struct work_struct *work);
- static void __maybe_unused NCR5380_print_options(struct Scsi_Host *instance);
- static void NCR5380_reselect(struct Scsi_Host *instance);
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag);
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd);
- #if defined(PSEUDO_DMA) || defined(REAL_DMA) || defined(REAL_DMA_POLL)
- static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
- #endif
+@@ -369,8 +367,8 @@ static inline int NCR5380_pread(struct S
+ 	NCR5380_write(MODE_REG, 0);	/* Clear the operating mode */
+ 	rtrc(0);
+ 	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+-	if (i > dtc_maxi)
+-		dtc_maxi = i;
++	if (i > hostdata->spin_max_r)
++		hostdata->spin_max_r = i;
+ 	return (0);
+ }
+ 
+@@ -390,6 +388,7 @@ static inline int NCR5380_pread(struct S
+ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src, int len)
+ {
+ 	int i;
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(instance);
+ 
+@@ -422,8 +421,8 @@ static inline int NCR5380_pwrite(struct
+ 	/* Check for parity error here. fixme. */
+ 	NCR5380_write(MODE_REG, 0);	/* Clear the operating mode */
+ 	rtrc(0);
+-	if (i > dtc_wmaxi)
+-		dtc_wmaxi = i;
++	if (i > hostdata->spin_max_w)
++		hostdata->spin_max_w = i;
+ 	return (0);
+ }
+ 
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2014-10-27 16:25:26.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2014-10-27 16:25:30.000000000 +1100
+@@ -88,8 +88,6 @@
+ #include "NCR5380.h"
+ 
+ 
+-static int pas_maxi = 0;
+-static int pas_wmaxi = 0;
+ static unsigned short pas16_addr = 0;
+ static int pas16_irq = 0;
+  
+@@ -502,6 +500,7 @@ static inline int NCR5380_pread (struct
+ 	P_DATA_REG_OFFSET);
+     register int i = len;
+     int ii = 0;
++    struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+     while ( !(inb(instance->io_port + P_STATUS_REG_OFFSET) & P_ST_RDY) )
+ 	 ++ii;
+@@ -514,8 +513,8 @@ static inline int NCR5380_pread (struct
+ 	    instance->host_no);
+ 	return -1;
+     }
+-   if (ii > pas_maxi)
+-      pas_maxi = ii;
++    if (ii > hostdata->spin_max_r)
++        hostdata->spin_max_r = ii;
+     return 0;
+ }
+ 
+@@ -538,6 +537,7 @@ static inline int NCR5380_pwrite (struct
+     register unsigned short reg = (instance->io_port + P_DATA_REG_OFFSET);
+     register int i = len;
+     int ii = 0;
++    struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 
+     while ( !((inb(instance->io_port + P_STATUS_REG_OFFSET)) & P_ST_RDY) )
+ 	 ++ii;
+@@ -550,8 +550,8 @@ static inline int NCR5380_pwrite (struct
+ 	    instance->host_no);
+ 	return -1;
+     }
+-    if (ii > pas_maxi)
+-	 pas_wmaxi = ii;
++    if (ii > hostdata->spin_max_w)
++        hostdata->spin_max_w = ii;
+     return 0;
+ }
+ 
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2014-10-27 16:25:26.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2014-10-27 16:25:30.000000000 +1100
+@@ -31,7 +31,6 @@
+ #define NCR5380_queue_command		oakscsi_queue_command
+ #define NCR5380_info			oakscsi_info
+ #define NCR5380_show_info		oakscsi_show_info
+-#define NCR5380_write_info		oakscsi_write_info
+ 
+ #define NCR5380_implementation_fields	\
+ 	void __iomem *base
+@@ -108,7 +107,6 @@ printk("reading %p len %d\n", addr, len)
+ static struct scsi_host_template oakscsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.show_info		= oakscsi_show_info,
+-	.write_info		= oakscsi_write_info,
+ 	.name			= "Oak 16-bit SCSI",
+ 	.info			= oakscsi_info,
+ 	.queuecommand		= oakscsi_queue_command,
 
 
