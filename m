@@ -1,58 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] ipr: Disable async aborts
-Date: Mon, 27 Oct 2014 07:50:03 -0700
-Message-ID: <1414421403.6401.5.camel@jarvis.lan>
-References: <201410271439.s9REdl9U017474@d01av02.pok.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6/6] scsi: return EAGAIN when resetting a device under EH
+Date: Mon, 27 Oct 2014 18:59:06 +0100
+Message-ID: <1414432746-12888-7-git-send-email-hch@lst.de>
+References: <1414432746-12888-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37677 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751191AbaJ0OuF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2014 10:50:05 -0400
-In-Reply-To: <201410271439.s9REdl9U017474@d01av02.pok.ibm.com>
+Received: from casper.infradead.org ([85.118.1.10]:48713 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbaJ0QxK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 12:53:10 -0400
+In-Reply-To: <1414432746-12888-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
-On Mon, 2014-10-27 at 09:37 -0500, Brian King wrote:
-> The ipr driver does not yet support async aborts, so disable this
-> for now.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-By "does not yet support" do you mean doesn't work with or merely not
-tested with but seems to work OK?  if the former, then surely this
-should be a fixes patch with a cc to stable for all the kernels async
-abort is in (which is 3.14)
-
-James
-
-> ---
-> 
->  drivers/scsi/ipr.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff -puN drivers/scsi/ipr.c~ipr_no_async_eh drivers/scsi/ipr.c
-> --- linux/drivers/scsi/ipr.c~ipr_no_async_eh	2014-10-24 08:57:53.169169509 -0500
-> +++ linux-bjking1/drivers/scsi/ipr.c	2014-10-24 08:57:53.175169579 -0500
-> @@ -6357,6 +6357,7 @@ static struct scsi_host_template driver_
->  	.sdev_attrs = ipr_dev_attrs,
->  	.proc_name = IPR_NAME,
->  	.no_write_same = 1,
-> +	.no_async_abort = 1,
->  };
->  
->  /**
-> _
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index d0cb33d..53e8fea 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -278,7 +278,7 @@ int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int cmd,
+ {
+ 	if (cmd == SG_SCSI_RESET && ndelay) {
+ 		if (scsi_host_in_recovery(sdev->host))
+-			return -ENODEV;
++			return -EAGAIN;
+ 	} else {
+ 		if (!scsi_block_when_processing_errors(sdev))
+ 			return -ENODEV;
+-- 
+1.9.1
 
