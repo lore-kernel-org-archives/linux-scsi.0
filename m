@@ -1,365 +1,606 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 29/36] atari_NCR5380: Refactor Falcon locking
-Date: Mon, 27 Oct 2014 16:26:36 +1100
-Message-ID: <20141027052614.115438637@telegraphics.com.au>
+Subject: [PATCH v2 25/36] sun3_scsi: Convert to platform device
+Date: Mon, 27 Oct 2014 16:26:32 +1100
+Message-ID: <20141027052613.155430175@telegraphics.com.au>
 References: <20141027052607.105914311@telegraphics.com.au>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=atari_NCR5380-refactor-falcon-locking
+Content-Disposition: inline; filename=sun3_scsi-convert-to-platform-device
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Simplify falcon_release_lock_if_possible() by making callers responsible for
-disabling local IRQ's, which they must do anyway to correctly synchronize
-the ST DMA "lock" with core driver data structures. Move this
-synchronization logic to the core driver with which it is tightly coupled.
-
-Other LLD's like sun3_scsi and mac_scsi that can make use of this core
-driver can just stub out the NCR5380_acquire_dma_irq() and
-NCR5380_release_dma_irq() calls so the compiler will eliminate the
-ST DMA code.
-
-Remove a redundant local_irq_save/restore pair (irq's are disabled for
-interrupt handlers these days). Revise the locking for
-atari_scsi_bus_reset(): use local_irq_save/restore() instead of
-atari_turnoff/turnon_irq(). There is no guarantee that atari_scsi still
-holds the ST DMA lock during EH, so atari_turnoff/turnon_irq() could
-end up dropping an IDE or floppy interrupt.
+Convert sun3_scsi to platform device and eliminate scsi_register().
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/atari_NCR5380.c |   72 ++++++++++++++++++++++++++-----------------
- drivers/scsi/atari_scsi.c    |   47 ++++++++++------------------
- 2 files changed, 62 insertions(+), 57 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
+Changes since v1:
+- Use NO_IRQ instead of IRQ_NONE.
+- Move device IRQ and address constants to platform resources.
+- Test idprom->id_machtype before registering platform device instead of
+  during platform driver probe.
+- Omit pointless instance->n_io_port assignment.
+
+---
+ arch/m68k/sun3/config.c  |   60 +++++++
+ drivers/scsi/sun3_scsi.c |  390 ++++++++++++++++++++++-------------------------
+ drivers/scsi/sun3_scsi.h |   17 --
+ 3 files changed, 245 insertions(+), 222 deletions(-)
+
+Index: linux/arch/m68k/sun3/config.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:54.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:55.000000000 +1100
-@@ -926,7 +926,7 @@ static int NCR5380_queue_command(struct
- 	 * alter queues and touch the lock.
- 	 */
- 	/* perhaps stop command timer here */
--	if (!falcon_get_lock())
-+	if (!NCR5380_acquire_dma_irq(instance))
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	/* perhaps restart command timer here */
+--- linux.orig/arch/m68k/sun3/config.c	2014-10-27 16:17:59.000000000 +1100
++++ linux/arch/m68k/sun3/config.c	2014-10-27 16:25:50.000000000 +1100
+@@ -16,6 +16,7 @@
+ #include <linux/console.h>
+ #include <linux/init.h>
+ #include <linux/bootmem.h>
++#include <linux/platform_device.h>
  
-@@ -962,6 +962,18 @@ static int NCR5380_queue_command(struct
- 	return 0;
+ #include <asm/oplib.h>
+ #include <asm/setup.h>
+@@ -27,6 +28,7 @@
+ #include <asm/sun3mmu.h>
+ #include <asm/rtc.h>
+ #include <asm/machdep.h>
++#include <asm/machines.h>
+ #include <asm/idprom.h>
+ #include <asm/intersil.h>
+ #include <asm/irq.h>
+@@ -169,3 +171,61 @@ static void __init sun3_sched_init(irq_h
+         intersil_clear();
  }
  
-+static inline void maybe_release_dma_irq(struct Scsi_Host *instance)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++#ifdef CONFIG_SUN3_SCSI
 +
-+	/* Caller does the locking needed to set & test these data atomically */
-+	if (!hostdata->disconnected_queue &&
-+	    !hostdata->issue_queue &&
-+	    !hostdata->connected &&
-+	    !hostdata->retain_dma_intr)
-+		NCR5380_release_dma_irq(instance);
++static const struct resource sun3_scsi_vme_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = SUN3_VEC_VMESCSI0,
++		.end   = SUN3_VEC_VMESCSI0,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0xff200000,
++		.end   = 0xff200000 + PAGE_SIZE - 1,
++	}, {
++		.flags = IORESOURCE_IRQ,
++		.start = SUN3_VEC_VMESCSI1,
++		.end   = SUN3_VEC_VMESCSI1,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0xff204000,
++		.end   = 0xff204000 + PAGE_SIZE - 1,
++	},
++};
++
++/*
++ * Int: level 2 autovector
++ * IO: type 1, base 0x00140000, 5 bits phys space: A<4..0>
++ */
++static const struct resource sun3_scsi_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = 2,
++		.end   = 2,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x00140000,
++		.end   = 0x00140000 + PAGE_SIZE - 1,
++	},
++};
++
++int __init sun3_platform_init(void)
++{
++	switch (idprom->id_machtype) {
++	case SM_SUN3 | SM_3_160:
++	case SM_SUN3 | SM_3_260:
++		platform_device_register_simple("sun3_scsi_vme", -1,
++			sun3_scsi_vme_rsrc, ARRAY_SIZE(sun3_scsi_vme_rsrc));
++		break;
++	case SM_SUN3 | SM_3_50:
++	case SM_SUN3 | SM_3_60:
++		platform_device_register_simple("sun3_scsi", -1,
++			sun3_scsi_rsrc, ARRAY_SIZE(sun3_scsi_rsrc));
++		break;
++	}
++	return 0;
 +}
 +
- /*
-  * Function : NCR5380_main (void)
-  *
-@@ -1084,9 +1096,11 @@ static void NCR5380_main(struct work_str
- 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
- #endif
- 					if (!NCR5380_select(instance, tmp)) {
-+						local_irq_disable();
- 						hostdata->retain_dma_intr--;
- 						/* release if target did not response! */
--						falcon_release_lock_if_possible(hostdata);
-+						maybe_release_dma_irq(instance);
-+						local_irq_restore(flags);
- 						break;
- 					} else {
- 						local_irq_disable();
-@@ -2085,11 +2099,12 @@ static void NCR5380_information_transfer
- 				case COMMAND_COMPLETE:
- 					/* Accept message by clearing ACK */
- 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--					/* ++guenther: possible race with Falcon locking */
--					hostdata->retain_dma_intr++;
--					hostdata->connected = NULL;
- 					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d, lun %llu "
- 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
++arch_initcall(sun3_platform_init);
 +
-+					local_irq_save(flags);
-+					hostdata->retain_dma_intr++;
-+					hostdata->connected = NULL;
- #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
- 					if (status_byte(cmd->SCp.Status) == QUEUE_FULL) {
-@@ -2148,17 +2163,17 @@ static void NCR5380_information_transfer
- 
- 						dprintk(NDEBUG_AUTOSENSE, "scsi%d: performing request sense\n", HOSTNO);
- 
--						local_irq_save(flags);
- 						LIST(cmd,hostdata->issue_queue);
- 						SET_NEXT(cmd, hostdata->issue_queue);
- 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
--						local_irq_restore(flags);
- 						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
- 							  "issue queue\n", H_NO(cmd));
- 					} else {
- 						cmd->scsi_done(cmd);
- 					}
- 
-+					local_irq_restore(flags);
-+
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					/*
- 					 * Restore phase bits to 0 so an interrupted selection,
-@@ -2169,12 +2184,14 @@ static void NCR5380_information_transfer
- 					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
- 						barrier();
- 
-+					local_irq_save(flags);
- 					hostdata->retain_dma_intr--;
- 					/* ++roman: For Falcon SCSI, release the lock on the
- 					 * ST-DMA here if no other commands are waiting on the
- 					 * disconnected queue.
- 					 */
--					falcon_release_lock_if_possible(hostdata);
-+					maybe_release_dma_irq(instance);
-+					local_irq_restore(flags);
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -2333,6 +2350,7 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
-+					local_irq_save(flags);
- #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
- #else
-@@ -2340,9 +2358,10 @@ static void NCR5380_information_transfer
- #endif
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
--					cmd->scsi_done(cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--					falcon_release_lock_if_possible(hostdata);
-+					maybe_release_dma_irq(instance);
-+					local_irq_restore(flags);
-+					cmd->scsi_done(cmd);
- 					return;
- 				}
- 				msgout = NOP;
-@@ -2395,7 +2414,6 @@ static void NCR5380_reselect(struct Scsi
- 	unsigned char msg[3];
- 	unsigned char *data;
- 	struct scsi_cmnd *tmp = NULL, *prev;
--/*	unsigned long flags; */
- 
- 	/*
- 	 * Disable arbitration, etc. since the host adapter obviously
-@@ -2475,8 +2493,6 @@ static void NCR5380_reselect(struct Scsi
- 		    && (tag == tmp->tag)
- #endif
- 		    ) {
--			/* ++guenther: prevent race with falcon_release_lock */
--			hostdata->retain_dma_intr++;
- 			if (prev) {
- 				REMOVE(prev, NEXT(prev), tmp, NEXT(tmp));
- 				SET_NEXT(prev, NEXT(tmp));
-@@ -2514,7 +2530,6 @@ static void NCR5380_reselect(struct Scsi
- 	hostdata->connected = tmp;
- 	dprintk(NDEBUG_RESELECTION, "scsi%d: nexus established, target = %d, lun = %llu, tag = %d\n",
- 		   HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
--	hostdata->retain_dma_intr--;
- }
- 
- 
-@@ -2590,12 +2605,12 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- #else
- 			hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
- #endif
-+			maybe_release_dma_irq(instance);
- 			local_irq_restore(flags);
- 			cmd->scsi_done(cmd);
--			falcon_release_lock_if_possible(hostdata);
- 			return SUCCESS;
- 		} else {
--/*			local_irq_restore(flags); */
-+			local_irq_restore(flags);
- 			printk("scsi%d: abort of connected command failed!\n", HOSTNO);
- 			return FAILED;
- 		}
-@@ -2614,13 +2629,13 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 			(*prev) = NEXT(tmp);
- 			SET_NEXT(tmp, NULL);
- 			tmp->result = DID_ABORT << 16;
-+			maybe_release_dma_irq(instance);
- 			local_irq_restore(flags);
- 			dprintk(NDEBUG_ABORT, "scsi%d: abort removed command from issue queue.\n",
- 				    HOSTNO);
- 			/* Tagged queuing note: no tag to free here, hasn't been assigned
- 			 * yet... */
- 			tmp->scsi_done(tmp);
--			falcon_release_lock_if_possible(hostdata);
- 			return SUCCESS;
- 		}
- 	}
-@@ -2698,15 +2713,22 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- #else
- 					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
- #endif
-+					maybe_release_dma_irq(instance);
- 					local_irq_restore(flags);
- 					tmp->scsi_done(tmp);
--					falcon_release_lock_if_possible(hostdata);
- 					return SUCCESS;
- 				}
- 			}
- 		}
- 	}
- 
-+	/* Maybe it is sufficient just to release the ST-DMA lock... (if
-+	 * possible at all) At least, we should check if the lock could be
-+	 * released after the abort, in case it is kept due to some bug.
-+	 */
-+	maybe_release_dma_irq(instance);
-+	local_irq_restore(flags);
-+
- 	/*
- 	 * Case 5 : If we reached this point, the command was not found in any of
- 	 *	    the queues.
-@@ -2717,15 +2739,8 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 	 * broke.
- 	 */
- 
--	local_irq_restore(flags);
- 	printk(KERN_INFO "scsi%d: warning : SCSI command probably completed successfully before abortion\n", HOSTNO);
- 
--	/* Maybe it is sufficient just to release the ST-DMA lock... (if
--	 * possible at all) At least, we should check if the lock could be
--	 * released after the abort, in case it is kept due to some bug.
--	 */
--	falcon_release_lock_if_possible(hostdata);
--
- 	return FAILED;
- }
- 
-@@ -2741,14 +2756,15 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 
- static int NCR5380_bus_reset(struct scsi_cmnd *cmd)
- {
--	SETUP_HOSTDATA(cmd->device->host);
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
- 	unsigned long flags;
- #if defined(RESET_RUN_DONE)
- 	struct scsi_cmnd *connected, *disconnected_queue;
- #endif
- 
--	NCR5380_print_status(cmd->device->host);
-+	NCR5380_print_status(instance);
- 
- 	/* get in phase */
- 	NCR5380_write(TARGET_COMMAND_REG,
-@@ -2873,6 +2889,8 @@ static int NCR5380_bus_reset(struct scsi
- #ifdef REAL_DMA
- 	hostdata->dma_len = 0;
- #endif
-+
-+	maybe_release_dma_irq(instance);
- 	local_irq_restore(flags);
- 
- 	/* we did no complete reset of all commands, so a wakeup is required */
-Index: linux/drivers/scsi/atari_scsi.c
++#endif
+Index: linux/drivers/scsi/sun3_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:25:54.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:25:55.000000000 +1100
-@@ -109,6 +109,9 @@
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
-         atari_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
- 
-+#define NCR5380_acquire_dma_irq(instance)      falcon_get_lock()
-+#define NCR5380_release_dma_irq(instance)      falcon_release_lock()
-+
- #include "NCR5380.h"
- 
- 
-@@ -448,23 +451,13 @@ static void atari_scsi_fetch_restbytes(v
-  * connected command and the disconnected queue is empty.
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:36.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:50.000000000 +1100
+@@ -23,22 +23,15 @@
   */
  
--static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata)
-+static void falcon_release_lock(void)
- {
--	unsigned long flags;
+ #include <linux/types.h>
+-#include <linux/stddef.h>
+-#include <linux/ctype.h>
+ #include <linux/delay.h>
 -
- 	if (IS_A_TT())
- 		return;
+ #include <linux/module.h>
+-#include <linux/signal.h>
+ #include <linux/ioport.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
++#include <linux/platform_device.h>
  
--	local_irq_save(flags);
+ #include <asm/io.h>
 -
--	if (!hostdata->disconnected_queue &&
--	    !hostdata->issue_queue &&
--	    !hostdata->connected &&
--	    !hostdata->retain_dma_intr &&
--	    stdma_is_locked_by(scsi_falcon_intr))
-+	if (stdma_is_locked_by(scsi_falcon_intr))
- 		stdma_release();
+-#include <asm/sun3ints.h>
+ #include <asm/dvma.h>
+-#include <asm/idprom.h>
+-#include <asm/machines.h>
+ 
+ /* dma on! */
+ #define REAL_DMA
+@@ -59,8 +52,6 @@ extern int sun3_map_test(unsigned long,
+ #endif
+ 
+ 
+-static irqreturn_t scsi_sun3_intr(int irq, void *dummy);
 -
--	local_irq_restore(flags);
+ static int setup_can_queue = -1;
+ module_param(setup_can_queue, int, 0);
+ static int setup_cmd_per_lun = -1;
+@@ -89,15 +80,14 @@ static struct scsi_cmnd *sun3_dma_setup_
+ /* minimum number of bytes to do dma on */
+ #define SUN3_DMA_MINSIZE 128
+ 
+-static volatile unsigned char *sun3_scsi_regp;
++static unsigned char *sun3_scsi_regp;
+ static volatile struct sun3_dma_regs *dregs;
+-#ifndef SUN3_SCSI_VME
+-static struct sun3_udc_regs *udc_regs = NULL;
+-#endif
++static struct sun3_udc_regs *udc_regs;
+ static unsigned char *sun3_dma_orig_addr = NULL;
+ static unsigned long sun3_dma_orig_count = 0;
+ static int sun3_dma_active = 0;
+ static unsigned long last_residual = 0;
++static struct Scsi_Host *default_instance;
+ 
+ /*
+  * NCR 5380 register access functions
+@@ -105,12 +95,12 @@ static unsigned long last_residual = 0;
+ 
+ static inline unsigned char sun3scsi_read(int reg)
+ {
+-	return( sun3_scsi_regp[reg] );
++	return in_8(sun3_scsi_regp + reg);
  }
  
- /* This function manages the locking of the ST-DMA.
-@@ -788,36 +781,30 @@ static void atari_scsi_falcon_reg_write(
- static int atari_scsi_bus_reset(struct scsi_cmnd *cmd)
+ static inline void sun3scsi_write(int reg, int value)
  {
- 	int rv;
--	struct NCR5380_hostdata *hostdata = shost_priv(cmd->device->host);
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
+-	sun3_scsi_regp[reg] = value;
++	out_8(sun3_scsi_regp + reg, value);
+ }
  
--	/* For doing the reset, SCSI interrupts must be disabled first,
--	 * since the 5380 raises its IRQ line while _RST is active and we
--	 * can't disable interrupts completely, since we need the timer.
--	 */
--	/* And abort a maybe active DMA transfer */
--	if (IS_A_TT()) {
--		atari_turnoff_irq(IRQ_TT_MFP_SCSI);
- #ifdef REAL_DMA
-+	/* Abort a maybe active DMA transfer */
-+	if (IS_A_TT()) {
- 		tt_scsi_dma.dma_ctrl = 0;
+ #ifndef SUN3_SCSI_VME
+@@ -137,192 +127,7 @@ static inline void sun3_udc_write(unsign
+ }
+ #endif
+ 
+-/*
+- * XXX: status debug
+- */
+-static struct Scsi_Host *default_instance;
+-
+-/*
+- * Function : int sun3scsi_detect(struct scsi_host_template * tpnt)
+- *
+- * Purpose : initializes mac NCR5380 driver based on the
+- *	command line / compile time port and irq definitions.
+- *
+- * Inputs : tpnt - template for this SCSI adapter.
+- *
+- * Returns : 1 if a host adapter was found, 0 if not.
+- *
+- */
+- 
+-static int __init sun3scsi_detect(struct scsi_host_template *tpnt)
+-{
+-	unsigned long ioaddr, irq;
+-	static int called = 0;
+-	struct Scsi_Host *instance;
+-#ifdef SUN3_SCSI_VME
+-	int i;
+-	unsigned long addrs[3] = { IOBASE_SUN3_VMESCSI,
+-				   IOBASE_SUN3_VMESCSI + 0x4000,
+-				   0 };
+-	unsigned long vecs[3] = { SUN3_VEC_VMESCSI0,
+-				  SUN3_VEC_VMESCSI1,
+-				  0 };
 -#endif
- 	} else {
--		atari_turnoff_irq(IRQ_MFP_FSCSI);
--#ifdef REAL_DMA
- 		st_dma.dma_mode_status = 0x90;
- 		atari_dma_active = 0;
- 		atari_dma_orig_addr = NULL;
+-
+-	/* check that this machine has an onboard 5380 */
+-	switch(idprom->id_machtype) {
+-#ifdef SUN3_SCSI_VME
+-	case SM_SUN3|SM_3_160:
+-	case SM_SUN3|SM_3_260:
+-		break;
+-#else
+-	case SM_SUN3|SM_3_50:
+-	case SM_SUN3|SM_3_60:
+-		break;
 -#endif
- 	}
+-
+-	default:
+-		return 0;
+-	}
+-
+-	if(called)
+-		return 0;
+-
+-#ifdef SUN3_SCSI_VME
+-	tpnt->proc_name = "Sun3 5380 VME SCSI";
+-#else
+-	tpnt->proc_name = "Sun3 5380 SCSI";
+-#endif
+-
+-	/* setup variables */
+-	if (setup_can_queue > 0)
+-		tpnt->can_queue = setup_can_queue;
+-	if (setup_cmd_per_lun > 0)
+-		tpnt->cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
+-		tpnt->sg_tablesize = setup_sg_tablesize;
+-
+-	if (setup_hostid >= 0)
+-		tpnt->this_id = setup_hostid;
+-	else {
+-		/* use 7 as default */
+-		tpnt->this_id = 7;
+-	}
+-
+-#ifdef SUN3_SCSI_VME
+-	ioaddr = 0;
+-	for (i = 0; addrs[i] != 0; i++) {
+-		unsigned char x;
+-
+-		ioaddr = (unsigned long)sun3_ioremap(addrs[i], PAGE_SIZE,
+-						     SUN3_PAGE_TYPE_VME16);
+-		irq = vecs[i];
+-		sun3_scsi_regp = (unsigned char *)ioaddr;
+-
+-		dregs = (struct sun3_dma_regs *)(((unsigned char *)ioaddr) + 8);
+-
+-		if (sun3_map_test((unsigned long)dregs, &x)) {
+-			unsigned short oldcsr;
+-
+-			oldcsr = dregs->csr;
+-			dregs->csr = 0;
+-			udelay(SUN3_DMA_DELAY);
+-			if (dregs->csr == 0x1400)
+-				break;
+-
+-			dregs->csr = oldcsr;
+-		}
+-
+-		iounmap((void *)ioaddr);
+-		ioaddr = 0;
+-	}
+-
+-	if (!ioaddr)
+-		return 0;
+-#else
+-	irq = IRQ_SUN3_SCSI;
+-	ioaddr = (unsigned long)ioremap(IOBASE_SUN3_SCSI, PAGE_SIZE);
+-	sun3_scsi_regp = (unsigned char *)ioaddr;
+-
+-	dregs = (struct sun3_dma_regs *)(((unsigned char *)ioaddr) + 8);
+-
+-	if((udc_regs = dvma_malloc(sizeof(struct sun3_udc_regs)))
+-	   == NULL) {
+-	     printk("SUN3 Scsi couldn't allocate DVMA memory!\n");
+-	     return 0;
+-	}
+-#endif
+-#ifdef SUPPORT_TAGS
+-	if (setup_use_tagged_queuing < 0)
+-		setup_use_tagged_queuing = 1;
+-#endif
+-
+-	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
+-	if(instance == NULL)
+-		return 0;
+-		
+-	default_instance = instance;
+-
+-        instance->io_port = (unsigned long) ioaddr;
+-	instance->irq = irq;
+-
+-	NCR5380_init(instance, 0);
+-
+-	instance->n_io_port = 32;
+-
+-	if (request_irq(instance->irq, scsi_sun3_intr,
+-			     0, "Sun3SCSI-5380", instance)) {
+-#ifndef REAL_DMA
+-		printk("scsi%d: IRQ%d not free, interrupts disabled\n",
+-		       instance->host_no, instance->irq);
+-		instance->irq = NO_IRQ;
+-#else
+-		printk("scsi%d: IRQ%d not free, bailing out\n",
+-		       instance->host_no, instance->irq);
+-		return 0;
+-#endif
+-	}
+-	
+-	dregs->csr = 0;
+-	udelay(SUN3_DMA_DELAY);
+-	dregs->csr = CSR_SCSI | CSR_FIFO | CSR_INTR;
+-	udelay(SUN3_DMA_DELAY);
+-	dregs->fifo_count = 0;
+-#ifdef SUN3_SCSI_VME
+-	dregs->fifo_count_hi = 0;
+-	dregs->dma_addr_hi = 0;
+-	dregs->dma_addr_lo = 0;
+-	dregs->dma_count_hi = 0;
+-	dregs->dma_count_lo = 0;
+-
+-	dregs->ivect = VME_DATA24 | (instance->irq & 0xff);
+-#endif
+-
+-	called = 1;
+-
+-#ifdef RESET_BOOT
+-	sun3_scsi_reset_boot(instance);
+-#endif
+-
+-	return 1;
+-}
+-
+-static int sun3scsi_release(struct Scsi_Host *shpnt)
+-{
+-	if (shpnt->irq != NO_IRQ)
+-		free_irq(shpnt->irq, shpnt);
+-
+-	iounmap((void *)sun3_scsi_regp);
+-
+-	NCR5380_exit(shpnt);
+-	return 0;
+-}
+-
+ #ifdef RESET_BOOT
+-/*
+- * Our 'bus reset on boot' function
+- */
+-
+ static void sun3_scsi_reset_boot(struct Scsi_Host *instance)
+ {
+ 	unsigned long end;
+@@ -671,11 +476,21 @@ static int sun3scsi_dma_finish(int write
+ 	
+ #include "sun3_NCR5380.c"
+ 
+-static struct scsi_host_template driver_template = {
++#ifdef SUN3_SCSI_VME
++#define SUN3_SCSI_NAME          "Sun3 NCR5380 VME SCSI"
++#define DRV_MODULE_NAME         "sun3_scsi_vme"
++#else
++#define SUN3_SCSI_NAME          "Sun3 NCR5380 SCSI"
++#define DRV_MODULE_NAME         "sun3_scsi"
 +#endif
++
++#define PFX                     DRV_MODULE_NAME ": "
++
++static struct scsi_host_template sun3_scsi_template = {
++	.module			= THIS_MODULE,
++	.proc_name		= DRV_MODULE_NAME,
+ 	.show_info		= sun3scsi_show_info,
+ 	.name			= SUN3_SCSI_NAME,
+-	.detect			= sun3scsi_detect,
+-	.release		= sun3scsi_release,
+ 	.info			= sun3scsi_info,
+ 	.queuecommand		= sun3scsi_queue_command,
+ 	.eh_abort_handler      	= sun3scsi_abort,
+@@ -687,7 +502,172 @@ static struct scsi_host_template driver_
+ 	.use_clustering		= DISABLE_CLUSTERING
+ };
  
- 	rv = NCR5380_bus_reset(cmd);
++static int __init sun3_scsi_probe(struct platform_device *pdev)
++{
++	struct Scsi_Host *instance;
++	int error;
++	struct resource *irq, *mem;
++	unsigned char *ioaddr;
++#ifdef SUN3_SCSI_VME
++	int i;
++#endif
++
++	if (setup_can_queue > 0)
++		sun3_scsi_template.can_queue = setup_can_queue;
++	if (setup_cmd_per_lun > 0)
++		sun3_scsi_template.cmd_per_lun = setup_cmd_per_lun;
++	if (setup_sg_tablesize >= 0)
++		sun3_scsi_template.sg_tablesize = setup_sg_tablesize;
++	if (setup_hostid >= 0)
++		sun3_scsi_template.this_id = setup_hostid & 7;
++
++#ifdef SUPPORT_TAGS
++	if (setup_use_tagged_queuing < 0)
++		setup_use_tagged_queuing = 1;
++#endif
++
++#ifdef SUN3_SCSI_VME
++	ioaddr = NULL;
++	for (i = 0; i < 2; i++) {
++		unsigned char x;
++
++		irq = platform_get_resource(pdev, IORESOURCE_IRQ, i);
++		mem = platform_get_resource(pdev, IORESOURCE_MEM, i);
++		if (!irq || !mem)
++			break;
++
++		ioaddr = sun3_ioremap(mem->start, mem->end - mem->start + 1,
++		                      SUN3_PAGE_TYPE_VME16);
++		dregs = (struct sun3_dma_regs *)(ioaddr + 8);
++
++		if (sun3_map_test((unsigned long)dregs, &x)) {
++			unsigned short oldcsr;
++
++			oldcsr = dregs->csr;
++			dregs->csr = 0;
++			udelay(SUN3_DMA_DELAY);
++			if (dregs->csr == 0x1400)
++				break;
++
++			dregs->csr = oldcsr;
++		}
++
++		iounmap(ioaddr);
++		ioaddr = NULL;
++	}
++	if (!ioaddr)
++		return -ENODEV;
++#else
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!irq || !mem)
++		return -ENODEV;
++
++	ioaddr = ioremap(mem->start, mem->end - mem->start + 1);
++	dregs = (struct sun3_dma_regs *)(ioaddr + 8);
++
++	udc_regs = dvma_malloc(sizeof(struct sun3_udc_regs));
++	if (!udc_regs) {
++		pr_err(PFX "couldn't allocate DVMA memory!\n");
++		iounmap(ioaddr);
++		return -ENOMEM;
++	}
++#endif
++
++	sun3_scsi_regp = ioaddr;
++
++	instance = scsi_host_alloc(&sun3_scsi_template,
++	                           sizeof(struct NCR5380_hostdata));
++	if (!instance) {
++		error = -ENOMEM;
++		goto fail_alloc;
++	}
++	default_instance = instance;
++
++	instance->io_port = (unsigned long)ioaddr;
++	instance->irq = irq->start;
++
++	NCR5380_init(instance, 0);
++
++	error = request_irq(instance->irq, scsi_sun3_intr, 0,
++	                    "NCR5380", instance);
++	if (error) {
++#ifdef REAL_DMA
++		pr_err(PFX "scsi%d: IRQ %d not free, bailing out\n",
++		       instance->host_no, instance->irq);
++		goto fail_irq;
++#else
++		pr_warn(PFX "scsi%d: IRQ %d not free, interrupts disabled\n",
++		        instance->host_no, instance->irq);
++		instance->irq = NO_IRQ;
++#endif
++	}
++
++	dregs->csr = 0;
++	udelay(SUN3_DMA_DELAY);
++	dregs->csr = CSR_SCSI | CSR_FIFO | CSR_INTR;
++	udelay(SUN3_DMA_DELAY);
++	dregs->fifo_count = 0;
++#ifdef SUN3_SCSI_VME
++	dregs->fifo_count_hi = 0;
++	dregs->dma_addr_hi = 0;
++	dregs->dma_addr_lo = 0;
++	dregs->dma_count_hi = 0;
++	dregs->dma_count_lo = 0;
++
++	dregs->ivect = VME_DATA24 | (instance->irq & 0xff);
++#endif
++
++#ifdef RESET_BOOT
++	sun3_scsi_reset_boot(instance);
++#endif
++
++	error = scsi_add_host(instance, NULL);
++	if (error)
++		goto fail_host;
++
++	platform_set_drvdata(pdev, instance);
++
++	scsi_scan_host(instance);
++	return 0;
++
++fail_host:
++	if (instance->irq != NO_IRQ)
++		free_irq(instance->irq, instance);
++fail_irq:
++	NCR5380_exit(instance);
++	scsi_host_put(instance);
++fail_alloc:
++	if (udc_regs)
++		dvma_free(udc_regs);
++	iounmap(sun3_scsi_regp);
++	return error;
++}
++
++static int __exit sun3_scsi_remove(struct platform_device *pdev)
++{
++	struct Scsi_Host *instance = platform_get_drvdata(pdev);
++
++	scsi_remove_host(instance);
++	if (instance->irq != NO_IRQ)
++		free_irq(instance->irq, instance);
++	NCR5380_exit(instance);
++	scsi_host_put(instance);
++	if (udc_regs)
++		dvma_free(udc_regs);
++	iounmap(sun3_scsi_regp);
++	return 0;
++}
++
++static struct platform_driver sun3_scsi_driver = {
++	.remove = __exit_p(sun3_scsi_remove),
++	.driver = {
++		.name	= DRV_MODULE_NAME,
++		.owner	= THIS_MODULE,
++	},
++};
  
--	if (IS_A_TT())
--		atari_turnon_irq(IRQ_TT_MFP_SCSI);
--	else
--		atari_turnon_irq(IRQ_MFP_FSCSI);
-+	/* The 5380 raises its IRQ line while _RST is active but the ST DMA
-+	 * "lock" has been released so this interrupt may end up handled by
-+	 * floppy or IDE driver (if one of them holds the lock). The NCR5380
-+	 * interrupt flag has been cleared already.
-+	 */
+-#include "scsi_module.c"
++module_platform_driver_probe(sun3_scsi_driver, sun3_scsi_probe);
  
--	if (rv == SUCCESS)
--		falcon_release_lock_if_possible(hostdata);
-+	local_irq_restore(flags);
++MODULE_ALIAS("platform:" DRV_MODULE_NAME);
+ MODULE_LICENSE("GPL");
+Index: linux/drivers/scsi/sun3_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:33.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:50.000000000 +1100
+@@ -18,25 +18,8 @@
+ #ifndef SUN3_SCSI_H
+ #define SUN3_SCSI_H
  
- 	return rv;
- }
+-/*
+- * Int: level 2 autovector
+- * IO: type 1, base 0x00140000, 5 bits phys space: A<4..0>
+- */
+-#define IRQ_SUN3_SCSI 2
+-#define IOBASE_SUN3_SCSI 0x00140000
+-
+-#define IOBASE_SUN3_VMESCSI 0xff200000
+-
+ #define MAX_TAGS 32
+ 
+-#include <scsi/scsicam.h>
+-
+-#ifdef SUN3_SCSI_VME
+-#define SUN3_SCSI_NAME "Sun3 NCR5380 VME SCSI"
+-#else
+-#define SUN3_SCSI_NAME "Sun3 NCR5380 SCSI"
+-#endif
+-
+ #define NCR5380_implementation_fields /* none */
+ 
+ #define NCR5380_local_declare() \
