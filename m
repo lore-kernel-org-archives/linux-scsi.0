@@ -1,36 +1,31 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 23/29] atari_scsi: Convert to platform device
-Date: Mon, 27 Oct 2014 11:15:16 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1410271106570.15729@nippy.intranet>
-References: <20141002065628.256592712@telegraphics.com.au> <20141002065633.766165263@telegraphics.com.au> <5444BAB7.5000908@gmail.com> <alpine.LNX.2.00.1410202217270.18012@nippy.intranet> <544CA4A1.6050802@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
+Date: Mon, 27 Oct 2014 02:50:54 -0700
+Message-ID: <20141027095054.GC31604@infradead.org>
+References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
+ <20141023171536.GB16990@infradead.org>
+ <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
+ <20141024092251.GA22849@infradead.org>
+ <e3ee043b87cc2e043cf23f52ca4772f1.squirrel@www.codeaurora.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <544CA4A1.6050802@gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <e3ee043b87cc2e043cf23f52ca4772f1.squirrel@www.codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Dolev Raviv <draviv@codeaurora.org>
+Cc: Christoph Hellwig <hch@infradead.org>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On Sun, 26 Oct 2014, Michael Schmitz wrote:
-
-> > On Mon, 20 Oct 2014, Michael Schmitz wrote:
-> >
-> > > not certain it is related to this exact patch - the driver crashes 
-> > > pretty much on the spot when selecting the first target on the bus.
-> > >     
-> > ...
+On Sun, Oct 26, 2014 at 11:04:06AM -0000, Dolev Raviv wrote:
+> > Btw, MAINTAINERS doesn't mention you for the ufs driver, should it?
 > 
-> Turns out I missed a reject in patch 29 of the series (hunk #4) which 
-> caused a local_irq_save(flags) to go AWOL. Both commenting out the 
-> resulting lone local_irq_restore(flags), as well as fixing the reject 
-> properly makes the driver behave as it should.
-> 
-> No locking races, and no more warnings about bytes stuck in the DMA 
-> fifo. We might be on to a winner here :-)
+> No it shouldn't.
 
-That's good to hear. Thanks for testing v1. I'll send v2 when I'm done 
-testing it.
+It seems like I'm getting a lot of the series from you and your signoff,
+why shouldn't you be listed in MAINTAINERS?  From the list activity it
+seems like you and Sujit are the defator maintainers.
 
--- 
+Santosh just send a patch to remove himself, and I only see very little
+activity from Vinayak, with his last ACK in early July and a few
+more earlier in the year.
