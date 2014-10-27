@@ -1,365 +1,258 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 15/36] ncr5380: Remove *_RELEASE macros
-Date: Mon, 27 Oct 2014 16:26:22 +1100
-Message-ID: <20141027052610.755444813@telegraphics.com.au>
+Subject: [PATCH v2 05/36] ncr5380: Remove useless prototypes
+Date: Mon, 27 Oct 2014 16:26:12 +1100
+Message-ID: <20141027052608.355775484@telegraphics.com.au>
 References: <20141027052607.105914311@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-RELEASE-macros
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:48324 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752238AbaJ0Kbv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 06:31:51 -0400
+Content-Disposition: inline; filename=ncr5380-remove-useless-prototypes
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-The *_RELEASE macros don't tell me anything. In some cases the version in
-the macro contradicts the version in the comments. Anyway, the Linux kernel
-version is sufficient information. Remove these macros to improve readability.
+Add missing static qualifiers and remove the now pointless prototypes. The
+NCR5380_* prototypes are all declared in NCR5380.h and renamed using macros.
+Further declarations are redundant (some are completely unused). Remove
+them.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c       |   18 ------------------
- drivers/scsi/NCR5380.h       |    5 -----
- drivers/scsi/arm/cumana_1.c  |    2 --
- drivers/scsi/arm/oak.c       |    2 --
- drivers/scsi/atari_NCR5380.c |    4 ----
- drivers/scsi/dtc.c           |    5 -----
- drivers/scsi/dtc.h           |    2 --
- drivers/scsi/g_NCR5380.c     |    2 --
- drivers/scsi/g_NCR5380.h     |    5 -----
- drivers/scsi/mac_scsi.c      |    2 --
- drivers/scsi/mac_scsi.h      |    4 ----
- drivers/scsi/pas16.h         |    2 --
- drivers/scsi/sun3_NCR5380.c  |    4 ----
- drivers/scsi/sun3_scsi.c     |    2 --
- drivers/scsi/sun3_scsi.h     |    4 ----
- drivers/scsi/t128.c          |    2 --
- drivers/scsi/t128.h          |    4 ----
- 17 files changed, 69 deletions(-)
+ drivers/scsi/atari_scsi.c |    5 -----
+ drivers/scsi/dtc.h        |    7 -------
+ drivers/scsi/g_NCR5380.c  |    6 +++---
+ drivers/scsi/g_NCR5380.h  |    6 ------
+ drivers/scsi/mac_scsi.c   |    2 --
+ drivers/scsi/pas16.c      |    6 +++---
+ drivers/scsi/pas16.h      |    6 ------
+ drivers/scsi/sun3_scsi.c  |    4 +---
+ drivers/scsi/sun3_scsi.h  |    7 -------
+ drivers/scsi/t128.c       |    7 ++++---
+ drivers/scsi/t128.h       |    6 ------
+ 11 files changed, 11 insertions(+), 51 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2014-10-27 16:25:30.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2014-10-27 16:25:33.000000000 +1100
-@@ -11,8 +11,6 @@
-  *      drew@colorado.edu
-  *      +1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6. 
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -735,22 +733,6 @@ static int __maybe_unused NCR5380_show_i
- 
- 	hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 
--	SPRINTF("NCR5380 core release=%d.   ", NCR5380_PUBLIC_RELEASE);
--	if (((struct NCR5380_hostdata *) instance->hostdata)->flags & FLAG_NCR53C400)
--		SPRINTF("ncr53c400 release=%d.  ", NCR53C400_PUBLIC_RELEASE);
--#ifdef DTC_PUBLIC_RELEASE
--	SPRINTF("DTC 3180/3280 release %d", DTC_PUBLIC_RELEASE);
--#endif
--#ifdef T128_PUBLIC_RELEASE
--	SPRINTF("T128 release %d", T128_PUBLIC_RELEASE);
--#endif
--#ifdef GENERIC_NCR5380_PUBLIC_RELEASE
--	SPRINTF("Generic5380 release %d", GENERIC_NCR5380_PUBLIC_RELEASE);
--#endif
--#ifdef PAS16_PUBLIC_RELEASE
--	SPRINTF("PAS16 release=%d", PAS16_PUBLIC_RELEASE);
--#endif
--
- #ifdef PSEUDO_DMA
- 	SPRINTF("Highwater I/O busy spin counts: write %d, read %d\n",
- 	        hostdata->spin_max_w, hostdata->spin_max_r);
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:33.000000000 +1100
-@@ -11,8 +11,6 @@
-  *	drew@colorado.edu
-  *	+1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6.
-- *
-  * For more information, please consult
-  *
-  * NCR 5380 Family
-@@ -741,7 +739,6 @@ static void NCR5380_print_status(struct
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	printk("\nNCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	printk("NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-@@ -785,7 +782,6 @@ static int __maybe_unused NCR5380_show_i
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	seq_printf(m, "NCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	seq_printf(m, "NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-10-27 16:25:33.000000000 +1100
-@@ -13,8 +13,6 @@
-  * 	drew@colorado.edu
-  *	+1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 6. 
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -687,7 +685,6 @@ static void NCR5380_print_status(struct
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	printk("\nNCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	printk("NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-@@ -731,7 +728,6 @@ static int __maybe_unused NCR5380_show_i
- 
- 	hostdata = (struct NCR5380_hostdata *)instance->hostdata;
- 
--	seq_printf(m, "NCR5380 core release=%d.\n", NCR5380_PUBLIC_RELEASE);
- 	local_irq_save(flags);
- 	seq_printf(m, "NCR5380: coroutine is%s running.\n",
- 		main_running ? "" : "n't");
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-10-27 16:25:30.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-10-27 16:25:33.000000000 +1100
-@@ -7,8 +7,6 @@
-  * 	drew@colorado.edu
-  *      +1 (303) 666-5836
-  *
-- * DISTRIBUTION RELEASE 7
-- *
-  * For more information, please consult 
-  *
-  * NCR 5380 Family
-@@ -27,9 +25,6 @@
- #include <linux/interrupt.h>
- #include <scsi/scsi_eh.h>
- 
--#define NCR5380_PUBLIC_RELEASE 7
--#define NCR53C400_PUBLIC_RELEASE 2
--
- #define NDEBUG_ARBITRATION	0x1
- #define NDEBUG_AUTOSENSE	0x2
- #define NDEBUG_DMA		0x4
-Index: linux/drivers/scsi/arm/cumana_1.c
-===================================================================
---- linux.orig/drivers/scsi/arm/cumana_1.c	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/arm/cumana_1.c	2014-10-27 16:25:33.000000000 +1100
-@@ -20,8 +20,6 @@
- 
- #define PSEUDO_DMA
- 
--#define CUMANASCSI_PUBLIC_RELEASE 1
--
- #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
- #define NCR5380_local_declare()		struct Scsi_Host *_instance
- #define NCR5380_setup(instance)		_instance = instance
-Index: linux/drivers/scsi/arm/oak.c
-===================================================================
---- linux.orig/drivers/scsi/arm/oak.c	2014-10-27 16:25:30.000000000 +1100
-+++ linux/drivers/scsi/arm/oak.c	2014-10-27 16:25:33.000000000 +1100
-@@ -18,8 +18,6 @@
- #include <scsi/scsi_host.h>
- 
- /*#define PSEUDO_DMA*/
--
--#define OAKSCSI_PUBLIC_RELEASE 1
- #define DONT_USE_INTR
- 
- #define priv(host)			((struct NCR5380_hostdata *)(host)->hostdata)
-Index: linux/drivers/scsi/dtc.c
-===================================================================
---- linux.orig/drivers/scsi/dtc.c	2014-10-27 16:25:30.000000000 +1100
-+++ linux/drivers/scsi/dtc.c	2014-10-27 16:25:33.000000000 +1100
-@@ -17,8 +17,6 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * DISTRIBUTION RELEASE 1.
-  */
- 
- /*
-@@ -66,9 +64,6 @@
- #define AUTOPROBE_IRQ
- #include "NCR5380.h"
- 
--
--#define DTC_PUBLIC_RELEASE 2
--
- /*
-  * The DTC3180 & 3280 boards are memory mapped.
-  * 
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:33.000000000 +1100
-@@ -9,16 +9,11 @@
-  *
-  * NCR53C400 extensions (c) 1994,1995,1996, Kevin Lentin
-  *    K.Lentin@cs.monash.edu.au
-- *
-- * ALPHA RELEASE 1. 
-  */
- 
- #ifndef GENERIC_NCR5380_H
- #define GENERIC_NCR5380_H
- 
--
--#define GENERIC_NCR5380_PUBLIC_RELEASE 1
--
- #ifdef NCR53C400
- #define BIOSPARAM
- #define NCR5380_BIOSPARAM generic_NCR5380_biosparam
-Index: linux/drivers/scsi/mac_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.h	2014-10-27 16:25:32.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.h	2014-10-27 16:25:33.000000000 +1100
-@@ -6,15 +6,11 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * ALPHA RELEASE 1.
-  */
- 
- #ifndef MAC_NCR5380_H
- #define MAC_NCR5380_H
- 
--#define MACSCSI_PUBLIC_RELEASE 2
--
- #ifndef ASM
- 
- #include <scsi/scsicam.h>
-Index: linux/drivers/scsi/pas16.h
-===================================================================
---- linux.orig/drivers/scsi/pas16.h	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2014-10-27 16:25:33.000000000 +1100
-@@ -24,8 +24,6 @@
- #ifndef PAS16_H
- #define PAS16_H
- 
--#define PAS16_PUBLIC_RELEASE 3
--
- #define PDEBUG_INIT	0x1
- #define PDEBUG_TRANSFER 0x2
- 
-Index: linux/drivers/scsi/sun3_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:32.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:33.000000000 +1100
-@@ -13,15 +13,11 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * ALPHA RELEASE 1.
-  */
- 
- #ifndef SUN3_SCSI_H
- #define SUN3_SCSI_H
- 
--#define SUN3SCSI_PUBLIC_RELEASE 1
--
- /*
-  * Int: level 2 autovector
-  * IO: type 1, base 0x00140000, 5 bits phys space: A<4..0>
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2014-10-27 16:25:33.000000000 +1100
-@@ -8,8 +8,6 @@
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-  *
-- * DISTRIBUTION RELEASE 3.
-- *
-  * For more information, please consult
-  *
-  * Trantor Systems, Ltd.
-@@ -25,8 +23,6 @@
- #ifndef T128_H
- #define T128_H
- 
--#define T128_PUBLIC_RELEASE 3
--
- #define TDEBUG		0
- #define TDEBUG_INIT	0x1
- #define TDEBUG_TRANSFER 0x2
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2014-10-27 16:25:33.000000000 +1100
-@@ -5,8 +5,6 @@
-  *	(Unix and Linux consulting and custom programming)
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-- *
-- * DISTRIBUTION RELEASE 2. 
-  */
- 
- #ifndef DTC3280_H
 Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:33.000000000 +1100
-@@ -18,8 +18,6 @@
-  *
-  * Added ISAPNP support for DTC436 adapters,
-  * Thomas Sailer, sailer@ife.ee.ethz.ch
-- *
-- * ALPHA RELEASE 1. 
+--- linux.orig/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2014-10-27 16:25:12.000000000 +1100
+@@ -272,7 +272,7 @@ static int __init do_DTC3181E_setup(char
+  *	Locks: none
   */
  
- /* 
-Index: linux/drivers/scsi/mac_scsi.c
+-int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
++static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
+ {
+ 	static int current_override = 0;
+ 	int count;
+@@ -484,7 +484,7 @@ int __init generic_NCR5380_detect(struct
+  *	Report driver information for the NCR5380
+  */
+  	
+-const char *generic_NCR5380_info(struct Scsi_Host *host)
++static const char *generic_NCR5380_info(struct Scsi_Host *host)
+ {
+ 	static const char string[] = "Generic NCR5380/53C400 Driver";
+ 	return string;
+@@ -499,7 +499,7 @@ const char *generic_NCR5380_info(struct
+  *	Locks: none
+  */
+  
+-int generic_NCR5380_release_resources(struct Scsi_Host *instance)
++static int generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ {
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(instance);
+Index: linux/drivers/scsi/pas16.c
 ===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:32.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:25:33.000000000 +1100
-@@ -9,8 +9,6 @@
-  * Generic Generic NCR5380 driver
+--- linux.orig/drivers/scsi/pas16.c	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2014-10-27 16:25:12.000000000 +1100
+@@ -382,7 +382,7 @@ __setup("pas16=", pas16_setup);
   *
-  * Copyright 1995, Russell King
-- *
-- * ALPHA RELEASE 1.
   */
  
- #include <linux/types.h>
+-int __init pas16_detect(struct scsi_host_template * tpnt)
++static int __init pas16_detect(struct scsi_host_template *tpnt)
+ {
+     static int current_override = 0;
+     static unsigned short current_base = 0;
+@@ -512,8 +512,8 @@ int __init pas16_detect(struct scsi_host
+  * and matching the H_C_S coordinates to what DOS uses.
+  */
+ 
+-int pas16_biosparam(struct scsi_device *sdev, struct block_device *dev,
+-		sector_t capacity, int * ip)
++static int pas16_biosparam(struct scsi_device *sdev, struct block_device *dev,
++                           sector_t capacity, int *ip)
+ {
+   int size = capacity;
+   ip[0] = 64;
 Index: linux/drivers/scsi/sun3_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:32.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:33.000000000 +1100
-@@ -20,8 +20,6 @@
-  * Generic Generic NCR5380 driver
-  *
-  * Copyright 1995, Russell King
-- *
-- * ALPHA RELEASE 1.
-  */
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-10-27 16:25:12.000000000 +1100
+@@ -86,8 +86,6 @@ extern int sun3_map_test(unsigned long,
  
- #include <linux/types.h>
+ 
+ static irqreturn_t scsi_sun3_intr(int irq, void *dummy);
+-static inline unsigned char sun3scsi_read(int reg);
+-static inline void sun3scsi_write(int reg, int value);
+ 
+ static int setup_can_queue = -1;
+ module_param(setup_can_queue, int, 0);
+@@ -348,7 +346,7 @@ static int __init sun3scsi_detect(struct
+ 	return 1;
+ }
+ 
+-int sun3scsi_release (struct Scsi_Host *shpnt)
++static int sun3scsi_release(struct Scsi_Host *shpnt)
+ {
+ 	if (shpnt->irq != SCSI_IRQ_NONE)
+ 		free_irq(shpnt->irq, shpnt);
 Index: linux/drivers/scsi/t128.c
 ===================================================================
---- linux.orig/drivers/scsi/t128.c	2014-10-27 16:25:26.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2014-10-27 16:25:33.000000000 +1100
-@@ -11,8 +11,6 @@
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
+--- linux.orig/drivers/scsi/t128.c	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/t128.c	2014-10-27 16:25:12.000000000 +1100
+@@ -193,7 +193,8 @@ __setup("t128=", t128_setup);
   *
-- * DISTRIBUTION RELEASE 3.
-- *
-  * For more information, please consult 
-  *
-  * Trantor Systems, Ltd.
+  */
+ 
+-int __init t128_detect(struct scsi_host_template * tpnt){
++static int __init t128_detect(struct scsi_host_template *tpnt)
++{
+     static int current_override = 0, current_base = 0;
+     struct Scsi_Host *instance;
+     unsigned long base;
+@@ -325,8 +326,8 @@ static int t128_release(struct Scsi_Host
+  * and matching the H_C_S coordinates to what DOS uses.
+  */
+ 
+-int t128_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+-		sector_t capacity, int * ip)
++static int t128_biosparam(struct scsi_device *sdev, struct block_device *bdev,
++                          sector_t capacity, int *ip)
+ {
+   ip[0] = 64;
+   ip[1] = 32;
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2014-10-27 16:18:00.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2014-10-27 16:25:12.000000000 +1100
+@@ -32,13 +32,6 @@
+ #define DTCDEBUG_INIT	0x1
+ #define DTCDEBUG_TRANSFER 0x2
+ 
+-static int dtc_abort(Scsi_Cmnd *);
+-static int dtc_biosparam(struct scsi_device *, struct block_device *,
+-		         sector_t, int*);
+-static int dtc_detect(struct scsi_host_template *);
+-static int dtc_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+-static int dtc_bus_reset(Scsi_Cmnd *);
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2014-10-27 16:25:12.000000000 +1100
+@@ -39,12 +39,6 @@
+ #endif
+ 
+ #ifndef ASM
+-static int generic_NCR5380_abort(Scsi_Cmnd *);
+-static int generic_NCR5380_detect(struct scsi_host_template *);
+-static int generic_NCR5380_release_resources(struct Scsi_Host *);
+-static int generic_NCR5380_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+-static int generic_NCR5380_bus_reset(Scsi_Cmnd *);
+-static const char* generic_NCR5380_info(struct Scsi_Host *);
+ 
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:25:12.000000000 +1100
+@@ -56,8 +56,6 @@
+ 
+ #define RESET_BOOT
+ 
+-extern void via_scsi_clear(void);
+-
+ #ifdef RESET_BOOT
+ static void mac_scsi_reset_boot(struct Scsi_Host *instance);
+ #endif
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2014-10-27 16:18:00.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2014-10-27 16:25:12.000000000 +1100
+@@ -114,12 +114,6 @@
+ 
+ 
+ #ifndef ASM
+-static int pas16_abort(Scsi_Cmnd *);
+-static int pas16_biosparam(struct scsi_device *, struct block_device *,
+-			   sector_t, int*);
+-static int pas16_detect(struct scsi_host_template *);
+-static int pas16_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+-static int pas16_bus_reset(Scsi_Cmnd *);
+ 
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+Index: linux/drivers/scsi/sun3_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:09.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-10-27 16:25:12.000000000 +1100
+@@ -43,13 +43,6 @@
+ 
+ #define IOBASE_SUN3_VMESCSI 0xff200000
+ 
+-static int sun3scsi_abort(struct scsi_cmnd *);
+-static int sun3scsi_detect (struct scsi_host_template *);
+-static const char *sun3scsi_info (struct Scsi_Host *);
+-static int sun3scsi_bus_reset(struct scsi_cmnd *);
+-static int sun3scsi_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+-static int sun3scsi_release (struct Scsi_Host *);
+-
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2014-10-27 16:18:00.000000000 +1100
++++ linux/drivers/scsi/t128.h	2014-10-27 16:25:12.000000000 +1100
+@@ -88,12 +88,6 @@
+ #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
+ 
+ #ifndef ASM
+-static int t128_abort(struct scsi_cmnd *);
+-static int t128_biosparam(struct scsi_device *, struct block_device *,
+-			  sector_t, int*);
+-static int t128_detect(struct scsi_host_template *);
+-static int t128_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
+-static int t128_bus_reset(struct scsi_cmnd *);
+ 
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+Index: linux/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:18:00.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:25:12.000000000 +1100
+@@ -181,12 +181,7 @@ static inline void DISABLE_IRQ(void)
+ /***************************** Prototypes *****************************/
+ 
+ #ifdef REAL_DMA
+-static int scsi_dma_is_ignored_buserr(unsigned char dma_stat);
+ static void atari_scsi_fetch_restbytes(void);
+-static long atari_scsi_dma_residual(struct Scsi_Host *instance);
+-static int falcon_classify_cmd(Scsi_Cmnd *cmd);
+-static unsigned long atari_dma_xfer_len(unsigned long wanted_len,
+-					Scsi_Cmnd *cmd, int write_flag);
+ #endif
+ static irqreturn_t scsi_tt_intr(int irq, void *dummy);
+ static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
+
+
