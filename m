@@ -1,71 +1,53 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/6] sd: fix up ->compat_ioctl
-Date: Mon, 27 Oct 2014 18:59:03 +0100
-Message-ID: <1414432746-12888-4-git-send-email-hch@lst.de>
+Subject: [PATCH 5/6] osst: call scsi_set_medium_removal directly
+Date: Mon, 27 Oct 2014 18:59:05 +0100
+Message-ID: <1414432746-12888-6-git-send-email-hch@lst.de>
 References: <1414432746-12888-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48702 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:48709 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855AbaJ0QxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 12:53:07 -0400
+	with ESMTP id S1752598AbaJ0QxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 12:53:09 -0400
 In-Reply-To: <1414432746-12888-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
-No need to verify the passthrough ioctls, the real handler will
-take care of that.  Also make sure not to block for resets on
-O_NONBLOCK fds.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c | 28 ++++++++--------------------
- 1 file changed, 8 insertions(+), 20 deletions(-)
+ drivers/scsi/osst.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 070b4b7..467563e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1541,31 +1541,19 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 			   unsigned int cmd, unsigned long arg)
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 8c28b49..9214e5d 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -3325,19 +3325,18 @@ static int osst_write_frame(struct osst_tape * STp, struct osst_request ** aSRpn
+ /* Lock or unlock the drive door. Don't use when struct osst_request allocated. */
+ static int do_door_lock(struct osst_tape * STp, int do_lock)
  {
- 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
--	int ret;
--
--	ret = scsi_verify_blk_ioctl(bdev, cmd);
--	if (ret < 0)
--		return ret;
-+	int error;
+-	int retval, cmd;
++	int retval;
  
--	/*
--	 * If we are in the middle of error recovery, don't let anyone
--	 * else try and use this device.  Also, if error recovery fails, it
--	 * may try and take the device offline, in which case all further
--	 * access to the device is prohibited.
--	 */
--	if (!scsi_block_when_processing_errors(sdev))
--		return -ENODEV;
-+	error = scsi_ioctl_block_when_processing_errors(sdev, cmd,
-+			mode & FMODE_NDELAY);
-+	if (error)
-+		return error;
- 	       
--	if (sdev->host->hostt->compat_ioctl) {
--		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
--
--		return ret;
--	}
--
- 	/* 
- 	 * Let the static ioctl translation table take care of it.
- 	 */
--	return -ENOIOCTLCMD; 
-+	if (!sdev->host->hostt->compat_ioctl)
-+		return -ENOIOCTLCMD; 
-+	return sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
- }
+-	cmd = do_lock ? SCSI_IOCTL_DOORLOCK : SCSI_IOCTL_DOORUNLOCK;
+ #if DEBUG
+ 	printk(OSST_DEB_MSG "%s:D: %socking drive door.\n", tape_name(STp), do_lock ? "L" : "Unl");
  #endif
+-	retval = scsi_ioctl(STp->device, cmd, NULL);
+-	if (!retval) {
++
++	retval = scsi_set_medium_removal(STp->device,
++			do_lock ? SCSI_REMOVAL_PREVENT : SCSI_REMOVAL_ALLOW);
++	if (!retval)
+ 		STp->door_locked = do_lock ? ST_LOCKED_EXPLICIT : ST_UNLOCKED;
+-	}
+-	else {
++	else
+ 		STp->door_locked = ST_LOCK_FAILS;
+-	}
+ 	return retval;
+ }
  
 -- 
 1.9.1
