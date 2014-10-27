@@ -1,37 +1,72 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] scsi: return EAGAIN when resetting a device under EH
-Date: Mon, 27 Oct 2014 18:59:06 +0100
-Message-ID: <1414432746-12888-7-git-send-email-hch@lst.de>
+Subject: [PATCH 3/6] sd: fix up ->compat_ioctl
+Date: Mon, 27 Oct 2014 18:59:03 +0100
+Message-ID: <1414432746-12888-4-git-send-email-hch@lst.de>
 References: <1414432746-12888-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48713 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:48702 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbaJ0QxK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 12:53:10 -0400
+	with ESMTP id S1750855AbaJ0QxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Oct 2014 12:53:07 -0400
 In-Reply-To: <1414432746-12888-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
+No need to verify the passthrough ioctls, the real handler will
+take care of that.  Also make sure not to block for resets on
+O_NONBLOCK fds.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sd.c | 28 ++++++++--------------------
+ 1 file changed, 8 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index d0cb33d..53e8fea 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -278,7 +278,7 @@ int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int cmd,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 070b4b7..467563e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1541,31 +1541,19 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
+ 			   unsigned int cmd, unsigned long arg)
  {
- 	if (cmd == SG_SCSI_RESET && ndelay) {
- 		if (scsi_host_in_recovery(sdev->host))
--			return -ENODEV;
-+			return -EAGAIN;
- 	} else {
- 		if (!scsi_block_when_processing_errors(sdev))
- 			return -ENODEV;
+ 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
+-	int ret;
+-
+-	ret = scsi_verify_blk_ioctl(bdev, cmd);
+-	if (ret < 0)
+-		return ret;
++	int error;
+ 
+-	/*
+-	 * If we are in the middle of error recovery, don't let anyone
+-	 * else try and use this device.  Also, if error recovery fails, it
+-	 * may try and take the device offline, in which case all further
+-	 * access to the device is prohibited.
+-	 */
+-	if (!scsi_block_when_processing_errors(sdev))
+-		return -ENODEV;
++	error = scsi_ioctl_block_when_processing_errors(sdev, cmd,
++			mode & FMODE_NDELAY);
++	if (error)
++		return error;
+ 	       
+-	if (sdev->host->hostt->compat_ioctl) {
+-		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+-
+-		return ret;
+-	}
+-
+ 	/* 
+ 	 * Let the static ioctl translation table take care of it.
+ 	 */
+-	return -ENOIOCTLCMD; 
++	if (!sdev->host->hostt->compat_ioctl)
++		return -ENOIOCTLCMD; 
++	return sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+ }
+ #endif
+ 
 -- 
 1.9.1
 
