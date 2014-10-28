@@ -1,36 +1,142 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] ipr: Disable async aborts
-Date: Tue, 28 Oct 2014 01:47:16 -0700
-Message-ID: <20141028084716.GA14286@infradead.org>
-References: <201410271439.s9REdl9U017474@d01av02.pok.ibm.com>
- <1414421403.6401.5.camel@jarvis.lan>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/6] scsi: refactor scsi_reset_provider handling
+Date: Tue, 28 Oct 2014 09:51:12 +0100
+Message-ID: <544F5900.6080406@acm.org>
+References: <1414432746-12888-1-git-send-email-hch@lst.de> <1414432746-12888-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33299 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723AbaJ1IrR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2014 04:47:17 -0400
-Content-Disposition: inline
-In-Reply-To: <1414421403.6401.5.camel@jarvis.lan>
+Received: from laurent.telenet-ops.be ([195.130.137.89]:44907 "EHLO
+	laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755707AbaJ1IvQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Oct 2014 04:51:16 -0400
+In-Reply-To: <1414432746-12888-2-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
-On Mon, Oct 27, 2014 at 07:50:03AM -0700, James Bottomley wrote:
-> On Mon, 2014-10-27 at 09:37 -0500, Brian King wrote:
-> > The ipr driver does not yet support async aborts, so disable this
-> > for now.
-> > 
-> > Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> 
-> By "does not yet support" do you mean doesn't work with or merely not
-> tested with but seems to work OK?  if the former, then surely this
-> should be a fixes patch with a cc to stable for all the kernels async
-> abort is in (which is 3.14)
+On 10/27/14 18:59, Christoph Hellwig wrote:
+> -/*
+> - * Function:	scsi_reset_provider
+> - *
+> - * Purpose:	Send requested reset to a bus or device at any phase.
+> - *
+> - * Arguments:	device	- device to send reset to
+> - *		flag - reset type (see scsi.h)
+> - *
+> - * Returns:	SUCCESS/FAILURE.
+> - *
+> - * Notes:	This is used by the SCSI Generic driver to provide
+> - *		Bus/Device reset capability.
+> +/**
+> + * scsi_ioctl_reset: explicitly reset a host/bus/target/device
+> + * @dev:	scsi_device to operate on
+> + * @val:	reset type (see sg.h)
+>    */
+>   int
+> -scsi_reset_provider(struct scsi_device *dev, int flag)
+> +scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+>   {
+>   	struct scsi_cmnd *scmd;
+>   	struct Scsi_Host *shost = dev->host;
+>   	struct request req;
+>   	unsigned long flags;
+> -	int rtn;
+> +	int error = 0, rtn, val;
+> +
+> +	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+> +		return -EACCES;
+> +
+> +	error = get_user(val, arg);
+> +	if (error)
+> +		return error;
+>
+>   	if (scsi_autopm_get_host(shost) < 0)
+> -		return FAILED;
+> +		return -EIO;
+>
+> -	if (!get_device(&dev->sdev_gendev)) {
+> -		rtn = FAILED;
+> +	error = -EIO;
+> +	if (!get_device(&dev->sdev_gendev))
+>   		goto out_put_autopm_host;
+> -	}
+>
+>   	scmd = scsi_get_command(dev, GFP_KERNEL);
+>   	if (!scmd) {
+> -		rtn = FAILED;
+>   		put_device(&dev->sdev_gendev);
+>   		goto out_put_autopm_host;
+>   	}
+> @@ -2347,37 +2345,33 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+>   	shost->tmf_in_progress = 1;
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+>
+> -	switch (flag) {
+> -	case SCSI_TRY_RESET_DEVICE:
+> +	error = 0;
+> +	switch (val & ~SG_SCSI_RESET_NO_ESCALATE) {
+> +	case SG_SCSI_RESET_NOTHING:
+> +		break;
+> +	case SG_SCSI_RESET_DEVICE:
+>   		rtn = scsi_try_bus_device_reset(scmd);
+> -		if (rtn == SUCCESS)
+> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
+>   			break;
+>   		/* FALLTHROUGH */
+> -	case SCSI_TRY_RESET_TARGET:
+> +	case SG_SCSI_RESET_TARGET:
+>   		rtn = scsi_try_target_reset(scmd);
+> -		if (rtn == SUCCESS)
+> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
+>   			break;
+>   		/* FALLTHROUGH */
+> -	case SCSI_TRY_RESET_BUS:
+> +	case SG_SCSI_RESET_BUS:
+>   		rtn = scsi_try_bus_reset(scmd);
+> -		if (rtn == SUCCESS)
+> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
+>   			break;
+>   		/* FALLTHROUGH */
+> -	case SCSI_TRY_RESET_HOST:
+> -	case SCSI_TRY_RESET_HOST | SCSI_TRY_RESET_NO_ESCALATE:
+> +	case SG_SCSI_RESET_HOST:
+>   		rtn = scsi_try_host_reset(scmd);
+> -		break;
+> -	case SCSI_TRY_RESET_DEVICE | SCSI_TRY_RESET_NO_ESCALATE:
+> -		rtn = scsi_try_bus_device_reset(scmd);
+> -		break;
+> -	case SCSI_TRY_RESET_TARGET | SCSI_TRY_RESET_NO_ESCALATE:
+> -		rtn = scsi_try_target_reset(scmd);
+> -		break;
+> -	case SCSI_TRY_RESET_BUS | SCSI_TRY_RESET_NO_ESCALATE:
+> -		rtn = scsi_try_bus_reset(scmd);
+> -		break;
+> +		if (rtn == SUCCESS)
+> +			break;
+>   	default:
+> -		rtn = FAILED;
+> +		/* FALLTHROUGH */
+> +		error = -EIO;
+> +		break;
+>   	}
+>
+>   	spin_lock_irqsave(shost->host_lock, flags);
+> @@ -2399,9 +2393,9 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
+>   	scsi_next_command(scmd);
+>   out_put_autopm_host:
+>   	scsi_autopm_put_host(shost);
+> -	return rtn;
+> +	return error;
+>   }
+> -EXPORT_SYMBOL(scsi_reset_provider);
+> +EXPORT_SYMBOL(scsi_ioctl_reset);
 
-I'm pretty sure this patch is incorrect, and that what ever issue should
-have been described in this patch are the same EH problems we fixed in
-the last couple releases.  I've also talked to Hannes a while ago, and
-we agree that we want to remove this flag ASAP as it's inviting this
+This function returns 0 even if an action like SG_SCSI_RESET_BUS fails 
+(rtn != SUCCESS) with the flag SCSI_TRY_RESET_NO_ESCALATE set. I think 
+the current behavior is to return -EIO in that case. If this change was 
+intended, please mention it in the patch description.
+
+Bart.
