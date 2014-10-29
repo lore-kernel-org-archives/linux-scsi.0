@@ -1,52 +1,29 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 2/6] scsi: split scsi_nonblockable_ioctl
-Date: Wed, 29 Oct 2014 11:55:38 +0100
-Message-ID: <5450C7AA.40706@acm.org>
-References: <1414432746-12888-1-git-send-email-hch@lst.de> <1414432746-12888-3-git-send-email-hch@lst.de> <544F5C5C.3090104@acm.org> <20141028173926.GB22593@lst.de>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Wed, 29 Oct 2014 13:46:04 +0200 (EET)
+Message-ID: <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:52794 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255AbaJ2Kzt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 06:55:49 -0400
-In-Reply-To: <20141028173926.GB22593@lst.de>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:33243 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932390AbaJ2LqH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2014 07:46:07 -0400
+In-Reply-To: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
+To: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>
 
-On 10/28/14 18:39, Christoph Hellwig wrote:
-> On Tue, Oct 28, 2014 at 10:05:32AM +0100, Bart Van Assche wrote:
->> I might be missing some background information here, but it's not clear to
->> me why the function like scsi_block_when_processing_errors() was introduced
->> some time ago. What if immediately after error handling has finished a new
->> request is queued that kicks the error handler again before the caller of
->> scsi_block_when_processing_errors() has finished the actions that should
->> not occur concurrently with error handling ? Has it already been considered
->> to introduce a mutex to serialize error handling and activity that should
->> not occur concurrently with error handling ?
->
-> I've not looked into changing the conditions, but your questions are
-> good ones.  I'd like to go even further and ask the question of what
-> we try to protect here.  For SG_SCSI_RESET the answer is that we want
-> to enforce a single outstanding TMF, as require by old parallel SCSI HBAs,
-> and possible by various drivers.  I don't quite understand why we check
-> the EH state before executing other ioctl, though.  Even more confusing
-> is that some driver like st.c and sg.c only enforce this on some ioctls.
->
-> Changing the exclusion rules isn't in the scope of this series, but if
-> you interested in looking into this series I'd be happy if we get the
-> ball on it rolling.
+> I tried 3.18-rc2 with blk-mq default on on HP ProLiant DL380 G3 (with HP 
+> CCISS RAID controller). It fails late in the bootup with "task 
+> scsi_eh_1:720 blocked for more than 120 seconds." messages.
+> 
+> Booting with scsi_mod.use_blk_mq=0 fixes the problem.
 
-Hello Christoph,
+Another test server with MPT SCSI RAID has similar problem, 
+scsi_mode.use_blk_mq=0 cures it but I can not get good trace (no serail 
+console). 3.18.0-rc2-00043-gf7e87a4 was tested there.
 
-As you know I'm working on several different projects simultaneously so 
-I'm not sure I will be able to free up some time soon to work on this. I 
-will add this on my to-do list but if anyone else would like to start 
-working on this that would be welcome.
-
-Bart.
-
-
+-- 
+Meelis Roos (mroos@linux.ee)
