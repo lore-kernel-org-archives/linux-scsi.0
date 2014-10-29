@@ -1,48 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 07/36] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
-Date: Wed, 29 Oct 2014 15:45:21 +0100
-Message-ID: <5450FD81.7050307@suse.de>
-References: <20141027052607.105914311@telegraphics.com.au> <20141027052608.825920884@telegraphics.com.au>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Wed, 29 Oct 2014 09:08:46 -0600
+Message-ID: <545102FE.3010003@kernel.dk>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee> <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44909 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932960AbaJ2OpX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2014 10:45:23 -0400
-In-Reply-To: <20141027052608.825920884@telegraphics.com.au>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:43095 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933143AbaJ2PIt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 11:08:49 -0400
+Received: by mail-pa0-f50.google.com with SMTP id eu11so3384350pac.9
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 08:08:49 -0700 (PDT)
+In-Reply-To: <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On 10/27/2014 06:26 AM, Finn Thain wrote:
-> Both atari_NCR5380.c and sun3_NCR5380.c core drivers #undef TAG_NONE =
-and
-> then redefine it. But the original definition is unused because NCR53=
-80.c
-> lacks support for tagged queueing. So just define it once.
->=20
-> The TAG_NEXT macro only appears in the arguments to NCR5380_select() =
-calls.
-> But that routine doesn't use its tag argument as the tag was already
-> assigned in NCR5380_main(). So remove the unused argument and the mac=
-ro.
->=20
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 2014-10-29 05:46, Meelis Roos wrote:
+>> I tried 3.18-rc2 with blk-mq default on on HP ProLiant DL380 G3 (with HP
+>> CCISS RAID controller). It fails late in the bootup with "task
+>> scsi_eh_1:720 blocked for more than 120 seconds." messages.
+>>
+>> Booting with scsi_mod.use_blk_mq=0 fixes the problem.
+>
+> Another test server with MPT SCSI RAID has similar problem,
+> scsi_mode.use_blk_mq=0 cures it but I can not get good trace (no serail
+> console). 3.18.0-rc2-00043-gf7e87a4 was tested there.
 
-Cheers,
+The first issue looks like scsi cdrom and error handling, it must be 
+leaking requests hence we hang on allocation of a new one. cciss doesn't 
+use blk_mq regardless of the scsi setting. Does the mpt box also have a 
+libata driven cdrom?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jens Axboe
+
