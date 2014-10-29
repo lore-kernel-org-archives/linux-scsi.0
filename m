@@ -1,49 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 12/36] ncr5380: Cleanup host info() methods
-Date: Wed, 29 Oct 2014 17:17:31 +0100
-Message-ID: <5451131B.9070208@suse.de>
-References: <20141027052607.105914311@telegraphics.com.au> <20141027052610.035420500@telegraphics.com.au>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] ipr: Convert to generic DMA API
+Date: Wed, 29 Oct 2014 12:34:49 -0500
+Message-ID: <54512539.5040501@linux.vnet.ibm.com>
+References: <1413191676-1663-1-git-send-email-anton@samba.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20141027052610.035420500@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:53806 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934130AbaJ2Re5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 13:34:57 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 29 Oct 2014 11:34:57 -0600
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id C1D323E40044
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 11:34:53 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9THYrZc53674152
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 18:34:53 +0100
+Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9THYqWZ002772
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 11:34:53 -0600
+In-Reply-To: <1413191676-1663-1-git-send-email-anton@samba.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, wenxiong@linux.vnet.ibm.com, scottwood@freescale.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 
-On 10/27/2014 06:26 AM, Finn Thain wrote:
-> If the host->info() method is not set, then host->name is used by def=
-ault.
-> For atari_scsi, that is exactly the same text. So remove the redundan=
-t
-> info() method. Keep sun3_scsi.c in line with atari_scsi.
->
-> Some NCR5380 drivers return an empty string from the info() method
-> (arm/cumana_1.c arm/oak.c mac_scsi.c) while other drivers use the def=
-ault
-> (dmx3191d dtc.c g_NCR5380.c pas16.c t128.c).
->
-> Implement a common info() method to replace a lot of duplicated code =
-which
-> the various drivers use to announce the same information.
->
-> This replaces most of the (deprecated) show_info() output and all of =
-the
-> NCR5380_print_info() output. This also eliminates a bunch of code in
-> g_NCR5380 which just duplicates functionality in the core driver.
->
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Cheers,
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+
