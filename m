@@ -1,65 +1,90 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/2] ipr: Disable async aborts
-Date: Wed, 29 Oct 2014 16:16:08 -0500
-Message-ID: <54515918.4000107@linux.vnet.ibm.com>
-References: <201410271439.s9REdl9U017474@d01av02.pok.ibm.com> <1414421403.6401.5.camel@jarvis.lan> <20141028084716.GA14286@infradead.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Wed, 29 Oct 2014 22:50:28 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295934C1FA@G9W0745.americas.hpqcorp.net>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
+ <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
+ <545102FE.3010003@kernel.dk>
+ <alpine.LRH.2.11.1410291738190.12885@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:37051 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757089AbaJ2VQP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 17:16:15 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Wed, 29 Oct 2014 15:16:15 -0600
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 5AB2319D8042
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 15:04:55 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9TLGC0452691194
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 22:16:12 +0100
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9TLGBRA021790
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2014 15:16:12 -0600
-In-Reply-To: <20141028084716.GA14286@infradead.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:13143 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757472AbaJ2WxO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 18:53:14 -0400
+In-Reply-To: <alpine.LRH.2.11.1410291738190.12885@adalberg.ut.ee>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: Meelis Roos <mroos@linux.ee>, Jens Axboe <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On 10/28/2014 03:47 AM, Christoph Hellwig wrote:
-> On Mon, Oct 27, 2014 at 07:50:03AM -0700, James Bottomley wrote:
->> On Mon, 2014-10-27 at 09:37 -0500, Brian King wrote:
->>> The ipr driver does not yet support async aborts, so disable this
->>> for now.
->>>
->>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
->>
->> By "does not yet support" do you mean doesn't work with or merely not
->> tested with but seems to work OK?  if the former, then surely this
->> should be a fixes patch with a cc to stable for all the kernels async
->> abort is in (which is 3.14)
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Meelis Roos
+> Sent: Wednesday, 29 October, 2014 10:38 AM
+> To: Jens Axboe
+> Cc: linux-scsi@vger.kernel.org; Christoph Hellwig
+> Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
 > 
-> I'm pretty sure this patch is incorrect, and that what ever issue should
-> have been described in this patch are the same EH problems we fixed in
-> the last couple releases.  I've also talked to Hannes a while ago, and
-> we agree that we want to remove this flag ASAP as it's inviting this
+> > On 2014-10-29 05:46, Meelis Roos wrote:
+> > > > I tried 3.18-rc2 with blk-mq default on on HP ProLiant DL380 G3
+> (with HP
+> > > > CCISS RAID controller). It fails late in the bootup with "task
+> > > > scsi_eh_1:720 blocked for more than 120 seconds." messages.
+> > > >
+> > > > Booting with scsi_mod.use_blk_mq=0 fixes the problem.
+> > >
+> > > Another test server with MPT SCSI RAID has similar problem,
+> > > scsi_mode.use_blk_mq=0 cures it but I can not get good trace (no
+> > serail
+> > > console). 3.18.0-rc2-00043-gf7e87a4 was tested there.
+> >
+> > The first issue looks like scsi cdrom and error handling, it must
+> > be leaking
+> > requests hence we hang on allocation of a new one. cciss doesn't
+> > use blk_mq
+> > regardless of the scsi setting. Does the mpt box also have a libata
+> > driven cdrom?
+> 
+> Yes, it does.
+> 
+> --
+> Meelis Roos (mroos@linux.ee)
 
-I think we can likely drop the first in the series here. I've reverted it
-and have been running abort testing for a bit and haven't hit any issues.
-Unless I see anything overnight, I'll resend the second patch by itself and
-cc stable.
+In the log, the first soft lockup for scsi_eh_1 means the thread 
+for host1, which is a pata controller:
 
-Thanks,
-
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+...
+[   15.069114] scsi host1: pata_serverworks
+[   15.173491] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[   15.184512] scsi host2: pata_serverworks
+[   15.184673] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x2000 irq 14
+[   15.184675] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x2008 irq 15
+[   15.460452] ata1.00: ATAPI: COMPAQ  CD-ROM SN-124, N104, max PIO4
+[   15.476445] ata1.00: configured for PIO4
+[   15.477110] scsi 1:0:0:0: CD-ROM            COMPAQ   CD-ROM SN-124    N104 PQ: 0 ANSI: 5 
+...
+[  240.704040] INFO: task scsi_eh_1:720 blocked for more than 120 seconds.
+[  240.783198]       Not tainted 3.18.0-rc2-dirty #22
+[  240.840485] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  240.934172] scsi_eh_1       D c1264d7f     0   720      2 0x00000000
+[  241.010385]  f5bdbe54 00000046 f5bdbde0 c1264d7f f5bdbe00 00001412 00000000 2be89db4
+[  241.103850]  00000004 2be8b1c6 00000004 c1534000 f63bca10 c10892f5 6f223d9e 00000132
+[  241.197335]  ffffffff 066087ce f5bdbe50 c10892f5 6f22478a 00000132 ffffffff 066087ce
+[  241.290803] Call Trace:
+[  241.320039]  [<c1264d7f>] ? put_device+0xf/0x20
+[  241.374205]  [<c10892f5>] ? ktime_get+0x45/0x110
+[  241.429416]  [<c10892f5>] ? ktime_get+0x45/0x110
+[  241.484631]  [<c137d8ee>] schedule+0x1e/0x60
+[  241.535679]  [<c137dae7>] io_schedule+0x77/0xc0
+[  241.589854]  [<c11c4cd3>] bt_get+0xc3/0x140
+[  241.639867]  [<c106b5c0>] ? __wake_up_sync+0x20/0x20
+[  241.699240]  [<c11c51fe>] blk_mq_get_tag+0x9e/0xc0
+...
 
 
