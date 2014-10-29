@@ -1,48 +1,36 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Wed, 29 Oct 2014 13:36:25 +0100
-Message-ID: <5450DF49.3090904@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <54462403.70700@dev.mellanox.co.il>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 05/36] ncr5380: Remove useless prototypes
+Date: Wed, 29 Oct 2014 15:41:41 +0100
+Message-ID: <5450FCA5.6000909@suse.de>
+References: <20141027052607.105914311@telegraphics.com.au> <20141027052608.355775484@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from albert.telenet-ops.be ([195.130.137.90]:43970 "EHLO
-	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514AbaJ2Mg3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2014 08:36:29 -0400
-In-Reply-To: <54462403.70700@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20141027052608.355775484@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On 10/21/14 11:14, Sagi Grimberg wrote:
-> On 10/7/2014 4:07 PM, Bart Van Assche wrote:
->>               spin_lock_irqsave(&ch->lock, flags);
->>               ch->req_lim += be32_to_cpu(rsp->req_lim_delta);
->> @@ -1906,7 +1970,7 @@ static int srp_queuecommand(struct Scsi_Host
->> *shost, struct scsi_cmnd *scmnd)
->>           goto err;
->
-> Bart,
->
-> Any chance you can share some perf output on this code?
-> I'm interested of knowing the contention on target->lock that is
-> still taken on the IO path across channels.
->
-> Can we think on how to avoid it?
->
-> Also would like to understand the where did the bottleneck transition.
+On 10/27/2014 06:26 AM, Finn Thain wrote:
+> Add missing static qualifiers and remove the now pointless prototypes=
+=2E The
+> NCR5380_* prototypes are all declared in NCR5380.h and renamed using =
+macros.
+> Further declarations are redundant (some are completely unused). Remo=
+ve
+> them.
+>=20
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Hello Sagi,
+Cheers,
 
-Are you referring to target->lock ? That lock isn't taken anywhere in 
-the hot path. More in general, I haven't seen any lock contention in the 
-perf output that was caused by the block layer, SCSI core, SRP initiator 
-or HCA (mlx4) drivers. The code that showed up highest in the perf 
-output was the direct I/O code, the code that is triggered by fio to 
-submit I/O requests.
-
-Bart.
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
