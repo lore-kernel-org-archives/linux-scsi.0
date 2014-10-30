@@ -1,50 +1,47 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
-Date: Thu, 30 Oct 2014 19:32:52 +0200 (EET)
-Message-ID: <alpine.LRH.2.11.1410301916490.13541@adalberg.ut.ee>
-References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee> <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee> <545102FE.3010003@kernel.dk> <20141029183828.GA31689@infradead.org> <alpine.LRH.2.11.1410292205060.16678@adalberg.ut.ee> <54514A7A.8050008@kernel.dk>
- <alpine.LRH.2.11.1410301317340.19899@adalberg.ut.ee> <20141030151955.GA12158@infradead.org>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
+Date: Thu, 30 Oct 2014 19:33:18 +0200
+Message-ID: <5452765E.1040604@dev.mellanox.co.il>
+References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org> <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il> <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il> <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il> <545256E5.9010501@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:37161 "EHLO smtp2.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758954AbaJ3Rc4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2014 13:32:56 -0400
-In-Reply-To: <20141030151955.GA12158@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <545256E5.9010501-HInyCGIudOg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-> can you try the patch below?  It's a hack and not a proper fix, but it
-> addresses what seems to be your culprit, given that it is the only
-> place allocating a request from the error handler.
+On 10/30/2014 5:19 PM, Bart Van Assche wrote:
+> On 10/30/14 16:06, Sagi Grimberg wrote:
+>> I'm not aware of any implicit interrupt coalescing effect...
+>
+> In case it was not clear what I was referring to: if multiple completion
+> queue handling routines run on the same CPU then the average number of
+> work completions processed by each completion handling routine increases
+> due to the increased time between generation of an interrupt and the
+> start of the completion handler routine. As you know this helps overall
+> system throughput.
+>
 
-Applied it on top of 3.18-rc2, booted with scsi_mod.use_blk_mq=1 and it 
-booted up fine.
+Now I realize that we can hit serious problems here since we never
+solved the issue of srp polling routine that might poll forever within
+an interrupt (or at least until a hard lockup). Its interesting that
+you weren't able to hit that with a high workload. Did you try running
+this code on a virtual function (I witnessed this issue in iser on a VM).
 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index fa7b5ec..5804ea0 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2010,6 +2010,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
->  	struct scsi_device *sdev;
->  	unsigned long flags;
->  
-> +#if 0
->  	/*
->  	 * If the door was locked, we need to insert a door lock request
->  	 * onto the head of the SCSI request queue for the device.  There
-> @@ -2019,6 +2020,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
->  		if (scsi_device_online(sdev) && sdev->locked)
->  			scsi_eh_lock_door(sdev);
->  	}
-> +#endif
->  
->  	/*
->  	 * next free up anything directly waiting upon the host.  this
-> 
+Moreover, the fairness issue is even more likely to be encountered in 
+multichannel. Did you try to hit that? I really think this patchset
+*needs* to deal with the 2 issues I mentioned as the probability of
+hitting them increases with a faster IO stack.
 
--- 
-Meelis Roos (mroos@linux.ee)
+I remember this was discussed lately with consideration for using
+blk-iopoll or not. But I think that for now the initial approach of
+bailing out of the once we hit a budget is fine for now.
+
+Sagi.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
