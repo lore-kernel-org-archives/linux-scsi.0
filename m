@@ -1,34 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: device handler cleanups V2
-Date: Thu, 30 Oct 2014 10:39:46 +0100
-Message-ID: <54520762.1020002@suse.de>
-References: <1414660754-8431-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 3/6] sd: fix up ->compat_ioctl
+Date: Thu, 30 Oct 2014 10:40:42 +0100
+Message-ID: <5452079A.1030606@suse.de>
+References: <1414661229-15199-1-git-send-email-hch@lst.de> <1414661229-15199-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34161 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34180 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758325AbaJ3Jjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2014 05:39:47 -0400
-In-Reply-To: <1414660754-8431-1-git-send-email-hch@lst.de>
+	id S1757246AbaJ3Jko (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2014 05:40:44 -0400
+In-Reply-To: <1414661229-15199-4-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>
-Cc: Sean Stewart <Sean.Stewart@netapp.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
-On 10/30/2014 10:19 AM, Christoph Hellwig wrote:
-> This series contains a couple easy cleanups for the device handler
-> infrastructure.  I think some more work could be done in the longer r=
-un,
-> e.g. by using a class_device interface to attach to the scsi_device,
-> similar to how the /dev/sg devices work.
+On 10/30/2014 10:27 AM, Christoph Hellwig wrote:
+> No need to verify the passthrough ioctls, the real handler will
+> take care of that.  Also make sure not to block for resets on
+> O_NONBLOCK fds.
 >=20
-> Changes since V1:
->  - fix ->attach for rdac, pointed out by Mike Christie
->=20
-Enumeration appears to be skewed; two patches with 3/6 but none with
-5/6 ...
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
