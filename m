@@ -1,49 +1,59 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
-Date: Thu, 30 Oct 2014 07:46:19 +0200 (EET)
-Message-ID: <alpine.LRH.2.11.1410300745270.7546@adalberg.ut.ee>
-References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee> <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee> <545102FE.3010003@kernel.dk> <20141029183828.GA31689@infradead.org> <alpine.LRH.2.11.1410292205060.16678@adalberg.ut.ee>
- <54514A7A.8050008@kernel.dk>
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: Re: [PATCH 1/1 linux-next] hpsa: remove set but unused variable rc
+Date: Thu, 30 Oct 2014 11:25:17 +0530
+Message-ID: <20141030055517.GC3519@sudip-PC>
+References: <1414595704-3119-1-git-send-email-fabf@skynet.be>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:48971 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756565AbaJ3FqX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2014 01:46:23 -0400
-In-Reply-To: <54514A7A.8050008@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1414595704-3119-1-git-send-email-fabf@skynet.be>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-> >> On Wed, Oct 29, 2014 at 09:08:46AM -0600, Jens Axboe wrote:
-> >>>> Another test server with MPT SCSI RAID has similar problem,
-> >>>> scsi_mode.use_blk_mq=0 cures it but I can not get good trace (no serail
-> >>>> console). 3.18.0-rc2-00043-gf7e87a4 was tested there.
-> >>>
-> >>> The first issue looks like scsi cdrom and error handling, it must be leaking
-> >>> requests hence we hang on allocation of a new one. cciss doesn't use blk_mq
-> >>> regardless of the scsi setting. Does the mpt box also have a libata driven
-> >>> cdrom?
-> >>
-> >> cciss does use scsi for CDROMs and other external devices, it is a bit
-> >> of a mess.
-> >>
-> >> Meelis, did you also test scsi-mq on 3.17 and this is a regression, or
-> >> was 3.18-rc2 the first kernel you tested?
-> > 
-> > Both machines ran 3.17 successfully. I turned on scsi-mq option as soon 
-> > as it appeared in Kconfig as a new option. But I am not sure whan the 
-> > option appeared, before or after 3.17 release.
+On Wed, Oct 29, 2014 at 04:15:04PM +0100, Fabian Frederick wrote:
+> Fix -Wunused-but-set-variable warning
+
+you should also mention why you have left the call to irq_set_affinity_hint().
+i am not sure , but it looks like irq_set_affinity_hint() is only checking if
+the lock is available or not. It is just locking ,then if lock is successfull then
+returning 0 or if lock fails then return -EINVAL, and unlocks before returnig.
+not doing anything else.
+
+thanks
+sudip
+
 > 
-> So just to be fully clear, you never enabled scsi-mq on 3.17? To do
-> that, you would have had to add a scsi_mod.use_blk_mq=1 boot parameter.
-> The scsi-mq kconfig option did not show up until after 3.17 release.
-
-Yes, I never enabled it via command line, only noticed it when the 
-question was asked during make oldconfig. Will try 3.17 with use_blk_mq 
-today.
-
--- 
-Meelis Roos (mroos@linux.ee)
+> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+> ---
+>  drivers/scsi/hpsa.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index cef5d49..34330e1 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -6619,11 +6619,11 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
+>  
+>  static void hpsa_irq_affinity_hints(struct ctlr_info *h)
+>  {
+> -	int i, cpu, rc;
+> +	int i, cpu;
+>  
+>  	cpu = cpumask_first(cpu_online_mask);
+>  	for (i = 0; i < h->msix_vector; i++) {
+> -		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
+> +		irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
+>  		cpu = cpumask_next(cpu, cpu_online_mask);
+>  	}
+>  }
+> -- 
+> 1.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
