@@ -1,52 +1,62 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/2] ipr: Convert to generic DMA API
-Date: Thu, 30 Oct 2014 08:40:52 -0500
-Message-ID: <54523FE4.5040503@linux.vnet.ibm.com>
-References: <1413191676-1663-1-git-send-email-anton@samba.org> <54512539.5040501@linux.vnet.ibm.com> <20141030091153.GA18224@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 0/11] IB/srp: Add multichannel support
+Date: Thu, 30 Oct 2014 14:44:14 +0100
+Message-ID: <545240AE.6060009@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:42304 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759470AbaJ3Nk7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 09:40:59 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 30 Oct 2014 07:40:58 -0600
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 9E19919D8039
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2014 07:29:37 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id s9UDethx49545448
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2014 14:40:55 +0100
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s9UDeriU016232
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2014 07:40:54 -0600
-In-Reply-To: <20141030091153.GA18224@infradead.org>
+Received: from andre.telenet-ops.be ([195.130.132.53]:52385 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760029AbaJ3No0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 09:44:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Anton Blanchard <anton@samba.org>, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, wenxiong@linux.vnet.ibm.com, scottwood@freescale.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On 10/30/2014 04:11 AM, Christoph Hellwig wrote:
-> On Wed, Oct 29, 2014 at 12:34:49PM -0500, Brian King wrote:
->> Acked-by: Brian King <brking@linux.vnet.ibm.com>
-> 
-> Doesn't apply to me.
-> 
-> Brain, can you please resend a rebased version of these two patches with
-> ipr error handlign patch (and anything else ipr related)?
-> 
+Although the SRP protocol supports multichannel operation, although 
+since considerable time RDMA HCA's are available that support multiple 
+completion vectors and although multichannel operation yields better 
+performance than using a single channel, the Linux SRP initiator does 
+not yet support multichannel operation. Hence this patch series that 
+adds multichannel support to the SRP initiator driver.
 
-Sorry. Let me rebase on top of your tree...
+Changes between v2 and v3:
+* Eliminated the new function blk_mq_build_unique_tag() from patch 1.
+* Elaborated the nr_hw_queues documentation in patch 2 as requested by
+   Martin.
+* Merged patches v2/10 and v2/11 into a single patch (v3/9).
+* Removed a debug statement from the patch that adds multichannel
+   support, and added another new debug statement
+   (WARN_ON_ONCE(scmnd->request->tag < 0) in srp_queuecommand()).
+* Added a new patch (v3/11) that fixes a recently reported race
+   condition. Although that patch is unrelated to adding multichannel
+   support, that patch has been added to this series to avoid merge
+   conflicts by submitting patches for the same driver to different
+   maintainers.
 
--Brian
+Changes between v1 and v2:
+* Added a function to the block layer that allows SCSI LLDs to query
+   the blk-mq hardware context index chosen by the block layer. Removed
+   the mq_queuecommand callback again.
+* Added support for multiple hardware queues in the TCQ functions in
+   the SCSI core.
+* Split a few patches and elaborated the patch descriptions to make it
+   easier to review this patch series.
+* Added two new patches: one patch that makes the SRP initiator always
+   use block layer tags and another patch that realizes a micro-
+   optimization, namely elimination of the free requests list.
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+The patches in this series are:
+0001-blk-mq-Add-blk_mq_unique_tag.patch
+0002-scsi-mq-Add-support-for-multiple-hardware-queues.patch
+0003-scsi_tcq.h-Add-support-for-multiple-hardware-queues.patch
+0004-IB-srp-Move-ib_destroy_cm_id-call-into-srp_free_ch_i.patch
+0005-IB-srp-Remove-stale-connection-retry-mechanism.patch
+0006-IB-srp-Avoid-that-I-O-hangs-due-to-a-cable-pull-duri.patch
+0007-IB-srp-Introduce-two-new-srp_target_port-member-vari.patch
+0008-IB-srp-Separate-target-and-channel-variables.patch
+0009-IB-srp-Use-block-layer-tags.patch
+0010-IB-srp-Add-multichannel-support.patch
+0011-IB-srp-Fix-a-race-condition-triggered-by-destroying-.patch
