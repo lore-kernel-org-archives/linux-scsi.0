@@ -1,47 +1,50 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Thu, 30 Oct 2014 19:33:18 +0200
-Message-ID: <5452765E.1040604@dev.mellanox.co.il>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org> <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il> <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il> <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il> <545256E5.9010501@acm.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Thu, 30 Oct 2014 10:45:36 -0700
+Message-ID: <20141030174536.GA27799@infradead.org>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
+ <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
+ <545102FE.3010003@kernel.dk>
+ <20141029183828.GA31689@infradead.org>
+ <alpine.LRH.2.11.1410292205060.16678@adalberg.ut.ee>
+ <54514A7A.8050008@kernel.dk>
+ <alpine.LRH.2.11.1410301317340.19899@adalberg.ut.ee>
+ <20141030151955.GA12158@infradead.org>
+ <alpine.LRH.2.11.1410301916490.13541@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <545256E5.9010501-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:44541 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933947AbaJ3Rpi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 13:45:38 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.11.1410301916490.13541@adalberg.ut.ee>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-On 10/30/2014 5:19 PM, Bart Van Assche wrote:
-> On 10/30/14 16:06, Sagi Grimberg wrote:
->> I'm not aware of any implicit interrupt coalescing effect...
->
-> In case it was not clear what I was referring to: if multiple completion
-> queue handling routines run on the same CPU then the average number of
-> work completions processed by each completion handling routine increases
-> due to the increased time between generation of an interrupt and the
-> start of the completion handler routine. As you know this helps overall
-> system throughput.
->
+On Thu, Oct 30, 2014 at 07:32:52PM +0200, Meelis Roos wrote:
+> > can you try the patch below?  It's a hack and not a proper fix, but it
+> > addresses what seems to be your culprit, given that it is the only
+> > place allocating a request from the error handler.
+> 
+> Applied it on top of 3.18-rc2, booted with scsi_mod.use_blk_mq=1 and it 
+> booted up fine.
 
-Now I realize that we can hit serious problems here since we never
-solved the issue of srp polling routine that might poll forever within
-an interrupt (or at least until a hard lockup). Its interesting that
-you weren't able to hit that with a high workload. Did you try running
-this code on a virtual function (I witnessed this issue in iser on a VM).
+Jens,
 
-Moreover, the fairness issue is even more likely to be encountered in 
-multichannel. Did you try to hit that? I really think this patchset
-*needs* to deal with the 2 issues I mentioned as the probability of
-hitting them increases with a faster IO stack.
+any idea what we could do here?  We want to lock the door again ASAP
+after potentially resetting the device state as far as I can read
+the code (the commit message for it is utterly meaningless).
 
-I remember this was discussed lately with consideration for using
-blk-iopoll or not. But I think that for now the initial approach of
-bailing out of the once we hit a budget is fine for now.
+Right now the code allocates the request from the scsi EH thread, which
+already is dangerous but mostly works for the !blk-mq case, but with the
+strict only allocate a request if a tag is available policy this breaks
+down if we still have BLOCK_PC requests that have references on them
+blocking another request queued (ATA cdroms tend to have a queue depth
+of 1).
 
-Sagi.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Given that this always was best effort anyway we might want to move it
+to a separate workqueue to not block EH?
