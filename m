@@ -1,296 +1,298 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] scsi: refactor scsi_reset_provider handling
-Date: Thu, 30 Oct 2014 10:27:04 +0100
-Message-ID: <1414661229-15199-2-git-send-email-hch@lst.de>
+Subject: [PATCH 2/6] scsi: split scsi_nonblockable_ioctl
+Date: Thu, 30 Oct 2014 10:27:05 +0100
+Message-ID: <1414661229-15199-3-git-send-email-hch@lst.de>
 References: <1414661229-15199-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:50936 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:50939 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756976AbaJ3J0y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 05:26:54 -0400
+	with ESMTP id S1751319AbaJ3J04 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 05:26:56 -0400
 In-Reply-To: <1414661229-15199-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Douglas Gilbert <dgilbert@interlog.com>, Robert Elliott <Elliott@hp.com>
 
-Pull the common code from the two callers into the function,
-and renamed it to scsi_ioctl_reset.
+The calling conventions for this function where bad as it could return
+-ENODEV both for a device not currently online and a not recognized ioctl.
 
+Add a new scsi_ioctl_block_when_processing_errors function that wraps
+scsi_block_when_processing_errors with the a special case for the
+SG_SCSI_RESET ioctl command, and handle the SG_SCSI_RESET case itself
+in scsi_ioctl.  All callers of scsi_ioctl now must call the above helper
+to check for the EH state, so that the ioctl handler itself doesn't
+have to.
+
+Reported-by: Robert Elliott <Elliott@hp.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_error.c | 76 ++++++++++++++++++++++-------------------------
- drivers/scsi/scsi_ioctl.c | 33 +-------------------
- drivers/scsi/sg.c         | 34 ++-------------------
- include/scsi/scsi_eh.h    | 15 +---------
- 4 files changed, 41 insertions(+), 117 deletions(-)
+ drivers/scsi/ch.c         |  5 +++++
+ drivers/scsi/osst.c       |  6 +++---
+ drivers/scsi/scsi_ioctl.c | 47 +++++++++++++----------------------------------
+ drivers/scsi/sd.c         |  6 +++---
+ drivers/scsi/sg.c         | 33 +++++++++++++++------------------
+ drivers/scsi/sr.c         | 15 +++++----------
+ drivers/scsi/st.c         |  7 +++----
+ include/scsi/scsi_ioctl.h |  4 ++--
+ 8 files changed, 49 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index fa7b5ec..ba19687 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -36,6 +36,7 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
-+#include <scsi/sg.h>
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 226ef77..4f502f9 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -616,6 +616,11 @@ static long ch_ioctl(struct file *file,
+ 	int retval;
+ 	void __user *argp = (void __user *)arg;
  
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -2309,39 +2310,36 @@ scsi_reset_provider_done_command(struct scsi_cmnd *scmd)
- {
- }
- 
--/*
-- * Function:	scsi_reset_provider
-- *
-- * Purpose:	Send requested reset to a bus or device at any phase.
-- *
-- * Arguments:	device	- device to send reset to
-- *		flag - reset type (see scsi.h)
-- *
-- * Returns:	SUCCESS/FAILURE.
-- *
-- * Notes:	This is used by the SCSI Generic driver to provide
-- *		Bus/Device reset capability.
-+/**
-+ * scsi_ioctl_reset: explicitly reset a host/bus/target/device
-+ * @dev:	scsi_device to operate on
-+ * @val:	reset type (see sg.h)
-  */
- int
--scsi_reset_provider(struct scsi_device *dev, int flag)
-+scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- {
- 	struct scsi_cmnd *scmd;
- 	struct Scsi_Host *shost = dev->host;
- 	struct request req;
- 	unsigned long flags;
--	int rtn;
-+	int error = 0, rtn, val;
++	retval = scsi_ioctl_block_when_processing_errors(ch->device, cmd,
++			file->f_flags & O_NDELAY);
++	if (retval)
++		return retval;
 +
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		return -EACCES;
-+
-+	error = get_user(val, arg);
-+	if (error)
-+		return error;
- 
- 	if (scsi_autopm_get_host(shost) < 0)
--		return FAILED;
-+		return -EIO;
- 
--	if (!get_device(&dev->sdev_gendev)) {
--		rtn = FAILED;
-+	error = -EIO;
-+	if (!get_device(&dev->sdev_gendev))
- 		goto out_put_autopm_host;
+ 	switch (cmd) {
+ 	case CHIOGPARAMS:
+ 	{
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 3d0d13c..b6d63d6 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -4969,10 +4969,10 @@ static long osst_ioctl(struct file * file,
+ 	 * may try and take the device offline, in which case all further
+ 	 * access to the device is prohibited.
+ 	 */
+-	if( !scsi_block_when_processing_errors(STp->device) ) {
+-		retval = (-ENXIO);
++	retval = scsi_ioctl_block_when_processing_errors(STp->device, cmd_in,
++			file->f_flags & O_NDELAY);
++	if (retval)
+ 		goto out;
 -	}
  
- 	scmd = scsi_get_command(dev, GFP_KERNEL);
- 	if (!scmd) {
--		rtn = FAILED;
- 		put_device(&dev->sdev_gendev);
- 		goto out_put_autopm_host;
- 	}
-@@ -2362,39 +2360,37 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	shost->tmf_in_progress = 1;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	switch (flag) {
--	case SCSI_TRY_RESET_DEVICE:
-+	switch (val & ~SG_SCSI_RESET_NO_ESCALATE) {
-+	case SG_SCSI_RESET_NOTHING:
-+		rtn = SUCCESS;
-+		break;
-+	case SG_SCSI_RESET_DEVICE:
- 		rtn = scsi_try_bus_device_reset(scmd);
--		if (rtn == SUCCESS)
-+		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
--	case SCSI_TRY_RESET_TARGET:
-+	case SG_SCSI_RESET_TARGET:
- 		rtn = scsi_try_target_reset(scmd);
--		if (rtn == SUCCESS)
-+		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
--	case SCSI_TRY_RESET_BUS:
-+	case SG_SCSI_RESET_BUS:
- 		rtn = scsi_try_bus_reset(scmd);
--		if (rtn == SUCCESS)
-+		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		/* FALLTHROUGH */
--	case SCSI_TRY_RESET_HOST:
--	case SCSI_TRY_RESET_HOST | SCSI_TRY_RESET_NO_ESCALATE:
-+	case SG_SCSI_RESET_HOST:
- 		rtn = scsi_try_host_reset(scmd);
--		break;
--	case SCSI_TRY_RESET_DEVICE | SCSI_TRY_RESET_NO_ESCALATE:
--		rtn = scsi_try_bus_device_reset(scmd);
--		break;
--	case SCSI_TRY_RESET_TARGET | SCSI_TRY_RESET_NO_ESCALATE:
--		rtn = scsi_try_target_reset(scmd);
--		break;
--	case SCSI_TRY_RESET_BUS | SCSI_TRY_RESET_NO_ESCALATE:
--		rtn = scsi_try_bus_reset(scmd);
--		break;
-+		if (rtn == SUCCESS)
-+			break;
- 	default:
-+		/* FALLTHROUGH */
- 		rtn = FAILED;
-+		break;
- 	}
- 
-+	error = (rtn == SUCCESS) ? 0 : -EIO;
-+
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->tmf_in_progress = 0;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -2414,9 +2410,9 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	scsi_next_command(scmd);
- out_put_autopm_host:
- 	scsi_autopm_put_host(shost);
--	return rtn;
-+	return error;
- }
--EXPORT_SYMBOL(scsi_reset_provider);
-+EXPORT_SYMBOL(scsi_ioctl_reset);
- 
- /**
-  * scsi_normalize_sense - normalize main elements from either fixed or
+ 	cmd_type = _IOC_TYPE(cmd_in);
+ 	cmd_nr   = _IOC_NR(cmd_in);
 diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index 5207274..5ddc08f 100644
+index 5ddc08f..712f159 100644
 --- a/drivers/scsi/scsi_ioctl.c
 +++ b/drivers/scsi/scsi_ioctl.c
-@@ -292,8 +292,6 @@ EXPORT_SYMBOL(scsi_ioctl);
- int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
- 			    void __user *arg, int ndelay)
+@@ -200,19 +200,6 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
  {
--	int val, val2, result;
--
- 	/* The first set of iocts may be executed even if we're doing
- 	 * error processing, as long as the device was opened
- 	 * non-blocking */
-@@ -305,36 +303,7 @@ int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+ 	char scsi_cmd[MAX_COMMAND_SIZE];
  
+-	/* No idea how this happens.... */
+-	if (!sdev)
+-		return -ENXIO;
+-
+-	/*
+-	 * If we are in the middle of error recovery, don't let anyone
+-	 * else try and use this device.  Also, if error recovery fails, it
+-	 * may try and take the device offline, in which case all further
+-	 * access to the device is prohibited.
+-	 */
+-	if (!scsi_block_when_processing_errors(sdev))
+-		return -ENODEV;
+-
+ 	/* Check for deprecated ioctls ... all the ioctls which don't
+ 	 * follow the new unique numbering scheme are deprecated */
  	switch (cmd) {
- 	case SG_SCSI_RESET:
--		result = get_user(val, (int __user *)arg);
--		if (result)
--			return result;
--		if (val & SG_SCSI_RESET_NO_ESCALATE) {
--			val &= ~SG_SCSI_RESET_NO_ESCALATE;
--			val2 = SCSI_TRY_RESET_NO_ESCALATE;
--		} else
--			val2 = 0;
--		if (val == SG_SCSI_RESET_NOTHING)
--			return 0;
--		switch (val) {
--		case SG_SCSI_RESET_DEVICE:
--			val2 |= SCSI_TRY_RESET_DEVICE;
--			break;
--		case SG_SCSI_RESET_TARGET:
--			val2 |= SCSI_TRY_RESET_TARGET;
--			break;
--		case SG_SCSI_RESET_BUS:
--			val2 |= SCSI_TRY_RESET_BUS;
--			break;
--		case SG_SCSI_RESET_HOST:
--			val2 |= SCSI_TRY_RESET_HOST;
--			break;
--		default:
--			return -EINVAL;
--		}
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		return (scsi_reset_provider(sdev, val2) ==
--			SUCCESS) ? 0 : -EIO;
+@@ -273,6 +260,8 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 				     START_STOP_TIMEOUT, NORMAL_RETRIES);
+         case SCSI_IOCTL_GET_PCI:
+                 return scsi_ioctl_get_pci(sdev, arg);
++	case SG_SCSI_RESET:
 +		return scsi_ioctl_reset(sdev, arg);
- 	}
- 	return -ENODEV;
+ 	default:
+ 		if (sdev->host->hostt->ioctl)
+ 			return sdev->host->hostt->ioctl(sdev, cmd, arg);
+@@ -281,30 +270,20 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
  }
+ EXPORT_SYMBOL(scsi_ioctl);
+ 
+-/**
+- * scsi_nonblockable_ioctl() - Handle SG_SCSI_RESET
+- * @sdev: scsi device receiving ioctl
+- * @cmd: Must be SC_SCSI_RESET
+- * @arg: pointer to int containing SG_SCSI_RESET_{DEVICE,TARGET,BUS,HOST}
+- *       possibly OR-ed with SG_SCSI_RESET_NO_ESCALATE
+- * @ndelay: file mode O_NDELAY flag
++/*
++ * We can process a reset even when a device isn't fully operable.
+  */
+-int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+-			    void __user *arg, int ndelay)
++int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int cmd,
++		bool ndelay)
+ {
+-	/* The first set of iocts may be executed even if we're doing
+-	 * error processing, as long as the device was opened
+-	 * non-blocking */
+-	if (ndelay) {
++	if (cmd == SG_SCSI_RESET && ndelay) {
+ 		if (scsi_host_in_recovery(sdev->host))
+ 			return -ENODEV;
+-	} else if (!scsi_block_when_processing_errors(sdev))
+-		return -ENODEV;
+-
+-	switch (cmd) {
+-	case SG_SCSI_RESET:
+-		return scsi_ioctl_reset(sdev, arg);
++	} else {
++		if (!scsi_block_when_processing_errors(sdev))
++			return -ENODEV;
+ 	}
+-	return -ENODEV;
++
++	return 0;
+ }
+-EXPORT_SYMBOL(scsi_nonblockable_ioctl);
++EXPORT_SYMBOL_GPL(scsi_ioctl_block_when_processing_errors);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 242f9b1..61e50ae 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1334,9 +1334,9 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+ 	 * may try and take the device offline, in which case all further
+ 	 * access to the device is prohibited.
+ 	 */
+-	error = scsi_nonblockable_ioctl(sdp, cmd, p,
+-					(mode & FMODE_NDELAY) != 0);
+-	if (!scsi_block_when_processing_errors(sdp) || !error)
++	error = scsi_ioctl_block_when_processing_errors(sdp, cmd,
++			mode & FMODE_NDELAY);
++	if (error)
+ 		goto out;
+ 
+ 	/*
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 2fe2701..7c55cac 100644
+index 7c55cac..b14f64c 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -847,7 +847,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- {
- 	void __user *p = (void __user *)arg;
- 	int __user *ip = p;
--	int result, val, val2, read_only;
-+	int result, val, read_only;
- 	Sg_device *sdp;
- 	Sg_fd *sfp;
- 	Sg_request *srp;
-@@ -1079,36 +1079,8 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 				return -EBUSY;
- 		} else if (!scsi_block_when_processing_errors(sdp->device))
- 			return -EBUSY;
--		result = get_user(val, ip);
--		if (result)
--			return result;
--		if (val & SG_SCSI_RESET_NO_ESCALATE) {
--			val &= ~SG_SCSI_RESET_NO_ESCALATE;
--			val2 = SCSI_TRY_RESET_NO_ESCALATE;
--		} else
--			val2 = 0;
--		if (SG_SCSI_RESET_NOTHING == val)
--			return 0;
--		switch (val) {
--		case SG_SCSI_RESET_DEVICE:
--			val2 |= SCSI_TRY_RESET_DEVICE;
--			break;
--		case SG_SCSI_RESET_TARGET:
--			val2 |= SCSI_TRY_RESET_TARGET;
--			break;
--		case SG_SCSI_RESET_BUS:
--			val2 |= SCSI_TRY_RESET_BUS;
--			break;
--		case SG_SCSI_RESET_HOST:
--			val2 |= SCSI_TRY_RESET_HOST;
--			break;
--		default:
--			return -EINVAL;
--		}
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		return (scsi_reset_provider(sdp->device, val2) ==
--			SUCCESS) ? 0 : -EIO;
-+
-+		return scsi_ioctl_reset(sdp->device, ip);
+@@ -1071,16 +1071,6 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		if (atomic_read(&sdp->detaching))
+ 			return -ENODEV;
+ 		return put_user(sdp->device->host->hostt->emulated, ip);
+-	case SG_SCSI_RESET:
+-		if (atomic_read(&sdp->detaching))
+-			return -ENODEV;
+-		if (filp->f_flags & O_NONBLOCK) {
+-			if (scsi_host_in_recovery(sdp->device->host))
+-				return -EBUSY;
+-		} else if (!scsi_block_when_processing_errors(sdp->device))
+-			return -EBUSY;
+-
+-		return scsi_ioctl_reset(sdp->device, ip);
  	case SCSI_IOCTL_SEND_COMMAND:
  		if (atomic_read(&sdp->detaching))
  			return -ENODEV;
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 2562481..1e1421b 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -60,20 +60,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+@@ -1100,13 +1090,6 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 			return result;
+ 		sdp->sgdebug = (char) val;
+ 		return 0;
+-	case SCSI_IOCTL_GET_IDLUN:
+-	case SCSI_IOCTL_GET_BUS_NUMBER:
+-	case SCSI_IOCTL_PROBE_HOST:
+-	case SG_GET_TRANSFORM:
+-		if (atomic_read(&sdp->detaching))
+-			return -ENODEV;
+-		return scsi_ioctl(sdp->device, cmd_in, p);
+ 	case BLKSECTGET:
+ 		return put_user(max_sectors_bytes(sdp->device->request_queue),
+ 				ip);
+@@ -1122,11 +1105,25 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 		return blk_trace_startstop(sdp->device->request_queue, 0);
+ 	case BLKTRACETEARDOWN:
+ 		return blk_trace_remove(sdp->device->request_queue);
++	case SCSI_IOCTL_GET_IDLUN:
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++	case SCSI_IOCTL_PROBE_HOST:
++	case SG_GET_TRANSFORM:
++	case SG_SCSI_RESET:
++		if (atomic_read(&sdp->detaching))
++			return -ENODEV;
++		break;
+ 	default:
+ 		if (read_only)
+ 			return -EPERM;	/* don't know so take safe approach */
+-		return scsi_ioctl(sdp->device, cmd_in, p);
++		break;
+ 	}
++
++	result = scsi_ioctl_block_when_processing_errors(sdp->device,
++			cmd_in, filp->f_flags & O_NDELAY);
++	if (result)
++		return result;
++	return scsi_ioctl(sdp->device, cmd_in, p);
+ }
  
- extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 2de44cc..1d9eabf 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -549,6 +549,11 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
  
--/*
-- * Reset request from external source
-- * Note: if SCSI_TRY_RESET_DEVICE fails then it will escalate to
-- * SCSI_TRY_RESET_TARGET which if it fails will escalate to
-- * SCSI_TRY_RESET_BUS which if it fails will escalate to SCSI_TRY_RESET_HOST.
-- * To prevent escalation OR with SCSI_TRY_RESET_NO_ESCALATE.
-- */
--#define SCSI_TRY_RESET_DEVICE	1
--#define SCSI_TRY_RESET_BUS	2
--#define SCSI_TRY_RESET_HOST	3
--#define SCSI_TRY_RESET_TARGET	4
--#define SCSI_TRY_RESET_NO_ESCALATE	0x100	/* OR-ed to prior defines */
--
--extern int scsi_reset_provider(struct scsi_device *, int);
-+extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
+ 	mutex_lock(&sr_mutex);
  
- struct scsi_eh_save {
- 	/* saved state */
++	ret = scsi_ioctl_block_when_processing_errors(sdev, cmd,
++			mode & FMODE_NDELAY);
++	if (ret)
++		goto out;
++
+ 	/*
+ 	 * Send SCSI addressing ioctls directly to mid level, send other
+ 	 * ioctls to cdrom/block level.
+@@ -564,16 +569,6 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	if (ret != -ENOSYS)
+ 		goto out;
+ 
+-	/*
+-	 * ENODEV means that we didn't recognise the ioctl, or that we
+-	 * cannot execute it in the current device state.  In either
+-	 * case fall through to scsi_ioctl, which will return ENDOEV again
+-	 * if it doesn't recognise the ioctl
+-	 */
+-	ret = scsi_nonblockable_ioctl(sdev, cmd, argp,
+-					(mode & FMODE_NDELAY) != 0);
+-	if (ret != -ENODEV)
+-		goto out;
+ 	ret = scsi_ioctl(sdev, cmd, argp);
+ 
+ out:
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 63c35ed..7d2e036 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -3376,11 +3376,10 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 	 * may try and take the device offline, in which case all further
+ 	 * access to the device is prohibited.
+ 	 */
+-	retval = scsi_nonblockable_ioctl(STp->device, cmd_in, p,
+-					file->f_flags & O_NDELAY);
+-	if (!scsi_block_when_processing_errors(STp->device) || retval != -ENODEV)
++	retval = scsi_ioctl_block_when_processing_errors(STp->device, cmd_in,
++			file->f_flags & O_NDELAY);
++	if (retval)
+ 		goto out;
+-	retval = 0;
+ 
+ 	cmd_type = _IOC_TYPE(cmd_in);
+ 	cmd_nr = _IOC_NR(cmd_in);
+diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+index b900684..8d19d1d 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/scsi/scsi_ioctl.h
+@@ -40,9 +40,9 @@ typedef struct scsi_fctargaddress {
+ 	unsigned char host_wwn[8]; // include NULL term.
+ } Scsi_FCTargAddress;
+ 
++int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
++		int cmd, bool ndelay);
+ extern int scsi_ioctl(struct scsi_device *, int, void __user *);
+-extern int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+-				   void __user *arg, int ndelay);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* _SCSI_IOCTL_H */
 -- 
 1.9.1
 
