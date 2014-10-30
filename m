@@ -1,84 +1,56 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: Re: [PATCH 1/1 linux-next] hpsa: remove set but unused variable rc
-Date: Thu, 30 Oct 2014 12:10:18 +0530
-Message-ID: <20141030064018.GD3519@sudip-PC>
-References: <1414595704-3119-1-git-send-email-fabf@skynet.be>
- <20141030055517.GC3519@sudip-PC>
- <94D0CD8314A33A4D9D801C0FE68B40295934CA1C@G9W0745.americas.hpqcorp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 13/36] ncr5380: Move static PDMA spin counters to host
+ data
+Date: Thu, 30 Oct 2014 08:31:00 +0100
+Message-ID: <5451E934.6010902@suse.de>
+References: <20141027052607.105914311@telegraphics.com.au> <20141027052610.275439151@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295934CA1C@G9W0745.americas.hpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Fabian Frederick <fabf@skynet.be>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59704 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751127AbaJ3HbC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2014 03:31:02 -0400
+In-Reply-To: <20141027052610.275439151@telegraphics.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 
-On Thu, Oct 30, 2014 at 06:28:13AM +0000, Elliott, Robert (Server Storage) wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Sudip Mukherjee
-> > Sent: Thursday, October 30, 2014 12:55 AM
-> > To: Fabian Frederick
-> > Cc: linux-kernel@vger.kernel.org; Stephen M. Cameron; James E.J.
-> > Bottomley; iss_storagedev@hp.com; linux-scsi@vger.kernel.org
-> > Subject: Re: [PATCH 1/1 linux-next] hpsa: remove set but unused variable
-> > rc
-> > 
-> > On Wed, Oct 29, 2014 at 04:15:04PM +0100, Fabian Frederick wrote:
-> > > Fix -Wunused-but-set-variable warning
-> > 
-> > you should also mention why you have left the call to
-> > irq_set_affinity_hint().
-> > i am not sure , but it looks like irq_set_affinity_hint() is only
-> > checking if
-> > the lock is available or not. It is just locking ,then if lock is
-> > successfull then
-> > returning 0 or if lock fails then return -EINVAL, and unlocks before
-> > returnig.
-> > not doing anything else.
-> > 
-> > thanks
-> > sudip
-> 
-> No, that function sets a mask value that shows up in 
-> 	/proc/irq/nnn/affinity_hint
-> that a program like irqbalance may use to set the CPU affinity mask
-> for each irq via 
-> 	/proc/irq/nnn/smp_affinity   (bitmap format)
-> 	/proc/irq/nnn/smp_affinity_list   (range format)
-> 
-> The reason is that in many cases, it is best when all these occur 
-> on the same CPU that submitted the IO:
-> * LLD submission queues (if multiple are supported)
-> * LDD completion queues
-> * MSI-X interrupt indicating completion
-> * LLD completion interrupt handler
-> * block layer completion handler
-> 
-> Benefits include:
-> * cache efficiency - the data structures for the IO aren't
-> pulled from CPU to CPU.
-> 
-> * avoid IPI overhead in the block layer to get the completion 
-> processed on the submitting CPU (which is done if using 
-> rq_affinity=2 and the interrupt is routed to on another CPU).
-> 
-> * self-throttle the CPUs - avoid swamping one CPU with 
-> completion processing for IOs submitted by many other CPUs
-> (which leads to stalls on the victim and timeouts on the
-> aggressors).
-> 
-> You must run irqbalance with an option to honor the hints;
-> some versions default to that, others don't.  Or, disable
-> the irqbalance service and set them up the affinities
-> manually.
-> 
-thanks , i think this is happening at desc->affinity_hint = m;
+On 10/27/2014 06:26 AM, Finn Thain wrote:
+> Static variables from dtc.c and pas16.c should not appear in the core
+> NCR5380.c driver. Aside from being a layering issue this worsens the
+> divergence between the three core driver variants (atari_NCR5380.c an=
+d
+> sun3_NCR5380.c don't support PSEUDO_DMA) and it can mean multiple hos=
+ts
+> share the same counters.
+>=20
+> Fix this by making the pseudo DMA spin counters in the core more gene=
+ric.
+> This also avoids the abuse of the {DTC,PAS16}_PUBLIC_RELEASE macros, =
+so
+> they can be removed.
+>=20
+> oak.c doesn't use PDMA and hence it doesn't use the counters and henc=
+e it
+> needs no write_info() method. Remove it.
+>=20
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-thanks
-sudip
-> 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
