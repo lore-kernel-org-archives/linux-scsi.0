@@ -1,31 +1,52 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Thu, 30 Oct 2014 16:19:01 +0100
-Message-ID: <545256E5.9010501@acm.org>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org> <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il> <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il> <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Thu, 30 Oct 2014 08:19:55 -0700
+Message-ID: <20141030151955.GA12158@infradead.org>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
+ <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee>
+ <545102FE.3010003@kernel.dk>
+ <20141029183828.GA31689@infradead.org>
+ <alpine.LRH.2.11.1410292205060.16678@adalberg.ut.ee>
+ <54514A7A.8050008@kernel.dk>
+ <alpine.LRH.2.11.1410301317340.19899@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <545253E3.7000009-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:46794 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760387AbaJ3PT5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 11:19:57 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.11.1410301317340.19899@adalberg.ut.ee>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On 10/30/14 16:06, Sagi Grimberg wrote:
-> I'm not aware of any implicit interrupt coalescing effect...
+Meelis,
 
-In case it was not clear what I was referring to: if multiple completion 
-queue handling routines run on the same CPU then the average number of 
-work completions processed by each completion handling routine increases 
-due to the increased time between generation of an interrupt and the 
-start of the completion handler routine. As you know this helps overall 
-system throughput.
+can you try the patch below?  It's a hack and not a proper fix, but it
+addresses what seems to be your culprit, given that it is the only
+place allocating a request from the error handler.
 
-Bart.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index fa7b5ec..5804ea0 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2010,6 +2010,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 	struct scsi_device *sdev;
+ 	unsigned long flags;
+ 
++#if 0
+ 	/*
+ 	 * If the door was locked, we need to insert a door lock request
+ 	 * onto the head of the SCSI request queue for the device.  There
+@@ -2019,6 +2020,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 		if (scsi_device_online(sdev) && sdev->locked)
+ 			scsi_eh_lock_door(sdev);
+ 	}
++#endif
+ 
+ 	/*
+ 	 * next free up anything directly waiting upon the host.  this
