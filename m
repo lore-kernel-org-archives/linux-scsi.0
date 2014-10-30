@@ -1,30 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] ipr: Disable async aborts
-Date: Thu, 30 Oct 2014 01:17:40 -0700
-Message-ID: <20141030081740.GA3194@infradead.org>
-References: <201410271439.s9REdl9U017474@d01av02.pok.ibm.com>
- <1414421403.6401.5.camel@jarvis.lan>
- <20141028084716.GA14286@infradead.org>
- <54515918.4000107@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 24/36] atari_scsi: Remove header
+Date: Thu, 30 Oct 2014 09:18:00 +0100
+Message-ID: <5451F438.8050707@suse.de>
+References: <20141027052607.105914311@telegraphics.com.au> <20141027052612.925453933@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48089 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590AbaJ3IRm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 04:17:42 -0400
-Content-Disposition: inline
-In-Reply-To: <54515918.4000107@linux.vnet.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:60420 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbaJ3ISB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2014 04:18:01 -0400
+In-Reply-To: <20141027052612.925453933@telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-On Wed, Oct 29, 2014 at 04:16:08PM -0500, Brian King wrote:
-> I think we can likely drop the first in the series here. I've reverted it
-> and have been running abort testing for a bit and haven't hit any issues.
-> Unless I see anything overnight, I'll resend the second patch by itself and
-> cc stable.
+On 10/27/2014 06:26 AM, Finn Thain wrote:
+> The #defines in atari_scsi.h are intended to influence subsequent #in=
+cludes
+> in atari_scsi.c. IMHO, that's too convoluted.
+>=20
+> Remove atari_scsi.h by moving those macro definitions to atari_scsi.c=
+,
+> consistent with other NCR5380 drivers.
+>=20
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Thanks, please try to find a reviewer for it as well.
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
