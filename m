@@ -1,35 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 03/12] scsi-mq: Add support for multiple hardware queues
-Date: Wed, 29 Oct 2014 20:53:04 -0400
-Message-ID: <yq1sii6l6of.fsf@sermon.lab.mkp.net>
-References: <5433E43D.3010107@acm.org> <5433E4AB.8030306@acm.org>
-	<yq1k33losu7.fsf@sermon.lab.mkp.net> <5450DC05.1010907@acm.org>
-	<5450DD49.6090108@acm.org>
+From: INHERITANCE FROM YOUR UNCLE <editor.ime@omicsgroupmailer.com>
+Subject: BUSINESS DEAL
+Date: Wed, 29 Oct 2014 23:54:42 -0400
+Message-ID: <20141029235442.79mcoy18g48040c8@webmail.opentransfer.com>
+Reply-To: jam.west@yandex.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5450DD49.6090108-HInyCGIudOg@public.gmane.org> (Bart Van Assche's message of "Wed, 29
-	Oct 2014 13:27:53 +0100")
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi@vger.kernel.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smh05.opentransfer.com ([98.130.1.173]:51243 "EHLO
+	smh05.opentransfer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724AbaJ3Eii (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 00:38:38 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Bart" == Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> writes:
 
-Bart> Let me correct this: setting nr_hw_queues in the host template is
-Bart> not yet supported. If anyone would consider this useful, such
-Bart> functionality would be easy to add.
 
-It seemed like an obvious thing a device driver would want to describe
-in its host template. That's why I asked.
+My name is James West, Attorney to late Mr. Richard who died in a car crash in
+London with his family on November 5th 2008.He left behind a deposit of
+(9.8million GBP) in his account. I sort to have known you have the same last
+name with my late client, So I believe you are related to him. Your consent is
+needed by me to present you as the next of kin to the Bank so we can  
+inherit his
+fortune since there is no one coming fort to lay claim of this money.  
+I have all
+documents that would  give you all the legal right to claim this money  
+which is
+said to have belong to your uncle. if this is right please do Send me your
+telephone number and Full names so that we can discuss on this  
+transaction. You
+can reach me on +447537176629 or Email me on: jam.west@yandex.com
 
-We can add it if somebody wants it but it's a bit of a chicken and egg
-problem. Anyway. Minor issue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hope to hear from you soon
+Yours faithfully
+James West Esq.
