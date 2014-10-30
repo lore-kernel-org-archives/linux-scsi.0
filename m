@@ -1,49 +1,26 @@
-From: Don Brace <brace77070@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/1 linux-next] hpsa: remove set but unused variable rc
-Date: Thu, 30 Oct 2014 10:21:05 -0500
-Message-ID: <54525761.8070800@gmail.com>
+Date: Thu, 30 Oct 2014 08:27:37 -0700
+Message-ID: <20141030152737.GA2818@infradead.org>
 References: <1414595704-3119-1-git-send-email-fabf@skynet.be>
+ <54525761.8070800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1414595704-3119-1-git-send-email-fabf@skynet.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fabian Frederick <fabf@skynet.be>, linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, don.brace@pmcs.com, hch@infradead.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:50015 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934118AbaJ3P1j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Oct 2014 11:27:39 -0400
+Content-Disposition: inline
+In-Reply-To: <54525761.8070800@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <brace77070@gmail.com>
+Cc: Fabian Frederick <fabf@skynet.be>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, don.brace@pmcs.com, hch@infradead.org
 
-On 10/29/2014 10:15 AM, Fabian Frederick wrote:
-> Fix -Wunused-but-set-variable warning
->
-> Signed-off-by: Fabian Frederick <fabf@skynet.be>
-> ---
->   drivers/scsi/hpsa.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index cef5d49..34330e1 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6619,11 +6619,11 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
->
->   static void hpsa_irq_affinity_hints(struct ctlr_info *h)
->   {
-> -	int i, cpu, rc;
-> +	int i, cpu;
->
->   	cpu = cpumask_first(cpu_online_mask);
->   	for (i = 0; i < h->msix_vector; i++) {
-> -		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
-> +		irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
->   		cpu = cpumask_next(cpu, cpu_online_mask);
->   	}
->   }
->
+On Thu, Oct 30, 2014 at 10:21:05AM -0500, Don Brace wrote:
+> I can add this patch to my current set of patches for 3.19 or ack this now,
+> What would you prefer?
 
-I can add this patch to my current set of patches for 3.19 or ack this 
-now, What would you prefer?
-
----
-Don Brace
-don.brace@pmcs.com
+Please queue it up, I'm much more interested in reducing the massive
+backlog of real hpsa changes than in litte cleanups at the moment.
