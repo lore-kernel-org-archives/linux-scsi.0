@@ -1,76 +1,56 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [ V2 PATCH 2/2] scsi: TUR path is down after adapter gets reset with multipath
-Date: Mon, 03 Nov 2014 15:28:59 -0600
-Message-ID: <20141103212948.304004745@linux.vnet.ibm.com>
-References: <20141103212857.791977005@linux.vnet.ibm.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: bisected regression: qla2xxx endianness on sparc64
+Date: Mon, 3 Nov 2014 23:26:38 +0100
+Message-ID: <CAMuHMdVoVjCyJAWiKePXzfx8WyXoFd8CwwAk8DM8jxcOHC1Mnw@mail.gmail.com>
+References: <alpine.DEB.2.03.1411022004230.3979@cyber.ee>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:58284 "HELO
-	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754048AbaKCVd0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 16:33:26 -0500
-Content-Disposition: inline; filename=allow_restart2
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:37201 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbaKCW0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 17:26:40 -0500
+In-Reply-To: <alpine.DEB.2.03.1411022004230.3979@cyber.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: Meelis Roos <mroos@linux.ee>
+Cc: Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-This patch fixes an issue with multipath ipr SAS devices which require a
-start unit command to be issued following an adapter reset. Without this
-patch, paths get marked failed following an adapter reset and since the
-error handler never gets invoked to issue the start unit, the paths are
-never recovered. Returning FAILED for this case ensures the error
-handler wakes up to issue the start unit.
+On Sun, Nov 2, 2014 at 7:10 PM, Meelis Roos <mroos@linux.ee> wrote:
+> Between 3.17 and 3.18-rc2, qla2xxx is broken on my sparc64 machines. It
+> fails to boot (hangs in firmware rings init).
+>
+> This is the result of bisect:
+>
+> 98aee70d19a7e3203649fa2078464e4f402a0ad8 is the first bad commit
+> commit 98aee70d19a7e3203649fa2078464e4f402a0ad8
+> Author: Joe Carnuccio <joe.carnuccio@qlogic.com>
+> Date:   Thu Sep 25 05:16:38 2014 -0400
+>
+>     qla2xxx: Add endianizer to max_payload_size modifier.
+>
+>     Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+>     Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> :040000 040000 041c1a26dc2a7988900acc982e3bd65d3cf7e751
+> 9700d09c3226fc352d44352f22b84f1be632d324 M  s
+>
+> This may not be the only problem - when bisecting, I also came to commits
+> that got past this step but hang after about 165 seconds of uptime while
+> running userspace startup scripts. But let that be another issue at the
+> moment.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Teste-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+Switching from uint16_t to __le16 but _removing_ cpu_to_le16() operations
+looks indeed very fishy.
 
-Index: b/drivers/scsi/device_handler/scsi_dh_alua.c
-===================================================================
---- a/drivers/scsi/device_handler/scsi_dh_alua.c	2014-10-29 20:50:29.000000000 -0500
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2014-11-03 14:24:39.482078993 -0600
-@@ -84,6 +84,7 @@ struct alua_dh_data {
- 
- static char print_alua_state(int);
- static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
-+static int alua_check_sense_handler(struct scsi_device *, struct scsi_sense_hdr *);
- 
- static inline struct alua_dh_data *get_alua_data(struct scsi_device *sdev)
- {
-@@ -519,6 +520,23 @@ static int alua_check_sense(struct scsi_
- 	return SCSI_RETURN_NOT_HANDLED;
- }
- 
-+static int alua_check_sense_handler(struct scsi_device *sdev,
-+			    struct scsi_sense_hdr *sense_hdr)
-+{
-+	switch (sense_hdr->sense_key) {
-+	case NOT_READY:
-+		if (sdev->allow_restart &&
-+		    sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x02)
-+			/*
-+			 * if the device is not started, we need to wake
-+			 * the error handler to start the motor
-+			 */
-+			return FAILED;
-+		break;
-+	}
-+	alua_check_sense(sdev, sense_hdr);
-+}
-+
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-@@ -827,7 +845,7 @@ static struct scsi_device_handler alua_d
- 	.attach = alua_bus_attach,
- 	.detach = alua_bus_detach,
- 	.prep_fn = alua_prep_fn,
--	.check_sense = alua_check_sense,
-+	.check_sense = alua_check_sense_handler,
- 	.activate = alua_activate,
- 	.set_params = alua_set_params,
- 	.match = alua_match,
+Gr{oetje,eeting}s,
 
--- 
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
