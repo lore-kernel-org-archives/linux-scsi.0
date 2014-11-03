@@ -1,44 +1,34 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [PATCH] megaraid_sas : Fix bug in handling return value of pci_enable_msix_range()
-Date: Mon,  3 Nov 2014 20:44:20 +0800
-Message-ID: <1415018660-30775-1-git-send-email-jiang.liu@linux.intel.com>
-Return-path: <linux-pci-owner@vger.kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
-To: Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, Alexander Gordeev <agordeev@redhat.com>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Meelis Roos <meelis.roos@ut.ee>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Mon, 03 Nov 2014 15:05:15 +0200
+Message-ID: <c1b17e67aac4b5c507f6bff2049773a3@pohl.ut.ee>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
+ <20141103100816.GA16752@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vmail.ut.ee ([193.40.5.83]:54780 "EHLO vmail.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751864AbaKCNNn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Nov 2014 08:13:43 -0500
+In-Reply-To: <20141103100816.GA16752@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 
-Function pci_enable_msix_range() may return negative values for error
-conditions. So it's a bug by checking (pci_enable_msix_range() != 0)
-for success and causes failure to megaraid driver when MSI is disabled.
-[   16.487267] megaraid_sas 0000:02:00.0: Controller type: iMR
-[   16.487275] genirq: Flags mismatch irq 0. 00000000 (megasas) vs. 00015a00 (tii
-mer)
-[   16.487347] megasas: Failed to register IRQ for vector 0.
+03-11-2014 12:08 kirjutas Christoph Hellwig:
 
-Fixes: 8ae80ed1734b "megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()"
+> Meelis,
+> 
+> can you give the patch below a try? This only tries to locked the door
+> on devices that actually were reset. Given that on a reset device we
+> fail all commands before resuming operations it should work fine there
+> as all tags should be released.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Bjorn Helgaas <bhelgaas@google.com>"
-Cc: linux-pci@vger.kernel.org
-Cc: <stable@vger.kernel.org> # 3.17
----
- drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Works fine on both DL380G3 and the other server with MPT and IDE CD.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f6a69a3b1b3f..5640ad1c8214 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4453,7 +4453,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			instance->msixentry[i].entry = i;
- 		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
- 					  1, instance->msix_vectors);
--		if (i)
-+		if (i > 0)
- 			instance->msix_vectors = i;
- 		else
- 			instance->msix_vectors = 0;
 -- 
-1.7.10.4
+Meelis Roos
