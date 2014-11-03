@@ -1,48 +1,42 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
-Date: Mon, 3 Nov 2014 00:25:21 -0800
-Message-ID: <20141103082521.GA22628@infradead.org>
-References: <5433E43D.3010107@acm.org>
- <5433E557.3010505@acm.org>
- <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
- <20141023084744.GA24965@infradead.org>
- <94D0CD8314A33A4D9D801C0FE68B402959324A17@G4W3296.americas.hpqcorp.net>
- <20141024064514.GA15654@infradead.org>
- <0b1b37c7fe497160a80a1f5515d01534@mail.gmail.com>
+Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
+Date: Mon, 3 Nov 2014 02:08:16 -0800
+Message-ID: <20141103100816.GA16752@infradead.org>
+References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36554 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:36739 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbaKCIZ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 03:25:29 -0500
+	with ESMTP id S1751012AbaKCKIR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 05:08:17 -0500
 Content-Disposition: inline
-In-Reply-To: <0b1b37c7fe497160a80a1f5515d01534@mail.gmail.com>
+In-Reply-To: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, linux-scsi@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>, "Scales, Webb" <webb.scales@hp.com>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
+To: Meelis Roos <mroos@linux.ee>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>
 
-On Mon, Nov 03, 2014 at 01:22:18PM +0530, Kashyap Desai wrote:
-> I also used below setting in slave_alloc(), so that first Inquiry command
-> received by driver also has valid Tag in (Non-MQ mode).
-> 	sdev->tagged_supported = 1
-> Without above setting Inquiry command comes with 0xFF. If I see below code
-> in scsi_scan.c, it looks like tagged_supported value should be popped by
-> after actual value reported from Inquiry command.
-> 
->         if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
->             !(*bflags & BLIST_NOTQ))
->                 sdev->tagged_supported = 1;
-> 
-> Does it means what driver set in slave_alloc is OK to get Inquiry commands
-> with valid Tag  ?
-> What will happen if Target really does not support Tagged command queue
-> and driver overwrite it in slave_alloc ?
+Meelis,
 
-I think the right thing here is to better differenciate between
-assigning a software tag, and a SCSI tagged command.  That is, we should
-assign a request->tag value for every command if we enable host wide
-tags, independent of issuing an actual tagged command.
+can you give the patch below a try?  This only tries to locked the door
+on devices that actually were reset. Given that on a reset device we
+fail all commands before resuming operations it should work fine there
+as all tags should be released.
 
-I'll send a series of patches for this ASAP.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index fa7b5ec..7af43cb 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2016,8 +2016,10 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+ 	 * is no point trying to lock the door of an off-line device.
+ 	 */
+ 	shost_for_each_device(sdev, shost) {
+-		if (scsi_device_online(sdev) && sdev->locked)
++		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
+ 			scsi_eh_lock_door(sdev);
++			sdev->was_reset = 0;
++		}
+ 	}
+ 
+ 	/*
