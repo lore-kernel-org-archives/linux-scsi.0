@@ -1,13 +1,13 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: [V2 PATCH 1/2] scsi: call device handler for failed TUR command
-Date: Mon, 03 Nov 2014 15:18:07 -0600
-Message-ID: <20141103211814.812115027@linux.vnet.ibm.com>
-References: <20141103211806.572351346@linux.vnet.ibm.com>
+Subject: [ V2 PATCH 1/2] scsi: call device handler for failed TUR command
+Date: Mon, 03 Nov 2014 15:28:58 -0600
+Message-ID: <20141103212948.123730327@linux.vnet.ibm.com>
+References: <20141103212857.791977005@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:58268 "HELO
+Received: from [32.97.110.57] ([32.97.110.57]:58281 "HELO
 	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1753964AbaKCVbL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 16:31:11 -0500
+	by vger.kernel.org with SMTP id S1754047AbaKCVd0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 16:33:26 -0500
 Content-Disposition: inline; filename=allow_restart1
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
