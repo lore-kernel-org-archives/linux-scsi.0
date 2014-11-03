@@ -1,34 +1,68 @@
-From: Meelis Roos <meelis.roos@ut.ee>
-Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
-Date: Mon, 03 Nov 2014 15:05:15 +0200
-Message-ID: <c1b17e67aac4b5c507f6bff2049773a3@pohl.ut.ee>
-References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee>
- <20141103100816.GA16752@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] vmw_pvscsi: fixup tagging
+Date: Mon, 3 Nov 2014 10:30:28 -0800
+Message-ID: <20141103183028.GA18162@infradead.org>
+References: <1412234501-78199-1-git-send-email-hare@suse.de>
+ <20141017131651.GD16538@infradead.org>
+ <41c186a1dcd04732a87f8bc47336a5d7@EX13-MBX-025.vmware.com>
+ <5442A671.3080704@suse.de>
+ <1690691e34434a6d9cb690a655897613@EX13-MBX-025.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vmail.ut.ee ([193.40.5.83]:54780 "EHLO vmail.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751864AbaKCNNn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Nov 2014 08:13:43 -0500
-In-Reply-To: <20141103100816.GA16752@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:34129 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbaKCSai (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 13:30:38 -0500
+Content-Disposition: inline
+In-Reply-To: <1690691e34434a6d9cb690a655897613@EX13-MBX-025.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: Arvind Kumar <arvindkumar@vmware.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, James Bottomley <jbottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-03-11-2014 12:08 kirjutas Christoph Hellwig:
+FYI, I've updated the patch a bit in my tree to always set  e->tag to
+SIMPLE_QUEUE_TAG.  The rationale for that is that we actually never set
+MSG_ORDERED_TAG for other drivers since 2010, and fixing this up
+properly in this driver makes it conflict less with my patch series to
+fix up more mess in this area.
 
-> Meelis,
-> 
-> can you give the patch below a try? This only tries to locked the door
-> on devices that actually were reset. Given that on a reset device we
-> fail all commands before resuming operations it should work fine there
-> as all tags should be released.
+Updated patch below:
 
-Works fine on both DL380G3 and the other server with MPT and IDE CD.
+---
+From: Hannes Reinecke <hare@suse.de>
+Subject: vmw_pvscsi: fixup tagging
 
+The request (and SCSI command) tag is the tag number assigned
+by the generic block-tagging code, not the SCSI-II tag messages.
+Those are represented by the device flags 'tagged_supported',
+'simple_tags', and 'ordered_tags'.
+(The SCSI midlayer doesn't use HEAD_OF_QUEUE tags).
+So fixup vmw_pvscsi to assign the correct tag type.
+
+[hch: fixed up to never set MSG_ORDERED_TAG]
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/vmw_pvscsi.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 598f65e..7dd4d17 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -723,10 +723,6 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+ 	memcpy(e->cdb, cmd->cmnd, e->cdbLen);
+ 
+ 	e->tag = SIMPLE_QUEUE_TAG;
+-	if (sdev->tagged_supported &&
+-	    (cmd->tag == HEAD_OF_QUEUE_TAG ||
+-	     cmd->tag == ORDERED_QUEUE_TAG))
+-		e->tag = cmd->tag;
+ 
+ 	if (cmd->sc_data_direction == DMA_FROM_DEVICE)
+ 		e->flags = PVSCSI_FLAG_CMD_DIR_TOHOST;
 -- 
-Meelis Roos
+1.9.1
+
