@@ -1,76 +1,69 @@
 From: wenxiong@linux.vnet.ibm.com
-Subject: [V2 PATCH 2/2] scsi: TUR path is down after adapter gets reset with multipath
-Date: Mon, 03 Nov 2014 15:18:08 -0600
-Message-ID: <20141103211815.000777763@linux.vnet.ibm.com>
+Subject: [V2 PATCH 1/2] scsi: call device handler for failed TUR command
+Date: Mon, 03 Nov 2014 15:18:07 -0600
+Message-ID: <20141103211814.812115027@linux.vnet.ibm.com>
 References: <20141103211806.572351346@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [32.97.110.57] ([32.97.110.57]:58265 "HELO
+Received: from [32.97.110.57] ([32.97.110.57]:58268 "HELO
 	jupiter1-lp2.austin.ibm.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754058AbaKCVbL (ORCPT
+	by vger.kernel.org with SMTP id S1753964AbaKCVbL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 16:31:11 -0500
-Content-Disposition: inline; filename=allow_restart2
+Content-Disposition: inline; filename=allow_restart1
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: hch@infradead.org, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-This patch fixes an issue with multipath ipr SAS devices which require a
-start unit command to be issued following an adapter reset. Without this
-patch, paths get marked failed following an adapter reset and since the
-error handler never gets invoked to issue the start unit, the paths are
-never recovered. Returning FAILED for this case ensures the error
-handler wakes up to issue the start unit.
+Multipath devices using the TUR path checker need to see the sense
+code for a failed TUR command in their device handler.  Since commit
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/
+drivers/scsi/scsi_error.c?id=14216561e164671ce147458653b1fea06a
+we always return success for mid layer issued TUR commands before
+calling the device handler, which stopped the TUR path checker from working.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-Teste-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Move the call to the device handler check sense method before the early
+return for TUR commands to give the device handler a chance to intercept
+them.
+
+Signed-off-by: Christoph Hellwig <hch@infradead.org>
+Tested-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_error.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Index: b/drivers/scsi/device_handler/scsi_dh_alua.c
+Index: b/drivers/scsi/scsi_error.c
 ===================================================================
---- a/drivers/scsi/device_handler/scsi_dh_alua.c	2014-10-29 20:50:29.000000000 -0500
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2014-11-03 14:24:39.482078993 -0600
-@@ -84,6 +84,7 @@ struct alua_dh_data {
+--- a/drivers/scsi/scsi_error.c	2014-10-23 12:54:16.000000000 -0500
++++ b/drivers/scsi/scsi_error.c	2014-10-23 12:57:44.642078988 -0500
+@@ -459,14 +459,6 @@ static int scsi_check_sense(struct scsi_
+ 	if (! scsi_command_normalize_sense(scmd, &sshdr))
+ 		return FAILED;	/* no valid sense data */
  
- static char print_alua_state(int);
- static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
-+static int alua_check_sense_handler(struct scsi_device *, struct scsi_sense_hdr *);
+-	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
+-		/*
+-		 * nasty: for mid-layer issued TURs, we need to return the
+-		 * actual sense data without any recovery attempt.  For eh
+-		 * issued ones, we need to try to recover and interpret
+-		 */
+-		return SUCCESS;
+-
+ 	scsi_report_sense(sdev, &sshdr);
  
- static inline struct alua_dh_data *get_alua_data(struct scsi_device *sdev)
- {
-@@ -519,6 +520,23 @@ static int alua_check_sense(struct scsi_
- 	return SCSI_RETURN_NOT_HANDLED;
- }
+ 	if (scsi_sense_is_deferred(&sshdr))
+@@ -482,6 +474,14 @@ static int scsi_check_sense(struct scsi_
+ 		/* handler does not care. Drop down to default handling */
+ 	}
  
-+static int alua_check_sense_handler(struct scsi_device *sdev,
-+			    struct scsi_sense_hdr *sense_hdr)
-+{
-+	switch (sense_hdr->sense_key) {
-+	case NOT_READY:
-+		if (sdev->allow_restart &&
-+		    sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x02)
-+			/*
-+			 * if the device is not started, we need to wake
-+			 * the error handler to start the motor
-+			 */
-+			return FAILED;
-+		break;
-+	}
-+	alua_check_sense(sdev, sense_hdr);
-+}
++	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
++		/*
++		 * nasty: for mid-layer issued TURs, we need to return the
++		 * actual sense data without any recovery attempt.  For eh
++		 * issued ones, we need to try to recover and interpret
++		 */
++		return SUCCESS;
 +
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-@@ -827,7 +845,7 @@ static struct scsi_device_handler alua_d
- 	.attach = alua_bus_attach,
- 	.detach = alua_bus_detach,
- 	.prep_fn = alua_prep_fn,
--	.check_sense = alua_check_sense,
-+	.check_sense = alua_check_sense_handler,
- 	.activate = alua_activate,
- 	.set_params = alua_set_params,
- 	.match = alua_match,
+ 	/*
+ 	 * Previous logic looked for FILEMARK, EOM or ILI which are
+ 	 * mainly associated with tapes and returned SUCCESS.
 
 -- 
