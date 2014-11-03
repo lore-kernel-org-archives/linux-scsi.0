@@ -1,203 +1,89 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH] drivers: scsi: qla2xxx: Remove redundant declaration in
- 'qla_gbl.h'
-Date: Mon, 3 Nov 2014 04:54:57 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D0128570B02@AVMB1.qlogic.org>
-References: <5454C804.50407@gmail.com>
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+Subject: RE: [PATCH v2 10/12] IB/srp: Use block layer tags
+Date: Mon, 3 Nov 2014 13:22:18 +0530
+Message-ID: <0b1b37c7fe497160a80a1f5515d01534@mail.gmail.com>
+References: <5433E43D.3010107@acm.org> <5433E557.3010505@acm.org>
+ <94D0CD8314A33A4D9D801C0FE68B4029593212E0@G4W3296.americas.hpqcorp.net>
+ <20141023084744.GA24965@infradead.org> <94D0CD8314A33A4D9D801C0FE68B402959324A17@G4W3296.americas.hpqcorp.net>
+ <20141024064514.GA15654@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D0128570B02AVMB1qlogicor_"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:32253 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750935AbaKCEzA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Nov 2014 23:55:00 -0500
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sA34rZLp004767
-	for <linux-scsi@vger.kernel.org>; Sun, 2 Nov 2014 20:55:00 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1qcs6vtesj-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 02 Nov 2014 20:54:59 -0800
-In-Reply-To: <5454C804.50407@gmail.com>
-Content-Language: en-US
+Received: from exprod7og109.obsmtp.com ([64.18.2.171]:53302 "EHLO
+	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbaKCH61 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 02:58:27 -0500
+Received: by mail-la0-f50.google.com with SMTP id hz20so6579871lab.9
+        for <linux-scsi@vger.kernel.org>; Sun, 02 Nov 2014 23:58:26 -0800 (PST)
+In-Reply-To: <20141024064514.GA15654@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chen Gang <gang.chen.5i5j@gmail.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
-Cc: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, linux-scsi@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>, "Scales, Webb" <webb.scales@hp.com>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D0128570B02AVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <54655209CFD35D45977A89E2DECE266B@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-
-
->Remove 2 redundant extern inline functions: qla8044_set_qsnt_ready() and
->qla8044_need_reset_handler(). At present, within upstream next kernel
->source code, they are only used within "drivers/scsi/qla2xxx/qla_nx2.c".
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: Friday, October 24, 2014 12:15 PM
+> To: Elliott, Robert (Server Storage)
+> Cc: Bart Van Assche; Jens Axboe; Sagi Grimberg; Sebastian Parschauer;
+Ming
+> Lei; linux-scsi@vger.kernel.org; linux-rdma; Scales, Webb; Don Brace
+(PMC)
+> Subject: Re: [PATCH v2 10/12] IB/srp: Use block layer tags
 >
->The related error and warnings (with allmodconfig under tile):
+> On Fri, Oct 24, 2014 at 04:43:15AM +0000, Elliott, Robert (Server
+Storage)
+> wrote:
+> > However, it was looking at scmd->tag, which is always 0xff (at least
+> > in those early discovery commands).  scmd->request->tag looks like it
+> > is the field that has the correct values.
+> >
+> > Also, I noticed that scmd->tag is just an 8 bit field, so it could
+> > never represent a large number of tags.
 >
->    CC [M]  drivers/scsi/qla2xxx/qla_nx2.o
->  drivers/scsi/qla2xxx/qla_nx2.c:1633:1: error: static declaration of
->'qla8044_need_reset_handler' follows non-static declaration
->   qla8044_need_reset_handler(struct scsi_qla_host *vha)
->   ^
->  In file included from drivers/scsi/qla2xxx/qla_def.h:3706:0,
->                   from drivers/scsi/qla2xxx/qla_nx2.c:11:
->  drivers/scsi/qla2xxx/qla_gbl.h:756:20: note: previous declaration of
->'qla8044_need_reset_handler' was here
->   extern inline void qla8044_need_reset_handler(struct scsi_qla_host
->*vha);
->                      ^
->  drivers/scsi/qla2xxx/qla_gbl.h:756:20: warning: inline function
->'qla8044_need_reset_handler' declared but never defined
->  make[3]: *** [drivers/scsi/qla2xxx/qla_nx2.o] Error 1
->  make[2]: *** [drivers/scsi/qla2xxx] Error 2
->  make[1]: *** [drivers/scsi] Error 2
->  make: *** [drivers] Error 2
+> Yes, we need to get rid of scmd->tag.  Hannes had a patchset to get
+started
+> on it, and I hope either he or someone else will have time to get back
+to it
+> ASAP.
 >
->    CC [M]  drivers/scsi/qla2xxx/qla_tmpl.o
->  In file included from drivers/scsi/qla2xxx/qla_def.h:3706:0,
->                   from drivers/scsi/qla2xxx/qla_tmpl.c:7:
->  drivers/scsi/qla2xxx/qla_gbl.h:755:20: warning: inline function
->'qla8044_set_qsnt_ready' declared but never defined
->   extern inline void qla8044_set_qsnt_ready(struct scsi_qla_host *vha);
->                    ^
+> > Just to confirm: After calling scsi_init_shared_tag_map() in non-mq
+> > mode, will scmd->request->tag be based on controller-wide tag
+> > allocation (never using the same value at the same time for the
+> > request queues of multiple devices in that controller)?
 >
->Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->---
-> drivers/scsi/qla2xxx/qla_gbl.h | 2 --
-> drivers/scsi/qla2xxx/qla_nx2.c | 2 +-
-> 2 files changed, 1 insertion(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_gbl.h
->b/drivers/scsi/qla2xxx/qla_gbl.h
->index b1865a7..7686bfe 100644
->--- a/drivers/scsi/qla2xxx/qla_gbl.h
->+++ b/drivers/scsi/qla2xxx/qla_gbl.h
->@@ -752,8 +752,6 @@ extern void qla8044_set_idc_dontreset(struct
->scsi_qla_host *ha);
-> extern int qla8044_rd_direct(struct scsi_qla_host *vha, const uint32_t
->crb_reg);
-> extern void qla8044_wr_direct(struct scsi_qla_host *vha,
-> 			      const uint32_t crb_reg, const uint32_t value);
->-extern inline void qla8044_set_qsnt_ready(struct scsi_qla_host *vha);
->-extern inline void qla8044_need_reset_handler(struct scsi_qla_host *vha);
-> extern int qla8044_device_state_handler(struct scsi_qla_host *vha);
-> extern void qla8044_clear_qsnt_ready(struct scsi_qla_host *vha);
-> extern void qla8044_clear_drv_active(struct qla_hw_data *);
->diff --git a/drivers/scsi/qla2xxx/qla_nx2.c
->b/drivers/scsi/qla2xxx/qla_nx2.c
->index 24a8528..ed4d6b6 100644
->--- a/drivers/scsi/qla2xxx/qla_nx2.c
->+++ b/drivers/scsi/qla2xxx/qla_nx2.c
->@@ -238,7 +238,7 @@ qla8044_rmw_crb_reg(struct scsi_qla_host *vha,
-> 	return;
-> }
->=20
->-inline void
->+static inline void
-> qla8044_set_qsnt_ready(struct scsi_qla_host *vha)
-> {
-> 	uint32_t qsnt_state;
->--=20
->1.9.3
+> Yes.
 
+Hi Everyone, I am doing similar code changes for megaraid_sas driver. I
+found this thread more suitable to get help from you...
 
---_000_F5D084D6342F9B479C34599BB0A03E4D0128570B02AVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+I also noticed that after using scsi_init_shared_tag_map() in driver, tags
+are coming controller wide.
+And that is a good for megaraid_sas driver to get-rid-off internal command
+pool list and start using block layer tags.
 
-eJ8+IlskAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADkyQzc1OUM3
-QzA4MEUwNDg5QTM0RERGMjZGNkMzNkRCAE4HAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HCwADAAQA
-NgA5AAEAZwEBIIADAA4AAADeBwsAAwAEADYAOQABAGcBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFAAAABSZTogW1BBVENIXSBkcml2ZXJzOiBzY3NpOiBxbGEyeHh4OiBS
-ZW1vdmUgcmVkdW5kYW50IGRlY2xhcmF0aW9uIGluICdxbGFfZ2JsLmgnALYbAQOQBgAQEgAANgAA
-AAIBfwABAAAAPgAAADxGNUQwODRENjM0MkY5QjQ3OUMzNDU5OUJCMEEwM0U0RDAxMjg1NzBCMDJA
-QVZNQjEucWxvZ2ljLm9yZz4AAAALAB8OAQAAAAIBCRABAAAA3AUAANgFAADxDgAATFpGdWqjjgNh
-AApmYmlkBAAAY2PAcGcxMjUyAP4DQ/B0ZXh0AfcCpAPjAgAEY2gKwHNldDAg7wdtAoMAUBFNMgqA
-BrQCgJZ9CoAIyDsJYjE5DsC/CcMWcgoyFnECgBViKgmwcwnwBJBhdAWyDlADYHOibwGAIEV4EcFu
-GDBdBlJ2BJAXtgIQcgDAdH0IUG4aMRAgBcAFoBtkZJogA1IgECIXslx2CJDkd2sLgGQ1HVME8AdA
-DRdwMApxF/Jia21rBnMBkAAgIEJNX0LgRUdJTn0K/AHxC/EQIEFjawmALWJ5BjoGAQhwYXYgS2EA
-c2h5YXAgPHNJIlMuayLEQHEJAGeFDlAuBaBtPlxsC4DGZQqBJPs+UmUEYBow6CAyIAlxdR3AAHAF
-QD8QMQSSC4Ak8hxwJwBjdBppAiBzIiAkMGE4MIg0NF8SAV9xcwIwAl8JcGFkeSgpIP8AcAswJdUp
-BhhQCYAqASmC1RmhZB5wcipgLiGQBUAmcCwSAjAsIAPwdGjxC4AgdXAfYCoRHLAYUO0QQCAhwASg
-ZQlQJdUZIH0IcGMZ4AWgAQAtwC4AZVZ5KoAJcCACIGwxEHVnEgAcYC3lImQFEBoxc5YvBPAAkC8p
-ATJ4M6CTM1IrsHgyJJAiLiXG/SXGVDDwJsELYBxCBJADYH8FwCqRLdAKwAMAGcAEICgzLeIqgGxs
-BGEb4WZpPmcuQB3AG7EokB5wKToFNJ4gOnFDQyBbTe5dOnAynzOqbzn4Oz8zq+A6MTYzMz+QIiA2
-U/ciIB9hKJBjPaAFkAtgGHFrKKExYGYlxicrTyxXJ78ccAbwCQAeMC7QAiAtQJ/fC5A6CEJ/LFgu
-cXUogECANz5BKbAz8WgZEAVAKnbVEdApOfleOfhJA6A4cPcecCfRQSB1AQAcZT2/M6YBAQEuaDoz
-NzA2+DowLDn6T91Mjz5/P4FnP/A9H1GvX2cCYE6RN/41TvAB0CIgRLAQICIgLVH/HWAIYAQgQQ9C
-H0MvNvAEIM8w8AlwOfknfHZvDdBGv/9Hz0jcJcZJwxYgT09hikrJ/1P/VQ9WEzb1IiAn7Vg/XW/n
-RAFXVBxRYnUFQBhQGjF/V0E4cBhQKrc6cADAIcBb9DNdIiAqbFA60GNPPEvdOwBFNmMAUGs8Mmwv
-bTn3boYOwGs8MXAfbTFx32ukn3N8dK85/zsPM3l0bQtQ/zz6S39Q702fTq9hj1DPee+7evE/gDdT
-T4H/VWg1ZW//Zn9niimMaW9qf1tvXH0pjd9en0mHYK9h3zTaUziAavFqLRkwZiHzQzDwA6BHOxmx
-IyBnGbEkkJTBLjXgaTVqQGcAwAMQJJo8Pi2XcHgHhF9kWyB83yahl4+YnzQFmhMrmngmsNd8AgQg
-GZRkLcAxJ9ESAKMAICihKCspLcAzV0HzHnAokygtSgclxg3gASDnmlEkYAVAYS+bH2RbJcZ+YqKv
-o78l8x2xEDCK0DEAODY1YTcuLjeyNqgQYmYZ4B6RNo4g75b5oo+mHyXVK6ygitCqPzOrTyXzQECa
-UFXgMizmOJ0wr6I2IK9hJ3WNj/0N0GN+sAIhLBOPNS+Xj8y/kLsndwVAjdYLIH6waQlwvyiAjz9J
-dy3AG+FJkXW2EVwzMnrAJcYFAGIqAWfztP9cjHdytv+4D3gHDIT/v9SRpbksG9C6lLkOXIAHQPsK
-UJDYLYyvjb+Oz4/fw7//xM9oH15Px7+1P8V3AQAdYP8wUClwRQHP0MufzK/Nv8ob/1dwKiC88MZP
-0T/ST9Nf1GP5rQB2XwDQKJAaMNVWSTP2d36wGIBhSbCQ2KHvrU+fM+ekn90f3iynlDI0xaDNDrA4
-qGAJgDRkqLCwUH+pD9x/4A+sP+R/5Y+vYjLwMzgsN50w6ZSvYbZXfm3asLqF1V++j7+UJsF0/whw
-EzC/KCBAvzeXBsmp5hf/RPXwn3hhxY/VD0kvv0YAAH/ti8FHKcPP88iY4/AlxjFwLjkuMyTsFUL8
-AB8AQgABAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwBlAAEAAAA0AAAA
-cwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AZAAB
-AAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMA
-YQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBz
-AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA0AAAAcwBhAHUAcgBhAHYA
-LgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A5V8BAAAAPAAAAHMAaQBw
-ADoAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A
-GgwBAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAfDAEAAAA0AAAAcwBh
-AHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AHgwBAAAA
-CgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1
-AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
-eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBr
-AGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8A+D8BAAAAHgAAAFMAYQB1AHIA
-YQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBo
-AHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB
-+T8BAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5
-AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAA
-AAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQA
-AAIBCzABAAAAEAAAAJLHWcfAgOBImjTd8m9sNtsDABcAAQAAAEAAOQCAJpZQIvfPAUAACDAV4b1Q
-IvfPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMA
-AAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAoAAAAFIAZQA6ACAAWwBQ
-AEEAVABDAEgAXQAgAGQAcgBpAHYAZQByAHMAOgAgAHMAYwBzAGkAOgAgAHEAbABhADIAeAB4AHgA
-OgAgAFIAZQBtAG8AdgBlACAAcgBlAGQAdQBuAGQAYQBuAHQAIABkAGUAYwBsAGEAcgBhAHQAaQBv
-AG4AIABpAG4AIAAnAHEAbABhAF8AZwBiAGwALgBoACcAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAA
-AAADADYAAAAAAB8AQhABAAAANgAAADwANQA0ADUANABDADgAMAA0AC4ANQAwADQAMAA3AEAAZwBt
-AGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAbAAAAAQHP9ciXzDxSSqDZGE6k65TOWg0d85xP
-O1iAAB8AcAABAAAAmAAAAFsAUABBAFQAQwBIAF0AIABkAHIAaQB2AGUAcgBzADoAIABzAGMAcwBp
-ADoAIABxAGwAYQAyAHgAeAB4ADoAIABSAGUAbQBvAHYAZQAgAHIAZQBkAHUAbgBkAGEAbgB0ACAA
-ZABlAGMAbABhAHIAYQB0AGkAbwBuACAAaQBuACAAJwBxAGwAYQBfAGcAYgBsAC4AaAAnAAAAHwA1
-EAEAAAB8AAAAPABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkA
-QgBCADAAQQAwADMARQA0AEQAMAAxADIAOAA1ADcAMABCADAAMgBAAEEAVgBNAEIAMQAuAHEAbABv
-AGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAANgAAADwANQA0ADUANABDADgAMAA0AC4ANQAwADQA
-MAA3AEAAZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAwDeP59OAABAAAcwt3d2UCL3zwEDACYAAAAA
-AAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTQxMTAzMDQ1NDU3Wi0zNzAz
-OAAAAB8AFRABAAAAWAAAADUANAA2ADUANQAyADAAOQBDAEYARAAzADUARAA0ADUAOQA3ADcAQQA4
-ADkARQAyAEQARQBDAEUAMgA2ADYAQgBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAACARQwAQAAAAwA
-AADQAAAAY99x7EEAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBzAGgAeQBhAHAAAAAA
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAA
-RgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADQALgA1
-AC4AMQA0ADEAMAAwADMAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUA
-cgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAKAQAASQBJ
-AD0AMAAxADAAMQBDAEYARgA3ADIAMgA1ADAAOAA2AEMAQQBBADgAQQA0ADIANwAzAEMAQwA0ADQA
-MAA5ADgARABDADQAMwBDADUANwBDAEQANQA1AEIARgAzADsAUwBCAE0ASQBEAD0ANAAwADkAOwBT
-ADEAPQA8ADUANAA1ADQAQwA4ADAANAAuADUAMAA0ADAANwBAAGcAbQBhAGkAbAAuAGMAbwBtAD4A
-OwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAg
-ADMAOAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAA
-wAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAA
-AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcA
-LQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMA
-AAAAAEgP
+As explained by Robert,
+I also used below setting in slave_alloc(), so that first Inquiry command
+received by driver also has valid Tag in (Non-MQ mode).
+	sdev->tagged_supported = 1
+Without above setting Inquiry command comes with 0xFF. If I see below code
+in scsi_scan.c, it looks like tagged_supported value should be popped by
+after actual value reported from Inquiry command.
 
---_000_F5D084D6342F9B479C34599BB0A03E4D0128570B02AVMB1qlogicor_--
+        if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
+            !(*bflags & BLIST_NOTQ))
+                sdev->tagged_supported = 1;
+
+Does it means what driver set in slave_alloc is OK to get Inquiry commands
+with valid Tag  ?
+What will happen if Target really does not support Tagged command queue
+and driver overwrite it in slave_alloc ?
+
+Thanks, Kashyap
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
