@@ -1,44 +1,48 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: scsi: only re-lock door after EH on devices that were reset
-Date: Mon, 3 Nov 2014 19:36:40 +0100
-Message-ID: <20141103183640.GA6718@lst.de>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: bisected regression: qla2xxx endianness on sparc64
+Date: Mon, 3 Nov 2014 15:09:47 -0500
+Message-ID: <alpine.OSX.2.00.1411031508560.1960@administrators-macbook-pro.local>
+References: <alpine.DEB.2.03.1411022004230.3979@cyber.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49657 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751908AbaKCSgo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Nov 2014 13:36:44 -0500
-Content-Disposition: inline
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:62681 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752458AbaKCUKE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2014 15:10:04 -0500
+In-Reply-To: <alpine.DEB.2.03.1411022004230.3979@cyber.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Meelis Roos <meelis.roos@ut.ee>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Setups that use the blk-mq I/O path can lock up if a host with a single
-device that has its door locked enters EH.  Make sure to only send the
-command to re-lock the door to devices that actually were reset and thus
-might have lost their state.  Otherwise the EH code might be get blocked
-on blk_get_request as all requests for non-reset devices might be in use.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Meelis Roos <meelis.roos@ut.ee>
-Tested-by: Meelis Roos <meelis.roos@ut.ee>
+On Sun, 2 Nov 2014, Meelis Roos wrote:
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index fa7b5ec..7af43cb 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2016,8 +2016,10 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
- 	 * is no point trying to lock the door of an off-line device.
- 	 */
- 	shost_for_each_device(sdev, shost) {
--		if (scsi_device_online(sdev) && sdev->locked)
-+		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
- 			scsi_eh_lock_door(sdev);
-+			sdev->was_reset = 0;
-+		}
- 	}
- 
- 	/*
+> Between 3.17 and 3.18-rc2, qla2xxx is broken on my sparc64 machines. It fails 
+> to boot (hangs in firmware rings init).
+>
+> This is the result of bisect:
+>
+> 98aee70d19a7e3203649fa2078464e4f402a0ad8 is the first bad commit
+> commit 98aee70d19a7e3203649fa2078464e4f402a0ad8
+> Author: Joe Carnuccio <joe.carnuccio@qlogic.com>
+> Date:   Thu Sep 25 05:16:38 2014 -0400
+>
+>    qla2xxx: Add endianizer to max_payload_size modifier.
+>
+>    Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+>    Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>    Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> :040000 040000 041c1a26dc2a7988900acc982e3bd65d3cf7e751 
+> 9700d09c3226fc352d44352f22b84f1be632d324 M  s
+>
+> This may not be the only problem - when bisecting, I also came to commits 
+> that got past this step but hang after about 165 seconds of uptime while 
+> running userspace startup scripts. But let that be another issue at the 
+> moment.
+>
+
+We should revert that change. What were some of the other failures you 
+were seeing?
