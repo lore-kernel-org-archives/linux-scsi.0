@@ -1,57 +1,69 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: blk-mq problem on proliant DL380 G3 (cciss)
-Date: Sun, 02 Nov 2014 18:23:51 -0700
-Message-ID: <5456D927.7040403@kernel.dk>
-References: <alpine.LRH.2.11.1410291233090.12885@adalberg.ut.ee> <alpine.LRH.2.11.1410291344220.12885@adalberg.ut.ee> <545102FE.3010003@kernel.dk> <20141029183828.GA31689@infradead.org> <alpine.LRH.2.11.1410292205060.16678@adalberg.ut.ee> <54514A7A.8050008@kernel.dk> <alpine.LRH.2.11.1410301317340.19899@adalberg.ut.ee> <20141030151955.GA12158@infradead.org> <alpine.LRH.2.11.1410301916490.13541@adalberg.ut.ee> <20141030174536.GA27799@infradead.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH v2 12/12] IB/srp: Add multichannel support
+Date: Mon, 3 Nov 2014 01:46:33 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959354E19@G9W0745.americas.hpqcorp.net>
+References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org>
+ <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org>
+ <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il>
+ <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il>
+ <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il>
+ <545256E5.9010501@acm.org> <5452765E.1040604@dev.mellanox.co.il>
+ <5453541D.7040206@acm.org> <54562B9C.3040004@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:34353 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890AbaKCBXy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Nov 2014 20:23:54 -0500
-Received: by mail-pd0-f182.google.com with SMTP id fp1so10640188pdb.27
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Nov 2014 17:23:53 -0800 (PST)
-In-Reply-To: <20141030174536.GA27799@infradead.org>
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:18854 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbaKCBrV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Nov 2014 20:47:21 -0500
+In-Reply-To: <54562B9C.3040004@dev.mellanox.co.il>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Meelis Roos <mroos@linux.ee>
-Cc: linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On 2014-10-30 11:45, Christoph Hellwig wrote:
-> On Thu, Oct 30, 2014 at 07:32:52PM +0200, Meelis Roos wrote:
->>> can you try the patch below?  It's a hack and not a proper fix, but it
->>> addresses what seems to be your culprit, given that it is the only
->>> place allocating a request from the error handler.
->>
->> Applied it on top of 3.18-rc2, booted with scsi_mod.use_blk_mq=1 and it
->> booted up fine.
->
-> Jens,
->
-> any idea what we could do here?  We want to lock the door again ASAP
-> after potentially resetting the device state as far as I can read
-> the code (the commit message for it is utterly meaningless).
->
-> Right now the code allocates the request from the scsi EH thread, which
-> already is dangerous but mostly works for the !blk-mq case, but with the
-> strict only allocate a request if a tag is available policy this breaks
-> down if we still have BLOCK_PC requests that have references on them
-> blocking another request queued (ATA cdroms tend to have a queue depth
-> of 1).
->
-> Given that this always was best effort anyway we might want to move it
-> to a separate workqueue to not block EH?
 
-So what we usually do for tagged devices that need some command for 
-error handling etc, is to have one tag reserved. The lock/unlock should 
-probably be using a reserved request, given how it is invoked as error 
-handling. Right now we don't reserve a tag for untagged things like PATA 
-cdrom, but we could, since they don't care about the tag anyway. And if 
-we had that and reserved grab in the scsi_eh_lock_door(), it should just 
-work.
 
--- 
-Jens Axboe
+> -----Original Message-----
+> From: Sagi Grimberg [mailto:sagig@dev.mellanox.co.il]
+> Sent: Sunday, November 02, 2014 7:03 AM
+> To: Bart Van Assche; Christoph Hellwig
+> Cc: Jens Axboe; Sagi Grimberg; Sebastian Parschauer; Elliott, Robert
+> (Server Storage); Ming Lei; linux-scsi@vger.kernel.org; linux-rdma
+> Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
+> 
+...
+> IMHO, this is not iSER specific issue, it is easily indicated from the
+> code that a specific workload SRP will poll recv completion queue
+> forever in an interrupt context.
+> 
+> I encountered this issue on a virtual guest in a high workload (80+
+> sessions with heavy traffic on all) because qemu smp_affinity setting
+> was broken (might still be, didn't check that for a while). This caused
+> all completion vectors to fire interrupts to core 0 causing a high
+> events contention on a single event queue (causing lockup situations
+> and starvation of other CQs). Using more completion queues will enhance
+> this situation.
+> 
+> I think running multichannel code when all MSIX vectors affinity are
+> directed to a single CPU can invoke what I'm talking about.
+
+That's not an SRP specific problem either.  If you ask just one CPU to
+service interrupts and block layer completions for submissions from lots
+of other CPUs, it's bound to become overloaded.
+
+Setting rq_affinity=2 helps quite a bit for the block layer completion
+work.  This patch proposed making that the default for blk-mq:
+	https://lkml.org/lkml/2014/9/9/931
+
+For SRP interrupt processing, irqbalance recently changed its default 
+to ignore the affinity_hint; you now need to pass an option to honor
+the hint, or provide a policy script to do so for selected irqs.  For
+multi-million IOPS workloads, irqbalance takes far too long to reroute
+them based on activity; you're likely to overload a CPU with 100% 
+hardirq processing, creating self-detected stalls for the submitting
+processes on that CPU and other problems.  Sending interrupts back 
+to the submitting CPU provides self-throttling.
 
