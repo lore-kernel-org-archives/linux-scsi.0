@@ -1,65 +1,44 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas : Fix bug in handling return value of pci_enable_msix_range()
-Date: Tue, 4 Nov 2014 16:06:06 +0530
-Message-ID: <f16ae17914f6e3023f59d4e3b1f6d188@mail.gmail.com>
-References: <1415018660-30775-1-git-send-email-jiang.liu@linux.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 02/11] scsi: add new scsi-command flag for tagged commands
+Date: Tue, 04 Nov 2014 11:44:23 +0100
+Message-ID: <5458AE07.7000004@suse.de>
+References: <1415087656-9491-1-git-send-email-hch@lst.de> <1415087656-9491-3-git-send-email-hch@lst.de> <5458906D.4090708@suse.de> <20141104103535.GB19154@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1415018660-30775-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:42591 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676AbaKDKo0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Nov 2014 05:44:26 -0500
+In-Reply-To: <20141104103535.GB19154@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bvanassche@acm.org>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
 
->-----Original Message-----
->From: Jiang Liu [mailto:jiang.liu@linux.intel.com]
->Sent: Monday, November 03, 2014 6:14 PM
->To: Neela Syam Kolli; James E.J. Bottomley
->Cc: Jiang Liu; Alexander Gordeev; linux-pci@vger.kernel.org; linux-
->scsi@vger.kernel.org; linux-kernel@vger.kernel.org
->Subject: [PATCH] megaraid_sas : Fix bug in handling return value of
->pci_enable_msix_range()
->
->Function pci_enable_msix_range() may return negative values for error
->conditions. So it's a bug by checking (pci_enable_msix_range() != 0) for
->success and causes failure to megaraid driver when MSI is disabled.
->[   16.487267] megaraid_sas 0000:02:00.0: Controller type: iMR
->[   16.487275] genirq: Flags mismatch irq 0. 00000000 (megasas) vs.
-00015a00 (tii
->mer)
->[   16.487347] megasas: Failed to register IRQ for vector 0.
->
->Fixes: 8ae80ed1734b "megaraid: Use pci_enable_msix_range() instead of
->pci_enable_msix()"
->
->Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->Cc: Alexander Gordeev <agordeev@redhat.com>
->Cc: "Bjorn Helgaas <bhelgaas@google.com>"
->Cc: linux-pci@vger.kernel.org
->Cc: <stable@vger.kernel.org> # 3.17
->---
-> drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index f6a69a3b1b3f..5640ad1c8214 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -4453,7 +4453,7 @@ static int megasas_init_fw(struct megasas_instance
->*instance)
-> 			instance->msixentry[i].entry = i;
-> 		i = pci_enable_msix_range(instance->pdev, instance-
->>msixentry,
-> 					  1, instance->msix_vectors);
->-		if (i)
->+		if (i > 0)
-> 			instance->msix_vectors = i;
-> 		else
-> 			instance->msix_vectors = 0;
+On 11/04/2014 11:35 AM, Christoph Hellwig wrote:
+> On Tue, Nov 04, 2014 at 09:38:05AM +0100, Hannes Reinecke wrote:
+>> Hmm. Flags with just one value in it ...
+>> bitfield, maybe?
+>=20
+> Bitfields are nasty.  And I see more use for flags, e.g. whatever is
+> left of eh_ehflags after the no_async_abort removal could be merged i=
+nto
+> it.
+>=20
+Ack. Fair enough.
 
-Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+Cheers,
 
->--
->1.7.10.4
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
