@@ -1,28 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [V2 PATCH 2/2] scsi: TUR path is down after adapter gets reset
- with multipath
-Date: Tue, 4 Nov 2014 07:01:52 -0800
-Message-ID: <20141104150152.GA17309@infradead.org>
-References: <20141103211806.572351346@linux.vnet.ibm.com>
- <20141103211815.000777763@linux.vnet.ibm.com>
- <54587E69.50108@suse.de>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: Large disk drives
+Date: Tue, 4 Nov 2014 11:14:39 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1411041112010.966-100000@iolanthe.rowland.org>
+References: <1415087562.2351.3.camel@jarvis.mobile.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54119 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439AbaKDPBz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 10:01:55 -0500
-Content-Disposition: inline
-In-Reply-To: <54587E69.50108@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1415087562.2351.3.camel-7O4RPy5TklLPRNG96csxHf8+0UxHXcjY@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: wenxiong@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Tue, Nov 04, 2014 at 08:21:13AM +0100, Hannes Reinecke wrote:
-> Why did you use a wrapper for an already existing function?
-> Please fold the logic into alua_check_sense().
+On Tue, 4 Nov 2014, James Bottomley wrote:
 
-That's what the first version did.  See the response from Rob to it
-on why it's done this way.
+> On Mon, 2014-11-03 at 16:06 -0500, Dale R. Worley wrote:
+> > Was there any resolution as to how large disk drives would be handled
+> > if their interface did not support the "capacity" request that would
+> > tell how large they were?
+> 
+> Realistically no ... unless someone comes up with a reliable heuristic
+> to give us the size.
+
+I posted a patch to allow the user to override the reported capacity:
+
+	http://marc.info/?l=linux-scsi&m=140993840113445&w=2
+
+Nobody responded to it.
+
+> > Unfortunately, such devices work OK with Windows (since Windows trusts
+> > what the partition table says), you can't just say to the salesperson
+> > "It has to work on drives over 3 TB."
+> 
+> This is a stopgap: your 3TB drive can be guessed as the 16 bit capacity
+> plus 2TB, but the same won't happen for a 5TB device.  Believing the
+> partition table gives us a chicken and egg problem because something
+> still has to get the partition table on to the device.
+> 
+> I don't think "don't buy something that doesn't work" is a hugely
+> unreasonable response to this.
+
+The problem is knowing beforehand whether it will work.  Once you buy 
+the device and can test it, returning it is annoying and time-consuming 
+at best.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
