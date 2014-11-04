@@ -1,12 +1,12 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/11] scsi: add new scsi-command flag for tagged commands
-Date: Tue,  4 Nov 2014 08:54:07 +0100
-Message-ID: <1415087656-9491-3-git-send-email-hch@lst.de>
+Subject: [PATCH 01/11] scsi: provide a generic change_queue_type method
+Date: Tue,  4 Nov 2014 08:54:06 +0100
+Message-ID: <1415087656-9491-2-git-send-email-hch@lst.de>
 References: <1415087656-9491-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:34638 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:34605 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbaKDHyM (ORCPT
+	with ESMTP id S1751960AbaKDHyM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 02:54:12 -0500
 In-Reply-To: <1415087656-9491-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,220 +14,580 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bvanassche@acm.org>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
 
-Currently scsi piggy backs on the block layer to define the concept
-of a tagged command.  But we want to be able to have block-level host-wide
-tags assigned even for untagged commands like the initial INQUIRY, so add
-a new SCSI-level flag for commands that are tagged at the scsi level, so
-that even commands without that set can have tags assigned to them.  Note
-that this alredy is the case for the blk-mq code path, and this just lets
-the old path catch up with it.
-
-We also set this flag based upon sdev->simple_tags instead of the block
-queue flag, so that it is entirely independent of the block layer tagging,
-and thus always correct even if a driver doesn't use block level tagging
-yet.
-
-Also remove the old blk_rq_tagged; it was only used by SCSI drivers, and
-removing it forces them to look for the proper replacement.
+Most drivers use exactly the same implementation, so provide it as a
+library function.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/block/biodoc.txt     |  4 ----
- block/blk-core.c                   |  4 ++--
- drivers/scsi/53c700.c              |  6 +++---
- drivers/scsi/aic7xxx/aic7xxx_osm.c |  2 +-
- drivers/scsi/scsi_lib.c            | 13 +++++++++----
- drivers/usb/storage/uas.c          |  2 +-
- include/linux/blkdev.h             |  1 -
- include/scsi/scsi_cmnd.h           |  4 ++++
- include/scsi/scsi_tcq.h            |  6 ++----
- 9 files changed, 22 insertions(+), 20 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c  | 24 +-----------------------
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c    |  2 +-
+ drivers/scsi/esas2r/esas2r.h         |  1 -
+ drivers/scsi/esas2r/esas2r_main.c    | 20 +-------------------
+ drivers/scsi/fcoe/fcoe.c             |  2 +-
+ drivers/scsi/fnic/fnic_main.c        |  2 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c       | 25 +------------------------
+ drivers/scsi/ipr.c                   | 20 +++-----------------
+ drivers/scsi/libfc/fc_fcp.c          | 20 --------------------
+ drivers/scsi/lpfc/lpfc_scsi.c        | 24 ++----------------------
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 24 +-----------------------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 25 +------------------------
+ drivers/scsi/pmcraid.c               | 14 ++++----------
+ drivers/scsi/qla2xxx/qla_os.c        | 18 +-----------------
+ drivers/scsi/scsi.c                  | 20 ++++++++++++++++++++
+ drivers/scsi/scsi_debug.c            |  9 +--------
+ drivers/target/loopback/tcm_loop.c   | 17 +----------------
+ include/scsi/libfc.h                 |  1 -
+ include/scsi/scsi_tcq.h              |  2 ++
+ 19 files changed, 42 insertions(+), 228 deletions(-)
 
-diff --git a/Documentation/block/biodoc.txt b/Documentation/block/biodoc.txt
-index 2101e71..6b972b2 100644
---- a/Documentation/block/biodoc.txt
-+++ b/Documentation/block/biodoc.txt
-@@ -827,10 +827,6 @@ but in the event of any barrier requests in the tag queue we need to ensure
- that requests are restarted in the order they were queue. This may happen
- if the driver needs to use blk_queue_invalidate_tags().
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 62d2a18..51670d7 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -2259,28 +2259,6 @@ static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event)
+ }
  
--Tagging also defines a new request flag, REQ_QUEUED. This is set whenever
--a request is currently tagged. You should not use this flag directly,
--blk_rq_tagged(rq) is the portable way to do so.
+ /**
+- * srp_change_queue_type - changing device queue tag type
+- * @sdev: scsi device struct
+- * @tag_type: requested tag type
+- *
+- * Returns queue tag type.
+- */
+-static int
+-srp_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
 -
- 3.3 I/O Submission
+-	return tag_type;
+-}
+-
+-/**
+  * srp_change_queue_depth - setting device queue depth
+  * @sdev: scsi device struct
+  * @qdepth: requested queue depth
+@@ -2600,7 +2578,7 @@ static struct scsi_host_template srp_template = {
+ 	.info				= srp_target_info,
+ 	.queuecommand			= srp_queuecommand,
+ 	.change_queue_depth             = srp_change_queue_depth,
+-	.change_queue_type              = srp_change_queue_type,
++	.change_queue_type              = scsi_change_queue_type,
+ 	.eh_abort_handler		= srp_abort,
+ 	.eh_device_reset_handler	= srp_reset_device,
+ 	.eh_host_reset_handler		= srp_reset_host,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 79e5c94..3c6dc8a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2784,7 +2784,7 @@ static struct scsi_host_template bnx2fc_shost_template = {
+ 	.eh_host_reset_handler	= fc_eh_host_reset,
+ 	.slave_alloc		= fc_slave_alloc,
+ 	.change_queue_depth	= fc_change_queue_depth,
+-	.change_queue_type	= fc_change_queue_type,
++	.change_queue_type	= scsi_change_queue_type,
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index 3fd305d..20ab211 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -976,7 +976,6 @@ int esas2r_slave_alloc(struct scsi_device *dev);
+ int esas2r_slave_configure(struct scsi_device *dev);
+ void esas2r_slave_destroy(struct scsi_device *dev);
+ int esas2r_change_queue_depth(struct scsi_device *dev, int depth, int reason);
+-int esas2r_change_queue_type(struct scsi_device *dev, int type);
+ long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
  
- The routine submit_bio() is used to submit a single io. Higher level i/o
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 0421b53..2e7424b 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1266,7 +1266,7 @@ void blk_requeue_request(struct request_queue *q, struct request *rq)
- 	blk_clear_rq_complete(rq);
- 	trace_block_rq_requeue(q, rq);
+ /* SCSI error handler (eh) functions */
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index 45aa684..be09c62 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -258,7 +258,7 @@ static struct scsi_host_template driver_template = {
+ 	.slave_alloc			= esas2r_slave_alloc,
+ 	.slave_destroy			= esas2r_slave_destroy,
+ 	.change_queue_depth		= esas2r_change_queue_depth,
+-	.change_queue_type		= esas2r_change_queue_type,
++	.change_queue_type		= scsi_change_queue_type,
+ 	.max_sectors			= 0xFFFF,
+ };
  
--	if (blk_rq_tagged(rq))
-+	if (rq->cmd_flags & REQ_QUEUED)
- 		blk_queue_end_tag(q, rq);
+@@ -1268,24 +1268,6 @@ int esas2r_change_queue_depth(struct scsi_device *dev, int depth, int reason)
+ 	return dev->queue_depth;
+ }
  
- 	BUG_ON(blk_queued_rq(rq));
-@@ -2554,7 +2554,7 @@ EXPORT_SYMBOL_GPL(blk_unprep_request);
-  */
- void blk_finish_request(struct request *req, int error)
+-int esas2r_change_queue_type(struct scsi_device *dev, int type)
+-{
+-	esas2r_log(ESAS2R_LOG_INFO, "change_queue_type %p, %d", dev, type);
+-
+-	if (dev->tagged_supported) {
+-		scsi_set_tag_type(dev, type);
+-
+-		if (type)
+-			scsi_activate_tcq(dev, dev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(dev, dev->queue_depth);
+-	} else {
+-		type = 0;
+-	}
+-
+-	return type;
+-}
+-
+ int esas2r_slave_alloc(struct scsi_device *dev)
  {
--	if (blk_rq_tagged(req))
-+	if (req->cmd_flags & REQ_QUEUED)
- 		blk_queue_end_tag(req->q, req);
+ 	return 0;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 4a8ac7d..86956cc 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -281,7 +281,7 @@ static struct scsi_host_template fcoe_shost_template = {
+ 	.eh_host_reset_handler = fc_eh_host_reset,
+ 	.slave_alloc = fc_slave_alloc,
+ 	.change_queue_depth = fc_change_queue_depth,
+-	.change_queue_type = fc_change_queue_type,
++	.change_queue_type = scsi_change_queue_type,
+ 	.this_id = -1,
+ 	.cmd_per_lun = 3,
+ 	.can_queue = FCOE_MAX_OUTSTANDING_COMMANDS,
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 8c56fdc..8581ce6 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -113,7 +113,7 @@ static struct scsi_host_template fnic_host_template = {
+ 	.eh_host_reset_handler = fnic_host_reset,
+ 	.slave_alloc = fnic_slave_alloc,
+ 	.change_queue_depth = fc_change_queue_depth,
+-	.change_queue_type = fc_change_queue_type,
++	.change_queue_type = scsi_change_queue_type,
+ 	.this_id = -1,
+ 	.cmd_per_lun = 3,
+ 	.can_queue = FNIC_DFLT_IO_REQ,
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 598c42c..48d19a3 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2929,29 +2929,6 @@ static int ibmvfc_change_queue_depth(struct scsi_device *sdev, int qdepth,
+ 	return sdev->queue_depth;
+ }
  
- 	BUG_ON(blk_queued_rq(req));
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 474cc6d..5143d32 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -1767,7 +1767,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
- 	 */
- 	if(NCR_700_get_depth(SCp->device) != 0
- 	   && (!(hostdata->tag_negotiated & (1<<scmd_id(SCp)))
--	       || !blk_rq_tagged(SCp->request))) {
-+	       || !(SCp->flags & SCMD_TAGGED))) {
- 		CDEBUG(KERN_ERR, SCp, "has non zero depth %d\n",
- 		       NCR_700_get_depth(SCp->device));
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
-@@ -1795,7 +1795,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
- 	printk("53c700: scsi%d, command ", SCp->device->host->host_no);
- 	scsi_print_command(SCp);
- #endif
--	if(blk_rq_tagged(SCp->request)
-+	if ((SCp->flags & SCMD_TAGGED)
- 	   && (hostdata->tag_negotiated &(1<<scmd_id(SCp))) == 0
- 	   && NCR_700_get_tag_neg_state(SCp->device) == NCR_700_START_TAG_NEGOTIATION) {
- 		scmd_printk(KERN_ERR, SCp, "Enabling Tag Command Queuing\n");
-@@ -1809,7 +1809,7 @@ NCR_700_queuecommand_lck(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *)
- 	 *
- 	 * FIXME: This will royally screw up on multiple LUN devices
- 	 * */
--	if(!blk_rq_tagged(SCp->request)
-+	if (!(SCp->flags & SCMD_TAGGED)
- 	   && (hostdata->tag_negotiated &(1<<scmd_id(SCp)))) {
- 		scmd_printk(KERN_INFO, SCp, "Disabling Tag Command Queuing\n");
- 		hostdata->tag_negotiated &= ~(1<<scmd_id(SCp));
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index d2c9bf3..63bae7c 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -1447,7 +1447,7 @@ ahc_linux_run_command(struct ahc_softc *ahc, struct ahc_linux_device *dev,
- 	 * we are storing a full busy target *lun*
- 	 * table in SCB space.
- 	 */
--	if (!blk_rq_tagged(cmd->request)
-+	if (!(cmd->flags & SCMD_TAGGED)
- 	    && (ahc->features & AHC_SCB_BTT) == 0) {
- 		int target_offset;
+-/**
+- * ibmvfc_change_queue_type - Change the device's queue type
+- * @sdev:		scsi device struct
+- * @tag_type:	type of tags to use
+- *
+- * Return value:
+- * 	actual queue type set
+- **/
+-static int ibmvfc_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-
+ static ssize_t ibmvfc_show_host_partition_name(struct device *dev,
+ 						 struct device_attribute *attr, char *buf)
+ {
+@@ -3133,7 +3110,7 @@ static struct scsi_host_template driver_template = {
+ 	.target_alloc = ibmvfc_target_alloc,
+ 	.scan_finished = ibmvfc_scan_finished,
+ 	.change_queue_depth = ibmvfc_change_queue_depth,
+-	.change_queue_type = ibmvfc_change_queue_type,
++	.change_queue_type = scsi_change_queue_type,
+ 	.cmd_per_lun = 16,
+ 	.can_queue = IBMVFC_MAX_REQUESTS_DEFAULT,
+ 	.this_id = -1,
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 19c2cb6..746a488 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4368,24 +4368,10 @@ static int ipr_change_queue_type(struct scsi_device *sdev, int tag_type)
  
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fc0a8a0..6b57fae 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1740,7 +1740,7 @@ static void scsi_request_fn(struct request_queue *q)
- 		 * we add the dev to the starved list so it eventually gets
- 		 * a run when a tag is freed.
- 		 */
--		if (blk_queue_tagged(q) && !blk_rq_tagged(req)) {
-+		if (blk_queue_tagged(q) && !(req->cmd_flags & REQ_QUEUED)) {
- 			spin_lock_irq(shost->host_lock);
- 			if (list_empty(&sdev->starved_entry))
- 				list_add_tail(&sdev->starved_entry,
-@@ -1754,6 +1754,11 @@ static void scsi_request_fn(struct request_queue *q)
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 	res = (struct ipr_resource_entry *)sdev->hostdata;
+-
+-	if (res) {
+-		if (ipr_is_gscsi(res) && sdev->tagged_supported) {
+-			/*
+-			 * We don't bother quiescing the device here since the
+-			 * adapter firmware does it for us.
+-			 */
+-			scsi_set_tag_type(sdev, tag_type);
+-
+-			if (tag_type)
+-				scsi_activate_tcq(sdev, sdev->queue_depth);
+-			else
+-				scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-		} else
+-			tag_type = 0;
+-	} else
++	if (res && ipr_is_gscsi(res))
++		tag_type = scsi_change_queue_type(sdev, tag_type);
++	else
+ 		tag_type = 0;
+-
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	return tag_type;
+ }
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 1d7e76e..f3043ad 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -2196,26 +2196,6 @@ int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ EXPORT_SYMBOL(fc_change_queue_depth);
  
- 		if (!scsi_host_queue_ready(q, shost, sdev))
- 			goto host_not_ready;
-+	
-+		if (sdev->simple_tags)
-+			cmd->flags |= SCMD_TAGGED;
+ /**
+- * fc_change_queue_type() - Change a device's queue type
+- * @sdev:     The SCSI device whose queue depth is to change
+- * @tag_type: Identifier for queue type
+- */
+-int fc_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-EXPORT_SYMBOL(fc_change_queue_type);
+-
+-/**
+  * fc_fcp_destory() - Tear down the FCP layer for a given local port
+  * @lport: The local port that no longer needs the FCP layer
+  */
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index b99399f..2896e52 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -345,26 +345,6 @@ lpfc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ }
+ 
+ /**
+- * lpfc_change_queue_type() - Change a device's scsi tag queuing type
+- * @sdev: Pointer the scsi device whose queue depth is to change
+- * @tag_type: Identifier for queue tag type
+- */
+-static int
+-lpfc_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-
+-/**
+  * lpfc_rampdown_queue_depth - Post RAMP_DOWN_QUEUE event to worker thread
+  * @phba: The Hba for which this call is being executed.
+  *
+@@ -6019,7 +5999,7 @@ struct scsi_host_template lpfc_template = {
+ 	.max_sectors		= 0xFFFF,
+ 	.vendor_id		= LPFC_NL_VENDOR_ID,
+ 	.change_queue_depth	= lpfc_change_queue_depth,
+-	.change_queue_type	= lpfc_change_queue_type,
++	.change_queue_type	= scsi_change_queue_type,
+ };
+ 
+ struct scsi_host_template lpfc_vport_template = {
+@@ -6042,5 +6022,5 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.shost_attrs		= lpfc_vport_attrs,
+ 	.max_sectors		= 0xFFFF,
+ 	.change_queue_depth	= lpfc_change_queue_depth,
+-	.change_queue_type	= lpfc_change_queue_type,
++	.change_queue_type	= scsi_change_queue_type,
+ };
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index c80ed04..ec36b91 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1255,28 +1255,6 @@ _scsih_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ }
+ 
+ /**
+- * _scsih_change_queue_type - changing device queue tag type
+- * @sdev: scsi device struct
+- * @tag_type: requested tag type
+- *
+- * Returns queue tag type.
+- */
+-static int
+-_scsih_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-
+-/**
+  * _scsih_target_alloc - target add routine
+  * @starget: scsi target struct
+  *
+@@ -7653,7 +7631,7 @@ static struct scsi_host_template scsih_driver_template = {
+ 	.scan_finished			= _scsih_scan_finished,
+ 	.scan_start			= _scsih_scan_start,
+ 	.change_queue_depth 		= _scsih_change_queue_depth,
+-	.change_queue_type		= _scsih_change_queue_type,
++	.change_queue_type		= scsi_change_queue_type,
+ 	.eh_abort_handler		= _scsih_abort,
+ 	.eh_device_reset_handler	= _scsih_dev_reset,
+ 	.eh_target_reset_handler	= _scsih_target_reset,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 857276b..52464ac 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1123,29 +1123,6 @@ _scsih_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ }
+ 
+ /**
+- * _scsih_change_queue_type - changing device queue tag type
+- * @sdev: scsi device struct
+- * @tag_type: requested tag type
+- *
+- * Returns queue tag type.
+- */
+-static int
+-_scsih_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-
+-
+-/**
+  * _scsih_target_alloc - target add routine
+  * @starget: scsi target struct
+  *
+@@ -7284,7 +7261,7 @@ static struct scsi_host_template scsih_driver_template = {
+ 	.scan_finished			= _scsih_scan_finished,
+ 	.scan_start			= _scsih_scan_start,
+ 	.change_queue_depth		= _scsih_change_queue_depth,
+-	.change_queue_type		= _scsih_change_queue_type,
++	.change_queue_type		= scsi_change_queue_type,
+ 	.eh_abort_handler		= _scsih_abort,
+ 	.eh_device_reset_handler	= _scsih_dev_reset,
+ 	.eh_target_reset_handler	= _scsih_target_reset,
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index bcb64eb..2233ed6 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -321,16 +321,10 @@ static int pmcraid_change_queue_type(struct scsi_device *scsi_dev, int tag)
+ 	struct pmcraid_resource_entry *res;
+ 
+ 	res = (struct pmcraid_resource_entry *)scsi_dev->hostdata;
+-
+-	if ((res) && scsi_dev->tagged_supported &&
+-	    (RES_IS_GSCSI(res->cfg_entry) || RES_IS_VSET(res->cfg_entry))) {
+-		scsi_set_tag_type(scsi_dev, tag);
+-
+-		if (tag)
+-			scsi_activate_tcq(scsi_dev, scsi_dev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(scsi_dev, scsi_dev->queue_depth);
+-	} else
++	if (res && scsi_dev->tagged_supported &&
++	    (RES_IS_GSCSI(res->cfg_entry) || RES_IS_VSET(res->cfg_entry)))
++	    	tag = scsi_change_queue_type(scsi_dev, tag);
++	else
+ 		tag = 0;
+ 
+ 	return tag;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index db3dbd9..5e75574 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -237,7 +237,6 @@ static int qla2xxx_eh_bus_reset(struct scsi_cmnd *);
+ static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
+ 
+ static int qla2x00_change_queue_depth(struct scsi_device *, int, int);
+-static int qla2x00_change_queue_type(struct scsi_device *, int);
+ static void qla2x00_clear_drv_active(struct qla_hw_data *);
+ static void qla2x00_free_device(scsi_qla_host_t *);
+ static void qla83xx_disable_laser(scsi_qla_host_t *vha);
+@@ -260,7 +259,7 @@ struct scsi_host_template qla2xxx_driver_template = {
+ 	.scan_finished		= qla2xxx_scan_finished,
+ 	.scan_start		= qla2xxx_scan_start,
+ 	.change_queue_depth	= qla2x00_change_queue_depth,
+-	.change_queue_type	= qla2x00_change_queue_type,
++	.change_queue_type	= scsi_change_queue_type,
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+@@ -1473,21 +1472,6 @@ qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
+ 	return sdev->queue_depth;
+ }
+ 
+-static int
+-qla2x00_change_queue_type(struct scsi_device *sdev, int tag_type)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag_type);
+-		if (tag_type)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag_type = 0;
+-
+-	return tag_type;
+-}
+-
+ /**
+  * qla2x00_config_dma_addressing() - Configure OS DMA addressing method.
+  * @ha: HA context
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index bc52bbd..9baeff0 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -867,6 +867,26 @@ int scsi_track_queue_full(struct scsi_device *sdev, int depth)
+ EXPORT_SYMBOL(scsi_track_queue_full);
+ 
+ /**
++ * scsi_change_queue_type() - Change a device's queue type
++ * @sdev:     The SCSI device whose queue depth is to change
++ * @tag_type: Identifier for queue type
++ */
++int scsi_change_queue_type(struct scsi_device *sdev, int tag_type)
++{
++	if (sdev->tagged_supported) {
++		scsi_set_tag_type(sdev, tag_type);
++		if (tag_type)
++			scsi_activate_tcq(sdev, sdev->queue_depth);
 +		else
-+			cmd->flags &= ~SCMD_TAGGED;
- 
- 		/*
- 		 * Finally, initialize any error handling parameters, and set up
-@@ -1908,10 +1913,10 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *req,
- 		blk_mq_start_request(req);
- 	}
- 
--	if (blk_queue_tagged(q))
--		req->cmd_flags |= REQ_QUEUED;
-+	if (sdev->simple_tags)
-+		cmd->flags |= SCMD_TAGGED;
- 	else
--		req->cmd_flags &= ~REQ_QUEUED;
-+		cmd->flags &= ~SCMD_TAGGED;
- 
- 	scsi_init_cmd_errh(cmd);
- 	cmd->scsi_done = scsi_mq_done;
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 89b2434..b38bc13 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -181,7 +181,7 @@ static int uas_get_tag(struct scsi_cmnd *cmnd)
- {
- 	int tag;
- 
--	if (blk_rq_tagged(cmnd->request))
-+	if (cmnd->flags & SCMD_TAGGED)
- 		tag = cmnd->request->tag + 2;
- 	else
- 		tag = 1;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aac0f9e..6d76b8b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1136,7 +1136,6 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
- /*
-  * tag stuff
-  */
--#define blk_rq_tagged(rq)		((rq)->cmd_flags & REQ_QUEUED)
- extern int blk_queue_start_tag(struct request_queue *, struct request *);
- extern struct request *blk_queue_find_tag(struct request_queue *, int);
- extern void blk_queue_end_tag(struct request_queue *, struct request *);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 522a5f27..e119142 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -53,6 +53,9 @@ struct scsi_pointer {
- 	volatile int phase;
- };
- 
-+/* for scmd->flags */
-+#define SCMD_TAGGED		(1 << 0)
++			scsi_deactivate_tcq(sdev, sdev->queue_depth);
++	} else
++		tag_type = 0;
 +
- struct scsi_cmnd {
- 	struct scsi_device *device;
- 	struct list_head list;  /* scsi_cmnd participates in queue lists */
-@@ -132,6 +135,7 @@ struct scsi_cmnd {
- 					 * to be at an address < 16Mb). */
++	return tag_type;
++}
++EXPORT_SYMBOL(scsi_change_queue_type);
++
++/**
+  * scsi_vpd_inquiry - Request a device provide us with a VPD page
+  * @sdev: The device to ask
+  * @buffer: Where to put the result
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 2a215ee..8ca4e71 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4532,14 +4532,7 @@ sdebug_change_qdepth(struct scsi_device *sdev, int qdepth, int reason)
+ static int
+ sdebug_change_qtype(struct scsi_device *sdev, int qtype)
+ {
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, qtype);
+-		if (qtype)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		qtype = 0;
++	qtype = scsi_change_queue_type(sdev, qtype);
+ 	if (SCSI_DEBUG_OPT_Q_NOISE & scsi_debug_opts) {
+ 		const char *cp;
  
- 	int result;		/* Status code from lower level driver */
-+	int flags;		/* Command flags */
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index ab3ab27..3b9c768 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -135,21 +135,6 @@ static int tcm_loop_change_queue_depth(
+ 	return sdev->queue_depth;
+ }
  
- 	unsigned char tag;	/* SCSI-II queued command tag */
- };
+-static int tcm_loop_change_queue_type(struct scsi_device *sdev, int tag)
+-{
+-	if (sdev->tagged_supported) {
+-		scsi_set_tag_type(sdev, tag);
+-
+-		if (tag)
+-			scsi_activate_tcq(sdev, sdev->queue_depth);
+-		else
+-			scsi_deactivate_tcq(sdev, sdev->queue_depth);
+-	} else
+-		tag = 0;
+-
+-	return tag;
+-}
+-
+ /*
+  * Locate the SAM Task Attr from struct scsi_cmnd *
+  */
+@@ -451,7 +436,7 @@ static struct scsi_host_template tcm_loop_driver_template = {
+ 	.name			= "TCM_Loopback",
+ 	.queuecommand		= tcm_loop_queuecommand,
+ 	.change_queue_depth	= tcm_loop_change_queue_depth,
+-	.change_queue_type	= tcm_loop_change_queue_type,
++	.change_queue_type	= scsi_change_queue_type,
+ 	.eh_abort_handler = tcm_loop_abort_task,
+ 	.eh_device_reset_handler = tcm_loop_device_reset,
+ 	.eh_target_reset_handler = tcm_loop_target_reset,
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 52beadf..2e0cf56 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -1106,7 +1106,6 @@ int fc_eh_device_reset(struct scsi_cmnd *);
+ int fc_eh_host_reset(struct scsi_cmnd *);
+ int fc_slave_alloc(struct scsi_device *);
+ int fc_change_queue_depth(struct scsi_device *, int qdepth, int reason);
+-int fc_change_queue_type(struct scsi_device *, int tag_type);
+ 
+ /*
+  * ELS/CT interface
 diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index 3090fd0..8f16b94a 100644
+index 56ed843..3090fd0 100644
 --- a/include/scsi/scsi_tcq.h
 +++ b/include/scsi/scsi_tcq.h
-@@ -101,11 +101,9 @@ static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
-  **/
- static inline int scsi_populate_tag_msg(struct scsi_cmnd *cmd, char *msg)
- {
--        struct request *req = cmd->request;
--
--        if (blk_rq_tagged(req)) {
-+        if (cmd->flags & SCMD_TAGGED) {
- 		*msg++ = MSG_SIMPLE_TAG;
--        	*msg++ = req->tag;
-+        	*msg++ = cmd->request->tag;
-         	return 2;
- 	}
+@@ -16,6 +16,8 @@
  
+ #ifdef CONFIG_BLOCK
+ 
++int scsi_change_queue_type(struct scsi_device *sdev, int tag_type);
++
+ /**
+  * scsi_get_tag_type - get the type of tag the device supports
+  * @sdev:	the scsi device
 -- 
 1.9.1
 
