@@ -1,56 +1,94 @@
 From: Anish Bhatt <anish@chelsio.com>
-Subject: [PATCH scsi 1/2] cxgbi : Add Maintainer for cxgb3i/cxgb4i
-Date: Tue,  4 Nov 2014 15:19:22 -0800
-Message-ID: <1415143163-2326-2-git-send-email-anish@chelsio.com>
+Subject: [PATCH scsi 2/2] cxgb4i : Send abort_rpl correctly
+Date: Tue,  4 Nov 2014 15:19:23 -0800
+Message-ID: <1415143163-2326-3-git-send-email-anish@chelsio.com>
 References: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:56858
+Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:56863
 	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751325AbaKDXVR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 18:21:17 -0500
+	by vger.kernel.org with ESMTP id S1751325AbaKDXVl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 18:21:41 -0500
 In-Reply-To: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-Signed-off-by: Anish Bhatt <anish@chelsio.com>
----
- MAINTAINERS | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Connection retries were not being cleaned up correctly if they failed as a
+ result of link down. Applies on top of drivers-for-3.18
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 82d4ad2..254cb28 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2742,6 +2742,13 @@ W:	http://www.chelsio.com
- S:	Supported
- F:	drivers/net/ethernet/chelsio/cxgb3/
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 15 +++++++++------
+ drivers/scsi/cxgbi/libcxgbi.c      | 18 ++++++++----------
+ 2 files changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 3e0a0d3..2d2f3d0 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -936,20 +936,23 @@ static void do_abort_req_rss(struct cxgbi_device *cdev, struct sk_buff *skb)
+ 	cxgbi_sock_get(csk);
+ 	spin_lock_bh(&csk->lock);
  
-+CXGB3 ISCSI DRIVER (CXGB3I)
-+M:      Karen Xie <kxie@chelsio.com>
-+L:      linux-scsi@vger.kernel.org
-+W:      http://www.chelsio.com
-+S:      Supported
-+F:      drivers/scsi/cxgbi/cxgb3i
+-	if (!cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD)) {
+-		cxgbi_sock_set_flag(csk, CTPF_ABORT_REQ_RCVD);
+-		cxgbi_sock_set_state(csk, CTP_ABORTING);
+-		goto done;
++	cxgbi_sock_clear_flag(csk, CTPF_ABORT_REQ_RCVD);
 +
- CXGB3 IWARP RNIC DRIVER (IW_CXGB3)
- M:	Steve Wise <swise@chelsio.com>
- L:	linux-rdma@vger.kernel.org
-@@ -2756,6 +2763,13 @@ W:	http://www.chelsio.com
- S:	Supported
- F:	drivers/net/ethernet/chelsio/cxgb4/
++	if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT)) {
++		send_tx_flowc_wr(csk, 0);
++		cxgbi_sock_set_flag(csk, CTPF_TX_DATA_SENT);
+ 	}
  
-+CXGB4 ISCSI DRIVER (CXGB4I)
-+M:      Karen Xie <kxie@chelsio.com>
-+L:      linux-scsi@vger.kernel.org
-+W:      http://www.chelsio.com
-+S:      Supported
-+F:      drivers/scsi/cxgbi/cxgb4i
+-	cxgbi_sock_clear_flag(csk, CTPF_ABORT_REQ_RCVD);
++	cxgbi_sock_set_flag(csk, CTPF_ABORT_REQ_RCVD);
++	cxgbi_sock_set_state(csk, CTP_ABORTING);
 +
- CXGB4 IWARP RNIC DRIVER (IW_CXGB4)
- M:	Steve Wise <swise@chelsio.com>
- L:	linux-rdma@vger.kernel.org
+ 	send_abort_rpl(csk, rst_status);
+ 
+ 	if (!cxgbi_sock_flag(csk, CTPF_ABORT_RPL_PENDING)) {
+ 		csk->err = abort_status_to_errno(csk, req->status, &rst_status);
+ 		cxgbi_sock_closed(csk);
+ 	}
+-done:
++
+ 	spin_unlock_bh(&csk->lock);
+ 	cxgbi_sock_put(csk);
+ rel_skb:
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 674d498..13d869a 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -905,18 +905,16 @@ void cxgbi_sock_rcv_abort_rpl(struct cxgbi_sock *csk)
+ {
+ 	cxgbi_sock_get(csk);
+ 	spin_lock_bh(&csk->lock);
++
++	cxgbi_sock_set_flag(csk, CTPF_ABORT_RPL_RCVD);
+ 	if (cxgbi_sock_flag(csk, CTPF_ABORT_RPL_PENDING)) {
+-		if (!cxgbi_sock_flag(csk, CTPF_ABORT_RPL_RCVD))
+-			cxgbi_sock_set_flag(csk, CTPF_ABORT_RPL_RCVD);
+-		else {
+-			cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_RCVD);
+-			cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_PENDING);
+-			if (cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD))
+-				pr_err("csk 0x%p,%u,0x%lx,%u,ABT_RPL_RSS.\n",
+-					csk, csk->state, csk->flags, csk->tid);
+-			cxgbi_sock_closed(csk);
+-		}
++		cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_PENDING);
++		if (cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD))
++			pr_err("csk 0x%p,%u,0x%lx,%u,ABT_RPL_RSS.\n",
++			       csk, csk->state, csk->flags, csk->tid);
++		cxgbi_sock_closed(csk);
+ 	}
++
+ 	spin_unlock_bh(&csk->lock);
+ 	cxgbi_sock_put(csk);
+ }
 -- 
 2.1.3
 
