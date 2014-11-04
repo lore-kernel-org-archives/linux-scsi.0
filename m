@@ -1,52 +1,47 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Large disk drives
-Date: Tue, 4 Nov 2014 11:14:39 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1411041112010.966-100000@iolanthe.rowland.org>
-References: <1415087562.2351.3.camel@jarvis.mobile.lan>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] scsi: make scsi_eh_scmd_add() always succeed
+Date: Tue, 4 Nov 2014 10:36:48 -0800
+Message-ID: <20141104183648.GA29621@infradead.org>
+References: <1415103073-90276-1-git-send-email-hare@suse.de>
+ <1415103073-90276-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1415087562.2351.3.camel-7O4RPy5TklLPRNG96csxHf8+0UxHXcjY@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:57119 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbaKDSgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 13:36:54 -0500
+Content-Disposition: inline
+In-Reply-To: <1415103073-90276-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
 
-On Tue, 4 Nov 2014, James Bottomley wrote:
+On Tue, Nov 04, 2014 at 01:11:11PM +0100, Hannes Reinecke wrote:
+> BLK_EH_HANDLED does not work with scsi commands, as we need
+> to release the associated buffers correctly.
 
-> On Mon, 2014-11-03 at 16:06 -0500, Dale R. Worley wrote:
-> > Was there any resolution as to how large disk drives would be handled
-> > if their interface did not support the "capacity" request that would
-> > tell how large they were?
-> 
-> Realistically no ... unless someone comes up with a reliable heuristic
-> to give us the size.
+Which particular error do you see?  The ->eh_timed_out routines can
+return BLK_EH_HANDLED, and libata, iscsi and fc actually do, so we'll
+need to fix these issues either way.
 
-I posted a patch to allow the user to override the reported capacity:
+> And scsi_eh_scmd_add() currently only will fail if no
+> error handler thread is started (which will never be the
+> case) 
 
-	http://marc.info/?l=linux-scsi&m=140993840113445&w=2
+Yes.
 
-Nobody responded to it.
+> or if the state machine encounters an illegal transition.
+> As state machine transitions don't have any real meaning
+> we can also force setting of the new state and
+> make scsi_dh_scmd_add() a void function.
+> With that we'll never have to resort to return
+> BLK_EH_HANDLED.
 
-> > Unfortunately, such devices work OK with Windows (since Windows trusts
-> > what the partition table says), you can't just say to the salesperson
-> > "It has to work on drives over 3 TB."
-> 
-> This is a stopgap: your 3TB drive can be guessed as the 16 bit capacity
-> plus 2TB, but the same won't happen for a 5TB device.  Believing the
-> partition table gives us a chicken and egg problem because something
-> still has to get the partition table on to the device.
-> 
-> I don't think "don't buy something that doesn't work" is a hugely
-> unreasonable response to this.
+Which kind of transition did you see rejected?  Neither a CREATED or
+DEL_(RECOVERY) state should be possible when invoking the error handler,
+so I'd rather see asserts here than overriding the state machine.
+te RECOVERY state from a RUNNING or existing RECOVERY state, which
+leaves CREATED, CANCEL, DEL, CANCEL_RECOVERY or DEL_RECOVERY.
 
-The problem is knowing beforehand whether it will work.  Once you buy 
-the device and can test it, returning it is annoying and time-consuming 
-at best.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
