@@ -1,52 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/10] scsi: Use real functions for logging
-Date: Tue, 4 Nov 2014 05:58:45 -0800
-Message-ID: <20141104135845.GA3531@infradead.org>
-References: <1415088409-46590-1-git-send-email-hare@suse.de>
- <1415088409-46590-2-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v3 01/11] blk-mq: Add blk_mq_unique_tag()
+Date: Tue, 4 Nov 2014 06:14:32 -0800
+Message-ID: <20141104141432.GA446@infradead.org>
+References: <545240AE.6060009@acm.org>
+ <545240E7.5030206@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34751 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:38669 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbaKDN6y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 08:58:54 -0500
+	with ESMTP id S1752617AbaKDOOl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 09:14:41 -0500
 Content-Disposition: inline
-In-Reply-To: <1415088409-46590-2-git-send-email-hare@suse.de>
+In-Reply-To: <545240E7.5030206@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Elliott <Elliott@hp.com>, Ming Lei <ming.lei@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-On Tue, Nov 04, 2014 at 09:06:40AM +0100, Hannes Reinecke wrote:
-> Implement a per-cpu buffer for formatting messages,
-> and add real functions for scmd_printk and sdev_prefix_printk
-> using that buffer and use dev_printk() to print out things.
-> And make sdev_printk() a wrapper for sdev_prefix_printk().
-
-The "real functions" mostly seem to be a side effect of the
-implementation, how about a more descriptive subject line?
-
-Also adding a sentence or two why this is done to the patch description
-would be very helpful.
-
-> +/*
-> + * scsi_logging.c
-
-Please don't mention the file name in top of file comments, it's bound
-to get out of date.
-
-> +#define SCSI_LOG_SPOOLSIZE 4096
-> +#define SCSI_LOG_BUFSIZE 128
-> +
-> +struct scsi_log_buf {
-> +	char buffer[SCSI_LOG_SPOOLSIZE];
-> +	unsigned long map;
-> +};
-> +
-> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
-
-Some sort of comment explaining why we need the per-cpu buffers also
-would be very useful.  To me this seems like a little bit too much
-duplication of the tracing code.
+I've applied patches 1-3 to the core-for-3.19 branch.  Various srp
+patches, including the first one fail to apply for me.  Can you
+regenerate them against the drivers-for-3.19 branch?  Thanks!
 
