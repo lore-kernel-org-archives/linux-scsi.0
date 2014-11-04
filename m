@@ -1,33 +1,56 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC] drop libsas task collector mode?
-Date: Tue, 4 Nov 2014 11:06:25 -0800
-Message-ID: <CAPcyv4jQoFioqheC79Ye-EJe-3b2-yfLKhkRc+SoGa0+9_a2yA@mail.gmail.com>
-References: <20141104185821.GA10475@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Anish Bhatt <anish@chelsio.com>
+Subject: [PATCH scsi 1/2] cxgbi : Add Maintainer for cxgb3i/cxgb4i
+Date: Tue,  4 Nov 2014 15:19:22 -0800
+Message-ID: <1415143163-2326-2-git-send-email-anish@chelsio.com>
+References: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:53919 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbaKDTG1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 14:06:27 -0500
-Received: by mail-wi0-f172.google.com with SMTP id bs8so10328317wib.17
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Nov 2014 11:06:26 -0800 (PST)
-In-Reply-To: <20141104185821.GA10475@infradead.org>
+Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:56858
+	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751325AbaKDXVR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 18:21:17 -0500
+In-Reply-To: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Xiangliang Yu <yuxiangl@marvell.com>
+To: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-On Tue, Nov 4, 2014 at 10:58 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> The task collector mode in libsas implements internal queueing in
-> libsas, which is somethign we usualy try to avoid, and doesn't seem
-> to get much exposure as it's only supported as a non-default option
-> in two drivers.
->
-> If there's still interest in submitting multiple tasks in one go
-> I'd be happy to wire up the blk-mq last parameter with a flag in
-> the scsi command so that we could get a similar effect without all
-> the overhead, but I'd need to have a signed up tester for it.
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
+---
+ MAINTAINERS | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
->From the isci perspective I don't care about task_collector going
-away.  It's more "latency_injector" than anything else.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 82d4ad2..254cb28 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2742,6 +2742,13 @@ W:	http://www.chelsio.com
+ S:	Supported
+ F:	drivers/net/ethernet/chelsio/cxgb3/
+ 
++CXGB3 ISCSI DRIVER (CXGB3I)
++M:      Karen Xie <kxie@chelsio.com>
++L:      linux-scsi@vger.kernel.org
++W:      http://www.chelsio.com
++S:      Supported
++F:      drivers/scsi/cxgbi/cxgb3i
++
+ CXGB3 IWARP RNIC DRIVER (IW_CXGB3)
+ M:	Steve Wise <swise@chelsio.com>
+ L:	linux-rdma@vger.kernel.org
+@@ -2756,6 +2763,13 @@ W:	http://www.chelsio.com
+ S:	Supported
+ F:	drivers/net/ethernet/chelsio/cxgb4/
+ 
++CXGB4 ISCSI DRIVER (CXGB4I)
++M:      Karen Xie <kxie@chelsio.com>
++L:      linux-scsi@vger.kernel.org
++W:      http://www.chelsio.com
++S:      Supported
++F:      drivers/scsi/cxgbi/cxgb4i
++
+ CXGB4 IWARP RNIC DRIVER (IW_CXGB4)
+ M:	Steve Wise <swise@chelsio.com>
+ L:	linux-rdma@vger.kernel.org
+-- 
+2.1.3
+
