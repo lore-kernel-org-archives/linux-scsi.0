@@ -1,47 +1,31 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] scsi: make scsi_eh_scmd_add() always succeed
-Date: Tue, 4 Nov 2014 10:36:48 -0800
-Message-ID: <20141104183648.GA29621@infradead.org>
+Subject: Re: [PATCH 3/3] scsi: make asynchronous aborts mandatory
+Date: Tue, 4 Nov 2014 10:52:49 -0800
+Message-ID: <20141104185249.GA30233@infradead.org>
 References: <1415103073-90276-1-git-send-email-hare@suse.de>
- <1415103073-90276-2-git-send-email-hare@suse.de>
+ <1415103073-90276-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57119 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:34836 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbaKDSgy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 13:36:54 -0500
+	with ESMTP id S1751430AbaKDSww (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 13:52:52 -0500
 Content-Disposition: inline
-In-Reply-To: <1415103073-90276-2-git-send-email-hare@suse.de>
+In-Reply-To: <1415103073-90276-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
 
-On Tue, Nov 04, 2014 at 01:11:11PM +0100, Hannes Reinecke wrote:
-> BLK_EH_HANDLED does not work with scsi commands, as we need
-> to release the associated buffers correctly.
+This leaves a stale comment reference to scsi_eh_abort_cmds in libsas.
+Also while grepping for that I found out that sas aborts don't work
+anymore with the async abort code due to this beautiful code in
+sas_eh_abort_handler:
 
-Which particular error do you see?  The ->eh_timed_out routines can
-return BLK_EH_HANDLED, and libata, iscsi and fc actually do, so we'll
-need to fix these issues either way.
+	if (current != host->ehandler)
+		return FAILED;
 
-> And scsi_eh_scmd_add() currently only will fail if no
-> error handler thread is started (which will never be the
-> case) 
-
-Yes.
-
-> or if the state machine encounters an illegal transition.
-> As state machine transitions don't have any real meaning
-> we can also force setting of the new state and
-> make scsi_dh_scmd_add() a void function.
-> With that we'll never have to resort to return
-> BLK_EH_HANDLED.
-
-Which kind of transition did you see rejected?  Neither a CREATED or
-DEL_(RECOVERY) state should be possible when invoking the error handler,
-so I'd rather see asserts here than overriding the state machine.
-te RECOVERY state from a RUNNING or existing RECOVERY state, which
-leaves CREATED, CANCEL, DEL, CANCEL_RECOVERY or DEL_RECOVERY.
-
+so you'll need another patch to fix that up.  In the longer run we
+really should both kill sas_eh_abort_handler and bring SAS EH
+more in line with the rest of the world.
