@@ -1,31 +1,53 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: [PATCH scsi 0/2] Bugfix & mainatainers update for cxgbi
-Date: Tue,  4 Nov 2014 15:19:21 -0800
-Message-ID: <1415143163-2326-1-git-send-email-anish@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:56864
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751812AbaKDXVm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 18:21:42 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v2 00/36] Fixes, cleanups and modernization for NCR5380 drivers
+Date: Wed, 5 Nov 2014 12:36:02 +1300
+Message-ID: <CAOmrzkKVYBcznyEaUX7Ta9z3P+B9=BTSj3kCZTjx-euZ2gannQ@mail.gmail.com>
+References: <20141027052607.105914311@telegraphics.com.au>
+	<5455C107.6040500@gmail.com>
+	<alpine.LNX.2.00.1411021710210.27266@nippy.intranet>
+	<5455E340.7080305@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <5455E340.7080305@gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-First patch adds missing maintainers for cxgb3i/cxgb4i.
-Second is a bugfix
+Hi Finn,
 
-Please apply on drivers-for-3.18
 
-Anish Bhatt (2):
-  cxgbi : Add Maintainer for cxgb3i/cxgb4i
-  cxgb4i : Send abort_rpl correctly
+> Thanks for testing.
+>
+> "No regressions over v1" means "no regressions", right?
+>
+>
+>
+> Well, what would I compare the driver performance to? With your patches to
+> sort out locking races, the driver is more stable than I've ever seen it in
+> years. That's a definite win. Big improvement over the driver in its current
+> state in m68k and mainstream (which locks up quite reliably with even
+> moderate concurrent IDE and SCSI I/O for me). No regression over v1 or
+> patches that you sent for me to test off-list.
+>
+> On the other hand, I've seen warnings about lost bytes (stuck in the DMA
+> fifo) for the first time _ever_ with the new driver - we've discussed that
+> at length, and it is still unclear why these happen. This is a known NCR5380
+> issue, and pretty much anything could have precipitated that. Must have
+> happened for other Falcon users before in the past, because the interrupt
+> handler explicitly checks for this condition.
 
- MAINTAINERS                        | 14 ++++++++++++++
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 15 +++++++++------
- drivers/scsi/cxgbi/libcxgbi.c      | 18 ++++++++----------
- 3 files changed, 31 insertions(+), 16 deletions(-)
+I went back and checked test logs from driver tests before any of your
+patches - no regressions over vanilla 3.17 or 3.16.
 
--- 
-2.1.3
+The 'lost bytes' error is rare enough that it would not have shown in
+those tests. Vanilla kernels run into the ST-DMA locking race at about
+7% of the total test set.
 
+The last kernel that performed with a similar stability as with your
+patches was 2.4.30 or thereabouts.
+
+Cheers,
+
+  Michael
