@@ -1,92 +1,52 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Tue, 04 Nov 2014 14:15:00 +0200
-Message-ID: <5458C344.2040109@dev.mellanox.co.il>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org> <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il> <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il> <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il> <545256E5.9010501@acm.org> <5452765E.1040604@dev.mellanox.co.il> <5453541D.7040206@acm.org> <54562B9C.3040004@dev.mellanox.co.il> <94D0CD8314A33A4D9D801C0FE68B402959354E19@G9W0745.americas.hpqcorp.net> <5458BC8B.40202@acm.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/10] scsi: Use real functions for logging
+Date: Tue, 4 Nov 2014 05:58:45 -0800
+Message-ID: <20141104135845.GA3531@infradead.org>
+References: <1415088409-46590-1-git-send-email-hare@suse.de>
+ <1415088409-46590-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5458BC8B.40202-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:34751 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbaKDN6y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 08:58:54 -0500
+Content-Disposition: inline
+In-Reply-To: <1415088409-46590-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
 
-On 11/4/2014 1:46 PM, Bart Van Assche wrote:
-> On 11/03/14 02:46, Elliott, Robert (Server Storage) wrote:
->>> -----Original Message-----
->>> From: Sagi Grimberg [mailto:sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org]
->>> Sent: Sunday, November 02, 2014 7:03 AM
->>> To: Bart Van Assche; Christoph Hellwig
->>> Cc: Jens Axboe; Sagi Grimberg; Sebastian Parschauer; Elliott, Robert
->>> (Server Storage); Ming Lei; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-rdma
->>> Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
->>>
->> ...
->>> IMHO, this is not iSER specific issue, it is easily indicated from the
->>> code that a specific workload SRP will poll recv completion queue
->>> forever in an interrupt context.
->>>
->>> I encountered this issue on a virtual guest in a high workload (80+
->>> sessions with heavy traffic on all) because qemu smp_affinity setting
->>> was broken (might still be, didn't check that for a while). This caused
->>> all completion vectors to fire interrupts to core 0 causing a high
->>> events contention on a single event queue (causing lockup situations
->>> and starvation of other CQs). Using more completion queues will enhance
->>> this situation.
->>>
->>> I think running multichannel code when all MSIX vectors affinity are
->>> directed to a single CPU can invoke what I'm talking about.
->>
->> That's not an SRP specific problem either.  If you ask just one CPU to
->> service interrupts and block layer completions for submissions from lots
->> of other CPUs, it's bound to become overloaded.
->>
->> Setting rq_affinity=2 helps quite a bit for the block layer completion
->> work.  This patch proposed making that the default for blk-mq:
->>     https://lkml.org/lkml/2014/9/9/931
->>
->> For SRP interrupt processing, irqbalance recently changed its default
->> to ignore the affinity_hint; you now need to pass an option to honor
->> the hint, or provide a policy script to do so for selected irqs.  For
->> multi-million IOPS workloads, irqbalance takes far too long to reroute
->> them based on activity; you're likely to overload a CPU with 100%
->> hardirq processing, creating self-detected stalls for the submitting
->> processes on that CPU and other problems.  Sending interrupts back
->> to the submitting CPU provides self-throttling.
->
-> Hello Sagi,
->
-> To me it seems like with Rob's reply all questions about this patch
-> series have been answered. But I think Christoph is still waiting for a
-> Reviewed-by tag from you for patch 12/12.
->
+On Tue, Nov 04, 2014 at 09:06:40AM +0100, Hannes Reinecke wrote:
+> Implement a per-cpu buffer for formatting messages,
+> and add real functions for scmd_printk and sdev_prefix_printk
+> using that buffer and use dev_printk() to print out things.
+> And make sdev_printk() a wrapper for sdev_prefix_printk().
 
-Hey Bart & Rob,
+The "real functions" mostly seem to be a side effect of the
+implementation, how about a more descriptive subject line?
 
-I'm sorry but I didn't get to reply to the Rob's email yesterday.
+Also adding a sentence or two why this is done to the patch description
+would be very helpful.
 
-I think that Rob and I are not talking about the same issue. In
-case only a single core is servicing interrupts it is indeed expected
-that it will spend 100% in hard-irq, that's acceptable since it is
-pounded with completions all the time.
+> +/*
+> + * scsi_logging.c
 
-However, I'm referring to a condition where SRP will spend infinite
-time servicing a single interrupt (while loop on ib_poll_cq that never
-drains) which will lead to a hard lockup.
+Please don't mention the file name in top of file comments, it's bound
+to get out of date.
 
-This *can* happen, and I do believe that with an optimized IO path
-it is even more likely to.
+> +#define SCSI_LOG_SPOOLSIZE 4096
+> +#define SCSI_LOG_BUFSIZE 128
+> +
+> +struct scsi_log_buf {
+> +	char buffer[SCSI_LOG_SPOOLSIZE];
+> +	unsigned long map;
+> +};
+> +
+> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
 
-Anyway, since I am sure you ran sufficient testing on this code (and
-didn't see the issue) and I don't want to my concerns to block this
-code from 3.18, and I didn't find other gating issues, you can add:
+Some sort of comment explaining why we need the per-cpu buffers also
+would be very useful.  To me this seems like a little bit too much
+duplication of the tracing code.
 
-Reviewed-by: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-
-Sagi.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
