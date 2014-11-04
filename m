@@ -1,32 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 05/11] scsi: remove abuses of scsi_populate_tag
-Date: Tue, 4 Nov 2014 11:37:45 +0100
-Message-ID: <20141104103745.GC19154@lst.de>
-References: <1415087656-9491-1-git-send-email-hch@lst.de> <1415087656-9491-6-git-send-email-hch@lst.de> <5458923E.3010603@suse.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch 2/2] bnx2fc: fix an error code in _bnx2fc_create()
+Date: Tue, 4 Nov 2014 13:37:59 +0300
+Message-ID: <20141104103759.GB19096@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51267 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682AbaKDKhu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Nov 2014 05:37:50 -0500
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5458923E.3010603@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bvanassche@acm.org>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
 
-> Hmm. Either ->task needs to be initialized with TSK_SIMPLE (=0),
-> then it's missing with the other instances below.
-> Or it doesn't, but then this line is pointless.
-> 
-> For clarification I'd rather have it set explicitly below.
+We should be returning an error code here instead of success.  Either
+-ENODEV or -ENOMEM would work.  There is also a failure message in
+printk().
 
-This just keeps the inconsistency the driver already had.   If the
-qlogic folks care it could be cleaned up later.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> The function description needs to be adapted; it still refers
-> to the original function name 'scsi_populate_tag_msg;
-
-Thanks, fixed.
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index dfed4be..251b114 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2195,6 +2195,7 @@ static int _bnx2fc_create(struct net_device *netdev,
+ 	interface = bnx2fc_interface_create(hba, netdev, fip_mode);
+ 	if (!interface) {
+ 		printk(KERN_ERR PFX "bnx2fc_interface_create failed\n");
++		rc = -ENOMEM;
+ 		goto ifput_err;
+ 	}
+ 
