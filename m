@@ -1,57 +1,56 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/36] Fixes, cleanups and modernization for NCR5380 drivers
-Date: Wed, 5 Nov 2014 09:10:18 +0100
-Message-ID: <CAMuHMdV_xAdXB-0Q=qCGqDKt9uY7LT5mn_DXKZiA1aVmcuMOLA@mail.gmail.com>
-References: <20141027052607.105914311@telegraphics.com.au>
-	<5455C107.6040500@gmail.com>
-	<alpine.LNX.2.00.1411021710210.27266@nippy.intranet>
-	<5455E340.7080305@gmail.com>
-	<CAOmrzkKVYBcznyEaUX7Ta9z3P+B9=BTSj3kCZTjx-euZ2gannQ@mail.gmail.com>
-	<CAL4YKD5fqhZKZG3_cOTxasqTSdb5oC3g0aUKnnxzE3Q4MJyxGQ@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [V2 PATCH 2/2] scsi: TUR path is down after adapter gets reset
+ with multipath
+Date: Wed, 05 Nov 2014 09:56:24 +0100
+Message-ID: <5459E638.6010707@suse.de>
+References: <20141103211806.572351346@linux.vnet.ibm.com> <20141103211815.000777763@linux.vnet.ibm.com> <54587E69.50108@suse.de> <20141104150152.GA17309@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:53034 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403AbaKEIKU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2014 03:10:20 -0500
-In-Reply-To: <CAL4YKD5fqhZKZG3_cOTxasqTSdb5oC3g0aUKnnxzE3Q4MJyxGQ@mail.gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:42041 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbaKEI40 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Nov 2014 03:56:26 -0500
+In-Reply-To: <20141104150152.GA17309@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?Q?David_G=C3=A1lvez?= <dgalvez75@gmail.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, aniplay@wanadoo.fr
+To: Christoph Hellwig <hch@infradead.org>
+Cc: wenxiong@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, "Elliott, Robert (Server Storage)" <elliott@hp.com>
 
-On Wed, Nov 5, 2014 at 8:56 AM, David G=C3=A1lvez <dgalvez75@gmail.com>=
- wrote:
-> Do you know about the Falcon's disturbance in the SDMA clock signal
-> hardware problem?
-> Most Falcons, specially those used in music studios, have a hardware
-> patch to fix this, it's normally called SCSI patch.
->
-> Some more info:
->
-> http://didierm.pagesperso-orange.fr/doc/eng/c_0a.htm
+On 11/04/2014 04:01 PM, Christoph Hellwig wrote:
+> On Tue, Nov 04, 2014 at 08:21:13AM +0100, Hannes Reinecke wrote:
+>> Why did you use a wrapper for an already existing function?
+>> Please fold the logic into alua_check_sense().
+>=20
+> That's what the first version did.  See the response from Rob to it
+> on why it's done this way.
 
-So this adds additional buffering to the clock.
+Hmm. I see. But I still thing it should be wrapped into
+alua_check_sense().
+The main objection from Rob was that a sense code of 02/04/02 should
+cause a START STOP UNIT to be sent, but the latter is might be
+invalid for certain ALUA states.
+Thing is, we're only sending START STOP UNIT as part of the main
+SCSI EH routine, so that would work in either way.
 
-Note that input pins 3 and 5 of the 74HC04 are left floating!
-I recommend tying them to either GND (pin 7) or VCC (pin 14), to avoid
-them picking up high-frequency signals and consuming power.
+And looking a scsi_dh_alua we're only checking a return value of
+ADD_TO_MLQUEUE; any other value is treated as an I/O error.
+So it doesn't really matter if alua_check_sense would return
+=46AILED here; it still would be folded into the final return value of
+SCSI_DH_IO.
 
-Gr{oetje,eeting}s,
+So I don't think we need to have a wrapper around alua_check_sense()
+but can rather merge them both.
 
-                        Geert
+Cheers,
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-                                -- Linus Torvalds
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
