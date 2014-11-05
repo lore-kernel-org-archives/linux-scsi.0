@@ -1,23 +1,23 @@
-From: worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org (Dale R. Worley)
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: Large disk drives
-Date: Wed, 5 Nov 2014 10:51:17 -0500
-Message-ID: <201411051551.sA5FpHBS002762@hobgoblin.ariadne.com>
+Date: Wed, 05 Nov 2014 17:07:48 +0100
+Message-ID: <1415203668.13212.2.camel@jarvis>
 References: <Pine.LNX.4.44L0.1411041112010.966-100000@iolanthe.rowland.org>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <Pine.LNX.4.44L0.1411041112010.966-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-	(stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org)
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42404 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755193AbaKEQHv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2014 11:07:51 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1411041112010.966-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Dale R. Worley" <worley@alum.mit.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-Replying to two messages at once:
-
-> Date: Tue, 4 Nov 2014 11:14:39 -0500 (EST)
-> From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-> cc: "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>, <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>,
->         <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-> 
+On Tue, 2014-11-04 at 11:14 -0500, Alan Stern wrote:
 > On Tue, 4 Nov 2014, James Bottomley wrote:
 > 
 > > On Mon, 2014-11-03 at 16:06 -0500, Dale R. Worley wrote:
@@ -27,16 +27,17 @@ Replying to two messages at once:
 > > 
 > > Realistically no ... unless someone comes up with a reliable heuristic
 > > to give us the size.
-
-I can understand why the linux-scsi project would not want to take up
-what is really a hack to work around a hardware deficiency.
-
+> 
 > I posted a patch to allow the user to override the reported capacity:
 > 
 > 	http://marc.info/?l=linux-scsi&m=140993840113445&w=2
 > 
 > Nobody responded to it.
-> 
+
+Sorry, meant to.  In principle I'm OK with this as the lever for the
+hack (largely because it means we don't need to do anything) but will
+the distributions support it?
+
 > > > Unfortunately, such devices work OK with Windows (since Windows trusts
 > > > what the partition table says), you can't just say to the salesperson
 > > > "It has to work on drives over 3 TB."
@@ -53,22 +54,19 @@ what is really a hack to work around a hardware deficiency.
 > the device and can test it, returning it is annoying and time-consuming 
 > at best.
 
-Or as I would phrase it, How do you turn "Don't buy something that
-doesn't work!" into an algorithm?  That is:  I'm standing in
-MicroCenter, holding a box in my hand that contains a USB-to-SCSI
-adapter.  How do I determine whether or not it supports large disks?
-The problem being that it *works with Windows*, so I can't just ask
-the friendly salesperson, Does this work with 3 terabyte disks?
+OK, but I still don't understand how windows gets the partition table on
+there in the first place ... that must surely be some sort of guess the
+disk size hack.
 
-In my case, the Diablotek device works, while the Kingwin EZ-Connect
-does not, despite being labeled in essentially the same way.  (Neither
-says that Linux is supported.)
+James
 
-I admit that my problem may be my deficiency in dealing with the
-retail situation, as I'm a much better software engineer than shopper.
 
-Dale
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Alan Stern
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
