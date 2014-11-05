@@ -1,73 +1,75 @@
-From: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>
-Subject: RE: [PATCH v2 12/12] IB/srp: Add multichannel support
-Date: Wed, 5 Nov 2014 04:57:43 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295937104F@G4W3202.americas.hpqcorp.net>
-References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org>
- <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org>
- <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il>
- <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il>
- <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il>
- <545256E5.9010501@acm.org> <5452765E.1040604@dev.mellanox.co.il>
- <5453541D.7040206@acm.org> <54562B9C.3040004@dev.mellanox.co.il>
- <94D0CD8314A33A4D9D801C0FE68B402959354E19@G9W0745.americas.hpqcorp.net>
- <5458BC8B.40202@acm.org> <5458C344.2040109@dev.mellanox.co.il>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi: make scsi_eh_scmd_add() always succeed
+Date: Wed, 05 Nov 2014 08:44:53 +0100
+Message-ID: <5459D575.4000203@suse.de>
+References: <1415103073-90276-1-git-send-email-hare@suse.de> <1415103073-90276-2-git-send-email-hare@suse.de> <20141104183648.GA29621@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5458C344.2040109-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Content-Language: en-US
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:39878 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753635AbaKEHo4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Nov 2014 02:44:56 -0500
+In-Reply-To: <20141104183648.GA29621@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org
 
+On 11/04/2014 07:36 PM, Christoph Hellwig wrote:
+> On Tue, Nov 04, 2014 at 01:11:11PM +0100, Hannes Reinecke wrote:
+>> BLK_EH_HANDLED does not work with scsi commands, as we need
+>> to release the associated buffers correctly.
+>=20
+> Which particular error do you see?  The ->eh_timed_out routines can
+> return BLK_EH_HANDLED, and libata, iscsi and fc actually do, so we'll
+> need to fix these issues either way.
+>=20
+Hmm. Looking closer it seem that you are correct.
+However, the main point still stands; there is no way
+scsi_eh_scmd_add() can legitimately fail.
 
+>> And scsi_eh_scmd_add() currently only will fail if no
+>> error handler thread is started (which will never be the
+>> case)=20
+>=20
+> Yes.
+>=20
+>> or if the state machine encounters an illegal transition.
+>> As state machine transitions don't have any real meaning
+>> we can also force setting of the new state and
+>> make scsi_dh_scmd_add() a void function.
+>> With that we'll never have to resort to return
+>> BLK_EH_HANDLED.
+>=20
+> Which kind of transition did you see rejected?  Neither a CREATED or
+> DEL_(RECOVERY) state should be possible when invoking the error handl=
+er,
+> so I'd rather see asserts here than overriding the state machine.
+> te RECOVERY state from a RUNNING or existing RECOVERY state, which
+> leaves CREATED, CANCEL, DEL, CANCEL_RECOVERY or DEL_RECOVERY.
+>=20
+I did not see any rejection so far.
+However, we're calling scsi_host_set_state(), which _might_ fail.
+And we need to have a way of either
+a) make sure that it cannot fail prior to calling it
+or
+b) handling the failure.
+So I'm fine with using asserts here.
 
-> -----Original Message-----
-> From: Sagi Grimberg [mailto:sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org]
-> Sent: Tuesday, November 04, 2014 6:15 AM
-> To: Bart Van Assche; Elliott, Robert (Server Storage); Christoph Hellwig
-> Cc: Jens Axboe; Sagi Grimberg; Sebastian Parschauer; Ming Lei; linux-
-> scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-rdma
-> Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
-> 
-...
-> I think that Rob and I are not talking about the same issue. In
-> case only a single core is servicing interrupts it is indeed expected
-> that it will spend 100% in hard-irq, that's acceptable since it is
-> pounded with completions all the time.
-> 
-> However, I'm referring to a condition where SRP will spend infinite
-> time servicing a single interrupt (while loop on ib_poll_cq that never
-> drains) which will lead to a hard lockup.
-> 
-> This *can* happen, and I do believe that with an optimized IO path
-> it is even more likely to.
+I'll be updating the patch (and description)
 
-If the IB completions/interrupts are only for IOs submitted on this
-CPU, then the CQ will eventually drain, because this CPU is not 
-submitting anything new while stuck in the loop.
+Cheers,
 
-This can become bursty, though - submit a lot of IOs, then be busy
-completing all of them and not submitting more, resulting in the 
-queue depth bouncing from 0 to high to 0 to high.  I've seen
-that with both hpsa and mpt3sas drivers.  The fio options
-iodepth_batch, iodepth_batch_complete, and iodepth_low
-can amplify and reduce that effect (using libaio).
-
-I haven't found a good way for the LLD ISRs and the block
-layer completion code to decide to yield the CPU based on how
-much time they are taking - that would almost qualify as
-a realtime kernel feature.  If you compile with
-CONFIG_IRQ_TIME_ACCOUNTING, the kernel does keep track
-of that information; perhaps that could be exported so
-modules can use it?
-
----
-Rob Elliott, HP Server Storage
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
