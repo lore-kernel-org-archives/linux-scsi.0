@@ -1,18 +1,18 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 01/11] scsi: provide a generic change_queue_type method
-Date: Tue, 04 Nov 2014 21:09:36 -0500
-Message-ID: <yq1bnomgzz3.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 02/11] scsi: add new scsi-command flag for tagged commands
+Date: Tue, 04 Nov 2014 21:12:08 -0500
+Message-ID: <yq14muegzuv.fsf@sermon.lab.mkp.net>
 References: <1415087656-9491-1-git-send-email-hch@lst.de>
-	<1415087656-9491-2-git-send-email-hch@lst.de>
+	<1415087656-9491-3-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51454 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:16760 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792AbaKECKh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 21:10:37 -0500
-In-Reply-To: <1415087656-9491-2-git-send-email-hch@lst.de> (Christoph
-	Hellwig's message of "Tue, 4 Nov 2014 08:54:06 +0100")
+	with ESMTP id S1752127AbaKECOB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 21:14:01 -0500
+In-Reply-To: <1415087656-9491-3-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Tue, 4 Nov 2014 08:54:07 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
@@ -20,10 +20,23 @@ Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnersh
 
 >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Christoph> Most drivers use exactly the same implementation, so provide
-Christoph> it as a library function.
+Christoph> Currently scsi piggy backs on the block layer to define the
+Christoph> concept of a tagged command.  But we want to be able to have
+Christoph> block-level host-wide tags assigned even for untagged
+Christoph> commands like the initial INQUIRY, so add a new SCSI-level
+Christoph> flag for commands that are tagged at the scsi level, so that
+Christoph> even commands without that set can have tags assigned to
+Christoph> them.  Note that this alredy is the case for the blk-mq code
+Christoph> path, and this just lets the old path catch up with it.
 
-Nice cleanup.
+Christoph> We also set this flag based upon sdev->simple_tags instead of
+Christoph> the block queue flag, so that it is entirely independent of
+Christoph> the block layer tagging, and thus always correct even if a
+Christoph> driver doesn't use block level tagging yet.
+
+Christoph> Also remove the old blk_rq_tagged; it was only used by SCSI
+Christoph> drivers, and removing it forces them to look for the proper
+Christoph> replacement.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
