@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: scsi: only re-lock door after EH on devices that were reset
-Date: Tue, 04 Nov 2014 20:57:59 -0500
-Message-ID: <yq1fvdyh0ig.fsf@sermon.lab.mkp.net>
-References: <20141103183640.GA6718@lst.de>
+Subject: Re: [PATCH 01/11] scsi: provide a generic change_queue_type method
+Date: Tue, 04 Nov 2014 21:09:36 -0500
+Message-ID: <yq1bnomgzz3.fsf@sermon.lab.mkp.net>
+References: <1415087656-9491-1-git-send-email-hch@lst.de>
+	<1415087656-9491-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48117 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:51454 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbaKEB6O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 20:58:14 -0500
-In-Reply-To: <20141103183640.GA6718@lst.de> (Christoph Hellwig's message of
-	"Mon, 3 Nov 2014 19:36:40 +0100")
+	with ESMTP id S1751792AbaKECKh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Nov 2014 21:10:37 -0500
+In-Reply-To: <1415087656-9491-2-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Tue, 4 Nov 2014 08:54:06 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Meelis Roos <meelis.roos@ut.ee>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bvanassche@acm.org>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
 
 >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Christoph> Setups that use the blk-mq I/O path can lock up if a host
-Christoph> with a single device that has its door locked enters EH.
-Christoph> Make sure to only send the command to re-lock the door to
-Christoph> devices that actually were reset and thus might have lost
-Christoph> their state.  Otherwise the EH code might be get blocked on
-Christoph> blk_get_request as all requests for non-reset devices might
-Christoph> be in use.
+Christoph> Most drivers use exactly the same implementation, so provide
+Christoph> it as a library function.
+
+Nice cleanup.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
