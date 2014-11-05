@@ -1,37 +1,83 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 0/3] Initial ZAC support
-Date: Wed,  5 Nov 2014 13:08:19 +0100
-Message-ID: <1415189302-108476-1-git-send-email-hare@suse.de>
+Subject: [PATCH 3/3] libata-scsi: Update SATL for ZAC drives
+Date: Wed,  5 Nov 2014 13:08:22 +0100
+Message-ID: <1415189302-108476-4-git-send-email-hare@suse.de>
+References: <1415189302-108476-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1415189302-108476-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+ZAC (zoned-access command) drives translate into ZBC (Zoned block
+command) device type for SCSI. So implement the correct mappings
+into libata-scsi and update the SCSI command set versions.
 
-this patchset updates the ATA stack to correctly detect
-host-managed ZAC devices.
+Acked-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-scsi.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-Hannes Reinecke (3):
-  libsas: use ata_dev_classify()
-  libata: Implement ATA_DEV_ZAC
-  libata-scsi: Update SATL for ZAC drives
-
- drivers/ata/libata-core.c           | 20 +++++++----
- drivers/ata/libata-eh.c             |  7 ++--
- drivers/ata/libata-scsi.c           | 30 +++++++++++++++--
- drivers/ata/libata-transport.c      |  1 +
- drivers/scsi/aic94xx/aic94xx_task.c | 10 +++---
- drivers/scsi/isci/request.c         |  4 +--
- drivers/scsi/libsas/sas_ata.c       | 66 +++++++------------------------------
- drivers/scsi/mvsas/mv_sas.c         |  4 +--
- drivers/scsi/pm8001/pm8001_hwi.c    |  2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c    |  2 +-
- include/linux/libata.h              |  6 ++--
- include/scsi/libsas.h               | 11 ++-----
- 12 files changed, 76 insertions(+), 87 deletions(-)
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bea6e7f..1db6eab 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1969,6 +1969,7 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	const u8 versions[] = {
++		0x00,
+ 		0x60,	/* SAM-3 (no version claimed) */
+ 
+ 		0x03,
+@@ -1977,6 +1978,20 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x02,
+ 		0x60	/* SPC-3 (no version claimed) */
+ 	};
++	const u8 versions_zbc[] = {
++		0x00,
++		0xA0,	/* SAM-5 (no version claimed) */
++
++		0x04,
++		0xC0,	/* SBC-3 (no version claimed) */
++
++		0x04,
++		0x60,	/* SPC-4 (no version claimed) */
++
++		0x60,
++		0x20,   /* ZBC (no version claimed) */
++	};
++
+ 	u8 hdr[] = {
+ 		TYPE_DISK,
+ 		0,
+@@ -1991,6 +2006,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (ata_id_removeable(args->id))
+ 		hdr[1] |= (1 << 7);
+ 
++	if (args->dev->class == ATA_DEV_ZAC) {
++		hdr[0] = TYPE_ZBC;
++		hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
++	}
++
+ 	memcpy(rbuf, hdr, sizeof(hdr));
+ 	memcpy(&rbuf[8], "ATA     ", 8);
+ 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+@@ -2003,7 +2023,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 	if (rbuf[32] == 0 || rbuf[32] == ' ')
+ 		memcpy(&rbuf[32], "n/a ", 4);
+ 
+-	memcpy(rbuf + 59, versions, sizeof(versions));
++	if (args->dev->class == ATA_DEV_ZAC)
++		memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
++	else
++		memcpy(rbuf + 58, versions, sizeof(versions));
+ 
+ 	return 0;
+ }
 -- 
 1.8.5.2
 
