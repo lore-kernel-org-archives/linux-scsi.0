@@ -1,49 +1,74 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 0/3] Initial ZAC support
-Date: Wed, 05 Nov 2014 16:09:20 +0100
-Message-ID: <545A3DA0.5060901@suse.de>
-References: <1415189302-108476-1-git-send-email-hare@suse.de> <20141105150340.GA1326@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53191 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537AbaKEPJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Nov 2014 10:09:22 -0500
-In-Reply-To: <20141105150340.GA1326@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org (Dale R. Worley)
+Subject: Re: Large disk drives
+Date: Wed, 5 Nov 2014 10:51:17 -0500
+Message-ID: <201411051551.sA5FpHBS002762@hobgoblin.ariadne.com>
+References: <Pine.LNX.4.44L0.1411041112010.966-100000@iolanthe.rowland.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-reply-to: <Pine.LNX.4.44L0.1411041112010.966-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+	(stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org)
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@parallels.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 11/05/2014 04:03 PM, Christoph Hellwig wrote:
-> On Wed, Nov 05, 2014 at 01:08:19PM +0100, Hannes Reinecke wrote:
->> Hi all,
->>
->> this patchset updates the ATA stack to correctly detect
->> host-managed ZAC devices.
->=20
-> And more importantly exports /dev/sg nodes from them so they can be
-> actually be accessed.
->=20
-> I'm fine with taking the whole series through the libata tree, so far
-> there are no conflicting libsas changes on the radar.
->=20
-Tejun?
-I've made the requested changes of using taskfiles in libsas,
-so everything should be fine now ...
+Replying to two messages at once:
 
-Cheers,
+> Date: Tue, 4 Nov 2014 11:14:39 -0500 (EST)
+> From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> cc: "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>, <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>,
+>         <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> 
+> On Tue, 4 Nov 2014, James Bottomley wrote:
+> 
+> > On Mon, 2014-11-03 at 16:06 -0500, Dale R. Worley wrote:
+> > > Was there any resolution as to how large disk drives would be handled
+> > > if their interface did not support the "capacity" request that would
+> > > tell how large they were?
+> > 
+> > Realistically no ... unless someone comes up with a reliable heuristic
+> > to give us the size.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+I can understand why the linux-scsi project would not want to take up
+what is really a hack to work around a hardware deficiency.
+
+> I posted a patch to allow the user to override the reported capacity:
+> 
+> 	http://marc.info/?l=linux-scsi&m=140993840113445&w=2
+> 
+> Nobody responded to it.
+> 
+> > > Unfortunately, such devices work OK with Windows (since Windows trusts
+> > > what the partition table says), you can't just say to the salesperson
+> > > "It has to work on drives over 3 TB."
+> > 
+> > This is a stopgap: your 3TB drive can be guessed as the 16 bit capacity
+> > plus 2TB, but the same won't happen for a 5TB device.  Believing the
+> > partition table gives us a chicken and egg problem because something
+> > still has to get the partition table on to the device.
+> > 
+> > I don't think "don't buy something that doesn't work" is a hugely
+> > unreasonable response to this.
+> 
+> The problem is knowing beforehand whether it will work.  Once you buy 
+> the device and can test it, returning it is annoying and time-consuming 
+> at best.
+
+Or as I would phrase it, How do you turn "Don't buy something that
+doesn't work!" into an algorithm?  That is:  I'm standing in
+MicroCenter, holding a box in my hand that contains a USB-to-SCSI
+adapter.  How do I determine whether or not it supports large disks?
+The problem being that it *works with Windows*, so I can't just ask
+the friendly salesperson, Does this work with 3 terabyte disks?
+
+In my case, the Diablotek device works, while the Kingwin EZ-Connect
+does not, despite being labeled in essentially the same way.  (Neither
+says that Linux is supported.)
+
+I admit that my problem may be my deficiency in dealing with the
+retail situation, as I'm a much better software engineer than shopper.
+
+Dale
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
