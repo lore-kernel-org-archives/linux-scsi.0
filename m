@@ -1,58 +1,66 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [V2 PATCH 2/2] scsi: TUR path is down after adapter gets reset
- with multipath
-Date: Wed, 05 Nov 2014 09:56:24 +0100
-Message-ID: <5459E638.6010707@suse.de>
-References: <20141103211806.572351346@linux.vnet.ibm.com> <20141103211815.000777763@linux.vnet.ibm.com> <54587E69.50108@suse.de> <20141104150152.GA17309@infradead.org>
+From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
+Date: Wed, 05 Nov 2014 13:22:01 +0200
+Message-ID: <545A0859.8030301@dev.mellanox.co.il>
+References: <5433E43D.3010107@acm.org> <5433E585.607@acm.org> <5443F69F.40606@dev.mellanox.co.il> <54450690.709@acm.org> <544622FE.5040906@dev.mellanox.co.il> <544FE13A.60807@dev.mellanox.co.il> <5450C6FC.90908@acm.org> <545248F8.8020102@dev.mellanox.co.il> <54524D08.4040203@acm.org> <545253E3.7000009@dev.mellanox.co.il> <545256E5.9010501@acm.org> <5452765E.1040604@dev.mellanox.co.il> <5453541D.7040206@acm.org> <54562B9C.3040004@dev.mellanox.co.il> <94D0CD8314A33A4D9D801C0FE68B402959354E19@G9W0745.americas.hpqcorp.net> <5458BC8B.40202@acm.org> <5458C344.2040109@dev.mellanox.co.il> <94D0CD8314A33A4D9D801C0FE68B40295937104F@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42041 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751188AbaKEI40 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Nov 2014 03:56:26 -0500
-In-Reply-To: <20141104150152.GA17309@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295937104F-2m9nI20wMFwSZAcGdq5asR6epYMZPwEe5NbjCUgZEJk@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Elliott, Robert (Server Storage)" <Elliott-VXdhtT5mjnY@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: wenxiong@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, "Elliott, Robert (Server Storage)" <elliott@hp.com>
 
-On 11/04/2014 04:01 PM, Christoph Hellwig wrote:
-> On Tue, Nov 04, 2014 at 08:21:13AM +0100, Hannes Reinecke wrote:
->> Why did you use a wrapper for an already existing function?
->> Please fold the logic into alua_check_sense().
->=20
-> That's what the first version did.  See the response from Rob to it
-> on why it's done this way.
+On 11/5/2014 6:57 AM, Elliott, Robert (Server Storage) wrote:
+>
+>
+>> -----Original Message-----
+>> From: Sagi Grimberg [mailto:sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org]
+>> Sent: Tuesday, November 04, 2014 6:15 AM
+>> To: Bart Van Assche; Elliott, Robert (Server Storage); Christoph Hellwig
+>> Cc: Jens Axboe; Sagi Grimberg; Sebastian Parschauer; Ming Lei; linux-
+>> scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-rdma
+>> Subject: Re: [PATCH v2 12/12] IB/srp: Add multichannel support
+>>
+> ...
+>> I think that Rob and I are not talking about the same issue. In
+>> case only a single core is servicing interrupts it is indeed expected
+>> that it will spend 100% in hard-irq, that's acceptable since it is
+>> pounded with completions all the time.
+>>
+>> However, I'm referring to a condition where SRP will spend infinite
+>> time servicing a single interrupt (while loop on ib_poll_cq that never
+>> drains) which will lead to a hard lockup.
+>>
+>> This *can* happen, and I do believe that with an optimized IO path
+>> it is even more likely to.
+>
+> If the IB completions/interrupts are only for IOs submitted on this
+> CPU, then the CQ will eventually drain, because this CPU is not
+> submitting anything new while stuck in the loop.
 
-Hmm. I see. But I still thing it should be wrapped into
-alua_check_sense().
-The main objection from Rob was that a sense code of 02/04/02 should
-cause a START STOP UNIT to be sent, but the latter is might be
-invalid for certain ALUA states.
-Thing is, we're only sending START STOP UNIT as part of the main
-SCSI EH routine, so that would work in either way.
+They're not (or not necessarily). I'm talking about the case where the
+IO completions are submitted from another CPU. This creates a cycle
+where the submitter is generating completions on CPU X and the completer
+is evacuating room for more submissions on CPU Y. This process can
+never end while the completer is in hard-irq context.
 
-And looking a scsi_dh_alua we're only checking a return value of
-ADD_TO_MLQUEUE; any other value is treated as an I/O error.
-So it doesn't really matter if alua_check_sense would return
-=46AILED here; it still would be folded into the final return value of
-SCSI_DH_IO.
+>
+> This can become bursty, though - submit a lot of IOs, then be busy
+> completing all of them and not submitting more, resulting in the
+> queue depth bouncing from 0 to high to 0 to high.  I've seen
+> that with both hpsa and mpt3sas drivers.  The fio options
+> iodepth_batch, iodepth_batch_complete, and iodepth_low
+> can amplify and reduce that effect (using libaio).
+>
 
-So I don't think we need to have a wrapper around alua_check_sense()
-but can rather merge them both.
+blk-iopoll (or some other form of budgeting completions) should take
+care of that.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+Sagi.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
