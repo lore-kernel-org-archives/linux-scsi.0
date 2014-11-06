@@ -1,125 +1,47 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Very slow throughput when using cdparanoia on two SATA CDROM drives
- with /dev/sr but not /dev/sg
-Date: Thu, 06 Nov 2014 13:25:06 +0000
-Message-ID: <545B76B2.1020906@buttersideup.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH] IB/srp: Fix a 32-bit compiler warning
+Date: Thu, 06 Nov 2014 15:18:12 +0100
+Message-ID: <545B8324.7010106@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.allsecuredomains.com ([78.47.234.210]:41672 "EHLO
-	relay1.allsecuredomains.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751313AbaKFNyK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2014 08:54:10 -0500
-Received: from [81.174.144.187] (helo=zebedee.buttersideup.com)
-	by relay1.allsecuredomains.com with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <tim@buttersideup.com>)
-	id 1XmN3j-0007Ea-NR
-	for linux-scsi@vger.kernel.org; Thu, 06 Nov 2014 13:25:07 +0000
-Received: from [172.19.198.5] (ermintrude.lan [172.19.198.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by zebedee.buttersideup.com (Postfix) with ESMTPSA id 541BC60250
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2014 13:25:07 +0000 (GMT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hello,
+The result of a pointer subtraction has type ptrdiff_t. Hence change a
+%ld format specifier into %td. This change avoids that the following
+warning is printed on 32-bit systems:
 
-I've got a big box of audio CDs to read, so I hooked up a load of SATA
-CDROM drives to a machine (Intel motherboard AHCI, and SATA SiI3124
-controllers - in this example one was attached to each host controller),
-so that I could read them in parallel.
+warning: format '%ld' expects argument of type 'long int', but argument 5 has type 'int' [-Wformat=]
 
-I'm using kernel 3.16.3, with cdparanoia 3.10.2 - both from Debian
-Jessie.  https://www.xiph.org/paranoia/manual.html
+Reported-by: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-When two (or more) drives are read simultaneously, the performance falls
-to pieces (throughput from each drive drops by 95%) if more than one
-/dev/sr* device is being read by cdparanoia.
-
-If I tell cdparanoia to use the corresponding /dev/sg devices, then no
-significant throughput drop is experienced when reading multiple drives
-simultaneously.
-
-As an example, using these two drives:
-
-[1:0:0:0]    cd/dvd  TSSTcorp DVD+-RW TS-H653G DW10  /dev/sr0   /dev/sg4
-[14:0:0:0]   cd/dvd  PLDS     DVD+-RW DH-16A6S YD11  /dev/sr9   /dev/sg16
-
-
-... in the following results I used "time cdparanoia -v -d /dev/XXX 1
-/tmp/1.wav" - where XXX was substituted for either sr9 or sg16
-
-
-On an otherwise idle machine, I did these two sequentially:
-
-sr9: 38 seconds
-
-sg16: 38 seconds
-
-
-
-Simultaneous with: cdparanoia -d /dev/sr0 11 /tmp/11.wav (and auto
-restarted that command when it completed) I then ran these two sequentially:
-
-sr9: 680 seconds
-
-sg16: 38 seconds
-
-
-
-Simultaneous with: cdparanoia -d /dev/sg4 11 /tmp/11.wav as above:
-
-sr9: 40 seconds
-
-sg16: 40 seconds
-
-
-This is a diff of the two sets of cdparanoia -v output (using the sr
-devices vs the sg devices):
-
---- /tmp/sr     2014-11-06 12:41:43.094867889 +0000
-+++ /tmp/sg     2014-11-06 12:42:00.463123769 +0000
-@@ -2,9 +2,9 @@
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 89e4560..577eb01 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1747,7 +1747,7 @@ static void srp_process_rsp(struct srp_rdma_ch *ch, struct srp_rsp *rsp)
+ 		}
+ 		if (!scmnd) {
+ 			shost_printk(KERN_ERR, target->scsi_host,
+-				     "Null scmnd for RSP w/tag %#016llx received on ch %ld / QP %#x\n",
++				     "Null scmnd for RSP w/tag %#016llx received on ch %td / QP %#x\n",
+ 				     rsp->tag, ch - target->ch, ch->qp->qp_num);
  
- Using cdda library version: 10.2
- Using paranoia library version: 10.2
--Checking /dev/sr9 for cdrom...
--        Testing /dev/sr9 for SCSI/MMC interface
--                SG_IO device: /dev/sr9
-+Checking /dev/sg16 for cdrom...
-+        Testing /dev/sg16 for SCSI/MMC interface
-+                SG_IO device: /dev/sg16
- 
- CDROM model sensed sensed: PLDS DVD+-RW DH-16A6S YD11
- 
-@@ -13,9 +13,9 @@
- 
- Checking for MMC style command set...
-         Drive is MMC style
--        DMA scatter/gather table entries: 1
-+        DMA scatter/gather table entries: 167
-         table entry size: 131072 bytes
--        maximum theoretical transfer: 55 sectors
-+        maximum theoretical transfer: 9185 sectors
-         Setting default read size to 27 sectors (63504 bytes).
- 
- Verifying CDDA command set...
-@@ -23,3 +23,5 @@
+ 			spin_lock_irqsave(&ch->lock, flags);
+-- 
+2.1.2
 
-
-I'm happy to try other kernel versions to gather more data.  Which
-kernel trees/branches should I try?
-
-I'm also assuming this is more likely to be a SCSI layer bug than a SATA
-one, so let me know if that's probably wrong.  Also, is reporting here
-best or bugzilla?
-
-Cheers,
-
-Tim.
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
