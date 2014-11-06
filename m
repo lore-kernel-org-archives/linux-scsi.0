@@ -1,76 +1,85 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/6] scsi: don't use scsi_next_command in scsi_reset_provider
-Date: Thu, 06 Nov 2014 09:18:03 +0100
-Message-ID: <545B2EBB.2010801@suse.de>
-References: <1415259630-20784-1-git-send-email-hch@lst.de> <1415259630-20784-2-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 2/6] scsi: remove scsi_next_command
+Date: Thu, 06 Nov 2014 09:21:05 +0100
+Message-ID: <545B2F71.7020808@suse.de>
+References: <1415259630-20784-1-git-send-email-hch@lst.de> <1415259630-20784-3-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41432 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:41581 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303AbaKFISG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2014 03:18:06 -0500
-In-Reply-To: <1415259630-20784-2-git-send-email-hch@lst.de>
+	id S1750955AbaKFIVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2014 03:21:06 -0500
+In-Reply-To: <1415259630-20784-3-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>
 
 On 11/06/2014 08:40 AM, Christoph Hellwig wrote:
-> scsi_reset_provider already manually runs all queues for the given ho=
-st,
-> so it doesn't need the scsi_run_queues call from it, and it doesn't n=
-eed
-> a reference on the device because it's synchronous.
->=20
-> So let's just call scsi_put_command directly and avoid the device ref=
-erence
-> dance to simplify the code.
+> There's only one caller left, so inline it and reduce the blk-mq vs !=
+blk-mq
+> diff a litte bit.
 >=20
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/scsi_error.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
+>  drivers/scsi/scsi_lib.c  | 18 ++++--------------
+>  drivers/scsi/scsi_priv.h |  1 -
+>  2 files changed, 4 insertions(+), 15 deletions(-)
 >=20
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index ba19687..a1ffdb0 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2335,14 +2335,9 @@ scsi_ioctl_reset(struct scsi_device *dev, int =
-__user *arg)
->  		return -EIO;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 38f8c85..1a3546e8 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -543,17 +543,6 @@ static void scsi_requeue_command(struct request_=
+queue *q, struct scsi_cmnd *cmd)
+>  	put_device(&sdev->sdev_gendev);
+>  }
 > =20
->  	error =3D -EIO;
-> -	if (!get_device(&dev->sdev_gendev))
-> -		goto out_put_autopm_host;
+> -void scsi_next_command(struct scsi_cmnd *cmd)
+> -{
+> -	struct scsi_device *sdev =3D cmd->device;
+> -	struct request_queue *q =3D sdev->request_queue;
 > -
->  	scmd =3D scsi_get_command(dev, GFP_KERNEL);
-> -	if (!scmd) {
-> -		put_device(&dev->sdev_gendev);
-> +	if (!scmd)
->  		goto out_put_autopm_host;
-> -	}
-> =20
->  	blk_rq_init(NULL, &req);
->  	scmd->request =3D &req;
-> @@ -2404,10 +2399,10 @@ scsi_ioctl_reset(struct scsi_device *dev, int=
- __user *arg)
->  			     "waking up host to restart after TMF\n"));
-> =20
->  	wake_up(&shost->host_wait);
+> -	scsi_put_command(cmd);
+> -	scsi_run_queue(q);
 > -
->  	scsi_run_host_queues(shost);
+> -	put_device(&sdev->sdev_gendev);
+> -}
+> -
+>  void scsi_run_host_queues(struct Scsi_Host *shost)
+>  {
+>  	struct scsi_device *sdev;
+> @@ -731,8 +720,6 @@ static bool scsi_end_request(struct request *req,=
+ int error,
+>  			kblockd_schedule_work(&sdev->requeue_work);
+>  		else
+>  			blk_mq_start_stopped_hw_queues(q, true);
+> -
+> -		put_device(&sdev->sdev_gendev);
+>  	} else {
+>  		unsigned long flags;
 > =20
-> -	scsi_next_command(scmd);
-> +	scsi_put_command(scmd);
+> @@ -744,9 +731,12 @@ static bool scsi_end_request(struct request *req=
+, int error,
+>  		spin_unlock_irqrestore(q->queue_lock, flags);
+> =20
+>  		scsi_release_buffers(cmd);
+> -		scsi_next_command(cmd);
 > +
->  out_put_autopm_host:
->  	scsi_autopm_put_host(shost);
->  	return error;
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> +		scsi_put_command(cmd);
+> +		scsi_run_queue(q);
+>  	}
+> =20
+> +	put_device(&sdev->sdev_gendev);
+>  	return false;
+>  }
+> =20
+Hmm? Isn't there a scsi_put_comand() too many?
+You dropped it from the 'if' branch, moved it out of
+the condition, but kept in in the 'else' branch ...
 
 Cheers,
 
