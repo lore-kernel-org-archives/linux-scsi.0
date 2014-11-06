@@ -1,92 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 00/10] scsi logging update: the real thing
-Date: Thu,  6 Nov 2014 09:30:29 +0100
-Message-ID: <1415262639-121586-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42016 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751534AbaKFIan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2014 03:30:43 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 06/10] libata: use __scsi_format_command()
+Date: Thu,  6 Nov 2014 09:30:35 +0100
+Message-ID: <1415262639-121586-7-git-send-email-hare@suse.de>
+References: <1415262639-121586-1-git-send-email-hare@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1415262639-121586-1-git-send-email-hare@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+libata already uses an internal buffer, so we should be using
+__scsi_format_command() here.
 
-this is the second part of my scsi logging update, covering
-CDB and sense code printing. With this patchset CDBs and
-sense code bytes will be formatted on a single line
-(where possible), and prefixed with the device and command
-tag.
+Cc: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-eh.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-To ensure CDBs and sense code bytes are not broken up during
-printk I've implemented a per-cpu buffer for formatting
-messages. One can allocate a chunk from the buffer using
-scsi_log_reserve_buffer() and return it via scsi_log_release_buffer().
-Both function do an implicit preempt_disable() / preempt_enable()
-to ensure we're not scheduled away from that cpu whilst writing
-into the buffer.
-
-With that I've been able to clean up constants.c to remove all the
-#ifdef CONFIG_SCSI_CONSTANTS statements. It'll now be compiled in
-conditionally if CONFIG_SCSI_CONSTANTS is set.
-
-Additionally I've updated the SCSI command definitions to SPC-3.
-
-Thanks go to Stephen Rostedt who suffered my annoying questions
-during LPC.
-
-Changes to v1:
-- Reshuffled patches to have SCSI command definition updates first
-- Added Reviewed-by: tags where appropriate
-- Implemented scmd_namd() helper as suggested by hch
-- Dropped buffer pointer logging in scsi_log_send()
-- Updated description for per-cpu logging buffer patch
-
-Hannes Reinecke (10):
-  scsi: Rename SERVICE_ACTION_IN to SERVICE_ACTION_IN_16
-  scsi: Add SPC-3 command definitions
-  scsi: Implement per-cpu logging buffer
-  scsi: log request tag for scmd_printk()
-  scsi: use external buffer for command logging
-  libata: use __scsi_format_command()
-  scsi: use per-cpu buffer for formatting sense
-  scsi: use per-cpu buffer for formatting scsi_print_result()
-  scsi: Conditionally compile in constants.c
-  scsi: Do not display buffer pointers in scsi_log_send()
-
- block/scsi_ioctl.c                         |   2 +-
- drivers/ata/libata-eh.c                    |  13 +-
- drivers/ata/libata-scsi.c                  |   2 +-
- drivers/block/nvme-scsi.c                  |   4 +-
- drivers/scsi/Makefile                      |   6 +-
- drivers/scsi/aacraid/aachba.c              |   4 +-
- drivers/scsi/aacraid/linit.c               |   2 +-
- drivers/scsi/ch.c                          |   6 +-
- drivers/scsi/constants.c                   | 250 +---------------
- drivers/scsi/gdth.c                        |   4 +-
- drivers/scsi/scsi.c                        |  11 +-
- drivers/scsi/scsi_debug.c                  |   2 +-
- drivers/scsi/scsi_logging.c                | 444 +++++++++++++++++++++++++++++
- drivers/scsi/scsi_trace.c                  |   2 +-
- drivers/scsi/sd.c                          |   9 +-
- drivers/scsi/sr_ioctl.c                    |  13 +-
- drivers/scsi/ufs/ufshcd.c                  |   6 +-
- drivers/target/target_core_alua.c          |   2 +-
- drivers/target/target_core_pr.c            |   2 +-
- drivers/target/target_core_sbc.c           |   2 +-
- drivers/usb/gadget/legacy/tcm_usb_gadget.c |   2 +-
- drivers/xen/xen-scsiback.c                 |   1 +
- include/scsi/scsi.h                        |  11 +-
- include/scsi/scsi_dbg.h                    |  72 ++++-
- include/scsi/scsi_device.h                 |  21 +-
- include/trace/events/scsi.h                |   2 +-
- include/trace/events/target.h              |   2 +-
- tools/lib/traceevent/plugin_scsi.c         |   9 +-
- 28 files changed, 584 insertions(+), 322 deletions(-)
- create mode 100644 drivers/scsi/scsi_logging.c
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index dad83df..6550a9a 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2509,15 +2509,12 @@ static void ata_eh_link_report(struct ata_link *link)
+ 
+ 		if (ata_is_atapi(qc->tf.protocol)) {
+ 			if (qc->scsicmd)
+-				scsi_print_command(qc->scsicmd);
++				__scsi_format_command(cdb_buf, sizeof(cdb_buf),
++						      qc->scsicmd->cmnd,
++						      qc->scsicmd->cmd_len);
+ 			else
+-				snprintf(cdb_buf, sizeof(cdb_buf),
+-				 "cdb %02x %02x %02x %02x %02x %02x %02x %02x  "
+-				 "%02x %02x %02x %02x %02x %02x %02x %02x\n         ",
+-				 cdb[0], cdb[1], cdb[2], cdb[3],
+-				 cdb[4], cdb[5], cdb[6], cdb[7],
+-				 cdb[8], cdb[9], cdb[10], cdb[11],
+-				 cdb[12], cdb[13], cdb[14], cdb[15]);
++				__scsi_format_command(cdb_buf, sizeof(cdb_buf),
++						      cdb, qc->dev->cdb_len);
+ 		} else {
+ 			const char *descr = ata_get_cmd_descript(cmd->command);
+ 			if (descr)
 -- 
 1.8.5.2
-
