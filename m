@@ -1,40 +1,58 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/11] scsi: always assign block layer tags if enabled
-Date: Thu, 6 Nov 2014 17:31:44 +0100
-Message-ID: <20141106163144.GA23914@lst.de>
-References: <1415087656-9491-1-git-send-email-hch@lst.de> <1415087656-9491-9-git-send-email-hch@lst.de> <545BA1B0.8030604@acm.org>
+From: Boaz Harrosh <boaz@plexistor.com>
+Subject: Re: Large disk drives
+Date: Thu, 06 Nov 2014 18:34:28 +0200
+Message-ID: <545BA314.4050109@plexistor.com>
+References: <1415203668.13212.2.camel@jarvis>		 <Pine.LNX.4.44L0.1411051130470.1531-100000@iolanthe.rowland.org>		 <20141105193045.GA13265@infradead.org>	 <1415269814.29907.19.camel@jarvis.quadriga.com>	 <545B86AC.3080704@plexistor.com> <1415289258.10617.4.camel@jarvis.quadriga.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57741 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbaKFQbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2014 11:31:50 -0500
-Content-Disposition: inline
-In-Reply-To: <545BA1B0.8030604@acm.org>
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:39263 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbaKFQeb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 11:34:31 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so1625540wgh.11
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2014 08:34:30 -0800 (PST)
+In-Reply-To: <1415289258.10617.4.camel@jarvis.quadriga.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, "Dale R. Worley" <worley@alum.mit.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Thu, Nov 06, 2014 at 05:28:32PM +0100, Bart Van Assche wrote:
-> Apparently this patch removes the 
-> queue_flag_set_unlocked(QUEUE_FLAG_QUEUED, sdev->request_queue) call for 
-> the multiqueue case. I think it should be explained in the commit message 
-> why that has been done.
+On 11/06/2014 05:54 PM, James Bottomley wrote:
+> 
+> We don't have a failure.  This is the problem.  Determining that a
+> problem exists 
+> 
 
-Ok, I will update it.
+OK Sorry. I assumed the bridge is smart enough to do nothing,
 
->> -static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
->> -{
->> -	if (blk_queue_tagged(sdev->request_queue))
->> -		blk_queue_free_tags(sdev->request_queue);
->> -	scsi_adjust_queue_depth(sdev, 0, depth);
->> -}
->
-> Hmm ... where has the blk_queue_free_tags() call been moved to ?
+ie READ_CAPACITY_10 is passed as is via sata to the device that
+actually supports READ_CAPACITY_16, as I understand then the 
+actual good drive is not suppose to send size-modulue-2G in
+response to READ_CAPACITY_10. Should it ?
 
-It's gone.  Despite the confusing name blk_queue_free_tags just clears
-QUEUE_FLAG_QUEUED, which we now never do until the actual tag structure
-is freed when the queue is torn via blk_release_queue ->
-__blk_queue_free_tags.
+Then the bridge just sends that back to me, now if I send
+READ_CAPACITY_16 the bridge will return NOT-SUPPORTED because
+it is unexpected.
+
+But what are you saying that the bridge was smart enough to
+do READ_CAPACITY_16 get a 64bit value from the drive and then
+return the lower 32bit to me ? Really ? I would not imagine
+in the life of me someone so dumb. And surly it is against
+any spec.
+
+Are you sure ? I think you are wrong I think the guy reported
+that he can only see 2T out of his 3T drive which means the
+bridge returned 0xffffffff, exactly 2T
+
+> James
+> 
+> 
+
+But hey, I guess stupidity is limitless, this one here pushing
+real far.
+
+Cheers
+Boaz
+
