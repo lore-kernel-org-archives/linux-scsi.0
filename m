@@ -1,172 +1,65 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/6] scsi: stop passing a gfp_mask argument down the command setup path
-Date: Thu,  6 Nov 2014 08:40:28 +0100
-Message-ID: <1415259630-20784-5-git-send-email-hch@lst.de>
+Subject: [PATCH 1/6] scsi: don't use scsi_next_command in scsi_reset_provider
+Date: Thu,  6 Nov 2014 08:40:25 +0100
+Message-ID: <1415259630-20784-2-git-send-email-hch@lst.de>
 References: <1415259630-20784-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51539 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:51531 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbaKFHka (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 02:40:30 -0500
+	with ESMTP id S1751054AbaKFHk1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 02:40:27 -0500
 In-Reply-To: <1415259630-20784-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>
 
-There is no reason for ULDs to pass in a flag on how to allocate the S/G
-lists.  While we don't need GFP_ATOMIC for the blk-mq case because we
-don't hold locks, that decision can be made way down the chain without
-having to pass a pointless gfp_mask argument.
+scsi_reset_provider already manually runs all queues for the given host,
+so it doesn't need the scsi_run_queues call from it, and it doesn't need
+a reference on the device because it's synchronous.
+
+So let's just call scsi_put_command directly and avoid the device reference
+dance to simplify the code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c  | 20 +++++++++-----------
- drivers/scsi/sd.c        |  6 +++---
- drivers/scsi/sr.c        |  2 +-
- include/scsi/scsi_cmnd.h |  2 +-
- 4 files changed, 14 insertions(+), 16 deletions(-)
+ drivers/scsi/scsi_error.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a737032..b2de77b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -588,10 +588,10 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
- 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
- }
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index ba19687..a1ffdb0 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2335,14 +2335,9 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 		return -EIO;
  
--static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
--			      gfp_t gfp_mask, bool mq)
-+static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
- {
- 	struct scatterlist *first_chunk = NULL;
-+	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
- 	int ret;
+ 	error = -EIO;
+-	if (!get_device(&dev->sdev_gendev))
+-		goto out_put_autopm_host;
+-
+ 	scmd = scsi_get_command(dev, GFP_KERNEL);
+-	if (!scmd) {
+-		put_device(&dev->sdev_gendev);
++	if (!scmd)
+ 		goto out_put_autopm_host;
+-	}
  
- 	BUG_ON(!nents);
-@@ -1038,8 +1038,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	}
- }
+ 	blk_rq_init(NULL, &req);
+ 	scmd->request = &req;
+@@ -2404,10 +2399,10 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 			     "waking up host to restart after TMF\n"));
  
--static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
--			     gfp_t gfp_mask)
-+static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
- {
- 	int count;
+ 	wake_up(&shost->host_wait);
+-
+ 	scsi_run_host_queues(shost);
  
-@@ -1047,7 +1046,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
- 	 * If sg table allocation fails, requeue request later.
- 	 */
- 	if (unlikely(scsi_alloc_sgtable(sdb, req->nr_phys_segments,
--					gfp_mask, req->mq_ctx != NULL)))
-+					req->mq_ctx != NULL)))
- 		return BLKPREP_DEFER;
- 
- 	/* 
-@@ -1072,7 +1071,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
-  *		BLKPREP_DEFER if the failure is retryable
-  *		BLKPREP_KILL if the failure is fatal
-  */
--int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+int scsi_init_io(struct scsi_cmnd *cmd)
- {
- 	struct scsi_device *sdev = cmd->device;
- 	struct request *rq = cmd->request;
-@@ -1081,7 +1080,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 
- 	BUG_ON(!rq->nr_phys_segments);
- 
--	error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
-+	error = scsi_init_sgtable(rq, &cmd->sdb);
- 	if (error)
- 		goto err_exit;
- 
-@@ -1097,8 +1096,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 			rq->next_rq->special = bidi_sdb;
- 		}
- 
--		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special,
--					  GFP_ATOMIC);
-+		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special);
- 		if (error)
- 			goto err_exit;
- 	}
-@@ -1110,7 +1108,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 		BUG_ON(prot_sdb == NULL);
- 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
- 
--		if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask, is_mq)) {
-+		if (scsi_alloc_sgtable(prot_sdb, ivecs, is_mq)) {
- 			error = BLKPREP_DEFER;
- 			goto err_exit;
- 		}
-@@ -1177,7 +1175,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 	 * submit a request without an attached bio.
- 	 */
- 	if (req->bio) {
--		int ret = scsi_init_io(cmd, GFP_ATOMIC);
-+		int ret = scsi_init_io(cmd);
- 		if (unlikely(ret))
- 			return ret;
- 	} else {
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b041eca..eca990c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -784,7 +784,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
- 	 * amount of blocks described by the request.
- 	 */
- 	blk_add_request_payload(rq, page, len);
--	ret = scsi_init_io(cmd, GFP_ATOMIC);
-+	ret = scsi_init_io(cmd);
- 	rq->__data_len = nr_bytes;
- 
- out:
-@@ -878,7 +878,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	 * knows how much to actually write.
- 	 */
- 	rq->__data_len = sdp->sector_size;
--	ret = scsi_init_io(cmd, GFP_ATOMIC);
-+	ret = scsi_init_io(cmd);
- 	rq->__data_len = nr_bytes;
- 	return ret;
- }
-@@ -912,7 +912,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	int ret;
- 	unsigned char protect;
- 
--	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
-+	ret = scsi_init_io(SCpnt);
- 	if (ret != BLKPREP_OK)
- 		goto out;
- 	SCpnt = rq->special;
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3d5399e..5ebadc2 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -387,7 +387,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
- 	struct request *rq = SCpnt->request;
- 	int ret;
- 
--	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
-+	ret = scsi_init_io(SCpnt);
- 	if (ret != BLKPREP_OK)
- 		goto out;
- 	SCpnt = rq->special;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 522a5f27..767967e 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -159,7 +159,7 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- 				 size_t *offset, size_t *len);
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
--extern int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask);
-+extern int scsi_init_io(struct scsi_cmnd *cmd);
- 
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+-	scsi_next_command(scmd);
++	scsi_put_command(scmd);
++
+ out_put_autopm_host:
+ 	scsi_autopm_put_host(shost);
+ 	return error;
 -- 
 1.9.1
 
