@@ -1,66 +1,47 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 6/6] scsi: return EAGAIN when resetting a device under EH
-Date: Thu, 6 Nov 2014 21:46:59 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959377FC3@G4W3202.americas.hpqcorp.net>
-References: <1414661229-15199-1-git-send-email-hch@lst.de>
- <1414661229-15199-7-git-send-email-hch@lst.de>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCHv2 net-next 0/3] RDMA/cxgb4,cxgb4vf,cxgb4i,csiostor:
+ Cleanup macros
+Date: Thu, 06 Nov 2014 16:57:20 -0500 (EST)
+Message-ID: <20141106.165720.1081314710517375005.davem@davemloft.net>
+References: <1415069457-22277-1-git-send-email-hariprasad@chelsio.com>
+	<20141105.145443.897956918105740779.davem@davemloft.net>
+	<20141106161444.GA8954@hariprasad-pc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:36604 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbaKFVsB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 16:48:01 -0500
-In-Reply-To: <1414661229-15199-7-git-send-email-hch@lst.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20141106161444.GA8954@hariprasad-pc>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, praveenm-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, nirranjan-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kumaras-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
 
-
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Thursday, 30 October, 2014 4:27 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: Douglas Gilbert; Elliott, Robert (Server Storage)
-> Subject: [PATCH 6/6] scsi: return EAGAIN when resetting a device
-> under EH
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/scsi_ioctl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-> index 712f159..c4f7b56 100644
-> --- a/drivers/scsi/scsi_ioctl.c
-> +++ b/drivers/scsi/scsi_ioctl.c
-> @@ -278,7 +278,7 @@ int
-> scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int
-> cmd,
->  {
->  	if (cmd == SG_SCSI_RESET && ndelay) {
->  		if (scsi_host_in_recovery(sdev->host))
-> -			return -ENODEV;
-> +			return -EAGAIN;
->  	} else {
->  		if (!scsi_block_when_processing_errors(sdev))
->  			return -ENODEV;
-> --
-> 1.9.1
-
-This is how sg_reset responds to -EAGAIN, which seems reasonable:
-	sg_reset: starting device reset
-	sg_reset: SG_SCSI_RESET failed: Resource temporarily unavailable
-
-That is easy to trigger when running sg_reset in parallel to
-multiple devices presented by the same controller.  In one
-example to 16 devices, 10 got that result while 6 succeeded.
-
-Tested-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Robert Elliott <elliott@hp.com>
-
-
+RnJvbTogSGFyaXByYXNhZCBTIDxoYXJpcHJhc2FkQGNoZWxzaW8uY29tPg0KRGF0ZTogVGh1LCA2
+IE5vdiAyMDE0IDIxOjQ1OjEwICswNTMwDQoNCj4gT24gV2VkLCBOb3YgMDUsIDIwMTQgYXQgMTQ6
+NTQ6NDMgLTA1MDAsIERhdmlkIE1pbGxlciB3cm90ZToNCj4+IEZyb206IEhhcmlwcmFzYWQgU2hl
+bmFpIDxoYXJpcHJhc2FkQGNoZWxzaW8uY29tPg0KPj4gRGF0ZTogVHVlLCAgNCBOb3YgMjAxNCAw
+ODoyMDo1NCArMDUzMA0KPj4gDQo+PiA+IEl0J3Mgbm90IHJlYWxseSB0aGUgImhhcmR3YXJlIiB3
+aGljaCBnZW5lcmF0ZXMgdGhlc2UgaGFyZHdhcmUgY29uc3RhbnQgc3ltYm9saWMNCj4+ID4gbWFj
+cm9zL3JlZ2lzdGVyIGRlZmluZXMgb2YgY291cnNlLCBpdCdzIHNjcmlwdHMgZGV2ZWxvcGVkIGJ5
+IHRoZSBoYXJkd2FyZSB0ZWFtLg0KPj4gPiBWYXJpb3VzIHBhdGNoZXMgaGF2ZSBlbmRlZCB1cCBj
+aGFuZ2luZyB0aGUgc3R5bGUgb2YgdGhlIHN5bWJvbGljIG1hY3Jvcy9yZWdpc3Rlcg0KPj4gPiBk
+ZWZpbmVzIGFuZCBzb21lIG9mIHRoZW0gdXNlZCB0aGUgbWFjcm9zL3JlZ2lzdGVyIGRlZmluZXMg
+dGhhdCBtYXRjaGVzIHRoZQ0KPj4gPiBvdXRwdXQgb2YgdGhlIHNjcmlwdCBmcm9tIHRoZSBoYXJk
+d2FyZSB0ZWFtLg0KPj4gDQo+PiBXZSd2ZSB0b2xkIHlvdSB0aGF0IHdlIGRvbid0IGNhcmUgd2hh
+dCBmb3JtYXQgeW91ciBpbnRlcm5hbCB3aGF0ZXZlciB1c2VzDQo+PiBmb3IgdGhlc2UgbWFjcm9z
+Lg0KPj4gDQo+PiBXZSBoYXZlIHN0YW5kYXJkcywgdGFzdGVzLCBhbmQgZGVzaXJlcyBhbmQgcmVh
+c29ucyBmb3IgbmFtaW5nIG1hY3Jvcw0KPj4gaW4gYSBjZXJ0YWluIHdheSBpbiB1cHN0cmVhbSBr
+ZXJuZWwgY29kZS4NCj4+IA0KPj4gSSBjb25zaWRlciBpdCBmbGF0IG91dCB1bmFjY2VwdGFibGUg
+dG8gdXNlIG1hY3JvcyB3aXRoIG9uZSBsZXR0ZXINCj4+IHByZWZpeGVzIGxpa2UgIlNfIi4gIFlv
+dSBzaW1wbHkgc2hvdWxkIG5vdCBkbyB0aGlzLg0KPj4gDQo+IA0KPiBPa2F5LiBXZaJsbCBjbGVh
+biB1cCBhbGwgb2YgdGhlIG1hY3JvcyB0byBtYXRjaCB0aGUgZmlsZXMnIG9yaWdpbmFsIHN0eWxl
+LiBXZQ0KPiBkbyBuZWVkIHRvIGNoYW5nZSB0aGUgc2Vuc2Ugb2YgdGhlICpfTUFTSyBtYWNyb3Mg
+c2luY2UgdGhleSBkb26idCBtYXRjaCBob3cgd2UgDQo+IHVzZSB0aGVtIGFzIGZpZWxkIHRva2Vu
+cy4gIEFsc28gdGhlICpfU0hJRlQsICpfTUFTSyBhbmQgKl9HRVQgbmFtZXMgYXJlDQo+IHN1Y2tp
+bmcgdXAgc3BhY2UgYW5kIG1ha2luZyBsaW5lcyB3cmFwIHVubmVjZXNzYXJpbHksIGNyZWF0aW5n
+IHJlYWRhYmlsaXR5DQo+IHByb2JsZW1zLiAgQ2FuIHdlIGNoYW5nZSB0aGVzZSB0byAqX1MsICpf
+TSBhbmQgKl9HPyAgRS5nLjoNCg0KVGhhdCdzIGZpbmUuDQo=
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
