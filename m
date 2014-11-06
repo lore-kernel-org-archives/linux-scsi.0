@@ -1,67 +1,53 @@
-From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: Large disk drives
-Date: Thu, 06 Nov 2014 16:33:16 +0200
-Message-ID: <545B86AC.3080704@plexistor.com>
-References: <1415203668.13212.2.camel@jarvis>	 <Pine.LNX.4.44L0.1411051130470.1531-100000@iolanthe.rowland.org>	 <20141105193045.GA13265@infradead.org> <1415269814.29907.19.camel@jarvis.quadriga.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 01/11] scsi: provide a generic change_queue_type method
+Date: Thu, 06 Nov 2014 16:28:41 +0100
+Message-ID: <545B93A9.3070206@acm.org>
+References: <1415087656-9491-1-git-send-email-hch@lst.de> <1415087656-9491-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:33797 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbaKFOdU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 09:33:20 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so1337597wgg.33
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2014 06:33:19 -0800 (PST)
-In-Reply-To: <1415269814.29907.19.camel@jarvis.quadriga.com>
+Received: from xavier.telenet-ops.be ([195.130.132.52]:37413 "EHLO
+	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbaKFP2s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 10:28:48 -0500
+In-Reply-To: <1415087656-9491-2-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "Dale R. Worley" <worley@alum.mit.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Robert Elliott <elliott@hp.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Mike Christie <michaelc@cs.wisc.edu>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, usb-storage@lists.one-eyed-alien.net
 
-On 11/06/2014 12:30 PM, James Bottomley wrote:
-> On Wed, 2014-11-05 at 11:30 -0800, Christoph Hellwig wrote:
->> On Wed, Nov 05, 2014 at 11:34:11AM -0500, Alan Stern wrote:
->>>> Sorry, meant to.  In principle I'm OK with this as the lever for the
->>>> hack (largely because it means we don't need to do anything) but will
->>>> the distributions support it?
->>>
->>> While I can't speak for the distributions, it's reasonable to assume 
->>> that if something becomes part of the upstream kernel then they will 
->>> include it.
->>
->> Btw, we do have precedence for looking at partition tables from SCSI
->> code with scsi_partsize(), so the layering violation of looking at
->> EFI labels for disks sizes wouldn't be something entirely new even
->> if we did it in kernel space.
-> 
-> We really don't want to make the decision within the kernel of whether
-> we believe the partition size or the disk capacity.   For these disk
-> problems we need it to be the former, but if we choose that always,
-> we'll get weird results on mispartitioned devices.
-> 
-> The usual rule is no policy in the kernel and which to choose is policy,
-> so just export the knob (as Alan's patch does) and then let userspace
-> decide.
-> 
+On 11/04/14 08:54, Christoph Hellwig wrote:
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index bcb64eb..2233ed6 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -321,16 +321,10 @@ static int pmcraid_change_queue_type(struct scsi_device *scsi_dev, int tag)
+>   	struct pmcraid_resource_entry *res;
+>
+>   	res = (struct pmcraid_resource_entry *)scsi_dev->hostdata;
+> -
+> -	if ((res) && scsi_dev->tagged_supported &&
+> -	    (RES_IS_GSCSI(res->cfg_entry) || RES_IS_VSET(res->cfg_entry))) {
+> -		scsi_set_tag_type(scsi_dev, tag);
+> -
+> -		if (tag)
+> -			scsi_activate_tcq(scsi_dev, scsi_dev->queue_depth);
+> -		else
+> -			scsi_deactivate_tcq(scsi_dev, scsi_dev->queue_depth);
+> -	} else
+> +	if (res && scsi_dev->tagged_supported &&
+> +	    (RES_IS_GSCSI(res->cfg_entry) || RES_IS_VSET(res->cfg_entry)))
+> +	    	tag = scsi_change_queue_type(scsi_dev, tag);
+> +	else
+>   		tag = 0;
+>
+>   	return tag;
 
-I do not think it is a matter of policy.
+A minor nit: do we really need to keep the scsi_dev->tagged_supported 
+test in the above code ? Anyway,
 
->From what I understand the situation is that read_capacity_10() which is
-32bit, Max 2T byte disks. fails with 0xffffffff and read_capacity_16() (64bit)
-is not supported because of wrong scsi-version or because it is blacklisted.
-(or device returns not-supported)
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Now If sd_read_capacity() succeed then off-course we choose it. What I'm saying
-is if read-capacity fails, then should we attempt a new read_capacity_part()?
 
-And sure a user-mode knob if he wants to make policy, like you said, is fine
-by me.
-
-But just the simple case of read-capacity failure should we then?
-
-> James
-
-Thanks
-Boaz
 
