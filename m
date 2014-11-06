@@ -1,39 +1,59 @@
-From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
-Subject: RE: Large disk drives
-Date: Thu, 6 Nov 2014 17:08:46 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1C9EA6C1@AcuExch.aculab.com>
-References: <Pine.LNX.4.44L0.1411061049310.886-100000@iolanthe.rowland.org>
- <545BA52F.6050205@gmail.com>
+From: Chris Friesen <chris.friesen@windriver.com>
+Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
+Date: Thu, 6 Nov 2014 11:16:53 -0600
+Message-ID: <545BAD05.3050800@windriver.com>
+References: <545BA625.40308@windriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <545BA52F.6050205-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: 'Boaz Harrosh' <openosd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Boaz Harrosh <boaz-/8YdC2HfS5554TAoqtyWWQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Dale R. Worley" <worley-FrUbXkNCsVf2fBVCVOL8/A@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:36383 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbaKFRRD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 12:17:03 -0500
+In-Reply-To: <545BA625.40308@windriver.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-RnJvbTogQm9heiBIYXJyb3NoDQo+IE9uIDExLzA2LzIwMTQgMDU6NTMgUE0sIEFsYW4gU3Rlcm4g
-d3JvdGU6DQo+ID4+IEJ1dCBqdXN0IHRoZSBzaW1wbGUgY2FzZSBvZiByZWFkLWNhcGFjaXR5IGZh
-aWx1cmUgc2hvdWxkIHdlIHRoZW4/DQo+ID4NCj4gPiBUaGF0J3MgYSBzZXBhcmF0ZSBxdWVzdGlv
-bi4gIEFzIGZhciBhcyBJIGtub3csIHRoZSBjYXNlIHlvdSBhcmUNCj4gPiBkZXNjcmliaW5nIGhh
-cyBub3QgY29tZSB1cC4NCj4gPg0KPiANCj4gQlRXOiB3aGF0IHdlIHNob3VsZCBkbyBpcyB3aGVu
-IHRoZSBwYXJ0aXRpb24gcGFyc2VyIGF0IHRoZSBibG9jayBsYXllcg0KPiBzZWUgdGhhdCB0aGUg
-cGFydGl0aW9uIGNhcGFjaXR5IGFzIHdyaXR0ZW4gaW4gdGhlIHBhcnRpdGlvbi10YWJsZSBpcw0K
-PiBiaWdnZXIgdGhlbiB0aGUgY2FwYWNpdHkgcmVwb3J0ZWQgZm9yIHRoZSBkZXZpY2Ugd2UgY2Fu
-IHB1dCBhIGZhdA0KPiBtZXNzYWdlIGF0IGRtZXNnIHdpdGggYm90aCBzaXplcyBhbmQgdXNlciBj
-YW4gZGVjaWRlLg0KDQpPbmUgcG9zc2liaWxpdHkgaXMgdG8gdHJ5IHRvIHJlYWQgdGhlIGxhc3Qg
-c2VjdG9yIG9mIHRoZSBhY3R1YWwNCnBhcnRpdGlvbi4gSWYgaXQgc3VjY2VlZHMgdGhlcmUgYXJl
-IDIgcG9zc2liaWxpdGllczoNCg0KMSkgVGhlIGRpc2sgaXMgYXMgYml0IGFzIHRoZSBwYXJ0aXRp
-b24gdGFibGUgaW5kaWNhdGVzLg0KMikgVGhlIGhpZ2ggYml0KHMpIG9mIHRoZSBzZWN0b3IgbnVt
-YmVyIGhhdmUgYmVlbiBtYXNrZWQuDQoob3IgdGhlIGRpc2sgbG9ja3MgdXApDQoNCkluIG1hbnkg
-Y2FzZXMgdGhlIGxhdHRlciBjYW4gYmUgdmVyaWZpZWQgYnkgcmVhZGluZyB0aGUgb3RoZXIgc2Vj
-dG9yLg0KQnV0IGlmIHRoZSBtZWRpYSBpcyBuZXcvZXJhc2VkIHRoZW4gYWxsIHRoZSBzZWN0b3Jz
-IHdpbGwgYmUgMHhmZg0KYW5kIHlvdSdkIGhhdmUgdG8gZG8gYSB3cml0ZSB0byBlbnN1cmUgdGhl
-cmUgd2FzIG5vIHNlY3RvciBhbGlhc2luZy4NCg0KCURhdmlkDQoNCg==
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 11/06/2014 10:47 AM, Chris Friesen wrote:
+> Hi,
+>
+> I'm running a modified 3.4-stable on relatively recent X86 server-class
+> hardware.
+>
+> I recently installed a Seagate ST900MM0026 (900GB 2.5in 10K SAS drive)
+> and it's reporting a value of 4294966784 for optimal_io_size.  The other
+> parameters look normal though:
+>
+> /sys/block/sda/queue/hw_sector_size:512
+> /sys/block/sda/queue/logical_block_size:512
+> /sys/block/sda/queue/max_segment_size:65536
+> /sys/block/sda/queue/minimum_io_size:512
+> /sys/block/sda/queue/optimal_io_size:4294966784
+
+<snip>
+
+> According to the manual, the ST900MM0026 has a 512 byte physical sector
+> size.
+>
+> Is this a drive firmware bug?  Or a bug in the SAS driver?  Or is there
+> a valid reason for a single drive to report such a huge value?
+>
+> Would it make sense for the kernel to do some sort of sanity checking on
+> this value?
+
+Looks like this sort of thing has been seen before, in other drives (one 
+of which is from the same family as my drive):
+
+http://www.spinics.net/lists/linux-scsi/msg65292.html
+
+http://iamlinux.technoyard.in/blog/why-is-my-ssd-disk-not-reconized-by-the-rhel6-anaconda-installer/
+
+Perhaps the ST900MM0026 should be blacklisted as well?
+
+Or maybe the SCSI code should do a variation on Mike Snitzer's original 
+patch and just ignore any values above some reasonable threshold?  (And 
+then we could remove the blacklist on the ST900MM0006.)
+
+Chris
