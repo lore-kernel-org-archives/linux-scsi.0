@@ -1,69 +1,76 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Large disk drives
-Date: Thu, 6 Nov 2014 11:59:33 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1411061151110.886-100000@iolanthe.rowland.org>
-References: <545BA314.4050109@plexistor.com>
+From: Hariprasad S <hariprasad@chelsio.com>
+Subject: Re: [PATCHv2 net-next 0/3] RDMA/cxgb4,cxgb4vf,cxgb4i,csiostor:
+ Cleanup macros
+Date: Thu, 6 Nov 2014 21:45:10 +0530
+Message-ID: <20141106161444.GA8954@hariprasad-pc>
+References: <1415069457-22277-1-git-send-email-hariprasad@chelsio.com>
+ <20141105.145443.897956918105740779.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44105 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751448AbaKFQ7e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 11:59:34 -0500
-In-Reply-To: <545BA314.4050109@plexistor.com>
+Received: from stargate.chelsio.com ([67.207.112.58]:17740 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbaKFRKL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 12:10:11 -0500
+Content-Disposition: inline
+In-Reply-To: <20141105.145443.897956918105740779.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <boaz@plexistor.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, "Dale R. Worley" <worley@alum.mit.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, praveenm@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com
 
-On Thu, 6 Nov 2014, Boaz Harrosh wrote:
+On Wed, Nov 05, 2014 at 14:54:43 -0500, David Miller wrote:
+> From: Hariprasad Shenai <hariprasad@chelsio.com>
+> Date: Tue,  4 Nov 2014 08:20:54 +0530
+>=20
+> > It's not really the "hardware" which generates these hardware const=
+ant symbolic
+> > macros/register defines of course, it's scripts developed by the ha=
+rdware team.
+> > Various patches have ended up changing the style of the symbolic ma=
+cros/register
+> > defines and some of them used the macros/register defines that matc=
+hes the
+> > output of the script from the hardware team.
+>=20
+> We've told you that we don't care what format your internal whatever =
+uses
+> for these macros.
+>=20
+> We have standards, tastes, and desires and reasons for naming macros
+> in a certain way in upstream kernel code.
+>=20
+> I consider it flat out unacceptable to use macros with one letter
+> prefixes like "S_".  You simply should not do this.
+>=20
 
-> On 11/06/2014 05:54 PM, James Bottomley wrote:
-> > 
-> > We don't have a failure.  This is the problem.  Determining that a
-> > problem exists 
-> > 
-> 
-> OK Sorry. I assumed the bridge is smart enough to do nothing,
-> 
-> ie READ_CAPACITY_10 is passed as is via sata to the device that
-> actually supports READ_CAPACITY_16, as I understand then the 
-> actual good drive is not suppose to send size-modulue-2G in
-> response to READ_CAPACITY_10. Should it ?
+Okay. We=E2=80=99ll clean up all of the macros to match the files' orig=
+inal style. We
+do need to change the sense of the *_MASK macros since they don=E2=80=99=
+t match how we=20
+use them as field tokens.  Also the *_SHIFT, *_MASK and *_GET names are
+sucking up space and making lines wrap unnecessarily, creating readabil=
+ity
+problems.  Can we change these to *_S, *_M and *_G?  E.g.:
 
-The bridge does not send SCSI commands to the drive; it sends ATA 
-commands.
+-#define  INGPADBOUNDARY_MASK    0x00000070U
+-#define  INGPADBOUNDARY_SHIFT   4
+-#define  INGPADBOUNDARY(x)      ((x) << INGPADBOUNDARY_SHIFT)
+-#define  INGPADBOUNDARY_GET(x)  (((x) & INGPADBOUNDARY_MASK) \
+-                                 >> INGPADBOUNDARY_SHIFT)
++#define  INGPADBOUNDARY_M       0x00000007U
++#define  INGPADBOUNDARY_S       4
++#define  INGPADBOUNDARY(x)      ((x) << INGPADBOUNDARY_S)
++#define  INGPADBOUNDARY_G(x)    (((x) >> INGPADBOUNDARY_S) \
++                                 & INGPADBOUNDARY_M)
 
-When the bridge receives a READ CAPACITY(10) command from the host 
-computer, if the drive's actual capacity is >= 2^32 blocks then the 
-bridge is supposed to send back a result buffer containing 0xffffffff.  
-Not the actual capacity modulo 2^32.
 
-> Then the bridge just sends that back to me, now if I send
-> READ_CAPACITY_16 the bridge will return NOT-SUPPORTED because
-> it is unexpected.
-
-Yes.
-
-> But what are you saying that the bridge was smart enough to
-> do READ_CAPACITY_16 get a 64bit value from the drive and then
-> return the lower 32bit to me ? Really ? I would not imagine
-> in the life of me someone so dumb. And surly it is against
-> any spec.
-
-The bridge does not send READ CAPACITY(16) to the drive.  It sends an 
-ATA command -- and it probably sends the same command for READ 
-CAPACITY(10).
-
-> Are you sure ? I think you are wrong I think the guy reported
-> that he can only see 2T out of his 3T drive which means the
-> bridge returned 0xffffffff, exactly 2T
-
-We are sure.  Dale reported that the size he got was less than 2 TB, 
-and it was equal to the actual capacity modulo 2^32.  You can check for 
-yourself; here's the original email:
-
-	http://marc.info/?l=linux-scsi&m=140908235510961&w=2
-
-Alan Stern
-
+=20
+Thanks,
+Hari
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
