@@ -1,39 +1,46 @@
-From: Chris Friesen <chris.friesen@windriver.com>
-Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
-Date: Thu, 6 Nov 2014 11:45:15 -0600
-Message-ID: <545BB3AB.8070409@windriver.com>
-References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com> <yq1k338b5d5.fsf@sermon.lab.mkp.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Large disk drives
+Date: Thu, 6 Nov 2014 12:47:36 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1411061240290.1206-100000@iolanthe.rowland.org>
+References: <201411052330.sA5NUSCG019414@hobgoblin.ariadne.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:43832 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbaKFRpX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 12:45:23 -0500
-In-Reply-To: <yq1k338b5d5.fsf@sermon.lab.mkp.net>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40950 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751367AbaKFRrh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 12:47:37 -0500
+In-Reply-To: <201411052330.sA5NUSCG019414@hobgoblin.ariadne.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+To: "Dale R. Worley" <worley@alum.mit.edu>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On 11/06/2014 11:34 AM, Martin K. Petersen wrote:
->>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
->
-> Chris> Perhaps the ST900MM0026 should be blacklisted as well?
->
-> Sure. I'll widen the net a bit for that Seagate model.
+On Wed, 5 Nov 2014, Dale R. Worley wrote:
 
-That'd work, but is it the best way to go?  I mean, I found one report 
-of a similar problem on an SSD (model number unknown).  In that case it 
-was a near-UINT_MAX value as well.
+> > From: Alan Stern <stern@rowland.harvard.edu>
+> 
+> > I posted a patch to allow the user to override the reported capacity:
+> > 
+> > 	http://marc.info/?l=linux-scsi&m=140993840113445&w=2
+> 
+> I see the patch, and I feel confident I could install it if I needed
+> to.  What command do I execute to "write to the capacity_override
+> attribute", before I do "blockdev --rereadpt /dev/sdX"?
 
-The problem with the blacklist is that until someone patches it, the 
-drive is broken.  And then it stays blacklisted even if the firmware 
-gets fixed.
+As root:
 
-I'm wondering if it might not be better to just ignore all values larger 
-than X (where X is whatever we think is the largest conceivable 
-reasonable value).
+	echo N >/sys/class/scsi_disk/D:D:D:D/capacity_override
 
-Chris
+where N is the number of blocks and D:D:D:D is the device name
+corresponding to the sdX disk.  Or if you prefer, an equivalent path
+would be
+
+	/sys/block/sdX/device/scsi_disk/D:D:D:D/capacity_override
+
+and here you wouldn't have to guess at the value of D:D:D:D because it 
+would be the only entry in the /sys/block/sdX/device/scsi_disk 
+directory.
+
+Alan Stern
+
