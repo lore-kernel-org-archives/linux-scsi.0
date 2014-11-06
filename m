@@ -1,202 +1,63 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 1/6] scsi: refactor scsi_reset_provider handling
-Date: Thu, 6 Nov 2014 18:01:28 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959377B3F@G4W3202.americas.hpqcorp.net>
-References: <1414661229-15199-1-git-send-email-hch@lst.de>
- <1414661229-15199-2-git-send-email-hch@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
+Date: Thu, 06 Nov 2014 13:12:17 -0500
+Message-ID: <yq1fvdwb3lq.fsf@sermon.lab.mkp.net>
+References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>
+	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:22947 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbaKFSCZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 13:02:25 -0500
-In-Reply-To: <1414661229-15199-2-git-send-email-hch@lst.de>
-Content-Language: en-US
+Received: from userp1040.oracle.com ([156.151.31.81]:34656 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbaKFSM2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 13:12:28 -0500
+In-Reply-To: <545BB3AB.8070409@windriver.com> (Chris Friesen's message of
+	"Thu, 6 Nov 2014 11:45:15 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
+To: Chris Friesen <chris.friesen@windriver.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
+>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
 
+Chris> That'd work, but is it the best way to go?  I mean, I found one
+Chris> report of a similar problem on an SSD (model number unknown).  In
+Chris> that case it was a near-UINT_MAX value as well.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: Thursday, 30 October, 2014 4:27 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: Douglas Gilbert; Elliott, Robert (Server Storage)
-> Subject: [PATCH 1/6] scsi: refactor scsi_reset_provider handling
-> 
-> Pull the common code from the two callers into the function,
-> and renamed it to scsi_ioctl_reset.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/scsi_error.c | 76 ++++++++++++++++++++++---------------
-> ----------
->  drivers/scsi/scsi_ioctl.c | 33 +-------------------
->  drivers/scsi/sg.c         | 34 ++-------------------
->  include/scsi/scsi_eh.h    | 15 +---------
->  4 files changed, 41 insertions(+), 117 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index fa7b5ec..ba19687 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -36,6 +36,7 @@
->  #include <scsi/scsi_transport.h>
->  #include <scsi/scsi_host.h>
->  #include <scsi/scsi_ioctl.h>
-> +#include <scsi/sg.h>
-> 
->  #include "scsi_priv.h"
->  #include "scsi_logging.h"
-> @@ -2309,39 +2310,36 @@ scsi_reset_provider_done_command(struct
-> scsi_cmnd *scmd)
->  {
->  }
-> 
-> -/*
-> - * Function:	scsi_reset_provider
-> - *
-> - * Purpose:	Send requested reset to a bus or device at any phase.
-> - *
-> - * Arguments:	device	- device to send reset to
-> - *		flag - reset type (see scsi.h)
-> - *
-> - * Returns:	SUCCESS/FAILURE.
-> - *
-> - * Notes:	This is used by the SCSI Generic driver to provide
-> - *		Bus/Device reset capability.
-> +/**
-> + * scsi_ioctl_reset: explicitly reset a host/bus/target/device
-> + * @dev:	scsi_device to operate on
-> + * @val:	reset type (see sg.h)
->   */
->  int
-> -scsi_reset_provider(struct scsi_device *dev, int flag)
-> +scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
->  {
->  	struct scsi_cmnd *scmd;
->  	struct Scsi_Host *shost = dev->host;
->  	struct request req;
+My concern is still the same. Namely that this particular drive happens
+to be returning UINT_MAX but it might as well be a value that's entirely
+random. Or even a value that is small and innocuous looking but
+completely wrong.
 
-Is this 368 byte structure too big to place on the stack?  
-Most other code using struct request uses an alloc() 
-function.  Also, on the stack, it is unlikely to be
-cacheline aligned.
+Chris> The problem with the blacklist is that until someone patches it,
+Chris> the drive is broken.  And then it stays blacklisted even if the
+Chris> firmware gets fixed.
 
->  	unsigned long flags;
-> -	int rtn;
-> +	int error = 0, rtn, val;
-> +
+Well, you can manually blacklist in /proc/scsi/device_info.
 
-No need to initialize error, as it is unilaterally set 
-4 lines below.
+Chris> I'm wondering if it might not be better to just ignore all values
+Chris> larger than X (where X is whatever we think is the largest
+Chris> conceivable reasonable value).
 
-> +	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-> +		return -EACCES;
-> +
-> +	error = get_user(val, arg);
-> +	if (error)
-> +		return error;
-> 
->  	if (scsi_autopm_get_host(shost) < 0)
-> -		return FAILED;
-> +		return -EIO;
->
+The problem is that finding that is not easy and it too will be a moving
+target.
 
-This could propagate the return value from scsi_autopm_get_host,
-which is the value from pm_runtime_get_sync, 
-which is the value from __pm_runtime_resume,
-which is the value from rpm_resume,
-which could be -EINVAL, -EACCESS, -EINPROGRESS, -EBUSY, or
-the value from rpm_callback, 
-which could be -ENOSYS, etc.
+I'm willing to entertain the following, however...
 
-> -	if (!get_device(&dev->sdev_gendev)) {
-> -		rtn = FAILED;
-> +	error = -EIO;
-> +	if (!get_device(&dev->sdev_gendev))
->  		goto out_put_autopm_host;
-> -	}
-> 
->  	scmd = scsi_get_command(dev, GFP_KERNEL);
->  	if (!scmd) {
-> -		rtn = FAILED;
->  		put_device(&dev->sdev_gendev);
->  		goto out_put_autopm_host;
->  	}
-> @@ -2362,39 +2360,37 @@ scsi_reset_provider(struct scsi_device *dev,
-> int flag)
->  	shost->tmf_in_progress = 1;
->  	spin_unlock_irqrestore(shost->host_lock, flags);
-> 
-> -	switch (flag) {
-> -	case SCSI_TRY_RESET_DEVICE:
-> +	switch (val & ~SG_SCSI_RESET_NO_ESCALATE) {
-> +	case SG_SCSI_RESET_NOTHING:
-> +		rtn = SUCCESS;
-> +		break;
-> +	case SG_SCSI_RESET_DEVICE:
->  		rtn = scsi_try_bus_device_reset(scmd);
-> -		if (rtn == SUCCESS)
-> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
->  			break;
->  		/* FALLTHROUGH */
-> -	case SCSI_TRY_RESET_TARGET:
-> +	case SG_SCSI_RESET_TARGET:
->  		rtn = scsi_try_target_reset(scmd);
-> -		if (rtn == SUCCESS)
-> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
->  			break;
->  		/* FALLTHROUGH */
-> -	case SCSI_TRY_RESET_BUS:
-> +	case SG_SCSI_RESET_BUS:
->  		rtn = scsi_try_bus_reset(scmd);
-> -		if (rtn == SUCCESS)
-> +		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
->  			break;
->  		/* FALLTHROUGH */
-> -	case SCSI_TRY_RESET_HOST:
-> -	case SCSI_TRY_RESET_HOST | SCSI_TRY_RESET_NO_ESCALATE:
-> +	case SG_SCSI_RESET_HOST:
->  		rtn = scsi_try_host_reset(scmd);
-> -		break;
-> -	case SCSI_TRY_RESET_DEVICE | SCSI_TRY_RESET_NO_ESCALATE:
-> -		rtn = scsi_try_bus_device_reset(scmd);
-> -		break;
-> -	case SCSI_TRY_RESET_TARGET | SCSI_TRY_RESET_NO_ESCALATE:
-> -		rtn = scsi_try_target_reset(scmd);
-> -		break;
-> -	case SCSI_TRY_RESET_BUS | SCSI_TRY_RESET_NO_ESCALATE:
-> -		rtn = scsi_try_bus_reset(scmd);
-> -		break;
-> +		if (rtn == SUCCESS)
-> +			break;
->  	default:
-> +		/* FALLTHROUGH */
->  		rtn = FAILED;
-> +		break;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 95bfb7bfbb9d..75cc51a01860 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2593,7 +2593,8 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_min(sdkp->disk->queue,
+ 			 get_unaligned_be16(&buffer[6]) * sector_sz);
+ 	blk_queue_io_opt(sdkp->disk->queue,
+-			 get_unaligned_be32(&buffer[12]) * sector_sz);
++			 min_t(u32, get_unaligned_be32(&buffer[12]),
++			       sdkp->capacity) * sector_sz);
+ 
+ 	if (buffer[3] == 0x3c) {
+ 		unsigned int lba_count, desc_count;
 
-The FALLTHROUGH comment belongs above the default: line
-to match the others.
-
->  	}
-> 
-> +	error = (rtn == SUCCESS) ? 0 : -EIO;
-> +
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	shost->tmf_in_progress = 0;
->  	spin_unlock_irqrestore(shost->host_lock, flags);
-
-
-Reviewed-by: Robert Elliott <elliott@hp.com>
-
----
-Rob Elliott    HP Server Storage
-
-
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
