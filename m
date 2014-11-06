@@ -1,41 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/6] scsi: move more requeue handling into scsi_requeue_command
-Date: Thu, 06 Nov 2014 09:26:09 +0100
-Message-ID: <545B30A1.2040708@suse.de>
-References: <1415259630-20784-1-git-send-email-hch@lst.de> <1415259630-20784-7-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH 04/10] scsi: log request tag for scmd_printk()
+Date: Thu,  6 Nov 2014 09:30:33 +0100
+Message-ID: <1415262639-121586-5-git-send-email-hare@suse.de>
+References: <1415262639-121586-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41842 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42012 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436AbaKFI0K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2014 03:26:10 -0500
-In-Reply-To: <1415259630-20784-7-git-send-email-hch@lst.de>
+	id S1751514AbaKFIan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2014 03:30:43 -0500
+In-Reply-To: <1415262639-121586-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, Robert Elliott <elliott@hp.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 11/06/2014 08:40 AM, Christoph Hellwig wrote:
-> Move a bit code out of scsi_io_completion and into scsi_requeue_comma=
-nd
-> in preparation for further refactoring.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+The request tag provides a concise identification of a SCSI
+command, so we should be printing that out for scmd_printk().
 
-Cheers,
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_logging.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 4a76796..dca45fe 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -109,6 +109,10 @@ int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
+ 	if (disk)
+ 		off += scnprintf(logbuf + off, logbuf_len - off,
+ 				 "[%s] ", disk->disk_name);
++
++	if (scmd->request->tag >= 0)
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 "tag#%d ", scmd->request->tag);
+ 	va_start(args, fmt);
+ 	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+ 	va_end(args);
+-- 
+1.8.5.2
+
