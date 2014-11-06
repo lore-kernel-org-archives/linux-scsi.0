@@ -1,187 +1,172 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/6] scsi: clean up S/G table freeing
-Date: Thu,  6 Nov 2014 08:40:27 +0100
-Message-ID: <1415259630-20784-4-git-send-email-hch@lst.de>
+Subject: [PATCH 4/6] scsi: stop passing a gfp_mask argument down the command setup path
+Date: Thu,  6 Nov 2014 08:40:28 +0100
+Message-ID: <1415259630-20784-5-git-send-email-hch@lst.de>
 References: <1415259630-20784-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51537 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:51539 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaKFHk3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 02:40:29 -0500
+	with ESMTP id S1751281AbaKFHka (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 02:40:30 -0500
 In-Reply-To: <1415259630-20784-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>
 
-Now that we are using the split completion model for the legacy request
-path as well we can use scsi_mq_free_sgtables unconditionally.
-
-Rename it to scsi_free_sgtables, use it for the legacy path and remove
-scsi_release_(bidi_)buffers.
+There is no reason for ULDs to pass in a flag on how to allocate the S/G
+lists.  While we don't need GFP_ATOMIC for the blk-mq case because we
+don't hold locks, that decision can be made way down the chain without
+having to pass a pointless gfp_mask argument.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c | 77 +++++++++++++------------------------------------
- 1 file changed, 20 insertions(+), 57 deletions(-)
+ drivers/scsi/scsi_lib.c  | 20 +++++++++-----------
+ drivers/scsi/sd.c        |  6 +++---
+ drivers/scsi/sr.c        |  2 +-
+ include/scsi/scsi_cmnd.h |  2 +-
+ 4 files changed, 14 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1a3546e8..a737032 100644
+index a737032..b2de77b 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -622,7 +622,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+@@ -588,10 +588,10 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+ 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
+ }
+ 
+-static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
+-			      gfp_t gfp_mask, bool mq)
++static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+ {
+ 	struct scatterlist *first_chunk = NULL;
++	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+ 	int ret;
+ 
+ 	BUG_ON(!nents);
+@@ -1038,8 +1038,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
  	}
  }
  
--static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
-+static void scsi_free_sgtables(struct scsi_cmnd *cmd)
+-static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+-			     gfp_t gfp_mask)
++static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
  {
- 	if (cmd->sdb.table.nents)
- 		scsi_free_sgtable(&cmd->sdb, true);
-@@ -638,7 +638,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- 	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
+ 	int count;
  
--	scsi_mq_free_sgtables(cmd);
- 	scsi_uninit_cmd(cmd);
+@@ -1047,7 +1046,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+ 	 * If sg table allocation fails, requeue request later.
+ 	 */
+ 	if (unlikely(scsi_alloc_sgtable(sdb, req->nr_phys_segments,
+-					gfp_mask, req->mq_ctx != NULL)))
++					req->mq_ctx != NULL)))
+ 		return BLKPREP_DEFER;
  
- 	if (shost->use_cmd_list) {
-@@ -649,42 +648,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- 	}
- }
- 
--/*
-- * Function:    scsi_release_buffers()
-- *
-- * Purpose:     Free resources allocate for a scsi_command.
-- *
-- * Arguments:   cmd	- command that we are bailing.
-- *
-- * Lock status: Assumed that no lock is held upon entry.
-- *
-- * Returns:     Nothing
-- *
-- * Notes:       In the event that an upper level driver rejects a
-- *		command, we must release resources allocated during
-- *		the __init_io() function.  Primarily this would involve
-- *		the scatter-gather table.
-- */
--static void scsi_release_buffers(struct scsi_cmnd *cmd)
--{
--	if (cmd->sdb.table.nents)
--		scsi_free_sgtable(&cmd->sdb, false);
--
--	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
--
--	if (scsi_prot_sg_count(cmd))
--		scsi_free_sgtable(cmd->prot_sdb, false);
--}
--
--static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
--{
--	struct scsi_data_buffer *bidi_sdb = cmd->request->next_rq->special;
--
--	scsi_free_sgtable(bidi_sdb, false);
--	kmem_cache_free(scsi_sdb_cache, bidi_sdb);
--	cmd->request->next_rq->special = NULL;
--}
--
- static bool scsi_end_request(struct request *req, int error,
- 		unsigned int bytes, unsigned int bidi_bytes)
+ 	/* 
+@@ -1072,7 +1071,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
+  *		BLKPREP_DEFER if the failure is retryable
+  *		BLKPREP_KILL if the failure is fatal
+  */
+-int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++int scsi_init_io(struct scsi_cmnd *cmd)
  {
-@@ -703,16 +666,14 @@ static bool scsi_end_request(struct request *req, int error,
- 	if (blk_queue_add_random(q))
- 		add_disk_randomness(req->rq_disk);
+ 	struct scsi_device *sdev = cmd->device;
+ 	struct request *rq = cmd->request;
+@@ -1081,7 +1080,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
  
-+	/*
-+	 * In the MQ case the command gets freed by __blk_mq_end_io, so we have
-+	 * to do all cleanup that depends on the command before that.
-+	 */
-+	scsi_free_sgtables(cmd);
-+
- 	if (req->mq_ctx) {
--		/*
--		 * In the MQ case the command gets freed by __blk_mq_end_request,
--		 * so we have to do all cleanup that depends on it earlier.
--		 *
--		 * We also can't kick the queues from irq context, so we
--		 * will have to defer it to a workqueue.
--		 */
- 		scsi_mq_uninit_cmd(cmd);
--
- 		__blk_mq_end_request(req, error);
+ 	BUG_ON(!rq->nr_phys_segments);
  
- 		if (scsi_target(sdev)->single_lun ||
-@@ -723,15 +684,15 @@ static bool scsi_end_request(struct request *req, int error,
- 	} else {
- 		unsigned long flags;
+-	error = scsi_init_sgtable(rq, &cmd->sdb, gfp_mask);
++	error = scsi_init_sgtable(rq, &cmd->sdb);
+ 	if (error)
+ 		goto err_exit;
  
--		if (bidi_bytes)
--			scsi_release_bidi_buffers(cmd);
-+		if (bidi_bytes) {
-+			kmem_cache_free(scsi_sdb_cache, req->next_rq->special);
-+			req->next_rq->special = NULL;
-+		}
- 
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_finish_request(req, error);
- 		spin_unlock_irqrestore(q->queue_lock, flags);
- 
--		scsi_release_buffers(cmd);
--
- 		scsi_put_command(cmd);
- 		scsi_run_queue(q);
- 	}
-@@ -1057,12 +1018,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		/* Unprep the request and put it back at the head of the queue.
- 		 * A new command will be prepared and issued.
- 		 */
-+		scsi_free_sgtables(cmd);
- 		if (q->mq_ops) {
- 			cmd->request->cmd_flags &= ~REQ_DONTPREP;
- 			scsi_mq_uninit_cmd(cmd);
- 			scsi_mq_requeue_cmd(cmd);
- 		} else {
--			scsi_release_buffers(cmd);
- 			scsi_requeue_command(q, cmd);
+@@ -1097,8 +1096,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 			rq->next_rq->special = bidi_sdb;
  		}
- 		break;
-@@ -1165,10 +1126,8 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
  
- 	return BLKPREP_OK;
- err_exit:
--	if (is_mq) {
--		scsi_mq_free_sgtables(cmd);
--	} else {
--		scsi_release_buffers(cmd);
-+	scsi_free_sgtables(cmd);
-+	if (!is_mq) {
- 		cmd->request->special = NULL;
- 		scsi_put_command(cmd);
- 		put_device(&sdev->sdev_gendev);
-@@ -1338,7 +1297,9 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- 		/* release the command and kill it */
- 		if (req->special) {
- 			struct scsi_cmnd *cmd = req->special;
--			scsi_release_buffers(cmd);
-+
-+			scsi_free_sgtables(cmd);
-+
- 			scsi_put_command(cmd);
- 			put_device(&sdev->sdev_gendev);
- 			req->special = NULL;
-@@ -1938,8 +1899,10 @@ out:
- 		 * we hit an error, as we will never see this command
- 		 * again.
- 		 */
--		if (req->cmd_flags & REQ_DONTPREP)
-+		if (req->cmd_flags & REQ_DONTPREP) {
-+			scsi_free_sgtables(cmd);
- 			scsi_mq_uninit_cmd(cmd);
-+		}
- 		break;
- 	default:
- 		break;
+-		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special,
+-					  GFP_ATOMIC);
++		error = scsi_init_sgtable(rq->next_rq, rq->next_rq->special);
+ 		if (error)
+ 			goto err_exit;
+ 	}
+@@ -1110,7 +1108,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 		BUG_ON(prot_sdb == NULL);
+ 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
+ 
+-		if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask, is_mq)) {
++		if (scsi_alloc_sgtable(prot_sdb, ivecs, is_mq)) {
+ 			error = BLKPREP_DEFER;
+ 			goto err_exit;
+ 		}
+@@ -1177,7 +1175,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ 	 * submit a request without an attached bio.
+ 	 */
+ 	if (req->bio) {
+-		int ret = scsi_init_io(cmd, GFP_ATOMIC);
++		int ret = scsi_init_io(cmd);
+ 		if (unlikely(ret))
+ 			return ret;
+ 	} else {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b041eca..eca990c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -784,7 +784,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	 * amount of blocks described by the request.
+ 	 */
+ 	blk_add_request_payload(rq, page, len);
+-	ret = scsi_init_io(cmd, GFP_ATOMIC);
++	ret = scsi_init_io(cmd);
+ 	rq->__data_len = nr_bytes;
+ 
+ out:
+@@ -878,7 +878,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+ 	 * knows how much to actually write.
+ 	 */
+ 	rq->__data_len = sdp->sector_size;
+-	ret = scsi_init_io(cmd, GFP_ATOMIC);
++	ret = scsi_init_io(cmd);
+ 	rq->__data_len = nr_bytes;
+ 	return ret;
+ }
+@@ -912,7 +912,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 	int ret;
+ 	unsigned char protect;
+ 
+-	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
++	ret = scsi_init_io(SCpnt);
+ 	if (ret != BLKPREP_OK)
+ 		goto out;
+ 	SCpnt = rq->special;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 3d5399e..5ebadc2 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -387,7 +387,7 @@ static int sr_init_command(struct scsi_cmnd *SCpnt)
+ 	struct request *rq = SCpnt->request;
+ 	int ret;
+ 
+-	ret = scsi_init_io(SCpnt, GFP_ATOMIC);
++	ret = scsi_init_io(SCpnt);
+ 	if (ret != BLKPREP_OK)
+ 		goto out;
+ 	SCpnt = rq->special;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 522a5f27..767967e 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -159,7 +159,7 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+ 				 size_t *offset, size_t *len);
+ extern void scsi_kunmap_atomic_sg(void *virt);
+ 
+-extern int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask);
++extern int scsi_init_io(struct scsi_cmnd *cmd);
+ 
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
 -- 
 1.9.1
 
