@@ -1,38 +1,23 @@
-From: Boaz Harrosh <openosd@gmail.com>
-Subject: Re: Large disk drives
-Date: Thu, 06 Nov 2014 18:43:27 +0200
-Message-ID: <545BA52F.6050205@gmail.com>
-References: <Pine.LNX.4.44L0.1411061049310.886-100000@iolanthe.rowland.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH scsi 0/2] Bugfix & mainatainers update for cxgbi
+Date: Thu, 6 Nov 2014 08:52:14 -0800
+Message-ID: <20141106165214.GB17176@infradead.org>
+References: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:50066 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751581AbaKFQnb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 11:43:31 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1411061049310.886-100000@iolanthe.rowland.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:53766 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbaKFQwP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 11:52:15 -0500
+Content-Disposition: inline
+In-Reply-To: <1415143163-2326-1-git-send-email-anish@chelsio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <boaz@plexistor.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>, "Dale R. Worley" <worley@alum.mit.edu>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Anish Bhatt <anish@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com
 
-On 11/06/2014 05:53 PM, Alan Stern wrote:
->> But just the simple case of read-capacity failure should we then?
-> 
-> That's a separate question.  As far as I know, the case you are 
-> describing has not come up.
-> 
+Thanks,
 
-BTW: what we should do is when the partition parser at the block layer
-see that the partition capacity as written in the partition-table is
-bigger then the capacity reported for the device we can put a fat
-message at dmesg with both sizes and user can decide.
-And/or add an extra field at block attributes for part_capacity. It
-is info that is known and parsed for today.
-
-> Alan Stern
-
-Thanks
-Boaz
+applied both patches to the drivers-for-3.18 branch.
 
