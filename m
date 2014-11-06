@@ -1,46 +1,96 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Large disk drives
-Date: Thu, 6 Nov 2014 15:16:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1411061511450.916-100000@iolanthe.rowland.org>
-References: <201411061923.sA6JNjSR007673@hobgoblin.ariadne.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Anish Bhatt <anish@chelsio.com>
+Subject: [PATCH scsi v2] cxgb4i : Send abort_rpl correctly
+Date: Thu,  6 Nov 2014 12:53:58 -0800
+Message-ID: <1415307238-29010-1-git-send-email-anish@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34029 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751088AbaKFUQh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 15:16:37 -0500
-In-Reply-To: <201411061923.sA6JNjSR007673@hobgoblin.ariadne.com>
+Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:33003
+	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750706AbaKFU4N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 15:56:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dale R. Worley" <worley@alum.mit.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, hch@infradead.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, jbottomley@parallels.com, michaelc@cs.wisc.edu, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-On Thu, 6 Nov 2014, Dale R. Worley wrote:
+Connection retries were not being cleaned up correctly if they failed as a
+ result of link down. Applies on top of drivers-for-3.18.
 
-> There is one thing that seems like it might be a problem:  We have to
-> ensure that the SCSI driver can read the partition tables (in the
-> standard locations) even if it doesn't know how big the disk is.
+v2 : Previous patch casued a build failure and was backed out. Fixed and
+ verified with this patch.
 
-A DOS partition table is stored in the first 512 bytes of the disk.  A
-GPT partition table occupies the first 33 or so blocks.  (It also has a
-copy occupying the last few blocks, but if you don't know how large the
-disk is, that's not much help.)
+Signed-off-by: Anish Bhatt <anish@chelsio.com>
+Signed-off-by: Karen Xie <kxie@chelsio.com>
 
-> Which leads me to wonder what happens if one reads /dev/sdX until one
-> hits end-of file.  People have written that we don't want to read the
-> disk from locations beyond end-of-data because some disks react badly
-> to out-of-range reads.  But if that is so in general, there would be
-> problems simply copying /dev/sdX.  (Indeed, if all disks gave a proper
-> error for out-of-range reads, a bisection search would find the size
-> of the disk easily enough.)
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 15 +++++++++------
+ drivers/scsi/cxgbi/libcxgbi.c      | 18 ++++++++----------
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
-Most drives will work fine if you try to read beyond the end.  You'll 
-just get an appropriate error return.
-
-But some devices (typically, cheap consumer-grade USB devices) go 
-wacky.  Often enough, they crash or hang.  Some of them may get going 
-again in response to a reset; others have to be powered off to recover.
-
-Alan Stern
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 3e0a0d3..81bb3bd 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -936,20 +936,23 @@ static void do_abort_req_rss(struct cxgbi_device *cdev, struct sk_buff *skb)
+ 	cxgbi_sock_get(csk);
+ 	spin_lock_bh(&csk->lock);
+ 
+-	if (!cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD)) {
+-		cxgbi_sock_set_flag(csk, CTPF_ABORT_REQ_RCVD);
+-		cxgbi_sock_set_state(csk, CTP_ABORTING);
+-		goto done;
++	cxgbi_sock_clear_flag(csk, CTPF_ABORT_REQ_RCVD);
++
++	if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT)) {
++		send_tx_flowc_wr(csk);
++		cxgbi_sock_set_flag(csk, CTPF_TX_DATA_SENT);
+ 	}
+ 
+-	cxgbi_sock_clear_flag(csk, CTPF_ABORT_REQ_RCVD);
++	cxgbi_sock_set_flag(csk, CTPF_ABORT_REQ_RCVD);
++	cxgbi_sock_set_state(csk, CTP_ABORTING);
++
+ 	send_abort_rpl(csk, rst_status);
+ 
+ 	if (!cxgbi_sock_flag(csk, CTPF_ABORT_RPL_PENDING)) {
+ 		csk->err = abort_status_to_errno(csk, req->status, &rst_status);
+ 		cxgbi_sock_closed(csk);
+ 	}
+-done:
++
+ 	spin_unlock_bh(&csk->lock);
+ 	cxgbi_sock_put(csk);
+ rel_skb:
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 674d498..13d869a 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -905,18 +905,16 @@ void cxgbi_sock_rcv_abort_rpl(struct cxgbi_sock *csk)
+ {
+ 	cxgbi_sock_get(csk);
+ 	spin_lock_bh(&csk->lock);
++
++	cxgbi_sock_set_flag(csk, CTPF_ABORT_RPL_RCVD);
+ 	if (cxgbi_sock_flag(csk, CTPF_ABORT_RPL_PENDING)) {
+-		if (!cxgbi_sock_flag(csk, CTPF_ABORT_RPL_RCVD))
+-			cxgbi_sock_set_flag(csk, CTPF_ABORT_RPL_RCVD);
+-		else {
+-			cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_RCVD);
+-			cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_PENDING);
+-			if (cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD))
+-				pr_err("csk 0x%p,%u,0x%lx,%u,ABT_RPL_RSS.\n",
+-					csk, csk->state, csk->flags, csk->tid);
+-			cxgbi_sock_closed(csk);
+-		}
++		cxgbi_sock_clear_flag(csk, CTPF_ABORT_RPL_PENDING);
++		if (cxgbi_sock_flag(csk, CTPF_ABORT_REQ_RCVD))
++			pr_err("csk 0x%p,%u,0x%lx,%u,ABT_RPL_RSS.\n",
++			       csk, csk->state, csk->flags, csk->tid);
++		cxgbi_sock_closed(csk);
+ 	}
++
+ 	spin_unlock_bh(&csk->lock);
+ 	cxgbi_sock_put(csk);
+ }
+-- 
+2.1.3
 
