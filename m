@@ -1,226 +1,87 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/6] scsi: move scsi_dispatch_cmd to scsi_lib.c
-Date: Thu,  6 Nov 2014 08:40:29 +0100
-Message-ID: <1415259630-20784-6-git-send-email-hch@lst.de>
-References: <1415259630-20784-1-git-send-email-hch@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/6] scsi: don't use scsi_next_command in scsi_reset_provider
+Date: Thu, 06 Nov 2014 09:18:03 +0100
+Message-ID: <545B2EBB.2010801@suse.de>
+References: <1415259630-20784-1-git-send-email-hch@lst.de> <1415259630-20784-2-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51542 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbaKFHkb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 02:40:31 -0500
-In-Reply-To: <1415259630-20784-1-git-send-email-hch@lst.de>
+Received: from cantor2.suse.de ([195.135.220.15]:41432 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751303AbaKFISG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Nov 2014 03:18:06 -0500
+In-Reply-To: <1415259630-20784-2-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>
 
-scsi_lib.c is where the rest of the I/O submission path lives, so move
-scsi_dispatch_cmd there and mark it static.
+On 11/06/2014 08:40 AM, Christoph Hellwig wrote:
+> scsi_reset_provider already manually runs all queues for the given ho=
+st,
+> so it doesn't need the scsi_run_queues call from it, and it doesn't n=
+eed
+> a reference on the device because it's synchronous.
+>=20
+> So let's just call scsi_put_command directly and avoid the device ref=
+erence
+> dance to simplify the code.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/scsi_error.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index ba19687..a1ffdb0 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -2335,14 +2335,9 @@ scsi_ioctl_reset(struct scsi_device *dev, int =
+__user *arg)
+>  		return -EIO;
+> =20
+>  	error =3D -EIO;
+> -	if (!get_device(&dev->sdev_gendev))
+> -		goto out_put_autopm_host;
+> -
+>  	scmd =3D scsi_get_command(dev, GFP_KERNEL);
+> -	if (!scmd) {
+> -		put_device(&dev->sdev_gendev);
+> +	if (!scmd)
+>  		goto out_put_autopm_host;
+> -	}
+> =20
+>  	blk_rq_init(NULL, &req);
+>  	scmd->request =3D &req;
+> @@ -2404,10 +2399,10 @@ scsi_ioctl_reset(struct scsi_device *dev, int=
+ __user *arg)
+>  			     "waking up host to restart after TMF\n"));
+> =20
+>  	wake_up(&shost->host_wait);
+> -
+>  	scsi_run_host_queues(shost);
+> =20
+> -	scsi_next_command(scmd);
+> +	scsi_put_command(scmd);
+> +
+>  out_put_autopm_host:
+>  	scsi_autopm_put_host(shost);
+>  	return error;
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi.c      | 81 ------------------------------------------------
- drivers/scsi/scsi_lib.c  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_priv.h |  1 -
- 3 files changed, 81 insertions(+), 82 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index bc52bbd..5fcfa02 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -603,87 +603,6 @@ void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- EXPORT_SYMBOL(scsi_cmd_get_serial);
- 
- /**
-- * scsi_dispatch_command - Dispatch a command to the low-level driver.
-- * @cmd: command block we are dispatching.
-- *
-- * Return: nonzero return request was rejected and device's queue needs to be
-- * plugged.
-- */
--int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
--{
--	struct Scsi_Host *host = cmd->device->host;
--	int rtn = 0;
--
--	atomic_inc(&cmd->device->iorequest_cnt);
--
--	/* check if the device is still usable */
--	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
--		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
--		 * returns an immediate error upwards, and signals
--		 * that the device is no longer present */
--		cmd->result = DID_NO_CONNECT << 16;
--		goto done;
--	}
--
--	/* Check to see if the scsi lld made this device blocked. */
--	if (unlikely(scsi_device_blocked(cmd->device))) {
--		/*
--		 * in blocked state, the command is just put back on
--		 * the device queue.  The suspend state has already
--		 * blocked the queue so future requests should not
--		 * occur until the device transitions out of the
--		 * suspend state.
--		 */
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			"queuecommand : device blocked\n"));
--		return SCSI_MLQUEUE_DEVICE_BUSY;
--	}
--
--	/* Store the LUN value in cmnd, if needed. */
--	if (cmd->device->lun_in_cdb)
--		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
--			       (cmd->device->lun << 5 & 0xe0);
--
--	scsi_log_send(cmd);
--
--	/*
--	 * Before we queue this command, check if the command
--	 * length exceeds what the host adapter can handle.
--	 */
--	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			       "queuecommand : command too long. "
--			       "cdb_size=%d host->max_cmd_len=%d\n",
--			       cmd->cmd_len, cmd->device->host->max_cmd_len));
--		cmd->result = (DID_ABORT << 16);
--		goto done;
--	}
--
--	if (unlikely(host->shost_state == SHOST_DEL)) {
--		cmd->result = (DID_NO_CONNECT << 16);
--		goto done;
--
--	}
--
--	trace_scsi_dispatch_cmd_start(cmd);
--	rtn = host->hostt->queuecommand(host, cmd);
--	if (rtn) {
--		trace_scsi_dispatch_cmd_error(cmd, rtn);
--		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
--		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
--			rtn = SCSI_MLQUEUE_HOST_BUSY;
--
--		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
--			"queuecommand : request rejected\n"));
--	}
--
--	return rtn;
-- done:
--	cmd->scsi_done(cmd);
--	return 0;
--}
--
--/**
-  * scsi_finish_command - cleanup and pass command back to upper layer
-  * @cmd: the command
-  *
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b2de77b..6400c6b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1602,6 +1602,87 @@ static void scsi_softirq_done(struct request *rq)
- }
- 
- /**
-+ * scsi_dispatch_command - Dispatch a command to the low-level driver.
-+ * @cmd: command block we are dispatching.
-+ *
-+ * Return: nonzero return request was rejected and device's queue needs to be
-+ * plugged.
-+ */
-+static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-+{
-+	struct Scsi_Host *host = cmd->device->host;
-+	int rtn = 0;
-+
-+	atomic_inc(&cmd->device->iorequest_cnt);
-+
-+	/* check if the device is still usable */
-+	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
-+		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
-+		 * returns an immediate error upwards, and signals
-+		 * that the device is no longer present */
-+		cmd->result = DID_NO_CONNECT << 16;
-+		goto done;
-+	}
-+
-+	/* Check to see if the scsi lld made this device blocked. */
-+	if (unlikely(scsi_device_blocked(cmd->device))) {
-+		/*
-+		 * in blocked state, the command is just put back on
-+		 * the device queue.  The suspend state has already
-+		 * blocked the queue so future requests should not
-+		 * occur until the device transitions out of the
-+		 * suspend state.
-+		 */
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : device blocked\n"));
-+		return SCSI_MLQUEUE_DEVICE_BUSY;
-+	}
-+
-+	/* Store the LUN value in cmnd, if needed. */
-+	if (cmd->device->lun_in_cdb)
-+		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-+			       (cmd->device->lun << 5 & 0xe0);
-+
-+	scsi_log_send(cmd);
-+
-+	/*
-+	 * Before we queue this command, check if the command
-+	 * length exceeds what the host adapter can handle.
-+	 */
-+	if (cmd->cmd_len > cmd->device->host->max_cmd_len) {
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			       "queuecommand : command too long. "
-+			       "cdb_size=%d host->max_cmd_len=%d\n",
-+			       cmd->cmd_len, cmd->device->host->max_cmd_len));
-+		cmd->result = (DID_ABORT << 16);
-+		goto done;
-+	}
-+
-+	if (unlikely(host->shost_state == SHOST_DEL)) {
-+		cmd->result = (DID_NO_CONNECT << 16);
-+		goto done;
-+
-+	}
-+
-+	trace_scsi_dispatch_cmd_start(cmd);
-+	rtn = host->hostt->queuecommand(host, cmd);
-+	if (rtn) {
-+		trace_scsi_dispatch_cmd_error(cmd, rtn);
-+		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-+		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
-+			rtn = SCSI_MLQUEUE_HOST_BUSY;
-+
-+		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
-+			"queuecommand : request rejected\n"));
-+	}
-+
-+	return rtn;
-+ done:
-+	cmd->scsi_done(cmd);
-+	return 0;
-+}
-+
-+/**
-  * scsi_done - Invoke completion on finished SCSI command.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 2a382c1..2dc4a83 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -29,7 +29,6 @@ extern int scsi_init_hosts(void);
- extern void scsi_exit_hosts(void);
- 
- /* scsi.c */
--extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- #ifdef CONFIG_SCSI_LOGGING
--- 
-1.9.1
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
