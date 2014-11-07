@@ -1,118 +1,79 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/3] block: Introduce blkdev_issue_zeroout_discard() function
-Date: Fri,  7 Nov 2014 00:08:14 -0500
-Message-ID: <1415336894-15327-4-git-send-email-martin.petersen@oracle.com>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21653 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbaKGFIe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 00:08:34 -0500
-In-Reply-To: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chris Friesen <chris.friesen@windriver.com>
+Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
+Date: Thu, 6 Nov 2014 23:35:23 -0600
+Message-ID: <545C5A1B.9020206@windriver.com>
+References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>	<yq1fvdwb3lq.fsf@sermon.lab.mkp.net> <545BC88A.7060706@windriver.com> <yq1zjc3ai4h.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1zjc3ai4h.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-blkdev_issue_discard() will zero a given block range on disk. This is
-done by way of either WRITE SAME or regular WRITE. I.e. the blocks on
-disk will be written and thus provisioned.
+On 11/06/2014 07:56 PM, Martin K. Petersen wrote:
+>>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
+>
+> Chris,
+>
+> Chris> For a RAID card I expect it would be related to chunk size or
+> Chris> stripe width or something...but even then I would expect to be
+> Chris> able to cap it at 100MB or so.  Or are there storage systems on
+> Chris> really fast interfaces that could legitimately want a hundred meg
+> Chris> of data at a time?
+>
+> Well, there are several devices that report their capacity to indicate
+> that they don't suffer any performance (RMW) penalties for large
+> commands regardless of size. I would personally prefer them to report 0
+> in that case.
 
-There are use cases where the desired behavior is to zero the blocks but
-unprovision them if possible. The blocks must deterministically contain
-zeroes when they are subsequently read back.
+I got curious and looked at the spec at 
+"http://www.13thmonkey.org/documentation/SCSI/sbc3r25.pdf".  I'm now 
+wondering if maybe linux is misbehaving.
 
-This patch introduces a blkdev_issue_zeroout_discard() call that
-provides this functionality. If a block device guarantees
-discard_zeroes_data the new function will use discard to clear the block
-range. If the device does not support discard_zeroes_data or if the
-discard request fails we will fall back to blkdev_issue_zeroout() to
-ensure predictable results.
+I think there is actually some justification for putting a huge value in 
+the "optimal transfer length" field.  That field is described as "the 
+optimal transfer length in blocks for a single...command", but then 
+later it has "If a device server receives a request with a transfer 
+length exceeding this value, then a significant delay in processing the 
+request may be incurred."  As written, it is ambiguous.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- block/blk-lib.c        | 44 ++++++++++++++++++++++++++++++++++++++++++--
- include/linux/blkdev.h |  2 ++
- 2 files changed, 44 insertions(+), 2 deletions(-)
+Looking at "ftp://ftp.t10.org/t10/document.03/03-028r2.pdf" it appears 
+that originally that field was the "optimal maximum transfer length", 
+not the "optimal transfer length".  It appears that the intent was that 
+the device was able to take requests up to the "maximum transfer 
+length", but there would be a performance penalty if you went over the 
+"optimum maximum transfer length".
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 8411be3c19d3..2ffec6a01c71 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -278,14 +278,18 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- }
- 
- /**
-- * blkdev_issue_zeroout - zero-fill a block range
-+ * blkdev_issue_zeroout - zero-fill and provision a block range
-  * @bdev:	blockdev to write
-  * @sector:	start sector
-  * @nr_sects:	number of sectors to write
-  * @gfp_mask:	memory allocation flags (for bio_alloc)
-  *
-  * Description:
-- *  Generate and issue number of bios with zerofiled pages.
-+ *  Zero-fill a block range. The blocks will be provisioned
-+ *  (allocated/anchored) and are guaranteed to return zeroes when read
-+ *  back. This function will attempt to use WRITE SAME to optimize the
-+ *  process if the block device supports it. Otherwise it will fall back
-+ *  to zeroing the blocks using regular WRITE calls.
-  */
- 
- int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
-@@ -305,3 +309,39 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
-+
-+/**
-+ * blkdev_issue_zeroout_discard - zero-fill and attempt to discard block range
-+ * @bdev:	blockdev to write
-+ * @sector:	start sector
-+ * @nr_sects:	number of sectors to write
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ *
-+ * Description:
-+ *  Zero-fill a block range. In contrast to blkdev_issue_zeroout() this
-+ *  function will attempt to deprovision (deallocate/discard) the blocks
-+ *  in question. It will only do so if the underlying device guarantees
-+ *  that subsequent READ operations to the block range in question will
-+ *  return zeroes. If the device does not provide hard guarantees or if
-+ *  the DISCARD attempt should fail the block range will be explicitly
-+ *  zeroed using blkdev_issue_zeroout().
-+ */
-+
-+int blkdev_issue_zeroout_discard(struct block_device *bdev, sector_t sector,
-+				 sector_t nr_sects, gfp_t gfp_mask)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (blk_queue_discard(q) && q->limits.discard_zeroes_data) {
-+		unsigned char bdn[BDEVNAME_SIZE];
-+
-+		if (!blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, 0))
-+			return 0;
-+
-+		bdevname(bdev, bdn);
-+		pr_err("%s: DISCARD failed. Manually zeroing.\n", bdn);
-+	}
-+
-+	return blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
-+}
-+EXPORT_SYMBOL(blkdev_issue_zeroout_discard);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aac0f9ea952a..078b6e5f488a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1164,6 +1164,8 @@ extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			sector_t nr_sects, gfp_t gfp_mask);
-+extern int blkdev_issue_zeroout_discard(struct block_device *bdev,
-+			sector_t sector, sector_t nr_sects, gfp_t gfp_mask);
- static inline int sb_issue_discard(struct super_block *sb, sector_t block,
- 		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
- {
--- 
-1.9.3
+Section E.4 in "sbc3r25.pdf" talks about optimizing transfers.  They 
+suggest using a transfer length that is a multiple of "optimal transfer 
+length granularity", up to a max of either the max or optimal transfer 
+lengths depending on the size of the penalty if you exceed the optimal 
+transfer length.  This reinforces the idea that the "optimal transfer 
+length" is actually the optimal *maximum* length, but any multiple of 
+the optimal granularity is fine.
 
+Based on that, I think it would have been clearer if it had been called 
+"/sys/block/sdb/queue/optimal_max_io_size".
+
+Also, I think it's wrong for filesystems and userspace to use it for 
+alignment.  In E.4 and E.5 in the "sbc3r25.pdf" doc, it looks like they 
+use the optimal granularity field for alignment, not the optimal 
+transfer length.
+
+
+So for the ST900MM0006, it had:
+
+# sg_inq --vpd --page=0xb0 /dev/sdb
+VPD INQUIRY: Block limits page (SBC)
+   Optimal transfer length granularity: 1 blocks
+   Maximum transfer length: 0 blocks
+   Optimal transfer length: 4294967295 blocks
+
+In this case I think the drive is trying to say that it doesn't require 
+any special granularity (can handle alignment on 512-byte blocks), and 
+that it can handle any size of transfer without performance penalty.
+
+Chris
