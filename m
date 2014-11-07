@@ -1,26 +1,83 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 00/36] Fixes, cleanups and modernization for NCR5380
- drivers
-Date: Fri, 7 Nov 2014 13:34:23 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1411071332540.1026@nippy.intranet>
-References: <20141027052607.105914311@telegraphics.com.au> <5455C107.6040500@gmail.com> <alpine.LNX.2.00.1411021710210.27266@nippy.intranet> <5455E340.7080305@gmail.com> <CAOmrzkKVYBcznyEaUX7Ta9z3P+B9=BTSj3kCZTjx-euZ2gannQ@mail.gmail.com>
- <CAL4YKD5fqhZKZG3_cOTxasqTSdb5oC3g0aUKnnxzE3Q4MJyxGQ@mail.gmail.com> <CAMuHMdV_xAdXB-0Q=qCGqDKt9uY7LT5mn_DXKZiA1aVmcuMOLA@mail.gmail.com> <CAOmrzkLW+cRi1p7Wa63L-Tf-hCtVkkcFxGmqQVBQHL4A3F+hKQ@mail.gmail.com> <alpine.LNX.2.00.1411061507240.20750@nippy.intranet>
- <CAOmrzkKUXJaDh7gchStxkwMeR6MUDGZPD+O+iAsvSbQOT0yB2g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <CAOmrzkKUXJaDh7gchStxkwMeR6MUDGZPD+O+iAsvSbQOT0yB2g@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, =?ISO-8859-15?Q?David_G=E1lvez?= <dgalvez75@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, aniplay@wanadoo.fr
+From: Hariprasad Shenai <hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCHv3 net-next 0/3] RDMA/cxgb4,cxgb4vf,cxgb4i,csiostor: Cleanup macros
+Date: Fri,  7 Nov 2014 09:35:22 +0530
+Message-ID: <1415333125-10635-1-git-send-email-hariprasad@chelsio.com>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, praveenm-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, nirranjan-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kumaras-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, Hariprasad Shenai <hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi,
 
-On Fri, 7 Nov 2014, Michael Schmitz wrote:
+This series moves the debugfs code to a new file debugfs.c and cleans up
+macros/register defines.
 
-> it's probably not Geert but James who needs to give the go-ahead.
+Various patches have ended up changing the style of the symbolic macros/register
+defines and some of them used the macros/register defines that matches the
+output of the script from the hardware team.
 
-Given Geert's objections to the changes under arch/m68k in v1, I'm hoping 
-for an acked-by from Geert for v2...
+As a result, the current kernel.org files are a mix of different macro styles.
+Since this macro/register defines is used by five different drivers, a
+few patch series have ended up adding duplicate macro/register define entries
+with different styles. This makes these register define/macro files a complete
+mess and we want to make them clean and consistent.
 
--- 
+Will post few more series so that we can cover all the macros so that they all
+follow the same style to be consistent.
+
+The patches series is created against 'net-next' tree.
+And includes patches on cxgb4, cxgb4vf, iw_cxgb4, csiostor and cxgb4i driver.
+
+We have included all the maintainers of respective drivers. Kindly review the
+change and let us know in case of any review comments.
+
+Thanks
+
+V3: Use suffix instead of prefix for macros/register defines
+V2: Changes the description and cover-letter content to answer David Miller's
+question
+
+Hariprasad Shenai (3):
+  cxgb4: Add cxgb4_debugfs.c, move all debugfs code to new file
+  cxgb4: Cleanup macros so they follow the same style and look
+    consistent
+  cxgb4: Cleanup macros so they follow the same style and look
+    consistent, part 2
+
+ drivers/infiniband/hw/cxgb4/cm.c                   |   56 +++---
+ drivers/infiniband/hw/cxgb4/cq.c                   |    8 +-
+ drivers/infiniband/hw/cxgb4/mem.c                  |   14 +-
+ drivers/infiniband/hw/cxgb4/qp.c                   |   26 ++--
+ drivers/net/ethernet/chelsio/cxgb4/Makefile        |    1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |    3 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_dcb.h     |    6 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c |  158 ++++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h |   52 ++++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |  173 +++++---------------
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_uld.h     |   15 +-
+ drivers/net/ethernet/chelsio/cxgb4/sge.c           |   32 ++--
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c         |  127 +++++++-------
+ drivers/net/ethernet/chelsio/cxgb4/t4_regs.h       |   72 +++++++--
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h      |  142 ++++++++++++----
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |   32 ++--
+ drivers/net/ethernet/chelsio/cxgb4vf/t4vf_common.h |    2 +-
+ drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c     |  150 +++++++++---------
+ drivers/scsi/csiostor/csio_attr.c                  |    8 +-
+ drivers/scsi/csiostor/csio_hw.c                    |   14 +-
+ drivers/scsi/csiostor/csio_hw_t4.c                 |   15 +-
+ drivers/scsi/csiostor/csio_hw_t5.c                 |   21 ++-
+ drivers/scsi/csiostor/csio_init.c                  |    6 +-
+ drivers/scsi/csiostor/csio_lnode.c                 |   18 +-
+ drivers/scsi/csiostor/csio_mb.c                    |  172 ++++++++++----------
+ drivers/scsi/csiostor/csio_scsi.c                  |   24 ++--
+ drivers/scsi/csiostor/csio_wr.h                    |    2 +-
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c                 |   35 ++--
+ 28 files changed, 816 insertions(+), 568 deletions(-)
+ create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c
+ create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
