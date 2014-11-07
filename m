@@ -1,398 +1,85 @@
-From: Hariprasad Shenai <hariprasad@chelsio.com>
-Subject: [PATCHv3 net-next 1/3] cxgb4: Add cxgb4_debugfs.c, move all debugfs code to new file
-Date: Fri,  7 Nov 2014 09:35:23 +0530
-Message-ID: <1415333125-10635-2-git-send-email-hariprasad@chelsio.com>
-References: <1415333125-10635-1-git-send-email-hariprasad@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:33606
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751371AbaKGEAT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2014 23:00:19 -0500
-In-Reply-To: <1415333125-10635-1-git-send-email-hariprasad@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Subject: Re: Large disk drives
+Date: Fri, 7 Nov 2014 13:53:51 +0900 (JST)
+Message-ID: <533357.25557.qm@web100006.mail.kks.yahoo.co.jp>
+Reply-To: Norman Diamond <n0diamond-/E1597aS9LR3+QwDJ9on6Q@public.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, anish@chelsio.com, praveenm@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com, Hariprasad Shenai <hariprasad@chelsio.com>
 
-Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4/Makefile        |    1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |    1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c |  158 ++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h |   52 +++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |   97 +------------
- 5 files changed, 217 insertions(+), 92 deletions(-)
- create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c
- create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h
-
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/Makefile b/drivers/net/ethernet/chelsio/cxgb4/Makefile
-index 1df65c9..b852807 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/Makefile
-+++ b/drivers/net/ethernet/chelsio/cxgb4/Makefile
-@@ -6,3 +6,4 @@ obj-$(CONFIG_CHELSIO_T4) += cxgb4.o
- 
- cxgb4-objs := cxgb4_main.o l2t.o t4_hw.o sge.o
- cxgb4-$(CONFIG_CHELSIO_T4_DCB) +=  cxgb4_dcb.o
-+cxgb4-$(CONFIG_DEBUG_FS) += cxgb4_debugfs.o
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index 3c481b2..dad1ea9 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -1085,4 +1085,5 @@ void t4_db_dropped(struct adapter *adapter);
- int t4_fwaddrspace_write(struct adapter *adap, unsigned int mbox,
- 			 u32 addr, u32 val);
- void t4_sge_decode_idma_state(struct adapter *adapter, int state);
-+void t4_free_mem(void *addr);
- #endif /* __CXGB4_H__ */
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c
-new file mode 100644
-index 0000000..e86b5fe
---- /dev/null
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.c
-@@ -0,0 +1,158 @@
-+/*
-+ * This file is part of the Chelsio T4 Ethernet driver for Linux.
-+ *
-+ * Copyright (c) 2003-2014 Chelsio Communications, Inc. All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#include <linux/seq_file.h>
-+#include <linux/debugfs.h>
-+#include <linux/string_helpers.h>
-+#include <linux/sort.h>
-+
-+#include "cxgb4.h"
-+#include "t4_regs.h"
-+#include "t4fw_api.h"
-+#include "cxgb4_debugfs.h"
-+#include "l2t.h"
-+
-+static ssize_t mem_read(struct file *file, char __user *buf, size_t count,
-+			loff_t *ppos)
-+{
-+	loff_t pos = *ppos;
-+	loff_t avail = file_inode(file)->i_size;
-+	unsigned int mem = (uintptr_t)file->private_data & 3;
-+	struct adapter *adap = file->private_data - mem;
-+	__be32 *data;
-+	int ret;
-+
-+	if (pos < 0)
-+		return -EINVAL;
-+	if (pos >= avail)
-+		return 0;
-+	if (count > avail - pos)
-+		count = avail - pos;
-+
-+	data = t4_alloc_mem(count);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	spin_lock(&adap->win0_lock);
-+	ret = t4_memory_rw(adap, 0, mem, pos, count, data, T4_MEMORY_READ);
-+	spin_unlock(&adap->win0_lock);
-+	if (ret) {
-+		t4_free_mem(data);
-+		return ret;
-+	}
-+	ret = copy_to_user(buf, data, count);
-+
-+	t4_free_mem(data);
-+	if (ret)
-+		return -EFAULT;
-+
-+	*ppos = pos + count;
-+	return count;
-+}
-+
-+static const struct file_operations mem_debugfs_fops = {
-+	.owner   = THIS_MODULE,
-+	.open    = simple_open,
-+	.read    = mem_read,
-+	.llseek  = default_llseek,
-+};
-+
-+static void add_debugfs_mem(struct adapter *adap, const char *name,
-+			    unsigned int idx, unsigned int size_mb)
-+{
-+	struct dentry *de;
-+
-+	de = debugfs_create_file(name, S_IRUSR, adap->debugfs_root,
-+				 (void *)adap + idx, &mem_debugfs_fops);
-+	if (de && de->d_inode)
-+		de->d_inode->i_size = size_mb << 20;
-+}
-+
-+/* Add an array of Debug FS files.
-+ */
-+void add_debugfs_files(struct adapter *adap,
-+		       struct t4_debugfs_entry *files,
-+		       unsigned int nfiles)
-+{
-+	int i;
-+
-+	/* debugfs support is best effort */
-+	for (i = 0; i < nfiles; i++)
-+		debugfs_create_file(files[i].name, files[i].mode,
-+				    adap->debugfs_root,
-+				    (void *)adap + files[i].data,
-+				    files[i].ops);
-+}
-+
-+int t4_setup_debugfs(struct adapter *adap)
-+{
-+	int i;
-+	u32 size;
-+
-+	static struct t4_debugfs_entry t4_debugfs_files[] = {
-+		{ "l2t", &t4_l2t_fops, S_IRUSR, 0},
-+	};
-+
-+	add_debugfs_files(adap,
-+			  t4_debugfs_files,
-+			  ARRAY_SIZE(t4_debugfs_files));
-+
-+	i = t4_read_reg(adap, MA_TARGET_MEM_ENABLE);
-+	if (i & EDRAM0_ENABLE) {
-+		size = t4_read_reg(adap, MA_EDRAM0_BAR);
-+		add_debugfs_mem(adap, "edc0", MEM_EDC0, EDRAM_SIZE_GET(size));
-+	}
-+	if (i & EDRAM1_ENABLE) {
-+		size = t4_read_reg(adap, MA_EDRAM1_BAR);
-+		add_debugfs_mem(adap, "edc1", MEM_EDC1, EDRAM_SIZE_GET(size));
-+	}
-+	if (is_t4(adap->params.chip)) {
-+		size = t4_read_reg(adap, MA_EXT_MEMORY_BAR);
-+		if (i & EXT_MEM_ENABLE)
-+			add_debugfs_mem(adap, "mc", MEM_MC,
-+					EXT_MEM_SIZE_GET(size));
-+	} else {
-+		if (i & EXT_MEM_ENABLE) {
-+			size = t4_read_reg(adap, MA_EXT_MEMORY_BAR);
-+			add_debugfs_mem(adap, "mc0", MEM_MC0,
-+					EXT_MEM_SIZE_GET(size));
-+		}
-+		if (i & EXT_MEM1_ENABLE) {
-+			size = t4_read_reg(adap, MA_EXT_MEMORY1_BAR);
-+			add_debugfs_mem(adap, "mc1", MEM_MC1,
-+					EXT_MEM_SIZE_GET(size));
-+		}
-+	}
-+	return 0;
-+}
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h
-new file mode 100644
-index 0000000..a3d8867
---- /dev/null
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_debugfs.h
-@@ -0,0 +1,52 @@
-+/*
-+ * This file is part of the Chelsio T4 Ethernet driver for Linux.
-+ *
-+ * Copyright (c) 2003-2014 Chelsio Communications, Inc. All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#ifndef __CXGB4_DEBUGFS_H
-+#define __CXGB4_DEBUGFS_H
-+
-+#include <linux/export.h>
-+
-+struct t4_debugfs_entry {
-+	const char *name;
-+	const struct file_operations *ops;
-+	mode_t mode;
-+	unsigned char data;
-+};
-+
-+int t4_setup_debugfs(struct adapter *adap);
-+void add_debugfs_files(struct adapter *adap,
-+		       struct t4_debugfs_entry *files,
-+		       unsigned int nfiles);
-+
-+#endif
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 8520d55..172f68b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -68,6 +68,7 @@
- #include "t4_msg.h"
- #include "t4fw_api.h"
- #include "cxgb4_dcb.h"
-+#include "cxgb4_debugfs.h"
- #include "l2t.h"
- 
- #include <../drivers/net/bonding/bonding.h>
-@@ -1287,7 +1288,7 @@ void *t4_alloc_mem(size_t size)
- /*
-  * Free memory allocated through alloc_mem().
-  */
--static void t4_free_mem(void *addr)
-+void t4_free_mem(void *addr)
- {
- 	if (is_vmalloc_addr(addr))
- 		vfree(addr);
-@@ -3127,102 +3128,14 @@ static const struct ethtool_ops cxgb_ethtool_ops = {
- 	.flash_device      = set_flash,
- };
- 
--/*
-- * debugfs support
-- */
--static ssize_t mem_read(struct file *file, char __user *buf, size_t count,
--			loff_t *ppos)
--{
--	loff_t pos = *ppos;
--	loff_t avail = file_inode(file)->i_size;
--	unsigned int mem = (uintptr_t)file->private_data & 3;
--	struct adapter *adap = file->private_data - mem;
--	__be32 *data;
--	int ret;
--
--	if (pos < 0)
--		return -EINVAL;
--	if (pos >= avail)
--		return 0;
--	if (count > avail - pos)
--		count = avail - pos;
--
--	data = t4_alloc_mem(count);
--	if (!data)
--		return -ENOMEM;
--
--	spin_lock(&adap->win0_lock);
--	ret = t4_memory_rw(adap, 0, mem, pos, count, data, T4_MEMORY_READ);
--	spin_unlock(&adap->win0_lock);
--	if (ret) {
--		t4_free_mem(data);
--		return ret;
--	}
--	ret = copy_to_user(buf, data, count);
--
--	t4_free_mem(data);
--	if (ret)
--		return -EFAULT;
--
--	*ppos = pos + count;
--	return count;
--}
--
--static const struct file_operations mem_debugfs_fops = {
--	.owner   = THIS_MODULE,
--	.open    = simple_open,
--	.read    = mem_read,
--	.llseek  = default_llseek,
--};
--
--static void add_debugfs_mem(struct adapter *adap, const char *name,
--			    unsigned int idx, unsigned int size_mb)
--{
--	struct dentry *de;
--
--	de = debugfs_create_file(name, S_IRUSR, adap->debugfs_root,
--				 (void *)adap + idx, &mem_debugfs_fops);
--	if (de && de->d_inode)
--		de->d_inode->i_size = size_mb << 20;
--}
--
- static int setup_debugfs(struct adapter *adap)
- {
--	int i;
--	u32 size;
--
- 	if (IS_ERR_OR_NULL(adap->debugfs_root))
- 		return -1;
- 
--	i = t4_read_reg(adap, MA_TARGET_MEM_ENABLE);
--	if (i & EDRAM0_ENABLE) {
--		size = t4_read_reg(adap, MA_EDRAM0_BAR);
--		add_debugfs_mem(adap, "edc0", MEM_EDC0,	EDRAM_SIZE_GET(size));
--	}
--	if (i & EDRAM1_ENABLE) {
--		size = t4_read_reg(adap, MA_EDRAM1_BAR);
--		add_debugfs_mem(adap, "edc1", MEM_EDC1, EDRAM_SIZE_GET(size));
--	}
--	if (is_t4(adap->params.chip)) {
--		size = t4_read_reg(adap, MA_EXT_MEMORY_BAR);
--		if (i & EXT_MEM_ENABLE)
--			add_debugfs_mem(adap, "mc", MEM_MC,
--					EXT_MEM_SIZE_GET(size));
--	} else {
--		if (i & EXT_MEM_ENABLE) {
--			size = t4_read_reg(adap, MA_EXT_MEMORY_BAR);
--			add_debugfs_mem(adap, "mc0", MEM_MC0,
--					EXT_MEM_SIZE_GET(size));
--		}
--		if (i & EXT_MEM1_ENABLE) {
--			size = t4_read_reg(adap, MA_EXT_MEMORY1_BAR);
--			add_debugfs_mem(adap, "mc1", MEM_MC1,
--					EXT_MEM_SIZE_GET(size));
--		}
--	}
--	if (adap->l2t)
--		debugfs_create_file("l2t", S_IRUSR, adap->debugfs_root, adap,
--				    &t4_l2t_fops);
-+#ifdef CONFIG_DEBUG_FS
-+	t4_setup_debugfs(adap);
-+#endif
- 	return 0;
- }
- 
--- 
-1.7.1
-
+If READ_CAPACITY_10 returns something that looks valid but might be off
+by a multiple of 2TB, and READ_CAPACITY_16 fails, what do we really wan=
+t
+to do when we read the partition table?
+=A0
+If the partition table indicates that everything fits in the capacity
+returned by READ_CAPACITY_10, great, it isn't a large disk drive and we
+can do all 10-byte commands.
+=A0
+If the partition table indicates that the disk drive really is large an=
+d
+the USB bridge has problems, I'd say we'd better not touch the drive an=
+y
+further (with possible exceptions).=A0 If the USB bridge fails
+READ_CAPACITY_16 but the USB bridge pretends to succeed with READ_16 an=
+d
+WRITE_16, well maybe it wraps around at 2TB and writes the wrong sector
+on the drive.=A0 If READ_CAPACITY_16 fails, I wouldn't trust the USB br=
+idge
+with any 16-byte command.=A0 If the partition table indicates that the
+drive is larger, the user had better be told to find a different USB
+bridge or use a real SATA or SCSI controller.
+=A0
+A possible exception is that if a USB bridge is well tested and confirm=
+ed
+to handle READ_16 and WRITE_16 correctly while failing READ_CAPACITY_16=
+,
+an antiquirk could be configured to say we rely on the bridge.
+=A0
+By the way, I've seen some USB bridges that lie about whether they
+performed various SAT commands (ATA passthrough), but told the truth
+about performing an ATA IDENTIFY DEVICE through SAT.=A0 So we could att=
+empt
+ATA passthrough with an IDENTIFY DEVICE command, and if it happens to
+return a sane looking result, we could comparre it to the bridge's own
+translation of READ_CAPACITY_10 and READ_CAPACITY_16.=A0 If the passthr=
+ough
+yielded a sane result and the capacity doesn't match, we know not to
+trust the bridge with 16-byte commands (except if tested, as mentioned)=
+=2E
+In such a case, we don't even have to look at the partition table.=A0 O=
+f
+course if the ATA passthrough fails or if the result is garbage then
+abandon this test and maybe look at the partition table.
+=A0
+By the way, it's not just USB bridges.=A0 I have a particularly obnoxio=
+us
+ExpressCard with an eSATA connection.=A0 Where the SATA drive operates =
+on
+512-byte LBAs (whether real or emulated doesn't matter), the eSATA brid=
+ge
+translates groups of 8 of them into emulated 4096-byte LBAs.=A0 This sh=
+ould
+make it possible for a 3TB drive to be used when the PC's drivers don't
+know how to use ATA commands on sector numbers bigger than 32 bits, as
+long as the PC's drivers can handle 4096-byte sectors, right?=A0 Well, =
+no.
+This eSATA bridge's firmware wraps around at 2TB.=A0 The vendor went to
+all this effort just to screw up and maximize the amount of damage that
+occurs by hiding their screw up.=A0 I don't know if eBay's warranty cov=
+ers
+this kind of defect, but it wouldn't be worth paying for postage to
+return this POS.=A0 I should have bought the Brooklyn Bridge instead.
+To compound the oddity, the same ExpressCard contains a working USB 3.0
+bridge.
+=A0
+(Sorry I can't construct headers to get this message threaded correctly
+in the mailing list.)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
