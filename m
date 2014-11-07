@@ -1,36 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: blk_mq: suspicious RCU usage, rcu_read_lock() used illegally
- while idle!
-Date: Fri, 07 Nov 2014 12:45:58 -0500 (EST)
-Message-ID: <20141107.124558.1965251829673123349.davem@davemloft.net>
-References: <20141106171110.GJ5718@linux.vnet.ibm.com>
-	<alpine.LRH.2.11.1411071221560.9943@siim2.ut.ee>
-	<20141107150628.GB4901@linux.vnet.ibm.com>
+From: Chris Friesen <chris.friesen@windriver.com>
+Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
+Date: Fri, 7 Nov 2014 11:51:40 -0600
+Message-ID: <545D06AC.7000606@windriver.com>
+References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>	<yq1fvdwb3lq.fsf@sermon.lab.mkp.net> <545BC88A.7060706@windriver.com>	<yq1zjc3ai4h.fsf@sermon.lab.mkp.net> <545C5A1B.9020206@windriver.com>	<yq1bnoj9dvu.fsf@sermon.lab.mkp.net> <yq1ioiq9abc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20141107150628.GB4901@linux.vnet.ibm.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: mroos@linux.ee, hch@infradead.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, sparclinux@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1ioiq9abc.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Date: Fri, 7 Nov 2014 07:06:28 -0800
+On 11/07/2014 11:42 AM, Martin K. Petersen wrote:
+>>>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
+>
+> Martin> I know there was a bug open with Seagate. I assume it has been
+> Martin> fixed in their latest firmware.
+>
+> Seagate confirms that this issue was fixed about a year ago. Will
+> provide more data when I have it.
 
-> On Fri, Nov 07, 2014 at 12:50:02PM +0200, Meelis Roos wrote:
->> Perhaps DaveM can tell which one is coreect or if there is any related 
->> problem.
-> 
-> Happy to push either of them along, if appropriate.
+Okay, thanks for the clarification (for this and the spec itself).
 
-We should use irq_enter()/irq_exit(), and we need to also add it to
-smp_call_function_single_client().
+Apparently there's a new firmware available, dated Oct 13 but with no 
+release notes.  We just tried updating the firmware on one of the drives 
+in question and it failed from two different versions of linux, while 
+Windows won't install because it doesn't like our SSD apparently.  Joy.
 
-I'll code up a final patch for sparc64 and push it upstream, thanks!
-
-Some other architectures appear to have the same problem, for example
-alpha and IA64.  Someone should grep around generic_smp_call_function*
-under arch/ and do an audit.
-
+Chris
