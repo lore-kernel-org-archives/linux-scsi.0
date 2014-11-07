@@ -1,90 +1,91 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH] tmscsim: fix spinlock usage in isr
-Date: Fri, 7 Nov 2014 13:09:03 +0000
-Message-ID: <1415365740.27625.14.camel@jarvis.quadriga.com>
-References: <1415364584-28951-1-git-send-email-hare@suse.de>
+Date: Fri, 07 Nov 2014 14:16:01 +0100
+Message-ID: <545CC611.6050703@suse.de>
+References: <1415364584-28951-1-git-send-email-hare@suse.de> <1415365740.27625.14.camel@jarvis.quadriga.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:57910 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbaKGNJG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 08:09:06 -0500
-In-Reply-To: <1415364584-28951-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <73CF01CB0A01C842A69E9830B8C5CF9B@sw.swsoft.com>
+Received: from cantor2.suse.de ([195.135.220.15]:48655 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751897AbaKGNQC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2014 08:16:02 -0500
+In-Reply-To: <1415365740.27625.14.camel@jarvis.quadriga.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
+To: James Bottomley <jbottomley@parallels.com>
 Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "g.liakhovetski@gmx.de" <g.liakhovetski@gmx.de>
 
-T24gRnJpLCAyMDE0LTExLTA3IGF0IDEzOjQ5ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IExvYWRpbmcgdGhlIHRtc2NzaW0gZHJpdmVyIHdvdWxkIHJlc3VsdCBpbiBrZXJuZWwgc3Bs
-YXQgYXMNCj4gdGhlIGludGVycnVwdCBzZXJ2aWNlIHJvdXRpbmUgd291bGQgb25seSB1c2Ugc3Bp
-bl9sb2NrX2lycSwNCj4gbm90IHNwaW5fbG9ja19pcnFzYXZlLg0KDQpJIGRvbid0IHVuZGVyc3Rh
-bmQgdGhlIHJlYXNvbmluZyAuLi4gd2hhdCBrZXJuZWwgc3BsYXQ/DQoNCkxpbnV4IHJ1bnMgaW50
-ZXJydXB0IHJvdXRpbmVzIHdpdGggaW50ZXJydXB0cyBlbmFibGVkLCBzbyB5b3Uga25vdyB0aGUN
-CmlycSBzdGF0ZSBvbiBlbnRyeTsgdGhhdCdzIHdoeSB5b3UgY2FuIGRvIHNwaW5fbG9ja19pcnEg
-Li4uIGJlY2F1c2UgeW91DQprbm93IGl0IHdhcyBlbmFibGVkIGJlZm9yZSBhbmQgbm93IGl0J3Mg
-ZGlzYWJsZWQuICBJdCBvbmx5IHNhdmVzIGENCmNvdXBsZSBvZiBpbnN0cnVjdGlvbnMsIHNvIHRo
-ZXJlJ3Mgbm8gcmVhbCBwb2ludCB1c2luZyBhIGRpZmZlcmVudA0KcGF0dGVybiwgYnV0IHRoZXJl
-J3Mgbm8gcmVhc29uIHRvIGNoYW5nZSBpdCBlaXRoZXIsIGJlY2F1c2UgaXQncw0KaGFybWxlc3Mg
-d2hlbiBkb25lIGNvcnJlY3RseS4NCg0KPiBBbmQgd2hpbGUgd2UncmUgYXQgaXQgdGhlcmUgaXMg
-bm90IG5lZWQgdG8gcmVsZWFzZSB0aGUNCj4gc3BpbiBsb2NrIHdoZW4gY2FsbGluZyB1ZGVsYXk7
-IGl0J3MgaW1wbGVtZW50ZWQgdmlhIGENCj4gcHJvY2Vzc29yIGNvdW50ZXIsIG5vdCB2aWEgaW50
-ZXJydXB0cy4NCg0KVGhhdCBsb29rcyBhIGJpdCBpbmNvcnJlY3Q6ICBUaGUgcG90ZW50aWFsIHRp
-bWVvdXQgaXMgamlmZmllcyArIEhaLCBpLmUuDQp1cCB0byAxIHNlY29uZCBvZiB1ZGVsYXkuICBJ
-ZiBpdCBkaWRuJ3QgZHJvcCBhbmQgcmV0YWtlIHRoZSBsb2NrIChhbmQNCmVuYWJsZSBpbnRlcnJ1
-cHRzKSwgaXQgd291bGQgc3BpbiB3aXRoIGludGVycnVwdHMgZGlzYWJsZWQgZm9yIHVwIHRvIGEN
-CnNlY29uZCAuLi4gd2l0aCBhbGwgdGhlIGJhZG5lc3MgdGhhdCB3b3VsZCByZXN1bHQgZnJvbSB0
-aGF0Lg0KDQpKYW1lcw0KDQo+IFNpZ25lZC1vZmYtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBz
-dXNlLmRlPg0KPiAtLS0NCj4gIGRyaXZlcnMvc2NzaS90bXNjc2ltLmMgfCAxNSArKysrKy0tLS0t
-LS0tLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygt
-KQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMgYi9kcml2ZXJzL3Nj
-c2kvdG1zY3NpbS5jDQo+IGluZGV4IDc2NDU3NTcuLjJhZWNkMmMgMTAwNjQ0DQo+IC0tLSBhL2Ry
-aXZlcnMvc2NzaS90bXNjc2ltLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYw0KPiBA
-QCAtNjU0LDYgKzY1NCw3IEBAIERDMzkwX0ludGVycnVwdCh2b2lkICpkZXZfaWQpDQo+ICAgICAg
-dTggIHBoYXNlOw0KPiAgICAgIHZvaWQgICAoKnN0YXRlVikoIHN0cnVjdCBkYzM5MF9hY2IqLCBz
-dHJ1Y3QgZGMzOTBfc3JiKiwgdTggKik7DQo+ICAgICAgdTggIGlzdGF0ZSwgaXN0YXR1czsNCj4g
-KyAgICB1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiAgDQo+ICAgICAgc3N0YXR1cyA9IERDMzkwX3Jl
-YWQ4IChTY3NpX1N0YXR1cyk7DQo+ICAgICAgaWYoICEoc3N0YXR1cyAmIElOVEVSUlVQVCkgKQ0K
-PiBAQCAtNjY1LDcgKzY2Niw3IEBAIERDMzkwX0ludGVycnVwdCh2b2lkICpkZXZfaWQpDQo+ICAg
-ICAgLy9kc3RhdHVzID0gREMzOTBfcmVhZDggKERNQV9TdGF0dXMpOw0KPiAgICAgIC8vREMzOTBf
-d3JpdGUzMiAoRE1BX1Njc2lCdXNDdHJsLCBFTl9JTlRfT05fUENJX0FCT1JUKTsNCj4gIA0KPiAt
-ICAgIHNwaW5fbG9ja19pcnEocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xvY2spOw0KPiArICAgIHNw
-aW5fbG9ja19pcnFzYXZlKHBBQ0ItPnBTY3NpSG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICAN
-Cj4gICAgICBpc3RhdGUgPSBEQzM5MF9yZWFkOCAoSW50ZXJuX1N0YXRlKTsNCj4gICAgICBpc3Rh
-dHVzID0gREMzOTBfcmVhZDggKElOVF9TdGF0dXMpOyAvKiBUaGlzIGNsZWFycyBTY3NpX1N0YXR1
-cywgSW50ZXJuX1N0YXRlIGFuZCBJTlRfU3RhdHVzICEgKi8NCj4gQEAgLTczNiw3ICs3MzcsNyBA
-QCBEQzM5MF9JbnRlcnJ1cHQodm9pZCAqZGV2X2lkKQ0KPiAgICAgIH0NCj4gIA0KPiAgIHVubG9j
-azoNCj4gLSAgICBzcGluX3VubG9ja19pcnEocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xvY2spOw0K
-PiArICAgIHNwaW5fdW5sb2NrX2lycXJlc3RvcmUocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xvY2ss
-IGZsYWdzKTsNCj4gICAgICByZXR1cm4gSVJRX0hBTkRMRUQ7DQo+ICB9DQo+ICANCj4gQEAgLTc3
-MCwxMSArNzcxLDggQEAgZGMzOTBfRGF0YU91dF8wKHN0cnVjdCBkYzM5MF9hY2IqIHBBQ0IsIHN0
-cnVjdCBkYzM5MF9zcmIqIHBTUkIsIHU4ICpwc3N0YXR1cykNCj4gIA0KPiAgCSAgICAvKiBGdW5j
-dGlvbiBjYWxsZWQgZnJvbSB0aGUgSVNSIHdpdGggdGhlIGhvc3RfbG9jayBoZWxkIGFuZCBpbnRl
-cnJ1cHRzIGRpc2FibGVkICovDQo+ICAJICAgIGlmIChwU1JCLT5TR1RvQmVYZmVyTGVuKQ0KPiAt
-CQl3aGlsZSAodGltZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkgJiYgISgoZHN0YXRlID0gREMz
-OTBfcmVhZDggKERNQV9TdGF0dXMpKSAmIERNQV9YRkVSX0RPTkUpKSB7DQo+IC0JCSAgICBzcGlu
-X3VubG9ja19pcnEocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xvY2spOw0KPiArCQl3aGlsZSAodGlt
-ZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkgJiYgISgoZHN0YXRlID0gREMzOTBfcmVhZDggKERN
-QV9TdGF0dXMpKSAmIERNQV9YRkVSX0RPTkUpKQ0KPiAgCQkgICAgdWRlbGF5KDUwKTsNCj4gLQkJ
-ICAgIHNwaW5fbG9ja19pcnEocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xvY2spOw0KPiAtCQl9DQo+
-ICAJICAgIGlmICghdGltZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkpDQo+ICAJCXByaW50ayAo
-S0VSTl9DUklUICJEQzM5MDogRGVhZGxvY2sgaW4gRGF0YU91dF8wOiBETUEgYWJvcnRlZCB1bmZp
-bmlzaGVkOiAlMDZ4IGJ5dGVzIHJlbWFpbiEhXG4iLA0KPiAgCQkJREMzOTBfcmVhZDMyIChETUFf
-V2tfQnl0ZUNudHIpKTsNCj4gQEAgLTgyOSwxMSArODI3LDggQEAgZGMzOTBfRGF0YUluXzAoc3Ry
-dWN0IGRjMzkwX2FjYiogcEFDQiwgc3RydWN0IGRjMzkwX3NyYiogcFNSQiwgdTggKnBzc3RhdHVz
-KQ0KPiAgDQo+ICAJICAgIC8qIEZ1bmN0aW9uIGNhbGxlZCBmcm9tIHRoZSBJU1Igd2l0aCB0aGUg
-aG9zdF9sb2NrIGhlbGQgYW5kIGludGVycnVwdHMgZGlzYWJsZWQgKi8NCj4gIAkgICAgaWYgKHBT
-UkItPlNHVG9CZVhmZXJMZW4pDQo+IC0JCXdoaWxlICh0aW1lX2JlZm9yZShqaWZmaWVzLCB0aW1l
-b3V0KSAmJiAhKChkc3RhdGUgPSBEQzM5MF9yZWFkOCAoRE1BX1N0YXR1cykpICYgRE1BX1hGRVJf
-RE9ORSkpIHsNCj4gLQkJICAgIHNwaW5fdW5sb2NrX2lycShwQUNCLT5wU2NzaUhvc3QtPmhvc3Rf
-bG9jayk7DQo+ICsJCXdoaWxlICh0aW1lX2JlZm9yZShqaWZmaWVzLCB0aW1lb3V0KSAmJiAhKChk
-c3RhdGUgPSBEQzM5MF9yZWFkOCAoRE1BX1N0YXR1cykpICYgRE1BX1hGRVJfRE9ORSkpDQo+ICAJ
-CSAgICB1ZGVsYXkoNTApOw0KPiAtCQkgICAgc3Bpbl9sb2NrX2lycShwQUNCLT5wU2NzaUhvc3Qt
-Pmhvc3RfbG9jayk7DQo+IC0JCX0NCj4gIAkgICAgaWYgKCF0aW1lX2JlZm9yZShqaWZmaWVzLCB0
-aW1lb3V0KSkgew0KPiAgCQlwcmludGsgKEtFUk5fQ1JJVCAiREMzOTA6IERlYWRsb2NrIGluIERh
-dGFJbl8wOiBETUEgYWJvcnRlZCB1bmZpbmlzaGVkOiAlMDZ4IGJ5dGVzIHJlbWFpbiEhXG4iLA0K
-PiAgCQkJREMzOTBfcmVhZDMyIChETUFfV2tfQnl0ZUNudHIpKTsNCg0K
+On 11/07/2014 02:09 PM, James Bottomley wrote:
+> On Fri, 2014-11-07 at 13:49 +0100, Hannes Reinecke wrote:
+>> Loading the tmscsim driver would result in kernel splat as
+>> the interrupt service routine would only use spin_lock_irq,
+>> not spin_lock_irqsave.
+>=20
+> I don't understand the reasoning ... what kernel splat?
+>
+
+This one:
+kernel: [   13.748186] ------------[ cut here ]------------
+kernel: [   13.748195] WARNING: CPU: 0 PID: 214 at
+kernel/irq/handle.c:147 handle_irq_event_percpu+0x18b/0x1a0()
+kernel: [   13.748200] irq 20 handler do_DC390_Interrupt+0x0/0x9d0
+[tmscsim] enabled interrupts
+kernel: [   13.748214] Modules linked in: crct10dif_pclmul
+crc32_pclmul ghash_clmulni_intel aesni_intel aes_x86_64 lrw gf128mul
+glue_helper bochs_drm(+) ttm ablk_helper drm_kms_helper pvpanic
+pcspkr cryptd drm tmscsim(+) serio_raw i2c_i801 syscopyarea
+sysfillrect lpc_ich mfd_core igbvf sysimgblt 8250_fintek processor
+thermal_sys button dm_mod efivarfs sr_mod cdrom btrfs xor raid6_pq
+sd_mod crc32c_intel ahci libahci libata megaraid_sas floppy sg autofs4
+kernel: [   13.748216] CPU: 0 PID: 214 Comm: kworker/0:1H Not
+tainted 3.18.0-rc2-default+ #104
+
+> Linux runs interrupt routines with interrupts enabled, so you know th=
+e
+> irq state on entry; that's why you can do spin_lock_irq ... because y=
+ou
+> know it was enabled before and now it's disabled.  It only saves a
+> couple of instructions, so there's no real point using a different
+> pattern, but there's no reason to change it either, because it's
+> harmless when done correctly.
+>=20
+
+Well, apparently it's not done correctly, then :-)
+I must admit is got the 'solution' off google, so I cannot vouch for
+the correctness here. The only thing I know is that with switching
+to the irqsave/irqrestore version the warning went away.
+
+>> And while we're at it there is not need to release the
+>> spin lock when calling udelay; it's implemented via a
+>> processor counter, not via interrupts.
+>=20
+> That looks a bit incorrect:  The potential timeout is jiffies + HZ, i=
+=2Ee.
+> up to 1 second of udelay.  If it didn't drop and retake the lock (and
+> enable interrupts), it would spin with interrupts disabled for up to =
+a
+> second ... with all the badness that would result from that.
+>=20
+Hmm. I could put them back in, but for completeness one would have
+to pass the irq flags taken in the outer routine to avoid lock
+imbalancing.
+
+Unless we manage to figure out the real reason for the above kernel
+splat, in which case we can leave things in.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
