@@ -1,117 +1,118 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/3] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
-Date: Fri,  7 Nov 2014 00:08:12 -0500
-Message-ID: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 3/3] block: Introduce blkdev_issue_zeroout_discard() function
+Date: Fri,  7 Nov 2014 00:08:14 -0500
+Message-ID: <1415336894-15327-4-git-send-email-martin.petersen@oracle.com>
 References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:21653 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbaKGFIe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 00:08:34 -0500
 In-Reply-To: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-List-Id: linux-scsi@vger.kernel.org
 
-As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
-Zero After Trim) flags in the ATA Command Set are unreliable in the
-sense that they only define what happens if the device successfully
-executed the DSM TRIM command. TRIM is only advisory, however, and the
-device is free to silently ignore all or parts of the request.
+blkdev_issue_discard() will zero a given block range on disk. This is
+done by way of either WRITE SAME or regular WRITE. I.e. the blocks on
+disk will be written and thus provisioned.
 
-In practice this renders the DRAT and RZAT flags completely useless and
-because the results are unpredictable we decided to disable discard in
-MD for 3.18 to avoid the risk of data corruption.
+There are use cases where the desired behavior is to zero the blocks but
+unprovision them if possible. The blocks must deterministically contain
+zeroes when they are subsequently read back.
 
-Hardware vendors in the real world obviously need better guarantees than
-what the standards bodies provide. Unfortuntely those guarantees are
-encoded in product requirements documents rather than somewhere we can
-key off of them programatically. So we are compelled to disabling
-discard_zeroes_data for all devices unless we explicitly have data to
-support whitelisting them.
-
-This patch whitelists SSDs from a few of the main vendors. None of the
-whitelists are based on written guarantees. They are purely based on
-empirical evidence collected from internal and external users that have
-tested or qualified these drives in RAID deployments.
-
-The whitelist is only meant as a starting point and is by no means
-comprehensive:
-
-   - All intel SSD models except for 510
-   - Micron M5*
-   - Samsung SSDs
-   - Seagate SSDs
+This patch introduces a blkdev_issue_zeroout_discard() call that
+provides this functionality. If a block device guarantees
+discard_zeroes_data the new function will use discard to clear the block
+range. If the device does not support discard_zeroes_data or if the
+discard request fails we will fall back to blkdev_issue_zeroout() to
+ensure predictable results.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/ata/libata-core.c | 18 ++++++++++++++----
- drivers/ata/libata-scsi.c | 10 ++++++----
- include/linux/libata.h    |  1 +
- 3 files changed, 21 insertions(+), 8 deletions(-)
+ block/blk-lib.c        | 44 ++++++++++++++++++++++++++++++++++++++++++--
+ include/linux/blkdev.h |  2 ++
+ 2 files changed, 44 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c5ba15af87d3..f41f24a8bc21 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4225,10 +4225,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 
- 	/* devices that don't properly handle queued TRIM commands */
--	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Micron_M550*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Crucial_CT*M550SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+	{ "Micron_M5?0*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial_CT???M5?0SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+
-+	/*
-+	 * DRAT/RZAT are weak guarantees. Explicitly black/whitelist
-+	 * SSDs that provide reliable zero after TRIM.
-+	 */
-+	{ "INTEL*SSDSC2MH*",		NULL,	0, }, /* Blacklist intel 510 */
-+	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "SAMSUNG*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "ST[1248][0248]0[FH]*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 
- 	/*
- 	 * Some WD SATA-I drives spin up and down erratically when the link
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0586f66d70fa..deaa6e34ed4d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2515,13 +2515,15 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 		rbuf[15] = lowest_aligned;
- 
- 		if (ata_id_has_trim(args->id)) {
--			rbuf[14] |= 0x80; /* TPE */
-+			rbuf[14] |= 0x80; /* LBPME */
- 
--			if (ata_id_has_zero_after_trim(args->id))
--				rbuf[14] |= 0x40; /* TPRZ */
-+			if (ata_id_has_zero_after_trim(args->id) &&
-+			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
-+				ata_dev_warn(dev, "Enabling discard_zeroes_data\n");
-+				rbuf[14] |= 0x40; /* LBPRZ */
-+			}
- 		}
- 	}
--
- 	return 0;
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 8411be3c19d3..2ffec6a01c71 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -278,14 +278,18 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
  }
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bd5fefeaf548..45ac825b8366 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -421,6 +421,7 @@ enum {
- 	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
- 	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
- 	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
-+	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
+ /**
+- * blkdev_issue_zeroout - zero-fill a block range
++ * blkdev_issue_zeroout - zero-fill and provision a block range
+  * @bdev:	blockdev to write
+  * @sector:	start sector
+  * @nr_sects:	number of sectors to write
+  * @gfp_mask:	memory allocation flags (for bio_alloc)
+  *
+  * Description:
+- *  Generate and issue number of bios with zerofiled pages.
++ *  Zero-fill a block range. The blocks will be provisioned
++ *  (allocated/anchored) and are guaranteed to return zeroes when read
++ *  back. This function will attempt to use WRITE SAME to optimize the
++ *  process if the block device supports it. Otherwise it will fall back
++ *  to zeroing the blocks using regular WRITE calls.
+  */
  
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
+ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+@@ -305,3 +309,39 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
+ }
+ EXPORT_SYMBOL(blkdev_issue_zeroout);
++
++/**
++ * blkdev_issue_zeroout_discard - zero-fill and attempt to discard block range
++ * @bdev:	blockdev to write
++ * @sector:	start sector
++ * @nr_sects:	number of sectors to write
++ * @gfp_mask:	memory allocation flags (for bio_alloc)
++ *
++ * Description:
++ *  Zero-fill a block range. In contrast to blkdev_issue_zeroout() this
++ *  function will attempt to deprovision (deallocate/discard) the blocks
++ *  in question. It will only do so if the underlying device guarantees
++ *  that subsequent READ operations to the block range in question will
++ *  return zeroes. If the device does not provide hard guarantees or if
++ *  the DISCARD attempt should fail the block range will be explicitly
++ *  zeroed using blkdev_issue_zeroout().
++ */
++
++int blkdev_issue_zeroout_discard(struct block_device *bdev, sector_t sector,
++				 sector_t nr_sects, gfp_t gfp_mask)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (blk_queue_discard(q) && q->limits.discard_zeroes_data) {
++		unsigned char bdn[BDEVNAME_SIZE];
++
++		if (!blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, 0))
++			return 0;
++
++		bdevname(bdev, bdn);
++		pr_err("%s: DISCARD failed. Manually zeroing.\n", bdn);
++	}
++
++	return blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
++}
++EXPORT_SYMBOL(blkdev_issue_zeroout_discard);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index aac0f9ea952a..078b6e5f488a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1164,6 +1164,8 @@ extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
+ extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 			sector_t nr_sects, gfp_t gfp_mask);
++extern int blkdev_issue_zeroout_discard(struct block_device *bdev,
++			sector_t sector, sector_t nr_sects, gfp_t gfp_mask);
+ static inline int sb_issue_discard(struct super_block *sb, sector_t block,
+ 		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
+ {
 -- 
 1.9.3
 
