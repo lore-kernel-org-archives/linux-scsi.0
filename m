@@ -1,30 +1,27 @@
-From: worley@alum.mit.edu (Dale R. Worley)
-Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
-Date: Fri, 7 Nov 2014 10:18:46 -0500
-Message-ID: <201411071518.sA7FIkLu031394@hobgoblin.ariadne.com>
-References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>	<yq1fvdwb3lq.fsf@sermon.lab.mkp.net> <545BC88A.7060706@windriver.com> <yq1zjc3ai4h.fsf@sermon.lab.mkp.net> <545C5A1B.9020206@windriver.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from resqmta-ch2-09v.sys.comcast.net ([69.252.207.41]:45665 "EHLO
-	resqmta-ch2-09v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751317AbaKGPSt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 10:18:49 -0500
-In-reply-to: <545C5A1B.9020206@windriver.com> (chris.friesen@windriver.com)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
+Date: Fri, 07 Nov 2014 10:37:43 -0500
+Message-ID: <yq1oasj9g3c.fsf@sermon.lab.mkp.net>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
+	<1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+	<20141107082406.GA8394@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20141107082406.GA8394@infradead.org> (Christoph Hellwig's
+	message of "Fri, 7 Nov 2014 00:24:06 -0800")
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Friesen <chris.friesen@windriver.com>
-Cc: martin.petersen@oracle.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, snitzer@redhat.com
 
-> From: Chris Friesen <chris.friesen@windriver.com>
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-> Also, I think it's wrong for filesystems and userspace to use it for 
-> alignment.  In E.4 and E.5 in the "sbc3r25.pdf" doc, it looks like they 
-> use the optimal granularity field for alignment, not the optimal 
-> transfer length.
+>> + ata_dev_warn(dev, "Enabling discard_zeroes_data\n");
 
-Everything you say suggests that "optimal transfer length" means
-"there is a penalty for doing transfers *larger* than this", but
-people have been treating it as "there is a penalty for doing
-transfers *smaller* than this".  But the latter is the "optimal
-transfer length granularity".
+Christoph> I think this should _info, not _warn.
 
-Dale
+Fixed.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
