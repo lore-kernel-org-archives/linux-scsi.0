@@ -1,82 +1,117 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/3] sd: Disable discard_zeroes_data for UNMAP
-Date: Fri,  7 Nov 2014 00:08:13 -0500
-Message-ID: <1415336894-15327-3-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 1/3] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
+Date: Fri,  7 Nov 2014 00:08:12 -0500
+Message-ID: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
 References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The T10 SBC UNMAP command does not provide any hard guarantees that
-blocks will return zeroes on a subsequent READ. This is due to the fact
-that the device server is free to silently ignore all or parts of the
-request.
+As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
+Zero After Trim) flags in the ATA Command Set are unreliable in the
+sense that they only define what happens if the device successfully
+executed the DSM TRIM command. TRIM is only advisory, however, and the
+device is free to silently ignore all or parts of the request.
 
-The only way to ensure that a block consistently returns zeroes after
-being unmapped is to use WRITE SAME with the UNMAP bit set. Should the
-device be unable to unmap one or more blocks described by the command it
-is required to manually write zeroes to them.
+In practice this renders the DRAT and RZAT flags completely useless and
+because the results are unpredictable we decided to disable discard in
+MD for 3.18 to avoid the risk of data corruption.
 
-Until now we have preferred UNMAP over the WRITE SAME variants to
-accommodate thinly provisioned devices that predated the final SBC-3
-spec. This patch changes the heuristic so that we favor WRITE SAME(16)
-or (10) over UNMAP if these commands are marked as supported in the
-Logical Block Provisioning VPD page.
+Hardware vendors in the real world obviously need better guarantees than
+what the standards bodies provide. Unfortuntely those guarantees are
+encoded in product requirements documents rather than somewhere we can
+key off of them programatically. So we are compelled to disabling
+discard_zeroes_data for all devices unless we explicitly have data to
+support whitelisting them.
 
-The patch also disables discard_zeroes_data for devices operating in
-UNMAP mode.
+This patch whitelists SSDs from a few of the main vendors. None of the
+whitelists are based on written guarantees. They are purely based on
+empirical evidence collected from internal and external users that have
+tested or qualified these drives in RAID deployments.
+
+The whitelist is only meant as a starting point and is by no means
+comprehensive:
+
+   - All intel SSD models except for 510
+   - Micron M5*
+   - Samsung SSDs
+   - Seagate SSDs
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c | 18 ++++++++++++++----
+ drivers/ata/libata-scsi.c | 10 ++++++----
+ include/linux/libata.h    |  1 +
+ 3 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b041eca8955d..95bfb7bfbb9d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -656,7 +656,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	unsigned int logical_block_size = sdkp->device->sector_size;
- 	unsigned int max_blocks = 0;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c5ba15af87d3..f41f24a8bc21 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4225,10 +4225,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
  
--	q->limits.discard_zeroes_data = sdkp->lbprz;
-+	q->limits.discard_zeroes_data = 0;
- 	q->limits.discard_alignment = sdkp->unmap_alignment *
- 		logical_block_size;
- 	q->limits.discard_granularity =
-@@ -680,11 +680,13 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	case SD_LBP_WS16:
- 		max_blocks = min_not_zero(sdkp->max_ws_blocks,
- 					  (u32)SD_MAX_WS16_BLOCKS);
-+		q->limits.discard_zeroes_data = sdkp->lbprz;
- 		break;
+ 	/* devices that don't properly handle queued TRIM commands */
+-	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Micron_M550*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Crucial_CT*M550SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Micron_M5?0*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "Crucial_CT???M5?0SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
++
++	/*
++	 * DRAT/RZAT are weak guarantees. Explicitly black/whitelist
++	 * SSDs that provide reliable zero after TRIM.
++	 */
++	{ "INTEL*SSDSC2MH*",		NULL,	0, }, /* Blacklist intel 510 */
++	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "SAMSUNG*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "ST[1248][0248]0[FH]*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
  
- 	case SD_LBP_WS10:
- 		max_blocks = min_not_zero(sdkp->max_ws_blocks,
- 					  (u32)SD_MAX_WS10_BLOCKS);
-+		q->limits.discard_zeroes_data = sdkp->lbprz;
- 		break;
+ 	/*
+ 	 * Some WD SATA-I drives spin up and down erratically when the link
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0586f66d70fa..deaa6e34ed4d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2515,13 +2515,15 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+ 		rbuf[15] = lowest_aligned;
  
- 	case SD_LBP_ZERO:
-@@ -2622,12 +2624,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 		if (ata_id_has_trim(args->id)) {
+-			rbuf[14] |= 0x80; /* TPE */
++			rbuf[14] |= 0x80; /* LBPME */
  
- 		} else {	/* LBP VPD page tells us what to use */
- 
--			if (sdkp->lbpu && sdkp->max_unmap_blocks)
--				sd_config_discard(sdkp, SD_LBP_UNMAP);
--			else if (sdkp->lbpws)
-+			if (sdkp->lbpws)
- 				sd_config_discard(sdkp, SD_LBP_WS16);
- 			else if (sdkp->lbpws10)
- 				sd_config_discard(sdkp, SD_LBP_WS10);
-+			else if (sdkp->lbpu && sdkp->max_unmap_blocks)
-+				sd_config_discard(sdkp, SD_LBP_UNMAP);
- 			else
- 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+-			if (ata_id_has_zero_after_trim(args->id))
+-				rbuf[14] |= 0x40; /* TPRZ */
++			if (ata_id_has_zero_after_trim(args->id) &&
++			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
++				ata_dev_warn(dev, "Enabling discard_zeroes_data\n");
++				rbuf[14] |= 0x40; /* LBPRZ */
++			}
  		}
+ 	}
+-
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index bd5fefeaf548..45ac825b8366 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -421,6 +421,7 @@ enum {
+ 	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
+ 	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
+ 	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
++	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
+ 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
 -- 
 1.9.3
 
