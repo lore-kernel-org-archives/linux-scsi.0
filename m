@@ -1,376 +1,124 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v2 22/36] atari_scsi: Fix atari_scsi deadlocks on Falcon
-Date: Sat, 08 Nov 2014 07:08:21 +1300
-Message-ID: <545D0A95.3000105@gmail.com>
-References: <20141027052607.105914311@telegraphics.com.au> <20141027052612.445434791@telegraphics.com.au>
+From: Chris Friesen <chris.friesen@windriver.com>
+Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
+Date: Fri, 7 Nov 2014 12:48:31 -0600
+Message-ID: <545D13FF.6090306@windriver.com>
+References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>	<yq1fvdwb3lq.fsf@sermon.lab.mkp.net> <545BC88A.7060706@windriver.com>	<yq1zjc3ai4h.fsf@sermon.lab.mkp.net> <545C5A1B.9020206@windriver.com> <yq1bnoj9dvu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20141027052612.445434791@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1bnoj9dvu.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn
-> Changes since v1:
-> - Use Geert's suggestion for simpler stdma_is_locked_by() implementation.
->
-> ---
->   arch/m68k/atari/stdma.c             |   61 ++++++++++++++++++----------
->   arch/m68k/include/asm/atari_stdma.h |    4 -
->   drivers/scsi/atari_NCR5380.c        |   35 +++++-----------
->   drivers/scsi/atari_scsi.c           |   76 +++++++-----------------------------
->   4 files changed, 69 insertions(+), 107 deletions(-)
->
-> Index: linux/arch/m68k/atari/stdma.c
-> ===================================================================
-> --- linux.orig/arch/m68k/atari/stdma.c	2014-10-27 16:17:59.000000000 +1100
-> +++ linux/arch/m68k/atari/stdma.c	2014-10-27 16:25:45.000000000 +1100
-> @@ -59,6 +59,31 @@ static irqreturn_t stdma_int (int irq, v
->   /************************* End of Prototypes **************************/
->   
->   
-> +/**
-> + * stdma_try_lock - attempt to acquire ST DMA interrupt "lock"
-> + * @handler: interrupt handler to use after acquisition
-> + *
-> + * Returns !0 if lock was acquired; otherwise 0.
-> + */
-> +
-> +int stdma_try_lock(irq_handler_t handler, void *data)
-> +{
-> +	unsigned long flags;
-> +
-> +	local_irq_save(flags);
-> +	if (stdma_locked) {
-> +		local_irq_restore(flags);
-> +		return 0;
-> +	}
-> +
-> +	stdma_locked   = 1;
-> +	stdma_isr      = handler;
-> +	stdma_isr_data = data;
-> +	local_irq_restore(flags);
-> +	return 1;
-> +}
-> +EXPORT_SYMBOL(stdma_try_lock);
-> +
->   
->   /*
->    * Function: void stdma_lock( isrfunc isr, void *data )
-> @@ -78,19 +103,10 @@ static irqreturn_t stdma_int (int irq, v
->   
->   void stdma_lock(irq_handler_t handler, void *data)
->   {
-> -	unsigned long flags;
-> -
-> -	local_irq_save(flags);		/* protect lock */
-> -
->   	/* Since the DMA is used for file system purposes, we
->   	 have to sleep uninterruptible (there may be locked
->   	 buffers) */
-> -	wait_event(stdma_wait, !stdma_locked);
-> -
-> -	stdma_locked   = 1;
-> -	stdma_isr      = handler;
-> -	stdma_isr_data = data;
-> -	local_irq_restore(flags);
-> +	wait_event(stdma_wait, stdma_try_lock(handler, data));
->   }
->   EXPORT_SYMBOL(stdma_lock);
->   
-> @@ -122,22 +138,25 @@ void stdma_release(void)
->   EXPORT_SYMBOL(stdma_release);
->   
->   
-> -/*
-> - * Function: int stdma_others_waiting( void )
-> - *
-> - * Purpose: Check if someone waits for the ST-DMA lock.
-> - *
-> - * Inputs: none
-> - *
-> - * Returns: 0 if no one is waiting, != 0 otherwise
-> +/**
-> + * stdma_is_locked_by - allow lock holder to check whether it needs to release.
-> + * @handler: interrupt handler previously used to acquire lock.
->    *
-> + * Returns !0 if locked for the given handler; 0 otherwise.
->    */
->   
-> -int stdma_others_waiting(void)
-> +int stdma_is_locked_by(irq_handler_t handler)
->   {
-> -	return waitqueue_active(&stdma_wait);
-> +	unsigned long flags;
-> +	int result;
-> +
-> +	local_irq_save(flags);
-> +	result = stdma_locked && (stdma_isr == handler);
-> +	local_irq_restore(flags);
-> +
-> +	return result;
->   }
-> -EXPORT_SYMBOL(stdma_others_waiting);
-> +EXPORT_SYMBOL(stdma_is_locked_by);
->   
->   
->   /*
-> Index: linux/arch/m68k/include/asm/atari_stdma.h
-> ===================================================================
-> --- linux.orig/arch/m68k/include/asm/atari_stdma.h	2014-10-27 16:17:59.000000000 +1100
-> +++ linux/arch/m68k/include/asm/atari_stdma.h	2014-10-27 16:25:45.000000000 +1100
-> @@ -8,11 +8,11 @@
->   
->   /***************************** Prototypes *****************************/
->   
-> +int stdma_try_lock(irq_handler_t, void *);
->   void stdma_lock(irq_handler_t handler, void *data);
->   void stdma_release( void );
-> -int stdma_others_waiting( void );
->   int stdma_islocked( void );
-> -void *stdma_locked_by( void );
-> +int stdma_is_locked_by(irq_handler_t);
->   void stdma_init( void );
->   
->   /************************* End of Prototypes **************************/
+On 11/07/2014 10:25 AM, Martin K. Petersen wrote:
+>>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
+> 
+> Chris,
+> 
+> Chris> Also, I think it's wrong for filesystems and userspace to use it
+> Chris> for alignment.  In E.4 and E.5 in the "sbc3r25.pdf" doc, it looks
+> Chris> like they use the optimal granularity field for alignment, not
+> Chris> the optimal transfer length.
+> 
+> The original rationale behind the OTLG and OTL values was to be able to
+> express stripe chunk size and stripe width. And to encourage aligned,
+> full stripe writes but nothing bigger than that. Obviously the wording
+> went through the usual standards body process to be vague/generic enough
+> to be used for anything. It has changed several times since sbc3r25,
+> btw.
 
-Acked-by: Michael Schmitz <schmitz@debian.org>
+You've obviously been involved in this area a lot more closely than me,
+so I'll defer to your experience. :)
 
-> Index: linux/drivers/scsi/atari_NCR5380.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:36.000000000 +1100
-> +++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:45.000000000 +1100
-> @@ -879,10 +879,10 @@ static void NCR5380_exit(struct Scsi_Hos
->    *
->    */
->   
-> -static int NCR5380_queue_command_lck(struct scsi_cmnd *cmd,
-> -                                     void (*done)(struct scsi_cmnd *))
-> +static int NCR5380_queue_command(struct Scsi_Host *instance,
-> +                                 struct scsi_cmnd *cmd)
->   {
-> -	SETUP_HOSTDATA(cmd->device->host);
-> +	struct NCR5380_hostdata *hostdata = shost_priv(instance);
->   	struct scsi_cmnd *tmp;
->   	unsigned long flags;
-
-Nitpick - why did this change set go into this particular patch? Because 
-you are converting from NCR5380_queue_command_lck to NCR5380_queue_command?
-
->   
-> @@ -893,7 +893,7 @@ static int NCR5380_queue_command_lck(str
->   		printk(KERN_NOTICE "scsi%d: WRITE attempted with NO_WRITE debugging flag set\n",
->   		       H_NO(cmd));
->   		cmd->result = (DID_ERROR << 16);
-> -		done(cmd);
-> +		cmd->scsi_done(cmd);
->   		return 0;
->   	}
->   #endif /* (NDEBUG & NDEBUG_NO_WRITE) */
-> @@ -904,8 +904,6 @@ static int NCR5380_queue_command_lck(str
->   	 */
->   
->   	SET_NEXT(cmd, NULL);
-> -	cmd->scsi_done = done;
-> -
->   	cmd->result = 0;
->   
->   	/*
-
-Ditto for these two.
-
-> @@ -915,7 +913,6 @@ static int NCR5380_queue_command_lck(str
->   	 * sense data is only guaranteed to be valid while the condition exists.
->   	 */
->   
-> -	local_irq_save(flags);
->   	/* ++guenther: now that the issue queue is being set up, we can lock ST-DMA.
->   	 * Otherwise a running NCR5380_main may steal the lock.
->   	 * Lock before actually inserting due to fairness reasons explained in
-> @@ -928,11 +925,13 @@ static int NCR5380_queue_command_lck(str
->   	 * because also a timer int can trigger an abort or reset, which would
->   	 * alter queues and touch the lock.
->   	 */
-> -	if (!IS_A_TT()) {
-> -		/* perhaps stop command timer here */
-> -		falcon_get_lock();
-> -		/* perhaps restart command timer here */
-> -	}
-> +	/* perhaps stop command timer here */
-> +	if (!falcon_get_lock())
-> +		return SCSI_MLQUEUE_HOST_BUSY;
-> +	/* perhaps restart command timer here */
-> +
-
-The comments about stopping and restarting the command timer can be 
-removed. In 2.4 kernels, the driver would tweak the timers and wait on 
-the lock unconditionally, Can't ne done anymore, for so many reasons.
+I think that if that's the intended use case, then the spec wording could
+be improved.  Looking at "sbc3r36.pdf", it still only explicitly mentions
+performance penalties for transfers that are larger than the "optimal
+transfer length", not for transfers that are smaller.
 
 
-> +	local_irq_save(flags);
-> +
->   	if (!(hostdata->issue_queue) || (cmd->cmnd[0] == REQUEST_SENSE)) {
->   		LIST(cmd, hostdata->issue_queue);
->   		SET_NEXT(cmd, hostdata->issue_queue);
-> @@ -956,15 +955,13 @@ static int NCR5380_queue_command_lck(str
->   	 * If we're not in an interrupt, we can call NCR5380_main()
->   	 * unconditionally, because it cannot be already running.
->   	 */
-> -	if (in_interrupt() || ((flags >> 8) & 7) >= 6)
-> +	if (in_interrupt() || irqs_disabled())
->   		queue_main();
->   	else
->   		NCR5380_main(NULL);
->   	return 0;
->   }
->   
-> -static DEF_SCSI_QCMD(NCR5380_queue_command)
-> -
->   /*
->    * Function : NCR5380_main (void)
->    *
-> @@ -2555,10 +2552,6 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
->   
->   	local_irq_save(flags);
->   
-> -	if (!IS_A_TT() && !falcon_got_lock)
-> -		printk(KERN_ERR "scsi%d: !!BINGO!! Falcon has no lock in NCR5380_abort\n",
-> -		       HOSTNO);
-> -
->   	dprintk(NDEBUG_ABORT, "scsi%d: abort called basr 0x%02x, sr 0x%02x\n", HOSTNO,
->   		    NCR5380_read(BUS_AND_STATUS_REG),
->   		    NCR5380_read(STATUS_REG));
-> @@ -2757,10 +2750,6 @@ static int NCR5380_bus_reset(struct scsi
->   	struct scsi_cmnd *connected, *disconnected_queue;
->   #endif
->   
-> -	if (!IS_A_TT() && !falcon_got_lock)
-> -		printk(KERN_ERR "scsi%d: !!BINGO!! Falcon has no lock in NCR5380_reset\n",
-> -		       H_NO(cmd));
-> -
->   	NCR5380_print_status(cmd->device->host);
->   
->   	/* get in phase */
-> Index: linux/drivers/scsi/atari_scsi.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/atari_scsi.c	2014-10-27 16:25:36.000000000 +1100
-> +++ linux/drivers/scsi/atari_scsi.c	2014-10-27 16:25:45.000000000 +1100
-> @@ -184,7 +184,7 @@ static void atari_scsi_fetch_restbytes(v
->   static irqreturn_t scsi_tt_intr(int irq, void *dummy);
->   static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
->   static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata);
-> -static void falcon_get_lock(void);
-> +static int falcon_get_lock(void);
->   #ifdef CONFIG_ATARI_SCSI_RESET_BOOT
->   static void atari_scsi_reset_boot(void);
->   #endif
-> @@ -473,17 +473,10 @@ static void atari_scsi_fetch_restbytes(v
->   #endif /* REAL_DMA */
->   
->   
-> -static int falcon_got_lock = 0;
-> -static DECLARE_WAIT_QUEUE_HEAD(falcon_fairness_wait);
-> -static int falcon_trying_lock = 0;
-> -static DECLARE_WAIT_QUEUE_HEAD(falcon_try_wait);
->   static int falcon_dont_release = 0;
->   
->   /* This function releases the lock on the DMA chip if there is no
-> - * connected command and the disconnected queue is empty. On
-> - * releasing, instances of falcon_get_lock are awoken, that put
-> - * themselves to sleep for fairness. They can now try to get the lock
-> - * again (but others waiting longer more probably will win).
-> + * connected command and the disconnected queue is empty.
->    */
->   
->   static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata)
-> @@ -495,20 +488,12 @@ static void falcon_release_lock_if_possi
->   
->   	local_irq_save(flags);
->   
-> -	if (falcon_got_lock && !hostdata->disconnected_queue &&
-> -	    !hostdata->issue_queue && !hostdata->connected) {
-> -
-> -		if (falcon_dont_release) {
-> -#if 0
-> -			printk("WARNING: Lock release not allowed. Ignored\n");
-> -#endif
-> -			local_irq_restore(flags);
-> -			return;
-> -		}
-> -		falcon_got_lock = 0;
-> +	if (!hostdata->disconnected_queue &&
-> +	    !hostdata->issue_queue &&
-> +	    !hostdata->connected &&
-> +	    !falcon_dont_release &&
-> +	    stdma_is_locked_by(scsi_falcon_intr))
->   		stdma_release();
-> -		wake_up(&falcon_fairness_wait);
-> -	}
->   
->   	local_irq_restore(flags);
->   }
-> @@ -517,51 +502,20 @@ static void falcon_release_lock_if_possi
->    * If the DMA isn't locked already for SCSI, it tries to lock it by
->    * calling stdma_lock(). But if the DMA is locked by the SCSI code and
->    * there are other drivers waiting for the chip, we do not issue the
-> - * command immediately but wait on 'falcon_fairness_queue'. We will be
-> - * waked up when the DMA is unlocked by some SCSI interrupt. After that
-> - * we try to get the lock again.
-> - * But we must be prepared that more than one instance of
-> - * falcon_get_lock() is waiting on the fairness queue. They should not
-> - * try all at once to call stdma_lock(), one is enough! For that, the
-> - * first one sets 'falcon_trying_lock', others that see that variable
-> - * set wait on the queue 'falcon_try_wait'.
-> - * Complicated, complicated.... Sigh...
-> + * command immediately but tell the SCSI mid-layer to defer.
->    */
->   
-> -static void falcon_get_lock(void)
-> +static int falcon_get_lock(void)
->   {
-> -	unsigned long flags;
-> -
->   	if (IS_A_TT())
-> -		return;
-> +		return 1;
->   
-> -	local_irq_save(flags);
-> -
-> -	wait_event_cmd(falcon_fairness_wait,
-> -		in_interrupt() || !falcon_got_lock || !stdma_others_waiting(),
-> -		local_irq_restore(flags),
-> -		local_irq_save(flags));
-> -
-> -	while (!falcon_got_lock) {
-> -		if (in_irq())
-> -			panic("Falcon SCSI hasn't ST-DMA lock in interrupt");
-> -		if (!falcon_trying_lock) {
-> -			falcon_trying_lock = 1;
-> -			stdma_lock(scsi_falcon_intr, NULL);
-> -			falcon_got_lock = 1;
-> -			falcon_trying_lock = 0;
-> -			wake_up(&falcon_try_wait);
-> -		} else {
-> -			wait_event_cmd(falcon_try_wait,
-> -				falcon_got_lock && !falcon_trying_lock,
-> -				local_irq_restore(flags),
-> -				local_irq_save(flags));
-> -		}
-> +	if (in_interrupt()) {
-> +		return stdma_try_lock(scsi_falcon_intr, NULL);
-> +	} else {
-> +		stdma_lock(scsi_falcon_intr, NULL);
-> +		return 1;
->   	}
-> -
-> -	local_irq_restore(flags);
-> -	if (!falcon_got_lock)
-> -		panic("Falcon SCSI: someone stole the lock :-(\n");
->   }
->   
->   
->
->
+
+On 11/07/2014 12:03 PM, Martin K. Petersen wrote:
+>>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
+> 
+> Chris> Apparently there's a new firmware available, dated Oct 13 but
+> Chris> with no release notes.  We just tried updating the firmware on
+> Chris> one of the drives in question and it failed from two different
+> Chris> versions of linux,
+> 
+> Did you use sg_write_buffer or some special firmware update tool?
+
+Both.  I didn't do it myself, but the guy who did sent me the following:
+
+
+localhost:~$ ./dl_sea_fw-0.2.3_64 -m ST900MM0026 -d /dev/sda -f Lightningbug10K6-SED-0003.LOD 
+================================================================================
+ Seagate Firmware Download Utility v0.2.3 Build Date: Jan  9 2013
+ Copyright (c) 2012 Seagate Technology LLC, All Rights Reserved
+ Fri Nov  7 14:51:21 2014
+================================================================================
+Downloading file Lightningbug10K6-SED-0003.LOD to /dev/sda
+send_io: Input/output error
+send_io: Input/output error
+ !
+FW Download FAILED
+
+
+This log is from a different system running Debian:
+
+ root@bricklane-2:/home/cgcs# sg_write_buffer -vvv --in=Lightningbug10K6-SED-0003.LOD --length=1752576 --mode=5 /dev/sdb
+
+open /dev/sdb with flags=0x802
+
+sending single write buffer, mode=0x5, mpsec=0, id=0, offset=0, len=1752576
+
+    Write buffer cmd: 3b 05 00 00 00 00 1a be 00 00 
+
+    Write buffer parameter list (first 256 bytes):
+
+e7 1a 0e 59 01 00 02 00  00 00 00 00 00 00 19 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 be 1a 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 d5 cd
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 07 00
+
+80 01 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 bc 1a 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 5f 42
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+
+ioctl(SG_IO v3) failed: Invalid argument (errno=22)
+
+write buffer: pass through os error: Invalid argument
+
+Write buffer failed: Sense category: -1, try '-v' option for more information
+
+
+Apparently the "hdparm -I" command is giving bogus data as well.
+I've seen that happen if the drive is on a RAID controller--I assume
+that could cause problems with firmware updates too?
+
+Chris
