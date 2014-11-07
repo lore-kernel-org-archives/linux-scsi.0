@@ -1,47 +1,46 @@
-From: Andras Kovacs <akovacs@fixstars.com>
-Subject: UNMAP command parameter list
-Date: Fri, 7 Nov 2014 23:30:00 +0000 (UTC)
-Message-ID: <loom.20141108T001847-741@post.gmane.org>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: blk_mq: suspicious RCU usage, rcu_read_lock() used illegally
+ while idle!
+Date: Fri, 7 Nov 2014 15:42:27 -0800
+Message-ID: <20141107234227.GD4901@linux.vnet.ibm.com>
+References: <20141106171110.GJ5718@linux.vnet.ibm.com>
+ <alpine.LRH.2.11.1411071221560.9943@siim2.ut.ee>
+ <20141107150628.GB4901@linux.vnet.ibm.com>
+ <20141107.124558.1965251829673123349.davem@davemloft.net>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50947 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247AbaKGXkH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2014 18:40:07 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1Xmt8O-0007lc-Nh
-	for linux-scsi@vger.kernel.org; Sat, 08 Nov 2014 00:40:05 +0100
-Received: from S0106602ad06f2965.gv.shawcable.net ([24.68.136.144])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Nov 2014 00:40:04 +0100
-Received: from akovacs by S0106602ad06f2965.gv.shawcable.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Nov 2014 00:40:04 +0100
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20141107.124558.1965251829673123349.davem@davemloft.net>
+Sender: sparclinux-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: mroos@linux.ee, hch@infradead.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+On Fri, Nov 07, 2014 at 12:45:58PM -0500, David Miller wrote:
+> From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+> Date: Fri, 7 Nov 2014 07:06:28 -0800
+> 
+> > On Fri, Nov 07, 2014 at 12:50:02PM +0200, Meelis Roos wrote:
+> >> Perhaps DaveM can tell which one is coreect or if there is any related 
+> >> problem.
+> > 
+> > Happy to push either of them along, if appropriate.
+> 
+> We should use irq_enter()/irq_exit(), and we need to also add it to
+> smp_call_function_single_client().
+> 
+> I'll code up a final patch for sparc64 and push it upstream, thanks!
 
-  Hi all,
+Even better!  ;-)
 
-  I'm trying to see what parameters are passed to the UFS driver from the
-SCSI midlayer when an UNMAP command is issued. In the UFS driver I can see
-the 10 byte command itself in the unsigned char *cmnd field of the struct
-scsi_cmnd, and it tells me that the parameter list length is 24 bytes (an 8
-byte UNMAP Parameter List header followed by one 16 byte long UNMAP Block
-Descriptor), but I'm having trouble finding where this UNMAP Parameter List
-is. It doesn't seem to be in the cmnd[] byte array after the UNMAP command
-itself.
+> Some other architectures appear to have the same problem, for example
+> alpha and IA64.  Someone should grep around generic_smp_call_function*
+> under arch/ and do an audit.
 
-  Can anyone tell me where I can find the UNMAP Parameter List which belongs
-to a particular UNMAP command?
+I will send something along in a couple days if someone else doesn't
+beat me to it.  ;-)
 
-  Any and all info would be greatly appreciated.
-
-  Andras
-
+							Thanx, Paul
 
