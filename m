@@ -1,46 +1,60 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: blk_mq: suspicious RCU usage, rcu_read_lock() used illegally
- while idle!
-Date: Fri, 7 Nov 2014 15:42:27 -0800
-Message-ID: <20141107234227.GD4901@linux.vnet.ibm.com>
-References: <20141106171110.GJ5718@linux.vnet.ibm.com>
- <alpine.LRH.2.11.1411071221560.9943@siim2.ut.ee>
- <20141107150628.GB4901@linux.vnet.ibm.com>
- <20141107.124558.1965251829673123349.davem@davemloft.net>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: UNMAP command parameter list
+Date: Fri, 7 Nov 2014 23:57:08 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295937B4CE@G4W3202.americas.hpqcorp.net>
+References: <loom.20141108T001847-741@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141107.124558.1965251829673123349.davem@davemloft.net>
-Sender: sparclinux-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: mroos@linux.ee, hch@infradead.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:5648 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704AbaKGX7L convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 18:59:11 -0500
+In-Reply-To: <loom.20141108T001847-741@post.gmane.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andras Kovacs <akovacs@fixstars.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Nov 07, 2014 at 12:45:58PM -0500, David Miller wrote:
-> From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-> Date: Fri, 7 Nov 2014 07:06:28 -0800
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Andras Kovacs
+> Sent: Friday, 07 November, 2014 5:30 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: UNMAP command parameter list
 > 
-> > On Fri, Nov 07, 2014 at 12:50:02PM +0200, Meelis Roos wrote:
-> >> Perhaps DaveM can tell which one is coreect or if there is any related 
-> >> problem.
-> > 
-> > Happy to push either of them along, if appropriate.
 > 
-> We should use irq_enter()/irq_exit(), and we need to also add it to
-> smp_call_function_single_client().
+>   Hi all,
 > 
-> I'll code up a final patch for sparc64 and push it upstream, thanks!
+>   I'm trying to see what parameters are passed to the UFS driver from the
+> SCSI midlayer when an UNMAP command is issued. In the UFS driver I can see
+> the 10 byte command itself in the unsigned char *cmnd field of the struct
+> scsi_cmnd, and it tells me that the parameter list length is 24 bytes (an 8
+> byte UNMAP Parameter List header followed by one 16 byte long UNMAP Block
+> Descriptor), but I'm having trouble finding where this UNMAP Parameter List
+> is. It doesn't seem to be in the cmnd[] byte array after the UNMAP
+> command itself.
+> 
+>   Can anyone tell me where I can find the UNMAP Parameter List which
+> belongs to a particular UNMAP command?
+> 
+>   Any and all info would be greatly appreciated.
+> 
+>   Andras
 
-Even better!  ;-)
+That is the data transferred for the command, not in the
+command descriptor block itself.
 
-> Some other architectures appear to have the same problem, for example
-> alpha and IA64.  Someone should grep around generic_smp_call_function*
-> under arch/ and do an audit.
+Typical T10 terminology is:
+* parameter list = data-out buffer (i.e., write data)
+* parameter data = data-in buffer (i.e., read data)
 
-I will send something along in a couple days if someone else doesn't
-beat me to it.  ;-)
 
-							Thanx, Paul
+---
+Rob Elliott    HP Server Storage
+
+
 
