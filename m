@@ -1,79 +1,57 @@
-From: Chris Friesen <chris.friesen@windriver.com>
-Subject: Re: absurdly high "optimal_io_size" on Seagate SAS disk
-Date: Thu, 6 Nov 2014 23:35:23 -0600
-Message-ID: <545C5A1B.9020206@windriver.com>
-References: <545BA625.40308@windriver.com> <545BAD05.3050800@windriver.com>	<yq1k338b5d5.fsf@sermon.lab.mkp.net> <545BB3AB.8070409@windriver.com>	<yq1fvdwb3lq.fsf@sermon.lab.mkp.net> <545BC88A.7060706@windriver.com> <yq1zjc3ai4h.fsf@sermon.lab.mkp.net>
+From: =?big5?B?Q2hhcmxlcyBDaGlvdSAtIFBUVCCq9MP83rM=?=
+	<charles.chiou@tw.promise.com>
+Subject: [PATCH 1/4] scsi:stex.c Support to Pegasus series.
+Date: Fri, 7 Nov 2014 15:37:38 +0800
+Message-ID: <28E32C4AE8987D4FAF847BD2DAE400E361630C00E2@ptt-ex02.promise.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1zjc3ai4h.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+Content-Type: text/plain; charset="big5"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailgw.tw.promise.com ([61.222.81.250]:51700 "HELO
+	mailgw.promise.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750993AbaKGHhu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 02:37:50 -0500
+Content-Language: zh-TW
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <jbottomley@parallels.com>
 
-On 11/06/2014 07:56 PM, Martin K. Petersen wrote:
->>>>>> "Chris" == Chris Friesen <chris.friesen@windriver.com> writes:
->
-> Chris,
->
-> Chris> For a RAID card I expect it would be related to chunk size or
-> Chris> stripe width or something...but even then I would expect to be
-> Chris> able to cap it at 100MB or so.  Or are there storage systems on
-> Chris> really fast interfaces that could legitimately want a hundred meg
-> Chris> of data at a time?
->
-> Well, there are several devices that report their capacity to indicate
-> that they don't suffer any performance (RMW) penalties for large
-> commands regardless of size. I would personally prefer them to report 0
-> in that case.
-
-I got curious and looked at the spec at 
-"http://www.13thmonkey.org/documentation/SCSI/sbc3r25.pdf".  I'm now 
-wondering if maybe linux is misbehaving.
-
-I think there is actually some justification for putting a huge value in 
-the "optimal transfer length" field.  That field is described as "the 
-optimal transfer length in blocks for a single...command", but then 
-later it has "If a device server receives a request with a transfer 
-length exceeding this value, then a significant delay in processing the 
-request may be incurred."  As written, it is ambiguous.
-
-Looking at "ftp://ftp.t10.org/t10/document.03/03-028r2.pdf" it appears 
-that originally that field was the "optimal maximum transfer length", 
-not the "optimal transfer length".  It appears that the intent was that 
-the device was able to take requests up to the "maximum transfer 
-length", but there would be a performance penalty if you went over the 
-"optimum maximum transfer length".
-
-Section E.4 in "sbc3r25.pdf" talks about optimizing transfers.  They 
-suggest using a transfer length that is a multiple of "optimal transfer 
-length granularity", up to a max of either the max or optimal transfer 
-lengths depending on the size of the penalty if you exceed the optimal 
-transfer length.  This reinforces the idea that the "optimal transfer 
-length" is actually the optimal *maximum* length, but any multiple of 
-the optimal granularity is fine.
-
-Based on that, I think it would have been clearer if it had been called 
-"/sys/block/sdb/queue/optimal_max_io_size".
-
-Also, I think it's wrong for filesystems and userspace to use it for 
-alignment.  In E.4 and E.5 in the "sbc3r25.pdf" doc, it looks like they 
-use the optimal granularity field for alignment, not the optimal 
-transfer length.
-
-
-So for the ST900MM0006, it had:
-
-# sg_inq --vpd --page=0xb0 /dev/sdb
-VPD INQUIRY: Block limits page (SBC)
-   Optimal transfer length granularity: 1 blocks
-   Maximum transfer length: 0 blocks
-   Optimal transfer length: 4294967295 blocks
-
-In this case I think the drive is trying to say that it doesn't require 
-any special granularity (can handle alignment on 512-byte blocks), and 
-that it can handle any size of transfer without performance penalty.
-
-Chris
+UGVnYXN1cyBpcyBhIGhpZ2ggcGVyZm9ybWFuY2UgaGFyZHdhcmUgUkFJRCBzb2x1dGlvbiBkZXNp
+Z25lZCB0byB1bmxlYXNoIHRoZSByYXcgcG93ZXIgb2YgVGh1bmRlcmJvbHQgdGVjaG5vbG9neS4N
+Cg0KSSBhZGQgY29kZSB0byBkaXN0aW5jdCBTdXBlclRyYWNrIGFuZCBQZWdhc3VzIHNlcmllcyBi
+eSBzdWJJRC4NCkl0J3MgbmVlZGVkIGZvciBiYWNrd2FyZCBjb21wYXRpYmlsaXR5Lg0KDQpDaGFu
+Z2UgdGhlIGRyaXZlciB2ZXJzaW9uLg0KDQpTaWduZWQtb2ZmLWJ5OiBDaGFybGVzIENoaW91IDxj
+aGFybGVzLmNoaW91QHR3LnByb21pc2UuY29tPg0KDQotLS0NCiBkcml2ZXJzL3Njc2kvc3RleC5j
+IHwgMjQgKysrKysrKysrKysrKysrKysrKy0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDE5IGluc2Vy
+dGlvbnMoKyksIDUgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3Rl
+eC5jIGIvZHJpdmVycy9zY3NpL3N0ZXguYyBpbmRleCAxYWE0YmVmLi5mNTJmMWRlIDEwMDY0NA0K
+LS0tIGEvZHJpdmVycy9zY3NpL3N0ZXguYw0KKysrIGIvZHJpdmVycy9zY3NpL3N0ZXguYw0KQEAg
+LTM3LDExICszNywxMSBAQA0KICNpbmNsdWRlIDxzY3NpL3Njc2lfZWguaD4NCiANCiAjZGVmaW5l
+IERSVl9OQU1FICJzdGV4Ig0KLSNkZWZpbmUgU1RfRFJJVkVSX1ZFUlNJT04gIjQuNi4wMDAwLjQi
+DQotI2RlZmluZSBTVF9WRVJfTUFKT1IJCTQNCi0jZGVmaW5lIFNUX1ZFUl9NSU5PUgkJNg0KLSNk
+ZWZpbmUgU1RfT0VNCQkJMA0KLSNkZWZpbmUgU1RfQlVJTERfVkVSCQk0DQorI2RlZmluZSBTVF9E
+UklWRVJfVkVSU0lPTiAiNS4wMC4wMDAwLjAxIg0KKyNkZWZpbmUgU1RfVkVSX01BSk9SCQk1DQor
+I2RlZmluZSBTVF9WRVJfTUlOT1IJCTAwDQorI2RlZmluZSBTVF9PRU0JCQkwMDAwDQorI2RlZmlu
+ZSBTVF9CVUlMRF9WRVIJCTAxDQogDQogZW51bSB7DQogCS8qIE1VIHJlZ2lzdGVyIG9mZnNldCAq
+Lw0KQEAgLTMyNyw2ICszMjcsNyBAQCBzdHJ1Y3Qgc3RfaGJhIHsNCiAJdTE2IHJxX2NvdW50Ow0K
+IAl1MTYgcnFfc2l6ZTsNCiAJdTE2IHN0c19jb3VudDsNCisJdTggIHllbGxvd3N0b25lOw0KIH07
+DQogDQogc3RydWN0IHN0X2NhcmRfaW5mbyB7DQpAQCAtMTU0Niw2ICsxNTQ3LDcgQEAgc3RhdGlj
+IGludCBzdGV4X3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2Rl
+dmljZV9pZCAqaWQpDQogCXN0cnVjdCBTY3NpX0hvc3QgKmhvc3Q7DQogCWNvbnN0IHN0cnVjdCBz
+dF9jYXJkX2luZm8gKmNpID0gTlVMTDsNCiAJdTMyIHN0c19vZmZzZXQsIGNwX29mZnNldCwgc2Ny
+YXRjaF9vZmZzZXQ7DQorCXUzMiBzdWJJRDsNCiAJaW50IGVycjsNCiANCiAJZXJyID0gcGNpX2Vu
+YWJsZV9kZXZpY2UocGRldik7DQpAQCAtMTU5MCw2ICsxNTkyLDE4IEBAIHN0YXRpYyBpbnQgc3Rl
+eF9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQg
+KmlkKQ0KIA0KIAloYmEtPmNhcmR0eXBlID0gKHVuc2lnbmVkIGludCkgaWQtPmRyaXZlcl9kYXRh
+Ow0KIAljaSA9ICZzdGV4X2NhcmRfaW5mb1toYmEtPmNhcmR0eXBlXTsNCisJc3ViSUQgPSBpZC0+
+c3ViZGV2aWNlOw0KKwlpZiAoKHN1YklEID09IDB4NDIyMSB8fCBzdWJJRCA9PSAweDQyMjIgfHwN
+CisJICAgIHN1YklEID09IDB4NDIyMyB8fCBzdWJJRCA9PSAweDQyMjQgfHwNCisJICAgIHN1YklE
+ID09IDB4NDIyNSB8fCBzdWJJRCA9PSAweDQyMjYgfHwNCisJICAgIHN1YklEID09IDB4NDIyNyB8
+fCBzdWJJRCA9PSAweDQyNjEgfHwNCisJICAgIHN1YklEID09IDB4NDI2MiB8fCBzdWJJRCA9PSAw
+eDQyNjMgfHwNCisJICAgIHN1YklEID09IDB4NDI2NCB8fCBzdWJJRCA9PSAweDQyNjUpICYmDQor
+CSAgICAoaGJhLT5jYXJkdHlwZSA9PSBzdF95ZWwpKSB7DQorCQloYmEtPnllbGxvd3N0b25lID0g
+MTsNCisJfSBlbHNlIGlmIChoYmEtPmNhcmR0eXBlID09IHN0X3llbCkgew0KKwkJaGJhLT55ZWxs
+b3dzdG9uZSA9IDA7DQorCX0NCiAJc3RzX29mZnNldCA9IHNjcmF0Y2hfb2Zmc2V0ID0gKGNpLT5y
+cV9jb3VudCsxKSAqIGNpLT5ycV9zaXplOw0KIAlpZiAoaGJhLT5jYXJkdHlwZSA9PSBzdF95ZWwp
+DQogCQlzdHNfb2Zmc2V0ICs9IChjaS0+c3RzX2NvdW50KzEpICogc2l6ZW9mKHUzMik7DQotLQ0K
