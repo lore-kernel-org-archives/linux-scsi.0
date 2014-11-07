@@ -1,26 +1,37 @@
-From: Bernd Schubert <bschubert@ddn.com>
-Subject: Re: [RFC] Discard update for 3.19
-Date: Fri, 7 Nov 2014 12:11:07 +0000
-Message-ID: <F6E129D0B46B7F4B89EF4089CE55578C045C9146@LAX-EX-MB4.datadirect.datadirectnet.com>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: fix potential resource leak
+Date: Fri,  7 Nov 2014 13:27:56 +0100
+Message-ID: <1415363276-9765-1-git-send-email-thenzl@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48864 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752238AbaKGM2E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2014 07:28:04 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: don.brace@pmcs.com, Elliott@hp.com, brace77070@gmail.com
 
-> The second patch tweaks the SCSI disk driver to prefer WRITE SAME w/
-> UNMAP instead of the UNMAP command since the former has deterministic
-> behavior.
+We should free the cfgtable allocated a few lines above.
 
-I have seen data corruption on an Intel SSD 510 after sending WRITE SAME
-UNMAP. As far as I remember, these disks ignore writes after sending
-that command. Unmap worked fine, though. So possibly there is another
-blacklisting required.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Cheers,
-Bernd
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 1ce2b43608..7d4cef779f 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5994,7 +5994,7 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	}
+ 	rc = write_driver_ver_to_cfgtable(cfgtable);
+ 	if (rc)
+-		goto unmap_vaddr;
++		goto unmap_cfgtable;
+ 
+ 	/* If reset via doorbell register is supported, use that.
+ 	 * There are two such methods.  Favor the newest method.
+-- 
+1.9.3
 
