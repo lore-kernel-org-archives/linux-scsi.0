@@ -1,37 +1,186 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] hpsa: fix potential resource leak
-Date: Fri,  7 Nov 2014 12:00:16 +0100
-Message-ID: <1415358016-6012-1-git-send-email-thenzl@redhat.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH RESEND] bnx2fc: fix tgt spinlock locking
+Date: Fri,  7 Nov 2014 12:55:39 +0100
+Message-ID: <1415361339-8242-1-git-send-email-mlombard@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45887 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35544 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303AbaKGLAW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2014 06:00:22 -0500
+	id S1751464AbaKGLzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2014 06:55:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: don.brace@pmcs.com, Elliott@hp.com, brace77070@gmail.com
+Cc: QLogic-Storage-Upstream@qlogic.com, eddie.wai@broadcom.com, JBottomley@parallels.com, hch@lst.de, chad.dupuis@qlogic.com
 
-We should free the cfgtable allocated a few lines above.
+bnx2fc_queuecommand(): when allocating a new io_req, the tgt_lock
+spinlock must be locked before calling bnx2fc_cmd_alloc().
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+The spinlock should also be kept locked until bnx2fc_post_io_req() has
+been completed.
+If not, a kernel thread may call bnx2fc_process_cq_compl() that extracts
+the newly allocated io_req from hba->cmd_mgr->cmds and destroys it while
+it is still being used by bnx2fc_post_io_req().
+
+BUG: unable to handle kernel NULL pointer dereference at 000000000000004c
+IP: [<ffffffffa03130da>] bnx2fc_init_task+0x6a/0x230 [bnx2fc]
+PGD 0
+Oops: 0000 [#1] SMP
+last sysfs file: /sys/devices/pci0000:00/0000:00:02.0/0000:04:00.3/net/eth3/type
+CPU 33
+Modules linked in: autofs4 target_core_iblock target_core_file target_core_pscsi target_core_mod configfs bnx2fc cnic uio fcoe libfcoe libfc scsi_transport_fc 8021q garp scsi_tgt stp llc cpufreq_ondemand freq_table pcc_cpufreq ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 power_meter microcode iTCO_wdt iTCO_vendor_support hpilo hpwdt sg bnx2x libcrc32c mdio serio_raw lpc_ich mfd_core shpchp ext4 jbd2 mbcache sd_mod crc_t10dif hpsa video output dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_wait_scan]
+
+Pid: 7355, comm: bnx2fc_thread/3 Not tainted 2.6.32-431.el6.x86_64 #1 HP ProLiant BL460c Gen8
+RIP: 0010:[<ffffffffa03130da>]  [<ffffffffa03130da>] bnx2fc_init_task+0x6a/0x230 [bnx2fc]
+RSP: 0018:ffff8820b0da3b68  EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff882003801080 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff882003801100
+RBP: ffff8820b0da3bc8 R08: ffffffff8160d4e8 R09: 0000000000000040
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff88400e600e00
+R13: ffff8840108fbe40 R14: ffff88200ffe5400 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8820b0da0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 000000000000004c CR3: 0000002010b67000 CR4: 00000000001407e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process bnx2fc_thread/3 (pid: 7355, threadinfo ffff88401f940000, task ffff884012f5f540)
+Stack:
+ ffff8820b0da3bc8 ffffffff81527303 ffff884000000020 ffff8820b0da3bd8
+<d> ffff8820b0da3b98 000000028138931a ffff88400f506078 ffff88400e600e00
+<d> ffff88200ffe5400 ffff88200ffe5590 0000000000000021 0000000000000002
+Call Trace:
+ <IRQ>
+ [<ffffffff81527303>] ? printk+0x41/0x46
+ [<ffffffffa03169bc>] bnx2fc_post_io_req+0x11c/0x440 [bnx2fc]
+ [<ffffffff812825b9>] ? cpumask_next_and+0x29/0x50
+ [<ffffffff8137ffd0>] ? scsi_done+0x0/0x60
+ [<ffffffffa0316df7>] bnx2fc_queuecommand+0x117/0x140 [bnx2fc]
+ [<ffffffff81380245>] scsi_dispatch_cmd+0xe5/0x310
+ [<ffffffff81388b9e>] scsi_request_fn+0x5ee/0x7a0
+ [<ffffffff812658f1>] __blk_run_queue+0x31/0x40
+ [<ffffffff81265a40>] blk_run_queue+0x30/0x50
+ [<ffffffff81387da6>] scsi_run_queue+0xc6/0x270
+ [<ffffffff81260f92>] ? elv_requeue_request+0x52/0xa0
+ [<ffffffff813897a0>] scsi_requeue_command+0x90/0xb0
+ [<ffffffff81389b84>] scsi_io_completion+0x154/0x6c0
+ [<ffffffff8137ff62>] scsi_finish_command+0xc2/0x130
+ [<ffffffff8138a255>] scsi_softirq_done+0x145/0x170
+ [<ffffffff8126e865>] blk_done_softirq+0x85/0xa0
+ [<ffffffff8107a8e1>] __do_softirq+0xc1/0x1e0
+ [<ffffffff8100c30c>] ? call_softirq+0x1c/0x30
+ [<ffffffff8100c30c>] call_softirq+0x1c/0x30
+ <EOI>
+ [<ffffffff8100fa75>] ? do_softirq+0x65/0xa0
+ [<ffffffff8107a40a>] local_bh_enable_ip+0x9a/0xb0
+ [<ffffffff8152a4eb>] _spin_unlock_bh+0x1b/0x20
+ [<ffffffffa0313937>] bnx2fc_process_cq_compl+0x257/0x2b0 [bnx2fc]
+ [<ffffffffa03114ea>] bnx2fc_percpu_io_thread+0xea/0x160 [bnx2fc]
+ [<ffffffffa0311400>] ? bnx2fc_percpu_io_thread+0x0/0x160 [bnx2fc]
+ [<ffffffff8109aef6>] kthread+0x96/0xa0
+ [<ffffffff8100c20a>] child_rip+0xa/0x20
+ [<ffffffff8109ae60>] ? kthread+0x0/0xa0
+ [<ffffffff8100c200>] ? child_rip+0x0/0x20
+Code: 89 df 45 8b 7e 30 0f 85 75 01 00 00 89 d1 31 c0 c1 e9 03 83 e2 04 89 c9 f3 48 ab 74 06 c7 07 00 00 00 00 49 89 9c 24 88 01 00 00 <83> 7e 4c 01 b8 01 00 00 00 0f 84 e7 00 00 00 89 c2 0a 53 38 41
+RIP  [<ffffffffa03130da>] bnx2fc_init_task+0x6a/0x230 [bnx2fc]
+ RSP <ffff8820b0da3b68>
+CR2: 000000000000004c
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_els.c |  2 --
+ drivers/scsi/bnx2fc/bnx2fc_io.c  | 19 ++++++++++---------
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1ce2b43608..7d4cef779f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5994,7 +5994,7 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index ca75c7c..ef355c1 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -480,9 +480,7 @@ void bnx2fc_rec_compl(struct bnx2fc_els_cb_arg *cb_arg)
+ 			bnx2fc_initiate_cleanup(orig_io_req);
+ 			/* Post a new IO req with the same sc_cmd */
+ 			BNX2FC_IO_DBG(rec_req, "Post IO request again\n");
+-			spin_unlock_bh(&tgt->tgt_lock);
+ 			rc = bnx2fc_post_io_req(tgt, new_io_req);
+-			spin_lock_bh(&tgt->tgt_lock);
+ 			if (!rc)
+ 				goto free_frame;
+ 			BNX2FC_IO_DBG(rec_req, "REC: io post err\n");
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 0679782..5b99844 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1894,18 +1894,24 @@ int bnx2fc_queuecommand(struct Scsi_Host *host,
+ 			goto exit_qcmd;
+ 		}
  	}
- 	rc = write_driver_ver_to_cfgtable(cfgtable);
- 	if (rc)
--		goto unmap_vaddr;
-+		goto unmap_cfgtable;
++
++	spin_lock_bh(&tgt->tgt_lock);
++
+ 	io_req = bnx2fc_cmd_alloc(tgt);
+ 	if (!io_req) {
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+-		goto exit_qcmd;
++		goto exit_qcmd_tgtlock;
+ 	}
+ 	io_req->sc_cmd = sc_cmd;
  
- 	/* If reset via doorbell register is supported, use that.
- 	 * There are two such methods.  Favor the newest method.
+ 	if (bnx2fc_post_io_req(tgt, io_req)) {
+ 		printk(KERN_ERR PFX "Unable to post io_req\n");
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+-		goto exit_qcmd;
++		goto exit_qcmd_tgtlock;
+ 	}
++
++exit_qcmd_tgtlock:
++	spin_unlock_bh(&tgt->tgt_lock);
+ exit_qcmd:
+ 	return rc;
+ }
+@@ -2020,6 +2026,8 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	int task_idx, index;
+ 	u16 xid;
+ 
++	/* bnx2fc_post_io_req() is called with the tgt_lock held */
++
+ 	/* Initialize rest of io_req fields */
+ 	io_req->cmd_type = BNX2FC_SCSI_CMD;
+ 	io_req->port = port;
+@@ -2047,9 +2055,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	/* Build buffer descriptor list for firmware from sg list */
+ 	if (bnx2fc_build_bd_list_from_sg(io_req)) {
+ 		printk(KERN_ERR PFX "BD list creation failed\n");
+-		spin_lock_bh(&tgt->tgt_lock);
+ 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
+-		spin_unlock_bh(&tgt->tgt_lock);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -2061,19 +2067,15 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	task = &(task_page[index]);
+ 	bnx2fc_init_task(io_req, task);
+ 
+-	spin_lock_bh(&tgt->tgt_lock);
+-
+ 	if (tgt->flush_in_prog) {
+ 		printk(KERN_ERR PFX "Flush in progress..Host Busy\n");
+ 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
+-		spin_unlock_bh(&tgt->tgt_lock);
+ 		return -EAGAIN;
+ 	}
+ 
+ 	if (!test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags)) {
+ 		printk(KERN_ERR PFX "Session not ready...post_io\n");
+ 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
+-		spin_unlock_bh(&tgt->tgt_lock);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -2091,6 +2093,5 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 
+ 	/* Ring doorbell */
+ 	bnx2fc_ring_doorbell(tgt);
+-	spin_unlock_bh(&tgt->tgt_lock);
+ 	return 0;
+ }
 -- 
-1.9.3
+Maurizio Lombardi
 
