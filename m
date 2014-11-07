@@ -1,39 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] Discard update for 3.19
-Date: Fri, 07 Nov 2014 10:46:37 -0500
-Message-ID: <yq1fvdv9foi.fsf@sermon.lab.mkp.net>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 3/3] block: Introduce blkdev_issue_zeroout_discard()
+ function
+Date: Fri, 7 Nov 2014 11:20:25 -0500
+Message-ID: <20141107162025.GA607@thunk.org>
 References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	<F6E129D0B46B7F4B89EF4089CE55578C045C9146@LAX-EX-MB4.datadirect.datadirectnet.com>
+ <1415336894-15327-4-git-send-email-martin.petersen@oracle.com>
+ <20141107082610.GC8394@infradead.org>
+ <yq1k3379fvj.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17595 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbaKGPqt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 10:46:49 -0500
-In-Reply-To: <F6E129D0B46B7F4B89EF4089CE55578C045C9146@LAX-EX-MB4.datadirect.datadirectnet.com>
-	(Bernd Schubert's message of "Fri, 7 Nov 2014 12:11:07 +0000")
+Received: from imap.thunk.org ([74.207.234.97]:45146 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752244AbaKGQUg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2014 11:20:36 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1k3379fvj.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bschubert@ddn.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 
->>>>> "Bernd" == Bernd Schubert <bschubert@ddn.com> writes:
+On Fri, Nov 07, 2014 at 10:42:24AM -0500, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+> 
+> Christoph> I'm not a fan of adding another function here and would
+> Christoph> prefer a flag, but it looks correct, 
+> 
+> That was my original approach too but I didn't want to stomp over all
+> the existing callers. Although there only are few.
+> 
+> Ted: Which would you prefer?
 
-Bernd,
+There are *very* few users of blkdev_issue_zeroout(), and aside for a
+single drbd, they are all in the block layer.  It would only start
+affecting ext4 when we plumb that flag through to sb_issue_zeroout
+(which your patch doesn't currently do), at which point it will affect
+4 call sites in ext4, and a call site in gfs2 and hpfs2.
 
-Bernd> I have seen data corruption on an Intel SSD 510 after sending
-Bernd> WRITE SAME UNMAP. As far as I remember, these disks ignore writes
-Bernd> after sending that command. Unmap worked fine, though. So
-Bernd> possibly there is another blacklisting required.
+So I'd be in favor of adding a flag to to blkdev_issue_zeroout(), and
+I would have a slight preference for also modifying sb_issue_zeroout
+so the flag gets plumbed all the way through to the fs-level callers.
 
-Well, the 510 is a SATA drive and doesn't implement either command so
-that would be an LSI SATL problem. I recall that we had some problems
-with the LSI firmware blacklisting DRAT/RZAT on that particular drive so
-I did the same in my libata patch.
+Cheers,
 
-I don't have any bugs open with WRITE SAME or UNMAP on recent LSI
-firmware, though. We use it extensively here.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+							- Ted
