@@ -1,73 +1,40 @@
-From: =?big5?B?Q2hhcmxlcyBDaGlvdSAtIFBUVCCq9MP83rM=?=
-	<charles.chiou@tw.promise.com>
-Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
-Date: Fri, 7 Nov 2014 16:02:52 +0800
-Message-ID: <28E32C4AE8987D4FAF847BD2DAE400E361630C00F2@ptt-ex02.promise.com.tw>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
+ return zeroes after TRIM
+Date: Fri, 7 Nov 2014 00:24:06 -0800
+Message-ID: <20141107082406.GA8394@infradead.org>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
+ <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="big5"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw.tw.promise.com ([61.222.81.250]:44522 "HELO
-	mailgw.promise.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750993AbaKGIC7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 03:02:59 -0500
-Content-Language: zh-TW
+Received: from bombadil.infradead.org ([198.137.202.9]:49333 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbaKGIYG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Nov 2014 03:24:06 -0500
+Content-Disposition: inline
+In-Reply-To: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <jbottomley@parallels.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 
-MS4gQWRkIFMzL1M0IHN1cHBvcnQsIGFkZCAuc3VzcGVuZCBhbmQgLnJlc3VtZSBmdW5jdGlvbiBp
-biBwY2lfZHJpdmVyLg0KDQoyLiBQZWdhc3VzIHRha2Ugc29tZSB0byBpbml0LCBJIGNyZWF0ZSBv
-bmUgdGhyZWFkIHRvIGZpbmlzaCBoYW5kc2hha2UNCiAgIHRvIG1ha2UgT1MgY2FuIHN0YXJ0IGZh
-c3Rlci4NCg0KMy4gQWNjb3JkaW5nIHRvICgyKSwgT1MgbWlnaHQgc2VuZCBjb21tYW5kIHRvIGRy
-aXZlciBiZWZvcmUgaGFuZHNoYWtlLg0KICAgUmV0dXJuIFNDU0lfTUxRVUVVRV9IT1NUX0JVU1ku
-DQotLS0NCiBkcml2ZXJzL3Njc2kvc3RleC5jIHwgNTcgKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKy0NCiAxIGZpbGUgY2hhbmdlZCwgNTYgaW5zZXJ0
-aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3N0ZXgu
-YyBiL2RyaXZlcnMvc2NzaS9zdGV4LmMNCmluZGV4IDdhNjZhOTMxLi4xZTBiMzdlIDEwMDY0NA0K
-LS0tIGEvZHJpdmVycy9zY3NpL3N0ZXguYw0KKysrIGIvZHJpdmVycy9zY3NpL3N0ZXguYw0KQEAg
-LTM2OSw2ICszNjksMTAgQEAgc3RhdGljIGNvbnN0IGNoYXIgY29uc29sZV9pbnFfcGFnZVtdID0N
-CiAJMHgwQywweDIwLDB4MjAsMHgyMCwweDIwLDB4MjAsMHgyMCwweDIwDQogfTsNCiANCitzdHJ1
-Y3QgaGJhX2hhbmRzaGFrZV93b3Jrc3RydWN0IHsNCisJc3RydWN0IHN0X2hiYSAqaGJhOw0KKwlz
-dHJ1Y3Qgd29ya19zdHJ1Y3QgaGFuZHNoYWtlX3dvcms7DQorfTsNCiBNT0RVTEVfQVVUSE9SKCJF
-ZCBMaW4iKTsNCiBNT0RVTEVfREVTQ1JJUFRJT04oIlByb21pc2UgVGVjaG5vbG9neSBTdXBlclRy
-YWsgRVggQ29udHJvbGxlcnMiKTsNCiBNT0RVTEVfTElDRU5TRSgiR1BMIik7DQpAQCAtNjMwLDcg
-KzYzNCw3IEBAIHN0ZXhfcXVldWVjb21tYW5kX2xjayhzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIHZv
-aWQgKCpkb25lKShzdHJ1Y3Qgc2NzaV9jbW5kICopKQ0KIAkJZG9uZShjbWQpOw0KIAkJcmV0dXJu
-IDA7DQogCX0NCi0JaWYgKHVubGlrZWx5KGhiYS0+bXVfc3RhdHVzID09IE1VX1NUQVRFX1JFU0VU
-VElORykpDQorCWlmICh1bmxpa2VseShoYmEtPm11X3N0YXR1cyAhPSBNVV9TVEFURV9TVEFSVEVE
-KSkNCiAJCXJldHVybiBTQ1NJX01MUVVFVUVfSE9TVF9CVVNZOw0KIA0KIAlzd2l0Y2ggKGNtZC0+
-Y21uZFswXSkgew0KQEAgLTEzOTYsNiArMTQwMCwxNyBAQCBzdGF0aWMgdm9pZCBzdGV4X3Jlc2V0
-X3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KIA0KIAlzdGV4X2RvX3Jlc2V0KGhiYSk7
-DQogfQ0KK3N0YXRpYyB2b2lkIHJlc3VtZV9oYW5kc2hha2Uoc3RydWN0IHdvcmtfc3RydWN0ICp3
-b3JrKQ0KK3sNCisJc3RydWN0IHN0X2hiYSAqaGJhOw0KKwlzdHJ1Y3QgaGJhX2hhbmRzaGFrZV93
-b3Jrc3RydWN0ICpoc3dvcms7DQorDQorCWhzd29yayA9IGNvbnRhaW5lcl9vZih3b3JrLA0KKwkJ
-c3RydWN0IGhiYV9oYW5kc2hha2Vfd29ya3N0cnVjdCwNCisJCWhhbmRzaGFrZV93b3JrKTsNCisJ
-aGJhID0gaHN3b3JrLT5oYmE7DQorCXN0ZXhfaGFuZHNoYWtlKGhiYSk7DQorfQ0KIA0KIHN0YXRp
-YyBpbnQgc3RleF9iaW9zcGFyYW0oc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LA0KIAlzdHJ1Y3Qg
-YmxvY2tfZGV2aWNlICpiZGV2LCBzZWN0b3JfdCBjYXBhY2l0eSwgaW50IGdlb21bXSkNCkBAIC0x
-ODY5LDYgKzE4ODQsNDQgQEAgc3RhdGljIHZvaWQgc3RleF9zaHV0ZG93bihzdHJ1Y3QgcGNpX2Rl
-diAqcGRldikNCiAJfQ0KIH0NCiANCitzdGF0aWMgaW50IHN0ZXhfY2hvaWNlX3NsZWVwX01JQyhw
-bV9tZXNzYWdlX3Qgc3RhdGUpDQorew0KKwlzd2l0Y2ggKHN0YXRlLmV2ZW50KSB7DQorCWNhc2Ug
-UE1fRVZFTlRfU1VTUEVORDoNCisJCXJldHVybiBTVF9TMzsNCisJY2FzZSBQTV9FVkVOVF9GUkVF
-WkU6DQorCWNhc2UgUE1fRVZFTlRfSElCRVJOQVRFOg0KKwkJcmV0dXJuIFNUX1M0Ow0KKwlkZWZh
-dWx0Og0KKwkJcmV0dXJuIFNUX1M0Ow0KKwl9DQorfQ0KKw0KK3N0YXRpYyBpbnQgc3RleF9zdXNw
-ZW5kKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBwbV9tZXNzYWdlX3Qgc3RhdGUpDQorew0KKwlzdHJ1
-Y3Qgc3RfaGJhICpoYmEgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7DQorDQorCWlmIChoYmEtPmNh
-cmR0eXBlID09IHN0X3llbCAmJiBoYmEtPnllbGxvd3N0b25lID09IDApDQorCQlzdGV4X2hiYV9z
-dG9wKGhiYSwgc3RleF9jaG9pY2Vfc2xlZXBfTUlDKHN0YXRlKSk7DQorCWVsc2UNCisJCXN0ZXhf
-aGJhX3N0b3AoaGJhLCBTVF9JR05PUkVEKTsNCisJcmV0dXJuIDA7DQorfQ0KKw0KKw0KK3N0YXRp
-YyBpbnQgc3RleF9yZXN1bWUoc3RydWN0IHBjaV9kZXYgKnBkZXYpDQorew0KKwlzdHJ1Y3Qgc3Rf
-aGJhICpoYmEgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7DQorCXN0cnVjdCBoYmFfaGFuZHNoYWtl
-X3dvcmtzdHJ1Y3QgKmhzd29yazsNCisJaW50IHN0czsNCisNCisNCisJaHN3b3JrID0ga3phbGxv
-YyhzaXplb2Yoc3RydWN0IGhiYV9oYW5kc2hha2Vfd29ya3N0cnVjdCksIEdGUF9LRVJORUwpOw0K
-KwlJTklUX1dPUksoJmhzd29yay0+aGFuZHNoYWtlX3dvcmssIHJlc3VtZV9oYW5kc2hha2UpOw0K
-Kwloc3dvcmstPmhiYSA9IGhiYTsNCisJc3RzID0gc2NoZWR1bGVfd29yaygmaHN3b3JrLT5oYW5k
-c2hha2Vfd29yayk7DQorCXJldHVybiAwOw0KK30NCiBNT0RVTEVfREVWSUNFX1RBQkxFKHBjaSwg
-c3RleF9wY2lfdGJsKTsNCiANCiBzdGF0aWMgc3RydWN0IHBjaV9kcml2ZXIgc3RleF9wY2lfZHJp
-dmVyID0gew0KQEAgLTE4NzcsNiArMTkzMCw4IEBAIHN0YXRpYyBzdHJ1Y3QgcGNpX2RyaXZlciBz
-dGV4X3BjaV9kcml2ZXIgPSB7DQogCS5wcm9iZQkJPSBzdGV4X3Byb2JlLA0KIAkucmVtb3ZlCQk9
-IHN0ZXhfcmVtb3ZlLA0KIAkuc2h1dGRvd24JPSBzdGV4X3NodXRkb3duLA0KKwkuc3VzcGVuZAk9
-IHN0ZXhfc3VzcGVuZCwNCisJLnJlc3VtZQk9IHN0ZXhfcmVzdW1lLA0KIH07DQogDQogc3RhdGlj
-IHN0cnVjdCBub3RpZmllcl9ibG9jayBzdGV4X3JlYm9vdF9ub3RpZmllciA9IHsNCi0tDQo=
+On Fri, Nov 07, 2014 at 12:08:12AM -0500, Martin K. Petersen wrote:
+>  		if (ata_id_has_trim(args->id)) {
+> -			rbuf[14] |= 0x80; /* TPE */
+> +			rbuf[14] |= 0x80; /* LBPME */
+>  
+> -			if (ata_id_has_zero_after_trim(args->id))
+> -				rbuf[14] |= 0x40; /* TPRZ */
+> +			if (ata_id_has_zero_after_trim(args->id) &&
+> +			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
+> +				ata_dev_warn(dev, "Enabling discard_zeroes_data\n");
+
+I think this should _info, not _warn.
+
+Otherwise looks good to me,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+It would be nice if there was a way to trigger the flag from userspace,
+so that we don't need to rebuild the kernel to add a whitelist entry.
