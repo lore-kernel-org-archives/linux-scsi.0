@@ -1,131 +1,76 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v2 22/36] atari_scsi: Fix atari_scsi deadlocks on Falcon
-Date: Sat, 08 Nov 2014 20:22:28 +1300
-Message-ID: <545DC4B4.3010109@gmail.com>
-References: <20141027052607.105914311@telegraphics.com.au> <20141027052612.445434791@telegraphics.com.au> <545D0A95.3000105@gmail.com> <alpine.LNX.2.00.1411081112580.27924@nippy.intranet>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/6] st: call scsi_set_medium_removal directly
+Date: Sat, 8 Nov 2014 14:26:23 +0100
+Message-ID: <20141108132623.GA22610@lst.de>
+References: <1414661229-15199-1-git-send-email-hch@lst.de> <1414661229-15199-5-git-send-email-hch@lst.de> <94D0CD8314A33A4D9D801C0FE68B402959378554@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1411081112580.27924@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:32917 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753662AbaKHN00 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Nov 2014 08:26:26 -0500
+Content-Disposition: inline
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402959378554@G4W3202.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>
 
-Finn,
->   
->>> Index: linux/drivers/scsi/atari_NCR5380.c
->>> ===================================================================
->>> --- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:36.000000000
->>> +1100
->>> +++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:45.000000000
->>> +1100
->>> @@ -879,10 +879,10 @@ static void NCR5380_exit(struct Scsi_Hos
->>>    *
->>>    */
->>>   -static int NCR5380_queue_command_lck(struct scsi_cmnd *cmd,
->>> -                                     void (*done)(struct scsi_cmnd *))
->>> +static int NCR5380_queue_command(struct Scsi_Host *instance,
->>> +                                 struct scsi_cmnd *cmd)
->>>   {
->>> -	SETUP_HOSTDATA(cmd->device->host);
->>> +	struct NCR5380_hostdata *hostdata = shost_priv(instance);
->>>    struct scsi_cmnd *tmp;
->>>    unsigned long flags;
->>>       
->> Nitpick - why did this change set go into this particular patch? Because you
->> are converting from NCR5380_queue_command_lck to NCR5380_queue_command?
->>     
->
-> That's right.
->   
+On Thu, Nov 06, 2014 at 11:54:41PM +0000, Elliott, Robert (Server Stora=
+ge) wrote:
+> A few comments spawned by this (and patch 5/6):
+>=20
+> 1. Although PREVENT ALLOW MEDIUM REMOVAL was a generic
+> command defined in SPC-2, In 2006 T10 proposal
+> 06-248r1 changed it to be a command-set specific=20
+> command for SPC-3.  MMC, SSC, SBC, and SMC had slight
+> differences and the groups wouldn't agree on a converged
+> definition.
+>=20
+> For example:
+> * SSC and SBC only define two of the bit combinations=20
+>   in byte 4 bits 1:0 - allowed and prevented
+> * MMC defines all four combinations of byte 4 bits 1:0 -
+>   unlocked, locked, persistent allow, and persistent prevent
+> * SMC follows SSC/SBC but adds a PREEMPT bit in=20
+>   byte 4 bit 7
+>=20
+> So, relying on one SCSI-wide scsi_set_medium_removal
+> call could theoretically be a problem (though not yet,
+> since none of those extra features are used).
 
-OK, I just wanted to understand why it's being combined with the stram.c 
-patch (and the directly resulting changes in the SCSI driver).
+The scsi_set_medium_removal is fairly trivial.  For the unlikely case
+that we are going to make use of these additional features we'll
+need to split it.
 
-The change to NCR5380_queue_command() can only now be done, as a result 
-of the deadlock fixes in this patch, so it follows logically. Makes 
-perfectly good sense to me now, thanks.
+> 2. Reviewing the callers for scsi_set_medium_removal,
+> I noticed sd.c sd_release ignores the return value=20
+> from scsi_set_medium_removal (like many others).
+>=20
+> Its comment says:
+> *      Returns 0.
+> but it is a void function so doesn't really return anything:
+> static void sd_release(struct gendisk *disk, fmode_t mode)
 
+Right.  That's actually a fairly recent change from Al, before
+that the ->release method for block devices had a return value,
+which we then always i=C5=8Bnored higher up.
 
->>>   @@ -893,7 +893,7 @@ static int NCR5380_queue_command_lck(str
->>>     printk(KERN_NOTICE "scsi%d: WRITE attempted with NO_WRITE debugging flag
->>>     set\n",
->>>            H_NO(cmd));
->>>   		cmd->result = (DID_ERROR << 16);
->>> -		done(cmd);
->>> +		cmd->scsi_done(cmd);
->>>    	return 0;
->>>   	}
->>>   #endif /* (NDEBUG & NDEBUG_NO_WRITE) */
->>> @@ -904,8 +904,6 @@ static int NCR5380_queue_command_lck(str
->>>     */
->>>   
->>>   	SET_NEXT(cmd, NULL);
->>> -	cmd->scsi_done = done;
->>> -
->>>    cmd->result = 0;
->>>   
->>>    /*
->>>       
->> Ditto for these two.
->>     
->
-> Again, it follows from the differences in the formal parameters between 
-> NCR5380_queue_command_lck() and NCR5380_queue_command().
->   
+> 3. Reviewing the callers, st_release has an initialized
+> result variable but does nothing else with it but return it:
+> 	int result =3D 0;
+> 	...
+> 	return result;
+>=20
+> It ignores the do_door_lock -> scsi_set_medium_removal
+> result (like many others).
 
-Yep, I got that bit. Thanks for the explanation, and apologies for the 
-noise.
-
->   
->>> @@ -915,7 +913,6 @@ static int NCR5380_queue_command_lck(str
->>>     * sense data is only guaranteed to be valid while the condition exists.
->>>     */
->>>   -	local_irq_save(flags);
->>>    /* ++guenther: now that the issue queue is being set up, we can lock
->>>    ST-DMA.
->>>     * Otherwise a running NCR5380_main may steal the lock.
->>>     * Lock before actually inserting due to fairness reasons explained in
->>> @@ -928,11 +925,13 @@ static int NCR5380_queue_command_lck(str
->>>     * because also a timer int can trigger an abort or reset, which would
->>>     * alter queues and touch the lock.
->>>     */
->>> -	if (!IS_A_TT()) {
->>> -		/* perhaps stop command timer here */
->>> -		falcon_get_lock();
->>> -		/* perhaps restart command timer here */
->>> -	}
->>> +	/* perhaps stop command timer here */
->>> +	if (!falcon_get_lock())
->>> +		return SCSI_MLQUEUE_HOST_BUSY;
->>> +	/* perhaps restart command timer here */
->>> +
->>>       
->> The comments about stopping and restarting the command timer can be 
->> removed. In 2.4 kernels, the driver would tweak the timers and wait on 
->> the lock unconditionally, Can't ne done anymore, for so many reasons.
->>     
->
-> Well, you sent an acked-by for this patch, so I'm a bit confused. Do you 
-> want me to re-spin it?
->   
-
-Not at all - this was just something I wanted to raise for future 
-patches, before it slips my mind, again. Sorry I did not make that clear 
-at all.
-
-I expect we will have an opportunity to address this when we embark on a 
-wider cleanup of comments throughout the driver - most of these comments 
-were for the 0.9 kernel series and might still be somewhat germane up to 
-2.4. Might be totally  misleading now.
-
-Not a priority at all - I know you have bigger fish to fry. I should not 
-have brought it up in this context.
-
-No problems at all with this patch (or indeed with the rest of the series).
-
-Cheers,
-
-    Michael
+The st driver defintively could use an audit for error code propagation=
+=2E
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
