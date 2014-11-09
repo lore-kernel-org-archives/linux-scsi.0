@@ -1,22 +1,18 @@
 From: Chen Gang <gang.chen.5i5j@gmail.com>
 Subject: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h" for
  internal shared functions using
-Date: Sun, 09 Nov 2014 18:16:58 +0800
-Message-ID: <545F3F1A.5030902@gmail.com>
+Date: Sun, 09 Nov 2014 18:17:16 +0800
+Message-ID: <545F3F2C.7060704@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:48778 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbaKIKRE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2014 05:17:04 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: megaraidlinux@lsi.com, "JBottomley@parallels.com" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-For shared inline functions acrossed source files, better to let it as
+For shared inline functions crossed source files, better to let it as
 "static inline" in a header file. For extern functions, better to
 declare them in header file.
 
