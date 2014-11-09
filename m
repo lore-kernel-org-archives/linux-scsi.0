@@ -1,57 +1,107 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/36] Fixes, cleanups and modernization for NCR5380 drivers
-Date: Sun, 9 Nov 2014 11:33:18 +0100
-Message-ID: <CAMuHMdVK1pa-XyxaHK_xs2RBjYpYkKGT3KwkNy8NFLS=bfgm_g@mail.gmail.com>
-References: <20141027052607.105914311@telegraphics.com.au>
-	<5455C107.6040500@gmail.com>
-	<alpine.LNX.2.00.1411021710210.27266@nippy.intranet>
-	<5455E340.7080305@gmail.com>
-	<CAOmrzkKVYBcznyEaUX7Ta9z3P+B9=BTSj3kCZTjx-euZ2gannQ@mail.gmail.com>
-	<CAL4YKD5fqhZKZG3_cOTxasqTSdb5oC3g0aUKnnxzE3Q4MJyxGQ@mail.gmail.com>
-	<CAMuHMdV_xAdXB-0Q=qCGqDKt9uY7LT5mn_DXKZiA1aVmcuMOLA@mail.gmail.com>
-	<CAOmrzkLW+cRi1p7Wa63L-Tf-hCtVkkcFxGmqQVBQHL4A3F+hKQ@mail.gmail.com>
-	<alpine.LNX.2.00.1411061507240.20750@nippy.intranet>
-	<CAOmrzkKUXJaDh7gchStxkwMeR6MUDGZPD+O+iAsvSbQOT0yB2g@mail.gmail.com>
-	<alpine.LNX.2.00.1411071332540.1026@nippy.intranet>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH v2 25/36] sun3_scsi: Convert to platform device
+Date: Sun, 9 Nov 2014 23:12:10 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1411092312040.21822@nippy.intranet>
+References: <20141027052607.105914311@telegraphics.com.au> <20141027052613.155430175@telegraphics.com.au> <CAMuHMdUULx29rmrSPxmSJugTQAbRVnkcjVzg6j3-eN4U7hLpZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1411071332540.1026@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, =?UTF-8?Q?David_G=C3=A1lvez?= <dgalvez75@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:38995 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbaKIMNT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Nov 2014 07:13:19 -0500
+In-Reply-To: <CAMuHMdUULx29rmrSPxmSJugTQAbRVnkcjVzg6j3-eN4U7hLpZA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 
-Hi Finn,
 
-On Fri, Nov 7, 2014 at 3:34 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
->> it's probably not Geert but James who needs to give the go-ahead.
->
-> Given Geert's objections to the changes under arch/m68k in v1, I'm hoping
-> for an acked-by from Geert for v2...
+On Sun, 9 Nov 2014, Geert Uytterhoeven wrote:
 
-I'm happy with the arch/m68k changes in v2 (modulo the PAGE_SIZE
-comment on Sun-3), so please add my
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-after fixing that one.
-As I'm not afraid of merge conflicts, I think this can go in through the SCSI
-tree? James?
+> On Mon, Oct 27, 2014 at 6:26 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> > --- linux.orig/arch/m68k/sun3/config.c  2014-10-27 16:17:59.000000000 +1100
+> > +++ linux/arch/m68k/sun3/config.c       2014-10-27 16:25:50.000000000 +1100
+> 
+> > @@ -169,3 +171,61 @@ static void __init sun3_sched_init(irq_h
+> >          intersil_clear();
+> >  }
+> >
+> > +#ifdef CONFIG_SUN3_SCSI
+> > +
+> > +static const struct resource sun3_scsi_vme_rsrc[] __initconst = {
+> > +       {
+> > +               .flags = IORESOURCE_IRQ,
+> > +               .start = SUN3_VEC_VMESCSI0,
+> > +               .end   = SUN3_VEC_VMESCSI0,
+> > +       }, {
+> > +               .flags = IORESOURCE_MEM,
+> > +               .start = 0xff200000,
+> > +               .end   = 0xff200000 + PAGE_SIZE - 1,
+> 
+> PAGE_SIZE is a software kernel configuration option, not a hardware
+> property. It makes sense to use it in an ioremap() call, but not in a
+> platform device's resource, which describes the hardware.
+> 
+> > +       }, {
+> > +               .flags = IORESOURCE_IRQ,
+> > +               .start = SUN3_VEC_VMESCSI1,
+> > +               .end   = SUN3_VEC_VMESCSI1,
+> > +       }, {
+> > +               .flags = IORESOURCE_MEM,
+> > +               .start = 0xff204000,
+> > +               .end   = 0xff204000 + PAGE_SIZE - 1,
+> 
+> Likewise
+> 
+> > +       },
+> > +};
+> > +
+> > +/*
+> > + * Int: level 2 autovector
+> > + * IO: type 1, base 0x00140000, 5 bits phys space: A<4..0>
+> > + */
+> > +static const struct resource sun3_scsi_rsrc[] __initconst = {
+> > +       {
+> > +               .flags = IORESOURCE_IRQ,
+> > +               .start = 2,
+> > +               .end   = 2,
+> > +       }, {
+> > +               .flags = IORESOURCE_MEM,
+> > +               .start = 0x00140000,
+> > +               .end   = 0x00140000 + PAGE_SIZE - 1,
+> 
+> Likewise
+> 
+> According to the Sun-3 Architecture Manual v2.0 (May 1985), end should
+> be 0x0014001f.
 
-Note that there's still room for improvement in the individual drivers, using
-more modern infrastructure (e.g. using devm_*() calls, and getting rid of the
-multiple ATARIHW_PRESENT() checks using e.g. platform_data or regmap).
-But this is already a giant step forward.
+OK. Where did you find that, BTW?
 
-Thanks a lot for doing this cleanup!
-Removing ca. 3700 LoC deserves you a spot in the LoC removal Hall of Fame!
+> 
+> I guess the resource length is 0x20 for VME SCSI, too?
 
-Gr{oetje,eeting}s,
+For VME SCSI it would need to be 8 + sizeof(struct sun3_dma_regs) which I 
+think equals 0x22:
 
-                        Geert
+struct sun3_dma_regs {
+        unsigned short dma_addr_hi; /* vme only */
+        unsigned short dma_addr_lo; /* vme only */
+        unsigned short dma_count_hi; /* vme only */
+        unsigned short dma_count_lo; /* vme only */
+        unsigned short udc_data; /* udc dma data reg (obio only) */
+        unsigned short udc_addr; /* uda dma addr reg (obio only) */
+        unsigned short fifo_data; /* fifo data reg, holds extra byte on
+                                     odd dma reads */
+        unsigned short fifo_count;
+        unsigned short csr; /* control/status reg */
+        unsigned short bpack_hi; /* vme only */
+        unsigned short bpack_lo; /* vme only */
+        unsigned short ivect; /* vme only */
+        unsigned short fifo_count_hi; /* vme only */
+};
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+I'll make these changes and re-spin the patch series once Hannes' 
+questions have been resolved. Thanks for reviewing.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+-- 
