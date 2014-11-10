@@ -1,26 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] virtio_scsi: support multi hw queue of blk-mq
-Date: Mon, 10 Nov 2014 14:39:30 +0100
-Message-ID: <20141110133930.GA3115@lst.de>
-References: <1415552224-31145-1-git-send-email-ming.lei@canonical.com> <1415552224-31145-3-git-send-email-ming.lei@canonical.com> <54609667.8030702@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: bisected regression: qla2xxx endianness on sparc64
+Date: Mon, 10 Nov 2014 06:15:19 -0800
+Message-ID: <20141110141519.GA12347@infradead.org>
+References: <alpine.DEB.2.03.1411022004230.3979@cyber.ee>
+ <alpine.OSX.2.00.1411031508560.1960@administrators-macbook-pro.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35751 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752134AbaKJNjd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Nov 2014 08:39:33 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:42607 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014AbaKJOP1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 09:15:27 -0500
 Content-Disposition: inline
-In-Reply-To: <54609667.8030702@redhat.com>
+In-Reply-To: <alpine.OSX.2.00.1411031508560.1960@administrators-macbook-pro.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Ming Lei <ming.lei@canonical.com>, James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: Meelis Roos <mroos@linux.ee>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Nov 10, 2014 at 11:41:43AM +0100, Paolo Bonzini wrote:
-> FWIW, instead of force_blk_mq, it would be fine for me to make
-> virtio-scsi use a single queue if not using blk-mq.
+On Mon, Nov 03, 2014 at 03:09:47PM -0500, Chad Dupuis wrote:
+> We should revert that change. What were some of the other failures you were
+> seeing?
 
-I agree with that.  I'd rather move all of SCSI over after a fairly short
-period instead of special cases like this, mostly out of fear of a horrible
-transition we had to the new EH model 10 years ago.
+Can you please send me the revert ASAP?
+
