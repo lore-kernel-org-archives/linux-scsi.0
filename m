@@ -1,29 +1,55 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: Re: bisected regression: qla2xxx endianness on sparc64
-Date: Mon, 10 Nov 2014 16:19:17 +0200 (EET)
-Message-ID: <alpine.LRH.2.11.1411101617030.31442@siim2.ut.ee>
-References: <alpine.DEB.2.03.1411022004230.3979@cyber.ee> <alpine.OSX.2.00.1411031508560.1960@administrators-macbook-pro.local> <alpine.LRH.2.11.1411032330370.19361@siim2.ut.ee> <20141110141555.GB12347@infradead.org>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: support multi hw queue of blk-mq
+Date: Mon, 10 Nov 2014 22:25:43 +0800
+Message-ID: <CACVXFVMdUVfXNoC0FDhmaQtxehCBgG3xnTx-PJ3BmoQaT1LsoQ@mail.gmail.com>
+References: <1415552224-31145-1-git-send-email-ming.lei@canonical.com>
+	<1415552224-31145-3-git-send-email-ming.lei@canonical.com>
+	<54609667.8030702@redhat.com>
+	<20141110133930.GA3115@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141110141555.GB12347@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Joe Carnuccio <joe.carnuccio@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:51846 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752791AbaKJOZq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 09:25:46 -0500
+Received: from mail-oi0-f46.google.com ([209.85.218.46])
+	by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_ARCFOUR_SHA1:16)
+	(Exim 4.71)
+	(envelope-from <ming.lei@canonical.com>)
+	id 1Xnpua-0007Lk-FC
+	for linux-scsi@vger.kernel.org; Mon, 10 Nov 2014 14:25:44 +0000
+Received: by mail-oi0-f46.google.com with SMTP id g201so5411813oib.19
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2014 06:25:43 -0800 (PST)
+In-Reply-To: <20141110133930.GA3115@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-> On Mon, Nov 03, 2014 at 11:32:14PM +0200, Meelis Roos wrote:
-> > Yes. I took the same 3.18.0-rc1-00422-g2cc9188-dirty kernel that had 
-> > just this patch reverted, it started the controller fine, detected disk, 
-> > mounted root, started multiple tasks and then some time after startin 
-> > exim it just hangs. This is consisten with what I saw during bisection.
-> 
-> Can you try to bisect this one as well?
+On Mon, Nov 10, 2014 at 9:39 PM, Christoph Hellwig <hch@lst.de> wrote:
+> On Mon, Nov 10, 2014 at 11:41:43AM +0100, Paolo Bonzini wrote:
+>> FWIW, instead of force_blk_mq, it would be fine for me to make
+>> virtio-scsi use a single queue if not using blk-mq.
+>
+> I agree with that.
 
-I have tried for many evenings but it is not so easy. With current 
-bisecting, I have lost good base version, even going back to 3.17 and 
-3.16 breaks for now. I will try more after some days when I have an idea 
-what did I change to break it (some conf option perhaps).
+For virtio-scsi, we can do that because only single vq is running at
+the same time for previous multi-vq support.
 
--- 
-Meelis Roos (mroos@linux.ee)
+> I'd rather move all of SCSI over after a fairly short
+> period instead of special cases like this, mostly out of fear of a horrible
+> transition we had to the new EH model 10 years ago.
+
+It depends on how long the transition period is, and other drivers
+with multi hwq support might be in the same situation with virtio-scsi. If
+the period is a bit long, it would be painful for these drivers to support
+both blk-mq and non-mq.
+
+Also with force_blk_mq on virtio-scsi, people can test scsi-mq with
+default setting, then it should be helpful to collect more test reports, :-)
+
+But I don't have strong desire for force_blk_mq if you think it isn't good.
+
+Thanks,
+Ming Lei
