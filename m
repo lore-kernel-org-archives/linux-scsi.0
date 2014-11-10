@@ -1,27 +1,85 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: Fix more error handling in SCSI_IOCTL_SEND_COMMAND
-Date: Mon, 10 Nov 2014 15:43:48 -0700
-Message-ID: <54613FA4.8040802@kernel.dk>
-References: <54613EC2.8010304@cybernetics.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/3] sd: Disable discard_zeroes_data for UNMAP
+Date: Tue, 11 Nov 2014 00:43:07 +0100
+Message-ID: <54614D8B.2070808@redhat.com>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com> <1415336894-15327-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54613EC2.8010304@cybernetics.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1415336894-15327-3-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 2014-11-10 15:40, Tony Battersby wrote:
-> Fix an error path in SCSI_IOCTL_SEND_COMMAND that calls
-> blk_put_request(rq) on an invalid IS_ERR(rq) pointer.
->
-> Fixes: a492f075450f ("block,scsi: fixup blk_get_request dead queue scenarios")
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+On 07/11/2014 06:08, Martin K. Petersen wrote:
+> The T10 SBC UNMAP command does not provide any hard guarantees that
+> blocks will return zeroes on a subsequent READ. This is due to the fact
+> that the device server is free to silently ignore all or parts of the
+> request.
+> 
+> The only way to ensure that a block consistently returns zeroes after
+> being unmapped is to use WRITE SAME with the UNMAP bit set. Should the
+> device be unable to unmap one or more blocks described by the command it
+> is required to manually write zeroes to them.
+> 
+> Until now we have preferred UNMAP over the WRITE SAME variants to
+> accommodate thinly provisioned devices that predated the final SBC-3
+> spec. This patch changes the heuristic so that we favor WRITE SAME(16)
+> or (10) over UNMAP if these commands are marked as supported in the
+> Logical Block Provisioning VPD page.
+> 
+> The patch also disables discard_zeroes_data for devices operating in
+> UNMAP mode.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  drivers/scsi/sd.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index b041eca8955d..95bfb7bfbb9d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -656,7 +656,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>  	unsigned int logical_block_size = sdkp->device->sector_size;
+>  	unsigned int max_blocks = 0;
+>  
+> -	q->limits.discard_zeroes_data = sdkp->lbprz;
+> +	q->limits.discard_zeroes_data = 0;
+>  	q->limits.discard_alignment = sdkp->unmap_alignment *
+>  		logical_block_size;
+>  	q->limits.discard_granularity =
+> @@ -680,11 +680,13 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>  	case SD_LBP_WS16:
+>  		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+>  					  (u32)SD_MAX_WS16_BLOCKS);
+> +		q->limits.discard_zeroes_data = sdkp->lbprz;
+>  		break;
+>  
+>  	case SD_LBP_WS10:
+>  		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+>  					  (u32)SD_MAX_WS10_BLOCKS);
+> +		q->limits.discard_zeroes_data = sdkp->lbprz;
+>  		break;
+>  
+>  	case SD_LBP_ZERO:
+> @@ -2622,12 +2624,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+>  
+>  		} else {	/* LBP VPD page tells us what to use */
+>  
+> -			if (sdkp->lbpu && sdkp->max_unmap_blocks)
+> -				sd_config_discard(sdkp, SD_LBP_UNMAP);
+> -			else if (sdkp->lbpws)
+> +			if (sdkp->lbpws)
+>  				sd_config_discard(sdkp, SD_LBP_WS16);
+>  			else if (sdkp->lbpws10)
+>  				sd_config_discard(sdkp, SD_LBP_WS10);
+> +			else if (sdkp->lbpu && sdkp->max_unmap_blocks)
+> +				sd_config_discard(sdkp, SD_LBP_UNMAP);
+>  			else
+>  				sd_config_discard(sdkp, SD_LBP_DISABLE);
+>  		}
+> 
 
-Thanks, good catch. Might be an idea to have blk_put_request() do 
-warn-and-return check on error pointers being passed in, just in case.
-
--- 
-Jens Axboe
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
