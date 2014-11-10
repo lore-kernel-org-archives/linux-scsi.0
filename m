@@ -1,298 +1,180 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 19/36] mac_scsi: Add module option to Kconfig
-Date: Mon, 10 Nov 2014 08:02:36 +0100
-Message-ID: <5460630C.2010303@suse.de>
-References: <20141027052607.105914311@telegraphics.com.au> <20141027052611.715435815@telegraphics.com.au> <5451EC64.8090704@suse.de> <alpine.LNX.2.00.1410311520041.7380@nippy.intranet> <54534955.7000108@suse.de> <alpine.LNX.2.00.1411091123260.4669@nippy.intranet>
+Subject: Re: [PATCH v2 29/36] atari_NCR5380: Refactor Falcon locking
+Date: Mon, 10 Nov 2014 08:03:47 +0100
+Message-ID: <54606353.5040809@suse.de>
+References: <20141027052607.105914311@telegraphics.com.au> <20141027052614.115438637@telegraphics.com.au> <5451F67A.2000708@suse.de> <alpine.LNX.2.00.1410311523590.7380@nippy.intranet> <alpine.LNX.2.00.1411091125480.4669@nippy.intranet>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1411091123260.4669@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.00.1411091125480.4669@nippy.intranet>
 Sender: linux-m68k-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/09/2014 01:17 PM, Finn Thain wrote:
+On 11/09/2014 01:18 PM, Finn Thain wrote:
 >=20
-> On Fri, 31 Oct 2014, Hannes Reinecke wrote:
+> Ping...
 >=20
->> On 10/31/2014 08:17 AM, Finn Thain wrote:
->>>
->>> On Thu, 30 Oct 2014, Hannes Reinecke wrote:
->>>
->>>> On 10/27/2014 06:26 AM, Finn Thain wrote:
->>>>> Allow mac_scsi to be built as a module. Replace the old validatio=
-n of=20
->>>>> __setup options with code that validates both module and __setup=20
->>>>> options.
->>>>>
->>>>> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->>>>>
->>>>> ---
->>>>>  drivers/scsi/Kconfig    |    2=20
->>>>>  drivers/scsi/mac_scsi.c |  112 +++++++++++++++------------------=
----------------
->>>>>  2 files changed, 38 insertions(+), 76 deletions(-)
->>>>>
->>>>> Index: linux/drivers/scsi/Kconfig
->>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>>> --- linux.orig/drivers/scsi/Kconfig	2014-10-27 16:17:59.000000000=
- +1100
->>>>> +++ linux/drivers/scsi/Kconfig	2014-10-27 16:25:42.000000000 +110=
-0
->>>>> @@ -1595,7 +1595,7 @@ config ATARI_SCSI_RESET_BOOT
->>>>>  	  that leave the devices with SCSI operations partway completed=
-=2E
->>>>> =20
->>>>>  config MAC_SCSI
->>>>> -	bool "Macintosh NCR5380 SCSI"
->>>>> +	tristate "Macintosh NCR5380 SCSI"
->>>>>  	depends on MAC && SCSI=3Dy
->>>>>  	select SCSI_SPI_ATTRS
->>>>>  	help
->>>>> Index: linux/drivers/scsi/mac_scsi.c
->>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>>> --- linux.orig/drivers/scsi/mac_scsi.c	2014-10-27 16:25:40.000000=
-000 +1100
->>>>> +++ linux/drivers/scsi/mac_scsi.c	2014-10-27 16:25:42.000000000 +=
-1100
->>>>> @@ -62,15 +62,18 @@
->>>>>  static void mac_scsi_reset_boot(struct Scsi_Host *instance);
->>>>>  #endif
->>>>> =20
->>>>> -static int setup_called =3D 0;
->>>>>  static int setup_can_queue =3D -1;
->>>>> +module_param(setup_can_queue, int, 0);
->>>>>  static int setup_cmd_per_lun =3D -1;
->>>>> +module_param(setup_cmd_per_lun, int, 0);
->>>>>  static int setup_sg_tablesize =3D -1;
->>>>> +module_param(setup_sg_tablesize, int, 0);
->>>>>  static int setup_use_pdma =3D -1;
->>>>> -#ifdef SUPPORT_TAGS
->>>>> +module_param(setup_use_pdma, int, 0);
->>>>>  static int setup_use_tagged_queuing =3D -1;
->>>>> -#endif
->>>>> +module_param(setup_use_tagged_queuing, int, 0);
->>>>>  static int setup_hostid =3D -1;
->>>>> +module_param(setup_hostid, int, 0);
->>>>> =20
->>>>>  /* Time (in jiffies) to wait after a reset; the SCSI standard ca=
-lls for 250ms,
->>>>>   * we usually do 0.5s to be on the safe side. But Toshiba CD-ROM=
-s once more
->>>>> @@ -102,72 +105,34 @@ static __inline__ void macscsi_write(str
->>>>>    out_8(instance->io_port + (reg<<4), value);
->>>>>  }
->>>>> =20
->>>>> -/*
->>>>> - * Function : mac_scsi_setup(char *str)
->>>>> - *
->>>>> - * Purpose : booter command line initialization of the overrides=
- array,
->>>>> - *
->>>>> - * Inputs : str - comma delimited list of options
->>>>> - *
->>>>> - */
->>>>> -
->>>>> -static int __init mac_scsi_setup(char *str) {
->>>>> +#ifndef MODULE
->>>>> +static int __init mac_scsi_setup(char *str)
->>>>> +{
->>>>>  	int ints[7];
->>>>> -=09
->>>>> -	(void)get_options( str, ARRAY_SIZE(ints), ints);
->>>>> -=09
->>>>> -	if (setup_called++ || ints[0] < 1 || ints[0] > 6) {
->>>>> -	    printk(KERN_WARNING "scsi: <mac5380>"
->>>>> -		" Usage: mac5380=3D<can_queue>[,<cmd_per_lun>,<sg_tablesize>,<=
-hostid>,<use_tags>,<use_pdma>]\n");
->>>>> -	    printk(KERN_ALERT "scsi: <mac5380> Bad Penguin parameters?\=
-n");
->>>>> -	    return 0;
->>>>> -	}
->>>>> -	   =20
->>>>> -	if (ints[0] >=3D 1) {
->>>>> -		if (ints[1] > 0)
->>>>> -			/* no limits on this, just > 0 */
->>>>> -			setup_can_queue =3D ints[1];
->>>>> -	}
->>>>> -	if (ints[0] >=3D 2) {
->>>>> -		if (ints[2] > 0)
->>>>> -			setup_cmd_per_lun =3D ints[2];
->>>>> -	}
->>>>> -	if (ints[0] >=3D 3) {
->>>>> -		if (ints[3] >=3D 0) {
->>>>> -			setup_sg_tablesize =3D ints[3];
->>>>> -			/* Must be <=3D SG_ALL (255) */
->>>>> -			if (setup_sg_tablesize > SG_ALL)
->>>>> -				setup_sg_tablesize =3D SG_ALL;
->>>>> -		}
->>>>> -	}
->>>>> -	if (ints[0] >=3D 4) {
->>>>> -		/* Must be between 0 and 7 */
->>>>> -		if (ints[4] >=3D 0 && ints[4] <=3D 7)
->>>>> -			setup_hostid =3D ints[4];
->>>>> -		else if (ints[4] > 7)
->>>>> -			printk(KERN_WARNING "mac_scsi_setup: invalid host ID %d !\n",=
- ints[4] );
->>>>> -	}
->>>>> -#ifdef SUPPORT_TAGS=09
->>>>> -	if (ints[0] >=3D 5) {
->>>>> -		if (ints[5] >=3D 0)
->>>>> -			setup_use_tagged_queuing =3D !!ints[5];
->>>>> +
->>>>> +	(void)get_options(str, ARRAY_SIZE(ints), ints);
->>>>> +
->>>>> +	if (ints[0] < 1 || ints[0] > 6) {
->>>>> +		pr_err("Usage: mac5380=3D<can_queue>[,<cmd_per_lun>[,<sg_table=
-size>[,<hostid>[,<use_tags>[,<use_pdma>]]]]]\n");
->>>>> +		return 0;
->>>>>  	}
->>>>> -=09
->>>>> -	if (ints[0] =3D=3D 6) {
->>>>> -	    if (ints[6] >=3D 0)
->>>>> +	if (ints[0] >=3D 1)
->>>>> +		setup_can_queue =3D ints[1];
->>>>> +	if (ints[0] >=3D 2)
->>>>> +		setup_cmd_per_lun =3D ints[2];
->>>>> +	if (ints[0] >=3D 3)
->>>>> +		setup_sg_tablesize =3D ints[3];
->>>>> +	if (ints[0] >=3D 4)
->>>>> +		setup_hostid =3D ints[4];
->>>>> +	if (ints[0] >=3D 5)
->>>>> +		setup_use_tagged_queuing =3D ints[5];
->>>>> +	if (ints[0] >=3D 6)
->>>>>  		setup_use_pdma =3D ints[6];
->>>>> -	}
->>>>> -#else
->>>>> -	if (ints[0] =3D=3D 5) {
->>>>> -	    if (ints[5] >=3D 0)
->>>>> -		setup_use_pdma =3D ints[5];
->>>>> -	}
->>>>> -#endif /* SUPPORT_TAGS */
->>>>> -=09
->>>>>  	return 1;
->>>>>  }
->>>>> =20
->>>>>  __setup("mac5380=3D", mac_scsi_setup);
->>>>> +#endif /* !MODULE */
->>>>> =20
->>>>>  /*
->>>>>   * Function : int macscsi_detect(struct scsi_host_template * tpn=
-t)
->>>>> @@ -199,13 +164,8 @@ int __init macscsi_detect(struct scsi_ho
->>>>>  		tpnt->cmd_per_lun =3D setup_cmd_per_lun;
->>>>>  	if (setup_sg_tablesize >=3D 0)
->>>>>  		tpnt->sg_tablesize =3D setup_sg_tablesize;
->>>>> -
->>>>> -    if (setup_hostid >=3D 0)
->>>>> -	tpnt->this_id =3D setup_hostid;
->>>>> -    else {
->>>>> -	/* use 7 as default */
->>>>> -	tpnt->this_id =3D 7;
->>>>> -    }
->>>>> +	if (setup_hostid >=3D 0)
->>>>> +		tpnt->this_id =3D setup_hostid & 7;
->>>>> =20
->>>>>  #ifdef SUPPORT_TAGS
->>>>>      if (setup_use_tagged_queuing < 0)
->>>>> @@ -219,15 +179,15 @@ int __init macscsi_detect(struct scsi_ho
->>>>>  	return 0;
->>>>> =20
->>>>>      if (macintosh_config->ident =3D=3D MAC_MODEL_IIFX) {
->>>>> -	mac_scsi_regp  =3D via1+0x8000;
->>>>> -	mac_scsi_drq   =3D via1+0xE000;
->>>>> -	mac_scsi_nodrq =3D via1+0xC000;
->>>>> +	mac_scsi_regp  =3D (unsigned char *) VIA1_BASE + 0x8000;
->>>>> +	mac_scsi_drq   =3D (unsigned char *) VIA1_BASE + 0xE000;
->>>>> +	mac_scsi_nodrq =3D (unsigned char *) VIA1_BASE + 0xC000;
->>>>>  	/* The IIFX should be able to do true DMA, but pseudo-dma doesn=
-'t work */
->>>>>  	flags =3D FLAG_NO_PSEUDO_DMA;
->>>>>      } else {
->>>>> -	mac_scsi_regp  =3D via1+0x10000;
->>>>> -	mac_scsi_drq   =3D via1+0x6000;
->>>>> -	mac_scsi_nodrq =3D via1+0x12000;
->>>>> +	mac_scsi_regp  =3D (unsigned char *) VIA1_BASE + 0x10000;
->>>>> +	mac_scsi_drq   =3D (unsigned char *) VIA1_BASE + 0x6000;
->>>>> +	mac_scsi_nodrq =3D (unsigned char *) VIA1_BASE + 0x12000;
->>>>>      }
->>>>> =20
->>>>>      if (! setup_use_pdma)
->>>> Hmm. mac_via.h has this:
->>>>
->>>> /*
->>>>  * Base addresses for the VIAs. There are two in every machine,
->>>>  * although on some machines the second is an RBV or an OSS.
->>>>  * The OSS is different enough that it's handled separately.
->>>>  *
->>>>  * Do not use these values directly; use the via1 and via2 variabl=
-es
->>>>  * instead (and don't forget to check rbv_present when using via2!=
-)
->>>>  */
->>>>
->>>> #define VIA1_BASE	(0x50F00000)
->>>> #define VIA2_BASE	(0x50F02000)
->>>> #define  RBV_BASE	(0x50F26000)
->>>>
->>>> So either that comment is obsolete or you should revert the above
->>>> bit ...
->>>
->>> Use of via1 had to be changed because that symbol is not exported.
->>>
->>> The comment you quoted is probably not wrong; it relates to program=
-ming=20
->>> the VIA chip itself (see ADB drivers for example). But in this driv=
-er we=20
->>> aren't interested in the VIA1 chip so I'd say niether via1 or VIA1_=
-BASE is=20
->>> good style. Hence my use of bare addresses in the platform resource=
-=20
->>> initializers in patch 21.
->>>
->>> This example of VIA1_BASE + offset disappears in patch 21 (you can =
-find an=20
->>> unrelated example in arch/m68k/mac/config.c but that was not my doi=
-ng).
->>>
->>> This patch is not meant to change the actual addresses used by mac_=
-scsi;=20
->>> it just makes the driver modular. Use of VIA1_BASE seemed like a go=
-od way=20
->>> to express the fact that the addresses are not changed yet (some mo=
-dels=20
->>> use new addresses after patch 21).
->>>
->>> Basically, I just wanted a modular driver for debugging and bisecti=
-on and=20
->>> I wanted it early in the patch series. A modular mac_scsi.c aligns =
-better=20
->>> with atari_scsi.c and sun3_scsi.c as they are already modular. That=
- means=20
->>> that the three subsequent patches which convert {atari,mac,sun3}_sc=
-si.c to=20
->>> platform drivers also align nicely (so I could cross check them).
->>>
->> Fair enough.
+> On Fri, 31 Oct 2014, Finn Thain wrote:
+>=20
 >>
->> Just needed some clarification here. My Mac experience ceased with a
->> IIcx :-)
->=20
-> Hannes, can I get a reviewed-by tag for this patch please?
->=20
-Sure.
+>> On Thu, 30 Oct 2014, Hannes Reinecke wrote:
+>>
+>>> On 10/27/2014 06:26 AM, Finn Thain wrote:
+>>>> Simplify falcon_release_lock_if_possible() by making callers=20
+>>>> responsible for disabling local IRQ's, which they must do anyway t=
+o=20
+>>>> correctly synchronize the ST DMA "lock" with core driver data=20
+>>>> structures. Move this synchronization logic to the core driver wit=
+h=20
+>>>> which it is tightly coupled.
+>>>>
+>>>> Other LLD's like sun3_scsi and mac_scsi that can make use of this =
+core=20
+>>>> driver can just stub out the NCR5380_acquire_dma_irq() and=20
+>>>> NCR5380_release_dma_irq() calls so the compiler will eliminate the=
+ ST=20
+>>>> DMA code.
+>>>>
+>>>> Remove a redundant local_irq_save/restore pair (irq's are disabled=
+ for=20
+>>>> interrupt handlers these days). Revise the locking for=20
+>>>> atari_scsi_bus_reset(): use local_irq_save/restore() instead of=20
+>>>> atari_turnoff/turnon_irq(). There is no guarantee that atari_scsi=20
+>>>> still holds the ST DMA lock during EH, so atari_turnoff/turnon_irq=
+()=20
+>>>> could end up dropping an IDE or floppy interrupt.
+>>>>
+>>>> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+>>>>
+>>>> ---
+>>>>  drivers/scsi/atari_NCR5380.c |   72 ++++++++++++++++++++++++++---=
+--------------
+>>>>  drivers/scsi/atari_scsi.c    |   47 ++++++++++------------------
+>>>>  2 files changed, 62 insertions(+), 57 deletions(-)
+>>>>
+>>>> Index: linux/drivers/scsi/atari_NCR5380.c
+>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>>> --- linux.orig/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:54.00=
+0000000 +1100
+>>>> +++ linux/drivers/scsi/atari_NCR5380.c	2014-10-27 16:25:55.0000000=
+00 +1100
+>>>> @@ -926,7 +926,7 @@ static int NCR5380_queue_command(struct
+>>>>  	 * alter queues and touch the lock.
+>>>>  	 */
+>>>>  	/* perhaps stop command timer here */
+>>>> -	if (!falcon_get_lock())
+>>>> +	if (!NCR5380_acquire_dma_irq(instance))
+>>>>  		return SCSI_MLQUEUE_HOST_BUSY;
+>>>>  	/* perhaps restart command timer here */
+>>>> =20
+>>>> @@ -962,6 +962,18 @@ static int NCR5380_queue_command(struct
+>>>>  	return 0;
+>>>>  }
+>>>> =20
+>>>> +static inline void maybe_release_dma_irq(struct Scsi_Host *instan=
+ce)
+>>>> +{
+>>>> +	struct NCR5380_hostdata *hostdata =3D shost_priv(instance);
+>>>> +
+>>>> +	/* Caller does the locking needed to set & test these data atomi=
+cally */
+>>>> +	if (!hostdata->disconnected_queue &&
+>>>> +	    !hostdata->issue_queue &&
+>>>> +	    !hostdata->connected &&
+>>>> +	    !hostdata->retain_dma_intr)
+>>>> +		NCR5380_release_dma_irq(instance);
+>>>> +}
+>>>> +
+>>>>  /*
+>>>>   * Function : NCR5380_main (void)
+>>>>   *
+>>>> @@ -1084,9 +1096,11 @@ static void NCR5380_main(struct work_str
+>>>>  					cmd_get_tag(tmp, tmp->cmnd[0] !=3D REQUEST_SENSE);
+>>>>  #endif
+>>>>  					if (!NCR5380_select(instance, tmp)) {
+>>>> +						local_irq_disable();
+>>>>  						hostdata->retain_dma_intr--;
+>>>>  						/* release if target did not response! */
+>>>> -						falcon_release_lock_if_possible(hostdata);
+>>>> +						maybe_release_dma_irq(instance);
+>>>> +						local_irq_restore(flags);
+>>>>  						break;
+>>>>  					} else {
+>>>>  						local_irq_disable();
+>>>> @@ -2085,11 +2099,12 @@ static void NCR5380_information_transfer
+>>>>  				case COMMAND_COMPLETE:
+>>>>  					/* Accept message by clearing ACK */
+>>>>  					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+>>>> -					/* ++guenther: possible race with Falcon locking */
+>>>> -					hostdata->retain_dma_intr++;
+>>>> -					hostdata->connected =3D NULL;
+>>>>  					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d, lun %=
+llu "
+>>>>  						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun)=
+;
+>>>> +
+>>>> +					local_irq_save(flags);
+>>>> +					hostdata->retain_dma_intr++;
+>>>> +					hostdata->connected =3D NULL;
+>>>>  #ifdef SUPPORT_TAGS
+>>>>  					cmd_free_tag(cmd);
+>>>>  					if (status_byte(cmd->SCp.Status) =3D=3D QUEUE_FULL) {
+>>>> @@ -2148,17 +2163,17 @@ static void NCR5380_information_transfer
+>>>> =20
+>>>>  						dprintk(NDEBUG_AUTOSENSE, "scsi%d: performing request sense=
+\n", HOSTNO);
+>>>> =20
+>>>> -						local_irq_save(flags);
+>>>>  						LIST(cmd,hostdata->issue_queue);
+>>>>  						SET_NEXT(cmd, hostdata->issue_queue);
+>>>>  						hostdata->issue_queue =3D (struct scsi_cmnd *) cmd;
+>>>> -						local_irq_restore(flags);
+>>>>  						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head=
+ of "
+>>>>  							  "issue queue\n", H_NO(cmd));
+>>>>  					} else {
+>>>>  						cmd->scsi_done(cmd);
+>>>>  					}
+>>>> =20
+>>>> +					local_irq_restore(flags);
+>>>> +
+>>>>  					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>>>>  					/*
+>>>>  					 * Restore phase bits to 0 so an interrupted selection,
+>>> Probably a stupid question, but you're disabling local interrupts.
+>>> scsi_done() OTOH is triggering a soft irq.
+>>
+>> Isn't that how all bottom halves work?
+>>
+>>> Does this work?
+>>
+>> Yes, I've tested that particular code. I'm pretty sure Michael has t=
+oo.
+>>
+>> A quick search turned up another example of this in=20
+>> zfcp_fsf_fcp_cmnd_handler().
+>>
+>>> Shouldn't we enable interrupts before calling scsi_done() ?
+>>
+>> I don't see anything in the scsi_done() implementation in scsi_lib.c=
+ that=20
+>> would be problematic. The description says "This function is interru=
+pt=20
+>> context safe". The same would have to apply to scsi_eh_done().
+>>
+>>
+Ah. I thought I've had it answered, but apparently I ran into one of
+our network hickups.
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
-
 Hannes
-
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
