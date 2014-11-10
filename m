@@ -1,36 +1,37 @@
-From: "Thaung Lin Yan" <linyan@weigusteelco.com>
-Subject: Reminder
-Date: Mon, 10 Nov 2014 10:22:53 +0100
-Message-ID: <20141110092302.EDEF0B73215__30095.7761159681$1415611797$gmane$org@relay.ubiobio.cl>
-Reply-To: 1989576889@qq.com
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: support multi hw queue of blk-mq
+Date: Mon, 10 Nov 2014 11:41:43 +0100
+Message-ID: <54609667.8030702@redhat.com>
+References: <1415552224-31145-1-git-send-email-ming.lei@canonical.com> <1415552224-31145-3-git-send-email-ming.lei@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlas.dci.ubiobio.cl ([146.83.195.21]:54438 "EHLO
-	relay.ubiobio.cl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbaKJJ3e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 04:29:34 -0500
-Content-Description: Mail message body
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:48058 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbaKJKlt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 05:41:49 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hi2so9926273wib.13
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2014 02:41:48 -0800 (PST)
+In-Reply-To: <1415552224-31145-3-git-send-email-ming.lei@canonical.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <linyan@weigusteelco.com>
+To: Ming Lei <ming.lei@canonical.com>, James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
+On 09/11/2014 17:57, Ming Lei wrote:
+> Since virtio_scsi has supported multi virtqueue already,
+> it is natural to map virtque to hw-queue of blk-mq.
+> 
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Ming Lei <ming.lei@canonical.com>
+> ---
+>  drivers/scsi/virtio_scsi.c |  154 ++++----------------------------------------
+>  1 file changed, 14 insertions(+), 140 deletions(-)
 
-Your partnership is needed for a profitable business transaction involv=
-ing huge amounts of fund please contact me for more details.
+Nice. :)
 
------------------------------------------------------------
-Uw partnerschap is nodig voor een winstgevende business transactie waar=
-bij enorme hoeveelheden fonds kunt u contact met mij op voor meer detai=
-ls.
-------------------------------------------------------------
+FWIW, instead of force_blk_mq, it would be fine for me to make
+virtio-scsi use a single queue if not using blk-mq.
 
-Ihre Partnerschaft ist f=FCr ein profitables Gesch=E4ft Transaktion mit=
- riesigen Mengen von Fonds kontaktieren Sie mich bitte f=FCr weitere Ei=
-nzelheiten ben=F6tig
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
