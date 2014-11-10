@@ -1,37 +1,85 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 2/2] virtio_scsi: support multi hw queue of blk-mq
-Date: Mon, 10 Nov 2014 11:41:43 +0100
-Message-ID: <54609667.8030702@redhat.com>
-References: <1415552224-31145-1-git-send-email-ming.lei@canonical.com> <1415552224-31145-3-git-send-email-ming.lei@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [3.16.y-ckt extended stable] Patch "scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND" has been added to staging queue
+Date: Mon, 10 Nov 2014 11:33:06 +0000
+Message-ID: <1415619186-12054-1-git-send-email-luis.henriques@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:48058 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbaKJKlt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 05:41:49 -0500
-Received: by mail-wi0-f180.google.com with SMTP id hi2so9926273wib.13
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2014 02:41:48 -0800 (PST)
-In-Reply-To: <1415552224-31145-3-git-send-email-ming.lei@canonical.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:50802 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbaKJLdJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 06:33:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
 
-On 09/11/2014 17:57, Ming Lei wrote:
-> Since virtio_scsi has supported multi virtqueue already,
-> it is natural to map virtque to hw-queue of blk-mq.
-> 
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-> ---
->  drivers/scsi/virtio_scsi.c |  154 ++++----------------------------------------
->  1 file changed, 14 insertions(+), 140 deletions(-)
+This is a note to let you know that I have just added a patch titled
 
-Nice. :)
+    scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
 
-FWIW, instead of force_blk_mq, it would be fine for me to make
-virtio-scsi use a single queue if not using blk-mq.
+to the linux-3.16.y-queue branch of the 3.16.y-ckt extended stable tree 
+which can be found at:
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.16.y-queue
+
+This patch is scheduled to be released in version 3.16.7-ckt1.
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.16.y-ckt tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+>From 3c8c784d1273b1f13ae894a5807ea7785be54623 Mon Sep 17 00:00:00 2001
+From: Jan Kara <jack@suse.cz>
+Date: Wed, 22 Oct 2014 20:13:39 -0600
+Subject: scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+
+commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
+
+When sg_scsi_ioctl() fails to prepare request to submit in
+blk_rq_map_kern() we jump to a label where we just end up copying
+(luckily zeroed-out) kernel buffer to userspace instead of reporting
+error. Fix the problem by jumping to the right label.
+
+CC: Jens Axboe <axboe@kernel.dk>
+CC: linux-scsi@vger.kernel.org
+Coverity-id: 1226871
+Signed-off-by: Jan Kara <jack@suse.cz>
+
+Fixed up the, now unused, out label.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ block/scsi_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 84ab119b6ffa..de3bd8287d81 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -490,7 +490,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+
+ 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
+ 		err = DRIVER_ERROR << 24;
+-		goto out;
++		goto error;
+ 	}
+
+ 	memset(sense, 0, sizeof(sense));
+@@ -499,7 +499,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+
+ 	blk_execute_rq(q, disk, rq, 0);
+
+-out:
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
+--
+2.1.0
+
