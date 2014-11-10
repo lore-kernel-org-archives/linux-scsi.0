@@ -1,80 +1,65 @@
 From: Hiral Shah <hishah@cisco.com>
-Subject: [PATCH 3/5] [SCSI] Fnic: Improper resue of exchange Ids
-Date: Mon, 10 Nov 2014 12:54:34 -0800
-Message-ID: <1415652876-24570-3-git-send-email-hishah@cisco.com>
+Subject: [PATCH 2/5] [SCSI] Fnic: Memcopy only mimumum of data or trace buffer [SCSI] Fnic: Memcopy only mimumum of data or trace buffer
+Date: Mon, 10 Nov 2014 12:54:33 -0800
+Message-ID: <1415652876-24570-2-git-send-email-hishah@cisco.com>
 References: <1415652876-24570-1-git-send-email-hishah@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-1.cisco.com ([173.37.142.88]:37993 "EHLO
-	alln-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbaKJVCn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 16:02:43 -0500
+Received: from alln-iport-6.cisco.com ([173.37.142.93]:3852 "EHLO
+	alln-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbaKJVCp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 16:02:45 -0500
 In-Reply-To: <1415652876-24570-1-git-send-email-hishah@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Hiral Shah <hishah@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, Anil Chintalapati <achintal@cisco.com>
 
-IOs belonging to an rport are aborted with Internal terminate option
-when rport goes offline. Any new IO issued to the rport during this
-time can reuse the terminated exchange which will cause inconsistent
-state of the exchange between local port and remote port.
+In case of receive path, we do not have eth header or fcoe header available when
+we take a trace so we fill the fc trace buffer with 0xff for both values. We copy only
+mimimum of received data or trace buffer size - fc header - eth and fcoe header
 
-fc_rport_priv is set to RPORT_ST_DELETE before exchanges are aborted by libfc.
-Not issuing amy more I/O requests when RPORT_ST_DELETE is set, will avoid
-inconsistent state of the exchange between local port and remote port.
-
-- Increment fnic version from 1.6.0.13 to 1.6.0.14
+- Increment fnic version from 1.6.0.12 to 1.6.0.13
 
 Signed-off-by: Hiral Shah <hishah@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 Signed-off-by: Anil Chintalapati <achintal@cisco.com>
 ---
- drivers/scsi/fnic/fnic.h      |  2 +-
- drivers/scsi/fnic/fnic_scsi.c | 11 +++++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/scsi/fnic/fnic.h       | 2 +-
+ drivers/scsi/fnic/fnic_trace.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index dbc69ad..5336e8d 100644
+index 69dee68..dbc69ad 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
 @@ -39,7 +39,7 @@
  
  #define DRV_NAME		"fnic"
  #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.13"
-+#define DRV_VERSION		"1.6.0.14"
+-#define DRV_VERSION		"1.6.0.12"
++#define DRV_VERSION		"1.6.0.13"
  #define PFX			DRV_NAME ": "
  #define DFX                     DRV_NAME "%d: "
  
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 961bdf5..d59d4c1 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -430,6 +430,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	int sg_count = 0;
- 	unsigned long flags;
- 	unsigned long ptr;
-+	struct fc_rport_priv *rdata;
- 
- 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -443,6 +444,16 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 		return 0;
- 	}
- 
-+	rdata = lp->tt.rport_lookup(lp, rport->port_id);
-+	if (!rdata || (rdata->rp_state == RPORT_ST_DELETE)) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"returning IO as rport is removed\n");
-+		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-+		sc->result = DID_NO_CONNECT;
-+		done(sc);
-+		return 0;
-+	}
-+
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index acf1f95..65a9bde 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -624,12 +624,12 @@ int fnic_fc_trace_set_data(u32 host_no, u8 frame_type,
+ 	if (frame_type == FNIC_FC_RECV) {
+ 		eth_fcoe_hdr_len = sizeof(struct ethhdr) +
+ 					sizeof(struct fcoe_hdr);
+-		fc_trc_frame_len = fc_trc_frame_len + eth_fcoe_hdr_len;
+ 		memset((char *)fc_trace, 0xff, eth_fcoe_hdr_len);
+ 		/* Copy the rest of data frame */
+ 		memcpy((char *)(fc_trace + eth_fcoe_hdr_len), (void *)frame,
+ 		min_t(u8, fc_trc_frame_len,
+-			(u8)(FC_TRC_SIZE_BYTES - FC_TRC_HEADER_SIZE)));
++			(u8)(FC_TRC_SIZE_BYTES - FC_TRC_HEADER_SIZE
++						- eth_fcoe_hdr_len)));
+ 	} else {
+ 		memcpy((char *)fc_trace, (void *)frame,
+ 		min_t(u8, fc_trc_frame_len,
 -- 
 1.8.5.4
 
