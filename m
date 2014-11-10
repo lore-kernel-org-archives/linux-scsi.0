@@ -1,36 +1,46 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: UNMAP command parameter list
-Date: Mon, 10 Nov 2014 12:52:35 -0500
-Message-ID: <yq1r3xb54f0.fsf@sermon.lab.mkp.net>
-References: <loom.20141108T001847-741@post.gmane.org>
-	<94D0CD8314A33A4D9D801C0FE68B40295937B4CE@G4W3202.americas.hpqcorp.net>
-	<loom.20141108T211736-836@post.gmane.org>
-	<loom.20141110T164410-58@post.gmane.org>
-	<yq17fz36m4o.fsf@sermon.lab.mkp.net>
-	<20141110174043.GA26944@infradead.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCHv3 net-next 0/3] RDMA/cxgb4,cxgb4vf,cxgb4i,csiostor:
+ Cleanup macros
+Date: Mon, 10 Nov 2014 12:57:42 -0500 (EST)
+Message-ID: <20141110.125742.1453978794920057126.davem@davemloft.net>
+References: <1415333125-10635-1-git-send-email-hariprasad@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43160 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbaKJRxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 12:53:07 -0500
-In-Reply-To: <20141110174043.GA26944@infradead.org> (Christoph Hellwig's
-	message of "Mon, 10 Nov 2014 09:40:43 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1415333125-10635-1-git-send-email-hariprasad@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: hariprasad@chelsio.com
+Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, anish@chelsio.com, praveenm@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Andras Kovacs <akovacs@fixstars.com>, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+From: Hariprasad Shenai <hariprasad@chelsio.com>
+Date: Fri,  7 Nov 2014 09:35:22 +0530
 
-Christoph> Note that if the hardware doesn't actually implement UNMAP
-Christoph> and you have to emulate something you're probably better off
-Christoph> emulating WRITE SAME (16) with the UNMAP bit, as the format
-Christoph> is a lot easier to handle, and it's much better specified to
-Christoph> start with.
+> This series moves the debugfs code to a new file debugfs.c and cleans up
+> macros/register defines.
+> 
+> Various patches have ended up changing the style of the symbolic macros/register
+> defines and some of them used the macros/register defines that matches the
+> output of the script from the hardware team.
+> 
+> As a result, the current kernel.org files are a mix of different macro styles.
+> Since this macro/register defines is used by five different drivers, a
+> few patch series have ended up adding duplicate macro/register define entries
+> with different styles. This makes these register define/macro files a complete
+> mess and we want to make them clean and consistent.
+> 
+> Will post few more series so that we can cover all the macros so that they all
+> follow the same style to be consistent.
+> 
+> The patches series is created against 'net-next' tree.
+> And includes patches on cxgb4, cxgb4vf, iw_cxgb4, csiostor and cxgb4i driver.
+> 
+> We have included all the maintainers of respective drivers. Kindly review the
+> change and let us know in case of any review comments.
+ ...
+> V3: Use suffix instead of prefix for macros/register defines
+> V2: Changes the description and cover-letter content to answer David Miller's
+> question
 
-Yup, absolutely!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Series applied, thanks.
