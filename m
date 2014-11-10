@@ -1,85 +1,55 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [3.16.y-ckt extended stable] Patch "scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND" has been added to staging queue
-Date: Mon, 10 Nov 2014 11:33:06 +0000
-Message-ID: <1415619186-12054-1-git-send-email-luis.henriques@canonical.com>
+From: <Sumit.Saxena@avagotech.com>
+Subject: [PATCH 1/7] megaraid_sas : Driver version upgrade
+Date: Mon, 10 Nov 2014 17:51:14 +0530
+Message-ID: <201411101224.sAACOcKw018039@palmhbs0.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50802 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbaKJLdJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Nov 2014 06:33:09 -0500
+Received: from mail-by2on0072.outbound.protection.outlook.com ([207.46.100.72]:6552
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752298AbaKJMgP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Nov 2014 07:36:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com, aradford@gmail.com
 
-This is a note to let you know that I have just added a patch titled
+megaraid_sas driver version upgrade
 
-    scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
-
-to the linux-3.16.y-queue branch of the 3.16.y-ckt extended stable tree 
-which can be found at:
-
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.16.y-queue
-
-This patch is scheduled to be released in version 3.16.7-ckt1.
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.16.y-ckt tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Luis
-
-------
-
->From 3c8c784d1273b1f13ae894a5807ea7785be54623 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Wed, 22 Oct 2014 20:13:39 -0600
-Subject: scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
-
-commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
-
-When sg_scsi_ioctl() fails to prepare request to submit in
-blk_rq_map_kern() we jump to a label where we just end up copying
-(luckily zeroed-out) kernel buffer to userspace instead of reporting
-error. Fix the problem by jumping to the right label.
-
-CC: Jens Axboe <axboe@kernel.dk>
-CC: linux-scsi@vger.kernel.org
-Coverity-id: 1226871
-Signed-off-by: Jan Kara <jack@suse.cz>
-
-Fixed up the, now unused, out label.
-
-Signed-off-by: Jens Axboe <axboe@fb.com>
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 ---
- block/scsi_ioctl.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h      | 2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 84ab119b6ffa..de3bd8287d81 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -490,7 +490,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
-
- 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
- 		err = DRIVER_ERROR << 24;
--		goto out;
-+		goto error;
- 	}
-
- 	memset(sense, 0, sizeof(sense));
-@@ -499,7 +499,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
-
- 	blk_execute_rq(q, disk, rq, 0);
-
--out:
- 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
- 	if (err) {
- 		if (rq->sense_len && rq->sense) {
---
-2.1.0
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index a49914d..f3eccf1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -33,7 +33,7 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"06.805.06.00-rc1"
++#define MEGASAS_VERSION				"06.805.06.01-rc1"
+ #define MEGASAS_RELDATE				"Sep. 4, 2014"
+ #define MEGASAS_EXT_VERSION			"Thu. Sep. 4 17:00:00 PDT 2014"
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index f6a69a3..36f463c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -18,7 +18,7 @@
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+  *
+  *  FILE: megaraid_sas_base.c
+- *  Version : 06.805.06.00-rc1
++ *  Version : 06.805.06.01-rc1
+  *
+  *  Authors: LSI Corporation
+  *           Sreenivas Bagalkote
+-- 
+1.8.3.1
 
