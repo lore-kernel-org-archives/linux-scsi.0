@@ -1,35 +1,61 @@
-From: Daniel Cressman <Daniel.Cressman@RHD.ORG>
-Subject: =?iso-8859-1?Q?Gesch=E4ftsvorschlag?=
-Date: Tue, 11 Nov 2014 04:29:50 -0500
-Message-ID: <F4B0CFC90D8B184893F205F423C2018D8A7DBC38CA__24790.7666526318$1415700126$gmane$org@exch.RHD.ORG>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sophos.rhd.org ([50.200.100.45]:60270 "EHLO sophos.rhd.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059AbaKKKBl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2014 05:01:41 -0500
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 3.16.y-ckt 116/170] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+Date: Tue, 11 Nov 2014 11:07:55 +0000
+Message-ID: <1415704129-12709-117-git-send-email-luis.henriques@canonical.com>
+References: <1415704129-12709-1-git-send-email-luis.henriques@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1415704129-12709-1-git-send-email-luis.henriques@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@fb.com>, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Daniel.Cressmann@RHD.ORG" <Daniel.Cressmann@RHD.ORG>
 
-Gesch=E4ftsvorschlag
+3.16.7-ckt1 -stable review patch.  If anyone has any objections, please let me know.
 
-Gru=DF, mein Name ist Herr Andrew WANG Shuhui. Ich bin aus Hong Kong.
+------------------
 
-Ich habe einen Gesch=E4ftsvorschlag f=FCr Sie.
+From: Jan Kara <jack@suse.cz>
 
-Wenn Sie interessiert sind, bitte schreiben Sie mir zur=FCck =FCber mei=
-ne private
+commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
 
-E-Mail-Adresse: Andrewchg@bigpond.com. Und ich gebe Ihnen weitere Infor=
-mationen. Sprechen Sie Englisch? Vielen Dank.
+When sg_scsi_ioctl() fails to prepare request to submit in
+blk_rq_map_kern() we jump to a label where we just end up copying
+(luckily zeroed-out) kernel buffer to userspace instead of reporting
+error. Fix the problem by jumping to the right label.
 
+CC: Jens Axboe <axboe@kernel.dk>
+CC: linux-scsi@vger.kernel.org
+Coverity-id: 1226871
+Signed-off-by: Jan Kara <jack@suse.cz>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fixed up the, now unused, out label.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ block/scsi_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 84ab119b6ffa..de3bd8287d81 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -490,7 +490,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
+ 		err = DRIVER_ERROR << 24;
+-		goto out;
++		goto error;
+ 	}
+ 
+ 	memset(sense, 0, sizeof(sense));
+@@ -499,7 +499,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	blk_execute_rq(q, disk, rq, 0);
+ 
+-out:
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
+-- 
+2.1.0
