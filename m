@@ -1,264 +1,353 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 07/37] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
-Date: Wed, 12 Nov 2014 16:11:53 +1100
-Message-ID: <20141112051148.175453066@telegraphics.com.au>
+Subject: [PATCH v3 08/37] ncr5380: Remove redundant AUTOSENSE macro
+Date: Wed, 12 Nov 2014 16:11:54 +1100
+Message-ID: <20141112051148.399620818@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-cleanup-TAG_NONE-and-TAG_NEXT
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40970 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbaKLFnJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:09 -0500
+Content-Disposition: inline; filename=ncr5380-remove-AUTOSENSE-macro
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Russell King <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org
 
-Both atari_NCR5380.c and sun3_NCR5380.c core drivers #undef TAG_NONE and
-then redefine it. But the original definition is unused because NCR5380.c
-lacks support for tagged queueing. So just define it once.
-
-The TAG_NEXT macro only appears in the arguments to NCR5380_select() calls.
-But that routine doesn't use its tag argument as the tag was already
-assigned in NCR5380_main(). So remove the unused argument and the macro.
+Every NCR5380 driver sets AUTOSENSE so it need not be optional (and the
+mid-layer expects it). Remove this redundant macro to improve readability.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.c       |   29 +++++++++++++----------------
- drivers/scsi/NCR5380.h       |   11 ++++-------
- drivers/scsi/atari_NCR5380.c |   19 +++++--------------
- drivers/scsi/sun3_NCR5380.c  |   19 +++++--------------
- 4 files changed, 27 insertions(+), 51 deletions(-)
+ drivers/scsi/NCR5380.c       |   14 +-------------
+ drivers/scsi/NCR5380.h       |    5 -----
+ drivers/scsi/arm/cumana_1.c  |    1 -
+ drivers/scsi/arm/oak.c       |    1 -
+ drivers/scsi/atari_NCR5380.c |   15 +--------------
+ drivers/scsi/atari_scsi.c    |    1 -
+ drivers/scsi/dmx3191d.c      |    1 -
+ drivers/scsi/dtc.c           |    4 ----
+ drivers/scsi/g_NCR5380.c     |    2 --
+ drivers/scsi/mac_scsi.c      |    2 --
+ drivers/scsi/pas16.c         |    4 ----
+ drivers/scsi/sun3_NCR5380.c  |   16 +---------------
+ drivers/scsi/sun3_scsi.c     |    2 --
+ drivers/scsi/t128.c          |    4 ----
+ 14 files changed, 3 insertions(+), 69 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:54.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
-@@ -316,10 +316,6 @@ static struct scsi_host_template *the_te
-  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
-  */
- 
--/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
--#undef TAG_NONE
--#define TAG_NONE 0xff
--
- typedef struct {
- 	DECLARE_BITMAP(allocated, MAX_TAGS);
- 	int nr_allocated;
-@@ -1118,9 +1114,7 @@ static void NCR5380_main(struct work_str
- #ifdef SUPPORT_TAGS
- 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
- #endif
--					if (!NCR5380_select(instance, tmp,
--					    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE :
--					    TAG_NEXT)) {
-+					if (!NCR5380_select(instance, tmp)) {
- 						falcon_dont_release--;
- 						/* release if target did not response! */
- 						falcon_release_lock_if_possible(hostdata);
-@@ -1351,17 +1345,14 @@ static void collect_stats(struct NCR5380
- #endif
- 
- /*
-- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd,
-- *	int tag);
-+ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *	including ARBITRATION, SELECTION, and initial message out for
-  *	IDENTIFY and queue messages.
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this
-- *	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for
-- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for
-- *	the command that is presently connected.
-+ *	target lives, cmd - SCSI command to execute.
-  *
-  * Returns : -1 if selection could not execute for some reason,
-  *	0 if selection succeeded or failed because the target
-@@ -1381,7 +1372,7 @@ static void collect_stats(struct NCR5380
-  *		cmd->result host byte set to DID_BAD_TARGET.
-  */
- 
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd, int tag)
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
- {
- 	SETUP_HOSTDATA(instance);
- 	unsigned char tmp[3], phase;
-@@ -2758,7 +2749,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
- 			local_irq_restore(flags);
- 			dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
- 
--			if (NCR5380_select(instance, cmd, (int)cmd->tag))
-+			if (NCR5380_select(instance, cmd))
- 				return FAILED;
- 
- 			dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:54.000000000 +1100
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
-@@ -305,10 +305,6 @@ static struct scsi_host_template *the_te
-  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
-  */
- 
--/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
--#undef TAG_NONE
--#define TAG_NONE 0xff
--
- /* For the m68k, the number of bits in 'allocated' must be a multiple of 32! */
- #if (MAX_TAGS % 32) != 0
- #error "MAX_TAGS must be a multiple of 32!"
-@@ -1057,9 +1053,7 @@ static void NCR5380_main (struct work_st
- #ifdef SUPPORT_TAGS
- 		    cmd_get_tag( tmp, tmp->cmnd[0] != REQUEST_SENSE );
- #endif
--		    if (!NCR5380_select(instance, tmp, 
--			    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : 
--			    TAG_NEXT)) {
-+		    if (!NCR5380_select(instance, tmp)) {
- 			break;
- 		    } else {
- 			local_irq_disable();
-@@ -1292,16 +1286,14 @@ static void collect_stats(struct NCR5380
- 
- /* 
-  * Function : int NCR5380_select(struct Scsi_Host *instance,
-- * 				 struct scsi_cmnd *cmd,	int tag);
-+ *				 struct scsi_cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *	including ARBITRATION, SELECTION, and initial message out for 
-  *	IDENTIFY and queue messages. 
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this 
-- * 	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
-- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
-- *	the command that is presently connected.
-+ *	target lives, cmd - SCSI command to execute.
-  * 
-  * Returns : -1 if selection could not execute for some reason,
-  *	0 if selection succeeded or failed because the target 
-@@ -1321,8 +1313,7 @@ static void collect_stats(struct NCR5380
-  *		cmd->result host byte set to DID_BAD_TARGET.
-  */
- 
--static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd,
--			  int tag)
-+static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- {
-     SETUP_HOSTDATA(instance);
-     unsigned char tmp[3], phase;
-@@ -2736,7 +2727,7 @@ static int NCR5380_abort(struct scsi_cmn
-             local_irq_restore(flags);
- 	    dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
-   
--            if (NCR5380_select (instance, cmd, (int) cmd->tag)) 
-+	    if (NCR5380_select(instance, cmd))
- 		return FAILED;
- 
- 	    dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
 Index: linux/drivers/scsi/NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.c	2014-11-12 16:10:55.000000000 +1100
-@@ -1073,14 +1073,14 @@ static void NCR5380_main(struct work_str
- 					hostdata->selecting = NULL;
- 					/* RvC: have to preset this to indicate a new command is being performed */
+--- linux.orig/drivers/scsi/NCR5380.c	2014-11-12 16:10:55.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2014-11-12 16:10:57.000000000 +1100
+@@ -627,9 +627,6 @@ NCR5380_print_options(struct Scsi_Host *
+ #ifdef AUTOPROBE_IRQ
+ 	       " AUTOPROBE_IRQ"
+ #endif
+-#ifdef AUTOSENSE
+-	       " AUTOSENSE"
+-#endif
+ #ifdef DIFFERENTIAL
+ 	       " DIFFERENTIAL"
+ #endif
+@@ -857,12 +854,6 @@ static int NCR5380_init(struct Scsi_Host
+ 	hostdata->host = instance;
+ 	hostdata->time_expires = 0;
  
--					if (!NCR5380_select(instance, tmp,
--							    /* 
--							     * REQUEST SENSE commands are issued without tagged
--							     * queueing, even on SCSI-II devices because the 
--							     * contingent allegiance condition exists for the 
--							     * entire unit.
--							     */
--							    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
-+					/*
-+					 * REQUEST SENSE commands are issued without tagged
-+					 * queueing, even on SCSI-II devices because the
-+					 * contingent allegiance condition exists for the
-+					 * entire unit.
-+					 */
-+
-+					if (!NCR5380_select(instance, tmp)) {
- 						break;
- 					} else {
- 						LIST(tmp, hostdata->issue_queue);
-@@ -1097,7 +1097,7 @@ static void NCR5380_main(struct work_str
- 		if (hostdata->selecting) {
- 			tmp = (Scsi_Cmnd *) hostdata->selecting;
- 			/* Selection will drop and retake the lock */
--			if (!NCR5380_select(instance, tmp, (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
-+			if (!NCR5380_select(instance, tmp)) {
- 				/* Ok ?? */
- 			} else {
- 				/* RvC: device failed, so we wait a long time
-@@ -1246,17 +1246,14 @@ static void collect_stats(struct NCR5380
+-#ifndef AUTOSENSE
+-	if ((instance->cmd_per_lun > 1) || instance->can_queue > 1)
+-		    printk(KERN_WARNING "scsi%d : WARNING : support for multiple outstanding commands enabled\n" "         without AUTOSENSE option, contingent allegiance conditions may\n"
+-		    	   "         be incorrectly cleared.\n", instance->host_no);
+-#endif				/* def AUTOSENSE */
+-
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+@@ -2260,7 +2251,6 @@ static void NCR5380_information_transfer
+ 					else if (status_byte(cmd->SCp.Status) != GOOD)
+ 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
  
- 
- /* 
-- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd, 
-- *      int tag);
-+ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
-  *
-  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
-  *      including ARBITRATION, SELECTION, and initial message out for 
-  *      IDENTIFY and queue messages. 
-  *
-  * Inputs : instance - instantiation of the 5380 driver on which this 
-- *      target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
-- *      new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
-- *      the command that is presently connected.
-+ *      target lives, cmd - SCSI command to execute.
-  * 
-  * Returns : -1 if selection could not execute for some reason,
-  *      0 if selection succeeded or failed because the target 
-@@ -1278,7 +1275,7 @@ static void collect_stats(struct NCR5380
-  *	Locks: caller holds hostdata lock in IRQ mode
-  */
-  
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag) 
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
- {
- 	NCR5380_local_declare();
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
-@@ -2774,7 +2771,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd
- 		if (cmd == tmp) {
- 			dprintk(NDEBUG_ABORT, "scsi%d : aborting disconnected command.\n", instance->host_no);
- 
--			if (NCR5380_select(instance, cmd, (int) cmd->tag))
-+			if (NCR5380_select(instance, cmd))
- 				return FAILED;
- 			dprintk(NDEBUG_ABORT, "scsi%d : nexus reestablished.\n", instance->host_no);
- 
+-#ifdef AUTOSENSE
+ 					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
+ 						hostdata->ses.cmd_len) {
+ 						scsi_eh_restore_cmnd(cmd, &hostdata->ses);
+@@ -2277,9 +2267,7 @@ static void NCR5380_information_transfer
+ 						    hostdata->issue_queue;
+ 						hostdata->issue_queue = (Scsi_Cmnd *) cmd;
+ 						dprintk(NDEBUG_QUEUES, "scsi%d : REQUEST SENSE added to head of issue queue\n", instance->host_no);
+-					} else
+-#endif				/* def AUTOSENSE */
+-					{
++					} else {
+ 						collect_stats(hostdata, cmd);
+ 						cmd->scsi_done(cmd);
+ 					}
 Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-11-12 16:10:54.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-11-12 16:10:55.000000000 +1100
-@@ -224,14 +224,11 @@
- #define DISCONNECT_LONG		2
+--- linux.orig/drivers/scsi/NCR5380.h	2014-11-12 16:10:55.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2014-11-12 16:10:57.000000000 +1100
+@@ -25,10 +25,7 @@
+ #define NCR5380_H
  
- /* 
-- * These are "special" values for the tag parameter passed to NCR5380_select.
-+ * "Special" value for the (unsigned char) command tag, to indicate
-+ * I_T_L nexus instead of I_T_L_Q.
+ #include <linux/interrupt.h>
+-
+-#ifdef AUTOSENSE
+ #include <scsi/scsi_eh.h>
+-#endif
+ 
+ #define NCR5380_PUBLIC_RELEASE 7
+ #define NCR53C400_PUBLIC_RELEASE 2
+@@ -281,9 +278,7 @@ struct NCR5380_hostdata {
+ 	unsigned pendingr;
+ 	unsigned pendingw;
+ #endif
+-#ifdef AUTOSENSE
+ 	struct scsi_eh_save ses;
+-#endif
+ };
+ 
+ #ifdef __KERNEL__
+Index: linux/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/cumana_1.c	2014-11-12 16:10:43.000000000 +1100
++++ linux/drivers/scsi/arm/cumana_1.c	2014-11-12 16:10:57.000000000 +1100
+@@ -18,7 +18,6 @@
+ 
+ #include <scsi/scsicam.h>
+ 
+-#define AUTOSENSE
+ #define PSEUDO_DMA
+ 
+ #define CUMANASCSI_PUBLIC_RELEASE 1
+Index: linux/drivers/scsi/arm/oak.c
+===================================================================
+--- linux.orig/drivers/scsi/arm/oak.c	2014-11-12 16:10:49.000000000 +1100
++++ linux/drivers/scsi/arm/oak.c	2014-11-12 16:10:57.000000000 +1100
+@@ -17,7 +17,6 @@
+ #include "../scsi.h"
+ #include <scsi/scsi_host.h>
+ 
+-#define AUTOSENSE
+ /*#define PSEUDO_DMA*/
+ 
+ #define OAKSCSI_PUBLIC_RELEASE 1
+Index: linux/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:57.000000000 +1100
+@@ -683,9 +683,6 @@ static inline void NCR5380_all_init(void
+ static void __init NCR5380_print_options(struct Scsi_Host *instance)
+ {
+ 	printk(" generic options"
+-#ifdef AUTOSENSE
+-	       " AUTOSENSE"
+-#endif
+ #ifdef REAL_DMA
+ 	       " REAL DMA"
+ #endif
+@@ -842,13 +839,6 @@ static int __init NCR5380_init(struct Sc
+ 		first_instance = instance;
+ 	}
+ 
+-#ifndef AUTOSENSE
+-	if ((instance->cmd_per_lun > 1) || (instance->can_queue > 1))
+-		printk("scsi%d: WARNING : support for multiple outstanding commands enabled\n"
+-		       "        without AUTOSENSE option, contingent allegiance conditions may\n"
+-		       "        be incorrectly cleared.\n", HOSTNO);
+-#endif /* def AUTOSENSE */
+-
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+@@ -2199,7 +2189,6 @@ static void NCR5380_information_transfer
+ 					else if (status_byte(cmd->SCp.Status) != GOOD)
+ 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 
+-#ifdef AUTOSENSE
+ 					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
+ 						hostdata->ses.cmd_len) {
+ 						scsi_eh_restore_cmnd(cmd, &hostdata->ses);
+@@ -2219,9 +2208,7 @@ static void NCR5380_information_transfer
+ 						local_irq_restore(flags);
+ 						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
+ 							  "issue queue\n", H_NO(cmd));
+-					} else
+-#endif /* def AUTOSENSE */
+-					{
++					} else {
+ #ifdef NCR5380_STATS
+ 						collect_stats(hostdata, cmd);
+ #endif
+Index: linux/drivers/scsi/atari_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:10:57.000000000 +1100
+@@ -67,7 +67,6 @@
+ 
+ #include <linux/module.h>
+ 
+-#define AUTOSENSE
+ /* For the Atari version, use only polled IO or REAL_DMA */
+ #define	REAL_DMA
+ /* Support tagged queuing? (on devices that are able to... :-) */
+Index: linux/drivers/scsi/dmx3191d.c
+===================================================================
+--- linux.orig/drivers/scsi/dmx3191d.c	2014-11-12 16:10:46.000000000 +1100
++++ linux/drivers/scsi/dmx3191d.c	2014-11-12 16:10:57.000000000 +1100
+@@ -33,7 +33,6 @@
+ /*
+  * Definitions for the generic 5380 driver.
   */
+-#define AUTOSENSE
  
--#define TAG_NEXT	-1	/* Use next free tag */
--#define TAG_NONE	-2	/* 
--				 * Establish I_T_L nexus instead of I_T_L_Q
--				 * even on SCSI-II devices.
--				 */
-+#define TAG_NONE	0xff
+ #define NCR5380_read(reg)		inb(port + reg)
+ #define NCR5380_write(reg, value)	outb(value, port + reg)
+Index: linux/drivers/scsi/dtc.c
+===================================================================
+--- linux.orig/drivers/scsi/dtc.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2014-11-12 16:10:57.000000000 +1100
+@@ -1,5 +1,4 @@
+ 
+-#define AUTOSENSE
+ #define PSEUDO_DMA
+ #define DONT_USE_INTR
+ #define UNSAFE			/* Leave interrupts enabled during pseudo-dma I/O */
+@@ -30,9 +29,6 @@
  
  /*
-  * These are "special" values for the irq and dma_channel fields of the 
-@@ -323,7 +320,7 @@ static irqreturn_t NCR5380_intr(int irq,
- static void NCR5380_main(struct work_struct *work);
- static void __maybe_unused NCR5380_print_options(struct Scsi_Host *instance);
- static void NCR5380_reselect(struct Scsi_Host *instance);
--static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag);
-+static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd);
- #if defined(PSEUDO_DMA) || defined(REAL_DMA) || defined(REAL_DMA_POLL)
- static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
+  * Options : 
+- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
+- *      for commands that return with a CHECK CONDITION status. 
+- *
+  * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+  * increase compared to polled I/O.
+  *
+Index: linux/drivers/scsi/g_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:57.000000000 +1100
+@@ -80,8 +80,6 @@
+ #define USLEEP_WAITLONG	500
+ 
+ #define AUTOPROBE_IRQ
+-#define AUTOSENSE
+-
+ 
+ #ifdef CONFIG_SCSI_GENERIC_NCR53C400
+ #define NCR53C400_PSEUDO_DMA 1
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:10:57.000000000 +1100
+@@ -48,8 +48,6 @@
+ #include <scsi/scsi_host.h>
+ #include "mac_scsi.h"
+ 
+-/* These control the behaviour of the generic 5380 core */
+-#define AUTOSENSE
+ #define PSEUDO_DMA
+ 
+ #include "NCR5380.h"
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2014-11-12 16:10:57.000000000 +1100
+@@ -1,4 +1,3 @@
+-#define AUTOSENSE
+ #define PSEUDO_DMA
+ #define UNSAFE  /* Not unsafe for PAS16 -- use it */
+ #define PDEBUG 0
+@@ -39,9 +38,6 @@
+ 
+ /*
+  * Options : 
+- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
+- *      for commands that return with a CHECK CONDITION status. 
+- *
+  * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
+  *      bytes at a time.  Since interrupts are disabled by default during
+  *      these transfers, we might need this to give reasonable interrupt
+Index: linux/drivers/scsi/sun3_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
++++ linux/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:57.000000000 +1100
+@@ -629,9 +629,6 @@ static inline void NCR5380_all_init (voi
+ static void __init NCR5380_print_options (struct Scsi_Host *instance)
+ {
+     printk(" generic options"
+-#ifdef AUTOSENSE 
+-    " AUTOSENSE"
+-#endif
+ #ifdef REAL_DMA
+     " REAL DMA"
  #endif
+@@ -788,14 +785,6 @@ static int __init NCR5380_init(struct Sc
+ 	first_instance = instance;
+     }
+ 	
+-
+-#ifndef AUTOSENSE
+-    if ((instance->cmd_per_lun > 1) || (instance->can_queue > 1))
+-	 printk("scsi%d: WARNING : support for multiple outstanding commands enabled\n"
+-	        "        without AUTOSENSE option, contingent allegiance conditions may\n"
+-	        "        be incorrectly cleared.\n", HOSTNO);
+-#endif /* def AUTOSENSE */
+-
+     NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+     NCR5380_write(MODE_REG, MR_BASE);
+     NCR5380_write(TARGET_COMMAND_REG, 0);
+@@ -2161,7 +2150,6 @@ static void NCR5380_information_transfer
+ 		    else if (status_byte(cmd->SCp.Status) != GOOD)
+ 			cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 		    
+-#ifdef AUTOSENSE
+ 		    if ((cmd->cmnd[0] == REQUEST_SENSE) &&
+ 			                        hostdata->ses.cmd_len) {
+ 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
+@@ -2185,9 +2173,7 @@ static void NCR5380_information_transfer
+ 		        local_irq_restore(flags);
+ 			dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
+ 				  "issue queue\n", H_NO(cmd));
+-		   } else
+-#endif /* def AUTOSENSE */
+-		   {
++		   } else {
+ #ifdef NCR5380_STATS
+ 		       collect_stats(hostdata, cmd);
+ #endif
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:57.000000000 +1100
+@@ -45,8 +45,6 @@
+  * PARITY - enable parity checking.  Not supported.
+  */
+ 
+-#define AUTOSENSE
+-
+ #include <linux/types.h>
+ #include <linux/stddef.h>
+ #include <linux/ctype.h>
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/t128.c	2014-11-12 16:10:57.000000000 +1100
+@@ -1,4 +1,3 @@
+-#define AUTOSENSE
+ #define PSEUDO_DMA
+ 
+ /*
+@@ -40,9 +39,6 @@
+ 
+ /*
+  * Options : 
+- * AUTOSENSE - if defined, REQUEST SENSE will be performed automatically
+- *      for commands that return with a CHECK CONDITION status. 
+- *
+  * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+  * increase compared to polled I/O.
+  *
+
+
