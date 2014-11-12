@@ -1,114 +1,89 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: BUG in scsi_lib.c due to a bad commit
-Date: Tue, 11 Nov 2014 18:53:04 -0800
-Message-ID: <5462CB90.1080303@roeck-us.net>
-References: <54629CAE.2000207@laposte.net> <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [V2 PATCH 1/4] scsi:stex.c Support to Pegasus series.
+Date: Wed, 12 Nov 2014 11:26:30 +0800
+Message-ID: <5462D366.5030106@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:47155 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755455AbaKLCxP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Nov 2014 21:53:15 -0500
-Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
-	(envelope-from <linux@roeck-us.net>)
-	id 1XoO3W-000yPq-BH
-	for linux-scsi@vger.kernel.org; Wed, 12 Nov 2014 02:53:14 +0000
-In-Reply-To: <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Barto <mister.freeman@laposte.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 
-On 11/11/2014 04:17 PM, Bjorn Helgaas wrote:
-> [+cc Guenter, linux-scsi]
->
-> On Tue, Nov 11, 2014 at 4:33 PM, Barto <mister.freeman@laposte.net> wrote:
->> Hello everyone,
->>
->> I notice a bug since kernel 3.17 ( and also with 3.18 branch ), a random
->> hang at boot on some PC configurations, I did a "git bisect" and I found
->> that the culprit is  :
->>
->> [045065d8a300a37218c548e9aa7becd581c6a0e8] [SCSI] fix qemu boot hang problem
->>
->> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=045065d8a300a37218c548e9aa7becd581c6a0e8
->>
->> the author of this commit has choosen to inverse the logic of the if
->> statement in the file  drivers/scsi/scsi_lib.c in order to solve an
->> issue with qemu :
->>
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1774,7 +1774,7 @@ static void scsi_request_fn(struct request_queue *q)
->> blk_requeue_request(q, req);
->> atomic_dec(&sdev->device_busy);
->> out_delay:
->> - if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
->> + if (!atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
->> blk_delay_queue(q, SCSI_QUEUE_DELAY);
->> }
->>
 
-The above commit was a follow-up to commit 71e75c97f97a, which did the following:
+ From 5fdb4203c09d6896e7b71a8f839e46e84234eeb9 Mon Sep 17 00:00:00 2001
+From: Charles Chiou <charles.chiou@tw.promise.com>
+Date: Wed, 5 Nov 2014 14:18:43 +0800
+Subject: [PATCH 1/4] scsi:stex.c Support to Pegasus series.
 
--       if (sdev->device_busy == 0 && !scsi_device_blocked(sdev))
-+       if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
 
-meaning it reversed the polarity of the check in the original code.
-Since that commit created problems as observed in qemu, I thought it
-would be obvious that restoring the original polarity would make sense.
-This is explained in my patch, so I am somewhat at loss why ...
+I add code to distinct SuperTrack and Pegasus series by subID.
+It's needed for backward compatibility.
 
->> this change triggers a bug on my PC ( I don't have SCSI devices, but
->> only 3 SATA harddisks and 2 IDE harddisks, SATA disks are on an ICH7
->> sata controler on the motherboard gigabyte GA-P31-DS3L, and IDE disk on
->> a JMicron JMB363/368 Sata/IDE PCIe card ), every 5~10 boots the boot
->> stops suddenly because of this commit,
->>
->> If I revert this commit then the bug is gone, more details can be found
->> here, where I created a patch who reverts commit 045065d8 :
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=87581
->>
->> my question: why Guenter Roeck ( the author of the bad commit ) has
->> choosen to inverse the logic in the if statement ?
+Change the driver version.
+---
+  drivers/scsi/stex.c | 24 +++++++++++++++++++-----
+  1 file changed, 19 insertions(+), 5 deletions(-)
 
-this question is asked.
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1aa4bef..f52f1de 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -37,11 +37,11 @@
+  #include <scsi/scsi_eh.h>
 
-Having said that, I don't really care one way or another. I am fine
-with reverting my commit; if that is done, I'll simply remove the
-related scsi tests from my qemu test runs.
+  #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION "5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM			0000
++#define ST_BUILD_VER		01
 
-Guenter
+  enum {
+  	/* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+  	u16 rq_count;
+  	u16 rq_size;
+  	u16 sts_count;
++	u8  yellowstone;
+  };
 
->> before his commit the if statement was like this :
->>
->> if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
->> blk_delay_queue(q, SCSI_QUEUE_DELAY);
->>
->> if his decision to inverse the logic of
->> "atomic_read(&sdev->device_busy)" is acceptable then the real bug is
->> probably located elsewhere in the scsi source code, and we must solve
->> this mistery because there is obviously a bug regression in SCSI code
->> because with older kernels ( 3.16.7 and lower ) I don't have the random
->> hang boot bug with my configuration,
->>
->> another user in archlinux forums has also this bug and he has a more
->> modern PC ( intel i7 core cpu, SSD device ), my fear is when linux
->> distros will move to kernel 3.17 then more users will have this weird
->> random bug who can occur only on boot and only with a specific PC
->> configuration, if the boot step is passed despite the random bug then
->> the bug will not occur, it occurs only during the boot process, which
->> probably means that the faulty source code is only called during the
->> boot process,
->>
->> thanks for anyone who wants to dig this problem with me
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->
+  struct st_card_info {
+@@ -1546,6 +1547,7 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+  	struct Scsi_Host *host;
+  	const struct st_card_info *ci = NULL;
+  	u32 sts_offset, cp_offset, scratch_offset;
++	u32 subID;
+  	int err;
 
+  	err = pci_enable_device(pdev);
+@@ -1590,6 +1592,18 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+
+  	hba->cardtype = (unsigned int) id->driver_data;
+  	ci = &stex_card_info[hba->cardtype];
++	subID = id->subdevice;
++	if ((subID == 0x4221 || subID == 0x4222 ||
++	    subID == 0x4223 || subID == 0x4224 ||
++	    subID == 0x4225 || subID == 0x4226 ||
++	    subID == 0x4227 || subID == 0x4261 ||
++	    subID == 0x4262 || subID == 0x4263 ||
++	    subID == 0x4264 || subID == 0x4265) &&
++	    (hba->cardtype == st_yel)) {
++		hba->yellowstone = 1;
++	} else if (hba->cardtype == st_yel) {
++		hba->yellowstone = 0;
++	}
+  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+  	if (hba->cardtype == st_yel)
+  		sts_offset += (ci->sts_count+1) * sizeof(u32);
+-- 
+1.9.1
