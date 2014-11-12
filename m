@@ -1,537 +1,344 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 23/37] atari_scsi: Convert to platform device
-Date: Wed, 12 Nov 2014 16:12:09 +1100
-Message-ID: <20141112051151.935467939@telegraphics.com.au>
+Subject: [PATCH v3 21/37] mac_scsi: Convert to platform device
+Date: Wed, 12 Nov 2014 16:12:07 +1100
+Message-ID: <20141112051151.465457332@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40987 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499AbaKLFnU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:20 -0500
-Content-Disposition: inline; filename=atari_scsi-convert-to-platform-device
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=mac_scsi-convert-to-platform-device
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Convert atari_scsi to platform device and eliminate scsi_register().
+Convert mac_scsi to platform device and eliminate scsi_register().
 
-Validate __setup options later on so that module options are checked as well.
-
-Remove the comment about the scsi mid-layer disabling the host irq as it
-is no longer true (AFAICT). Also remove the obsolete slow interrupt stuff
-(IRQ_TYPE_SLOW == 0 anyway).
+Platform resources for chip registers now follow the documentation. This
+should fix issues with the Mac IIci (and possibly other models too).
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
 ---
 
+The new hwreg_present() call site is not protected by local_irq_save/restore.
+This assumes Geert's patch, "Disable/restore interrupts in
+hwreg_present()/hwreg_write()", which is commit e4dc601bf99ccd1c in 3.18-rc1.
+
 Changes since v1:
-- Remove unnecessary return -ENODEV branch.
-- Move IRQ constants to platform resources.
-- Always assign instance->irq so that the atari_NCR5380.c core driver
-  can adopt the NCR5380.c interpretation of instance->irq.
+- Use NO_IRQ instead of IRQ_NONE.
+- Drop unnecessary MACH_IS_MAC() test.
+- Remove static platform_device structs and call
+  platform_device_register_simple() instead of platform_device_register().
+- Platform resources now const and __initconst.
+- Add MAC_SCSI_LATE platform resources to avoid PDMA on certain models.
 
 ---
- arch/m68k/atari/config.c  |   27 ++
- drivers/scsi/atari_scsi.c |  424 ++++++++++++++++++++++------------------------
- drivers/scsi/atari_scsi.h |   17 -
- 3 files changed, 237 insertions(+), 231 deletions(-)
+ arch/m68k/include/asm/macintosh.h |    4 
+ arch/m68k/mac/config.c            |  146 ++++++++++++++++++++--
+ drivers/scsi/mac_scsi.c           |  245 +++++++++++++++++++-------------------
+ 3 files changed, 262 insertions(+), 133 deletions(-)
 
-Index: linux/arch/m68k/atari/config.c
+Index: linux/drivers/scsi/mac_scsi.c
 ===================================================================
---- linux.orig/arch/m68k/atari/config.c	2014-11-12 16:10:43.000000000 +1100
-+++ linux/arch/m68k/atari/config.c	2014-11-12 16:11:26.000000000 +1100
-@@ -858,6 +858,24 @@ static struct platform_device *atari_net
- };
- #endif /* CONFIG_ATARI_ETHERNEC */
- 
-+#ifdef CONFIG_ATARI_SCSI
-+static const struct resource atari_scsi_st_rsrc[] __initconst = {
-+	{
-+		.flags = IORESOURCE_IRQ,
-+		.start = IRQ_MFP_FSCSI,
-+		.end   = IRQ_MFP_FSCSI,
-+	},
-+};
-+
-+static const struct resource atari_scsi_tt_rsrc[] __initconst = {
-+	{
-+		.flags = IORESOURCE_IRQ,
-+		.start = IRQ_TT_MFP_SCSI,
-+		.end   = IRQ_TT_MFP_SCSI,
-+	},
-+};
-+#endif
-+
- int __init atari_platform_init(void)
- {
- 	int rv = 0;
-@@ -892,6 +910,15 @@ int __init atari_platform_init(void)
- 	}
- #endif
- 
-+#ifdef CONFIG_ATARI_SCSI
-+	if (ATARIHW_PRESENT(ST_SCSI))
-+		platform_device_register_simple("atari_scsi", -1,
-+			atari_scsi_st_rsrc, ARRAY_SIZE(atari_scsi_st_rsrc));
-+	else if (ATARIHW_PRESENT(TT_SCSI))
-+		platform_device_register_simple("atari_scsi", -1,
-+			atari_scsi_tt_rsrc, ARRAY_SIZE(atari_scsi_tt_rsrc));
-+#endif
-+
- 	return rv;
- }
- 
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:25.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:26.000000000 +1100
-@@ -74,33 +74,26 @@
- #define	MAX_TAGS 32
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:22.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:23.000000000 +1100
+@@ -12,23 +12,18 @@
+  */
  
  #include <linux/types.h>
 -#include <linux/stddef.h>
 -#include <linux/ctype.h>
  #include <linux/delay.h>
--#include <linux/mm.h>
+-
+ #include <linux/module.h>
+-#include <linux/signal.h>
+ #include <linux/ioport.h>
+ #include <linux/init.h>
  #include <linux/blkdev.h>
  #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/nvram.h>
- #include <linux/bitops.h>
- #include <linux/wait.h>
 +#include <linux/platform_device.h>
  
- #include <asm/setup.h>
- #include <asm/atarihw.h>
- #include <asm/atariints.h>
--#include <asm/page.h>
--#include <asm/pgtable.h>
--#include <asm/irq.h>
--#include <asm/traps.h>
--
--#include <scsi/scsi_host.h>
--#include "atari_scsi.h"
--#include "NCR5380.h"
- #include <asm/atari_stdma.h>
- #include <asm/atari_stram.h>
++#include <asm/hwtest.h>
  #include <asm/io.h>
- 
--#include <linux/stat.h>
-+#include <scsi/scsi_host.h>
-+
-+#include "atari_scsi.h"
-+#include "NCR5380.h"
- 
- #define	IS_A_TT()	ATARIHW_PRESENT(TT_SCSI)
- 
-@@ -176,25 +169,9 @@ static inline void DISABLE_IRQ(void)
- #define	AFTER_RESET_DELAY	(5*HZ/2)
- #endif
- 
--/***************************** Prototypes *****************************/
+-#include <asm/irq.h>
 -
- #ifdef REAL_DMA
- static void atari_scsi_fetch_restbytes(void);
- #endif
--static irqreturn_t scsi_tt_intr(int irq, void *dummy);
--static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
--static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata);
--static int falcon_get_lock(void);
--#ifdef CONFIG_ATARI_SCSI_RESET_BOOT
--static void atari_scsi_reset_boot(void);
+-#include <asm/macintosh.h>
+ #include <asm/macints.h>
+-#include <asm/mac_via.h>
++#include <asm/setup.h>
+ 
+ #include <scsi/scsi_host.h>
+ 
+@@ -36,7 +31,7 @@
+ 
+ #define PSEUDO_DMA
+ 
+-#define NCR5380_implementation_fields   /* none */
++#define NCR5380_implementation_fields   unsigned char *pdma_base
+ #define NCR5380_local_declare()         struct Scsi_Host *_instance
+ #define NCR5380_setup(instance)         _instance = instance
+ 
+@@ -58,10 +53,6 @@
+ 
+ #define RESET_BOOT
+ 
+-#ifdef RESET_BOOT
+-static void mac_scsi_reset_boot(struct Scsi_Host *instance);
 -#endif
--static unsigned char atari_scsi_tt_reg_read(unsigned char reg);
--static void atari_scsi_tt_reg_write(unsigned char reg, unsigned char value);
--static unsigned char atari_scsi_falcon_reg_read(unsigned char reg);
--static void atari_scsi_falcon_reg_write(unsigned char reg, unsigned char value);
 -
--/************************* End of Prototypes **************************/
--
+ static int setup_can_queue = -1;
+ module_param(setup_can_queue, int, 0);
+ static int setup_cmd_per_lun = -1;
+@@ -86,23 +77,18 @@ module_param(setup_hostid, int, 0);
+ #define	AFTER_RESET_DELAY	(HZ/2)
+ #endif
  
- static struct Scsi_Host *atari_scsi_host;
- static unsigned char (*atari_scsi_reg_read)(unsigned char reg);
-@@ -517,160 +494,12 @@ static int falcon_get_lock(void)
- 	return 1;
+-static unsigned char *mac_scsi_regp;
+-static unsigned char *mac_scsi_drq;
+-static unsigned char *mac_scsi_nodrq;
+-
+-
+ /*
+  * NCR 5380 register access functions
+  */
+ 
+-static __inline__ char macscsi_read(struct Scsi_Host *instance, int reg)
++static inline char macscsi_read(struct Scsi_Host *instance, int reg)
+ {
+-  return in_8(instance->io_port + (reg<<4));
++	return in_8(instance->base + (reg << 4));
  }
  
--
--static int __init atari_scsi_detect(struct scsi_host_template *host)
+-static __inline__ void macscsi_write(struct Scsi_Host *instance, int reg, int value)
++static inline void macscsi_write(struct Scsi_Host *instance, int reg, int value)
+ {
+-  out_8(instance->io_port + (reg<<4), value);
++	out_8(instance->base + (reg << 4), value);
+ }
+ 
+ #ifndef MODULE
+@@ -134,96 +120,6 @@ static int __init mac_scsi_setup(char *s
+ __setup("mac5380=", mac_scsi_setup);
+ #endif /* !MODULE */
+ 
+-/*
+- * Function : int macscsi_detect(struct scsi_host_template * tpnt)
+- *
+- * Purpose : initializes mac NCR5380 driver based on the
+- *	command line / compile time port and irq definitions.
+- *
+- * Inputs : tpnt - template for this SCSI adapter.
+- *
+- * Returns : 1 if a host adapter was found, 0 if not.
+- *
+- */
+- 
+-int __init macscsi_detect(struct scsi_host_template * tpnt)
 -{
--	static int called = 0;
--	struct Scsi_Host *instance;
+-    static int called = 0;
+-    int flags = 0;
+-    struct Scsi_Host *instance;
 -
--	if (!MACH_IS_ATARI ||
--	    (!ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(TT_SCSI)) ||
--	    called)
--		return 0;
+-    if (!MACH_IS_MAC || called)
+-	return( 0 );
 -
--	host->proc_name = "Atari";
+-    if (macintosh_config->scsi_type != MAC_SCSI_OLD)
+-	return( 0 );
 -
--	atari_scsi_reg_read  = IS_A_TT() ? atari_scsi_tt_reg_read :
--					   atari_scsi_falcon_reg_read;
--	atari_scsi_reg_write = IS_A_TT() ? atari_scsi_tt_reg_write :
--					   atari_scsi_falcon_reg_write;
--
--	/* setup variables */
--	host->can_queue =
--		(setup_can_queue > 0) ? setup_can_queue :
--		IS_A_TT() ? ATARI_TT_CAN_QUEUE : ATARI_FALCON_CAN_QUEUE;
--	host->cmd_per_lun =
--		(setup_cmd_per_lun > 0) ? setup_cmd_per_lun :
--		IS_A_TT() ? ATARI_TT_CMD_PER_LUN : ATARI_FALCON_CMD_PER_LUN;
--	/* Force sg_tablesize to 0 on a Falcon! */
--	host->sg_tablesize =
--		!IS_A_TT() ? ATARI_FALCON_SG_TABLESIZE :
--		(setup_sg_tablesize >= 0) ? setup_sg_tablesize : ATARI_TT_SG_TABLESIZE;
--
+-	if (setup_can_queue > 0)
+-		tpnt->can_queue = setup_can_queue;
+-	if (setup_cmd_per_lun > 0)
+-		tpnt->cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
+-		tpnt->sg_tablesize = setup_sg_tablesize;
 -	if (setup_hostid >= 0)
--		host->this_id = setup_hostid;
--	else {
--		/* use 7 as default */
--		host->this_id = 7;
--		/* Test if a host id is set in the NVRam */
--		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
--			unsigned char b = nvram_read_byte( 14 );
--			/* Arbitration enabled? (for TOS) If yes, use configured host ID */
--			if (b & 0x80)
--				host->this_id = b & 7;
--		}
--	}
+-		tpnt->this_id = setup_hostid & 7;
 -
 -#ifdef SUPPORT_TAGS
--	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = 0;
+-    if (setup_use_tagged_queuing < 0)
+-	setup_use_tagged_queuing = 0;
 -#endif
--#ifdef REAL_DMA
--	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
--	 * memory block, since there's always ST-Ram in a Falcon), then allocate a
--	 * STRAM_BUFFER_SIZE byte dribble buffer for transfers from/to alternative
--	 * Ram.
--	 */
--	if (MACH_IS_ATARI && ATARIHW_PRESENT(ST_SCSI) &&
--	    !ATARIHW_PRESENT(EXTD_DMA) && m68k_num_memory > 1) {
--		atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
--		if (!atari_dma_buffer) {
--			printk(KERN_ERR "atari_scsi_detect: can't allocate ST-RAM "
--					"double buffer\n");
--			return 0;
--		}
--		atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
--		atari_dma_orig_addr = 0;
--	}
+-
+-    /* Once we support multiple 5380s (e.g. DuoDock) we'll do
+-       something different here */
+-    instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
+-    if (instance == NULL)
+-	return 0;
+-
+-    if (macintosh_config->ident == MAC_MODEL_IIFX) {
+-	mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x8000;
+-	mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0xE000;
+-	mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0xC000;
+-	/* The IIFX should be able to do true DMA, but pseudo-dma doesn't work */
+-	flags = FLAG_NO_PSEUDO_DMA;
+-    } else {
+-	mac_scsi_regp  = (unsigned char *) VIA1_BASE + 0x10000;
+-	mac_scsi_drq   = (unsigned char *) VIA1_BASE + 0x6000;
+-	mac_scsi_nodrq = (unsigned char *) VIA1_BASE + 0x12000;
+-    }
+-
+-    if (! setup_use_pdma)
+-	flags = FLAG_NO_PSEUDO_DMA;
+-	
+-    instance->io_port = (unsigned long) mac_scsi_regp;
+-    instance->irq = IRQ_MAC_SCSI;
+-
+-#ifdef RESET_BOOT   
+-    mac_scsi_reset_boot(instance);
 -#endif
--	instance = scsi_register(host, sizeof(struct NCR5380_hostdata));
--	if (instance == NULL) {
--		atari_stram_free(atari_dma_buffer);
--		atari_dma_buffer = 0;
--		return 0;
--	}
--	atari_scsi_host = instance;
--	/*
--	 * Set irq to 0, to avoid that the mid-level code disables our interrupt
--	 * during queue_command calls. This is completely unnecessary, and even
--	 * worse causes bad problems on the Falcon, where the int is shared with
--	 * IDE and floppy!
--	 */
--       instance->irq = 0;
+-    
+-    NCR5380_init(instance, flags);
 -
--#ifdef CONFIG_ATARI_SCSI_RESET_BOOT
--	atari_scsi_reset_boot();
--#endif
--	NCR5380_init(instance, 0);
+-    instance->n_io_port = 255;
 -
--	if (IS_A_TT()) {
--
--		/* This int is actually "pseudo-slow", i.e. it acts like a slow
--		 * interrupt after having cleared the pending flag for the DMA
--		 * interrupt. */
--		if (request_irq(IRQ_TT_MFP_SCSI, scsi_tt_intr, IRQ_TYPE_SLOW,
--				 "SCSI NCR5380", instance)) {
--			printk(KERN_ERR "atari_scsi_detect: cannot allocate irq %d, aborting",IRQ_TT_MFP_SCSI);
--			scsi_unregister(atari_scsi_host);
--			atari_stram_free(atari_dma_buffer);
--			atari_dma_buffer = 0;
--			return 0;
--		}
--		tt_mfp.active_edge |= 0x80;		/* SCSI int on L->H */
--#ifdef REAL_DMA
--		tt_scsi_dma.dma_ctrl = 0;
--		atari_dma_residual = 0;
--
--		if (MACH_IS_MEDUSA) {
--			/* While the read overruns (described by Drew Eckhardt in
--			 * NCR5380.c) never happened on TTs, they do in fact on the Medusa
--			 * (This was the cause why SCSI didn't work right for so long
--			 * there.) Since handling the overruns slows down a bit, I turned
--			 * the #ifdef's into a runtime condition.
--			 *
--			 * In principle it should be sufficient to do max. 1 byte with
--			 * PIO, but there is another problem on the Medusa with the DMA
--			 * rest data register. So 'atari_read_overruns' is currently set
--			 * to 4 to avoid having transfers that aren't a multiple of 4. If
--			 * the rest data bug is fixed, this can be lowered to 1.
--			 */
--			atari_read_overruns = 4;
--		}
--#endif /*REAL_DMA*/
--	} else { /* ! IS_A_TT */
--
--		/* Nothing to do for the interrupt: the ST-DMA is initialized
--		 * already by atari_init_INTS()
--		 */
--
--#ifdef REAL_DMA
--		atari_dma_residual = 0;
--		atari_dma_active = 0;
--		atari_dma_stram_mask = (ATARIHW_PRESENT(EXTD_DMA) ? 0x00000000
--					: 0xff000000);
--#endif
+-    if (instance->irq != NO_IRQ)
+-	if (request_irq(instance->irq, NCR5380_intr, 0, "ncr5380", instance)) {
+-	    printk(KERN_WARNING "scsi%d: IRQ%d not free, interrupts disabled\n",
+-		   instance->host_no, instance->irq);
+-	    instance->irq = NO_IRQ;
 -	}
 -
--	called = 1;
--	return 1;
+-    called = 1;
+-    return 1;
 -}
 -
--static int atari_scsi_release(struct Scsi_Host *sh)
+-int macscsi_release (struct Scsi_Host *shpnt)
 -{
--	if (IS_A_TT())
--		free_irq(IRQ_TT_MFP_SCSI, sh);
--	if (atari_dma_buffer)
--		atari_stram_free(atari_dma_buffer);
--	NCR5380_exit(sh);
--	return 1;
+-	if (shpnt->irq != NO_IRQ)
+-		free_irq(shpnt->irq, shpnt);
+-	NCR5380_exit(shpnt);
+-
+-	return 0;
 -}
 -
- #ifndef MODULE
- static int __init atari_scsi_setup(char *str)
+ #ifdef RESET_BOOT
+ /*
+  * Our 'bus reset on boot' function
+@@ -335,13 +231,14 @@ __asm__ __volatile__					\
+ static int macscsi_pread(struct Scsi_Host *instance,
+                          unsigned char *dst, int len)
  {
- 	/* Format of atascsi parameter is:
- 	 *   atascsi=<can_queue>,<cmd_per_lun>,<sg_tablesize>,<hostid>,<use_tags>
--	 * Defaults depend on TT or Falcon, hostid determined at run time.
-+	 * Defaults depend on TT or Falcon, determined at run time.
- 	 * Negative values mean don't change.
- 	 */
- 	int ints[6];
-@@ -681,36 +510,17 @@ static int __init atari_scsi_setup(char
- 		printk("atari_scsi_setup: no arguments!\n");
- 		return 0;
- 	}
--
--	if (ints[0] >= 1) {
--		if (ints[1] > 0)
--			/* no limits on this, just > 0 */
--			setup_can_queue = ints[1];
--	}
--	if (ints[0] >= 2) {
--		if (ints[2] > 0)
--			setup_cmd_per_lun = ints[2];
--	}
--	if (ints[0] >= 3) {
--		if (ints[3] >= 0) {
--			setup_sg_tablesize = ints[3];
--			/* Must be <= SG_ALL (255) */
--			if (setup_sg_tablesize > SG_ALL)
--				setup_sg_tablesize = SG_ALL;
--		}
--	}
--	if (ints[0] >= 4) {
--		/* Must be between 0 and 7 */
--		if (ints[4] >= 0 && ints[4] <= 7)
--			setup_hostid = ints[4];
--		else if (ints[4] > 7)
--			printk("atari_scsi_setup: invalid host ID %d !\n", ints[4]);
--	}
-+	if (ints[0] >= 1)
-+		setup_can_queue = ints[1];
-+	if (ints[0] >= 2)
-+		setup_cmd_per_lun = ints[2];
-+	if (ints[0] >= 3)
-+		setup_sg_tablesize = ints[3];
-+	if (ints[0] >= 4)
-+		setup_hostid = ints[4];
- #ifdef SUPPORT_TAGS
--	if (ints[0] >= 5) {
--		if (ints[5] >= 0)
--			setup_use_tagged_queuing = !!ints[5];
--	}
-+	if (ints[0] >= 5)
-+		setup_use_tagged_queuing = ints[5];
- #endif
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char *d;
+ 	unsigned char *s;
  
- 	return 1;
-@@ -1019,23 +829,209 @@ static int atari_scsi_bus_reset(struct s
- 	return rv;
- }
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(instance);
+ 
+-	s = mac_scsi_drq + (INPUT_DATA_REG << 4);
++	s = hostdata->pdma_base + (INPUT_DATA_REG << 4);
+ 	d = dst;
+ 
+ 	/* These conditions are derived from MacOS */
+@@ -428,6 +325,7 @@ __asm__ __volatile__					\
+ static int macscsi_pwrite(struct Scsi_Host *instance,
+                           unsigned char *src, int len)
+ {
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char *s;
+ 	unsigned char *d;
+ 
+@@ -435,7 +333,7 @@ static int macscsi_pwrite(struct Scsi_Ho
+ 	NCR5380_setup(instance);
+ 
+ 	s = src;
+-	d = mac_scsi_drq + (OUTPUT_DATA_REG << 4);
++	d = hostdata->pdma_base + (OUTPUT_DATA_REG << 4);
+ 
+ 	/* These conditions are derived from MacOS */
+ 
+@@ -462,13 +360,15 @@ static int macscsi_pwrite(struct Scsi_Ho
+ 
+ #include "NCR5380.c"
  
 -static struct scsi_host_template driver_template = {
-+#define DRV_MODULE_NAME         "atari_scsi"
+-	.proc_name			= "Mac5380",
++#define DRV_MODULE_NAME         "mac_scsi"
 +#define PFX                     DRV_MODULE_NAME ": "
 +
-+static struct scsi_host_template atari_scsi_template = {
-+	.module			= THIS_MODULE,
-+	.proc_name		= DRV_MODULE_NAME,
- 	.show_info		= atari_scsi_show_info,
- 	.name			= "Atari native SCSI",
--	.detect			= atari_scsi_detect,
--	.release		= atari_scsi_release,
- 	.info			= atari_scsi_info,
- 	.queuecommand		= atari_scsi_queue_command,
- 	.eh_abort_handler	= atari_scsi_abort,
- 	.eh_bus_reset_handler	= atari_scsi_bus_reset,
--	.can_queue		= 0, /* initialized at run-time */
--	.this_id		= 0, /* initialized at run-time */
--	.sg_tablesize		= 0, /* initialized at run-time */
--	.cmd_per_lun		= 0, /* initialized at run-time */
-+	.this_id		= 7,
- 	.use_clustering		= DISABLE_CLUSTERING
++static struct scsi_host_template mac_scsi_template = {
++	.module				= THIS_MODULE,
++	.proc_name			= DRV_MODULE_NAME,
+ 	.show_info			= macscsi_show_info,
+ 	.write_info			= macscsi_write_info,
+ 	.name				= "Macintosh NCR5380 SCSI",
+-	.detect				= macscsi_detect,
+-	.release			= macscsi_release,
+ 	.info				= macscsi_info,
+ 	.queuecommand			= macscsi_queue_command,
+ 	.eh_abort_handler		= macscsi_abort,
+@@ -480,7 +380,114 @@ static struct scsi_host_template driver_
+ 	.use_clustering			= DISABLE_CLUSTERING
  };
  
-+static int __init atari_scsi_probe(struct platform_device *pdev)
++static int __init mac_scsi_probe(struct platform_device *pdev)
 +{
 +	struct Scsi_Host *instance;
 +	int error;
-+	struct resource *irq;
++	int host_flags = 0;
++	struct resource *irq, *pio_mem, *pdma_mem = NULL;
 +
-+	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (!irq)
++	pio_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!pio_mem)
 +		return -ENODEV;
 +
-+	if (ATARIHW_PRESENT(TT_SCSI)) {
-+		atari_scsi_reg_read  = atari_scsi_tt_reg_read;
-+		atari_scsi_reg_write = atari_scsi_tt_reg_write;
-+	} else {
-+		atari_scsi_reg_read  = atari_scsi_falcon_reg_read;
-+		atari_scsi_reg_write = atari_scsi_falcon_reg_write;
-+	}
++#ifdef PSEUDO_DMA
++	pdma_mem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++#endif
 +
-+	/* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary.
-+	 * Higher values should work, too; try it!
-+	 * (But cmd_per_lun costs memory!)
-+	 *
-+	 * But there seems to be a bug somewhere that requires CAN_QUEUE to be
-+	 * 2*CMD_PER_LUN. At least on a TT, no spurious timeouts seen since
-+	 * changed CMD_PER_LUN...
-+	 *
-+	 * Note: The Falcon currently uses 8/1 setting due to unsolved problems
-+	 * with cmd_per_lun != 1
-+	 */
-+	if (ATARIHW_PRESENT(TT_SCSI)) {
-+		atari_scsi_template.can_queue    = 16;
-+		atari_scsi_template.cmd_per_lun  = 8;
-+		atari_scsi_template.sg_tablesize = SG_ALL;
-+	} else {
-+		atari_scsi_template.can_queue    = 8;
-+		atari_scsi_template.cmd_per_lun  = 1;
-+		atari_scsi_template.sg_tablesize = SG_NONE;
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++
++	if (!hwreg_present((unsigned char *)pio_mem->start +
++	                   (STATUS_REG << 4))) {
++		pr_info(PFX "no device detected at %pap\n", &pio_mem->start);
++		return -ENODEV;
 +	}
 +
 +	if (setup_can_queue > 0)
-+		atari_scsi_template.can_queue = setup_can_queue;
-+
++		mac_scsi_template.can_queue = setup_can_queue;
 +	if (setup_cmd_per_lun > 0)
-+		atari_scsi_template.cmd_per_lun = setup_cmd_per_lun;
-+
-+	/* Leave sg_tablesize at 0 on a Falcon! */
-+	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
-+		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
-+
-+	if (setup_hostid >= 0) {
-+		atari_scsi_template.this_id = setup_hostid & 7;
-+	} else {
-+		/* Test if a host id is set in the NVRam */
-+		if (ATARIHW_PRESENT(TT_CLK) && nvram_check_checksum()) {
-+			unsigned char b = nvram_read_byte(14);
-+
-+			/* Arbitration enabled? (for TOS)
-+			 * If yes, use configured host ID
-+			 */
-+			if (b & 0x80)
-+				atari_scsi_template.this_id = b & 7;
-+		}
-+	}
-+
++		mac_scsi_template.cmd_per_lun = setup_cmd_per_lun;
++	if (setup_sg_tablesize >= 0)
++		mac_scsi_template.sg_tablesize = setup_sg_tablesize;
++	if (setup_hostid >= 0)
++		mac_scsi_template.this_id = setup_hostid & 7;
 +#ifdef SUPPORT_TAGS
 +	if (setup_use_tagged_queuing < 0)
 +		setup_use_tagged_queuing = 0;
 +#endif
++	if (setup_use_pdma < 0)
++		setup_use_pdma = 0;
 +
-+#ifdef REAL_DMA
-+	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
-+	 * memory block, since there's always ST-Ram in a Falcon), then
-+	 * allocate a STRAM_BUFFER_SIZE byte dribble buffer for transfers
-+	 * from/to alternative Ram.
-+	 */
-+	if (ATARIHW_PRESENT(ST_SCSI) && !ATARIHW_PRESENT(EXTD_DMA) &&
-+	    m68k_num_memory > 1) {
-+		atari_dma_buffer = atari_stram_alloc(STRAM_BUFFER_SIZE, "SCSI");
-+		if (!atari_dma_buffer) {
-+			pr_err(PFX "can't allocate ST-RAM double buffer\n");
-+			return -ENOMEM;
-+		}
-+		atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
-+		atari_dma_orig_addr = 0;
-+	}
-+#endif
-+
-+	instance = scsi_host_alloc(&atari_scsi_template,
++	instance = scsi_host_alloc(&mac_scsi_template,
 +	                           sizeof(struct NCR5380_hostdata));
-+	if (!instance) {
-+		error = -ENOMEM;
-+		goto fail_alloc;
-+	}
-+	atari_scsi_host = instance;
++	if (!instance)
++		return -ENOMEM;
 +
-+#ifdef CONFIG_ATARI_SCSI_RESET_BOOT
-+	atari_scsi_reset_boot();
++	instance->base = pio_mem->start;
++	if (irq)
++		instance->irq = irq->start;
++	else
++		instance->irq = NO_IRQ;
++
++	if (pdma_mem && setup_use_pdma) {
++		struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++		hostdata->pdma_base = (unsigned char *)pdma_mem->start;
++	} else
++		host_flags |= FLAG_NO_PSEUDO_DMA;
++
++#ifdef RESET_BOOT
++	mac_scsi_reset_boot(instance);
 +#endif
 +
-+	instance->irq = irq->start;
++	NCR5380_init(instance, host_flags);
 +
-+	NCR5380_init(instance, 0);
-+
-+	if (IS_A_TT()) {
-+		error = request_irq(instance->irq, scsi_tt_intr, 0,
++	if (instance->irq != NO_IRQ) {
++		error = request_irq(instance->irq, macscsi_intr, IRQF_SHARED,
 +		                    "NCR5380", instance);
-+		if (error) {
-+			pr_err(PFX "request irq %d failed, aborting\n",
-+			       instance->irq);
++		if (error)
 +			goto fail_irq;
-+		}
-+		tt_mfp.active_edge |= 0x80;	/* SCSI int on L->H */
-+#ifdef REAL_DMA
-+		tt_scsi_dma.dma_ctrl = 0;
-+		atari_dma_residual = 0;
-+
-+		/* While the read overruns (described by Drew Eckhardt in
-+		 * NCR5380.c) never happened on TTs, they do in fact on the
-+		 * Medusa (This was the cause why SCSI didn't work right for
-+		 * so long there.) Since handling the overruns slows down
-+		 * a bit, I turned the #ifdef's into a runtime condition.
-+		 *
-+		 * In principle it should be sufficient to do max. 1 byte with
-+		 * PIO, but there is another problem on the Medusa with the DMA
-+		 * rest data register. So 'atari_read_overruns' is currently set
-+		 * to 4 to avoid having transfers that aren't a multiple of 4.
-+		 * If the rest data bug is fixed, this can be lowered to 1.
-+		 */
-+		if (MACH_IS_MEDUSA)
-+			atari_read_overruns = 4;
-+#endif
-+	} else {
-+		/* Nothing to do for the interrupt: the ST-DMA is initialized
-+		 * already.
-+		 */
-+#ifdef REAL_DMA
-+		atari_dma_residual = 0;
-+		atari_dma_active = 0;
-+		atari_dma_stram_mask = (ATARIHW_PRESENT(EXTD_DMA) ? 0x00000000
-+					: 0xff000000);
-+#endif
 +	}
 +
 +	error = scsi_add_host(instance, NULL);
@@ -544,33 +351,28 @@ Index: linux/drivers/scsi/atari_scsi.c
 +	return 0;
 +
 +fail_host:
-+	if (IS_A_TT())
++	if (instance->irq != NO_IRQ)
 +		free_irq(instance->irq, instance);
 +fail_irq:
 +	NCR5380_exit(instance);
 +	scsi_host_put(instance);
-+fail_alloc:
-+	if (atari_dma_buffer)
-+		atari_stram_free(atari_dma_buffer);
 +	return error;
 +}
 +
-+static int __exit atari_scsi_remove(struct platform_device *pdev)
++static int __exit mac_scsi_remove(struct platform_device *pdev)
 +{
 +	struct Scsi_Host *instance = platform_get_drvdata(pdev);
 +
 +	scsi_remove_host(instance);
-+	if (IS_A_TT())
++	if (instance->irq != NO_IRQ)
 +		free_irq(instance->irq, instance);
 +	NCR5380_exit(instance);
 +	scsi_host_put(instance);
-+	if (atari_dma_buffer)
-+		atari_stram_free(atari_dma_buffer);
 +	return 0;
 +}
 +
-+static struct platform_driver atari_scsi_driver = {
-+	.remove = __exit_p(atari_scsi_remove),
++static struct platform_driver mac_scsi_driver = {
++	.remove = __exit_p(mac_scsi_remove),
 +	.driver = {
 +		.name	= DRV_MODULE_NAME,
 +		.owner	= THIS_MODULE,
@@ -578,37 +380,284 @@ Index: linux/drivers/scsi/atari_scsi.c
 +};
  
 -#include "scsi_module.c"
-+module_platform_driver_probe(atari_scsi_driver, atari_scsi_probe);
++module_platform_driver_probe(mac_scsi_driver, mac_scsi_probe);
  
 +MODULE_ALIAS("platform:" DRV_MODULE_NAME);
  MODULE_LICENSE("GPL");
-Index: linux/drivers/scsi/atari_scsi.h
+Index: linux/arch/m68k/mac/config.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.h	2014-11-12 16:11:11.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.h	2014-11-12 16:11:26.000000000 +1100
-@@ -18,23 +18,6 @@
- /* (I_HAVE_OVERRUNS stuff removed) */
+--- linux.orig/arch/m68k/mac/config.c	2014-11-12 16:10:43.000000000 +1100
++++ linux/arch/m68k/mac/config.c	2014-11-12 16:11:23.000000000 +1100
+@@ -278,7 +278,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "IIfx",
+ 		.adb_type	= MAC_ADB_IOP,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_IIFX,
+ 		.scc_type	= MAC_SCC_IOP,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_IOP,
+@@ -329,7 +329,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "Color Classic",
+ 		.adb_type	= MAC_ADB_CUDA,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_CCL,
+ 		.scc_type	= MAC_SCC_II,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -338,7 +338,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "Color Classic II",
+ 		.adb_type	= MAC_ADB_CUDA,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_CCL,
+ 		.scc_type	= MAC_SCC_II,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -526,7 +526,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "Performa 520",
+ 		.adb_type	= MAC_ADB_CUDA,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_CCL,
+ 		.scc_type	= MAC_SCC_II,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -535,7 +535,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "Performa 550",
+ 		.adb_type	= MAC_ADB_CUDA,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_CCL,
+ 		.scc_type	= MAC_SCC_II,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -567,7 +567,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "TV",
+ 		.adb_type	= MAC_ADB_CUDA,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_CCL,
+ 		.scc_type	= MAC_SCC_II,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -712,7 +712,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook 190",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_QUADRA,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_LATE,
+ 		.ide_type	= MAC_IDE_BABOON,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+@@ -722,7 +722,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook 520",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_QUADRA,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_LATE,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.ether_type	= MAC_ETHER_SONIC,
+ 		.nubus_type	= MAC_NUBUS,
+@@ -740,7 +740,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 210",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -749,7 +749,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 230",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -758,7 +758,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 250",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -767,7 +767,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 270c",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -776,7 +776,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 280",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -785,7 +785,7 @@ static struct mac_model mac_data_table[]
+ 		.name		= "PowerBook Duo 280c",
+ 		.adb_type	= MAC_ADB_PB2,
+ 		.via_type	= MAC_VIA_IICI,
+-		.scsi_type	= MAC_SCSI_OLD,
++		.scsi_type	= MAC_SCSI_DUO,
+ 		.scc_type	= MAC_SCC_QUADRA,
+ 		.nubus_type	= MAC_NUBUS,
+ 		.floppy_type	= MAC_FLOPPY_SWIM_ADDR2,
+@@ -929,6 +929,70 @@ static struct platform_device swim_pdev
+ 	.resource	= &swim_rsrc,
+ };
  
- #ifndef ASM
--/* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary. Higher
-- * values should work, too; try it! (but cmd_per_lun costs memory!) */
--
--/* But there seems to be a bug somewhere that requires CAN_QUEUE to be
-- * 2*CMD_PER_LUN. At least on a TT, no spurious timeouts seen since
-- * changed CMD_PER_LUN... */
--
--/* Note: The Falcon currently uses 8/1 setting due to unsolved problems with
-- * cmd_per_lun != 1 */
--
--#define ATARI_TT_CAN_QUEUE		16
--#define ATARI_TT_CMD_PER_LUN		8
--#define ATARI_TT_SG_TABLESIZE		SG_ALL
--
--#define ATARI_FALCON_CAN_QUEUE		8
--#define ATARI_FALCON_CMD_PER_LUN	1
--#define ATARI_FALCON_SG_TABLESIZE	SG_NONE
++static const struct resource mac_scsi_iifx_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = IRQ_MAC_SCSI,
++		.end   = IRQ_MAC_SCSI,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50008000,
++		.end   = 0x50009FFF,
++	},
++};
++
++static const struct resource mac_scsi_duo_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_MEM,
++		.start = 0xFEE02000,
++		.end   = 0xFEE03FFF,
++	},
++};
++
++static const struct resource mac_scsi_old_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = IRQ_MAC_SCSI,
++		.end   = IRQ_MAC_SCSI,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50010000,
++		.end   = 0x50011FFF,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50006000,
++		.end   = 0x50007FFF,
++	},
++};
++
++static const struct resource mac_scsi_late_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = IRQ_MAC_SCSI,
++		.end   = IRQ_MAC_SCSI,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50010000,
++		.end   = 0x50011FFF,
++	},
++};
++
++static const struct resource mac_scsi_ccl_rsrc[] __initconst = {
++	{
++		.flags = IORESOURCE_IRQ,
++		.start = IRQ_MAC_SCSI,
++		.end   = IRQ_MAC_SCSI,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50F10000,
++		.end   = 0x50F11FFF,
++	}, {
++		.flags = IORESOURCE_MEM,
++		.start = 0x50F06000,
++		.end   = 0x50F07FFF,
++	},
++};
++
+ static struct platform_device esp_0_pdev = {
+ 	.name		= "mac_esp",
+ 	.id		= 0,
+@@ -1000,6 +1064,60 @@ int __init mac_platform_init(void)
+ 		    (macintosh_config->ident == MAC_MODEL_Q950))
+ 			platform_device_register(&esp_1_pdev);
+ 		break;
++	case MAC_SCSI_IIFX:
++		/* Addresses from The Guide to Mac Family Hardware.
++		 * $5000 8000 - $5000 9FFF: SCSI DMA
++		 * $5000 C000 - $5000 DFFF: Alternate SCSI (DMA)
++		 * $5000 E000 - $5000 FFFF: Alternate SCSI (Hsk)
++		 * The SCSI DMA custom IC embeds the 53C80 core. mac_scsi does
++		 * not make use of its DMA or hardware handshaking logic.
++		 */
++		platform_device_register_simple("mac_scsi", 0,
++			mac_scsi_iifx_rsrc, ARRAY_SIZE(mac_scsi_iifx_rsrc));
++		break;
++	case MAC_SCSI_DUO:
++		/* Addresses from the Duo Dock II Developer Note.
++		 * $FEE0 2000 - $FEE0 3FFF: normal mode
++		 * $FEE0 4000 - $FEE0 5FFF: pseudo DMA without /DRQ
++		 * $FEE0 6000 - $FEE0 7FFF: pseudo DMA with /DRQ
++		 * The NetBSD code indicates that both 5380 chips share
++		 * an IRQ (?) which would need careful handling (see mac_esp).
++		 */
++		platform_device_register_simple("mac_scsi", 1,
++			mac_scsi_duo_rsrc, ARRAY_SIZE(mac_scsi_duo_rsrc));
++		/* fall through */
++	case MAC_SCSI_OLD:
++		/* Addresses from Developer Notes for Duo System,
++		 * PowerBook 180 & 160, 140 & 170, Macintosh IIsi
++		 * and also from The Guide to Mac Family Hardware for
++		 * SE/30, II, IIx, IIcx, IIci.
++		 * $5000 6000 - $5000 7FFF: pseudo-DMA with /DRQ
++		 * $5001 0000 - $5001 1FFF: normal mode
++		 * $5001 2000 - $5001 3FFF: pseudo-DMA without /DRQ
++		 * GMFH says that $5000 0000 - $50FF FFFF "wraps
++		 * $5000 0000 - $5001 FFFF eight times" (!)
++		 * mess.org says IIci and Color Classic do not alias
++		 * I/O address space.
++		 */
++		platform_device_register_simple("mac_scsi", 0,
++			mac_scsi_old_rsrc, ARRAY_SIZE(mac_scsi_old_rsrc));
++		break;
++	case MAC_SCSI_LATE:
++		/* PDMA logic in 68040 PowerBooks is somehow different to
++		 * '030 models. It's probably more like Quadras (see mac_esp).
++		 */
++		platform_device_register_simple("mac_scsi", 0,
++			mac_scsi_late_rsrc, ARRAY_SIZE(mac_scsi_late_rsrc));
++		break;
++	case MAC_SCSI_CCL:
++		/* Addresses from the Color Classic Developer Note.
++		 * $50F0 6000 - $50F0 7FFF: SCSI handshake
++		 * $50F1 0000 - $50F1 1FFF: SCSI
++		 * $50F1 2000 - $50F1 3FFF: SCSI DMA
++		 */
++		platform_device_register_simple("mac_scsi", 0,
++			mac_scsi_ccl_rsrc, ARRAY_SIZE(mac_scsi_ccl_rsrc));
++		break;
+ 	}
  
- #define	NCR5380_implementation_fields	/* none */
+ 	/*
+Index: linux/arch/m68k/include/asm/macintosh.h
+===================================================================
+--- linux.orig/arch/m68k/include/asm/macintosh.h	2014-11-12 16:10:43.000000000 +1100
++++ linux/arch/m68k/include/asm/macintosh.h	2014-11-12 16:11:23.000000000 +1100
+@@ -53,6 +53,10 @@ struct mac_model
+ #define MAC_SCSI_QUADRA		2
+ #define MAC_SCSI_QUADRA2	3
+ #define MAC_SCSI_QUADRA3	4
++#define MAC_SCSI_IIFX		5
++#define MAC_SCSI_DUO		6
++#define MAC_SCSI_CCL		7
++#define MAC_SCSI_LATE		8
  
-
-
+ #define MAC_IDE_NONE		0
+ #define MAC_IDE_QUADRA		1
