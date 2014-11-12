@@ -1,254 +1,264 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 05/37] ncr5380: Remove useless prototypes
-Date: Wed, 12 Nov 2014 16:11:51 +1100
-Message-ID: <20141112051147.705455659@telegraphics.com.au>
+Subject: [PATCH v3 07/37] ncr5380: Cleanup TAG_NEXT and TAG_NONE macros
+Date: Wed, 12 Nov 2014 16:11:53 +1100
+Message-ID: <20141112051148.175453066@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-remove-useless-prototypes
+Content-Disposition: inline; filename=ncr5380-cleanup-TAG_NONE-and-TAG_NEXT
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Add missing static qualifiers and remove the now pointless prototypes. The
-NCR5380_* prototypes are all declared in NCR5380.h and renamed using macros.
-Further declarations are redundant (some are completely unused). Remove
-them.
+Both atari_NCR5380.c and sun3_NCR5380.c core drivers #undef TAG_NONE and
+then redefine it. But the original definition is unused because NCR5380.c
+lacks support for tagged queueing. So just define it once.
+
+The TAG_NEXT macro only appears in the arguments to NCR5380_select() calls.
+But that routine doesn't use its tag argument as the tag was already
+assigned in NCR5380_main(). So remove the unused argument and the macro.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/atari_scsi.c |    5 -----
- drivers/scsi/dtc.h        |    7 -------
- drivers/scsi/g_NCR5380.c  |    6 +++---
- drivers/scsi/g_NCR5380.h  |    6 ------
- drivers/scsi/mac_scsi.c   |    2 --
- drivers/scsi/pas16.c      |    6 +++---
- drivers/scsi/pas16.h      |    6 ------
- drivers/scsi/sun3_scsi.c  |    4 +---
- drivers/scsi/sun3_scsi.h  |    7 -------
- drivers/scsi/t128.c       |    7 ++++---
- drivers/scsi/t128.h       |    6 ------
- 11 files changed, 11 insertions(+), 51 deletions(-)
+ drivers/scsi/NCR5380.c       |   29 +++++++++++++----------------
+ drivers/scsi/NCR5380.h       |   11 ++++-------
+ drivers/scsi/atari_NCR5380.c |   19 +++++--------------
+ drivers/scsi/sun3_NCR5380.c  |   19 +++++--------------
+ 4 files changed, 27 insertions(+), 51 deletions(-)
 
-Index: linux/drivers/scsi/g_NCR5380.c
+Index: linux/drivers/scsi/atari_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:51.000000000 +1100
-@@ -272,7 +272,7 @@ static int __init do_DTC3181E_setup(char
-  *	Locks: none
+--- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
+@@ -316,10 +316,6 @@ static struct scsi_host_template *the_te
+  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
   */
  
--int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
-+static int __init generic_NCR5380_detect(struct scsi_host_template *tpnt)
- {
- 	static int current_override = 0;
- 	int count;
-@@ -484,7 +484,7 @@ int __init generic_NCR5380_detect(struct
-  *	Report driver information for the NCR5380
+-/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
+-#undef TAG_NONE
+-#define TAG_NONE 0xff
+-
+ typedef struct {
+ 	DECLARE_BITMAP(allocated, MAX_TAGS);
+ 	int nr_allocated;
+@@ -1118,9 +1114,7 @@ static void NCR5380_main(struct work_str
+ #ifdef SUPPORT_TAGS
+ 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
+ #endif
+-					if (!NCR5380_select(instance, tmp,
+-					    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE :
+-					    TAG_NEXT)) {
++					if (!NCR5380_select(instance, tmp)) {
+ 						falcon_dont_release--;
+ 						/* release if target did not response! */
+ 						falcon_release_lock_if_possible(hostdata);
+@@ -1351,17 +1345,14 @@ static void collect_stats(struct NCR5380
+ #endif
+ 
+ /*
+- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd,
+- *	int tag);
++ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
+  *
+  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
+  *	including ARBITRATION, SELECTION, and initial message out for
+  *	IDENTIFY and queue messages.
+  *
+  * Inputs : instance - instantiation of the 5380 driver on which this
+- *	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for
+- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for
+- *	the command that is presently connected.
++ *	target lives, cmd - SCSI command to execute.
+  *
+  * Returns : -1 if selection could not execute for some reason,
+  *	0 if selection succeeded or failed because the target
+@@ -1381,7 +1372,7 @@ static void collect_stats(struct NCR5380
+  *		cmd->result host byte set to DID_BAD_TARGET.
   */
-  	
--const char *generic_NCR5380_info(struct Scsi_Host *host)
-+static const char *generic_NCR5380_info(struct Scsi_Host *host)
+ 
+-static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd, int tag)
++static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
  {
- 	static const char string[] = "Generic NCR5380/53C400 Driver";
- 	return string;
-@@ -499,7 +499,7 @@ const char *generic_NCR5380_info(struct
-  *	Locks: none
+ 	SETUP_HOSTDATA(instance);
+ 	unsigned char tmp[3], phase;
+@@ -2758,7 +2749,7 @@ int NCR5380_abort(Scsi_Cmnd *cmd)
+ 			local_irq_restore(flags);
+ 			dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
+ 
+-			if (NCR5380_select(instance, cmd, (int)cmd->tag))
++			if (NCR5380_select(instance, cmd))
+ 				return FAILED;
+ 
+ 			dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
+Index: linux/drivers/scsi/sun3_NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:10:55.000000000 +1100
+@@ -305,10 +305,6 @@ static struct scsi_host_template *the_te
+  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
+  */
+ 
+-/* -1 for TAG_NONE is not possible with unsigned char cmd->tag */
+-#undef TAG_NONE
+-#define TAG_NONE 0xff
+-
+ /* For the m68k, the number of bits in 'allocated' must be a multiple of 32! */
+ #if (MAX_TAGS % 32) != 0
+ #error "MAX_TAGS must be a multiple of 32!"
+@@ -1057,9 +1053,7 @@ static void NCR5380_main (struct work_st
+ #ifdef SUPPORT_TAGS
+ 		    cmd_get_tag( tmp, tmp->cmnd[0] != REQUEST_SENSE );
+ #endif
+-		    if (!NCR5380_select(instance, tmp, 
+-			    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : 
+-			    TAG_NEXT)) {
++		    if (!NCR5380_select(instance, tmp)) {
+ 			break;
+ 		    } else {
+ 			local_irq_disable();
+@@ -1292,16 +1286,14 @@ static void collect_stats(struct NCR5380
+ 
+ /* 
+  * Function : int NCR5380_select(struct Scsi_Host *instance,
+- * 				 struct scsi_cmnd *cmd,	int tag);
++ *				 struct scsi_cmnd *cmd)
+  *
+  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
+  *	including ARBITRATION, SELECTION, and initial message out for 
+  *	IDENTIFY and queue messages. 
+  *
+  * Inputs : instance - instantiation of the 5380 driver on which this 
+- * 	target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
+- *	new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
+- *	the command that is presently connected.
++ *	target lives, cmd - SCSI command to execute.
+  * 
+  * Returns : -1 if selection could not execute for some reason,
+  *	0 if selection succeeded or failed because the target 
+@@ -1321,8 +1313,7 @@ static void collect_stats(struct NCR5380
+  *		cmd->result host byte set to DID_BAD_TARGET.
+  */
+ 
+-static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd,
+-			  int tag)
++static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ {
+     SETUP_HOSTDATA(instance);
+     unsigned char tmp[3], phase;
+@@ -2736,7 +2727,7 @@ static int NCR5380_abort(struct scsi_cmn
+             local_irq_restore(flags);
+ 	    dprintk(NDEBUG_ABORT, "scsi%d: aborting disconnected command.\n", HOSTNO);
+   
+-            if (NCR5380_select (instance, cmd, (int) cmd->tag)) 
++	    if (NCR5380_select(instance, cmd))
+ 		return FAILED;
+ 
+ 	    dprintk(NDEBUG_ABORT, "scsi%d: nexus reestablished.\n", HOSTNO);
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2014-11-12 16:10:49.000000000 +1100
++++ linux/drivers/scsi/NCR5380.c	2014-11-12 16:10:55.000000000 +1100
+@@ -1073,14 +1073,14 @@ static void NCR5380_main(struct work_str
+ 					hostdata->selecting = NULL;
+ 					/* RvC: have to preset this to indicate a new command is being performed */
+ 
+-					if (!NCR5380_select(instance, tmp,
+-							    /* 
+-							     * REQUEST SENSE commands are issued without tagged
+-							     * queueing, even on SCSI-II devices because the 
+-							     * contingent allegiance condition exists for the 
+-							     * entire unit.
+-							     */
+-							    (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
++					/*
++					 * REQUEST SENSE commands are issued without tagged
++					 * queueing, even on SCSI-II devices because the
++					 * contingent allegiance condition exists for the
++					 * entire unit.
++					 */
++
++					if (!NCR5380_select(instance, tmp)) {
+ 						break;
+ 					} else {
+ 						LIST(tmp, hostdata->issue_queue);
+@@ -1097,7 +1097,7 @@ static void NCR5380_main(struct work_str
+ 		if (hostdata->selecting) {
+ 			tmp = (Scsi_Cmnd *) hostdata->selecting;
+ 			/* Selection will drop and retake the lock */
+-			if (!NCR5380_select(instance, tmp, (tmp->cmnd[0] == REQUEST_SENSE) ? TAG_NONE : TAG_NEXT)) {
++			if (!NCR5380_select(instance, tmp)) {
+ 				/* Ok ?? */
+ 			} else {
+ 				/* RvC: device failed, so we wait a long time
+@@ -1246,17 +1246,14 @@ static void collect_stats(struct NCR5380
+ 
+ 
+ /* 
+- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd, 
+- *      int tag);
++ * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd)
+  *
+  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
+  *      including ARBITRATION, SELECTION, and initial message out for 
+  *      IDENTIFY and queue messages. 
+  *
+  * Inputs : instance - instantiation of the 5380 driver on which this 
+- *      target lives, cmd - SCSI command to execute, tag - set to TAG_NEXT for 
+- *      new tag, TAG_NONE for untagged queueing, otherwise set to the tag for 
+- *      the command that is presently connected.
++ *      target lives, cmd - SCSI command to execute.
+  * 
+  * Returns : -1 if selection could not execute for some reason,
+  *      0 if selection succeeded or failed because the target 
+@@ -1278,7 +1275,7 @@ static void collect_stats(struct NCR5380
+  *	Locks: caller holds hostdata lock in IRQ mode
   */
   
--int generic_NCR5380_release_resources(struct Scsi_Host *instance)
-+static int generic_NCR5380_release_resources(struct Scsi_Host *instance)
+-static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag) 
++static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd)
  {
  	NCR5380_local_declare();
- 	NCR5380_setup(instance);
-Index: linux/drivers/scsi/pas16.c
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+@@ -2774,7 +2771,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd
+ 		if (cmd == tmp) {
+ 			dprintk(NDEBUG_ABORT, "scsi%d : aborting disconnected command.\n", instance->host_no);
+ 
+-			if (NCR5380_select(instance, cmd, (int) cmd->tag))
++			if (NCR5380_select(instance, cmd))
+ 				return FAILED;
+ 			dprintk(NDEBUG_ABORT, "scsi%d : nexus reestablished.\n", instance->host_no);
+ 
+Index: linux/drivers/scsi/NCR5380.h
 ===================================================================
---- linux.orig/drivers/scsi/pas16.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/pas16.c	2014-11-12 16:10:51.000000000 +1100
-@@ -382,7 +382,7 @@ __setup("pas16=", pas16_setup);
-  *
+--- linux.orig/drivers/scsi/NCR5380.h	2014-11-12 16:10:54.000000000 +1100
++++ linux/drivers/scsi/NCR5380.h	2014-11-12 16:10:55.000000000 +1100
+@@ -224,14 +224,11 @@
+ #define DISCONNECT_LONG		2
+ 
+ /* 
+- * These are "special" values for the tag parameter passed to NCR5380_select.
++ * "Special" value for the (unsigned char) command tag, to indicate
++ * I_T_L nexus instead of I_T_L_Q.
   */
  
--int __init pas16_detect(struct scsi_host_template * tpnt)
-+static int __init pas16_detect(struct scsi_host_template *tpnt)
- {
-     static int current_override = 0;
-     static unsigned short current_base = 0;
-@@ -512,8 +512,8 @@ int __init pas16_detect(struct scsi_host
-  * and matching the H_C_S coordinates to what DOS uses.
-  */
+-#define TAG_NEXT	-1	/* Use next free tag */
+-#define TAG_NONE	-2	/* 
+-				 * Establish I_T_L nexus instead of I_T_L_Q
+-				 * even on SCSI-II devices.
+-				 */
++#define TAG_NONE	0xff
  
--int pas16_biosparam(struct scsi_device *sdev, struct block_device *dev,
--		sector_t capacity, int * ip)
-+static int pas16_biosparam(struct scsi_device *sdev, struct block_device *dev,
-+                           sector_t capacity, int *ip)
- {
-   int size = capacity;
-   ip[0] = 64;
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:51.000000000 +1100
-@@ -86,8 +86,6 @@ extern int sun3_map_test(unsigned long,
- 
- 
- static irqreturn_t scsi_sun3_intr(int irq, void *dummy);
--static inline unsigned char sun3scsi_read(int reg);
--static inline void sun3scsi_write(int reg, int value);
- 
- static int setup_can_queue = -1;
- module_param(setup_can_queue, int, 0);
-@@ -348,7 +346,7 @@ static int __init sun3scsi_detect(struct
- 	return 1;
- }
- 
--int sun3scsi_release (struct Scsi_Host *shpnt)
-+static int sun3scsi_release(struct Scsi_Host *shpnt)
- {
- 	if (shpnt->irq != SCSI_IRQ_NONE)
- 		free_irq(shpnt->irq, shpnt);
-Index: linux/drivers/scsi/t128.c
-===================================================================
---- linux.orig/drivers/scsi/t128.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/t128.c	2014-11-12 16:10:51.000000000 +1100
-@@ -193,7 +193,8 @@ __setup("t128=", t128_setup);
-  *
-  */
- 
--int __init t128_detect(struct scsi_host_template * tpnt){
-+static int __init t128_detect(struct scsi_host_template *tpnt)
-+{
-     static int current_override = 0, current_base = 0;
-     struct Scsi_Host *instance;
-     unsigned long base;
-@@ -325,8 +326,8 @@ static int t128_release(struct Scsi_Host
-  * and matching the H_C_S coordinates to what DOS uses.
-  */
- 
--int t128_biosparam(struct scsi_device *sdev, struct block_device *bdev,
--		sector_t capacity, int * ip)
-+static int t128_biosparam(struct scsi_device *sdev, struct block_device *bdev,
-+                          sector_t capacity, int *ip)
- {
-   ip[0] = 64;
-   ip[1] = 32;
-Index: linux/drivers/scsi/dtc.h
-===================================================================
---- linux.orig/drivers/scsi/dtc.h	2014-11-12 16:10:43.000000000 +1100
-+++ linux/drivers/scsi/dtc.h	2014-11-12 16:10:51.000000000 +1100
-@@ -32,13 +32,6 @@
- #define DTCDEBUG_INIT	0x1
- #define DTCDEBUG_TRANSFER 0x2
- 
--static int dtc_abort(Scsi_Cmnd *);
--static int dtc_biosparam(struct scsi_device *, struct block_device *,
--		         sector_t, int*);
--static int dtc_detect(struct scsi_host_template *);
--static int dtc_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
--static int dtc_bus_reset(Scsi_Cmnd *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
+ /*
+  * These are "special" values for the irq and dma_channel fields of the 
+@@ -323,7 +320,7 @@ static irqreturn_t NCR5380_intr(int irq,
+ static void NCR5380_main(struct work_struct *work);
+ static void __maybe_unused NCR5380_print_options(struct Scsi_Host *instance);
+ static void NCR5380_reselect(struct Scsi_Host *instance);
+-static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd * cmd, int tag);
++static int NCR5380_select(struct Scsi_Host *instance, Scsi_Cmnd *cmd);
+ #if defined(PSEUDO_DMA) || defined(REAL_DMA) || defined(REAL_DMA_POLL)
+ static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
  #endif
-Index: linux/drivers/scsi/g_NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/g_NCR5380.h	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/g_NCR5380.h	2014-11-12 16:10:51.000000000 +1100
-@@ -39,12 +39,6 @@
- #endif
- 
- #ifndef ASM
--static int generic_NCR5380_abort(Scsi_Cmnd *);
--static int generic_NCR5380_detect(struct scsi_host_template *);
--static int generic_NCR5380_release_resources(struct Scsi_Host *);
--static int generic_NCR5380_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
--static int generic_NCR5380_bus_reset(Scsi_Cmnd *);
--static const char* generic_NCR5380_info(struct Scsi_Host *);
- 
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:10:51.000000000 +1100
-@@ -56,8 +56,6 @@
- 
- #define RESET_BOOT
- 
--extern void via_scsi_clear(void);
--
- #ifdef RESET_BOOT
- static void mac_scsi_reset_boot(struct Scsi_Host *instance);
- #endif
-Index: linux/drivers/scsi/pas16.h
-===================================================================
---- linux.orig/drivers/scsi/pas16.h	2014-11-12 16:10:43.000000000 +1100
-+++ linux/drivers/scsi/pas16.h	2014-11-12 16:10:51.000000000 +1100
-@@ -114,12 +114,6 @@
- 
- 
- #ifndef ASM
--static int pas16_abort(Scsi_Cmnd *);
--static int pas16_biosparam(struct scsi_device *, struct block_device *,
--			   sector_t, int*);
--static int pas16_detect(struct scsi_host_template *);
--static int pas16_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
--static int pas16_bus_reset(Scsi_Cmnd *);
- 
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
-Index: linux/drivers/scsi/sun3_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.h	2014-11-12 16:10:49.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.h	2014-11-12 16:10:51.000000000 +1100
-@@ -43,13 +43,6 @@
- 
- #define IOBASE_SUN3_VMESCSI 0xff200000
- 
--static int sun3scsi_abort(struct scsi_cmnd *);
--static int sun3scsi_detect (struct scsi_host_template *);
--static const char *sun3scsi_info (struct Scsi_Host *);
--static int sun3scsi_bus_reset(struct scsi_cmnd *);
--static int sun3scsi_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
--static int sun3scsi_release (struct Scsi_Host *);
--
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
-Index: linux/drivers/scsi/t128.h
-===================================================================
---- linux.orig/drivers/scsi/t128.h	2014-11-12 16:10:43.000000000 +1100
-+++ linux/drivers/scsi/t128.h	2014-11-12 16:10:51.000000000 +1100
-@@ -88,12 +88,6 @@
- #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
- 
- #ifndef ASM
--static int t128_abort(struct scsi_cmnd *);
--static int t128_biosparam(struct scsi_device *, struct block_device *,
--			  sector_t, int*);
--static int t128_detect(struct scsi_host_template *);
--static int t128_queue_command(struct Scsi_Host *, struct scsi_cmnd *);
--static int t128_bus_reset(struct scsi_cmnd *);
- 
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:10:43.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:10:51.000000000 +1100
-@@ -181,12 +181,7 @@ static inline void DISABLE_IRQ(void)
- /***************************** Prototypes *****************************/
- 
- #ifdef REAL_DMA
--static int scsi_dma_is_ignored_buserr(unsigned char dma_stat);
- static void atari_scsi_fetch_restbytes(void);
--static long atari_scsi_dma_residual(struct Scsi_Host *instance);
--static int falcon_classify_cmd(Scsi_Cmnd *cmd);
--static unsigned long atari_dma_xfer_len(unsigned long wanted_len,
--					Scsi_Cmnd *cmd, int write_flag);
- #endif
- static irqreturn_t scsi_tt_intr(int irq, void *dummy);
- static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
