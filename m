@@ -1,149 +1,377 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 34/37] atari_NCR5380: Move static TagAlloc array to host data
-Date: Wed, 12 Nov 2014 16:12:20 +1100
-Message-ID: <20141112051154.515485971@telegraphics.com.au>
+Subject: [PATCH v3 09/37] ncr5380: Remove duplicate comments
+Date: Wed, 12 Nov 2014 16:11:55 +1100
+Message-ID: <20141112051148.645452638@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40991 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753562AbaKLFnU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:20 -0500
-Content-Disposition: inline; filename=atari_NCR5380-move-TagAlloc-array
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-remove-duplicate-comments
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-The atari_NCR5380.c core driver keeps some per-host data in a static
-variable which limits the driver to a single instance. Fix this by moving
-TagAlloc to the hostdata struct.
+The LIMIT_TRANSFERSIZE, PSEUDO_DMA, PARITY and UNSAFE options are all
+documented in the core drivers where they are used. The same goes for the
+chip databook reference. Remove the duplicate comments.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/NCR5380.h       |   12 ++++++++++++
- drivers/scsi/atari_NCR5380.c |   27 +++++++++------------------
- 2 files changed, 21 insertions(+), 18 deletions(-)
+ drivers/scsi/dtc.c       |   17 +----------------
+ drivers/scsi/dtc.h       |   16 ----------------
+ drivers/scsi/g_NCR5380.c |   16 ----------------
+ drivers/scsi/g_NCR5380.h |   12 ------------
+ drivers/scsi/mac_scsi.c  |   12 ------------
+ drivers/scsi/mac_scsi.h  |   12 ------------
+ drivers/scsi/pas16.c     |   31 -------------------------------
+ drivers/scsi/pas16.h     |   12 ------------
+ drivers/scsi/sun3_scsi.c |   21 ---------------------
+ drivers/scsi/sun3_scsi.h |   12 ------------
+ drivers/scsi/t128.c      |   23 -----------------------
+ drivers/scsi/t128.h      |   12 ------------
+ 12 files changed, 1 insertion(+), 195 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.h
+Index: linux/drivers/scsi/dtc.c
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2014-11-12 16:11:39.000000000 +1100
-+++ linux/drivers/scsi/NCR5380.h	2014-11-12 16:11:41.000000000 +1100
-@@ -245,6 +245,15 @@
- #define FLAG_TAGGED_QUEUING		64	/* as X3T9.2 spelled it */
+--- linux.orig/drivers/scsi/dtc.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/dtc.c	2014-11-12 16:10:59.000000000 +1100
+@@ -19,24 +19,9 @@
+  *      +1 (303) 440-4894
+  *
+  * DISTRIBUTION RELEASE 1.
+- *
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+-*/
++ */
  
- #ifndef ASM
-+
-+#ifdef SUPPORT_TAGS
-+struct tag_alloc {
-+	DECLARE_BITMAP(allocated, MAX_TAGS);
-+	int nr_allocated;
-+	int queue_size;
-+};
-+#endif
-+
- struct NCR5380_hostdata {
- 	NCR5380_implementation_fields;		/* implementation specific */
- 	struct Scsi_Host *host;			/* Host backpointer */
-@@ -274,6 +283,9 @@ struct NCR5380_hostdata {
- 	int read_overruns;                /* number of bytes to cut from a
- 	                                   * transfer to handle chip overruns */
- 	int retain_dma_intr;
-+#ifdef SUPPORT_TAGS
-+	struct tag_alloc TagAlloc[8][8];	/* 8 targets and 8 LUNs */
-+#endif
- #ifdef PSEUDO_DMA
- 	unsigned spin_max_r;
- 	unsigned spin_max_w;
-Index: linux/drivers/scsi/atari_NCR5380.c
+ /*
+- * Options : 
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers. 
+- *		You probably want this.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - since the board is memory mapped, 
+  *     a BIOS signature is scanned for to locate the registers.
+Index: linux/drivers/scsi/g_NCR5380.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:39.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:41.000000000 +1100
-@@ -274,26 +274,17 @@ static struct scsi_host_template *the_te
-  * important: the tag bit must be cleared before 'nr_allocated' is decreased.
+--- linux.orig/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.c	2014-11-12 16:10:59.000000000 +1100
+@@ -20,18 +20,6 @@
+  * Thomas Sailer, sailer@ife.ee.ethz.ch
+  *
+  * ALPHA RELEASE 1. 
+- *
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
   */
  
--typedef struct {
--	DECLARE_BITMAP(allocated, MAX_TAGS);
--	int nr_allocated;
--	int queue_size;
--} TAG_ALLOC;
+ /* 
+@@ -40,10 +28,6 @@
+  */
+ 
+ /*
+- * Options :
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  With command line overrides - NCR5380=port,irq may be 
+  *     used on the LILO command line to override the defaults.
+Index: linux/drivers/scsi/pas16.c
+===================================================================
+--- linux.orig/drivers/scsi/pas16.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/pas16.c	2014-11-12 16:10:59.000000000 +1100
+@@ -22,40 +22,9 @@
+  * Media Vision
+  * (510) 770-8600
+  * (800) 348-7116
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ /*
+- * Options : 
+- * LIMIT_TRANSFERSIZE - if defined, limit the pseudo-dma transfers to 512
+- *      bytes at a time.  Since interrupts are disabled by default during
+- *      these transfers, we might need this to give reasonable interrupt
+- *      service time if the transfer size gets too large.
+- *
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers.  This
+- *	    parameter comes from the NCR5380 code.  It is NOT unsafe with
+- *	    the PAS16 and you should use it.  If you don't you will have
+- *	    a problem with dropped characters during high speed
+- *	    communications during SCSI transfers.  If you really don't
+- *	    want to use UNSAFE you can try defining LIMIT_TRANSFERSIZE or
+- *	    twiddle with the transfer size in the high level code.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - There are many different models of
+  *     the Pro Audio Spectrum/Studio 16, and I only have one of
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:10:59.000000000 +1100
+@@ -22,27 +22,6 @@
+  * Copyright 1995, Russell King
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+- */
 -
--static TAG_ALLOC TagAlloc[8][8];	/* 8 targets and 8 LUNs */
 -
--
- static void __init init_tags(struct NCR5380_hostdata *hostdata)
- {
- 	int target, lun;
--	TAG_ALLOC *ta;
-+	struct tag_alloc *ta;
+-/*
+- * This is from mac_scsi.h, but hey, maybe this is useful for Sun3 too! :)
+- *
+- * Options :
+- *
+- * PARITY - enable parity checking.  Not supported.
+  */
  
- 	if (!(hostdata->flags & FLAG_TAGGED_QUEUING))
- 		return;
+ #include <linux/types.h>
+Index: linux/drivers/scsi/t128.c
+===================================================================
+--- linux.orig/drivers/scsi/t128.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/t128.c	2014-11-12 16:10:59.000000000 +1100
+@@ -23,32 +23,9 @@
+  * 5415 Randall Place
+  * Fremont, CA 94538
+  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
  
- 	for (target = 0; target < 8; ++target) {
- 		for (lun = 0; lun < 8; ++lun) {
--			ta = &TagAlloc[target][lun];
-+			ta = &hostdata->TagAlloc[target][lun];
- 			bitmap_zero(ta->allocated, MAX_TAGS);
- 			ta->nr_allocated = 0;
- 			/* At the beginning, assume the maximum queue size we could
-@@ -324,8 +315,8 @@ static int is_lun_busy(struct scsi_cmnd
- 	    !(hostdata->flags & FLAG_TAGGED_QUEUING) ||
- 	    !cmd->device->tagged_supported)
- 		return 0;
--	if (TagAlloc[cmd->device->id][lun].nr_allocated >=
--	    TagAlloc[cmd->device->id][lun].queue_size) {
-+	if (hostdata->TagAlloc[scmd_id(cmd)][lun].nr_allocated >=
-+	    hostdata->TagAlloc[scmd_id(cmd)][lun].queue_size) {
- 		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d: no free tags\n",
- 			   H_NO(cmd), cmd->device->id, lun);
- 		return 1;
-@@ -355,7 +346,7 @@ static void cmd_get_tag(struct scsi_cmnd
- 		dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %d now allocated by untagged "
- 			   "command\n", H_NO(cmd), cmd->device->id, lun);
- 	} else {
--		TAG_ALLOC *ta = &TagAlloc[cmd->device->id][lun];
-+		struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][lun];
+ /*
+- * Options : 
+- * PSEUDO_DMA - enables PSEUDO-DMA hardware, should give a 3-4X performance
+- * increase compared to polled I/O.
+- *
+- * PARITY - enable parity checking.  Not supported.
+- *
+- * UNSAFE - leave interrupts enabled during pseudo-DMA transfers.  You
+- *          only really want to use this if you're having a problem with
+- *          dropped characters during high speed communications, and even
+- *          then, you're going to be better off twiddling with transfersize.
+- *
+  * The card is detected and initialized in one of several ways : 
+  * 1.  Autoprobe (default) - since the board is memory mapped, 
+  *     a BIOS signature is scanned for to locate the registers.
+Index: linux/drivers/scsi/dtc.h
+===================================================================
+--- linux.orig/drivers/scsi/dtc.h	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/dtc.h	2014-11-12 16:10:59.000000000 +1100
+@@ -7,22 +7,6 @@
+  *      +1 (303) 440-4894
+  *
+  * DISTRIBUTION RELEASE 2. 
+- *
+- * For more information, please consult 
+- *
+- * 
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
  
- 		cmd->tag = find_first_zero_bit(ta->allocated, MAX_TAGS);
- 		set_bit(cmd->tag, ta->allocated);
-@@ -385,7 +376,7 @@ static void cmd_free_tag(struct scsi_cmn
- 		printk(KERN_NOTICE "scsi%d: trying to free bad tag %d!\n",
- 		       H_NO(cmd), cmd->tag);
- 	} else {
--		TAG_ALLOC *ta = &TagAlloc[cmd->device->id][lun];
-+		struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][lun];
- 		clear_bit(cmd->tag, ta->allocated);
- 		ta->nr_allocated--;
- 		dprintk(NDEBUG_TAGS, "scsi%d: freed tag %d for target %d lun %d\n",
-@@ -397,14 +388,14 @@ static void cmd_free_tag(struct scsi_cmn
- static void free_all_tags(struct NCR5380_hostdata *hostdata)
- {
- 	int target, lun;
--	TAG_ALLOC *ta;
-+	struct tag_alloc *ta;
+ #ifndef DTC3280_H
+Index: linux/drivers/scsi/g_NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/g_NCR5380.h	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/g_NCR5380.h	2014-11-12 16:10:59.000000000 +1100
+@@ -11,18 +11,6 @@
+  *    K.Lentin@cs.monash.edu.au
+  *
+  * ALPHA RELEASE 1. 
+- *
+- * For more information, please consult 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
  
- 	if (!(hostdata->flags & FLAG_TAGGED_QUEUING))
- 		return;
+ #ifndef GENERIC_NCR5380_H
+Index: linux/drivers/scsi/mac_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:10:57.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:10:59.000000000 +1100
+@@ -11,18 +11,6 @@
+  * Copyright 1995, Russell King
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
  
- 	for (target = 0; target < 8; ++target) {
- 		for (lun = 0; lun < 8; ++lun) {
--			ta = &TagAlloc[target][lun];
-+			ta = &hostdata->TagAlloc[target][lun];
- 			bitmap_zero(ta->allocated, MAX_TAGS);
- 			ta->nr_allocated = 0;
- 		}
-@@ -2205,7 +2196,7 @@ static void NCR5380_information_transfer
- 						 */
- 						/* ++Andreas: the mid level code knows about
- 						   QUEUE_FULL now. */
--						TAG_ALLOC *ta = &TagAlloc[cmd->device->id][cmd->device->lun];
-+						struct tag_alloc *ta = &hostdata->TagAlloc[scmd_id(cmd)][cmd->device->lun];
- 						dprintk(NDEBUG_TAGS, "scsi%d: target %d lun %llu returned "
- 							   "QUEUE_FULL after %d commands\n",
- 							   HOSTNO, cmd->device->id, cmd->device->lun,
-
-
+ #include <linux/types.h>
+Index: linux/drivers/scsi/mac_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.h	2014-11-12 16:10:46.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.h	2014-11-12 16:10:59.000000000 +1100
+@@ -8,18 +8,6 @@
+  *      +1 (303) 440-4894
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef MAC_NCR5380_H
+Index: linux/drivers/scsi/pas16.h
+===================================================================
+--- linux.orig/drivers/scsi/pas16.h	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/pas16.h	2014-11-12 16:10:59.000000000 +1100
+@@ -18,18 +18,6 @@
+  * Media Vision
+  * (510) 770-8600
+  * (800) 348-7116
+- * 
+- * and 
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ 
+Index: linux/drivers/scsi/sun3_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-11-12 16:10:59.000000000 +1100
+@@ -15,18 +15,6 @@
+  *      +1 (303) 440-4894
+  *
+  * ALPHA RELEASE 1.
+- *
+- * For more information, please consult
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef SUN3_SCSI_H
+Index: linux/drivers/scsi/t128.h
+===================================================================
+--- linux.orig/drivers/scsi/t128.h	2014-11-12 16:10:51.000000000 +1100
++++ linux/drivers/scsi/t128.h	2014-11-12 16:10:59.000000000 +1100
+@@ -20,18 +20,6 @@
+  * 5415 Randall Place
+  * Fremont, CA 94538
+  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- *
+- * and
+- *
+- * NCR 5380 Family
+- * SCSI Protocol Controller
+- * Databook
+- *
+- * NCR Microelectronics
+- * 1635 Aeroplaza Drive
+- * Colorado Springs, CO 80916
+- * 1+ (719) 578-3400
+- * 1+ (800) 334-5454
+  */
+ 
+ #ifndef T128_H
