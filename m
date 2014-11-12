@@ -1,211 +1,154 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 14/37] ncr5380: Remove pointless compiler command line override macros
-Date: Wed, 12 Nov 2014 16:12:00 +1100
-Message-ID: <20141112051149.815461897@telegraphics.com.au>
+Subject: [PATCH v3 26/37] sun3_scsi: Move macro definitions
+Date: Wed, 12 Nov 2014 16:12:12 +1100
+Message-ID: <20141112051152.635936903@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40975 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202AbaKLFnJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:09 -0500
-Content-Disposition: inline; filename=ncr5380-remove-compiler-invocation-macros
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=sun3_scsi-move-macro-definitions
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Compile-time override of scsi host defaults is pointless for drivers that
-provide module parameters and __setup options for that. Too many macros make
-the code hard to read so remove them.
+The #defines in sun3_scsi.h are intended to influence subsequent #includes
+in sun3_scsi.c. IMHO, that's too convoluted.
+
+Move sun3_scsi.h macro definitions to sun3_scsi.c, consistent with other
+NCR5380 drivers.
+
+Omit the unused NCR5380_local_declare() and NCR5380_setup() macros.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/atari_scsi.c |    2 +-
- drivers/scsi/atari_scsi.h |    3 ---
- drivers/scsi/mac_scsi.c   |   19 +++++++++----------
- drivers/scsi/mac_scsi.h   |   16 ----------------
- drivers/scsi/sun3_scsi.c  |   20 ++++++++++----------
- drivers/scsi/sun3_scsi.h  |   18 ------------------
- 6 files changed, 20 insertions(+), 58 deletions(-)
+ drivers/scsi/sun3_scsi.c |   45 ++++++++++++++++++++++++++++++++-------------
+ drivers/scsi/sun3_scsi.h |   25 -------------------------
+ 2 files changed, 32 insertions(+), 38 deletions(-)
 
-Index: linux/drivers/scsi/mac_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:11.000000000 +1100
-@@ -177,13 +177,12 @@ int __init macscsi_detect(struct scsi_ho
-     if (macintosh_config->scsi_type != MAC_SCSI_OLD)
- 	return( 0 );
- 
--    /* setup variables */
--    tpnt->can_queue =
--	(setup_can_queue > 0) ? setup_can_queue : CAN_QUEUE;
--    tpnt->cmd_per_lun =
--	(setup_cmd_per_lun > 0) ? setup_cmd_per_lun : CMD_PER_LUN;
--    tpnt->sg_tablesize = 
--	(setup_sg_tablesize >= 0) ? setup_sg_tablesize : SG_TABLESIZE;
-+	if (setup_can_queue > 0)
-+		tpnt->can_queue = setup_can_queue;
-+	if (setup_cmd_per_lun > 0)
-+		tpnt->cmd_per_lun = setup_cmd_per_lun;
-+	if (setup_sg_tablesize >= 0)
-+		tpnt->sg_tablesize = setup_sg_tablesize;
- 
-     if (setup_hostid >= 0)
- 	tpnt->this_id = setup_hostid;
-@@ -194,7 +193,7 @@ int __init macscsi_detect(struct scsi_ho
- 
- #ifdef SUPPORT_TAGS
-     if (setup_use_tagged_queuing < 0)
--	setup_use_tagged_queuing = USE_TAGGED_QUEUING;
-+	setup_use_tagged_queuing = 0;
- #endif
- 
-     /* Once we support multiple 5380s (e.g. DuoDock) we'll do
-@@ -496,10 +495,10 @@ static struct scsi_host_template driver_
- 	.queuecommand			= macscsi_queue_command,
- 	.eh_abort_handler		= macscsi_abort,
- 	.eh_bus_reset_handler		= macscsi_bus_reset,
--	.can_queue			= CAN_QUEUE,
-+	.can_queue			= 16,
- 	.this_id			= 7,
- 	.sg_tablesize			= SG_ALL,
--	.cmd_per_lun			= CMD_PER_LUN,
-+	.cmd_per_lun			= 2,
- 	.use_clustering			= DISABLE_CLUSTERING
- };
- 
-Index: linux/drivers/scsi/mac_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/mac_scsi.h	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.h	2014-11-12 16:11:11.000000000 +1100
-@@ -17,22 +17,6 @@
- 
- #ifndef ASM
- 
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
--
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 16
--#endif
--
--#ifndef SG_TABLESIZE
--#define SG_TABLESIZE SG_NONE
--#endif
--
--#ifndef USE_TAGGED_QUEUING
--#define	USE_TAGGED_QUEUING 0
--#endif
--
- #include <scsi/scsicam.h>
- 
- #define NCR5380_implementation_fields /* none */
 Index: linux/drivers/scsi/sun3_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:11.000000000 +1100
-@@ -198,12 +198,12 @@ static int __init sun3scsi_detect(struct
- #endif
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:29.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:30.000000000 +1100
+@@ -33,18 +33,42 @@
+ #include <asm/io.h>
+ #include <asm/dvma.h>
  
- 	/* setup variables */
--	tpnt->can_queue =
--		(setup_can_queue > 0) ? setup_can_queue : CAN_QUEUE;
--	tpnt->cmd_per_lun =
--		(setup_cmd_per_lun > 0) ? setup_cmd_per_lun : CMD_PER_LUN;
--	tpnt->sg_tablesize = 
--		(setup_sg_tablesize >= 0) ? setup_sg_tablesize : SG_TABLESIZE;
-+	if (setup_can_queue > 0)
-+		tpnt->can_queue = setup_can_queue;
-+	if (setup_cmd_per_lun > 0)
-+		tpnt->cmd_per_lun = setup_cmd_per_lun;
-+	if (setup_sg_tablesize >= 0)
-+		tpnt->sg_tablesize = setup_sg_tablesize;
+-/* dma on! */
+-#define REAL_DMA
+-
+ #include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+-#include "NCR5380.h"
  
- 	if (setup_hostid >= 0)
- 		tpnt->this_id = setup_hostid;
-@@ -257,7 +257,7 @@ static int __init sun3scsi_detect(struct
- #endif
- #ifdef SUPPORT_TAGS
- 	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = USE_TAGGED_QUEUING;
-+		setup_use_tagged_queuing = 1;
- #endif
+-extern int sun3_map_test(unsigned long, char *);
++/* Definitions for the core NCR5380 driver. */
  
- 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
-@@ -683,10 +683,10 @@ static struct scsi_host_template driver_
- 	.queuecommand		= sun3scsi_queue_command,
- 	.eh_abort_handler      	= sun3scsi_abort,
- 	.eh_bus_reset_handler  	= sun3scsi_bus_reset,
--	.can_queue		= CAN_QUEUE,
-+	.can_queue		= 16,
- 	.this_id		= 7,
--	.sg_tablesize		= SG_TABLESIZE,
--	.cmd_per_lun		= CMD_PER_LUN,
-+	.sg_tablesize		= SG_NONE,
-+	.cmd_per_lun		= 2,
- 	.use_clustering		= DISABLE_CLUSTERING
- };
+-/*#define RESET_BOOT */
++#define REAL_DMA
++#define RESET_RUN_DONE
+ /* #define SUPPORT_TAGS */
  
++/* #define MAX_TAGS                     32 */
++
++#define NCR5380_implementation_fields   /* none */
++
++#define NCR5380_read(reg)               sun3scsi_read(reg)
++#define NCR5380_write(reg, value)       sun3scsi_write(reg, value)
++
++#define NCR5380_queue_command           sun3scsi_queue_command
++#define NCR5380_bus_reset               sun3scsi_bus_reset
++#define NCR5380_abort                   sun3scsi_abort
++#define NCR5380_show_info               sun3scsi_show_info
++#define NCR5380_info                    sun3scsi_info
++
++#define NCR5380_dma_read_setup(instance, data, count) \
++        sun3scsi_dma_setup(data, count, 0)
++#define NCR5380_dma_write_setup(instance, data, count) \
++        sun3scsi_dma_setup(data, count, 1)
++#define NCR5380_dma_residual(instance) \
++        sun3scsi_dma_residual(instance)
++#define NCR5380_dma_xfer_len(instance, cmd, phase) \
++        sun3scsi_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
++
++#include "NCR5380.h"
++
++
++extern int sun3_map_test(unsigned long, char *);
++
+ #ifdef SUN3_SCSI_VME
+ #define ENABLE_IRQ()
+ #else
+@@ -65,9 +89,7 @@ module_param(setup_use_tagged_queuing, i
+ static int setup_hostid = -1;
+ module_param(setup_hostid, int, 0);
+ 
+-static struct scsi_cmnd *sun3_dma_setup_done = NULL;
+-
+-#define	RESET_RUN_DONE
++/* #define RESET_BOOT */
+ 
+ #define	AFTER_RESET_DELAY	(HZ/2)
+ 
+@@ -80,6 +102,7 @@ static struct scsi_cmnd *sun3_dma_setup_
+ /* minimum number of bytes to do dma on */
+ #define SUN3_DMA_MINSIZE 128
+ 
++static struct scsi_cmnd *sun3_dma_setup_done;
+ static unsigned char *sun3_scsi_regp;
+ static volatile struct sun3_dma_regs *dregs;
+ static struct sun3_udc_regs *udc_regs;
+@@ -131,9 +154,6 @@ static inline void sun3_udc_write(unsign
+ static void sun3_scsi_reset_boot(struct Scsi_Host *instance)
+ {
+ 	unsigned long end;
+-
+-	NCR5380_local_declare();
+-	NCR5380_setup(instance);
+ 	
+ 	/*
+ 	 * Do a SCSI reset to clean up the bus during initialization. No
+@@ -210,7 +230,6 @@ static irqreturn_t scsi_sun3_intr(int ir
+ void sun3_sun3_debug (void)
+ {
+ 	unsigned long flags;
+-	NCR5380_local_declare();
+ 
+ 	if (default_instance) {
+ 			local_irq_save(flags);
 Index: linux/drivers/scsi/sun3_scsi.h
 ===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:11.000000000 +1100
-@@ -31,25 +31,7 @@
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:29.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:30.000000000 +1100
+@@ -18,31 +18,6 @@
+ #ifndef SUN3_SCSI_H
+ #define SUN3_SCSI_H
  
- #define IOBASE_SUN3_VMESCSI 0xff200000
- 
--#ifndef CMD_PER_LUN
--#define CMD_PER_LUN 2
--#endif
+-#define MAX_TAGS 32
 -
--#ifndef CAN_QUEUE
--#define CAN_QUEUE 16
--#endif
+-#define NCR5380_implementation_fields /* none */
 -
--#ifndef SG_TABLESIZE
--#define SG_TABLESIZE SG_NONE
--#endif
+-#define NCR5380_local_declare() \
+-        struct Scsi_Host *_instance
 -
--#ifndef MAX_TAGS
- #define MAX_TAGS 32
--#endif
+-#define NCR5380_setup(instance) \
+-        _instance = instance
 -
--#ifndef USE_TAGGED_QUEUING
--#define	USE_TAGGED_QUEUING 1
--#endif
- 
- #include <scsi/scsicam.h>
- 
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:11.000000000 +1100
-@@ -611,7 +611,7 @@ static int __init atari_scsi_detect(stru
- 
- #ifdef SUPPORT_TAGS
- 	if (setup_use_tagged_queuing < 0)
--		setup_use_tagged_queuing = DEFAULT_USE_TAGGED_QUEUING;
-+		setup_use_tagged_queuing = 0;
- #endif
- #ifdef REAL_DMA
- 	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
-Index: linux/drivers/scsi/atari_scsi.h
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.h	2014-11-12 16:11:06.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.h	2014-11-12 16:11:11.000000000 +1100
-@@ -36,9 +36,6 @@
- #define ATARI_FALCON_CMD_PER_LUN	1
- #define ATARI_FALCON_SG_TABLESIZE	SG_NONE
- 
--#define	DEFAULT_USE_TAGGED_QUEUING	0
+-#define NCR5380_read(reg) sun3scsi_read(reg)
+-#define NCR5380_write(reg, value) sun3scsi_write(reg, value)
 -
+-#define NCR5380_queue_command sun3scsi_queue_command
+-#define NCR5380_bus_reset sun3scsi_bus_reset
+-#define NCR5380_abort sun3scsi_abort
+-#define NCR5380_show_info sun3scsi_show_info
+-#define NCR5380_info sun3scsi_info
+-#define NCR5380_dma_xfer_len(i, cmd, phase) \
+-        sun3scsi_dma_xfer_len(cmd->SCp.this_residual,cmd,((phase) & SR_IO) ? 0 : 1)
 -
- #define	NCR5380_implementation_fields	/* none */
- 
- #define NCR5380_read(reg)		  atari_scsi_reg_read( reg )
-
-
+-#define NCR5380_dma_write_setup(instance, data, count) sun3scsi_dma_setup(data, count, 1)
+-#define NCR5380_dma_read_setup(instance, data, count) sun3scsi_dma_setup(data, count, 0)
+-#define NCR5380_dma_residual sun3scsi_dma_residual
+-
+ /* additional registers - mainly DMA control regs */
+ /* these start at regbase + 8 -- directly after the NCR regs */
+ struct sun3_dma_regs {
