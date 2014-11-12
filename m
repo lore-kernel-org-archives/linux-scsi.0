@@ -1,27 +1,43 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] st: set owner in struct device_driver
-Date: Wed, 12 Nov 2014 09:25:01 -0800
-Message-ID: <20141112172501.GA18862@infradead.org>
-References: <DDB9C85B850785449757F9914A034FCB3BEF2A93@G9W0766.americas.hpqcorp.net>
- <20141112103120.GA19140@infradead.org>
- <DDB9C85B850785449757F9914A034FCB3BEF2CDA@G9W0766.americas.hpqcorp.net>
+Subject: Re: [V2 PATCH 3/4] scsi:stex.c Add reboot support
+Date: Wed, 12 Nov 2014 09:27:50 -0800
+Message-ID: <20141112172750.GB18862@infradead.org>
+References: <5462D62C.50602@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56521 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbaKLRZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 12:25:03 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BEF2CDA@G9W0766.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <5462D62C.50602@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, James Bottomley <jbottomley@parallels.com>
 
-On Wed, Nov 12, 2014 at 12:01:31PM +0000, Seymour, Shane M wrote:
-> I can, but at this point it will be tomorrow (11pm where I am).
+> +static int stex_reboot_callback(struct notifier_block *self,
+> +							  unsigned long val,
+> +							  void *data)
+> +{
+> +	if (val == SYS_RESTART)
+> +		isRestart = 1;
+> +	return NOTIFY_OK;
+> +}
+> 
+> @@ -1832,7 +1859,14 @@ static void stex_shutdown(struct pci_dev *pdev)
+>  {
+>  	struct st_hba *hba = pci_get_drvdata(pdev);
+> 
+> -	stex_hba_stop(hba);
+> +	if (hba->yellowstone == 1)
+> +		stex_hba_stop(hba, ST_IGNORED);
+> +	else {
+> +		if (isRestart)
+> +			stex_hba_stop(hba, ST_S6);
+> +		else
+> +			stex_hba_stop(hba, ST_S5);
+> +	}
 
-Looks like none of th scsi_driver intances sets the owner field.  Let me
-sort this out in a generic way, and thanks for the initial patch!
+This sort of check for reboot vs restart isn't really something
+we want in drivers.  I don't really know how we could find this
+out assuming we even want drivers to behave differently.
 
+Maybe Greg or someone on lkml has an idea how to best handle this case.
