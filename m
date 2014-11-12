@@ -1,21 +1,69 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] st: set owner in struct device_driver
-Date: Wed, 12 Nov 2014 02:31:20 -0800
-Message-ID: <20141112103120.GA19140@infradead.org>
-References: <DDB9C85B850785449757F9914A034FCB3BEF2A93@G9W0766.americas.hpqcorp.net>
+Subject: Re: [V2 PATCH 1/4] scsi:stex.c Support to Pegasus series.
+Date: Wed, 12 Nov 2014 02:43:00 -0800
+Message-ID: <20141112104300.GA31213@infradead.org>
+References: <5462D366.5030106@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:42686 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:49723 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbaKLKbW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 05:31:22 -0500
+	with ESMTP id S1752176AbaKLKnB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 05:43:01 -0500
 Content-Disposition: inline
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BEF2A93@G9W0766.americas.hpqcorp.net>
+In-Reply-To: <5462D366.5030106@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, James Bottomley <jbottomley@parallels.com>
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Looks good to me.  Can you also send the equivalent patch for the osst
-and ch drivers?
+> +	u8  yellowstone;
+
+Calling this flag yellowstone seems a bit confusing as there already
+is a st_yel card type, and this only seems a subset of those.  Maybe
+a ->support_pm flag or similar would be useful?
+
+> +	u32 subID;
+
+We don't use camelCaps, but I don't think you even need this variable at
+all..
+
+> 
+>  	hba->cardtype = (unsigned int) id->driver_data;
+>  	ci = &stex_card_info[hba->cardtype];
+> +	subID = id->subdevice;
+> +	if ((subID == 0x4221 || subID == 0x4222 ||
+> +	    subID == 0x4223 || subID == 0x4224 ||
+> +	    subID == 0x4225 || subID == 0x4226 ||
+> +	    subID == 0x4227 || subID == 0x4261 ||
+> +	    subID == 0x4262 || subID == 0x4263 ||
+> +	    subID == 0x4264 || subID == 0x4265) &&
+> +	    (hba->cardtype == st_yel)) {
+> +		hba->yellowstone = 1;
+> +	} else if (hba->cardtype == st_yel) {
+> +		hba->yellowstone = 0;
+> +	}
+
+Just write this as
+
+	switch (id->subdevice) {
+	case 0x4221:
+	case 0x4222:
+	case 0x4223:
+	case 0x4224:
+	case 0x4225:
+	case 0x4226:
+	case 0x4227:
+	case 0x4261:
+	case 0x4262:
+	case 0x4263:
+	case 0x4264:
+	case 0x4265:
+		if (hba->cardtype == st_yel) {
+			hba->supports_pm = 1;
+			break;
+		}
+	default:
+		hba->supports_pm = 0;
+	}
+
