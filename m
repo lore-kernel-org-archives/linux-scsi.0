@@ -1,184 +1,114 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 20/37] mac_scsi: Cleanup PDMA code
-Date: Wed, 12 Nov 2014 16:12:06 +1100
-Message-ID: <20141112051151.225450136@telegraphics.com.au>
+Subject: [PATCH v3 18/37] mac_scsi: Remove header
+Date: Wed, 12 Nov 2014 16:12:04 +1100
+Message-ID: <20141112051150.745455089@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=mac_scsi-pdma-cleanup
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40988 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753463AbaKLFnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:20 -0500
+Content-Disposition: inline; filename=mac_scsi-remove-header
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Fix whitespace, remove pointless volatile qualifiers and improve code style
-by use of INPUT_DATA_REG and OUTPUT_DATA_REG macros.
+The #defines in mac_scsi.h are intended to influence subsequent #includes in
+mac_scsi.c. IMHO, that's too convoluted.
+
+Remove mac_scsi.h by moving those macro definitions to mac_scsi.c,
+consistent with other NCR5380 drivers.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
- drivers/scsi/mac_scsi.c |  122 ++++++++++++++++++++++++------------------------
- 1 file changed, 62 insertions(+), 60 deletions(-)
+ drivers/scsi/mac_scsi.c |   21 ++++++++++++++++++++-
+ drivers/scsi/mac_scsi.h |   42 ------------------------------------------
+ 2 files changed, 20 insertions(+), 43 deletions(-)
 
 Index: linux/drivers/scsi/mac_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:21.000000000 +1100
-+++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:22.000000000 +1100
-@@ -86,9 +86,9 @@ module_param(setup_hostid, int, 0);
- #define	AFTER_RESET_DELAY	(HZ/2)
- #endif
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:16.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:20.000000000 +1100
+@@ -31,10 +31,29 @@
+ #include <asm/mac_via.h>
  
--static volatile unsigned char *mac_scsi_regp = NULL;
--static volatile unsigned char *mac_scsi_drq  = NULL;
--static volatile unsigned char *mac_scsi_nodrq = NULL;
-+static unsigned char *mac_scsi_regp;
-+static unsigned char *mac_scsi_drq;
-+static unsigned char *mac_scsi_nodrq;
+ #include <scsi/scsi_host.h>
+-#include "mac_scsi.h"
++
++/* Definitions for the core NCR5380 driver. */
  
+ #define PSEUDO_DMA
  
- /*
-@@ -262,6 +262,7 @@ static void mac_scsi_reset_boot(struct S
- }
- #endif
++#define NCR5380_implementation_fields   /* none */
++#define NCR5380_local_declare()         struct Scsi_Host *_instance
++#define NCR5380_setup(instance)         _instance = instance
++
++#define NCR5380_read(reg)               macscsi_read(_instance, reg)
++#define NCR5380_write(reg, value)       macscsi_write(_instance, reg, value)
++
++#define NCR5380_pread                   macscsi_pread
++#define NCR5380_pwrite                  macscsi_pwrite
++
++#define NCR5380_intr                    macscsi_intr
++#define NCR5380_queue_command           macscsi_queue_command
++#define NCR5380_abort                   macscsi_abort
++#define NCR5380_bus_reset               macscsi_bus_reset
++#define NCR5380_info                    macscsi_info
++#define NCR5380_show_info               macscsi_show_info
++#define NCR5380_write_info              macscsi_write_info
++
+ #include "NCR5380.h"
  
-+#ifdef PSEUDO_DMA
- /* 
-    Pseudo-DMA: (Ove Edlund)
-    The code attempts to catch bus errors that occur if one for example
-@@ -331,38 +332,38 @@ __asm__ __volatile__					\
-      : "0"(s), "1"(d), "2"(len)				\
-      : "d0")
- 
+ #define RESET_BOOT
+Index: linux/drivers/scsi/mac_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.h	2014-11-12 16:11:13.000000000 +1100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,42 +0,0 @@
+-/*
+- * Cumana Generic NCR5380 driver defines
+- *
+- * Copyright 1993, Drew Eckhardt
+- *	Visionary Computing
+- *	(Unix and Linux consulting and custom programming)
+- *	drew@colorado.edu
+- *      +1 (303) 440-4894
+- */
 -
--static int macscsi_pread (struct Scsi_Host *instance,
--			  unsigned char *dst, int len)
-+static int macscsi_pread(struct Scsi_Host *instance,
-+                         unsigned char *dst, int len)
- {
--   unsigned char *d;
--   volatile unsigned char *s;
-+	unsigned char *d;
-+	unsigned char *s;
-+
-+	NCR5380_local_declare();
-+	NCR5380_setup(instance);
-+
-+	s = mac_scsi_drq + (INPUT_DATA_REG << 4);
-+	d = dst;
- 
--   NCR5380_local_declare();
--   NCR5380_setup(instance);
-+	/* These conditions are derived from MacOS */
- 
--   s = mac_scsi_drq+0x60;
--   d = dst;
-+	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
-+	       !(NCR5380_read(STATUS_REG) & SR_REQ))
-+		;
-+
-+	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
-+	    (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
-+		pr_err("Error in macscsi_pread\n");
-+		return -1;
-+	}
- 
--/* These conditions are derived from MacOS */
+-#ifndef MAC_NCR5380_H
+-#define MAC_NCR5380_H
 -
--   while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
--         && !(NCR5380_read(STATUS_REG) & SR_REQ))
--      ;
--   if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
--         && (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
--      printk(KERN_ERR "Error in macscsi_pread\n");
--      return -1;
--   }
+-#ifndef ASM
 -
--   CP_IO_TO_MEM(s, d, len);
--   
--   if (len != 0) {
--      printk(KERN_NOTICE "Bus error in macscsi_pread\n");
--      return -1;
--   }
--   
--   return 0;
-+	CP_IO_TO_MEM(s, d, len);
-+
-+	if (len != 0) {
-+		pr_notice("Bus error in macscsi_pread\n");
-+		return -1;
-+	}
-+
-+	return 0;
- }
- 
- 
-@@ -424,39 +425,40 @@ __asm__ __volatile__					\
-      : "0"(s), "1"(d), "2"(len)				\
-      : "d0")
- 
--static int macscsi_pwrite (struct Scsi_Host *instance,
--				  unsigned char *src, int len)
-+static int macscsi_pwrite(struct Scsi_Host *instance,
-+                          unsigned char *src, int len)
- {
--   unsigned char *s;
--   volatile unsigned char *d;
-+	unsigned char *s;
-+	unsigned char *d;
-+
-+	NCR5380_local_declare();
-+	NCR5380_setup(instance);
- 
--   NCR5380_local_declare();
--   NCR5380_setup(instance);
-+	s = src;
-+	d = mac_scsi_drq + (OUTPUT_DATA_REG << 4);
- 
--   s = src;
--   d = mac_scsi_drq;
--   
--/* These conditions are derived from MacOS */
+-#include <scsi/scsicam.h>
 -
--   while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
--         && (!(NCR5380_read(STATUS_REG) & SR_REQ) 
--            || (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))) 
--      ;
--   if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ)) {
--      printk(KERN_ERR "Error in macscsi_pwrite\n");
--      return -1;
--   }
+-#define NCR5380_implementation_fields /* none */
 -
--   CP_MEM_TO_IO(s, d, len);   
+-#define NCR5380_local_declare() \
+-        struct Scsi_Host *_instance
 -
--   if (len != 0) {
--      printk(KERN_NOTICE "Bus error in macscsi_pwrite\n");
--      return -1;
--   }
--   
--   return 0;
--}
-+	/* These conditions are derived from MacOS */
-+
-+	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
-+	       (!(NCR5380_read(STATUS_REG) & SR_REQ) ||
-+	        (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)))
-+		;
-+
-+	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ)) {
-+		pr_err("Error in macscsi_pwrite\n");
-+		return -1;
-+	}
-+
-+	CP_MEM_TO_IO(s, d, len);
- 
-+	if (len != 0) {
-+		pr_notice("Bus error in macscsi_pwrite\n");
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+#endif
- 
- #include "NCR5380.c"
- 
+-#define NCR5380_setup(instance) \
+-        _instance = instance
+-
+-#define NCR5380_read(reg) macscsi_read(_instance, reg)
+-#define NCR5380_write(reg, value) macscsi_write(_instance, reg, value)
+-
+-#define NCR5380_pread 	macscsi_pread
+-#define NCR5380_pwrite 	macscsi_pwrite
+-	
+-#define NCR5380_intr macscsi_intr
+-#define NCR5380_queue_command macscsi_queue_command
+-#define NCR5380_abort macscsi_abort
+-#define NCR5380_bus_reset macscsi_bus_reset
+-#define NCR5380_info macscsi_info
+-#define NCR5380_show_info macscsi_show_info
+-#define NCR5380_write_info macscsi_write_info
+-
+-#endif /* ndef ASM */
+-#endif /* MAC_NCR5380_H */
+-
+
+
