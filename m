@@ -1,461 +1,114 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 30/37] atari_NCR5380: Merge from sun3_NCR5380.c
-Date: Wed, 12 Nov 2014 16:12:16 +1100
-Message-ID: <20141112051153.565473473@telegraphics.com.au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v3 25/37] sun3_scsi: Convert to platform device
+Date: Wed, 12 Nov 2014 10:17:46 +0100
+Message-ID: <CAMuHMdVtKc782AfiC0g0+tNn-uGCOig88vHsFx3yEj3dz2=U1A@mail.gmail.com>
 References: <20141112051146.525489687@telegraphics.com.au>
+	<20141112051152.395473503@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40984 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443AbaKLFnU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:20 -0500
-Content-Disposition: inline; filename=atari_NCR5380-merge-from-sun3_NCR5380
+Received: from mail-la0-f43.google.com ([209.85.215.43]:65404 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251AbaKLJRs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 04:17:48 -0500
+In-Reply-To: <20141112051152.395473503@telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 
-There is very little difference between the sun3_NCR5380.c core driver
-and atari_NCR5380.c. The former is a fork of the latter.
+Hi Finn,
 
-Merge the sun3_NCR5380.c core driver into atari_NCR5380.c so that
-sun3_scsi.c can adopt the latter and the former can be deleted.
+On Wed, Nov 12, 2014 at 6:12 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> Changes since v2:
+> - Give more precise addresses in platform resource initializers and
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Thanks!
 
----
+>   move PAGE_SIZE back to ioremap() arguments.
 
-This patch brings some undesirable #ifdef's to atari_NCR5380. It's a small
-price to pay for the elimination of so much duplication. Eventually, with
-some testing, it should be possible to remove many of these.
+Sorry, I think I didn't make myself clear, and you thus misunderstood.
+I meant PAGE_SIZE makes sense when ioremap()ing a small region
+at a hardcoded address, where you don't care about the exact size, as it
+will be rounded up to PAGE_SIZE anyway.
 
-Elimination of the SUN3_SCSI_VME macro is necessary to reach the goal of a
-single platform driver to replace the {atari,mac,sun3,sun3_vme}_scsi modules.
+When ioremap()ing resources, please use the size provided by the resource.
 
-Elimination of the #ifdef CONFIG_SUN3 tests is not necessary. But some of
-these would go away if the sun3 driver followed the atari logic more
-closely, such as use of PIO vs DMA for certain phases and transfer sizes.
+> +static int __init sun3_scsi_probe(struct platform_device *pdev)
+> +{
+> +       struct Scsi_Host *instance;
+> +       int error;
+> +       struct resource *irq, *mem;
+> +       unsigned char *ioaddr;
+> +#ifdef SUN3_SCSI_VME
+> +       int i;
+> +#endif
+> +
+> +       if (setup_can_queue > 0)
+> +               sun3_scsi_template.can_queue = setup_can_queue;
+> +       if (setup_cmd_per_lun > 0)
+> +               sun3_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+> +       if (setup_sg_tablesize >= 0)
+> +               sun3_scsi_template.sg_tablesize = setup_sg_tablesize;
+> +       if (setup_hostid >= 0)
+> +               sun3_scsi_template.this_id = setup_hostid & 7;
+> +
+> +#ifdef SUPPORT_TAGS
+> +       if (setup_use_tagged_queuing < 0)
+> +               setup_use_tagged_queuing = 1;
+> +#endif
+> +
+> +#ifdef SUN3_SCSI_VME
+> +       ioaddr = NULL;
+> +       for (i = 0; i < 2; i++) {
+> +               unsigned char x;
+> +
+> +               irq = platform_get_resource(pdev, IORESOURCE_IRQ, i);
+> +               mem = platform_get_resource(pdev, IORESOURCE_MEM, i);
+> +               if (!irq || !mem)
+> +                       break;
+> +
+> +               ioaddr = sun3_ioremap(mem->start, PAGE_SIZE,
 
-After applying this patch it is easy to compare the new atari_NCR5380.c
-with sun3_NCR5380.c, to check that they are equivalent. E.g.
+Here ...
 
-$ cp drivers/scsi/{sun3,atari}_NCR5380.c /tmp
-$ sed -i -e 's/  *$//'      /tmp/{sun3,atari}_NCR5380.c
-$ scripts/Lindent -l96 -hnl /tmp/{sun3,atari}_NCR5380.c
-$ meld                      /tmp/{sun3,atari}_NCR5380.c
+> +                                     SUN3_PAGE_TYPE_VME16);
+> +               dregs = (struct sun3_dma_regs *)(ioaddr + 8);
+> +
+> +               if (sun3_map_test((unsigned long)dregs, &x)) {
+> +                       unsigned short oldcsr;
+> +
+> +                       oldcsr = dregs->csr;
+> +                       dregs->csr = 0;
+> +                       udelay(SUN3_DMA_DELAY);
+> +                       if (dregs->csr == 0x1400)
+> +                               break;
+> +
+> +                       dregs->csr = oldcsr;
+> +               }
+> +
+> +               iounmap(ioaddr);
+> +               ioaddr = NULL;
+> +       }
+> +       if (!ioaddr)
+> +               return -ENODEV;
+> +#else
+> +       irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> +       mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +       if (!irq || !mem)
+> +               return -ENODEV;
+> +
+> +       ioaddr = ioremap(mem->start, PAGE_SIZE);
 
-One can see that the two implementations of tagged command queueing have
-diverged since the fork. The atari version has been updated and the sun3
-implementation is unused as sun3_scsi.c does not define SUPPORT_TAGS.
+and here.
 
-The remaining differences are merge_contiguous_buffers() and the falcon
-locking code. The falcon code disappears when suitable macro definitions are
-provided in sun3_scsi.c. merge_contiguous_buffers() could be a problem
-for sun3 (due to a DMA setup in an odd place) so it is #ifdef'd for sun3
-until the DMA setup discrepancies can be reconciled or moved out of
-the core driver.
+Gr{oetje,eeting}s,
 
-Changes since v2:
-- Remove email addresses from error messages.
+                        Geert
 
----
- drivers/scsi/atari_NCR5380.c |  208 +++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/atari_scsi.c    |    1 
- 2 files changed, 193 insertions(+), 16 deletions(-)
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-Index: linux/drivers/scsi/atari_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:34.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:35.000000000 +1100
-@@ -71,6 +71,9 @@
-  * 1.  Test linked command handling code after Eric is ready with
-  *     the high level code.
-  */
-+
-+/* Adapted for the sun3 by Sam Creasey. */
-+
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_transport_spi.h>
- 
-@@ -458,6 +461,7 @@ static void free_all_tags(void)
- 
- static void merge_contiguous_buffers(struct scsi_cmnd *cmd)
- {
-+#if !defined(CONFIG_SUN3)
- 	unsigned long endaddr;
- #if (NDEBUG & NDEBUG_MERGING)
- 	unsigned long oldlen = cmd->SCp.this_residual;
-@@ -482,6 +486,7 @@ static void merge_contiguous_buffers(str
- 		dprintk(NDEBUG_MERGING, "merged %d buffers from %p, new length %08x\n",
- 			   cnt, cmd->SCp.ptr, cmd->SCp.this_residual);
- #endif
-+#endif /* !defined(CONFIG_SUN3) */
- }
- 
- /*
-@@ -1041,12 +1046,10 @@ static void NCR5380_main(struct work_str
- 			     prev = NULL; tmp; prev = tmp, tmp = NEXT(tmp)) {
- 				u8 lun = tmp->device->lun;
- 
--#if (NDEBUG & NDEBUG_LISTS)
--				if (prev != tmp)
--					printk("MAIN tmp=%p   target=%d   busy=%d lun=%llu\n",
--					       tmp, tmp->device->id, hostdata->busy[tmp->device->id],
--					       lun);
--#endif
-+				dprintk(NDEBUG_LISTS,
-+				        "MAIN tmp=%p target=%d busy=%d lun=%d\n",
-+				        tmp, scmd_id(tmp), hostdata->busy[scmd_id(tmp)],
-+				        lun);
- 				/*  When we find one, remove it from the issue queue. */
- 				/* ++guenther: possible race with Falcon locking */
- 				if (
-@@ -1155,9 +1158,11 @@ static void NCR5380_main(struct work_str
- static void NCR5380_dma_complete(struct Scsi_Host *instance)
- {
- 	SETUP_HOSTDATA(instance);
--	int transfered, saved_data = 0, overrun = 0, cnt, toPIO;
--	unsigned char **data, p;
-+	int transfered;
-+	unsigned char **data;
- 	volatile int *count;
-+	int saved_data = 0, overrun = 0;
-+	unsigned char p;
- 
- 	if (!hostdata->connected) {
- 		printk(KERN_WARNING "scsi%d: received end of DMA interrupt with "
-@@ -1183,6 +1188,24 @@ static void NCR5380_dma_complete(struct
- 		   HOSTNO, NCR5380_read(BUS_AND_STATUS_REG),
- 		   NCR5380_read(STATUS_REG));
- 
-+#if defined(CONFIG_SUN3)
-+	if ((sun3scsi_dma_finish(rq_data_dir(hostdata->connected->request)))) {
-+		pr_err("scsi%d: overrun in UDC counter -- not prepared to deal with this!\n",
-+		       instance->host_no);
-+		BUG();
-+	}
-+
-+	/* make sure we're not stuck in a data phase */
-+	if ((NCR5380_read(BUS_AND_STATUS_REG) & (BASR_PHASE_MATCH | BASR_ACK)) ==
-+	    (BASR_PHASE_MATCH | BASR_ACK)) {
-+		pr_err("scsi%d: BASR %02x\n", instance->host_no,
-+		       NCR5380_read(BUS_AND_STATUS_REG));
-+		pr_err("scsi%d: bus stuck in data phase -- probably a single byte overrun!\n",
-+		       instance->host_no);
-+		BUG();
-+	}
-+#endif
-+
- 	(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- 	NCR5380_write(MODE_REG, MR_BASE);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-@@ -1196,6 +1219,8 @@ static void NCR5380_dma_complete(struct
- 	*count -= transfered;
- 
- 	if (hostdata->read_overruns) {
-+		int cnt, toPIO;
-+
- 		if ((NCR5380_read(STATUS_REG) & PHASE_MASK) == p && (p & SR_IO)) {
- 			cnt = toPIO = hostdata->read_overruns;
- 			if (overrun) {
-@@ -1275,11 +1300,14 @@ static irqreturn_t NCR5380_intr(int irq,
- 			{
- /* MS: Ignore unknown phase mismatch interrupts (caused by EOP interrupt) */
- 				if (basr & BASR_PHASE_MATCH)
--					printk(KERN_NOTICE "scsi%d: unknown interrupt, "
-+					dprintk(NDEBUG_INTR, "scsi%d: unknown interrupt, "
- 					       "BASR 0x%x, MR 0x%x, SR 0x%x\n",
- 					       HOSTNO, basr, NCR5380_read(MODE_REG),
- 					       NCR5380_read(STATUS_REG));
- 				(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+#ifdef SUN3_SCSI_VME
-+				dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 			}
- 		} /* if !(SELECTION || PARITY) */
- 		handled = 1;
-@@ -1288,6 +1316,9 @@ static irqreturn_t NCR5380_intr(int irq,
- 		       "BASR 0x%X, MR 0x%X, SR 0x%x\n", HOSTNO, basr,
- 		       NCR5380_read(MODE_REG), NCR5380_read(STATUS_REG));
- 		(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+#ifdef SUN3_SCSI_VME
-+		dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 	}
- 
- 	if (!done) {
-@@ -1620,6 +1651,9 @@ static int NCR5380_select(struct Scsi_Ho
- #ifndef SUPPORT_TAGS
- 	hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
- #endif
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_INTR;
-+#endif
- 
- 	initialize_SCp(cmd);
- 
-@@ -1843,9 +1877,54 @@ static int NCR5380_transfer_dma(struct S
- 	SETUP_HOSTDATA(instance);
- 	register int c = *count;
- 	register unsigned char p = *phase;
-+	unsigned long flags;
-+
-+#if defined(CONFIG_SUN3)
-+	/* sanity check */
-+	if (!sun3_dma_setup_done) {
-+		pr_err("scsi%d: transfer_dma without setup!\n",
-+		       instance->host_no);
-+		BUG();
-+	}
-+	hostdata->dma_len = c;
-+
-+	dprintk(NDEBUG_DMA, "scsi%d: initializing DMA for %s, %d bytes %s %p\n",
-+		instance->host_no, (p & SR_IO) ? "reading" : "writing",
-+		c, (p & SR_IO) ? "to" : "from", *data);
-+
-+	/* netbsd turns off ints here, why not be safe and do it too */
-+	local_irq_save(flags);
-+
-+	/* send start chain */
-+	sun3scsi_dma_start(c, *data);
-+
-+	if (p & SR_IO) {
-+		NCR5380_write(TARGET_COMMAND_REG, 1);
-+		NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+		NCR5380_write(INITIATOR_COMMAND_REG, 0);
-+		NCR5380_write(MODE_REG,
-+			      (NCR5380_read(MODE_REG) | MR_DMA_MODE | MR_ENABLE_EOP_INTR));
-+		NCR5380_write(START_DMA_INITIATOR_RECEIVE_REG, 0);
-+	} else {
-+		NCR5380_write(TARGET_COMMAND_REG, 0);
-+		NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_ASSERT_DATA);
-+		NCR5380_write(MODE_REG,
-+			      (NCR5380_read(MODE_REG) | MR_DMA_MODE | MR_ENABLE_EOP_INTR));
-+		NCR5380_write(START_DMA_SEND_REG, 0);
-+	}
-+
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_DMA_ENABLE;
-+#endif
-+
-+	local_irq_restore(flags);
-+
-+	sun3_dma_active = 1;
-+
-+#else /* !defined(CONFIG_SUN3) */
- 	register unsigned char *d = *data;
- 	unsigned char tmp;
--	unsigned long flags;
- 
- 	if ((tmp = (NCR5380_read(STATUS_REG) & PHASE_MASK)) != p) {
- 		*phase = tmp;
-@@ -1893,6 +1972,8 @@ static int NCR5380_transfer_dma(struct S
- 			NCR5380_dma_write_setup(instance, d, c);
- 		local_irq_restore(flags);
- 	}
-+#endif /* !defined(CONFIG_SUN3) */
-+
- 	return 0;
- }
- #endif /* defined(REAL_DMA) */
-@@ -1928,6 +2009,10 @@ static void NCR5380_information_transfer
- 	unsigned char phase, tmp, extended_msg[10], old_phase = 0xff;
- 	struct scsi_cmnd *cmd = (struct scsi_cmnd *) hostdata->connected;
- 
-+#ifdef SUN3_SCSI_VME
-+	dregs->csr |= CSR_INTR;
-+#endif
-+
- 	while (1) {
- 		tmp = NCR5380_read(STATUS_REG);
- 		/* We only have a valid SCSI phase when REQ is asserted */
-@@ -1937,6 +2022,33 @@ static void NCR5380_information_transfer
- 				old_phase = phase;
- 				NCR5380_dprint_phase(NDEBUG_INFORMATION, instance);
- 			}
-+#if defined(CONFIG_SUN3)
-+			if (phase == PHASE_CMDOUT) {
-+#if defined(REAL_DMA)
-+				void *d;
-+				unsigned long count;
-+
-+				if (!cmd->SCp.this_residual && cmd->SCp.buffers_residual) {
-+					count = cmd->SCp.buffer->length;
-+					d = sg_virt(cmd->SCp.buffer);
-+				} else {
-+					count = cmd->SCp.this_residual;
-+					d = cmd->SCp.ptr;
-+				}
-+				/* this command setup for dma yet? */
-+				if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != cmd)) {
-+					if (cmd->request->cmd_type == REQ_TYPE_FS) {
-+						sun3scsi_dma_setup(d, count,
-+						                   rq_data_dir(cmd->request));
-+						sun3_dma_setup_done = cmd;
-+					}
-+				}
-+#endif
-+#ifdef SUN3_SCSI_VME
-+				dregs->csr |= CSR_INTR;
-+#endif
-+			}
-+#endif /* CONFIG_SUN3 */
- 
- 			if (sink && (phase != PHASE_MSGOUT)) {
- 				NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
-@@ -1998,8 +2110,11 @@ static void NCR5380_information_transfer
- 				 */
- 
- #if defined(REAL_DMA)
--				if (!cmd->device->borken &&
--				    (transfersize = NCR5380_dma_xfer_len(instance,cmd,phase)) > 31) {
-+				if (
-+#if !defined(CONFIG_SUN3)
-+				    !cmd->device->borken &&
-+#endif
-+				    (transfersize = NCR5380_dma_xfer_len(instance, cmd, phase)) >= DMA_MIN_SIZE) {
- 					len = transfersize;
- 					cmd->SCp.phase = phase;
- 					if (NCR5380_transfer_dma(instance, &phase,
-@@ -2036,6 +2151,11 @@ static void NCR5380_information_transfer
- 					NCR5380_transfer_pio(instance, &phase,
- 							     (int *)&cmd->SCp.this_residual,
- 							     (unsigned char **)&cmd->SCp.ptr);
-+#if defined(CONFIG_SUN3) && defined(REAL_DMA)
-+				/* if we had intended to dma that command clear it */
-+				if (sun3_dma_setup_done == cmd)
-+					sun3_dma_setup_done = NULL;
-+#endif
- 				break;
- 			case PHASE_MSGIN:
- 				len = 1;
-@@ -2241,6 +2361,9 @@ static void NCR5380_information_transfer
- 					/* Wait for bus free to avoid nasty timeouts */
- 					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
- 						barrier();
-+#ifdef SUN3_SCSI_VME
-+					dregs->csr |= CSR_DMA_ENABLE;
-+#endif
- 					return;
- 					/*
- 					 * The SCSI data pointer is *IMPLICITLY* saved on a disconnect
-@@ -2400,17 +2523,20 @@ static void NCR5380_information_transfer
-  */
- 
- 
-+/* it might eventually prove necessary to do a dma setup on
-+   reselection, but it doesn't seem to be needed now -- sam */
-+
- static void NCR5380_reselect(struct Scsi_Host *instance)
- {
- 	SETUP_HOSTDATA(instance);
- 	unsigned char target_mask;
--	unsigned char lun, phase;
--	int len;
-+	unsigned char lun;
- #ifdef SUPPORT_TAGS
- 	unsigned char tag;
- #endif
- 	unsigned char msg[3];
--	unsigned char *data;
-+	int __maybe_unused len;
-+	unsigned char __maybe_unused *data, __maybe_unused phase;
- 	struct scsi_cmnd *tmp = NULL, *prev;
- 
- 	/*
-@@ -2447,10 +2573,18 @@ static void NCR5380_reselect(struct Scsi
- 	while (!(NCR5380_read(STATUS_REG) & SR_REQ))
- 		;
- 
-+#if defined(CONFIG_SUN3) && defined(REAL_DMA)
-+	/* acknowledge toggle to MSGIN */
-+	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(PHASE_MSGIN));
-+
-+	/* peek at the byte without really hitting the bus */
-+	msg[0] = NCR5380_read(CURRENT_SCSI_DATA_REG);
-+#else
- 	len = 1;
- 	data = msg;
- 	phase = PHASE_MSGIN;
- 	NCR5380_transfer_pio(instance, &phase, &len, &data);
-+#endif
- 
- 	if (!(msg[0] & 0x80)) {
- 		printk(KERN_DEBUG "scsi%d: expecting IDENTIFY message, got ", HOSTNO);
-@@ -2460,7 +2594,7 @@ static void NCR5380_reselect(struct Scsi
- 	}
- 	lun = (msg[0] & 0x07);
- 
--#ifdef SUPPORT_TAGS
-+#if defined(SUPPORT_TAGS) && !defined(CONFIG_SUN3)
- 	/* If the phase is still MSGIN, the target wants to send some more
- 	 * messages. In case it supports tagged queuing, this is probably a
- 	 * SIMPLE_QUEUE_TAG for the I_T_L_Q nexus.
-@@ -2522,9 +2656,51 @@ static void NCR5380_reselect(struct Scsi
- 		return;
- 	}
- 
-+#if defined(CONFIG_SUN3) && defined(REAL_DMA)
-+	/* engage dma setup for the command we just saw */
-+	{
-+		void *d;
-+		unsigned long count;
-+
-+		if (!tmp->SCp.this_residual && tmp->SCp.buffers_residual) {
-+			count = tmp->SCp.buffer->length;
-+			d = sg_virt(tmp->SCp.buffer);
-+		} else {
-+			count = tmp->SCp.this_residual;
-+			d = tmp->SCp.ptr;
-+		}
-+		/* setup this command for dma if not already */
-+		if ((count >= DMA_MIN_SIZE) && (sun3_dma_setup_done != tmp)) {
-+			sun3scsi_dma_setup(d, count, rq_data_dir(tmp->request));
-+			sun3_dma_setup_done = tmp;
-+		}
-+	}
-+
-+	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_ACK);
-+#endif
-+
- 	/* Accept message by clearing ACK */
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 
-+#if defined(SUPPORT_TAGS) && defined(CONFIG_SUN3)
-+	/* If the phase is still MSGIN, the target wants to send some more
-+	 * messages. In case it supports tagged queuing, this is probably a
-+	 * SIMPLE_QUEUE_TAG for the I_T_L_Q nexus.
-+	 */
-+	tag = TAG_NONE;
-+	if (phase == PHASE_MSGIN && setup_use_tagged_queuing) {
-+		/* Accept previous IDENTIFY message by clearing ACK */
-+		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+		len = 2;
-+		data = msg + 1;
-+		if (!NCR5380_transfer_pio(instance, &phase, &len, &data) &&
-+		    msg[1] == SIMPLE_QUEUE_TAG)
-+			tag = msg[2];
-+		dprintk(NDEBUG_TAGS, "scsi%d: target mask %02x, lun %d sent tag %d at reselection\n"
-+			HOSTNO, target_mask, lun, tag);
-+	}
-+#endif
-+
- 	hostdata->connected = tmp;
- 	dprintk(NDEBUG_RESELECTION, "scsi%d: nexus established, target = %d, lun = %llu, tag = %d\n",
- 		   HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:34.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:35.000000000 +1100
-@@ -89,6 +89,7 @@
- #define REAL_DMA
- #define SUPPORT_TAGS
- #define MAX_TAGS                        32
-+#define DMA_MIN_SIZE                    32
- 
- #define NCR5380_implementation_fields   /* none */
- 
-
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
