@@ -1,129 +1,184 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 27/37] ncr5380: Remove ENABLE_IRQ/DISABLE_IRQ macros
-Date: Wed, 12 Nov 2014 16:12:13 +1100
-Message-ID: <20141112051152.865479291@telegraphics.com.au>
+Subject: [PATCH v3 20/37] mac_scsi: Cleanup PDMA code
+Date: Wed, 12 Nov 2014 16:12:06 +1100
+Message-ID: <20141112051151.225450136@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40986 "EHLO
-	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbaKLFnU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:20 -0500
-Content-Disposition: inline; filename=ncr5380-remove-ENABLE_IRQ-DISABLE_IRQ
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=mac_scsi-pdma-cleanup
+Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-atari_NCR5380.c enables its IRQ when it is already enabled. Sun3 doesn't
-use the ENABLE_IRQ/DISABLE_IRQ cruft. Remove it.
+Fix whitespace, remove pointless volatile qualifiers and improve code style
+by use of INPUT_DATA_REG and OUTPUT_DATA_REG macros.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/atari_NCR5380.c |    2 --
- drivers/scsi/atari_scsi.c    |   21 ---------------------
- drivers/scsi/sun3_NCR5380.c  |    2 --
- drivers/scsi/sun3_scsi.c     |    7 -------
- 4 files changed, 32 deletions(-)
+ drivers/scsi/mac_scsi.c |  122 ++++++++++++++++++++++++------------------------
+ 1 file changed, 62 insertions(+), 60 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
+Index: linux/drivers/scsi/mac_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:25.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:31.000000000 +1100
-@@ -1227,7 +1227,6 @@ static irqreturn_t NCR5380_intr(int irq,
- 		NCR5380_dprint(NDEBUG_INTR, instance);
- 		if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
- 			done = 0;
--			ENABLE_IRQ();
- 			dprintk(NDEBUG_INTR, "scsi%d: SEL interrupt\n", HOSTNO);
- 			NCR5380_reselect(instance);
- 			(void)NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-@@ -1257,7 +1256,6 @@ static irqreturn_t NCR5380_intr(int irq,
- 				dprintk(NDEBUG_INTR, "scsi%d: PHASE MISM or EOP interrupt\n", HOSTNO);
- 				NCR5380_dma_complete( instance );
- 				done = 0;
--				ENABLE_IRQ();
- 			} else
- #endif /* REAL_DMA */
- 			{
-Index: linux/drivers/scsi/atari_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:28.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:31.000000000 +1100
-@@ -157,23 +157,6 @@ static inline unsigned long SCSI_DMA_GET
- 	return adr;
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:21.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:22.000000000 +1100
+@@ -86,9 +86,9 @@ module_param(setup_hostid, int, 0);
+ #define	AFTER_RESET_DELAY	(HZ/2)
+ #endif
+ 
+-static volatile unsigned char *mac_scsi_regp = NULL;
+-static volatile unsigned char *mac_scsi_drq  = NULL;
+-static volatile unsigned char *mac_scsi_nodrq = NULL;
++static unsigned char *mac_scsi_regp;
++static unsigned char *mac_scsi_drq;
++static unsigned char *mac_scsi_nodrq;
+ 
+ 
+ /*
+@@ -262,6 +262,7 @@ static void mac_scsi_reset_boot(struct S
+ }
+ #endif
+ 
++#ifdef PSEUDO_DMA
+ /* 
+    Pseudo-DMA: (Ove Edlund)
+    The code attempts to catch bus errors that occur if one for example
+@@ -331,38 +332,38 @@ __asm__ __volatile__					\
+      : "0"(s), "1"(d), "2"(len)				\
+      : "d0")
+ 
+-
+-static int macscsi_pread (struct Scsi_Host *instance,
+-			  unsigned char *dst, int len)
++static int macscsi_pread(struct Scsi_Host *instance,
++                         unsigned char *dst, int len)
+ {
+-   unsigned char *d;
+-   volatile unsigned char *s;
++	unsigned char *d;
++	unsigned char *s;
++
++	NCR5380_local_declare();
++	NCR5380_setup(instance);
++
++	s = mac_scsi_drq + (INPUT_DATA_REG << 4);
++	d = dst;
+ 
+-   NCR5380_local_declare();
+-   NCR5380_setup(instance);
++	/* These conditions are derived from MacOS */
+ 
+-   s = mac_scsi_drq+0x60;
+-   d = dst;
++	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
++	       !(NCR5380_read(STATUS_REG) & SR_REQ))
++		;
++
++	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
++	    (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
++		pr_err("Error in macscsi_pread\n");
++		return -1;
++	}
+ 
+-/* These conditions are derived from MacOS */
+-
+-   while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
+-         && !(NCR5380_read(STATUS_REG) & SR_REQ))
+-      ;
+-   if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
+-         && (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
+-      printk(KERN_ERR "Error in macscsi_pread\n");
+-      return -1;
+-   }
+-
+-   CP_IO_TO_MEM(s, d, len);
+-   
+-   if (len != 0) {
+-      printk(KERN_NOTICE "Bus error in macscsi_pread\n");
+-      return -1;
+-   }
+-   
+-   return 0;
++	CP_IO_TO_MEM(s, d, len);
++
++	if (len != 0) {
++		pr_notice("Bus error in macscsi_pread\n");
++		return -1;
++	}
++
++	return 0;
  }
  
--static inline void ENABLE_IRQ(void)
--{
--	if (IS_A_TT())
--		atari_enable_irq(IRQ_TT_MFP_SCSI);
--	else
--		atari_enable_irq(IRQ_MFP_FSCSI);
+ 
+@@ -424,39 +425,40 @@ __asm__ __volatile__					\
+      : "0"(s), "1"(d), "2"(len)				\
+      : "d0")
+ 
+-static int macscsi_pwrite (struct Scsi_Host *instance,
+-				  unsigned char *src, int len)
++static int macscsi_pwrite(struct Scsi_Host *instance,
++                          unsigned char *src, int len)
+ {
+-   unsigned char *s;
+-   volatile unsigned char *d;
++	unsigned char *s;
++	unsigned char *d;
++
++	NCR5380_local_declare();
++	NCR5380_setup(instance);
+ 
+-   NCR5380_local_declare();
+-   NCR5380_setup(instance);
++	s = src;
++	d = mac_scsi_drq + (OUTPUT_DATA_REG << 4);
+ 
+-   s = src;
+-   d = mac_scsi_drq;
+-   
+-/* These conditions are derived from MacOS */
+-
+-   while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) 
+-         && (!(NCR5380_read(STATUS_REG) & SR_REQ) 
+-            || (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))) 
+-      ;
+-   if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ)) {
+-      printk(KERN_ERR "Error in macscsi_pwrite\n");
+-      return -1;
+-   }
+-
+-   CP_MEM_TO_IO(s, d, len);   
+-
+-   if (len != 0) {
+-      printk(KERN_NOTICE "Bus error in macscsi_pwrite\n");
+-      return -1;
+-   }
+-   
+-   return 0;
 -}
--
--static inline void DISABLE_IRQ(void)
--{
--	if (IS_A_TT())
--		atari_disable_irq(IRQ_TT_MFP_SCSI);
--	else
--		atari_disable_irq(IRQ_MFP_FSCSI);
--}
--
--
- #define HOSTDATA_DMALEN		(((struct NCR5380_hostdata *) \
- 				(atari_scsi_host->hostdata))->dma_len)
++	/* These conditions are derived from MacOS */
++
++	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ) &&
++	       (!(NCR5380_read(STATUS_REG) & SR_REQ) ||
++	        (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)))
++		;
++
++	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_DRQ)) {
++		pr_err("Error in macscsi_pwrite\n");
++		return -1;
++	}
++
++	CP_MEM_TO_IO(s, d, len);
  
-@@ -373,10 +356,6 @@ static irqreturn_t scsi_tt_intr(int irq,
++	if (len != 0) {
++		pr_notice("Bus error in macscsi_pwrite\n");
++		return -1;
++	}
++
++	return 0;
++}
++#endif
  
- 	NCR5380_intr(irq, dummy);
+ #include "NCR5380.c"
  
--#if 0
--	/* To be sure the int is not masked */
--	atari_enable_irq(IRQ_TT_MFP_SCSI);
--#endif
- 	return IRQ_HANDLED;
- }
- 
-Index: linux/drivers/scsi/sun3_NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:11:16.000000000 +1100
-+++ linux/drivers/scsi/sun3_NCR5380.c	2014-11-12 16:11:31.000000000 +1100
-@@ -1155,7 +1155,6 @@ static irqreturn_t NCR5380_intr (int irq
- 	NCR5380_dprint(NDEBUG_INTR, instance);
- 	if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
- 	    done = 0;
--//	    ENABLE_IRQ();
- 	    dprintk(NDEBUG_INTR, "scsi%d: SEL interrupt\n", HOSTNO);
- 	    NCR5380_reselect(instance);
- 	    (void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-@@ -1188,7 +1187,6 @@ static irqreturn_t NCR5380_intr (int irq
- 		dprintk(NDEBUG_INTR, "scsi%d: PHASE MISM or EOP interrupt\n", HOSTNO);
- 		NCR5380_dma_complete( instance );
- 		done = 0;
--//		ENABLE_IRQ();
- 	    } else
- #endif /* REAL_DMA */
- 	    {
-Index: linux/drivers/scsi/sun3_scsi.c
-===================================================================
---- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:30.000000000 +1100
-+++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:31.000000000 +1100
-@@ -69,13 +69,6 @@
- 
- extern int sun3_map_test(unsigned long, char *);
- 
--#ifdef SUN3_SCSI_VME
--#define ENABLE_IRQ()
--#else
--#define	ENABLE_IRQ()	enable_irq( IRQ_SUN3_SCSI ); 
--#endif
--
--
- static int setup_can_queue = -1;
- module_param(setup_can_queue, int, 0);
- static int setup_cmd_per_lun = -1;
-
-
