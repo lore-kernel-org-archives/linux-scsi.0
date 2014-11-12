@@ -1,43 +1,178 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [V2 PATCH 3/4] scsi:stex.c Add reboot support
-Date: Wed, 12 Nov 2014 09:27:50 -0800
-Message-ID: <20141112172750.GB18862@infradead.org>
-References: <5462D62C.50602@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5462D62C.50602@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pm@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: remove scsi_driver owner field
+Date: Wed, 12 Nov 2014 18:34:51 +0100
+Message-ID: <1415813691-4132-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:45453 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685AbaKLRes (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 12:34:48 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Shane M Seymour <shane.seymour@hp.com>
 
-> +static int stex_reboot_callback(struct notifier_block *self,
-> +							  unsigned long val,
-> +							  void *data)
-> +{
-> +	if (val == SYS_RESTART)
-> +		isRestart = 1;
-> +	return NOTIFY_OK;
-> +}
-> 
-> @@ -1832,7 +1859,14 @@ static void stex_shutdown(struct pci_dev *pdev)
->  {
->  	struct st_hba *hba = pci_get_drvdata(pdev);
-> 
-> -	stex_hba_stop(hba);
-> +	if (hba->yellowstone == 1)
-> +		stex_hba_stop(hba, ST_IGNORED);
-> +	else {
-> +		if (isRestart)
-> +			stex_hba_stop(hba, ST_S6);
-> +		else
-> +			stex_hba_stop(hba, ST_S5);
-> +	}
+The driver core driver structure has grown an owner field and now
+requires it to be set for all modular drivers.  Set it up for
+all scsi_driver instances and get rid of the now superflous
+scsi_driver owner field.
 
-This sort of check for reboot vs restart isn't really something
-we want in drivers.  I don't really know how we could find this
-out assuming we even want drivers to behave differently.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Shane M Seymour <shane.seymour@hp.com>
+---
+ drivers/scsi/ch.c          | 2 +-
+ drivers/scsi/osd/osd_uld.c | 2 +-
+ drivers/scsi/osst.c        | 2 +-
+ drivers/scsi/scsi_scan.c   | 9 ++++-----
+ drivers/scsi/sd.c          | 2 +-
+ drivers/scsi/ses.c         | 2 +-
+ drivers/scsi/sr.c          | 2 +-
+ drivers/scsi/st.c          | 2 +-
+ include/scsi/scsi_driver.h | 1 -
+ 9 files changed, 11 insertions(+), 13 deletions(-)
 
-Maybe Greg or someone on lkml has an idea how to best handle this case.
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 4f502f9..6bac8a7 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -972,9 +972,9 @@ static int ch_remove(struct device *dev)
+ }
+ 
+ static struct scsi_driver ch_template = {
+-	.owner     	= THIS_MODULE,
+ 	.gendrv     	= {
+ 		.name	= "ch",
++		.owner	= THIS_MODULE,
+ 		.probe  = ch_probe,
+ 		.remove = ch_remove,
+ 	},
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 92cdd4b..243eab3 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -540,9 +540,9 @@ static int osd_remove(struct device *dev)
+  */
+ 
+ static struct scsi_driver osd_driver = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= osd_name,
++		.owner		= THIS_MODULE,
+ 		.probe		= osd_probe,
+ 		.remove		= osd_remove,
+ 	}
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 8c38464..5033223 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -172,9 +172,9 @@ static int osst_probe(struct device *);
+ static int osst_remove(struct device *);
+ 
+ static struct scsi_driver osst_template = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		=  "osst",
++		.owner		= THIS_MODULE,
+ 		.probe		= osst_probe,
+ 		.remove		= osst_remove,
+ 	}
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index d97597e..0cda53a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1593,16 +1593,15 @@ EXPORT_SYMBOL(scsi_add_device);
+ 
+ void scsi_rescan_device(struct device *dev)
+ {
+-	struct scsi_driver *drv;
+-	
+ 	if (!dev->driver)
+ 		return;
+ 
+-	drv = to_scsi_driver(dev->driver);
+-	if (try_module_get(drv->owner)) {
++	if (try_module_get(dev->driver->owner)) {
++		struct scsi_driver *drv = to_scsi_driver(dev->driver);
++
+ 		if (drv->rescan)
+ 			drv->rescan(dev);
+-		module_put(drv->owner);
++		module_put(dev->driver->owner);
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_rescan_device);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 95bfb7b..2ac603f8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -510,9 +510,9 @@ static const struct dev_pm_ops sd_pm_ops = {
+ };
+ 
+ static struct scsi_driver sd_template = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= "sd",
++		.owner		= THIS_MODULE,
+ 		.probe		= sd_probe,
+ 		.remove		= sd_remove,
+ 		.shutdown	= sd_shutdown,
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 80bfece..b7e79e7 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -693,9 +693,9 @@ static struct class_interface ses_interface = {
+ };
+ 
+ static struct scsi_driver ses_template = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= "ses",
++		.owner		= THIS_MODULE,
+ 		.probe		= ses_probe,
+ 		.remove		= ses_remove,
+ 	},
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 3d5399e..20a1096 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -88,9 +88,9 @@ static struct dev_pm_ops sr_pm_ops = {
+ };
+ 
+ static struct scsi_driver sr_template = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name   	= "sr",
++		.owner		= THIS_MODULE,
+ 		.probe		= sr_probe,
+ 		.remove		= sr_remove,
+ 		.pm		= &sr_pm_ops,
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e46e02b2..128d3b5 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -202,9 +202,9 @@ static int do_create_sysfs_files(void);
+ static void do_remove_sysfs_files(void);
+ 
+ static struct scsi_driver st_template = {
+-	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		= "st",
++		.owner		= THIS_MODULE,
+ 		.probe		= st_probe,
+ 		.remove		= st_remove,
+ 	},
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index c2b7598..891a658 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -9,7 +9,6 @@ struct scsi_cmnd;
+ struct scsi_device;
+ 
+ struct scsi_driver {
+-	struct module		*owner;
+ 	struct device_driver	gendrv;
+ 
+ 	void (*rescan)(struct device *);
+-- 
+1.9.1
+
