@@ -1,373 +1,211 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 29/37] atari_NCR5380: Refactor Falcon locking
-Date: Wed, 12 Nov 2014 16:12:15 +1100
-Message-ID: <20141112051153.335494158@telegraphics.com.au>
+Subject: [PATCH v3 14/37] ncr5380: Remove pointless compiler command line override macros
+Date: Wed, 12 Nov 2014 16:12:00 +1100
+Message-ID: <20141112051149.815461897@telegraphics.com.au>
 References: <20141112051146.525489687@telegraphics.com.au>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40994 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40975 "EHLO
 	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753586AbaKLFnV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:21 -0500
-Content-Disposition: inline; filename=atari_NCR5380-refactor-falcon-locking
+	with ESMTP id S1753202AbaKLFnJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 00:43:09 -0500
+Content-Disposition: inline; filename=ncr5380-remove-compiler-invocation-macros
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-Simplify falcon_release_lock_if_possible() by making callers responsible for
-disabling local IRQ's, which they must do anyway to correctly synchronize
-the ST DMA "lock" with core driver data structures. Move this
-synchronization logic to the core driver with which it is tightly coupled.
-
-Other LLD's like sun3_scsi and mac_scsi that can make use of this core
-driver can just stub out the NCR5380_acquire_dma_irq() and
-NCR5380_release_dma_irq() calls so the compiler will eliminate the
-ST DMA code.
-
-Remove a redundant local_irq_save/restore pair (irq's are disabled for
-interrupt handlers these days). Revise the locking for
-atari_scsi_bus_reset(): use local_irq_save/restore() instead of
-atari_turnoff/turnon_irq(). There is no guarantee that atari_scsi still
-holds the ST DMA lock during EH, so atari_turnoff/turnon_irq() could
-end up dropping an IDE or floppy interrupt.
+Compile-time override of scsi host defaults is pointless for drivers that
+provide module parameters and __setup options for that. Too many macros make
+the code hard to read so remove them.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
- drivers/scsi/atari_NCR5380.c |   72 ++++++++++++++++++++++++++-----------------
- drivers/scsi/atari_scsi.c    |   47 ++++++++++------------------
- 2 files changed, 62 insertions(+), 57 deletions(-)
+ drivers/scsi/atari_scsi.c |    2 +-
+ drivers/scsi/atari_scsi.h |    3 ---
+ drivers/scsi/mac_scsi.c   |   19 +++++++++----------
+ drivers/scsi/mac_scsi.h   |   16 ----------------
+ drivers/scsi/sun3_scsi.c  |   20 ++++++++++----------
+ drivers/scsi/sun3_scsi.h  |   18 ------------------
+ 6 files changed, 20 insertions(+), 58 deletions(-)
 
-Index: linux/drivers/scsi/atari_NCR5380.c
+Index: linux/drivers/scsi/mac_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:32.000000000 +1100
-+++ linux/drivers/scsi/atari_NCR5380.c	2014-11-12 16:11:34.000000000 +1100
-@@ -925,7 +925,7 @@ static int NCR5380_queue_command(struct
- 	 * because also a timer int can trigger an abort or reset, which would
- 	 * alter queues and touch the lock.
- 	 */
--	if (!falcon_get_lock())
-+	if (!NCR5380_acquire_dma_irq(instance))
- 		return SCSI_MLQUEUE_HOST_BUSY;
+--- linux.orig/drivers/scsi/mac_scsi.c	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.c	2014-11-12 16:11:11.000000000 +1100
+@@ -177,13 +177,12 @@ int __init macscsi_detect(struct scsi_ho
+     if (macintosh_config->scsi_type != MAC_SCSI_OLD)
+ 	return( 0 );
  
- 	local_irq_save(flags);
-@@ -960,6 +960,18 @@ static int NCR5380_queue_command(struct
- 	return 0;
- }
+-    /* setup variables */
+-    tpnt->can_queue =
+-	(setup_can_queue > 0) ? setup_can_queue : CAN_QUEUE;
+-    tpnt->cmd_per_lun =
+-	(setup_cmd_per_lun > 0) ? setup_cmd_per_lun : CMD_PER_LUN;
+-    tpnt->sg_tablesize = 
+-	(setup_sg_tablesize >= 0) ? setup_sg_tablesize : SG_TABLESIZE;
++	if (setup_can_queue > 0)
++		tpnt->can_queue = setup_can_queue;
++	if (setup_cmd_per_lun > 0)
++		tpnt->cmd_per_lun = setup_cmd_per_lun;
++	if (setup_sg_tablesize >= 0)
++		tpnt->sg_tablesize = setup_sg_tablesize;
  
-+static inline void maybe_release_dma_irq(struct Scsi_Host *instance)
-+{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+
-+	/* Caller does the locking needed to set & test these data atomically */
-+	if (!hostdata->disconnected_queue &&
-+	    !hostdata->issue_queue &&
-+	    !hostdata->connected &&
-+	    !hostdata->retain_dma_intr)
-+		NCR5380_release_dma_irq(instance);
-+}
-+
- /*
-  * Function : NCR5380_main (void)
-  *
-@@ -1082,9 +1094,11 @@ static void NCR5380_main(struct work_str
- 					cmd_get_tag(tmp, tmp->cmnd[0] != REQUEST_SENSE);
- #endif
- 					if (!NCR5380_select(instance, tmp)) {
-+						local_irq_disable();
- 						hostdata->retain_dma_intr--;
- 						/* release if target did not response! */
--						falcon_release_lock_if_possible(hostdata);
-+						maybe_release_dma_irq(instance);
-+						local_irq_restore(flags);
- 						break;
- 					} else {
- 						local_irq_disable();
-@@ -2083,11 +2097,12 @@ static void NCR5380_information_transfer
- 				case COMMAND_COMPLETE:
- 					/* Accept message by clearing ACK */
- 					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--					/* ++guenther: possible race with Falcon locking */
--					hostdata->retain_dma_intr++;
--					hostdata->connected = NULL;
- 					dprintk(NDEBUG_QUEUES, "scsi%d: command for target %d, lun %llu "
- 						  "completed\n", HOSTNO, cmd->device->id, cmd->device->lun);
-+
-+					local_irq_save(flags);
-+					hostdata->retain_dma_intr++;
-+					hostdata->connected = NULL;
+     if (setup_hostid >= 0)
+ 	tpnt->this_id = setup_hostid;
+@@ -194,7 +193,7 @@ int __init macscsi_detect(struct scsi_ho
+ 
  #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
- 					if (status_byte(cmd->SCp.Status) == QUEUE_FULL) {
-@@ -2146,17 +2161,17 @@ static void NCR5380_information_transfer
- 
- 						dprintk(NDEBUG_AUTOSENSE, "scsi%d: performing request sense\n", HOSTNO);
- 
--						local_irq_save(flags);
- 						LIST(cmd,hostdata->issue_queue);
- 						SET_NEXT(cmd, hostdata->issue_queue);
- 						hostdata->issue_queue = (struct scsi_cmnd *) cmd;
--						local_irq_restore(flags);
- 						dprintk(NDEBUG_QUEUES, "scsi%d: REQUEST SENSE added to head of "
- 							  "issue queue\n", H_NO(cmd));
- 					} else {
- 						cmd->scsi_done(cmd);
- 					}
- 
-+					local_irq_restore(flags);
-+
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 					/*
- 					 * Restore phase bits to 0 so an interrupted selection,
-@@ -2167,12 +2182,14 @@ static void NCR5380_information_transfer
- 					while ((NCR5380_read(STATUS_REG) & SR_BSY) && !hostdata->connected)
- 						barrier();
- 
-+					local_irq_save(flags);
- 					hostdata->retain_dma_intr--;
- 					/* ++roman: For Falcon SCSI, release the lock on the
- 					 * ST-DMA here if no other commands are waiting on the
- 					 * disconnected queue.
- 					 */
--					falcon_release_lock_if_possible(hostdata);
-+					maybe_release_dma_irq(instance);
-+					local_irq_restore(flags);
- 					return;
- 				case MESSAGE_REJECT:
- 					/* Accept message by clearing ACK */
-@@ -2331,6 +2348,7 @@ static void NCR5380_information_transfer
- 				hostdata->last_message = msgout;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data);
- 				if (msgout == ABORT) {
-+					local_irq_save(flags);
- #ifdef SUPPORT_TAGS
- 					cmd_free_tag(cmd);
- #else
-@@ -2338,9 +2356,10 @@ static void NCR5380_information_transfer
+     if (setup_use_tagged_queuing < 0)
+-	setup_use_tagged_queuing = USE_TAGGED_QUEUING;
++	setup_use_tagged_queuing = 0;
  #endif
- 					hostdata->connected = NULL;
- 					cmd->result = DID_ERROR << 16;
--					cmd->scsi_done(cmd);
- 					NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
--					falcon_release_lock_if_possible(hostdata);
-+					maybe_release_dma_irq(instance);
-+					local_irq_restore(flags);
-+					cmd->scsi_done(cmd);
- 					return;
- 				}
- 				msgout = NOP;
-@@ -2393,7 +2412,6 @@ static void NCR5380_reselect(struct Scsi
- 	unsigned char msg[3];
- 	unsigned char *data;
- 	struct scsi_cmnd *tmp = NULL, *prev;
--/*	unsigned long flags; */
  
- 	/*
- 	 * Disable arbitration, etc. since the host adapter obviously
-@@ -2473,8 +2491,6 @@ static void NCR5380_reselect(struct Scsi
- 		    && (tag == tmp->tag)
- #endif
- 		    ) {
--			/* ++guenther: prevent race with falcon_release_lock */
--			hostdata->retain_dma_intr++;
- 			if (prev) {
- 				REMOVE(prev, NEXT(prev), tmp, NEXT(tmp));
- 				SET_NEXT(prev, NEXT(tmp));
-@@ -2512,7 +2528,6 @@ static void NCR5380_reselect(struct Scsi
- 	hostdata->connected = tmp;
- 	dprintk(NDEBUG_RESELECTION, "scsi%d: nexus established, target = %d, lun = %llu, tag = %d\n",
- 		   HOSTNO, tmp->device->id, tmp->device->lun, tmp->tag);
--	hostdata->retain_dma_intr--;
- }
+     /* Once we support multiple 5380s (e.g. DuoDock) we'll do
+@@ -496,10 +495,10 @@ static struct scsi_host_template driver_
+ 	.queuecommand			= macscsi_queue_command,
+ 	.eh_abort_handler		= macscsi_abort,
+ 	.eh_bus_reset_handler		= macscsi_bus_reset,
+-	.can_queue			= CAN_QUEUE,
++	.can_queue			= 16,
+ 	.this_id			= 7,
+ 	.sg_tablesize			= SG_ALL,
+-	.cmd_per_lun			= CMD_PER_LUN,
++	.cmd_per_lun			= 2,
+ 	.use_clustering			= DISABLE_CLUSTERING
+ };
  
+Index: linux/drivers/scsi/mac_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/mac_scsi.h	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/mac_scsi.h	2014-11-12 16:11:11.000000000 +1100
+@@ -17,22 +17,6 @@
  
-@@ -2588,12 +2603,12 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- #else
- 			hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
- #endif
-+			maybe_release_dma_irq(instance);
- 			local_irq_restore(flags);
- 			cmd->scsi_done(cmd);
--			falcon_release_lock_if_possible(hostdata);
- 			return SUCCESS;
- 		} else {
--/*			local_irq_restore(flags); */
-+			local_irq_restore(flags);
- 			printk("scsi%d: abort of connected command failed!\n", HOSTNO);
- 			return FAILED;
- 		}
-@@ -2612,13 +2627,13 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 			(*prev) = NEXT(tmp);
- 			SET_NEXT(tmp, NULL);
- 			tmp->result = DID_ABORT << 16;
-+			maybe_release_dma_irq(instance);
- 			local_irq_restore(flags);
- 			dprintk(NDEBUG_ABORT, "scsi%d: abort removed command from issue queue.\n",
- 				    HOSTNO);
- 			/* Tagged queuing note: no tag to free here, hasn't been assigned
- 			 * yet... */
- 			tmp->scsi_done(tmp);
--			falcon_release_lock_if_possible(hostdata);
- 			return SUCCESS;
- 		}
- 	}
-@@ -2696,15 +2711,22 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- #else
- 					hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
- #endif
-+					maybe_release_dma_irq(instance);
- 					local_irq_restore(flags);
- 					tmp->scsi_done(tmp);
--					falcon_release_lock_if_possible(hostdata);
- 					return SUCCESS;
- 				}
- 			}
- 		}
- 	}
+ #ifndef ASM
  
-+	/* Maybe it is sufficient just to release the ST-DMA lock... (if
-+	 * possible at all) At least, we should check if the lock could be
-+	 * released after the abort, in case it is kept due to some bug.
-+	 */
-+	maybe_release_dma_irq(instance);
-+	local_irq_restore(flags);
-+
- 	/*
- 	 * Case 5 : If we reached this point, the command was not found in any of
- 	 *	    the queues.
-@@ -2715,15 +2737,8 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 	 * broke.
- 	 */
- 
--	local_irq_restore(flags);
- 	printk(KERN_INFO "scsi%d: warning : SCSI command probably completed successfully before abortion\n", HOSTNO);
- 
--	/* Maybe it is sufficient just to release the ST-DMA lock... (if
--	 * possible at all) At least, we should check if the lock could be
--	 * released after the abort, in case it is kept due to some bug.
--	 */
--	falcon_release_lock_if_possible(hostdata);
+-#ifndef CMD_PER_LUN
+-#define CMD_PER_LUN 2
+-#endif
 -
- 	return FAILED;
- }
+-#ifndef CAN_QUEUE
+-#define CAN_QUEUE 16
+-#endif
+-
+-#ifndef SG_TABLESIZE
+-#define SG_TABLESIZE SG_NONE
+-#endif
+-
+-#ifndef USE_TAGGED_QUEUING
+-#define	USE_TAGGED_QUEUING 0
+-#endif
+-
+ #include <scsi/scsicam.h>
  
-@@ -2739,14 +2754,15 @@ int NCR5380_abort(struct scsi_cmnd *cmd)
- 
- static int NCR5380_bus_reset(struct scsi_cmnd *cmd)
- {
--	SETUP_HOSTDATA(cmd->device->host);
-+	struct Scsi_Host *instance = cmd->device->host;
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	int i;
- 	unsigned long flags;
- #if defined(RESET_RUN_DONE)
- 	struct scsi_cmnd *connected, *disconnected_queue;
+ #define NCR5380_implementation_fields /* none */
+Index: linux/drivers/scsi/sun3_scsi.c
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.c	2014-11-12 16:11:11.000000000 +1100
+@@ -198,12 +198,12 @@ static int __init sun3scsi_detect(struct
  #endif
  
--	NCR5380_print_status(cmd->device->host);
-+	NCR5380_print_status(instance);
+ 	/* setup variables */
+-	tpnt->can_queue =
+-		(setup_can_queue > 0) ? setup_can_queue : CAN_QUEUE;
+-	tpnt->cmd_per_lun =
+-		(setup_cmd_per_lun > 0) ? setup_cmd_per_lun : CMD_PER_LUN;
+-	tpnt->sg_tablesize = 
+-		(setup_sg_tablesize >= 0) ? setup_sg_tablesize : SG_TABLESIZE;
++	if (setup_can_queue > 0)
++		tpnt->can_queue = setup_can_queue;
++	if (setup_cmd_per_lun > 0)
++		tpnt->cmd_per_lun = setup_cmd_per_lun;
++	if (setup_sg_tablesize >= 0)
++		tpnt->sg_tablesize = setup_sg_tablesize;
  
- 	/* get in phase */
- 	NCR5380_write(TARGET_COMMAND_REG,
-@@ -2871,6 +2887,8 @@ static int NCR5380_bus_reset(struct scsi
- #ifdef REAL_DMA
- 	hostdata->dma_len = 0;
+ 	if (setup_hostid >= 0)
+ 		tpnt->this_id = setup_hostid;
+@@ -257,7 +257,7 @@ static int __init sun3scsi_detect(struct
  #endif
-+
-+	maybe_release_dma_irq(instance);
- 	local_irq_restore(flags);
+ #ifdef SUPPORT_TAGS
+ 	if (setup_use_tagged_queuing < 0)
+-		setup_use_tagged_queuing = USE_TAGGED_QUEUING;
++		setup_use_tagged_queuing = 1;
+ #endif
  
- 	/* we did no complete reset of all commands, so a wakeup is required */
+ 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
+@@ -683,10 +683,10 @@ static struct scsi_host_template driver_
+ 	.queuecommand		= sun3scsi_queue_command,
+ 	.eh_abort_handler      	= sun3scsi_abort,
+ 	.eh_bus_reset_handler  	= sun3scsi_bus_reset,
+-	.can_queue		= CAN_QUEUE,
++	.can_queue		= 16,
+ 	.this_id		= 7,
+-	.sg_tablesize		= SG_TABLESIZE,
+-	.cmd_per_lun		= CMD_PER_LUN,
++	.sg_tablesize		= SG_NONE,
++	.cmd_per_lun		= 2,
+ 	.use_clustering		= DISABLE_CLUSTERING
+ };
+ 
+Index: linux/drivers/scsi/sun3_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/sun3_scsi.h	2014-11-12 16:11:11.000000000 +1100
+@@ -31,25 +31,7 @@
+ 
+ #define IOBASE_SUN3_VMESCSI 0xff200000
+ 
+-#ifndef CMD_PER_LUN
+-#define CMD_PER_LUN 2
+-#endif
+-
+-#ifndef CAN_QUEUE
+-#define CAN_QUEUE 16
+-#endif
+-
+-#ifndef SG_TABLESIZE
+-#define SG_TABLESIZE SG_NONE
+-#endif
+-
+-#ifndef MAX_TAGS
+ #define MAX_TAGS 32
+-#endif
+-
+-#ifndef USE_TAGGED_QUEUING
+-#define	USE_TAGGED_QUEUING 1
+-#endif
+ 
+ #include <scsi/scsicam.h>
+ 
 Index: linux/drivers/scsi/atari_scsi.c
 ===================================================================
---- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:32.000000000 +1100
-+++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:34.000000000 +1100
-@@ -109,6 +109,9 @@
- #define NCR5380_dma_xfer_len(instance, cmd, phase) \
-         atari_dma_xfer_len(cmd->SCp.this_residual, cmd, !((phase) & SR_IO))
+--- linux.orig/drivers/scsi/atari_scsi.c	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.c	2014-11-12 16:11:11.000000000 +1100
+@@ -611,7 +611,7 @@ static int __init atari_scsi_detect(stru
  
-+#define NCR5380_acquire_dma_irq(instance)      falcon_get_lock()
-+#define NCR5380_release_dma_irq(instance)      falcon_release_lock()
-+
- #include "NCR5380.h"
- 
- 
-@@ -448,23 +451,13 @@ static void atari_scsi_fetch_restbytes(v
-  * connected command and the disconnected queue is empty.
-  */
- 
--static void falcon_release_lock_if_possible(struct NCR5380_hostdata *hostdata)
-+static void falcon_release_lock(void)
- {
--	unsigned long flags;
--
- 	if (IS_A_TT())
- 		return;
- 
--	local_irq_save(flags);
--
--	if (!hostdata->disconnected_queue &&
--	    !hostdata->issue_queue &&
--	    !hostdata->connected &&
--	    !hostdata->retain_dma_intr &&
--	    stdma_is_locked_by(scsi_falcon_intr))
-+	if (stdma_is_locked_by(scsi_falcon_intr))
- 		stdma_release();
--
--	local_irq_restore(flags);
- }
- 
- /* This function manages the locking of the ST-DMA.
-@@ -787,36 +780,30 @@ static void atari_scsi_falcon_reg_write(
- static int atari_scsi_bus_reset(struct scsi_cmnd *cmd)
- {
- 	int rv;
--	struct NCR5380_hostdata *hostdata = shost_priv(cmd->device->host);
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
- 
--	/* For doing the reset, SCSI interrupts must be disabled first,
--	 * since the 5380 raises its IRQ line while _RST is active and we
--	 * can't disable interrupts completely, since we need the timer.
--	 */
--	/* And abort a maybe active DMA transfer */
--	if (IS_A_TT()) {
--		atari_turnoff_irq(IRQ_TT_MFP_SCSI);
+ #ifdef SUPPORT_TAGS
+ 	if (setup_use_tagged_queuing < 0)
+-		setup_use_tagged_queuing = DEFAULT_USE_TAGGED_QUEUING;
++		setup_use_tagged_queuing = 0;
+ #endif
  #ifdef REAL_DMA
-+	/* Abort a maybe active DMA transfer */
-+	if (IS_A_TT()) {
- 		tt_scsi_dma.dma_ctrl = 0;
--#endif
- 	} else {
--		atari_turnoff_irq(IRQ_MFP_FSCSI);
--#ifdef REAL_DMA
- 		st_dma.dma_mode_status = 0x90;
- 		atari_dma_active = 0;
- 		atari_dma_orig_addr = NULL;
--#endif
- 	}
-+#endif
+ 	/* If running on a Falcon and if there's TT-Ram (i.e., more than one
+Index: linux/drivers/scsi/atari_scsi.h
+===================================================================
+--- linux.orig/drivers/scsi/atari_scsi.h	2014-11-12 16:11:06.000000000 +1100
++++ linux/drivers/scsi/atari_scsi.h	2014-11-12 16:11:11.000000000 +1100
+@@ -36,9 +36,6 @@
+ #define ATARI_FALCON_CMD_PER_LUN	1
+ #define ATARI_FALCON_SG_TABLESIZE	SG_NONE
  
- 	rv = NCR5380_bus_reset(cmd);
+-#define	DEFAULT_USE_TAGGED_QUEUING	0
+-
+-
+ #define	NCR5380_implementation_fields	/* none */
  
--	if (IS_A_TT())
--		atari_turnon_irq(IRQ_TT_MFP_SCSI);
--	else
--		atari_turnon_irq(IRQ_MFP_FSCSI);
-+	/* The 5380 raises its IRQ line while _RST is active but the ST DMA
-+	 * "lock" has been released so this interrupt may end up handled by
-+	 * floppy or IDE driver (if one of them holds the lock). The NCR5380
-+	 * interrupt flag has been cleared already.
-+	 */
- 
--	if (rv == SUCCESS)
--		falcon_release_lock_if_possible(hostdata);
-+	local_irq_restore(flags);
- 
- 	return rv;
- }
+ #define NCR5380_read(reg)		  atari_scsi_reg_read( reg )
 
 
