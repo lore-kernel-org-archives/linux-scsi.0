@@ -1,18 +1,18 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.14 168/203] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
-Date: Wed, 12 Nov 2014 10:17:18 +0900
-Message-ID: <20141112011550.390748951@linuxfoundation.org>
-References: <20141112011542.686743533@linuxfoundation.org>
+Subject: [PATCH 3.10 098/123] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+Date: Wed, 12 Nov 2014 10:17:44 +0900
+Message-ID: <20141112011723.438471597@linuxfoundation.org>
+References: <20141112011718.985171261@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20141112011542.686743533@linuxfoundation.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141112011718.985171261@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-3.14-stable review patch.  If anyone has any objections, please let me know.
+3.10-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -41,7 +41,7 @@ Signed-off-by: Jens Axboe <axboe@fb.com>
 
 --- a/block/scsi_ioctl.c
 +++ b/block/scsi_ioctl.c
-@@ -489,7 +489,7 @@ int sg_scsi_ioctl(struct request_queue *
+@@ -506,7 +506,7 @@ int sg_scsi_ioctl(struct request_queue *
  
  	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
  		err = DRIVER_ERROR << 24;
@@ -50,7 +50,7 @@ Signed-off-by: Jens Axboe <axboe@fb.com>
  	}
  
  	memset(sense, 0, sizeof(sense));
-@@ -499,7 +499,6 @@ int sg_scsi_ioctl(struct request_queue *
+@@ -516,7 +516,6 @@ int sg_scsi_ioctl(struct request_queue *
  
  	blk_execute_rq(q, disk, rq, 0);
  
