@@ -1,37 +1,63 @@
-From: julien.parvole@lcpp.cpe.fr
-Subject: (unknown)
-Date: Thu, 13 Nov 2014 03:10:38 +0100
-Message-ID: <20141113031038.Horde.4poIYlX6fN1UZBMeQ9lxwzA__28479.1916878477$1415849560$gmane$org@webmailng.cpe.fr>
-Reply-To: mr.nobuyukihirano@foxmail.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: BUG in scsi_lib.c due to a bad commit
+Date: Thu, 13 Nov 2014 05:33:06 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net>
+References: <54629CAE.2000207@laposte.net>
+ <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com>
+ <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.cpe.fr ([134.214.49.100]:60495 "EHLO smtp.cpe.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753865AbaKMDcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Nov 2014 22:32:25 -0500
-Content-Disposition: inline
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:57205 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbaKMFfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2014 00:35:11 -0500
+In-Reply-To: <54642541.9080302@laposte.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Barto <mister.freeman@laposte.net>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 
-
-
-Greetings,
-
-I hope this proposal meets you in a good state of health.
-
-Please can you help me re-profile fund? I am Mr Nobuyuki Hirano,  
-President and CEO of The Bank of Tokyo-Mitsubishi UFJ. A sum of Twenty  
-three million, two Hundred Thousand dollars  was deposited by my Late  
-customer (Fadel Ahmed) who died without declaring any next of kin  
-before his death in 2009.
-
-My suggestion to you is to stand as the next of kin to Fadel Ahmed. We  
-shall share in the ratio of 50% for me, 50% for you. Please contact me  
-via this e- mail: mr.nobuyukihirano@foxmail.com thanks.
-
-Sincerely,
-Mr. Nobuyuki Hirano
-
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
+bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQmFydG8NCj4gU2VudDogV2VkbmVzZGF5LCBOb3ZlbWJl
+ciAxMiwgMjAxNCA5OjI4IFBNDQo+IFRvOiBHdWVudGVyIFJvZWNrOyBCam9ybiBIZWxnYWFzDQo+
+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVs
+Lm9yZzsgSm9lDQo+IFBlcmNoZXMNCj4gU3ViamVjdDogUmU6IEJVRyBpbiBzY3NpX2xpYi5jIGR1
+ZSB0byBhIGJhZCBjb21taXQNCj4gDQo+IHJldmVydGluZyB5b3VyIGNvbW1pdCAwNDUwNjVkOGEz
+MDBhMzcyMThjIGlzIGEgc29sdXRpb24sIGJ1dCBpdCdzIGp1c3QgYQ0KPiB0ZW1wb3Jhcnkgc29s
+dXRpb24sDQo+IA0KPiBpdCdzIGJldHRlciB0byBzZWFyY2ggd2h5IHlvdXIgY29tbWl0IGNhbiBj
+cmVhdGUgYSByYW5kb20gaGFuZyBvbiBib290DQo+IG9uIHNvbWUgUEMgY29uZmlndXJhdGlvbnMs
+DQo+IA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Nj
+c2kvc2NzaV9saWIuYw0KPiBAQCAtMTc3NCw3ICsxNzc0LDcgQEAgc3RhdGljIHZvaWQgc2NzaV9y
+ZXF1ZXN0X2ZuKHN0cnVjdCByZXF1ZXN0X3F1ZXVlDQo+ICpxKQ0KPiBibGtfcmVxdWV1ZV9yZXF1
+ZXN0KHEsIHJlcSk7DQo+IGF0b21pY19kZWMoJnNkZXYtPmRldmljZV9idXN5KTsNCj4gb3V0X2Rl
+bGF5Og0KPiAtIGlmIChhdG9taWNfcmVhZCgmc2Rldi0+ZGV2aWNlX2J1c3kpICYmICFzY3NpX2Rl
+dmljZV9ibG9ja2VkKHNkZXYpKQ0KPiArIGlmICghYXRvbWljX3JlYWQoJnNkZXYtPmRldmljZV9i
+dXN5KSAmJiAhc2NzaV9kZXZpY2VfYmxvY2tlZChzZGV2KSkNCj4gYmxrX2RlbGF5X3F1ZXVlKHEs
+IFNDU0lfUVVFVUVfREVMQVkpOw0KPiB9DQo+IA0KPiBwZXJoYXBzIHRoZSBhdG9taWNfcmVhZCgp
+IGZ1bmN0aW9uIGRvZXNuJ3QgbWFrZSB0aGUgZXhwZWN0ZWQgam9iIG9uIHNvbWUNCj4gcmFyZSBj
+aXJjb25zdGFuY2VzLCBJIGhhdmUgdGhlIHNhbWUgZG91YnRzIGFib3V0IHRoZSBibGtfZGVsYXlf
+cXVldWUoKQ0KPiBmdW5jdGlvbg0KDQpXZXJlIHlvdSBydW5uaW5nIHdpdGggc2NzaV9tb2QudXNl
+X2Jsa19tcT1ZIG9yID1OPw0KDQpkZXZpY2VfYnVzeSBpcyB0aGUgYWN0aXZlIHF1ZXVlIGRlcHRo
+IGZvciB0aGUgZGV2aWNlIChlLmcuDQo1IG1lYW5zIHRoZXJlIGFyZSA1IGNvbW1hbmRzIHN1Ym1p
+dHRlZCBidXQgbm90IHlldCBjb21wbGV0ZWQpLg0KDQpUaGUgZnVuY3Rpb24gcmVhY2hlcyB0aGlz
+IGNvZGUgaWYgaXQgaGFzIHJ1biBvdXQgb2YgdGFncywgdGhlIGhvc3QNCmhhcyByZWFjaGVkIGl0
+cyBsaW1pdCBvZiBvdXRzdGFuZGluZyBjb21tYW5kcywgb3IgdGhlIHRhcmdldCBoYXMNCnJlYWNo
+ZWQgaXRzIGxpbWl0LiAgSXQgcmVxdWV1cyB0aGUgcmVxdWVzdDoNCiogd2l0aCBkZWxheSBpZiBk
+ZXZpY2VfYnVzeSBpcyB6ZXJvDQoqIHdpdGhvdXQgZGVsYXkgaWYgZGV2aWNlX2J1c3kgaXMgbm9u
+X3plcm8NCg0KSSB0aGluayB0aGlzIGlzIHRoZSByZWFzb25pbmc6DQpJZiBkZXZpY2VfYnVzeSBp
+cyB6ZXJvLCB0cnlpbmcgdG8gcHJvY2VzcyB0aGUgcmVxdWVzdCBhZ2FpbiB3aWxsDQpwcm9iYWJs
+eSBydW4gaW50byB0aGUgc2FtZSBwcm9ibGVtOyBhIGRlbGF5IGdpdmVzIHRpbWUgZm9yIHRoZQ0K
+c2l0dWF0aW9uIHRvIGNoYW5nZS4gIElmIGRldmljZV9idXN5IGlzIG5vbi16ZXJvLCB0aGVuIHRo
+ZSANCnJlcXVldWVkIGNvbW1hbmQgZ29lcyBiZWhpbmQgb3RoZXJzIGFuZCBtaWdodCBnZXQgYSBk
+aWZmZXJlbnQNCnJlc3VsdC4NCg0KV2l0aCB0aGUgcG9sYXJpdHkgYmFja3dhcmRzLCB0aGUgbGFj
+ayBvZiBkZWxheSBodW5nIFBBLVJJU0MgDQphbmQgU1BBUkM2NCBzeXN0ZW1zKSwgbm90IGp1c3Qg
+UUVNVS4gIFNvLCBJIGRvbid0IHRoaW5rIHJldmVydGluZw0KdGhlIGZpeCBpcyBnb29kLg0KDQpD
+aGFuZ2luZyBpdCB0byBhbiB1bmNvbmRpdGlvbmFsIGRlbGF5IG1pZ2h0IGJlIHNhZmUgLSBkZWxh
+eQ0KcmVnYXJkbGVzcyBvZiBkZXZpY2VfYnVzeSAodW50aWwgdGhlIHJvb3QgY2F1c2UgaXMgdW5k
+ZXJzdG9vZCkuDQoNCkFsc28sIFNDU0lfUVVFVUVfREVMQVkgc2VlbXMgbGlrZSBhbiBhcmJpdHJh
+cnkgbWFnaWMgbnVtYmVyOyANCm1heWJlIHRoYXQgdmFsdWUgaXNuJ3Qgd29ya2luZyBjb3JyZWN0
+bHkgYW55bW9yZT8NCg0KDQo=
