@@ -1,168 +1,128 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
- commands during driver removal
-Date: Thu, 13 Nov 2014 13:05:21 +0530
-Message-ID: <370f46a365d1cdc3eb42242ec287f6e4@mail.gmail.com>
-References: <201411101224.sAACOmvj018047@palmhbs0.lsi.com> <5462124E.4070500@redhat.com>
- 4e1d4dfe448d9ed6c275bfea6b9203ac@mail.gmail.com
+From: Barto <mister.freeman@laposte.net>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Thu, 13 Nov 2014 10:38:24 +0100
+Message-ID: <54647C10.4070506@laposte.net>
+References: <54629CAE.2000207@laposte.net> <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com> <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net> <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og129.obsmtp.com ([64.18.2.122]:53236 "EHLO
-	exprod7og129.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbaKMHfY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2014 02:35:24 -0500
-Received: by mail-la0-f51.google.com with SMTP id q1so12619452lam.24
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2014 23:35:23 -0800 (PST)
-In-Reply-To: 4e1d4dfe448d9ed6c275bfea6b9203ac@mail.gmail.com
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, aradford@gmail.com
 
-> -----Original Message-----
-> From: Kashyap Desai [mailto:kashyap.desai@avagotech.com]
-> Sent: Wednesday, November 12, 2014 4:39 PM
-> To: 'Tomas Henzl'; Sumit Saxena; 'linux-scsi@vger.kernel.org'
-> Cc: 'martin.petersen@oracle.com'; 'hch@infradead.org';
-> 'jbottomley@parallels.com'; 'aradford@gmail.com'
-> Subject: RE: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
-> commands during driver removal
->
->
->
-> > -----Original Message-----
-> > From: Tomas Henzl [mailto:thenzl@redhat.com]
-> > Sent: Tuesday, November 11, 2014 7:13 PM
-> > To: Sumit.Saxena@avagotech.com; linux-scsi@vger.kernel.org
-> > Cc: martin.petersen@oracle.com; hch@infradead.org;
-> > jbottomley@parallels.com; kashyap.desai@avagotech.com;
-> > aradford@gmail.com
-> > Subject: Re: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
-> > commands during driver removal
-> >
-> > On 11/10/2014 01:21 PM, Sumit.Saxena@avagotech.com wrote:
-> > > Do not process any SCSI and IOCTL command further(return them with
-> > > appropriate return values to callers), while driver removal is in
-> > > progress/PCI
-> > shutdown is invoked.
-> > >
-> > > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> > > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> > > ---
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c |   20 ++++++++++++++++--
-> --
-> > >  1 files changed, 16 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > index f6a69a3..7754eeb 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > @@ -1572,6 +1572,12 @@ megasas_queue_command(struct Scsi_Host
-> > *shost, struct scsi_cmnd *scmd)
-> > >  	instance = (struct megasas_instance *)
-> > >  	    scmd->device->host->hostdata;
-> > >
-> > > +	if (instance->unload == 1) {
-> > > +		scmd->result = DID_NO_CONNECT << 16;
-> > > +		scmd->scsi_done(scmd);
-> > > +		return 0;
-> > > +	}
-> > > +
-> > >  	if (instance->issuepend_done == 0)
-> > >  		return SCSI_MLQUEUE_HOST_BUSY;
-> > >
-> > > @@ -4957,10 +4963,6 @@ static int megasas_io_attach(struct
-> > megasas_instance *instance)
-> > >  		return -ENODEV;
-> > >  	}
-> > >
-> > > -	/*
-> > > -	 * Trigger SCSI to scan our drives
-> > > -	 */
-> > > -	scsi_scan_host(host);
-> > >  	return 0;
-> > >  }
-> > >
-> > > @@ -5288,6 +5290,10 @@ retry_irq_register:
-> > >  		goto fail_io_attach;
-> > >
-> > >  	instance->unload = 0;
-> > > +	/*
-> > > +	 * Trigger SCSI to scan our drives
-> > > +	 */
-> > > +	scsi_scan_host(host);
-> > >
-> > >  	/*
-> > >  	 * Initiate AEN (Asynchronous Event Notification) @@ -6051,6
-> > > +6057,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance
-> > *instance,
-> > >  	megasas_issue_blocked_cmd(instance, cmd, 0);
-> > >  	cmd->sync_cmd = 0;
-> >
-> > I've expected that you'll not send the command to the card, you first
-> > issue blocked command and after that test unload state.
-> > Shouldn't it be reversed?
-> Actually, there was a two part of this Patch for IOCTL path. One will
-not allow
-> to send IOCTL while driver removal.
-> Another will not use already return IOCTL from FW to avoid illegal
-memory
-> access on MFI frame.
-> Driver wakeup all blocked command in unload path and MFI/MPT frames are
-> freed as well, so this check is good to have.
->
-> As you suggested, we missed to have another check in IOCTL path, before
-> driver takes semaphore. It was planned, but somehow we missed while
-> submitting this patch set.
-> We will send incremental patch for that part.
+Hello,
 
-Correction - First of all sorry for confusion.
-megasas_mgmt_ioctl_fw and megasas_mgmt_ioctl_aen already has a check for
-instance->unload. We don't need any changes for this patch.
+> Were you running with scsi_mod.use_blk_mq=3DY or =3DN?
 
-Tomas -
-We are planning to provide resend patch series which will have changes for
-below two patch.
-[PATCH 1/7] megaraid_sas : Driver version upgrade and
-[PATCH 4/7] megaraid_sas : Online Firmware upgrade support for Extended VD
-feature
+I don't find this value in my .config file related to kernel modules
+options,
+
+perhaps you talk about a kernel boot option for grub ?
+I don't use this kernel option boot in grub ( scsi_mod.use_blk_mq ),
+
+I use archlinux and his default kernel config file for 64 bits CPU, you
+can find this file here :
+
+https://projects.archlinux.org/svntogit/packages.git/tree/trunk?h=3Dpac=
+kages/linux
+
+I don't have SCSI devices, I have only 3 SATA harddisks, and 2 IDE
+harddisks,
+
+before kernel 3.17 I don't have this random hang bug on boot, so we nee=
+d
+to know what's going on, it's probably a change made last months ago in
+SCSI source code ( or something else ) who has introduced a bug who
+prevents a correct behaviour on some parts in scsi_lib.c ( for example
+the if statement related to atomic_read(&sdev->device_busy) and
+blk_delay_queue(q, SCSI_QUEUE_DELAY)  )
+
+Guenter Roeck was the first to have been hit by this bug ( his qemu tes=
+t
+files hang on boot ), he thought the solution was to revert the polarit=
+y
+of the if statement, it solves his problem but unfortunately a new bug
+is now triggered on some PC configurations,
+
+it would be interesting to find a definitive solution who can solve bot=
+h
+the "qemu bug" and the "random bug on boot" on some PC configurations,
+
+I'm not an expert about the scsi code, perhaps with some unit tests you
+can spot the defect element in the scsi source code, check if some part=
+s
+in the source code acts really like it should be ?
 
 
-` Kashyap
-
->
-> >
-> > >
-> > > +	if (instance->unload == 1) {
-> > > +		dev_info(&instance->pdev->dev, "we are doing unload so no
-> > need"
-> > > +			"to submit data to application. This may be force
-exit"
-> > > +			"from driver\n");
-> >
-> > I'm not a native speaker, so I'll not comment on the wording, but you
-> > should add a space at the line breaks.
->
-> Agree. will address this part.
->
-> > +		dev_info(&instance->pdev->dev, "we are doing unload so no
-> > need "
-> > +			"to submit data to application. This may be force
-exit
-> > "
-> > +			"from driver\n");
-> >
-> > > +		goto out;
-> > > +	}
-> > >  	/*
-> > >  	 * copy out the kernel buffers to user buffers
-> > >  	 */
-> >
-> > Aren't there other ioctl paths too - for example
-> > megasas_mgmt_ioctl_aen - isn't a block needed there too?
-> This path will be cleanup from megasas_shutdown_controller() call.   AEN
-> and MAP SYNC command will be aborted explicitly.
->
-> >
+Le 13/11/2014 06:33, Elliott, Robert (Server Storage) a =C3=A9crit :
+>=20
+>=20
+>> -----Original Message-----
+>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+>> owner@vger.kernel.org] On Behalf Of Barto
+>> Sent: Wednesday, November 12, 2014 9:28 PM
+>> To: Guenter Roeck; Bjorn Helgaas
+>> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Joe
+>> Perches
+>> Subject: Re: BUG in scsi_lib.c due to a bad commit
+>>
+>> reverting your commit 045065d8a300a37218c is a solution, but it's ju=
+st a
+>> temporary solution,
+>>
+>> it's better to search why your commit can create a random hang on bo=
+ot
+>> on some PC configurations,
+>>
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1774,7 +1774,7 @@ static void scsi_request_fn(struct request_que=
+ue
+>> *q)
+>> blk_requeue_request(q, req);
+>> atomic_dec(&sdev->device_busy);
+>> out_delay:
+>> - if (atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev))
+>> + if (!atomic_read(&sdev->device_busy) && !scsi_device_blocked(sdev)=
+)
+>> blk_delay_queue(q, SCSI_QUEUE_DELAY);
+>> }
+>>
+>> perhaps the atomic_read() function doesn't make the expected job on =
+some
+>> rare circonstances, I have the same doubts about the blk_delay_queue=
+()
+>> function
+>=20
+> Were you running with scsi_mod.use_blk_mq=3DY or =3DN?
+>=20
+> device_busy is the active queue depth for the device (e.g.
+> 5 means there are 5 commands submitted but not yet completed).
+>=20
+> The function reaches this code if it has run out of tags, the host
+> has reached its limit of outstanding commands, or the target has
+> reached its limit.  It requeus the request:
+> * with delay if device_busy is zero
+> * without delay if device_busy is non_zero
+>=20
+> I think this is the reasoning:
+> If device_busy is zero, trying to process the request again will
+> probably run into the same problem; a delay gives time for the
+> situation to change.  If device_busy is non-zero, then the=20
+> requeued command goes behind others and might get a different
+> result.
+>=20
+> With the polarity backwards, the lack of delay hung PA-RISC=20
+> and SPARC64 systems), not just QEMU.  So, I don't think reverting
+> the fix is good.
+>=20
+> Changing it to an unconditional delay might be safe - delay
+> regardless of device_busy (until the root cause is understood).
+>=20
+> Also, SCSI_QUEUE_DELAY seems like an arbitrary magic number;=20
+> maybe that value isn't working correctly anymore?
+>=20
+>=20
