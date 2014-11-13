@@ -1,63 +1,168 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: BUG in scsi_lib.c due to a bad commit
-Date: Thu, 13 Nov 2014 05:33:06 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net>
-References: <54629CAE.2000207@laposte.net>
- <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com>
- <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net>
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+Subject: RE: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
+ commands during driver removal
+Date: Thu, 13 Nov 2014 13:05:21 +0530
+Message-ID: <370f46a365d1cdc3eb42242ec287f6e4@mail.gmail.com>
+References: <201411101224.sAACOmvj018047@palmhbs0.lsi.com> <5462124E.4070500@redhat.com>
+ 4e1d4dfe448d9ed6c275bfea6b9203ac@mail.gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:57205 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbaKMFfL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2014 00:35:11 -0500
-In-Reply-To: <54642541.9080302@laposte.net>
-Content-Language: en-US
+Received: from exprod7og129.obsmtp.com ([64.18.2.122]:53236 "EHLO
+	exprod7og129.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbaKMHfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Nov 2014 02:35:24 -0500
+Received: by mail-la0-f51.google.com with SMTP id q1so12619452lam.24
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2014 23:35:23 -0800 (PST)
+In-Reply-To: 4e1d4dfe448d9ed6c275bfea6b9203ac@mail.gmail.com
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Barto <mister.freeman@laposte.net>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
+To: Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, aradford@gmail.com
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
-bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3duZXJAdmdlci5r
-ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQmFydG8NCj4gU2VudDogV2VkbmVzZGF5LCBOb3ZlbWJl
-ciAxMiwgMjAxNCA5OjI4IFBNDQo+IFRvOiBHdWVudGVyIFJvZWNrOyBCam9ybiBIZWxnYWFzDQo+
-IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZzsgSm9lDQo+IFBlcmNoZXMNCj4gU3ViamVjdDogUmU6IEJVRyBpbiBzY3NpX2xpYi5jIGR1
-ZSB0byBhIGJhZCBjb21taXQNCj4gDQo+IHJldmVydGluZyB5b3VyIGNvbW1pdCAwNDUwNjVkOGEz
-MDBhMzcyMThjIGlzIGEgc29sdXRpb24sIGJ1dCBpdCdzIGp1c3QgYQ0KPiB0ZW1wb3Jhcnkgc29s
-dXRpb24sDQo+IA0KPiBpdCdzIGJldHRlciB0byBzZWFyY2ggd2h5IHlvdXIgY29tbWl0IGNhbiBj
-cmVhdGUgYSByYW5kb20gaGFuZyBvbiBib290DQo+IG9uIHNvbWUgUEMgY29uZmlndXJhdGlvbnMs
-DQo+IA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYw0KPiArKysgYi9kcml2ZXJzL3Nj
-c2kvc2NzaV9saWIuYw0KPiBAQCAtMTc3NCw3ICsxNzc0LDcgQEAgc3RhdGljIHZvaWQgc2NzaV9y
-ZXF1ZXN0X2ZuKHN0cnVjdCByZXF1ZXN0X3F1ZXVlDQo+ICpxKQ0KPiBibGtfcmVxdWV1ZV9yZXF1
-ZXN0KHEsIHJlcSk7DQo+IGF0b21pY19kZWMoJnNkZXYtPmRldmljZV9idXN5KTsNCj4gb3V0X2Rl
-bGF5Og0KPiAtIGlmIChhdG9taWNfcmVhZCgmc2Rldi0+ZGV2aWNlX2J1c3kpICYmICFzY3NpX2Rl
-dmljZV9ibG9ja2VkKHNkZXYpKQ0KPiArIGlmICghYXRvbWljX3JlYWQoJnNkZXYtPmRldmljZV9i
-dXN5KSAmJiAhc2NzaV9kZXZpY2VfYmxvY2tlZChzZGV2KSkNCj4gYmxrX2RlbGF5X3F1ZXVlKHEs
-IFNDU0lfUVVFVUVfREVMQVkpOw0KPiB9DQo+IA0KPiBwZXJoYXBzIHRoZSBhdG9taWNfcmVhZCgp
-IGZ1bmN0aW9uIGRvZXNuJ3QgbWFrZSB0aGUgZXhwZWN0ZWQgam9iIG9uIHNvbWUNCj4gcmFyZSBj
-aXJjb25zdGFuY2VzLCBJIGhhdmUgdGhlIHNhbWUgZG91YnRzIGFib3V0IHRoZSBibGtfZGVsYXlf
-cXVldWUoKQ0KPiBmdW5jdGlvbg0KDQpXZXJlIHlvdSBydW5uaW5nIHdpdGggc2NzaV9tb2QudXNl
-X2Jsa19tcT1ZIG9yID1OPw0KDQpkZXZpY2VfYnVzeSBpcyB0aGUgYWN0aXZlIHF1ZXVlIGRlcHRo
-IGZvciB0aGUgZGV2aWNlIChlLmcuDQo1IG1lYW5zIHRoZXJlIGFyZSA1IGNvbW1hbmRzIHN1Ym1p
-dHRlZCBidXQgbm90IHlldCBjb21wbGV0ZWQpLg0KDQpUaGUgZnVuY3Rpb24gcmVhY2hlcyB0aGlz
-IGNvZGUgaWYgaXQgaGFzIHJ1biBvdXQgb2YgdGFncywgdGhlIGhvc3QNCmhhcyByZWFjaGVkIGl0
-cyBsaW1pdCBvZiBvdXRzdGFuZGluZyBjb21tYW5kcywgb3IgdGhlIHRhcmdldCBoYXMNCnJlYWNo
-ZWQgaXRzIGxpbWl0LiAgSXQgcmVxdWV1cyB0aGUgcmVxdWVzdDoNCiogd2l0aCBkZWxheSBpZiBk
-ZXZpY2VfYnVzeSBpcyB6ZXJvDQoqIHdpdGhvdXQgZGVsYXkgaWYgZGV2aWNlX2J1c3kgaXMgbm9u
-X3plcm8NCg0KSSB0aGluayB0aGlzIGlzIHRoZSByZWFzb25pbmc6DQpJZiBkZXZpY2VfYnVzeSBp
-cyB6ZXJvLCB0cnlpbmcgdG8gcHJvY2VzcyB0aGUgcmVxdWVzdCBhZ2FpbiB3aWxsDQpwcm9iYWJs
-eSBydW4gaW50byB0aGUgc2FtZSBwcm9ibGVtOyBhIGRlbGF5IGdpdmVzIHRpbWUgZm9yIHRoZQ0K
-c2l0dWF0aW9uIHRvIGNoYW5nZS4gIElmIGRldmljZV9idXN5IGlzIG5vbi16ZXJvLCB0aGVuIHRo
-ZSANCnJlcXVldWVkIGNvbW1hbmQgZ29lcyBiZWhpbmQgb3RoZXJzIGFuZCBtaWdodCBnZXQgYSBk
-aWZmZXJlbnQNCnJlc3VsdC4NCg0KV2l0aCB0aGUgcG9sYXJpdHkgYmFja3dhcmRzLCB0aGUgbGFj
-ayBvZiBkZWxheSBodW5nIFBBLVJJU0MgDQphbmQgU1BBUkM2NCBzeXN0ZW1zKSwgbm90IGp1c3Qg
-UUVNVS4gIFNvLCBJIGRvbid0IHRoaW5rIHJldmVydGluZw0KdGhlIGZpeCBpcyBnb29kLg0KDQpD
-aGFuZ2luZyBpdCB0byBhbiB1bmNvbmRpdGlvbmFsIGRlbGF5IG1pZ2h0IGJlIHNhZmUgLSBkZWxh
-eQ0KcmVnYXJkbGVzcyBvZiBkZXZpY2VfYnVzeSAodW50aWwgdGhlIHJvb3QgY2F1c2UgaXMgdW5k
-ZXJzdG9vZCkuDQoNCkFsc28sIFNDU0lfUVVFVUVfREVMQVkgc2VlbXMgbGlrZSBhbiBhcmJpdHJh
-cnkgbWFnaWMgbnVtYmVyOyANCm1heWJlIHRoYXQgdmFsdWUgaXNuJ3Qgd29ya2luZyBjb3JyZWN0
-bHkgYW55bW9yZT8NCg0KDQo=
+> -----Original Message-----
+> From: Kashyap Desai [mailto:kashyap.desai@avagotech.com]
+> Sent: Wednesday, November 12, 2014 4:39 PM
+> To: 'Tomas Henzl'; Sumit Saxena; 'linux-scsi@vger.kernel.org'
+> Cc: 'martin.petersen@oracle.com'; 'hch@infradead.org';
+> 'jbottomley@parallels.com'; 'aradford@gmail.com'
+> Subject: RE: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
+> commands during driver removal
+>
+>
+>
+> > -----Original Message-----
+> > From: Tomas Henzl [mailto:thenzl@redhat.com]
+> > Sent: Tuesday, November 11, 2014 7:13 PM
+> > To: Sumit.Saxena@avagotech.com; linux-scsi@vger.kernel.org
+> > Cc: martin.petersen@oracle.com; hch@infradead.org;
+> > jbottomley@parallels.com; kashyap.desai@avagotech.com;
+> > aradford@gmail.com
+> > Subject: Re: [PATCH 3/7] megaraid_sas : Do not process IOCTLs and SCSI
+> > commands during driver removal
+> >
+> > On 11/10/2014 01:21 PM, Sumit.Saxena@avagotech.com wrote:
+> > > Do not process any SCSI and IOCTL command further(return them with
+> > > appropriate return values to callers), while driver removal is in
+> > > progress/PCI
+> > shutdown is invoked.
+> > >
+> > > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> > > Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
+> > > ---
+> > >  drivers/scsi/megaraid/megaraid_sas_base.c |   20 ++++++++++++++++--
+> --
+> > >  1 files changed, 16 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > index f6a69a3..7754eeb 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > @@ -1572,6 +1572,12 @@ megasas_queue_command(struct Scsi_Host
+> > *shost, struct scsi_cmnd *scmd)
+> > >  	instance = (struct megasas_instance *)
+> > >  	    scmd->device->host->hostdata;
+> > >
+> > > +	if (instance->unload == 1) {
+> > > +		scmd->result = DID_NO_CONNECT << 16;
+> > > +		scmd->scsi_done(scmd);
+> > > +		return 0;
+> > > +	}
+> > > +
+> > >  	if (instance->issuepend_done == 0)
+> > >  		return SCSI_MLQUEUE_HOST_BUSY;
+> > >
+> > > @@ -4957,10 +4963,6 @@ static int megasas_io_attach(struct
+> > megasas_instance *instance)
+> > >  		return -ENODEV;
+> > >  	}
+> > >
+> > > -	/*
+> > > -	 * Trigger SCSI to scan our drives
+> > > -	 */
+> > > -	scsi_scan_host(host);
+> > >  	return 0;
+> > >  }
+> > >
+> > > @@ -5288,6 +5290,10 @@ retry_irq_register:
+> > >  		goto fail_io_attach;
+> > >
+> > >  	instance->unload = 0;
+> > > +	/*
+> > > +	 * Trigger SCSI to scan our drives
+> > > +	 */
+> > > +	scsi_scan_host(host);
+> > >
+> > >  	/*
+> > >  	 * Initiate AEN (Asynchronous Event Notification) @@ -6051,6
+> > > +6057,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance
+> > *instance,
+> > >  	megasas_issue_blocked_cmd(instance, cmd, 0);
+> > >  	cmd->sync_cmd = 0;
+> >
+> > I've expected that you'll not send the command to the card, you first
+> > issue blocked command and after that test unload state.
+> > Shouldn't it be reversed?
+> Actually, there was a two part of this Patch for IOCTL path. One will
+not allow
+> to send IOCTL while driver removal.
+> Another will not use already return IOCTL from FW to avoid illegal
+memory
+> access on MFI frame.
+> Driver wakeup all blocked command in unload path and MFI/MPT frames are
+> freed as well, so this check is good to have.
+>
+> As you suggested, we missed to have another check in IOCTL path, before
+> driver takes semaphore. It was planned, but somehow we missed while
+> submitting this patch set.
+> We will send incremental patch for that part.
+
+Correction - First of all sorry for confusion.
+megasas_mgmt_ioctl_fw and megasas_mgmt_ioctl_aen already has a check for
+instance->unload. We don't need any changes for this patch.
+
+Tomas -
+We are planning to provide resend patch series which will have changes for
+below two patch.
+[PATCH 1/7] megaraid_sas : Driver version upgrade and
+[PATCH 4/7] megaraid_sas : Online Firmware upgrade support for Extended VD
+feature
+
+
+` Kashyap
+
+>
+> >
+> > >
+> > > +	if (instance->unload == 1) {
+> > > +		dev_info(&instance->pdev->dev, "we are doing unload so no
+> > need"
+> > > +			"to submit data to application. This may be force
+exit"
+> > > +			"from driver\n");
+> >
+> > I'm not a native speaker, so I'll not comment on the wording, but you
+> > should add a space at the line breaks.
+>
+> Agree. will address this part.
+>
+> > +		dev_info(&instance->pdev->dev, "we are doing unload so no
+> > need "
+> > +			"to submit data to application. This may be force
+exit
+> > "
+> > +			"from driver\n");
+> >
+> > > +		goto out;
+> > > +	}
+> > >  	/*
+> > >  	 * copy out the kernel buffers to user buffers
+> > >  	 */
+> >
+> > Aren't there other ioctl paths too - for example
+> > megasas_mgmt_ioctl_aen - isn't a block needed there too?
+> This path will be cleanup from megasas_shutdown_controller() call.   AEN
+> and MAP SYNC command will be aborted explicitly.
+>
+> >
