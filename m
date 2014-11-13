@@ -1,69 +1,92 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: mpt2sas,mpt3sas: SATA affiliations
-Date: Wed, 12 Nov 2014 14:59:11 -0500
-Message-ID: <5463BC0F.4050605@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: making the queue_type attribute read only, was: Re: tag
+ handling refactor V2
+Date: Thu, 13 Nov 2014 00:33:41 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A10D8@G9W0745.americas.hpqcorp.net>
+References: <1415634990-3023-1-git-send-email-hch@lst.de>
+ <20141112174142.GA14359@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44697 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151AbaKLT7W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Nov 2014 14:59:22 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id 85B38204295
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2014 20:59:19 +0100 (CET)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id vKwoejDHs3Q4 for <linux-scsi@vger.kernel.org>;
-	Wed, 12 Nov 2014 20:59:17 +0100 (CET)
-Received: from [192.168.48.86] (host-23-91-188-34.dyn.295.ca [23.91.188.34])
-	by smtp.infotech.no (Postfix) with ESMTPA id 8DA0D204293
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2014 20:59:17 +0100 (CET)
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:37747 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807AbaKMAfE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Nov 2014 19:35:04 -0500
+In-Reply-To: <20141112174142.GA14359@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-
- From a correspondent and my own testing I have seen way
-too many of these messages in the log:
-    log_info(0x31160000): originator(PL), code(0x16), sub_code(0x0000)
-
-That comes from either the mpt2sas or mpt3sas driver and may be
-a problem with their interaction with the SCSI EH. In one case,
-those messages go on forever, requiring a reboot; in my testing
-(with sg_readcap) the command timeout (60 seconds) stopped them.
+To: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart van Assche <bvanassche@acm.org>, Mike Christie <michaelc@cs.wisc.edu>
 
 
-How they occur needs a bit of explaining: ATA disks are designed
-to have only only initiator (host). So if you build a SAS fabric
-including at least two initiators, an expander and one SATA disk,
-then there is potentially a problem which SAS expanders address
-with "affiliations". An affiliation is a mechanism for the
-expander to remember the SAS address of the initiator (host)
-that first "grabbed" the SATA disk, and rejecting any other
-initiator that tries to access that SATA disk.
 
-That rejection, in the link layer in SAS for the STP protocol,
-is a OPEN_REJECT (STP RESOURCES BUSY) response. That is *not*
-a retry-able error (so the use of "busy" is unfortunate).
-FreeBSD handles this correctly, Linux in some cases retries
-which results in chaos plus bloated logs.
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Wednesday, 12 November, 2014 11:42 AM
+> To: Christoph Hellwig
+> Cc: linux-scsi@vger.kernel.org; James Bottomley; Elliott, Robert
+> (Server Storage); Hannes Reinecke; Martin K. Petersen; Bart van
+> Assche; Mike Christie
+> Subject: making the queue_type attribute read only, was: Re: tag
+> handling refactor V2
+> 
+> >  - how is the change_queue_type API supposed to be used for most
+> >    drivers?  It only changes the tag type from none to simple
+> >    or back, but except for the special implementation in the
+> >    53c700 driver doesn't change the queue depth,
+> >    which might cause it to issue multiple non-tagged command.
+> >    Fortunately most drivers never look at this information, but
+> >    then again changing the queue type is useless to start with.
+> >  - for those drivers looking at the command tagged information
+> >    we'd need to quiesce the LUN.  No driver but the 53c700
+> >    driver does that, and the 53c700 does it at a target-level,
+> >    which despite a comment claiming it's needed doesn't seem
+> >    to make sense given the code.  If we can make sure
+> >    to quience all LUNs we could avoid the per-command flag for
+> >    tagged commands and always look at the scsi_device flag.
+> 
+> I've not merged the series, but ondering the above two issues I've
+> become convinved that we should make the queue_type sysfs attribute
+> read only.
+> 
+> Switching off tagging isn't really something we should leave to
+> users, as the hardware knows much better.  Changing the tag type
+> might have made sense during the times of the ordered tags for
+> barriers insanity, but now that it's just tagged vs untagged
+> it's pretty pointless.
+> Especially given that only a single driver ever got the
+> implementation right.
+> 
+> Does anyone have objections to removing the change_queue_type method?
 
-There are mechanisms for the owner of the affiliation to clear
-it so another initiator can claim it. However affiliations are
-designed to thwart brute force attempts by non-owners. At best
-non-owners should get one log message along the lines of:
-   cannot access SATA disk xxxx since another machine/HBA is
-   affiliated with it
+A queue_type of "none" disables the SCSI midlayer automatic queue depth
+adjustments based on TASK SET FULL vs. other status values, while
+"simple" enables them.  That's the feature where TASK SET FULL reception
+causes the queue depth to be lowered, while several GOOD status values
+in a row causes it to be increased.
 
-Linux properly handles SATA affiliations when it comes across
-them in normal device discovery. It is the "surprise"
-disappearance of an affiliation that causes instability. That
-surprise is caused by a utility like smp_phy_control telling
-the expander to clear the affiliation and doing a rescan on
-the other machine to claim the affiliation.
+That logic doesn't work very well right now, so that sysfs file
+might be the best way to keep controlling the automatic adjustment
+feature even if it no longer controls whether tags exist.
 
-Doug Gilbert
+One problem is it adjusts the queue depths for all devices sharing
+the same target number; we talked about letting the host choose
+the policy (http://marc.info/?l=linux-scsi&m=140440001619574&w=2).
+
+Even if that is corrected, the ramp-up/ramp-down algorithms
+and controls are not quite right for the full range of device 
+types (SSDs to HDDs).  With SSDs, I saw the queue_depth:
+* ramp down by about 10 every 2 seconds
+* with the default queue_ramp_up_period of 120000: never ramp up
+* with a queue_ramp_up_period of 120: ramp up by 16 ever 2 seconds
+
+At 1M IOPS, 2 seconds is far too long to decide anything; some
+algorithm changes are needed.
+
+---
+Rob Elliott    HP Server Storage
+
 
 
