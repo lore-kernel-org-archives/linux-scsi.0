@@ -1,25 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] target: Change some fabric functions to return bool
-Date: Fri, 14 Nov 2014 08:06:04 +0100
-Message-ID: <20141114070604.GB3944@lst.de>
-References: <1415911858-3123-1-git-send-email-agrover@redhat.com> <1415911858-3123-3-git-send-email-agrover@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Thu, 13 Nov 2014 23:32:14 -0800
+Message-ID: <20141114073214.GA1879@infradead.org>
+References: <54629CAE.2000207@laposte.net>
+ <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com>
+ <5462CB90.1080303@roeck-us.net>
+ <54642541.9080302@laposte.net>
+ <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net>
+ <54647C10.4070506@laposte.net>
+ <20141113142907.GB29354@infradead.org>
+ <5464E6E6.3090606@laposte.net>
+ <20141113175402.GA27327@infradead.org>
+ <546536EA.4070705@laposte.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45369 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754330AbaKNHGH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2014 02:06:07 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1415911858-3123-3-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <546536EA.4070705@laposte.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Barto <mister.freeman@laposte.net>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, nab@linux-iscsi.org
 
-On Thu, Nov 13, 2014 at 12:50:58PM -0800, Andy Grover wrote:
-> The tpg_check_* functions in the fabric_ops struct return 1 or 0,
-> so we can make their return type bool. Change fabrics to match.
+On Thu, Nov 13, 2014 at 11:55:38PM +0100, Barto wrote:
+> it's interesting, with this commit
+> 74665016086615bbaa3fa6f83af410a0a4e029ee I have the bug :
+> 
+> scsi: convert host_busy to atomic_t :
 
-All these true/false stub sounds like some of them methods should be
-optional, and a useful default should be assumed if they aren't present.
+At this point we'll need a bisction between v3.16 as the last good
+point, and 74665016086615bbaa3fa6f83af410a0a4e029ee as the known bad
+point.
