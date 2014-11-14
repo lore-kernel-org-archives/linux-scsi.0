@@ -1,17 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 08/13] hpsa: get rid of type/attribute/direction bit field
- where possible
-Date: Fri, 14 Nov 2014 17:27:04 -0600
-Message-ID: <20141114232704.20808.16089.stgit@don-ProLiant-MicroServer-Gen8>
+Subject: [PATCH 10/13] hpsa: do not be so noisy about check conditions
+Date: Fri, 14 Nov 2014 17:27:14 -0600
+Message-ID: <20141114232714.20808.59968.stgit@don-ProLiant-MicroServer-Gen8>
 References: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58587 "EHLO
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:58620 "EHLO
 	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422933AbaKNXZ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:29 -0500
+	with ESMTP id S1422933AbaKNXZj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:39 -0500
 In-Reply-To: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,202 +19,93 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <stephenmcameron@gmail.com>
 
-Using bit fields for hardware command fields isn't portable and
-relies on assumptions about how the compiler lays out the bits.
-We can fix this in the driver's internal command structure, but the
-ioctl interface we can't change because it is part of the
-userland ABI.
+We were printing a lot of useless information before ultimately
+just passing things up to the SCSI mid layer.  Just let the
+midlayer handle it without LLD chatter.
 
 Signed-off-by: Don Brace <don.brace@pmcs.com>
-Reviewed-by: Webb Scales <webb.scales@hp.com>
+Signed-off-by: Stephen M. Cameron <stephenmcameron@gmail.com>
+Reviewed-by: Joe Handzik <joseph.t.handzik@hp.com>
+Reviewed-by: Scott Teel <scott.teel@hp.com>
 ---
- drivers/scsi/hpsa.c     |   58 ++++++++++++++++++++++++-----------------------
- drivers/scsi/hpsa_cmd.h |   18 +++++++++++----
- 2 files changed, 42 insertions(+), 34 deletions(-)
+ drivers/scsi/hpsa.c |   59 ---------------------------------------------------
+ 1 file changed, 59 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index fe1b589..95c34a5 100644
+index c9554e6..58f6847 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4019,17 +4019,18 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 	BUG_ON(cmd->cmd_len > sizeof(c->Request.CDB));
- 	c->Request.CDBLen = cmd->cmd_len;
- 	memcpy(c->Request.CDB, cmd->cmnd, cmd->cmd_len);
--	c->Request.Type.Type = TYPE_CMD;
--	c->Request.Type.Attribute = ATTR_SIMPLE;
- 	switch (cmd->sc_data_direction) {
- 	case DMA_TO_DEVICE:
--		c->Request.Type.Direction = XFER_WRITE;
-+		c->Request.type_attr_dir =
-+			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_WRITE);
- 		break;
- 	case DMA_FROM_DEVICE:
--		c->Request.Type.Direction = XFER_READ;
-+		c->Request.type_attr_dir =
-+			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_READ);
- 		break;
- 	case DMA_NONE:
--		c->Request.Type.Direction = XFER_NONE;
-+		c->Request.type_attr_dir =
-+			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_NONE);
- 		break;
- 	case DMA_BIDIRECTIONAL:
- 		/* This can happen if a buggy application does a scsi passthru
-@@ -4037,7 +4038,8 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 		 * ../scsi/scsi_ioctl.c:scsi_ioctl_send_command() )
- 		 */
- 
--		c->Request.Type.Direction = XFER_RSVD;
-+		c->Request.type_attr_dir =
-+			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_RSVD);
- 		/* This is technically wrong, and hpsa controllers should
- 		 * reject it with CMD_INVALID, which is the most correct
- 		 * response, but non-fibre backends appear to let it
-@@ -5257,7 +5259,6 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 	c->Header.tag = c->busaddr;
- 	memcpy(c->Header.LUN.LunAddrBytes, scsi3addr, 8);
- 
--	c->Request.Type.Type = cmd_type;
- 	if (cmd_type == TYPE_CMD) {
- 		switch (cmd) {
- 		case HPSA_INQUIRY:
-@@ -5267,8 +5268,8 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 				c->Request.CDB[2] = (page_code & 0xff);
+@@ -1760,72 +1760,13 @@ static void complete_scsi_command(struct CommandList *cp)
+ 			/* Get addition sense code qualifier */
+ 			ascq = ei->SenseInfo[13];
+ 		}
+-
+ 		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION) {
+-			if (check_for_unit_attention(h, cp))
+-				break;
+-			if (sense_key == ILLEGAL_REQUEST) {
+-				/*
+-				 * SCSI REPORT_LUNS is commonly unsupported on
+-				 * Smart Array.  Suppress noisy complaint.
+-				 */
+-				if (cp->Request.CDB[0] == REPORT_LUNS)
+-					break;
+-
+-				/* If ASC/ASCQ indicate Logical Unit
+-				 * Not Supported condition,
+-				 */
+-				if ((asc == 0x25) && (ascq == 0x0)) {
+-					dev_warn(&h->pdev->dev, "cp %p "
+-						"has check condition\n", cp);
+-					break;
+-				}
+-			}
+-
+-			if (sense_key == NOT_READY) {
+-				/* If Sense is Not Ready, Logical Unit
+-				 * Not ready, Manual Intervention
+-				 * required
+-				 */
+-				if ((asc == 0x04) && (ascq == 0x03)) {
+-					dev_warn(&h->pdev->dev, "cp %p "
+-						"has check condition: unit "
+-						"not ready, manual "
+-						"intervention required\n", cp);
+-					break;
+-				}
+-			}
+ 			if (sense_key == ABORTED_COMMAND) {
+-				/* Aborted command is retryable */
+-				dev_warn(&h->pdev->dev, "cp %p "
+-					"has check condition: aborted command: "
+-					"ASC: 0x%x, ASCQ: 0x%x\n",
+-					cp, asc, ascq);
+ 				cmd->result |= DID_SOFT_ERROR << 16;
+ 				break;
  			}
- 			c->Request.CDBLen = 6;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_READ;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
- 			c->Request.Timeout = 0;
- 			c->Request.CDB[0] = HPSA_INQUIRY;
- 			c->Request.CDB[4] = size & 0xFF;
-@@ -5279,8 +5280,8 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			   mode = 00 target = 0.  Nothing to write.
- 			 */
- 			c->Request.CDBLen = 12;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_READ;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
- 			c->Request.Timeout = 0;
- 			c->Request.CDB[0] = cmd;
- 			c->Request.CDB[6] = (size >> 24) & 0xFF; /* MSB */
-@@ -5290,8 +5291,9 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+-			/* Must be some other type of check condition */
+-			dev_dbg(&h->pdev->dev, "cp %p has check condition: "
+-					"unknown type: "
+-					"Sense: 0x%x, ASC: 0x%x, ASCQ: 0x%x, "
+-					"Returning result: 0x%x, "
+-					"cmd=[%02x %02x %02x %02x %02x "
+-					"%02x %02x %02x %02x %02x %02x "
+-					"%02x %02x %02x %02x %02x]\n",
+-					cp, sense_key, asc, ascq,
+-					cmd->result,
+-					cmd->cmnd[0], cmd->cmnd[1],
+-					cmd->cmnd[2], cmd->cmnd[3],
+-					cmd->cmnd[4], cmd->cmnd[5],
+-					cmd->cmnd[6], cmd->cmnd[7],
+-					cmd->cmnd[8], cmd->cmnd[9],
+-					cmd->cmnd[10], cmd->cmnd[11],
+-					cmd->cmnd[12], cmd->cmnd[13],
+-					cmd->cmnd[14], cmd->cmnd[15]);
  			break;
- 		case HPSA_CACHE_FLUSH:
- 			c->Request.CDBLen = 12;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_WRITE;
-+			c->Request.type_attr_dir =
-+					TYPE_ATTR_DIR(cmd_type,
-+						ATTR_SIMPLE, XFER_WRITE);
- 			c->Request.Timeout = 0;
- 			c->Request.CDB[0] = BMIC_WRITE;
- 			c->Request.CDB[6] = BMIC_CACHE_FLUSH;
-@@ -5300,14 +5302,14 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			break;
- 		case TEST_UNIT_READY:
- 			c->Request.CDBLen = 6;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_NONE;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_NONE);
- 			c->Request.Timeout = 0;
- 			break;
- 		case HPSA_GET_RAID_MAP:
- 			c->Request.CDBLen = 12;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_READ;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
- 			c->Request.Timeout = 0;
- 			c->Request.CDB[0] = HPSA_CISS_READ;
- 			c->Request.CDB[1] = cmd;
-@@ -5318,8 +5320,8 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			break;
- 		case BMIC_SENSE_CONTROLLER_PARAMETERS:
- 			c->Request.CDBLen = 10;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_READ;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_READ);
- 			c->Request.Timeout = 0;
- 			c->Request.CDB[0] = BMIC_READ;
- 			c->Request.CDB[6] = BMIC_SENSE_CONTROLLER_PARAMETERS;
-@@ -5336,9 +5338,8 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 
- 		case  HPSA_DEVICE_RESET_MSG:
- 			c->Request.CDBLen = 16;
--			c->Request.Type.Type =  1; /* It is a MSG not a CMD */
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_NONE;
-+			c->Request.type_attr_dir =
-+				TYPE_ATTR_DIR(cmd_type, ATTR_SIMPLE, XFER_NONE);
- 			c->Request.Timeout = 0; /* Don't time out */
- 			memset(&c->Request.CDB[0], 0, sizeof(c->Request.CDB));
- 			c->Request.CDB[0] =  cmd;
-@@ -5357,9 +5358,9 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			tlower = (u32) (a->Header.tag >> 32);
- 			tupper = (u32) (a->Header.tag & 0x0ffffffffULL);
- 			c->Request.CDBLen = 16;
--			c->Request.Type.Type = TYPE_MSG;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_WRITE;
-+			c->Request.type_attr_dir =
-+					TYPE_ATTR_DIR(cmd_type,
-+						ATTR_SIMPLE, XFER_WRITE);
- 			c->Request.Timeout = 0; /* Don't time out */
- 			c->Request.CDB[0] = HPSA_TASK_MANAGEMENT;
- 			c->Request.CDB[1] = HPSA_TMF_ABORT_TASK;
-@@ -5389,7 +5390,7 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 		BUG();
- 	}
- 
--	switch (c->Request.Type.Direction) {
-+	switch (GET_DIR(c->Request.type_attr_dir)) {
- 	case XFER_READ:
- 		pci_dir = PCI_DMA_FROMDEVICE;
- 		break;
-@@ -5747,9 +5748,8 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- 	memset(&cmd->CommandHeader.LUN.LunAddrBytes, 0, 8);
- 
- 	cmd->Request.CDBLen = 16;
--	cmd->Request.Type.Type = TYPE_MSG;
--	cmd->Request.Type.Attribute = ATTR_HEADOFQUEUE;
--	cmd->Request.Type.Direction = XFER_NONE;
-+	cmd->Request.type_attr_dir =
-+			TYPE_ATTR_DIR(TYPE_MSG, ATTR_HEADOFQUEUE, XFER_NONE);
- 	cmd->Request.Timeout = 0; /* Don't time out */
- 	cmd->Request.CDB[0] = opcode;
- 	cmd->Request.CDB[1] = type;
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 575eda8..cb988c4 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -320,11 +320,19 @@ struct CommandListHeader {
- 
- struct RequestBlock {
- 	u8   CDBLen;
--	struct {
--		u8 Type:3;
--		u8 Attribute:3;
--		u8 Direction:2;
--	} Type;
-+	/*
-+	 * type_attr_dir:
-+	 * type: low 3 bits
-+	 * attr: middle 3 bits
-+	 * dir: high 2 bits
-+	 */
-+	u8	type_attr_dir;
-+#define TYPE_ATTR_DIR(t, a, d) ((((d) & 0x03) << 6) |\
-+				(((a) & 0x07) << 3) |\
-+				((t) & 0x07))
-+#define GET_TYPE(tad) ((tad) & 0x07)
-+#define GET_ATTR(tad) (((tad) >> 3) & 0x07)
-+#define GET_DIR(tad) (((tad) >> 6) & 0x03)
- 	u16  Timeout;
- 	u8   CDB[16];
- };
+ 		}
+-
+-
+ 		/* Problem was not a check condition
+ 		 * Pass it up to the upper layers...
+ 		 */
 
