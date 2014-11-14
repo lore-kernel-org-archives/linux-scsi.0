@@ -1,181 +1,126 @@
-From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 01/13] hpsa: Clean up warnings from sparse.
-Date: Fri, 14 Nov 2014 17:26:27 -0600
-Message-ID: <20141114232627.20808.63834.stgit@don-ProLiant-MicroServer-Gen8>
-References: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
+Date: Fri, 14 Nov 2014 16:29:39 -0700
+Message-ID: <54669063.6050307@kernel.dk>
+References: <alpine.LRH.2.11.1411141302270.26966@adalberg.ut.ee> <20141114165804.GA14631@infradead.org> <alpine.LRH.2.11.1411142114200.26813@adalberg.ut.ee> <54665B30.4070708@kernel.dk> <alpine.LRH.2.11.1411150033400.26813@adalberg.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:37044 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935393AbaKNXYx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:24:53 -0500
-In-Reply-To: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------090808060601010900080603"
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.11.1411150033400.26813@adalberg.ut.ee>
+Sender: sparclinux-owner@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, webb.scales@hp.com, james.bottomley@parallels.com, brace@pmcs.com
-Cc: linux-scsi@vger.kernel.org
 
-Clean up issues reported when running sparse.
+This is a multi-part message in MIME format.
+--------------090808060601010900080603
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Don Brace <don.brace@pmcs.com>
-Reviewed-by: Webb Scales <webb.scales@hp.com>
----
- drivers/scsi/hpsa.c |   29 ++++++++++++++++-------------
- drivers/scsi/hpsa.h |    6 +++---
- 2 files changed, 19 insertions(+), 16 deletions(-)
+On 2014-11-14 15:59, Meelis Roos wrote:
+>>>> The second oops is in blk_mq_map_queue() which is a trivial
+>>>> two level cpu lookup.  I wonder if there's something odd about
+>>>> cpu numbers on these big old sparc systems?
+>>>
+>>> CPU numbers are sparse - they are determined by hardware slot number and
+>>> some models only fill every other mainboard slot, and first slots can be
+>>> free. I have first board offline and currently have CPUs numbered
+>>> 10,11,14,15 online.
+>>>
+>>> Here is debug with Jens's patch:
+>>
+>>> [  133.971050] CPU 11: synchronized TICK with master CPU (last diff -1 cycles, maxerr 516 cycles)
+>>> [  133.975491] CPU 14: synchronized TICK with master CPU (last diff -3 cycles, maxerr 531 cycles)
+>>> [  133.979943] CPU 15: synchronized TICK with master CPU (last diff -3 cycles, maxerr 531 cycles)
+>>> [  133.980146] Brought up 4 CPUs
+>>
+>> So this looks like this might be the issue. On a scsi-mq disabled boot,
+>> you have 4 CPUs, but how are they numbered?
+>
+> The numbers are always the same.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index cef5d49..f345cc5 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -48,6 +48,7 @@
- #include <linux/bitmap.h>
- #include <linux/atomic.h>
- #include <linux/jiffies.h>
-+#include <linux/percpu-defs.h>
- #include <linux/percpu.h>
- #include <asm/div64.h>
- #include "hpsa_cmd.h"
-@@ -193,12 +194,13 @@ static int number_of_controllers;
+I would hope so, my question was really on what CPU numbers you see. But 
+I guess that 10, 11, 14, and 15?
+
+> But everything seems to be mapped to queue 0?
+
+As it should, scsi-mq only supports a single hw queue for now.
+
+>> We might need Christophs debug patch on top this to fully know...
+>
+> Applied it too, dmesg is below. Yes it does spam the log a lot, and over
+> 9600bps console its' somewhat slow :)
+>
+> There is another detail to note  -this server contains a faulty disk as
+> sdc that times out spinup. I left it in the server because it helped to
+> pinpoint and fix a previous error in esp scsi driver. This can be a
+> factor here too - the error handling details.
+
+It could be. So we have tons of mappings from CPU10 to queue 0, but then 
+we see this:
+
+> [  256.236742] cpu: 10
+> [  256.236749] queue: 809119744
+
+and it turns to crap. This is pretty weird. Try with this debug patch - 
+get rid of the other ones first. It should reduce your noise level too.
+
+-- 
+Jens Axboe
+
+
+--------------090808060601010900080603
+Content-Type: text/x-patch;
+ name="debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="debug.patch"
+
+diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+index 1065d7c65fa1..9200e2aee746 100644
+--- a/block/blk-mq-cpumap.c
++++ b/block/blk-mq-cpumap.c
+@@ -81,6 +81,9 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
+ 			map[i] = map[first_sibling];
+ 	}
  
- static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
- static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
--static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg);
-+static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- static void lock_and_start_io(struct ctlr_info *h);
- static void start_io(struct ctlr_info *h, unsigned long *flags);
- 
- #ifdef CONFIG_COMPAT
--static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void *arg);
-+static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd,
-+	void __user *arg);
- #endif
- 
- static void cmd_free(struct ctlr_info *h, struct CommandList *c);
-@@ -2941,8 +2943,8 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
++	for (i = 0; i < queue; i++)
++		printk(KERN_ERR "cpumap %d -> %d\n", i, map[i]);
++
+ 	free_cpumask_var(cpus);
  	return 0;
  }
- 
--u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position, int i,
--	int nphysicals, int nlogicals,
-+static u8 *figure_lunaddrbytes(struct ctlr_info *h, int raid_ctlr_position,
-+	int i, int nphysicals, int nlogicals,
- 	struct ReportExtendedLUNdata *physdev_list,
- 	struct ReportLUNdata *logdev_list)
- {
-@@ -4410,7 +4412,7 @@ static struct CommandList *hpsa_find_cmd_in_queue(struct ctlr_info *h,
- 	struct CommandList *c = NULL;	/* ptr into cmpQ */
- 
- 	if (!find)
--		return 0;
-+		return NULL;
- 	spin_lock_irqsave(&h->lock, flags);
- 	list_for_each_entry(c, queue_head, list) {
- 		if (c->scsi_cmd == NULL) /* e.g.: passthru ioctl */
-@@ -4785,7 +4787,8 @@ static void cmd_special_free(struct ctlr_info *h, struct CommandList *c)
- 
- #ifdef CONFIG_COMPAT
- 
--static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg)
-+static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
-+	void __user *arg)
- {
- 	IOCTL32_Command_struct __user *arg32 =
- 	    (IOCTL32_Command_struct __user *) arg;
-@@ -4810,7 +4813,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg)
- 	if (err)
- 		return -EFAULT;
- 
--	err = hpsa_ioctl(dev, CCISS_PASSTHRU, (void *)p);
-+	err = hpsa_ioctl(dev, CCISS_PASSTHRU, p);
- 	if (err)
- 		return err;
- 	err |= copy_in_user(&arg32->error_info, &p->error_info,
-@@ -4821,7 +4824,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 68929bad9a6a..1678da3505ea 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1265,12 +1265,25 @@ run_queue:
+ 	blk_mq_put_ctx(data.ctx);
  }
  
- static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
--	int cmd, void *arg)
-+	int cmd, void __user *arg)
- {
- 	BIG_IOCTL32_Command_struct __user *arg32 =
- 	    (BIG_IOCTL32_Command_struct __user *) arg;
-@@ -4848,7 +4851,7 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
- 	if (err)
- 		return -EFAULT;
- 
--	err = hpsa_ioctl(dev, CCISS_BIG_PASSTHRU, (void *)p);
-+	err = hpsa_ioctl(dev, CCISS_BIG_PASSTHRU, p);
- 	if (err)
- 		return err;
- 	err |= copy_in_user(&arg32->error_info, &p->error_info,
-@@ -4858,7 +4861,7 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
- 	return err;
- }
- 
--static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void *arg)
-+static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
- {
- 	switch (cmd) {
- 	case CCISS_GETPCIINFO:
-@@ -5206,7 +5209,7 @@ static void decrement_passthru_count(struct ctlr_info *h)
++static int did_warn;
++
  /*
-  * ioctl
+  * Default mapping to a software queue, since we use one per CPU.
   */
--static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg)
-+static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
+ struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q, const int cpu)
  {
- 	struct ctlr_info *h;
- 	void __user *argp = (void __user *)arg;
-@@ -5818,7 +5821,7 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- #define hpsa_noop(p) hpsa_message(p, 3, 0)
+-	return q->queue_hw_ctx[q->mq_map[cpu]];
++	int i;
++
++	i = q->mq_map[cpu];
++	if (!i || did_warn)
++		return q->queue_hw_ctx[0];
++
++	printk(KERN_ERR "blk-mq: cpu %u got queue %u\n", cpu, i);
++	for_each_online_cpu(i)
++		printk(KERN_ERR "  cpu%d -> queue index %u\n", i, q->mq_map[i]);
++
++	did_warn = 1;
++	return q->queue_hw_ctx[0];
+ }
+ EXPORT_SYMBOL(blk_mq_map_queue);
  
- static int hpsa_controller_hard_reset(struct pci_dev *pdev,
--	void * __iomem vaddr, u32 use_doorbell)
-+	void __iomem *vaddr, u32 use_doorbell)
- {
- 	u16 pmcsr;
- 	int pos;
-@@ -6056,7 +6059,7 @@ unmap_vaddr:
-  *   the io functions.
-  *   This is for debug only.
-  */
--static void print_cfg_table(struct device *dev, struct CfgTable *tb)
-+static void print_cfg_table(struct device *dev, struct CfgTable __iomem *tb)
- {
- #ifdef HPSA_DEBUG
- 	int i;
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 24472ce..80fa9a9 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -164,7 +164,7 @@ struct ctlr_info {
- 	 */
- 	u32 trans_support;
- 	u32 trans_offset;
--	struct TransTable_struct *transtable;
-+	struct TransTable_struct __iomem *transtable;
- 	unsigned long transMethod;
- 
- 	/* cap concurrent passthrus at some reasonable maximum */
-@@ -181,7 +181,7 @@ struct ctlr_info {
- 	u32 *blockFetchTable;
- 	u32 *ioaccel1_blockFetchTable;
- 	u32 *ioaccel2_blockFetchTable;
--	u32 *ioaccel2_bft2_regs;
-+	u32 __iomem *ioaccel2_bft2_regs;
- 	unsigned char *hba_inquiry_data;
- 	u32 driver_support;
- 	u32 fw_support;
-@@ -192,7 +192,7 @@ struct ctlr_info {
- 	u64 last_heartbeat_timestamp;
- 	u32 heartbeat_sample_interval;
- 	atomic_t firmware_flash_in_progress;
--	u32 *lockup_detected;
-+	u32 __percpu *lockup_detected;
- 	struct delayed_work monitor_ctlr_work;
- 	int remove_in_progress;
- 	u32 fifo_recently_full;
 
+--------------090808060601010900080603--
