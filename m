@@ -1,111 +1,87 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 10/13] hpsa: do not be so noisy about check conditions
-Date: Fri, 14 Nov 2014 17:27:14 -0600
-Message-ID: <20141114232714.20808.59968.stgit@don-ProLiant-MicroServer-Gen8>
+Subject: [PATCH 11/13] hpsa: Convert SCSI LLD ->queuecommand() for host_lock
+ less operation
+Date: Fri, 14 Nov 2014 17:27:19 -0600
+Message-ID: <20141114232719.20808.77460.stgit@don-ProLiant-MicroServer-Gen8>
 References: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58620 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422933AbaKNXZj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:39 -0500
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:46464 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422933AbaKNXZo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:44 -0500
 In-Reply-To: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: hch@infradead.org, webb.scales@hp.com, james.bottomley@parallels.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <stephenmcameron@gmail.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-We were printing a lot of useless information before ultimately
-just passing things up to the SCSI mid layer.  Just let the
-midlayer handle it without LLD chatter.
+There isn't anything in hpsa that requires the host lock to be held
+during queuecommand.
 
 Signed-off-by: Don Brace <don.brace@pmcs.com>
-Signed-off-by: Stephen M. Cameron <stephenmcameron@gmail.com>
-Reviewed-by: Joe Handzik <joseph.t.handzik@hp.com>
-Reviewed-by: Scott Teel <scott.teel@hp.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Reviewed-by: Stephen M. Cameron <stephenmcameron@gmail.com>
 ---
- drivers/scsi/hpsa.c |   59 ---------------------------------------------------
- 1 file changed, 59 deletions(-)
+ drivers/scsi/hpsa.c |   16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c9554e6..58f6847 100644
+index 58f6847..761612d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1760,72 +1760,13 @@ static void complete_scsi_command(struct CommandList *cp)
- 			/* Get addition sense code qualifier */
- 			ascq = ei->SenseInfo[13];
- 		}
+@@ -3881,8 +3881,11 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 						dev->scsi3addr);
+ }
+ 
+-static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+-	void (*done)(struct scsi_cmnd *))
++/*
++ * Running in struct Scsi_Host->host_lock less mode using LLD internal
++ * struct ctlr_info *h->lock w/ spin_lock_irqsave() protection.
++ */
++static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ {
+ 	struct ctlr_info *h;
+ 	struct hpsa_scsi_dev_t *dev;
+@@ -3895,14 +3898,14 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+ 	dev = cmd->device->hostdata;
+ 	if (!dev) {
+ 		cmd->result = DID_NO_CONNECT << 16;
+-		done(cmd);
++		cmd->scsi_done(cmd);
+ 		return 0;
+ 	}
+ 	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+ 
+ 	if (unlikely(lockup_detected(h))) {
+ 		cmd->result = DID_ERROR << 16;
+-		done(cmd);
++		cmd->scsi_done(cmd);
+ 		return 0;
+ 	}
+ 	c = cmd_alloc(h);
+@@ -3912,9 +3915,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+ 	}
+ 
+ 	/* Fill in the command list header */
 -
- 		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION) {
--			if (check_for_unit_attention(h, cp))
--				break;
--			if (sense_key == ILLEGAL_REQUEST) {
--				/*
--				 * SCSI REPORT_LUNS is commonly unsupported on
--				 * Smart Array.  Suppress noisy complaint.
--				 */
--				if (cp->Request.CDB[0] == REPORT_LUNS)
--					break;
+-	cmd->scsi_done = done;    /* save this for use by completion code */
 -
--				/* If ASC/ASCQ indicate Logical Unit
--				 * Not Supported condition,
--				 */
--				if ((asc == 0x25) && (ascq == 0x0)) {
--					dev_warn(&h->pdev->dev, "cp %p "
--						"has check condition\n", cp);
--					break;
--				}
--			}
+ 	/* save c in case we have to abort it  */
+ 	cmd->host_scribble = (unsigned char *) c;
+ 
+@@ -4005,8 +4005,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+ 	return 0;
+ }
+ 
+-static DEF_SCSI_QCMD(hpsa_scsi_queue_command)
 -
--			if (sense_key == NOT_READY) {
--				/* If Sense is Not Ready, Logical Unit
--				 * Not ready, Manual Intervention
--				 * required
--				 */
--				if ((asc == 0x04) && (ascq == 0x03)) {
--					dev_warn(&h->pdev->dev, "cp %p "
--						"has check condition: unit "
--						"not ready, manual "
--						"intervention required\n", cp);
--					break;
--				}
--			}
- 			if (sense_key == ABORTED_COMMAND) {
--				/* Aborted command is retryable */
--				dev_warn(&h->pdev->dev, "cp %p "
--					"has check condition: aborted command: "
--					"ASC: 0x%x, ASCQ: 0x%x\n",
--					cp, asc, ascq);
- 				cmd->result |= DID_SOFT_ERROR << 16;
- 				break;
- 			}
--			/* Must be some other type of check condition */
--			dev_dbg(&h->pdev->dev, "cp %p has check condition: "
--					"unknown type: "
--					"Sense: 0x%x, ASC: 0x%x, ASCQ: 0x%x, "
--					"Returning result: 0x%x, "
--					"cmd=[%02x %02x %02x %02x %02x "
--					"%02x %02x %02x %02x %02x %02x "
--					"%02x %02x %02x %02x %02x]\n",
--					cp, sense_key, asc, ascq,
--					cmd->result,
--					cmd->cmnd[0], cmd->cmnd[1],
--					cmd->cmnd[2], cmd->cmnd[3],
--					cmd->cmnd[4], cmd->cmnd[5],
--					cmd->cmnd[6], cmd->cmnd[7],
--					cmd->cmnd[8], cmd->cmnd[9],
--					cmd->cmnd[10], cmd->cmnd[11],
--					cmd->cmnd[12], cmd->cmnd[13],
--					cmd->cmnd[14], cmd->cmnd[15]);
- 			break;
- 		}
--
--
- 		/* Problem was not a check condition
- 		 * Pass it up to the upper layers...
- 		 */
+ static int do_not_scan_if_controller_locked_up(struct ctlr_info *h)
+ {
+ 	unsigned long flags;
 
