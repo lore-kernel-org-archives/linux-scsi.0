@@ -1,71 +1,58 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCHv2 00/10] scsi logging update: the real thing
-Date: Fri, 14 Nov 2014 22:59:42 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A86CF@G9W0745.americas.hpqcorp.net>
-References: <1415262639-121586-1-git-send-email-hare@suse.de>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH 00/13] hpsa update
+Date: Fri, 14 Nov 2014 17:26:20 -0600
+Message-ID: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:6611 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422639AbaKNXEK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:04:10 -0500
-In-Reply-To: <1415262639-121586-1-git-send-email-hare@suse.de>
-Content-Language: en-US
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:37031 "EHLO
+	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935316AbaKNXYs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:24:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: hch@infradead.org, webb.scales@hp.com, james.bottomley@parallels.com, brace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Thursday, 06 November, 2014 2:30 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; Ewan Milne; Elliott, Robert (Server Storage);
-> linux-scsi@vger.kernel.org; Hannes Reinecke
-> Subject: [PATCHv2 00/10] scsi logging update: the real thing
-> 
-> Hi all,
-> 
-> this is the second part of my scsi logging update, covering
-> CDB and sense code printing. With this patchset CDBs and
-> sense code bytes will be formatted on a single line
-> (where possible), and prefixed with the device and command
-> tag.
-> 
-> To ensure CDBs and sense code bytes are not broken up during
-> printk I've implemented a per-cpu buffer for formatting
-> messages. One can allocate a chunk from the buffer using
-> scsi_log_reserve_buffer() and return it via
-> scsi_log_release_buffer().
-> Both function do an implicit preempt_disable() / preempt_enable()
-> to ensure we're not scheduled away from that cpu whilst writing
-> into the buffer.
-> 
-> With that I've been able to clean up constants.c to remove all the
-> #ifdef CONFIG_SCSI_CONSTANTS statements. It'll now be compiled in
-> conditionally if CONFIG_SCSI_CONSTANTS is set.
-> 
-> Additionally I've updated the SCSI command definitions to SPC-3.
-> 
-> Thanks go to Stephen Rostedt who suffered my annoying questions
-> during LPC.
-> 
-
-I've run with v2 for a while.  Tag prints look good;
-CDBs are coming out on one line, etc.
-
-I haven't tested every line of every patch, but I think I
-exercised patches 3, 5, 7, and 8 pretty thoroughly, so you
-may add this to those:
-
-Tested-by: Robert Elliott <elliott@hp.com>
+This patch set is based on Linus's tree.
+The changes are:
+ - correct warnings from sparse
+ - updates for some error handling issues
+ - general code cleanup
+ - performance enhancements based on removing spin_locks
 
 ---
-Rob Elliott    HP Server Storage
+
+Don Brace (1):
+      hpsa: Clean up warnings from sparse.
+
+Nicholas Bellinger (1):
+      hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
+
+Robert Elliott (2):
+      hpsa: remove dev_warn prints from RAID-1ADM
+      hpsa: always call pci_set_master after pci_enable_device
+
+Stephen M. Cameron (8):
+      hpsa: fix a couple pci id table mistakes
+      hpsa: remove 'action required' phrasing
+      hpsa: fix allocation sizes for CISS_REPORT_LUNs commands
+      hpsa: fix endianness issue with scatter gather elements
+      hpsa: get rid of type/attribute/direction bit field where possible
+      hpsa: use atomics for commands_outstanding
+      hpsa: do not be so noisy about check conditions
+      hpsa: remove spin lock around command allocation
+
+Webb Scales (1):
+      hpsa: correct off-by-one sizing of chained SG block
 
 
+ drivers/scsi/hpsa.c     |  488 ++++++++++++++++++++---------------------------
+ drivers/scsi/hpsa.h     |   33 +--
+ drivers/scsi/hpsa_cmd.h |   34 ++-
+ 3 files changed, 234 insertions(+), 321 deletions(-)
 
+--
+Don Brace
+don.brace@pmcs.com
