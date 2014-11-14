@@ -1,72 +1,26 @@
-From: Fabian Frederick <fabf@skynet.be>
-Subject: [PATCH V4 linux-next RESEND 2] bfa: replace 2 kzalloc/copy_from_user by memdup_user
-Date: Fri, 14 Nov 2014 19:49:58 +0100
-Message-ID: <1415990998-29659-1-git-send-email-fabf@skynet.be>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Joe Perches <joe@perches.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Fabian Frederick <fabf@skynet.be>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: Masoud Sharbiani <msharbiani@twitter.com>
+Subject: Backport of a fix for a race condition in HPSA driver
+Date: Fri, 14 Nov 2014 10:53:55 -0800
+Message-ID: <CAJVGYjpRXcuZ7SjGiWF1_cQ-t4UFmRQ7H3o=bZ6wW+j-QbfJwg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f45.google.com ([209.85.215.45]:63589 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965567AbaKNSx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 13:53:56 -0500
+Received: by mail-la0-f45.google.com with SMTP id pn19so15639641lab.18
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2014 10:53:55 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: thenzl@redhat.com, scameron@beardog.cce.hp.com, JBottomley@parallels.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org
 
-This patch also removes unnecessary printk(KERN_INFO
+Hello stable maintainers,
+Can you please backport commitid
+2cc5bfaf854463d9d1aa52091f60110fbf102a9 ([SCSI] hpsa: fix a race in
+cmd_free/scsi_done) to 3.10 stable (and earlier, if applicable)? It
+seems to fix an issue that we have run into a couple of times.
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
-V4: remove blank line after memdup_user
-V3: memdup_user first argument is already void __user * (thanks to Joe Perches)
-    typo in title
-V2: Remove printk(KERN_INFO (suggested by Alan)
-
- drivers/scsi/bfa/bfad_debugfs.c | 30 ++++++------------------------
- 1 file changed, 6 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-index 8e83d04..74a307c 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -260,18 +260,9 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
- 
--	kern_buf = kzalloc(nbytes, GFP_KERNEL);
--
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
--	}
-+	kern_buf = memdup_user(buf, nbytes);
-+	if (IS_ERR(kern_buf))
-+		return PTR_ERR(kern_buf);
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &len);
- 	if (rc < 2) {
-@@ -336,18 +327,9 @@ bfad_debugfs_write_regwr(struct file *file, const char __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
- 
--	kern_buf = kzalloc(nbytes, GFP_KERNEL);
--
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
--	}
-+	kern_buf = memdup_user(buf, nbytes);
-+	if (IS_ERR(kern_buf))
-+		return PTR_ERR(kern_buf);
- 
- 	rc = sscanf(kern_buf, "%x:%x", &addr, &val);
- 	if (rc < 2) {
--- 
-1.9.3
+Many thanks,
+Masoud Sharbiani
