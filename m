@@ -1,104 +1,122 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] bnx2fc: do not add shared skbs to the fcoe_rx_list
-Date: Fri, 14 Nov 2014 16:26:27 -0500
-Message-ID: <alpine.OSX.2.00.1411141625350.2317@administrators-macbook-pro.local>
-References: <1406275372-3983-1-git-send-email-mlombard@redhat.com>  <53D21166.4090608@redhat.com>  <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com> <1415974030.3977.1.camel@dhcp-27-107.brq.redhat.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 08/10] scsi: use per-cpu buffer for formatting
+ scsi_print_result()
+Date: Fri, 14 Nov 2014 22:20:36 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A85DA@G9W0745.americas.hpqcorp.net>
+References: <1415262639-121586-1-git-send-email-hare@suse.de>
+ <1415262639-121586-9-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:27070 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161890AbaKNV0k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2014 16:26:40 -0500
-In-Reply-To: <1415974030.3977.1.camel@dhcp-27-107.brq.redhat.com>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:49578 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161814AbaKNWYc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 17:24:32 -0500
+In-Reply-To: <1415262639-121586-9-git-send-email-hare@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Maurizio, we've been running this for a little while with no issues so 
-it's good to go from our perspective.
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Thursday, 06 November, 2014 2:31 AM
+...
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+...
+> diff --git a/drivers/scsi/scsi_logging.c
+> b/drivers/scsi/scsi_logging.c
+> index 065792a3..e7e7cab 100644
+> --- a/drivers/scsi/scsi_logging.c
+> +++ b/drivers/scsi/scsi_logging.c
+> @@ -398,3 +398,47 @@ void scsi_print_sense(const struct scsi_cmnd
+> *cmd)
+>  			     cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
+>  }
+>  EXPORT_SYMBOL(scsi_print_sense);
+> +
+> +void scsi_print_result(struct scsi_cmnd *cmd, const char *msg, int
+> disposition)
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Since this function does not modify anything pointed to by cmd,
+consider adding const to that argument.
 
-On Fri, 14 Nov 2014, Maurizio Lombardi wrote:
+> +{
+> +	char *logbuf;
+> +	size_t off, logbuf_len;
+> +	const char *mlret_string = scsi_mlreturn_string(disposition);
 
-> Hi Chad,
+As mentioned in the last series, it might be good to
+change the midlayer string from SUCCESS to COMPLETE,
+since that is printed even for commands that fail with
+errors.  
+
+(This patch series doesn't touch that function, so mentioning
+the issue here at the only caller)
+
 >
-> On Fri, 2014-08-22 at 16:02 -0700, Eddie Wai wrote:
->> On Fri, 2014-07-25 at 10:12 +0200, Maurizio Lombardi wrote:
->>>
->>> On 07/25/2014 10:02 AM, Maurizio Lombardi wrote:
->>>> In some cases, the fcoe_rx_list may contains multiple instances
->>>> of the same skb (the so called "shared skbs").
->>>>
->>>> the bnx2fc_l2_rcv thread is a loop that extracts a skb from the list,
->>>> modifies (and destroys) its content and the proceed to the next one.
->>>> The problem is that if the skb is shared, the remaining instances will
->>>> be corrupted.
->>>>
->>>> The solution is to use skb_share_check() before adding the skb to the
->>>> fcoe_rx_list.
->>>>
->>>> [ 6286.808725] ------------[ cut here ]------------
->>>> [ 6286.808729] WARNING: at include/scsi/fc_frame.h:173 bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]()
->>>> [ 6286.808748] Modules linked in: bnx2x(-) mdio dm_service_time bnx2fc cnic uio fcoe libfcoe 8021q garp stp mrp libfc llc scsi_transport_fc scsi_tgt sg iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel e1000e ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper ptp cryptd hpilo serio_raw hpwdt lpc_ich pps_core ipmi_si pcspkr mfd_core ipmi_msghandler shpchp pcc_cpufreq mperf nfsd auth_rpcgss nfs_acl lockd sunrpc dm_multipath xfs libcrc32c ata_generic pata_acpi sd_mod crc_t10dif crct10dif_common mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit ata_piix drm_kms_helper ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod [last unloaded: mdio]
->>>> [ 6286.808750] CPU: 3 PID: 1304 Comm: bnx2fc_l2_threa Not tainted 3.10.0-121.el7.x86_64 #1
->>>> [ 6286.808750] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
->>>> [ 6286.808752]  0000000000000000 000000000b36e715 ffff8800deba1e00 ffffffff815ec0ba
->>>> [ 6286.808753]  ffff8800deba1e38 ffffffff8105dee1 ffffffffa05618c0 ffff8801e4c81888
->>>> [ 6286.808754]  ffffe8ffff663868 ffff8801f402b180 ffff8801f56bc000 ffff8800deba1e48
->>>> [ 6286.808754] Call Trace:
->>>> [ 6286.808759]  [<ffffffff815ec0ba>] dump_stack+0x19/0x1b
->>>> [ 6286.808762]  [<ffffffff8105dee1>] warn_slowpath_common+0x61/0x80
->>>> [ 6286.808763]  [<ffffffff8105e00a>] warn_slowpath_null+0x1a/0x20
->>>> [ 6286.808765]  [<ffffffffa054f415>] bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]
->>>> [ 6286.808767]  [<ffffffffa054eff0>] ? bnx2fc_disable+0x90/0x90 [bnx2fc]
->>>> [ 6286.808769]  [<ffffffff81085aef>] kthread+0xcf/0xe0
->>>> [ 6286.808770]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
->>>> [ 6286.808772]  [<ffffffff815fc76c>] ret_from_fork+0x7c/0xb0
->>>> [ 6286.808773]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
->>>> [ 6286.808774] ---[ end trace c6cdb939184ccb4e ]---
->>>>
->>>> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
->>>> ---
->>>>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++++
->>>>  1 file changed, 7 insertions(+)
->>>>
->>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
->>>> index 785d0d7..a190ab6 100644
->>>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
->>>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
->>>> @@ -411,6 +411,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
->>>>  	struct fc_frame_header *fh;
->>>>  	struct fcoe_rcv_info *fr;
->>>>  	struct fcoe_percpu_s *bg;
->>>> +	struct sk_buff *tmp_skb;
->>>>  	unsigned short oxid;
->>>>
->>>>  	interface = container_of(ptype, struct bnx2fc_interface,
->>>> @@ -423,6 +424,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
->>>>  		goto err;
->>>>  	}
->>>>
->>>> +	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
->>>> +	if (!tmp_skb)
->>>> +		goto err;
->>>> +
->>>> +	skb = tmp_skb;
->>>> +
->>>>  	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
->>>>  		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
->>>>  		goto err;
->>>>
->> Seems logical, but this patch requires some testing which ought to be
->> verified by the Qlogic team.  Thanks.
->
-> Any update about this?
-> Is the QLogic team still reviewing this patch?
->
-> Thanks,
-> Maurizio Lombardi
->
->
+> +	const char *hb_string = scsi_hostbyte_string(cmd->result);
+> +	const char *db_string = scsi_driverbyte_string(cmd->result);
+> +
+> +	logbuf = scsi_log_reserve_buffer(&logbuf_len);
+> +	if (!logbuf)
+> +		return;
+> +
+> +	off = sdev_format_header(logbuf, logbuf_len,
+> +				 scmd_name(cmd), cmd->request->tag);
+> +
+> +	if (msg)
+> +		off += scnprintf(logbuf + off, logbuf_len - off,
+> +				 "%s: ", msg);
+> +	if (mlret_string)
+> +		off += scnprintf(logbuf + off, logbuf_len - off,
+> +				 "%s ", mlret_string);
+> +	else
+> +		off += scnprintf(logbuf + off, logbuf_len - off,
+> +				 "UNKNOWN(0x%02x) ", disposition);
+> +	off += scnprintf(logbuf + off, logbuf_len - off, "Result: ");
+...
+
+Consider printing "Result: " first.  That would make
+the messages more consistent since "Done:" is not always there.
+
+Current:
+ [491784.462209] sd 1:0:0:0: [sdq] tag#0 Done: SUCCESS Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+ [491784.464962] sd 1:0:0:0: [sdq] tag#0 CDB: Write(10) 2a 00 39 8c fa 80 00 00 08 00
+ [  259.667383] sd 2:0:0:0: [sdr] tag#334 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+ [  259.667387] sd 2:0:0:0: [sdr] tag#334 Sense Key : Hardware Error [current]
+ [  259.667391] sd 2:0:0:0: [sdr] tag#334 Add. Sense: Logical unit failure
+ [  259.667395] sd 2:0:0:0: [sdr] tag#334 CDB: Read(10) 28 00 1b 85 9d 30 00 00 08 00
+ [27907.647377] sd 1:0:0:0: [sdq] tag#768 Done: TIMEOUT_ERROR Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+ [27907.647380] sd 1:0:0:0: [sdq] tag#768 CDB: Write(10) 2a 00 39 8a f4 e0 00 00 08 00
+ [27907.647382] sd 1:0:0:0: [sdq] tag#768 scmd ffff880424761470 abort scheduled
+
+Proposed:
+ [491784.462209] sd 1:0:0:0: [sdq] tag#0 Result: Done: COMPLETE hostbyte=DID_OK driverbyte=DRIVER_OK
+ [491784.464962] sd 1:0:0:0: [sdq] tag#0 CDB: Write(10) 2a 00 39 8c fa 80 00 00 08 00
+ [  259.667383] sd 2:0:0:0: [sdr] tag#334 Result: FAILED hostbyte=DID_OK driverbyte=DRIVER_SENSE
+ [  259.667387] sd 2:0:0:0: [sdr] tag#334 Sense Key : Hardware Error [current]
+ [  259.667391] sd 2:0:0:0: [sdr] tag#334 Add. Sense: Logical unit failure
+ [  259.667395] sd 2:0:0:0: [sdr] tag#334 CDB: Read(10) 28 00 1b 85 9d 30 00 00 08 00
+ [27907.647377] sd 1:0:0:0: [sdq] tag#768 Result: Done: TIMEOUT_ERROR hostbyte=DID_OK driverbyte=DRIVER_OK
+ [27907.647380] sd 1:0:0:0: [sdq] tag#768 CDB: Write(10) 2a 00 39 8a f4 e0 00 00 08 00
+ [27907.647382] sd 1:0:0:0: [sdq] tag#768 scmd ffff880424761470 abort scheduled
+
+Furthermore, consider dropping "Done" (the only msg argument 
+ever used) altogether.  "Done" means scsi_log_completion is
+printing this. No "Done" means scsi_io_completion's ACTION_FAIL
+case is printing this.
+
+The disposition (COMPLETE, FAILED, TIMEOUT_ERROR, etc.) seems
+to convey that same information, in more detail.
+
+
+Reviewed-by: Robert Elliott <elliott@hp.com>
+
+---
+Rob Elliott    HP Server Storage
+
+
+
