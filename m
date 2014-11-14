@@ -1,16 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 09/13] hpsa: use atomics for commands_outstanding
-Date: Fri, 14 Nov 2014 17:27:09 -0600
-Message-ID: <20141114232709.20808.6934.stgit@don-ProLiant-MicroServer-Gen8>
+Subject: [PATCH 13/13] hpsa: remove spin lock around command allocation
+Date: Fri, 14 Nov 2014 17:27:29 -0600
+Message-ID: <20141114232729.20808.72735.stgit@don-ProLiant-MicroServer-Gen8>
 References: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58595 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422945AbaKNXZe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:34 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:13521 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422933AbaKNXZz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 18:25:55 -0500
 In-Reply-To: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,169 +19,77 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <stephenmcameron@gmail.com>
 
-Use atomics for commands_outstanding instead of protecting with spin locks.
+It is already using atomic test_and_set_bit to do the
+allocation.
+
+There is some microscopic chance of starvation, but it is
+so microscopic that it should never happen in reality.
 
 Signed-off-by: Don Brace <don.brace@pmcs.com>
-Signed-off-by: Stephen M. Cameron <stephenmcameron@gmail.com>
-Reviewed-by: Joe Handzik <joseph.t.handzik@hp.com>
+Reviewed-by: Webb Scales <webbnh@hp.com>
 ---
- drivers/scsi/hpsa.c |   26 +++++++++-----------------
- drivers/scsi/hpsa.h |   27 +++++++--------------------
- 2 files changed, 16 insertions(+), 37 deletions(-)
+ drivers/scsi/hpsa.c |   36 +++++++++++++++++++++++-------------
+ 1 file changed, 23 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 95c34a5..c9554e6 100644
+index 72daca9..8a3d0de 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -394,7 +394,8 @@ static ssize_t host_show_commands_outstanding(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ctlr_info *h = shost_to_hba(shost);
+@@ -4607,19 +4607,32 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 	int i;
+ 	union u64bit temp64;
+ 	dma_addr_t cmd_dma_handle, err_dma_handle;
+-	unsigned long flags;
++	int loopcount;
++
++	/* There is some *extremely* small but non-zero chance that that
++	 * multiple threads could get in here, and one thread could
++	 * be scanning through the list of bits looking for a free
++	 * one, but the free ones are always behind him, and other
++	 * threads sneak in behind him and eat them before he can
++	 * get to them, so that while there is always a free one, a
++	 * very unlucky thread might be starved anyway, never able to
++	 * beat the other threads.  In reality, this happens so
++	 * infrequently as to be indistinguishable from never.
++	 */
  
--	return snprintf(buf, 20, "%d\n", h->commands_outstanding);
-+	return snprintf(buf, 20, "%d\n",
-+			atomic_read(&h->commands_outstanding));
- }
+-	spin_lock_irqsave(&h->lock, flags);
++	loopcount = 0;
+ 	do {
+ 		i = find_first_zero_bit(h->cmd_pool_bits, h->nr_cmds);
+-		if (i == h->nr_cmds) {
+-			spin_unlock_irqrestore(&h->lock, flags);
+-			return NULL;
+-		}
+-	} while (test_and_set_bit
+-		 (i & (BITS_PER_LONG - 1),
+-		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0);
+-	spin_unlock_irqrestore(&h->lock, flags);
++		if (i == h->nr_cmds)
++			i = 0;
++		loopcount++;
++	} while (test_and_set_bit(i & (BITS_PER_LONG - 1),
++		  h->cmd_pool_bits + (i / BITS_PER_LONG)) != 0 &&
++		loopcount < 10);
++
++	/* Thread got starved?  We do not expect this to ever happen. */
++	if (loopcount >= 10)
++		return NULL;
  
- static ssize_t host_show_transport_mode(struct device *dev,
-@@ -700,7 +701,6 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
+ 	c = h->cmd_pool + i;
+ 	memset(c, 0, sizeof(*c));
+@@ -4679,13 +4692,10 @@ static struct CommandList *cmd_special_alloc(struct ctlr_info *h)
+ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
  {
- 	u32 a;
- 	struct reply_queue_buffer *rq = &h->reply_queue[q];
+ 	int i;
 -	unsigned long flags;
  
- 	if (h->transMethod & CFGTBL_Trans_io_accel1)
- 		return h->access.command_completed(h, q);
-@@ -711,9 +711,7 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
- 	if ((rq->head[rq->current_entry] & 1) == rq->wraparound) {
- 		a = rq->head[rq->current_entry];
- 		rq->current_entry++;
--		spin_lock_irqsave(&h->lock, flags);
--		h->commands_outstanding--;
--		spin_unlock_irqrestore(&h->lock, flags);
-+		atomic_dec(&h->commands_outstanding);
- 	} else {
- 		a = FIFO_EMPTY;
- 	}
-@@ -5445,15 +5443,9 @@ static void start_io(struct ctlr_info *h, unsigned long *flags)
- 
- 		/* Put job onto the completed Q */
- 		addQ(&h->cmpQ, c);
--
--		/* Must increment commands_outstanding before unlocking
--		 * and submitting to avoid race checking for fifo full
--		 * condition.
--		 */
--		h->commands_outstanding++;
--
--		/* Tell the controller execute command */
-+		atomic_inc(&h->commands_outstanding);
- 		spin_unlock_irqrestore(&h->lock, *flags);
-+		/* Tell the controller execute command */
- 		h->access.submit_command(h, c);
- 		spin_lock_irqsave(&h->lock, *flags);
- 	}
-@@ -5499,6 +5491,7 @@ static inline void finish_cmd(struct CommandList *c)
- 	unsigned long flags;
- 	int io_may_be_stalled = 0;
- 	struct ctlr_info *h = c->h;
-+	int count;
- 
- 	spin_lock_irqsave(&h->lock, flags);
- 	removeQ(c);
-@@ -5519,11 +5512,10 @@ static inline void finish_cmd(struct CommandList *c)
- 	 * want to get in a cycle where we call start_io every time
- 	 * through here.
- 	 */
--	if (unlikely(h->fifo_recently_full) &&
--		h->commands_outstanding < 5)
--		io_may_be_stalled = 1;
--
-+	count = atomic_read(&h->commands_outstanding);
- 	spin_unlock_irqrestore(&h->lock, flags);
-+	if (unlikely(h->fifo_recently_full) && count < 5)
-+		io_may_be_stalled = 1;
- 
- 	dial_up_lockup_detection_on_fw_flash_complete(c->h, c);
- 	if (likely(c->cmd_type == CMD_IOACCEL1 || c->cmd_type == CMD_SCSI
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 80fa9a9..8e06d9e 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -118,7 +118,7 @@ struct ctlr_info {
- 	struct CfgTable __iomem *cfgtable;
- 	int	interrupts_enabled;
- 	int 	max_commands;
--	int	commands_outstanding;
-+	atomic_t commands_outstanding;
- #	define PERF_MODE_INT	0
- #	define DOORBELL_INT	1
- #	define SIMPLE_MODE_INT	2
-@@ -395,7 +395,7 @@ static void SA5_performant_intr_mask(struct ctlr_info *h, unsigned long val)
- static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
- {
- 	struct reply_queue_buffer *rq = &h->reply_queue[q];
--	unsigned long flags, register_value = FIFO_EMPTY;
-+	unsigned long register_value = FIFO_EMPTY;
- 
- 	/* msi auto clears the interrupt pending bit. */
- 	if (!(h->msi_vector || h->msix_vector)) {
-@@ -413,9 +413,7 @@ static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
- 	if ((rq->head[rq->current_entry] & 1) == rq->wraparound) {
- 		register_value = rq->head[rq->current_entry];
- 		rq->current_entry++;
--		spin_lock_irqsave(&h->lock, flags);
--		h->commands_outstanding--;
--		spin_unlock_irqrestore(&h->lock, flags);
-+		atomic_dec(&h->commands_outstanding);
- 	} else {
- 		register_value = FIFO_EMPTY;
- 	}
-@@ -433,11 +431,7 @@ static unsigned long SA5_performant_completed(struct ctlr_info *h, u8 q)
-  */
- static unsigned long SA5_fifo_full(struct ctlr_info *h)
- {
--	if (h->commands_outstanding >= h->max_commands)
--		return 1;
--	else
--		return 0;
--
-+	return atomic_read(&h->commands_outstanding) >= h->max_commands;
+ 	i = c - h->cmd_pool;
+-	spin_lock_irqsave(&h->lock, flags);
+ 	clear_bit(i & (BITS_PER_LONG - 1),
+ 		  h->cmd_pool_bits + (i / BITS_PER_LONG));
+-	spin_unlock_irqrestore(&h->lock, flags);
  }
- /*
-  *   returns value read from hardware.
-@@ -448,13 +442,9 @@ static unsigned long SA5_completed(struct ctlr_info *h,
- {
- 	unsigned long register_value
- 		= readl(h->vaddr + SA5_REPLY_PORT_OFFSET);
--	unsigned long flags;
  
--	if (register_value != FIFO_EMPTY) {
--		spin_lock_irqsave(&h->lock, flags);
--		h->commands_outstanding--;
--		spin_unlock_irqrestore(&h->lock, flags);
--	}
-+	if (register_value != FIFO_EMPTY)
-+		atomic_dec(&h->commands_outstanding);
- 
- #ifdef HPSA_DEBUG
- 	if (register_value != FIFO_EMPTY)
-@@ -510,7 +500,6 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
- {
- 	u64 register_value;
- 	struct reply_queue_buffer *rq = &h->reply_queue[q];
--	unsigned long flags;
- 
- 	BUG_ON(q >= h->nreply_queues);
- 
-@@ -528,9 +517,7 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
- 		wmb();
- 		writel((q << 24) | rq->current_entry, h->vaddr +
- 				IOACCEL_MODE1_CONSUMER_INDEX);
--		spin_lock_irqsave(&h->lock, flags);
--		h->commands_outstanding--;
--		spin_unlock_irqrestore(&h->lock, flags);
-+		atomic_dec(&h->commands_outstanding);
- 	}
- 	return (unsigned long) register_value;
- }
+ static void cmd_special_free(struct ctlr_info *h, struct CommandList *c)
 
