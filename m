@@ -1,42 +1,40 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 01/10] scsi: Rename SERVICE_ACTION_IN to
- SERVICE_ACTION_IN_16
-Date: Fri, 14 Nov 2014 16:10:23 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A7E30@G9W0745.americas.hpqcorp.net>
-References: <1415262639-121586-1-git-send-email-hare@suse.de>
- <1415262639-121586-2-git-send-email-hare@suse.de>
+From: Barto <mister.freeman@laposte.net>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Fri, 14 Nov 2014 17:30:36 +0100
+Message-ID: <54662E2C.5020309@laposte.net>
+References: <54629CAE.2000207@laposte.net> <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com> <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net> <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net> <54647C10.4070506@laposte.net> <20141113142907.GB29354@infradead.org> <5464E6E6.3090606@laposte.net> <20141113175402.GA27327@infradead.org> <546536EA.4070705@laposte.net> <20141114073214.GA1879@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:47504 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934727AbaKNQM3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 11:12:29 -0500
-In-Reply-To: <1415262639-121586-2-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141114073214.GA1879@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+Hello Christoph,
+
+I did the new bisect,
+
+the first bad commit is :
+
+74665016086615bbaa3fa6f83af410a0a4e029ee
+scsi: convert host_busy to atomic_t
+
+you can find the bisect log here :
+
+https://bugzilla.kernel.org/attachment.cgi?id=3D157621
 
 
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Thursday, 06 November, 2014 2:31 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; Ewan Milne; Elliott, Robert (Server Storage);
-> linux-scsi@vger.kernel.org; Hannes Reinecke
-> Subject: [PATCH 01/10] scsi: Rename SERVICE_ACTION_IN to
-> SERVICE_ACTION_IN_16
-> 
-> SPC-3 defines SERVICE ACTION IN(12) and SERVICE ACTION IN(16).
-> So rename SERVICE_ACTION_IN to SERVICE_ACTION_IN_16 to be
-> consistent with SPC and to allow for better distinction.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-Reviewed-by: Robert Elliott <elliott@hp.com>
-
+Le 14/11/2014 08:32, Christoph Hellwig a =E9crit :
+> On Thu, Nov 13, 2014 at 11:55:38PM +0100, Barto wrote:
+>> it's interesting, with this commit
+>> 74665016086615bbaa3fa6f83af410a0a4e029ee I have the bug :
+>>
+>> scsi: convert host_busy to atomic_t :
+>=20
+> At this point we'll need a bisction between v3.16 as the last good
+> point, and 74665016086615bbaa3fa6f83af410a0a4e029ee as the known bad
+> point.
+>=20
