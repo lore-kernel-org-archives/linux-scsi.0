@@ -1,85 +1,83 @@
-From: Barto <mister.freeman@laposte.net>
-Subject: Re: BUG in scsi_lib.c due to a bad commit
-Date: Thu, 13 Nov 2014 23:55:38 +0100
-Message-ID: <546536EA.4070705@laposte.net>
-References: <54629CAE.2000207@laposte.net> <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com> <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net> <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net> <54647C10.4070506@laposte.net> <20141113142907.GB29354@infradead.org> <5464E6E6.3090606@laposte.net> <20141113175402.GA27327@infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.40 available
+Date: Thu, 13 Nov 2014 19:27:13 -0500
+Message-ID: <54654C61.8070002@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141113175402.GA27327@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>, Martin Pitt <mpitt@debian.org>
+Cc: David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Christoph,
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the Linux 3, 2.6 and 2.4 kernel series. It has ports to
+FreeBSD, Tru64, Solaris, and Windows (cygwin and MinGW).
 
-> Please explicitly test commits:
->
-> 71e75c97f97a9645d25fbf3d8e4165a558f18747
+There are three new utilities and major additions to several
+others, see the ChangeLog below. This version tracks various
+changes made by www.t10.org since June 2014.
 
-with commit 71e75c97f97a9645d25fbf3d8e4165a558f18747 there is no proble=
-m
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     http://sg.danny.cz/sg/sg_ses.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
 
-> and
->
-> 74665016086615bbaa3fa6f83af410a0a4e029ee
+Changelog for sg3_utils-1.40 [20141110] [svn: r620]
+   - sg_write_verify: new utility for WRITE AND VERIFY
+   - sg_ses_microcode: new utility
+   - sg_sat_read_gplog: new utility
+   - sg_senddiag: add --maxlen= option
+   - sg_copy_results: correct response length calculations
+   - sg_format: make '-FFF' bypass mode sense/select
+     - add --mode=MP to supply alternate mode page,
+       default remains read-write error recovery mpage
+     - output unit serial number and LU name prior to
+   - sg_inq: expand Block limits VPD page output
+     - fix --cmddt output if not supported by device
+     - more sanity checks on vendor supplied fields
+   - sg_vpd: add --all option
+     - more TPC VPD page decoding
+     - add zoned block device characteristics page
+     - more sanity checks on vendor supplied fields
+   - sg_ses: fix problem with --index=sse (and ssc)
+     - mask status element before using as control
+     - defeat previous item with --mask (ignore) option
+     - SAS connector status element: add overcurrent bit
+     - handle element descriptor names that count a
+       trailing NULL
+     - add --warn option mainly for broken joins
+     - add optional descriptions to -ee output
+     - sync with ses3r07
+   - sg_sanitize: add --desc and --zero options
+     - output unit serial number and LU name prior to
+   - sg_rep_zones: corrections, sync with zbc-r01c
+   - sg_persist: split help into two pages, '-hh' for 2nd
+   - sg_logs: refine tape drive output
+   - sg_raw: with -vvv decode T10 CDB name
+     - do not output/print data-in if error
+   - sg_opcodes: add --compact field
+   - sg_senddiag: add --page=PG option
+   - sg_reset: add words for EAGAIN from reset ioctl
+   - sg_sat_*: mention t_type and multiple_count fields
+   - win32: sg_scan: handle larger configurations
+   - sg_lib: trim trailing spaces in dStrHex() and friends
+   - sg_lib_data: sync asc/ascq codes with T10 20140924
+     - clean up service action string functions
+     - sg_ll_unmap_v2(): fix group number
+     - sg_ll_inquiry(), sg_ll_mode_sense*(),
+       sg_ll_log_sense(): use resid to clear unfilled
+       data-in buffer
+   - sg_unaligned.h: add header for building parameters
+   - examples/sg_tst_async: new Linux sg test utility
 
-it's interesting, with this commit
-74665016086615bbaa3fa6f83af410a0a4e029ee I have the bug :
+Changelog for sg3_utils-1.39 [20140612] [svn: r588]
+...
 
-scsi: convert host_busy to atomic_t :
-
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?=
-id=3D74665016086615bbaa3fa6f83af410a0a4e029ee
-
-Le 13/11/2014 18:54, Christoph Hellwig a =E9crit :
-> On Thu, Nov 13, 2014 at 06:14:14PM +0100, Barto wrote:
->> Hello Christoph,
->>
->> I tested this commit :
->>
->> 7ae65c0f9646c29432b69580b80e08632e6cd813 scsi: convert target_busy t=
-o an
->> atomic_t
->>
->> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commi=
-t/?id=3D7ae65c0f9646c29432b69580b80e08632e6cd813
->>
->> there is no bug, boot process is ok whit this commit,
->>
->> when I did the "git bisect" the first bad commit was Guenters' commi=
-t (
->> 045065d8a300a37218c548e9aa7becd581c6a0e8 ), it seems that all commit=
-s
->> before 045065d8a300a37218c548e9aa7becd581c6a0e8 are ok,
->=20
-> The bisect isn't quite interesting here as we're trying to find the r=
-eal
-> root ause.
->=20
-> 045065d8a300a37218c548e9aa7becd581c6a0e8 reverts the polarity of the
-> check that 71e75c97f97a9645d25fbf3d8e4165a558f18747 incorrectly
-> chaged.
->=20
-> The behavior you see doesn't make a lot of sense from a high level vi=
-ew,
-> so we need to find out what's going on.
->=20
-> When you say all commits before 045065d8a300a37218c548e9aa7becd581c6a=
-0e8
-> I wonder if the bisect simply skiped to many revisions.
->=20
-> Please explicitly test commits:
->=20
-> 71e75c97f97a9645d25fbf3d8e4165a558f18747
->=20
-> and
->=20
-> 74665016086615bbaa3fa6f83af410a0a4e029ee
->=20
-> Thanks!
->=20
->=20
+Doug Gilbert
