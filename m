@@ -1,55 +1,73 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [V2 PATCH 3/4] scsi:stex.c Add reboot support
-Date: Fri, 14 Nov 2014 17:03:42 -0800
-Message-ID: <20141115010342.GA5933@kroah.com>
-References: <5462D62C.50602@gmail.com>
- <20141112172750.GB18862@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141112172750.GB18862@infradead.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Charles Chiou <ch1102chiou@gmail.com>, JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH V1] virtio_scsi: support multi hw queue of blk-mq
+Date: Sat, 15 Nov 2014 11:47:14 +0800
+Message-ID: <1416023234-28003-1-git-send-email-ming.lei@canonical.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:60808 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935166AbaKODr3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Nov 2014 22:47:29 -0500
+Received: by mail-pa0-f42.google.com with SMTP id et14so3974178pad.29
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2014 19:47:28 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@canonical.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-On Wed, Nov 12, 2014 at 09:27:50AM -0800, Christoph Hellwig wrote:
-> > +static int stex_reboot_callback(struct notifier_block *self,
-> > +							  unsigned long val,
-> > +							  void *data)
-> > +{
-> > +	if (val == SYS_RESTART)
-> > +		isRestart = 1;
-> > +	return NOTIFY_OK;
-> > +}
-> > 
-> > @@ -1832,7 +1859,14 @@ static void stex_shutdown(struct pci_dev *pdev)
-> >  {
-> >  	struct st_hba *hba = pci_get_drvdata(pdev);
-> > 
-> > -	stex_hba_stop(hba);
-> > +	if (hba->yellowstone == 1)
-> > +		stex_hba_stop(hba, ST_IGNORED);
-> > +	else {
-> > +		if (isRestart)
-> > +			stex_hba_stop(hba, ST_S6);
-> > +		else
-> > +			stex_hba_stop(hba, ST_S5);
-> > +	}
-> 
-> This sort of check for reboot vs restart isn't really something
-> we want in drivers.  I don't really know how we could find this
-> out assuming we even want drivers to behave differently.
-> 
-> Maybe Greg or someone on lkml has an idea how to best handle this case.
+Since virtio_scsi has supported multi virtqueue already,
+it is natural to map the virtque to hw-queue of blk-mq.
 
-What is "this case"?
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+V1:
+	- support non-mq too
 
-And yes, I agree, we shouldn't care, in drivers, about reboot vs.
-restart, as they should both be the same thing, along with "disconnect",
-right?
+ drivers/scsi/virtio_scsi.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index b83846f..d3af70e 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -561,6 +561,15 @@ static int virtscsi_queuecommand_single(struct Scsi_Host *sh,
+ 	return virtscsi_queuecommand(vscsi, &vscsi->req_vqs[0], sc);
+ }
+ 
++static struct virtio_scsi_vq *virtscsi_pick_vq_mq(struct virtio_scsi *vscsi,
++						  struct scsi_cmnd *sc)
++{
++	u32 tag = blk_mq_unique_tag(sc->request);
++	u16 hwq = blk_mq_unique_tag_to_hwq(tag);
++
++	return &vscsi->req_vqs[hwq];
++}
++
+ static struct virtio_scsi_vq *virtscsi_pick_vq(struct virtio_scsi *vscsi,
+ 					       struct virtio_scsi_target_state *tgt)
+ {
+@@ -604,7 +613,12 @@ static int virtscsi_queuecommand_multi(struct Scsi_Host *sh,
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 	struct virtio_scsi_target_state *tgt =
+ 				scsi_target(sc->device)->hostdata;
+-	struct virtio_scsi_vq *req_vq = virtscsi_pick_vq(vscsi, tgt);
++	struct virtio_scsi_vq *req_vq;
++
++	if (shost_use_blk_mq(sh))
++		req_vq = virtscsi_pick_vq_mq(vscsi, sc);
++	else
++		req_vq = virtscsi_pick_vq(vscsi, tgt);
+ 
+ 	return virtscsi_queuecommand(vscsi, req_vq, sc);
+ }
+@@ -983,6 +997,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	shost->max_id = num_targets;
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
++	shost->nr_hw_queues = num_queues;
+ 
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
+ 		host_prot = SHOST_DIF_TYPE1_PROTECTION | SHOST_DIF_TYPE2_PROTECTION |
+-- 
+1.7.9.5
 
-greg k-h
