@@ -1,46 +1,76 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
-Date: Sat, 15 Nov 2014 08:31:00 -0700
-Message-ID: <546771B4.1010507@kernel.dk>
-References: <alpine.LRH.2.11.1411141302270.26966@adalberg.ut.ee> <20141114165804.GA14631@infradead.org> <alpine.LRH.2.11.1411142114200.26813@adalberg.ut.ee> <54665B30.4070708@kernel.dk> <alpine.LRH.2.11.1411150033400.26813@adalberg.ut.ee> <54669063.6050307@kernel.dk> <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
+From: Jeff DeFouw <mrj@plorb.com>
+Subject: 3.16 commit 89fb4cd errors on drives without SYNC CACHE
+Date: Sat, 15 Nov 2014 20:14:57 -0500
+Message-ID: <20141116011457.GA19264@blorp.plorb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
-Sender: sparclinux-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from resqmta-ch2-10v.sys.comcast.net ([69.252.207.42]:50527 "EHLO
+	resqmta-ch2-10v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754833AbaKPBXK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Nov 2014 20:23:10 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 2014-11-14 23:48, Meelis Roos wrote:
-> [  247.424529] sd 0:0:2:0: [sdc] READ CAPACITY failed
-> [  247.479803] sd 0:0:2:0: [sdc]
-> [  247.517288] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> [  247.583978] sd 0:0:2:0: [sdc]
-> [  247.621487] Sense Key : Not Ready [current]
-> [  247.672493] sd 0:0:2:0: [sdc]
-> [  247.710046] Add. Sense: Logical unit not ready, cause not reportable
-> [  247.788409] sd 0:0:2:0: [sdc] Test WP failed, assume Write Enabled
-> [  247.861176] sd 0:0:2:0: [sdc] Asking for cache data failed
-> [  247.926063] sd 0:0:2:0: [sdc] Assuming drive cache: write through
-> [  248.001337] blk-mq: cpu 14 got queue 1828716544
-> [  248.053686]   cpu10 -> queue index 809119744
-> [  248.104595]   cpu11 -> queue index 0
-> [  248.147313]   cpu14 -> queue index 1828716544
-> [  248.199394]   cpu15 -> queue index 0
-> [  248.244954] sd 0:0:2:0: [sdc] Spinning up disk...
+Kernel 3.16 includes commit
+89fb4cd1f717a871ef79fa7debbe840e3225cd54
+scsi: handle flush errors properly
 
-So the issue definitely seems to be related to the fact that this disk 
-misbehaves. The hw queue values aren't random either, in fact they CPU14 
-mapping is identical to your previous boot, which is0x6d000000. And 
-CPU10's mapping is 0x303a3000.
+I have an old USB backup drive that indicates a write cache but does not 
+support Synchronize Cache(10).  The request error now gets returned, 
+resulting in a journal abort and inability to write to the ext3 
+filesystem.  I was able to work around the problem by adding a new USB 
+storage quirk that completes the request without contacting the drive.  
+Is it acceptable for a drive to respond this way, and therefore need to 
+be handled in the SCSI layer, or is a new USB storage quirk the right 
+way to go?
 
-My next move would be to add more debug to the CPU map setup and 
-teardown, so that we can verify that the map that is being used above 
-has indeed been setup. Unless Christoph has any ideas on what is going 
-on here?
+Detection:
+
+[  471.204020] usb 1-2: new high-speed USB device number 2 using ehci-pci
+[  471.336900] usb 1-2: New USB device found, idVendor=0d49, idProduct=7100
+[  471.336903] usb 1-2: New USB device strings: Mfr=1, Product=3, SerialNumber=2
+[  471.336906] usb 1-2: Product: OneTouch II
+[  471.336908] usb 1-2: Manufacturer: Maxtor
+[  471.336910] usb 1-2: SerialNumber: L60N3ANG    
+[  471.450333] usb-storage 1-2:1.0: USB Mass Storage device detected
+[  471.450421] scsi8 : usb-storage 1-2:1.0
+[  471.450512] usbcore: registered new interface driver usb-storage
+[  472.501374] scsi 8:0:0:0: Direct-Access     Maxtor   OneTouch II      023g PQ: 0 ANSI: 4
+[  472.501712] sd 8:0:0:0: Attached scsi generic sg4 type 0
+[  472.554993] sd 8:0:0:0: [sdd] 586114704 512-byte logical blocks: (300 GB/279 GiB)
+[  472.608733] sd 8:0:0:0: [sdd] Write Protect is off
+[  472.608735] sd 8:0:0:0: [sdd] Mode Sense: 24 00 00 00
+[  472.662478] sd 8:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[  472.847985]  sdd: sdd1 sdd2
+[  473.063339] sd 8:0:0:0: [sdd] Attached SCSI disk
+
+Write failure:
+
+[ 2812.782271] sd 9:0:0:0: [sdd] Done: 
+[ 2812.782276] 0xffff88007960c9c0 SUCCESS
+[ 2812.782279] sd 9:0:0:0: [sdd]  
+[ 2812.782282] Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[ 2812.782285] sd 9:0:0:0: [sdd] CDB: 
+[ 2812.782286] Write(10): 2a 00 00 90 10 3f 00 00 30 00
+[ 2812.782293] sd 9:0:0:0: [sdd] scsi host busy 1 failed 0
+[ 2812.782897] sd 9:0:0:0: [sdd] Done: 
+[ 2812.782900] 0xffff88007960c9c0 SUCCESS
+[ 2812.782902] sd 9:0:0:0: [sdd]  
+[ 2812.782904] Result: hostbyte=DID_TARGET_FAILURE driverbyte=DRIVER_OK
+[ 2812.782905] sd 9:0:0:0: [sdd] CDB: 
+[ 2812.782906] Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
+[ 2812.782911] sd 9:0:0:0: [sdd]  
+[ 2812.782912] Sense Key : Illegal Request [current] 
+[ 2812.782914] sd 9:0:0:0: [sdd]  
+[ 2812.782916] Add. Sense: Invalid command operation code
+[ 2812.782917] sd 9:0:0:0: [sdd] scsi host busy 1 failed 0
+[ 2812.782922] end_request: critical target error, dev sdd, sector 9441391
+[ 2812.782931] Aborting journal on device sdd1-8.
 
 -- 
-Jens Axboe
-
+Jeff DeFouw <mrj@plorb.com>
