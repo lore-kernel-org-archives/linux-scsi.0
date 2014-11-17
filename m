@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/10] scsi: Rename SERVICE_ACTION_IN to SERVICE_ACTION_IN_16
-Date: Mon, 17 Nov 2014 14:25:19 +0100
-Message-ID: <1416230728-66425-2-git-send-email-hare@suse.de>
+Subject: [PATCH 05/10] scsi: use external buffer for command logging
+Date: Mon, 17 Nov 2014 14:25:23 +0100
+Message-ID: <1416230728-66425-6-git-send-email-hare@suse.de>
 References: <1416230728-66425-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55521 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:55525 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752212AbaKQNZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752080AbaKQNZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 17 Nov 2014 08:25:34 -0500
 In-Reply-To: <1416230728-66425-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,290 +14,432 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Robert Elliott <elliott@hp.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-SPC-3 defines SERVICE ACTION IN(12) and SERVICE ACTION IN(16).
-So rename SERVICE_ACTION_IN to SERVICE_ACTION_IN_16 to be
-consistent with SPC and to allow for better distinction.
+Use an external buffer for __scsi_print_command() and
+move command logging over to use the per-cpu logging
+buffer. With that we can guarantee the command always
+will always be formatted in one line.
+So we can even print out a variable length command
+correctly across several lines.
+Finally rename __scsi_print_command() to
+__scsi_format_comment() to better reflect the
+functionality.
 
 Tested-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/scsi_ioctl.c                         | 2 +-
- drivers/ata/libata-scsi.c                  | 2 +-
- drivers/block/nvme-scsi.c                  | 4 ++--
- drivers/scsi/aacraid/aachba.c              | 4 ++--
- drivers/scsi/aacraid/linit.c               | 2 +-
- drivers/scsi/constants.c                   | 1 -
- drivers/scsi/gdth.c                        | 4 ++--
- drivers/scsi/scsi_debug.c                  | 2 +-
- drivers/scsi/scsi_trace.c                  | 2 +-
- drivers/scsi/sd.c                          | 2 +-
- drivers/target/target_core_alua.c          | 2 +-
- drivers/target/target_core_sbc.c           | 2 +-
- drivers/usb/gadget/legacy/tcm_usb_gadget.c | 2 +-
- include/scsi/scsi.h                        | 2 +-
- include/trace/events/scsi.h                | 2 +-
- include/trace/events/target.h              | 2 +-
- tools/lib/traceevent/plugin_scsi.c         | 4 ++--
- 17 files changed, 20 insertions(+), 21 deletions(-)
+ drivers/scsi/ch.c           |   6 +-
+ drivers/scsi/constants.c    |  74 +-----------------
+ drivers/scsi/scsi_logging.c | 182 ++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/sr_ioctl.c     |  13 +++-
+ include/scsi/scsi.h         |   3 +
+ include/scsi/scsi_dbg.h     |   6 +-
+ 6 files changed, 192 insertions(+), 92 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 1e053d9..c7bbc19 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -142,7 +142,7 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
- 	__set_bit(GPCMD_VERIFY_10, filter->read_ok);
- 	__set_bit(VERIFY_16, filter->read_ok);
- 	__set_bit(REPORT_LUNS, filter->read_ok);
--	__set_bit(SERVICE_ACTION_IN, filter->read_ok);
-+	__set_bit(SERVICE_ACTION_IN_16, filter->read_ok);
- 	__set_bit(RECEIVE_DIAGNOSTIC, filter->read_ok);
- 	__set_bit(MAINTENANCE_IN, filter->read_ok);
- 	__set_bit(GPCMD_READ_BUFFER_CAPACITY, filter->read_ok);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c8bb6ab..fc6a60a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3570,7 +3570,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 		ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
- 		break;
- 
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		if ((scsicmd[1] & 0x1f) == SAI_READ_CAPACITY_16)
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
- 		else
-diff --git a/drivers/block/nvme-scsi.c b/drivers/block/nvme-scsi.c
-index a4cd6d6..0b4b277 100644
---- a/drivers/block/nvme-scsi.c
-+++ b/drivers/block/nvme-scsi.c
-@@ -329,7 +329,7 @@ INQUIRY_EVPD_BIT_MASK) ? 1 : 0)
- (GET_U32_FROM_CDB(cdb, READ_CAP_16_CDB_ALLOC_LENGTH_OFFSET))
- 
- #define IS_READ_CAP_16(cdb)					\
--((cdb[0] == SERVICE_ACTION_IN && cdb[1] == SAI_READ_CAPACITY_16) ? 1 : 0)
-+((cdb[0] == SERVICE_ACTION_IN_16 && cdb[1] == SAI_READ_CAPACITY_16) ? 1 : 0)
- 
- /* Request Sense Helper Macros */
- #define GET_REQUEST_SENSE_ALLOC_LENGTH(cdb)			\
-@@ -2947,7 +2947,7 @@ static int nvme_scsi_translate(struct nvme_ns *ns, struct sg_io_hdr *hdr)
- 	case READ_CAPACITY:
- 		retcode = nvme_trans_read_capacity(ns, hdr, cmd);
- 		break;
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		if (IS_READ_CAP_16(cmd))
- 			retcode = nvme_trans_read_capacity(ns, hdr, cmd);
- 		else
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 681434e..b32e77d 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2181,7 +2181,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 			  (fsa_dev_ptr[cid].sense_data.sense_key ==
- 			   NOT_READY)) {
- 				switch (scsicmd->cmnd[0]) {
--				case SERVICE_ACTION_IN:
-+				case SERVICE_ACTION_IN_16:
- 					if (!(dev->raw_io_interface) ||
- 					    !(dev->raw_io_64) ||
- 					    ((scsicmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
-@@ -2309,7 +2309,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		scsi_sg_copy_from_buffer(scsicmd, &inq_data, sizeof(inq_data));
- 		return aac_get_container_name(scsicmd);
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 4f502f9..abcc46f 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -195,8 +195,10 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd, int cmd_len,
+  retry:
+ 	errno = 0;
+ 	if (debug) {
+-		DPRINTK("command: ");
+-		__scsi_print_command(cmd, cmd_len);
++		char logbuf[SCSI_LOG_BUFSIZE];
++
++		__scsi_format_command(logbuf, sizeof(logbuf), cmd, cmd_len);
++		DPRINTK("command: %s", logbuf);
  	}
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		if (!(dev->raw_io_interface) ||
- 		    !(dev->raw_io_64) ||
- 		    ((scsicmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 41b9c68b..4c340d8 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -555,7 +555,7 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 		AAC_DRIVERNAME,
- 		host->host_no, sdev_channel(dev), sdev_id(dev), dev->lun);
- 	switch (cmd->cmnd[0]) {
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		if (!(aac->raw_io_interface) ||
- 		    !(aac->raw_io_64) ||
- 		    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
+ 
+ 	result = scsi_execute_req(ch->device, cmd, direction, buffer,
 diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 0cf43f6..52afabd 100644
+index aee62f6..e5daf0e 100644
 --- a/drivers/scsi/constants.c
 +++ b/drivers/scsi/constants.c
-@@ -24,7 +24,6 @@
- #define SERVICE_ACTION_IN_12 0xab
- #define SERVICE_ACTION_OUT_12 0xa9
- #define SERVICE_ACTION_BIDIRECTIONAL 0x9d
--#define SERVICE_ACTION_IN_16 0x9e
- #define SERVICE_ACTION_OUT_16 0x9f
+@@ -24,8 +24,6 @@
  #define THIRD_PARTY_COPY_OUT 0x83
  #define THIRD_PARTY_COPY_IN 0x84
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 4ebbeae..71e1380 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -2159,7 +2159,7 @@ static void gdth_next(gdth_ha_str *ha)
-               case VERIFY:
-               case START_STOP:
-               case MODE_SENSE:
--              case SERVICE_ACTION_IN:
-+              case SERVICE_ACTION_IN_16:
-                 TRACE(("cache cmd %x/%x/%x/%x/%x/%x\n",nscp->cmnd[0],
-                        nscp->cmnd[1],nscp->cmnd[2],nscp->cmnd[3],
-                        nscp->cmnd[4],nscp->cmnd[5]));
-@@ -2391,7 +2391,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
-         gdth_copy_internal_data(ha, scp, (char*)&rdc, sizeof(gdth_rdcap_data));
-         break;
  
--      case SERVICE_ACTION_IN:
-+      case SERVICE_ACTION_IN_16:
-         if ((scp->cmnd[1] & 0x1f) == SAI_READ_CAPACITY_16 &&
-             (ha->cache_feat & GDT_64BIT)) {
-             gdth_rdcap16_data rdc16;
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index b025713..378e0aa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4210,7 +4210,7 @@ scsi_debug_queuecommand(struct scsi_cmnd *SCpnt)
- 	case READ_CAPACITY:
- 		errsts = resp_readcap(SCpnt, devip);
- 		break;
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		if (cmd[1] == SAI_READ_CAPACITY_16)
- 			errsts = resp_readcap16(SCpnt, devip);
- 		else if (cmd[1] == SAI_GET_LBA_STATUS) {
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 503594e..82af28b 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -278,7 +278,7 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
- 		return scsi_trace_rw16(p, cdb, len);
- 	case UNMAP:
- 		return scsi_trace_unmap(p, cdb, len);
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		return scsi_trace_service_action_in(p, cdb, len);
- 	case VARIABLE_LENGTH_CMD:
- 		return scsi_trace_varlen(p, cdb, len);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 95bfb7b..f58f965 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1982,7 +1982,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+-#define VENDOR_SPECIFIC_CDB 0xc0
+-
+ struct sa_name_list {
+ 	int opcode;
+ 	const struct value_name_pair *arr;
+@@ -281,8 +279,8 @@ static struct sa_name_list sa_names_arr[] = {
+ };
+ #endif /* CONFIG_SCSI_CONSTANTS */
  
- 	do {
- 		memset(cmd, 0, 16);
--		cmd[0] = SERVICE_ACTION_IN;
-+		cmd[0] = SERVICE_ACTION_IN_16;
- 		cmd[1] = SAI_READ_CAPACITY_16;
- 		cmd[13] = RC16_LEN;
- 		memset(buffer, 0, RC16_LEN);
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index fb87780..75cbde1 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -576,7 +576,7 @@ static inline int core_alua_state_standby(
- 	case SEND_DIAGNOSTIC:
- 	case READ_CAPACITY:
+-static bool scsi_opcode_sa_name(int opcode, int service_action,
+-				const char **cdb_name, const char **sa_name)
++bool scsi_opcode_sa_name(int opcode, int service_action,
++			 const char **cdb_name, const char **sa_name)
+ {
+ 	struct sa_name_list *sa_name_ptr;
+ 	const struct value_name_pair *arr = NULL;
+@@ -315,74 +313,6 @@ static bool scsi_opcode_sa_name(int opcode, int service_action,
+ 	return true;
+ }
+ 
+-static void print_opcode_name(const unsigned char *cdbp, size_t cdb_len)
+-{
+-	int sa, cdb0;
+-	const char *cdb_name = NULL, *sa_name = NULL;
+-
+-	cdb0 = cdbp[0];
+-	if (cdb0 == VARIABLE_LENGTH_CMD) {
+-		if (cdb_len < 10) {
+-			printk("short variable length command, len=%zu",
+-			       cdb_len);
+-			return;
+-		}
+-		sa = (cdbp[8] << 8) + cdbp[9];
+-	} else
+-		sa = cdbp[1] & 0x1f;
+-
+-	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
+-		if (cdb_name)
+-			printk("%s", cdb_name);
+-		else if (cdb0 >= VENDOR_SPECIFIC_CDB)
+-			printk("cdb[0]=0x%x (vendor)", cdb0);
+-		else if (cdb0 >= 0x60 && cdb0 < 0x7e)
+-			printk("cdb[0]=0x%x (reserved)", cdb0);
+-		else
+-			printk("cdb[0]=0x%x", cdb0);
+-	} else {
+-		if (sa_name)
+-			printk("%s", sa_name);
+-		else if (cdb_name)
+-			printk("%s, sa=0x%x", cdb_name, sa);
+-		else
+-			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-	}
+-}
+-
+-void __scsi_print_command(const unsigned char *cdb, size_t cdb_len)
+-{
+-	int k, len;
+-
+-	print_opcode_name(cdb, cdb_len);
+-	len = scsi_command_size(cdb);
+-	if (cdb_len < len)
+-		len = cdb_len;
+-	/* print out all bytes in cdb */
+-	for (k = 0; k < len; ++k)
+-		printk(" %02x", cdb[k]);
+-	printk("\n");
+-}
+-EXPORT_SYMBOL(__scsi_print_command);
+-
+-void scsi_print_command(struct scsi_cmnd *cmd)
+-{
+-	int k;
+-
+-	if (cmd->cmnd == NULL)
+-		return;
+-
+-	scmd_printk(KERN_INFO, cmd, "CDB: ");
+-	print_opcode_name(cmd->cmnd, cmd->cmd_len);
+-
+-	/* print out all bytes in cdb */
+-	printk(":");
+-	for (k = 0; k < cmd->cmd_len; ++k)
+-		printk(" %02x", cmd->cmnd[k]);
+-	printk("\n");
+-}
+-EXPORT_SYMBOL(scsi_print_command);
+-
+ #ifdef CONFIG_SCSI_CONSTANTS
+ 
+ struct error_info {
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 4d20132..afba995 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -13,10 +13,10 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
++#include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dbg.h>
+ 
+ #define SCSI_LOG_SPOOLSIZE 4096
+-#define SCSI_LOG_BUFSIZE 128
+ 
+ #if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
+ #warning SCSI logging bitmask too large
+@@ -69,6 +69,24 @@ static void scsi_log_release_buffer(char *bufptr)
+ 	preempt_enable();
+ }
+ 
++static size_t scmd_format_header(char *logbuf, size_t logbuf_len,
++				 struct gendisk *disk, int tag)
++{
++	size_t off = 0;
++
++	if (disk)
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 "[%s] ", disk->disk_name);
++
++	if (WARN_ON(off >= logbuf_len))
++		return off;
++
++	if (tag >= 0)
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 "tag#%d ", tag);
++	return off;
++}
++
+ int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
+ 		       const char *name, const char *fmt, ...)
+ {
+@@ -87,9 +105,11 @@ int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
+ 	if (name)
+ 		off += scnprintf(logbuf + off, logbuf_len - off,
+ 				 "[%s] ", name);
+-	va_start(args, fmt);
+-	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+-	va_end(args);
++	if (!WARN_ON(off >= logbuf_len)) {
++		va_start(args, fmt);
++		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
++		va_end(args);
++	}
+ 	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
+ 	scsi_log_release_buffer(logbuf);
+ 	return ret;
+@@ -111,18 +131,152 @@ int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
+ 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
+ 	if (!logbuf)
  		return 0;
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		switch (cdb[1] & 0x1f) {
- 		case SAI_READ_CAPACITY_16:
- 			return 0;
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index ebe62af..8d171ff 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -852,7 +852,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		size = READ_CAP_LEN;
- 		cmd->execute_cmd = sbc_emulate_readcapacity;
- 		break;
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		switch (cmd->t_task_cdb[1] & 0x1f) {
- 		case SAI_READ_CAPACITY_16:
- 			cmd->execute_cmd = sbc_emulate_readcapacity_16;
-diff --git a/drivers/usb/gadget/legacy/tcm_usb_gadget.c b/drivers/usb/gadget/legacy/tcm_usb_gadget.c
-index 6cdb7a5..024f584 100644
---- a/drivers/usb/gadget/legacy/tcm_usb_gadget.c
-+++ b/drivers/usb/gadget/legacy/tcm_usb_gadget.c
-@@ -912,7 +912,7 @@ static int get_cmd_dir(const unsigned char *cdb)
- 	case INQUIRY:
- 	case MODE_SENSE:
- 	case MODE_SENSE_10:
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 	case MAINTENANCE_IN:
- 	case PERSISTENT_RESERVE_IN:
- 	case SECURITY_PROTOCOL_IN:
+-	if (disk)
+-		off += scnprintf(logbuf + off, logbuf_len - off,
+-				 "[%s] ", disk->disk_name);
+-
+-	if (scmd->request->tag >= 0)
+-		off += scnprintf(logbuf + off, logbuf_len - off,
+-				 "tag#%d ", scmd->request->tag);
+-	va_start(args, fmt);
+-	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+-	va_end(args);
++	off = scmd_format_header(logbuf, logbuf_len, disk,
++				 scmd->request->tag);
++	if (off < logbuf_len) {
++		va_start(args, fmt);
++		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
++		va_end(args);
++	}
+ 	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
+ 	scsi_log_release_buffer(logbuf);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(scmd_printk);
++
++static size_t scsi_format_opcode_name(char *buffer, size_t buf_len,
++				      const unsigned char *cdbp)
++{
++	int sa, cdb0;
++	const char *cdb_name = NULL, *sa_name = NULL;
++	size_t off;
++
++	cdb0 = cdbp[0];
++	if (cdb0 == VARIABLE_LENGTH_CMD) {
++		int len = scsi_varlen_cdb_length(cdbp);
++
++		if (len < 10) {
++			off = scnprintf(buffer, buf_len,
++					"short variable length command, len=%d",
++					len);
++			return off;
++		}
++		sa = (cdbp[8] << 8) + cdbp[9];
++	} else
++		sa = cdbp[1] & 0x1f;
++
++	if (!scsi_opcode_sa_name(cdb0, sa, &cdb_name, &sa_name)) {
++		if (cdb_name)
++			off = scnprintf(buffer, buf_len, "%s", cdb_name);
++		else {
++			off = scnprintf(buffer, buf_len, "opcode=0x%x", cdb0);
++			if (WARN_ON(off >= buf_len))
++				return off;
++			if (cdb0 >= VENDOR_SPECIFIC_CDB)
++				off += scnprintf(buffer + off, buf_len - off,
++						 " (vendor)");
++			else if (cdb0 >= 0x60 && cdb0 < 0x7e)
++				off += scnprintf(buffer + off, buf_len - off,
++						 " (reserved)");
++		}
++	} else {
++		if (sa_name)
++			off = scnprintf(buffer, buf_len, "%s", sa_name);
++		else if (cdb_name)
++			off = scnprintf(buffer, buf_len, "%s, sa=0x%x",
++					cdb_name, sa);
++		else
++			off = scnprintf(buffer, buf_len,
++					"opcode=0x%x, sa=0x%x", cdb0, sa);
++	}
++	WARN_ON(off >= buf_len);
++	return off;
++}
++
++size_t __scsi_format_command(char *logbuf, size_t logbuf_len,
++			     const unsigned char *cdb, size_t cdb_len)
++{
++	int len, k;
++	size_t off;
++
++	off = scsi_format_opcode_name(logbuf, logbuf_len, cdb);
++	if (off >= logbuf_len)
++		return off;
++	len = scsi_command_size(cdb);
++	if (cdb_len < len)
++		len = cdb_len;
++	/* print out all bytes in cdb */
++	for (k = 0; k < len; ++k) {
++		if (off > logbuf_len - 3)
++			break;
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 " %02x", cdb[k]);
++	}
++	return off;
++}
++EXPORT_SYMBOL(__scsi_format_command);
++
++void scsi_print_command(struct scsi_cmnd *cmd)
++{
++	struct gendisk *disk = cmd->request->rq_disk;
++	int k;
++	char *logbuf;
++	size_t off, logbuf_len;
++
++	if (!cmd->cmnd)
++		return;
++
++	logbuf = scsi_log_reserve_buffer(&logbuf_len);
++	if (!logbuf)
++		return;
++
++	off = scmd_format_header(logbuf, logbuf_len, disk, cmd->request->tag);
++	if (off >= logbuf_len)
++		goto out_printk;
++	off += scnprintf(logbuf + off, logbuf_len - off, "CDB: ");
++	if (WARN_ON(off >= logbuf_len))
++		goto out_printk;
++
++	off += scsi_format_opcode_name(logbuf + off, logbuf_len - off,
++				       cmd->cmnd);
++	if (off >= logbuf_len)
++		goto out_printk;
++
++	/* print out all bytes in cdb */
++	if (cmd->cmd_len > 16) {
++		/* Print opcode in one line and use separate lines for CDB */
++		off += scnprintf(logbuf + off, logbuf_len - off, "\n");
++		dev_printk(KERN_INFO, &cmd->device->sdev_gendev, logbuf);
++		scsi_log_release_buffer(logbuf);
++		for (k = 0; k < cmd->cmd_len; k += 16) {
++			size_t linelen = min(cmd->cmd_len - k, 16);
++
++			logbuf = scsi_log_reserve_buffer(&logbuf_len);
++			if (!logbuf)
++				break;
++			off = scmd_format_header(logbuf, logbuf_len, disk,
++						 cmd->request->tag);
++			if (!WARN_ON(off > logbuf_len - 58)) {
++				off += scnprintf(logbuf + off, logbuf_len - off,
++						 "CDB[%02x]: ", k);
++				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
++						   16, 1, logbuf + off,
++						   logbuf_len - off, false);
++			}
++			dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
++				   logbuf);
++			scsi_log_release_buffer(logbuf);
++		}
++		return;
++	}
++	if (!WARN_ON(off > logbuf_len - 49)) {
++		off += scnprintf(logbuf + off, logbuf_len - off, " ");
++		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
++				   logbuf + off, logbuf_len - off,
++				   false);
++	}
++out_printk:
++	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, logbuf);
++	scsi_log_release_buffer(logbuf);
++}
++EXPORT_SYMBOL(scsi_print_command);
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index fb929fa..e8deb9c 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -188,6 +188,7 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ 	struct scsi_sense_hdr sshdr;
+ 	int result, err = 0, retries = 0;
+ 	struct request_sense *sense = cgc->sense;
++	char logbuf[SCSI_LOG_BUFSIZE];
+ 
+ 	SDev = cd->device;
+ 
+@@ -257,14 +258,20 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+ 				/* sense: Invalid command operation code */
+ 				err = -EDRIVE_CANT_DO_THIS;
+ #ifdef DEBUG
+-			__scsi_print_command(cgc->cmd, CDROM_PACKET_SIZE);
++			__scsi_format_command(logbuf, sizeof(logbuf),
++					      cgc->cmd, CDROM_PACKET_SIZE);
++			sr_printk(KERN_INFO, cd,
++				  "CDROM (ioctl) invalid command: %s\n",
++				  logbuf);
+ 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
+ #endif
+ 			break;
+ 		default:
++			__scsi_format_command(logbuf, sizeof(logbuf),
++					      cgc->cmd, CDROM_PACKET_SIZE);
+ 			sr_printk(KERN_ERR, cd,
+-				  "CDROM (ioctl) error, command: ");
+-			__scsi_print_command(cgc->cmd, CDROM_PACKET_SIZE);
++				  "CDROM (ioctl) error, command: %s\n",
++				  logbuf);
+ 			scsi_print_sense_hdr(cd->device, cd->cdi.name, &sshdr);
+ 			err = -EIO;
+ 		}
 diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index d17178e..b354c0d 100644
+index 8a7f8ad..d0a66aa 100644
 --- a/include/scsi/scsi.h
 +++ b/include/scsi/scsi.h
-@@ -151,7 +151,7 @@ enum scsi_timeouts {
- #define VERIFY_16	      0x8f
- #define SYNCHRONIZE_CACHE_16  0x91
- #define WRITE_SAME_16	      0x93
--#define SERVICE_ACTION_IN     0x9e
-+#define SERVICE_ACTION_IN_16  0x9e
- /* values for service action in */
- #define	SAI_READ_CAPACITY_16  0x10
- #define SAI_GET_LBA_STATUS    0x12
-diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-index db6c935..079bd10 100644
---- a/include/trace/events/scsi.h
-+++ b/include/trace/events/scsi.h
-@@ -94,7 +94,7 @@
- 		scsi_opcode_name(WRITE_16),			\
- 		scsi_opcode_name(VERIFY_16),			\
- 		scsi_opcode_name(WRITE_SAME_16),		\
--		scsi_opcode_name(SERVICE_ACTION_IN),		\
-+		scsi_opcode_name(SERVICE_ACTION_IN_16),		\
- 		scsi_opcode_name(SAI_READ_CAPACITY_16),		\
- 		scsi_opcode_name(SAI_GET_LBA_STATUS),		\
- 		scsi_opcode_name(MI_REPORT_TARGET_PGS),		\
-diff --git a/include/trace/events/target.h b/include/trace/events/target.h
-index da9cc0f..4540344 100644
---- a/include/trace/events/target.h
-+++ b/include/trace/events/target.h
-@@ -96,7 +96,7 @@
- 		scsi_opcode_name(WRITE_16),			\
- 		scsi_opcode_name(VERIFY_16),			\
- 		scsi_opcode_name(WRITE_SAME_16),		\
--		scsi_opcode_name(SERVICE_ACTION_IN),		\
-+		scsi_opcode_name(SERVICE_ACTION_IN_16),		\
- 		scsi_opcode_name(SAI_READ_CAPACITY_16),		\
- 		scsi_opcode_name(SAI_GET_LBA_STATUS),		\
- 		scsi_opcode_name(MI_REPORT_TARGET_PGS),		\
-diff --git a/tools/lib/traceevent/plugin_scsi.c b/tools/lib/traceevent/plugin_scsi.c
-index eda326f..c699f47 100644
---- a/tools/lib/traceevent/plugin_scsi.c
-+++ b/tools/lib/traceevent/plugin_scsi.c
-@@ -107,7 +107,7 @@ typedef unsigned int u32;
- #define VERIFY_16			0x8f
- #define SYNCHRONIZE_CACHE_16		0x91
- #define WRITE_SAME_16			0x93
--#define SERVICE_ACTION_IN		0x9e
-+#define SERVICE_ACTION_IN_16		0x9e
- /* values for service action in */
- #define	SAI_READ_CAPACITY_16		0x10
- #define SAI_GET_LBA_STATUS		0x12
-@@ -393,7 +393,7 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
- 		return scsi_trace_rw16(p, cdb, len);
- 	case UNMAP:
- 		return scsi_trace_unmap(p, cdb, len);
--	case SERVICE_ACTION_IN:
-+	case SERVICE_ACTION_IN_16:
- 		return scsi_trace_service_action_in(p, cdb, len);
- 	case VARIABLE_LENGTH_CMD:
- 		return scsi_trace_varlen(p, cdb, len);
+@@ -195,6 +195,9 @@ enum scsi_timeouts {
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
+ 
++/* Vendor specific CDBs start here */
++#define VENDOR_SPECIFIC_CDB 0xc0
++
+ /*
+  *	SCSI command lengths
+  */
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index 7982795..c7ed7b8 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -5,8 +5,12 @@ struct scsi_cmnd;
+ struct scsi_device;
+ struct scsi_sense_hdr;
+ 
++#define SCSI_LOG_BUFSIZE 128
++
++extern bool scsi_opcode_sa_name(int, int, const char **, const char **);
+ extern void scsi_print_command(struct scsi_cmnd *);
+-extern void __scsi_print_command(const unsigned char *, size_t);
++extern size_t __scsi_format_command(char *, size_t,
++				   const unsigned char *, size_t);
+ extern void scsi_show_extd_sense(const struct scsi_device *, const char *,
+ 				 unsigned char, unsigned char);
+ extern void scsi_show_sense_hdr(const struct scsi_device *, const char *,
 -- 
 1.8.5.2
 
