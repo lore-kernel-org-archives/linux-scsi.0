@@ -1,209 +1,359 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
 Subject: RE: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
  for internal shared functions using
-Date: Mon, 17 Nov 2014 19:46:34 +0800
-Message-ID: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com>
+Date: Mon, 17 Nov 2014 17:21:55 +0530
+Message-ID: <1085092fd0c2eadae3a0f8de3ee09b95@mail.gmail.com>
+References: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:52432 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbaKQLqk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Nov 2014 06:46:40 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
 Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Ck9LLCBJIHdpbGwgc2VuZCBwYXRjaCB2MiBmb3IgaXQuCgpJIHNlbnQgdGhpcyBwYXRjaCBiYXNl
-ZCBvbiBMaW51eCBuZXh0IHRyZWUsIHBsZWFzZSB0ZWxsIG1lIHRoZSB0cmVlCmxvY2F0aW9uIChn
-aXQgYWRkcmVzcykgd2hpY2ggSSBzaGFsbCBiYXNlIG9uIGZvciBzZW5kaW5nIHBhdGNoIHYyLgoK
-VGhhbmtzLgoKU2VuZCBmcm9tIExlbm92byBBNzg4dC4KClN1bWl0IFNheGVuYSA8c3VtaXQuc2F4
-ZW5hQGF2YWdvdGVjaC5jb20+IHdyb3RlOgoKPj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+
-PkZyb206IENoZW4gR2FuZyBbbWFpbHRvOmdhbmcuY2hlbi41aTVqQGdtYWlsLmNvbV0KPj5TZW50
-OiBTdW5kYXksIE5vdmVtYmVyIDA5LCAyMDE0IDM6NDcgUE0KPj5UbzogbWVnYXJhaWRsaW51eEBs
-c2kuY29tOyBKQm90dG9tbGV5QHBhcmFsbGVscy5jb20KPj5DYzogbGludXgtc2NzaUB2Z2VyLmtl
-cm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcKPj5TdWJqZWN0OiBbUEFUQ0hd
-IGRyaXZlcnM6IHNjc2k6IG1lZ2FyYWlkOiBBZGQgIm1lZ2FyYWlkX3Nhc19pbnRlcm5hbC5oIgo+
-Zm9yCj4+aW50ZXJuYWwgc2hhcmVkIGZ1bmN0aW9ucyB1c2luZwo+Pgo+PkZvciBzaGFyZWQgaW5s
-aW5lIGZ1bmN0aW9ucyBjcm9zc2VkIHNvdXJjZSBmaWxlcywgYmV0dGVyIHRvIGxldCBpdCBhcwo+
-InN0YXRpYyBpbmxpbmUiCj4+aW4gYSBoZWFkZXIgZmlsZS4gRm9yIGV4dGVybiBmdW5jdGlvbnMs
-IGJldHRlciB0byBkZWNsYXJlIHRoZW0gaW4gaGVhZGVyCj5maWxlLgo+Pgo+PkZvciB0aGUgbGF0
-ZXN0IHVwc3RyZWFtIGdjYy9iaW51dGlsZXMgKGdjYyA1IHdpdGggbGQgMi4yNS41MSksIGl0IHdp
-bGwKPmNhdXNlCj4+YnVpbGRpbmcgYnJlYWsgKGFsdGhvdWdoIGl0IG1pZ2h0IGJlIHRoZSBnY2Mn
-cyBvciBsZCdzIGlzc3VlKSwgdGhlCj5yZWxhdGVkIGVycm9yCj4+KHdpdGggYWxsbW9kY29uZmln
-IHVuZGVyIHRpbGUpOgo+Pgo+PiAgICBNT0RQT1NUIDQwMDIgbW9kdWxlcwo+PiAgRVJST1I6ICJt
-ZWdhc2FzX3JldHVybl9jbWQiIFtkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmtv
-XQo+PnVuZGVmaW5lZCEKPj4gIEVSUk9SOiAibWVnYXNhc19pc19sZGlvIiBbZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5rb10KPj51bmRlZmluZWQhCj4+Cj4+Cj4+U2lnbmVkLW9m
-Zi1ieTogQ2hlbiBHYW5nIDxnYW5nLmNoZW4uNWk1akBnbWFpbC5jb20+Cj4+LS0tCj4+IGRyaXZl
-cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jICAgICB8ICA2NSArLS0tLS0tLS0t
-LS0tLS0tLQo+PiBkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jICAg
-fCAgMzggKy0tLS0tLS0tLQo+PiBkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2lu
-dGVybmFsLmggfCAxMDAKPj4rKysrKysrKysrKysrKysrKysrKysrKysrKwo+PiAzIGZpbGVzIGNo
-YW5nZWQsIDEwMiBpbnNlcnRpb25zKCspLCAxMDEgZGVsZXRpb25zKC0pICBjcmVhdGUgbW9kZSAx
-MDA2NDQKPj5kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2ludGVybmFsLmgKPj4K
-Pj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMK
-Pj5iL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCj4+aW5kZXggZjZh
-NjlhMy4uNGE3MWMwNCAxMDA2NDQKPj4tLS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
-aWRfc2FzX2Jhc2UuYwo+PisrKyBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNf
-YmFzZS5jCj4+QEAgLTU3LDYgKzU3LDcgQEAKPj4gI2luY2x1ZGUgPHNjc2kvc2NzaV90Y3EuaD4K
-Pj4gI2luY2x1ZGUgIm1lZ2FyYWlkX3Nhc19mdXNpb24uaCIKPj4gI2luY2x1ZGUgIm1lZ2FyYWlk
-X3Nhcy5oIgo+PisjaW5jbHVkZSAibWVnYXJhaWRfc2FzX2ludGVybmFsLmgiCj4+Cj4+IC8qCj4+
-ICAqIE51bWJlciBvZiBzZWN0b3JzIHBlciBJTyBjb21tYW5kCj4+QEAgLTk4LDcgKzk5LDYgQEAg
-TU9EVUxFX1ZFUlNJT04oTUVHQVNBU19WRVJTSU9OKTsKPj5NT0RVTEVfQVVUSE9SKCJtZWdhcmFp
-ZGxpbnV4QGxzaS5jb20iKTsKPj4gTU9EVUxFX0RFU0NSSVBUSU9OKCJMU0kgTWVnYVJBSUQgU0FT
-IERyaXZlciIpOwo+Pgo+Pi1pbnQgbWVnYXNhc190cmFuc2l0aW9uX3RvX3JlYWR5KHN0cnVjdCBt
-ZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgaW50Cj4+b2NyKTsgIHN0YXRpYyBpbnQgbWVnYXNh
-c19nZXRfcGRfbGlzdChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOwo+PnN0YXRp
-YyBpbnQgbWVnYXNhc19sZF9saXN0X3F1ZXJ5KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0
-YW5jZSwKPj4gCQkJCSB1OCBxdWVyeV90eXBlKTsKPj5AQCAtMTU1LDkgKzE1NSw2IEBAIHN0YXRp
-YyB1MzIgc3VwcG9ydF9kZXZpY2VfY2hhbmdlOwo+PiAvKiBkZWZpbmUgbG9jayBmb3IgYWVuIHBv
-bGwgKi8KPj4gc3BpbmxvY2tfdCBwb2xsX2Flbl9sb2NrOwo+Pgo+Pi12b2lkCj4+LW1lZ2FzYXNf
-Y29tcGxldGVfY21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3RydWN0Cj4+
-bWVnYXNhc19jbWQgKmNtZCwKPj4tCQkgICAgIHU4IGFsdF9zdGF0dXMpOwo+PiBzdGF0aWMgdTMy
-Cj4+IG1lZ2FzYXNfcmVhZF9md19zdGF0dXNfcmVnX2dlbjIoc3RydWN0IG1lZ2FzYXNfcmVnaXN0
-ZXJfc2V0IF9faW9tZW0KPj4qcmVncyk7ICBzdGF0aWMgaW50IEBAIC0xNzAsMjYgKzE2Nyw4IEBA
-IHUzMgo+Pm1lZ2FzYXNfYnVpbGRfYW5kX2lzc3VlX2NtZChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5j
-ZSAqaW5zdGFuY2UsCj4+IAkJCSAgICBzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKTsKPj4gc3RhdGlj
-IHZvaWQgbWVnYXNhc19jb21wbGV0ZV9jbWRfZHBjKHVuc2lnbmVkIGxvbmcgaW5zdGFuY2VfYWRk
-cik7IC12b2lkCj4+LW1lZ2FzYXNfcmVsZWFzZV9mdXNpb24oc3RydWN0IG1lZ2FzYXNfaW5zdGFu
-Y2UgKmluc3RhbmNlKTsgLWludCAtCj4+bWVnYXNhc19pb2NfaW5pdF9mdXNpb24oc3RydWN0IG1l
-Z2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKTsgLXZvaWQgLQo+Pm1lZ2FzYXNfZnJlZV9jbWRzX2Z1
-c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOwo+Pi11OAo+Pi1tZWdhc2Fz
-X2dldF9tYXBfaW5mbyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOyAtaW50IC0K
-Pj5tZWdhc2FzX3N5bmNfbWFwX2luZm8oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNl
-KTsgLWludCAtCj4+d2FpdF9hbmRfcG9sbChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFu
-Y2UsIHN0cnVjdCBtZWdhc2FzX2NtZAo+PipjbWQsCj4+LQlpbnQgc2Vjb25kcyk7Cj4+LXZvaWQg
-bWVnYXNhc19yZXNldF9yZXBseV9kZXNjKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5j
-ZSk7IC1pbnQKPj5tZWdhc2FzX3Jlc2V0X2Z1c2lvbihzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCwg
-aW50IGlvdGltZW91dCk7IC12b2lkCj4+bWVnYXNhc19mdXNpb25fb2NyX3dxKHN0cnVjdCB3b3Jr
-X3N0cnVjdCAqd29yayk7ICBzdGF0aWMgaW50Cj4+bWVnYXNhc19nZXRfbGRfdmZfYWZmaWxpYXRp
-b24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLAo+PiAJCQkJCSBpbnQgaW5pdGlh
-bCk7Cj4+LWludCBtZWdhc2FzX2NoZWNrX21waW9fcGF0aHMoc3RydWN0IG1lZ2FzYXNfaW5zdGFu
-Y2UgKmluc3RhbmNlLAo+Pi0JCQkgICAgIHN0cnVjdCBzY3NpX2NtbmQgKnNjbWQpOwo+Pgo+PiB2
-b2lkCj4+IG1lZ2FzYXNfaXNzdWVfZGNtZChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFu
-Y2UsIHN0cnVjdAo+Pm1lZ2FzYXNfY21kICpjbWQpIEBAIC0yNTgsMjIgKzIzNyw2IEBAIF9fbWVn
-YXNhc19yZXR1cm5fY21kKHN0cnVjdAo+Pm1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLCBzdHJ1
-Y3QgbWVnYXNhc19jbWQgKmNtZCkgIH0KPj4KPj4gLyoqCj4+LSAqIG1lZ2FzYXNfcmV0dXJuX2Nt
-ZCAtCVJldHVybiBhIGNtZCB0byBmcmVlIGNvbW1hbmQgcG9vbAo+Pi0gKiBAaW5zdGFuY2U6CQlB
-ZGFwdGVyIHNvZnQgc3RhdGUKPj4tICogQGNtZDoJCUNvbW1hbmQgcGFja2V0IHRvIGJlIHJldHVy
-bmVkIHRvIGZyZWUgY29tbWFuZAo+PnBvb2wKPj4tICovCj4+LWlubGluZSB2b2lkCj4+LW1lZ2Fz
-YXNfcmV0dXJuX2NtZChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHN0cnVjdAo+
-Pm1lZ2FzYXNfY21kICpjbWQpIC17Cj4+LQl1bnNpZ25lZCBsb25nIGZsYWdzOwo+Pi0KPj4tCXNw
-aW5fbG9ja19pcnFzYXZlKCZpbnN0YW5jZS0+bWZpX3Bvb2xfbG9jaywgZmxhZ3MpOwo+Pi0JX19t
-ZWdhc2FzX3JldHVybl9jbWQoaW5zdGFuY2UsIGNtZCk7Cj4+LQlzcGluX3VubG9ja19pcnFyZXN0
-b3JlKCZpbnN0YW5jZS0+bWZpX3Bvb2xfbG9jaywgZmxhZ3MpOwo+Pi19Cj4+LQo+Pi0KPj4tLyoq
-Cj4+ICoJVGhlIGZvbGxvd2luZyBmdW5jdGlvbnMgYXJlIGRlZmluZWQgZm9yIHhzY2FsZQo+PiAq
-CShkZXZpY2VpZCA6IDEwNjRSLCBQRVJDNSkgY29udHJvbGxlcnMKPj4gKi8KPj5AQCAtMTQxNywz
-MiArMTM4MCw2IEBAIG1lZ2FzYXNfYnVpbGRfbGRpbyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQo+
-PippbnN0YW5jZSwgc3RydWN0IHNjc2lfY21uZCAqc2NwLAo+PiAJcmV0dXJuIGNtZC0+ZnJhbWVf
-Y291bnQ7Cj4+IH0KPj4KPj4tLyoqCj4+LSAqIG1lZ2FzYXNfaXNfbGRpbyAtCQlDaGVja3MgaWYg
-dGhlIGNtZCBpcyBmb3IgbG9naWNhbCBkcml2ZQo+Pi0gKiBAc2NtZDoJCQlTQ1NJIGNvbW1hbmQK
-Pj4tICoKPj4tICogQ2FsbGVkIGJ5IG1lZ2FzYXNfcXVldWVfY29tbWFuZCB0byBmaW5kIG91dCBp
-ZiB0aGUgY29tbWFuZCB0byBiZQo+PnF1ZXVlZAo+Pi0gKiBpcyBhIGxvZ2ljYWwgZHJpdmUgY29t
-bWFuZAo+Pi0gKi8KPj4taW5saW5lIGludCBtZWdhc2FzX2lzX2xkaW8oc3RydWN0IHNjc2lfY21u
-ZCAqY21kKSAtewo+Pi0JaWYgKCFNRUdBU0FTX0lTX0xPR0lDQUwoY21kKSkKPj4tCQlyZXR1cm4g
-MDsKPj4tCXN3aXRjaCAoY21kLT5jbW5kWzBdKSB7Cj4+LQljYXNlIFJFQURfMTA6Cj4+LQljYXNl
-IFdSSVRFXzEwOgo+Pi0JY2FzZSBSRUFEXzEyOgo+Pi0JY2FzZSBXUklURV8xMjoKPj4tCWNhc2Ug
-UkVBRF82Ogo+Pi0JY2FzZSBXUklURV82Ogo+Pi0JY2FzZSBSRUFEXzE2Ogo+Pi0JY2FzZSBXUklU
-RV8xNjoKPj4tCQlyZXR1cm4gMTsKPj4tCWRlZmF1bHQ6Cj4+LQkJcmV0dXJuIDA7Cj4+LQl9Cj4+
-LX0KPj4tCj4+ICAvKioKPj4gICogbWVnYXNhc19kdW1wX3BlbmRpbmdfZnJhbWVzIC0JRHVtcHMg
-dGhlIGZyYW1lIGFkZHJlc3Mgb2YgYWxsCj4+cGVuZGluZyBjbWRzCj4+ICAqICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgCWluIEZXCj4+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMKPj5iL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXNfZnVzaW9uLmMKPj5pbmRleCBmMzdlZWQ2Li5jMmI4NzgyIDEwMDY0NAo+Pi0tLSBh
-L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMKPj4rKysgYi9kcml2
-ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jCj4+QEAgLTU0LDQzICs1NCw3
-IEBACj4+Cj4+ICNpbmNsdWRlICJtZWdhcmFpZF9zYXNfZnVzaW9uLmgiCj4+ICNpbmNsdWRlICJt
-ZWdhcmFpZF9zYXMuaCIKPj4tCj4+LWV4dGVybiB2b2lkIG1lZ2FzYXNfZnJlZV9jbWRzKHN0cnVj
-dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSk7IC0KPj5leHRlcm4gc3RydWN0IG1lZ2FzYXNf
-Y21kICptZWdhc2FzX2dldF9jbWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UKPj4tCQkJCQkgICAq
-aW5zdGFuY2UpOwo+Pi1leHRlcm4gdm9pZAo+Pi1tZWdhc2FzX2NvbXBsZXRlX2NtZChzdHJ1Y3Qg
-bWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsCj4+LQkJICAgICBzdHJ1Y3QgbWVnYXNhc19jbWQg
-KmNtZCwgdTggYWx0X3N0YXR1cyk7Cj4+LWludCBtZWdhc2FzX2lzX2xkaW8oc3RydWN0IHNjc2lf
-Y21uZCAqY21kKTsgLWludCAtd2FpdF9hbmRfcG9sbChzdHJ1Y3QKPj5tZWdhc2FzX2luc3RhbmNl
-ICppbnN0YW5jZSwgc3RydWN0IG1lZ2FzYXNfY21kICpjbWQsCj4+LQkgICAgICBpbnQgc2Vjb25k
-cyk7Cj4+LQo+Pi12b2lkCj4+LW1lZ2FzYXNfcmV0dXJuX2NtZChzdHJ1Y3QgbWVnYXNhc19pbnN0
-YW5jZSAqaW5zdGFuY2UsIHN0cnVjdAo+Pm1lZ2FzYXNfY21kICpjbWQpOyAtaW50IG1lZ2FzYXNf
-YWxsb2NfY21kcyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZQo+PippbnN0YW5jZSk7IC1pbnQgLW1l
-Z2FzYXNfY2xlYXJfaW50cl9mdXNpb24oc3RydWN0IG1lZ2FzYXNfcmVnaXN0ZXJfc2V0Cj4+X19p
-b21lbSAqcmVncyk7IC1pbnQgLW1lZ2FzYXNfaXNzdWVfcG9sbGVkKHN0cnVjdCBtZWdhc2FzX2lu
-c3RhbmNlCj4+Kmluc3RhbmNlLAo+Pi0JCSAgICAgc3RydWN0IG1lZ2FzYXNfY21kICpjbWQpOwo+
-Pi12b2lkCj4+LW1lZ2FzYXNfY2hlY2tfYW5kX3Jlc3RvcmVfcXVldWVfZGVwdGgoc3RydWN0IG1l
-Z2FzYXNfaW5zdGFuY2UKPj4qaW5zdGFuY2UpOwo+Pi0KPj4taW50IG1lZ2FzYXNfdHJhbnNpdGlv
-bl90b19yZWFkeShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIGludAo+Pm9jcik7
-IC12b2lkIG1lZ2FyYWlkX3Nhc19raWxsX2hiYShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5z
-dGFuY2UpOwo+Pi0KPj4tZXh0ZXJuIHUzMiBtZWdhc2FzX2RiZ19sdmw7Cj4+LXZvaWQgbWVnYXNh
-c19zcmlvdl9oZWFydGJlYXRfaGFuZGxlcih1bnNpZ25lZCBsb25nIGluc3RhbmNlX2FkZHIpOyAt
-aW50Cj4+bWVnYXNhc19zcmlvdl9zdGFydF9oZWFydGJlYXQoc3RydWN0IG1lZ2FzYXNfaW5zdGFu
-Y2UgKmluc3RhbmNlLAo+Pi0JCQkJICBpbnQgaW5pdGlhbCk7Cj4+LXZvaWQgbWVnYXNhc19zdGFy
-dF90aW1lcihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsCj4+LQkJCXN0cnVjdCB0
-aW1lcl9saXN0ICp0aW1lciwKPj4tCQkJIHZvaWQgKmZuLCB1bnNpZ25lZCBsb25nIGludGVydmFs
-KTsKPj4tZXh0ZXJuIHN0cnVjdCBtZWdhc2FzX21nbXRfaW5mbyBtZWdhc2FzX21nbXRfaW5mbzsg
-LWV4dGVybiBpbnQKPj5yZXNldHdhaXR0aW1lOwo+Pi0KPj4tCj4+KyNpbmNsdWRlICJtZWdhcmFp
-ZF9zYXNfaW50ZXJuYWwuaCIKPj4KPj4gLyoqCj4+ICAqIG1lZ2FzYXNfZW5hYmxlX2ludHJfZnVz
-aW9uIC0JRW5hYmxlcyBpbnRlcnJ1cHRzCj4+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXNfaW50ZXJuYWwuaAo+PmIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FyYWlkX3Nhc19pbnRlcm5hbC5oCj4+bmV3IGZpbGUgbW9kZSAxMDA2NDQKPj5pbmRleCAwMDAw
-MDAwLi5iMmIwYTU1Cj4+LS0tIC9kZXYvbnVsbAo+PisrKyBiL2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfaW50ZXJuYWwuaAo+PkBAIC0wLDAgKzEsMTAwIEBACj4+KyNpZm5kZWYg
-TFNJX01FR0FSQUlEX1NBU19JTlRFUk5BTF9ICj4+KyNkZWZpbmUgTFNJX01FR0FSQUlEX1NBU19J
-TlRFUk5BTF9ICj4+Kwo+PisvKgo+PisgKiBGcm9tIGJhc2UuCj4+KyAqLwo+PisKPj4rZXh0ZXJu
-IHZvaWQgbWVnYXNhc19mcmVlX2NtZHMoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNl
-KTsKPj4rZXh0ZXJuIHN0cnVjdCBtZWdhc2FzX2NtZCAqbWVnYXNhc19nZXRfY21kKHN0cnVjdCBt
-ZWdhc2FzX2luc3RhbmNlCj4+KwkJCQkJICAgKmluc3RhbmNlKTsKPj4rCj4+K2V4dGVybiB2b2lk
-Cj4+K21lZ2FzYXNfY29tcGxldGVfY21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5j
-ZSwKPj4rCQkgICAgIHN0cnVjdCBtZWdhc2FzX2NtZCAqY21kLCB1OCBhbHRfc3RhdHVzKTsKPj4r
-LyoqCj4+KyAqIG1lZ2FzYXNfaXNfbGRpbyAtCQlDaGVja3MgaWYgdGhlIGNtZCBpcyBmb3IgbG9n
-aWNhbCBkcml2ZQo+PisgKiBAc2NtZDoJCQlTQ1NJIGNvbW1hbmQKPj4rICoKPj4rICogQ2FsbGVk
-IGJ5IG1lZ2FzYXNfcXVldWVfY29tbWFuZCB0byBmaW5kIG91dCBpZiB0aGUgY29tbWFuZCB0byBi
-ZQo+PitxdWV1ZWQKPj4rICogaXMgYSBsb2dpY2FsIGRyaXZlIGNvbW1hbmQKPj4rICovCj4+K3N0
-YXRpYyBpbmxpbmUgaW50IG1lZ2FzYXNfaXNfbGRpbyhzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQpIHsK
-Pj4rCWlmICghTUVHQVNBU19JU19MT0dJQ0FMKGNtZCkpCj4+KwkJcmV0dXJuIDA7Cj4+Kwlzd2l0
-Y2ggKGNtZC0+Y21uZFswXSkgewo+PisJY2FzZSBSRUFEXzEwOgo+PisJY2FzZSBXUklURV8xMDoK
-Pj4rCWNhc2UgUkVBRF8xMjoKPj4rCWNhc2UgV1JJVEVfMTI6Cj4+KwljYXNlIFJFQURfNjoKPj4r
-CWNhc2UgV1JJVEVfNjoKPj4rCWNhc2UgUkVBRF8xNjoKPj4rCWNhc2UgV1JJVEVfMTY6Cj4+KwkJ
-cmV0dXJuIDE7Cj4+KwlkZWZhdWx0Ogo+PisJCXJldHVybiAwOwo+PisJfQo+Pit9Cj4+Kwo+Pisv
-KioKPj4rICogbWVnYXNhc19yZXR1cm5fY21kIC0JUmV0dXJuIGEgY21kIHRvIGZyZWUgY29tbWFu
-ZCBwb29sCj4+KyAqIEBpbnN0YW5jZToJCUFkYXB0ZXIgc29mdCBzdGF0ZQo+PisgKiBAY21kOgkJ
-Q29tbWFuZCBwYWNrZXQgdG8gYmUgcmV0dXJuZWQgdG8gZnJlZSBjb21tYW5kCj4+cG9vbAo+Pisg
-Ki8KPj4rc3RhdGljIGlubGluZSB2b2lkCj4+K21lZ2FzYXNfcmV0dXJuX2NtZChzdHJ1Y3QgbWVn
-YXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHN0cnVjdAo+PittZWdhc2FzX2NtZCAqY21kKSB7Cj4+
-Kwl1bnNpZ25lZCBsb25nIGZsYWdzOwo+PisKPj4rCXNwaW5fbG9ja19pcnFzYXZlKCZpbnN0YW5j
-ZS0+bWZpX3Bvb2xfbG9jaywgZmxhZ3MpOwo+PisJX19tZWdhc2FzX3JldHVybl9jbWQoaW5zdGFu
-Y2UsIGNtZCk7Cj4+KwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZpbnN0YW5jZS0+bWZpX3Bvb2xf
-bG9jaywgZmxhZ3MpOyB9Cj4+Kwo+PitpbnQgbWVnYXNhc19hbGxvY19jbWRzKHN0cnVjdCBtZWdh
-c2FzX2luc3RhbmNlICppbnN0YW5jZSk7Cj4+Kwo+PitpbnQKPj4rbWVnYXNhc19pc3N1ZV9wb2xs
-ZWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLAo+PisJCSAgICAgc3RydWN0IG1l
-Z2FzYXNfY21kICpjbWQpOwo+Pit2b2lkCj4+K21lZ2FzYXNfY2hlY2tfYW5kX3Jlc3RvcmVfcXVl
-dWVfZGVwdGgoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UKPj4rKmluc3RhbmNlKTsKPj4rCj4+K2lu
-dCBtZWdhc2FzX3RyYW5zaXRpb25fdG9fcmVhZHkoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmlu
-c3RhbmNlLCBpbnQKPj4rb2NyKTsgdm9pZCBtZWdhcmFpZF9zYXNfa2lsbF9oYmEoc3RydWN0IG1l
-Z2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKTsKPj4rCj4+K2V4dGVybiB1MzIgbWVnYXNhc19kYmdf
-bHZsOwo+Pit2b2lkIG1lZ2FzYXNfc3Jpb3ZfaGVhcnRiZWF0X2hhbmRsZXIodW5zaWduZWQgbG9u
-ZyBpbnN0YW5jZV9hZGRyKTsgaW50Cj4+K21lZ2FzYXNfc3Jpb3Zfc3RhcnRfaGVhcnRiZWF0KHN0
-cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwKPj4rCQkJCSAgaW50IGluaXRpYWwpOwo+
-Pit2b2lkIG1lZ2FzYXNfc3RhcnRfdGltZXIoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3Rh
-bmNlLAo+PisJCQlzdHJ1Y3QgdGltZXJfbGlzdCAqdGltZXIsCj4+KwkJCSB2b2lkICpmbiwgdW5z
-aWduZWQgbG9uZyBpbnRlcnZhbCk7Cj4+K2V4dGVybiBzdHJ1Y3QgbWVnYXNhc19tZ210X2luZm8g
-bWVnYXNhc19tZ210X2luZm87IGV4dGVybiBpbnQKPj4rcmVzZXR3YWl0dGltZTsKPj4rCj4+Ky8q
-Cj4+KyAqIEZyb20gZnVzaW9uLgo+PisgKi8KPj4rCj4+K2ludCBtZWdhc2FzX2NoZWNrX21waW9f
-cGF0aHMoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLAo+PisJCQkgICAgIHN0cnVj
-dCBzY3NpX2NtbmQgKnNjbWQpOwo+PitpbnQKPj4rd2FpdF9hbmRfcG9sbChzdHJ1Y3QgbWVnYXNh
-c19pbnN0YW5jZSAqaW5zdGFuY2UsIHN0cnVjdCBtZWdhc2FzX2NtZAo+PipjbWQsCj4+KwkgICAg
-ICBpbnQgc2Vjb25kcyk7Cj4+K3ZvaWQKPj4rbWVnYXNhc19yZWxlYXNlX2Z1c2lvbihzdHJ1Y3Qg
-bWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOyBpbnQKPj4rbWVnYXNhc19pb2NfaW5pdF9mdXNp
-b24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKTsgdm9pZAo+PittZWdhc2FzX2Zy
-ZWVfY21kc19mdXNpb24oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlKTsKPj4rdTgK
-Pj4rbWVnYXNhc19nZXRfbWFwX2luZm8oc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNl
-KTsgaW50Cj4+K21lZ2FzYXNfc3luY19tYXBfaW5mbyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAq
-aW5zdGFuY2UpOyB2b2lkCj4+K21lZ2FzYXNfcmVzZXRfcmVwbHlfZGVzYyhzdHJ1Y3QgbWVnYXNh
-c19pbnN0YW5jZSAqaW5zdGFuY2UpOyBpbnQKPj4rbWVnYXNhc19yZXNldF9mdXNpb24oc3RydWN0
-IFNjc2lfSG9zdCAqc2hvc3QsIGludCBpb3RpbWVvdXQpOyB2b2lkCj4+K21lZ2FzYXNfZnVzaW9u
-X29jcl93cShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspOwo+PisKPj4rI2VuZGlmIC8qIExTSV9N
-RUdBUkFJRF9TQVNfSU5URVJOQUxfSCAqLwo+Cj5QYXRjaCBsb29rcyBnb29kIHRvIG1lLiBDYW4g
-eW91IHBsZWFzZSByZWJhc2UgdGhpcyBwYXRjaCBvbiB0b3Agb2YgbGF0ZXN0Cj5wYXRjaCBzZXJp
-ZXMgc2VudCBieSBtZT8KPj4tLQo+PjEuOS4zCg==
+>-----Original Message-----
+>From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
+>Sent: Monday, November 17, 2014 5:17 PM
+>To: Sumit Saxena
+>Cc: megaraidlinux@lsi.com; linux-scsi@vger.kernel.org; linux-
+>kernel@vger.kernel.org
+>Subject: RE: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+>for internal shared functions using
+>
+>
+>OK, I will send patch v2 for it.
+>
+>I sent this patch based on Linux next tree, please tell me the tree
+>location (git
+>address) which I shall base on for sending patch v2.
 
+I posted the patch series today, once the patches make it to scsi-next tree,
+I will let you know.
+
+Thanks
+Sumit
+>
+>Thanks.
+>
+>Send from Lenovo A788t.
+>
+>Sumit Saxena <sumit.saxena@avagotech.com> wrote:
+>
+>>>-----Original Message-----
+>>>From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
+>>>Sent: Sunday, November 09, 2014 3:47 PM
+>>>To: megaraidlinux@lsi.com; JBottomley@parallels.com
+>>>Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+>>>Subject: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+>>for
+>>>internal shared functions using
+>>>
+>>>For shared inline functions crossed source files, better to let it as
+>>"static inline"
+>>>in a header file. For extern functions, better to declare them in
+>>>header
+>>file.
+>>>
+>>>For the latest upstream gcc/binutiles (gcc 5 with ld 2.25.51), it will
+>>cause
+>>>building break (although it might be the gcc's or ld's issue), the
+>>related error
+>>>(with allmodconfig under tile):
+>>>
+>>>    MODPOST 4002 modules
+>>>  ERROR: "megasas_return_cmd" [drivers/scsi/megaraid/megaraid_sas.ko]
+>>>undefined!
+>>>  ERROR: "megasas_is_ldio" [drivers/scsi/megaraid/megaraid_sas.ko]
+>>>undefined!
+>>>
+>>>
+>>>Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+>>>---
+>>> drivers/scsi/megaraid/megaraid_sas_base.c     |  65 +----------------
+>>> drivers/scsi/megaraid/megaraid_sas_fusion.c   |  38 +---------
+>>> drivers/scsi/megaraid/megaraid_sas_internal.h | 100
+>>>++++++++++++++++++++++++++
+>>> 3 files changed, 102 insertions(+), 101 deletions(-)  create mode
+>>>100644 drivers/scsi/megaraid/megaraid_sas_internal.h
+>>>
+>>>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>>index f6a69a3..4a71c04 100644
+>>>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>>>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>>>@@ -57,6 +57,7 @@
+>>> #include <scsi/scsi_tcq.h>
+>>> #include "megaraid_sas_fusion.h"
+>>> #include "megaraid_sas.h"
+>>>+#include "megaraid_sas_internal.h"
+>>>
+>>> /*
+>>>  * Number of sectors per IO command
+>>>@@ -98,7 +99,6 @@ MODULE_VERSION(MEGASAS_VERSION);
+>>>MODULE_AUTHOR("megaraidlinux@lsi.com");
+>>> MODULE_DESCRIPTION("LSI MegaRAID SAS Driver");
+>>>
+>>>-int megasas_transition_to_ready(struct megasas_instance *instance,
+>>>int ocr);  static int megasas_get_pd_list(struct megasas_instance
+>>>*instance); static int megasas_ld_list_query(struct megasas_instance
+>*instance,
+>>> 				 u8 query_type);
+>>>@@ -155,9 +155,6 @@ static u32 support_device_change;
+>>> /* define lock for aen poll */
+>>> spinlock_t poll_aen_lock;
+>>>
+>>>-void
+>>>-megasas_complete_cmd(struct megasas_instance *instance, struct
+>>>megasas_cmd *cmd,
+>>>-		     u8 alt_status);
+>>> static u32
+>>> megasas_read_fw_status_reg_gen2(struct megasas_register_set
+>__iomem
+>>>*regs);  static int @@ -170,26 +167,8 @@ u32
+>>>megasas_build_and_issue_cmd(struct megasas_instance *instance,
+>>> 			    struct scsi_cmnd *scmd);
+>>> static void megasas_complete_cmd_dpc(unsigned long instance_addr);
+>>>-void -megasas_release_fusion(struct megasas_instance *instance); -int
+>>>- megasas_ioc_init_fusion(struct megasas_instance *instance); -void -
+>>>megasas_free_cmds_fusion(struct megasas_instance *instance);
+>>>-u8
+>>>-megasas_get_map_info(struct megasas_instance *instance); -int -
+>>>megasas_sync_map_info(struct megasas_instance *instance); -int -
+>>>wait_and_poll(struct megasas_instance *instance, struct megasas_cmd
+>>>*cmd,
+>>>-	int seconds);
+>>>-void megasas_reset_reply_desc(struct megasas_instance *instance);
+>>>-int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout);
+>>>-void megasas_fusion_ocr_wq(struct work_struct *work);  static int
+>>>megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
+>>> 					 int initial);
+>>>-int megasas_check_mpio_paths(struct megasas_instance *instance,
+>>>-			     struct scsi_cmnd *scmd);
+>>>
+>>> void
+>>> megasas_issue_dcmd(struct megasas_instance *instance, struct
+>>>megasas_cmd *cmd) @@ -258,22 +237,6 @@
+>__megasas_return_cmd(struct
+>>>megasas_instance *instance, struct megasas_cmd *cmd)  }
+>>>
+>>> /**
+>>>- * megasas_return_cmd -	Return a cmd to free command pool
+>>>- * @instance:		Adapter soft state
+>>>- * @cmd:		Command packet to be returned to free command
+>>>pool
+>>>- */
+>>>-inline void
+>>>-megasas_return_cmd(struct megasas_instance *instance, struct
+>>>megasas_cmd *cmd) -{
+>>>-	unsigned long flags;
+>>>-
+>>>-	spin_lock_irqsave(&instance->mfi_pool_lock, flags);
+>>>-	__megasas_return_cmd(instance, cmd);
+>>>-	spin_unlock_irqrestore(&instance->mfi_pool_lock, flags);
+>>>-}
+>>>-
+>>>-
+>>>-/**
+>>> *	The following functions are defined for xscale
+>>> *	(deviceid : 1064R, PERC5) controllers
+>>> */
+>>>@@ -1417,32 +1380,6 @@ megasas_build_ldio(struct megasas_instance
+>>>*instance, struct scsi_cmnd *scp,
+>>> 	return cmd->frame_count;
+>>> }
+>>>
+>>>-/**
+>>>- * megasas_is_ldio -		Checks if the cmd is for logical drive
+>>>- * @scmd:			SCSI command
+>>>- *
+>>>- * Called by megasas_queue_command to find out if the command to be
+>>>queued
+>>>- * is a logical drive command
+>>>- */
+>>>-inline int megasas_is_ldio(struct scsi_cmnd *cmd) -{
+>>>-	if (!MEGASAS_IS_LOGICAL(cmd))
+>>>-		return 0;
+>>>-	switch (cmd->cmnd[0]) {
+>>>-	case READ_10:
+>>>-	case WRITE_10:
+>>>-	case READ_12:
+>>>-	case WRITE_12:
+>>>-	case READ_6:
+>>>-	case WRITE_6:
+>>>-	case READ_16:
+>>>-	case WRITE_16:
+>>>-		return 1;
+>>>-	default:
+>>>-		return 0;
+>>>-	}
+>>>-}
+>>>-
+>>>  /**
+>>>  * megasas_dump_pending_frames -	Dumps the frame address of
+>all
+>>>pending cmds
+>>>  *                              	in FW
+>>>diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>index f37eed6..c2b8782 100644
+>>>--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>>@@ -54,43 +54,7 @@
+>>>
+>>> #include "megaraid_sas_fusion.h"
+>>> #include "megaraid_sas.h"
+>>>-
+>>>-extern void megasas_free_cmds(struct megasas_instance *instance); -
+>>>extern struct megasas_cmd *megasas_get_cmd(struct megasas_instance
+>>>-					   *instance);
+>>>-extern void
+>>>-megasas_complete_cmd(struct megasas_instance *instance,
+>>>-		     struct megasas_cmd *cmd, u8 alt_status);
+>>>-int megasas_is_ldio(struct scsi_cmnd *cmd); -int
+>>>-wait_and_poll(struct megasas_instance *instance, struct megasas_cmd
+>*cmd,
+>>>-	      int seconds);
+>>>-
+>>>-void
+>>>-megasas_return_cmd(struct megasas_instance *instance, struct
+>>>megasas_cmd *cmd); -int megasas_alloc_cmds(struct megasas_instance
+>>>*instance); -int -megasas_clear_intr_fusion(struct
+>>>megasas_register_set __iomem *regs); -int -megasas_issue_polled(struct
+>>>megasas_instance *instance,
+>>>-		     struct megasas_cmd *cmd);
+>>>-void
+>>>-megasas_check_and_restore_queue_depth(struct megasas_instance
+>>>*instance);
+>>>-
+>>>-int megasas_transition_to_ready(struct megasas_instance *instance,
+>>>int ocr); -void megaraid_sas_kill_hba(struct megasas_instance
+>>>*instance);
+>>>-
+>>>-extern u32 megasas_dbg_lvl;
+>>>-void megasas_sriov_heartbeat_handler(unsigned long instance_addr);
+>>>-int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+>>>-				  int initial);
+>>>-void megasas_start_timer(struct megasas_instance *instance,
+>>>-			struct timer_list *timer,
+>>>-			 void *fn, unsigned long interval);
+>>>-extern struct megasas_mgmt_info megasas_mgmt_info; -extern int
+>>>resetwaittime;
+>>>-
+>>>-
+>>>+#include "megaraid_sas_internal.h"
+>>>
+>>> /**
+>>>  * megasas_enable_intr_fusion -	Enables interrupts
+>>>diff --git a/drivers/scsi/megaraid/megaraid_sas_internal.h
+>>>b/drivers/scsi/megaraid/megaraid_sas_internal.h
+>>>new file mode 100644
+>>>index 0000000..b2b0a55
+>>>--- /dev/null
+>>>+++ b/drivers/scsi/megaraid/megaraid_sas_internal.h
+>>>@@ -0,0 +1,100 @@
+>>>+#ifndef LSI_MEGARAID_SAS_INTERNAL_H
+>>>+#define LSI_MEGARAID_SAS_INTERNAL_H
+>>>+
+>>>+/*
+>>>+ * From base.
+>>>+ */
+>>>+
+>>>+extern void megasas_free_cmds(struct megasas_instance *instance);
+>>>+extern struct megasas_cmd *megasas_get_cmd(struct megasas_instance
+>>>+					   *instance);
+>>>+
+>>>+extern void
+>>>+megasas_complete_cmd(struct megasas_instance *instance,
+>>>+		     struct megasas_cmd *cmd, u8 alt_status);
+>>>+/**
+>>>+ * megasas_is_ldio -		Checks if the cmd is for logical drive
+>>>+ * @scmd:			SCSI command
+>>>+ *
+>>>+ * Called by megasas_queue_command to find out if the command to be
+>>>+queued
+>>>+ * is a logical drive command
+>>>+ */
+>>>+static inline int megasas_is_ldio(struct scsi_cmnd *cmd) {
+>>>+	if (!MEGASAS_IS_LOGICAL(cmd))
+>>>+		return 0;
+>>>+	switch (cmd->cmnd[0]) {
+>>>+	case READ_10:
+>>>+	case WRITE_10:
+>>>+	case READ_12:
+>>>+	case WRITE_12:
+>>>+	case READ_6:
+>>>+	case WRITE_6:
+>>>+	case READ_16:
+>>>+	case WRITE_16:
+>>>+		return 1;
+>>>+	default:
+>>>+		return 0;
+>>>+	}
+>>>+}
+>>>+
+>>>+/**
+>>>+ * megasas_return_cmd -	Return a cmd to free command pool
+>>>+ * @instance:		Adapter soft state
+>>>+ * @cmd:		Command packet to be returned to free command
+>>>pool
+>>>+ */
+>>>+static inline void
+>>>+megasas_return_cmd(struct megasas_instance *instance, struct
+>>>+megasas_cmd *cmd) {
+>>>+	unsigned long flags;
+>>>+
+>>>+	spin_lock_irqsave(&instance->mfi_pool_lock, flags);
+>>>+	__megasas_return_cmd(instance, cmd);
+>>>+	spin_unlock_irqrestore(&instance->mfi_pool_lock, flags); }
+>>>+
+>>>+int megasas_alloc_cmds(struct megasas_instance *instance);
+>>>+
+>>>+int
+>>>+megasas_issue_polled(struct megasas_instance *instance,
+>>>+		     struct megasas_cmd *cmd);
+>>>+void
+>>>+megasas_check_and_restore_queue_depth(struct megasas_instance
+>>>+*instance);
+>>>+
+>>>+int megasas_transition_to_ready(struct megasas_instance *instance,
+>>>+int ocr); void megaraid_sas_kill_hba(struct megasas_instance
+>>>+*instance);
+>>>+
+>>>+extern u32 megasas_dbg_lvl;
+>>>+void megasas_sriov_heartbeat_handler(unsigned long instance_addr);
+>>>+int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+>>>+				  int initial);
+>>>+void megasas_start_timer(struct megasas_instance *instance,
+>>>+			struct timer_list *timer,
+>>>+			 void *fn, unsigned long interval); extern struct
+>>>+megasas_mgmt_info megasas_mgmt_info; extern int resetwaittime;
+>>>+
+>>>+/*
+>>>+ * From fusion.
+>>>+ */
+>>>+
+>>>+int megasas_check_mpio_paths(struct megasas_instance *instance,
+>>>+			     struct scsi_cmnd *scmd);
+>>>+int
+>>>+wait_and_poll(struct megasas_instance *instance, struct megasas_cmd
+>>>*cmd,
+>>>+	      int seconds);
+>>>+void
+>>>+megasas_release_fusion(struct megasas_instance *instance); int
+>>>+megasas_ioc_init_fusion(struct megasas_instance *instance); void
+>>>+megasas_free_cmds_fusion(struct megasas_instance *instance);
+>>>+u8
+>>>+megasas_get_map_info(struct megasas_instance *instance); int
+>>>+megasas_sync_map_info(struct megasas_instance *instance); void
+>>>+megasas_reset_reply_desc(struct megasas_instance *instance); int
+>>>+megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout); void
+>>>+megasas_fusion_ocr_wq(struct work_struct *work);
+>>>+
+>>>+#endif /* LSI_MEGARAID_SAS_INTERNAL_H */
+>>
+>>Patch looks good to me. Can you please rebase this patch on top of
+>>latest patch series sent by me?
+>>>--
+>>>1.9.3
