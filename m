@@ -1,205 +1,91 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH V4 linux-next RESEND 2] bfa: replace 2
- kzalloc/copy_from_user by memdup_user
-Date: Mon, 17 Nov 2014 05:11:46 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FD4166@avmb2.qlogic.org>
-References: <1415990998-29659-1-git-send-email-fabf@skynet.be>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 02/10] scsi: Add SPC-3 command definitions
+Date: Mon, 17 Nov 2014 08:56:29 +0100
+Message-ID: <5469AA2D.7090903@suse.de>
+References: <1415262639-121586-1-git-send-email-hare@suse.de> <1415262639-121586-3-git-send-email-hare@suse.de> <94D0CD8314A33A4D9D801C0FE68B402959398D0C@G9W0745.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FD4166avmb2qlogicorg_"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:53535 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751481AbaKQFLt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2014 00:11:49 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sAH593GE005192
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Nov 2014 21:11:48 -0800
-Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1qpgfk172e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Nov 2014 21:11:48 -0800
-In-Reply-To: <1415990998-29659-1-git-send-email-fabf@skynet.be>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:48115 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750900AbaKQH4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2014 02:56:31 -0500
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402959398D0C@G9W0745.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fabian Frederick <fabf@skynet.be>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: Joe Perches <joe@perches.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FD4166avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 11/12/2014 06:07 PM, Elliott, Robert (Server Storage) wrote:
+>=20
+>=20
+>> -----Original Message-----
+>> From: Hannes Reinecke [mailto:hare@suse.de]
+>> Sent: Thursday, 06 November, 2014 2:31 AM
+>> To: James Bottomley
+>> Cc: Christoph Hellwig; Ewan Milne; Elliott, Robert (Server Storage);
+>> linux-scsi@vger.kernel.org; Hannes Reinecke
+>> Subject: [PATCH 02/10] scsi: Add SPC-3 command definitions
+>>
+>> SPC-3 defines SERVICE ACTION IN(12), SERVICE_ACTION OUT(12),
+>> SERVICE ACTION OUT(16), and SERVICE ACTION BIDIRECTIONAL.
+>> And READ MEDIA SERIAL NUMBER has long since been deprecated.
+>> So update callers to refer to the new cdb name.
+>>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/scsi/constants.c           | 4 ----
+>>  drivers/target/target_core_pr.c    | 2 +-
+>>  include/scsi/scsi.h                | 6 +++++-
+>>  tools/lib/traceevent/plugin_scsi.c | 5 ++++-
+>>  4 files changed, 10 insertions(+), 7 deletions(-)
+>>
+> ...
+>> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+>> index b354c0d..df00fd1 100644
+>> --- a/include/scsi/scsi.h
+>> +++ b/include/scsi/scsi.h
+>> @@ -128,8 +128,10 @@ enum scsi_timeouts {
+>>  #define MOVE_MEDIUM           0xa5
+>>  #define EXCHANGE_MEDIUM       0xa6
+>>  #define READ_12               0xa8
+>> +#define SERVICE_ACTION_OUT_12 0xa9
+>>  #define WRITE_12              0xaa
+>> -#define READ_MEDIA_SERIAL_NUMBER 0xab
+>> +#define READ_MEDIA_SERIAL_NUMBER 0xab /* Obsolete with SPC-2 */
+>> +#define SERVICE_ACTION_IN_12 0xab
+>=20
+> That needs one more space before 0xab to line up with the others.
+>=20
+> ...
+>> diff --git a/tools/lib/traceevent/plugin_scsi.c
+>> b/tools/lib/traceevent/plugin_scsi.c
+>> index c699f47..63aba97 100644
+>> --- a/tools/lib/traceevent/plugin_scsi.c
+>> +++ b/tools/lib/traceevent/plugin_scsi.c
+>> @@ -85,8 +85,9 @@ typedef unsigned int u32;
+>>  #define MOVE_MEDIUM			0xa5
+>>  #define EXCHANGE_MEDIUM			0xa6
+>>  #define READ_12				0xa8
+>> +#define SERVICE_ACTION_out_12		0xa9
+> ...
+>=20
+> out should be capitalized
+>=20
+=46ixed in my next round of patches.
 
-Patch looks good.=20
-Thanks!
-Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cheers,
 
------Original Message-----
-From: Fabian Frederick [mailto:fabf@skynet.be]=20
-Sent: 15 November 2014 00:20
-To: linux-kernel
-Cc: Joe Perches; Greg Kroah-Hartman; One Thousand Gnomes; Fabian Frederick;=
- Anil Gurumurthy; Sudarsana Kalluru; James E.J. Bottomley; linux-scsi
-Subject: [PATCH V4 linux-next RESEND 2] bfa: replace 2 kzalloc/copy_from_us=
-er by memdup_user
-
-This patch also removes unnecessary printk(KERN_INFO
-
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
-V4: remove blank line after memdup_user
-V3: memdup_user first argument is already void __user * (thanks to Joe Perc=
-hes)
-    typo in title
-V2: Remove printk(KERN_INFO (suggested by Alan)
-
- drivers/scsi/bfa/bfad_debugfs.c | 30 ++++++------------------------
- 1 file changed, 6 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugf=
-s.c index 8e83d04..74a307c 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -260,18 +260,9 @@ bfad_debugfs_write_regrd(struct file *file, const char=
- __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
-=20
--	kern_buf =3D kzalloc(nbytes, GFP_KERNEL);
--
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
--	}
-+	kern_buf =3D memdup_user(buf, nbytes);
-+	if (IS_ERR(kern_buf))
-+		return PTR_ERR(kern_buf);
-=20
- 	rc =3D sscanf(kern_buf, "%x:%x", &addr, &len);
- 	if (rc < 2) {
-@@ -336,18 +327,9 @@ bfad_debugfs_write_regwr(struct file *file, const char=
- __user *buf,
- 	unsigned long flags;
- 	void *kern_buf;
-=20
--	kern_buf =3D kzalloc(nbytes, GFP_KERNEL);
--
--	if (!kern_buf) {
--		printk(KERN_INFO "bfad[%d]: Failed to allocate buffer\n",
--				bfad->inst_no);
--		return -ENOMEM;
--	}
--
--	if (copy_from_user(kern_buf, (void  __user *)buf, nbytes)) {
--		kfree(kern_buf);
--		return -ENOMEM;
--	}
-+	kern_buf =3D memdup_user(buf, nbytes);
-+	if (IS_ERR(kern_buf))
-+		return PTR_ERR(kern_buf);
-=20
- 	rc =3D sscanf(kern_buf, "%x:%x", &addr, &val);
- 	if (rc < 2) {
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
 --
-1.9.3
-
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FD4166avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+IrhhAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEFCNTY3NDJC
-MEIxNjIyNDc5QTNDMTYyMEVGQUM5QzlEADYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HCwARAAUA
-CwAuAAEAQAEBIIADAA4AAADeBwsAEQAFAAsALgABAEABAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAFgAAABSRTogW1BBVENIIFY0IGxpbnV4LW5leHQgUkVTRU5EIDJdIGJm
-YTogcmVwbGFjZSAyIGt6YWxsb2MvY29weV9mcm9tX3VzZXIgYnkgbWVtZHVwX3VzZXIA7x0BA5AG
-AKQRAABAAAAAAgF/AAEAAAA6AAAAPDIwQjFBM0NCRDk4RjM4NDVCM0Y1RjU2RDg1OTdFRjU5RkQ0
-MTY2QGF2bWIyLnFsb2dpYy5vcmc+AAAACwAfDgEAAAACAQkQAQAAANYFAADSBQAATwwAAExaRnW6
-sUd1YQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFAR
-TTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBF
-eBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1T
-BPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB8QvxrCBQGIARwCAJAG8fUKQgZyIQ
-ZC4DMGwLgFplCoBUGaEfUCEixUEEY2sJgC1ieTogSkEDAkcIcHVtCHB0MGh5IDwAcAMQLmepJRdA
-cQkAZw5QLgWgrG0+IsUixS0oUk8FEJ0m8G4HQAXQB5BzYRgw2yhTIsVGA2EkkEYBoAcwnwOgKmAJ
-gAZxJCAgWwDAEwMQGJA6ZgGgZkBzBGt5GFB0LmJlXU8itgZgAjAkkDE1B7BvjxowBtAbsQHQMTQg
-HqA+OgwBItUsMCHwC4B1eDYtJDAEoGUJUCLUQ2PpJJBKbxngUASQEcAHkEY7JPAJcGcgSwNgYZho
-LUgfgRMSIE8YUL0SQGgIYClgHcAk8G4DcB8yMirOMlAkvTJQU3Vk+xHhAHBhMrAHQApAJSAyUERK
-YQeCRS5KIqBC/m8CQANwHnA3ATA0BPAAkTEtZXViagWQLfFbUMBBVENIIFYvEDA0BxhQEEAH8EVT
-RU5Edy7QLTAscGEkkAlwC1FjIRngMiBrejfhb2OiLwWgcHlfA1JfNCALG7EkcCAHgG1kdXDvP1Mn
-fCMwBAAgCrAhwgdAnxkgPZEEYBowBCB1bhhQaz3wKVFyJZBwBRACMGtAKEtFUk5fICBGek8nfFMo
-wBhQJFAZMGb7JGMqzzwsXCdmKcg70D2Cv0KSPUALYCNgMCIZ4GEBgHcbsT/vSZAzJJBLaRxwab8R
-8AVACsAmEAeAAjAgQZGTB0AJcGFkJZB2bw3QxCBfP1QqICglcCNSVxzAQlAxqSkixSBR4XSceXBC
-UAuAHMBpdB5wdUk2MiSQUkn0Q75P8HO8dWcYMB9gHFE/sUFKYZtRZlF2ZAUQGjFzLzoipi89UVgC
-ZF8BAGJVQEMD0CcgIHwgMxIwK/9ZkyhTWj8p1y4QTXEecBvQ4RmjZCwgNlJhP3FSoKECIHMoKylc
-0DIvEHcBAB5wXWQtVk0N4AEgILcoUCbwTcEvV09YXWJgnwdYTh2xEDAgOGU4M4EJkDQuLjc0YVlg
-xjdZIB6RNjQ0J+hgfz9jryLFWZFin2hPIsVAQIFgEDI2MCwxOFmAmWzCOSBsgVhaX3cFEN0QIF8y
-gQsgVSB0JSA7IP1cBCpcElzQG+FNsRHCT2f5WMBmLFF2DIJC4QCQRbLvIfEZwBxwC2BnMkByC08j
-+iowkl9xwXQIJ/Vyg3VGZCA9PjYobiRwECBzIVzQR0ZQX0QiRUy+KXQGKeZ2xAaQT/AhdUa+KQMw
-AAB2aXKDVB8iWFLwWyVkXUZiXCEcYFCBLz5jGIBKMXHQZkBxXG6eInH2fGd8d1hSLT5dEbx0XzSQ
-eXl8hglwdAhwhQOgLTzgT01FTYMb3wMwIEB5r3q1PswodUZc0LYoTyNPZymI43hUKXu//3bjA1AJ
-4IiHgw+EH4UvaXR7dt5LaSiKOnQGkKR64kn0U19EMFKMmFFmkKOOCvhQVFKUfHXOcnQyAHehEwQQ
-HlBuZoiJIiV45jqawICAICZO4GogmyHfHnBWMHQMeuKZUTwu0Ir5EWyCMzM2bPMzMjf/bX9uiW6g
-b19wb3F/co9zn/90r3W/ds9333jvhn97D3wf/30vfj9/T4BfgW+Cf42vjr//ha+Gv4fPiN+J761v
-jA+NH/+1v7bPkE+RX5Jvk3+Uj5Wf35avl7+Yz5nfmux2B0Cb/wedDygyIsUxLjkuMwcnfBVC0eAA
-AB8AQgABAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwBlAAEAAAA2AAAA
-QQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
-AGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
-AIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4AaQBsAC4ARwB1
-AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADYAAABBAG4A
-aQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8B
-AAAAPgAAAHMAaQBwADoAYQBuAGkAbAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
-YwAuAGMAbwBtAAAAAAAfABoMAQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAA
-AB8AHwwBAAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMA
-LgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB4AAAAAAAAAIErH6S+
-oxAZnW4A3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAA
-QQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAB
-XQEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMA
-bwBtAAAAAAAfAPg/AQAAACAAAABBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAB8AI0AB
-AAAANgAAAEEAbgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5PwEAAAB4AAAAAAAAAIErH6S+oxAZnW4A
-3QEPVAIAAACAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAABTAE0AVABQAAAAQQBuAGkA
-bAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA2
-AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-AAAfADFAAQAAAAIAAAAAAAAACwBAOgEAAAAfADBAAQAAAAIAAAAAAAAAHwAaAAEAAAASAAAASQBQ
-AE0ALgBOAG8AdABlAAAAAAADAPE/CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACrVnQr
-CxYiR5o8FiDvrJydAwAXAAEAAABAADkAANXH+yQC0AFAAAgwTi8B/CQC0AELACkAAAAAAAsAIwAA
-AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcA
-ZQAAAAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAA
-AB8ANwABAAAAsAAAAFIARQA6ACAAWwBQAEEAVABDAEgAIABWADQAIABsAGkAbgB1AHgALQBuAGUA
-eAB0ACAAUgBFAFMARQBOAEQAIAAyAF0AIABiAGYAYQA6ACAAcgBlAHAAbABhAGMAZQAgADIAIABr
-AHoAYQBsAGwAbwBjAC8AYwBvAHAAeQBfAGYAcgBvAG0AXwB1AHMAZQByACAAYgB5ACAAbQBlAG0A
-ZAB1AHAAXwB1AHMAZQByAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAA
-AB8AQhABAAAAZgAAADwAMQA0ADEANQA5ADkAMAA5ADkAOAAtADIAOQA2ADUAOQAtADEALQBnAGkA
-dAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBmAGEAYgBmAEAAcwBrAHkAbgBlAHQALgBiAGUAPgAA
-AAAAAgFxAAEAAAAbAAAAAQHQADvO/bHQKLvWKUSLTcWGklbMaJxkSO0wAB8AcAABAAAAqAAAAFsA
-UABBAFQAQwBIACAAVgA0ACAAbABpAG4AdQB4AC0AbgBlAHgAdAAgAFIARQBTAEUATgBEACAAMgBd
-ACAAYgBmAGEAOgAgAHIAZQBwAGwAYQBjAGUAIAAyACAAawB6AGEAbABsAG8AYwAvAGMAbwBwAHkA
-XwBmAHIAbwBtAF8AdQBzAGUAcgAgAGIAeQAgAG0AZQBtAGQAdQBwAF8AdQBzAGUAcgAAAB8ANRAB
-AAAAdAAAADwAMgAwAEIAMQBBADMAQwBCAEQAOQA4AEYAMwA4ADQANQBCADMARgA1AEYANQA2AEQA
-OAA1ADkANwBFAEYANQA5AEYARAA0ADEANgA2AEAAYQB2AG0AYgAyAC4AcQBsAG8AZwBpAGMALgBv
-AHIAZwA+AAAAHwA5EAEAAABmAAAAPAAxADQAMQA1ADkAOQAwADkAOQA4AC0AMgA5ADYANQA5AC0A
-MQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAGYAYQBiAGYAQABzAGsAeQBuAGUAdAAu
-AGIAZQA+AAAAAAADAN4/n04AAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAAAAADAIAQ/////0AABzBOlfb6JALQAQsAAgABAAAAAwAm
-AAAAAAALACsAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQxMTE3
-MDUxMTQ2Wi01NDQ3MAAAAAIBEDABAAAARgAAAAAAAACl9rpY+JScQJeq5kM6RFa/BwAgsaPL2Y84
-RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3GiSKVd3se6CF95AEt6piD+AAAAAB8A+j8BAAAAIAAAAEEA
-bgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAA
-RgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAA
-wAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAI
-IAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBj
-AGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcA
-aQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAAAf
-AACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAZABpAHMAYwBsAGEAaQBtAGUAcgAAAAAAAQAAAA4A
-AABiAHkAcABhAHMAcwAAAAAA79g=
-
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FD4166avmb2qlogicorg_--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
