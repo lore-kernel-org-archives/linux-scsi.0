@@ -1,217 +1,125 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/10] scsi: Implement per-cpu logging buffer
-Date: Mon, 17 Nov 2014 14:25:21 +0100
-Message-ID: <1416230728-66425-4-git-send-email-hare@suse.de>
+Subject: [PATCH 02/10] scsi: Add SPC-3 command definitions
+Date: Mon, 17 Nov 2014 14:25:20 +0100
+Message-ID: <1416230728-66425-3-git-send-email-hare@suse.de>
 References: <1416230728-66425-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55522 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:55502 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752211AbaKQNZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2014 08:25:34 -0500
+	id S1752152AbaKQNZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2014 08:25:32 -0500
 In-Reply-To: <1416230728-66425-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Robert Elliott <elliott@hp.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Implement a per-cpu buffer for formatting messages to
-avoid line break up under high load.
-This patch implements scmd_printk() and sdev_prefix_printk()
-using the per-cpu buffer and makes sdev_printk() a wrapper
-for sdev_prefix_printk().
+SPC-3 defines SERVICE ACTION IN(12), SERVICE_ACTION OUT(12),
+SERVICE ACTION OUT(16), and SERVICE ACTION BIDIRECTIONAL.
+And READ MEDIA SERIAL NUMBER has long since been deprecated.
+So update callers to refer to the new cdb name.
 
 Tested-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Robert Elliott <elliott@hp.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/Makefile       |   2 +-
- drivers/scsi/scsi_logging.c | 124 ++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h  |  21 +++-----
- 3 files changed, 133 insertions(+), 14 deletions(-)
- create mode 100644 drivers/scsi/scsi_logging.c
+ drivers/scsi/constants.c           |  4 ----
+ drivers/target/target_core_pr.c    |  2 +-
+ include/scsi/scsi.h                | 10 +++++++---
+ tools/lib/traceevent/plugin_scsi.c |  5 ++++-
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 59f1ce6..4991b62 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -166,7 +166,7 @@ scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
- scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
- scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
--scsi_mod-y			+= scsi_trace.o
-+scsi_mod-y			+= scsi_trace.o scsi_logging.o
- scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 52afabd..aee62f6 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -21,10 +21,6 @@
  
- hv_storvsc-y			:= storvsc_drv.o
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-new file mode 100644
-index 0000000..09d65de
---- /dev/null
-+++ b/drivers/scsi/scsi_logging.c
-@@ -0,0 +1,124 @@
-+/*
-+ * scsi_logging.c
-+ *
-+ * Copyright (C) 2014 SUSE Linux Products GmbH
-+ * Copyright (C) 2014 Hannes Reinecke <hare@suse.de>
-+ *
-+ * This file is released under the GPLv2
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/atomic.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_dbg.h>
-+
-+#define SCSI_LOG_SPOOLSIZE 4096
-+#define SCSI_LOG_BUFSIZE 128
-+
-+#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
-+#warning SCSI logging bitmask too large
-+#endif
-+
-+struct scsi_log_buf {
-+	char buffer[SCSI_LOG_SPOOLSIZE];
-+	unsigned long map;
-+};
-+
-+static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
-+
-+static char *scsi_log_reserve_buffer(size_t *len)
-+{
-+	struct scsi_log_buf *buf;
-+	unsigned long map_bits = sizeof(buf->buffer) / SCSI_LOG_BUFSIZE;
-+	unsigned long idx = 0;
-+
-+	preempt_disable();
-+	buf = this_cpu_ptr(&scsi_format_log);
-+	idx = find_first_zero_bit(&buf->map, map_bits);
-+	if (likely(idx < map_bits)) {
-+		while (test_and_set_bit(idx, &buf->map)) {
-+			idx = find_next_zero_bit(&buf->map, map_bits, idx);
-+			if (idx >= map_bits)
-+				break;
-+		}
-+	}
-+	if (WARN_ON(idx >= map_bits)) {
-+		preempt_enable();
-+		return NULL;
-+	}
-+	*len = SCSI_LOG_BUFSIZE;
-+	return buf->buffer + idx * SCSI_LOG_BUFSIZE;
-+}
-+
-+static void scsi_log_release_buffer(char *bufptr)
-+{
-+	struct scsi_log_buf *buf;
-+	unsigned long idx;
-+	int ret;
-+
-+	buf = this_cpu_ptr(&scsi_format_log);
-+	if (bufptr >= buf->buffer &&
-+	    bufptr < buf->buffer + SCSI_LOG_SPOOLSIZE) {
-+		idx = (bufptr - buf->buffer) / SCSI_LOG_BUFSIZE;
-+		ret = test_and_clear_bit(idx, &buf->map);
-+		WARN_ON(!ret);
-+	}
-+	preempt_enable();
-+}
-+
-+int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
-+		       const char *name, const char *fmt, ...)
-+{
-+	va_list args;
-+	char *logbuf;
-+	size_t off = 0, logbuf_len;
-+	int ret;
-+
-+	if (!sdev)
-+		return 0;
-+
-+	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-+	if (!logbuf)
-+		return 0;
-+
-+	if (name)
-+		off += scnprintf(logbuf + off, logbuf_len - off,
-+				 "[%s] ", name);
-+	va_start(args, fmt);
-+	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-+	va_end(args);
-+	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
-+	scsi_log_release_buffer(logbuf);
-+	return ret;
-+}
-+EXPORT_SYMBOL(sdev_prefix_printk);
-+
-+int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
-+		const char *fmt, ...)
-+{
-+	struct gendisk *disk = scmd->request->rq_disk;
-+	va_list args;
-+	char *logbuf;
-+	size_t off = 0, logbuf_len;
-+	int ret;
-+
-+	if (!scmd || !scmd->cmnd)
-+		return 0;
-+
-+	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-+	if (!logbuf)
-+		return 0;
-+	if (disk)
-+		off += scnprintf(logbuf + off, logbuf_len - off,
-+				 "[%s] ", disk->disk_name);
-+	va_start(args, fmt);
-+	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-+	va_end(args);
-+	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
-+	scsi_log_release_buffer(logbuf);
-+	return ret;
-+}
-+EXPORT_SYMBOL(scmd_printk);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 0aeaa00..6fddcd2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -230,9 +230,6 @@ struct scsi_dh_data {
- #define transport_class_to_sdev(class_dev) \
- 	to_scsi_device(class_dev->parent)
  
--#define sdev_printk(prefix, sdev, fmt, a...)	\
--	dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
--
- #define sdev_dbg(sdev, fmt, a...) \
- 	dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
+ /* Commands with service actions that change the command name */
+-#define SERVICE_ACTION_IN_12 0xab
+-#define SERVICE_ACTION_OUT_12 0xa9
+-#define SERVICE_ACTION_BIDIRECTIONAL 0x9d
+-#define SERVICE_ACTION_OUT_16 0x9f
+ #define THIRD_PARTY_COPY_OUT 0x83
+ #define THIRD_PARTY_COPY_IN 0x84
  
-@@ -240,16 +237,14 @@ struct scsi_dh_data {
-  * like scmd_printk, but the device name is passed in
-  * as a string pointer
-  */
--#define sdev_prefix_printk(l, sdev, p, fmt, a...)			\
--	(p) ?								\
--	sdev_printk(l, sdev, "[%s] " fmt, p, ##a) :			\
--	sdev_printk(l, sdev, fmt, ##a)
--
--#define scmd_printk(prefix, scmd, fmt, a...)				\
--        (scmd)->request->rq_disk ?					\
--	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
--		    (scmd)->request->rq_disk->disk_name, ##a) :		\
--	sdev_printk(prefix, (scmd)->device, fmt, ##a)
-+extern int sdev_prefix_printk(const char *, const struct scsi_device *,
-+			      const char *, const char *, ...);
-+
-+#define sdev_printk(l, sdev, fmt, a...)				\
-+	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
-+
-+extern int scmd_printk(const char *, const struct scsi_cmnd *,
-+		       const char *, ...);
- 
- #define scmd_dbg(scmd, fmt, a...)					   \
- 	do {								   \
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 8c60a1a..806bfba 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -459,7 +459,7 @@ static int core_scsi3_pr_seq_non_holder(
+ 	case ACCESS_CONTROL_OUT:
+ 	case INQUIRY:
+ 	case LOG_SENSE:
+-	case READ_MEDIA_SERIAL_NUMBER:
++	case SERVICE_ACTION_IN_12:
+ 	case REPORT_LUNS:
+ 	case REQUEST_SENSE:
+ 	case PERSISTENT_RESERVE_IN:
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index b354c0d..8a7f8ad 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -128,8 +128,10 @@ enum scsi_timeouts {
+ #define MOVE_MEDIUM           0xa5
+ #define EXCHANGE_MEDIUM       0xa6
+ #define READ_12               0xa8
++#define SERVICE_ACTION_OUT_12 0xa9
+ #define WRITE_12              0xaa
+-#define READ_MEDIA_SERIAL_NUMBER 0xab
++#define READ_MEDIA_SERIAL_NUMBER 0xab /* Obsolete with SPC-2 */
++#define SERVICE_ACTION_IN_12  0xab
+ #define WRITE_VERIFY_12       0xae
+ #define VERIFY_12	      0xaf
+ #define SEARCH_HIGH_12        0xb0
+@@ -151,7 +153,9 @@ enum scsi_timeouts {
+ #define VERIFY_16	      0x8f
+ #define SYNCHRONIZE_CACHE_16  0x91
+ #define WRITE_SAME_16	      0x93
++#define SERVICE_ACTION_BIDIRECTIONAL 0x9d
+ #define SERVICE_ACTION_IN_16  0x9e
++#define SERVICE_ACTION_OUT_16 0x9f
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
+ #define SAI_GET_LBA_STATUS    0x12
+@@ -165,8 +169,8 @@ enum scsi_timeouts {
+ #define MI_REPORT_ALIASES     0x0b
+ #define MI_REPORT_SUPPORTED_OPERATION_CODES 0x0c
+ #define MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS 0x0d
+-#define MI_REPORT_PRIORITY   0x0e
+-#define MI_REPORT_TIMESTAMP  0x0f
++#define MI_REPORT_PRIORITY    0x0e
++#define MI_REPORT_TIMESTAMP   0x0f
+ #define MI_MANAGEMENT_PROTOCOL_IN 0x10
+ /* value for MI_REPORT_TARGET_PGS ext header */
+ #define MI_EXT_HDR_PARAM_FMT  0x20
+diff --git a/tools/lib/traceevent/plugin_scsi.c b/tools/lib/traceevent/plugin_scsi.c
+index c699f47..3727de4 100644
+--- a/tools/lib/traceevent/plugin_scsi.c
++++ b/tools/lib/traceevent/plugin_scsi.c
+@@ -85,8 +85,9 @@ typedef unsigned int u32;
+ #define MOVE_MEDIUM			0xa5
+ #define EXCHANGE_MEDIUM			0xa6
+ #define READ_12				0xa8
++#define SERVICE_ACTION_OUT_12		0xa9
+ #define WRITE_12			0xaa
+-#define READ_MEDIA_SERIAL_NUMBER	0xab
++#define SERVICE_ACTION_IN_12		0xab
+ #define WRITE_VERIFY_12			0xae
+ #define VERIFY_12			0xaf
+ #define SEARCH_HIGH_12			0xb0
+@@ -107,7 +108,9 @@ typedef unsigned int u32;
+ #define VERIFY_16			0x8f
+ #define SYNCHRONIZE_CACHE_16		0x91
+ #define WRITE_SAME_16			0x93
++#define SERVICE_ACTION_BIDIRECTIONAL	0x9d
+ #define SERVICE_ACTION_IN_16		0x9e
++#define SERVICE_ACTION_OUT_16		0x9f
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16		0x10
+ #define SAI_GET_LBA_STATUS		0x12
 -- 
 1.8.5.2
 
