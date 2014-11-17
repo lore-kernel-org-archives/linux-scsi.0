@@ -1,109 +1,264 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH RESEND 1/7] megaraid_sas : Driver version upgrade and
- remove some meta data of driver
-Date: Mon, 17 Nov 2014 15:23:58 +0530
-Message-ID: <201411170957.sAH9vdRD008943@palmhbs0.lsi.com>
+Subject: [PATCH RESEND 2/7] megaraid_sas : Update MAINTAINERS and
+ copyright information for megaraid drivers
+Date: Mon, 17 Nov 2014 15:24:03 +0530
+Message-ID: <201411170957.sAH9viYE008947@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bn0100.outbound.protection.outlook.com ([157.56.110.100]:56945
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-by2on0088.outbound.protection.outlook.com ([207.46.100.88]:47441
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751971AbaKQJyN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2014 04:54:13 -0500
+	id S1751971AbaKQJyV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2014 04:54:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-Update driver version and remove some meta data(release date and extended version) about megaraid_sas driver.
+Update MAINTAINERS list and copyright information for megaraid_sas driver.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |    4 +---
- drivers/scsi/megaraid/megaraid_sas_base.c |   24 +-----------------------
- 2 files changed, 2 insertions(+), 26 deletions(-)
+ MAINTAINERS                                 |    9 ++++++---
+ drivers/scsi/megaraid/megaraid_sas.h        |   16 +++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   21 ++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |   16 +++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |   18 ++++++++++--------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |   16 +++++++++-------
+ 6 files changed, 53 insertions(+), 43 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aefa948..4c071f0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5830,10 +5830,13 @@ W:	http://linuxtv.org
+ S:	Odd Fixes
+ F:	drivers/media/parport/pms*
+ 
+-MEGARAID SCSI DRIVERS
+-M:	Neela Syam Kolli <megaraidlinux@lsi.com>
++MEGARAID SCSI/SAS DRIVERS
++M:	Kashyap Desai <kashyap.desai@avagotech.com>
++M:	Sumit Saxena <sumit.saxena@avagotech.com>
++M:	Uday Lingala <uday.lingala@avagotech.com>
++L:	megaraidlinux.pdl@avagotech.com
+ L:	linux-scsi@vger.kernel.org
+-W:	http://megaraid.lsilogic.com
++W:	http://www.lsi.com
+ S:	Maintained
+ F:	Documentation/scsi/megaraid.txt
+ F:	drivers/scsi/megaraid.*
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index a49914d..fe546e6 100644
+index fe546e6..401f4a2 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -33,9 +33,7 @@
+@@ -1,7 +1,8 @@
  /*
-  * MegaRAID SAS Driver meta data
+  *  Linux MegaRAID driver for SAS based RAID controllers
+  *
+- *  Copyright (c) 2003-2012  LSI Corporation.
++ *  Copyright (c) 2003-2013  LSI Corporation
++ *  Copyright (c) 2013-2014  Avago Technologies
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License
+@@ -14,17 +15,18 @@
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+  *  FILE: megaraid_sas.h
+  *
+- *  Authors: LSI Corporation
++ *  Authors: Avago Technologies
++ *           Kashyap Desai <kashyap.desai@avagotech.com>
++ *           Sumit Saxena <sumit.saxena@avagotech.com>
+  *
+- *  Send feedback to: <megaraidlinux@lsi.com>
++ *  Send feedback to: megaraidlinux.pdl@avagotech.com
+  *
+- *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
+- *     ATTN: Linuxraid
++ *  Mail to: Avago Technologies, 350 West Trimble Road, Building 90,
++ *  San Jose, California 95131
   */
--#define MEGASAS_VERSION				"06.805.06.00-rc1"
--#define MEGASAS_RELDATE				"Sep. 4, 2014"
--#define MEGASAS_EXT_VERSION			"Thu. Sep. 4 17:00:00 PDT 2014"
-+#define MEGASAS_VERSION				"06.805.06.01-rc1"
  
- /*
-  * Device IDs
+ #ifndef LSI_MEGARAID_SAS_H
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f6a69a3..6c74a67 100644
+index 6c74a67..5fa6ce2 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6400,16 +6400,6 @@ static ssize_t megasas_sysfs_show_version(struct device_driver *dd, char *buf)
- static DRIVER_ATTR(version, S_IRUGO, megasas_sysfs_show_version, NULL);
+@@ -1,7 +1,8 @@
+ /*
+  *  Linux MegaRAID driver for SAS based RAID controllers
+  *
+- *  Copyright (c) 2003-2012  LSI Corporation.
++ *  Copyright (c) 2003-2013  LSI Corporation
++ *  Copyright (c) 2013-2014  Avago Technologies
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License
+@@ -14,22 +15,20 @@
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+- *  FILE: megaraid_sas_base.c
+- *  Version : 06.805.06.00-rc1
+- *
+- *  Authors: LSI Corporation
++ *  Authors: Avago Technologies
+  *           Sreenivas Bagalkote
+  *           Sumant Patro
+  *           Bo Yang
+- *           Adam Radford <linuxraid@lsi.com>
++ *           Adam Radford
++ *           Kashyap Desai <kashyap.desai@avagotech.com>
++ *           Sumit Saxena <sumit.saxena@avagotech.com>
+  *
+- *  Send feedback to: <megaraidlinux@lsi.com>
++ *  Send feedback to: megaraidlinux.pdl@avagotech.com
+  *
+- *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
+- *     ATTN: Linuxraid
++ *  Mail to: Avago Technologies, 350 West Trimble Road, Building 90,
++ *  San Jose, California 95131
+  */
  
- static ssize_t
--megasas_sysfs_show_release_date(struct device_driver *dd, char *buf)
--{
--	return snprintf(buf, strlen(MEGASAS_RELDATE) + 2, "%s\n",
--			MEGASAS_RELDATE);
--}
--
--static DRIVER_ATTR(release_date, S_IRUGO, megasas_sysfs_show_release_date,
--		   NULL);
--
--static ssize_t
- megasas_sysfs_show_support_poll_for_event(struct device_driver *dd, char *buf)
- {
- 	return sprintf(buf, "%u\n", support_poll_for_event);
-@@ -6712,8 +6702,7 @@ static int __init megasas_init(void)
- 	/*
- 	 * Announce driver version and other information
- 	 */
--	printk(KERN_INFO "megasas: %s %s\n", MEGASAS_VERSION,
--	       MEGASAS_EXT_VERSION);
-+	pr_info("megasas: %s\n", MEGASAS_VERSION);
+ #include <linux/kernel.h>
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index 685e6f3..246574b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -1,7 +1,8 @@
+ /*
+  *  Linux MegaRAID driver for SAS based RAID controllers
+  *
+- *  Copyright (c) 2009-2012  LSI Corporation.
++ *  Copyright (c) 2009-2013  LSI Corporation
++ *  Copyright (c) 2013-2014  Avago Technologies
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License
+@@ -14,20 +15,21 @@
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+  *  FILE: megaraid_sas_fp.c
+  *
+- *  Authors: LSI Corporation
++ *  Authors: Avago Technologies
+  *           Sumant Patro
+  *           Varad Talamacki
+  *           Manoj Jose
++ *           Kashyap Desai <kashyap.desai@avagotech.com>
++ *           Sumit Saxena <sumit.saxena@avagotech.com>
+  *
+- *  Send feedback to: <megaraidlinux@lsi.com>
++ *  Send feedback to: megaraidlinux.pdl@avagotech.com
+  *
+- *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
+- *     ATTN: Linuxraid
++ *  Mail to: Avago Technologies, 350 West Trimble Road, Building 90,
++ *  San Jose, California 95131
+  */
  
- 	spin_lock_init(&poll_aen_lock);
+ #include <linux/kernel.h>
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f37eed6..92f3354 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1,7 +1,8 @@
+ /*
+  *  Linux MegaRAID driver for SAS based RAID controllers
+  *
+- *  Copyright (c) 2009-2012  LSI Corporation.
++ *  Copyright (c) 2009-2013  LSI Corporation
++ *  Copyright (c) 2013-2014  Avago Technologies
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License
+@@ -14,19 +15,20 @@
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+  *  FILE: megaraid_sas_fusion.c
+  *
+- *  Authors: LSI Corporation
++ *  Authors: Avago Technologies
+  *           Sumant Patro
+- *           Adam Radford <linuxraid@lsi.com>
++ *           Adam Radford
++ *           Kashyap Desai <kashyap.desai@avagotech.com>
++ *           Sumit Saxena <sumit.saxena@avagotech.com>
+  *
+- *  Send feedback to: <megaraidlinux@lsi.com>
++ *  Send feedback to: megaraidlinux.pdl@avagotech.com
+  *
+- *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
+- *     ATTN: Linuxraid
++ *  Mail to: Avago Technologies, 350 West Trimble Road, Building 90,
++ *  San Jose, California 95131
+  */
  
-@@ -6748,10 +6737,6 @@ static int __init megasas_init(void)
- 				  &driver_attr_version);
- 	if (rval)
- 		goto err_dcf_attr_ver;
--	rval = driver_create_file(&megasas_pci_driver.driver,
--				  &driver_attr_release_date);
--	if (rval)
--		goto err_dcf_rel_date;
+ #include <linux/kernel.h>
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 0d183d5..92ecd39 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -1,7 +1,8 @@
+ /*
+  *  Linux MegaRAID driver for SAS based RAID controllers
+  *
+- *  Copyright (c) 2009-2012  LSI Corporation.
++ *  Copyright (c) 2009-2013  LSI Corporation
++ *  Copyright (c) 2013-2014  Avago Technologies
+  *
+  *  This program is free software; you can redistribute it and/or
+  *  modify it under the terms of the GNU General Public License
+@@ -14,19 +15,20 @@
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+- *  along with this program; if not, write to the Free Software
+- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  *
+  *  FILE: megaraid_sas_fusion.h
+  *
+- *  Authors: LSI Corporation
++ *  Authors: Avago Technologies
+  *           Manoj Jose
+  *           Sumant Patro
++ *           Kashyap Desai <kashyap.desai@avagotech.com>
++ *           Sumit Saxena <sumit.saxena@avagotech.com>
+  *
+- *  Send feedback to: <megaraidlinux@lsi.com>
++ *  Send feedback to: megaraidlinux.pdl@avagotech.com
+  *
+- *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
+- *     ATTN: Linuxraid
++ *  Mail to: Avago Technologies, 350 West Trimble Road, Building 90,
++ *  San Jose, California 95131
+  */
  
- 	rval = driver_create_file(&megasas_pci_driver.driver,
- 				&driver_attr_support_poll_for_event);
-@@ -6775,12 +6760,7 @@ err_dcf_support_device_change:
- err_dcf_dbg_lvl:
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			&driver_attr_support_poll_for_event);
--
- err_dcf_support_poll_for_event:
--	driver_remove_file(&megasas_pci_driver.driver,
--			   &driver_attr_release_date);
--
--err_dcf_rel_date:
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
- err_dcf_attr_ver:
- 	pci_unregister_driver(&megasas_pci_driver);
-@@ -6800,8 +6780,6 @@ static void __exit megasas_exit(void)
- 			&driver_attr_support_poll_for_event);
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			&driver_attr_support_device_change);
--	driver_remove_file(&megasas_pci_driver.driver,
--			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
- 
- 	pci_unregister_driver(&megasas_pci_driver);
+ #ifndef _MEGARAID_SAS_FUSION_H_
 -- 
 1.7.1
 
