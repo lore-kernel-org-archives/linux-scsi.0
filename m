@@ -1,277 +1,120 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/10] scsi: Implement per-cpu logging buffer
-Date: Tue, 18 Nov 2014 16:25:01 +0100
-Message-ID: <546B64CD.4010604@suse.de>
-References: <1416230728-66425-1-git-send-email-hare@suse.de> <1416230728-66425-4-git-send-email-hare@suse.de> <546A5021.20302@interlog.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH] bnx2fc: do not add shared skbs to the fcoe_rx_list
+Date: Tue, 18 Nov 2014 16:50:56 +0100
+Message-ID: <1416325856.3764.1.camel@dhcp-27-107.brq.redhat.com>
+References: <1406275372-3983-1-git-send-email-mlombard@redhat.com>
+	  <53D21166.4090608@redhat.com>
+	  <1408748523.3876.52.camel@lbirv-waie-lx2.broadcom.com>
+	 <1415974030.3977.1.camel@dhcp-27-107.brq.redhat.com>
+	 <alpine.OSX.2.00.1411141625350.2317@administrators-macbook-pro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59510 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:46828 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757154AbaKRPZF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2014 10:25:05 -0500
-In-Reply-To: <546A5021.20302@interlog.com>
+	id S1753439AbaKRPvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2014 10:51:06 -0500
+In-Reply-To: <alpine.OSX.2.00.1411141625350.2317@administrators-macbook-pro.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, Robert Elliott <elliott@hp.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
+To: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@lst.de
 
-On 11/17/2014 08:44 PM, Douglas Gilbert wrote:
-> On 14-11-17 08:25 AM, Hannes Reinecke wrote:
->> Implement a per-cpu buffer for formatting messages to
->> avoid line break up under high load.
->> This patch implements scmd_printk() and sdev_prefix_printk()
->> using the per-cpu buffer and makes sdev_printk() a wrapper
->> for sdev_prefix_printk().
->>
->> Tested-by: Robert Elliott <elliott@hp.com>
->> Reviewed-by: Robert Elliott <elliott@hp.com>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/Makefile       |   2 +-
->>   drivers/scsi/scsi_logging.c | 124
->> ++++++++++++++++++++++++++++++++++++++++++++
->>   include/scsi/scsi_device.h  |  21 +++-----
->>   3 files changed, 133 insertions(+), 14 deletions(-)
->>   create mode 100644 drivers/scsi/scsi_logging.c
->>
->> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
->> index 59f1ce6..4991b62 100644
->> --- a/drivers/scsi/Makefile
->> +++ b/drivers/scsi/Makefile
->> @@ -166,7 +166,7 @@ scsi_mod-y            +=3D scsi_scan.o
->> scsi_sysfs.o scsi_devinfo.o
->>   scsi_mod-$(CONFIG_SCSI_NETLINK)    +=3D scsi_netlink.o
->>   scsi_mod-$(CONFIG_SYSCTL)    +=3D scsi_sysctl.o
->>   scsi_mod-$(CONFIG_SCSI_PROC_FS)    +=3D scsi_proc.o
->> -scsi_mod-y            +=3D scsi_trace.o
->> +scsi_mod-y            +=3D scsi_trace.o scsi_logging.o
->>   scsi_mod-$(CONFIG_PM)        +=3D scsi_pm.o
->>
->>   hv_storvsc-y            :=3D storvsc_drv.o
->> diff --git a/drivers/scsi/scsi_logging.c
->> b/drivers/scsi/scsi_logging.c
->> new file mode 100644
->> index 0000000..09d65de
->> --- /dev/null
->> +++ b/drivers/scsi/scsi_logging.c
->> @@ -0,0 +1,124 @@
->> +/*
->> + * scsi_logging.c
->> + *
->> + * Copyright (C) 2014 SUSE Linux Products GmbH
->> + * Copyright (C) 2014 Hannes Reinecke <hare@suse.de>
->> + *
->> + * This file is released under the GPLv2
->> + */
->> +
->> +#include <linux/kernel.h>
->> +#include <linux/atomic.h>
->> +
->> +#include <scsi/scsi.h>
->> +#include <scsi/scsi_cmnd.h>
->> +#include <scsi/scsi_device.h>
->> +#include <scsi/scsi_dbg.h>
->> +
->> +#define SCSI_LOG_SPOOLSIZE 4096
->> +#define SCSI_LOG_BUFSIZE 128
->> +
->> +#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
->> +#warning SCSI logging bitmask too large
->> +#endif
->> +
->> +struct scsi_log_buf {
->> +    char buffer[SCSI_LOG_SPOOLSIZE];
->> +    unsigned long map;
->> +};
->> +
->> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
->> +
->> +static char *scsi_log_reserve_buffer(size_t *len)
->> +{
->> +    struct scsi_log_buf *buf;
->> +    unsigned long map_bits =3D sizeof(buf->buffer) / SCSI_LOG_BUFSI=
-ZE;
->> +    unsigned long idx =3D 0;
->> +
->> +    preempt_disable();
->> +    buf =3D this_cpu_ptr(&scsi_format_log);
->> +    idx =3D find_first_zero_bit(&buf->map, map_bits);
->> +    if (likely(idx < map_bits)) {
->> +        while (test_and_set_bit(idx, &buf->map)) {
->> +            idx =3D find_next_zero_bit(&buf->map, map_bits, idx);
->> +            if (idx >=3D map_bits)
->> +                break;
->> +        }
->> +    }
->> +    if (WARN_ON(idx >=3D map_bits)) {
->> +        preempt_enable();
->> +        return NULL;
->> +    }
->> +    *len =3D SCSI_LOG_BUFSIZE;
->> +    return buf->buffer + idx * SCSI_LOG_BUFSIZE;
->> +}
->> +
->> +static void scsi_log_release_buffer(char *bufptr)
->> +{
->> +    struct scsi_log_buf *buf;
->> +    unsigned long idx;
->> +    int ret;
->> +
->> +    buf =3D this_cpu_ptr(&scsi_format_log);
->> +    if (bufptr >=3D buf->buffer &&
->> +        bufptr < buf->buffer + SCSI_LOG_SPOOLSIZE) {
->> +        idx =3D (bufptr - buf->buffer) / SCSI_LOG_BUFSIZE;
->> +        ret =3D test_and_clear_bit(idx, &buf->map);
->> +        WARN_ON(!ret);
->> +    }
->> +    preempt_enable();
->> +}
->> +
->> +int sdev_prefix_printk(const char *level, const struct
->> scsi_device *sdev,
->> +               const char *name, const char *fmt, ...)
->> +{
->> +    va_list args;
->> +    char *logbuf;
->> +    size_t off =3D 0, logbuf_len;
->> +    int ret;
->> +
->> +    if (!sdev)
->> +        return 0;
->> +
->> +    logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
->> +    if (!logbuf)
->> +        return 0;
->> +
->> +    if (name)
->> +        off +=3D scnprintf(logbuf + off, logbuf_len - off,
->> +                 "[%s] ", name);
->> +    va_start(args, fmt);
->> +    off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
->> +    va_end(args);
->> +    ret =3D dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
->> +    scsi_log_release_buffer(logbuf);
->> +    return ret;
->> +}
->> +EXPORT_SYMBOL(sdev_prefix_printk);
->> +
->> +int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
->> +        const char *fmt, ...)
->> +{
->> +    struct gendisk *disk =3D scmd->request->rq_disk;
->> +    va_list args;
->> +    char *logbuf;
->> +    size_t off =3D 0, logbuf_len;
->> +    int ret;
->> +
->> +    if (!scmd || !scmd->cmnd)
->> +        return 0;
->> +
->> +    logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
->> +    if (!logbuf)
->> +        return 0;
->> +    if (disk)
->> +        off +=3D scnprintf(logbuf + off, logbuf_len - off,
->> +                 "[%s] ", disk->disk_name);
->> +    va_start(args, fmt);
->> +    off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
->> +    va_end(args);
->> +    ret =3D dev_printk(level, &scmd->device->sdev_gendev, "%s",
->> logbuf);
->> +    scsi_log_release_buffer(logbuf);
->> +    return ret;
->> +}
->> +EXPORT_SYMBOL(scmd_printk);
->> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->> index 0aeaa00..6fddcd2 100644
->> --- a/include/scsi/scsi_device.h
->> +++ b/include/scsi/scsi_device.h
->> @@ -230,9 +230,6 @@ struct scsi_dh_data {
->>   #define transport_class_to_sdev(class_dev) \
->>       to_scsi_device(class_dev->parent)
->>
->> -#define sdev_printk(prefix, sdev, fmt, a...)    \
->> -    dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
->> -
->>   #define sdev_dbg(sdev, fmt, a...) \
->>       dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
->>
->> @@ -240,16 +237,14 @@ struct scsi_dh_data {
->>    * like scmd_printk, but the device name is passed in
->>    * as a string pointer
->>    */
->> -#define sdev_prefix_printk(l, sdev, p, fmt, a...)            \
->> -    (p) ?                                \
->> -    sdev_printk(l, sdev, "[%s] " fmt, p, ##a) :            \
->> -    sdev_printk(l, sdev, fmt, ##a)
->> -
->> -#define scmd_printk(prefix, scmd, fmt, a...)                \
->> -        (scmd)->request->rq_disk ?                    \
->> -    sdev_printk(prefix, (scmd)->device, "[%s] " fmt,        \
->> -            (scmd)->request->rq_disk->disk_name, ##a) :        \
->> -    sdev_printk(prefix, (scmd)->device, fmt, ##a)
->> +extern int sdev_prefix_printk(const char *, const struct
->> scsi_device *,
->> +                  const char *, const char *, ...);
->> +
->> +#define sdev_printk(l, sdev, fmt, a...)                \
->> +    sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
->> +
->> +extern int scmd_printk(const char *, const struct scsi_cmnd *,
->> +               const char *, ...);
->>
->>   #define scmd_dbg(scmd, fmt, a...)                       \
->>       do {                                   \
->>
->=20
-> The gcc compiler knows about the idiosyncrasies of printf()
-> and will warn about abuses like this:
->    int k;
->    printf("string=3D%s\n", k);
->=20
->=20
-> In sg3_utils I sometimes collapse fprintf(stderr, const char fmt ...)
-> with a new function declaration like this:
->    int pr2serr(const char * fmt, ...)
->         __attribute__ ((format (printf, 1, 2)));
->=20
-> The "1" is the position of the fmt string (origin 1) and the
-> "2" is the position of the first arg to check. That __attribute__
-> tells the compiler how to do printf() style checking on
-> pr2serr().
->=20
->=20
-> In the kernel include compiler-gcc.h contains this define:
->=20
->   #define __printf(a, b)   __attribute__((format(printf, a, b)))
->=20
-> So I would suggest changing:
->   extern int sdev_prefix_printk(const char *, const struct
-> scsi_device *,
->                       const char *, const char *, ...);
-> to
->   extern __printf(4, 5) int
->      sdev_prefix_printk(const char *, const struct scsi_device *,
->                       const char *, const char *, ...);
->=20
->=20
-> plus a similar change to the scmd_printk() declaration (and any
-> other printf() style functions being introduced).
->=20
-Hmm. I guess you are right. Will be updating the patch.
+Hi Chad,
+Thanks.
 
-Cheers,
+CC James and Christoph
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, 2014-11-14 at 16:26 -0500, Chad Dupuis wrote:
+> Maurizio, we've been running this for a little while with no issues so 
+> it's good to go from our perspective.
+> 
+> Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> 
+> On Fri, 14 Nov 2014, Maurizio Lombardi wrote:
+> 
+> > Hi Chad,
+> >
+> > On Fri, 2014-08-22 at 16:02 -0700, Eddie Wai wrote:
+> >> On Fri, 2014-07-25 at 10:12 +0200, Maurizio Lombardi wrote:
+> >>>
+> >>> On 07/25/2014 10:02 AM, Maurizio Lombardi wrote:
+> >>>> In some cases, the fcoe_rx_list may contains multiple instances
+> >>>> of the same skb (the so called "shared skbs").
+> >>>>
+> >>>> the bnx2fc_l2_rcv thread is a loop that extracts a skb from the list,
+> >>>> modifies (and destroys) its content and the proceed to the next one.
+> >>>> The problem is that if the skb is shared, the remaining instances will
+> >>>> be corrupted.
+> >>>>
+> >>>> The solution is to use skb_share_check() before adding the skb to the
+> >>>> fcoe_rx_list.
+> >>>>
+> >>>> [ 6286.808725] ------------[ cut here ]------------
+> >>>> [ 6286.808729] WARNING: at include/scsi/fc_frame.h:173 bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]()
+> >>>> [ 6286.808748] Modules linked in: bnx2x(-) mdio dm_service_time bnx2fc cnic uio fcoe libfcoe 8021q garp stp mrp libfc llc scsi_transport_fc scsi_tgt sg iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel e1000e ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper ptp cryptd hpilo serio_raw hpwdt lpc_ich pps_core ipmi_si pcspkr mfd_core ipmi_msghandler shpchp pcc_cpufreq mperf nfsd auth_rpcgss nfs_acl lockd sunrpc dm_multipath xfs libcrc32c ata_generic pata_acpi sd_mod crc_t10dif crct10dif_common mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit ata_piix drm_kms_helper ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod [last unloaded: mdio]
+> >>>> [ 6286.808750] CPU: 3 PID: 1304 Comm: bnx2fc_l2_threa Not tainted 3.10.0-121.el7.x86_64 #1
+> >>>> [ 6286.808750] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+> >>>> [ 6286.808752]  0000000000000000 000000000b36e715 ffff8800deba1e00 ffffffff815ec0ba
+> >>>> [ 6286.808753]  ffff8800deba1e38 ffffffff8105dee1 ffffffffa05618c0 ffff8801e4c81888
+> >>>> [ 6286.808754]  ffffe8ffff663868 ffff8801f402b180 ffff8801f56bc000 ffff8800deba1e48
+> >>>> [ 6286.808754] Call Trace:
+> >>>> [ 6286.808759]  [<ffffffff815ec0ba>] dump_stack+0x19/0x1b
+> >>>> [ 6286.808762]  [<ffffffff8105dee1>] warn_slowpath_common+0x61/0x80
+> >>>> [ 6286.808763]  [<ffffffff8105e00a>] warn_slowpath_null+0x1a/0x20
+> >>>> [ 6286.808765]  [<ffffffffa054f415>] bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]
+> >>>> [ 6286.808767]  [<ffffffffa054eff0>] ? bnx2fc_disable+0x90/0x90 [bnx2fc]
+> >>>> [ 6286.808769]  [<ffffffff81085aef>] kthread+0xcf/0xe0
+> >>>> [ 6286.808770]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> >>>> [ 6286.808772]  [<ffffffff815fc76c>] ret_from_fork+0x7c/0xb0
+> >>>> [ 6286.808773]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> >>>> [ 6286.808774] ---[ end trace c6cdb939184ccb4e ]---
+> >>>>
+> >>>> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> >>>> ---
+> >>>>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++++
+> >>>>  1 file changed, 7 insertions(+)
+> >>>>
+> >>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> >>>> index 785d0d7..a190ab6 100644
+> >>>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> >>>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> >>>> @@ -411,6 +411,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+> >>>>  	struct fc_frame_header *fh;
+> >>>>  	struct fcoe_rcv_info *fr;
+> >>>>  	struct fcoe_percpu_s *bg;
+> >>>> +	struct sk_buff *tmp_skb;
+> >>>>  	unsigned short oxid;
+> >>>>
+> >>>>  	interface = container_of(ptype, struct bnx2fc_interface,
+> >>>> @@ -423,6 +424,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+> >>>>  		goto err;
+> >>>>  	}
+> >>>>
+> >>>> +	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
+> >>>> +	if (!tmp_skb)
+> >>>> +		goto err;
+> >>>> +
+> >>>> +	skb = tmp_skb;
+> >>>> +
+> >>>>  	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
+> >>>>  		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+> >>>>  		goto err;
+> >>>>
+> >> Seems logical, but this patch requires some testing which ought to be
+> >> verified by the Qlogic team.  Thanks.
+> >
+> > Any update about this?
+> > Is the QLogic team still reviewing this patch?
+> >
+> > Thanks,
+> > Maurizio Lombardi
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
