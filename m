@@ -1,27 +1,26 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 3/3] target: Change some fabric functions to return bool
-Date: Mon, 17 Nov 2014 14:58:06 -0800
-Message-ID: <546A7D7E.7090808@redhat.com>
-References: <1415911858-3123-1-git-send-email-agrover@redhat.com> <1415911858-3123-3-git-send-email-agrover@redhat.com> <20141114070604.GB3944@lst.de>
+From: "ST CHANG" <info@net.com.net>
+Subject: COMPANY REPRESENTATIVE NEEDED
+Date: Mon, 17 Nov 2014 23:00:57 -0800
+Message-ID: <20141118070109.36E7D71AE09@zimbra.primariabistrita.ro>
+Reply-To: changst78@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20141114070604.GB3944@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, nab@linux-iscsi.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wless186-36.bistrita.astral.ro ([85.186.37.36]:53032 "EHLO
+	zimbra.primariabistrita.ro" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752715AbaKRHrH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2014 02:47:07 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <info@net.com.net>
 
-On 11/13/2014 11:06 PM, Christoph Hellwig wrote:
-> On Thu, Nov 13, 2014 at 12:50:58PM -0800, Andy Grover wrote:
->> The tpg_check_* functions in the fabric_ops struct return 1 or 0,
->> so we can make their return type bool. Change fabrics to match.
->
-> All these true/false stub sounds like some of them methods should be
-> optional, and a useful default should be assumed if they aren't present.
+China Steel Corporation (CSAC), is in urgent need of a reputable company,/firm
+ or individual to serve as our financial coordinator in Canada, America, Europe,
+ Uk. It's a part time job and pays well. If you are interested in working with us
+ please reply: stchang307@yahoo.com.hk
 
-This may be true but I couldn't determine a useful default, or a change 
-that would make the code shorter or clearer, so I left it for now.
-
--- Andy
+Thank you very much.
+S T CHANG
