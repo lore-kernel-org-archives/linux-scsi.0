@@ -1,65 +1,63 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 2/2] scsi: ufs: fix NULL dereference when no regulators are defined
-Date: Tue, 18 Nov 2014 23:02:46 +0900
-Message-ID: <1416319366-11539-3-git-send-email-akinobu.mita@gmail.com>
-References: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:41044 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753903AbaKRODR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Nov 2014 09:03:17 -0500
-Received: by mail-pd0-f175.google.com with SMTP id y10so4636866pdj.6
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2014 06:03:16 -0800 (PST)
-In-Reply-To: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH 3.12 175/206] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+Date: Tue, 18 Nov 2014 15:08:50 +0100
+Message-ID: <e00e9894a2a3a78d1a5d890f778afd2c50b8e017.1416319692.git.jslaby@suse.cz>
+References: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <28f04bcc068a44c5641c727883947960fb8dcbd5.1416319692.git.jslaby@suse.cz>
+In-Reply-To: <cover.1416319692.git.jslaby@suse.cz>
+References: <cover.1416319692.git.jslaby@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Subhash Jadavani <subhashj@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-If no voltage supply regulators are defined for the UFS devices (assumed
-they are always-on), ufshcd_config_vreg_load() can be called on
-suspend/resume paths with vreg == NULL as hba->vreg_info.vcc* equal to
-NULL, and it causes NULL pointer dereference.
+From: Jan Kara <jack@suse.cz>
 
-This fixes it by making ufshcd_config_vreg_{h,l}pm noop when no regulators
-are defined.
+3.12-stable review patch.  If anyone has any objections, please let me know.
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+===============
+
+commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
+
+When sg_scsi_ioctl() fails to prepare request to submit in
+blk_rq_map_kern() we jump to a label where we just end up copying
+(luckily zeroed-out) kernel buffer to userspace instead of reporting
+error. Fix the problem by jumping to the right label.
+
+CC: Jens Axboe <axboe@kernel.dk>
+CC: linux-scsi@vger.kernel.org
+Coverity-id: 1226871
+Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+
+Fixed up the, now unused, out label.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ block/scsi_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 59b6544..d18adc4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4248,12 +4248,18 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
-+	if (!vreg)
-+		return 0;
-+
- 	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
- }
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index a5ffcc988f0b..1b4988b4bc11 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -506,7 +506,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
  
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
-+	if (!vreg)
-+		return 0;
-+
- 	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
+ 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
+ 		err = DRIVER_ERROR << 24;
+-		goto out;
++		goto error;
+ 	}
  
+ 	memset(sense, 0, sizeof(sense));
+@@ -516,7 +516,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	blk_execute_rq(q, disk, rq, 0);
+ 
+-out:
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
 -- 
-1.9.1
-
+2.1.3
