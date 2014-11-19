@@ -1,56 +1,63 @@
-From: Anish Bhatt <anish@chelsio.com>
-Subject: [PATCH net] cxgb4i : Don't block unload/cxgb4 unload when remote closes TCP connection
-Date: Tue, 18 Nov 2014 19:09:51 -0800
-Message-ID: <1416366591-9699-1-git-send-email-anish@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:57799
-	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754362AbaKSDKs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2014 22:10:48 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Barto <mister.freeman@laposte.net>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Wed, 19 Nov 2014 21:21:55 +0100
+Message-ID: <546CFBE3.6080407@laposte.net>
+References: <54629CAE.2000207@laposte.net> <CAErSpo6FFK6zMOWSK9=dOOMKjWd1soAyj9r73yP8Z_U4F9ygAA@mail.gmail.com> <5462CB90.1080303@roeck-us.net> <54642541.9080302@laposte.net> <94D0CD8314A33A4D9D801C0FE68B4029593A1880@G9W0745.americas.hpqcorp.net> <54647C10.4070506@laposte.net> <20141113142907.GB29354@infradead.org> <5464E6E6.3090606@laposte.net> <20141113175402.GA27327@infradead.org> <546536EA.4070705@laposte.net> <20141114073214.GA1879@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141114073214.GA1879@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Joe Perches <joe@perches.com>
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, davem@davemloft.net, hch@infradead.org, jbottomley@parallels.com, kxie@chelsio.com, manojmalviya@chelsio.com, Anish Bhatt <anish@chelsio.com>
 
-cxgb4i was returning wrong error and not releasing module reference if remote
-end abruptly closed TCP connection. This prevents the cxgb4 network module from
-being unloaded, further affecting other network drivers dependent on cxgb4
+Hello,
 
-Sending to net as this affects all cxgb4 based network drivers.
+I solved the mystery,
 
-Signed-off-by: Anish Bhatt <anish@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 2 ++
- drivers/scsi/cxgbi/libcxgbi.c      | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+I found that the element who triggers the bug ( random hang at boot wit=
+h
+kernel 3.17 and 3.18 ) is the combination of 3 elements :
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 3e0a0d3..f48f40ce 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -828,6 +828,8 @@ static void do_act_open_rpl(struct cxgbi_device *cdev, struct sk_buff *skb)
- 	if (status == CPL_ERR_RTX_NEG_ADVICE)
- 		goto rel_skb;
- 
-+	module_put(THIS_MODULE);
-+
- 	if (status && status != CPL_ERR_TCAM_FULL &&
- 	    status != CPL_ERR_CONN_EXIST &&
- 	    status != CPL_ERR_ARP_MISS)
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 674d498..9d63853 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -816,7 +816,7 @@ static void cxgbi_inform_iscsi_conn_closing(struct cxgbi_sock *csk)
- 		read_lock_bh(&csk->callback_lock);
- 		if (csk->user_data)
- 			iscsi_conn_failure(csk->user_data,
--					ISCSI_ERR_CONN_FAILED);
-+					ISCSI_ERR_TCP_CONN_CLOSE);
- 		read_unlock_bh(&csk->callback_lock);
- 	}
- }
--- 
-2.1.3
+- the use of a SATA DVD burner ( Liteon iHAS124 C ) on a ICH7 Sata cont=
+roler
+- the use of a gigabyte motherboard GA-P31-DSL3 ( bios F10A, ICH7
+controler, intel P31 chipset )
+- commit 74665016086615bbaa3fa6f83af410a0a4e029ee ( scsi: convert
+host_busy to atomic_t )
 
+If I connect this Sata DVD burner and a sata harddisk by using the SATA
+ports of the motherboard then the bug will occur ( but the bug will
+occur only on kernels 3.17 and 3.18, there is no problems with older
+kernels, and no problems with Windows 7 )
+
+If I disconnect the SATA DVD burner then the bug is gone, no problems
+with kernels 3.17 and 3.18,
+
+And if I connect the SATA DVD burner on my JMicron SATA/IDE PCIe card
+then there is no problem, no bugs, this is a perfect workaround for my
+problem, because I can use kernel 3.17/3.18 without problem with this
+configuration.
+
+But I don't know which element I should blame, my gigabyte motherboard =
+?
+( faulty bios ? ) The use of "atomic_t" in scsi source code ? (
+innapropriate way to handle SATA devices, it breaks compatibility with
+some PC configurations ? )
+
+
+
+
+Le 14/11/2014 08:32, Christoph Hellwig a =E9crit :
+> On Thu, Nov 13, 2014 at 11:55:38PM +0100, Barto wrote:
+>> it's interesting, with this commit
+>> 74665016086615bbaa3fa6f83af410a0a4e029ee I have the bug :
+>>
+>> scsi: convert host_busy to atomic_t :
+>=20
+> At this point we'll need a bisction between v3.16 as the last good
+> point, and 74665016086615bbaa3fa6f83af410a0a4e029ee as the known bad
+> point.
+>=20
