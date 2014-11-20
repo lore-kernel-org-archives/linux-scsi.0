@@ -1,61 +1,49 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/1] SCSI: Deletion of unnecessary checks before the function
- call "put_device"
-Date: Thu, 20 Nov 2014 18:55:14 +0100
-Message-ID: <546E2B02.5090902@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 88591] New: SCSI_IOCTL_GET_IDLUN only returns 8 bits for the
+ SCSI Target value
+Date: Thu, 20 Nov 2014 17:55:41 +0000
+Message-ID: <bug-88591-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:51024 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757858AbaKTRzo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2014 12:55:44 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 12AF620225
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 17:55:43 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id B719E20221
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 17:55:41 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Thu, 20 Nov 2014 18:48:52 +0100
+https://bugzilla.kernel.org/show_bug.cgi?id=88591
 
-The put_device() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+            Bug ID: 88591
+           Summary: SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
+                    Target value
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.14.22
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: kg6esx@gmail.com
+        Regression: No
 
-This issue was detected by using the Coccinelle software.
+However, very large configurations can have target ids that exceed 255.
+Or, in the process of devices dropping offline and being rediscovered, they can
+be assigned target ids greater than 255.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/hosts.c      | 3 +--
- drivers/scsi/scsi_sysfs.c | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 6de80e3..57afb19 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -337,8 +337,7 @@ static void scsi_host_dev_release(struct device *dev)
- 
- 	kfree(shost->shost_data);
- 
--	if (parent)
--		put_device(parent);
-+	put_device(parent);
- 	kfree(shost);
- }
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 8b4105a..c977c99 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -426,8 +426,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	kfree(sdev->inquiry);
- 	kfree(sdev);
- 
--	if (parent)
--		put_device(parent);
-+	put_device(parent);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
 -- 
-2.1.3
+You are receiving this mail because:
+You are watching the assignee of the bug.
