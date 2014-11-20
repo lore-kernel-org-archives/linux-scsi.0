@@ -1,32 +1,29 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net] cxgb4i : Don't block unload/cxgb4 unload when
- remote closes TCP connection
-Date: Wed, 19 Nov 2014 16:59:50 -0500 (EST)
-Message-ID: <20141119.165950.2141251288119010411.davem@davemloft.net>
-References: <1416366591-9699-1-git-send-email-anish@chelsio.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
+Date: Wed, 19 Nov 2014 22:01:35 -0800
+Message-ID: <20141120060135.GA2862@infradead.org>
+References: <alpine.LRH.2.11.1411141302270.26966@adalberg.ut.ee>
+ <20141114165804.GA14631@infradead.org>
+ <alpine.LRH.2.11.1411142114200.26813@adalberg.ut.ee>
+ <54665B30.4070708@kernel.dk>
+ <alpine.LRH.2.11.1411150033400.26813@adalberg.ut.ee>
+ <54669063.6050307@kernel.dk>
+ <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
+ <546771B4.1010507@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:39258 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933448AbaKSV7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2014 16:59:54 -0500
-In-Reply-To: <1416366591-9699-1-git-send-email-anish@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <546771B4.1010507@kernel.dk>
+Sender: sparclinux-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Meelis Roos <mroos@linux.ee>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: anish@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org, jbottomley@parallels.com, kxie@chelsio.com, manojmalviya@chelsio.com
 
-From: Anish Bhatt <anish@chelsio.com>
-Date: Tue, 18 Nov 2014 19:09:51 -0800
+On Sat, Nov 15, 2014 at 08:31:00AM -0700, Jens Axboe wrote:
+> My next move would be to add more debug to the CPU map setup and teardown,
+> so that we can verify that the map that is being used above has indeed been
+> setup. Unless Christoph has any ideas on what is going on here?
 
-> cxgb4i was returning wrong error and not releasing module reference if remote
-> end abruptly closed TCP connection. This prevents the cxgb4 network module from
-> being unloaded, further affecting other network drivers dependent on cxgb4
-> 
-> Sending to net as this affects all cxgb4 based network drivers.
-> 
-> Signed-off-by: Anish Bhatt <anish@chelsio.com>
-
-Applied, thank you.
+No good idea, but I'd sugges to debug cpu_to_queue_index how it could
+return such an out of bounds value.
