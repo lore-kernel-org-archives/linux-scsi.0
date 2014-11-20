@@ -1,55 +1,57 @@
-From: "Dolev Raviv" <draviv@codeaurora.org>
+From: merez@codeaurora.org
 Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
-Date: Thu, 20 Nov 2014 11:19:19 -0000
-Message-ID: <d51584ba38bf9946b22be1d72b69b3a0.squirrel@www.codeaurora.org>
+Date: Thu, 20 Nov 2014 11:42:01 -0000
+Message-ID: <3e1028b6661b84e7aed555863e098e67.squirrel@www.codeaurora.org>
 References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-    <20141023171536.GB16990@infradead.org>
-    <cf3edc6781220b166188fb5f6d07cc2d.squirrel@www.codeaurora.org>
-    <20141024092251.GA22849@infradead.org>
-    <e3ee043b87cc2e043cf23f52ca4772f1.squirrel@www.codeaurora.org>
-    <20141027095054.GC31604@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:49035 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbaKTLTU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 06:19:20 -0500
-In-Reply-To: <20141027095054.GC31604@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-Cc: Dolev Raviv <draviv@codeaurora.org>, Christoph Hellwig <hch@infradead.org>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Vinayak Holikatti <vinholikatti@gmail.com>
 
+Reviewed-by: Maya Erez <merez@codeaurora.org>
 
-> On Sun, Oct 26, 2014 at 11:04:06AM -0000, Dolev Raviv wrote:
->> > Btw, MAINTAINERS doesn't mention you for the ufs driver, should it?
->>
->> No it shouldn't.
+> Contains a couple of bug fixes reported by Akinobu Mita, In adition to
+> "static checker" warnings reported by Dan Carpenter.
 >
-> It seems like I'm getting a lot of the series from you and your signoff,
-> why shouldn't you be listed in MAINTAINERS?  From the list activity it
-> seems like you and Sujit are the defator maintainers.
+> Akinobu Mita (1):
+>   scsi: ufs: fix reference counting of W-LUs
 >
-
-Thank you,
-Sorry this mail was forgotten in the archives.
-I'll have to pass, as I will not be able to be fully committed.
-
-> Santosh just send a patch to remove himself, and I only see very little
-> activity from Vinayak, with his last ACK in early July and a few
-> more earlier in the year.
+> Dolev Raviv (4):
+>   scsi: ufs: fix static checker errors in ufshcd_system_suspend
+>   scsi: ufs: fix static checker warning in ufshcd_populate_vreg
+>   scsi: ufs: fix static checker warning in __ufshcd_setup_clocks
+>   scsi: ufs: fix static checker warning in ufshcd_parse_clock_info
 >
+> Yaniv Gardi (1):
+>   scsi: ufs: fix power info after link start-up
+>
+>  drivers/scsi/ufs/ufshcd-pltfrm.c | 15 +++----
+>  drivers/scsi/ufs/ufshcd.c        | 96
+> +++++++++++++++++++++++-----------------
+>  drivers/scsi/ufs/ufshcd.h        |  2 -
+>  3 files changed, 61 insertions(+), 52 deletions(-)
+>
+> --
+> 1.8.5.2
+> --
+> Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
+> Foundation Collaborative Project
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
 
 -- 
-Thanks,
-Dolev
-
--- 
+Maya Erez
 Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
-Foundation Collaborative Project
-
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+Collaborative Project
