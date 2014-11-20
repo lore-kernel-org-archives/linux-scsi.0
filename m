@@ -1,23 +1,31 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [Bug 88591] New: SCSI_IOCTL_GET_IDLUN only returns 8 bits for
- the SCSI Target value
-Date: Thu, 20 Nov 2014 16:01:15 -0500
-Message-ID: <546E569B.60906@interlog.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 88591] SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
+ Target value
+Date: Thu, 20 Nov 2014 21:08:55 +0000
+Message-ID: <bug-88591-11613-hTBET59p4T@https.bugzilla.kernel.org/>
 References: <bug-88591-11613@https.bugzilla.kernel.org/>
-Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51968 "EHLO smtp.infotech.no"
+Received: from mail.kernel.org ([198.145.19.201]:58066 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757459AbaKTVBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2014 16:01:31 -0500
+	id S1756223AbaKTVJA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2014 16:09:00 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 284D320222
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 21:08:58 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 43AEF2021B
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 21:08:56 +0000 (UTC)
 In-Reply-To: <bug-88591-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=88591
+
+--- Comment #1 from d gilbert <dgilbert@interlog.com> ---
 On 14-11-20 12:55 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=88591
 >
@@ -61,7 +69,8 @@ opened /dev/sde that would usually be 8,64 . Then go searching in
 sysfs for a "dev" file that contains "8,64" ***, then look at
 the real path of the match (i.e. without any symlinks).
 That real path might be:
-   /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:4/block/sde/dev
+  
+/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:4/block/sde/dev
 
 Back up that real path until you find /<h>:<c>:<t>:<l>/ and
 there is your LUN: <l>
@@ -82,3 +91,7 @@ BTW Thanks to udev, just because a disk is known as /dev/sde
      sysfs) will know it as "sde", it could be "sdg". That is
      the reason for searching with major,minor numbers rather
      than its name.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
