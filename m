@@ -1,97 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 88591] SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
- Target value
-Date: Thu, 20 Nov 2014 21:08:55 +0000
-Message-ID: <bug-88591-11613-hTBET59p4T@https.bugzilla.kernel.org/>
-References: <bug-88591-11613@https.bugzilla.kernel.org/>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 1/1] SCSI-aic94xx: Deletion of an unnecessary check before
+ the function call "kfree"
+Date: Thu, 20 Nov 2014 23:23:20 +0100
+Message-ID: <546E69D8.4040002@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58066 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756223AbaKTVJA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2014 16:09:00 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 284D320222
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 21:08:58 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 43AEF2021B
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 21:08:56 +0000 (UTC)
-In-Reply-To: <bug-88591-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=88591
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 20 Nov 2014 23:18:56 +0100
 
---- Comment #1 from d gilbert <dgilbert@interlog.com> ---
-On 14-11-20 12:55 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=88591
->
->              Bug ID: 88591
->             Summary: SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
->                      Target value
->             Product: SCSI Drivers
->             Version: 2.5
->      Kernel Version: 3.14.22
->            Hardware: All
->                  OS: Linux
->                Tree: Mainline
->              Status: NEW
->            Severity: normal
->            Priority: P1
->           Component: Other
->            Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->            Reporter: kg6esx@gmail.com
->          Regression: No
->
+The kfree() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-If that ioctl has not been deprecated, it should be. Fixing
-it would likely break existing apps so I doubt that will
-happen. Introducing new ioctls is discouraged.
+This issue was detected by using the Coccinelle software.
 
-Also the 8 bit LUN "feature" with this ioctl was documented
-over 10 years ago, about the time that a new ioctl was proposed
-to address this issue.
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-
-The answer is to use sysfs. Now you would think sysfs would
-have a pseudo file called "lun" in some obvious place that
-would contain the 64 bit LUN value in binary, hex or decimal.
-Even better would be a string of eight bytes to match T10's
-LUN representation.
-No, that would be too simple.
-
-One way to find a file descriptor's LUN is to use stat() to
-get its major and minor device numbers. For example if you had
-opened /dev/sde that would usually be 8,64 . Then go searching in
-sysfs for a "dev" file that contains "8,64" ***, then look at
-the real path of the match (i.e. without any symlinks).
-That real path might be:
-  
-/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:4/block/sde/dev
-
-Back up that real path until you find /<h>:<c>:<t>:<l>/ and
-there is your LUN: <l>
-That would be "4" for the path show above.
-
-
-As you may have noticed sysfs is a pretty bad mechanism
-for answering this type of question, compared to an ioctl.
-
-Doug Gilbert
-
-
-*** the details of the search differ depending on whether the
-     driver is bsg, sg, sd, st, ses ....
-
-BTW Thanks to udev, just because a disk is known as /dev/sde
-     in the user space, doesn't mean that the kernel (and
-     sysfs) will know it as "sde", it could be "sdg". That is
-     the reason for searching with major,minor numbers rather
-     than its name.
-
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index c56741f..0bfdcba 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -597,8 +597,7 @@ static void asd_destroy_ha_caches(struct asd_ha_struct *asd_ha)
+ 	if (asd_ha->hw_prof.scb_ext)
+ 		asd_free_coherent(asd_ha, asd_ha->hw_prof.scb_ext);
+ 
+-	if (asd_ha->hw_prof.ddb_bitmap)
+-		kfree(asd_ha->hw_prof.ddb_bitmap);
++	kfree(asd_ha->hw_prof.ddb_bitmap);
+ 	asd_ha->hw_prof.ddb_bitmap = NULL;
+ 
+ 	for (i = 0; i < ASD_MAX_PHYS; i++) {
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.1.3
