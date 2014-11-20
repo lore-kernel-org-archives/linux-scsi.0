@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 21/22] mpt3sas: Add branding string support for OEM custom HBA
-Date: Thu, 20 Nov 2014 12:35:54 +0530
-Message-ID: <1416467155-16869-22-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 19/22] [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and 2.00.34 header files
+Date: Thu, 20 Nov 2014 12:35:52 +0530
+Message-ID: <1416467155-16869-20-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,90 +10,117 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the following OEM's branding to the mpt3sas driver.
+Following is the change set,
 
-"VendorID"   "DeviceID"  "SubsystemVendor ID"   "SubsystemDevice ID"  Cisco Branding String
-0x1000         0x97         SVID = 0x1137             0x014C          Cisco 9300-8E 12G SAS HBA
+1. Added more defines for the BiosOptions field of MPI2_CONFIG_PAGE_BIOS_1.
+2. Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC definition.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 34 ++++++++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.h | 11 +++++++++++
- 2 files changed, 45 insertions(+)
+ drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 14 ++++++++++++--
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  4 +++-
+ 3 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index cc1bfef..088c138 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2371,6 +2371,39 @@ _base_display_dell_branding(struct MPT3SAS_ADAPTER *ioc)
- 	}
- }
- 
-+/**
-+ * _base_display_cisco_branding - Display branding string
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_display_cisco_branding(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_CISCO)
-+		return;
-+
-+	switch (ioc->pdev->device) {
-+	case MPI25_MFGPAGE_DEVID_SAS3008:
-+		switch (ioc->pdev->subsystem_device) {
-+		case MPT3SAS_CISCO_12G_HBA_SSDID:
-+			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
-+				MPT3SAS_CISCO_12G_HBA_BRANDING);
-+			break;
-+		default:
-+			pr_info(MPT3SAS_FMT
-+			  "Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+			  ioc->name, ioc->pdev->subsystem_device);
-+			break;
-+		}
-+		break;
-+	default:
-+		 pr_info(MPT3SAS_FMT
-+			"Cisco 12Gbps SAS HBA: Subsystem ID: 0x%X\n",
-+			ioc->name, ioc->pdev->subsystem_device);
-+		break;
-+	}
-+}
- 
- /**
-  * _base_display_ioc_capabilities - Disply IOC's capabilities.
-@@ -2403,6 +2436,7 @@ _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
- 
- 	_base_display_intel_branding(ioc);
- 	_base_display_dell_branding(ioc);
-+	_base_display_cisco_branding(ioc);
- 
- 	pr_info(MPT3SAS_FMT "Protocol=(", ioc->name);
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index f2ce5a5..9608e3a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -163,6 +163,17 @@
- #define MPT3SAS_DELL_12G_HBA_SSDID	0x1F46
- 
- /*
-+ * Cisco HBA branding
-+ */
-+#define MPT3SAS_CISCO_12G_HBA_BRANDING       \
-+	"Cisco 9300-8E 12G SAS HBA"
-+
-+/*
-+ * Cisco HBA SSSDIDs
-+ */
-+ #define MPT3SAS_CISCO_12G_HBA_SSDID  0x14C
-+
-+/*
-  * status bits for ioc->diag_buffer_status
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
+index d730c5c..c2d127c 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                 scatter/gather formats.
+  * Creation Date:  June 21, 2006
+  *
+- * mpi2.h Version:  02.00.33
++ * mpi2.h Version:  02.00.34
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -90,6 +90,7 @@
+  * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
+  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
++ * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
+  * --------------------------------------------------------------------------
   */
- #define MPT3_DIAG_BUFFER_IS_REGISTERED	(0x01)
+ 
+@@ -123,7 +124,7 @@
+ #define MPI2_VERSION_02_05                  (0x0205)
+ 
+ /*Unit and Dev versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x21)
++#define MPI2_HEADER_VERSION_UNIT            (0x22)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 62dfbf6..66f2cc1 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI Configuration messages and pages
+  * Creation Date:  November 10, 2006
+  *
+- *   mpi2_cnfg.h Version:  02.00.27
++ *   mpi2_cnfg.h Version:  02.00.28
+  *
+  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
+  *       prefix are for use only on MPI v2.5 products, and must not be used
+@@ -175,6 +175,8 @@
+  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
+  *		       Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
+  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
++ * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
++ *		       MPI2_CONFIG_PAGE_BIOS_1.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -1334,9 +1336,17 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
+ 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
+ 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
+ 
+-#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
++#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
+ 
+ /*values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		    (0x00000400)
++
++#define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
++#define MPI2_BIOSPAGE1_OPTIONS_USE_BIT0_REGISTRATION_UEFI_BSD	(0x00000000)
++#define MPI2_BIOSPAGE1_OPTIONS_FULL_REGISTRATION_UEFI_BSD	(0x00000100)
++#define MPI2_BIOSPAGE1_OPTIONS_ADAPTER_REGISTRATION_UEFI_BSD	(0x00000200)
++#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_REGISTRATION_UEFI_BSD	(0x00000300)
++
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
+ #define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
+ 
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+index 904910d..1629e5b 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
+@@ -6,7 +6,7 @@
+  *         Title:  MPI diagnostic tool structures and definitions
+  * Creation Date:  March 26, 2007
+  *
+- *   mpi2_tool.h Version:  02.00.11
++ *   mpi2_tool.h Version:  02.00.12
+  *
+  * Version History
+  * ---------------
+@@ -33,6 +33,7 @@
+  * 07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
+  *                     it uses MPI Chain SGE as well as MPI Simple SGE.
+  * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
++ * 01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
+  * --------------------------------------------------------------------------
+  */
+ 
+@@ -100,6 +101,7 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST {
+ #define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
+ #define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
+ #define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
++#define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
+ #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
+ #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
+ #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
 -- 
 2.0.2
