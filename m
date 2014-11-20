@@ -1,46 +1,84 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/1] SCSI-eata_pio: Deletion of an unnecessary check before
- the function call "pci_dev_put"
-Date: Thu, 20 Nov 2014 20:42:19 +0100
-Message-ID: <546E441B.7040004@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug 88591] New: SCSI_IOCTL_GET_IDLUN only returns 8 bits for
+ the SCSI Target value
+Date: Thu, 20 Nov 2014 16:01:15 -0500
+Message-ID: <546E569B.60906@interlog.com>
+References: <bug-88591-11613@https.bugzilla.kernel.org/>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:51968 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757459AbaKTVBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2014 16:01:31 -0500
+In-Reply-To: <bug-88591-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Thu, 20 Nov 2014 20:37:30 +0100
+On 14-11-20 12:55 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=88591
+>
+>              Bug ID: 88591
+>             Summary: SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
+>                      Target value
+>             Product: SCSI Drivers
+>             Version: 2.5
+>      Kernel Version: 3.14.22
+>            Hardware: All
+>                  OS: Linux
+>                Tree: Mainline
+>              Status: NEW
+>            Severity: normal
+>            Priority: P1
+>           Component: Other
+>            Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+>            Reporter: kg6esx@gmail.com
+>          Regression: No
+>
 
-The pci_dev_put() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+If that ioctl has not been deprecated, it should be. Fixing
+it would likely break existing apps so I doubt that will
+happen. Introducing new ioctls is discouraged.
 
-This issue was detected by using the Coccinelle software.
+Also the 8 bit LUN "feature" with this ioctl was documented
+over 10 years ago, about the time that a new ioctl was proposed
+to address this issue.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/eata_pio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
-index 8319d2b..707f64d 100644
---- a/drivers/scsi/eata_pio.c
-+++ b/drivers/scsi/eata_pio.c
-@@ -122,8 +122,7 @@ static int eata_pio_release(struct Scsi_Host *sh)
- 			release_region(sh->io_port, sh->n_io_port);
- 	}
- 	/* At this point the PCI reference can go */
--	if (hd->pdev)
--		pci_dev_put(hd->pdev);
-+	pci_dev_put(hd->pdev);
- 	return 1;
- }
- 
--- 
-2.1.3
+The answer is to use sysfs. Now you would think sysfs would
+have a pseudo file called "lun" in some obvious place that
+would contain the 64 bit LUN value in binary, hex or decimal.
+Even better would be a string of eight bytes to match T10's
+LUN representation.
+No, that would be too simple.
+
+One way to find a file descriptor's LUN is to use stat() to
+get its major and minor device numbers. For example if you had
+opened /dev/sde that would usually be 8,64 . Then go searching in
+sysfs for a "dev" file that contains "8,64" ***, then look at
+the real path of the match (i.e. without any symlinks).
+That real path might be:
+   /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:4/block/sde/dev
+
+Back up that real path until you find /<h>:<c>:<t>:<l>/ and
+there is your LUN: <l>
+That would be "4" for the path show above.
+
+
+As you may have noticed sysfs is a pretty bad mechanism
+for answering this type of question, compared to an ioctl.
+
+Doug Gilbert
+
+
+*** the details of the search differ depending on whether the
+     driver is bsg, sg, sd, st, ses ....
+
+BTW Thanks to udev, just because a disk is known as /dev/sde
+     in the user space, doesn't mean that the kernel (and
+     sysfs) will know it as "sde", it could be "sdg". That is
+     the reason for searching with major,minor numbers rather
+     than its name.
