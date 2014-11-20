@@ -1,221 +1,44 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 01/22] [SCSI] mpt2sas: MPI2 Rev AA (2.00.19) specifications
-Date: Thu, 20 Nov 2014 12:35:34 +0530
-Message-ID: <1416467155-16869-2-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with DID_RESET status for log_info value 0x0x32010081
+Date: Thu, 20 Nov 2014 12:35:40 +0530
+Message-ID: <1416467155-16869-8-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og112.obsmtp.com ([64.18.2.177]:59912 "EHLO
-	exprod7og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbaKTHL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 02:11:57 -0500
-Received: by mail-pd0-f179.google.com with SMTP id w10so2544124pde.10
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2014 23:11:56 -0800 (PST)
+Received: from exprod7og126.obsmtp.com ([64.18.2.206]:36184 "EHLO
+	exprod7og126.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780AbaKTHMB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 02:12:01 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lj1so1987215pab.32
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2014 23:12:00 -0800 (PST)
 In-Reply-To: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-Below is the changeset from the MPI specification and 2.00.34 header files
-1) Defined additional bits in the BiosOptions field of BIOS Page 1 to allow for finer control of X86 BIOS and UEFI BSD.
-2) For the Clean Tool, reserved bit 26 of the Flags field for product specific use.
+For any SCSI command, if the driver receives IOC status = SCSI_IOC_TERMINATED and log info = 0x32010081
+ then that command will be completed with DID_RESET host status.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpi/mpi2.h      |  4 +++-
- drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h | 38 +++++++++++++++++++++++++++++-------
- drivers/scsi/mpt2sas/mpi/mpi2_ioc.h  |  4 +++-
- drivers/scsi/mpt2sas/mpi/mpi2_tool.h |  6 ++++--
- 4 files changed, 41 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index 088eefa..76cde3f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.32
-+ *  mpi2.h Version:  02.00.34
-  *
-  *  Version History
-  *  ---------------
-@@ -83,6 +83,8 @@
-  *  04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT.
-  *  --------------------------------------------------------------------------
-  */
- 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index 510ef0d..f055310 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
-  *
-- *    mpi2_cnfg.h Version:  02.00.26
-+ *    mpi2_cnfg.h Version:  02.00.28
-  *
-  *  Version History
-  *  ---------------
-@@ -157,6 +157,18 @@
-  *  04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
-  *			Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
-  *			match the specification.
-+ *  12-05-13  02.00.27  Added MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL for
-+ *			MPI2_CONFIG_PAGE_MAN_7.
-+ *			Added EnclosureLevel and ConnectorName fields to
-+ *			MPI2_CONFIG_PAGE_SAS_DEV_0.
-+ *			Added MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID for
-+ *			MPI2_CONFIG_PAGE_SAS_DEV_0.
-+ *			Added EnclosureLevel field to
-+ *			MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ *			Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
-+ *			MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ *  01-08-14  02.00.28  Added more defines for the BiosOptions field of
-+ *			MPI2_CONFIG_PAGE_BIOS_1.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -706,6 +718,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
- #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
- 
- /* defines for the Flags field */
-+#define MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL         (0x00000008)
- #define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
- #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
- 
-@@ -1235,9 +1248,17 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1
- } MPI2_CONFIG_PAGE_BIOS_1, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_BIOS_1,
-   Mpi2BiosPage1_t, MPI2_POINTER pMpi2BiosPage1_t;
- 
--#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
-+#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
- 
- /* values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS                 (0x00000400)
-+
-+#define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD       (0x00000300)
-+#define MPI2_BIOSPAGE1_OPTIONS_USE_BIT0_REGISTRATION_UEFI_BSD   (0x00000000)
-+#define MPI2_BIOSPAGE1_OPTIONS_FULL_REGISTRATION_UEFI_BSD       (0x00000100)
-+#define MPI2_BIOSPAGE1_OPTIONS_ADAPTER_REGISTRATION_UEFI_BSD    (0x00000200)
-+#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_REGISTRATION_UEFI_BSD    (0x00000300)
-+
- #define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
- #define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
- 
-@@ -2420,13 +2441,13 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0
-     U8                                  PortGroups;             /* 0x2C */
-     U8                                  DmaGroup;               /* 0x2D */
-     U8                                  ControlGroup;           /* 0x2E */
--    U8                                  Reserved1;              /* 0x2F */
--    U32                                 Reserved2;              /* 0x30 */
-+	U8				 EnclosureLevel;	 /* 0x2F */
-+	U8				 ConnectorName[4];	 /* 0x30 */
-     U32                                 Reserved3;              /* 0x34 */
- } MPI2_CONFIG_PAGE_SAS_DEV_0, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SAS_DEV_0,
-   Mpi2SasDevicePage0_t, MPI2_POINTER pMpi2SasDevicePage0_t;
- 
--#define MPI2_SASDEVICE0_PAGEVERSION         (0x08)
-+#define MPI2_SASDEVICE0_PAGEVERSION         (0x09)
- 
- /* values for SAS Device Page 0 AccessStatus field */
- #define MPI2_SAS_DEVICE0_ASTATUS_NO_ERRORS                  (0x00)
-@@ -2464,6 +2485,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0
- #define MPI2_SAS_DEVICE0_FLAGS_SATA_NCQ_SUPPORTED           (0x0020)
- #define MPI2_SAS_DEVICE0_FLAGS_SATA_FUA_SUPPORTED           (0x0010)
- #define MPI2_SAS_DEVICE0_FLAGS_PORT_SELECTOR_ATTACH         (0x0008)
-+#define MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID             (0x0002)
- #define MPI2_SAS_DEVICE0_FLAGS_DEVICE_PRESENT               (0x0001)
- 
- 
-@@ -2732,7 +2754,8 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0
-     U16                                 EnclosureHandle;            /* 0x16 */
-     U16                                 NumSlots;                   /* 0x18 */
-     U16                                 StartSlot;                  /* 0x1A */
--    U16                                 Reserved2;                  /* 0x1C */
-+	U8				 Reserved2;		     /* 0x1C */
-+	U8				 EnclosureLevel;	     /* 0x1D */
-     U16                                 SEPDevHandle;               /* 0x1E */
-     U32                                 Reserved3;                  /* 0x20 */
-     U32                                 Reserved4;                  /* 0x24 */
-@@ -2740,9 +2763,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0
-   MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
-   Mpi2SasEnclosurePage0_t, MPI2_POINTER pMpi2SasEnclosurePage0_t;
- 
--#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x03)
-+#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x04)
- 
- /* values for SAS Enclosure Page 0 Flags field */
-+#define MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID      (0x0010)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_MASK              (0x000F)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_UNKNOWN           (0x0000)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_IOC_SES           (0x0001)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index 2c3b0f2..b02de48 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.23
-+ *  mpi2_ioc.h Version:  02.00.24
-  *
-  *  Version History
-  *  ---------------
-@@ -126,6 +126,7 @@
-  *                      Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
-  *                      Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
-  *                      Added Encrypted Hash Extended Image.
-+ *  12-05-13  02.00.24  Added MPI25_HASH_IMAGE_TYPE_BIOS.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -1589,6 +1590,7 @@ Mpi25EncryptedHashEntry_t, MPI2_POINTER pMpi25EncryptedHashEntry_t;
- /* values for HashImageType */
- #define MPI25_HASH_IMAGE_TYPE_UNUSED            (0x00)
- #define MPI25_HASH_IMAGE_TYPE_FIRMWARE          (0x01)
-+#define MPI25_HASH_IMAGE_TYPE_BIOS              (0x02)
- 
- /* values for HashAlgorithm */
- #define MPI25_HASH_ALGORITHM_UNUSED             (0x00)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-index 9be03ed..659b8ac 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI diagnostic tool structures and definitions
-  *  Creation Date:  March 26, 2007
-  *
-- *    mpi2_tool.h Version:  02.00.11
-+ *    mpi2_tool.h Version:  02.00.12
-  *
-  *  Version History
-  *  ---------------
-@@ -29,7 +29,8 @@
-  *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
-  *  07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
-  *			it uses MPI Chain SGE as well as MPI Simple SGE.
-- * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
-+ *  08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
-+ *  01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -101,6 +102,7 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST
- #define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
- #define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
- #define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
-+#define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
- #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
- #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
- #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 38acb91..c6bb136 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -4574,6 +4574,10 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 			scmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 			goto out;
+ 		}
++		if (log_info == 0x32010081) {
++			scmd->result = DID_RESET << 16;
++			break;
++		}
+ 		scmd->result = DID_SOFT_ERROR << 16;
+ 		break;
+ 	case MPI2_IOCSTATUS_SCSI_TASK_TERMINATED:
 -- 
 2.0.2
 
