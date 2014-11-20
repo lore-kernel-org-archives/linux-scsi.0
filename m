@@ -1,52 +1,43 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH] scsi: mpt2sas: Fix spelling.
-Date: Thu, 20 Nov 2014 13:54:19 +0530
-Message-ID: <CAK=zhgoM=0aN52M8ejf9j7fB509nxOazgeYR9BMCF6PG31VFHw@mail.gmail.com>
-References: <20141107005034.GA8448@alexpilon.ca>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V4 4/5] scsi: Change default value of max_report_luns to
+ 16k-1
+Date: Thu, 20 Nov 2014 01:23:33 -0800
+Message-ID: <20141120092333.GA26901@infradead.org>
+References: <1416237730-1862-1-git-send-email-revers@redhat.com>
+ <1416237730-1862-5-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og106.obsmtp.com ([64.18.2.165]:42075 "EHLO
-	exprod7og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377AbaKTIYV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 03:24:21 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so2978195wgg.21
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2014 00:24:19 -0800 (PST)
-In-Reply-To: <20141107005034.GA8448@alexpilon.ca>
+Received: from bombadil.infradead.org ([198.137.202.9]:40736 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905AbaKTJXe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 04:23:34 -0500
+Content-Disposition: inline
+In-Reply-To: <1416237730-1862-5-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Pilon <alp+linux@alexpilon.ca>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, trivial@kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
 
-Hi,
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -105,12 +105,13 @@ MODULE_PARM_DESC(scan, "sync, async or none");
+>   * in practice, the maximum number of LUNs suppored by any device
+>   * is about 16k.
+>   */
+> -static unsigned int max_scsi_report_luns = 511;
+> +static unsigned int max_scsi_report_luns = 16383;
+>  
+>  module_param_named(max_report_luns, max_scsi_report_luns, uint, S_IRUGO|S_IWUSR);
 
-Please consider this patch as Acked-by: "Sreekanth Reddy"
-<Sreekanth.Reddy@avagotech.com>.
+What's the point of keepign this parameter?  From looking at ancient
+history we initially supported just 128 LUNs by default when Doug added
+support for REPORT_LUNS, and we later increased it to 511 when Kurt
+enabled REPORT_LUNS support by default.
 
-Regards,
-Sreekanth.
+I can't really see any reason to limit the size except for avoiding
+large allocations, and with the two step process we take care of that
+easily.
 
-On Fri, Nov 7, 2014 at 6:20 AM, Alex Pilon <alp+linux@alexpilon.ca> wrote:
-> Fix 'ioctl' spelling.
->
-> Signed-off-by: Alex Pilon <alp+linux@alexpilon.ca>
-> ---
->  drivers/scsi/mpt2sas/mpt2sas_ctl.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.h b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-> index fa0567c..7f842c8 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-> @@ -224,7 +224,7 @@ struct mpt2_ioctl_eventreport {
->  };
->
->  /**
-> - * struct mpt2_ioctl_command - generic mpt firmware passthru ioclt
-> + * struct mpt2_ioctl_command - generic mpt firmware passthru ioctl
->   * @hdr - generic header
->   * @timeout - command timeout in seconds. (if zero then use driver default
->   *  value).
-> --
-> 2.1.3
->
+Any reason to keep two responses around in the file instead of a
+"goto retry" after updating the length?
+
