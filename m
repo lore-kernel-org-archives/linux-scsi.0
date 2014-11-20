@@ -1,29 +1,91 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
-Date: Wed, 19 Nov 2014 22:01:35 -0800
-Message-ID: <20141120060135.GA2862@infradead.org>
-References: <alpine.LRH.2.11.1411141302270.26966@adalberg.ut.ee>
- <20141114165804.GA14631@infradead.org>
- <alpine.LRH.2.11.1411142114200.26813@adalberg.ut.ee>
- <54665B30.4070708@kernel.dk>
- <alpine.LRH.2.11.1411150033400.26813@adalberg.ut.ee>
- <54669063.6050307@kernel.dk>
- <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
- <546771B4.1010507@kernel.dk>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Wed, 19 Nov 2014 22:09:33 -0800
+Message-ID: <20141120060933.GA21432@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42737 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbaKTGJi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 01:09:38 -0500
 Content-Disposition: inline
-In-Reply-To: <546771B4.1010507@kernel.dk>
-Sender: sparclinux-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Meelis Roos <mroos@linux.ee>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Barto <mister.freeman@laposte.net>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Nov 15, 2014 at 08:31:00AM -0700, Jens Axboe wrote:
-> My next move would be to add more debug to the CPU map setup and teardown,
-> so that we can verify that the map that is being used above has indeed been
-> setup. Unless Christoph has any ideas on what is going on here?
+I
 
-No good idea, but I'd sugges to debug cpu_to_queue_index how it could
-return such an out of bounds value.
+Hi Barto,
+
+sorry for the late reply, and thanks for drilling down the exact
+conditions.
+
+I think we have some issues with the lack of the host lock vs error
+handling, but I still don't undertand the details.
+
+I've got a test patch for you that just adds the host lock back in a few
+places while keeing the atomic_t.  Can you try to reproduce with that
+one?
+
+When breaking an existing setup in software it's always the softwares
+fault, btw..
+
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 994eb08..99b77f7 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -311,16 +311,16 @@ void scsi_device_unbusy(struct scsi_device *sdev)
+ 	struct scsi_target *starget = scsi_target(sdev);
+ 	unsigned long flags;
+ 
++	spin_lock_irqsave(shost->host_lock, flags);
+ 	atomic_dec(&shost->host_busy);
+ 	if (starget->can_queue > 0)
+ 		atomic_dec(&starget->target_busy);
+ 
+ 	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     (shost->host_failed || shost->host_eh_scheduled))) {
+-		spin_lock_irqsave(shost->host_lock, flags);
+ 		scsi_eh_wakeup(shost);
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+ 	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	atomic_dec(&sdev->device_busy);
+ }
+@@ -1504,6 +1504,8 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 	if (scsi_host_in_recovery(shost))
+ 		return 0;
+ 
++	spin_lock_irq(shost->host_lock);
++
+ 	busy = atomic_inc_return(&shost->host_busy) - 1;
+ 	if (atomic_read(&shost->host_blocked) > 0) {
+ 		if (busy)
+@@ -1527,21 +1529,19 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 
+ 	/* We're OK to process the command, so we can't be starved */
+ 	if (!list_empty(&sdev->starved_entry)) {
+-		spin_lock_irq(shost->host_lock);
+ 		if (!list_empty(&sdev->starved_entry))
+ 			list_del_init(&sdev->starved_entry);
+-		spin_unlock_irq(shost->host_lock);
+ 	}
+ 
++	spin_unlock_irq(shost->host_lock);
+ 	return 1;
+ 
+ starved:
+-	spin_lock_irq(shost->host_lock);
+ 	if (list_empty(&sdev->starved_entry))
+ 		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+-	spin_unlock_irq(shost->host_lock);
+ out_dec:
+ 	atomic_dec(&shost->host_busy);
++	spin_unlock_irq(shost->host_lock);
+ 	return 0;
+ }
+ 
