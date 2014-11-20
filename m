@@ -1,66 +1,192 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
-Date: Thu, 20 Nov 2014 12:35:39 +0530
-Message-ID: <1416467155-16869-7-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 14/22] [SCSI] mpt2sas, mpt3sas: Remove redundancy code while freeing the controller resources.
+Date: Thu, 20 Nov 2014 12:35:47 +0530
+Message-ID: <1416467155-16869-15-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og123.obsmtp.com ([64.18.2.24]:36841 "EHLO
-	exprod7og123.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755999AbaKTHNh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 02:13:37 -0500
-Received: by mail-pa0-f46.google.com with SMTP id lj1so1982535pab.33
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2014 23:13:37 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-1. Removed the upper boundary restriction for the module parameter max_sgl_entries. Earlier, the max_sgl_entries was capped at the SCSI_MAX_SG_SEGMENTS kernel definition. With this change, the user would be able to set the max_sgl_entries to any value.
-2. Added a print for the message log whenever the user sets the max_sgl_entries to a value greater than SCSI_MAX_SG_SEGMENTS to warn about the kernel definition overriding.
+Removed the redundancy code while freeing the controller resources.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c | 9 ++++++---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 5 ++++-
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 49 ++++++++++++++++++-------------
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 57 +++++++++++++++++++++----------------
+ 2 files changed, 61 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 13d1d5b..adb99e5 100644
+index 7286cd2..79626d9 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -2492,9 +2492,12 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+@@ -1501,6 +1501,33 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ }
  
- 	/* command line tunables  for max sgl entries */
- 	if (max_sgl_entries != -1) {
--		ioc->shost->sg_tablesize = (max_sgl_entries <
--		    MPT2SAS_SG_DEPTH) ? max_sgl_entries :
--		    MPT2SAS_SG_DEPTH;
-+		if (max_sgl_entries > MPT2SAS_SG_DEPTH)
-+			printk(MPT2SAS_WARN_FMT
-+			 "setting max_sgl_entries(%d), overriding kernel"
-+			 " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-+			  max_sgl_entries, MPT2SAS_SG_DEPTH);
-+		ioc->shost->sg_tablesize = max_sgl_entries;
- 	} else {
- 		ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
+ /**
++ * mpt2sas_base_unmap_resources - free controller resources
++ * @ioc: per adapter object
++ */
++void
++mpt2sas_base_unmap_resources(struct MPT2SAS_ADAPTER *ioc)
++{
++	struct pci_dev *pdev = ioc->pdev;
++
++	dexitprintk(ioc, printk(MPT2SAS_FMT "%s\n",
++		ioc->name, __func__));
++
++	_base_free_irq(ioc);
++	_base_disable_msix(ioc);
++
++	if (ioc->chip_phys) {
++		iounmap(ioc->chip);
++		ioc->chip_phys = 0;
++	}
++
++	if (pci_is_enabled(pdev)) {
++		pci_release_selected_regions(ioc->pdev, ioc->bars);
++		pci_disable_pcie_error_reporting(pdev);
++		pci_disable_device(pdev);
++	}
++}
++
++/**
+  * mpt2sas_base_map_resources - map in controller resources (io/irq/memap)
+  * @ioc: per adapter object
+  *
+@@ -1606,12 +1633,7 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	return 0;
+ 
+  out_fail:
+-	if (ioc->chip_phys)
+-		iounmap(ioc->chip);
+-	ioc->chip_phys = 0;
+-	pci_release_selected_regions(ioc->pdev, ioc->bars);
+-	pci_disable_pcie_error_reporting(pdev);
+-	pci_disable_device(pdev);
++	mpt2sas_base_unmap_resources(ioc);
+ 	return r;
+ }
+ 
+@@ -4422,8 +4444,6 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ void
+ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ {
+-	struct pci_dev *pdev = ioc->pdev;
+-
+ 	dexitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+ 	    __func__));
+ 
+@@ -4434,18 +4454,7 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		ioc->shost_recovery = 0;
  	}
+ 
+-	_base_free_irq(ioc);
+-	_base_disable_msix(ioc);
+-
+-	if (ioc->chip_phys && ioc->chip)
+-		iounmap(ioc->chip);
+-	ioc->chip_phys = 0;
+-
+-	if (pci_is_enabled(pdev)) {
+-		pci_release_selected_regions(ioc->pdev, ioc->bars);
+-		pci_disable_pcie_error_reporting(pdev);
+-		pci_disable_device(pdev);
+-	}
++	mpt2sas_base_unmap_resources(ioc);
+ 	return;
+ }
+ 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index f1918cf..35d4780 100644
+index 527f91b..4322d7c 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2667,7 +2667,10 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
- 	if (sg_tablesize < MPT3SAS_MIN_PHYS_SEGMENTS)
- 		sg_tablesize = MPT3SAS_MIN_PHYS_SEGMENTS;
- 	else if (sg_tablesize > MPT3SAS_MAX_PHYS_SEGMENTS)
--		sg_tablesize = MPT3SAS_MAX_PHYS_SEGMENTS;
-+		pr_warn(MPT3SAS_FMT
-+		 "setting max_sgl_entries(%d), overriding kernel"
-+		 " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-+		 max_sgl_entries, MPT3SAS_MAX_PHYS_SEGMENTS);
- 	ioc->shost->sg_tablesize = sg_tablesize;
+@@ -1791,6 +1791,36 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ }
  
- 	ioc->hi_priority_depth = facts->HighPriorityCredit;
+ /**
++ * mpt3sas_base_unmap_resources - free controller resources
++ * @ioc: per adapter object
++ */
++void
++mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct pci_dev *pdev = ioc->pdev;
++
++	dexitprintk(ioc, printk(MPT3SAS_FMT "%s\n",
++		ioc->name, __func__));
++
++	_base_free_irq(ioc);
++	_base_disable_msix(ioc);
++
++	if (ioc->msix96_vector)
++		kfree(ioc->replyPostRegisterIndex);
++
++	if (ioc->chip_phys) {
++		iounmap(ioc->chip);
++		ioc->chip_phys = 0;
++	}
++
++	if (pci_is_enabled(pdev)) {
++		pci_release_selected_regions(ioc->pdev, ioc->bars);
++		pci_disable_pcie_error_reporting(pdev);
++		pci_disable_device(pdev);
++	}
++}
++
++/**
+  * mpt3sas_base_map_resources - map in controller resources (io/irq/memap)
+  * @ioc: per adapter object
+  *
+@@ -1918,14 +1948,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	return 0;
+ 
+  out_fail:
+-	if (ioc->chip_phys)
+-		iounmap(ioc->chip);
+-	ioc->chip_phys = 0;
+-	pci_release_selected_regions(ioc->pdev, ioc->bars);
+-	pci_disable_pcie_error_reporting(pdev);
+-	pci_disable_device(pdev);
+-	if (ioc->msix96_vector)
+-		kfree(ioc->replyPostRegisterIndex);
++	mpt3sas_base_unmap_resources(ioc);
+ 	return r;
+ }
+ 
+@@ -4657,8 +4680,6 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+ void
+ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ {
+-	struct pci_dev *pdev = ioc->pdev;
+-
+ 	dexitprintk(ioc, pr_info(MPT3SAS_FMT "%s\n", ioc->name,
+ 	    __func__));
+ 
+@@ -4669,21 +4690,7 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->shost_recovery = 0;
+ 	}
+ 
+-	_base_free_irq(ioc);
+-	_base_disable_msix(ioc);
+-
+-	if (ioc->msix96_vector)
+-		kfree(ioc->replyPostRegisterIndex);
+-
+-	if (ioc->chip_phys && ioc->chip)
+-		iounmap(ioc->chip);
+-	ioc->chip_phys = 0;
+-
+-	if (pci_is_enabled(pdev)) {
+-		pci_release_selected_regions(ioc->pdev, ioc->bars);
+-		pci_disable_pcie_error_reporting(pdev);
+-		pci_disable_device(pdev);
+-	}
++	mpt3sas_base_unmap_resources(ioc);
+ 	return;
+ }
+ 
 -- 
 2.0.2
-
