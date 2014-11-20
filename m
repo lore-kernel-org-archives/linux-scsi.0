@@ -1,39 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: Add Intel Multi-Flex to scsi scan blacklist
-Date: Thu, 20 Nov 2014 06:08:43 -0800
-Message-ID: <20141120140843.GB13685@infradead.org>
-References: <1416338612.13492.17.camel@hfg-karlsruhe.de>
- <20141120064606.GB5928@infradead.org>
- <20141120121058.Horde.TOmtlQZW4WfH4rWoXm9iVg3@webmail.hfg-karlsruhe.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Re: 3.16 commit 89fb4cd errors on drives without
+ SYNC CACHE
+Date: Thu, 20 Nov 2014 10:11:57 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1411201008290.1061-100000@iolanthe.rowland.org>
+References: <20141120064233.GA29412@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48102 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbaKTOIo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 09:08:44 -0500
-Content-Disposition: inline
-In-Reply-To: <20141120121058.Horde.TOmtlQZW4WfH4rWoXm9iVg3@webmail.hfg-karlsruhe.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:57013 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755979AbaKTPL6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 10:11:58 -0500
+In-Reply-To: <20141120064233.GA29412@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: christian.suenkenberg@hfg-karlsruhe.de
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff DeFouw <mrj@plorb.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Thu, Nov 20, 2014 at 12:10:58PM +0100, christian.suenkenberg@hfg-karlsruhe.de wrote:
-> Hello,
-> 
-> On Wed, 19 Nov 2014 22:46:06 -0800, Christoph Hellwig wrote:
-> >Looks reasonable.  Btw, that is the Intel Multi-Flex? A search seems to
-> >b pointing to ethernet switches..
-> 
-> it's a volume manager / multiplexer that comes with the Intel Modular
-> Server Chassis (MFSYS25 / MFSYS35 / MFSYS25V2). It allows you to create
-> RAID volumes on a shared storage controller and attach them to up to
-> six compute blades. Compute blades then see the volumes as LUs of an
-> Intel Multi-Flex device attached to their LSI SAS 1064E.
-> 
-> I'd also like to ask whether this patch could land in stable,
-> as one needs a very patient initramfs or rootdelay at the moment
-> to boot distributions post Linux 3.6 on these machines.
+On Wed, 19 Nov 2014, Christoph Hellwig wrote:
 
-Yes, this should go into -stable.
+> On Sat, Nov 15, 2014 at 08:14:57PM -0500, Jeff DeFouw wrote:
+> > Kernel 3.16 includes commit
+> > 89fb4cd1f717a871ef79fa7debbe840e3225cd54
+> > scsi: handle flush errors properly
+> > 
+> > I have an old USB backup drive that indicates a write cache but does not 
+> > support Synchronize Cache(10).  The request error now gets returned, 
+> > resulting in a journal abort and inability to write to the ext3 
+> > filesystem.  I was able to work around the problem by adding a new USB 
+> > storage quirk that completes the request without contacting the drive.  
+> > Is it acceptable for a drive to respond this way, and therefore need to 
+> > be handled in the SCSI layer, or is a new USB storage quirk the right 
+> > way to go?
+> 
+> Maybe the problem is that usb-storage sets the wce_default_on flag, and
+> we thus send a SYNCHRONIZE_CACHE even if the devices never claimed to
+> support it?
+
+usb-storage sets wce_default_on only for devices that are marked with 
+the US_FL_WRITE_CACHE quirk flag.  Currently only two devices have that 
+flag: the Seagate Portable HDD (vendor ID 0x0bc2, product ID 0x2300) 
+and the Western Digital My Password HDD (vendor ID 0x1058, product ID 
+0x070a).
+
+> Adding the 
+
+Alan Stern
+
