@@ -1,46 +1,44 @@
 From: merez@codeaurora.org
-Subject: Re: [PATCH 0/6] various fixes for UFS-PM series
-Date: Thu, 20 Nov 2014 11:42:01 -0000
-Message-ID: <3e1028b6661b84e7aed555863e098e67.squirrel@www.codeaurora.org>
-References: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
+Subject: Re: [PATCH 0/2] UFS driver fixes for v3.18
+Date: Thu, 20 Nov 2014 11:45:45 -0000
+Message-ID: <0142d978ba393fab5d3c60847c99c4c4.squirrel@www.codeaurora.org>
+References: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com>
+    <20141120064530.GA5928@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1414059917-13831-1-git-send-email-draviv@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, Dolev Raviv <draviv@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:50748 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbaKTLpq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 06:45:46 -0500
+In-Reply-To: <20141120064530.GA5928@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <jbottomley@parallels.com>
 
-Reviewed-by: Maya Erez <merez@codeaurora.org>
+Hi Chris and Mita,
 
-> Contains a couple of bug fixes reported by Akinobu Mita, In adition to
-> "static checker" warnings reported by Dan Carpenter.
+We will review and test the below patches early next week.
+
+Thanks,
+Maya
+> On Tue, Nov 18, 2014 at 11:02:44PM +0900, Akinobu Mita wrote:
+>> This patch series includes two fixes for UFS driver.
+>>
+>> The first patch already got reviewed and it was a part of Dolev's
+>> various
+>> fixes for UFS-PM series
+>> (http://marc.info/?l=linux-scsi&m=141405993104015),
+>> but they are not merged scsi-queue yet.  So this series also includes
+>> it.
 >
-> Akinobu Mita (1):
->   scsi: ufs: fix reference counting of W-LUs
+> Actually that series is missing reviews for this and mother other
+> patches.
 >
-> Dolev Raviv (4):
->   scsi: ufs: fix static checker errors in ufshcd_system_suspend
->   scsi: ufs: fix static checker warning in ufshcd_populate_vreg
->   scsi: ufs: fix static checker warning in __ufshcd_setup_clocks
->   scsi: ufs: fix static checker warning in ufshcd_parse_clock_info
->
-> Yaniv Gardi (1):
->   scsi: ufs: fix power info after link start-up
->
->  drivers/scsi/ufs/ufshcd-pltfrm.c | 15 +++----
->  drivers/scsi/ufs/ufshcd.c        | 96
-> +++++++++++++++++++++++-----------------
->  drivers/scsi/ufs/ufshcd.h        |  2 -
->  3 files changed, 61 insertions(+), 52 deletions(-)
->
-> --
-> 1.8.5.2
-> --
-> Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
-> Foundation Collaborative Project
+> Can the UFS community please start reviewing each others patches?
+> Thanks!
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
@@ -55,3 +53,4 @@ Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
 Collaborative Project
+
