@@ -1,129 +1,46 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 1/7] lpfc: remove queue_depth events
-Date: Thu, 20 Nov 2014 14:16:05 -0500
-Message-ID: <546E3DF5.9050805@emulex.com>
-References: <1415901546-8006-1-git-send-email-hch@lst.de> <1415901546-8006-2-git-send-email-hch@lst.de>
-Reply-To: <james.smart@emulex.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 1/1] SCSI-libfc: Deletion of an unnecessary check before the
+ function call "fc_fcp_ddp_done"
+Date: Thu, 20 Nov 2014 20:15:39 +0100
+Message-ID: <546E3DDB.5040508@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=iso-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:47780 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756845AbaKTTQl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 14:16:41 -0500
-In-Reply-To: <1415901546-8006-2-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, Robert Love <robert.w.love@intel.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Looks fine
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 20 Nov 2014 20:10:19 +0100
 
+The fc_fcp_ddp_done() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-Acked-by:  James Smart  <james.smart@emulex.com>
+This issue was detected by using the Coccinelle software.
 
--- james s
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/scsi/libfc/fc_exch.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-
-On 11/13/2014 12:59 PM, Christoph Hellwig wrote:
-> James Smart said the userspace to consume these events never emerged.  Given
-> that these get in the way of the following patches remove support for them.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/lpfc/lpfc_scsi.c | 66 -------------------------------------------
->   1 file changed, 66 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index 8533ee9..80351ff 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -243,60 +243,6 @@ lpfc_update_stats(struct lpfc_hba *phba, struct  lpfc_scsi_buf *lpfc_cmd)
->   }
->   
->   /**
-> - * lpfc_send_sdev_queuedepth_change_event - Posts a queuedepth change event
-> - * @phba: Pointer to HBA context object.
-> - * @vport: Pointer to vport object.
-> - * @ndlp: Pointer to FC node associated with the target.
-> - * @lun: Lun number of the scsi device.
-> - * @old_val: Old value of the queue depth.
-> - * @new_val: New value of the queue depth.
-> - *
-> - * This function sends an event to the mgmt application indicating
-> - * there is a change in the scsi device queue depth.
-> - **/
-> -static void
-> -lpfc_send_sdev_queuedepth_change_event(struct lpfc_hba *phba,
-> -		struct lpfc_vport  *vport,
-> -		struct lpfc_nodelist *ndlp,
-> -		uint64_t lun,
-> -		uint32_t old_val,
-> -		uint32_t new_val)
-> -{
-> -	struct lpfc_fast_path_event *fast_path_evt;
-> -	unsigned long flags;
-> -
-> -	fast_path_evt = lpfc_alloc_fast_evt(phba);
-> -	if (!fast_path_evt)
-> -		return;
-> -
-> -	fast_path_evt->un.queue_depth_evt.scsi_event.event_type =
-> -		FC_REG_SCSI_EVENT;
-> -	fast_path_evt->un.queue_depth_evt.scsi_event.subcategory =
-> -		LPFC_EVENT_VARQUEDEPTH;
-> -
-> -	/* Report all luns with change in queue depth */
-> -	fast_path_evt->un.queue_depth_evt.scsi_event.lun = lun;
-> -	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
-> -		memcpy(&fast_path_evt->un.queue_depth_evt.scsi_event.wwpn,
-> -			&ndlp->nlp_portname, sizeof(struct lpfc_name));
-> -		memcpy(&fast_path_evt->un.queue_depth_evt.scsi_event.wwnn,
-> -			&ndlp->nlp_nodename, sizeof(struct lpfc_name));
-> -	}
-> -
-> -	fast_path_evt->un.queue_depth_evt.oldval = old_val;
-> -	fast_path_evt->un.queue_depth_evt.newval = new_val;
-> -	fast_path_evt->vport = vport;
-> -
-> -	fast_path_evt->work_evt.evt = LPFC_EVT_FASTPATH_MGMT_EVT;
-> -	spin_lock_irqsave(&phba->hbalock, flags);
-> -	list_add_tail(&fast_path_evt->work_evt.evt_listp, &phba->work_list);
-> -	spin_unlock_irqrestore(&phba->hbalock, flags);
-> -	lpfc_worker_wake_up(phba);
-> -
-> -	return;
-> -}
-> -
-> -/**
->    * lpfc_change_queue_depth - Alter scsi device queue depth
->    * @sdev: Pointer the scsi device on which to change the queue depth.
->    * @qdepth: New queue depth to set the sdev to.
-> @@ -310,11 +256,6 @@ static int
->   lpfc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
->   {
->   	struct lpfc_vport *vport = (struct lpfc_vport *) sdev->host->hostdata;
-> -	struct lpfc_hba   *phba = vport->phba;
-> -	struct lpfc_rport_data *rdata;
-> -	unsigned long new_queue_depth, old_queue_depth;
-> -
-> -	old_queue_depth = sdev->queue_depth;
->   
->   	switch (reason) {
->   	case SCSI_QDEPTH_DEFAULT:
-> @@ -334,13 +275,6 @@ lpfc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
->   		return -EOPNOTSUPP;
->   	}
->   
-> -	new_queue_depth = sdev->queue_depth;
-> -	rdata = lpfc_rport_data_from_scsi_device(sdev);
-> -	if (rdata)
-> -		lpfc_send_sdev_queuedepth_change_event(phba, vport,
-> -						       rdata->pnode, sdev->lun,
-> -						       old_queue_depth,
-> -						       new_queue_depth);
->   	return sdev->queue_depth;
->   }
->   
-
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 1b3a094..aad6f48 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -2120,8 +2120,7 @@ static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
+ 	spin_unlock_bh(&ep->ex_lock);
+ 	return sp;
+ err:
+-	if (fsp)
+-		fc_fcp_ddp_done(fsp);
++	fc_fcp_ddp_done(fsp);
+ 	rc = fc_exch_done_locked(ep);
+ 	spin_unlock_bh(&ep->ex_lock);
+ 	if (!rc)
+-- 
+2.1.3
