@@ -1,20 +1,17 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] zfcp features for 3.19
-Date: Thu, 20 Nov 2014 07:52:54 -0800
-Message-ID: <20141120155254.GA26189@infradead.org>
-References: <1415887188-40233-1-git-send-email-maier@linux.vnet.ibm.com>
+Subject: Re: [PATCH V4 linux-next RESEND 2] bfa: replace 2
+ kzalloc/copy_from_user by memdup_user
+Date: Thu, 20 Nov 2014 07:53:17 -0800
+Message-ID: <20141120155317.GB26189@infradead.org>
+References: <1415990998-29659-1-git-send-email-fabf@skynet.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59227 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756223AbaKTPw4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 10:52:56 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1415887188-40233-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1415990998-29659-1-git-send-email-fabf@skynet.be>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Thanks, applied all three patches to drivers-for-3.19
+Thanks, applied to drivers-for-3.19.
