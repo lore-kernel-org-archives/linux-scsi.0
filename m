@@ -1,62 +1,217 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 18/22] [SCSI] mpt3sas: Update MPI2 strings to MPI2.5
-Date: Thu, 20 Nov 2014 12:35:51 +0530
-Message-ID: <1416467155-16869-19-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 13/22] [SCSI] mpt3sas: Added module parameter 'unblock_io' to unblock IO's during disk addition
+Date: Thu, 20 Nov 2014 12:35:46 +0530
+Message-ID: <1416467155-16869-14-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og101.obsmtp.com ([64.18.2.155]:40799 "EHLO
-	exprod7og101.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757136AbaKTHOs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Nov 2014 02:14:48 -0500
-Received: by mail-pa0-f48.google.com with SMTP id rd3so1999211pab.7
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2014 23:14:48 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Update MPI2 strings to MPI2.5.
+During hot-plugging of a disk(having a flaky link), the disk addition
+stops and any further disk addition or removal doesn't happen on that controller.
+
+This is because, when driver receives DELAY_NOT_RESPONDING for a disk when it is undergoing
+addition in the SCSI Mid layer, the driver would block the I/O to that disk
+resulting in a deadlock. i.e the disk addition work couldn't be completed
+as it can't send any I/O to the disk as I/Os are blocked. Any device removal (TARGET_NOT_RESPONDING)
+or link update(RC_PHY_CHANGED) couldn't be processed as they are in the queue
+to get processed after disk addition.
+
+Description of Change:
+To handle such cases, unblock the I/Os to the disk in ISR context if the disk is undergoing
+addition. The I/Os would get unblocked only if the driver receives RC_PHY_CHANGED reason
+code when the device addition is within the SAS Transport layer.
+
+An module parameter 'unblock_io' is introduced which needs to be set to have this
+functionality enabled. By default this functionality is disabled.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
- drivers/scsi/mpt3sas/mpt3sas_base.h | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  4 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 63 +++++++++++++++++++++++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 14 +++++++
+ 3 files changed, 75 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 4322d7c..5fafd51 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3891,7 +3891,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
- 	mpi_request.WhoInit = MPI2_WHOINIT_HOST_DRIVER;
- 	mpi_request.VF_ID = 0; /* TODO */
- 	mpi_request.VP_ID = 0;
--	mpi_request.MsgVersion = cpu_to_le16(MPI2_VERSION);
-+	mpi_request.MsgVersion = cpu_to_le16(MPI25_VERSION);
- 	mpi_request.HeaderVersion = cpu_to_le16(MPI2_HEADER_VERSION);
- 
- 	if (_base_is_controller_msix_enabled(ioc))
-@@ -4759,7 +4759,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->build_sg_scmd = &_base_build_sg_scmd_ieee;
- 	ioc->build_sg = &_base_build_sg_ieee;
- 	ioc->build_zero_len_sge = &_base_build_zero_len_sge_ieee;
--	ioc->mpi25 = 1;
- 	ioc->sge_size_ieee = sizeof(Mpi2IeeeSgeSimple64_t);
- 
- 	/*
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 4c07f17..c27e94e 100644
+index 348b3f6..7dd5510 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -818,7 +818,6 @@ struct MPT3SAS_ADAPTER {
- 	MPT_BUILD_SG_SCMD build_sg_scmd;
- 	MPT_BUILD_SG    build_sg;
- 	MPT_BUILD_ZERO_LEN_SGE build_zero_len_sge;
--	u8              mpi25;
- 	u16             sge_size_ieee;
+@@ -294,7 +294,8 @@ struct _internal_cmd {
+  * @responding: used in _scsih_sas_device_mark_responding
+  * @fast_path: fast path feature enable bit
+  * @pfa_led_on: flag for PFA LED status
+- *
++ * @pend_sas_rphy_add: flag to check if device is in sas_rphy_add()
++ *	addition routine
+  */
+ struct _sas_device {
+ 	struct list_head list;
+@@ -315,6 +316,7 @@ struct _sas_device {
+ 	u8	responding;
+ 	u8	fast_path;
+ 	u8	pfa_led_on;
++	u8	pend_sas_rphy_add;
+ };
  
- 	/* function ptr for MPI sg elements only */
+ /**
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 1b9a3a9..1ca5f98 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -111,6 +111,11 @@ static int missing_delay[2] = {-1, -1};
+ module_param_array(missing_delay, int, NULL, 0);
+ MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
+ 
++static int unblock_io;
++module_param(unblock_io, int, 0);
++MODULE_PARM_DESC(unblock_io,
++"unblocks IO if set to 1 when device is undergoing addition (default=0)");
++
+ /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+ #define MPT3SAS_MAX_LUN (16895)
+ static u64 max_lun = MPT3SAS_MAX_LUN;
+@@ -2629,6 +2634,34 @@ _scsih_ublock_io_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
+ 	}
+ }
+ 
++/*
++ *_scsih_ublock_io_device_to_running - set the device state to SDEV_RUNNING
++ *@ioc: per adapter object
++ *@sas_addr: sas address
++ *
++ *unblock the device to receive IO during device addition. Device
++ *responsiveness is not checked before unblocking
++ */
++static void
++_scsih_ublock_io_device_to_running(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
++{
++	struct MPT3SAS_DEVICE *sas_device_priv_data;
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, ioc->shost) {
++		sas_device_priv_data = sdev->hostdata;
++		if (!sas_device_priv_data)
++			continue;
++		if (sas_device_priv_data->sas_target->sas_address
++		      != sas_address)
++			continue;
++		if (sas_device_priv_data->block) {
++			sas_device_priv_data->block = 0;
++			scsi_internal_device_unblock(sdev, SDEV_RUNNING);
++		}
++	}
++}
++
+ /**
+  * _scsih_block_io_all_device - set the device state to SDEV_BLOCK
+  * @ioc: per adapter object
+@@ -2736,20 +2769,22 @@ _scsih_block_io_to_children_attached_to_ex(struct MPT3SAS_ADAPTER *ioc,
+ }
+ 
+ /**
+- * _scsih_block_io_to_children_attached_directly
++ * _scsih_handle_io_to_children_attached_directly
+  * @ioc: per adapter object
+  * @event_data: topology change event data
+  *
+- * This routine set sdev state to SDEV_BLOCK for all devices
++ * This routine set sdev state to SDEV_BLOCK or SDEV_RUNNING for all devices
+  * direct attached during device pull.
+  */
+ static void
+-_scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
++_scsih_handle_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2EventDataSasTopologyChangeList_t *event_data)
+ {
+ 	int i;
+ 	u16 handle;
+ 	u16 reason_code;
++	struct _sas_device *sas_device;
++	u8 link_rate, prev_link_rate;
+ 
+ 	for (i = 0; i < event_data->NumEntries; i++) {
+ 		handle = le16_to_cpu(event_data->PHY[i].AttachedDevHandle);
+@@ -2759,6 +2794,24 @@ _scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
+ 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
+ 		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING)
+ 			_scsih_block_io_device(ioc, handle);
++		else if ((reason_code == MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED) &&
++		    (unblock_io == 1)) {
++			/* unblock only if device is in the process of addition
++			 * within the SCSI Mid Layer (sas_rphy_add) to prevent
++			 * deadlock. Unblocking in other cases can lead to data
++			 * corruption */
++
++			link_rate = event_data->PHY[i].LinkRate >> 4;
++			prev_link_rate = event_data->PHY[i].LinkRate & 0xF;
++			sas_device = _scsih_sas_device_find_by_handle(ioc,
++								       handle);
++			if (!sas_device)
++				continue;
++			if ((link_rate > prev_link_rate) &&
++			    (sas_device->pend_sas_rphy_add == 1))
++				_scsih_ublock_io_device_to_running(ioc,
++				    sas_device->sas_address);
++		}
+ 	}
+ }
+ 
+@@ -3166,7 +3219,7 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	expander_handle = le16_to_cpu(event_data->ExpanderDevHandle);
+ 	if (expander_handle < ioc->sas_hba.num_phys) {
+-		_scsih_block_io_to_children_attached_directly(ioc, event_data);
++		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
+ 		return;
+ 	}
+ 	if (event_data->ExpStatus ==
+@@ -3184,7 +3237,7 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
+ 				_scsih_block_io_device(ioc, handle);
+ 		} while (test_and_clear_bit(handle, ioc->blocking_handles));
+ 	} else if (event_data->ExpStatus == MPI2_EVENT_SAS_TOPO_ES_RESPONDING)
+-		_scsih_block_io_to_children_attached_directly(ioc, event_data);
++		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
+ 
+ 	if (event_data->ExpStatus != MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING)
+ 		return;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 4dc2329..adcbd64 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -649,6 +649,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	unsigned long flags;
+ 	struct _sas_node *sas_node;
+ 	struct sas_rphy *rphy;
++	struct _sas_device *sas_device = NULL;
+ 	int i;
+ 	struct sas_port *port;
+ 
+@@ -731,10 +732,23 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 		    mpt3sas_port->remote_identify.device_type);
+ 
+ 	rphy->identify = mpt3sas_port->remote_identify;
++	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
++		    mpt3sas_port->remote_identify.sas_address);
++		if (!sas_device) {
++			dfailprintk(ioc, printk(MPT3SAS_FMT
++			    "failure at %s:%d/%s()!\n",
++			    ioc->name, __FILE__, __LINE__, __func__));
++			goto out_fail;
++		}
++		sas_device->pend_sas_rphy_add = 1;
++	}
+ 	if ((sas_rphy_add(rphy))) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+ 	}
++	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE)
++		sas_device->pend_sas_rphy_add = 0;
+ 	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
+ 		dev_printk(KERN_INFO, &rphy->dev,
+ 			"add: handle(0x%04x), sas_addr(0x%016llx)\n",
 -- 
 2.0.2
-
