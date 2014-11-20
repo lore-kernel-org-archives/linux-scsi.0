@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 13/22] [SCSI] mpt3sas: Added module parameter 'unblock_io' to unblock IO's during disk addition
-Date: Thu, 20 Nov 2014 12:35:46 +0530
-Message-ID: <1416467155-16869-14-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 20/22] [SCSI] mpt3sas: Add branding string support for OEM's HBA
+Date: Thu, 20 Nov 2014 12:35:53 +0530
+Message-ID: <1416467155-16869-21-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,208 +10,92 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-During hot-plugging of a disk(having a flaky link), the disk addition
-stops and any further disk addition or removal doesn't happen on that controller.
+Added the following Dell branding to the mpt3sas driver.
 
-This is because, when driver receives DELAY_NOT_RESPONDING for a disk when it is undergoing
-addition in the SCSI Mid layer, the driver would block the I/O to that disk
-resulting in a deadlock. i.e the disk addition work couldn't be completed
-as it can't send any I/O to the disk as I/Os are blocked. Any device removal (TARGET_NOT_RESPONDING)
-or link update(RC_PHY_CHANGED) couldn't be processed as they are in the queue
-to get processed after disk addition.
-
-Description of Change:
-To handle such cases, unblock the I/Os to the disk in ISR context if the disk is undergoing
-addition. The I/Os would get unblocked only if the driver receives RC_PHY_CHANGED reason
-code when the device addition is within the SAS Transport layer.
-
-An module parameter 'unblock_io' is introduced which needs to be set to have this
-functionality enabled. By default this functionality is disabled.
+"VendorID"   "DeviceID"  "SubsystemVendor ID"  "SubsystemDevice ID"  Dell Branding String
+0x1000        0x0097          0x1028                 0x1F46            DELL 12Gbps HBA
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  4 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 63 +++++++++++++++++++++++++++++---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 14 +++++++
- 3 files changed, 75 insertions(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 36 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 11 +++++++++++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 348b3f6..7dd5510 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -294,7 +294,8 @@ struct _internal_cmd {
-  * @responding: used in _scsih_sas_device_mark_responding
-  * @fast_path: fast path feature enable bit
-  * @pfa_led_on: flag for PFA LED status
-- *
-+ * @pend_sas_rphy_add: flag to check if device is in sas_rphy_add()
-+ *	addition routine
-  */
- struct _sas_device {
- 	struct list_head list;
-@@ -315,6 +316,7 @@ struct _sas_device {
- 	u8	responding;
- 	u8	fast_path;
- 	u8	pfa_led_on;
-+	u8	pend_sas_rphy_add;
- };
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 5fafd51..cc1bfef 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2338,6 +2338,41 @@ _base_display_intel_branding(struct MPT3SAS_ADAPTER *ioc)
+ 
  
  /**
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 1b9a3a9..1ca5f98 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -111,6 +111,11 @@ static int missing_delay[2] = {-1, -1};
- module_param_array(missing_delay, int, NULL, 0);
- MODULE_PARM_DESC(missing_delay, " device missing delay , io missing delay");
- 
-+static int unblock_io;
-+module_param(unblock_io, int, 0);
-+MODULE_PARM_DESC(unblock_io,
-+"unblocks IO if set to 1 when device is undergoing addition (default=0)");
-+
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPT3SAS_MAX_LUN (16895)
- static u64 max_lun = MPT3SAS_MAX_LUN;
-@@ -2629,6 +2634,34 @@ _scsih_ublock_io_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
- 	}
- }
- 
-+/*
-+ *_scsih_ublock_io_device_to_running - set the device state to SDEV_RUNNING
-+ *@ioc: per adapter object
-+ *@sas_addr: sas address
++ * _base_display_dell_branding - Display branding string
++ * @ioc: per adapter object
 + *
-+ *unblock the device to receive IO during device addition. Device
-+ *responsiveness is not checked before unblocking
++ * Return nothing.
 + */
 +static void
-+_scsih_ublock_io_device_to_running(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
++_base_display_dell_branding(struct MPT3SAS_ADAPTER *ioc)
 +{
-+	struct MPT3SAS_DEVICE *sas_device_priv_data;
-+	struct scsi_device *sdev;
++	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_DELL)
++		return;
 +
-+	shost_for_each_device(sdev, ioc->shost) {
-+		sas_device_priv_data = sdev->hostdata;
-+		if (!sas_device_priv_data)
-+			continue;
-+		if (sas_device_priv_data->sas_target->sas_address
-+		      != sas_address)
-+			continue;
-+		if (sas_device_priv_data->block) {
-+			sas_device_priv_data->block = 0;
-+			scsi_internal_device_unblock(sdev, SDEV_RUNNING);
++	switch (ioc->pdev->device) {
++	case MPI25_MFGPAGE_DEVID_SAS3008:
++		switch (ioc->pdev->subsystem_device) {
++		case MPT3SAS_DELL_12G_HBA_SSDID:
++			pr_info(MPT3SAS_FMT "%s\n", ioc->name,
++				MPT3SAS_DELL_12G_HBA_BRANDING);
++			break;
++		default:
++			pr_info(MPT3SAS_FMT
++			   "Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
++			   ioc->pdev->subsystem_device);
++			break;
 +		}
++		break;
++	default:
++		pr_info(MPT3SAS_FMT
++			"Dell 12Gbps HBA: Subsystem ID: 0x%X\n", ioc->name,
++			ioc->pdev->subsystem_device);
++		break;
 +	}
 +}
 +
- /**
-  * _scsih_block_io_all_device - set the device state to SDEV_BLOCK
-  * @ioc: per adapter object
-@@ -2736,20 +2769,22 @@ _scsih_block_io_to_children_attached_to_ex(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-- * _scsih_block_io_to_children_attached_directly
-+ * _scsih_handle_io_to_children_attached_directly
-  * @ioc: per adapter object
-  * @event_data: topology change event data
-  *
-- * This routine set sdev state to SDEV_BLOCK for all devices
-+ * This routine set sdev state to SDEV_BLOCK or SDEV_RUNNING for all devices
-  * direct attached during device pull.
-  */
- static void
--_scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
-+_scsih_handle_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2EventDataSasTopologyChangeList_t *event_data)
- {
- 	int i;
- 	u16 handle;
- 	u16 reason_code;
-+	struct _sas_device *sas_device;
-+	u8 link_rate, prev_link_rate;
- 
- 	for (i = 0; i < event_data->NumEntries; i++) {
- 		handle = le16_to_cpu(event_data->PHY[i].AttachedDevHandle);
-@@ -2759,6 +2794,24 @@ _scsih_block_io_to_children_attached_directly(struct MPT3SAS_ADAPTER *ioc,
- 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
- 		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING)
- 			_scsih_block_io_device(ioc, handle);
-+		else if ((reason_code == MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED) &&
-+		    (unblock_io == 1)) {
-+			/* unblock only if device is in the process of addition
-+			 * within the SCSI Mid Layer (sas_rphy_add) to prevent
-+			 * deadlock. Unblocking in other cases can lead to data
-+			 * corruption */
 +
-+			link_rate = event_data->PHY[i].LinkRate >> 4;
-+			prev_link_rate = event_data->PHY[i].LinkRate & 0xF;
-+			sas_device = _scsih_sas_device_find_by_handle(ioc,
-+								       handle);
-+			if (!sas_device)
-+				continue;
-+			if ((link_rate > prev_link_rate) &&
-+			    (sas_device->pend_sas_rphy_add == 1))
-+				_scsih_ublock_io_device_to_running(ioc,
-+				    sas_device->sas_address);
-+		}
- 	}
- }
++/**
+  * _base_display_ioc_capabilities - Disply IOC's capabilities.
+  * @ioc: per adapter object
+  *
+@@ -2367,6 +2402,7 @@ _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
+ 	    bios_version & 0x000000FF);
  
-@@ -3166,7 +3219,7 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
+ 	_base_display_intel_branding(ioc);
++	_base_display_dell_branding(ioc);
  
- 	expander_handle = le16_to_cpu(event_data->ExpanderDevHandle);
- 	if (expander_handle < ioc->sas_hba.num_phys) {
--		_scsih_block_io_to_children_attached_directly(ioc, event_data);
-+		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
- 		return;
- 	}
- 	if (event_data->ExpStatus ==
-@@ -3184,7 +3237,7 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
- 				_scsih_block_io_device(ioc, handle);
- 		} while (test_and_clear_bit(handle, ioc->blocking_handles));
- 	} else if (event_data->ExpStatus == MPI2_EVENT_SAS_TOPO_ES_RESPONDING)
--		_scsih_block_io_to_children_attached_directly(ioc, event_data);
-+		_scsih_handle_io_to_children_attached_directly(ioc, event_data);
+ 	pr_info(MPT3SAS_FMT "Protocol=(", ioc->name);
  
- 	if (event_data->ExpStatus != MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING)
- 		return;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 4dc2329..adcbd64 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -649,6 +649,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	unsigned long flags;
- 	struct _sas_node *sas_node;
- 	struct sas_rphy *rphy;
-+	struct _sas_device *sas_device = NULL;
- 	int i;
- 	struct sas_port *port;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index c27e94e..f2ce5a5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -152,6 +152,17 @@
+ #define MPT3SAS_INTEL_RS3UC080_SSDID    0x3524
  
-@@ -731,10 +732,23 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		    mpt3sas_port->remote_identify.device_type);
- 
- 	rphy->identify = mpt3sas_port->remote_identify;
-+	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
-+		sas_device = mpt3sas_scsih_sas_device_find_by_sas_address(ioc,
-+		    mpt3sas_port->remote_identify.sas_address);
-+		if (!sas_device) {
-+			dfailprintk(ioc, printk(MPT3SAS_FMT
-+			    "failure at %s:%d/%s()!\n",
-+			    ioc->name, __FILE__, __LINE__, __func__));
-+			goto out_fail;
-+		}
-+		sas_device->pend_sas_rphy_add = 1;
-+	}
- 	if ((sas_rphy_add(rphy))) {
- 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 	}
-+	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE)
-+		sas_device->pend_sas_rphy_add = 0;
- 	if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
- 		dev_printk(KERN_INFO, &rphy->dev,
- 			"add: handle(0x%04x), sas_addr(0x%016llx)\n",
+ /*
++ * Dell HBA branding
++ */
++#define MPT3SAS_DELL_12G_HBA_BRANDING       \
++	"Dell 12Gbps HBA"
++
++/*
++ * Dell HBA SSDIDs
++ */
++#define MPT3SAS_DELL_12G_HBA_SSDID	0x1F46
++
++/*
+  * status bits for ioc->diag_buffer_status
+  */
+ #define MPT3_DIAG_BUFFER_IS_REGISTERED	(0x01)
 -- 
 2.0.2
