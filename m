@@ -1,53 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/10] am53c974: BLAST residual handling
-Date: Fri, 21 Nov 2014 11:29:30 +0100
-Message-ID: <546F140A.5060201@suse.de>
-References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-9-git-send-email-hare@suse.de> <546F0F81.4030803@redhat.com>
+Subject: Re: [PATCH 00/10] Re-implement am53c974 driver
+Date: Fri, 21 Nov 2014 11:33:35 +0100
+Message-ID: <546F14FF.3080509@suse.de>
+References: <1416562077-105715-1-git-send-email-hare@suse.de> <20141121102639.GA31016@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48379 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:48454 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857AbaKUK3b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 05:29:31 -0500
-In-Reply-To: <546F0F81.4030803@redhat.com>
+	id S1755226AbaKUKdi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 05:33:38 -0500
+In-Reply-To: <20141121102639.GA31016@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, davem@davemloft.net, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-On 11/21/2014 11:10 AM, Paolo Bonzini wrote:
->=20
->=20
-> On 21/11/2014 10:27, Hannes Reinecke wrote:
->> The am53c974 has an design issue where a single byte might be
->> left in the SCSI FIFO after a DMA transfer.
->> As the handling code is currently untested add a WARN_ON()
->> statement here.
+On 11/21/2014 11:26 AM, Christoph Hellwig wrote:
+> On Fri, Nov 21, 2014 at 10:27:47AM +0100, Hannes Reinecke wrote:
+>> Hi all,
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/scsi/am53c974.c |  6 ++++++
->>  drivers/scsi/esp_scsi.c | 29 +++++++++++++++++++++++++++++
->>  drivers/scsi/esp_scsi.h |  1 +
->>  3 files changed, 36 insertions(+)
->>
->> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
->> index 652762e..0b7643e 100644
->> --- a/drivers/scsi/am53c974.c
->> +++ b/drivers/scsi/am53c974.c
->> @@ -195,6 +195,12 @@ static void pci_esp_dma_drain(struct esp *esp)
->>  	shost_printk(KERN_INFO, esp->host,
->>  		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
->>  #endif
->> +	/* BLAST residual handling is currently untested */
->> +	if (WARN_ON(resid =3D=3D 1)) {
+>> having found some issues with the current tmscsim driver
+>> I looked at the code and found is really awkward to clean
+>> up.
+>> Seeing that the am53c974 chip is actually based on the
+>> 'ESP' chip design I've re-implemented it based on the
+>> common esp_scsi routines. This new driver
+>> (cunningly named 'am53c974') provides all features
+>> found on the tmscsim driver, with the goal of obsoleting
+>> the old tmscsim driver.
+>> Tested with Tekram DC390 and qemu esp-scsi.
 >=20
-> WARN_ON_ONCE?
+> This looks very nice!
 >=20
-I have not seen it once so far, so I doubt it's a common
-case. But yeah, WARN_ON_ONCE is probably better.
+> Three high level comments:
+>=20
+>  - please Cc Dave for changes to esp_scsi
+That's what I thought, too, but 'get_maintainers.pl' doesn't
+know about him. Maybe we should fix this up ...
+
+>  - please Cc Guennadi as the tmscsim maintainer
+>  - this probably should deprecated and/or remove the tmscsim driver
+>=20
+That was the general idea. I just thought to be conservative and
+add a new driver. But yeah, the idea is to sent another patch
+to remove tmscsim altogether.
 
 Cheers,
 
