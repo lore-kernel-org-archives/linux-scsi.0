@@ -1,17 +1,17 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 08/12] am53c974: BLAST residual handling
-Date: Fri, 21 Nov 2014 14:09:43 +0100
-Message-ID: <546F3997.8080801@redhat.com>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-9-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 11/12] esp: enable CONFIG2_FENAB for am53c974
+Date: Fri, 21 Nov 2014 14:10:49 +0100
+Message-ID: <546F39D9.3030705@redhat.com>
+References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-12-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46510 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46830 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbaKUNKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:10:01 -0500
-In-Reply-To: <1416573716-73890-9-git-send-email-hare@suse.de>
+	id S1758147AbaKUNLF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 08:11:05 -0500
+In-Reply-To: <1416573716-73890-12-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
@@ -20,87 +20,116 @@ Cc: Christoph Hellwig <hch@lst.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de
 
 
 On 21/11/2014 13:41, Hannes Reinecke wrote:
-> The am53c974 has an design issue where a single byte might be
-> left in the SCSI FIFO after a DMA transfer.
-> As the handling code is currently untested add a WARN_ON()
-> statement here.
+> CONFIG2_FENAB ('feature enable') changed definition between chip
+> revisions, from 'Latch SCSI Phase' to 'Latch SCSI Phase, display
+> chip ID upon reset, and enable 24 bit addresses'.
+> So only enable it for am53c974 where we know what it's doing.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/am53c974.c |  6 ++++++
->  drivers/scsi/esp_scsi.c | 29 +++++++++++++++++++++++++++++
->  drivers/scsi/esp_scsi.h |  1 +
->  3 files changed, 36 insertions(+)
+>  drivers/scsi/am53c974.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/esp_scsi.c |  2 ++
+>  2 files changed, 43 insertions(+)
 > 
 > diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-> index 86c4c42..1c1312f 100644
+> index 340cb2f..55622eb 100644
 > --- a/drivers/scsi/am53c974.c
 > +++ b/drivers/scsi/am53c974.c
-> @@ -197,6 +197,12 @@ static void pci_esp_dma_drain(struct esp *esp)
->  	shost_printk(KERN_INFO, esp->host,
->  		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
->  #endif
-> +	/* BLAST residual handling is currently untested */
-> +	if (WARN_ON_ONCE(resid == 1)) {
-> +		struct esp_cmd_entry *ent = esp->active_cmd;
+> @@ -17,6 +17,8 @@
+>  #define DRV_MODULE_NAME "am53c974"
+>  #define DRV_MODULE_VERSION "1.00"
+>  
+> +static bool am53c974_fenab = true;
 > +
-> +		ent->flags |= ESP_CMD_FLAG_RESIDUAL;
-> +	}
+>  // #define ESP_DMA_DEBUG
+>  
+>  #define ESP_DMA_CMD 0x10
+> @@ -254,6 +256,8 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
+>  
+>  	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+>  	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+> +	if (esp->config2 & ESP_CONFIG2_FENAB)
+> +		pci_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+>  
+>  	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
+>  	pci_esp_write32(esp, addr, ESP_DMA_SPA);
+> @@ -267,6 +271,33 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
+>  	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
 >  }
 >  
->  static void pci_esp_dma_invalidate(struct esp *esp)
+> +static u32 pci_esp_dma_length_limit(struct esp *esp, u32 dma_addr, u32 dma_len)
+> +{
+> +	int dma_limit = 16;
+> +	u32 base, end;
+> +
+> +	/*
+> +	 * If CONFIG2_FENAB is set we can
+> +	 * handle up to 24 bit addresses
+> +	 */
+> +	if (esp->config2 & ESP_CONFIG2_FENAB)
+> +		dma_limit = 24;
+> +
+> +	if (dma_len > (1U << dma_limit))
+> +		dma_len = (1U << dma_limit);
+> +
+> +	/*
+> +	 * Prevent crossing a 24-bit address boundary.
+> +	 */
+> +	base = dma_addr & ((1U << 24) - 1U);
+> +	end = base + dma_len;
+> +	if (end > (1U << 24))
+> +		end = (1U <<24);
+> +	dma_len = end - base;
+> +
+> +	return dma_len;
+> +}
+> +
+>  static const struct esp_driver_ops pci_esp_ops = {
+>  	.esp_write8	=	pci_esp_write8,
+>  	.esp_read8	=	pci_esp_read8,
+> @@ -280,6 +311,7 @@ static const struct esp_driver_ops pci_esp_ops = {
+>  	.dma_invalidate	=	pci_esp_dma_invalidate,
+>  	.send_dma_cmd	=	pci_esp_send_dma_cmd,
+>  	.dma_error	=	pci_esp_dma_error,
+> +	.dma_length_limit =	pci_esp_dma_length_limit,
+>  };
+>  
+>  /*
+> @@ -417,6 +449,12 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+>  	 * DMA for command submission.
+>  	 */
+>  	esp->flags |= ESP_FLAG_USE_FIFO;
+> +	/*
+> +	 * Enable CONFIG2_FENAB to allow for large DMA transfers
+> +	 */
+> +	if (am53c974_fenab)
+> +		esp->config2 |= ESP_CONFIG2_FENAB;
+> +
+>  	pep->esp = esp;
+>  
+>  	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
+> @@ -535,5 +573,8 @@ MODULE_AUTHOR("Hannes Reinecke <hare@suse.de>");
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(DRV_MODULE_VERSION);
+>  
+> +module_param(am53c974_fenab, bool, 0444);
+> +MODULE_PARM_DESC(am53c974_fenab, "Enable 24-bit DMA transfer sizes");
+> +
+>  module_init(am53c974_module_init);
+>  module_exit(am53c974_module_exit);
 > diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 2a3277d..07b4d93 100644
+> index bd17516..56f361e 100644
 > --- a/drivers/scsi/esp_scsi.c
 > +++ b/drivers/scsi/esp_scsi.c
-> @@ -1334,6 +1334,35 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+> @@ -1343,6 +1343,8 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+>  			  (((unsigned int)esp_read8(ESP_TCMED)) << 8));
+>  		if (esp->rev == FASHME)
+>  			ecount |= ((unsigned int)esp_read8(FAS_RLO)) << 16;
+> +		if (esp->rev == PCSCSI && (esp->config2 & ESP_CONFIG2_FENAB))
+> +			ecount |= ((unsigned int)esp_read8(ESP_TCHI)) << 16;
+>  	}
+>  
 >  	bytes_sent = esp->data_dma_len;
->  	bytes_sent -= ecount;
->  
-> +	/*
-> +	 * The am53c974 has a DMA 'pecularity'. The doc states:
-> +	 * In some odd byte conditions, one residual byte will
-> +	 * be left in the SCSI FIFO, and the FIFO Flags will
-> +	 * never count to '0 '. When this happens, the residual
-> +	 * byte should be retrieved via PIO following completion
-> +	 * of the BLAST operation.
-> +	 */
-> +	if (fifo_cnt == 1 && ent->flags & ESP_CMD_FLAG_RESIDUAL) {
-> +		size_t count = 1;
-> +		size_t offset = bytes_sent;
-> +		u8 bval = esp_read8(ESP_FDATA);
-> +
-> +		if (ent->flags & ESP_CMD_FLAG_AUTOSENSE)
-> +			ent->sense_ptr[bytes_sent] = bval;
-> +		else {
-> +			struct esp_cmd_priv *p = ESP_CMD_PRIV(cmd);
-> +			u8 *ptr;
-> +
-> +			ptr = scsi_kmap_atomic_sg(p->cur_sg, p->u.num_sg,
-> +						  &offset, &count);
-> +			if (likely(ptr)) {
-> +				*(ptr + offset) = bval;
-> +				scsi_kunmap_atomic_sg(ptr);
-> +			}
-> +		}
-> +		bytes_sent += fifo_cnt;
-> +		ent->flags &= ~ESP_CMD_FLAG_RESIDUAL;
-> +	}
->  	if (!(ent->flags & ESP_CMD_FLAG_WRITE))
->  		bytes_sent -= fifo_cnt;
->  
-> diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-> index 27dcaf8..5fa456c 100644
-> --- a/drivers/scsi/esp_scsi.h
-> +++ b/drivers/scsi/esp_scsi.h
-> @@ -269,6 +269,7 @@ struct esp_cmd_entry {
->  #define ESP_CMD_FLAG_WRITE	0x01 /* DMA is a write */
->  #define ESP_CMD_FLAG_ABORT	0x02 /* being aborted */
->  #define ESP_CMD_FLAG_AUTOSENSE	0x04 /* Doing automatic REQUEST_SENSE */
-> +#define ESP_CMD_FLAG_RESIDUAL	0x08 /* AM53c974 BLAST residual */
->  
->  	u8			tag[2];
->  	u8			orig_tag[2];
 > 
 
 Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
