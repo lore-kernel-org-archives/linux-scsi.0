@@ -1,65 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.18-rc6
-Date: Thu, 20 Nov 2014 21:18:57 -0800
-Message-ID: <1416547137.27917.70.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+From: Hariprasad Shenai <hariprasad@chelsio.com>
+Subject: [PATCH net-next 0/5] RDMA/cxgb4,cxgb4vf,csiostor: Cleanup macros
+Date: Fri, 21 Nov 2014 12:52:00 +0530
+Message-ID: <1416554525-11844-1-git-send-email-hariprasad@chelsio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 99-65-72-227.uvs.sntcca.sbcglobal.net ([99.65.72.227]:33684
+	"EHLO stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751596AbaKUHRP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 02:17:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com, praveen@chelsio.com, varun@chelsio.com, Hariprasad Shenai <hariprasad@chelsio.com>
 
-Hi Linus,
+Hi,
 
-Here are the target-pending fixes queued for v3.18-rc6. Please go ahead
-and pull from:
+This series continues to cleanup all the macros/register defines related to
+filter, port, VI, queue, RSS, LDST, firmware, etc that are defined in t4fw_api.h
+and the affected files.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+Will post few more series so that we can cover all the macros so that they all
+follow the same style to be consistent.
 
-The highlights include:
+The patches series is created against 'net-next' tree.
+And includes patches on cxgb4, cxgb4vf, iw_cxgb4 and csiostor driver.
 
-  - target-core OOPs fix with tcm_qla2xxx + vxworks FC initiators + zero length
-    SCSI commands having a transfer direction set. (Roland + Craig Watson)
-  - vhost-scsi OOPs fix to explicitly prevent WWPN endpoint configfs group removal
-    while qemu still has an active reference.  (Paolo + nab)
-  - ib_srpt fix for RDMA hardware with lower srp_sq_size limits. (Bart)
-  - Two ib_isert work-arounds for running on ocrdma hardware (Or + Sagi + Chris)
-  - iscsi-target discovery portal typo + SPC-3 PR Preempt SA key matching fix (Steve)
+We have included all the maintainers of respective drivers. Kindly review the
+change and let us know in case of any review comments.
 
-Thank you,
+Thanks
 
---nab
+Hariprasad Shenai (5):
+  RDMA/cxgb4: Cleanup Filter related macros/register defines
+  RDMA/cxgb4/csiostor: Cleansup FW related macros/register defines for
+    PF/VF and LDST
+  cxgb4/cxgb4vf/csiostor: Cleanup macros/register defines related to
+    queues
+  cxgb4/cxgb4vf/csiostor: Cleanup macros/register defines related to
+    port and VI
+  RDMA/cxgb4/cxgb4vf/csiostor: Cleanup macros/register defines related
+    to PCIE, RSS and FW
 
-Bart Van Assche (1):
-  srp-target: Retry when QP creation fails with ENOMEM
+ drivers/infiniband/hw/cxgb4/cm.c                   |   16 +-
+ drivers/infiniband/hw/cxgb4/provider.c             |    8 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |    8 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_dcb.c     |   14 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_dcb.h     |    4 +-
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |  193 +-
+ drivers/net/ethernet/chelsio/cxgb4/l2t.c           |    4 +-
+ drivers/net/ethernet/chelsio/cxgb4/sge.c           |  115 +-
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c         |  292 ++--
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h      | 2121 +++++++++++++-------
+ .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |   26 +-
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |   63 +-
+ drivers/net/ethernet/chelsio/cxgb4vf/t4vf_hw.c     |  232 ++--
+ drivers/scsi/csiostor/csio_hw.c                    |   38 +-
+ drivers/scsi/csiostor/csio_init.c                  |    8 +-
+ drivers/scsi/csiostor/csio_mb.c                    |  171 +-
+ drivers/scsi/csiostor/csio_mb.h                    |   12 +-
+ 17 files changed, 2004 insertions(+), 1321 deletions(-)
 
-Chris Moore (1):
-  IB/isert: Adjust CQ size to HW limits
-
-Nicholas Bellinger (1):
-  vhost-scsi: Take configfs group dependency during
-    VHOST_SCSI_SET_ENDPOINT
-
-Or Gerlitz (1):
-  ib_isert: Add max_send_sge=2 minimum for control PDU responses
-
-Roland Dreier (1):
-  target: Don't call TFO->write_pending if data_length == 0
-
-Sagi Grimberg (1):
-  iser-target: Handle DEVICE_REMOVAL event on network portal listener
-    correctly
-
-Steven Allen (2):
-  iscsi-target: return the correct port in SendTargets
-  target: return CONFLICT only when SA key unmatched
-
- drivers/infiniband/ulp/isert/ib_isert.c | 44 ++++++++++++++++++++++-----------
- drivers/infiniband/ulp/srpt/ib_srpt.c   |  8 ++++++
- drivers/target/iscsi/iscsi_target.c     |  2 +-
- drivers/target/target_core_pr.c         |  9 ++++---
- drivers/target/target_core_transport.c  |  2 +-
- drivers/vhost/scsi.c                    | 24 ++++++++++++++++++
- 6 files changed, 69 insertions(+), 20 deletions(-)
