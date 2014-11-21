@@ -1,133 +1,123 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/12] esp: correctly detect am53c974
-Date: Fri, 21 Nov 2014 13:41:53 +0100
-Message-ID: <1416573716-73890-10-git-send-email-hare@suse.de>
+Subject: [PATCH 10/12] esp_scsi: let DMA driver provide a config2 value
+Date: Fri, 21 Nov 2014 13:41:54 +0100
+Message-ID: <1416573716-73890-11-git-send-email-hare@suse.de>
 References: <1416573716-73890-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51588 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51587 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758233AbaKUMmC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758231AbaKUMmC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 21 Nov 2014 07:42:02 -0500
 In-Reply-To: <1416573716-73890-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
 
-The am53c974 returns the same ID as the FAS236, but implements
-things slightly differently. So detect the am53c974 by checking
-for ESP_CONFIG4 register.
+From: Paolo Bonzini <pbonzini@redhat.com>
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+On PCscsi, the FENAB configuration also enables 24-bit DMA
+transfer lengths (and provides the chip id in TCHI after reset).
+We want to be able to enable this parameter from the DMA driver.
+
+Check if the caller of scsi_esp_register provided a value for esp->config2.
+If this is the case, assume this is not an ESP100, skip the detection
+phase and leave esp->config2 untouched.  It will be used in esp_reset_esp.
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- drivers/scsi/am53c974.c |  2 ++
- drivers/scsi/esp_scsi.c | 17 ++++++++++++++++-
- drivers/scsi/esp_scsi.h | 15 +++++++++++++++
- 3 files changed, 33 insertions(+), 1 deletion(-)
+ drivers/scsi/esp_scsi.c | 70 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-index 1c1312f..340cb2f 100644
---- a/drivers/scsi/am53c974.c
-+++ b/drivers/scsi/am53c974.c
-@@ -367,6 +367,8 @@ static void dc390_check_eeprom(struct esp *esp)
- 	}
- 	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
- 	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
-+	if (EEbuf[DC390_EE_MODE2] & DC390_EE_MODE2_ACTIVE_NEGATION)
-+		esp->config4 |= ESP_CONFIG4_RADE | ESP_CONFIG4_RAE;
- }
- 
- static int pci_esp_probe_one(struct pci_dev *pdev,
 diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 07b4d93..797e208 100644
+index 797e208..bd17516 100644
 --- a/drivers/scsi/esp_scsi.c
 +++ b/drivers/scsi/esp_scsi.c
-@@ -268,6 +268,19 @@ static void esp_reset_esp(struct esp *esp)
- 	} else {
- 		esp->min_period = ((5 * esp->ccycle) / 1000);
- 	}
-+	if (esp->rev == FAS236) {
-+		/*
-+		 * The AM53c974 chip returns the same ID as FAS236;
-+		 * try to configure glitch eater.
-+		 */
-+		u8 config4 = ESP_CONFIG4_GE1;
-+		esp_write8(config4, ESP_CFG4);
-+		config4 = esp_read8(ESP_CFG4);
-+		if ((config4 & ESP_CONFIG4_GE1) == ESP_CONFIG4_GE1) {
-+			esp->rev = PCSCSI;
-+			esp_write8(esp->config4, ESP_CFG4);
+@@ -2219,46 +2219,50 @@ static void esp_get_revision(struct esp *esp)
+ 	u8 val;
+ 
+ 	esp->config1 = (ESP_CONFIG1_PENABLE | (esp->scsi_id & 7));
+-	esp->config2 = (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY);
++	if (esp->config2 == 0) {
++		esp->config2 = (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY);
++		esp_write8(esp->config2, ESP_CFG2);
++
++		val = esp_read8(ESP_CFG2);
++		val &= ~ESP_CONFIG2_MAGIC;
++
++		esp->config2 = 0;
++		if (val != (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY)) {
++			/*
++			 * If what we write to cfg2 does not come back,
++			 * cfg2 is not implemented.
++			 * Therefore this must be a plain esp100.
++			 */
++			esp->rev = ESP100;
++			return;
 +		}
 +	}
- 	esp->max_period = (esp->max_period + 3)>>2;
- 	esp->min_period = (esp->min_period + 3)>>2;
- 
-@@ -293,7 +306,8 @@ static void esp_reset_esp(struct esp *esp)
- 		/* fallthrough... */
- 
- 	case FAS236:
--		/* Fast 236 or HME */
-+	case PCSCSI:
-+		/* Fast 236, AM53c974 or HME */
- 		esp_write8(esp->config2, ESP_CFG2);
- 		if (esp->rev == FASHME) {
- 			u8 cfg3 = esp->target[0].esp_config3;
-@@ -2364,6 +2378,7 @@ static const char *esp_chip_names[] = {
- 	"FAS100A",
- 	"FAST",
- 	"FASHME",
-+	"AM53C974",
- };
- 
- static struct scsi_transport_template *esp_transport_template;
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 5fa456c..84dcbe4 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -25,6 +25,7 @@
- #define ESP_CTEST	0x0aUL		/* wo  Chip test register      0x28  */
- #define ESP_CFG2	0x0bUL		/* rw  Second cfg register     0x2c  */
- #define ESP_CFG3	0x0cUL		/* rw  Third cfg register      0x30  */
-+#define ESP_CFG4	0x0dUL		/* rw  Fourth cfg register     0x34  */
- #define ESP_TCHI	0x0eUL		/* rw  High bits transf count  0x38  */
- #define ESP_UID		ESP_TCHI	/* ro  Unique ID code          0x38  */
- #define FAS_RLO		ESP_TCHI	/* rw  HME extended counter    0x38  */
-@@ -76,6 +77,18 @@
- #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
- #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
- 
-+/* ESP config register 4 read-write, found only on am53c974 chips */
-+#define ESP_CONFIG4_RADE      0x04     /* Active negation */
-+#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
-+#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
-+#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
-+#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
 +
-+#define ESP_CONFIG_GE_12NS    (0)
-+#define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
-+#define ESP_CONFIG_GE_35NS    (ESP_CONFIG_GE0)
-+#define ESP_CONFIG_GE_0NS     (ESP_CONFIG_GE0 | ESP_CONFIG_GE1)
-+
- /* ESP command register read-write */
- /* Group 1 commands:  These may be sent at any point in time to the ESP
-  *                    chip.  None of them can generate interrupts 'cept
-@@ -254,6 +267,7 @@ enum esp_rev {
- 	FAS100A    = 0x04,
- 	FAST       = 0x05,
- 	FASHME     = 0x06,
-+	PCSCSI     = 0x07,  /* AM53c974 */
- };
++	esp_set_all_config3(esp, 5);
++	esp->prev_cfg3 = 5;
+ 	esp_write8(esp->config2, ESP_CFG2);
++	esp_write8(0, ESP_CFG3);
++	esp_write8(esp->prev_cfg3, ESP_CFG3);
  
- struct esp_cmd_entry {
-@@ -466,6 +480,7 @@ struct esp {
- 	u8			bursts;
- 	u8			config1;
- 	u8			config2;
-+	u8			config4;
+-	val = esp_read8(ESP_CFG2);
+-	val &= ~ESP_CONFIG2_MAGIC;
+-	if (val != (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY)) {
+-		/* If what we write to cfg2 does not come back, cfg2 is not
+-		 * implemented, therefore this must be a plain esp100.
++	val = esp_read8(ESP_CFG3);
++	if (val != 5) {
++		/* The cfg2 register is implemented, however
++		 * cfg3 is not, must be esp100a.
+ 		 */
+-		esp->rev = ESP100;
++		esp->rev = ESP100A;
+ 	} else {
+-		esp->config2 = 0;
+-		esp_set_all_config3(esp, 5);
+-		esp->prev_cfg3 = 5;
+-		esp_write8(esp->config2, ESP_CFG2);
+-		esp_write8(0, ESP_CFG3);
++		esp_set_all_config3(esp, 0);
++		esp->prev_cfg3 = 0;
+ 		esp_write8(esp->prev_cfg3, ESP_CFG3);
  
- 	u8			scsi_id;
- 	u32			scsi_id_mask;
+-		val = esp_read8(ESP_CFG3);
+-		if (val != 5) {
+-			/* The cfg2 register is implemented, however
+-			 * cfg3 is not, must be esp100a.
+-			 */
+-			esp->rev = ESP100A;
++		/* All of cfg{1,2,3} implemented, must be one of
++		 * the fas variants, figure out which one.
++		 */
++		if (esp->cfact == 0 || esp->cfact > ESP_CCF_F5) {
++			esp->rev = FAST;
++			esp->sync_defp = SYNC_DEFP_FAST;
+ 		} else {
+-			esp_set_all_config3(esp, 0);
+-			esp->prev_cfg3 = 0;
+-			esp_write8(esp->prev_cfg3, ESP_CFG3);
+-
+-			/* All of cfg{1,2,3} implemented, must be one of
+-			 * the fas variants, figure out which one.
+-			 */
+-			if (esp->cfact == 0 || esp->cfact > ESP_CCF_F5) {
+-				esp->rev = FAST;
+-				esp->sync_defp = SYNC_DEFP_FAST;
+-			} else {
+-				esp->rev = ESP236;
+-			}
+-			esp->config2 = 0;
+-			esp_write8(esp->config2, ESP_CFG2);
++			esp->rev = ESP236;
+ 		}
+ 	}
+ }
 -- 
 1.8.5.2
 
