@@ -1,58 +1,295 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Very slow throughput when using cdparanoia on two SATA CDROM
- drives with /dev/sr but not /dev/sg
-Date: Fri, 21 Nov 2014 02:02:10 -0800
-Message-ID: <20141121100210.GC8866@infradead.org>
-References: <545B76B2.1020906@buttersideup.com>
- <20141107213723.GA5088@animx.eu.org>
- <20141120063420.GA18238@infradead.org>
- <546DA346.7050507@buttersideup.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 07/10] esp: Use FIFO for command submission
+Date: Fri, 21 Nov 2014 11:04:31 +0100
+Message-ID: <546F0E2F.7090502@redhat.com>
+References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-8-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:42023 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478AbaKUKCP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 05:02:15 -0500
-Content-Disposition: inline
-In-Reply-To: <546DA346.7050507@buttersideup.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36174 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752189AbaKUKEo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 05:04:44 -0500
+In-Reply-To: <1416562077-105715-8-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: Wakko Warner <wakko@animx.eu.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Thu, Nov 20, 2014 at 08:16:06AM +0000, Tim Small wrote:
-> On 20/11/14 06:34, Christoph Hellwig wrote:
-> > Wakko, any chance you could resend a patch to remove the mutex from the
-> > ioctl path?
+
+
+On 21/11/2014 10:27, Hannes Reinecke wrote:
+> The am53c974 has a design flaw causing it to throw an
+> DMA interrupt whenever a DMA transmission completed,
+> even though DMA interrupt reporting is disabled.
+> This confuses the esp routines as it would register
+> a DMA interrupt whenever a cdb has been transmitted
+> to the drive.
+> So implement an option to use the FIFO for command
+> submission and enable it for am53c974.
 > 
-> I'm trying out some local changes which removes the ex-BKL mutex from
-> sr_block_ioctl() in sr.c, and instead uses a per-drive mutex which I've
-> added to cdrom_device_info (as per Arnd Bergmann/ James Bottomley's
-> discussion here https://lkml.org/lkml/2012/2/28/305 ).
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/am53c974.c |  1 +
+>  drivers/scsi/esp_scsi.c | 83 ++++++++++++++++++++++++++++++++++++++-----------
+>  drivers/scsi/esp_scsi.h |  1 +
+>  3 files changed, 66 insertions(+), 19 deletions(-)
 > 
-> This seems to work in a quick test testing (simultaneous cdparanoia on
-> 8-or-so drives took ~10 minutes, whereas last time I tried that it took
-> more than 18 hours), but I've been short on time to do much more.
+> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+> index b9af8b0..652762e 100644
+> --- a/drivers/scsi/am53c974.c
+> +++ b/drivers/scsi/am53c974.c
+> @@ -401,6 +401,7 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+>  	esp->host = shost;
+>  	esp->dev = pdev;
+>  	esp->ops = &pci_esp_ops;
+> +	esp->flags |= ESP_FLAG_USE_FIFO;
+
+Why not invert this patch and the previous one, and add this line
+directly when the am53c974 driver is born?
+
+>  	pep->esp = esp;
+>  
+>  	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 92ab921..ab7d2bc 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -605,7 +605,7 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+>  {
+>  	struct scsi_cmnd *cmd = ent->cmd;
+>  	struct scsi_device *dev = cmd->device;
+> -	int tgt, lun;
+> +	int tgt, lun, i;
+>  	u8 *p, val;
+>  
+>  	tgt = dev->id;
+> @@ -626,7 +626,10 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+>  
+>  	esp->active_cmd = ent;
+>  
+> -	p = esp->command_block;
+> +	if (esp->flags & ESP_FLAG_USE_FIFO)
+> +		p = esp->fifo;
+> +	else
+> +		p = esp->command_block;
+
+Any reason not to use esp->command_block unconditionally?
+
+>  	esp->msg_out_len = 0;
+>  
+>  	*p++ = IDENTIFY(0, lun);
+> @@ -648,12 +651,21 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+>  	esp_write_tgt_sync(esp, tgt);
+>  	esp_write_tgt_config3(esp, tgt);
+>  
+> -	val = (p - esp->command_block);
+> +	if (esp->flags & ESP_FLAG_USE_FIFO)
+> +		val = (p - esp->fifo);
+> +	else
+> +		val = (p - esp->command_block);
+>  
+>  	if (esp->rev == FASHME)
+>  		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+
+For consistency with what you do elsewhere, please move this in the "else".
+
+> -	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> -			       val, 16, 0, ESP_CMD_DMA | ESP_CMD_SELA);
+> +	if (esp->flags & ESP_FLAG_USE_FIFO) {
+> +		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> +		for (i = 0; i < val; i++)
+> +			esp_write8(esp->fifo[i], ESP_FDATA);
+> +		scsi_esp_cmd(esp, ESP_CMD_SELA);
+> +	} else
+> +		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> +				       val, 16, 0, ESP_CMD_DMA | ESP_CMD_SELA);
+>  }
+
+Hmm, what about a wrapper
+
+    __send_cmd(esp, data, esp_count, dma_count, cmd, force_flush,
+               force_fifo)
+    {
+        use_fifo =
+            force_fifo || (esp->flags & ESP_FLAG_USE_FIFO) ||
+            esp_count == 1;
+        if (force_flush || use_fifo || esp->rev == FASHME)
+            scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+        if (use_fifo) {
+            for (i = 0; i < val; i++)
+                esp_write8(esp->fifo[i], ESP_FDATA);
+            scsi_esp_cmd(esp, cmd);
+        } else {
+            if (data != esp->command_block)
+                memcpy(esp->command_block, data, length)
+            esp->ops->send_dma_cmd(esp,
+                                   esp->command_block_dma,
+                                   esp_count, dma_count, 0,
+                                   cmd | ESP_CMD_DMA);
+        }
+    }
+
+    send_cmd(esp, data, esp_count, dma_count, cmd)
+    {
+        __send_cmd(esp, data, esp_count, dma_count, cmd, false, false);
+    }
+
+This would be:
+
+    send_cmd(esp, esp->command_block, val, 16, ESP_CMD_SELA);
+
+>  static struct esp_cmd_entry *find_and_prep_issuable_command(struct esp *esp)
+> @@ -727,7 +739,10 @@ static void esp_maybe_execute_command(struct esp *esp)
+>  
+>  	esp_check_command_len(esp, cmd);
+>  
+> -	p = esp->command_block;
+> +	if (esp->flags & ESP_FLAG_USE_FIFO)
+> +		p = esp->fifo;
+
+Any reason not to use esp->command_block unconditionally?
+
+> +	else
+> +		p = esp->command_block;
+>  
+>  	esp->msg_out_len = 0;
+>  	if (tp->flags & ESP_TGT_CHECK_NEGO) {
+> @@ -789,13 +804,15 @@ build_identify:
+>  	}
+>  
+>  	if (!(esp->flags & ESP_FLAG_DOING_SLOWCMD)) {
+> -		start_cmd = ESP_CMD_DMA | ESP_CMD_SELA;
+> +		start_cmd = ESP_CMD_SELA;
+>  		if (ent->tag[0]) {
+>  			*p++ = ent->tag[0];
+>  			*p++ = ent->tag[1];
+>  
+> -			start_cmd = ESP_CMD_DMA | ESP_CMD_SA3;
+> +			start_cmd = ESP_CMD_SA3;
+>  		}
+> +		if (!(esp->flags & ESP_FLAG_USE_FIFO))
+> +			start_cmd |= ESP_CMD_DMA;
+>  
+>  		for (i = 0; i < cmd->cmd_len; i++)
+>  			*p++ = cmd->cmnd[i];
+> @@ -814,7 +831,9 @@ build_identify:
+>  			esp->msg_out_len += 2;
+>  		}
+>  
+> -		start_cmd = ESP_CMD_DMA | ESP_CMD_SELAS;
+> +		start_cmd = ESP_CMD_SELAS;
+> +		if (!(esp->flags & ESP_FLAG_USE_FIFO))
+> +			start_cmd |= ESP_CMD_DMA;
+>  		esp->select_state = ESP_SELECT_MSGOUT;
+>  	}
+>  	val = tgt;
+> @@ -825,7 +844,10 @@ build_identify:
+>  	esp_write_tgt_sync(esp, tgt);
+>  	esp_write_tgt_config3(esp, tgt);
+>  
+> -	val = (p - esp->command_block);
+> +	if (esp->flags & ESP_FLAG_USE_FIFO)
+> +		val = (p - esp->fifo);
+> +	else
+> +		val = (p - esp->command_block);
+>  
+>  	if (esp_debug & ESP_DEBUG_SCSICMD) {
+>  		printk("ESP: tgt[%d] lun[%d] scsi_cmd [ ", tgt, lun);
+> @@ -836,8 +858,17 @@ build_identify:
+>  
+>  	if (esp->rev == FASHME)
+>  		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> -	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> -			       val, 16, 0, start_cmd);
+> +
+> +	if (esp->flags & ESP_FLAG_USE_FIFO) {
+> +		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> +		for (i = 0; i < val; i++)
+> +			esp_write8(esp->fifo[i], ESP_FDATA);
+> +
+> +		scsi_esp_cmd(esp, start_cmd);
+> +	} else {
+> +		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> +				       val, 16, 0, start_cmd);
+
+   send_cmd(esp, esp->command_block, val, 16, start_cmd);
+
+> +	}
+>  }
+>  
+>  static struct esp_cmd_entry *esp_get_ent(struct esp *esp)
+> @@ -1646,7 +1677,7 @@ static int esp_msgin_process(struct esp *esp)
+>  
+>  static int esp_process_event(struct esp *esp)
+>  {
+> -	int write;
+> +	int write, i;
+>  
+>  again:
+>  	write = 0;
+> @@ -1872,6 +1903,10 @@ again:
+>  			if (esp->msg_out_len == 1) {
+>  				esp_write8(esp->msg_out[0], ESP_FDATA);
+>  				scsi_esp_cmd(esp, ESP_CMD_TI);
+> +			} else if (esp->flags & ESP_FLAG_USE_FIFO) {
+> +				for (i = 0; i < esp->msg_out_len; i++)
+> +					esp_write8(esp->msg_out[i], ESP_FDATA);
+> +				scsi_esp_cmd(esp, ESP_CMD_TI);
+>  			} else {
+>  				/* Use DMA. */
+>  				memcpy(esp->command_block,
+
+    __send_cmd(esp, esp->msg_out, esp->msg_out_len, esp->msg_out_len,
+               ESP_CMD_TI, true, esp->rev == FASHME);
+
+> @@ -1947,13 +1982,23 @@ again:
+>  		}
+>  		break;
+>  	case ESP_EVENT_CMD_START:
+> -		memcpy(esp->command_block, esp->cmd_bytes_ptr,
+> -		       esp->cmd_bytes_left);
+> -		if (esp->rev == FASHME)
+> +		if (esp->flags & ESP_FLAG_USE_FIFO) {
+>  			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> -		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> -				       esp->cmd_bytes_left, 16, 0,
+> -				       ESP_CMD_DMA | ESP_CMD_TI);
+> +			while (esp->cmd_bytes_left) {
+> +				esp_write8(esp->cmd_bytes_ptr[0], ESP_FDATA);
+> +				esp->cmd_bytes_ptr++;
+> +				esp->cmd_bytes_left--;
+> +			}
+> +			scsi_esp_cmd(esp, ESP_CMD_TI);
+> +		} else {
+> +			memcpy(esp->command_block, esp->cmd_bytes_ptr,
+> +			       esp->cmd_bytes_left);
+> +			if (esp->rev == FASHME)
+> +				scsi_esp_cmd(esp, ESP_CMD_FLUSH);
+> +			esp->ops->send_dma_cmd(esp, esp->command_block_dma,
+> +					       esp->cmd_bytes_left, 16, 0,
+> +					       ESP_CMD_DMA | ESP_CMD_TI);
+> +		}
+
+    send_cmd(esp, esp->cmd_bytes_ptr, esp->cmd_bytes_left, 16,
+             ESP_CMD_TI);
+
+>  		esp_event(esp, ESP_EVENT_CMD_DONE);
+>  		esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
+>  		break;
+> diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+> index 975d293..27dcaf8 100644
+> --- a/drivers/scsi/esp_scsi.h
+> +++ b/drivers/scsi/esp_scsi.h
+> @@ -478,6 +478,7 @@ struct esp {
+>  #define ESP_FLAG_WIDE_CAPABLE	0x00000008
+>  #define ESP_FLAG_QUICKIRQ_CHECK	0x00000010
+>  #define ESP_FLAG_DISABLE_SYNC	0x00000020
+> +#define ESP_FLAG_USE_FIFO	0x00000040
+>  
+>  	u8			select_state;
+>  #define ESP_SELECT_NONE		0x00 /* Not selecting */
 > 
-> At first inspection, it looks like it's just the cdrom-specific ioctls
-> in drivers/cdrom/cdrom.c which aren't safely preemptible (my conclusion
-> based on the fact that scsi_ioctl etc. is called elsewhere without
-> locking (e.g. from /dev/sg and /dev/sd devices - I haven't looked at ).
 
-Yes, they are safe.  Even inside cdrom_ioctl very little locking is
-required, but it might not be worth a lot of effort to go for fine
-grained locking there.
-
-> As a result, I was wondering about moving the mutex_lock / unlock, so
-> that they wrap just the cdrom-specific ioctl calls instead, although I
-> suspect there won't be a huge performance benefit from doing so, it
-> would have the advantage that all the code related to the new mutex to
-> be moved into cdrom.c
-
-That sounds fine.  It gets the performance critical SG_IO out of the
-critical region, and replaces the silly global lock in all the CDROM
-drivers with a per-device lock colocated with the data protected.
-
-
-Totally offtopic:  Jens, is it time to drop the silly paride driver?
+Paolo
