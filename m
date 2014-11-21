@@ -1,41 +1,46 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH net-next 1/5] RDMA/cxgb4: Cleanup Filter related
- macros/register defines
-Date: Thu, 20 Nov 2014 23:55:54 -0800
-Message-ID: <1416556554.6651.35.camel@perches.com>
-References: <1416554525-11844-1-git-send-email-hariprasad@chelsio.com>
-	 <1416554525-11844-2-git-send-email-hariprasad@chelsio.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 1/1] SCSI-libcxgbi: Deletion of an unnecessary check before
+ the function call "dst_release"
+Date: Fri, 21 Nov 2014 09:20:28 +0100
+Message-ID: <546EF5CC.1050308@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1416554525-11844-2-git-send-email-hariprasad@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: Hariprasad Shenai <hariprasad@chelsio.com>
-Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com, praveen@chelsio.com, varun@chelsio.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2014-11-21 at 12:52 +0530, Hariprasad Shenai wrote:
-> This patch cleanups all filter related macros/register defines that are defined
-> in t4fw_api.h and the affected files.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 21 Nov 2014 09:15:10 +0100
 
-Is there any real value in the FW_FILTER_WR_ prefix?
-Does it need to be so long?
+The dst_release() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-Perhaps it'd be nicer to read if
-_S was _SHIFT
-_M was _MASK
-_V was whatever it's supposed to represent (_SET?)
-and
-_G was _GET
+This issue was detected by using the Coccinelle software.
 
-> +#define FW_FILTER_WR_TID_S      12
-> +#define FW_FILTER_WR_TID_M      0xfffff
-> +#define FW_FILTER_WR_TID_V(x)   ((x) << FW_FILTER_WR_TID_S)
-> +#define FW_FILTER_WR_TID_G(x)   \
-> +	(((x) >> FW_FILTER_WR_TID_S) & FW_FILTER_WR_TID_M)
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/scsi/cxgbi/libcxgbi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Why aren't the _V defines masked then shifted?
-
-#define FW_FILTER_WR_<foo>_V(x)				\
-	(((x) & FW_FILTER_<foo>_M) << FW_FILTER_<foo>_S)
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index addd1dd..95d2654 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -798,8 +798,7 @@ void cxgbi_sock_closed(struct cxgbi_sock *csk)
+ 		return;
+ 	if (csk->saddr.sin_port)
+ 		sock_put_port(csk);
+-	if (csk->dst)
+-		dst_release(csk->dst);
++	dst_release(csk->dst);
+ 	csk->cdev->csk_release_offload_resources(csk);
+ 	cxgbi_sock_set_state(csk, CTP_CLOSED);
+ 	cxgbi_inform_iscsi_conn_closing(csk);
+-- 
+2.1.3
