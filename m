@@ -1,46 +1,45 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/1] SCSI-fnic: Deletion of an unnecessary check before the
- function call "vfree"
-Date: Fri, 21 Nov 2014 09:45:47 +0100
-Message-ID: <546EFBBB.7000409@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 00/37] Fixes, cleanups and modernization for NCR5380
+ drivers
+Date: Fri, 21 Nov 2014 09:59:15 +0100
+Message-ID: <546EFEE3.4090207@suse.de>
+References: <20141112051146.525489687@telegraphics.com.au> <20141120155659.GA2450@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian Uchino <buchino@cisco.com>, Hiral Patel <hiralpat@cisco.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, Suma Ramars <sramars@cisco.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:46663 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757271AbaKUI7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 03:59:18 -0500
+In-Reply-To: <20141120155659.GA2450@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 21 Nov 2014 09:39:43 +0100
+On 11/20/2014 04:56 PM, Christoph Hellwig wrote:
+> Thanks, I've applied all patches to the drivers-for-3.19 branch.
+>=20
+> I had a few rejects due to Hannes logging changes.  I think I've fixe=
+d
+> them properly, but please verify it.
 
-The vfree() function performs also input parameter validation. Thus the test
-around the call is not needed.
+Speaking of which, what is the decision for my next round of logging
+updates?
+I _think_ I've got all things fixed (minus the suggestion from Doug,
+but this can be fixed up with the next round).
 
-This issue was detected by using the Coccinelle software.
+Cheers,
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/fnic/fnic_debugfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
-index 2c613bd..ec70e6d 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -102,8 +102,7 @@ void fnic_debugfs_terminate(void)
- 	debugfs_remove(fnic_trace_debugfs_root);
- 	fnic_trace_debugfs_root = NULL;
- 
--	if (fc_trc_flag)
--		vfree(fc_trc_flag);
-+	vfree(fc_trc_flag);
- }
- 
- /*
--- 
-2.1.3
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
