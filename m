@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/12] esp_scsi: use FIFO for command submission
-Date: Fri, 21 Nov 2014 13:41:50 +0100
-Message-ID: <1416573716-73890-7-git-send-email-hare@suse.de>
+Subject: [PATCH 09/12] esp: correctly detect am53c974
+Date: Fri, 21 Nov 2014 13:41:53 +0100
+Message-ID: <1416573716-73890-10-git-send-email-hare@suse.de>
 References: <1416573716-73890-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51582 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51588 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757162AbaKUMmC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758233AbaKUMmC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 21 Nov 2014 07:42:02 -0500
 In-Reply-To: <1416573716-73890-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,142 +14,120 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Using DMA for command submission has the drawback that it might
-generate additional DMA completion interrupts after the command
-has been submitted to the device.
-Additionally the am53c974 has a design flaw causing it
-to generate spurious interrupts even though DMA completion
-interrupts are not enabled.
-This can be avoided by using the FIFO for command submission.
+The am53c974 returns the same ID as the FAS236, but implements
+things slightly differently. So detect the am53c974 by checking
+for ESP_CONFIG4 register.
 
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/esp_scsi.c | 46 +++++++++++++++++++++++++++++-----------------
- drivers/scsi/esp_scsi.h |  1 +
- 2 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/scsi/am53c974.c |  2 ++
+ drivers/scsi/esp_scsi.c | 17 ++++++++++++++++-
+ drivers/scsi/esp_scsi.h | 15 +++++++++++++++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+index 1c1312f..340cb2f 100644
+--- a/drivers/scsi/am53c974.c
++++ b/drivers/scsi/am53c974.c
+@@ -367,6 +367,8 @@ static void dc390_check_eeprom(struct esp *esp)
+ 	}
+ 	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
+ 	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
++	if (EEbuf[DC390_EE_MODE2] & DC390_EE_MODE2_ACTIVE_NEGATION)
++		esp->config4 |= ESP_CONFIG4_RADE | ESP_CONFIG4_RAE;
+ }
+ 
+ static int pci_esp_probe_one(struct pci_dev *pdev,
 diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 0ad0f08..2a3277d 100644
+index 07b4d93..797e208 100644
 --- a/drivers/scsi/esp_scsi.c
 +++ b/drivers/scsi/esp_scsi.c
-@@ -143,6 +143,24 @@ void scsi_esp_cmd(struct esp *esp, u8 val)
- }
- EXPORT_SYMBOL(scsi_esp_cmd);
- 
-+static void esp_send_dma_cmd(struct esp *esp, int len, int max_len, int cmd)
-+{
-+	if (esp->flags & ESP_FLAG_USE_FIFO) {
-+		int i;
-+
-+		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-+		for (i = 0; i < len; i++)
-+			esp_write8(esp->command_block[i], ESP_FDATA);
-+		scsi_esp_cmd(esp, cmd);
-+	} else {
-+		if (esp->rev == FASHME)
-+			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-+		cmd |= ESP_CMD_DMA;
-+		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-+				       len, max_len, 0, cmd);
+@@ -268,6 +268,19 @@ static void esp_reset_esp(struct esp *esp)
+ 	} else {
+ 		esp->min_period = ((5 * esp->ccycle) / 1000);
+ 	}
++	if (esp->rev == FAS236) {
++		/*
++		 * The AM53c974 chip returns the same ID as FAS236;
++		 * try to configure glitch eater.
++		 */
++		u8 config4 = ESP_CONFIG4_GE1;
++		esp_write8(config4, ESP_CFG4);
++		config4 = esp_read8(ESP_CFG4);
++		if ((config4 & ESP_CONFIG4_GE1) == ESP_CONFIG4_GE1) {
++			esp->rev = PCSCSI;
++			esp_write8(esp->config4, ESP_CFG4);
++		}
 +	}
-+}
-+
- static void esp_event(struct esp *esp, u8 val)
- {
- 	struct esp_event_ent *p;
-@@ -650,10 +668,7 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+ 	esp->max_period = (esp->max_period + 3)>>2;
+ 	esp->min_period = (esp->min_period + 3)>>2;
  
- 	val = (p - esp->command_block);
+@@ -293,7 +306,8 @@ static void esp_reset_esp(struct esp *esp)
+ 		/* fallthrough... */
  
--	if (esp->rev == FASHME)
--		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--			       val, 16, 0, ESP_CMD_DMA | ESP_CMD_SELA);
-+	esp_send_dma_cmd(esp, val, 16, ESP_CMD_SELA);
- }
+ 	case FAS236:
+-		/* Fast 236 or HME */
++	case PCSCSI:
++		/* Fast 236, AM53c974 or HME */
+ 		esp_write8(esp->config2, ESP_CFG2);
+ 		if (esp->rev == FASHME) {
+ 			u8 cfg3 = esp->target[0].esp_config3;
+@@ -2364,6 +2378,7 @@ static const char *esp_chip_names[] = {
+ 	"FAS100A",
+ 	"FAST",
+ 	"FASHME",
++	"AM53C974",
+ };
  
- static struct esp_cmd_entry *find_and_prep_issuable_command(struct esp *esp)
-@@ -789,12 +804,12 @@ build_identify:
- 	}
- 
- 	if (!(esp->flags & ESP_FLAG_DOING_SLOWCMD)) {
--		start_cmd = ESP_CMD_DMA | ESP_CMD_SELA;
-+		start_cmd = ESP_CMD_SELA;
- 		if (ent->tag[0]) {
- 			*p++ = ent->tag[0];
- 			*p++ = ent->tag[1];
- 
--			start_cmd = ESP_CMD_DMA | ESP_CMD_SA3;
-+			start_cmd = ESP_CMD_SA3;
- 		}
- 
- 		for (i = 0; i < cmd->cmd_len; i++)
-@@ -814,7 +829,7 @@ build_identify:
- 			esp->msg_out_len += 2;
- 		}
- 
--		start_cmd = ESP_CMD_DMA | ESP_CMD_SELAS;
-+		start_cmd = ESP_CMD_SELAS;
- 		esp->select_state = ESP_SELECT_MSGOUT;
- 	}
- 	val = tgt;
-@@ -834,10 +849,7 @@ build_identify:
- 		printk("]\n");
- 	}
- 
--	if (esp->rev == FASHME)
--		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--			       val, 16, 0, start_cmd);
-+	esp_send_dma_cmd(esp, val, 16, start_cmd);
- }
- 
- static struct esp_cmd_entry *esp_get_ent(struct esp *esp)
-@@ -1646,7 +1658,7 @@ static int esp_msgin_process(struct esp *esp)
- 
- static int esp_process_event(struct esp *esp)
- {
--	int write;
-+	int write, i;
- 
- again:
- 	write = 0;
-@@ -1872,6 +1884,10 @@ again:
- 			if (esp->msg_out_len == 1) {
- 				esp_write8(esp->msg_out[0], ESP_FDATA);
- 				scsi_esp_cmd(esp, ESP_CMD_TI);
-+			} else if (esp->flags & ESP_FLAG_USE_FIFO) {
-+				for (i = 0; i < esp->msg_out_len; i++)
-+					esp_write8(esp->msg_out[i], ESP_FDATA);
-+				scsi_esp_cmd(esp, ESP_CMD_TI);
- 			} else {
- 				/* Use DMA. */
- 				memcpy(esp->command_block,
-@@ -1949,11 +1965,7 @@ again:
- 	case ESP_EVENT_CMD_START:
- 		memcpy(esp->command_block, esp->cmd_bytes_ptr,
- 		       esp->cmd_bytes_left);
--		if (esp->rev == FASHME)
--			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--				       esp->cmd_bytes_left, 16, 0,
--				       ESP_CMD_DMA | ESP_CMD_TI);
-+		esp_send_dma_cmd(esp, esp->cmd_bytes_left, 16, ESP_CMD_TI);
- 		esp_event(esp, ESP_EVENT_CMD_DONE);
- 		esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
- 		break;
+ static struct scsi_transport_template *esp_transport_template;
 diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 975d293..27dcaf8 100644
+index 5fa456c..84dcbe4 100644
 --- a/drivers/scsi/esp_scsi.h
 +++ b/drivers/scsi/esp_scsi.h
-@@ -478,6 +478,7 @@ struct esp {
- #define ESP_FLAG_WIDE_CAPABLE	0x00000008
- #define ESP_FLAG_QUICKIRQ_CHECK	0x00000010
- #define ESP_FLAG_DISABLE_SYNC	0x00000020
-+#define ESP_FLAG_USE_FIFO	0x00000040
+@@ -25,6 +25,7 @@
+ #define ESP_CTEST	0x0aUL		/* wo  Chip test register      0x28  */
+ #define ESP_CFG2	0x0bUL		/* rw  Second cfg register     0x2c  */
+ #define ESP_CFG3	0x0cUL		/* rw  Third cfg register      0x30  */
++#define ESP_CFG4	0x0dUL		/* rw  Fourth cfg register     0x34  */
+ #define ESP_TCHI	0x0eUL		/* rw  High bits transf count  0x38  */
+ #define ESP_UID		ESP_TCHI	/* ro  Unique ID code          0x38  */
+ #define FAS_RLO		ESP_TCHI	/* rw  HME extended counter    0x38  */
+@@ -76,6 +77,18 @@
+ #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
+ #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
  
- 	u8			select_state;
- #define ESP_SELECT_NONE		0x00 /* Not selecting */
++/* ESP config register 4 read-write, found only on am53c974 chips */
++#define ESP_CONFIG4_RADE      0x04     /* Active negation */
++#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
++#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
++#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
++#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
++
++#define ESP_CONFIG_GE_12NS    (0)
++#define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
++#define ESP_CONFIG_GE_35NS    (ESP_CONFIG_GE0)
++#define ESP_CONFIG_GE_0NS     (ESP_CONFIG_GE0 | ESP_CONFIG_GE1)
++
+ /* ESP command register read-write */
+ /* Group 1 commands:  These may be sent at any point in time to the ESP
+  *                    chip.  None of them can generate interrupts 'cept
+@@ -254,6 +267,7 @@ enum esp_rev {
+ 	FAS100A    = 0x04,
+ 	FAST       = 0x05,
+ 	FASHME     = 0x06,
++	PCSCSI     = 0x07,  /* AM53c974 */
+ };
+ 
+ struct esp_cmd_entry {
+@@ -466,6 +480,7 @@ struct esp {
+ 	u8			bursts;
+ 	u8			config1;
+ 	u8			config2;
++	u8			config4;
+ 
+ 	u8			scsi_id;
+ 	u32			scsi_id_mask;
 -- 
 1.8.5.2
 
