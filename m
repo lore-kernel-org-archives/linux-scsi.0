@@ -1,72 +1,53 @@
-From: Hariprasad S <hariprasad@chelsio.com>
-Subject: Re: [PATCH net-next 1/5] RDMA/cxgb4: Cleanup Filter related
- macros/register defines
-Date: Sat, 22 Nov 2014 01:46:55 +0530
-Message-ID: <20141121201653.GA32567@hariprasad-pc>
-References: <1416554525-11844-1-git-send-email-hariprasad@chelsio.com>
- <1416554525-11844-2-git-send-email-hariprasad@chelsio.com>
- <1416556554.6651.35.camel@perches.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/1] target: Deletion of unnecessary checks before the
+ function call "module_put"
+Date: Fri, 21 Nov 2014 13:57:29 -0800
+Message-ID: <1416607049.27880.20.camel@haakon3.risingtidesystems.com>
+References: <5307CAA2.8060406@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+	 <530A086E.8010901@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+	 <530A72AA.3000601@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+	 <530B5FB6.6010207@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402241710370.2074@hadrien>
+	 <530C5E18.1020800@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402251014170.2080@hadrien>
+	 <530CD2C4.4050903@users.sourceforge.net>
+	 <alpine.DEB.2.10.1402251840450.7035@hadrien>
+	 <530CF8FF.8080600@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	 <530DD06F.4090703@users.sourceforge.net>
+	 <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	 <5317A59D.4@users.sourceforge.net> <546F0642.4060007@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1416556554.6651.35.camel@perches.com>
-Sender: netdev-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, roland@purestorage.com, JBottomley@parallels.com, hch@infradead.org, swise@opengridcomputing.com, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com, praveen@chelsio.com, varun@chelsio.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <546F0642.4060007@users.sourceforge.net>
+Sender: target-devel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Nov 20, 2014 at 23:55:54 -0800, Joe Perches wrote:
-> On Fri, 2014-11-21 at 12:52 +0530, Hariprasad Shenai wrote:
-> > This patch cleanups all filter related macros/register defines that are defined
-> > in t4fw_api.h and the affected files.
+On Fri, 2014-11-21 at 10:30 +0100, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 21 Nov 2014 10:25:45 +0100
 > 
-> Is there any real value in the FW_FILTER_WR_ prefix?
-> Does it need to be so long?
+> The module_put() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
 > 
-Hey Joe, we have about 600 of these register defines used internally, and more
-added as we add functionality and only a small chunk of these are actually used
-in the code in kernel. Without the descriptive prefixes code would be extremely
-hard to read without having a reference document open at all times. They are
-used in 6 different drivers, and no one is proficient enough to know them all
-off hand, hence the explanatory prefixes.
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/target/iscsi/iscsi_target_transport.c | 3 +--
+>  drivers/target/target_core_hba.c              | 6 ++----
+>  2 files changed, 3 insertions(+), 6 deletions(-)
+> 
 
-> Perhaps it'd be nicer to read if
-> _S was _SHIFT
-> _M was _MASK
-> _V was whatever it's supposed to represent (_SET?)
-> and
-> _G was _GET
-> 
-There prefixes are auto-generated based on hardware logic, as the actual
-prefixes generated are not acceptable in the kernel due namespace collison
-worries, we are trying to keep it in an format that is _both_ acceptable in the
-kernel and can be used to convert in-house patches to upstream kernel patches.
-Changing the length of the macro names would significantly increase manual
-intervention required to ensure that the 80 char limit is not violated. Even
-simply changing existing code would require quite a lot of man-hours manually
-fixing all the char length issues that would be better spend making code more
-maintainable first.
+Applied to target-pending/for-next.
 
-The current focus of the effort is to get all these macros into a uniform
-format. Due to legacy reasons, the current macros are represented in 3 varying
-formats (one of which actually is _SHIFT, _MASK etc), making code very hard to
-maintain, doubly so when transplanting changesets. As a final phase of this, we
-will add an explanation about the suffixes used so that the headers are easier
-to read.
+Thanks Markus!
 
-> > +#define FW_FILTER_WR_TID_S      12
-> > +#define FW_FILTER_WR_TID_M      0xfffff
-> > +#define FW_FILTER_WR_TID_V(x)   ((x) << FW_FILTER_WR_TID_S)
-> > +#define FW_FILTER_WR_TID_G(x)   \
-> > +	(((x) >> FW_FILTER_WR_TID_S) & FW_FILTER_WR_TID_M)
-> 
-> Why aren't the _V defines masked then shifted?
-> 
-> #define FW_FILTER_WR_<foo>_V(x)				\
-> 	(((x) & FW_FILTER_<foo>_M) << FW_FILTER_<foo>_S)
-> 
-> 
-Good point, until now we just have been careful using _V macros. But this too
-is best done once we actually have all the macros used to set values in a
-uniform format that can be patched in one go.
+--nab
