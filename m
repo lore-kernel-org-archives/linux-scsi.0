@@ -1,32 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 00/37] Fixes, cleanups and modernization for NCR5380
- drivers
-Date: Fri, 21 Nov 2014 02:23:13 -0800
-Message-ID: <20141121102313.GA12886@infradead.org>
-References: <20141112051146.525489687@telegraphics.com.au>
- <20141120155659.GA2450@infradead.org>
- <546EFEE3.4090207@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 00/10] Re-implement am53c974 driver
+Date: Fri, 21 Nov 2014 11:26:39 +0100
+Message-ID: <20141121102639.GA31016@lst.de>
+References: <1416562077-105715-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:39749 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbaKUKXQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 05:23:16 -0500
+Received: from verein.lst.de ([213.95.11.211]:59138 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972AbaKUK0t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 05:26:49 -0500
 Content-Disposition: inline
-In-Reply-To: <546EFEE3.4090207@suse.de>
+In-Reply-To: <1416562077-105715-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, davem@davemloft.net, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-On Fri, Nov 21, 2014 at 09:59:15AM +0100, Hannes Reinecke wrote:
-> Speaking of which, what is the decision for my next round of logging
-> updates?
-> I _think_ I've got all things fixed (minus the suggestion from Doug,
-> but this can be fixed up with the next round).
+On Fri, Nov 21, 2014 at 10:27:47AM +0100, Hannes Reinecke wrote:
+> Hi all,
+> 
+> having found some issues with the current tmscsim driver
+> I looked at the code and found is really awkward to clean
+> up.
+> Seeing that the am53c974 chip is actually based on the
+> 'ESP' chip design I've re-implemented it based on the
+> common esp_scsi routines. This new driver
+> (cunningly named 'am53c974') provides all features
+> found on the tmscsim driver, with the goal of obsoleting
+> the old tmscsim driver.
+> Tested with Tekram DC390 and qemu esp-scsi.
 
-I was waiting for that to do another deep review.  In generall I' fine
-with it, but with all the fallout from logging hanges so far I'm tempted
-to not merged it for the 3.19 window that is about to close, but as the
-first thing for the 3.20 merge window.
+This looks very nice!
+
+Three high level comments:
+
+ - please Cc Dave for changes to esp_scsi
+ - please Cc Guennadi as the tmscsim maintainer
+ - this probably should deprecated and/or remove the tmscsim driver
