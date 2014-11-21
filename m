@@ -1,31 +1,42 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [usb-storage] Re: 3.16 commit 89fb4cd errors on drives without
- SYNC CACHE
-Date: Fri, 21 Nov 2014 02:17:33 -0800
-Message-ID: <20141121101733.GA23135@infradead.org>
-References: <20141120064233.GA29412@infradead.org>
- <Pine.LNX.4.44L0.1411201008290.1061-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH 2/7] scsi: avoid ->change_queue_depth indirection for
+ queue full tracking
+Date: Fri, 21 Nov 2014 02:19:55 -0800
+Message-ID: <20141121101955.GA3926@infradead.org>
+References: <1415901546-8006-1-git-send-email-hch@lst.de>
+ <1415901546-8006-3-git-send-email-hch@lst.de>
+ <20141113194719.GA21540@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56669 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:60851 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758599AbaKUKRj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 05:17:39 -0500
+	with ESMTP id S1757407AbaKUKT5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 05:19:57 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1411201008290.1061-100000@iolanthe.rowland.org>
+In-Reply-To: <20141113194719.GA21540@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jeff DeFouw <mrj@plorb.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: venkateshs@google.com
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-> usb-storage sets wce_default_on only for devices that are marked with 
-> the US_FL_WRITE_CACHE quirk flag.  Currently only two devices have that 
-> flag: the Seagate Portable HDD (vendor ID 0x0bc2, product ID 0x2300) 
-> and the Western Digital My Password HDD (vendor ID 0x1058, product ID 
-> 0x070a).
+On Thu, Nov 13, 2014 at 07:47:19PM +0000, venkateshs@google.com wrote:
+> On Thu, Nov 13, 2014 at 06:59:01PM +0100, Christoph Hellwig wrote:
+> >All drivers use the implementation for ramping the queue up and down, so
+> >instead of overloading the change_queue_depth method call the
+> >implementation diretly if the driver opts into it by setting the
+> >track_queue_depth flag in the host template.
+> >
+> >Note that a few drivers validated the new queue depth in their
+> >change_queue_depth method, but as we never go over the queue depth
+> >set during slave_configure or the sysfs file this isn't nessecary
+> >and can safely be removed.
+> >
+> >Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> This patch plus the change to remove the 'tagged' argument to
+> scsi_adjust_queue_depth() form a nice cleanup.
+> 
+> Reviewed-by: Venkatesh Srinivas <venkateshs@google.com>
 
-So Jeff has a drive that on its own claims WCE=1 but doesn't support
-SYNCHRONIZE_CACHE(10).  I'm not sure what to do about it as it sounds
-inherently dangerous.
-
+Any chance to get a review for the other patches in the series as well?
