@@ -1,135 +1,92 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 11/12] esp: enable CONFIG2_FENAB for am53c974
-Date: Fri, 21 Nov 2014 14:10:49 +0100
-Message-ID: <546F39D9.3030705@redhat.com>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-12-git-send-email-hare@suse.de>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH RESEND] bnx2fc: do not add shared skbs to the fcoe_rx_list
+Date: Fri, 21 Nov 2014 14:21:15 +0100
+Message-ID: <546F3C4B.4000509@redhat.com>
+References: <1416478653-4452-1-git-send-email-mlombard@redhat.com> <20141120140723.GA13685@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46830 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758147AbaKUNLF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:11:05 -0500
-In-Reply-To: <1416573716-73890-12-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20141120140723.GA13685@infradead.org>
+Sender: stable-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: chad.dupuis@qlogic.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, JBottomley@parallels.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
 
 
 
-On 21/11/2014 13:41, Hannes Reinecke wrote:
-> CONFIG2_FENAB ('feature enable') changed definition between chip
-> revisions, from 'Latch SCSI Phase' to 'Latch SCSI Phase, display
-> chip ID upon reset, and enable 24 bit addresses'.
-> So only enable it for am53c974 where we know what it's doing.
+On 11/20/2014 03:07 PM, Christoph Hellwig wrote:
+> Thanks.  This should go into 3.18 and -stable, right?
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+Yes.
+
+Thanks,
+Maurizio Lombardi
+
+
+
+On 11/20/2014 11:17 AM, Maurizio Lombardi wrote:
+> In some cases, the fcoe_rx_list may contains multiple instances
+> of the same skb (the so called "shared skbs").
+>
+> the bnx2fc_l2_rcv thread is a loop that extracts a skb from the list,
+> modifies (and destroys) its content and then proceed to the next one.
+> The problem is that if the skb is shared, the remaining instances will
+> be corrupted.
+>
+> The solution is to use skb_share_check() before adding the skb to the
+> fcoe_rx_list.
+>
+> [ 6286.808725] ------------[ cut here ]------------
+> [ 6286.808729] WARNING: at include/scsi/fc_frame.h:173 bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]()
+> [ 6286.808748] Modules linked in: bnx2x(-) mdio dm_service_time bnx2fc cnic uio fcoe libfcoe 8021q garp stp mrp libfc llc scsi_transport_fc scsi_tgt sg iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel e1000e ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper ptp cryptd hpilo serio_raw hpwdt lpc_ich pps_core ipmi_si pcspkr mfd_core ipmi_msghandler shpchp pcc_cpufreq mperf nfsd auth_rpcgss nfs_acl lockd sunrpc dm_multipath xfs libcrc32c ata_generic pata_acpi sd_mod crc_t10dif crct10dif_common mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit ata_piix drm_kms_helper ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod [last unloaded: mdio]
+> [ 6286.808750] CPU: 3 PID: 1304 Comm: bnx2fc_l2_threa Not tainted 3.10.0-121.el7.x86_64 #1
+> [ 6286.808750] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+> [ 6286.808752]  0000000000000000 000000000b36e715 ffff8800deba1e00 ffffffff815ec0ba
+> [ 6286.808753]  ffff8800deba1e38 ffffffff8105dee1 ffffffffa05618c0 ffff8801e4c81888
+> [ 6286.808754]  ffffe8ffff663868 ffff8801f402b180 ffff8801f56bc000 ffff8800deba1e48
+> [ 6286.808754] Call Trace:
+> [ 6286.808759]  [<ffffffff815ec0ba>] dump_stack+0x19/0x1b
+> [ 6286.808762]  [<ffffffff8105dee1>] warn_slowpath_common+0x61/0x80
+> [ 6286.808763]  [<ffffffff8105e00a>] warn_slowpath_null+0x1a/0x20
+> [ 6286.808765]  [<ffffffffa054f415>] bnx2fc_l2_rcv_thread+0x425/0x450 [bnx2fc]
+> [ 6286.808767]  [<ffffffffa054eff0>] ? bnx2fc_disable+0x90/0x90 [bnx2fc]
+> [ 6286.808769]  [<ffffffff81085aef>] kthread+0xcf/0xe0
+> [ 6286.808770]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> [ 6286.808772]  [<ffffffff815fc76c>] ret_from_fork+0x7c/0xb0
+> [ 6286.808773]  [<ffffffff81085a20>] ? kthread_create_on_node+0x140/0x140
+> [ 6286.808774] ---[ end trace c6cdb939184ccb4e ]---
+>
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 > ---
->  drivers/scsi/am53c974.c | 41 +++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/esp_scsi.c |  2 ++
->  2 files changed, 43 insertions(+)
-> 
-> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-> index 340cb2f..55622eb 100644
-> --- a/drivers/scsi/am53c974.c
-> +++ b/drivers/scsi/am53c974.c
-> @@ -17,6 +17,8 @@
->  #define DRV_MODULE_NAME "am53c974"
->  #define DRV_MODULE_VERSION "1.00"
->  
-> +static bool am53c974_fenab = true;
-> +
->  // #define ESP_DMA_DEBUG
->  
->  #define ESP_DMA_CMD 0x10
-> @@ -254,6 +256,8 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
->  
->  	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
->  	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
-> +	if (esp->config2 & ESP_CONFIG2_FENAB)
-> +		pci_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
->  
->  	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
->  	pci_esp_write32(esp, addr, ESP_DMA_SPA);
-> @@ -267,6 +271,33 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
->  	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
->  }
->  
-> +static u32 pci_esp_dma_length_limit(struct esp *esp, u32 dma_addr, u32 dma_len)
-> +{
-> +	int dma_limit = 16;
-> +	u32 base, end;
-> +
-> +	/*
-> +	 * If CONFIG2_FENAB is set we can
-> +	 * handle up to 24 bit addresses
-> +	 */
-> +	if (esp->config2 & ESP_CONFIG2_FENAB)
-> +		dma_limit = 24;
-> +
-> +	if (dma_len > (1U << dma_limit))
-> +		dma_len = (1U << dma_limit);
-> +
-> +	/*
-> +	 * Prevent crossing a 24-bit address boundary.
-> +	 */
-> +	base = dma_addr & ((1U << 24) - 1U);
-> +	end = base + dma_len;
-> +	if (end > (1U << 24))
-> +		end = (1U <<24);
-> +	dma_len = end - base;
-> +
-> +	return dma_len;
-> +}
-> +
->  static const struct esp_driver_ops pci_esp_ops = {
->  	.esp_write8	=	pci_esp_write8,
->  	.esp_read8	=	pci_esp_read8,
-> @@ -280,6 +311,7 @@ static const struct esp_driver_ops pci_esp_ops = {
->  	.dma_invalidate	=	pci_esp_dma_invalidate,
->  	.send_dma_cmd	=	pci_esp_send_dma_cmd,
->  	.dma_error	=	pci_esp_dma_error,
-> +	.dma_length_limit =	pci_esp_dma_length_limit,
->  };
->  
->  /*
-> @@ -417,6 +449,12 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
->  	 * DMA for command submission.
->  	 */
->  	esp->flags |= ESP_FLAG_USE_FIFO;
-> +	/*
-> +	 * Enable CONFIG2_FENAB to allow for large DMA transfers
-> +	 */
-> +	if (am53c974_fenab)
-> +		esp->config2 |= ESP_CONFIG2_FENAB;
-> +
->  	pep->esp = esp;
->  
->  	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
-> @@ -535,5 +573,8 @@ MODULE_AUTHOR("Hannes Reinecke <hare@suse.de>");
->  MODULE_LICENSE("GPL");
->  MODULE_VERSION(DRV_MODULE_VERSION);
->  
-> +module_param(am53c974_fenab, bool, 0444);
-> +MODULE_PARM_DESC(am53c974_fenab, "Enable 24-bit DMA transfer sizes");
-> +
->  module_init(am53c974_module_init);
->  module_exit(am53c974_module_exit);
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index bd17516..56f361e 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -1343,6 +1343,8 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
->  			  (((unsigned int)esp_read8(ESP_TCMED)) << 8));
->  		if (esp->rev == FASHME)
->  			ecount |= ((unsigned int)esp_read8(FAS_RLO)) << 16;
-> +		if (esp->rev == PCSCSI && (esp->config2 & ESP_CONFIG2_FENAB))
-> +			ecount |= ((unsigned int)esp_read8(ESP_TCHI)) << 16;
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 79e5c94..72533c5 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -412,6 +412,7 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+>  	struct fc_frame_header *fh;
+>  	struct fcoe_rcv_info *fr;
+>  	struct fcoe_percpu_s *bg;
+> +	struct sk_buff *tmp_skb;
+>  	unsigned short oxid;
+>
+>  	interface = container_of(ptype, struct bnx2fc_interface,
+> @@ -424,6 +425,12 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+>  		goto err;
 >  	}
->  
->  	bytes_sent = esp->data_dma_len;
-> 
-
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+>
+> +	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
+> +	if (!tmp_skb)
+> +		goto err;
+> +
+> +	skb = tmp_skb;
+> +
+>  	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
+>  		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+>  		goto err;
+>
