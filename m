@@ -1,111 +1,84 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH RESEND 1/7] megaraid_sas : Driver version upgrade and
- remove some meta data of driver
-Date: Fri, 21 Nov 2014 14:51:06 +0100
-Message-ID: <546F434A.6020702@redhat.com>
-References: <201411170957.sAH9vdRD008943@palmhbs0.lsi.com>
+Subject: Re: [PATCH RESEND 3/7] megaraid_sas : Do not process IOCTLs and SCSI
+ commands during driver removal
+Date: Fri, 21 Nov 2014 14:51:31 +0100
+Message-ID: <546F4363.3000808@redhat.com>
+References: <201411170957.sAH9vnhF008957@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57903 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60508 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758635AbaKUNve (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:51:34 -0500
-In-Reply-To: <201411170957.sAH9vdRD008943@palmhbs0.lsi.com>
+	id S1755540AbaKUNwB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 08:52:01 -0500
+In-Reply-To: <201411170957.sAH9vnhF008957@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-On 11/17/2014 10:53 AM, Sumit.Saxena@avagotech.com wrote:
-> Update driver version and remove some meta data(release date and extended version) about megaraid_sas driver.
+On 11/17/2014 10:54 AM, Sumit.Saxena@avagotech.com wrote:
+> Do not process any SCSI and IOCTL command further(return them with appropriate return values to callers),
+> while driver removal is in progress/PCI shutdown is invoked. 
 >
 > Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas.h      |    4 +---
->  drivers/scsi/megaraid/megaraid_sas_base.c |   24 +-----------------------
->  2 files changed, 2 insertions(+), 26 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas_base.c |   19 +++++++++++++++----
+>  1 files changed, 15 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index a49914d..fe546e6 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -33,9 +33,7 @@
->  /*
->   * MegaRAID SAS Driver meta data
->   */
-> -#define MEGASAS_VERSION				"06.805.06.00-rc1"
-> -#define MEGASAS_RELDATE				"Sep. 4, 2014"
-> -#define MEGASAS_EXT_VERSION			"Thu. Sep. 4 17:00:00 PDT 2014"
-> +#define MEGASAS_VERSION				"06.805.06.01-rc1"
->  
->  /*
->   * Device IDs
 > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index f6a69a3..6c74a67 100644
+> index 5fa6ce2..3781920 100644
 > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -6400,16 +6400,6 @@ static ssize_t megasas_sysfs_show_version(struct device_driver *dd, char *buf)
->  static DRIVER_ATTR(version, S_IRUGO, megasas_sysfs_show_version, NULL);
+> @@ -1571,6 +1571,12 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>  	instance = (struct megasas_instance *)
+>  	    scmd->device->host->hostdata;
 >  
->  static ssize_t
-> -megasas_sysfs_show_release_date(struct device_driver *dd, char *buf)
-> -{
-> -	return snprintf(buf, strlen(MEGASAS_RELDATE) + 2, "%s\n",
-> -			MEGASAS_RELDATE);
-> -}
-> -
-> -static DRIVER_ATTR(release_date, S_IRUGO, megasas_sysfs_show_release_date,
-> -		   NULL);
-> -
-> -static ssize_t
->  megasas_sysfs_show_support_poll_for_event(struct device_driver *dd, char *buf)
->  {
->  	return sprintf(buf, "%u\n", support_poll_for_event);
-> @@ -6712,8 +6702,7 @@ static int __init megasas_init(void)
+> +	if (instance->unload == 1) {
+> +		scmd->result = DID_NO_CONNECT << 16;
+> +		scmd->scsi_done(scmd);
+> +		return 0;
+> +	}
+> +
+>  	if (instance->issuepend_done == 0)
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+>  
+> @@ -4956,10 +4962,6 @@ static int megasas_io_attach(struct megasas_instance *instance)
+>  		return -ENODEV;
+>  	}
+>  
+> -	/*
+> -	 * Trigger SCSI to scan our drives
+> -	 */
+> -	scsi_scan_host(host);
+>  	return 0;
+>  }
+>  
+> @@ -5287,6 +5289,10 @@ retry_irq_register:
+>  		goto fail_io_attach;
+>  
+>  	instance->unload = 0;
+> +	/*
+> +	 * Trigger SCSI to scan our drives
+> +	 */
+> +	scsi_scan_host(host);
+>  
 >  	/*
->  	 * Announce driver version and other information
+>  	 * Initiate AEN (Asynchronous Event Notification)
+> @@ -6050,6 +6056,11 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
+>  	megasas_issue_blocked_cmd(instance, cmd, 0);
+>  	cmd->sync_cmd = 0;
+>  
+> +	if (instance->unload == 1) {
+> +		dev_info(&instance->pdev->dev, "Driver unload is in progress "
+> +			"don't submit data to application\n");
+> +		goto out;
+> +	}
+>  	/*
+>  	 * copy out the kernel buffers to user buffers
 >  	 */
-> -	printk(KERN_INFO "megasas: %s %s\n", MEGASAS_VERSION,
-> -	       MEGASAS_EXT_VERSION);
-> +	pr_info("megasas: %s\n", MEGASAS_VERSION);
->  
->  	spin_lock_init(&poll_aen_lock);
->  
-> @@ -6748,10 +6737,6 @@ static int __init megasas_init(void)
->  				  &driver_attr_version);
->  	if (rval)
->  		goto err_dcf_attr_ver;
-> -	rval = driver_create_file(&megasas_pci_driver.driver,
-> -				  &driver_attr_release_date);
-> -	if (rval)
-> -		goto err_dcf_rel_date;
->  
->  	rval = driver_create_file(&megasas_pci_driver.driver,
->  				&driver_attr_support_poll_for_event);
-> @@ -6775,12 +6760,7 @@ err_dcf_support_device_change:
->  err_dcf_dbg_lvl:
->  	driver_remove_file(&megasas_pci_driver.driver,
->  			&driver_attr_support_poll_for_event);
-> -
->  err_dcf_support_poll_for_event:
-> -	driver_remove_file(&megasas_pci_driver.driver,
-> -			   &driver_attr_release_date);
-> -
-> -err_dcf_rel_date:
->  	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
->  err_dcf_attr_ver:
->  	pci_unregister_driver(&megasas_pci_driver);
-> @@ -6800,8 +6780,6 @@ static void __exit megasas_exit(void)
->  			&driver_attr_support_poll_for_event);
->  	driver_remove_file(&megasas_pci_driver.driver,
->  			&driver_attr_support_device_change);
-> -	driver_remove_file(&megasas_pci_driver.driver,
-> -			   &driver_attr_release_date);
->  	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
->  
->  	pci_unregister_driver(&megasas_pci_driver);
 
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
