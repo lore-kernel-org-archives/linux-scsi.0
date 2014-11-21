@@ -1,107 +1,132 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/10] esp: enable CONFIG2_FENAB for am53c974
-Date: Fri, 21 Nov 2014 10:27:57 +0100
-Message-ID: <1416562077-105715-11-git-send-email-hare@suse.de>
+Subject: [PATCH 09/10] esp: correctly detect am53c974
+Date: Fri, 21 Nov 2014 10:27:56 +0100
+Message-ID: <1416562077-105715-10-git-send-email-hare@suse.de>
 References: <1416562077-105715-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47182 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47168 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753877AbaKUJ2H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:28:07 -0500
+	id S1755056AbaKUJ2F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:28:05 -0500
 In-Reply-To: <1416562077-105715-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-CONFIG2_FENAB ('feature enable') changed definition between chip
-revisions, from 'Latch SCSI Phase' to 'Latch SCSI Phase, display
-chip ID upon reset, and enable 24 bit addresses'.
-So only enable it for am53c974 where we know what it's doing.
+The am53c974 returns the same ID as the FAS236, but implements
+things slightly differently. So detect the am53c974 by checking
+for ESP_CONFIG4 register.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/am53c974.c | 30 ++++++++++++++++++++++++++++++
- drivers/scsi/esp_scsi.c |  4 ++++
- 2 files changed, 34 insertions(+)
+ drivers/scsi/am53c974.c |  2 ++
+ drivers/scsi/esp_scsi.c | 17 ++++++++++++++++-
+ drivers/scsi/esp_scsi.h | 15 +++++++++++++++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-index 0452ed1..722e781 100644
+index 0b7643e..0452ed1 100644
 --- a/drivers/scsi/am53c974.c
 +++ b/drivers/scsi/am53c974.c
-@@ -252,6 +252,8 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 
- 	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
-+	if (esp->config2 & ESP_CONFIG2_FENAB)
-+		pci_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
- 	pci_esp_write32(esp, addr, ESP_DMA_SPA);
-@@ -265,6 +267,33 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
+@@ -365,6 +365,8 @@ static void dc390_check_eeprom(struct esp *esp)
+ 	}
+ 	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
+ 	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
++	if (EEbuf[DC390_EE_MODE2] & DC390_EE_MODE2_ACTIVE_NEGATION)
++		esp->config4 |= ESP_CONFIG4_RADE | ESP_CONFIG4_RAE;
  }
  
-+static u32 pci_esp_dma_length_limit(struct esp *esp, u32 dma_addr, u32 dma_len)
-+{
-+	int dma_limit = 16;
-+	u32 base, end;
-+
-+	/*
-+	 * If CONFIG2_FENAB is set we can
-+	 * handle up to 24 bit addresses
-+	 */
-+	if (esp->config2 & ESP_CONFIG2_FENAB)
-+		dma_limit = 24;
-+
-+	if (dma_len > (1U << dma_limit))
-+		dma_len = (1U << dma_limit);
-+
-+	/*
-+	 * Prevent crossing a 24-bit address boundary.
-+	 */
-+	base = dma_addr & ((1U << 24) - 1U);
-+	end = base + dma_len;
-+	if (end > (1U << 24))
-+		end = (1U <<24);
-+	dma_len = end - base;
-+
-+	return dma_len;
-+}
-+
- static const struct esp_driver_ops pci_esp_ops = {
- 	.esp_write8	=	pci_esp_write8,
- 	.esp_read8	=	pci_esp_read8,
-@@ -278,6 +307,7 @@ static const struct esp_driver_ops pci_esp_ops = {
- 	.dma_invalidate	=	pci_esp_dma_invalidate,
- 	.send_dma_cmd	=	pci_esp_send_dma_cmd,
- 	.dma_error	=	pci_esp_dma_error,
-+	.dma_length_limit =	pci_esp_dma_length_limit,
- };
- 
- /*
+ static int pci_esp_probe_one(struct pci_dev *pdev,
 diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 01753f5..d0b7b32 100644
+index 88272bb..01753f5 100644
 --- a/drivers/scsi/esp_scsi.c
 +++ b/drivers/scsi/esp_scsi.c
-@@ -289,6 +289,8 @@ static void esp_reset_esp(struct esp *esp)
+@@ -250,6 +250,19 @@ static void esp_reset_esp(struct esp *esp)
+ 	} else {
+ 		esp->min_period = ((5 * esp->ccycle) / 1000);
+ 	}
++	if (esp->rev == FAS236) {
++		/*
++		 * The AM53c974 chip returns the same ID as FAS236;
++		 * try to configure glitch eater.
++		 */
++		u8 config4 = ESP_CONFIG4_GE1;
++		esp_write8(config4, ESP_CFG4);
++		config4 = esp_read8(ESP_CFG4);
++		if ((config4 & ESP_CONFIG4_GE1) == ESP_CONFIG4_GE1) {
++			esp->rev = PCSCSI;
++			esp_write8(esp->config4, ESP_CFG4);
++		}
++	}
+ 	esp->max_period = (esp->max_period + 3)>>2;
+ 	esp->min_period = (esp->min_period + 3)>>2;
+ 
+@@ -275,7 +288,8 @@ static void esp_reset_esp(struct esp *esp)
+ 		/* fallthrough... */
  
  	case FAS236:
- 	case PCSCSI:
-+		if (esp->rev == PCSCSI)
-+			esp->config2 |= ESP_CONFIG2_FENAB;
- 		/* Fast 236, AM53c974 or HME */
+-		/* Fast 236 or HME */
++	case PCSCSI:
++		/* Fast 236, AM53c974 or HME */
  		esp_write8(esp->config2, ESP_CFG2);
  		if (esp->rev == FASHME) {
-@@ -1362,6 +1364,8 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
- 			  (((unsigned int)esp_read8(ESP_TCMED)) << 8));
- 		if (esp->rev == FASHME)
- 			ecount |= ((unsigned int)esp_read8(FAS_RLO)) << 16;
-+		if (esp->rev == PCSCSI && (esp->config2 & ESP_CONFIG2_FENAB))
-+			ecount |= ((unsigned int)esp_read8(ESP_TCHI)) << 16;
- 	}
+ 			u8 cfg3 = esp->target[0].esp_config3;
+@@ -2397,6 +2411,7 @@ static const char *esp_chip_names[] = {
+ 	"FAS100A",
+ 	"FAST",
+ 	"FASHME",
++	"AM53C974",
+ };
  
- 	bytes_sent = esp->data_dma_len;
+ static struct scsi_transport_template *esp_transport_template;
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 5fa456c..84dcbe4 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -25,6 +25,7 @@
+ #define ESP_CTEST	0x0aUL		/* wo  Chip test register      0x28  */
+ #define ESP_CFG2	0x0bUL		/* rw  Second cfg register     0x2c  */
+ #define ESP_CFG3	0x0cUL		/* rw  Third cfg register      0x30  */
++#define ESP_CFG4	0x0dUL		/* rw  Fourth cfg register     0x34  */
+ #define ESP_TCHI	0x0eUL		/* rw  High bits transf count  0x38  */
+ #define ESP_UID		ESP_TCHI	/* ro  Unique ID code          0x38  */
+ #define FAS_RLO		ESP_TCHI	/* rw  HME extended counter    0x38  */
+@@ -76,6 +77,18 @@
+ #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
+ #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
+ 
++/* ESP config register 4 read-write, found only on am53c974 chips */
++#define ESP_CONFIG4_RADE      0x04     /* Active negation */
++#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
++#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
++#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
++#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
++
++#define ESP_CONFIG_GE_12NS    (0)
++#define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
++#define ESP_CONFIG_GE_35NS    (ESP_CONFIG_GE0)
++#define ESP_CONFIG_GE_0NS     (ESP_CONFIG_GE0 | ESP_CONFIG_GE1)
++
+ /* ESP command register read-write */
+ /* Group 1 commands:  These may be sent at any point in time to the ESP
+  *                    chip.  None of them can generate interrupts 'cept
+@@ -254,6 +267,7 @@ enum esp_rev {
+ 	FAS100A    = 0x04,
+ 	FAST       = 0x05,
+ 	FASHME     = 0x06,
++	PCSCSI     = 0x07,  /* AM53c974 */
+ };
+ 
+ struct esp_cmd_entry {
+@@ -466,6 +480,7 @@ struct esp {
+ 	u8			bursts;
+ 	u8			config1;
+ 	u8			config2;
++	u8			config4;
+ 
+ 	u8			scsi_id;
+ 	u32			scsi_id_mask;
 -- 
 1.8.5.2
 
