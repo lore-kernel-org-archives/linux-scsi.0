@@ -1,17 +1,17 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 08/10] am53c974: BLAST residual handling
-Date: Fri, 21 Nov 2014 11:10:09 +0100
-Message-ID: <546F0F81.4030803@redhat.com>
-References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-9-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 09/10] esp: correctly detect am53c974
+Date: Fri, 21 Nov 2014 11:11:56 +0100
+Message-ID: <546F0FEC.60405@redhat.com>
+References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-10-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52811 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56227 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758346AbaKUKKT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 05:10:19 -0500
-In-Reply-To: <1416562077-105715-9-git-send-email-hare@suse.de>
+	id S1758017AbaKUKMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 05:12:07 -0500
+In-Reply-To: <1416562077-105715-10-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
@@ -20,90 +20,119 @@ Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
 
 On 21/11/2014 10:27, Hannes Reinecke wrote:
-> The am53c974 has an design issue where a single byte might be
-> left in the SCSI FIFO after a DMA transfer.
-> As the handling code is currently untested add a WARN_ON()
-> statement here.
+> The am53c974 returns the same ID as the FAS236, but implements
+> things slightly differently. So detect the am53c974 by checking
+> for ESP_CONFIG4 register.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/am53c974.c |  6 ++++++
->  drivers/scsi/esp_scsi.c | 29 +++++++++++++++++++++++++++++
->  drivers/scsi/esp_scsi.h |  1 +
->  3 files changed, 36 insertions(+)
+>  drivers/scsi/am53c974.c |  2 ++
+>  drivers/scsi/esp_scsi.c | 17 ++++++++++++++++-
+>  drivers/scsi/esp_scsi.h | 15 +++++++++++++++
+>  3 files changed, 33 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-> index 652762e..0b7643e 100644
+> index 0b7643e..0452ed1 100644
 > --- a/drivers/scsi/am53c974.c
 > +++ b/drivers/scsi/am53c974.c
-> @@ -195,6 +195,12 @@ static void pci_esp_dma_drain(struct esp *esp)
->  	shost_printk(KERN_INFO, esp->host,
->  		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
->  #endif
-> +	/* BLAST residual handling is currently untested */
-> +	if (WARN_ON(resid == 1)) {
-
-WARN_ON_ONCE?
-
-Paolo
-
-> +		struct esp_cmd_entry *ent = esp->active_cmd;
-> +
-> +		ent->flags |= ESP_CMD_FLAG_RESIDUAL;
-> +	}
+> @@ -365,6 +365,8 @@ static void dc390_check_eeprom(struct esp *esp)
+>  	}
+>  	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
+>  	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
+> +	if (EEbuf[DC390_EE_MODE2] & DC390_EE_MODE2_ACTIVE_NEGATION)
+> +		esp->config4 |= ESP_CONFIG4_RADE | ESP_CONFIG4_RAE;
 >  }
 >  
->  static void pci_esp_dma_invalidate(struct esp *esp)
+>  static int pci_esp_probe_one(struct pci_dev *pdev,
 > diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index ab7d2bc..88272bb 100644
+> index 88272bb..01753f5 100644
 > --- a/drivers/scsi/esp_scsi.c
 > +++ b/drivers/scsi/esp_scsi.c
-> @@ -1353,6 +1353,35 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
->  	bytes_sent = esp->data_dma_len;
->  	bytes_sent -= ecount;
->  
-> +	/*
-> +	 * The am53c974 has a DMA 'pecularity'. The doc states:
-> +	 * In some odd byte conditions, one residual byte will
-> +	 * be left in the SCSI FIFO, and the FIFO Flags will
-> +	 * never count to '0 '. When this happens, the residual
-> +	 * byte should be retrieved via PIO following completion
-> +	 * of the BLAST operation.
-> +	 */
-> +	if (fifo_cnt == 1 && ent->flags & ESP_CMD_FLAG_RESIDUAL) {
-> +		size_t count = 1;
-> +		size_t offset = bytes_sent;
-> +		u8 bval = esp_read8(ESP_FDATA);
-> +
-> +		if (ent->flags & ESP_CMD_FLAG_AUTOSENSE)
-> +			ent->sense_ptr[bytes_sent] = bval;
-> +		else {
-> +			struct esp_cmd_priv *p = ESP_CMD_PRIV(cmd);
-> +			u8 *ptr;
-> +
-> +			ptr = scsi_kmap_atomic_sg(p->cur_sg, p->u.num_sg,
-> +						  &offset, &count);
-> +			if (likely(ptr)) {
-> +				*(ptr + offset) = bval;
-> +				scsi_kunmap_atomic_sg(ptr);
-> +			}
+> @@ -250,6 +250,19 @@ static void esp_reset_esp(struct esp *esp)
+>  	} else {
+>  		esp->min_period = ((5 * esp->ccycle) / 1000);
+>  	}
+> +	if (esp->rev == FAS236) {
+> +		/*
+> +		 * The AM53c974 chip returns the same ID as FAS236;
+> +		 * try to configure glitch eater.
+> +		 */
+> +		u8 config4 = ESP_CONFIG4_GE1;
+> +		esp_write8(config4, ESP_CFG4);
+> +		config4 = esp_read8(ESP_CFG4);
+> +		if ((config4 & ESP_CONFIG4_GE1) == ESP_CONFIG4_GE1) {
+> +			esp->rev = PCSCSI;
+> +			esp_write8(esp->config4, ESP_CFG4);
 > +		}
-> +		bytes_sent += fifo_cnt;
-> +		ent->flags &= ~ESP_CMD_FLAG_RESIDUAL;
 > +	}
->  	if (!(ent->flags & ESP_CMD_FLAG_WRITE))
->  		bytes_sent -= fifo_cnt;
+>  	esp->max_period = (esp->max_period + 3)>>2;
+>  	esp->min_period = (esp->min_period + 3)>>2;
 >  
+> @@ -275,7 +288,8 @@ static void esp_reset_esp(struct esp *esp)
+>  		/* fallthrough... */
+>  
+>  	case FAS236:
+> -		/* Fast 236 or HME */
+> +	case PCSCSI:
+> +		/* Fast 236, AM53c974 or HME */
+>  		esp_write8(esp->config2, ESP_CFG2);
+>  		if (esp->rev == FASHME) {
+>  			u8 cfg3 = esp->target[0].esp_config3;
+> @@ -2397,6 +2411,7 @@ static const char *esp_chip_names[] = {
+>  	"FAS100A",
+>  	"FAST",
+>  	"FASHME",
+> +	"AM53C974",
+>  };
+>  
+>  static struct scsi_transport_template *esp_transport_template;
 > diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-> index 27dcaf8..5fa456c 100644
+> index 5fa456c..84dcbe4 100644
 > --- a/drivers/scsi/esp_scsi.h
 > +++ b/drivers/scsi/esp_scsi.h
-> @@ -269,6 +269,7 @@ struct esp_cmd_entry {
->  #define ESP_CMD_FLAG_WRITE	0x01 /* DMA is a write */
->  #define ESP_CMD_FLAG_ABORT	0x02 /* being aborted */
->  #define ESP_CMD_FLAG_AUTOSENSE	0x04 /* Doing automatic REQUEST_SENSE */
-> +#define ESP_CMD_FLAG_RESIDUAL	0x08 /* AM53c974 BLAST residual */
+> @@ -25,6 +25,7 @@
+>  #define ESP_CTEST	0x0aUL		/* wo  Chip test register      0x28  */
+>  #define ESP_CFG2	0x0bUL		/* rw  Second cfg register     0x2c  */
+>  #define ESP_CFG3	0x0cUL		/* rw  Third cfg register      0x30  */
+> +#define ESP_CFG4	0x0dUL		/* rw  Fourth cfg register     0x34  */
+>  #define ESP_TCHI	0x0eUL		/* rw  High bits transf count  0x38  */
+>  #define ESP_UID		ESP_TCHI	/* ro  Unique ID code          0x38  */
+>  #define FAS_RLO		ESP_TCHI	/* rw  HME extended counter    0x38  */
+> @@ -76,6 +77,18 @@
+>  #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
+>  #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
 >  
->  	u8			tag[2];
->  	u8			orig_tag[2];
+> +/* ESP config register 4 read-write, found only on am53c974 chips */
+> +#define ESP_CONFIG4_RADE      0x04     /* Active negation */
+> +#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
+> +#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
+> +#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
+> +#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
+> +
+> +#define ESP_CONFIG_GE_12NS    (0)
+> +#define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
+> +#define ESP_CONFIG_GE_35NS    (ESP_CONFIG_GE0)
+> +#define ESP_CONFIG_GE_0NS     (ESP_CONFIG_GE0 | ESP_CONFIG_GE1)
+> +
+>  /* ESP command register read-write */
+>  /* Group 1 commands:  These may be sent at any point in time to the ESP
+>   *                    chip.  None of them can generate interrupts 'cept
+> @@ -254,6 +267,7 @@ enum esp_rev {
+>  	FAS100A    = 0x04,
+>  	FAST       = 0x05,
+>  	FASHME     = 0x06,
+> +	PCSCSI     = 0x07,  /* AM53c974 */
+>  };
+>  
+>  struct esp_cmd_entry {
+> @@ -466,6 +480,7 @@ struct esp {
+>  	u8			bursts;
+>  	u8			config1;
+>  	u8			config2;
+> +	u8			config4;
+>  
+>  	u8			scsi_id;
+>  	u32			scsi_id_mask;
 > 
+
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
