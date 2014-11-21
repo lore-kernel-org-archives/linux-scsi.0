@@ -1,41 +1,74 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] uas: Add no-uas quirk for Hitachi usb-3 enclosures 4971:1012
-Date: Fri, 21 Nov 2014 13:28:03 +0100
-Message-ID: <1416572883-16465-1-git-send-email-hdegoede@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 04/12] esp_scsi: debug event and command
+Date: Fri, 21 Nov 2014 13:41:48 +0100
+Message-ID: <1416573716-73890-5-git-send-email-hare@suse.de>
+References: <1416573716-73890-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34470 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:51563 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbaKUM2H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 07:28:07 -0500
+	id S1755724AbaKUMmA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 07:42:00 -0500
+In-Reply-To: <1416573716-73890-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, stable@vger.kernel.org.#.3.16
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-These disks have a broken uas implementation, the tag field of the status
-iu-s is not set properly, so we need to fall-back to usb-storage for these.
+Add new debug definitions for event and command logging.
 
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/usb/storage/unusual_uas.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/esp_scsi.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 2fefaf9..18a283d 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -103,3 +103,10 @@ UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
- 		"VL711",
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_ATA_1X),
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 10a3d17..3a5d81c 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -49,6 +49,8 @@ static u32 esp_debug;
+ #define ESP_DEBUG_DATADONE	0x00000100
+ #define ESP_DEBUG_RECONNECT	0x00000200
+ #define ESP_DEBUG_AUTOSENSE	0x00000400
++#define ESP_DEBUG_EVENT		0x00000800
++#define ESP_DEBUG_COMMAND	0x00001000
+ 
+ #define esp_log_intr(f, a...) \
+ do {	if (esp_debug & ESP_DEBUG_INTR) \
+@@ -100,6 +102,16 @@ do {	if (esp_debug & ESP_DEBUG_AUTOSENSE) \
+ 		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
+ } while (0)
+ 
++#define esp_log_event(f, a...) \
++do {   if (esp_debug & ESP_DEBUG_EVENT)	\
++		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
++} while (0)
 +
-+/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
-+UNUSUAL_DEV(0x4971, 0x1012, 0x0000, 0x9999,
-+		"Hitachi",
-+		"External HDD",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_IGNORE_UAS),
++#define esp_log_command(f, a...) \
++do {   if (esp_debug & ESP_DEBUG_COMMAND)	\
++		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
++} while (0)
++
+ #define esp_read8(REG)		esp->ops->esp_read8(esp, REG)
+ #define esp_write8(VAL,REG)	esp->ops->esp_write8(esp, VAL, REG)
+ 
+@@ -126,6 +138,7 @@ void scsi_esp_cmd(struct esp *esp, u8 val)
+ 
+ 	esp->esp_event_cur = (idx + 1) & (ESP_EVENT_LOG_SZ - 1);
+ 
++	esp_log_command("cmd[%02x]\n", val);
+ 	esp_write8(val, ESP_CMD);
+ }
+ EXPORT_SYMBOL(scsi_esp_cmd);
+@@ -1638,6 +1651,8 @@ static int esp_process_event(struct esp *esp)
+ 
+ again:
+ 	write = 0;
++	esp_log_event("process event %d phase %x\n",
++		      esp->event, esp->sreg & ESP_STAT_PMASK);
+ 	switch (esp->event) {
+ 	case ESP_EVENT_CHECK_PHASE:
+ 		switch (esp->sreg & ESP_STAT_PMASK) {
 -- 
-2.1.0
+1.8.5.2
 
