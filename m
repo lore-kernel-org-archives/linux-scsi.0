@@ -1,46 +1,46 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/1] SCSI-libcxgbi: Deletion of an unnecessary check before
- the function call "dst_release"
-Date: Fri, 21 Nov 2014 09:20:28 +0100
-Message-ID: <546EF5CC.1050308@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 88591] SCSI_IOCTL_GET_IDLUN only returns 8 bits for the SCSI
+ Target value
+Date: Fri, 21 Nov 2014 08:39:41 +0000
+Message-ID: <bug-88591-11613-0hQYVnqT8M@https.bugzilla.kernel.org/>
+References: <bug-88591-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:49898 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758003AbaKUIjn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 03:39:43 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D93E3201BB
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2014 08:39:42 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 75FE720176
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2014 08:39:41 +0000 (UTC)
+In-Reply-To: <bug-88591-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 21 Nov 2014 09:15:10 +0100
+https://bugzilla.kernel.org/show_bug.cgi?id=88591
 
-The dst_release() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+Lei, Ni <zsurancher@163.com> changed:
 
-This issue was detected by using the Coccinelle software.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |zsurancher@163.com
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/cxgbi/libcxgbi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+--- Comment #2 from Lei, Ni <zsurancher@163.com> ---
+(In reply to d gilbert from comment #1)
+> As you may have noticed sysfs is a pretty bad mechanism
+> for answering this type of question, compared to an ioctl.
+> 
+> Doug Gilbert
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index addd1dd..95d2654 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -798,8 +798,7 @@ void cxgbi_sock_closed(struct cxgbi_sock *csk)
- 		return;
- 	if (csk->saddr.sin_port)
- 		sock_put_port(csk);
--	if (csk->dst)
--		dst_release(csk->dst);
-+	dst_release(csk->dst);
- 	csk->cdev->csk_release_offload_resources(csk);
- 	cxgbi_sock_set_state(csk, CTP_CLOSED);
- 	cxgbi_inform_iscsi_conn_closing(csk);
+Since sysfs is not a good mechanism, why should this ioctl command be
+deprecated ?
+
 -- 
-2.1.3
+You are receiving this mail because:
+You are watching the assignee of the bug.
