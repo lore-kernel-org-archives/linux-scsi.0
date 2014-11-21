@@ -1,49 +1,41 @@
-From: Sumit Saxena <sumitsaxena86@gmail.com>
-Subject: Re: [PATCH RESEND 0/7] megaraid_sas : Description Patch
-Date: Fri, 21 Nov 2014 17:07:08 +0530
-Message-ID: <CAKYY47Ub-cSATE6kdv=YzW=+zMZW84=oC9kockaD4XwG9UvHpQ@mail.gmail.com>
-References: <201411170957.sAH9vYLa008937@palmhbs0.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] uas: Add no-uas quirk for Hitachi usb-3 enclosures 4971:1012
+Date: Fri, 21 Nov 2014 13:28:03 +0100
+Message-ID: <1416572883-16465-1-git-send-email-hdegoede@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f169.google.com ([209.85.220.169]:52671 "EHLO
-	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758146AbaKULhJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 06:37:09 -0500
-Received: by mail-vc0-f169.google.com with SMTP id hy10so2319354vcb.14
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2014 03:37:08 -0800 (PST)
-In-Reply-To: <201411170957.sAH9vYLa008937@palmhbs0.lsi.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34470 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596AbaKUM2H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 07:28:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sumit saxena <Sumit.Saxena@avagotech.com>, thenzl@redhat.com
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, stable@vger.kernel.org.#.3.16
 
-On Mon, Nov 17, 2014 at 3:23 PM,  <Sumit.Saxena@avagotech.com> wrote:
-> megaraid_sas driver changes.
-> This resent patch series has some additional changes in few patches on top of last patch series.
-> [PATCH RESNED 1/7] additionally rmeoves some meta data of megaraid_sas driver.
-> [PATCH RESEND 2/7] has additional copyright changes as well.
-> Please consider this patch set for next kernel release.
->
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
->
-> ---
-> [PATCH RESEND 0/7] megaraid_sas : Description Patch.
-> [PATCH RESEND 1/7] megaraid_sas : Driver version upgrade and remove some meta data of driver.
-> [PATCH RESEND 2/7] megaraid_sas : Update MAINTAINERS and copyright information for megaraid drivers.
-> [PATCH RESEND 3/7] megaraid_sas : Do not process IOCTLs and SCSI commands during driver removal.
-> [PATCH RESEND 4/7] megaraid_sas : Online Firmware upgrade support for Extended VD feature.
-> [PATCH RESEND 5/7] megaraid_sas : Make HBA operational after LD_MAP_SYNC DCMD in OCR path.
-> [PATCH RESEND 6/7] megaraid_sas : Corrected return of wait_event from abort frame path.
-> [PATCH RESEND 7/7] megaraid_sas : Endinaness related bug fixes.
+These disks have a broken uas implementation, the tag field of the status
+iu-s is not set properly, so we need to fall-back to usb-storage for these.
 
-Tomas,
-This patch series is almost same as last series reviewed by you, only
-two patches(patch#1 and patch#2) are modified
-to accommodate your feedback. Can you provide Reviewed-by tag for this series.
+Cc: stable@vger.kernel.org # 3.16
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/unusual_uas.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index 2fefaf9..18a283d 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -103,3 +103,10 @@ UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
+ 		"VL711",
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_ATA_1X),
++
++/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
++UNUSUAL_DEV(0x4971, 0x1012, 0x0000, 0x9999,
++		"Hitachi",
++		"External HDD",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_IGNORE_UAS),
+-- 
+2.1.0
+
