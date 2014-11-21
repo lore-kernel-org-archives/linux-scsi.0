@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: [GIT PULL] target fixes for v3.18-rc6
-Date: Thu, 20 Nov 2014 21:19:24 -0800
-Message-ID: <1416547164.27917.71.camel@haakon3.risingtidesystems.com>
+Date: Thu, 20 Nov 2014 21:18:57 -0800
+Message-ID: <1416547137.27917.70.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
