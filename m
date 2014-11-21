@@ -1,17 +1,17 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 06/12] esp_scsi: use FIFO for command submission
-Date: Fri, 21 Nov 2014 14:09:21 +0100
-Message-ID: <546F3981.7000507@redhat.com>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-7-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 08/12] am53c974: BLAST residual handling
+Date: Fri, 21 Nov 2014 14:09:43 +0100
+Message-ID: <546F3997.8080801@redhat.com>
+References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-9-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46052 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46510 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750856AbaKUNJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:09:43 -0500
-In-Reply-To: <1416573716-73890-7-git-send-email-hare@suse.de>
+	id S1751596AbaKUNKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 08:10:01 -0500
+In-Reply-To: <1416573716-73890-9-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
@@ -20,142 +20,87 @@ Cc: Christoph Hellwig <hch@lst.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de
 
 
 On 21/11/2014 13:41, Hannes Reinecke wrote:
-> Using DMA for command submission has the drawback that it might
-> generate additional DMA completion interrupts after the command
-> has been submitted to the device.
-> Additionally the am53c974 has a design flaw causing it
-> to generate spurious interrupts even though DMA completion
-> interrupts are not enabled.
-> This can be avoided by using the FIFO for command submission.
+> The am53c974 has an design issue where a single byte might be
+> left in the SCSI FIFO after a DMA transfer.
+> As the handling code is currently untested add a WARN_ON()
+> statement here.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/esp_scsi.c | 46 +++++++++++++++++++++++++++++-----------------
+>  drivers/scsi/am53c974.c |  6 ++++++
+>  drivers/scsi/esp_scsi.c | 29 +++++++++++++++++++++++++++++
 >  drivers/scsi/esp_scsi.h |  1 +
->  2 files changed, 30 insertions(+), 17 deletions(-)
+>  3 files changed, 36 insertions(+)
 > 
+> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+> index 86c4c42..1c1312f 100644
+> --- a/drivers/scsi/am53c974.c
+> +++ b/drivers/scsi/am53c974.c
+> @@ -197,6 +197,12 @@ static void pci_esp_dma_drain(struct esp *esp)
+>  	shost_printk(KERN_INFO, esp->host,
+>  		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
+>  #endif
+> +	/* BLAST residual handling is currently untested */
+> +	if (WARN_ON_ONCE(resid == 1)) {
+> +		struct esp_cmd_entry *ent = esp->active_cmd;
+> +
+> +		ent->flags |= ESP_CMD_FLAG_RESIDUAL;
+> +	}
+>  }
+>  
+>  static void pci_esp_dma_invalidate(struct esp *esp)
 > diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 0ad0f08..2a3277d 100644
+> index 2a3277d..07b4d93 100644
 > --- a/drivers/scsi/esp_scsi.c
 > +++ b/drivers/scsi/esp_scsi.c
-> @@ -143,6 +143,24 @@ void scsi_esp_cmd(struct esp *esp, u8 val)
->  }
->  EXPORT_SYMBOL(scsi_esp_cmd);
+> @@ -1334,6 +1334,35 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+>  	bytes_sent = esp->data_dma_len;
+>  	bytes_sent -= ecount;
 >  
-> +static void esp_send_dma_cmd(struct esp *esp, int len, int max_len, int cmd)
-> +{
-> +	if (esp->flags & ESP_FLAG_USE_FIFO) {
-> +		int i;
+> +	/*
+> +	 * The am53c974 has a DMA 'pecularity'. The doc states:
+> +	 * In some odd byte conditions, one residual byte will
+> +	 * be left in the SCSI FIFO, and the FIFO Flags will
+> +	 * never count to '0 '. When this happens, the residual
+> +	 * byte should be retrieved via PIO following completion
+> +	 * of the BLAST operation.
+> +	 */
+> +	if (fifo_cnt == 1 && ent->flags & ESP_CMD_FLAG_RESIDUAL) {
+> +		size_t count = 1;
+> +		size_t offset = bytes_sent;
+> +		u8 bval = esp_read8(ESP_FDATA);
 > +
-> +		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-> +		for (i = 0; i < len; i++)
-> +			esp_write8(esp->command_block[i], ESP_FDATA);
-> +		scsi_esp_cmd(esp, cmd);
-> +	} else {
-> +		if (esp->rev == FASHME)
-> +			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-> +		cmd |= ESP_CMD_DMA;
-> +		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-> +				       len, max_len, 0, cmd);
+> +		if (ent->flags & ESP_CMD_FLAG_AUTOSENSE)
+> +			ent->sense_ptr[bytes_sent] = bval;
+> +		else {
+> +			struct esp_cmd_priv *p = ESP_CMD_PRIV(cmd);
+> +			u8 *ptr;
+> +
+> +			ptr = scsi_kmap_atomic_sg(p->cur_sg, p->u.num_sg,
+> +						  &offset, &count);
+> +			if (likely(ptr)) {
+> +				*(ptr + offset) = bval;
+> +				scsi_kunmap_atomic_sg(ptr);
+> +			}
+> +		}
+> +		bytes_sent += fifo_cnt;
+> +		ent->flags &= ~ESP_CMD_FLAG_RESIDUAL;
 > +	}
-> +}
-> +
->  static void esp_event(struct esp *esp, u8 val)
->  {
->  	struct esp_event_ent *p;
-> @@ -650,10 +668,7 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+>  	if (!(ent->flags & ESP_CMD_FLAG_WRITE))
+>  		bytes_sent -= fifo_cnt;
 >  
->  	val = (p - esp->command_block);
->  
-> -	if (esp->rev == FASHME)
-> -		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-> -	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-> -			       val, 16, 0, ESP_CMD_DMA | ESP_CMD_SELA);
-> +	esp_send_dma_cmd(esp, val, 16, ESP_CMD_SELA);
->  }
->  
->  static struct esp_cmd_entry *find_and_prep_issuable_command(struct esp *esp)
-> @@ -789,12 +804,12 @@ build_identify:
->  	}
->  
->  	if (!(esp->flags & ESP_FLAG_DOING_SLOWCMD)) {
-> -		start_cmd = ESP_CMD_DMA | ESP_CMD_SELA;
-> +		start_cmd = ESP_CMD_SELA;
->  		if (ent->tag[0]) {
->  			*p++ = ent->tag[0];
->  			*p++ = ent->tag[1];
->  
-> -			start_cmd = ESP_CMD_DMA | ESP_CMD_SA3;
-> +			start_cmd = ESP_CMD_SA3;
->  		}
->  
->  		for (i = 0; i < cmd->cmd_len; i++)
-> @@ -814,7 +829,7 @@ build_identify:
->  			esp->msg_out_len += 2;
->  		}
->  
-> -		start_cmd = ESP_CMD_DMA | ESP_CMD_SELAS;
-> +		start_cmd = ESP_CMD_SELAS;
->  		esp->select_state = ESP_SELECT_MSGOUT;
->  	}
->  	val = tgt;
-> @@ -834,10 +849,7 @@ build_identify:
->  		printk("]\n");
->  	}
->  
-> -	if (esp->rev == FASHME)
-> -		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-> -	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-> -			       val, 16, 0, start_cmd);
-> +	esp_send_dma_cmd(esp, val, 16, start_cmd);
->  }
->  
->  static struct esp_cmd_entry *esp_get_ent(struct esp *esp)
-> @@ -1646,7 +1658,7 @@ static int esp_msgin_process(struct esp *esp)
->  
->  static int esp_process_event(struct esp *esp)
->  {
-> -	int write;
-> +	int write, i;
->  
->  again:
->  	write = 0;
-> @@ -1872,6 +1884,10 @@ again:
->  			if (esp->msg_out_len == 1) {
->  				esp_write8(esp->msg_out[0], ESP_FDATA);
->  				scsi_esp_cmd(esp, ESP_CMD_TI);
-> +			} else if (esp->flags & ESP_FLAG_USE_FIFO) {
-> +				for (i = 0; i < esp->msg_out_len; i++)
-> +					esp_write8(esp->msg_out[i], ESP_FDATA);
-> +				scsi_esp_cmd(esp, ESP_CMD_TI);
->  			} else {
->  				/* Use DMA. */
->  				memcpy(esp->command_block,
-> @@ -1949,11 +1965,7 @@ again:
->  	case ESP_EVENT_CMD_START:
->  		memcpy(esp->command_block, esp->cmd_bytes_ptr,
->  		       esp->cmd_bytes_left);
-> -		if (esp->rev == FASHME)
-> -			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-> -		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-> -				       esp->cmd_bytes_left, 16, 0,
-> -				       ESP_CMD_DMA | ESP_CMD_TI);
-> +		esp_send_dma_cmd(esp, esp->cmd_bytes_left, 16, ESP_CMD_TI);
->  		esp_event(esp, ESP_EVENT_CMD_DONE);
->  		esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
->  		break;
 > diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-> index 975d293..27dcaf8 100644
+> index 27dcaf8..5fa456c 100644
 > --- a/drivers/scsi/esp_scsi.h
 > +++ b/drivers/scsi/esp_scsi.h
-> @@ -478,6 +478,7 @@ struct esp {
->  #define ESP_FLAG_WIDE_CAPABLE	0x00000008
->  #define ESP_FLAG_QUICKIRQ_CHECK	0x00000010
->  #define ESP_FLAG_DISABLE_SYNC	0x00000020
-> +#define ESP_FLAG_USE_FIFO	0x00000040
+> @@ -269,6 +269,7 @@ struct esp_cmd_entry {
+>  #define ESP_CMD_FLAG_WRITE	0x01 /* DMA is a write */
+>  #define ESP_CMD_FLAG_ABORT	0x02 /* being aborted */
+>  #define ESP_CMD_FLAG_AUTOSENSE	0x04 /* Doing automatic REQUEST_SENSE */
+> +#define ESP_CMD_FLAG_RESIDUAL	0x08 /* AM53c974 BLAST residual */
 >  
->  	u8			select_state;
->  #define ESP_SELECT_NONE		0x00 /* Not selecting */
+>  	u8			tag[2];
+>  	u8			orig_tag[2];
 > 
 
 Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
