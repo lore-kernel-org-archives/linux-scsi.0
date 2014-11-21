@@ -1,132 +1,601 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/10] esp: correctly detect am53c974
-Date: Fri, 21 Nov 2014 10:27:56 +0100
-Message-ID: <1416562077-105715-10-git-send-email-hare@suse.de>
+Subject: [PATCH 06/10] scsi: add 'am53c974' driver
+Date: Fri, 21 Nov 2014 10:27:53 +0100
+Message-ID: <1416562077-105715-7-git-send-email-hare@suse.de>
 References: <1416562077-105715-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47168 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47180 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755056AbaKUJ2F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:28:05 -0500
+	id S1757523AbaKUJ2H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:28:07 -0500
 In-Reply-To: <1416562077-105715-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The am53c974 returns the same ID as the FAS236, but implements
-things slightly differently. So detect the am53c974 by checking
-for ESP_CONFIG4 register.
+This patch adds a new implementation for the Tekram DC-390T /
+AMD AM53c974 SCSI controller, based on the generic
+esp_scsi infrastructure.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/am53c974.c |  2 ++
- drivers/scsi/esp_scsi.c | 17 ++++++++++++++++-
- drivers/scsi/esp_scsi.h | 15 +++++++++++++++
- 3 files changed, 33 insertions(+), 1 deletion(-)
+ drivers/scsi/Kconfig    |  18 ++
+ drivers/scsi/Makefile   |   1 +
+ drivers/scsi/am53c974.c | 523 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 542 insertions(+)
+ create mode 100644 drivers/scsi/am53c974.c
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 21bc674..497e7d5 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1357,6 +1357,24 @@ config SCSI_DC390T
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called tmscsim.
+ 
++config SCSI_AM53C974
++	tristate "Tekram DC390(T) and Am53/79C974 SCSI support (new driver)"
++	depends on PCI && SCSI
++	select SCSI_SPI_ATTRS
++	---help---
++	  This driver supports PCI SCSI host adapters based on the Am53C974A
++	  chip, e.g. Tekram DC390(T), DawiControl 2974 and some onboard
++	  PCscsi/PCnet (Am53/79C974) solutions.
++	  This is a new implementation base on the generic esp_scsi driver.
++
++	  Documentation can be found in <file:Documentation/scsi/tmscsim.txt>.
++
++	  Note that this driver does NOT support Tekram DC390W/U/F, which are
++	  based on NCR/Symbios chips. Use "NCR53C8XX SCSI support" for those.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called am53c974.
++
+ config SCSI_T128
+ 	tristate "Trantor T128/T128F/T228 SCSI support"
+ 	depends on ISA && SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 76f8932..7f974fc 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -101,6 +101,7 @@ obj-$(CONFIG_SCSI_7000FASST)	+= wd7000.o
+ obj-$(CONFIG_SCSI_EATA)		+= eata.o
+ obj-$(CONFIG_SCSI_DC395x)	+= dc395x.o
+ obj-$(CONFIG_SCSI_DC390T)	+= tmscsim.o
++obj-$(CONFIG_SCSI_AM53C974)	+= esp_scsi.o	am53c974.o
+ obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
+ obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
+ obj-$(CONFIG_MEGARAID_SAS)	+= megaraid/
 diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-index 0b7643e..0452ed1 100644
---- a/drivers/scsi/am53c974.c
+new file mode 100644
+index 0000000..b9af8b0
+--- /dev/null
 +++ b/drivers/scsi/am53c974.c
-@@ -365,6 +365,8 @@ static void dc390_check_eeprom(struct esp *esp)
- 	}
- 	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
- 	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
-+	if (EEbuf[DC390_EE_MODE2] & DC390_EE_MODE2_ACTIVE_NEGATION)
-+		esp->config4 |= ESP_CONFIG4_RADE | ESP_CONFIG4_RAE;
- }
- 
- static int pci_esp_probe_one(struct pci_dev *pdev,
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 88272bb..01753f5 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -250,6 +250,19 @@ static void esp_reset_esp(struct esp *esp)
- 	} else {
- 		esp->min_period = ((5 * esp->ccycle) / 1000);
- 	}
-+	if (esp->rev == FAS236) {
-+		/*
-+		 * The AM53c974 chip returns the same ID as FAS236;
-+		 * try to configure glitch eater.
-+		 */
-+		u8 config4 = ESP_CONFIG4_GE1;
-+		esp_write8(config4, ESP_CFG4);
-+		config4 = esp_read8(ESP_CFG4);
-+		if ((config4 & ESP_CONFIG4_GE1) == ESP_CONFIG4_GE1) {
-+			esp->rev = PCSCSI;
-+			esp_write8(esp->config4, ESP_CFG4);
-+		}
+@@ -0,0 +1,523 @@
++/*
++ * AMD am53c974 driver.
++ * Copyright (c) 2014 Hannes Reinecke, SUSE Linux GmbH
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/pci.h>
++#include <linux/interrupt.h>
++
++#include <scsi/scsi_host.h>
++
++#include "esp_scsi.h"
++
++#define DRV_MODULE_NAME "am53c974"
++#define DRV_MODULE_VERSION "1.00"
++
++// #define ESP_DMA_DEBUG
++
++#define ESP_DMA_CMD 0x10
++#define ESP_DMA_STC 0x11
++#define ESP_DMA_SPA 0x12
++#define ESP_DMA_WBC 0x13
++#define ESP_DMA_WAC 0x14
++#define ESP_DMA_STATUS 0x15
++#define ESP_DMA_SMDLA 0x16
++#define ESP_DMA_WMAC 0x17
++
++#define ESP_DMA_CMD_IDLE 0x00
++#define ESP_DMA_CMD_BLAST 0x01
++#define ESP_DMA_CMD_ABORT 0x02
++#define ESP_DMA_CMD_START 0x03
++#define ESP_DMA_CMD_MASK  0x03
++#define ESP_DMA_CMD_DIAG 0x04
++#define ESP_DMA_CMD_MDL 0x10
++#define ESP_DMA_CMD_INTE_P 0x20
++#define ESP_DMA_CMD_INTE_D 0x40
++#define ESP_DMA_CMD_DIR 0x80
++
++#define ESP_DMA_STAT_PWDN 0x01
++#define ESP_DMA_STAT_ERROR 0x02
++#define ESP_DMA_STAT_ABORT 0x04
++#define ESP_DMA_STAT_DONE 0x08
++#define ESP_DMA_STAT_SCSIINT 0x10
++#define ESP_DMA_STAT_BCMPLT 0x20
++
++/* EEPROM is accessed with 16-bit values */
++#define DC390_EEPROM_READ 0x80
++#define DC390_EEPROM_LEN 0x40
++
++/*
++ * DC390 EEPROM
++ *
++ * 8 * 4 bytes of per-device options
++ * followed by HBA specific options
++ */
++
++/* Per-device options */
++#define DC390_EE_MODE1 0x00
++#define DC390_EE_SPEED 0x01
++
++/* HBA-specific options */
++#define DC390_EE_ADAPT_SCSI_ID 0x40
++#define DC390_EE_MODE2 0x41
++#define DC390_EE_DELAY 0x42
++#define DC390_EE_TAG_CMD_NUM 0x43
++
++#define DC390_EE_MODE1_PARITY_CHK   0x01
++#define DC390_EE_MODE1_SYNC_NEGO    0x02
++#define DC390_EE_MODE1_EN_DISC      0x04
++#define DC390_EE_MODE1_SEND_START   0x08
++#define DC390_EE_MODE1_TCQ          0x10
++
++#define DC390_EE_MODE2_MORE_2DRV    0x01
++#define DC390_EE_MODE2_GREATER_1G   0x02
++#define DC390_EE_MODE2_RST_SCSI_BUS 0x04
++#define DC390_EE_MODE2_ACTIVE_NEGATION 0x08
++#define DC390_EE_MODE2_NO_SEEK      0x10
++#define DC390_EE_MODE2_LUN_CHECK    0x20
++
++struct pci_esp_priv {
++	struct esp *esp;
++	u8 dma_status;
++};
++
++#define PCI_ESP_GET_PRIV(esp) ((struct pci_esp_priv *) \
++			       pci_get_drvdata((struct pci_dev *) \
++					       (esp)->dev))
++
++static void pci_esp_dma_drain(struct esp *esp);
++
++static void pci_esp_write8(struct esp *esp, u8 val, unsigned long reg)
++{
++	iowrite8(val, esp->regs + (reg * 4UL));
++}
++
++static u8 pci_esp_read8(struct esp *esp, unsigned long reg)
++{
++	return ioread8(esp->regs + (reg * 4UL));
++}
++
++static void pci_esp_write32(struct esp *esp, u32 val, unsigned long reg)
++{
++	return iowrite32(val, esp->regs + (reg * 4UL));
++}
++
++static dma_addr_t pci_esp_map_single(struct esp *esp, void *buf,
++				     size_t sz, int dir)
++{
++	return pci_map_single(esp->dev, buf, sz, dir);
++}
++
++static int pci_esp_map_sg(struct esp *esp, struct scatterlist *sg,
++			  int num_sg, int dir)
++{
++	return pci_map_sg(esp->dev, sg, num_sg, dir);
++}
++
++static void pci_esp_unmap_single(struct esp *esp, dma_addr_t addr,
++				 size_t sz, int dir)
++{
++	pci_unmap_single(esp->dev, addr, sz, dir);
++}
++
++static void pci_esp_unmap_sg(struct esp *esp, struct scatterlist *sg,
++			     int num_sg, int dir)
++{
++	pci_unmap_sg(esp->dev, sg, num_sg, dir);
++}
++
++static int pci_esp_irq_pending(struct esp *esp)
++{
++	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
++
++	pep->dma_status = pci_esp_read8(esp, ESP_DMA_STATUS);
++#ifdef ESP_DMA_DEBUG
++	if (pep->dma_status)
++		shost_printk(KERN_INFO, esp->host, "dma intr dreg[%02x]\n",
++			     pep->dma_status);
++#endif
++	if (pep->dma_status & (ESP_DMA_STAT_ERROR |
++			       ESP_DMA_STAT_ABORT |
++			       ESP_DMA_STAT_DONE |
++			       ESP_DMA_STAT_SCSIINT))
++		return 1;
++
++	return 0;
++}
++
++static void pci_esp_reset_dma(struct esp *esp)
++{
++	/* Nothing to do ? */
++}
++
++static void pci_esp_dma_drain(struct esp *esp)
++{
++	u8 resid;
++	int lim = 1000;
++
++
++	if ((esp->sreg & ESP_STAT_PMASK) == ESP_DOP ||
++	    (esp->sreg & ESP_STAT_PMASK) == ESP_DIP)
++		/* Data-In or Data-Out, nothing to be done */
++		return;
++
++	while (--lim > 0) {
++		resid = pci_esp_read8(esp, ESP_FFLAGS) & ESP_FF_FBYTES;
++		if (resid <= 1)
++			break;
 +	}
- 	esp->max_period = (esp->max_period + 3)>>2;
- 	esp->min_period = (esp->min_period + 3)>>2;
- 
-@@ -275,7 +288,8 @@ static void esp_reset_esp(struct esp *esp)
- 		/* fallthrough... */
- 
- 	case FAS236:
--		/* Fast 236 or HME */
-+	case PCSCSI:
-+		/* Fast 236, AM53c974 or HME */
- 		esp_write8(esp->config2, ESP_CFG2);
- 		if (esp->rev == FASHME) {
- 			u8 cfg3 = esp->target[0].esp_config3;
-@@ -2397,6 +2411,7 @@ static const char *esp_chip_names[] = {
- 	"FAS100A",
- 	"FAST",
- 	"FASHME",
-+	"AM53C974",
- };
- 
- static struct scsi_transport_template *esp_transport_template;
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 5fa456c..84dcbe4 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -25,6 +25,7 @@
- #define ESP_CTEST	0x0aUL		/* wo  Chip test register      0x28  */
- #define ESP_CFG2	0x0bUL		/* rw  Second cfg register     0x2c  */
- #define ESP_CFG3	0x0cUL		/* rw  Third cfg register      0x30  */
-+#define ESP_CFG4	0x0dUL		/* rw  Fourth cfg register     0x34  */
- #define ESP_TCHI	0x0eUL		/* rw  High bits transf count  0x38  */
- #define ESP_UID		ESP_TCHI	/* ro  Unique ID code          0x38  */
- #define FAS_RLO		ESP_TCHI	/* rw  HME extended counter    0x38  */
-@@ -76,6 +77,18 @@
- #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
- #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
- 
-+/* ESP config register 4 read-write, found only on am53c974 chips */
-+#define ESP_CONFIG4_RADE      0x04     /* Active negation */
-+#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
-+#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
-+#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
-+#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
++	if (resid > 1) {
++		/* FIFO not cleared */
++		shost_printk(KERN_INFO, esp->host,
++			     "FIFO not cleared, %d bytes left\n",
++			     resid);
++	}
 +
-+#define ESP_CONFIG_GE_12NS    (0)
-+#define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
-+#define ESP_CONFIG_GE_35NS    (ESP_CONFIG_GE0)
-+#define ESP_CONFIG_GE_0NS     (ESP_CONFIG_GE0 | ESP_CONFIG_GE1)
++	/*
++	 * When there is a residual BCMPLT will never be set
++	 * (obviously). But we still have to issue the BLAST
++	 * command, otherwise the data will not being transferred.
++	 * But we'll never know when the BLAST operation is
++	 * finished. So check for some time and give up eventually.
++	 */
++	lim = 1000;
++	pci_esp_write8(esp, ESP_DMA_CMD_DIR | ESP_DMA_CMD_BLAST, ESP_DMA_CMD);
++	while (pci_esp_read8(esp, ESP_DMA_STATUS) & ESP_DMA_STAT_BCMPLT) {
++		if (--lim == 0)
++			break;
++	}
++	pci_esp_write8(esp, ESP_DMA_CMD_DIR | ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
++#ifdef ESP_DMA_DEBUG
++	shost_printk(KERN_INFO, esp->host,
++		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
++#endif
++}
 +
- /* ESP command register read-write */
- /* Group 1 commands:  These may be sent at any point in time to the ESP
-  *                    chip.  None of them can generate interrupts 'cept
-@@ -254,6 +267,7 @@ enum esp_rev {
- 	FAS100A    = 0x04,
- 	FAST       = 0x05,
- 	FASHME     = 0x06,
-+	PCSCSI     = 0x07,  /* AM53c974 */
- };
- 
- struct esp_cmd_entry {
-@@ -466,6 +480,7 @@ struct esp {
- 	u8			bursts;
- 	u8			config1;
- 	u8			config2;
-+	u8			config4;
- 
- 	u8			scsi_id;
- 	u32			scsi_id_mask;
++static void pci_esp_dma_invalidate(struct esp *esp)
++{
++	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
++
++#ifdef ESP_DMA_DEBUG
++	shost_printk(KERN_INFO, esp->host, "invalidate DMA\n");
++#endif
++	pci_esp_write8(esp, ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
++	pep->dma_status = 0;
++}
++
++static int pci_esp_dma_error(struct esp *esp)
++{
++	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
++
++	if (pep->dma_status & ESP_DMA_STAT_ERROR) {
++		u8 dma_cmd = pci_esp_read8(esp, ESP_DMA_CMD);
++
++		if ((dma_cmd & ESP_DMA_CMD_MASK) == ESP_DMA_CMD_START)
++			pci_esp_write8(esp, ESP_DMA_CMD_ABORT, ESP_DMA_CMD);
++
++		return 1;
++	}
++	if (pep->dma_status & ESP_DMA_STAT_ABORT) {
++		pci_esp_write8(esp, ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
++		pep->dma_status = pci_esp_read8(esp, ESP_DMA_CMD);
++		return 1;
++	}
++	return 0;
++}
++
++static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
++				 u32 dma_count, int write, u8 cmd)
++{
++	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
++	u32 val = 0;
++
++	BUG_ON(!(cmd & ESP_CMD_DMA));
++
++	pep->dma_status = 0;
++
++	/* Set DMA engine to IDLE */
++	if (write)
++		/* DMA write direction logic is inverted */
++		val |= ESP_DMA_CMD_DIR;
++	pci_esp_write8(esp, ESP_DMA_CMD_IDLE | val, ESP_DMA_CMD);
++
++	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
++	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
++
++	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
++	pci_esp_write32(esp, addr, ESP_DMA_SPA);
++
++#ifdef ESP_DMA_DEBUG
++	shost_printk(KERN_INFO, esp->host, "start dma addr[%x] count[%d:%d]\n",
++		     addr, esp_count, dma_count);
++#endif
++	scsi_esp_cmd(esp, cmd);
++	/* Send DMA Start command */
++	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
++}
++
++static const struct esp_driver_ops pci_esp_ops = {
++	.esp_write8	=	pci_esp_write8,
++	.esp_read8	=	pci_esp_read8,
++	.map_single	=	pci_esp_map_single,
++	.map_sg		=	pci_esp_map_sg,
++	.unmap_single	=	pci_esp_unmap_single,
++	.unmap_sg	=	pci_esp_unmap_sg,
++	.irq_pending	=	pci_esp_irq_pending,
++	.reset_dma	=	pci_esp_reset_dma,
++	.dma_drain	=	pci_esp_dma_drain,
++	.dma_invalidate	=	pci_esp_dma_invalidate,
++	.send_dma_cmd	=	pci_esp_send_dma_cmd,
++	.dma_error	=	pci_esp_dma_error,
++};
++
++/*
++ * Read DC-390 eeprom
++ */
++static void dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 cmd)
++{
++	u8 carryFlag = 1, j = 0x80, bval;
++	int i;
++
++	for (i = 0; i < 9; i++) {
++		if (carryFlag) {
++			pci_write_config_byte(pdev, 0x80, 0x40);
++			bval = 0xc0;
++		} else
++			bval = 0x80;
++
++		udelay(160);
++		pci_write_config_byte(pdev, 0x80, bval);
++		udelay(160);
++		pci_write_config_byte(pdev, 0x80, 0);
++		udelay(160);
++
++		carryFlag = (cmd & j) ? 1 : 0;
++		j >>= 1;
++	}
++}
++
++static u16 dc390_eeprom_get_data(struct pci_dev *pdev)
++{
++	int i;
++	u16 wval = 0;
++	u8 bval;
++
++	for (i = 0; i < 16; i++) {
++		wval <<= 1;
++
++		pci_write_config_byte(pdev, 0x80, 0x80);
++		udelay(160);
++		pci_write_config_byte(pdev, 0x80, 0x40);
++		udelay(160);
++		pci_read_config_byte(pdev, 0x00, &bval);
++
++		if (bval == 0x22)
++			wval |= 1;
++	}
++
++	return wval;
++}
++
++static void dc390_read_eeprom(struct pci_dev *pdev, u16 *ptr)
++{
++	u8 cmd = DC390_EEPROM_READ, i;
++
++	for (i = 0; i < DC390_EEPROM_LEN; i++) {
++		pci_write_config_byte(pdev, 0xc0, 0);
++		udelay(160);
++
++		dc390_eeprom_prepare_read(pdev, cmd++);
++		*ptr++ = dc390_eeprom_get_data(pdev);
++
++		pci_write_config_byte(pdev, 0x80, 0);
++		pci_write_config_byte(pdev, 0x80, 0);
++		udelay(160);
++	}
++}
++
++static void dc390_check_eeprom(struct esp *esp)
++{
++	u8 EEbuf[128];
++	u16 *ptr = (u16 *)EEbuf, wval = 0;
++	int i;
++
++	dc390_read_eeprom((struct pci_dev *)esp->dev, ptr);
++
++	for (i = 0; i < DC390_EEPROM_LEN; i++, ptr++)
++		wval += *ptr;
++
++	/* no Tekram EEprom found */
++	if (wval != 0x1234) {
++		struct pci_dev *pdev = esp->dev;
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "No valid Tekram EEprom found\n");
++		return;
++	}
++	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
++	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
++}
++
++static int pci_esp_probe_one(struct pci_dev *pdev,
++			      const struct pci_device_id *id)
++{
++	struct scsi_host_template *hostt = &scsi_esp_template;
++	int err = -ENODEV;
++	struct Scsi_Host *shost;
++	struct esp *esp;
++	struct pci_esp_priv *pep;
++
++	if (pci_enable_device(pdev)) {
++		dev_printk(KERN_INFO, &pdev->dev, "cannot enable device\n");
++		return -ENODEV;
++	}
++
++	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "failed to set 32bit DMA mask\n");
++		goto fail_disable_device;
++	}
++
++	shost = scsi_host_alloc(hostt, sizeof(struct esp));
++	if (!shost) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "failed to allocate scsi host\n");
++		err = -ENOMEM;
++		goto fail_disable_device;
++	}
++
++	pep = kzalloc(sizeof(struct pci_esp_priv), GFP_KERNEL);
++	if (!pep) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "failed to allocate esp_priv\n");
++		err = -ENOMEM;
++		goto fail_host_alloc;
++	}
++
++	esp = shost_priv(shost);
++	esp->host = shost;
++	esp->dev = pdev;
++	esp->ops = &pci_esp_ops;
++	pep->esp = esp;
++
++	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "pci memory selection failed\n");
++		goto fail_priv_alloc;
++	}
++
++	esp->regs = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
++	if (!esp->regs) {
++		dev_printk(KERN_ERR, &pdev->dev, "pci I/O map failed\n");
++		goto fail_release_regions;
++	}
++	esp->dma_regs = esp->regs;
++
++	pci_set_master(pdev);
++
++	esp->command_block = pci_alloc_consistent(pdev, 16,
++						  &esp->command_block_dma);
++	if (!esp->command_block) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "failed to allocate command block\n");
++		err = -ENOMEM;
++		goto fail_unmap_regs;
++	}
++
++	if (request_irq(pdev->irq, scsi_esp_intr, IRQF_SHARED,
++			DRV_MODULE_NAME, esp)) {
++		dev_printk(KERN_ERR, &pdev->dev, "failed to register IRQ\n");
++		goto fail_unmap_command_block;
++	}
++
++	esp->scsi_id = 7;
++	dc390_check_eeprom(esp);
++
++	shost->this_id = esp->scsi_id;
++	shost->max_id = 8;
++	shost->irq = pdev->irq;
++	shost->io_port = pci_resource_start(pdev, 0);
++	shost->n_io_port = pci_resource_len(pdev, 0);
++	shost->unique_id = shost->io_port;
++	esp->scsi_id_mask = (1 << esp->scsi_id);
++	/* Assume 40MHz clock */
++	esp->cfreq = 40000000;
++
++	pci_set_drvdata(pdev, pep);
++
++	err = scsi_esp_register(esp, &pdev->dev);
++	if (err)
++		goto fail_free_irq;
++
++	return 0;
++
++fail_free_irq:
++	free_irq(pdev->irq, esp);
++fail_unmap_command_block:
++	pci_free_consistent(pdev, 16, esp->command_block,
++			    esp->command_block_dma);
++fail_unmap_regs:
++	pci_iounmap(pdev, esp->regs);
++fail_release_regions:
++	pci_release_regions(pdev);
++fail_priv_alloc:
++	kfree(pep);
++fail_host_alloc:
++	scsi_host_put(shost);
++fail_disable_device:
++	pci_disable_device(pdev);
++
++	return err;
++}
++
++static void pci_esp_remove_one(struct pci_dev *pdev)
++{
++	struct pci_esp_priv *pep = pci_get_drvdata(pdev);
++	struct esp *esp = pep->esp;
++
++	scsi_esp_unregister(esp);
++	free_irq(pdev->irq, esp);
++	pci_free_consistent(pdev, 16, esp->command_block,
++			    esp->command_block_dma);
++	pci_iounmap(pdev, esp->regs);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++	kfree(pep);
++
++	scsi_host_put(esp->host);
++}
++
++static struct pci_device_id am53c974_pci_tbl[] = {
++	{ PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_SCSI,
++		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(pci, am53c974_pci_tbl);
++
++static struct pci_driver am53c974_driver = {
++	.name           = DRV_MODULE_NAME,
++	.id_table       = am53c974_pci_tbl,
++	.probe          = pci_esp_probe_one,
++	.remove         = pci_esp_remove_one,
++};
++
++static int __init am53c974_module_init(void)
++{
++	return pci_register_driver(&am53c974_driver);
++}
++
++static void __exit am53c974_module_exit(void)
++{
++	pci_unregister_driver(&am53c974_driver);
++}
++
++MODULE_DESCRIPTION("AM53C974 SCSI driver");
++MODULE_AUTHOR("Hannes Reinecke <hare@suse.de>");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(DRV_MODULE_VERSION);
++
++module_init(am53c974_module_init);
++module_exit(am53c974_module_exit);
 -- 
 1.8.5.2
 
