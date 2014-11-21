@@ -1,47 +1,36 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH RESEND 6/7] megaraid_sas : Corrected return of wait_event
- from abort frame path
-Date: Fri, 21 Nov 2014 14:52:08 +0100
-Message-ID: <546F4388.6040508@redhat.com>
-References: <201411170958.sAH9w4GU008976@palmhbs0.lsi.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Re: 3.16 commit 89fb4cd errors on drives without
+ SYNC CACHE
+Date: Fri, 21 Nov 2014 10:08:02 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1411211003130.1124-100000@iolanthe.rowland.org>
+References: <20141121101733.GA23135@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60718 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758650AbaKUNwf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 08:52:35 -0500
-In-Reply-To: <201411170958.sAH9w4GU008976@palmhbs0.lsi.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59906 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757880AbaKUPID (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 10:08:03 -0500
+In-Reply-To: <20141121101733.GA23135@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff DeFouw <mrj@plorb.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 11/17/2014 10:54 AM, Sumit.Saxena@avagotech.com wrote:
-> Corrected wait_event() call which was waiting for wrong completion status(0xFF).
->
-> Cc: <stable@vger.kernel.org>
->
-> Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 8262067..f11c5f3 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1007,7 +1007,7 @@ megasas_issue_blocked_abort_cmd(struct megasas_instance *instance,
->  		cpu_to_le32(upper_32_bits(cmd_to_abort->frame_phys_addr));
->  
->  	cmd->sync_cmd = 1;
-> -	cmd->cmd_status = 0xFF;
-> +	cmd->cmd_status = ENODATA;
->  
->  	instance->instancet->issue_dcmd(instance, cmd);
->  
+On Fri, 21 Nov 2014, Christoph Hellwig wrote:
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+> > usb-storage sets wce_default_on only for devices that are marked with 
+> > the US_FL_WRITE_CACHE quirk flag.  Currently only two devices have that 
+> > flag: the Seagate Portable HDD (vendor ID 0x0bc2, product ID 0x2300) 
+> > and the Western Digital My Password HDD (vendor ID 0x1058, product ID 
+> > 0x070a).
+> 
+> So Jeff has a drive that on its own claims WCE=1 but doesn't support
+> SYNCHRONIZE_CACHE(10).  I'm not sure what to do about it as it sounds
+> inherently dangerous.
+
+Maybe we should log a one-time warning when this happens and turn off 
+sdkp->WCE.  There's not much else we _can_ do about it.
+
+Alan Stern
 
