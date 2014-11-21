@@ -1,17 +1,17 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 04/10] esp_scsi: debug event and command
-Date: Fri, 21 Nov 2014 10:38:17 +0100
-Message-ID: <546F0809.3000103@redhat.com>
-References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-5-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 05/10] esp_scsi: read status registers
+Date: Fri, 21 Nov 2014 10:43:33 +0100
+Message-ID: <546F0945.1030503@redhat.com>
+References: <1416562077-105715-1-git-send-email-hare@suse.de> <1416562077-105715-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44835 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49349 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755056AbaKUJi1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2014 04:38:27 -0500
-In-Reply-To: <1416562077-105715-5-git-send-email-hare@suse.de>
+	id S1754592AbaKUJnn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2014 04:43:43 -0500
+In-Reply-To: <1416562077-105715-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
@@ -20,60 +20,51 @@ Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
 
 On 21/11/2014 10:27, Hannes Reinecke wrote:
-> Add new debug definitions for event and command logging.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/esp_scsi.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 492c51b..fe3278e 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -49,6 +49,8 @@ static u32 esp_debug;
->  #define ESP_DEBUG_DATADONE	0x00000100
->  #define ESP_DEBUG_RECONNECT	0x00000200
->  #define ESP_DEBUG_AUTOSENSE	0x00000400
-> +#define ESP_DEBUG_EVENT		0x00000800
-> +#define ESP_DEBUG_COMMAND	0x00001000
->  
->  #define esp_log_intr(f, a...) \
->  do {	if (esp_debug & ESP_DEBUG_INTR) \
-> @@ -100,6 +102,16 @@ do {	if (esp_debug & ESP_DEBUG_AUTOSENSE) \
->  		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
->  } while (0)
->  
-> +#define esp_log_event(f, a...) \
-> +do {   if (esp_debug & ESP_DEBUG_EVENT)	\
-> +		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
-> +} while (0)
-> +
-> +#define esp_log_command(f, a...) \
-> +do {   if (esp_debug & ESP_DEBUG_COMMAND)	\
-> +		shost_printk(KERN_DEBUG, esp->host, f, ## a);	\
-> +} while (0)
-> +
->  #define esp_read8(REG)		esp->ops->esp_read8(esp, REG)
->  #define esp_write8(VAL,REG)	esp->ops->esp_write8(esp, VAL, REG)
->  
-> @@ -126,6 +138,7 @@ void scsi_esp_cmd(struct esp *esp, u8 val)
->  
->  	esp->esp_event_cur = (idx + 1) & (ESP_EVENT_LOG_SZ - 1);
->  
-> +	esp_log_command("cmd[%02x]\n", val);
->  	esp_write8(val, ESP_CMD);
->  }
->  EXPORT_SYMBOL(scsi_esp_cmd);
-> @@ -1638,6 +1651,8 @@ static int esp_process_event(struct esp *esp)
->  
->  again:
->  	write = 0;
-> +	esp_log_event("process event %d phase %x\n",
-> +		      esp->event, esp->sreg & ESP_STAT_PMASK);
->  	switch (esp->event) {
->  	case ESP_EVENT_CHECK_PHASE:
->  		switch (esp->sreg & ESP_STAT_PMASK) {
-> 
+> A read to ESP_INTRPT will clear ESP_STATUS and ESP_SSTEP. So read
+> all status registers in one go to avoid losing information.
+
+(ESP_STAT_TCNT is actually kept in the status register, it is cleared by
+writing TCLO/MID/HI).
 
 Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/esp_scsi.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index fe3278e..92ab921 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -982,7 +982,6 @@ static int esp_check_spur_intr(struct esp *esp)
+>  
+>  	default:
+>  		if (!(esp->sreg & ESP_STAT_INTR)) {
+> -			esp->ireg = esp_read8(ESP_INTRPT);
+>  			if (esp->ireg & ESP_INTR_SR)
+>  				return 1;
+>  
+> @@ -2056,7 +2055,12 @@ static void __esp_interrupt(struct esp *esp)
+>  	int finish_reset, intr_done;
+>  	u8 phase;
+>  
+> +       /*
+> +	* Once INTRPT is read STATUS and SSTEP are cleared.
+> +	*/
+>  	esp->sreg = esp_read8(ESP_STATUS);
+> +	esp->seqreg = esp_read8(ESP_SSTEP);
+> +	esp->ireg = esp_read8(ESP_INTRPT);
+>  
+>  	if (esp->flags & ESP_FLAG_RESETTING) {
+>  		finish_reset = 1;
+> @@ -2069,8 +2073,6 @@ static void __esp_interrupt(struct esp *esp)
+>  			return;
+>  	}
+>  
+> -	esp->ireg = esp_read8(ESP_INTRPT);
+> -
+>  	if (esp->ireg & ESP_INTR_SR)
+>  		finish_reset = 1;
+>  
+> 
