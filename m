@@ -1,80 +1,218 @@
 From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH 2/2] scsi: ufs: fix NULL dereference when no regulators are defined
-Date: Fri, 21 Nov 2014 17:21:29 -0800
-Message-ID: <000001d005f2$a4f616c0$eee24440$@codeaurora.org>
-References: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com> <1416319366-11539-3-git-send-email-akinobu.mita@gmail.com>
+Subject: RE: [PATCH 1/2] scsi: ufs: fix reference counting of W-LUs
+Date: Fri, 21 Nov 2014 17:23:46 -0800
+Message-ID: <000201d005f2$f68f8610$e3ae9230$@codeaurora.org>
+References: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com> <1416319366-11539-2-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:58291 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:58400 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbaKVBVb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 20:21:31 -0500
-In-Reply-To: <1416319366-11539-3-git-send-email-akinobu.mita@gmail.com>
+	with ESMTP id S1752975AbaKVBXs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 20:23:48 -0500
+In-Reply-To: <1416319366-11539-2-git-send-email-akinobu.mita@gmail.com>
 Content-Language: en-us
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Akinobu Mita' <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
-Cc: 'Akinobu Mita' <mita@fixstars.com>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Yaniv Gardi' <ygardi@codeaurora.org>, 'Christoph Hellwig' <hch@lst.de>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
+Cc: 'Akinobu Mita' <mita@fixstars.com>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>, 'Yaniv Gardi' <ygardi@codeaurora.org>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Christoph Hellwig' <hch@lst.de>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
+Looks good to me,
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 -----Original Message-----
 From: Akinobu Mita [mailto:akinobu.mita@gmail.com] 
 Sent: Tuesday, November 18, 2014 6:03 AM
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita; Akinobu Mita; Vinayak Holikatti; Subhash Jadavani; Dolev
-Raviv; Sujit Reddy Thumma; Yaniv Gardi; Christoph Hellwig; James E.J.
+Cc: Akinobu Mita; Akinobu Mita; Vinayak Holikatti; Dolev Raviv; Subhash
+Jadavani; Yaniv Gardi; Sujit Reddy Thumma; Christoph Hellwig; James E.J.
 Bottomley
-Subject: [PATCH 2/2] scsi: ufs: fix NULL dereference when no regulators are
-defined
+Subject: [PATCH 1/2] scsi: ufs: fix reference counting of W-LUs
 
-If no voltage supply regulators are defined for the UFS devices (assumed
-they are always-on), ufshcd_config_vreg_load() can be called on
-suspend/resume paths with vreg == NULL as hba->vreg_info.vcc* equal to NULL,
-and it causes NULL pointer dereference.
+UFS driver adds three well known LUs in the initialization, but those
+reference counts are not decremented, so it makes ufshcd module impossible
+to unload.
 
-This fixes it by making ufshcd_config_vreg_{h,l}pm noop when no regulators
-are defined.
+This fixes it by putting scsi_device_put() in the initalization, and in
+order to protect concurrent access to hba->sdev_ufs_device (UFS Device
+W-LU) from manual delete, increment the reference count while requesting
+device power mode setting.
+
+The rest of W-LUs (hba->sdev_boot and hba->sdev_rpmb) are not directly used
+from driver, so these references in struct ufs_hba are removed.
 
 Signed-off-by: Akinobu Mita <mita@fixstars.com>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/ufs/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 74
++++++++++++++++++++++++------------------------
+ drivers/scsi/ufs/ufshcd.h |  2 --
+ 2 files changed, 36 insertions(+), 40 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-59b6544..d18adc4 100644
+497c38a..59b6544 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4248,12 +4248,18 @@ static int ufshcd_config_vreg_load(struct device
-*dev, struct ufs_vreg *vreg,  static inline int
-ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
-+	if (!vreg)
-+		return 0;
+@@ -2844,8 +2844,13 @@ static void ufshcd_slave_destroy(struct scsi_device
+*sdev)
+ 	hba = shost_priv(sdev->host);
+ 	scsi_deactivate_tcq(sdev, hba->nutrs);
+ 	/* Drop the reference as it won't be needed anymore */
+-	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
++	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
+{
++		unsigned long flags;
 +
- 	return ufshcd_config_vreg_load(hba->dev, vreg,
-UFS_VREG_LPM_LOAD_UA);  }
++		spin_lock_irqsave(hba->host->host_lock, flags);
+ 		hba->sdev_ufs_device = NULL;
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	}
+ }
  
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
-+	if (!vreg)
-+		return 0;
+ /**
+@@ -4062,6 +4067,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba
+*hba)  static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)  {
+ 	int ret = 0;
++	struct scsi_device *sdev_rpmb;
++	struct scsi_device *sdev_boot;
+ 
+ 	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
+ 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN),
+NULL); @@ -4070,26 +4077,27 @@ static int ufshcd_scsi_add_wlus(struct
+ufs_hba *hba)
+ 		hba->sdev_ufs_device = NULL;
+ 		goto out;
+ 	}
++	scsi_device_put(hba->sdev_ufs_device);
+ 
+-	hba->sdev_boot = __scsi_add_device(hba->host, 0, 0,
++	sdev_boot = __scsi_add_device(hba->host, 0, 0,
+ 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+-	if (IS_ERR(hba->sdev_boot)) {
+-		ret = PTR_ERR(hba->sdev_boot);
+-		hba->sdev_boot = NULL;
++	if (IS_ERR(sdev_boot)) {
++		ret = PTR_ERR(sdev_boot);
+ 		goto remove_sdev_ufs_device;
+ 	}
++	scsi_device_put(sdev_boot);
+ 
+-	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
++	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+ 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
+-	if (IS_ERR(hba->sdev_rpmb)) {
+-		ret = PTR_ERR(hba->sdev_rpmb);
+-		hba->sdev_rpmb = NULL;
++	if (IS_ERR(sdev_rpmb)) {
++		ret = PTR_ERR(sdev_rpmb);
+ 		goto remove_sdev_boot;
+ 	}
++	scsi_device_put(sdev_rpmb);
+ 	goto out;
+ 
+ remove_sdev_boot:
+-	scsi_remove_device(hba->sdev_boot);
++	scsi_remove_device(sdev_boot);
+ remove_sdev_ufs_device:
+ 	scsi_remove_device(hba->sdev_ufs_device);
+ out:
+@@ -4097,30 +4105,6 @@ out:
+ }
+ 
+ /**
+- * ufshcd_scsi_remove_wlus - Removes the W-LUs which were added by
+- *			     ufshcd_scsi_add_wlus()
+- * @hba: per-adapter instance
+- *
+- */
+-static void ufshcd_scsi_remove_wlus(struct ufs_hba *hba) -{
+-	if (hba->sdev_ufs_device) {
+-		scsi_remove_device(hba->sdev_ufs_device);
+-		hba->sdev_ufs_device = NULL;
+-	}
+-
+-	if (hba->sdev_boot) {
+-		scsi_remove_device(hba->sdev_boot);
+-		hba->sdev_boot = NULL;
+-	}
+-
+-	if (hba->sdev_rpmb) {
+-		scsi_remove_device(hba->sdev_rpmb);
+-		hba->sdev_rpmb = NULL;
+-	}
+-}
+-
+-/**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
+  *
+@@ -4675,11 +4659,25 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba
+*hba,  {
+ 	unsigned char cmd[6] = { START_STOP };
+ 	struct scsi_sense_hdr sshdr;
+-	struct scsi_device *sdp = hba->sdev_ufs_device;
++	struct scsi_device *sdp;
++	unsigned long flags;
+ 	int ret;
+ 
+-	if (!sdp || !scsi_device_online(sdp))
+-		return -ENODEV;
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	sdp = hba->sdev_ufs_device;
++	if (sdp) {
++		ret = scsi_device_get(sdp);
++		if (!ret && !scsi_device_online(sdp)) {
++			ret = -ENODEV;
++			scsi_device_put(sdp);
++		}
++	} else {
++		ret = -ENODEV;
++	}
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
 +
- 	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);  }
++	if (ret)
++		return ret;
  
+ 	/*
+ 	 * If scsi commands fail, the scsi mid-layer schedules scsi error-
+@@ -4718,6 +4716,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba
+*hba,
+ 	if (!ret)
+ 		hba->curr_dev_pwr_mode = pwr_mode;
+ out:
++	scsi_device_put(sdp);
+ 	hba->host->eh_noresume = 0;
+ 	return ret;
+ }
+@@ -5231,7 +5230,6 @@ EXPORT_SYMBOL(ufshcd_shutdown);  void
+ufshcd_remove(struct ufs_hba *hba)  {
+ 	scsi_remove_host(hba->host);
+-	ufshcd_scsi_remove_wlus(hba);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+ 	ufshcd_hba_stop(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
+58ecdff..4a574aa 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -392,8 +392,6 @@ struct ufs_hba {
+ 	 * "UFS device" W-LU.
+ 	 */
+ 	struct scsi_device *sdev_ufs_device;
+-	struct scsi_device *sdev_rpmb;
+-	struct scsi_device *sdev_boot;
+ 
+ 	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+ 	enum uic_link_state uic_link_state;
 --
 1.9.1
 
