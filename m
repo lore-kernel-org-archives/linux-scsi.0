@@ -1,219 +1,37 @@
-From: "Subhash Jadavani" <subhashj@codeaurora.org>
-Subject: RE: [PATCH 1/2] scsi: ufs: fix reference counting of W-LUs
-Date: Fri, 21 Nov 2014 17:23:46 -0800
-Message-ID: <000201d005f2$f68f8610$e3ae9230$@codeaurora.org>
-References: <1416319366-11539-1-git-send-email-akinobu.mita@gmail.com> <1416319366-11539-2-git-send-email-akinobu.mita@gmail.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH net-next 0/5] RDMA/cxgb4,cxgb4vf,csiostor: Cleanup
+ macros
+Date: Sat, 22 Nov 2014 16:58:11 -0500 (EST)
+Message-ID: <20141122.165811.2270530256951559796.davem@davemloft.net>
+References: <1416554525-11844-1-git-send-email-hariprasad@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:58400 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbaKVBXs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Nov 2014 20:23:48 -0500
-In-Reply-To: <1416319366-11539-2-git-send-email-akinobu.mita@gmail.com>
-Content-Language: en-us
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1416554525-11844-1-git-send-email-hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org, JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, nirranjan-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kumaras-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, praveen-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Akinobu Mita' <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
-Cc: 'Akinobu Mita' <mita@fixstars.com>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>, 'Yaniv Gardi' <ygardi@codeaurora.org>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Christoph Hellwig' <hch@lst.de>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-Looks good to me,
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+From: Hariprasad Shenai <hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Date: Fri, 21 Nov 2014 12:52:00 +0530
 
------Original Message-----
-From: Akinobu Mita [mailto:akinobu.mita@gmail.com] 
-Sent: Tuesday, November 18, 2014 6:03 AM
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita; Akinobu Mita; Vinayak Holikatti; Dolev Raviv; Subhash
-Jadavani; Yaniv Gardi; Sujit Reddy Thumma; Christoph Hellwig; James E.J.
-Bottomley
-Subject: [PATCH 1/2] scsi: ufs: fix reference counting of W-LUs
+> This series continues to cleanup all the macros/register defines related to
+> filter, port, VI, queue, RSS, LDST, firmware, etc that are defined in t4fw_api.h
+> and the affected files.
+> 
+> Will post few more series so that we can cover all the macros so that they all
+> follow the same style to be consistent.
+> 
+> The patches series is created against 'net-next' tree.
+> And includes patches on cxgb4, cxgb4vf, iw_cxgb4 and csiostor driver.
+> 
+> We have included all the maintainers of respective drivers. Kindly review the
+> change and let us know in case of any review comments.
 
-UFS driver adds three well known LUs in the initialization, but those
-reference counts are not decremented, so it makes ufshcd module impossible
-to unload.
-
-This fixes it by putting scsi_device_put() in the initalization, and in
-order to protect concurrent access to hba->sdev_ufs_device (UFS Device
-W-LU) from manual delete, increment the reference count while requesting
-device power mode setting.
-
-The rest of W-LUs (hba->sdev_boot and hba->sdev_rpmb) are not directly used
-from driver, so these references in struct ufs_hba are removed.
-
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd.c | 74
-+++++++++++++++++++++++------------------------
- drivers/scsi/ufs/ufshcd.h |  2 --
- 2 files changed, 36 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-497c38a..59b6544 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2844,8 +2844,13 @@ static void ufshcd_slave_destroy(struct scsi_device
-*sdev)
- 	hba = shost_priv(sdev->host);
- 	scsi_deactivate_tcq(sdev, hba->nutrs);
- 	/* Drop the reference as it won't be needed anymore */
--	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
-+	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN)
-{
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 		hba->sdev_ufs_device = NULL;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	}
- }
- 
- /**
-@@ -4062,6 +4067,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba
-*hba)  static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)  {
- 	int ret = 0;
-+	struct scsi_device *sdev_rpmb;
-+	struct scsi_device *sdev_boot;
- 
- 	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
- 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN),
-NULL); @@ -4070,26 +4077,27 @@ static int ufshcd_scsi_add_wlus(struct
-ufs_hba *hba)
- 		hba->sdev_ufs_device = NULL;
- 		goto out;
- 	}
-+	scsi_device_put(hba->sdev_ufs_device);
- 
--	hba->sdev_boot = __scsi_add_device(hba->host, 0, 0,
-+	sdev_boot = __scsi_add_device(hba->host, 0, 0,
- 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
--	if (IS_ERR(hba->sdev_boot)) {
--		ret = PTR_ERR(hba->sdev_boot);
--		hba->sdev_boot = NULL;
-+	if (IS_ERR(sdev_boot)) {
-+		ret = PTR_ERR(sdev_boot);
- 		goto remove_sdev_ufs_device;
- 	}
-+	scsi_device_put(sdev_boot);
- 
--	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
-+	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
- 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
--	if (IS_ERR(hba->sdev_rpmb)) {
--		ret = PTR_ERR(hba->sdev_rpmb);
--		hba->sdev_rpmb = NULL;
-+	if (IS_ERR(sdev_rpmb)) {
-+		ret = PTR_ERR(sdev_rpmb);
- 		goto remove_sdev_boot;
- 	}
-+	scsi_device_put(sdev_rpmb);
- 	goto out;
- 
- remove_sdev_boot:
--	scsi_remove_device(hba->sdev_boot);
-+	scsi_remove_device(sdev_boot);
- remove_sdev_ufs_device:
- 	scsi_remove_device(hba->sdev_ufs_device);
- out:
-@@ -4097,30 +4105,6 @@ out:
- }
- 
- /**
-- * ufshcd_scsi_remove_wlus - Removes the W-LUs which were added by
-- *			     ufshcd_scsi_add_wlus()
-- * @hba: per-adapter instance
-- *
-- */
--static void ufshcd_scsi_remove_wlus(struct ufs_hba *hba) -{
--	if (hba->sdev_ufs_device) {
--		scsi_remove_device(hba->sdev_ufs_device);
--		hba->sdev_ufs_device = NULL;
--	}
--
--	if (hba->sdev_boot) {
--		scsi_remove_device(hba->sdev_boot);
--		hba->sdev_boot = NULL;
--	}
--
--	if (hba->sdev_rpmb) {
--		scsi_remove_device(hba->sdev_rpmb);
--		hba->sdev_rpmb = NULL;
--	}
--}
--
--/**
-  * ufshcd_probe_hba - probe hba to detect device and initialize
-  * @hba: per-adapter instance
-  *
-@@ -4675,11 +4659,25 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba
-*hba,  {
- 	unsigned char cmd[6] = { START_STOP };
- 	struct scsi_sense_hdr sshdr;
--	struct scsi_device *sdp = hba->sdev_ufs_device;
-+	struct scsi_device *sdp;
-+	unsigned long flags;
- 	int ret;
- 
--	if (!sdp || !scsi_device_online(sdp))
--		return -ENODEV;
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	sdp = hba->sdev_ufs_device;
-+	if (sdp) {
-+		ret = scsi_device_get(sdp);
-+		if (!ret && !scsi_device_online(sdp)) {
-+			ret = -ENODEV;
-+			scsi_device_put(sdp);
-+		}
-+	} else {
-+		ret = -ENODEV;
-+	}
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	if (ret)
-+		return ret;
- 
- 	/*
- 	 * If scsi commands fail, the scsi mid-layer schedules scsi error-
-@@ -4718,6 +4716,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba
-*hba,
- 	if (!ret)
- 		hba->curr_dev_pwr_mode = pwr_mode;
- out:
-+	scsi_device_put(sdp);
- 	hba->host->eh_noresume = 0;
- 	return ret;
- }
-@@ -5231,7 +5230,6 @@ EXPORT_SYMBOL(ufshcd_shutdown);  void
-ufshcd_remove(struct ufs_hba *hba)  {
- 	scsi_remove_host(hba->host);
--	ufshcd_scsi_remove_wlus(hba);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-58ecdff..4a574aa 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -392,8 +392,6 @@ struct ufs_hba {
- 	 * "UFS device" W-LU.
- 	 */
- 	struct scsi_device *sdev_ufs_device;
--	struct scsi_device *sdev_rpmb;
--	struct scsi_device *sdev_boot;
- 
- 	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
- 	enum uic_link_state uic_link_state;
+Series applied, thanks.
 --
-1.9.1
-
-
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
