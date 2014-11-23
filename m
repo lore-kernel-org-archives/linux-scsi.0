@@ -1,34 +1,20 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: split ->change_queue_depth
-Date: Sun, 23 Nov 2014 23:51:55 -0600
-Message-ID: <5472C77B.1020401@cs.wisc.edu>
-References: <1415901546-8006-1-git-send-email-hch@lst.de>
+From: "hi" <moajote@gmail.com>
+Subject: ..hello...
+Date: Mon, 24 Nov 2014 07:38:42 +0800
+Message-ID: <606334CC3883C975FCB6EEA778CEDF06__23563.0697956823$1416814723$gmane$org@enjbcuhd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47108 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887AbaKXFwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 00:52:08 -0500
-In-Reply-To: <1415901546-8006-1-git-send-email-hch@lst.de>
+Received: from mail-pd0-f193.google.com ([209.85.192.193]:41524 "EHLO pdew10"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751921AbaKXHic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2014 02:38:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 11/13/14, 11:58 AM, Christoph Hellwig wrote:
-> Overloading ->change_queue_depth with the queue ramp up / down
-> functionality has been a bad idea.   It lead to a large amount
-> of code duplication, and driver keep getting the the API
-> wrong and end up accidentally enabling the queue depth tracking
-> while getting it wrong.
->
-> This serie instead adds a flag to enable queue tracking and
-> handles it entirely in core code.  This is a preparation for
-> various logic changes to the queue depth tracking code.
->
+U2Ftc3VuZyBTNSAyNzAgZXVybywgaXBob25lIDZwbHVzLCA0MzBldXJvICwgaXBhZCwgLi4uDQpz
+aSB0ZSA6ICAgIGFzc3Jvb29vIC4gY29u
 
-Looks nice to me.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
