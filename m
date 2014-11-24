@@ -1,52 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] libsas: remove task_collector mode
-Date: Mon, 24 Nov 2014 10:01:20 +0100
-Message-ID: <5472F3E0.1040409@suse.de>
-References: <1416818502-19584-1-git-send-email-hch@lst.de> <5472F19D.3070600@suse.de> <20141124085440.GA19283@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Mon, 24 Nov 2014 01:18:35 -0800
+Message-ID: <20141124091835.GA21579@infradead.org>
+References: <20141120060933.GA21432@infradead.org>
+ <546E2880.5070303@laposte.net>
+ <20141120175316.GA19590@infradead.org>
+ <546E32A5.4040202@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35808 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751881AbaKXJBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 04:01:22 -0500
-In-Reply-To: <20141124085440.GA19283@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <546E32A5.4040202@laposte.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Barto <mister.freeman@laposte.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Chen Gang <gang.chen.5i5j@gmail.com>, Dan Williams <dan.j.williams@intel.com>, James Bottomley <JBottomley@Parallels.com>
 
-On 11/24/2014 09:54 AM, Christoph Hellwig wrote:
->> Why did you not remove the last argument from asd_can_queue() and
->> asd_can_dequeue(), too?
->> With that patch it's always '1' ...
->=20
-> Because I wanted to remove the libsas (mis-)feature and avoid to many=
- boad
-> driver changes.  Especially for a unmaintained big driver like aic94x=
-x.
->=20
->> This 'while' loop can go, too.
->=20
-> Same here.  Note that this driver never even allowed task collector m=
-ode,
-> so it was already dead code.
->=20
-Okay.
+On Thu, Nov 20, 2014 at 07:27:49PM +0100, Barto wrote:
+> but the sata DVD burner is now connected on a Jmicron sata PCIe card (
+> with this configuration the bug doesn't occur ), I don't know if this
+> change can modify the result of your command,
+> 
+> here is the result of another command :
+> 
+> $ for i in /sys/class/scsi_host/*; do cat $i/proc_name; done
+> pata_jmicron
+> pata_jmicron
+> ata_piix
+> ata_piix
+> ata_piix
+> ata_piix
+> ahci
+> ahci
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Interesting.  So the jmicron card also has a queue depth of just one,
+but the error still occurs?  I've added the linux-ide list, maybe
+someone there has an idea how piix vs jmicron could have such different
+behaviors for queueing or error handling.
