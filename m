@@ -1,78 +1,179 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/12] scsi: add 'am53c974' driver
-Date: Mon, 24 Nov 2014 15:01:12 +0100
-Message-ID: <54733A28.3010909@suse.de>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-8-git-send-email-hare@suse.de> <20141124135041.GA28523@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] bfa: switch to mid layer queue full tracking
+Date: Mon, 24 Nov 2014 15:18:32 +0100
+Message-ID: <1416838712-26219-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45373 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111AbaKXOBP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:01:15 -0500
-In-Reply-To: <20141124135041.GA28523@infradead.org>
+Received: from casper.infradead.org ([85.118.1.10]:46761 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753569AbaKXOSk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 09:18:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 11/24/2014 02:50 PM, Christoph Hellwig wrote:
->> +/*
->> + * AMD am53c974 driver.
->> + * Copyright (c) 2014 Hannes Reinecke, SUSE Linux GmbH
->> + */
->=20
-> Is there anything left from the old driver that should get credit her=
-e?
->=20
-Hmm. I copied the EEprom handling more-or-less verbatim from the
-tmscsim driver; not sure if that warrants a credit.
+As far as I can tell the queue tracking in the bfa driver is a copy&paste
+copy of the midlayer version, just without support to configure it through
+sysfs.
 
->> +#define PCI_ESP_GET_PRIV(esp) ((struct pci_esp_priv *) \
->> +			       pci_get_drvdata((struct pci_dev *) \
->> +					       (esp)->dev))
->=20
-> I think an inline function would be a lot cleaner, especially as that
-> should avoid all these casts.
->=20
-Ok.
+Remove the bfa copy and rely on the mid layer version.
 
->> +#ifdef ESP_DMA_DEBUG
->> +	shost_printk(KERN_INFO, esp->host, "start dma addr[%x] count[%d:%d=
-]\n",
->> +		     addr, esp_count, dma_count);
->> +#endif
->=20
-> Can you add a esp_dma_printk or similar instead of all these ifdefs?
->=20
-Yep, I can.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/bfa/bfad_im.c | 66 ++--------------------------------------------
+ drivers/scsi/bfa/bfad_im.h |  6 -----
+ 2 files changed, 2 insertions(+), 70 deletions(-)
 
->> +	u8 carryFlag =3D 1, j =3D 0x80, bval;
->=20
-> carry_flag.
->=20
-As said, copied verbatim. Will be fixing it up.
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 7223b00..ac55fd9 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -43,8 +43,6 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
+ {
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+ 	struct bfad_s         *bfad = drv;
+-	struct bfad_itnim_data_s *itnim_data;
+-	struct bfad_itnim_s *itnim;
+ 	u8         host_status = DID_OK;
+ 
+ 	switch (io_status) {
+@@ -93,19 +91,6 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
+ 	cmnd->host_scribble = NULL;
+ 	bfa_trc(bfad, cmnd->result);
+ 
+-	itnim_data = cmnd->device->hostdata;
+-	if (itnim_data) {
+-		itnim = itnim_data->itnim;
+-		if (!cmnd->result && itnim &&
+-			 (bfa_lun_queue_depth > cmnd->device->queue_depth)) {
+-			/* Queue depth adjustment for good status completion */
+-			bfad_ramp_up_qdepth(itnim, cmnd->device);
+-		} else if (cmnd->result == SAM_STAT_TASK_SET_FULL && itnim) {
+-			/* qfull handling */
+-			bfad_handle_qfull(itnim, cmnd->device);
+-		}
+-	}
+-
+ 	cmnd->scsi_done(cmnd);
+ }
+ 
+@@ -113,8 +98,6 @@ void
+ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
+ {
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-	struct bfad_itnim_data_s *itnim_data;
+-	struct bfad_itnim_s *itnim;
+ 
+ 	cmnd->result = ScsiResult(DID_OK, SCSI_STATUS_GOOD);
+ 
+@@ -123,17 +106,6 @@ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
+ 		scsi_dma_unmap(cmnd);
+ 
+ 	cmnd->host_scribble = NULL;
+-
+-	/* Queue depth adjustment */
+-	if (bfa_lun_queue_depth > cmnd->device->queue_depth) {
+-		itnim_data = cmnd->device->hostdata;
+-		if (itnim_data) {
+-			itnim = itnim_data->itnim;
+-			if (itnim)
+-				bfad_ramp_up_qdepth(itnim, cmnd->device);
+-		}
+-	}
+-
+ 	cmnd->scsi_done(cmnd);
+ }
+ 
+@@ -801,6 +773,7 @@ struct scsi_host_template bfad_im_scsi_host_template = {
+ 	.max_sectors = BFAD_MAX_SECTORS,
+ 	.vendor_id = BFA_PCI_VENDOR_ID_BROCADE,
+ 	.use_blk_tags = 1,
++	.track_queue_depth = 1,
+ };
+ 
+ struct scsi_host_template bfad_im_vport_template = {
+@@ -823,6 +796,7 @@ struct scsi_host_template bfad_im_vport_template = {
+ 	.shost_attrs = bfad_im_vport_attrs,
+ 	.max_sectors = BFAD_MAX_SECTORS,
+ 	.use_blk_tags = 1,
++	.track_queue_depth = 1,
+ };
+ 
+ bfa_status_t
+@@ -853,42 +827,6 @@ bfad_im_module_exit(void)
+ 		fc_release_transport(bfad_im_scsi_vport_transport_template);
+ }
+ 
+-void
+-bfad_ramp_up_qdepth(struct bfad_itnim_s *itnim, struct scsi_device *sdev)
+-{
+-	struct scsi_device *tmp_sdev;
+-
+-	if (((jiffies - itnim->last_ramp_up_time) >
+-		BFA_QUEUE_FULL_RAMP_UP_TIME * HZ) &&
+-		((jiffies - itnim->last_queue_full_time) >
+-		BFA_QUEUE_FULL_RAMP_UP_TIME * HZ)) {
+-		shost_for_each_device(tmp_sdev, sdev->host) {
+-			if (bfa_lun_queue_depth > tmp_sdev->queue_depth) {
+-				if (tmp_sdev->id != sdev->id)
+-					continue;
+-				scsi_change_queue_depth(tmp_sdev,
+-					tmp_sdev->queue_depth + 1);
+-
+-				itnim->last_ramp_up_time = jiffies;
+-			}
+-		}
+-	}
+-}
+-
+-void
+-bfad_handle_qfull(struct bfad_itnim_s *itnim, struct scsi_device *sdev)
+-{
+-	struct scsi_device *tmp_sdev;
+-
+-	itnim->last_queue_full_time = jiffies;
+-
+-	shost_for_each_device(tmp_sdev, sdev->host) {
+-		if (tmp_sdev->id != sdev->id)
+-			continue;
+-		scsi_track_queue_full(tmp_sdev, tmp_sdev->queue_depth - 1);
+-	}
+-}
+-
+ struct bfad_itnim_s *
+ bfad_get_itnim(struct bfad_im_port_s *im_port, int id)
+ {
+diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
+index f6c1023..7db2b75 100644
+--- a/drivers/scsi/bfa/bfad_im.h
++++ b/drivers/scsi/bfa/bfad_im.h
+@@ -44,7 +44,6 @@ u32 bfad_im_supported_speeds(struct bfa_s *bfa);
+ #define BFAD_TARGET_RESET_TMO 60
+ #define BFAD_LUN_RESET_TMO 60
+ #define ScsiResult(host_code, scsi_code) (((host_code) << 16) | scsi_code)
+-#define BFA_QUEUE_FULL_RAMP_UP_TIME 120
+ 
+ /*
+  * itnim flags
+@@ -94,8 +93,6 @@ struct bfad_itnim_s {
+ 	u16        scsi_tgt_id;
+ 	u16	   channel;
+ 	u16        queue_work;
+-	unsigned long	last_ramp_up_time;
+-	unsigned long	last_queue_full_time;
+ };
+ 
+ enum bfad_binding_type {
+@@ -148,9 +145,6 @@ void bfad_destroy_workq(struct bfad_im_s *im);
+ void bfad_fc_host_init(struct bfad_im_port_s *im_port);
+ void bfad_scsi_host_free(struct bfad_s *bfad,
+ 				 struct bfad_im_port_s *im_port);
+-void bfad_ramp_up_qdepth(struct bfad_itnim_s *itnim,
+-				 struct scsi_device *sdev);
+-void bfad_handle_qfull(struct bfad_itnim_s *itnim, struct scsi_device *sdev);
+ struct bfad_itnim_s *bfad_get_itnim(struct bfad_im_port_s *im_port, int id);
+ 
+ extern struct scsi_host_template bfad_im_scsi_host_template;
+-- 
+1.9.1
 
->> +	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
->=20
->> +	if (request_irq(pdev->irq, scsi_esp_intr, IRQF_SHARED,
->> +			DRV_MODULE_NAME, esp)) {
->=20
-> Please propagate the return values from these two.
->=20
-Ok.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
