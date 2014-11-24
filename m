@@ -1,37 +1,35 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] aic94xx: Fixup compilation warning
-Date: Mon, 24 Nov 2014 15:39:21 +0000
-Message-ID: <1416843568.2194.3.camel@parallels.com>
-References: <1415085059-127936-1-git-send-email-hare@suse.de>
-	 <20141124134014.GA22128@infradead.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH v3 09/11] IB/srp: Use block layer tags
+Date: Mon, 24 Nov 2014 16:43:27 +0100
+Message-ID: <5473521F.2080409@acm.org>
+References: <545240AE.6060009@acm.org> <545241C7.5010707@acm.org> <20141112104537.GA13223@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:46879 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbaKXPje (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 10:39:34 -0500
-In-Reply-To: <20141124134014.GA22128@infradead.org>
-Content-Language: en-US
-Content-ID: <6A5E6091134AA0478FB58E0E8334632F@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20141112104537.GA13223-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Robert Elliott <Elliott-VXdhtT5mjnY@public.gmane.org>, Ming Lei <ming.lei-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
 
-T24gTW9uLCAyMDE0LTExLTI0IGF0IDA1OjQwIC0wODAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gQ2FuIHNvbWVvbmUgcmV2aWV3IHRoaXMgdHJpdmlhbCBwYXRjaCBmb3IgbWU/ICBUaGFu
-a3MhDQoNCkkgZG9uJ3QgcmVhbGx5IHRoaW5rIHdlIG5lZWQgcmV2aWV3ZXJzIGZvciB0cml2aWFs
-IHBhdGNoZXMsIGRvIHdlPw0KDQpIb3dldmVyLCB0aGUgcGF0Y2ggaXMgY2xlYXJseSBib2d1cy4g
-V2hhdCdzIHN1cHBvc2VkIHRvIGhhcHBlbiBpcyB0aGF0DQp0aGUgdW5zZXQgdmFyaWFibGVzIChz
-aXplIGFuZCBvZmZzKSBnZXQgaW5pdGlhbGlzZWQgdG8gZGVmYXVsdCB2YWx1ZXMgb24NCmVycm9y
-IHJldHVybiwgd2hpY2ggaXMgd2hhdCdzIG1pc3NpbmcgZm9yIG9mZnNldCwgc28gdGhpcyBpcyB0
-aGUgY29ycmVjdA0KcGF0Y2gsIGlzbid0IGl0Pw0KDQpKYW1lcw0KDQotLS0NCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvYWljOTR4eC9haWM5NHh4X3Nkcy5jIGIvZHJpdmVycy9zY3NpL2FpYzk0
-eHgvYWljOTR4eF9zZHMuYw0KaW5kZXggZWRiNDNmZC4uZDExYjRkNyAxMDA2NDQNCi0tLSBhL2Ry
-aXZlcnMvc2NzaS9haWM5NHh4L2FpYzk0eHhfc2RzLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9haWM5
-NHh4L2FpYzk0eHhfc2RzLmMNCkBAIC0xMDAzLDYgKzEwMDMsNyBAQCBzdGF0aWMgaW50IGFzZF9w
-cm9jZXNzX2N0cmxfYV91c2VyKHN0cnVjdCBhc2RfaGFfc3RydWN0ICphc2RfaGEsDQogCQl9DQog
-DQogCQlzaXplID0gc2l6ZW9mKHN0cnVjdCBhc2RfY3RybGFfcGh5X3NldHRpbmdzKTsNCisJCW9m
-ZnMgPSAwOw0KIAkJcHMgPSAmZGZsdF9wczsNCiAJfQ0KIA0KDQo=
+On 11/12/14 11:45, Christoph Hellwig wrote:
+> FYI, I've updated this to use .use_blk_tags = 1 isntead of
+> scsi_activate_tcq now that I've rebased the drivers-for-3.19 branch
+> over the tcq rework.  Please verify that it's workign as intented.
+
+[ just arrived home from traveling ]
+
+Hello Christoph,
+
+The SRP initiator passes the same tests as before. I have checked with 
+ibdump and Wireshark that the SRP tags are still assigned properly. 
+These tests have been run with and without blk-mq (use_blk_mq=Y versus 
+N). The code I have tested is branch drivers-for-3.19 / commit 
+18f87a67e6d681d1c6f8b3c47985f21b25959a77.
+
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
