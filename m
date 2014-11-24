@@ -1,92 +1,133 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
-Date: Mon, 24 Nov 2014 08:22:49 -0800
-Message-ID: <20141124162249.GG5050@linux.vnet.ibm.com>
-References: <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
- <546771B4.1010507@kernel.dk>
- <20141120060135.GA2862@infradead.org>
- <20141121.145600.2001813891553289235.davem@davemloft.net>
- <20141124082132.GA22971@infradead.org>
- <54735052.7020807@kernel.dk>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] aic94xx: Fixup compilation warning
+Date: Mon, 24 Nov 2014 17:34:38 +0100
+Message-ID: <54735E1E.2070502@redhat.com>
+References: <1415085059-127936-1-git-send-email-hare@suse.de>	 <20141124134014.GA22128@infradead.org> <547356F6.3070404@redhat.com> <1416845409.2194.7.camel@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54735052.7020807@kernel.dk>
-Sender: sparclinux-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753331AbaKXQfN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2014 11:35:13 -0500
+In-Reply-To: <1416845409.2194.7.camel@parallels.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>
 
-On Mon, Nov 24, 2014 at 08:35:46AM -0700, Jens Axboe wrote:
-> On 11/24/2014 01:21 AM, Christoph Hellwig wrote:
-> >On Fri, Nov 21, 2014 at 02:56:00PM -0500, David Miller wrote:
-> >>I would suggest looking into the possibility that we allocate the memory
-> >>using the count of valid cpus, rather than the largest cpu number.
-> >>
-> >>That's a common error that runs into problems with discontiguous
-> >>cpu numbering like Sparc sometimes has.
-> >
-> >Yes, that does look like the case.  Do you have a good trick on how
-> >to allocate a map for the highest possible cpu number without first
-> >iterating the cpu map?  I couldn't find something that looks like a
-> >highest_possible_cpu() helper.
-> 
-> Honestly I think that num_posible_cpus() should return the max of
-> number of CPUs (weigt), and the highest numbered CPU. It's a pain in
-> the butt to handle this otherwise.
+On 11/24/2014 05:10 PM, James Bottomley wrote:
+> On Mon, 2014-11-24 at 17:04 +0100, Tomas Henzl wrote:
+>> On 11/24/2014 02:40 PM, Christoph Hellwig wrote:
+>>> Can someone review this trivial patch for me?  Thanks!
+>>>
+>> The compiler complains because when asd_find_flash_de fails, the off=
+s is not initialized.
+>> When that happens this code is invoked :
+>>         if (err) {
+>>                 ASD_DPRINTK("couldn't find CTRL-A user settings sect=
+ion\n");
+>>                 ASD_DPRINTK("Creating default CTRL-A user settings s=
+ection\n");
+>>
+>>                 dflt_ps.id0 =3D 'h';
+>>                 dflt_ps.num_phys =3D 8;
+>>                 for (i =3D0; i < ASD_MAX_PHYS; i++) {
+>>                         memcpy(dflt_ps.phy_ent[i].sas_addr,
+>>                                asd_ha->hw_prof.sas_addr, SAS_ADDR_SI=
+ZE);
+>>                         dflt_ps.phy_ent[i].sas_link_rates =3D 0x98;
+>>                         dflt_ps.phy_ent[i].flags =3D 0x0;
+>>                         dflt_ps.phy_ent[i].sata_link_rates =3D 0x0;
+>>                 }
+>>
+>>                 size =3D sizeof(struct asd_ctrla_phy_settings);
+>>                 ps =3D &dflt_ps;
+>> the dflt_ps is initialized and the address assigned to 'ps', but non=
+e of them is used later
+>>  }
+>>
+>>         if (size =3D=3D 0)
+>>                 goto out;
+>>
+>>         err =3D -ENOMEM;
+>>         el =3D kmalloc(size, GFP_KERNEL);
+>>         if (!el) {
+>>                 ASD_DPRINTK("no mem for ctrla user settings section\=
+n");
+>>                 goto out;
+>>         }
+>>
+>>         err =3D asd_read_flash_seg(asd_ha, (void *)el, offs, size);
+>>         if (err) {
+>>                 ASD_DPRINTK("couldn't read ctrla phy settings sectio=
+n\n");
+>>                 goto out2;
+>>         }
+>>
+>>         err =3D -ENOENT;
+>>         ps =3D asd_find_ll_by_id(el, 'h', 0xFF);
+>> here^ a new value is assigned to 'ps'
+>>
+>>
+>> I have no idea what was intended in the originally so - it looks lik=
+ely, but how do we know that
+>> the '0' is a correct value for offs?
+> Yes, it seems to be the default from the hw ... if you don't have any
+> nvram then the phy setting are up first.
+>
+>> Probably the error path is never used, this patch should fix the gcc=
+ warning too -
+>> @@ -990,20 +990,7 @@ static int asd_process_ctrl_a_user(struct asd_h=
+a_struct *asd_ha,
+>>  	err =3D asd_find_flash_de(flash_dir, FLASH_DE_CTRL_A_USER, &offs, =
+&size);
+>>  	if (err) {
+>>  		ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
+>> -		ASD_DPRINTK("Creating default CTRL-A user settings section\n");
+>> -
+>> -		dflt_ps.id0 =3D 'h';
+>> -		dflt_ps.num_phys =3D 8;
+>> -		for (i =3D0; i < ASD_MAX_PHYS; i++) {
+>> -			memcpy(dflt_ps.phy_ent[i].sas_addr,
+>> -			       asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
+>> -			dflt_ps.phy_ent[i].sas_link_rates =3D 0x98;
+>> -			dflt_ps.phy_ent[i].flags =3D 0x0;
+>> -			dflt_ps.phy_ent[i].sata_link_rates =3D 0x0;
+>> -		}
+>> -
+>> -		size =3D sizeof(struct asd_ctrla_phy_settings);
+>> -		ps =3D &dflt_ps;
+>> +		goto out;
+> I did think about that.  There does seem to be a definite reason to
+> expect the phy setting read to succeed even though the nvram read
+> failed.  I think the reason was that there were some aic94xx cards th=
+at
+> had no nvram and therefore always failed the read, but I can't find a=
+ny
+> evidence of that any more.
 
-Hear, hear!!!  That would make my life easier, and would make this sort
-of problem much less likely to occur!
+The dead code there brought me to the idea that the error path was not =
+much used...
+Using a '0' is at least so good as some random value, so I'm fine
+with your or Hannes's patch.
 
-							Thanx, Paul
+>
+> James
+>
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
+=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
 
-> /* If cpus are offline, map them to first hctx */
-> map = kzalloc_node(sizeof(*map) * num_possible_cpus(), GFP_KERNEL,
->                                 set->numa_node);
-> 
-> is where it goes wrong, assuming Meelis has NR_CPUS set to something
-> < 14, which was the highest numbered CPU, iirc. A construct like:
-> 
-> map = alloc(num_possible_cpus());
-> for_each_possible_cpu(i)
->     map[i] = ...
-> 
-> seems like the obvious way to do things, yet it's broken. And not
-> broken on x86 where we'd find the issue pretty quickly, but on
-> sparc64 where it'll take a lot longer to run into. It just violates
-> the principle of least surprise, which is bad for an API.
-> 
-> That said, if there was a helper like Christoph suggested, it'd be a
-> bit better. And perhaps we can't just modify num_possible_cpus(),
-> we'd need num_*_cpus() for the other bitmaps, too. That might be
-> breaking other things...
-> 
-> Meelis, can you try the attached?
-> 
-> -- 
-> Jens Axboe
-> 
-
-> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-> index 1065d7c65fa1..15da9cc08f64 100644
-> --- a/block/blk-mq-cpumap.c
-> +++ b/block/blk-mq-cpumap.c
-> @@ -87,10 +87,14 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
-> 
->  unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
->  {
-> +	unsigned int max_cpus;
->  	unsigned int *map;
-> 
-> +	for_each_possible_cpu(max_cpus)
-> +		;
-> +
->  	/* If cpus are offline, map them to first hctx */
-> -	map = kzalloc_node(sizeof(*map) * num_possible_cpus(), GFP_KERNEL,
-> +	map = kzalloc_node(sizeof(*map) * max_cpus, GFP_KERNEL,
->  				set->numa_node);
->  	if (!map)
->  		return NULL;
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
