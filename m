@@ -1,19 +1,52 @@
-From: <luv2charitys@gmail.com>
-Subject: Charity Work
-Date: Mon, 24 Nov 2014 14:44:53 -0600
-Message-ID: <HO-SRV23Y21ZJhRGrNq00053cb3@office.horkans.com>
-Reply-To: <paucharity@gmail.com>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH 3/3] esas2r: fix an oversight in setting return value
+Date: Mon, 24 Nov 2014 15:58:42 -0500
+Message-ID: <54739C02.7000102@attotech.com>
+References: <1416144934-21338-1-git-send-email-thenzl@redhat.com> <1416144934-21338-4-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.vodafone.ie ([213.233.128.43]:10499 "EHLO
-	mail1.vodafone.ie" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884AbaKXUoz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 15:44:55 -0500
-Content-Description: Mail message body
+Received: from sw.attotech.com ([208.69.85.34]:28514 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750828AbaKXU6k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 15:58:40 -0500
+In-Reply-To: <1416144934-21338-4-git-send-email-thenzl@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hello,this is Mr Paul N,i sent you an email on charity work but i am yet to hear fom you,do reply with this code CHA-2015 to my email address paulcharity@qq.com  i Look forward to hearing from you this time,God bless  Brother Paul
+Acked-by: Bradley Grove <bgrove@attotech.com>
+
+Thanks,
+Brad
+
+On 11/16/2014 08:35 AM, Tomas Henzl wrote:
+> The patch moves an error code assigment to a 'default' case
+> in the previous switch statement.
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>   drivers/scsi/esas2r/esas2r_ioctl.c | 5 ++++-
+>   1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+> index c88b9f9491..baf913047b 100644
+> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
+> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> @@ -1524,9 +1524,12 @@ ioctl_done:
+>   		case -EINVAL:
+>   			ioctl->header.return_code = IOCTL_INVALID_PARAM;
+>   			break;
+> +
+> +		default:
+> +			ioctl->header.return_code = IOCTL_GENERAL_ERROR;
+> +			break;
+>   		}
+>
+> -		ioctl->header.return_code = IOCTL_GENERAL_ERROR;
+>   	}
+>
+>   	/* Always copy the buffer back, if only to pick up the status */
+>
+
