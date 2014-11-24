@@ -1,87 +1,38 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] blk-mq: handle the single queue case in blk_mq_hctx_next_cpu
-Date: Mon, 24 Nov 2014 09:27:23 +0100
-Message-ID: <1416817643-17888-1-git-send-email-hch@lst.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] libsas: allow async aborts
+Date: Mon, 24 Nov 2014 09:40:14 +0100
+Message-ID: <1416818414-19430-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:44803 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbaKXIkX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 03:40:23 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, intel-linux-scu@intel.com
 
-Don't duplicate the code to handle the not cpu bounce case in the
-caller, do it inside blk_mq_hctx_next_cpu instead.
+We now first try to call ->eh_abort_handler from a work queue, but libsas
+was always failing that for no good reason.  Allow async aborts.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c | 31 ++++++++++---------------------
- 1 file changed, 10 insertions(+), 21 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c234f33..f8e5358 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -798,10 +798,11 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
-  */
- static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
- {
--	int cpu = hctx->next_cpu;
-+	if (hctx->queue->nr_hw_queues == 1)
-+		return WORK_CPU_UNBOUND;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 89e8b68..3ebdfaf 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -539,9 +539,6 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
  
- 	if (--hctx->next_cpu_batch <= 0) {
--		int next_cpu;
-+		int cpu = hctx->next_cpu, next_cpu;
- 
- 		next_cpu = cpumask_next(hctx->next_cpu, hctx->cpumask);
- 		if (next_cpu >= nr_cpu_ids)
-@@ -809,9 +810,11 @@ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
- 
- 		hctx->next_cpu = next_cpu;
- 		hctx->next_cpu_batch = BLK_MQ_CPU_WORK_BATCH;
-+	
-+		return cpu;
- 	}
- 
--	return cpu;
-+	return hctx->next_cpu;
- }
- 
- void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
-@@ -830,14 +833,8 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
- 		put_cpu();
- 	}
- 
--	if (hctx->queue->nr_hw_queues == 1)
--		kblockd_schedule_delayed_work(&hctx->run_work, 0);
--	else {
--		unsigned int cpu;
+-	if (current != host->ehandler)
+-		return FAILED;
 -
--		cpu = blk_mq_hctx_next_cpu(hctx);
--		kblockd_schedule_delayed_work_on(cpu, &hctx->run_work, 0);
--	}
-+	kblockd_schedule_delayed_work_on(blk_mq_hctx_next_cpu(hctx),
-+			&hctx->run_work, 0);
- }
- 
- void blk_mq_run_queues(struct request_queue *q, bool async)
-@@ -929,16 +926,8 @@ static void blk_mq_delay_work_fn(struct work_struct *work)
- 
- void blk_mq_delay_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
- {
--	unsigned long tmo = msecs_to_jiffies(msecs);
--
--	if (hctx->queue->nr_hw_queues == 1)
--		kblockd_schedule_delayed_work(&hctx->delay_work, tmo);
--	else {
--		unsigned int cpu;
--
--		cpu = blk_mq_hctx_next_cpu(hctx);
--		kblockd_schedule_delayed_work_on(cpu, &hctx->delay_work, tmo);
--	}
-+	kblockd_schedule_delayed_work_on(blk_mq_hctx_next_cpu(hctx),
-+			&hctx->delay_work, msecs_to_jiffies(msecs));
- }
- EXPORT_SYMBOL(blk_mq_delay_queue);
+ 	if (!i->dft->lldd_abort_task)
+ 		return FAILED;
  
 -- 
 1.9.1
+
