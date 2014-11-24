@@ -1,45 +1,87 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 00/12] Re-implement am53c974 driver
-Date: Mon, 24 Nov 2014 09:23:33 +0100
-Message-ID: <5472EB05.3010509@suse.de>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <20141124081403.GA18574@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35225 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752685AbaKXIXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 03:23:36 -0500
-In-Reply-To: <20141124081403.GA18574@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] blk-mq: handle the single queue case in blk_mq_hctx_next_cpu
+Date: Mon, 24 Nov 2014 09:27:23 +0100
+Message-ID: <1416817643-17888-1-git-send-email-hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
 
-On 11/24/2014 09:14 AM, Christoph Hellwig wrote:
-> I'm tempted to merge this into drivers-for-3.19 ASAP, any argument ag=
-ainst
-> that?  Guennadi, do you have any additional hardware to Hannes one re=
-al and one
-> virtual adapter to test this new driver on before?
->=20
-Certainly not from me :-)
+Don't duplicate the code to handle the not cpu bounce case in the
+caller, do it inside blk_mq_hctx_next_cpu instead.
 
-It would be nice to have it in, as then I could do some more
-in-depth testing for EH async aborts and the EH rework in general.
-And qemu would finally have all SCSI HBAs working again :-)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-mq.c | 31 ++++++++++---------------------
+ 1 file changed, 10 insertions(+), 21 deletions(-)
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index c234f33..f8e5358 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -798,10 +798,11 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+  */
+ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
+ {
+-	int cpu = hctx->next_cpu;
++	if (hctx->queue->nr_hw_queues == 1)
++		return WORK_CPU_UNBOUND;
+ 
+ 	if (--hctx->next_cpu_batch <= 0) {
+-		int next_cpu;
++		int cpu = hctx->next_cpu, next_cpu;
+ 
+ 		next_cpu = cpumask_next(hctx->next_cpu, hctx->cpumask);
+ 		if (next_cpu >= nr_cpu_ids)
+@@ -809,9 +810,11 @@ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
+ 
+ 		hctx->next_cpu = next_cpu;
+ 		hctx->next_cpu_batch = BLK_MQ_CPU_WORK_BATCH;
++	
++		return cpu;
+ 	}
+ 
+-	return cpu;
++	return hctx->next_cpu;
+ }
+ 
+ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
+@@ -830,14 +833,8 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
+ 		put_cpu();
+ 	}
+ 
+-	if (hctx->queue->nr_hw_queues == 1)
+-		kblockd_schedule_delayed_work(&hctx->run_work, 0);
+-	else {
+-		unsigned int cpu;
+-
+-		cpu = blk_mq_hctx_next_cpu(hctx);
+-		kblockd_schedule_delayed_work_on(cpu, &hctx->run_work, 0);
+-	}
++	kblockd_schedule_delayed_work_on(blk_mq_hctx_next_cpu(hctx),
++			&hctx->run_work, 0);
+ }
+ 
+ void blk_mq_run_queues(struct request_queue *q, bool async)
+@@ -929,16 +926,8 @@ static void blk_mq_delay_work_fn(struct work_struct *work)
+ 
+ void blk_mq_delay_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
+ {
+-	unsigned long tmo = msecs_to_jiffies(msecs);
+-
+-	if (hctx->queue->nr_hw_queues == 1)
+-		kblockd_schedule_delayed_work(&hctx->delay_work, tmo);
+-	else {
+-		unsigned int cpu;
+-
+-		cpu = blk_mq_hctx_next_cpu(hctx);
+-		kblockd_schedule_delayed_work_on(cpu, &hctx->delay_work, tmo);
+-	}
++	kblockd_schedule_delayed_work_on(blk_mq_hctx_next_cpu(hctx),
++			&hctx->delay_work, msecs_to_jiffies(msecs));
+ }
+ EXPORT_SYMBOL(blk_mq_delay_queue);
+ 
+-- 
+1.9.1
