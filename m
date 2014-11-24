@@ -1,36 +1,41 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] libsas: remove task_collector mode
-Date: Mon, 24 Nov 2014 08:46:22 -0800
-Message-ID: <CAPcyv4ij4P4TAdSvk1Z_NcSSK-E6phj-EWqYanZd_4a+fh9ACg@mail.gmail.com>
-References: <1416818502-19584-1-git-send-email-hch@lst.de>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 1/6] isci: Fix a typo for the word "destroy"
+Date: Mon, 24 Nov 2014 18:08:32 +0100
+Message-ID: <54736610.9090203@users.sourceforge.net>
+References: <54736422.90409@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:55479 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbaKXQqX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 11:46:23 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y19so12821857wgg.0
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2014 08:46:22 -0800 (PST)
-In-Reply-To: <1416818502-19584-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54736422.90409@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Dave Jiang <dave.jiang@intel.com>, "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, intel-linux-scu@intel.com
+Cc: kernel-janitors@vger.kernel.org, trivial@kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Chen Gang <gang.chen.5i5j@gmail.com>, James Bottomley <JBottomley@parallels.com>
 
-On Mon, Nov 24, 2014 at 12:41 AM, Christoph Hellwig <hch@lst.de> wrote:
-> The task_collector mode (or "latency_injector", (C) Dan Willians) is an
-> optional I/O path in libsas that queues up scsi commands instead of
-> directly sending it to the hardware.  It generall increases latencies
-> to in the optiomal case slightly reduce mmio traffic to the hardware.
->
-> Only the obsolete aic94xx driver and the mvsas driver allowed to use
-> it without recompiling the kernel, and most drivers didn't support it
-> at all.
->
-> Remove the giant blob of code to allow better optimizations for scsi-mq
-> in the future.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 24 Nov 2014 15:35:48 +0100
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
+A word was corrected in the description for
+the sci_remote_device_destruct() function.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/scsi/isci/remote_device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index cc51f38..f54bb98 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1008,7 +1008,7 @@ static void sci_remote_device_initial_state_enter(struct sci_base_state_machine
+  * successfully destructed or if some failure occurred. enum sci_status This value
+  * is returned if the device is successfully destructed.
+  * SCI_FAILURE_INVALID_REMOTE_DEVICE This value is returned if the supplied
+- * device isn't valid (e.g. it's already been destoryed, the handle isn't
++ * device isn't valid (e.g. it's already been destroyed, the handle isn't
+  * valid, etc.).
+  */
+ static enum sci_status sci_remote_device_destruct(struct isci_remote_device *idev)
+-- 
+2.1.3
