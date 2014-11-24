@@ -1,46 +1,79 @@
-From: brace <brace@pmcs.com>
-Subject: RE: [PATCH 00/13] hpsa update
-Date: Mon, 24 Nov 2014 19:22:46 +0000
-Message-ID: <3DDAC9D31C8A6A48BA9003A158488F44386498@BBYEXM01.pmc-sierra.internal>
-References: <20141114231145.20808.76898.stgit@don-ProLiant-MicroServer-Gen8>
- <20141120155520.GC26189@infradead.org>
+From: "Subhash Jadavani" <subhashj@codeaurora.org>
+Subject: RE: [PATCH] scsi: ufs: ensure clk gating work is finished before module unloading
+Date: Mon, 24 Nov 2014 12:31:05 -0800
+Message-ID: <001201d00825$92ee3040$b8ca90c0$@codeaurora.org>
+References: <1416806658-7349-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49061 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752643AbaKXTnU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 14:43:20 -0500
-In-Reply-To: <20141120155520.GC26189@infradead.org>
-Content-Language: en-US
+Received: from smtp.codeaurora.org ([198.145.11.231]:44135 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbaKXUbH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 15:31:07 -0500
+In-Reply-To: <1416806658-7349-1-git-send-email-akinobu.mita@gmail.com>
+Content-Language: en-us
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Don Brace <Don.Brace@pmcs.com>
-Cc: "webb.scales@hp.com" <webb.scales@hp.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: 'Akinobu Mita' <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
+Cc: 'Akinobu Mita' <mita@fixstars.com>, 'Vinayak Holikatti' <vinholikatti@gmail.com>, 'Dolev Raviv' <draviv@codeaurora.org>, 'Yaniv Gardi' <ygardi@codeaurora.org>, 'Sujit Reddy Thumma' <sthumma@codeaurora.org>, 'Maya Erez' <merez@codeaurora.org>, 'Sahitya Tummala' <stummala@codeaurora.org>, 'Christoph Hellwig' <hch@lst.de>, "'James E.J. Bottomley'" <JBottomley@parallels.com>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Thursday, November 20, 2014 9:55 AM
-> To: Don Brace
-> Cc: hch@infradead.org; webb.scales@hp.com;
-> james.bottomley@parallels.com; brace; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 00/13] hpsa update
-> 
-> I've applied all patches to drivers-for-3.19.
-> 
-> If you could do me two favours:
-> 
->  - please look into sparse endianess warnings.  This series introduces
->    a few new ones, but given that the area around it was full of it
->    I didn't pull it for that for now.
->  - please review the various hpsa fixes Tomas Henzl sent over the last
->    few weeks.
-> 
-> Thanks,
-> 	Christoph
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-I created a patch for the extra sparse warnings and I have it in for a local review.
-I will get it up soon. Most of the people in my area are off this week. 
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Akinobu Mita
+Sent: Sunday, November 23, 2014 9:24 PM
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita; Akinobu Mita; Vinayak Holikatti; Dolev Raviv; Subhash
+Jadavani; Yaniv Gardi; Sujit Reddy Thumma; Maya Erez; Sahitya Tummala;
+Christoph Hellwig; James E.J. Bottomley
+Subject: [PATCH] scsi: ufs: ensure clk gating work is finished before module
+unloading
+
+When dynamic clk gating feature is enabled, delayed workqueue machanism is
+used in order to detect certain period of inactivity.  But there is no
+guarantee that scheduled gating work is completed before module unloading.
+So it can cause kernel crash by accessing memory after it was freed.
+
+Fix it by cancelling clk gating and ungating works and ensure that its
+execution is finished before module unloading.
+
+Signed-off-by: Akinobu Mita <mita@fixstars.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>
+Cc: Sahitya Tummala <stummala@codeaurora.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/ufs/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+d18adc4..713420b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -744,6 +744,8 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+ 		return;
+ 	device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
++	cancel_work_sync(&hba->clk_gating.ungate_work);
++	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
+ }
+ 
+ /* Must be called with host lock acquired */
+--
+1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
 
