@@ -1,33 +1,31 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] eeprom-93cx6: Add (read-only) support for 8-bit mode
-Date: Mon, 24 Nov 2014 14:16:20 +0100
-Message-ID: <54732FA4.1090603@suse.de>
-References: <1416831074-24282-1-git-send-email-linux@rainbow-software.org> <1416831074-24282-2-git-send-email-linux@rainbow-software.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ARCMSR - Notify sense data report - Lost patch?
+Date: Mon, 24 Nov 2014 05:23:31 -0800
+Message-ID: <20141124132331.GA4179@infradead.org>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C1FC8@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1416831074-24282-2-git-send-email-linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Kernel development list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:53874 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132AbaKXNXg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 08:23:36 -0500
+Content-Disposition: inline
+In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C1FC8@EXCHANGE.collogia.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Markus Stockhausen <stockhausen@collogia.de>
+Cc: "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "thenzl@redhat.com" <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/24/2014 01:11 PM, Ondrej Zary wrote:
-> Add read-only support for EEPROMs configured in 8-bit mode (ORG pin c=
-onnected
-> to GND).
-> This will be used by wd719x driver.
->=20
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+On Mon, Nov 24, 2014 at 11:47:02AM +0000, Markus Stockhausen wrote:
+> Hi,
+> 
+> sorting out some diffs between the official Arcea driver and 
+> the newest 3.18 patches I found a patch that might got lost:
+> 
+> https://lkml.org/lkml/2014/2/20/956
+> 
+> Could you check if that is desired?
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Looks sensible to me.  Did you test it?
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
