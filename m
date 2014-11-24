@@ -1,617 +1,119 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 07/12] scsi: add 'am53c974' driver
-Date: Mon, 24 Nov 2014 14:42:34 +0100
-Message-ID: <547335CA.4040102@redhat.com>
-References: <1416573716-73890-1-git-send-email-hare@suse.de> <1416573716-73890-8-git-send-email-hare@suse.de>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: ARCMSR - Notify sense data report - Lost patch?
+Date: Mon, 24 Nov 2014 13:45:57 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C20B0@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C1FC8@EXCHANGE.collogia.de>,<20141124132331.GA4179@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-069b1662-d018-4837-aaf9-06faf6bfe1ce"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:44790 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbaKXNmk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 08:42:40 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so5698974wiw.8
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2014 05:42:38 -0800 (PST)
-In-Reply-To: <1416573716-73890-8-git-send-email-hare@suse.de>
+Received: from mailrelay.collogia.de ([194.8.207.98]:5251 "HELO
+	mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751215AbaKXNqW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 08:46:22 -0500
+In-Reply-To: <20141124132331.GA4179@infradead.org>
+Content-Language: de-DE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "thenzl@redhat.com" <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
+This is a multi-part message in MIME format.
 
-On 21/11/2014 13:41, Hannes Reinecke wrote:
-> This patch adds a new implementation for the Tekram DC-390T /
-> AMD AM53c974 SCSI controller, based on the generic
-> esp_scsi infrastructure.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/Kconfig    |  18 ++
->  drivers/scsi/Makefile   |   1 +
->  drivers/scsi/am53c974.c | 531 ++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 550 insertions(+)
->  create mode 100644 drivers/scsi/am53c974.c
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 60c67e1..519c3ef 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1357,6 +1357,24 @@ config SCSI_DC390T
->  	  To compile this driver as a module, choose M here: the
->  	  module will be called tmscsim.
->  
-> +config SCSI_AM53C974
-> +	tristate "Tekram DC390(T) and Am53/79C974 SCSI support (new driver)"
-> +	depends on PCI && SCSI
-> +	select SCSI_SPI_ATTRS
-> +	---help---
-> +	  This driver supports PCI SCSI host adapters based on the Am53C974A
-> +	  chip, e.g. Tekram DC390(T), DawiControl 2974 and some onboard
-> +	  PCscsi/PCnet (Am53/79C974) solutions.
-> +	  This is a new implementation base on the generic esp_scsi driver.
-> +
-> +	  Documentation can be found in <file:Documentation/scsi/tmscsim.txt>.
-> +
-> +	  Note that this driver does NOT support Tekram DC390W/U/F, which are
-> +	  based on NCR/Symbios chips. Use "NCR53C8XX SCSI support" for those.
-> +
-> +	  To compile this driver as a module, choose M here: the
-> +	  module will be called am53c974.
-> +
->  config SCSI_T128
->  	tristate "Trantor T128/T128F/T228 SCSI support"
->  	depends on ISA && SCSI
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index 59f1ce6..79a6571 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -101,6 +101,7 @@ obj-$(CONFIG_SCSI_7000FASST)	+= wd7000.o
->  obj-$(CONFIG_SCSI_EATA)		+= eata.o
->  obj-$(CONFIG_SCSI_DC395x)	+= dc395x.o
->  obj-$(CONFIG_SCSI_DC390T)	+= tmscsim.o
-> +obj-$(CONFIG_SCSI_AM53C974)	+= esp_scsi.o	am53c974.o
->  obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
->  obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
->  obj-$(CONFIG_MEGARAID_SAS)	+= megaraid/
-> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-> new file mode 100644
-> index 0000000..86c4c42
-> --- /dev/null
-> +++ b/drivers/scsi/am53c974.c
-> @@ -0,0 +1,531 @@
-> +/*
-> + * AMD am53c974 driver.
-> + * Copyright (c) 2014 Hannes Reinecke, SUSE Linux GmbH
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/init.h>
-> +#include <linux/delay.h>
-> +#include <linux/pci.h>
-> +#include <linux/interrupt.h>
-> +
-> +#include <scsi/scsi_host.h>
-> +
-> +#include "esp_scsi.h"
-> +
-> +#define DRV_MODULE_NAME "am53c974"
-> +#define DRV_MODULE_VERSION "1.00"
-> +
-> +// #define ESP_DMA_DEBUG
-> +
-> +#define ESP_DMA_CMD 0x10
-> +#define ESP_DMA_STC 0x11
-> +#define ESP_DMA_SPA 0x12
-> +#define ESP_DMA_WBC 0x13
-> +#define ESP_DMA_WAC 0x14
-> +#define ESP_DMA_STATUS 0x15
-> +#define ESP_DMA_SMDLA 0x16
-> +#define ESP_DMA_WMAC 0x17
-> +
-> +#define ESP_DMA_CMD_IDLE 0x00
-> +#define ESP_DMA_CMD_BLAST 0x01
-> +#define ESP_DMA_CMD_ABORT 0x02
-> +#define ESP_DMA_CMD_START 0x03
-> +#define ESP_DMA_CMD_MASK  0x03
-> +#define ESP_DMA_CMD_DIAG 0x04
-> +#define ESP_DMA_CMD_MDL 0x10
-> +#define ESP_DMA_CMD_INTE_P 0x20
-> +#define ESP_DMA_CMD_INTE_D 0x40
-> +#define ESP_DMA_CMD_DIR 0x80
-> +
-> +#define ESP_DMA_STAT_PWDN 0x01
-> +#define ESP_DMA_STAT_ERROR 0x02
-> +#define ESP_DMA_STAT_ABORT 0x04
-> +#define ESP_DMA_STAT_DONE 0x08
-> +#define ESP_DMA_STAT_SCSIINT 0x10
-> +#define ESP_DMA_STAT_BCMPLT 0x20
-> +
-> +/* EEPROM is accessed with 16-bit values */
-> +#define DC390_EEPROM_READ 0x80
-> +#define DC390_EEPROM_LEN 0x40
-> +
-> +/*
-> + * DC390 EEPROM
-> + *
-> + * 8 * 4 bytes of per-device options
-> + * followed by HBA specific options
-> + */
-> +
-> +/* Per-device options */
-> +#define DC390_EE_MODE1 0x00
-> +#define DC390_EE_SPEED 0x01
-> +
-> +/* HBA-specific options */
-> +#define DC390_EE_ADAPT_SCSI_ID 0x40
-> +#define DC390_EE_MODE2 0x41
-> +#define DC390_EE_DELAY 0x42
-> +#define DC390_EE_TAG_CMD_NUM 0x43
-> +
-> +#define DC390_EE_MODE1_PARITY_CHK   0x01
-> +#define DC390_EE_MODE1_SYNC_NEGO    0x02
-> +#define DC390_EE_MODE1_EN_DISC      0x04
-> +#define DC390_EE_MODE1_SEND_START   0x08
-> +#define DC390_EE_MODE1_TCQ          0x10
-> +
-> +#define DC390_EE_MODE2_MORE_2DRV    0x01
-> +#define DC390_EE_MODE2_GREATER_1G   0x02
-> +#define DC390_EE_MODE2_RST_SCSI_BUS 0x04
-> +#define DC390_EE_MODE2_ACTIVE_NEGATION 0x08
-> +#define DC390_EE_MODE2_NO_SEEK      0x10
-> +#define DC390_EE_MODE2_LUN_CHECK    0x20
-> +
-> +struct pci_esp_priv {
-> +	struct esp *esp;
-> +	u8 dma_status;
-> +};
-> +
-> +#define PCI_ESP_GET_PRIV(esp) ((struct pci_esp_priv *) \
-> +			       pci_get_drvdata((struct pci_dev *) \
-> +					       (esp)->dev))
-> +
-> +static void pci_esp_dma_drain(struct esp *esp);
-> +
-> +static void pci_esp_write8(struct esp *esp, u8 val, unsigned long reg)
-> +{
-> +	iowrite8(val, esp->regs + (reg * 4UL));
-> +}
-> +
-> +static u8 pci_esp_read8(struct esp *esp, unsigned long reg)
-> +{
-> +	return ioread8(esp->regs + (reg * 4UL));
-> +}
-> +
-> +static void pci_esp_write32(struct esp *esp, u32 val, unsigned long reg)
-> +{
-> +	return iowrite32(val, esp->regs + (reg * 4UL));
-> +}
-> +
-> +static dma_addr_t pci_esp_map_single(struct esp *esp, void *buf,
-> +				     size_t sz, int dir)
-> +{
-> +	return pci_map_single(esp->dev, buf, sz, dir);
-> +}
-> +
-> +static int pci_esp_map_sg(struct esp *esp, struct scatterlist *sg,
-> +			  int num_sg, int dir)
-> +{
-> +	return pci_map_sg(esp->dev, sg, num_sg, dir);
-> +}
-> +
-> +static void pci_esp_unmap_single(struct esp *esp, dma_addr_t addr,
-> +				 size_t sz, int dir)
-> +{
-> +	pci_unmap_single(esp->dev, addr, sz, dir);
-> +}
-> +
-> +static void pci_esp_unmap_sg(struct esp *esp, struct scatterlist *sg,
-> +			     int num_sg, int dir)
-> +{
-> +	pci_unmap_sg(esp->dev, sg, num_sg, dir);
-> +}
-> +
-> +static int pci_esp_irq_pending(struct esp *esp)
-> +{
-> +	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
-> +
-> +	pep->dma_status = pci_esp_read8(esp, ESP_DMA_STATUS);
-> +#ifdef ESP_DMA_DEBUG
-> +	if (pep->dma_status)
-> +		shost_printk(KERN_INFO, esp->host, "dma intr dreg[%02x]\n",
-> +			     pep->dma_status);
-> +#endif
-> +	if (pep->dma_status & (ESP_DMA_STAT_ERROR |
-> +			       ESP_DMA_STAT_ABORT |
-> +			       ESP_DMA_STAT_DONE |
-> +			       ESP_DMA_STAT_SCSIINT))
-> +		return 1;
-> +
-> +	return 0;
-> +}
-> +
-> +static void pci_esp_reset_dma(struct esp *esp)
-> +{
-> +	/* Nothing to do ? */
-> +}
-> +
-> +static void pci_esp_dma_drain(struct esp *esp)
-> +{
-> +	u8 resid;
-> +	int lim = 1000;
-> +
-> +
-> +	if ((esp->sreg & ESP_STAT_PMASK) == ESP_DOP ||
-> +	    (esp->sreg & ESP_STAT_PMASK) == ESP_DIP)
-> +		/* Data-In or Data-Out, nothing to be done */
-> +		return;
-> +
-> +	while (--lim > 0) {
-> +		resid = pci_esp_read8(esp, ESP_FFLAGS) & ESP_FF_FBYTES;
-> +		if (resid <= 1)
-> +			break;
-> +		cpu_relax();
-> +	}
-> +	if (resid > 1) {
-> +		/* FIFO not cleared */
-> +		shost_printk(KERN_INFO, esp->host,
-> +			     "FIFO not cleared, %d bytes left\n",
-> +			     resid);
-> +	}
-> +
-> +	/*
-> +	 * When there is a residual BCMPLT will never be set
-> +	 * (obviously). But we still have to issue the BLAST
-> +	 * command, otherwise the data will not being transferred.
-> +	 * But we'll never know when the BLAST operation is
-> +	 * finished. So check for some time and give up eventually.
-> +	 */
-> +	lim = 1000;
-> +	pci_esp_write8(esp, ESP_DMA_CMD_DIR | ESP_DMA_CMD_BLAST, ESP_DMA_CMD);
-> +	while (pci_esp_read8(esp, ESP_DMA_STATUS) & ESP_DMA_STAT_BCMPLT) {
-> +		if (--lim == 0)
-> +			break;
-> +		cpu_relax();
-> +	}
-> +	pci_esp_write8(esp, ESP_DMA_CMD_DIR | ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
-> +#ifdef ESP_DMA_DEBUG
-> +	shost_printk(KERN_INFO, esp->host,
-> +		     "DMA blast done (%d tries, %d bytes left)\n", lim, resid);
-> +#endif
-> +}
-> +
-> +static void pci_esp_dma_invalidate(struct esp *esp)
-> +{
-> +	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
-> +
-> +#ifdef ESP_DMA_DEBUG
-> +	shost_printk(KERN_INFO, esp->host, "invalidate DMA\n");
-> +#endif
-> +	pci_esp_write8(esp, ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
-> +	pep->dma_status = 0;
-> +}
-> +
-> +static int pci_esp_dma_error(struct esp *esp)
-> +{
-> +	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
-> +
-> +	if (pep->dma_status & ESP_DMA_STAT_ERROR) {
-> +		u8 dma_cmd = pci_esp_read8(esp, ESP_DMA_CMD);
-> +
-> +		if ((dma_cmd & ESP_DMA_CMD_MASK) == ESP_DMA_CMD_START)
-> +			pci_esp_write8(esp, ESP_DMA_CMD_ABORT, ESP_DMA_CMD);
-> +
-> +		return 1;
-> +	}
-> +	if (pep->dma_status & ESP_DMA_STAT_ABORT) {
-> +		pci_esp_write8(esp, ESP_DMA_CMD_IDLE, ESP_DMA_CMD);
-> +		pep->dma_status = pci_esp_read8(esp, ESP_DMA_CMD);
-> +		return 1;
-> +	}
-> +	return 0;
-> +}
-> +
-> +static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
-> +				 u32 dma_count, int write, u8 cmd)
-> +{
-> +	struct pci_esp_priv *pep = PCI_ESP_GET_PRIV(esp);
-> +	u32 val = 0;
-> +
-> +	BUG_ON(!(cmd & ESP_CMD_DMA));
-> +
-> +	pep->dma_status = 0;
-> +
-> +	/* Set DMA engine to IDLE */
-> +	if (write)
-> +		/* DMA write direction logic is inverted */
-> +		val |= ESP_DMA_CMD_DIR;
-> +	pci_esp_write8(esp, ESP_DMA_CMD_IDLE | val, ESP_DMA_CMD);
-> +
-> +	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
-> +	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
-> +
-> +	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
-> +	pci_esp_write32(esp, addr, ESP_DMA_SPA);
-> +
-> +#ifdef ESP_DMA_DEBUG
-> +	shost_printk(KERN_INFO, esp->host, "start dma addr[%x] count[%d:%d]\n",
-> +		     addr, esp_count, dma_count);
-> +#endif
-> +	scsi_esp_cmd(esp, cmd);
-> +	/* Send DMA Start command */
-> +	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
-> +}
-> +
-> +static const struct esp_driver_ops pci_esp_ops = {
-> +	.esp_write8	=	pci_esp_write8,
-> +	.esp_read8	=	pci_esp_read8,
-> +	.map_single	=	pci_esp_map_single,
-> +	.map_sg		=	pci_esp_map_sg,
-> +	.unmap_single	=	pci_esp_unmap_single,
-> +	.unmap_sg	=	pci_esp_unmap_sg,
-> +	.irq_pending	=	pci_esp_irq_pending,
-> +	.reset_dma	=	pci_esp_reset_dma,
-> +	.dma_drain	=	pci_esp_dma_drain,
-> +	.dma_invalidate	=	pci_esp_dma_invalidate,
-> +	.send_dma_cmd	=	pci_esp_send_dma_cmd,
-> +	.dma_error	=	pci_esp_dma_error,
-> +};
-> +
-> +/*
-> + * Read DC-390 eeprom
-> + */
-> +static void dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 cmd)
-> +{
-> +	u8 carryFlag = 1, j = 0x80, bval;
-> +	int i;
-> +
-> +	for (i = 0; i < 9; i++) {
-> +		if (carryFlag) {
-> +			pci_write_config_byte(pdev, 0x80, 0x40);
-> +			bval = 0xc0;
-> +		} else
-> +			bval = 0x80;
-> +
-> +		udelay(160);
-> +		pci_write_config_byte(pdev, 0x80, bval);
-> +		udelay(160);
-> +		pci_write_config_byte(pdev, 0x80, 0);
-> +		udelay(160);
-> +
-> +		carryFlag = (cmd & j) ? 1 : 0;
-> +		j >>= 1;
-> +	}
-> +}
-> +
-> +static u16 dc390_eeprom_get_data(struct pci_dev *pdev)
-> +{
-> +	int i;
-> +	u16 wval = 0;
-> +	u8 bval;
-> +
-> +	for (i = 0; i < 16; i++) {
-> +		wval <<= 1;
-> +
-> +		pci_write_config_byte(pdev, 0x80, 0x80);
-> +		udelay(160);
-> +		pci_write_config_byte(pdev, 0x80, 0x40);
-> +		udelay(160);
-> +		pci_read_config_byte(pdev, 0x00, &bval);
-> +
-> +		if (bval == 0x22)
-> +			wval |= 1;
-> +	}
-> +
-> +	return wval;
-> +}
-> +
-> +static void dc390_read_eeprom(struct pci_dev *pdev, u16 *ptr)
-> +{
-> +	u8 cmd = DC390_EEPROM_READ, i;
-> +
-> +	for (i = 0; i < DC390_EEPROM_LEN; i++) {
-> +		pci_write_config_byte(pdev, 0xc0, 0);
-> +		udelay(160);
-> +
-> +		dc390_eeprom_prepare_read(pdev, cmd++);
-> +		*ptr++ = dc390_eeprom_get_data(pdev);
-> +
-> +		pci_write_config_byte(pdev, 0x80, 0);
-> +		pci_write_config_byte(pdev, 0x80, 0);
-> +		udelay(160);
-> +	}
-> +}
-> +
-> +static void dc390_check_eeprom(struct esp *esp)
-> +{
-> +	u8 EEbuf[128];
-> +	u16 *ptr = (u16 *)EEbuf, wval = 0;
-> +	int i;
-> +
-> +	dc390_read_eeprom((struct pci_dev *)esp->dev, ptr);
-> +
-> +	for (i = 0; i < DC390_EEPROM_LEN; i++, ptr++)
-> +		wval += *ptr;
-> +
-> +	/* no Tekram EEprom found */
-> +	if (wval != 0x1234) {
-> +		struct pci_dev *pdev = esp->dev;
-> +		dev_printk(KERN_INFO, &pdev->dev,
-> +			   "No valid Tekram EEprom found\n");
-> +		return;
-> +	}
-> +	esp->scsi_id = EEbuf[DC390_EE_ADAPT_SCSI_ID];
-> +	esp->num_tags = 2 << EEbuf[DC390_EE_TAG_CMD_NUM];
-> +}
-> +
-> +static int pci_esp_probe_one(struct pci_dev *pdev,
-> +			      const struct pci_device_id *id)
-> +{
-> +	struct scsi_host_template *hostt = &scsi_esp_template;
-> +	int err = -ENODEV;
-> +	struct Scsi_Host *shost;
-> +	struct esp *esp;
-> +	struct pci_esp_priv *pep;
-> +
-> +	if (pci_enable_device(pdev)) {
-> +		dev_printk(KERN_INFO, &pdev->dev, "cannot enable device\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
-> +		dev_printk(KERN_INFO, &pdev->dev,
-> +			   "failed to set 32bit DMA mask\n");
-> +		goto fail_disable_device;
-> +	}
-> +
-> +	shost = scsi_host_alloc(hostt, sizeof(struct esp));
-> +	if (!shost) {
-> +		dev_printk(KERN_INFO, &pdev->dev,
-> +			   "failed to allocate scsi host\n");
-> +		err = -ENOMEM;
-> +		goto fail_disable_device;
-> +	}
-> +
-> +	pep = kzalloc(sizeof(struct pci_esp_priv), GFP_KERNEL);
-> +	if (!pep) {
-> +		dev_printk(KERN_INFO, &pdev->dev,
-> +			   "failed to allocate esp_priv\n");
-> +		err = -ENOMEM;
-> +		goto fail_host_alloc;
-> +	}
-> +
-> +	esp = shost_priv(shost);
-> +	esp->host = shost;
-> +	esp->dev = pdev;
-> +	esp->ops = &pci_esp_ops;
-> +	/*
-> +	 * The am53c974 HBA has a design flaw of generating
-> +	 * spurious DMA completion interrupts when using
-> +	 * DMA for command submission.
-> +	 */
-> +	esp->flags |= ESP_FLAG_USE_FIFO;
-> +	pep->esp = esp;
-> +
-> +	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
-> +		dev_printk(KERN_ERR, &pdev->dev,
-> +			   "pci memory selection failed\n");
-> +		goto fail_priv_alloc;
-> +	}
-> +
-> +	esp->regs = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
-> +	if (!esp->regs) {
-> +		dev_printk(KERN_ERR, &pdev->dev, "pci I/O map failed\n");
-> +		goto fail_release_regions;
-> +	}
-> +	esp->dma_regs = esp->regs;
-> +
-> +	pci_set_master(pdev);
-> +
-> +	esp->command_block = pci_alloc_consistent(pdev, 16,
-> +						  &esp->command_block_dma);
-> +	if (!esp->command_block) {
-> +		dev_printk(KERN_ERR, &pdev->dev,
-> +			   "failed to allocate command block\n");
-> +		err = -ENOMEM;
-> +		goto fail_unmap_regs;
-> +	}
-> +
-> +	if (request_irq(pdev->irq, scsi_esp_intr, IRQF_SHARED,
-> +			DRV_MODULE_NAME, esp)) {
-> +		dev_printk(KERN_ERR, &pdev->dev, "failed to register IRQ\n");
-> +		goto fail_unmap_command_block;
-> +	}
-> +
-> +	esp->scsi_id = 7;
-> +	dc390_check_eeprom(esp);
-> +
-> +	shost->this_id = esp->scsi_id;
-> +	shost->max_id = 8;
-> +	shost->irq = pdev->irq;
-> +	shost->io_port = pci_resource_start(pdev, 0);
-> +	shost->n_io_port = pci_resource_len(pdev, 0);
-> +	shost->unique_id = shost->io_port;
-> +	esp->scsi_id_mask = (1 << esp->scsi_id);
-> +	/* Assume 40MHz clock */
-> +	esp->cfreq = 40000000;
-> +
-> +	pci_set_drvdata(pdev, pep);
-> +
-> +	err = scsi_esp_register(esp, &pdev->dev);
-> +	if (err)
-> +		goto fail_free_irq;
-> +
-> +	return 0;
-> +
-> +fail_free_irq:
-> +	free_irq(pdev->irq, esp);
-> +fail_unmap_command_block:
-> +	pci_free_consistent(pdev, 16, esp->command_block,
-> +			    esp->command_block_dma);
-> +fail_unmap_regs:
-> +	pci_iounmap(pdev, esp->regs);
-> +fail_release_regions:
-> +	pci_release_regions(pdev);
-> +fail_priv_alloc:
-> +	kfree(pep);
-> +fail_host_alloc:
-> +	scsi_host_put(shost);
-> +fail_disable_device:
-> +	pci_disable_device(pdev);
-> +
-> +	return err;
-> +}
-> +
-> +static void pci_esp_remove_one(struct pci_dev *pdev)
-> +{
-> +	struct pci_esp_priv *pep = pci_get_drvdata(pdev);
-> +	struct esp *esp = pep->esp;
-> +
-> +	scsi_esp_unregister(esp);
-> +	free_irq(pdev->irq, esp);
-> +	pci_free_consistent(pdev, 16, esp->command_block,
-> +			    esp->command_block_dma);
-> +	pci_iounmap(pdev, esp->regs);
-> +	pci_release_regions(pdev);
-> +	pci_disable_device(pdev);
-> +	kfree(pep);
-> +
-> +	scsi_host_put(esp->host);
-> +}
-> +
-> +static struct pci_device_id am53c974_pci_tbl[] = {
-> +	{ PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_SCSI,
-> +		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-> +	{ }
-> +};
-> +MODULE_DEVICE_TABLE(pci, am53c974_pci_tbl);
-> +
-> +static struct pci_driver am53c974_driver = {
-> +	.name           = DRV_MODULE_NAME,
-> +	.id_table       = am53c974_pci_tbl,
-> +	.probe          = pci_esp_probe_one,
-> +	.remove         = pci_esp_remove_one,
-> +};
-> +
-> +static int __init am53c974_module_init(void)
-> +{
-> +	return pci_register_driver(&am53c974_driver);
-> +}
-> +
-> +static void __exit am53c974_module_exit(void)
-> +{
-> +	pci_unregister_driver(&am53c974_driver);
-> +}
-> +
-> +MODULE_DESCRIPTION("AM53C974 SCSI driver");
-> +MODULE_AUTHOR("Hannes Reinecke <hare@suse.de>");
-> +MODULE_LICENSE("GPL");
-> +MODULE_VERSION(DRV_MODULE_VERSION);
-> +
-> +module_init(am53c974_module_init);
-> +module_exit(am53c974_module_exit);
-> 
+------=_NextPartTM-000-069b1662-d018-4837-aaf9-06faf6bfe1ce
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> Von: linux-scsi-owner@vger.kernel.org [linux-scsi-owner@vger.kernel.org]&=
+quot; im Auftrag von &quot;Christoph Hellwig [hch@infradead.org]=0A=
+> Gesendet: Montag, 24. November 2014 14:23=0A=
+> An: Markus Stockhausen=0A=
+> Cc: ching2048@areca.com.tw; thenzl@redhat.com; linux-scsi@vger.kernel.org=
+=0A=
+> Betreff: Re: ARCMSR - Notify sense data report - Lost patch?=0A=
+> =0A=
+> On Mon, Nov 24, 2014 at 11:47:02AM +0000, Markus Stockhausen wrote:=0A=
+> > Hi,=0A=
+> >=0A=
+> > sorting out some diffs between the official Arcea driver and=0A=
+> > the newest 3.18 patches I found a patch that might got lost:=0A=
+> >=0A=
+> > https://lkml.org/lkml/2014/2/20/956=0A=
+> >=0A=
+> > Could you check if that is desired?=0A=
+> =0A=
+> Looks sensible to me.  Did you test it?=0A=
+=0A=
+No not really, as I don't know how. We had a controller crash the last=0A=
+week and I was wondering about the differences between vendor and=0A=
+upstream version. So I basically did some code comparison between =0A=
+the two source. Besides a lot of layout differences and other hacks =0A=
+this was one of the first things I noticed and wondered what difference =0A=
+those flags could make. Especially regarding stability.=0A=
+=0A=
+Hopefully Ching and/or Tomas know better as they seem repsonsible =0A=
+for the rest of the 3.18 arcmsr patches.=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-069b1662-d018-4837-aaf9-06faf6bfe1ce
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-069b1662-d018-4837-aaf9-06faf6bfe1ce--
