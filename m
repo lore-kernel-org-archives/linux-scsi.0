@@ -1,74 +1,60 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
-Date: Mon, 24 Nov 2014 09:44:26 -0800
-Message-ID: <20141124174426.GP5050@linux.vnet.ibm.com>
-References: <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
- <546771B4.1010507@kernel.dk>
- <20141120060135.GA2862@infradead.org>
- <20141121.145600.2001813891553289235.davem@davemloft.net>
- <20141124082132.GA22971@infradead.org>
- <54735052.7020807@kernel.dk>
- <20141124162249.GG5050@linux.vnet.ibm.com>
- <547367DF.5060706@kernel.dk>
- <20141124173129.GL5050@linux.vnet.ibm.com>
- <54736BF1.5050305@kernel.dk>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: cessations00624@gmail.com
+Subject: Fix Penguin Penalty 17th October2014 ( mail-archive.com )
+Date: Mon, 24 Nov 2014 23:50:28 +0530
+Message-ID: <547376ea.0941440a.10df.49c2@mx.google.com>
+Reply-To: julia.kites@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54736BF1.5050305@kernel.dk>
-Sender: sparclinux-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36819 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932087AbaKXSU2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 13:20:28 -0500
+Received: by mail-pa0-f66.google.com with SMTP id rd3so5566828pab.9
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2014 10:20:28 -0800 (PST)
+Received: from localhost.localdomain ([27.255.204.186])
+        by mx.google.com with ESMTPSA id t9sm12941698pbs.75.2014.11.24.10.20.25
+        for <linux-scsi@vger.kernel.org>
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Mon, 24 Nov 2014 10:20:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Nov 24, 2014 at 10:33:37AM -0700, Jens Axboe wrote:
-> On 11/24/2014 10:31 AM, Paul E. McKenney wrote:
-> >On Mon, Nov 24, 2014 at 10:16:15AM -0700, Jens Axboe wrote:
-> >>On 11/24/2014 09:22 AM, Paul E. McKenney wrote:
-> >>>On Mon, Nov 24, 2014 at 08:35:46AM -0700, Jens Axboe wrote:
-> >>>>On 11/24/2014 01:21 AM, Christoph Hellwig wrote:
-> >>>>>On Fri, Nov 21, 2014 at 02:56:00PM -0500, David Miller wrote:
-> >>>>>>I would suggest looking into the possibility that we allocate the memory
-> >>>>>>using the count of valid cpus, rather than the largest cpu number.
-> >>>>>>
-> >>>>>>That's a common error that runs into problems with discontiguous
-> >>>>>>cpu numbering like Sparc sometimes has.
-> >>>>>
-> >>>>>Yes, that does look like the case.  Do you have a good trick on how
-> >>>>>to allocate a map for the highest possible cpu number without first
-> >>>>>iterating the cpu map?  I couldn't find something that looks like a
-> >>>>>highest_possible_cpu() helper.
-> >>>>
-> >>>>Honestly I think that num_posible_cpus() should return the max of
-> >>>>number of CPUs (weigt), and the highest numbered CPU. It's a pain in
-> >>>>the butt to handle this otherwise.
-> >>>
-> >>>Hear, hear!!!  That would make my life easier, and would make this sort
-> >>>of problem much less likely to occur!
-> >>
-> >>How about this one?
-> >
-> >Works for me!
-> 
-> Thanks! I'll add an appropriate comment and send it out for review.
-> 
-> >(Just for the record, as far as I know, this doesn't matter for RCU,
-> >which already uses nr_cpu_ids.)
-> 
-> Was that done after hitting something like this?
+Dear Sir
 
-Nope.  It was done after people started griping about RCU's older habit
-of sizing its data structures based on NR_CPUS.  Something about distros
-cranking NR_CPUS up to 1024 and beyond.  ;-)
+Did your website get hit by Google Penguin update on October 17th 2014?=
+ What basically is Google Penguin Update? It is actually a code name fo=
+r Google algorithm which aims at decreasing your websites search engine=
+ rankings that violate Google=92s guidelines by using black hat SEO tec=
+hniques to rank your webpage by giving number of spammy links to the pa=
+ge.
+=20
+We are one of those few SEO companies that can help you avoid penalties=
+ from Google Updates like Penguin and Panda. Our clients have survived =
+all the previous and present updates with ease. They have never been hi=
+t because we use 100% white hat SEO techniques to rank Webpages.  Simpl=
+e thing that we do to keep websites away from any Penguin or Panda pena=
+lties is follow Google guidelines and we give Google users the best ans=
+wers to their queries.
 
-							Thanx, Paul
+If you are looking to increase the quality of your websites and to get =
+more targeted traffic or save your websites from these Google penalties=
+ email us back with your interest.=20
 
-> Meelis, can you check if it fixes your issue?
-> 
-> 
-> -- 
-> Jens Axboe
-> 
+We will be glad to serve you and help you grow your business.
 
+Regards
+
+Julia kites
+
+SEO Manager ( TOB )
+B7 Green Avenue, Amritsar 143001 Punjab
+____________________________
+NO CLICK in the subject to STOP EMAILS
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
