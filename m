@@ -1,73 +1,40 @@
-From: Bradley Grove <bgrove@attotech.com>
-Subject: Re: [PATCH 1/3] esas2r: fir error handling in do_fm_api
-Date: Mon, 24 Nov 2014 15:53:35 -0500
-Message-ID: <54739ACF.5040906@attotech.com>
-References: <1416144934-21338-1-git-send-email-thenzl@redhat.com> <1416144934-21338-2-git-send-email-thenzl@redhat.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
+Date: Mon, 24 Nov 2014 16:56:23 -0500 (EST)
+Message-ID: <20141124.165623.42259031853400756.davem@davemloft.net>
+References: <54735052.7020807@kernel.dk>
+	<20141124162249.GG5050@linux.vnet.ibm.com>
+	<547367DF.5060706@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw.attotech.com ([208.69.85.34]:29362 "EHLO
-	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751051AbaKXVIm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 16:08:42 -0500
-In-Reply-To: <1416144934-21338-2-git-send-email-thenzl@redhat.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:54156 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbaKXV41 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 16:56:27 -0500
+In-Reply-To: <547367DF.5060706@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: axboe@kernel.dk
+Cc: paulmck@linux.vnet.ibm.com, hch@infradead.org, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 
+From: Jens Axboe <axboe@kernel.dk>
+Date: Mon, 24 Nov 2014 10:16:15 -0700
 
-Looks good.
+> How about this one?
 
-Acked-by: Bradley Grove <bgrove@attotech.com>
+The "num" in num_possible_cpus() means a count, as in how many are
+there.
 
-Thanks,
-Brad
+It doesn't mean largest ID of members of set X, which is what you
+are asking for.
 
-On 11/16/2014 08:35 AM, Tomas Henzl wrote:
-> This patch fixes an error path and rearranges error handling.
->
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->   drivers/scsi/esas2r/esas2r_ioctl.c | 10 +++++-----
->   1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-> index d89a0277a8..9ac8207554 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-> @@ -117,9 +117,8 @@ static void do_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
->
->   	rq = esas2r_alloc_request(a);
->   	if (rq == NULL) {
-> -		up(&a->fm_api_semaphore);
->   		fi->status = FI_STAT_BUSY;
-> -		return;
-> +		goto free_sem;
->   	}
->
->   	if (fi == &a->firmware.header) {
-> @@ -135,7 +134,7 @@ static void do_fm_api(struct esas2r_adapter *a, struct esas2r_flash_img *fi)
->   		if (a->firmware.header_buff == NULL) {
->   			esas2r_debug("failed to allocate header buffer!");
->   			fi->status = FI_STAT_BUSY;
-> -			return;
-> +			goto free_req;
->   		}
->
->   		memcpy(a->firmware.header_buff, fi,
-> @@ -171,9 +170,10 @@ all_done:
->   				  a->firmware.header_buff,
->   				  (dma_addr_t)a->firmware.header_buff_phys);
->   	}
-> -
-> -	up(&a->fm_api_semaphore);
-> +free_req:
->   	esas2r_free_request(a, (struct esas2r_request *)rq);
-> +free_sem:
-> +	up(&a->fm_api_semaphore);
->   	return;
->
->   }
->
+Even worse, having num_online_cpus() and num_possible_cpus() count
+from a different perspective is really confusing.
 
+Usually when people want a per-cpu thing they allocate percpu
+memory which hides all of these details, why don't you allocate
+the map as dynamic per-cpu memory?
+
+It will also do the NUMA node local allocations for you as well.
