@@ -1,99 +1,79 @@
-From: Tomas Henzl <thenzl@redhat.com>
+From: James Bottomley <jbottomley@parallels.com>
 Subject: Re: [PATCH] aic94xx: Fixup compilation warning
-Date: Mon, 24 Nov 2014 17:04:06 +0100
-Message-ID: <547356F6.3070404@redhat.com>
-References: <1415085059-127936-1-git-send-email-hare@suse.de> <20141124134014.GA22128@infradead.org>
+Date: Mon, 24 Nov 2014 16:10:02 +0000
+Message-ID: <1416845409.2194.7.camel@parallels.com>
+References: <1415085059-127936-1-git-send-email-hare@suse.de>
+	 <20141124134014.GA22128@infradead.org> <547356F6.3070404@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42300 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751051AbaKXQEn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 11:04:43 -0500
-In-Reply-To: <20141124134014.GA22128@infradead.org>
+Received: from mx2.parallels.com ([199.115.105.18]:49195 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbaKXQKN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 11:10:13 -0500
+In-Reply-To: <547356F6.3070404@redhat.com>
+Content-Language: en-US
+Content-ID: <81EA4ED497273D49A8CA9E4EC84A698B@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: "thenzl@redhat.com" <thenzl@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>
 
-On 11/24/2014 02:40 PM, Christoph Hellwig wrote:
-> Can someone review this trivial patch for me?  Thanks!
->
-The compiler complains because when asd_find_flash_de fails, the offs is not initialized.
-When that happens this code is invoked :
-        if (err) {
-                ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
-                ASD_DPRINTK("Creating default CTRL-A user settings section\n");
-
-                dflt_ps.id0 = 'h';
-                dflt_ps.num_phys = 8;
-                for (i =0; i < ASD_MAX_PHYS; i++) {
-                        memcpy(dflt_ps.phy_ent[i].sas_addr,
-                               asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
-                        dflt_ps.phy_ent[i].sas_link_rates = 0x98;
-                        dflt_ps.phy_ent[i].flags = 0x0;
-                        dflt_ps.phy_ent[i].sata_link_rates = 0x0;
-                }
-
-                size = sizeof(struct asd_ctrla_phy_settings);
-                ps = &dflt_ps;
-the dflt_ps is initialized and the address assigned to 'ps', but none of them is used later
- }
-
-        if (size == 0)
-                goto out;
-
-        err = -ENOMEM;
-        el = kmalloc(size, GFP_KERNEL);
-        if (!el) {
-                ASD_DPRINTK("no mem for ctrla user settings section\n");
-                goto out;
-        }
-
-        err = asd_read_flash_seg(asd_ha, (void *)el, offs, size);
-        if (err) {
-                ASD_DPRINTK("couldn't read ctrla phy settings section\n");
-                goto out2;
-        }
-
-        err = -ENOENT;
-        ps = asd_find_ll_by_id(el, 'h', 0xFF);
-here^ a new value is assigned to 'ps'
-
-
-I have no idea what was intended in the originally so - it looks likely, but how do we know that
-the '0' is a correct value for offs?
-
-Probably the error path is never used, this patch should fix the gcc warning too -
-@@ -990,20 +990,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
- 	err = asd_find_flash_de(flash_dir, FLASH_DE_CTRL_A_USER, &offs, &size);
- 	if (err) {
- 		ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
--		ASD_DPRINTK("Creating default CTRL-A user settings section\n");
--
--		dflt_ps.id0 = 'h';
--		dflt_ps.num_phys = 8;
--		for (i =0; i < ASD_MAX_PHYS; i++) {
--			memcpy(dflt_ps.phy_ent[i].sas_addr,
--			       asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
--			dflt_ps.phy_ent[i].sas_link_rates = 0x98;
--			dflt_ps.phy_ent[i].flags = 0x0;
--			dflt_ps.phy_ent[i].sata_link_rates = 0x0;
--		}
--
--		size = sizeof(struct asd_ctrla_phy_settings);
--		ps = &dflt_ps;
-+		goto out;
- 	}
- 
- 	if (size == 0)
-................
-
-Somebody with access to this hw might help and test "offs = 0;".
-It's a question whether we should touch old drivers at all.
-
-Tomas
-
-
-
+T24gTW9uLCAyMDE0LTExLTI0IGF0IDE3OjA0ICswMTAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4g
+T24gMTEvMjQvMjAxNCAwMjo0MCBQTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+ID4gQ2Fu
+IHNvbWVvbmUgcmV2aWV3IHRoaXMgdHJpdmlhbCBwYXRjaCBmb3IgbWU/ICBUaGFua3MhDQo+ID4N
+Cj4gVGhlIGNvbXBpbGVyIGNvbXBsYWlucyBiZWNhdXNlIHdoZW4gYXNkX2ZpbmRfZmxhc2hfZGUg
+ZmFpbHMsIHRoZSBvZmZzIGlzIG5vdCBpbml0aWFsaXplZC4NCj4gV2hlbiB0aGF0IGhhcHBlbnMg
+dGhpcyBjb2RlIGlzIGludm9rZWQgOg0KPiAgICAgICAgIGlmIChlcnIpIHsNCj4gICAgICAgICAg
+ICAgICAgIEFTRF9EUFJJTlRLKCJjb3VsZG4ndCBmaW5kIENUUkwtQSB1c2VyIHNldHRpbmdzIHNl
+Y3Rpb25cbiIpOw0KPiAgICAgICAgICAgICAgICAgQVNEX0RQUklOVEsoIkNyZWF0aW5nIGRlZmF1
+bHQgQ1RSTC1BIHVzZXIgc2V0dGluZ3Mgc2VjdGlvblxuIik7DQo+IA0KPiAgICAgICAgICAgICAg
+ICAgZGZsdF9wcy5pZDAgPSAnaCc7DQo+ICAgICAgICAgICAgICAgICBkZmx0X3BzLm51bV9waHlz
+ID0gODsNCj4gICAgICAgICAgICAgICAgIGZvciAoaSA9MDsgaSA8IEFTRF9NQVhfUEhZUzsgaSsr
+KSB7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIG1lbWNweShkZmx0X3BzLnBoeV9lbnRbaV0u
+c2FzX2FkZHIsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhc2RfaGEtPmh3X3By
+b2Yuc2FzX2FkZHIsIFNBU19BRERSX1NJWkUpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBk
+Zmx0X3BzLnBoeV9lbnRbaV0uc2FzX2xpbmtfcmF0ZXMgPSAweDk4Ow0KPiAgICAgICAgICAgICAg
+ICAgICAgICAgICBkZmx0X3BzLnBoeV9lbnRbaV0uZmxhZ3MgPSAweDA7DQo+ICAgICAgICAgICAg
+ICAgICAgICAgICAgIGRmbHRfcHMucGh5X2VudFtpXS5zYXRhX2xpbmtfcmF0ZXMgPSAweDA7DQo+
+ICAgICAgICAgICAgICAgICB9DQo+IA0KPiAgICAgICAgICAgICAgICAgc2l6ZSA9IHNpemVvZihz
+dHJ1Y3QgYXNkX2N0cmxhX3BoeV9zZXR0aW5ncyk7DQo+ICAgICAgICAgICAgICAgICBwcyA9ICZk
+Zmx0X3BzOw0KPiB0aGUgZGZsdF9wcyBpcyBpbml0aWFsaXplZCBhbmQgdGhlIGFkZHJlc3MgYXNz
+aWduZWQgdG8gJ3BzJywgYnV0IG5vbmUgb2YgdGhlbSBpcyB1c2VkIGxhdGVyDQo+ICB9DQo+IA0K
+PiAgICAgICAgIGlmIChzaXplID09IDApDQo+ICAgICAgICAgICAgICAgICBnb3RvIG91dDsNCj4g
+DQo+ICAgICAgICAgZXJyID0gLUVOT01FTTsNCj4gICAgICAgICBlbCA9IGttYWxsb2Moc2l6ZSwg
+R0ZQX0tFUk5FTCk7DQo+ICAgICAgICAgaWYgKCFlbCkgew0KPiAgICAgICAgICAgICAgICAgQVNE
+X0RQUklOVEsoIm5vIG1lbSBmb3IgY3RybGEgdXNlciBzZXR0aW5ncyBzZWN0aW9uXG4iKTsNCj4g
+ICAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiAgICAgICAgIH0NCj4gDQo+ICAgICAgICAgZXJy
+ID0gYXNkX3JlYWRfZmxhc2hfc2VnKGFzZF9oYSwgKHZvaWQgKillbCwgb2Zmcywgc2l6ZSk7DQo+
+ICAgICAgICAgaWYgKGVycikgew0KPiAgICAgICAgICAgICAgICAgQVNEX0RQUklOVEsoImNvdWxk
+bid0IHJlYWQgY3RybGEgcGh5IHNldHRpbmdzIHNlY3Rpb25cbiIpOw0KPiAgICAgICAgICAgICAg
+ICAgZ290byBvdXQyOw0KPiAgICAgICAgIH0NCj4gDQo+ICAgICAgICAgZXJyID0gLUVOT0VOVDsN
+Cj4gICAgICAgICBwcyA9IGFzZF9maW5kX2xsX2J5X2lkKGVsLCAnaCcsIDB4RkYpOw0KPiBoZXJl
+XiBhIG5ldyB2YWx1ZSBpcyBhc3NpZ25lZCB0byAncHMnDQo+IA0KPiANCj4gSSBoYXZlIG5vIGlk
+ZWEgd2hhdCB3YXMgaW50ZW5kZWQgaW4gdGhlIG9yaWdpbmFsbHkgc28gLSBpdCBsb29rcyBsaWtl
+bHksIGJ1dCBob3cgZG8gd2Uga25vdyB0aGF0DQo+IHRoZSAnMCcgaXMgYSBjb3JyZWN0IHZhbHVl
+IGZvciBvZmZzPw0KDQpZZXMsIGl0IHNlZW1zIHRvIGJlIHRoZSBkZWZhdWx0IGZyb20gdGhlIGh3
+IC4uLiBpZiB5b3UgZG9uJ3QgaGF2ZSBhbnkNCm52cmFtIHRoZW4gdGhlIHBoeSBzZXR0aW5nIGFy
+ZSB1cCBmaXJzdC4NCg0KPiBQcm9iYWJseSB0aGUgZXJyb3IgcGF0aCBpcyBuZXZlciB1c2VkLCB0
+aGlzIHBhdGNoIHNob3VsZCBmaXggdGhlIGdjYyB3YXJuaW5nIHRvbyAtDQo+IEBAIC05OTAsMjAg
+Kzk5MCw3IEBAIHN0YXRpYyBpbnQgYXNkX3Byb2Nlc3NfY3RybF9hX3VzZXIoc3RydWN0IGFzZF9o
+YV9zdHJ1Y3QgKmFzZF9oYSwNCj4gIAllcnIgPSBhc2RfZmluZF9mbGFzaF9kZShmbGFzaF9kaXIs
+IEZMQVNIX0RFX0NUUkxfQV9VU0VSLCAmb2ZmcywgJnNpemUpOw0KPiAgCWlmIChlcnIpIHsNCj4g
+IAkJQVNEX0RQUklOVEsoImNvdWxkbid0IGZpbmQgQ1RSTC1BIHVzZXIgc2V0dGluZ3Mgc2VjdGlv
+blxuIik7DQo+IC0JCUFTRF9EUFJJTlRLKCJDcmVhdGluZyBkZWZhdWx0IENUUkwtQSB1c2VyIHNl
+dHRpbmdzIHNlY3Rpb25cbiIpOw0KPiAtDQo+IC0JCWRmbHRfcHMuaWQwID0gJ2gnOw0KPiAtCQlk
+Zmx0X3BzLm51bV9waHlzID0gODsNCj4gLQkJZm9yIChpID0wOyBpIDwgQVNEX01BWF9QSFlTOyBp
+KyspIHsNCj4gLQkJCW1lbWNweShkZmx0X3BzLnBoeV9lbnRbaV0uc2FzX2FkZHIsDQo+IC0JCQkg
+ICAgICAgYXNkX2hhLT5od19wcm9mLnNhc19hZGRyLCBTQVNfQUREUl9TSVpFKTsNCj4gLQkJCWRm
+bHRfcHMucGh5X2VudFtpXS5zYXNfbGlua19yYXRlcyA9IDB4OTg7DQo+IC0JCQlkZmx0X3BzLnBo
+eV9lbnRbaV0uZmxhZ3MgPSAweDA7DQo+IC0JCQlkZmx0X3BzLnBoeV9lbnRbaV0uc2F0YV9saW5r
+X3JhdGVzID0gMHgwOw0KPiAtCQl9DQo+IC0NCj4gLQkJc2l6ZSA9IHNpemVvZihzdHJ1Y3QgYXNk
+X2N0cmxhX3BoeV9zZXR0aW5ncyk7DQo+IC0JCXBzID0gJmRmbHRfcHM7DQo+ICsJCWdvdG8gb3V0
+Ow0KDQpJIGRpZCB0aGluayBhYm91dCB0aGF0LiAgVGhlcmUgZG9lcyBzZWVtIHRvIGJlIGEgZGVm
+aW5pdGUgcmVhc29uIHRvDQpleHBlY3QgdGhlIHBoeSBzZXR0aW5nIHJlYWQgdG8gc3VjY2VlZCBl
+dmVuIHRob3VnaCB0aGUgbnZyYW0gcmVhZA0KZmFpbGVkLiAgSSB0aGluayB0aGUgcmVhc29uIHdh
+cyB0aGF0IHRoZXJlIHdlcmUgc29tZSBhaWM5NHh4IGNhcmRzIHRoYXQNCmhhZCBubyBudnJhbSBh
+bmQgdGhlcmVmb3JlIGFsd2F5cyBmYWlsZWQgdGhlIHJlYWQsIGJ1dCBJIGNhbid0IGZpbmQgYW55
+DQpldmlkZW5jZSBvZiB0aGF0IGFueSBtb3JlLg0KDQpKYW1lcw0KDQo=
