@@ -1,79 +1,92 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] aic94xx: Fixup compilation warning
-Date: Mon, 24 Nov 2014 16:10:02 +0000
-Message-ID: <1416845409.2194.7.camel@parallels.com>
-References: <1415085059-127936-1-git-send-email-hare@suse.de>
-	 <20141124134014.GA22128@infradead.org> <547356F6.3070404@redhat.com>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
+Date: Mon, 24 Nov 2014 08:22:49 -0800
+Message-ID: <20141124162249.GG5050@linux.vnet.ibm.com>
+References: <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee>
+ <546771B4.1010507@kernel.dk>
+ <20141120060135.GA2862@infradead.org>
+ <20141121.145600.2001813891553289235.davem@davemloft.net>
+ <20141124082132.GA22971@infradead.org>
+ <54735052.7020807@kernel.dk>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:49195 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752416AbaKXQKN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 11:10:13 -0500
-In-Reply-To: <547356F6.3070404@redhat.com>
-Content-Language: en-US
-Content-ID: <81EA4ED497273D49A8CA9E4EC84A698B@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54735052.7020807@kernel.dk>
+Sender: sparclinux-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@infradead.org>, David Miller <davem@davemloft.net>, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "thenzl@redhat.com" <thenzl@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "hare@suse.de" <hare@suse.de>
 
-T24gTW9uLCAyMDE0LTExLTI0IGF0IDE3OjA0ICswMTAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4g
-T24gMTEvMjQvMjAxNCAwMjo0MCBQTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6DQo+ID4gQ2Fu
-IHNvbWVvbmUgcmV2aWV3IHRoaXMgdHJpdmlhbCBwYXRjaCBmb3IgbWU/ICBUaGFua3MhDQo+ID4N
-Cj4gVGhlIGNvbXBpbGVyIGNvbXBsYWlucyBiZWNhdXNlIHdoZW4gYXNkX2ZpbmRfZmxhc2hfZGUg
-ZmFpbHMsIHRoZSBvZmZzIGlzIG5vdCBpbml0aWFsaXplZC4NCj4gV2hlbiB0aGF0IGhhcHBlbnMg
-dGhpcyBjb2RlIGlzIGludm9rZWQgOg0KPiAgICAgICAgIGlmIChlcnIpIHsNCj4gICAgICAgICAg
-ICAgICAgIEFTRF9EUFJJTlRLKCJjb3VsZG4ndCBmaW5kIENUUkwtQSB1c2VyIHNldHRpbmdzIHNl
-Y3Rpb25cbiIpOw0KPiAgICAgICAgICAgICAgICAgQVNEX0RQUklOVEsoIkNyZWF0aW5nIGRlZmF1
-bHQgQ1RSTC1BIHVzZXIgc2V0dGluZ3Mgc2VjdGlvblxuIik7DQo+IA0KPiAgICAgICAgICAgICAg
-ICAgZGZsdF9wcy5pZDAgPSAnaCc7DQo+ICAgICAgICAgICAgICAgICBkZmx0X3BzLm51bV9waHlz
-ID0gODsNCj4gICAgICAgICAgICAgICAgIGZvciAoaSA9MDsgaSA8IEFTRF9NQVhfUEhZUzsgaSsr
-KSB7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIG1lbWNweShkZmx0X3BzLnBoeV9lbnRbaV0u
-c2FzX2FkZHIsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhc2RfaGEtPmh3X3By
-b2Yuc2FzX2FkZHIsIFNBU19BRERSX1NJWkUpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBk
-Zmx0X3BzLnBoeV9lbnRbaV0uc2FzX2xpbmtfcmF0ZXMgPSAweDk4Ow0KPiAgICAgICAgICAgICAg
-ICAgICAgICAgICBkZmx0X3BzLnBoeV9lbnRbaV0uZmxhZ3MgPSAweDA7DQo+ICAgICAgICAgICAg
-ICAgICAgICAgICAgIGRmbHRfcHMucGh5X2VudFtpXS5zYXRhX2xpbmtfcmF0ZXMgPSAweDA7DQo+
-ICAgICAgICAgICAgICAgICB9DQo+IA0KPiAgICAgICAgICAgICAgICAgc2l6ZSA9IHNpemVvZihz
-dHJ1Y3QgYXNkX2N0cmxhX3BoeV9zZXR0aW5ncyk7DQo+ICAgICAgICAgICAgICAgICBwcyA9ICZk
-Zmx0X3BzOw0KPiB0aGUgZGZsdF9wcyBpcyBpbml0aWFsaXplZCBhbmQgdGhlIGFkZHJlc3MgYXNz
-aWduZWQgdG8gJ3BzJywgYnV0IG5vbmUgb2YgdGhlbSBpcyB1c2VkIGxhdGVyDQo+ICB9DQo+IA0K
-PiAgICAgICAgIGlmIChzaXplID09IDApDQo+ICAgICAgICAgICAgICAgICBnb3RvIG91dDsNCj4g
-DQo+ICAgICAgICAgZXJyID0gLUVOT01FTTsNCj4gICAgICAgICBlbCA9IGttYWxsb2Moc2l6ZSwg
-R0ZQX0tFUk5FTCk7DQo+ICAgICAgICAgaWYgKCFlbCkgew0KPiAgICAgICAgICAgICAgICAgQVNE
-X0RQUklOVEsoIm5vIG1lbSBmb3IgY3RybGEgdXNlciBzZXR0aW5ncyBzZWN0aW9uXG4iKTsNCj4g
-ICAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiAgICAgICAgIH0NCj4gDQo+ICAgICAgICAgZXJy
-ID0gYXNkX3JlYWRfZmxhc2hfc2VnKGFzZF9oYSwgKHZvaWQgKillbCwgb2Zmcywgc2l6ZSk7DQo+
-ICAgICAgICAgaWYgKGVycikgew0KPiAgICAgICAgICAgICAgICAgQVNEX0RQUklOVEsoImNvdWxk
-bid0IHJlYWQgY3RybGEgcGh5IHNldHRpbmdzIHNlY3Rpb25cbiIpOw0KPiAgICAgICAgICAgICAg
-ICAgZ290byBvdXQyOw0KPiAgICAgICAgIH0NCj4gDQo+ICAgICAgICAgZXJyID0gLUVOT0VOVDsN
-Cj4gICAgICAgICBwcyA9IGFzZF9maW5kX2xsX2J5X2lkKGVsLCAnaCcsIDB4RkYpOw0KPiBoZXJl
-XiBhIG5ldyB2YWx1ZSBpcyBhc3NpZ25lZCB0byAncHMnDQo+IA0KPiANCj4gSSBoYXZlIG5vIGlk
-ZWEgd2hhdCB3YXMgaW50ZW5kZWQgaW4gdGhlIG9yaWdpbmFsbHkgc28gLSBpdCBsb29rcyBsaWtl
-bHksIGJ1dCBob3cgZG8gd2Uga25vdyB0aGF0DQo+IHRoZSAnMCcgaXMgYSBjb3JyZWN0IHZhbHVl
-IGZvciBvZmZzPw0KDQpZZXMsIGl0IHNlZW1zIHRvIGJlIHRoZSBkZWZhdWx0IGZyb20gdGhlIGh3
-IC4uLiBpZiB5b3UgZG9uJ3QgaGF2ZSBhbnkNCm52cmFtIHRoZW4gdGhlIHBoeSBzZXR0aW5nIGFy
-ZSB1cCBmaXJzdC4NCg0KPiBQcm9iYWJseSB0aGUgZXJyb3IgcGF0aCBpcyBuZXZlciB1c2VkLCB0
-aGlzIHBhdGNoIHNob3VsZCBmaXggdGhlIGdjYyB3YXJuaW5nIHRvbyAtDQo+IEBAIC05OTAsMjAg
-Kzk5MCw3IEBAIHN0YXRpYyBpbnQgYXNkX3Byb2Nlc3NfY3RybF9hX3VzZXIoc3RydWN0IGFzZF9o
-YV9zdHJ1Y3QgKmFzZF9oYSwNCj4gIAllcnIgPSBhc2RfZmluZF9mbGFzaF9kZShmbGFzaF9kaXIs
-IEZMQVNIX0RFX0NUUkxfQV9VU0VSLCAmb2ZmcywgJnNpemUpOw0KPiAgCWlmIChlcnIpIHsNCj4g
-IAkJQVNEX0RQUklOVEsoImNvdWxkbid0IGZpbmQgQ1RSTC1BIHVzZXIgc2V0dGluZ3Mgc2VjdGlv
-blxuIik7DQo+IC0JCUFTRF9EUFJJTlRLKCJDcmVhdGluZyBkZWZhdWx0IENUUkwtQSB1c2VyIHNl
-dHRpbmdzIHNlY3Rpb25cbiIpOw0KPiAtDQo+IC0JCWRmbHRfcHMuaWQwID0gJ2gnOw0KPiAtCQlk
-Zmx0X3BzLm51bV9waHlzID0gODsNCj4gLQkJZm9yIChpID0wOyBpIDwgQVNEX01BWF9QSFlTOyBp
-KyspIHsNCj4gLQkJCW1lbWNweShkZmx0X3BzLnBoeV9lbnRbaV0uc2FzX2FkZHIsDQo+IC0JCQkg
-ICAgICAgYXNkX2hhLT5od19wcm9mLnNhc19hZGRyLCBTQVNfQUREUl9TSVpFKTsNCj4gLQkJCWRm
-bHRfcHMucGh5X2VudFtpXS5zYXNfbGlua19yYXRlcyA9IDB4OTg7DQo+IC0JCQlkZmx0X3BzLnBo
-eV9lbnRbaV0uZmxhZ3MgPSAweDA7DQo+IC0JCQlkZmx0X3BzLnBoeV9lbnRbaV0uc2F0YV9saW5r
-X3JhdGVzID0gMHgwOw0KPiAtCQl9DQo+IC0NCj4gLQkJc2l6ZSA9IHNpemVvZihzdHJ1Y3QgYXNk
-X2N0cmxhX3BoeV9zZXR0aW5ncyk7DQo+IC0JCXBzID0gJmRmbHRfcHM7DQo+ICsJCWdvdG8gb3V0
-Ow0KDQpJIGRpZCB0aGluayBhYm91dCB0aGF0LiAgVGhlcmUgZG9lcyBzZWVtIHRvIGJlIGEgZGVm
-aW5pdGUgcmVhc29uIHRvDQpleHBlY3QgdGhlIHBoeSBzZXR0aW5nIHJlYWQgdG8gc3VjY2VlZCBl
-dmVuIHRob3VnaCB0aGUgbnZyYW0gcmVhZA0KZmFpbGVkLiAgSSB0aGluayB0aGUgcmVhc29uIHdh
-cyB0aGF0IHRoZXJlIHdlcmUgc29tZSBhaWM5NHh4IGNhcmRzIHRoYXQNCmhhZCBubyBudnJhbSBh
-bmQgdGhlcmVmb3JlIGFsd2F5cyBmYWlsZWQgdGhlIHJlYWQsIGJ1dCBJIGNhbid0IGZpbmQgYW55
-DQpldmlkZW5jZSBvZiB0aGF0IGFueSBtb3JlLg0KDQpKYW1lcw0KDQo=
+On Mon, Nov 24, 2014 at 08:35:46AM -0700, Jens Axboe wrote:
+> On 11/24/2014 01:21 AM, Christoph Hellwig wrote:
+> >On Fri, Nov 21, 2014 at 02:56:00PM -0500, David Miller wrote:
+> >>I would suggest looking into the possibility that we allocate the memory
+> >>using the count of valid cpus, rather than the largest cpu number.
+> >>
+> >>That's a common error that runs into problems with discontiguous
+> >>cpu numbering like Sparc sometimes has.
+> >
+> >Yes, that does look like the case.  Do you have a good trick on how
+> >to allocate a map for the highest possible cpu number without first
+> >iterating the cpu map?  I couldn't find something that looks like a
+> >highest_possible_cpu() helper.
+> 
+> Honestly I think that num_posible_cpus() should return the max of
+> number of CPUs (weigt), and the highest numbered CPU. It's a pain in
+> the butt to handle this otherwise.
+
+Hear, hear!!!  That would make my life easier, and would make this sort
+of problem much less likely to occur!
+
+							Thanx, Paul
+
+> /* If cpus are offline, map them to first hctx */
+> map = kzalloc_node(sizeof(*map) * num_possible_cpus(), GFP_KERNEL,
+>                                 set->numa_node);
+> 
+> is where it goes wrong, assuming Meelis has NR_CPUS set to something
+> < 14, which was the highest numbered CPU, iirc. A construct like:
+> 
+> map = alloc(num_possible_cpus());
+> for_each_possible_cpu(i)
+>     map[i] = ...
+> 
+> seems like the obvious way to do things, yet it's broken. And not
+> broken on x86 where we'd find the issue pretty quickly, but on
+> sparc64 where it'll take a lot longer to run into. It just violates
+> the principle of least surprise, which is bad for an API.
+> 
+> That said, if there was a helper like Christoph suggested, it'd be a
+> bit better. And perhaps we can't just modify num_possible_cpus(),
+> we'd need num_*_cpus() for the other bitmaps, too. That might be
+> breaking other things...
+> 
+> Meelis, can you try the attached?
+> 
+> -- 
+> Jens Axboe
+> 
+
+> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+> index 1065d7c65fa1..15da9cc08f64 100644
+> --- a/block/blk-mq-cpumap.c
+> +++ b/block/blk-mq-cpumap.c
+> @@ -87,10 +87,14 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
+> 
+>  unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
+>  {
+> +	unsigned int max_cpus;
+>  	unsigned int *map;
+> 
+> +	for_each_possible_cpu(max_cpus)
+> +		;
+> +
+>  	/* If cpus are offline, map them to first hctx */
+> -	map = kzalloc_node(sizeof(*map) * num_possible_cpus(), GFP_KERNEL,
+> +	map = kzalloc_node(sizeof(*map) * max_cpus, GFP_KERNEL,
+>  				set->numa_node);
+>  	if (!map)
+>  		return NULL;
+
