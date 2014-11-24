@@ -1,157 +1,130 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/12] esp_scsi: use FIFO for command submission
-Date: Mon, 24 Nov 2014 15:37:24 +0100
-Message-ID: <1416839850-30475-7-git-send-email-hare@suse.de>
+Subject: [PATCH 11/12] esp: enable CONFIG2_FENAB for am53c974
+Date: Mon, 24 Nov 2014 15:37:29 +0100
+Message-ID: <1416839850-30475-12-git-send-email-hare@suse.de>
 References: <1416839850-30475-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46303 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:46332 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754193AbaKXOhd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2014 09:37:33 -0500
+	id S1754258AbaKXOhf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2014 09:37:35 -0500
 In-Reply-To: <1416839850-30475-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, Paolo@suse.de, "Bonzini <pbonzini"@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Using DMA for command submission has the drawback that it might
-generate additional DMA completion interrupts after the command
-has been submitted to the device.
-Additionally the am53c974 has a design flaw causing it
-to generate spurious interrupts even though DMA completion
-interrupts are not enabled.
-This can be avoided by using the FIFO for command submission.
+CONFIG2_FENAB ('feature enable') changed definition between chip
+revisions, from 'Latch SCSI Phase' to 'Latch SCSI Phase, display
+chip ID upon reset, and enable 24 bit addresses'.
+So only enable it for am53c974 where we know what it's doing.
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 Acked-by: David S. Miller <davem@davemloft.net>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/esp_scsi.c | 46 +++++++++++++++++++++++++++++-----------------
- drivers/scsi/esp_scsi.h |  1 +
- 2 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/scsi/am53c974.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/esp_scsi.c |  2 ++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 0ad0f08..2a3277d 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -143,6 +143,24 @@ void scsi_esp_cmd(struct esp *esp, u8 val)
- }
- EXPORT_SYMBOL(scsi_esp_cmd);
+diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+index 6e88e38..25f0619 100644
+--- a/drivers/scsi/am53c974.c
++++ b/drivers/scsi/am53c974.c
+@@ -18,6 +18,7 @@
+ #define DRV_MODULE_VERSION "1.00"
  
-+static void esp_send_dma_cmd(struct esp *esp, int len, int max_len, int cmd)
+ static bool am53c974_debug;
++static bool am53c974_fenab = true;
+ 
+ #define esp_dma_log(f, a...)						\
+ 	do {								\
+@@ -256,6 +257,8 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
+ 
+ 	pci_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	pci_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
++	if (esp->config2 & ESP_CONFIG2_FENAB)
++		pci_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	pci_esp_write32(esp, esp_count, ESP_DMA_STC);
+ 	pci_esp_write32(esp, addr, ESP_DMA_SPA);
+@@ -268,6 +271,33 @@ static void pci_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
+ 	pci_esp_write8(esp, ESP_DMA_CMD_START | val, ESP_DMA_CMD);
+ }
+ 
++static u32 pci_esp_dma_length_limit(struct esp *esp, u32 dma_addr, u32 dma_len)
 +{
-+	if (esp->flags & ESP_FLAG_USE_FIFO) {
-+		int i;
++	int dma_limit = 16;
++	u32 base, end;
 +
-+		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-+		for (i = 0; i < len; i++)
-+			esp_write8(esp->command_block[i], ESP_FDATA);
-+		scsi_esp_cmd(esp, cmd);
-+	} else {
-+		if (esp->rev == FASHME)
-+			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-+		cmd |= ESP_CMD_DMA;
-+		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
-+				       len, max_len, 0, cmd);
-+	}
++	/*
++	 * If CONFIG2_FENAB is set we can
++	 * handle up to 24 bit addresses
++	 */
++	if (esp->config2 & ESP_CONFIG2_FENAB)
++		dma_limit = 24;
++
++	if (dma_len > (1U << dma_limit))
++		dma_len = (1U << dma_limit);
++
++	/*
++	 * Prevent crossing a 24-bit address boundary.
++	 */
++	base = dma_addr & ((1U << 24) - 1U);
++	end = base + dma_len;
++	if (end > (1U << 24))
++		end = (1U <<24);
++	dma_len = end - base;
++
++	return dma_len;
 +}
 +
- static void esp_event(struct esp *esp, u8 val)
- {
- 	struct esp_event_ent *p;
-@@ -650,10 +668,7 @@ static void esp_autosense(struct esp *esp, struct esp_cmd_entry *ent)
+ static const struct esp_driver_ops pci_esp_ops = {
+ 	.esp_write8	=	pci_esp_write8,
+ 	.esp_read8	=	pci_esp_read8,
+@@ -281,6 +311,7 @@ static const struct esp_driver_ops pci_esp_ops = {
+ 	.dma_invalidate	=	pci_esp_dma_invalidate,
+ 	.send_dma_cmd	=	pci_esp_send_dma_cmd,
+ 	.dma_error	=	pci_esp_dma_error,
++	.dma_length_limit =	pci_esp_dma_length_limit,
+ };
  
- 	val = (p - esp->command_block);
+ /*
+@@ -418,6 +449,12 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+ 	 * DMA for command submission.
+ 	 */
+ 	esp->flags |= ESP_FLAG_USE_FIFO;
++	/*
++	 * Enable CONFIG2_FENAB to allow for large DMA transfers
++	 */
++	if (am53c974_fenab)
++		esp->config2 |= ESP_CONFIG2_FENAB;
++
+ 	pep->esp = esp;
  
--	if (esp->rev == FASHME)
--		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--			       val, 16, 0, ESP_CMD_DMA | ESP_CMD_SELA);
-+	esp_send_dma_cmd(esp, val, 16, ESP_CMD_SELA);
- }
+ 	if (pci_request_regions(pdev, DRV_MODULE_NAME)) {
+@@ -541,5 +578,8 @@ MODULE_VERSION(DRV_MODULE_VERSION);
+ module_param(am53c974_debug, bool, 0644);
+ MODULE_PARM_DESC(am53c974_debug, "Enable debugging");
  
- static struct esp_cmd_entry *find_and_prep_issuable_command(struct esp *esp)
-@@ -789,12 +804,12 @@ build_identify:
++module_param(am53c974_fenab, bool, 0444);
++MODULE_PARM_DESC(am53c974_fenab, "Enable 24-bit DMA transfer sizes");
++
+ module_init(am53c974_module_init);
+ module_exit(am53c974_module_exit);
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index cfbae52..dc120f9 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -1343,6 +1343,8 @@ static int esp_data_bytes_sent(struct esp *esp, struct esp_cmd_entry *ent,
+ 			  (((unsigned int)esp_read8(ESP_TCMED)) << 8));
+ 		if (esp->rev == FASHME)
+ 			ecount |= ((unsigned int)esp_read8(FAS_RLO)) << 16;
++		if (esp->rev == PCSCSI && (esp->config2 & ESP_CONFIG2_FENAB))
++			ecount |= ((unsigned int)esp_read8(ESP_TCHI)) << 16;
  	}
  
- 	if (!(esp->flags & ESP_FLAG_DOING_SLOWCMD)) {
--		start_cmd = ESP_CMD_DMA | ESP_CMD_SELA;
-+		start_cmd = ESP_CMD_SELA;
- 		if (ent->tag[0]) {
- 			*p++ = ent->tag[0];
- 			*p++ = ent->tag[1];
- 
--			start_cmd = ESP_CMD_DMA | ESP_CMD_SA3;
-+			start_cmd = ESP_CMD_SA3;
- 		}
- 
- 		for (i = 0; i < cmd->cmd_len; i++)
-@@ -814,7 +829,7 @@ build_identify:
- 			esp->msg_out_len += 2;
- 		}
- 
--		start_cmd = ESP_CMD_DMA | ESP_CMD_SELAS;
-+		start_cmd = ESP_CMD_SELAS;
- 		esp->select_state = ESP_SELECT_MSGOUT;
- 	}
- 	val = tgt;
-@@ -834,10 +849,7 @@ build_identify:
- 		printk("]\n");
- 	}
- 
--	if (esp->rev == FASHME)
--		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--	esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--			       val, 16, 0, start_cmd);
-+	esp_send_dma_cmd(esp, val, 16, start_cmd);
- }
- 
- static struct esp_cmd_entry *esp_get_ent(struct esp *esp)
-@@ -1646,7 +1658,7 @@ static int esp_msgin_process(struct esp *esp)
- 
- static int esp_process_event(struct esp *esp)
- {
--	int write;
-+	int write, i;
- 
- again:
- 	write = 0;
-@@ -1872,6 +1884,10 @@ again:
- 			if (esp->msg_out_len == 1) {
- 				esp_write8(esp->msg_out[0], ESP_FDATA);
- 				scsi_esp_cmd(esp, ESP_CMD_TI);
-+			} else if (esp->flags & ESP_FLAG_USE_FIFO) {
-+				for (i = 0; i < esp->msg_out_len; i++)
-+					esp_write8(esp->msg_out[i], ESP_FDATA);
-+				scsi_esp_cmd(esp, ESP_CMD_TI);
- 			} else {
- 				/* Use DMA. */
- 				memcpy(esp->command_block,
-@@ -1949,11 +1965,7 @@ again:
- 	case ESP_EVENT_CMD_START:
- 		memcpy(esp->command_block, esp->cmd_bytes_ptr,
- 		       esp->cmd_bytes_left);
--		if (esp->rev == FASHME)
--			scsi_esp_cmd(esp, ESP_CMD_FLUSH);
--		esp->ops->send_dma_cmd(esp, esp->command_block_dma,
--				       esp->cmd_bytes_left, 16, 0,
--				       ESP_CMD_DMA | ESP_CMD_TI);
-+		esp_send_dma_cmd(esp, esp->cmd_bytes_left, 16, ESP_CMD_TI);
- 		esp_event(esp, ESP_EVENT_CMD_DONE);
- 		esp->flags |= ESP_FLAG_QUICKIRQ_CHECK;
- 		break;
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 975d293..27dcaf8 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -478,6 +478,7 @@ struct esp {
- #define ESP_FLAG_WIDE_CAPABLE	0x00000008
- #define ESP_FLAG_QUICKIRQ_CHECK	0x00000010
- #define ESP_FLAG_DISABLE_SYNC	0x00000020
-+#define ESP_FLAG_USE_FIFO	0x00000040
- 
- 	u8			select_state;
- #define ESP_SELECT_NONE		0x00 /* Not selecting */
+ 	bytes_sent = esp->data_dma_len;
 -- 
 1.8.5.2
 
