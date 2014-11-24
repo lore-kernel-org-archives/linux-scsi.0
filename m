@@ -1,108 +1,98 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: LSF/MM 2015 Call For Proposals
-Date: Mon, 24 Nov 2014 09:58:33 +0000
-Message-ID: <20141124095833.GC2725@suse.de>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: ARCMSR - Notify sense data report - Lost patch?
+Date: Mon, 24 Nov 2014 11:47:02 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C1FC8@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-Sender: owner-linux-mm@kvack.org
-To: linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-1bef77fa-b713-4e91-9fd4-49cb7eac62c8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailrelay.collogia.de ([194.8.207.98]:60455 "HELO
+	mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752512AbaKXLw0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 06:52:26 -0500
+Content-Language: de-DE
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "ching2048@areca.com.tw" <ching2048@areca.com.tw>, "thenzl@redhat.com" <thenzl@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2015 will be held on March 9th and 10th before the Linux Foundation Vault
-conference at the Revere Hotel, Boston MA. For those that do not know,
-Vault is designed to be an event where open source storage and filesystem
-practitioners meet storage implementors and, as such, it would be of
-benefit for LSF/MM attendees to go to at least the first day of Vault.
 
-	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
-	http://events.linuxfoundation.org/events/vault
+This is a multi-part message in MIME format.
 
-On behalf of the committee I am issuing a call for agenda proposals that
-are suitable for cross-track discussion as well as technical subjects for
-the breakout sessions.
+------=_NextPartTM-000-1bef77fa-b713-4e91-9fd4-49cb7eac62c8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-1) Proposals for agenda topics should be sent before January 16th, 2015 to:
+Hi,=0A=
+=0A=
+sorting out some diffs between the official Arcea driver and =0A=
+the newest 3.18 patches I found a patch that might got lost:=0A=
+=0A=
+https://lkml.org/lkml/2014/2/20/956=0A=
+=0A=
+Could you check if that is desired?=0A=
+=0A=
+Thanks in advance.=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-1bef77fa-b713-4e91-9fd4-49cb7eac62c8
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
-	lsf-pc@lists.linux-foundation.org
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
-and cc the Linux list or lists that are most interested in it:
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
 
-	ATA:  linux-ide@vger.kernel.org
-	FS:   linux-fsdevel@vger.kernel.org
-	MM:   linux-mm@kvack.org
-	SCSI: linux-scsi@vger.kernel.org
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
-If advance notice is required for visa applications then please send
-proposals before January 1st. The committee will complete the first round
-of selections near that date to accommodate applications.
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
 
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to track.
-Agenda topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees on the day.
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
 
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
 
-2) Requests to attend the summit should be sent to:
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
 
-	lsf-pc@lists.linux-foundation.org
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
 
-Please summarise what expertise you will bring to the meeting, and what
-you would like to discuss. Please also tag your email with [LSF/MM ATTEND]
-so there is less chance of it getting lost.
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
-Presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However, we expect
-that written minutes will be published as we did in previous years
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
 
-2014:
-	http://lwn.net/Articles/LSFMM2014/
+President of the supervisory board:
+Hans Kristian Langva
 
-2013:
-	http://lwn.net/Articles/548089/
+Registry office: district court Cologne
+Register number: HRB 52 497
 
-2012:
-	http://lwn.net/Articles/490114/
-	http://lwn.net/Articles/490501/
+****************************************************************************
 
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-4) We would like to remind those that are are also interested in presenting
-   at the Vault conference that the CFP deadline for Vault is December 1st.
-
-Thank you on behalf of the program committee:
-
-Storage:
-	James Bottomley 
-	Martin Petersen 
-	Christoph Hellwig 
-
-Filesystem:
-	Jeff Layton 
-	Ric Wheeler 
-	Jan Kara 
-	Trond Myklebust 
-	Theodore Ts'o
-
-MM:
-	Rik van Riel 
-	Michel Lespinasse 
-	Sasha Levin
-
--- 
-Mel Gorman
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+------=_NextPartTM-000-1bef77fa-b713-4e91-9fd4-49cb7eac62c8--
