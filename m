@@ -1,31 +1,33 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: mroos@linux.ee
 Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
-Date: Mon, 24 Nov 2014 15:20:29 -0700
-Message-ID: <5473AF2D.7090905@kernel.dk>
-References: <547367DF.5060706@kernel.dk>	<20141124.165623.42259031853400756.davem@davemloft.net>	<5473AAD3.7010409@kernel.dk> <20141124.170933.410328396352735176.davem@davemloft.net>
+Date: Tue, 25 Nov 2014 00:23:20 +0200 (EET)
+Message-ID: <alpine.LRH.2.11.1411250022470.31497@siim2.ut.ee>
+References: <alpine.LRH.2.11.1411150829190.26813@adalberg.ut.ee> <546771B4.1010507@kernel.dk> <20141120060135.GA2862@infradead.org> <20141121.145600.2001813891553289235.davem@davemloft.net> <20141124082132.GA22971@infradead.org> <54735052.7020807@kernel.dk>
+ <20141124162249.GG5050@linux.vnet.ibm.com> <547367DF.5060706@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20141124.170933.410328396352735176.davem@davemloft.net>
+In-Reply-To: <547367DF.5060706@kernel.dk>
 Sender: sparclinux-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: paulmck@linux.vnet.ibm.com, hch@infradead.org, mroos@linux.ee, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: paulmck@linux.vnet.ibm.com, Christoph Hellwig <hch@infradead.org>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/24/2014 03:09 PM, David Miller wrote:
-> From: Jens Axboe <axboe@kernel.dk>
-> Date: Mon, 24 Nov 2014 15:01:55 -0700
->
->> I'll just updated blk-mq to use nr_cpu_ids and be done with it.
->
-> Wow, a grep on nr_cpu_ids gets a lot of hits on people allocating just
-> these kinds of tables :)
+> > > > Yes, that does look like the case.  Do you have a good trick on how
+> > > > to allocate a map for the highest possible cpu number without first
+> > > > iterating the cpu map?  I couldn't find something that looks like a
+> > > > highest_possible_cpu() helper.
+> > >
+> > > Honestly I think that num_posible_cpus() should return the max of
+> > > number of CPUs (weigt), and the highest numbered CPU. It's a pain in
+> > > the butt to handle this otherwise.
+> >
+> > Hear, hear!!!  That would make my life easier, and would make this sort
+> > of problem much less likely to occur!
+> 
+> How about this one?
 
-Yep! It'd be nicer to export a helper for that, I bet it's just one of 
-those things that people started using because it's there and there are 
-no functions for getting this information.
+It make the machine work.
 
 -- 
-Jens Axboe
-
+Meelis Roos (mroos@linux.ee)
