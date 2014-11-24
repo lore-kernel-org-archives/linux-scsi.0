@@ -1,55 +1,34 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] scsi: ufs: ensure clk gating work is finished before module unloading
-Date: Mon, 24 Nov 2014 14:24:18 +0900
-Message-ID: <1416806658-7349-1-git-send-email-akinobu.mita@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: split ->change_queue_depth
+Date: Sun, 23 Nov 2014 23:51:55 -0600
+Message-ID: <5472C77B.1020401@cs.wisc.edu>
+References: <1415901546-8006-1-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:40388 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbaKXFZF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 00:25:05 -0500
-Received: by mail-pa0-f53.google.com with SMTP id kq14so8829749pab.12
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Nov 2014 21:25:03 -0800 (PST)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47108 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887AbaKXFwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2014 00:52:08 -0500
+In-Reply-To: <1415901546-8006-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Akinobu Mita <mita@fixstars.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Maya Erez <merez@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-When dynamic clk gating feature is enabled, delayed workqueue machanism
-is used in order to detect certain period of inactivity.  But there is no
-guarantee that scheduled gating work is completed before module unloading.
-So it can cause kernel crash by accessing memory after it was freed.
+On 11/13/14, 11:58 AM, Christoph Hellwig wrote:
+> Overloading ->change_queue_depth with the queue ramp up / down
+> functionality has been a bad idea.   It lead to a large amount
+> of code duplication, and driver keep getting the the API
+> wrong and end up accidentally enabling the queue depth tracking
+> while getting it wrong.
+>
+> This serie instead adds a flag to enable queue tracking and
+> handles it entirely in core code.  This is a preparation for
+> various logic changes to the queue depth tracking code.
+>
 
-Fix it by cancelling clk gating and ungating works and ensure that its
-execution is finished before module unloading.
+Looks nice to me.
 
-Signed-off-by: Akinobu Mita <mita@fixstars.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>
-Cc: Sahitya Tummala <stummala@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d18adc4..713420b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -744,6 +744,8 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkgating_allowed(hba))
- 		return;
- 	device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
-+	cancel_work_sync(&hba->clk_gating.ungate_work);
-+	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
- }
- 
- /* Must be called with host lock acquired */
--- 
-1.9.1
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
