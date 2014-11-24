@@ -1,48 +1,69 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas: Enable shared host tag map
-Date: Mon, 24 Nov 2014 21:22:49 +0530
-Message-ID: <cec16f1d245f8e7b2dbe5ccbd7455cc3@mail.gmail.com>
-References: <1416843235-35947-1-git-send-email-hare@suse.de> <20141124153558.GA27364@lst.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] aic94xx: Fixup compilation warning
+Date: Mon, 24 Nov 2014 16:55:30 +0100
+Message-ID: <547354F2.40106@suse.de>
+References: <1415085059-127936-1-git-send-email-hare@suse.de>	 <20141124134014.GA22128@infradead.org> <1416843568.2194.3.camel@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og104.obsmtp.com ([64.18.2.161]:44141 "EHLO
-	exprod7og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbaKXPwy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2014 10:52:54 -0500
-Received: by mail-la0-f50.google.com with SMTP id pv20so7918714lab.9
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2014 07:52:51 -0800 (PST)
-In-Reply-To: <20141124153558.GA27364@lst.de>
+Received: from cantor2.suse.de ([195.135.220.15]:48443 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754165AbaKXPzc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2014 10:55:32 -0500
+In-Reply-To: <1416843568.2194.3.camel@parallels.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Monday, November 24, 2014 9:06 PM
-> To: Hannes Reinecke
-> Cc: James Bottomley; Sumit Saxena; Kashyap Desai; Christoph Hellwig;
-linux-
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH] megaraid_sas: Enable shared host tag map
->
-> On Mon, Nov 24, 2014 at 04:33:55PM +0100, Hannes Reinecke wrote:
-> > The megaraid SAS driver uses a shared host tag map internally, so we
-> > should be telling the block layer about it.
->
-> But it doesn't make use of request->tag yet.  This would only be useful
-if you
-> got rid of the internal tag allocator.
+On 11/24/2014 04:39 PM, James Bottomley wrote:
+> On Mon, 2014-11-24 at 05:40 -0800, Christoph Hellwig wrote:
+>> Can someone review this trivial patch for me?  Thanks!
+>=20
+> I don't really think we need reviewers for trivial patches, do we?
+>=20
+> However, the patch is clearly bogus. What's supposed to happen is tha=
+t
+> the unset variables (size and offs) get initialised to default values=
+ on
+> error return, which is what's missing for offset, so this is the corr=
+ect
+> patch, isn't it?
+>=20
+> James
+>=20
+> ---
+> diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94x=
+x/aic94xx_sds.c
+> index edb43fd..d11b4d7 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_sds.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+> @@ -1003,6 +1003,7 @@ static int asd_process_ctrl_a_user(struct asd_h=
+a_struct *asd_ha,
+>  		}
+> =20
+>  		size =3D sizeof(struct asd_ctrla_phy_settings);
+> +		offs =3D 0;
+>  		ps =3D &dflt_ps;
+>  	}
+> =20
+>=20
+Yep, that would work, as well.
 
-I have patch for code changes in this particular area and that is
-currently under internal test cycle.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Next patch series will start using shared blk tag for internal MPT frame
-allocation. It will get-rid-off  MPT frame pool link list completely and
-also does lots of refactor w.r.t MFI/MPT frame corruption issue. Using
-shared blk tag gave good performance improvement as driver completely
-removed mpt frame spin lock used in megasas_get_cmd_fusion/
-megasas_return_cmd_fusion.
+Cheers,
 
-~ Kashyap
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
