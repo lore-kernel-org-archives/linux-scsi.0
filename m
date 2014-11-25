@@ -1,36 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] megaraid_sas: Enable shared host tag map
-Date: Tue, 25 Nov 2014 17:34:53 +0100
-Message-ID: <20141125163453.GA2721@lst.de>
-References: <1416843235-35947-1-git-send-email-hare@suse.de> <20141124153558.GA27364@lst.de> <547353F2.1040005@suse.de> <20141125143140.GA32570@lst.de> <cd290ec39c368c11217bcb4510c9ac71@mail.gmail.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 0/4] Fix performance burning or extracting audio etc.
+ from multiple optical drives.
+Date: Tue, 25 Nov 2014 09:36:54 -0700
+Message-ID: <5474B026.3040900@fb.com>
+References: <20141121100210.GC8866@infradead.org> <1416924562-16849-1-git-send-email-tim@seoss.co.uk> <20141125162620.GA31478@infradead.org> <5474AE9B.40104@fb.com> <20141125163241.GA25295@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39747 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaKYQe6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:34:58 -0500
-Content-Disposition: inline
-In-Reply-To: <cd290ec39c368c11217bcb4510c9ac71@mail.gmail.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:33279 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750802AbaKYQiF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 11:38:05 -0500
+In-Reply-To: <20141125163241.GA25295@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org, Webb Scales <webbnh@hp.com>, Don Brace <don.brace@pmcs.com>, Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tim Small <tim@seoss.co.uk>, tim@buttersideup.com, Wakko Warner <wakko@animx.eu.org>, linux-scsi@vger.kernel.org, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>
 
-On Tue, Nov 25, 2014 at 08:33:28PM +0530, Kashyap Desai wrote:
-> Just trying to understand your above comment. I see host template has new
-> field called
-> "reserved_tags" which is normally used by mid layer to reserved block tag
-> pool for driver's internal use.
-> What if driver is OK to manage internal pool without any blk tag
-> dependency and do not expose actual max can queue of what FW can support.
-> For example, in megaraid_sas driver FW expose max_fw_cmd = 1024 and driver
-> keep some reserve (let's say 24 commands for internal use) and it just
-> expose 1000 command for blk tags.  This will work for blk-mq and legacy
-> blk driver. Let driver to manage whatever internal reserved it kept for
-> and do not add any dependency with blk tag from above layer for those
-> reserved pool.
+On 11/25/2014 09:32 AM, Christoph Hellwig wrote:
+> On Tue, Nov 25, 2014 at 09:30:19AM -0700, Jens Axboe wrote:
+>> On 11/25/2014 09:26 AM, Christoph Hellwig wrote:
+>>> This looks reasonable to me.  Jens, do you want to takes this
+>>> through the block tree?
+>>>
+>>> Acked-by: Christoph Hellwig <hch@lst.de>
+>>
+>> Yeah I can do that, though do we really need to do paride here?
+> 
+> Well, no need to keep the mutex around in paride for no reason.  But my
+> preference would be to just kill off paride anyway :)
 
-The driver can of coure always just manage its internal tags, but that
-means we need to duplicate a tag allocator in every driver.  In short
-it works ok for now, but I'd rather solve the problem in a single place.
+That's sort of my point. Performance optimization and paride, well...
+But it's not a huge deal, we can apply it.
+
+-- 
+Jens Axboe
+
