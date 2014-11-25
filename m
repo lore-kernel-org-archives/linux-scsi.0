@@ -1,44 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] megaraid_sas: Enable shared host tag map
-Date: Tue, 25 Nov 2014 17:30:14 +0100
-Message-ID: <20141125163014.GA2614@lst.de>
-References: <1416843235-35947-1-git-send-email-hare@suse.de> <20141124153558.GA27364@lst.de> <547353F2.1040005@suse.de> <20141125143140.GA32570@lst.de> <5474968C.2080800@suse.de>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 0/4] Fix performance burning or extracting audio etc.
+ from multiple optical drives.
+Date: Tue, 25 Nov 2014 09:30:19 -0700
+Message-ID: <5474AE9B.40104@fb.com>
+References: <20141121100210.GC8866@infradead.org> <1416924562-16849-1-git-send-email-tim@seoss.co.uk> <20141125162620.GA31478@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39726 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbaKYQaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:30:19 -0500
-Content-Disposition: inline
-In-Reply-To: <5474968C.2080800@suse.de>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:64946 "EHLO
+	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750927AbaKYQbt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 11:31:49 -0500
+In-Reply-To: <20141125162620.GA31478@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jbottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, linux-scsi@vger.kernel.org, Webb Scales <webbnh@hp.com>, Don Brace <don.brace@pmcs.com>, Jens Axboe <axboe@kernel.dk>
+To: Christoph Hellwig <hch@infradead.org>, Tim Small <tim@seoss.co.uk>
+Cc: tim@buttersideup.com, Wakko Warner <wakko@animx.eu.org>, linux-scsi@vger.kernel.org, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>
 
-On Tue, Nov 25, 2014 at 03:47:40PM +0100, Hannes Reinecke wrote:
-> I'd rather have a single map to get request/tags from; otherwise
-> we'd be arbitrarily starving internal requests even though the
-> 'main' tag map is empty.
+On 11/25/2014 09:26 AM, Christoph Hellwig wrote:
+> This looks reasonable to me.  Jens, do you want to takes this
+> through the block tree?
+> 
+> Acked-by: Christoph Hellwig <hch@lst.de>
 
-At least in blk-mq the assumption is that a driver needs very few
-internal tags, and it might need access to them in "emergency"
-situations like resets or aborts.
+Yeah I can do that, though do we really need to do paride here?
 
-> My plan was more to mark a certain range of tags as 'reserved',
-> and add another helper/argument to allow to dip into the reserved
-> pool, too.
+Tim, you also need to work on your changelogs. Please resend (dropping
+paride), and add proper subject and commit message. Patches 2-4 have
+identical subjects, and no commit message...
 
-We can add this as optional behavior, but I think the existing blk-mq
-behavior is a good default.
+-- 
+Jens Axboe
 
-> A tentative patch is attached.
-> Idea is to call blk_queue_init_tags() with the actual tag size and
-> then blk_resize_tags() to limit the number of tags for the request
-> queue.
-> The driver can then use 'blk_allocate_tag' with the appropriate max
-> depth to get tags from the range [max_depth:real_max_depth].
-
-I'd much prefer the blk-mq approach with two maps.  Either way please
-make sure whatever you come up is compatible with blk-mq.
