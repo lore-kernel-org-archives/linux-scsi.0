@@ -1,70 +1,469 @@
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-Subject: RE: [PATCH] megaraid_sas: Enable shared host tag map
-Date: Tue, 25 Nov 2014 20:33:28 +0530
-Message-ID: <cd290ec39c368c11217bcb4510c9ac71@mail.gmail.com>
-References: <1416843235-35947-1-git-send-email-hare@suse.de>
- <20141124153558.GA27364@lst.de> <547353F2.1040005@suse.de> <20141125143140.GA32570@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 4/5] scsi_debug: change SCSI command parser to table
+ driven
+Date: Tue, 25 Nov 2014 07:12:39 -0800
+Message-ID: <1416928359.2194.23.camel@HansenPartnership.com>
+References: <5474000A.2030501@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og127.obsmtp.com ([64.18.2.210]:41365 "EHLO
-	exprod7og127.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbaKYPDh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2014 10:03:37 -0500
-Received: by mail-la0-f49.google.com with SMTP id hs14so679629lab.8
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Nov 2014 07:03:29 -0800 (PST)
-In-Reply-To: <20141125143140.GA32570@lst.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53363 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750780AbaKYPMl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 10:12:41 -0500
+In-Reply-To: <5474000A.2030501@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org, Webb Scales <webbnh@hp.com>, Don Brace <don.brace@pmcs.com>, Jens Axboe <axboe@kernel.dk>
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Tuesday, November 25, 2014 8:02 PM
-> To: Hannes Reinecke
-> Cc: James Bottomley; Sumit Saxena; Kashyap Desai; linux-
-> scsi@vger.kernel.org; Webb Scales; Don Brace; Jens Axboe
-> Subject: Re: [PATCH] megaraid_sas: Enable shared host tag map
->
-> On Mon, Nov 24, 2014 at 04:51:14PM +0100, Hannes Reinecke wrote:
-> > It is useful as is, as we'll be getting prefixed logging output :-)
->
-> Use the blk-mq code path if you care :)
->
-> > Which I didn't do yet as the driver is using a larger tag map than
-> > that one announced to the block layer.
-> > This is to facilitate internal command submission, which should always
-> > work independent on any tag starvation issues from the upper layers.
->
-> This is an "issue" for a lot of drivers.  blk-mq provides a
-reserved_tags pool
-> for that, which reserves a number of tags for internal use, those must
-be
-> allocated using blk_mq_alloc_request with the reserved argument set to
-> true.
->
-> The lockless hpsa patches expose this to SCSI, which I'm generally fine
-with,
-> but we need to find a way to transparently make this work for the old
-code
-> path, too.  This might be as simple as embedding a second blk_queue_tag
-> structure into the Scsi_Host, adding a constant prefix to the tag and
-providing
-> some wrappes in scsi that allow allocating a struct request (or rather
-> scsi_cmnd) for internal use.
+On Mon, 2014-11-24 at 23:05 -0500, Douglas Gilbert wrote:
+> From: Douglas Gilbert <dgilbert@interlog.com>
+> Date: Mon, 24 Nov 2014 20:46:29 -0500
+> Subject: [PATCH 4/5] change SCSI command parser to table driven
+> 
+> The existing 'big switch' parser in queuecommand() is changed to
+> a table driven parser. The old and new queuecommand() were moved
+> in the source so diff would not shuffle them. Apart from the new
+> tables most other changes are refactoring existing response code
+> to be more easily called out of the table parser. The 'strict'
+> parameter is added so that cdb_s can be checked for non-zero
+> values in parts of the cdb that are reserved. Some other changes
+> include: tweak request sense response when D_SENSE differs; support
+> NDOB in Write Same(16); and fix crash in Get LBA Status when LBP
+> was inactive.
+> ---
+>   drivers/scsi/scsi_debug.c | 1391 +++++++++++++++++++++++++++------------------
+>   1 file changed, 833 insertions(+), 558 deletions(-)
 
-Just trying to understand your above comment. I see host template has new
-field called
-"reserved_tags" which is normally used by mid layer to reserved block tag
-pool for driver's internal use.
-What if driver is OK to manage internal pool without any blk tag
-dependency and do not expose actual max can queue of what FW can support.
-For example, in megaraid_sas driver FW expose max_fw_cmd = 1024 and driver
-keep some reserve (let's say 24 commands for internal use) and it just
-expose 1000 command for blk tags.  This will work for blk-mq and legacy
-blk driver. Let driver to manage whatever internal reserved it kept for
-and do not add any dependency with blk tag from above layer for those
-reserved pool.
+There's a massive amount of apparently unnecessary code motion in this
+patch (like moving the whole of scsi_debug_queuecommand).  This caused a
+reject today on the merger of the drivers-for-3.19 with core-for-3.19
+(conflict with the queue depth reason elimination). Can we not do large
+pieces of code motion unless there's good reason.
 
-` Kashyap
+Perhaps, also, it's time to reconsider whether we do actually need a
+core and drivers branch separation.
+
+The merge was trivial but I've attached it below, just in case.
+
+James
+
+---
+
+commit 5055a627a05df34f88265095cdf5da01b2b22a7a
+Merge: 7ec0579 38d5c83
+Author: James Bottomley <JBottomley@Parallels.com>
+Date:   Tue Nov 25 06:54:28 2014 -0800
+
+    Merge remote-tracking branch 'scsi-queue/drivers-for-3.19' into for-next
+    
+    Conflicts:
+    	drivers/scsi/scsi_debug.c
+
+diff --cc drivers/scsi/scsi_debug.c
+index 378e0aa,aa4b6b8..6183419
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@@ -4083,396 -4957,9 +4957,394 @@@ static void sdebug_remove_adapter(void
+  }
+  
+  static int
+ +scsi_debug_queuecommand(struct scsi_cmnd *SCpnt)
+ +{
+ +	unsigned char *cmd = SCpnt->cmnd;
+ +	int len, k;
+ +	unsigned int num;
+ +	unsigned long long lba;
+ +	u32 ei_lba;
+ +	int errsts = 0;
+ +	int target = SCpnt->device->id;
+ +	struct sdebug_dev_info *devip = NULL;
+ +	int inj_recovered = 0;
+ +	int inj_transport = 0;
+ +	int inj_dif = 0;
+ +	int inj_dix = 0;
+ +	int inj_short = 0;
+ +	int delay_override = 0;
+ +	int unmap = 0;
+ +
+ +	scsi_set_resid(SCpnt, 0);
+ +	if ((SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) &&
+ +	    !(SCSI_DEBUG_OPT_NO_CDB_NOISE & scsi_debug_opts)) {
+ +		char b[120];
+ +		int n;
+ +
+ +		len = SCpnt->cmd_len;
+ +		if (len > 32)
+ +			strcpy(b, "too long, over 32 bytes");
+ +		else {
+ +			for (k = 0, n = 0; k < len; ++k)
+ +				n += scnprintf(b + n, sizeof(b) - n, "%02x ",
+ +					       (unsigned int)cmd[k]);
+ +		}
+ +		sdev_printk(KERN_INFO, SCpnt->device, "%s: cmd %s\n", my_name,
+ +			    b);
+ +	}
+ +
+ +	if ((SCpnt->device->lun >= scsi_debug_max_luns) &&
+ +	    (SCpnt->device->lun != SAM2_WLUN_REPORT_LUNS))
+ +		return schedule_resp(SCpnt, NULL, DID_NO_CONNECT << 16, 0);
+ +	devip = devInfoReg(SCpnt->device);
+ +	if (NULL == devip)
+ +		return schedule_resp(SCpnt, NULL, DID_NO_CONNECT << 16, 0);
+ +
+ +	if ((scsi_debug_every_nth != 0) &&
+ +	    (atomic_inc_return(&sdebug_cmnd_count) >=
+ +	     abs(scsi_debug_every_nth))) {
+ +		atomic_set(&sdebug_cmnd_count, 0);
+ +		if (scsi_debug_every_nth < -1)
+ +			scsi_debug_every_nth = -1;
+ +		if (SCSI_DEBUG_OPT_TIMEOUT & scsi_debug_opts)
+ +			return 0; /* ignore command causing timeout */
+ +		else if (SCSI_DEBUG_OPT_MAC_TIMEOUT & scsi_debug_opts &&
+ +			 scsi_medium_access_command(SCpnt))
+ +			return 0; /* time out reads and writes */
+ +		else if (SCSI_DEBUG_OPT_RECOVERED_ERR & scsi_debug_opts)
+ +			inj_recovered = 1; /* to reads and writes below */
+ +		else if (SCSI_DEBUG_OPT_TRANSPORT_ERR & scsi_debug_opts)
+ +			inj_transport = 1; /* to reads and writes below */
+ +		else if (SCSI_DEBUG_OPT_DIF_ERR & scsi_debug_opts)
+ +			inj_dif = 1; /* to reads and writes below */
+ +		else if (SCSI_DEBUG_OPT_DIX_ERR & scsi_debug_opts)
+ +			inj_dix = 1; /* to reads and writes below */
+ +		else if (SCSI_DEBUG_OPT_SHORT_TRANSFER & scsi_debug_opts)
+ +			inj_short = 1;
+ +	}
+ +
+ +	if (devip->wlun) {
+ +		switch (*cmd) {
+ +		case INQUIRY:
+ +		case REQUEST_SENSE:
+ +		case TEST_UNIT_READY:
+ +		case REPORT_LUNS:
+ +			break;  /* only allowable wlun commands */
+ +		default:
+ +			if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ +				printk(KERN_INFO "scsi_debug: Opcode: 0x%x "
+ +				       "not supported for wlun\n", *cmd);
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +			return schedule_resp(SCpnt, devip, errsts, 0);
+ +		}
+ +	}
+ +
+ +	switch (*cmd) {
+ +	case INQUIRY:     /* mandatory, ignore unit attention */
+ +		delay_override = 1;
+ +		errsts = resp_inquiry(SCpnt, target, devip);
+ +		break;
+ +	case REQUEST_SENSE:	/* mandatory, ignore unit attention */
+ +		delay_override = 1;
+ +		errsts = resp_requests(SCpnt, devip);
+ +		break;
+ +	case REZERO_UNIT:	/* actually this is REWIND for SSC */
+ +	case START_STOP:
+ +		errsts = resp_start_stop(SCpnt, devip);
+ +		break;
+ +	case ALLOW_MEDIUM_REMOVAL:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		if (errsts)
+ +			break;
+ +		if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ +			printk(KERN_INFO "scsi_debug: Medium removal %s\n",
+ +			       cmd[4] ? "inhibited" : "enabled");
+ +		break;
+ +	case SEND_DIAGNOSTIC:     /* mandatory */
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case TEST_UNIT_READY:     /* mandatory */
+ +		/* delay_override = 1; */
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		break;
+ +	case RESERVE:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case RESERVE_10:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case RELEASE:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case RELEASE_10:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case READ_CAPACITY:
+ +		errsts = resp_readcap(SCpnt, devip);
+ +		break;
+ +	case SERVICE_ACTION_IN_16:
+ +		if (cmd[1] == SAI_READ_CAPACITY_16)
+ +			errsts = resp_readcap16(SCpnt, devip);
+ +		else if (cmd[1] == SAI_GET_LBA_STATUS) {
+ +
+ +			if (scsi_debug_lbp() == 0) {
+ +				mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +						INVALID_COMMAND_OPCODE, 0);
+ +				errsts = check_condition_result;
+ +			} else
+ +				errsts = resp_get_lba_status(SCpnt, devip);
+ +		} else {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +		}
+ +		break;
+ +	case MAINTENANCE_IN:
+ +		if (MI_REPORT_TARGET_PGS != cmd[1]) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +			break;
+ +		}
+ +		errsts = resp_report_tgtpgs(SCpnt, devip);
+ +		break;
+ +	case READ_16:
+ +	case READ_12:
+ +	case READ_10:
+ +		/* READ{10,12,16} and DIF Type 2 are natural enemies */
+ +		if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
+ +		    cmd[1] & 0xe0) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_COMMAND_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +			break;
+ +		}
+ +
+ +		if ((scsi_debug_dif == SD_DIF_TYPE1_PROTECTION ||
+ +		     scsi_debug_dif == SD_DIF_TYPE3_PROTECTION) &&
+ +		    (cmd[1] & 0xe0) == 0)
+ +			printk(KERN_ERR "Unprotected RD/WR to DIF device\n");
+ +
+ +		/* fall through */
+ +	case READ_6:
+ +read:
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		if (errsts)
+ +			break;
+ +		if (scsi_debug_fake_rw)
+ +			break;
+ +		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
+ +
+ +		if (inj_short)
+ +			num /= 2;
+ +
+ +		errsts = resp_read(SCpnt, lba, num, ei_lba);
+ +		if (inj_recovered && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, RECOVERED_ERROR,
+ +					THRESHOLD_EXCEEDED, 0);
+ +			errsts = check_condition_result;
+ +		} else if (inj_transport && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, ABORTED_COMMAND,
+ +					TRANSPORT_PROBLEM, ACK_NAK_TO);
+ +			errsts = check_condition_result;
+ +		} else if (inj_dif && (0 == errsts)) {
+ +			/* Logical block guard check failed */
+ +			mk_sense_buffer(SCpnt, ABORTED_COMMAND, 0x10, 1);
+ +			errsts = illegal_condition_result;
+ +		} else if (inj_dix && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST, 0x10, 1);
+ +			errsts = illegal_condition_result;
+ +		}
+ +		break;
+ +	case REPORT_LUNS:	/* mandatory, ignore unit attention */
+ +		delay_override = 1;
+ +		errsts = resp_report_luns(SCpnt, devip);
+ +		break;
+ +	case VERIFY:		/* 10 byte SBC-2 command */
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		break;
+ +	case WRITE_16:
+ +	case WRITE_12:
+ +	case WRITE_10:
+ +		/* WRITE{10,12,16} and DIF Type 2 are natural enemies */
+ +		if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
+ +		    cmd[1] & 0xe0) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_COMMAND_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +			break;
+ +		}
+ +
+ +		if ((scsi_debug_dif == SD_DIF_TYPE1_PROTECTION ||
+ +		     scsi_debug_dif == SD_DIF_TYPE3_PROTECTION) &&
+ +		    (cmd[1] & 0xe0) == 0)
+ +			printk(KERN_ERR "Unprotected RD/WR to DIF device\n");
+ +
+ +		/* fall through */
+ +	case WRITE_6:
+ +write:
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		if (errsts)
+ +			break;
+ +		if (scsi_debug_fake_rw)
+ +			break;
+ +		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
+ +		errsts = resp_write(SCpnt, lba, num, ei_lba);
+ +		if (inj_recovered && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, RECOVERED_ERROR,
+ +					THRESHOLD_EXCEEDED, 0);
+ +			errsts = check_condition_result;
+ +		} else if (inj_dif && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, ABORTED_COMMAND, 0x10, 1);
+ +			errsts = illegal_condition_result;
+ +		} else if (inj_dix && (0 == errsts)) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST, 0x10, 1);
+ +			errsts = illegal_condition_result;
+ +		}
+ +		break;
+ +	case WRITE_SAME_16:
+ +	case WRITE_SAME:
+ +		if (cmd[1] & 0x8) {
+ +			if ((*cmd == WRITE_SAME_16 && scsi_debug_lbpws == 0) ||
+ +			    (*cmd == WRITE_SAME && scsi_debug_lbpws10 == 0)) {
+ +				mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +						INVALID_FIELD_IN_CDB, 0);
+ +				errsts = check_condition_result;
+ +			} else
+ +				unmap = 1;
+ +		}
+ +		if (errsts)
+ +			break;
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		if (errsts)
+ +			break;
+ +		if (scsi_debug_fake_rw)
+ +			break;
+ +		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
+ +		errsts = resp_write_same(SCpnt, lba, num, ei_lba, unmap);
+ +		break;
+ +	case UNMAP:
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		if (errsts)
+ +			break;
+ +		if (scsi_debug_fake_rw)
+ +			break;
+ +
+ +		if (scsi_debug_unmap_max_desc == 0 || scsi_debug_lbpu == 0) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_COMMAND_OPCODE, 0);
+ +			errsts = check_condition_result;
+ +		} else
+ +			errsts = resp_unmap(SCpnt, devip);
+ +		break;
+ +	case MODE_SENSE:
+ +	case MODE_SENSE_10:
+ +		errsts = resp_mode_sense(SCpnt, target, devip);
+ +		break;
+ +	case MODE_SELECT:
+ +		errsts = resp_mode_select(SCpnt, 1, devip);
+ +		break;
+ +	case MODE_SELECT_10:
+ +		errsts = resp_mode_select(SCpnt, 0, devip);
+ +		break;
+ +	case LOG_SENSE:
+ +		errsts = resp_log_sense(SCpnt, devip);
+ +		break;
+ +	case SYNCHRONIZE_CACHE:
+ +		delay_override = 1;
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		break;
+ +	case WRITE_BUFFER:
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		break;
+ +	case XDWRITEREAD_10:
+ +		if (!scsi_bidi_cmnd(SCpnt)) {
+ +			mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +					INVALID_FIELD_IN_CDB, 0);
+ +			errsts = check_condition_result;
+ +			break;
+ +		}
+ +
+ +		errsts = check_readiness(SCpnt, UAS_TUR, devip);
+ +		if (errsts)
+ +			break;
+ +		if (scsi_debug_fake_rw)
+ +			break;
+ +		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
+ +		errsts = resp_read(SCpnt, lba, num, ei_lba);
+ +		if (errsts)
+ +			break;
+ +		errsts = resp_write(SCpnt, lba, num, ei_lba);
+ +		if (errsts)
+ +			break;
+ +		errsts = resp_xdwriteread(SCpnt, lba, num, devip);
+ +		break;
+ +	case VARIABLE_LENGTH_CMD:
+ +		if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION) {
+ +
+ +			if ((cmd[10] & 0xe0) == 0)
+ +				printk(KERN_ERR
+ +				       "Unprotected RD/WR to DIF device\n");
+ +
+ +			if (cmd[9] == READ_32) {
+ +				BUG_ON(SCpnt->cmd_len < 32);
+ +				goto read;
+ +			}
+ +
+ +			if (cmd[9] == WRITE_32) {
+ +				BUG_ON(SCpnt->cmd_len < 32);
+ +				goto write;
+ +			}
+ +		}
+ +
+ +		mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +				INVALID_FIELD_IN_CDB, 0);
+ +		errsts = check_condition_result;
+ +		break;
+ +	case 0x85:
+ +		if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ +			sdev_printk(KERN_INFO, SCpnt->device,
+ +			"%s: ATA PASS-THROUGH(16) not supported\n", my_name);
+ +		mk_sense_buffer(SCpnt, ILLEGAL_REQUEST,
+ +				INVALID_OPCODE, 0);
+ +		errsts = check_condition_result;
+ +		break;
+ +	default:
+ +		if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ +			sdev_printk(KERN_INFO, SCpnt->device,
+ +				    "%s: Opcode: 0x%x not supported\n",
+ +				    my_name, *cmd);
+ +		errsts = check_readiness(SCpnt, UAS_ONLY, devip);
+ +		if (errsts)
+ +			break;	/* Unit attention takes precedence */
+ +		mk_sense_buffer(SCpnt, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
+ +		errsts = check_condition_result;
+ +		break;
+ +	}
+ +	return schedule_resp(SCpnt, devip, errsts,
+ +			     (delay_override ? 0 : scsi_debug_delay));
+ +}
+ +
+ +static int
+ +sdebug_queuecommand_lock_or_not(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ +{
+ +	if (scsi_debug_host_lock) {
+ +		unsigned long iflags;
+ +		int rc;
+ +
+ +		spin_lock_irqsave(shost->host_lock, iflags);
+ +		rc = scsi_debug_queuecommand(cmd);
+ +		spin_unlock_irqrestore(shost->host_lock, iflags);
+ +		return rc;
+ +	} else
+ +		return scsi_debug_queuecommand(cmd);
+ +}
+ +
+- static int
+- sdebug_change_qdepth(struct scsi_device *sdev, int qdepth, int reason)
++ sdebug_change_qdepth(struct scsi_device *sdev, int qdepth)
+  {
+  	int num_in_q = 0;
+- 	int bad = 0;
+  	unsigned long iflags;
+  	struct sdebug_dev_info *devip;
+  
+ 
+
