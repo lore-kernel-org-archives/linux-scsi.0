@@ -1,31 +1,38 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net-next] cxgb4/cxgb4vf/csiostor: Add T4/T5 PCI ID Table
-Date: Tue, 25 Nov 2014 14:07:21 -0500 (EST)
-Message-ID: <20141125.140721.1105760708655161441.davem@davemloft.net>
-References: <1416884638-7582-1-git-send-email-hariprasad@chelsio.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCHv2 00/12] Re-implement am53c974 driver
+Date: Tue, 25 Nov 2014 23:10:00 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.1411252301320.17362@axis700.grange>
+References: <1416573716-73890-1-git-send-email-hare@suse.de>
+ <20141124081403.GA18574@lst.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:37123 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbaKYTHY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2014 14:07:24 -0500
-In-Reply-To: <1416884638-7582-1-git-send-email-hariprasad@chelsio.com>
+Received: from mout.gmx.net ([212.227.17.20]:55623 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166AbaKYWKQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 17:10:16 -0500
+In-Reply-To: <20141124081403.GA18574@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hariprasad@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com, praveenm@chelsio.com, varun@chelsio.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>, Paolo Bonzini <pbonzini@redhat.com>, "David S. Miller" <davem@davemloft.net>, linux-scsi@vger.kernel.org
 
-From: Hariprasad Shenai <hariprasad@chelsio.com>
-Date: Tue, 25 Nov 2014 08:33:58 +0530
+Hi Christoph,
 
-> Add a new file t4_pci_id_tbl.h that contains T4/T5 PCI ID Table so that for all
-> drivers that uses T4/T5 PCI functions changes can be done in one place.
-> 
-> checkpatch.pl script reports following error, which if tried to fix ends up in
-> compilation error.
-...
-> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
+On Mon, 24 Nov 2014, Christoph Hellwig wrote:
 
-Applied, thanks.
+> I'm tempted to merge this into drivers-for-3.19 ASAP, any argument against
+> that?  Guennadi, do you have any additional hardware to Hannes one real and one
+> virtual adapter to test this new driver on before?
+
+I've got a similar / identical Tekram dc390 SCSI PCI card and a PC with an 
+on-board am53c974 chip, but that is either a rather old (2 x PII @ 400MHz 
+:)) or a very old (P @ 166MHz) PC of mine, don't think testing on any of 
+those would be viable, even if I dig them out from the basement :) More 
+interesting would be testing with different devices like tape streamers, 
+scanners... But I'm really unsure anyone still uses those, even when I was 
+fixing them, I was pretty much the only affected user :)
+
+Thanks
+Guennadi
+
