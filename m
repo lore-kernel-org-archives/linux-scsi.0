@@ -1,34 +1,45 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 4/5] scsi_debug: change SCSI command parser to table
- driven
-Date: Tue, 25 Nov 2014 08:04:35 +0100
-Message-ID: <54742A03.90600@suse.de>
-References: <5474000A.2030501@interlog.com>
+Subject: Re: [PATCH v2 5/5] scsi_debug: Add Report supported opcodes+tmfs;
+ Compare and write
+Date: Tue, 25 Nov 2014 08:05:15 +0100
+Message-ID: <54742A2B.2080505@suse.de>
+References: <54740014.8060605@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60267 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60280 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280AbaKYHEh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 02:04:37 -0500
-In-Reply-To: <5474000A.2030501@interlog.com>
+	id S1752343AbaKYHFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 02:05:16 -0500
+In-Reply-To: <54740014.8060605@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 Cc: "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
 On 11/25/2014 05:05 AM, Douglas Gilbert wrote:
-> +	case 0x53:	/* XDWRITEREAD(10) */
-> +		ei_lba =3D 0;
-> +		lba =3D get_unaligned_be32(cmd + 2);
-> +		num =3D get_unaligned_be16(cmd + 7);
-> +		check_prot =3D false;
-> +		break;
-Why not use 'XDWRITEREAD_10' here?
-It did work in the original version ...
+> From: Douglas Gilbert <dgilbert@interlog.com>
+> Date: Mon, 24 Nov 2014 21:27:12 -0500
+> Subject: [PATCH 5/5] Add Report supported opcodes+tmfs; Compare and
+> write
+>=20
+> The Report supported operation codes command is very closely integrat=
+ed
+> into the table driven parser and very useful for testing it. Its cdb
+> masks form the basis of the 'strict' parameter's checks. The Report
+> supported TMFs command is a simple extension. The Compare and write
+> command may even be useful, as it should be atomic due to the
+> read-write
+> lock that the driver uses on its backing store (ram).
+> ---
+>  drivers/scsi/scsi_debug.c | 326
+> +++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 307 insertions(+), 19 deletions(-)
+>=20
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-(This is the bit I meant :-)
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
