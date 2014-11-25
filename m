@@ -1,43 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 5/5] scsi_debug: Add Report supported opcodes+tmfs;
- Compare and write
-Date: Tue, 25 Nov 2014 08:05:15 +0100
-Message-ID: <54742A2B.2080505@suse.de>
-References: <54740014.8060605@interlog.com>
+Subject: Re: [PATCH 2/3] wd719x: Introduce Western Digital WD7193/7197/7296
+ PCI SCSI card driver
+Date: Tue, 25 Nov 2014 10:45:08 +0100
+Message-ID: <54744FA4.6060609@suse.de>
+References: <1416867882-29344-1-git-send-email-linux@rainbow-software.org> <1416867882-29344-3-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60280 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34833 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752343AbaKYHFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 02:05:16 -0500
-In-Reply-To: <54740014.8060605@interlog.com>
+	id S1750760AbaKYJpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 04:45:11 -0500
+In-Reply-To: <1416867882-29344-3-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@ORACLE.COM>
+To: Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On 11/25/2014 05:05 AM, Douglas Gilbert wrote:
-> From: Douglas Gilbert <dgilbert@interlog.com>
-> Date: Mon, 24 Nov 2014 21:27:12 -0500
-> Subject: [PATCH 5/5] Add Report supported opcodes+tmfs; Compare and
-> write
+On 11/24/2014 11:24 PM, Ondrej Zary wrote:
+> Introduce wd719x, a driver for Western Digital WD7193, WD7197 and WD7=
+296 PCI
+> SCSI controllers based on WD33C296A chip.
+> Tested with WD7193 card.
 >=20
-> The Report supported operation codes command is very closely integrat=
-ed
-> into the table driven parser and very useful for testing it. Its cdb
-> masks form the basis of the 'strict' parameter's checks. The Report
-> supported TMFs command is a simple extension. The Compare and write
-> command may even be useful, as it should be atomic due to the
-> read-write
-> lock that the driver uses on its backing store (ram).
-> ---
->  drivers/scsi/scsi_debug.c | 326
-> +++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 307 insertions(+), 19 deletions(-)
->=20
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
@@ -47,9 +35,8 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnberg=
-)
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
