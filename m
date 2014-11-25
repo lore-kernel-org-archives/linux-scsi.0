@@ -1,42 +1,24 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] megaraid_sas: Enable shared host tag map
-Date: Tue, 25 Nov 2014 15:31:40 +0100
-Message-ID: <20141125143140.GA32570@lst.de>
-References: <1416843235-35947-1-git-send-email-hare@suse.de> <20141124153558.GA27364@lst.de> <547353F2.1040005@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/3] esas2r: few minor fixes
+Date: Tue, 25 Nov 2014 06:43:42 -0800
+Message-ID: <20141125144342.GA22764@infradead.org>
+References: <1416144934-21338-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39446 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750781AbaKYObo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 09:31:44 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:35232 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaKYOnn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Nov 2014 09:43:43 -0500
 Content-Disposition: inline
-In-Reply-To: <547353F2.1040005@suse.de>
+In-Reply-To: <1416144934-21338-1-git-send-email-thenzl@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, linux-scsi@vger.kernel.org, Webb Scales <webbnh@hp.com>, Don Brace <don.brace@pmcs.com>, Jens Axboe <axboe@kernel.dk>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, bgrove@attotech.com
 
-On Mon, Nov 24, 2014 at 04:51:14PM +0100, Hannes Reinecke wrote:
-> It is useful as is, as we'll be getting prefixed logging output :-)
+On Sun, Nov 16, 2014 at 02:35:31PM +0100, Tomas Henzl wrote:
+> This patchset corrects few minor lapses in the eas2r code.
+> Without access to the hw it's only compile tested.
 
-Use the blk-mq code path if you care :)
-
-> Which I didn't do yet as the driver is using a larger tag map than
-> that one announced to the block layer.
-> This is to facilitate internal command submission, which should
-> always work independent on any tag starvation issues from the
-> upper layers.
-
-This is an "issue" for a lot of drivers.  blk-mq provides a reserved_tags
-pool for that, which reserves a number of tags for internal use, those
-must be allocated using blk_mq_alloc_request with the reserved argument
-set to true.
-
-The lockless hpsa patches expose this to SCSI, which I'm generally
-fine with, but we need to find a way to transparently make this work
-for the old code path, too.  This might be as simple as embedding a
-second blk_queue_tag structure into the Scsi_Host, adding a constant
-prefix to the tag and providing some wrappes in scsi that allow
-allocating a struct request (or rather scsi_cmnd) for internal use.
-
+Thanks, applied the series to drivers-for-3.19
