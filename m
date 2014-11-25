@@ -1,277 +1,105 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: [PATCH v4 38/42] virtio_scsi: v1.0 support
-Date: Tue, 25 Nov 2014 18:44:08 +0200
-Message-ID: <1416933600-21398-39-git-send-email-mst@redhat.com>
-References: <1416933600-21398-1-git-send-email-mst@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 4/5] scsi_debug: change SCSI command parser to table
+ driven
+Date: Tue, 25 Nov 2014 10:24:49 -0800
+Message-ID: <1416939889.15196.5.camel@HansenPartnership.com>
+References: <5474000A.2030501@interlog.com>
+	 <1416928359.2194.23.camel@HansenPartnership.com>
+	 <5474A963.2030006@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38608 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752329AbaKYQo1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2014 11:44:27 -0500
-Content-Disposition: inline
-In-Reply-To: <1416933600-21398-1-git-send-email-mst@redhat.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54439 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751152AbaKYSYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2014 13:24:52 -0500
+In-Reply-To: <5474A963.2030006@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: David Miller <davem@davemloft.net>, cornelia.huck@de.ibm.com, rusty@au1.ibm.com, nab@linux-iscsi.org, pbonzini@redhat.com, "James E.J. Bottomley" <JBottomley@parallels.com>, Rusty Russell <rusty@rustcorp.com.au>, linux-scsi@vger.kernel.org, virtualization@lists.linux-foundation.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
-Note: for consistency, and to avoid sparse errors,
-  convert all fields, even those no longer in use
-  for virtio v1.0.
+On Tue, 2014-11-25 at 11:08 -0500, Douglas Gilbert wrote:
+> On 14-11-25 10:12 AM, James Bottomley wrote:
+> > On Mon, 2014-11-24 at 23:05 -0500, Douglas Gilbert wrote:
+> >> From: Douglas Gilbert <dgilbert@interlog.com>
+> >> Date: Mon, 24 Nov 2014 20:46:29 -0500
+> >> Subject: [PATCH 4/5] change SCSI command parser to table driven
+> >>
+> >> The existing 'big switch' parser in queuecommand() is changed to
+> >> a table driven parser. The old and new queuecommand() were moved
+> >> in the source so diff would not shuffle them. Apart from the new
+> >> tables most other changes are refactoring existing response code
+> >> to be more easily called out of the table parser. The 'strict'
+> >> parameter is added so that cdb_s can be checked for non-zero
+> >> values in parts of the cdb that are reserved. Some other changes
+> >> include: tweak request sense response when D_SENSE differs; support
+> >> NDOB in Write Same(16); and fix crash in Get LBA Status when LBP
+> >> was inactive.
+> >> ---
+> >>    drivers/scsi/scsi_debug.c | 1391 +++++++++++++++++++++++++++------------------
+> >>    1 file changed, 833 insertions(+), 558 deletions(-)
+> >
+> > There's a massive amount of apparently unnecessary code motion in this
+> > patch (like moving the whole of scsi_debug_queuecommand).  This caused a
+> > reject today on the merger of the drivers-for-3.19 with core-for-3.19
+> > (conflict with the queue depth reason elimination). Can we not do large
+> > pieces of code motion unless there's good reason.
+> 
+> I was asked to break up the code to make it easier to
+> review. The critical part of this chunk was the replacement
+> of the big switch in queuecommand() with a table driven
+> version. Without that move, the diff (both in git and by hand)
+> shuffles the two versions of queuecommand() in such a way
+> that I cannot even understand what is going on (and I wrote
+> half of the old one and all of the new one).
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- include/linux/virtio_scsi.h | 32 +++++++++++++++-------------
- drivers/scsi/virtio_scsi.c  | 51 ++++++++++++++++++++++++++++-----------------
- 2 files changed, 49 insertions(+), 34 deletions(-)
+That may be, but it's even less reviewable if you simply move the code
+to make the diff come out better because now there's a large chunk of
+minusses and a large chunk of plusses and you can't necessarily see the
+changes.  At least with in place changes you can use better diff tools
+if the unified diff isn't working.  Things like reducing or increasing
+context lines also help.
 
-diff --git a/include/linux/virtio_scsi.h b/include/linux/virtio_scsi.h
-index de429d1..af44864 100644
---- a/include/linux/virtio_scsi.h
-+++ b/include/linux/virtio_scsi.h
-@@ -27,13 +27,15 @@
- #ifndef _LINUX_VIRTIO_SCSI_H
- #define _LINUX_VIRTIO_SCSI_H
- 
-+#include <linux/virtio_types.h>
-+
- #define VIRTIO_SCSI_CDB_SIZE   32
- #define VIRTIO_SCSI_SENSE_SIZE 96
- 
- /* SCSI command request, followed by data-out */
- struct virtio_scsi_cmd_req {
- 	u8 lun[8];		/* Logical Unit Number */
--	u64 tag;		/* Command identifier */
-+	__virtio64 tag;		/* Command identifier */
- 	u8 task_attr;		/* Task attribute */
- 	u8 prio;		/* SAM command priority field */
- 	u8 crn;
-@@ -43,20 +45,20 @@ struct virtio_scsi_cmd_req {
- /* SCSI command request, followed by protection information */
- struct virtio_scsi_cmd_req_pi {
- 	u8 lun[8];		/* Logical Unit Number */
--	u64 tag;		/* Command identifier */
-+	__virtio64 tag;		/* Command identifier */
- 	u8 task_attr;		/* Task attribute */
- 	u8 prio;		/* SAM command priority field */
- 	u8 crn;
--	u32 pi_bytesout;	/* DataOUT PI Number of bytes */
--	u32 pi_bytesin;		/* DataIN PI Number of bytes */
-+	__virtio32 pi_bytesout;	/* DataOUT PI Number of bytes */
-+	__virtio32 pi_bytesin;		/* DataIN PI Number of bytes */
- 	u8 cdb[VIRTIO_SCSI_CDB_SIZE];
- } __packed;
- 
- /* Response, followed by sense data and data-in */
- struct virtio_scsi_cmd_resp {
--	u32 sense_len;		/* Sense data length */
--	u32 resid;		/* Residual bytes in data buffer */
--	u16 status_qualifier;	/* Status qualifier */
-+	__virtio32 sense_len;		/* Sense data length */
-+	__virtio32 resid;		/* Residual bytes in data buffer */
-+	__virtio16 status_qualifier;	/* Status qualifier */
- 	u8 status;		/* Command completion status */
- 	u8 response;		/* Response values */
- 	u8 sense[VIRTIO_SCSI_SENSE_SIZE];
-@@ -64,10 +66,10 @@ struct virtio_scsi_cmd_resp {
- 
- /* Task Management Request */
- struct virtio_scsi_ctrl_tmf_req {
--	u32 type;
--	u32 subtype;
-+	__virtio32 type;
-+	__virtio32 subtype;
- 	u8 lun[8];
--	u64 tag;
-+	__virtio64 tag;
- } __packed;
- 
- struct virtio_scsi_ctrl_tmf_resp {
-@@ -76,20 +78,20 @@ struct virtio_scsi_ctrl_tmf_resp {
- 
- /* Asynchronous notification query/subscription */
- struct virtio_scsi_ctrl_an_req {
--	u32 type;
-+	__virtio32 type;
- 	u8 lun[8];
--	u32 event_requested;
-+	__virtio32 event_requested;
- } __packed;
- 
- struct virtio_scsi_ctrl_an_resp {
--	u32 event_actual;
-+	__virtio32 event_actual;
- 	u8 response;
- } __packed;
- 
- struct virtio_scsi_event {
--	u32 event;
-+	__virtio32 event;
- 	u8 lun[8];
--	u32 reason;
-+	__virtio32 reason;
- } __packed;
- 
- struct virtio_scsi_config {
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index b83846f..c2779ea 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -158,7 +158,7 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 		sc, resp->response, resp->status, resp->sense_len);
- 
- 	sc->result = resp->status;
--	virtscsi_compute_resid(sc, resp->resid);
-+	virtscsi_compute_resid(sc, __virtio32_to_cpu(vscsi->vdev, resp->resid));
- 	switch (resp->response) {
- 	case VIRTIO_SCSI_S_OK:
- 		set_host_byte(sc, DID_OK);
-@@ -196,10 +196,13 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- 		break;
- 	}
- 
--	WARN_ON(resp->sense_len > VIRTIO_SCSI_SENSE_SIZE);
-+	WARN_ON(__virtio32_to_cpu(vscsi->vdev, resp->sense_len) >
-+		VIRTIO_SCSI_SENSE_SIZE);
- 	if (sc->sense_buffer) {
- 		memcpy(sc->sense_buffer, resp->sense,
--		       min_t(u32, resp->sense_len, VIRTIO_SCSI_SENSE_SIZE));
-+		       min_t(u32,
-+			     __virtio32_to_cpu(vscsi->vdev, resp->sense_len),
-+			     VIRTIO_SCSI_SENSE_SIZE));
- 		if (resp->sense_len)
- 			set_driver_byte(sc, DRIVER_SENSE);
- 	}
-@@ -323,7 +326,7 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
- 	unsigned int target = event->lun[1];
- 	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
- 
--	switch (event->reason) {
-+	switch (__virtio32_to_cpu(vscsi->vdev, event->reason)) {
- 	case VIRTIO_SCSI_EVT_RESET_RESCAN:
- 		scsi_add_device(shost, 0, target, lun);
- 		break;
-@@ -349,8 +352,8 @@ static void virtscsi_handle_param_change(struct virtio_scsi *vscsi,
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
- 	unsigned int target = event->lun[1];
- 	unsigned int lun = (event->lun[2] << 8) | event->lun[3];
--	u8 asc = event->reason & 255;
--	u8 ascq = event->reason >> 8;
-+	u8 asc = __virtio32_to_cpu(vscsi->vdev, event->reason) & 255;
-+	u8 ascq = __virtio32_to_cpu(vscsi->vdev, event->reason) >> 8;
- 
- 	sdev = scsi_device_lookup(shost, 0, target, lun);
- 	if (!sdev) {
-@@ -374,12 +377,14 @@ static void virtscsi_handle_event(struct work_struct *work)
- 	struct virtio_scsi *vscsi = event_node->vscsi;
- 	struct virtio_scsi_event *event = &event_node->event;
- 
--	if (event->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
--		event->event &= ~VIRTIO_SCSI_T_EVENTS_MISSED;
-+	if (event->event &
-+	    __cpu_to_virtio32(vscsi->vdev, VIRTIO_SCSI_T_EVENTS_MISSED)) {
-+		event->event &= ~__cpu_to_virtio32(vscsi->vdev,
-+						   VIRTIO_SCSI_T_EVENTS_MISSED);
- 		scsi_scan_host(virtio_scsi_host(vscsi->vdev));
- 	}
- 
--	switch (event->event) {
-+	switch (__virtio32_to_cpu(vscsi->vdev, event->event)) {
- 	case VIRTIO_SCSI_T_NO_EVENT:
- 		break;
- 	case VIRTIO_SCSI_T_TRANSPORT_RESET:
-@@ -482,26 +487,28 @@ static int virtscsi_kick_cmd(struct virtio_scsi_vq *vq,
- 	return err;
- }
- 
--static void virtio_scsi_init_hdr(struct virtio_scsi_cmd_req *cmd,
-+static void virtio_scsi_init_hdr(struct virtio_device *vdev,
-+				 struct virtio_scsi_cmd_req *cmd,
- 				 struct scsi_cmnd *sc)
- {
- 	cmd->lun[0] = 1;
- 	cmd->lun[1] = sc->device->id;
- 	cmd->lun[2] = (sc->device->lun >> 8) | 0x40;
- 	cmd->lun[3] = sc->device->lun & 0xff;
--	cmd->tag = (unsigned long)sc;
-+	cmd->tag = __cpu_to_virtio64(vdev, (unsigned long)sc);
- 	cmd->task_attr = VIRTIO_SCSI_S_SIMPLE;
- 	cmd->prio = 0;
- 	cmd->crn = 0;
- }
- 
--static void virtio_scsi_init_hdr_pi(struct virtio_scsi_cmd_req_pi *cmd_pi,
-+static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
-+				    struct virtio_scsi_cmd_req_pi *cmd_pi,
- 				    struct scsi_cmnd *sc)
- {
- 	struct request *rq = sc->request;
- 	struct blk_integrity *bi;
- 
--	virtio_scsi_init_hdr((struct virtio_scsi_cmd_req *)cmd_pi, sc);
-+	virtio_scsi_init_hdr(vdev, (struct virtio_scsi_cmd_req *)cmd_pi, sc);
- 
- 	if (!rq || !scsi_prot_sg_count(sc))
- 		return;
-@@ -509,9 +516,13 @@ static void virtio_scsi_init_hdr_pi(struct virtio_scsi_cmd_req_pi *cmd_pi,
- 	bi = blk_get_integrity(rq->rq_disk);
- 
- 	if (sc->sc_data_direction == DMA_TO_DEVICE)
--		cmd_pi->pi_bytesout = blk_rq_sectors(rq) * bi->tuple_size;
-+		cmd_pi->pi_bytesout = __cpu_to_virtio32(vdev,
-+							blk_rq_sectors(rq) *
-+							bi->tuple_size);
- 	else if (sc->sc_data_direction == DMA_FROM_DEVICE)
--		cmd_pi->pi_bytesin = blk_rq_sectors(rq) * bi->tuple_size;
-+		cmd_pi->pi_bytesin = __cpu_to_virtio32(vdev,
-+						       blk_rq_sectors(rq) *
-+						       bi->tuple_size);
- }
- 
- static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
-@@ -536,11 +547,11 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
- 
- 	if (virtio_has_feature(vscsi->vdev, VIRTIO_SCSI_F_T10_PI)) {
--		virtio_scsi_init_hdr_pi(&cmd->req.cmd_pi, sc);
-+		virtio_scsi_init_hdr_pi(vscsi->vdev, &cmd->req.cmd_pi, sc);
- 		memcpy(cmd->req.cmd_pi.cdb, sc->cmnd, sc->cmd_len);
- 		req_size = sizeof(cmd->req.cmd_pi);
- 	} else {
--		virtio_scsi_init_hdr(&cmd->req.cmd, sc);
-+		virtio_scsi_init_hdr(vscsi->vdev, &cmd->req.cmd, sc);
- 		memcpy(cmd->req.cmd.cdb, sc->cmnd, sc->cmd_len);
- 		req_size = sizeof(cmd->req.cmd);
- 	}
-@@ -655,7 +666,8 @@ static int virtscsi_device_reset(struct scsi_cmnd *sc)
- 	cmd->sc = sc;
- 	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
- 		.type = VIRTIO_SCSI_T_TMF,
--		.subtype = VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET,
-+		.subtype = __cpu_to_virtio32(vscsi->vdev,
-+					     VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET),
- 		.lun[0] = 1,
- 		.lun[1] = sc->device->id,
- 		.lun[2] = (sc->device->lun >> 8) | 0x40,
-@@ -713,7 +725,7 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
- 		.lun[1] = sc->device->id,
- 		.lun[2] = (sc->device->lun >> 8) | 0x40,
- 		.lun[3] = sc->device->lun & 0xff,
--		.tag = (unsigned long)sc,
-+		.tag = __cpu_to_virtio64(vscsi->vdev, (unsigned long)sc),
- 	};
- 	return virtscsi_tmf(vscsi, cmd);
- }
-@@ -1073,6 +1085,7 @@ static unsigned int features[] = {
- 	VIRTIO_SCSI_F_HOTPLUG,
- 	VIRTIO_SCSI_F_CHANGE,
- 	VIRTIO_SCSI_F_T10_PI,
-+	VIRTIO_F_VERSION_1,
- };
- 
- static struct virtio_driver virtio_scsi_driver = {
--- 
-MST
+> There are two audiences to a presented patch: those who
+> might review it (and Hannes has been the only volunteer
+> to date) and those that might apply it after it is
+> reviewed. Until today, I was still at the first hurdle.
+> 
+> Is there a way to tell (git) diff not to shuffle the old and
+> new versions of a function? Would changing the name of the
+> new version have helped (e.g. qcommand() )?
+
+You can use -U<n> to reduce or increase context.  You can also change
+the algorithm with --diff-algorithm=<alg> and in the last instance it
+can do a word diff (--word-diff) although that probably would never be
+suitable for posting to a mailing list.
+
+> > Perhaps, also, it's time to reconsider whether we do actually need a
+> > core and drivers branch separation.
+> 
+> I did a git pull on the drivers-for-3.19 just before I
+> built this patch. That caused conflict due to the queue
+> depth reason elimination so I rebuilt my patch. The kernel
+> was then built as every chunk was applied. Not every step
+> was tested (i.e. kernel was not run) but the end result
+> is what was presented a month ago and tested then (modulo
+> changes in drivers-for-3.19 since then).
+
+Right, but that's not the problem ... the problem is a conflict with
+core-for-3.19.
+
+> > The merge was trivial but I've attached it below, just in case.
+> 
+> I don't understand the patch below. It seems to add
+> back the old, big-switch parser. That will set up a conflict
+> with the new one which has the same function signature.
+
+Right, that's the extra chunk which is the source of the zero day build
+failure. I've removed it, so everything should work now.
+
+James
+
 
