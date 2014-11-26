@@ -1,61 +1,71 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: next-20141126 build failures in wd719x
-Date: Wed, 26 Nov 2014 17:26:06 +0000
-Message-ID: <20141126172606.GL7712@sirena.org.uk>
-References: <E1XtdBa-00087r-J4@debutante>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [hch-scsi-queue:drivers-for-3.19 174/180] drivers/scsi/wd719x.c:247:2: error: implicit declaration of function 'dma_cache_sync'
+Date: Wed, 26 Nov 2014 18:32:48 +0100
+Message-ID: <201411261832.48201.linux@rainbow-software.org>
+References: <201411252333.lLEJOiQu%fengguang.wu@intel.com> <20141126102843.GB23189@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="L5Ks5Ey27iMz7PUy"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:39579 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213AbaKZR22 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Nov 2014 12:28:28 -0500
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20141126102843.GB23189@lst.de>
 Content-Disposition: inline
-In-Reply-To: <E1XtdBa-00087r-J4@debutante>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: sparclinux-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: kernel-build-reports@lists.linaro.org, linaro-kernel@lists.linaro.org, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+
+On Wednesday 26 November 2014 11:28:43 Christoph Hellwig wrote:
+> Hi sparc folks,
+>
+> any idea where the build error below comes from?  This new driver pulls
+> in <linux/dma-mapping.h>, but still doesn't seem to get a prototype for
+> dma_cache_sync on sparc64.
+
+wd819x should probably depend on VIRT_TO_BUS? But that means it will not work 
+on sparc. Is there a way to make it work? I have a sparc machine but haven't 
+tested it.
+
+> On Tue, Nov 25, 2014 at 11:42:38PM +0800, kbuild test robot wrote:
+> > tree:   git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.19
+> > head:   38d5c8336e60bf6e53a1da9586befe82fa75171b
+> > commit: 48a31030066315a74e6c11153b4382edbf133bb3 [174/180] wd719x:
+> > Introduce Western Digital WD7193/7197/7296 PCI SCSI card driver config:
+> > sparc64-allyesconfig (attached as .config)
+> > reproduce:
+> >   wget
+> > https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin
+> >/make.cross -O ~/bin/make.cross chmod +x ~/bin/make.cross
+> >   git checkout 48a31030066315a74e6c11153b4382edbf133bb3
+> >   # save the attached .config to linux build tree
+> >   make.cross ARCH=sparc64
+> >
+> > All error/warnings:
+> >
+> >    drivers/scsi/wd719x.c: In function 'wd719x_queuecommand':
+> > >> drivers/scsi/wd719x.c:247:2: error: implicit declaration of function
+> > >> 'dma_cache_sync' [-Werror=implicit-function-declaration]
+> >
+> >      dma_cache_sync(&wd->pdev->dev, cmd->sense_buffer,
+> >      ^
+> >    cc1: some warnings being treated as errors
+> >
+> > vim +/dma_cache_sync +247 drivers/scsi/wd719x.c
+> >
+> >    241		memcpy(scb->CDB, cmd->cmnd, cmd->cmd_len);
+> >    242
+> >    243		/* map sense buffer */
+> >    244		scb->sense_buf_length = SCSI_SENSE_BUFFERSIZE;
+> >    245		cmd->SCp.dma_handle = dma_map_single(&wd->pdev->dev,
+> > cmd->sense_buffer, 246				SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
+> >
+> >  > 247		dma_cache_sync(&wd->pdev->dev, cmd->sense_buffer,
+> >
+> >    248				SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
+> >    249		scb->sense_buf = cpu_to_le32(cmd->SCp.dma_handle);
+> >    250
+> >
 
 
---L5Ks5Ey27iMz7PUy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Nov 26, 2014 at 02:03:14PM +0000, Build bot for Mark Brown wrote:
-
-The wd719x driver fails to build on at least arm and arm64 in today's
--next since:
-
-> 	arm64-allmodconfig
-> ../drivers/scsi/wd719x.c:247:2: error: implicit declaration of function '=
-dma_cache_sync' [-Werror=3Dimplicit-function-declaration]
->=20
-> 	arm-allmodconfig
-> ../drivers/scsi/wd719x.c:247:2: error: implicit declaration of function '=
-dma_cache_sync' [-Werror=3Dimplicit-function-declaration]
-
-dma_cache_sync() is not available on these architectures.  I can't
-immediately see something to depend on that'd exclude the driver from
-these architectures, the other users seem to all have architecture
-specific dependencies.
-
---L5Ks5Ey27iMz7PUy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBAgAGBQJUdg0uAAoJECTWi3JdVIfQa2YH/RlpX9CZUj7mxuc0zeV7JA9g
-6pXZ9f3ssWrn/bp6CevE4mgGe1B8qry1COS937UJX7xaZispE+UjwtwBgOb+Fhnv
-iOgsjGd3MKFO6uG/OG3/2DOSmnWw7+L95YA1pheI7yOhlvy884jloMXzCUw8WXw+
-dF0mlLDkTFbyZd2r9uyKvYU8xHAWusneifN7rKQE7ilGXn3xMC8z8J1XQnBtY9Sw
-zk1yFLO0+mWFZgcvpuOv8BUZ+5XtrQz6V8/5X4Lf442s8TS/ihtcsg9F1Rld4Ajw
-Ov//Z6gSOH0eri7yUvwFZZHMqfHhJDrrRCX2aaKPw+s9vbyVGuFNVWjqg+cXyeo=
-=o/9w
------END PGP SIGNATURE-----
-
---L5Ks5Ey27iMz7PUy--
+-- 
+Ondrej Zary
