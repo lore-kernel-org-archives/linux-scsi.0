@@ -1,133 +1,107 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] scsi_debug: fix compare and write errors
-Date: Wed, 26 Nov 2014 12:45:13 -0500
-Message-ID: <547611A9.2040208@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: AW: ARCMSR - Notify sense data report - Lost patch?
+Date: Wed, 26 Nov 2014 17:46:42 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C39F2@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD1735F8C1FC8@EXCHANGE.collogia.de>
+	<20141124132331.GA4179@infradead.org>
+	<12EF8D94C6F8734FB2FF37B9FBEDD1735F8C20B0@EXCHANGE.collogia.de>
+	<5473451C.1040400@redhat.com>
+	<12EF8D94C6F8734FB2FF37B9FBEDD1735F8C23F4@EXCHANGE.collogia.de>,<CAKiknE87ac0yKzrvgiRj5fnq7OvdJSeVgYBLjt=rFYkjfS1yZg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090105050106070509000004"
+	boundary="----=_NextPartTM-000-f53967cb-1ec4-469c-a2b2-ca9e3ae62539"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:40145 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212AbaKZRpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2014 12:45:34 -0500
+Received: from mailrelay.collogia.de ([194.8.207.98]:49106 "HELO
+	mailrelay.collogia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753164AbaKZRrf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Nov 2014 12:47:35 -0500
+In-Reply-To: <CAKiknE87ac0yKzrvgiRj5fnq7OvdJSeVgYBLjt=rFYkjfS1yZg@mail.gmail.com>
+Content-Language: de-DE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>
+To: =?big5?B?tsCyTbap?= <ching2048@areca.com.tw>
+Cc: Tomas Henzl <thenzl@redhat.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
 
 This is a multi-part message in MIME format.
---------------090105050106070509000004
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-From: Douglas Gilbert <dgilbert@interlog.com>
-Date: Wed, 26 Nov 2014 12:33:48 -0500
-Subject: [PATCH] scsi_debug fix compare and write errors
+------=_NextPartTM-000-f53967cb-1ec4-469c-a2b2-ca9e3ae62539
+Content-Type: text/plain; charset="big5"
+Content-Transfer-Encoding: base64
 
-Kernel build tools pointed out a memory leak so that has been
-fixed and its error paths strengthened with a goto. Testing
-showed compare and write was only working for lba=0; correcting
-the length of the LBA field fixed that.
----
-  drivers/scsi/scsi_debug.c | 31 ++++++++++++++++---------------
-  1 file changed, 16 insertions(+), 15 deletions(-)
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-
---------------090105050106070509000004
-Content-Type: text/x-patch;
- name="0001-scsi_debug-fix-compare-and-write-errors.patch"
+PiBWb246ILbAsk22qSBbY2hpbmcyMDQ4QGFyZWNhLmNvbS50d10KPiBHZXNlbmRldDogTWl0dHdv
+Y2gsIDI2LiBOb3ZlbWJlciAyMDE0IDEzOjExCj4gQW46IE1hcmt1cyBTdG9ja2hhdXNlbgo+IENj
+OiBUb21hcyBIZW56bDsgQ2hyaXN0b3BoIEhlbGx3aWc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwu
+b3JnCj4gCj4gQmV0cmVmZjogUmU6IEFXOiBBUkNNU1IgLSBOb3RpZnkgc2Vuc2UgZGF0YSByZXBv
+cnQgLSBMb3N0IHBhdGNoPwo+Cj4gSGkgTWFya3VzLAo+IAo+IFdoaWNoIHZlcnNpb24gb2YgYXJj
+bXNyIGRyaXZlciB5b3UgYXJlIHVzaW5nPwo+IFdoYXQgbW9kZWwgbnVtYmVyIG9mIGFkYXB0ZXIg
+eW91IGFyZSB1c2luZz8KCldlIGFyZSB1c2luZyBhIEFyZWNhIDEyNjFNTCBjb250cm9sbGVyIHdp
+dGggdGhlIDMuMTIgc3RvY2sgZHJpdmVycy4gClNvIG5vdCB0aGUgb2ZmaWNpYWwgQXJlY2Egb25l
+cy4gRnJvbSByZWFkaW5nIHRoZSBjaGFuZ2UgbG9ncyBmb3IgCjMuMTggSSBhbnRpY2lwYXRlIHRo
+YXQgdGhlIGZvbGxvd2luZyBmaXhlcyBhcmUgaW1wb3J0YW50IGZvciBzdGFiaWxpdHkKYW5kIG1p
+Z2h0IHRoZXJlZm9yZSBiZSB2YWxpZCBmb3IgLXN0YWJsZS4KCmFyY21zcjogZml4IGNvbW1hbmQg
+dGltZW91dCB1bmRlciBoZWF2eSBsb2FkCmFyY21zcjogbGltaXQgbWF4LiBudW1iZXIgb2YgU0NT
+SSBjb21tYW5kIHJlcXVlc3QKYXJjbXNyOiByZXR1cm4gc3RhdHVzIG9mIGFib3J0IGNvbW1hbmQK
+CkJUVzogVGhlIHNhbWUgc2VlbXMgdG8gYXBwbHkgZm9yIHRoZSBsb3N0IHBhdGNoIGFib3V0IG5v
+dGlmeQpzZW5zZSBkYXRhLgoKPiBSZWdhcmRzLAo+IAo+IENoaW5nCgoK
+------=_NextPartTM-000-f53967cb-1ec4-469c-a2b2-ca9e3ae62539
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
- filename="0001-scsi_debug-fix-compare-and-write-errors.patch"
+	filename="InterScan_Disclaimer.txt"
 
->From 699d7b799ebbc0e1b5bc905ccfd50dc77003a9e8 Mon Sep 17 00:00:00 2001
-From: Douglas Gilbert <dgilbert@interlog.com>
-Date: Wed, 26 Nov 2014 12:33:48 -0500
-Subject: [PATCH] scsi_debug fix compare and write errors
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
-Kernel build tools pointed out a memory leak so that has been
-fixed and its error paths strengthened with a goto. Testing
-showed compare and write was only working for lba=0; correcting
-the length of the LBA field fixed that.
----
- drivers/scsi/scsi_debug.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index aa4b6b8..747c691 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3045,18 +3045,12 @@ resp_comp_write(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	u8 num;
- 	unsigned long iflags;
- 	int ret;
-+	int retval = 0;
- 
--	lba = get_unaligned_be32(cmd + 2);
-+	lba = get_unaligned_be64(cmd + 2);
- 	num = cmd[13];		/* 1 to a maximum of 255 logical blocks */
- 	if (0 == num)
- 		return 0;	/* degenerate case, not an error */
--	dnum = 2 * num;
--	arr = kzalloc(dnum * lb_size, GFP_ATOMIC);
--	if (NULL == arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
--		return check_condition_result;
--	}
- 	if (scsi_debug_dif == SD_DIF_TYPE2_PROTECTION &&
- 	    (cmd[1] & 0xe0)) {
- 		mk_sense_invalid_opcode(scp);
-@@ -3079,6 +3073,13 @@ resp_comp_write(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
- 		return check_condition_result;
- 	}
-+	dnum = 2 * num;
-+	arr = kzalloc(dnum * lb_size, GFP_ATOMIC);
-+	if (NULL == arr) {
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
-+				INSUFF_RES_ASCQ);
-+		return check_condition_result;
-+	}
- 
- 	write_lock_irqsave(&atomic_rw, iflags);
- 
-@@ -3089,24 +3090,24 @@ resp_comp_write(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	ret = do_device_access(scp, 0, dnum, true);
- 	fake_storep = fake_storep_hold;
- 	if (ret == -1) {
--		write_unlock_irqrestore(&atomic_rw, iflags);
--		kfree(arr);
--		return DID_ERROR << 16;
-+		retval = DID_ERROR << 16;
-+		goto cleanup;
- 	} else if ((ret < (dnum * lb_size)) &&
- 		 (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
- 		sdev_printk(KERN_INFO, scp->device, "%s: compare_write: cdb "
- 			    "indicated=%u, IO sent=%d bytes\n", my_name,
- 			    dnum * lb_size, ret);
- 	if (!comp_write_worker(lba, num, arr)) {
--		write_unlock_irqrestore(&atomic_rw, iflags);
--		kfree(arr);
- 		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
--		return check_condition_result;
-+		retval = check_condition_result;
-+		goto cleanup;
- 	}
- 	if (scsi_debug_lbp())
- 		map_region(lba, num);
-+cleanup:
- 	write_unlock_irqrestore(&atomic_rw, iflags);
--	return 0;
-+	kfree(arr);
-+	return retval;
- }
- 
- struct unmap_block_desc {
--- 
-1.9.1
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
 
---------------090105050106070509000004--
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-f53967cb-1ec4-469c-a2b2-ca9e3ae62539--
