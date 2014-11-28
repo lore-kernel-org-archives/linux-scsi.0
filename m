@@ -1,25 +1,121 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/4] scsi: remove scsi_get_tag_type
-Date: Fri, 28 Nov 2014 11:00:05 +0100
-Message-ID: <547847A5.2060705@acm.org>
-References: <1416839781-26988-1-git-send-email-hch@lst.de> <1416839781-26988-4-git-send-email-hch@lst.de>
+From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
+Subject: Re: [PATCH 1.1 1/1] arcmsr: Notify has sense data report
+Date: Fri, 28 Nov 2014 18:29:58 +0800
+Message-ID: <CAKiknE80Ee+7Kco=uwZUbSm-CyGKnrhtXCUPPPNxRw_48jXVng@mail.gmail.com>
+References: <1417169252.25477.11.camel@Centos6.3-64>
+	<54784B1D.6030308@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sf2.bxl.stone.is ([5.134.1.239]:54005 "EHLO sf2.bxl.stone.is"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750827AbaK1KRS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Nov 2014 05:17:18 -0500
-In-Reply-To: <1416839781-26988-4-git-send-email-hch@lst.de>
+Received: from mail-la0-f44.google.com ([209.85.215.44]:59297 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbaK1K37 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Nov 2014 05:29:59 -0500
+Received: by mail-la0-f44.google.com with SMTP id ge10so5461333lab.17
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2014 02:29:58 -0800 (PST)
+In-Reply-To: <54784B1D.6030308@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: Doug Ledford <dledford@redhat.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "hch@infradead.org" <hch@infradead.org>, Tomas Henzl <thenzl@redhat.com>, James Bottomley <jbottomley@parallels.com>, Dan Carpenter <dan.carpenter@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 11/24/14 15:36, Christoph Hellwig wrote:
-> Both remaining users are better of just checking sdev->simple_tags
-> directly.
+There is no this case.
+We always have auto request sense to device in case of CHECK_CONDITION =
+status.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
+2014-11-28 18:14 GMT+08:00 Hannes Reinecke <hare@suse.de>:
+> On 11/28/2014 11:07 AM, Ching Huang wrote:
+>> From: Ching Huang <ching2048@areca.com.tw>
+>>
+>> Setting command status with 'DRIVER_SENSE' except 'CHECK_CONDITION' =
+if we have sense data.
+>>
+>> Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+>> ---
+>>
+>> This patch is relative to http://git.infradead.org/users/hch/scsi-qu=
+eue.git/tree/refs/heads/drivers-for-3.18:/drivers/scsi/arcmsr
+>>
+>>
+>> diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcm=
+sr.h
+>> --- a/drivers/scsi/arcmsr/arcmsr.h    2014-09-19 11:04:41.845100000 =
++0800
+>> +++ b/drivers/scsi/arcmsr/arcmsr.h    2014-11-28 10:54:30.000000000 =
++0800
+>> @@ -52,7 +52,7 @@ struct device_attribute;
+>>       #define ARCMSR_MAX_FREECCB_NUM  320
+>>  #define ARCMSR_MAX_OUTSTANDING_CMD   255
+>>  #endif
+>> -#define ARCMSR_DRIVER_VERSION                "v1.30.00.04-20140919"
+>> +#define ARCMSR_DRIVER_VERSION                "v1.30.00.05-20141128"
+>>  #define ARCMSR_SCSI_INITIATOR_ID                                   =
+          255
+>>  #define ARCMSR_MAX_XFER_SECTORS                                    =
+                  512
+>>  #define ARCMSR_MAX_XFER_SECTORS_B                                  =
+          4096
+>> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/=
+arcmsr_hba.c
+>> --- a/drivers/scsi/arcmsr/arcmsr_hba.c        2014-09-19 11:01:26.99=
+0090000 +0800
+>> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c        2014-11-28 17:51:04.00=
+0000000 +0800
+>> @@ -989,16 +989,15 @@ static void arcmsr_report_sense_info(str
+>>
+>>       struct scsi_cmnd *pcmd =3D ccb->pcmd;
+>>       struct SENSE_DATA *sensebuffer =3D (struct SENSE_DATA *)pcmd->=
+sense_buffer;
+>> -     pcmd->result =3D DID_OK << 16;
+>> -     if (sensebuffer) {
+>> -             int sense_data_length =3D
+>> +
+>> +     pcmd->result =3D (DRIVER_SENSE << 24) | (DID_OK << 16) | (CHEC=
+K_CONDITION << 1);
+>> +     int sense_data_length =3D
+>>                       sizeof(struct SENSE_DATA) < SCSI_SENSE_BUFFERS=
+IZE
+>>                       ? sizeof(struct SENSE_DATA) : SCSI_SENSE_BUFFE=
+RSIZE;
+>> -             memset(sensebuffer, 0, SCSI_SENSE_BUFFERSIZE);
+>> -             memcpy(sensebuffer, ccb->arcmsr_cdb.SenseData, sense_d=
+ata_length);
+>> -             sensebuffer->ErrorCode =3D SCSI_SENSE_CURRENT_ERRORS;
+>> -             sensebuffer->Valid =3D 1;
+>> -     }
+>> +     memset(sensebuffer, 0, SCSI_SENSE_BUFFERSIZE);
+>> +     memcpy(sensebuffer, ccb->arcmsr_cdb.SenseData, sense_data_leng=
+th);
+>> +     sensebuffer->ErrorCode =3D SCSI_SENSE_CURRENT_ERRORS;
+>> +     sensebuffer->Valid =3D 1;
+>>  }
+>>
+>>  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock =
+*acb)
+>>
+>>
+> Hmm. Sorry to be picky, but:
+>
+> Is there a chance the _no_ sense data will be provided?
+> If so we'd end up starting the error handler, calling REQUEST SENSE
+> (which will fail, too), and finally offlining the device.
+> I'd rather provide a default sense code for these cases.
+>
+> Plus please use SAM_STAT_CHECK_CONDITION instead of
+> CHECK_CONDITION << 1.
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                   zSeries & Storage
+> hare@suse.de                          +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnbe=
+rg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
