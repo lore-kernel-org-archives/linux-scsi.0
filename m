@@ -1,121 +1,59 @@
-From: =?UTF-8?B?6buD5riF6ZqG?= <ching2048@areca.com.tw>
-Subject: Re: [PATCH 1.1 1/1] arcmsr: Notify has sense data report
-Date: Fri, 28 Nov 2014 18:29:58 +0800
-Message-ID: <CAKiknE80Ee+7Kco=uwZUbSm-CyGKnrhtXCUPPPNxRw_48jXVng@mail.gmail.com>
-References: <1417169252.25477.11.camel@Centos6.3-64>
-	<54784B1D.6030308@suse.de>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 5/4] scsi: remove MSG_*_TAG defines
+Date: Fri, 28 Nov 2014 10:58:58 +0100
+Message-ID: <54784762.8020304@acm.org>
+References: <1416839781-26988-1-git-send-email-hch@lst.de> <20141124150725.GA23165@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:59297 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027AbaK1K37 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Nov 2014 05:29:59 -0500
-Received: by mail-la0-f44.google.com with SMTP id ge10so5461333lab.17
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2014 02:29:58 -0800 (PST)
-In-Reply-To: <54784B1D.6030308@suse.de>
+Received: from sf1.bxl.stone.is ([87.238.167.36]:41041 "EHLO sf1.bxl.stone.is"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751053AbaK1KrV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2014 05:47:21 -0500
+In-Reply-To: <20141124150725.GA23165@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "hch@infradead.org" <hch@infradead.org>, Tomas Henzl <thenzl@redhat.com>, James Bottomley <jbottomley@parallels.com>, Dan Carpenter <dan.carpenter@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+Cc: Doug Ledford <dledford@redhat.com>
 
-There is no this case.
-We always have auto request sense to device in case of CHECK_CONDITION =
-status.
+On 11/24/14 16:07, Christoph Hellwig wrote:
+> index 6719a33..2c5ce48 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -7921,9 +7921,9 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+>   	 */
+>   	if ((asc_dvc->cur_dvc_qng[scp->device->id] > 0) &&
+>   	    (boardp->reqcnt[scp->device->id] % 255) == 0) {
+> -		asc_scsi_q->q2.tag_code = MSG_ORDERED_TAG;
+> +		asc_scsi_q->q2.tag_code = ORDERED_QUEUE_TAG;
+>   	} else {
+> -		asc_scsi_q->q2.tag_code = MSG_SIMPLE_TAG;
+> +		asc_scsi_q->q2.tag_code = SIMPLE_QUEUE_TAG;
+>   	}
+>
+>   	/* Build ASC_SCSI_Q */
+> @@ -8351,7 +8351,7 @@ static int AscPutReadyQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq, uchar q_no)
+>   	}
+>   	q_addr = ASC_QNO_TO_QADDR(q_no);
+>   	if ((scsiq->q1.target_id & asc_dvc->use_tagged_qng) == 0) {
+> -		scsiq->q2.tag_code &= ~MSG_SIMPLE_TAG;
+> +		scsiq->q2.tag_code &= ~SIMPLE_QUEUE_TAG;
+>   	}
+>   	scsiq->q1.status = QS_FREE;
+>   	AscMemWordCopyPtrToLram(iop_base,
+> @@ -8669,7 +8669,7 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+>   		}
+>   	}
+>   	if (disable_syn_offset_one_fix) {
+> -		scsiq->q2.tag_code &= ~MSG_SIMPLE_TAG;
+> +		scsiq->q2.tag_code &= ~SIMPLE_QUEUE_TAG;
+>   		scsiq->q2.tag_code |= (ASC_TAG_FLAG_DISABLE_ASYN_USE_SYN_FIX |
+>   				       ASC_TAG_FLAG_DISABLE_DISCONNECT);
+>   	} else {
 
-2014-11-28 18:14 GMT+08:00 Hannes Reinecke <hare@suse.de>:
-> On 11/28/2014 11:07 AM, Ching Huang wrote:
->> From: Ching Huang <ching2048@areca.com.tw>
->>
->> Setting command status with 'DRIVER_SENSE' except 'CHECK_CONDITION' =
-if we have sense data.
->>
->> Signed-off-by: Ching Huang <ching2048@areca.com.tw>
->> ---
->>
->> This patch is relative to http://git.infradead.org/users/hch/scsi-qu=
-eue.git/tree/refs/heads/drivers-for-3.18:/drivers/scsi/arcmsr
->>
->>
->> diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcm=
-sr.h
->> --- a/drivers/scsi/arcmsr/arcmsr.h    2014-09-19 11:04:41.845100000 =
-+0800
->> +++ b/drivers/scsi/arcmsr/arcmsr.h    2014-11-28 10:54:30.000000000 =
-+0800
->> @@ -52,7 +52,7 @@ struct device_attribute;
->>       #define ARCMSR_MAX_FREECCB_NUM  320
->>  #define ARCMSR_MAX_OUTSTANDING_CMD   255
->>  #endif
->> -#define ARCMSR_DRIVER_VERSION                "v1.30.00.04-20140919"
->> +#define ARCMSR_DRIVER_VERSION                "v1.30.00.05-20141128"
->>  #define ARCMSR_SCSI_INITIATOR_ID                                   =
-          255
->>  #define ARCMSR_MAX_XFER_SECTORS                                    =
-                  512
->>  #define ARCMSR_MAX_XFER_SECTORS_B                                  =
-          4096
->> diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/=
-arcmsr_hba.c
->> --- a/drivers/scsi/arcmsr/arcmsr_hba.c        2014-09-19 11:01:26.99=
-0090000 +0800
->> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c        2014-11-28 17:51:04.00=
-0000000 +0800
->> @@ -989,16 +989,15 @@ static void arcmsr_report_sense_info(str
->>
->>       struct scsi_cmnd *pcmd =3D ccb->pcmd;
->>       struct SENSE_DATA *sensebuffer =3D (struct SENSE_DATA *)pcmd->=
-sense_buffer;
->> -     pcmd->result =3D DID_OK << 16;
->> -     if (sensebuffer) {
->> -             int sense_data_length =3D
->> +
->> +     pcmd->result =3D (DRIVER_SENSE << 24) | (DID_OK << 16) | (CHEC=
-K_CONDITION << 1);
->> +     int sense_data_length =3D
->>                       sizeof(struct SENSE_DATA) < SCSI_SENSE_BUFFERS=
-IZE
->>                       ? sizeof(struct SENSE_DATA) : SCSI_SENSE_BUFFE=
-RSIZE;
->> -             memset(sensebuffer, 0, SCSI_SENSE_BUFFERSIZE);
->> -             memcpy(sensebuffer, ccb->arcmsr_cdb.SenseData, sense_d=
-ata_length);
->> -             sensebuffer->ErrorCode =3D SCSI_SENSE_CURRENT_ERRORS;
->> -             sensebuffer->Valid =3D 1;
->> -     }
->> +     memset(sensebuffer, 0, SCSI_SENSE_BUFFERSIZE);
->> +     memcpy(sensebuffer, ccb->arcmsr_cdb.SenseData, sense_data_leng=
-th);
->> +     sensebuffer->ErrorCode =3D SCSI_SENSE_CURRENT_ERRORS;
->> +     sensebuffer->Valid =3D 1;
->>  }
->>
->>  static u32 arcmsr_disable_outbound_ints(struct AdapterControlBlock =
-*acb)
->>
->>
-> Hmm. Sorry to be picky, but:
->
-> Is there a chance the _no_ sense data will be provided?
-> If so we'd end up starting the error handler, calling REQUEST SENSE
-> (which will fail, too), and finally offlining the device.
-> I'd rather provide a default sense code for these cases.
->
-> Plus please use SAM_STAT_CHECK_CONDITION instead of
-> CHECK_CONDITION << 1.
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                   zSeries & Storage
-> hare@suse.de                          +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnbe=
-rg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+One of the statements in advansys.c (tag_code &= 0xDC) makes assumptions 
+about the numeric value of MSG_SIMPLE_TAG. This makes me wonder whether 
+it is safe to change MSG_SIMPLE_TAG into another value ?
+
+Bart.
