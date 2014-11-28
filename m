@@ -1,81 +1,166 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 00/16] target: Use external CITs for backend devices
-Date: Fri, 28 Nov 2014 09:06:26 +0000
-Message-ID: <1417165602-32359-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH 01/16] target: Move dev_cit to struct se_subsystem_api
+Date: Fri, 28 Nov 2014 09:06:27 +0000
+Message-ID: <1417165602-32359-2-git-send-email-nab@daterainc.com>
+References: <1417165602-32359-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:63729 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbaK1Jhb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Nov 2014 04:37:31 -0500
+Received: by mail-oi0-f50.google.com with SMTP id a141so4388543oig.37
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2014 01:37:31 -0800 (PST)
+In-Reply-To: <1417165602-32359-1-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Jerome Martin <tramjoe.merin@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi all,
+This patch adds initial support for dev_cit as external config_item_type.
 
-This series addresses a long standing limitation going back to early
-LIO v3.x days, where all TCM backend devices originally used local
-scope struct config_item_types in target_core_configfs.c code that
-resulted in same /sys/kernel/config/target/core/$HBA/$DEV/attrib/*
-for all se_subsystem_api flavors, regardless of ->transport_type.
+This includes a new struct target_backend_cits to hold the external CITs
+within struct se_subsystem_api, and target_core_setup_sub_cits() to be
+used by backend drivers ahead of transport_subsystem_register().
 
-This has made user-space complexity grow slightly over the years,
-causing rtslib + friends to have to determine which device attributes
-can be changed at run-time for pSCSI vs. other backend drivers.
+It adds a TB_CIT_SETUP() helper following target_core_fabric_configfs.c
+to perform the config_item_type assignments.
 
-On the other hand, existing target_core_fabric_configfs.c logic in
-LIO v4.0 has used a method that lets fabric drivers populate their
-own driver dependent attributes using struct config_item_type members
-within struct target_fabric_configfs->tf_cit_tmpl.  This allows for
-config_item_type (CITs) to live within external modules, so fabric
-drivers can add new attributes without breaking existing configfs
-user-space ABI.
+Also, drop left-over target_core_dev_cit from target_core_configfs.c code
+and update comments.
 
-To that end, this series exposes the 6 existing se_device CITs from
-target_core_configfs.c externally to backend drivers, and using a
-new set of helper macros in target_core_backend_configfs.h converts
-existing IBLOCK, FILEIO, RAMDISK, TCM-USER, and PSCSI to populate
-their own set of backend device attributes.
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_configfs.c | 33 ++++++++++++++++++++++++---------
+ drivers/target/target_core_hba.c      |  1 +
+ include/target/target_core_backend.h  |  9 +++++++++
+ 3 files changed, 34 insertions(+), 9 deletions(-)
 
-Post conversion, IBLOCK, FILEIO, RAMDISK, and TCM-USER device attrs
-remain unchanged to user-space via the DEF_TB_DEFAULT_ATTRIBS CPP
-magic, and PSCSI now exposes 4 read-only attributes: hw_pi_prot_type,
-hw_block_size, hw_max_sectors and hw_queue_depth.
-
-Thanks!
-
---nab
-
-Nicholas Bellinger (16):
-  target: Move dev_cit to struct se_subsystem_api
-  target: Move dev_attrib_cit to struct se_subsystem_api
-  target: Move dev_pr_cit to struct se_subsystem_api
-  target: Move dev_wwn_cit to struct se_subsystem_api
-  target: Move dev_alua_tg_pt_gps_cit to struct se_subsystem_api
-  target: Move dev_stat_cit to struct se_subsystem_api
-  target: Add target_core_backend_configfs.h helper macros
-  target: Add EXPORT_SYMBOL for existing se_dev_set_*
-  target: Add DEF_TB_DEFAULT_ATTRIBS macro for virtual device attrs
-  target/iblock: Convert to external iblock_backend_dev_attrs
-  target/file: Convert to external fileio_backend_dev_attrs
-  target/rd: Convert to external rd_mcp_backend_dev_attrs
-  target/user: Convert to external tcmu_backend_dev_attrs
-  target/pscsi: Convert to external pscsi_backend_dev_attrs
-  target: Drop left-over internal dev attribute code
-  target: Drop left-over PHBA_PDEV set attr checks
-
- drivers/target/target_core_configfs.c         | 269 +++++---------------------
- drivers/target/target_core_device.c           |  90 ++++-----
- drivers/target/target_core_file.c             |  42 ++++
- drivers/target/target_core_hba.c              |   1 +
- drivers/target/target_core_iblock.c           |  42 ++++
- drivers/target/target_core_internal.h         |  28 ---
- drivers/target/target_core_pscsi.c            |  26 +++
- drivers/target/target_core_rd.c               |  41 ++++
- drivers/target/target_core_user.c             |  42 ++++
- include/target/target_core_backend.h          |  43 ++++
- include/target/target_core_backend_configfs.h | 120 ++++++++++++
- 11 files changed, 442 insertions(+), 302 deletions(-)
- create mode 100644 include/target/target_core_backend_configfs.h
-
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 41498b6..f7b2186 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -50,6 +50,19 @@
+ #include "target_core_rd.h"
+ #include "target_core_xcopy.h"
+ 
++#define TB_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
++static void target_core_setup_##_name##_cit(struct se_subsystem_api *sa) \
++{									\
++	struct target_backend_cits *tbc = &sa->tb_cits;			\
++	struct config_item_type *cit = &tbc->tb_##_name##_cit;		\
++									\
++	cit->ct_item_ops = _item_ops;					\
++	cit->ct_group_ops = _group_ops;					\
++	cit->ct_attrs = _attrs;						\
++	cit->ct_owner = sa->owner;					\
++	pr_debug("Setup generic %s\n", __stringify(_name));		\
++}
++
+ extern struct t10_alua_lu_gp *default_lu_gp;
+ 
+ static LIST_HEAD(g_tf_list);
+@@ -1470,7 +1483,7 @@ static struct config_item_type target_core_dev_pr_cit = {
+ 
+ /*  End functions for struct config_item_type target_core_dev_pr_cit */
+ 
+-/*  Start functions for struct config_item_type target_core_dev_cit */
++/*  Start functions for struct config_item_type tb_dev_cit */
+ 
+ static ssize_t target_core_show_dev_info(void *p, char *page)
+ {
+@@ -1934,7 +1947,7 @@ static struct target_core_configfs_attribute target_core_attr_dev_lba_map = {
+ 	.store	= target_core_store_dev_lba_map,
+ };
+ 
+-static struct configfs_attribute *lio_core_dev_attrs[] = {
++static struct configfs_attribute *target_core_dev_attrs[] = {
+ 	&target_core_attr_dev_info.attr,
+ 	&target_core_attr_dev_control.attr,
+ 	&target_core_attr_dev_alias.attr,
+@@ -1993,13 +2006,9 @@ static struct configfs_item_operations target_core_dev_item_ops = {
+ 	.store_attribute	= target_core_dev_store,
+ };
+ 
+-static struct config_item_type target_core_dev_cit = {
+-	.ct_item_ops		= &target_core_dev_item_ops,
+-	.ct_attrs		= lio_core_dev_attrs,
+-	.ct_owner		= THIS_MODULE,
+-};
++TB_CIT_SETUP(dev, &target_core_dev_item_ops, NULL, target_core_dev_attrs);
+ 
+-/* End functions for struct config_item_type target_core_dev_cit */
++/* End functions for struct config_item_type tb_dev_cit */
+ 
+ /* Start functions for struct config_item_type target_core_alua_lu_gp_cit */
+ 
+@@ -2815,7 +2824,7 @@ static struct config_group *target_core_make_subdev(
+ 	if (!dev_cg->default_groups)
+ 		goto out_free_device;
+ 
+-	config_group_init_type_name(dev_cg, name, &target_core_dev_cit);
++	config_group_init_type_name(dev_cg, name, &t->tb_cits.tb_dev_cit);
+ 	config_group_init_type_name(&dev->dev_attrib.da_group, "attrib",
+ 			&target_core_dev_attrib_cit);
+ 	config_group_init_type_name(&dev->dev_pr_group, "pr",
+@@ -3119,6 +3128,12 @@ static struct config_item_type target_core_cit = {
+ 
+ /* Stop functions for struct config_item_type target_core_hba_cit */
+ 
++void target_core_setup_sub_cits(struct se_subsystem_api *sa)
++{
++	target_core_setup_dev_cit(sa);
++}
++EXPORT_SYMBOL(target_core_setup_sub_cits);
++
+ static int __init target_core_init_configfs(void)
+ {
+ 	struct config_group *target_cg, *hba_cg = NULL, *alua_cg = NULL;
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index e6e496f..ff95f95 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -36,6 +36,7 @@
+ #include <target/target_core_base.h>
+ #include <target/target_core_backend.h>
+ #include <target/target_core_fabric.h>
++#include <target/target_core_configfs.h>
+ 
+ #include "target_core_internal.h"
+ 
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 9adc1bc..7b84436 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -5,6 +5,10 @@
+ #define TRANSPORT_PLUGIN_VHBA_PDEV		2
+ #define TRANSPORT_PLUGIN_VHBA_VDEV		3
+ 
++struct target_backend_cits {
++	struct config_item_type tb_dev_cit;
++};
++
+ struct se_subsystem_api {
+ 	struct list_head sub_api_list;
+ 
+@@ -44,6 +48,8 @@ struct se_subsystem_api {
+ 	int (*init_prot)(struct se_device *);
+ 	int (*format_prot)(struct se_device *);
+ 	void (*free_prot)(struct se_device *);
++
++	struct target_backend_cits tb_cits;
+ };
+ 
+ struct sbc_ops {
+@@ -96,4 +102,7 @@ sense_reason_t	transport_generic_map_mem_to_cmd(struct se_cmd *,
+ 
+ void	array_free(void *array, int n);
+ 
++/* From target_core_configfs.c to setup default backend config_item_types */
++void	target_core_setup_sub_cits(struct se_subsystem_api *);
++
+ #endif /* TARGET_CORE_BACKEND_H */
 -- 
 1.9.1
+
