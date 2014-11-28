@@ -1,41 +1,39 @@
-From: "Dr. NTakashi" <info@sankojapan.co.jp>
-Subject: Warten darauf=?iso-8859-2?Q?=2C_von_Ihnen_zu_h=F6ren?=
-Date: Fri, 28 Nov 2014 22:22:07 +1300 (NZDT)
-Message-ID: <53228.46.114.10.245.1417166527.squirrel__42044.5445496172$1417165737$gmane$org@mail.fseromania.ro>
-Reply-To: ntakashi@aol.jp
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 1/1] arcmsr: Notify has sense data report
+Date: Fri, 28 Nov 2014 12:17:52 +0300
+Message-ID: <20141128091752.GH4911@mwanda>
+References: <1417148444.16588.56.camel@Centos6.3-64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.fseromania.ro ([89.35.192.164]:37970 "EHLO
-	mail.fseromania.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbaK1JIR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Nov 2014 04:08:17 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1417148444.16588.56.camel@Centos6.3-64>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ching Huang <ching2048@areca.com.tw>
+Cc: hch@infradead.org, thenzl@redhat.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Warten darauf, von Ihnen zu h=F6ren
+On Fri, Nov 28, 2014 at 12:20:44PM +0800, Ching Huang wrote:
+> This patch is relative to http://git.infradead.org/users/hch/scsi-queue.git/tree/refs/heads/drivers-for-3.18:/drivers/scsi/arcmsr
+> 
 
-Ich bin Dr. Takashi Nonaka. (Head of Internal Audit Group Vice Presiden=
-t,
-Executive Officer und Direktor von Mizuho Trust Banking Co., Ltd.), Jap=
-an.
-I ein lukratives Gesch=E4ft Vorschlag von gemeinsamem Interesse mit Ihn=
-en
-teilen, wenn Sie Interesse an einer Zusammenarbeit mit mir sind,
-kontaktieren Sie mich durch meine private E-Mail; ( ntakashi@aol.jp ) f=
-=FCr
-weitere Details
+Put this information after the --- cut off line so that it is not
+saved in the permanent git log.
 
-Mit freundlichen Gr=FC=DFen
-Dr. Takashi Nonaka
-E-mail: ntakashi@aol.jp
+> Setting command status with 'DRIVER_SENSE' except 'CHECK_CONDITION' if we have sense data.
+> 
+> Signed-off-by: Ching Huang <ching2048@areca.com.tw>
+> ---
 
+<--- Here.  Put it here.
 
+> 
+> diff -uprN a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+> --- a/drivers/scsi/arcmsr/arcmsr.h	2014-09-19 11:04:41.845100000 +0800
+> +++ b/drivers/scsi/arcmsr/arcmsr.h	2014-11-28 10:54:30.000000000 +0800
+> @@ -52,7 +52,7 @@ struct device_attribute;
+>  	#define ARCMSR_MAX_FREECCB_NUM	320
+>  #define ARCMSR_MAX_OUTSTANDING_CMD	255
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+regards,
+dan carpenter
