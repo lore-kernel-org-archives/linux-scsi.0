@@ -1,34 +1,39 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] usb: storage: debug: uninitialized var in
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch] usb: storage: debug: uninitialized var in
  usb_stor_show_sense()
-Date: Sat, 29 Nov 2014 15:48:01 +0300
-Message-ID: <20141129124801.GA27251@mwanda>
+Date: Sat, 29 Nov 2014 08:07:55 -0800
+Message-ID: <1417277275.2202.35.camel@HansenPartnership.com>
+References: <20141129124801.GA27251@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hannes Reinecke <hare@suse.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, =?iso-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43044 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751075AbaK2QH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Nov 2014 11:07:59 -0500
+In-Reply-To: <20141129124801.GA27251@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>
 
-The "fmt" variable might be used uninitialized, it should be set to NULL
-at the start.
+On Sat, 2014-11-29 at 15:48 +0300, Dan Carpenter wrote:
+> The "fmt" variable might be used uninitialized, it should be set to NULL
+> at the start.
+> 
+> Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Hm, that' falls into the category of an interface that's hard to get
+right if every caller has to remember to set fmt to NULL.
 
-diff --git a/drivers/usb/storage/debug.c b/drivers/usb/storage/debug.c
-index 57bf3ad..fd00509 100644
---- a/drivers/usb/storage/debug.c
-+++ b/drivers/usb/storage/debug.c
-@@ -164,7 +164,8 @@ void usb_stor_show_sense(const struct us_data *us,
- 			 unsigned char asc,
- 			 unsigned char ascq)
- {
--	const char *what, *keystr, *fmt;
-+	const char *fmt = NULL;
-+	const char *what, *keystr;
- 
- 	keystr = scsi_sense_key_string(key);
- 	what = scsi_extd_sense_format(asc, ascq, &fmt);
+Could you instead set *fmt to NULL in scsi_extd_sense_format()?  That
+way the interface is much easier.
+
+Thanks,
+
+James
+
+
