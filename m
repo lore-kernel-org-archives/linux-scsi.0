@@ -1,39 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch] usb: storage: debug: uninitialized var in
- usb_stor_show_sense()
-Date: Sat, 29 Nov 2014 08:07:55 -0800
-Message-ID: <1417277275.2202.35.camel@HansenPartnership.com>
-References: <20141129124801.GA27251@mwanda>
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+Subject: Re: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+ for internal shared functions using
+Date: Sun, 30 Nov 2014 11:07:21 +0800
+Message-ID: <547A89E9.6010804@gmail.com>
+References: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com> <1085092fd0c2eadae3a0f8de3ee09b95@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43044 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751075AbaK2QH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2014 11:07:59 -0500
-In-Reply-To: <20141129124801.GA27251@mwanda>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:46041 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611AbaK3DAq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Nov 2014 22:00:46 -0500
+In-Reply-To: <1085092fd0c2eadae3a0f8de3ee09b95@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>
+To: Sumit Saxena <sumit.saxena@avagotech.com>
+Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 2014-11-29 at 15:48 +0300, Dan Carpenter wrote:
-> The "fmt" variable might be used uninitialized, it should be set to NULL
-> at the start.
+On 11/17/14 19:51, Sumit Saxena wrote:
+>> -----Original Message-----
+>> From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
+>> Sent: Monday, November 17, 2014 5:17 PM
+>> To: Sumit Saxena
+>> Cc: megaraidlinux@lsi.com; linux-scsi@vger.kernel.org; linux-
+>> kernel@vger.kernel.org
+>> Subject: RE: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+>> for internal shared functions using
+>>
+>>
+>> OK, I will send patch v2 for it.
+>>
+>> I sent this patch based on Linux next tree, please tell me the tree
+>> location (git
+>> address) which I shall base on for sending patch v2.
 > 
-> Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> I posted the patch series today, once the patches make it to scsi-next tree,
+> I will let you know.
+> 
 
-Hm, that' falls into the category of an interface that's hard to get
-right if every caller has to remember to set fmt to NULL.
+Is it OK?  or if possible, please help rebase and send the patch for it
+based on the related branches and patches.
 
-Could you instead set *fmt to NULL in scsi_extd_sense_format()?  That
-way the interface is much easier.
+Thanks.
+-- 
+Chen Gang
 
-Thanks,
-
-James
-
-
+Open, share, and attitude like air, water, and life which God blessed
