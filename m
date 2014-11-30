@@ -1,77 +1,52 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 1/4] target: remove unneeded array
-Date: Sun, 30 Nov 2014 19:14:12 +0100
-Message-ID: <1417371255-2282-2-git-send-email-Julia.Lawall@lip6.fr>
-References: <1417371255-2282-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417371255-2282-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH 3/5]: ipr: kexec boot speed improvements
+Date: Mon, 1 Dec 2014 07:43:19 +1100
+Message-ID: <20141201074319.7ded3d8e@kryten>
+References: <53D6B2A4.4010102@linux.vnet.ibm.com>
+	<20140827140630.1f0ee455@kryten>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:58764 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751650AbaK3UnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Nov 2014 15:43:21 -0500
+In-Reply-To: <20140827140630.1f0ee455@kryten>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Hi Brian,
 
-Delete a local array that is only used to be initialized by memset.
+> > Currently when performing a kexec boot with an ipr adapter,
+> > the adapter gets shutdown completely, flushing all write
+> > cache, as well as performing a full hardware reset of the card
+> > during the shutdown phase of the old kernel. This forces
+> > the new kernel to then wait for the adapter firmware to
+> > reinitialize, which slows down kexec boot. There is no
+> > need to do all of this on the newer ipr adapters, since they
+> > support the ability to cancel outstanding error buffers.
+> > 
+> > This patch adds a special case for kexec boot to simply
+> > cancel these outstanding error buffers, and as long as
+> > there is no other I/O outstanding to the adapter, which
+> > there shouldn't be, place the adapter into a state
+> > where it has no memory of any DMA addresses from the old
+> > kernel, then disable the device. This significantly
+> > speeds up kexec boot, particularly in configurations with
+> > multiple ipr adapters.
+> > 
+> > Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> > ---
+> 
+> This reduces boot time on my box from 80 seconds to 34 seconds. ppc64
+> kernel developers (who boot boxes continually) thank you!
+> 
+> Tested-by: Anton Blanchard <anton@samba.org>
 
-A semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+Just checking on this series. I'm very keen to see it go in since it is
+a huge improvement in boot time.
 
-// <smpl>
-@@
-identifier x;
-type T;
-@@
-
-{
-... when any
--T x[...];
-<+... when != x
-- memset(x,...);
-...+>
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/target/target_core_pr.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 4c261c3..a0f850b 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1429,14 +1429,12 @@ core_scsi3_decode_spec_i_port(
- 	struct target_core_fabric_ops *tmp_tf_ops;
- 	unsigned char *buf;
- 	unsigned char *ptr, *i_str = NULL, proto_ident, tmp_proto_ident;
--	char *iport_ptr = NULL, dest_iport[64], i_buf[PR_REG_ISID_ID_LEN];
-+	char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN];
- 	sense_reason_t ret;
- 	u32 tpdl, tid_len = 0;
- 	int dest_local_nexus;
- 	u32 dest_rtpi = 0;
- 
--	memset(dest_iport, 0, 64);
--
- 	local_se_deve = se_sess->se_node_acl->device_list[cmd->orig_fe_lun];
- 	/*
- 	 * Allocate a struct pr_transport_id_holder and setup the
-@@ -3059,7 +3057,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
- 	struct t10_reservation *pr_tmpl = &dev->t10_pr;
- 	unsigned char *buf;
- 	unsigned char *initiator_str;
--	char *iport_ptr = NULL, dest_iport[64], i_buf[PR_REG_ISID_ID_LEN];
-+	char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN];
- 	u32 tid_len, tmp_tid_len;
- 	int new_reg = 0, type, scope, matching_iname;
- 	sense_reason_t ret;
-@@ -3071,7 +3069,6 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
- 
--	memset(dest_iport, 0, 64);
- 	memset(i_buf, 0, PR_REG_ISID_ID_LEN);
- 	se_tpg = se_sess->se_tpg;
- 	tf_ops = se_tpg->se_tpg_tfo;
+Anton
