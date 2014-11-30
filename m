@@ -1,52 +1,69 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: [PATCH 3/5]: ipr: kexec boot speed improvements
-Date: Mon, 1 Dec 2014 07:43:19 +1100
-Message-ID: <20141201074319.7ded3d8e@kryten>
-References: <53D6B2A4.4010102@linux.vnet.ibm.com>
-	<20140827140630.1f0ee455@kryten>
+From: Laurence Oberman <oberman.l@gmail.com>
+Subject: Re: Crash when copying from broken external hdd
+Date: Sun, 30 Nov 2014 15:55:03 -0500
+Message-ID: <CAAzz28j0kTWaqnyAXR-1ASmzqdyp5hjYx1WmRg3_CN62Bt577w@mail.gmail.com>
+References: <1417258323.9558.3.camel@gmail.com>
+	<CAFLxGvwKwZh38+-is8dX6zOFAiz0gVo+Yio3B=2eiMqmGCZfqA@mail.gmail.com>
+	<CAAzz28gHzPSC+VsSeq56oWj-KByCqK0oqeG3N4HM3D1iX_z6uQ@mail.gmail.com>
+	<1417365364.4806.1.camel@gmail.com>
+	<547B48F3.6020909@nod.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58764 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751650AbaK3UnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Nov 2014 15:43:21 -0500
-In-Reply-To: <20140827140630.1f0ee455@kryten>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <547B48F3.6020909@nod.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Richard Weinberger <richard@nod.at>
+Cc: Simon Danner <danner.simon@gmail.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, kexec@lists.infradead.org
 
-Hi Brian,
+The BUG_ON is taken because
+blk_queued_rq(req)) returns true which means the request->queuelist is
+empty, i.e no more entries by the time the request is dereferenced
 
-> > Currently when performing a kexec boot with an ipr adapter,
-> > the adapter gets shutdown completely, flushing all write
-> > cache, as well as performing a full hardware reset of the card
-> > during the shutdown phase of the old kernel. This forces
-> > the new kernel to then wait for the adapter firmware to
-> > reinitialize, which slows down kexec boot. There is no
-> > need to do all of this on the newer ipr adapters, since they
-> > support the ability to cancel outstanding error buffers.
-> > 
-> > This patch adds a special case for kexec boot to simply
-> > cancel these outstanding error buffers, and as long as
-> > there is no other I/O outstanding to the adapter, which
-> > there shouldn't be, place the adapter into a state
-> > where it has no memory of any DMA addresses from the old
-> > kernel, then disable the device. This significantly
-> > speeds up kexec boot, particularly in configurations with
-> > multiple ipr adapters.
-> > 
-> > Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> > ---
-> 
-> This reduces boot time on my box from 80 seconds to 34 seconds. ppc64
-> kernel developers (who boot boxes continually) thank you!
-> 
-> Tested-by: Anton Blanchard <anton@samba.org>
+Can I get the messages file entries (last 100 lines) just prior to the
+panic, not the whole file.
+If its large attach  .gz and email to me.
 
-Just checking on this series. I'm very keen to see it go in since it is
-a huge improvement in boot time.
+Thanks
 
-Anton
+On Sun, Nov 30, 2014 at 11:42 AM, Richard Weinberger <richard@nod.at> wrote:
+> Am 30.11.2014 um 17:36 schrieb Simon Danner:
+>> Hi,
+>> here the two screenshots i could take, from 3.17.4 and 3.18 git.
+>
+> You're hitting BUG_ON(blk_queued_rq(req)); in blk_finish_request()
+>
+> Thanks,
+> //richard
+>
+>> Thanks
+>> Simon
+>>
+>> On Sun, 2014-11-30 at 10:58 -0500, Laurence Oberman wrote:
+>>> I need more of the stack if you have it, the screenshot is not attached.
+>>> Thanks
+>>> Laurence
+>>>
+>>> On Sun, Nov 30, 2014 at 6:11 AM, Richard Weinberger
+>>> <richard.weinberger@gmail.com> wrote:
+>>>> On Sat, Nov 29, 2014 at 11:52 AM, Simon Danner <danner.simon@gmail.com> wrote:
+>>>>> Hello,
+>>>>> i get the following crash after i try to copy files from a broken
+>>>>> external hdd to another external hdd.
+>>>>> It happens after a few minutes, with latest git and 3.17.4 from Arch.
+>>>>> Attached screenshot is from latest mainline git.
+>>>>>
+>>>>> i hope this can be fixed somehow,
+>>>>> Regards Simon Danner
+>>>>
+>>>> Can you decode scsi_requed_end+0x122?
+>>>> CC'ing block and scsi folks.
+>>>>
+>>>> --
+>>>> Thanks,
+>>>> //richard
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
