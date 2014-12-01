@@ -1,62 +1,58 @@
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-Subject: Re: [PATCH v7 42/46] virtio_scsi: v1.0 support
-Date: Mon, 1 Dec 2014 13:55:52 +0100
-Message-ID: <20141201135552.01915825.cornelia.huck@de.ibm.com>
-References: <1417359787-10138-1-git-send-email-mst@redhat.com>
-	<1417359787-10138-43-git-send-email-mst@redhat.com>
-	<20141201135001.142bd29a.cornelia.huck@de.ibm.com>
-	<20141201125305.GC18106@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20141201125305.GC18106@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: thuth@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, rusty@au1.ibm.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, dahi@linux.vnet.ibm.com, "James E.J. Bottomley" <JBottomley@parallels.com>, pbonzini@redhat.com, David Miller <davem@davemloft.net>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH 1/1] bfs: bfad_worker cleanup
+Date: Mon,  1 Dec 2014 15:36:43 +0100
+Message-ID: <1417444603-7195-1-git-send-email-jslaby@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 1 Dec 2014 14:53:05 +0200
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
+This kthread is not loop at all due to break at the end of the loop.
+Make that function linear, with no while loop.
 
-> On Mon, Dec 01, 2014 at 01:50:01PM +0100, Cornelia Huck wrote:
-> > On Sun, 30 Nov 2014 17:12:47 +0200
-> > "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> > 
-> > > Note: for consistency, and to avoid sparse errors,
-> > >   convert all fields, even those no longer in use
-> > >   for virtio v1.0.
-> > > 
-> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-> > > ---
-> > >  include/linux/virtio_scsi.h | 32 +++++++++++++++-------------
-> > >  drivers/scsi/virtio_scsi.c  | 51 ++++++++++++++++++++++++++++-----------------
-> > >  2 files changed, 49 insertions(+), 34 deletions(-)
-> > > 
-> > 
-> > > @@ -196,10 +196,13 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
-> > >  		break;
-> > >  	}
-> > > 
-> > > -	WARN_ON(resp->sense_len > VIRTIO_SCSI_SENSE_SIZE);
-> > > +	WARN_ON(virtio32_to_cpu(vscsi->vdev, resp->sense_len) >
-> > > +		VIRTIO_SCSI_SENSE_SIZE);
-> > 
-> > Introduce a local variable for this? Might make this statement and the
-> > min_t statement below easier to read.
-> 
-> I prefer 1:1 code conversions. We can do refactorings on top.
-> Since you mention this line as hard to read, I'll just make it > 80
-> chars for now, and trivial line splits can come later.
-> OK?
+And remove an unnecessary cast.
 
-I guess I don't care strongly enough about this, so go ahead.
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+---
+ drivers/scsi/bfa/bfad.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e90a3742f09d..cc3b9d3d6d40 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1079,22 +1079,18 @@ bfad_start_ops(struct bfad_s *bfad) {
+ int
+ bfad_worker(void *ptr)
+ {
+-	struct bfad_s *bfad;
+-	unsigned long   flags;
+-
+-	bfad = (struct bfad_s *)ptr;
+-
+-	while (!kthread_should_stop()) {
++	struct bfad_s *bfad = ptr;
++	unsigned long flags;
+ 
+-		/* Send event BFAD_E_INIT_SUCCESS */
+-		bfa_sm_send_event(bfad, BFAD_E_INIT_SUCCESS);
++	if (kthread_should_stop())
++		return 0;
+ 
+-		spin_lock_irqsave(&bfad->bfad_lock, flags);
+-		bfad->bfad_tsk = NULL;
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	/* Send event BFAD_E_INIT_SUCCESS */
++	bfa_sm_send_event(bfad, BFAD_E_INIT_SUCCESS);
+ 
+-		break;
+-	}
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	bfad->bfad_tsk = NULL;
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	return 0;
+ }
+-- 
+2.1.3
