@@ -1,39 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/4] scsi: remove MSG_*_TAG defines
-Date: Mon, 1 Dec 2014 01:03:15 -0800
-Message-ID: <20141201090315.GA4042@infradead.org>
-References: <1416839781-26988-1-git-send-email-hch@lst.de>
- <20141124150725.GA23165@infradead.org>
- <54784762.8020304@acm.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] usb: storage: debug: uninitialized var in
+ usb_stor_show_sense()
+Date: Mon, 1 Dec 2014 13:42:46 +0300
+Message-ID: <20141201104246.GD4994@mwanda>
+References: <20141129124801.GA27251@mwanda>
+ <1417277275.2202.35.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48920 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690AbaLAJDQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2014 04:03:16 -0500
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <54784762.8020304@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1417277275.2202.35.camel@HansenPartnership.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Hannes Reinecke <hare@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, =?iso-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 
-On Fri, Nov 28, 2014 at 10:58:58AM +0100, Bart Van Assche wrote:
-> >  	if (disable_syn_offset_one_fix) {
-> >-		scsiq->q2.tag_code &= ~MSG_SIMPLE_TAG;
-> >+		scsiq->q2.tag_code &= ~SIMPLE_QUEUE_TAG;
-> >  		scsiq->q2.tag_code |= (ASC_TAG_FLAG_DISABLE_ASYN_USE_SYN_FIX |
-> >  				       ASC_TAG_FLAG_DISABLE_DISCONNECT);
-> >  	} else {
+On Sat, Nov 29, 2014 at 08:07:55AM -0800, James Bottomley wrote:
+> On Sat, 2014-11-29 at 15:48 +0300, Dan Carpenter wrote:
+> > The "fmt" variable might be used uninitialized, it should be set to NULL
+> > at the start.
+> > 
+> > Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> One of the statements in advansys.c (tag_code &= 0xDC) makes assumptions
-> about the numeric value of MSG_SIMPLE_TAG. This makes me wonder whether it
-> is safe to change MSG_SIMPLE_TAG into another value ?
+> Hm, that' falls into the category of an interface that's hard to get
+> right if every caller has to remember to set fmt to NULL.
+> 
+> Could you instead set *fmt to NULL in scsi_extd_sense_format()?  That
+> way the interface is much easier.
+> 
 
-MSG_SIMPLE_TAG and SIMPLE_QUEUE_TAG are two different symbolic names
-for the 0x20 value assigned to the SCSI-2 protocol "SIMPLE QUEUE TAG"
-message.  Having both is confusing, so I decided to only keep the one
-that is named closer to the spec, and in the same namespace as the
-symbolic names we use for other SCSI-2 messages.
+Sure.  I will send that tomorrow.
+
+regards,
+dan carpenter
 
