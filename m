@@ -1,93 +1,59 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [BUG] kzalloc overflow in lpfc driver on 6k core system
-Date: Tue, 2 Dec 2014 22:39:40 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593EFC9E@G4W3202.americas.hpqcorp.net>
-References: <20141202215810.GT4720@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH v2 0/6] scsi: Some seq_file cleanups/optimizations
+Date: Wed,  3 Dec 2014 00:10:48 +0100
+Message-ID: <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
+References: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141202215810.GT4720@sgi.com>
-Content-Language: en-US
+In-Reply-To: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alex Thorlton <athorlton@sgi.com>
-Cc: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Finn Thain <fthain@telegraphics.com.au>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>
 List-Id: linux-scsi@vger.kernel.org
 
+These patches mostly replace seq_printf with simpler and faster
+equivalents, e.g. seq_printf(m, "something") => seq_puts(m,
+"something") and seq_printf(m, "\n") => seq_putc(m, '\n). But before
+my Coccinelle scripts could be unleashed I had to clean up an
+unnecessary macro.
 
+The patches don't change the semantics of the code (well, that's the
+idea anyway), but should make it slightly smaller and faster.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Alex Thorlton
-> Sent: Tuesday, 02 December, 2014 3:58 PM
-...
-> We've recently upgraded our big machine up to 6144 cores, and we're
-> shaking out a number of bugs related to booting at that large core
-> count.  Last night I tripped a warning from the lpfc driver that appears
-> to be related to a kzalloc that uses the number of cores as part of it's
-> size calculation.  Here's the backtrace from the warning:
-...
-> For a little bit more information on exactly what's going wrong, we're
-> tripping the warning from lpfc_pci_probe_one_s4 (as you can see from the
-> trace).  That function calls down to lpfc_sli4_driver_resource_setup,
-> which contains the failing kzalloc here:
-> 
-> phba->sli4_hba.cpu_map = kzalloc((sizeof(struct lpfc_vector_map_info) *
->                                  phba->sli4_hba.num_present_cpu),
->                                  GFP_KERNEL);
-> 
-> As mentioned, it looks like we're multiplying the number available cpus
-> by that struct size to get an allocation size, which ends up being
-> greater than KMALLOC_MAX_SIZE.
-> 
-> Does anyone have any ideas on what could be done to break that
-> allocation up into smaller pieces, or to make it in a different way so
-> that we avoid this warning?
-> 
-> Any help is greatly appreciated.  Thanks!
-> 
+v2: Redone on top of git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.19
 
-That structure includes an NR_CPU-based maskbits field, which is
-probably too big.
+Rasmus Villemoes (6):
+  scsi: Remove SPRINTF macro
+  scsi/advansys: Replace seq_printf with seq_puts
+  scsi/aha152x: Replace seq_printf with seq_puts
+  scsi: misc:  Replace seq_printf with seq_puts
+  scsi: misc: Merge consecutive seq_puts calls
+  scsi: misc: Print single-character strings with seq_putc
 
-include/cpumask.h:
-typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
+ drivers/scsi/BusLogic.c             |  10 +-
+ drivers/scsi/NCR5380.c              |  20 ++-
+ drivers/scsi/advansys.c             | 142 ++++++++---------
+ drivers/scsi/aha152x.c              | 295 ++++++++++++++++++------------------
+ drivers/scsi/aic7xxx/aic79xx_proc.c |  38 +++--
+ drivers/scsi/aic7xxx/aic7xxx_proc.c |  24 +--
+ drivers/scsi/arm/fas216.c           |   6 +-
+ drivers/scsi/atari_NCR5380.c        |   4 +-
+ drivers/scsi/atp870u.c              |   5 +-
+ drivers/scsi/dc395x.c               |  79 +++++-----
+ drivers/scsi/dpt_i2o.c              |   2 +-
+ drivers/scsi/eata_pio.c             |   2 +-
+ drivers/scsi/esas2r/esas2r_main.c   |   2 +-
+ drivers/scsi/gdth_proc.c            |  24 +--
+ drivers/scsi/in2000.c               |  18 +--
+ drivers/scsi/ips.c                  |   7 +-
+ drivers/scsi/megaraid.c             |   2 +-
+ drivers/scsi/nsp32.c                |  41 +++--
+ drivers/scsi/pcmcia/nsp_cs.c        |  50 +++---
+ drivers/scsi/qla2xxx/qla_dfs.c      |   8 +-
+ drivers/scsi/scsi_proc.c            |  22 +--
+ drivers/scsi/scsi_trace.c           |   6 +-
+ drivers/scsi/wd33c93.c              |  18 +--
+ drivers/scsi/wd7000.c               |  41 +++--
+ 24 files changed, 412 insertions(+), 454 deletions(-)
 
-drivers/scsi/lpfc/lpfc_sli4.h:
-struct lpfc_vector_map_info {
-        uint16_t        phys_id;
-        uint16_t        core_id;
-        uint16_t        irq;
-        uint16_t        channel_id;
-        struct cpumask  maskbits;
-};
-
-maskbits appears to only be used for setting IRQ affinity hints in
-drivers/scsi/lpfc_init.c:
-        for (idx = 0; idx < vectors; idx++) {
-                cpup = phba->sli4_hba.cpu_map;
-                cpu = lpfc_find_next_cpu(phba, phys_id);
-                ...
-                mask = &cpup->maskbits;
-                cpumask_clear(mask);
-                cpumask_set_cpu(cpu, mask);
-                i = irq_set_affinity_hint(phba->sli4_hba.msix_entries[idx].
-                                          vector, mask);
-
-In similar code, mpt3sas and lockless hpsa just call get_cpu_mask()
-inside the loop:
-        cpu = cpumask_first(cpu_online_mask);
-        for (i = 0; i < h->msix_vector; i++) {
-                rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
-                cpu = cpumask_next(cpu, cpu_online_mask);
-        }
-
-get_cpu_mask() uses the global cpu_bit_bitmap array, which is declared
-in kernel/cpu.c:
-extern const unsigned long
-        cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)];
-
-That approach should work for lpfc.
-
----
-Rob Elliott    HP Server Storage
+-- 
+2.0.4
