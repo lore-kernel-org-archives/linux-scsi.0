@@ -1,49 +1,55 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch v2] scsi: set fmt to NULL scsi_extd_sense_format() by default
-Date: Tue, 2 Dec 2014 14:07:30 +0300
-Message-ID: <20141202110729.GA17562@mwanda>
-References: <1417277275.2202.35.camel@HansenPartnership.com>
+From: lamirada@cashmatters.com
+Subject: geschaftsvorschlag
+Date: Tue, 02 Dec 2014 07:23:48 -0500
+Message-ID: <3807c0d7791c7abcde344b2afd2f140d__23690.1949313053$1417525101$gmane$org@cashmatters.com>
+Reply-To: rodthompson50@aol.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46713 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753267AbaLBLHq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2014 06:07:46 -0500
-Content-Disposition: inline
-In-Reply-To: <1417277275.2202.35.camel@HansenPartnership.com>
+Received: from host.manna.ro ([74.200.89.108]:52031 "EHLO host.cashmatters.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753363AbaLBM6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Dec 2014 07:58:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-One of the two callers passes an unintialized pointer as "fmt" and
-expects it to be set to NULL if there is no format string.  Let's make
-this function work as expected.
+hallo  geschaftsvorschlag
 
-Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2:  Change scsi_extd_sense_format() instead of the caller
+Es ist verst=C3=A4ndlich , dass Sie vielleicht ein bisschen besorgt , w=
+eil=20
+Sie mich nicht kennen , Bitte verzeihen Sie diese ungew=C3=B6hnliche Ar=
+t und=20
+Weise , Sie zu kontaktieren , aber diese spezielle Brief / E-Mail ist=20
+von au=C3=9Fergew=C3=B6hnlicher und sehr privater Natur , da aufgrund m=
+einer Sicht=20
+in meiner Position Land Libyen , ich habe ein lukratives Gesch=C3=A4ft=20
+Vorschlag von gemeinsamem Interesse mit Ihnen teilen. Es gibt keine=20
+M=C3=B6glichkeit f=C3=BCr mich zu wissen , ob ich richtig verstanden we=
+rden , aber=20
+es ist meine Pflicht zu schreiben und zu erreichen, um Ihnen , im=20
+Vertrauen , dass Sie geben diesem Vorschlag eine positive=20
+Ber=C3=BCcksichtigung .
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index aee62f6..e2068a2 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1271,6 +1271,7 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
- 	int i;
- 	unsigned short code = ((asc << 8) | ascq);
- 
-+	*fmt = NULL;
- 	for (i = 0; additional[i].text; i++)
- 		if (additional[i].code12 == code)
- 			return additional[i].text;
-@@ -1282,6 +1283,8 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
- 			return additional2[i].str;
- 		}
- 	}
-+#else
-+	*fmt = NULL;
- #endif
- 	return NULL;
- }
+Ich bin Rod Thompson einer der Direktoren einer Bank hier in Libya.I=20
+m=C3=BCssen Sie mir bei der Ausf=C3=BChrung eines Business-Projekt von =
+unserer=20
+Bank im Wert von US $ 21,1 Millionen zu unterst=C3=BCtzen. Diese Mittel=
+=20
+wurden bei unserer Bank von einem Kunden unserer Bank , die die=20
+Staatsangeh=C3=B6rigkeit { } B=C3=BCrger Ihres Landes / der Region , de=
+r leider=20
+vor 10 Jahren gestorben ist, hinterlegt . Ich werde Ihnen weitere=20
+Informationen zu diesem Vorgang zu liefern , als ich Ihre Antwort=20
+erhalten .
+
+senden Sie Ihre Antwort auf diese E-Mail -Adresse :=20
+rodthompson50@aol.com
+
+Dr.Rod Thompson
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
