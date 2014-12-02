@@ -1,28 +1,52 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 0/2] Revert mpt2sas, mpt3sas: remove disconnected phys on topology change
-Date: Tue,  2 Dec 2014 20:58:45 +0530
-Message-ID: <1417534127-6189-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 2/2] Revert "[SCSI] mpt3sas: Remove phys on topology change"
+Date: Tue,  2 Dec 2014 20:58:47 +0530
+Message-ID: <1417534127-6189-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+References: <1417534127-6189-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1417534127-6189-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, stable@vger.kernel.org, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Reverting the below commit IDs
+This reverts commit 963ba22b90a955363644cd397b20226928eab976
+("mpt3sas: Remove phys on topology change")
 
-1. [PATCH 1/2] mpt2sas: Remove phys on topology change
-   commit ID: 3520f9c779bed098ca76dd3fb6377264301d57ed
+Reverting the previous mpt3sas drives patch changes,
+since we will observe below issue
 
-2. [PATCH 2/2] mpt3sas: Remove phys on topology change
-   commit ID: 963ba22b90a955363644cd397b20226928eab976
+Issue:
+Drives connected Enclosure/Expander will unregister with
+SCSI Transport Layer, if any one remove and add expander
+cable with in DMD (Device Missing Delay) time period or 
+even any one power-off and power-on the Enclosure with in
+the DMD period.
 
-Sreekanth Reddy (2):
-  Revert "[SCSI] mpt2sas: Remove phys on topology change."
-  Revert "[SCSI] mpt3sas: Remove phys on topology change"
-
- drivers/scsi/mpt2sas/mpt2sas_transport.c | 5 +----
+Cc: <stable@vger.kernel.org>
+Cc: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+---
  drivers/scsi/mpt3sas/mpt3sas_transport.c | 5 +----
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index d4bafaa..3637ae6 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -1003,12 +1003,9 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
+ 		    &mpt3sas_phy->remote_identify);
+ 		_transport_add_phy_to_an_existing_port(ioc, sas_node,
+ 		    mpt3sas_phy, mpt3sas_phy->remote_identify.sas_address);
+-	} else {
++	} else
+ 		memset(&mpt3sas_phy->remote_identify, 0 , sizeof(struct
+ 		    sas_identify));
+-		_transport_del_phy_from_an_existing_port(ioc, sas_node,
+-		    mpt3sas_phy);
+-	}
+ 
+ 	if (mpt3sas_phy->phy)
+ 		mpt3sas_phy->phy->negotiated_linkrate =
 -- 
 2.0.2
