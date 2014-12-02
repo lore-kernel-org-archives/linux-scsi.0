@@ -1,77 +1,52 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH RESEND 2/5] kexec: Export kexec_in_progress
-Date: Tue, 02 Dec 2014 12:49:27 -0600
-Message-ID: <547E09B7.7030507@linux.vnet.ibm.com>
-References: <201412021847.sB2Ilfvc002145@d01av04.pok.ibm.com>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH 1/1] esas2r: Correct typos of "validate" in a comment
+Date: Tue, 02 Dec 2014 14:37:07 -0500
+Message-ID: <547E14E3.1070303@attotech.com>
+References: <54774D8D.2030204@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:41760 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbaLBSte (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2014 13:49:34 -0500
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 2 Dec 2014 11:49:33 -0700
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 55E003E4003E
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2014 11:49:32 -0700 (MST)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id sB2IoF0Y49348674
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Dec 2014 11:50:15 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id sB2InUHO008867
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Dec 2014 11:49:32 -0700
-In-Reply-To: <201412021847.sB2Ilfvc002145@d01av04.pok.ibm.com>
+Received: from sw.attotech.com ([208.69.85.34]:50959 "EHLO
+	NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932903AbaLBThH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2014 14:37:07 -0500
+In-Reply-To: <54774D8D.2030204@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ebiederm@xmission.com
-Cc: James.Bottomley@HansenPartnership.com, hch@lst.de, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, anton@samba.org, kexec@lists.infradead.org
+To: Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, trivial@kernel.org
+Cc: Boris Bodemann <bobo.barbarossa@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 12/02/2014 12:47 PM, Brian King wrote:
-> A kexec boot for some ipr SAS adapters was seen to take ~20 seconds
-> just doing ipr adapter initialization. This is due to the fact that
-> a kexec invokes the driver's shutdown handler which places the adapter
-> into a state that requires a hard reset and resulting firmware initialization
-> to be usable again, which takes significant time. By exporting kexec_in_progress,
-> this process can be optimized significantly in the driver by essentially
-> placing the adapter into a state where this hardware reset and re-initialization
-> can be bypassed, eliminating this delay in kexec boot.
-> 
-> Cc: Eric Biederman <ebiederm@xmission.com>
-> Cc: kexec <kexec@lists.infradead.org>
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  kernel/kexec.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff -puN kernel/kexec.c~kexec_export_in_prog kernel/kexec.c
-> --- scsi-queue/kernel/kexec.c~kexec_export_in_prog	2014-12-02 12:13:22.820325731 -0600
-> +++ scsi-queue-bjking1/kernel/kexec.c	2014-12-02 12:13:22.825325687 -0600
-> @@ -2768,3 +2768,5 @@ int kernel_kexec(void)
->  	mutex_unlock(&kexec_mutex);
->  	return error;
->  }
-> +
-> +EXPORT_SYMBOL_GPL(kexec_in_progress);
-> _
-> 
-
-Eric,
-
-Can I get your ack on this so this can go through the scsi tree? The last time I sent this
-out you had some issues with the patch description.
+Acked-by: Bradley Grove <bgrove@attotech.com>
 
 Thanks,
+Brad
 
-Brian
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+On 11/27/2014 11:13 AM, Boris Bodemann wrote:
+> From: Boris Bodemann <bobo.barbarossa@gmail.com>
+>
+> Correct typos of "validate" in a comment
+>
+> Signed-off-by: Boris Bodemann <bobo.barbarossa@gmail.com>
+> ---
+> diff -up a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
+> --- a/drivers/scsi/esas2r/esas2r_flash.c        2014-11-21 18:24:10.000000000 +0100
+> +++ b/drivers/scsi/esas2r/esas2r_flash.c        2014-11-27 14:49:03.029899303 +0100
+> @@ -684,9 +684,9 @@ static u16 calc_fi_checksum(struct esas2
+>    *              1)  verify the fi_version is correct
+>    *              2)  verify the checksum of the entire image.
+>    *              3)  validate the adap_typ, action and length fields.
+> - *              4)  valdiate each component header. check the img_type and
+> + *              4)  validate each component header. check the img_type and
+>    *                  length fields
+> - *              5)  valdiate each component image.  validate signatures and
+> + *              5)  validate each component image.  validate signatures and
+>    *                  local checksums
+>    */
+>   static bool verify_fi(struct esas2r_adapter *a,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
