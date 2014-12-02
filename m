@@ -1,51 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] target: remove unneeded array
-Date: Mon, 01 Dec 2014 22:12:47 -0800
-Message-ID: <1417500767.11477.2.camel@haakon3.risingtidesystems.com>
-References: <1417371255-2282-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1417371255-2282-2-git-send-email-Julia.Lawall@lip6.fr>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch v2] scsi: set fmt to NULL scsi_extd_sense_format() by default
+Date: Tue, 2 Dec 2014 14:07:30 +0300
+Message-ID: <20141202110729.GA17562@mwanda>
+References: <1417277275.2202.35.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417371255-2282-2-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46713 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753267AbaLBLHq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2014 06:07:46 -0500
+Content-Disposition: inline
+In-Reply-To: <1417277275.2202.35.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Sun, 2014-11-30 at 19:14 +0100, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> Delete a local array that is only used to be initialized by memset.
-> 
-> A semantic patch that makes this change is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> identifier x;
-> type T;
-> @@
-> 
-> {
-> ... when any
-> -T x[...];
-> <+... when != x
-> - memset(x,...);
-> ...+>
-> }
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
->  drivers/target/target_core_pr.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
+One of the two callers passes an unintialized pointer as "fmt" and
+expects it to be set to NULL if there is no format string.  Let's make
+this function work as expected.
 
-Applied to target-pending/for-next.
+Fixes: d811b848ebb7 ('scsi: use sdev as argument for sense code printing')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2:  Change scsi_extd_sense_format() instead of the caller
 
-Thanks Julia!
-
---nab
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index aee62f6..e2068a2 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1271,6 +1271,7 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
+ 	int i;
+ 	unsigned short code = ((asc << 8) | ascq);
+ 
++	*fmt = NULL;
+ 	for (i = 0; additional[i].text; i++)
+ 		if (additional[i].code12 == code)
+ 			return additional[i].text;
+@@ -1282,6 +1283,8 @@ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
+ 			return additional2[i].str;
+ 		}
+ 	}
++#else
++	*fmt = NULL;
+ #endif
+ 	return NULL;
+ }
