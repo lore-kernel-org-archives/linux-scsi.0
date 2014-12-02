@@ -1,7 +1,7 @@
 From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH v2 2/6] scsi/advansys: Replace seq_printf with seq_puts
-Date: Wed,  3 Dec 2014 00:10:50 +0100
-Message-ID: <1417561854-17188-3-git-send-email-linux@rasmusvillemoes.dk>
+Subject: [PATCH v2 3/6] scsi/aha152x: Replace seq_printf with seq_puts
+Date: Wed,  3 Dec 2014 00:10:51 +0100
+Message-ID: <1417561854-17188-4-git-send-email-linux@rasmusvillemoes.dk>
 References: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk>
  <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -17,461 +17,460 @@ seq_puts when possible.
 
 Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 ---
- drivers/scsi/advansys.c | 155 +++++++++++++++++++++++-------------------------
- 1 file changed, 75 insertions(+), 80 deletions(-)
+ drivers/scsi/aha152x.c | 248 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 124 insertions(+), 124 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 6719a33..d31fc6d 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2880,7 +2880,7 @@ static void asc_prt_board_devices(struct seq_file *m, struct Scsi_Host *shost)
- 		chip_scsi_id = boardp->dvc_var.adv_dvc_var.chip_scsi_id;
- 	}
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index f14ad8a..e31c460 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -2505,21 +2505,21 @@ static void get_command(struct seq_file *m, Scsi_Cmnd * ptr)
+ 		ptr->SCp.buffers_residual);
  
--	seq_printf(m, "Target IDs Detected:");
-+	seq_puts(m, "Target IDs Detected:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if (boardp->init_tidmask & ADV_TID_TO_TIDMASK(i))
- 			seq_printf(m, " %X,", i);
-@@ -2896,18 +2896,18 @@ static void asc_prt_adv_bios(struct seq_file *m, struct Scsi_Host *shost)
- 	struct asc_board *boardp = shost_priv(shost);
- 	ushort major, minor, letter;
- 
--	seq_printf(m, "\nROM BIOS Version: ");
-+	seq_puts(m, "\nROM BIOS Version: ");
- 
- 	/*
- 	 * If the BIOS saved a valid signature, then fill in
- 	 * the BIOS code segment base address.
- 	 */
- 	if (boardp->bios_signature != 0x55AA) {
--		seq_printf(m, "Disabled or Pre-3.1\n");
--		seq_printf(m,
--			  "BIOS either disabled or Pre-3.1. If it is pre-3.1, then a newer version\n");
--		seq_printf(m,
--			  "can be found at the ConnectCom FTP site: ftp://ftp.connectcom.net/pub\n");
-+		seq_puts(m, "Disabled or Pre-3.1\n");
-+		seq_puts(m,
-+			 "BIOS either disabled or Pre-3.1. If it is pre-3.1, then a newer version\n");
-+		seq_puts(m,
-+			 "can be found at the ConnectCom FTP site: ftp://ftp.connectcom.net/pub\n");
- 	} else {
- 		major = (boardp->bios_version >> 12) & 0xF;
- 		minor = (boardp->bios_version >> 8) & 0xF;
-@@ -2923,10 +2923,9 @@ static void asc_prt_adv_bios(struct seq_file *m, struct Scsi_Host *shost)
- 		 */
- 		if (major < 3 || (major <= 3 && minor < 1) ||
- 		    (major <= 3 && minor <= 1 && letter < ('I' - 'A'))) {
--			seq_printf(m,
--				   "Newer version of ROM BIOS is available at the ConnectCom FTP site:\n");
--			seq_printf(m,
--				   "ftp://ftp.connectcom.net/pub\n");
-+			seq_puts(m,
-+				 "Newer version of ROM BIOS is available at the ConnectCom FTP site:\n");
-+			seq_puts(m, "ftp://ftp.connectcom.net/pub\n");
- 		}
- 	}
- }
-@@ -3056,11 +3055,10 @@ static void asc_prt_asc_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	    == ASC_TRUE)
- 		seq_printf(m, " Serial Number: %s\n", serialstr);
- 	else if (ep->adapter_info[5] == 0xBB)
--		seq_printf(m,
--			   " Default Settings Used for EEPROM-less Adapter.\n");
-+		seq_puts(m,
-+			 " Default Settings Used for EEPROM-less Adapter.\n");
- 	else
--		seq_printf(m,
--			   " Serial Number Signature Not Present.\n");
-+		seq_puts(m, " Serial Number Signature Not Present.\n");
- 
- 	seq_printf(m,
- 		   " Host SCSI ID: %u, Host Queue Size: %u, Device Queue Size: %u\n",
-@@ -3070,34 +3068,34 @@ static void asc_prt_asc_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	seq_printf(m,
- 		   " cntl 0x%x, no_scam 0x%x\n", ep->cntl, ep->no_scam);
- 
--	seq_printf(m, " Target ID:           ");
-+	seq_puts(m, " Target ID:           ");
- 	for (i = 0; i <= ASC_MAX_TID; i++)
- 		seq_printf(m, " %d", i);
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
--	seq_printf(m, " Disconnects:         ");
-+	seq_puts(m, " Disconnects:         ");
- 	for (i = 0; i <= ASC_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (ep->disc_enable & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
--	seq_printf(m, " Command Queuing:     ");
-+	seq_puts(m, " Command Queuing:     ");
- 	for (i = 0; i <= ASC_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (ep->use_cmd_qng & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
--	seq_printf(m, " Start Motor:         ");
-+	seq_puts(m, " Start Motor:         ");
- 	for (i = 0; i <= ASC_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (ep->start_motor & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
--	seq_printf(m, " Synchronous Transfer:");
-+	seq_puts(m, " Synchronous Transfer:");
- 	for (i = 0; i <= ASC_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (ep->init_sdtr & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- #ifdef CONFIG_ISA
- 	if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
-@@ -3151,7 +3149,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	if (asc_get_eeprom_string(wordp, serialstr) == ASC_TRUE)
- 		seq_printf(m, " Serial Number: %s\n", serialstr);
- 	else
--		seq_printf(m, " Serial Number Signature Not Present.\n");
-+		seq_puts(m, " Serial Number Signature Not Present.\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550)
- 		seq_printf(m,
-@@ -3209,10 +3207,10 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 			   ep_38C1600->termination_lvd, termstr,
- 			   ep_38C1600->bios_ctrl);
- 
--	seq_printf(m, " Target ID:           ");
-+	seq_puts(m, " Target ID:           ");
- 	for (i = 0; i <= ADV_MAX_TID; i++)
- 		seq_printf(m, " %X", i);
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
- 		word = ep_3550->disc_enable;
-@@ -3221,11 +3219,11 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	} else {
- 		word = ep_38C1600->disc_enable;
- 	}
--	seq_printf(m, " Disconnects:         ");
-+	seq_puts(m, " Disconnects:         ");
- 	for (i = 0; i <= ADV_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
- 		word = ep_3550->tagqng_able;
-@@ -3234,11 +3232,11 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	} else {
- 		word = ep_38C1600->tagqng_able;
- 	}
--	seq_printf(m, " Command Queuing:     ");
-+	seq_puts(m, " Command Queuing:     ");
- 	for (i = 0; i <= ADV_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
- 		word = ep_3550->start_motor;
-@@ -3247,28 +3245,28 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	} else {
- 		word = ep_38C1600->start_motor;
- 	}
--	seq_printf(m, " Start Motor:         ");
-+	seq_puts(m, " Start Motor:         ");
- 	for (i = 0; i <= ADV_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
--		seq_printf(m, " Synchronous Transfer:");
-+		seq_puts(m, " Synchronous Transfer:");
- 		for (i = 0; i <= ADV_MAX_TID; i++)
- 			seq_printf(m, " %c",
- 				   (ep_3550->sdtr_able & ADV_TID_TO_TIDMASK(i)) ?
- 				   'Y' : 'N');
--		seq_printf(m, "\n");
-+		seq_puts(m, "\n");
- 	}
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
--		seq_printf(m, " Ultra Transfer:      ");
-+		seq_puts(m, " Ultra Transfer:      ");
- 		for (i = 0; i <= ADV_MAX_TID; i++)
- 			seq_printf(m, " %c",
- 				   (ep_3550->ultra_able & ADV_TID_TO_TIDMASK(i))
- 				   ? 'Y' : 'N');
--		seq_printf(m, "\n");
-+		seq_puts(m, "\n");
- 	}
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
-@@ -3278,16 +3276,15 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 	} else {
- 		word = ep_38C1600->wdtr_able;
- 	}
--	seq_printf(m, " Wide Transfer:       ");
-+	seq_puts(m, " Wide Transfer:       ");
- 	for (i = 0; i <= ADV_MAX_TID; i++)
- 		seq_printf(m, " %c",
- 			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800 ||
- 	    adv_dvc_varp->chip_type == ADV_CHIP_ASC38C1600) {
--		seq_printf(m,
--			   " Synchronous Transfer Speed (Mhz):\n  ");
-+		seq_puts(m, " Synchronous Transfer Speed (Mhz):\n  ");
- 		for (i = 0; i <= ADV_MAX_TID; i++) {
- 			char *speed_str;
- 
-@@ -3325,10 +3322,10 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
- 			}
- 			seq_printf(m, "%X:%s ", i, speed_str);
- 			if (i == 7)
--				seq_printf(m, "\n  ");
-+				seq_puts(m, "\n  ");
- 			sdtr_speed >>= 4;
- 		}
--		seq_printf(m, "\n");
-+		seq_puts(m, "\n");
- 	}
+ 	if (ptr->SCp.phase & not_issued)
+-		seq_printf(m, "not issued|");
++		seq_puts(m, "not issued|");
+ 	if (ptr->SCp.phase & selecting)
+-		seq_printf(m, "selecting|");
++		seq_puts(m, "selecting|");
+ 	if (ptr->SCp.phase & disconnected)
+-		seq_printf(m, "disconnected|");
++		seq_puts(m, "disconnected|");
+ 	if (ptr->SCp.phase & aborted)
+-		seq_printf(m, "aborted|");
++		seq_puts(m, "aborted|");
+ 	if (ptr->SCp.phase & identified)
+-		seq_printf(m, "identified|");
++		seq_puts(m, "identified|");
+ 	if (ptr->SCp.phase & completed)
+-		seq_printf(m, "completed|");
++		seq_puts(m, "completed|");
+ 	if (ptr->SCp.phase & spiordy)
+-		seq_printf(m, "spiordy|");
++		seq_puts(m, "spiordy|");
+ 	if (ptr->SCp.phase & syncneg)
+-		seq_printf(m, "syncneg|");
++		seq_puts(m, "syncneg|");
+ 	seq_printf(m, "; next=0x%p\n", SCNEXT(ptr));
  }
  
-@@ -3403,7 +3400,7 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 	seq_printf(m,
- 		   " Total Command Pending: %d\n", v->cur_total_qng);
+@@ -2530,256 +2530,256 @@ static void get_ports(struct seq_file *m, struct Scsi_Host *shpnt)
+ 	seq_printf(m, "\n%s: %s(%s) ", CURRENT_SC ? "on bus" : "waiting", states[STATE].name, states[PREVSTATE].name);
  
--	seq_printf(m, " Command Queuing:");
-+	seq_puts(m, " Command Queuing:");
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3413,10 +3410,10 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 			   i,
- 			   (v->use_tagged_qng & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
+ 	s = GETPORT(SCSISEQ);
+-	seq_printf(m, "SCSISEQ( ");
++	seq_puts(m, "SCSISEQ( ");
+ 	if (s & TEMODEO)
+-		seq_printf(m, "TARGET MODE ");
++		seq_puts(m, "TARGET MODE ");
+ 	if (s & ENSELO)
+-		seq_printf(m, "SELO ");
++		seq_puts(m, "SELO ");
+ 	if (s & ENSELI)
+-		seq_printf(m, "SELI ");
++		seq_puts(m, "SELI ");
+ 	if (s & ENRESELI)
+-		seq_printf(m, "RESELI ");
++		seq_puts(m, "RESELI ");
+ 	if (s & ENAUTOATNO)
+-		seq_printf(m, "AUTOATNO ");
++		seq_puts(m, "AUTOATNO ");
+ 	if (s & ENAUTOATNI)
+-		seq_printf(m, "AUTOATNI ");
++		seq_puts(m, "AUTOATNI ");
+ 	if (s & ENAUTOATNP)
+-		seq_printf(m, "AUTOATNP ");
++		seq_puts(m, "AUTOATNP ");
+ 	if (s & SCSIRSTO)
+-		seq_printf(m, "SCSIRSTO ");
+-	seq_printf(m, ");");
++		seq_puts(m, "SCSIRSTO ");
++	seq_puts(m, ");");
  
- 	/* Current number of commands waiting for a device. */
--	seq_printf(m, " Command Queue Pending:");
-+	seq_puts(m, " Command Queue Pending:");
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3424,10 +3421,10 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		}
- 		seq_printf(m, " %X:%u", i, v->cur_dvc_qng[i]);
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	/* Current limit on number of commands that can be sent to a device. */
--	seq_printf(m, " Command Queue Limit:");
-+	seq_puts(m, " Command Queue Limit:");
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3435,10 +3432,10 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		}
- 		seq_printf(m, " %X:%u", i, v->max_dvc_qng[i]);
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	/* Indicate whether the device has returned queue full status. */
--	seq_printf(m, " Command Queue Full:");
-+	seq_puts(m, " Command Queue Full:");
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3450,9 +3447,9 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		else
- 			seq_printf(m, " %X:N", i);
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
--	seq_printf(m, " Synchronous Transfer:");
-+	seq_puts(m, " Synchronous Transfer:");
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3462,7 +3459,7 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 			   i,
- 			   (v->sdtr_done & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	for (i = 0; i <= ASC_MAX_TID; i++) {
- 		uchar syn_period_ix;
-@@ -3476,7 +3473,7 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		seq_printf(m, "  %X:", i);
- 
- 		if ((boardp->sdtr_data[i] & ASC_SYN_MAX_OFFSET) == 0) {
--			seq_printf(m, " Asynchronous");
-+			seq_puts(m, " Asynchronous");
- 		} else {
- 			syn_period_ix =
- 			    (boardp->sdtr_data[i] >> 4) & (v->max_sdtr_index -
-@@ -3494,16 +3491,15 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		}
- 
- 		if ((v->sdtr_done & ADV_TID_TO_TIDMASK(i)) == 0) {
--			seq_printf(m, "*\n");
-+			seq_puts(m, "*\n");
- 			renegotiate = 1;
- 		} else {
--			seq_printf(m, "\n");
-+			seq_puts(m, "\n");
- 		}
+-	seq_printf(m, " SCSISIG(");
++	seq_puts(m, " SCSISIG(");
+ 	s = GETPORT(SCSISIG);
+ 	switch (s & P_MASK) {
+ 	case P_DATAO:
+-		seq_printf(m, "DATA OUT");
++		seq_puts(m, "DATA OUT");
+ 		break;
+ 	case P_DATAI:
+-		seq_printf(m, "DATA IN");
++		seq_puts(m, "DATA IN");
+ 		break;
+ 	case P_CMD:
+-		seq_printf(m, "COMMAND");
++		seq_puts(m, "COMMAND");
+ 		break;
+ 	case P_STATUS:
+-		seq_printf(m, "STATUS");
++		seq_puts(m, "STATUS");
+ 		break;
+ 	case P_MSGO:
+-		seq_printf(m, "MESSAGE OUT");
++		seq_puts(m, "MESSAGE OUT");
+ 		break;
+ 	case P_MSGI:
+-		seq_printf(m, "MESSAGE IN");
++		seq_puts(m, "MESSAGE IN");
+ 		break;
+ 	default:
+-		seq_printf(m, "*invalid*");
++		seq_puts(m, "*invalid*");
+ 		break;
  	}
  
- 	if (renegotiate) {
--		seq_printf(m,
--			   " * = Re-negotiation pending before next command.\n");
-+		seq_puts(m, " * = Re-negotiation pending before next command.\n");
- 	}
+-	seq_printf(m, "); ");
++	seq_puts(m, "); ");
+ 
+ 	seq_printf(m, "INTSTAT (%s); ", TESTHI(DMASTAT, INTSTAT) ? "hi" : "lo");
+ 
+-	seq_printf(m, "SSTAT( ");
++	seq_puts(m, "SSTAT( ");
+ 	s = GETPORT(SSTAT0);
+ 	if (s & TARGET)
+-		seq_printf(m, "TARGET ");
++		seq_puts(m, "TARGET ");
+ 	if (s & SELDO)
+-		seq_printf(m, "SELDO ");
++		seq_puts(m, "SELDO ");
+ 	if (s & SELDI)
+-		seq_printf(m, "SELDI ");
++		seq_puts(m, "SELDI ");
+ 	if (s & SELINGO)
+-		seq_printf(m, "SELINGO ");
++		seq_puts(m, "SELINGO ");
+ 	if (s & SWRAP)
+-		seq_printf(m, "SWRAP ");
++		seq_puts(m, "SWRAP ");
+ 	if (s & SDONE)
+-		seq_printf(m, "SDONE ");
++		seq_puts(m, "SDONE ");
+ 	if (s & SPIORDY)
+-		seq_printf(m, "SPIORDY ");
++		seq_puts(m, "SPIORDY ");
+ 	if (s & DMADONE)
+-		seq_printf(m, "DMADONE ");
++		seq_puts(m, "DMADONE ");
+ 
+ 	s = GETPORT(SSTAT1);
+ 	if (s & SELTO)
+-		seq_printf(m, "SELTO ");
++		seq_puts(m, "SELTO ");
+ 	if (s & ATNTARG)
+-		seq_printf(m, "ATNTARG ");
++		seq_puts(m, "ATNTARG ");
+ 	if (s & SCSIRSTI)
+-		seq_printf(m, "SCSIRSTI ");
++		seq_puts(m, "SCSIRSTI ");
+ 	if (s & PHASEMIS)
+-		seq_printf(m, "PHASEMIS ");
++		seq_puts(m, "PHASEMIS ");
+ 	if (s & BUSFREE)
+-		seq_printf(m, "BUSFREE ");
++		seq_puts(m, "BUSFREE ");
+ 	if (s & SCSIPERR)
+-		seq_printf(m, "SCSIPERR ");
++		seq_puts(m, "SCSIPERR ");
+ 	if (s & PHASECHG)
+-		seq_printf(m, "PHASECHG ");
++		seq_puts(m, "PHASECHG ");
+ 	if (s & REQINIT)
+-		seq_printf(m, "REQINIT ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "REQINIT ");
++	seq_puts(m, "); ");
+ 
+ 
+-	seq_printf(m, "SSTAT( ");
++	seq_puts(m, "SSTAT( ");
+ 
+ 	s = GETPORT(SSTAT0) & GETPORT(SIMODE0);
+ 
+ 	if (s & TARGET)
+-		seq_printf(m, "TARGET ");
++		seq_puts(m, "TARGET ");
+ 	if (s & SELDO)
+-		seq_printf(m, "SELDO ");
++		seq_puts(m, "SELDO ");
+ 	if (s & SELDI)
+-		seq_printf(m, "SELDI ");
++		seq_puts(m, "SELDI ");
+ 	if (s & SELINGO)
+-		seq_printf(m, "SELINGO ");
++		seq_puts(m, "SELINGO ");
+ 	if (s & SWRAP)
+-		seq_printf(m, "SWRAP ");
++		seq_puts(m, "SWRAP ");
+ 	if (s & SDONE)
+-		seq_printf(m, "SDONE ");
++		seq_puts(m, "SDONE ");
+ 	if (s & SPIORDY)
+-		seq_printf(m, "SPIORDY ");
++		seq_puts(m, "SPIORDY ");
+ 	if (s & DMADONE)
+-		seq_printf(m, "DMADONE ");
++		seq_puts(m, "DMADONE ");
+ 
+ 	s = GETPORT(SSTAT1) & GETPORT(SIMODE1);
+ 
+ 	if (s & SELTO)
+-		seq_printf(m, "SELTO ");
++		seq_puts(m, "SELTO ");
+ 	if (s & ATNTARG)
+-		seq_printf(m, "ATNTARG ");
++		seq_puts(m, "ATNTARG ");
+ 	if (s & SCSIRSTI)
+-		seq_printf(m, "SCSIRSTI ");
++		seq_puts(m, "SCSIRSTI ");
+ 	if (s & PHASEMIS)
+-		seq_printf(m, "PHASEMIS ");
++		seq_puts(m, "PHASEMIS ");
+ 	if (s & BUSFREE)
+-		seq_printf(m, "BUSFREE ");
++		seq_puts(m, "BUSFREE ");
+ 	if (s & SCSIPERR)
+-		seq_printf(m, "SCSIPERR ");
++		seq_puts(m, "SCSIPERR ");
+ 	if (s & PHASECHG)
+-		seq_printf(m, "PHASECHG ");
++		seq_puts(m, "PHASECHG ");
+ 	if (s & REQINIT)
+-		seq_printf(m, "REQINIT ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "REQINIT ");
++	seq_puts(m, "); ");
+ 
+-	seq_printf(m, "SXFRCTL0( ");
++	seq_puts(m, "SXFRCTL0( ");
+ 
+ 	s = GETPORT(SXFRCTL0);
+ 	if (s & SCSIEN)
+-		seq_printf(m, "SCSIEN ");
++		seq_puts(m, "SCSIEN ");
+ 	if (s & DMAEN)
+-		seq_printf(m, "DMAEN ");
++		seq_puts(m, "DMAEN ");
+ 	if (s & CH1)
+-		seq_printf(m, "CH1 ");
++		seq_puts(m, "CH1 ");
+ 	if (s & CLRSTCNT)
+-		seq_printf(m, "CLRSTCNT ");
++		seq_puts(m, "CLRSTCNT ");
+ 	if (s & SPIOEN)
+-		seq_printf(m, "SPIOEN ");
++		seq_puts(m, "SPIOEN ");
+ 	if (s & CLRCH1)
+-		seq_printf(m, "CLRCH1 ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "CLRCH1 ");
++	seq_puts(m, "); ");
+ 
+-	seq_printf(m, "SIGNAL( ");
++	seq_puts(m, "SIGNAL( ");
+ 
+ 	s = GETPORT(SCSISIG);
+ 	if (s & SIG_ATNI)
+-		seq_printf(m, "ATNI ");
++		seq_puts(m, "ATNI ");
+ 	if (s & SIG_SELI)
+-		seq_printf(m, "SELI ");
++		seq_puts(m, "SELI ");
+ 	if (s & SIG_BSYI)
+-		seq_printf(m, "BSYI ");
++		seq_puts(m, "BSYI ");
+ 	if (s & SIG_REQI)
+-		seq_printf(m, "REQI ");
++		seq_puts(m, "REQI ");
+ 	if (s & SIG_ACKI)
+-		seq_printf(m, "ACKI ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "ACKI ");
++	seq_puts(m, "); ");
+ 
+ 	seq_printf(m, "SELID(%02x), ", GETPORT(SELID));
+ 
+ 	seq_printf(m, "STCNT(%d), ", GETSTCNT());
+ 
+-	seq_printf(m, "SSTAT2( ");
++	seq_puts(m, "SSTAT2( ");
+ 
+ 	s = GETPORT(SSTAT2);
+ 	if (s & SOFFSET)
+-		seq_printf(m, "SOFFSET ");
++		seq_puts(m, "SOFFSET ");
+ 	if (s & SEMPTY)
+-		seq_printf(m, "SEMPTY ");
++		seq_puts(m, "SEMPTY ");
+ 	if (s & SFULL)
+-		seq_printf(m, "SFULL ");
++		seq_puts(m, "SFULL ");
+ 	seq_printf(m, "); SFCNT (%d); ", s & (SFULL | SFCNT));
+ 
+ 	s = GETPORT(SSTAT3);
+ 	seq_printf(m, "SCSICNT (%d), OFFCNT(%d), ", (s & 0xf0) >> 4, s & 0x0f);
+ 
+-	seq_printf(m, "SSTAT4( ");
++	seq_puts(m, "SSTAT4( ");
+ 	s = GETPORT(SSTAT4);
+ 	if (s & SYNCERR)
+-		seq_printf(m, "SYNCERR ");
++		seq_puts(m, "SYNCERR ");
+ 	if (s & FWERR)
+-		seq_printf(m, "FWERR ");
++		seq_puts(m, "FWERR ");
+ 	if (s & FRERR)
+-		seq_printf(m, "FRERR ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "FRERR ");
++	seq_puts(m, "); ");
+ 
+-	seq_printf(m, "DMACNTRL0( ");
++	seq_puts(m, "DMACNTRL0( ");
+ 	s = GETPORT(DMACNTRL0);
+ 	seq_printf(m, "%s ", s & _8BIT ? "8BIT" : "16BIT");
+ 	seq_printf(m, "%s ", s & DMA ? "DMA" : "PIO");
+ 	seq_printf(m, "%s ", s & WRITE_READ ? "WRITE" : "READ");
+ 	if (s & ENDMA)
+-		seq_printf(m, "ENDMA ");
++		seq_puts(m, "ENDMA ");
+ 	if (s & INTEN)
+-		seq_printf(m, "INTEN ");
++		seq_puts(m, "INTEN ");
+ 	if (s & RSTFIFO)
+-		seq_printf(m, "RSTFIFO ");
++		seq_puts(m, "RSTFIFO ");
+ 	if (s & SWINT)
+-		seq_printf(m, "SWINT ");
+-	seq_printf(m, "); ");
++		seq_puts(m, "SWINT ");
++	seq_puts(m, "); ");
+ 
+-	seq_printf(m, "DMASTAT( ");
++	seq_puts(m, "DMASTAT( ");
+ 	s = GETPORT(DMASTAT);
+ 	if (s & ATDONE)
+-		seq_printf(m, "ATDONE ");
++		seq_puts(m, "ATDONE ");
+ 	if (s & WORDRDY)
+-		seq_printf(m, "WORDRDY ");
++		seq_puts(m, "WORDRDY ");
+ 	if (s & DFIFOFULL)
+-		seq_printf(m, "DFIFOFULL ");
++		seq_puts(m, "DFIFOFULL ");
+ 	if (s & DFIFOEMP)
+-		seq_printf(m, "DFIFOEMP ");
+-	seq_printf(m, ")\n");
++		seq_puts(m, "DFIFOEMP ");
++	seq_puts(m, ")\n");
+ 
+-	seq_printf(m, "enabled interrupts( ");
++	seq_puts(m, "enabled interrupts( ");
+ 
+ 	s = GETPORT(SIMODE0);
+ 	if (s & ENSELDO)
+-		seq_printf(m, "ENSELDO ");
++		seq_puts(m, "ENSELDO ");
+ 	if (s & ENSELDI)
+-		seq_printf(m, "ENSELDI ");
++		seq_puts(m, "ENSELDI ");
+ 	if (s & ENSELINGO)
+-		seq_printf(m, "ENSELINGO ");
++		seq_puts(m, "ENSELINGO ");
+ 	if (s & ENSWRAP)
+-		seq_printf(m, "ENSWRAP ");
++		seq_puts(m, "ENSWRAP ");
+ 	if (s & ENSDONE)
+-		seq_printf(m, "ENSDONE ");
++		seq_puts(m, "ENSDONE ");
+ 	if (s & ENSPIORDY)
+-		seq_printf(m, "ENSPIORDY ");
++		seq_puts(m, "ENSPIORDY ");
+ 	if (s & ENDMADONE)
+-		seq_printf(m, "ENDMADONE ");
++		seq_puts(m, "ENDMADONE ");
+ 
+ 	s = GETPORT(SIMODE1);
+ 	if (s & ENSELTIMO)
+-		seq_printf(m, "ENSELTIMO ");
++		seq_puts(m, "ENSELTIMO ");
+ 	if (s & ENATNTARG)
+-		seq_printf(m, "ENATNTARG ");
++		seq_puts(m, "ENATNTARG ");
+ 	if (s & ENPHASEMIS)
+-		seq_printf(m, "ENPHASEMIS ");
++		seq_puts(m, "ENPHASEMIS ");
+ 	if (s & ENBUSFREE)
+-		seq_printf(m, "ENBUSFREE ");
++		seq_puts(m, "ENBUSFREE ");
+ 	if (s & ENSCSIPERR)
+-		seq_printf(m, "ENSCSIPERR ");
++		seq_puts(m, "ENSCSIPERR ");
+ 	if (s & ENPHASECHG)
+-		seq_printf(m, "ENPHASECHG ");
++		seq_puts(m, "ENPHASECHG ");
+ 	if (s & ENREQINIT)
+-		seq_printf(m, "ENREQINIT ");
+-	seq_printf(m, ")\n");
++		seq_puts(m, "ENREQINIT ");
++	seq_puts(m, ")\n");
  }
  
-@@ -3548,7 +3544,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		   c->mcode_date, c->mcode_version);
+ static int aha152x_set_info(struct Scsi_Host *shpnt, char *buffer, int length)
+@@ -2822,7 +2822,7 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
+ 	Scsi_Cmnd *ptr;
+ 	unsigned long flags;
  
- 	AdvReadWordLram(iop_base, ASC_MC_TAGQNG_ABLE, tagqng_able);
--	seq_printf(m, " Queuing Enabled:");
-+	seq_puts(m, " Queuing Enabled:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3559,9 +3555,9 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 			   i,
- 			   (tagqng_able & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
+-	seq_printf(m, AHA152X_REVID "\n");
++	seq_puts(m, AHA152X_REVID "\n");
+ 
+ 	seq_printf(m, "ioports 0x%04lx to 0x%04lx\n",
+ 		shpnt->io_port, shpnt->io_port + shpnt->n_io_port - 1);
+@@ -2836,7 +2836,7 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
+ 	seq_printf(m, "%d commands currently queued\n", HOSTDATA(shpnt)->commands);
+ 
+ 	if(SYNCHRONOUS) {
+-		seq_printf(m, "synchronously operating targets (tick=50 ns):\n");
++		seq_puts(m, "synchronously operating targets (tick=50 ns):\n");
+ 		for (i = 0; i < 8; i++)
+ 			if (HOSTDATA(shpnt)->syncrate[i] & 0x7f)
+ 				seq_printf(m, "target %d: period %dT/%dns; req/ack offset %d\n",
+@@ -2845,28 +2845,28 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
+ 					(((HOSTDATA(shpnt)->syncrate[i] & 0x70) >> 4) + 2) * 50,
+ 				    HOSTDATA(shpnt)->syncrate[i] & 0x0f);
  	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
+-	seq_printf(m, "\nqueue status:\n");
++	seq_puts(m, "\nqueue status:\n");
+ 	DO_LOCK(flags);
+ 	if (ISSUE_SC) {
+-		seq_printf(m, "not yet issued commands:\n");
++		seq_puts(m, "not yet issued commands:\n");
+ 		for (ptr = ISSUE_SC; ptr; ptr = SCNEXT(ptr))
+ 			get_command(m, ptr);
+ 	} else
+-		seq_printf(m, "no not yet issued commands\n");
++		seq_puts(m, "no not yet issued commands\n");
+ 	DO_UNLOCK(flags);
  
--	seq_printf(m, " Queue Limit:");
-+	seq_puts(m, " Queue Limit:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3573,9 +3569,9 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
+ 	if (CURRENT_SC) {
+-		seq_printf(m, "current command:\n");
++		seq_puts(m, "current command:\n");
+ 		get_command(m, CURRENT_SC);
+ 	} else
+-		seq_printf(m, "no current command\n");
++		seq_puts(m, "no current command\n");
  
- 		seq_printf(m, " %X:%d", i, lrambyte);
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
+ 	if (DISCONNECTED_SC) {
+-		seq_printf(m, "disconnected commands:\n");
++		seq_puts(m, "disconnected commands:\n");
+ 		for (ptr = DISCONNECTED_SC; ptr; ptr = SCNEXT(ptr))
+ 			get_command(m, ptr);
+ 	} else
+-		seq_printf(m, "no disconnected commands\n");
++		seq_puts(m, "no disconnected commands\n");
  
--	seq_printf(m, " Command Pending:");
-+	seq_puts(m, " Command Pending:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3587,10 +3583,10 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 
- 		seq_printf(m, " %X:%d", i, lrambyte);
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	AdvReadWordLram(iop_base, ASC_MC_WDTR_ABLE, wdtr_able);
--	seq_printf(m, " Wide Enabled:");
-+	seq_puts(m, " Wide Enabled:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3601,10 +3597,10 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 			   i,
- 			   (wdtr_able & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	AdvReadWordLram(iop_base, ASC_MC_WDTR_DONE, wdtr_done);
--	seq_printf(m, " Transfer Bit Width:");
-+	seq_puts(m, " Transfer Bit Width:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3620,14 +3616,14 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 
- 		if ((wdtr_able & ADV_TID_TO_TIDMASK(i)) &&
- 		    (wdtr_done & ADV_TID_TO_TIDMASK(i)) == 0) {
--			seq_printf(m, "*");
-+			seq_puts(m, "*");
- 			renegotiate = 1;
- 		}
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	AdvReadWordLram(iop_base, ASC_MC_SDTR_ABLE, sdtr_able);
--	seq_printf(m, " Synchronous Enabled:");
-+	seq_puts(m, " Synchronous Enabled:");
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
- 		if ((chip_scsi_id == i) ||
- 		    ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(i)) == 0)) {
-@@ -3638,7 +3634,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 			   i,
- 			   (sdtr_able & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
- 	}
--	seq_printf(m, "\n");
-+	seq_puts(m, "\n");
- 
- 	AdvReadWordLram(iop_base, ASC_MC_SDTR_DONE, sdtr_done);
- 	for (i = 0; i <= ADV_MAX_TID; i++) {
-@@ -3657,14 +3653,14 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		seq_printf(m, "  %X:", i);
- 
- 		if ((lramword & 0x1F) == 0) {	/* Check for REQ/ACK Offset 0. */
--			seq_printf(m, " Asynchronous");
-+			seq_puts(m, " Asynchronous");
- 		} else {
--			seq_printf(m, " Transfer Period Factor: ");
-+			seq_puts(m, " Transfer Period Factor: ");
- 
- 			if ((lramword & 0x1F00) == 0x1100) {	/* 80 Mhz */
--				seq_printf(m, "9 (80.0 Mhz),");
-+				seq_puts(m, "9 (80.0 Mhz),");
- 			} else if ((lramword & 0x1F00) == 0x1000) {	/* 40 Mhz */
--				seq_printf(m, "10 (40.0 Mhz),");
-+				seq_puts(m, "10 (40.0 Mhz),");
- 			} else {	/* 20 Mhz or below. */
- 
- 				period = (((lramword >> 8) * 25) + 50) / 4;
-@@ -3684,16 +3680,15 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		}
- 
- 		if ((sdtr_done & ADV_TID_TO_TIDMASK(i)) == 0) {
--			seq_printf(m, "*\n");
-+			seq_puts(m, "*\n");
- 			renegotiate = 1;
- 		} else {
--			seq_printf(m, "\n");
-+			seq_puts(m, "\n");
- 		}
- 	}
- 
- 	if (renegotiate) {
--		seq_printf(m,
--			   " * = Re-negotiation pending before next command.\n");
-+		seq_puts(m, " * = Re-negotiation pending before next command.\n");
- 	}
- }
+ 	get_ports(m, shpnt);
  
 -- 
 2.0.4
