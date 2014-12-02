@@ -1,52 +1,39 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 2/2] Revert "[SCSI] mpt3sas: Remove phys on topology change"
-Date: Tue,  2 Dec 2014 20:58:47 +0530
-Message-ID: <1417534127-6189-3-git-send-email-Sreekanth.Reddy@avagotech.com>
-References: <1417534127-6189-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417534127-6189-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, stable@vger.kernel.org, Tomas Henzl <thenzl@redhat.com>
+From: Eric B Munson <emunson@akamai.com>
+Subject: [PATCH] Initialize off value in asd_process_ctrl_a_user()
+Date: Tue,  2 Dec 2014 11:34:01 -0500
+Message-ID: <1417538041-6850-1-git-send-email-emunson@akamai.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from prod-mail-xrelay07.akamai.com ([72.246.2.115]:61281 "EHLO
+	prod-mail-xrelay07.akamai.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753928AbaLBQfE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2014 11:35:04 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eric B Munson <emunson@akamai.com>, stable@vger.kernel.org
 
-This reverts commit 963ba22b90a955363644cd397b20226928eab976
-("mpt3sas: Remove phys on topology change")
+If the asd_find_flash_de() function returns ENOENT the off value will
+be used uninitialized in the call to asd_read_flash_seg().
 
-Reverting the previous mpt3sas drives patch changes,
-since we will observe below issue
-
-Issue:
-Drives connected Enclosure/Expander will unregister with
-SCSI Transport Layer, if any one remove and add expander
-cable with in DMD (Device Missing Delay) time period or 
-even any one power-off and power-on the Enclosure with in
-the DMD period.
-
-Cc: <stable@vger.kernel.org>
-Cc: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Signed-off-by: Eric B Munson <emunson@akamai.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_sds.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index d4bafaa..3637ae6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -1003,12 +1003,9 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 		    &mpt3sas_phy->remote_identify);
- 		_transport_add_phy_to_an_existing_port(ioc, sas_node,
- 		    mpt3sas_phy, mpt3sas_phy->remote_identify.sas_address);
--	} else {
-+	} else
- 		memset(&mpt3sas_phy->remote_identify, 0 , sizeof(struct
- 		    sas_identify));
--		_transport_del_phy_from_an_existing_port(ioc, sas_node,
--		    mpt3sas_phy);
--	}
- 
- 	if (mpt3sas_phy->phy)
- 		mpt3sas_phy->phy->negotiated_linkrate =
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
+index edb43fd..6f6a5b8 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c
++++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
+ 				   struct asd_flash_dir *flash_dir)
+ {
+ 	int err, i;
+-	u32 offs, size;
++	u32 offs = 0, size;
+ 	struct asd_ll_el *el;
+ 	struct asd_ctrla_phy_settings *ps;
+ 	struct asd_ctrla_phy_settings dflt_ps;
 -- 
-2.0.2
+1.9.1
+
