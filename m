@@ -1,189 +1,68 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] drivers: scsi: aic7xxx: Fix positive error codes.
-Date: Wed, 03 Dec 2014 17:22:05 +0100
-Message-ID: <547F38AD.9050103@suse.de>
-References: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
+Subject: Re: [PATCH 00/12] nobody loves the advansys driver
+Date: Wed, 03 Dec 2014 17:28:40 +0100
+Message-ID: <547F3A38.6070908@suse.de>
+References: <1417607105-85455-1-git-send-email-hare@suse.de>	 <20141203152141.GA6175@lst.de>	 <201412031634.48711.linux@rainbow-software.org> <1417621350.2206.3.camel@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Wilkes <letshaveanadventure@gmail.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33998 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752216AbaLCQ2l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Dec 2014 11:28:41 -0500
+In-Reply-To: <1417621350.2206.3.camel@parallels.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>, "linux@rainbow-software.org" <linux@rainbow-software.org>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "matthew@wil.cx" <matthew@wil.cx>
 
-On 12/03/2014 01:03 AM, Jason Wilkes wrote:
-> Note:
-> There are more instances of the problem described below, but I
-> thought I'd explain the first one in detail, to make sure it's
-> worth fixing the others (and to make sure I didn't do anything
-> stupid, which I may have. I'm new to this :-). Alright, here we go!
->=20
-> A few drivers seem to return positive error codes internally, in
-> order to signal something to a static function in the same driver.
-> (see, for example, drivers/staging/lustre/lnet/lnet/lib-move.c)
-> That's unusual, but seems okay as long as they're consistent between
-> return codes and return code checks. However, a problem might arise
-> if +ERRORCODE rather than -ERRORCODE is returned to other layers
-> of the kernel (e.g., to the driver core). Let's do some exploring...
->=20
-> Here's a function that returns +ENOMEM
-> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
-> FUNC: aic7770_map_registers
->=20
-> int
-> aic7770_map_registers(struct ahc_softc *ahc, u_int port)
-> {
-> ... (clipped for brevity) ..
->=20
-> 	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
-> 		return (ENOMEM);
->=20
-> ... (clipped for brevity) ..
-> }
->=20
-> This may not be a problem, unless we're passing the value
-> outside the current module. So who calls this function?
-> $ grep -r -C20 aic7770_map_registers
->=20
-> Looks like it's only ever called in:
-> FILE: drivers/scsi/aic7xxx/aic7770.c
-> FUNC: aic7770_config
->=20
-> int aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *en=
-try, u_int io)
-> {
-> ... (code and stuff) ...
->=20
-> 	error =3D aic7770_map_registers(ahc, io);
-> 	if (error !=3D 0)
-> 		return (error);
->=20
-> ... (code and stuff) ...
-> }
->=20
-> Hmm... Let's see who calls this guy.
-> $ grep -r -C20 aic7770_config
->=20
-> This too is only called once, in:
-> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
-> FUNC: aic7770_probe
->=20
-> static int
-> aic7770_probe(struct device *dev)
-> {
-> ... (blah blah blah) ...
->=20
-> 	error =3D aic7770_config(ahc, aic7770_ident_table + edev->id.driver_=
-data,
-> 			       eisaBase);
-> 	if (error !=3D 0) {
-> 		ahc->bsh.ioport =3D 0;
-> 		ahc_free(ahc);
-> 		return (error);
-> 	}
->=20
-> ... (blah blah blah) ...
-> }
->=20
-> Same deal as before. Okay, so who calls aic7770_probe?
->=20
-> Well, as expected, no one calls it, at least not by name.
-> It's just the .probe function in the following struct:
->=20
-> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
->=20
-> static struct eisa_driver aic7770_driver =3D {
-> 	.id_table	=3D aic7770_ids,
-> 	.driver =3D {
-> 		.name   =3D "aic7xxx",
-> 		.probe  =3D aic7770_probe,
-> 		.remove =3D aic7770_remove,
-> 	}
-> };
->=20
-> So the return code *is* being passed to another layer of the kernel,
-> in which case it should probably be negative.
->=20
-> There are lots of similar examples in the same driver. I'd be happy
-> to fix them up, but I thought I should send this patch first, to make
-> sure I'm not doing anything obviously wrong.
->=20
-> Ooh! One more thing, just to be safe. Above, I assumed that grepping
-> the kernel tree would give us all the places where an identifier show=
-s
-> up, but maybe this driver does something clever with the preprocessor=
+On 12/03/2014 04:42 PM, James Bottomley wrote:
+> On Wed, 2014-12-03 at 16:34 +0100, Ondrej Zary wrote:
+>> On Wednesday 03 December 2014, Christoph Hellwig wrote:
+>>> Thanks for looking into this old driver.
+>>>
+>>> If you've got a few spare cycles it might make sense to simply spli=
+t
+>>> the "wide board" support out - the driver literally is two differen=
+t
+>>> drivers with an if/else section in every method for the totally
+>>> different narrow vs wide boards.  Having at least a clean and simpl=
+e
+>>> driver for the newer wide boards would be good, and narrow ones are
+>>> probably old enough that we can let the driver for those fade away.=
 =2E
+>>
+>> I have an ASB-3940UA (bought around 2000) and use it for scanner so =
+I can test=20
+>> patches.
+>> The driver was working fine so I never had to look at the code. Now =
+I see that=20
+>> it's 12K lines long :( Converting that to something simple would req=
+uire a=20
+>> lot of work.
 >=20
-> $ grep -r '##' drivers/scsi/aic7xxx/ || cowsay hooray
->  ________
-> < hooray >
->  --------
->         \   ^__^
->          \  (oo)\_______
->             (__)\       )\/\
->                 ||----w |
->                 ||     ||
+> That's the problem: The driver as-is works in all of the use cases, s=
+o
+> no-one has any motivation to fix it.  Plus the complexity is pretty
+> daunting.  It's not even the worst driver we have (that prize goes to
+> atp870u which still has internal bus scanning code).  I'm not saying
+> don't do the conversion, but I am saying it will have to be validated
+> and tested before it can go in because lots of people still seem to u=
+se
+> this family of devices in odd corners of the world.
 >=20
-> Okay good, so there shouldn't be any ## magic messing with our greps.
-> Alright, I guess I should send this patch off now. Thanks for reading=
-,
-> and apologies in advance if I'm a moron :-)
->=20
-> Signed-off-by: Jason Wilkes <letshaveanadventure@gmail.com>
-> ---
->  drivers/scsi/aic7xxx/aic7770.c     | 2 +-
->  drivers/scsi/aic7xxx/aic7770_osm.c | 6 +++---
->  2 files changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/scsi/aic7xxx/aic7770.c b/drivers/scsi/aic7xxx/ai=
-c7770.c
-> index 5000bd6..cecdea9 100644
-> --- a/drivers/scsi/aic7xxx/aic7770.c
-> +++ b/drivers/scsi/aic7xxx/aic7770.c
-> @@ -171,7 +171,7 @@ aic7770_config(struct ahc_softc *ahc, struct aic7=
-770_identity *entry, u_int io)
->  		break;
->  	default:
->  		printk("aic7770_config: invalid irq setting %d\n", intdef);
-> -		return (ENXIO);
-> +		return -ENXIO;
->  	}
-> =20
->  	if ((intdef & EDGE_TRIG) !=3D 0)
-> diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xx=
-x/aic7770_osm.c
-> index 3d401d0..50f030d 100644
-> --- a/drivers/scsi/aic7xxx/aic7770_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic7770_osm.c
-> @@ -51,7 +51,7 @@ aic7770_map_registers(struct ahc_softc *ahc, u_int =
-port)
->  	 * Lock out other contenders for our i/o space.
->  	 */
->  	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
-> -		return (ENOMEM);
-> +		return -ENOMEM;
->  	ahc->tag =3D BUS_SPACE_PIO;
->  	ahc->bsh.ioport =3D port;
->  	return (0);
-> @@ -87,10 +87,10 @@ aic7770_probe(struct device *dev)
->  	sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
->  	name =3D kstrdup(buf, GFP_ATOMIC);
->  	if (name =3D=3D NULL)
-> -		return (ENOMEM);
-> +		return -ENOMEM;
->  	ahc =3D ahc_alloc(&aic7xxx_driver_template, name);
->  	if (ahc =3D=3D NULL)
-> -		return (ENOMEM);
-> +		return -ENOMEM;
->  	error =3D aic7770_config(ahc, aic7770_ident_table + edev->id.driver=
-_data,
->  			       eisaBase);
->  	if (error !=3D 0) {
->=20
-Looks okay so far, but have you validated all callers to ensure they
-use the new syntax?
+It was actually on my mind, too, to split the driver up.
+The code for the narrow board has some issues even today (I've
+inserted some remarks in the code) which always get in the way when
+trying to update the other side.
+
+But then I only got a wide board, so I couldn't do any testing
+there; I was sort of banking on Matt Wilcox to have a board
+available ...
+
+Ondrej, if you got a narrow board I'd be willing to to the split and
+let you test out the result.
 
 Cheers,
 
@@ -191,5 +70,11 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
