@@ -1,66 +1,195 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 00/12] nobody loves the advansys driver
-Date: Wed, 03 Dec 2014 11:06:58 -0500
-Message-ID: <547F3522.4070205@interlog.com>
-References: <1417607105-85455-1-git-send-email-hare@suse.de>
-Reply-To: dgilbert@interlog.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] drivers: scsi: aic7xxx: Fix positive error codes.
+Date: Wed, 03 Dec 2014 17:22:05 +0100
+Message-ID: <547F38AD.9050103@suse.de>
+References: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53506 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaLCQHR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2014 11:07:17 -0500
-In-Reply-To: <1417607105-85455-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Wilkes <letshaveanadventure@gmail.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On 14-12-03 06:44 AM, Hannes Reinecke wrote:
-> Hi all,
->
-> it has been bugged me for ages that the advansys driver always
-> reported a compilation warning about not having been converted
-> to the DMA-API.
-> And even aggressive waiting hasn't made this warning go away.
->
-> So here's a patchset to update the advansys driver to current
-> standards and use the DMA-API.
-> Tested on ABP940-U2W.
->
-> As usual, reviews and comments are welcome.
->
-> Hannes Reinecke (12):
->    advansys: use host_reset
->    advansys: use shared host tag map for command lookup
->    advansys: use DMA-API for mapping sense buffer
->    advansys: Use DMA-API for carrier buffer
->    advansys: Use DMA-API for mapping request blocks
->    advansys: Use dma_pool for sg elements
->    advansys: use 'bool' instead of 'int'
->    advansys: use standard data types
->    advansys: Remove 'TRUE' and 'FALSE' definitions
->    advansys: Remove 'ERR' definition
->    advansys: cleanup function return codes
->    advansys: Update to version 3.5 and remove compilation warning
->
->   MAINTAINERS             |    1 +
->   drivers/scsi/advansys.c | 1073 +++++++++++++++++++++--------------------------
->   2 files changed, 469 insertions(+), 605 deletions(-)
+On 12/03/2014 01:03 AM, Jason Wilkes wrote:
+> Note:
+> There are more instances of the problem described below, but I
+> thought I'd explain the first one in detail, to make sure it's
+> worth fixing the others (and to make sure I didn't do anything
+> stupid, which I may have. I'm new to this :-). Alright, here we go!
+>=20
+> A few drivers seem to return positive error codes internally, in
+> order to signal something to a static function in the same driver.
+> (see, for example, drivers/staging/lustre/lnet/lnet/lib-move.c)
+> That's unusual, but seems okay as long as they're consistent between
+> return codes and return code checks. However, a problem might arise
+> if +ERRORCODE rather than -ERRORCODE is returned to other layers
+> of the kernel (e.g., to the driver core). Let's do some exploring...
+>=20
+> Here's a function that returns +ENOMEM
+> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+> FUNC: aic7770_map_registers
+>=20
+> int
+> aic7770_map_registers(struct ahc_softc *ahc, u_int port)
+> {
+> ... (clipped for brevity) ..
+>=20
+> 	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
+> 		return (ENOMEM);
+>=20
+> ... (clipped for brevity) ..
+> }
+>=20
+> This may not be a problem, unless we're passing the value
+> outside the current module. So who calls this function?
+> $ grep -r -C20 aic7770_map_registers
+>=20
+> Looks like it's only ever called in:
+> FILE: drivers/scsi/aic7xxx/aic7770.c
+> FUNC: aic7770_config
+>=20
+> int aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *en=
+try, u_int io)
+> {
+> ... (code and stuff) ...
+>=20
+> 	error =3D aic7770_map_registers(ahc, io);
+> 	if (error !=3D 0)
+> 		return (error);
+>=20
+> ... (code and stuff) ...
+> }
+>=20
+> Hmm... Let's see who calls this guy.
+> $ grep -r -C20 aic7770_config
+>=20
+> This too is only called once, in:
+> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+> FUNC: aic7770_probe
+>=20
+> static int
+> aic7770_probe(struct device *dev)
+> {
+> ... (blah blah blah) ...
+>=20
+> 	error =3D aic7770_config(ahc, aic7770_ident_table + edev->id.driver_=
+data,
+> 			       eisaBase);
+> 	if (error !=3D 0) {
+> 		ahc->bsh.ioport =3D 0;
+> 		ahc_free(ahc);
+> 		return (error);
+> 	}
+>=20
+> ... (blah blah blah) ...
+> }
+>=20
+> Same deal as before. Okay, so who calls aic7770_probe?
+>=20
+> Well, as expected, no one calls it, at least not by name.
+> It's just the .probe function in the following struct:
+>=20
+> FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+>=20
+> static struct eisa_driver aic7770_driver =3D {
+> 	.id_table	=3D aic7770_ids,
+> 	.driver =3D {
+> 		.name   =3D "aic7xxx",
+> 		.probe  =3D aic7770_probe,
+> 		.remove =3D aic7770_remove,
+> 	}
+> };
+>=20
+> So the return code *is* being passed to another layer of the kernel,
+> in which case it should probably be negative.
+>=20
+> There are lots of similar examples in the same driver. I'd be happy
+> to fix them up, but I thought I should send this patch first, to make
+> sure I'm not doing anything obviously wrong.
+>=20
+> Ooh! One more thing, just to be safe. Above, I assumed that grepping
+> the kernel tree would give us all the places where an identifier show=
+s
+> up, but maybe this driver does something clever with the preprocessor=
+=2E
+>=20
+> $ grep -r '##' drivers/scsi/aic7xxx/ || cowsay hooray
+>  ________
+> < hooray >
+>  --------
+>         \   ^__^
+>          \  (oo)\_______
+>             (__)\       )\/\
+>                 ||----w |
+>                 ||     ||
+>=20
+> Okay good, so there shouldn't be any ## magic messing with our greps.
+> Alright, I guess I should send this patch off now. Thanks for reading=
+,
+> and apologies in advance if I'm a moron :-)
+>=20
+> Signed-off-by: Jason Wilkes <letshaveanadventure@gmail.com>
+> ---
+>  drivers/scsi/aic7xxx/aic7770.c     | 2 +-
+>  drivers/scsi/aic7xxx/aic7770_osm.c | 6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/scsi/aic7xxx/aic7770.c b/drivers/scsi/aic7xxx/ai=
+c7770.c
+> index 5000bd6..cecdea9 100644
+> --- a/drivers/scsi/aic7xxx/aic7770.c
+> +++ b/drivers/scsi/aic7xxx/aic7770.c
+> @@ -171,7 +171,7 @@ aic7770_config(struct ahc_softc *ahc, struct aic7=
+770_identity *entry, u_int io)
+>  		break;
+>  	default:
+>  		printk("aic7770_config: invalid irq setting %d\n", intdef);
+> -		return (ENXIO);
+> +		return -ENXIO;
+>  	}
+> =20
+>  	if ((intdef & EDGE_TRIG) !=3D 0)
+> diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xx=
+x/aic7770_osm.c
+> index 3d401d0..50f030d 100644
+> --- a/drivers/scsi/aic7xxx/aic7770_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic7770_osm.c
+> @@ -51,7 +51,7 @@ aic7770_map_registers(struct ahc_softc *ahc, u_int =
+port)
+>  	 * Lock out other contenders for our i/o space.
+>  	 */
+>  	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
+> -		return (ENOMEM);
+> +		return -ENOMEM;
+>  	ahc->tag =3D BUS_SPACE_PIO;
+>  	ahc->bsh.ioport =3D port;
+>  	return (0);
+> @@ -87,10 +87,10 @@ aic7770_probe(struct device *dev)
+>  	sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
+>  	name =3D kstrdup(buf, GFP_ATOMIC);
+>  	if (name =3D=3D NULL)
+> -		return (ENOMEM);
+> +		return -ENOMEM;
+>  	ahc =3D ahc_alloc(&aic7xxx_driver_template, name);
+>  	if (ahc =3D=3D NULL)
+> -		return (ENOMEM);
+> +		return -ENOMEM;
+>  	error =3D aic7770_config(ahc, aic7770_ident_table + edev->id.driver=
+_data,
+>  			       eisaBase);
+>  	if (error !=3D 0) {
+>=20
+Looks okay so far, but have you validated all callers to ensure they
+use the new syntax?
 
-Looks good.
+Cheers,
 
-Tried to find my old Advansys HBAs but failed, probably
-the result of a purge a few years back. Hence I was unable
-to test it with my few remaining SPI disks and tape drive.
-If memory serves, for a while Advansys HBAs were bundled
-with SCSI scanners.
-
-The original Advansys maintainer, Bob Frey, I suspect was
-the recipient of my first SCSI related queries.
-
-
-Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
