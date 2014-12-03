@@ -1,67 +1,94 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because
- of write_same check
-Date: Wed, 03 Dec 2014 11:08:23 -0600
-Message-ID: <547F4387.5010207@cs.wisc.edu>
-References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu> <52CF8F0C.3040304@oracle.com> <52CFA440.7030104@cs.wisc.edu> <52CFAA9F.5010706@oracle.com> <52D056E9.8080008@cs.wisc.edu> <52D09CE6.80200@oracle.com> <a90377a8-3ef9-4fc2-a3e9-bfff23560674@googlegroups.com> <547C2E4D.1030802@oracle.com> <E12134C3-7E50-4E13-94FE-7CEDCB7D9537@cs.wisc.edu> <yq17fy9mnsx.fsf@sermon.lab.mkp.net>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 00/12] nobody loves the advansys driver
+Date: Wed, 3 Dec 2014 19:29:14 +0100
+Message-ID: <201412031929.14767.linux@rainbow-software.org>
+References: <1417607105-85455-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBEEH7WRQKGQECKGFVFA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <yq17fy9mnsx.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-1.atlantis.sk ([80.94.52.57]:34052 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbaLCSaD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 13:30:03 -0500
+In-Reply-To: <1417607105-85455-1-git-send-email-hare@suse.de>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-On 12/2/14, 9:09 PM, Martin K. Petersen wrote:
->>>>>> "Mike" =3D=3D Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org> writes:
+On Wednesday 03 December 2014 12:44:53 Hannes Reinecke wrote:
+> Hi all,
 >
-> Mike,
+> it has been bugged me for ages that the advansys driver always
+> reported a compilation warning about not having been converted
+> to the DMA-API.
+> And even aggressive waiting hasn't made this warning go away.
 >
-> Mike> This was the issue we worked with Microsoft on wasn=E2=80=99t it? Y=
-ou guys
-> Mike> figured out it was fixed in their target in a recent release
-> Mike> right?
+> So here's a patchset to update the advansys driver to current
+> standards and use the DMA-API.
+> Tested on ABP940-U2W.
 >
-> The issue we worked recently was wrt. the thin provisioning reporting.
+> As usual, reviews and comments are welcome.
 >
-> The WRITE SAME problem was that the target returns an iSCSI-specific
-> error code rather than a check condition with ILLEGAL REQUEST. You were
-> going to talk to MS.
+> Hannes Reinecke (12):
+>   advansys: use host_reset
+>   advansys: use shared host tag map for command lookup
+>   advansys: use DMA-API for mapping sense buffer
+>   advansys: Use DMA-API for carrier buffer
+>   advansys: Use DMA-API for mapping request blocks
+>   advansys: Use dma_pool for sg elements
+>   advansys: use 'bool' instead of 'int'
+>   advansys: use standard data types
+>   advansys: Remove 'TRUE' and 'FALSE' definitions
+>   advansys: Remove 'ERR' definition
+>   advansys: cleanup function return codes
+>   advansys: Update to version 3.5 and remove compilation warning
+>
+>  MAINTAINERS             |    1 +
+>  drivers/scsi/advansys.c | 1073
+> +++++++++++++++++++++-------------------------- 2 files changed, 469
+> insertions(+), 605 deletions(-)
 
-Are you sure about this? The issue you are talking about and the one=20
-jazz is is the same issue right?
+Seems to break narrow boards, at least mine ASB-3940UA :(
 
-I do not have any of the old replies from MS, but I have some of the=20
-mails I sent them. It looks like we were asking them about when sd.c=20
-would send a REPORT SUPPORTED OPERATION, the old MS target would return=20
-the iscsi specific error code. And it looks like they had us try a=20
-updated version and in there it was changed to just work on their side.
+[    4.266292] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
+[    7.661374] scsi host2: AdvanSys SCSI 3.5: PCI Ultra: IO 0xA800-0xA80F, IRQ 0x9
+[   28.840078] scsi 2:0:0:0: SCSI bus reset started...
+[   28.846640] scsi 2:0:0:0: SCSI bus reset error: 0x2, status: 0x0
+[   28.846648] scsi 2:0:0:0: Device offlined - not ready after error recovery
+[   28.846803] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.852052] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.860051] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.868047] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.868249] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.876050] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.884048] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.892047] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.892243] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.900051] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.908048] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.916047] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.916241] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.924051] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.932048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.940048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.940240] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.948051] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.956049] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.964047] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.964239] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.972050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.980048] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+[   28.988050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
 
-Jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org's patch would work around the same problem because in=20
-sd_read_write_same, sd would see no_write_same is set and not send=20
-REPORT SUPPORTED OPERATION.
+Before the patch:
+[    4.226690] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
+[    7.644841] scsi host2: AdvanSys SCSI 3.4: PCI Ultra: IO 0xA800-0xA80F, IRQ 0x9
+[    8.072257] scsi 2:0:2:0: Processor         HP       C1790A           3226 PQ: 0 ANSI: 2
+[    8.919128] scsi 2:0:2:0: Attached scsi generic sg3 type 3
 
-The subject of that email thread with MS was "Linux iSCSI and Microsoft=20
-target interop question". I started it with MS on Jan 14, 2014. Vaughan=20
-ccd you on that thread a little later to get your help. I do not have=20
-the replies though. I am just going by truncated snippets in mails sent,=20
-so I do not know what version that was fixed in. Do you guys have the=20
-replies by any chance?
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+-- 
+Ondrej Zary
