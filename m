@@ -1,476 +1,169 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH v2 3/6] scsi/aha152x: Replace seq_printf with seq_puts
-Date: Wed,  3 Dec 2014 00:10:51 +0100
-Message-ID: <1417561854-17188-4-git-send-email-linux@rasmusvillemoes.dk>
-References: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk>
- <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
+From: Jason Wilkes <letshaveanadventure@gmail.com>
+Subject: [PATCH] drivers: scsi: aic7xxx: Fix positive error codes.
+Date: Tue,  2 Dec 2014 16:03:04 -0800
+Message-ID: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Finn Thain <fthain@telegraphics.com.au>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: hare@suse.de
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, letshaveanadventure@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Using seq_printf to print a simple string is a lot more expensive than
-it needs to be, since seq_puts exists. Replace seq_printf with
-seq_puts when possible.
+Note:
+There are more instances of the problem described below, but I
+thought I'd explain the first one in detail, to make sure it's
+worth fixing the others (and to make sure I didn't do anything
+stupid, which I may have. I'm new to this :-). Alright, here we go!
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+A few drivers seem to return positive error codes internally, in
+order to signal something to a static function in the same driver.
+(see, for example, drivers/staging/lustre/lnet/lnet/lib-move.c)
+That's unusual, but seems okay as long as they're consistent between
+return codes and return code checks. However, a problem might arise
+if +ERRORCODE rather than -ERRORCODE is returned to other layers
+of the kernel (e.g., to the driver core). Let's do some exploring...
+
+Here's a function that returns +ENOMEM
+FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+FUNC: aic7770_map_registers
+
+int
+aic7770_map_registers(struct ahc_softc *ahc, u_int port)
+{
+... (clipped for brevity) ..
+
+	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
+		return (ENOMEM);
+
+... (clipped for brevity) ..
+}
+
+This may not be a problem, unless we're passing the value
+outside the current module. So who calls this function?
+$ grep -r -C20 aic7770_map_registers
+
+Looks like it's only ever called in:
+FILE: drivers/scsi/aic7xxx/aic7770.c
+FUNC: aic7770_config
+
+int aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *entry, u_int io)
+{
+... (code and stuff) ...
+
+	error = aic7770_map_registers(ahc, io);
+	if (error != 0)
+		return (error);
+
+... (code and stuff) ...
+}
+
+Hmm... Let's see who calls this guy.
+$ grep -r -C20 aic7770_config
+
+This too is only called once, in:
+FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+FUNC: aic7770_probe
+
+static int
+aic7770_probe(struct device *dev)
+{
+... (blah blah blah) ...
+
+	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
+			       eisaBase);
+	if (error != 0) {
+		ahc->bsh.ioport = 0;
+		ahc_free(ahc);
+		return (error);
+	}
+
+... (blah blah blah) ...
+}
+
+Same deal as before. Okay, so who calls aic7770_probe?
+
+Well, as expected, no one calls it, at least not by name.
+It's just the .probe function in the following struct:
+
+FILE: drivers/scsi/aic7xxx/aic7770_osm.c
+
+static struct eisa_driver aic7770_driver = {
+	.id_table	= aic7770_ids,
+	.driver = {
+		.name   = "aic7xxx",
+		.probe  = aic7770_probe,
+		.remove = aic7770_remove,
+	}
+};
+
+So the return code *is* being passed to another layer of the kernel,
+in which case it should probably be negative.
+
+There are lots of similar examples in the same driver. I'd be happy
+to fix them up, but I thought I should send this patch first, to make
+sure I'm not doing anything obviously wrong.
+
+Ooh! One more thing, just to be safe. Above, I assumed that grepping
+the kernel tree would give us all the places where an identifier shows
+up, but maybe this driver does something clever with the preprocessor.
+
+$ grep -r '##' drivers/scsi/aic7xxx/ || cowsay hooray
+ ________
+< hooray >
+ --------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+
+Okay good, so there shouldn't be any ## magic messing with our greps.
+Alright, I guess I should send this patch off now. Thanks for reading,
+and apologies in advance if I'm a moron :-)
+
+Signed-off-by: Jason Wilkes <letshaveanadventure@gmail.com>
 ---
- drivers/scsi/aha152x.c | 248 ++++++++++++++++++++++++-------------------------
- 1 file changed, 124 insertions(+), 124 deletions(-)
+ drivers/scsi/aic7xxx/aic7770.c     | 2 +-
+ drivers/scsi/aic7xxx/aic7770_osm.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index f14ad8a..e31c460 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -2505,21 +2505,21 @@ static void get_command(struct seq_file *m, Scsi_Cmnd * ptr)
- 		ptr->SCp.buffers_residual);
- 
- 	if (ptr->SCp.phase & not_issued)
--		seq_printf(m, "not issued|");
-+		seq_puts(m, "not issued|");
- 	if (ptr->SCp.phase & selecting)
--		seq_printf(m, "selecting|");
-+		seq_puts(m, "selecting|");
- 	if (ptr->SCp.phase & disconnected)
--		seq_printf(m, "disconnected|");
-+		seq_puts(m, "disconnected|");
- 	if (ptr->SCp.phase & aborted)
--		seq_printf(m, "aborted|");
-+		seq_puts(m, "aborted|");
- 	if (ptr->SCp.phase & identified)
--		seq_printf(m, "identified|");
-+		seq_puts(m, "identified|");
- 	if (ptr->SCp.phase & completed)
--		seq_printf(m, "completed|");
-+		seq_puts(m, "completed|");
- 	if (ptr->SCp.phase & spiordy)
--		seq_printf(m, "spiordy|");
-+		seq_puts(m, "spiordy|");
- 	if (ptr->SCp.phase & syncneg)
--		seq_printf(m, "syncneg|");
-+		seq_puts(m, "syncneg|");
- 	seq_printf(m, "; next=0x%p\n", SCNEXT(ptr));
- }
- 
-@@ -2530,256 +2530,256 @@ static void get_ports(struct seq_file *m, struct Scsi_Host *shpnt)
- 	seq_printf(m, "\n%s: %s(%s) ", CURRENT_SC ? "on bus" : "waiting", states[STATE].name, states[PREVSTATE].name);
- 
- 	s = GETPORT(SCSISEQ);
--	seq_printf(m, "SCSISEQ( ");
-+	seq_puts(m, "SCSISEQ( ");
- 	if (s & TEMODEO)
--		seq_printf(m, "TARGET MODE ");
-+		seq_puts(m, "TARGET MODE ");
- 	if (s & ENSELO)
--		seq_printf(m, "SELO ");
-+		seq_puts(m, "SELO ");
- 	if (s & ENSELI)
--		seq_printf(m, "SELI ");
-+		seq_puts(m, "SELI ");
- 	if (s & ENRESELI)
--		seq_printf(m, "RESELI ");
-+		seq_puts(m, "RESELI ");
- 	if (s & ENAUTOATNO)
--		seq_printf(m, "AUTOATNO ");
-+		seq_puts(m, "AUTOATNO ");
- 	if (s & ENAUTOATNI)
--		seq_printf(m, "AUTOATNI ");
-+		seq_puts(m, "AUTOATNI ");
- 	if (s & ENAUTOATNP)
--		seq_printf(m, "AUTOATNP ");
-+		seq_puts(m, "AUTOATNP ");
- 	if (s & SCSIRSTO)
--		seq_printf(m, "SCSIRSTO ");
--	seq_printf(m, ");");
-+		seq_puts(m, "SCSIRSTO ");
-+	seq_puts(m, ");");
- 
--	seq_printf(m, " SCSISIG(");
-+	seq_puts(m, " SCSISIG(");
- 	s = GETPORT(SCSISIG);
- 	switch (s & P_MASK) {
- 	case P_DATAO:
--		seq_printf(m, "DATA OUT");
-+		seq_puts(m, "DATA OUT");
- 		break;
- 	case P_DATAI:
--		seq_printf(m, "DATA IN");
-+		seq_puts(m, "DATA IN");
- 		break;
- 	case P_CMD:
--		seq_printf(m, "COMMAND");
-+		seq_puts(m, "COMMAND");
- 		break;
- 	case P_STATUS:
--		seq_printf(m, "STATUS");
-+		seq_puts(m, "STATUS");
- 		break;
- 	case P_MSGO:
--		seq_printf(m, "MESSAGE OUT");
-+		seq_puts(m, "MESSAGE OUT");
- 		break;
- 	case P_MSGI:
--		seq_printf(m, "MESSAGE IN");
-+		seq_puts(m, "MESSAGE IN");
+diff --git a/drivers/scsi/aic7xxx/aic7770.c b/drivers/scsi/aic7xxx/aic7770.c
+index 5000bd6..cecdea9 100644
+--- a/drivers/scsi/aic7xxx/aic7770.c
++++ b/drivers/scsi/aic7xxx/aic7770.c
+@@ -171,7 +171,7 @@ aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *entry, u_int io)
  		break;
  	default:
--		seq_printf(m, "*invalid*");
-+		seq_puts(m, "*invalid*");
- 		break;
+ 		printk("aic7770_config: invalid irq setting %d\n", intdef);
+-		return (ENXIO);
++		return -ENXIO;
  	}
  
--	seq_printf(m, "); ");
-+	seq_puts(m, "); ");
- 
- 	seq_printf(m, "INTSTAT (%s); ", TESTHI(DMASTAT, INTSTAT) ? "hi" : "lo");
- 
--	seq_printf(m, "SSTAT( ");
-+	seq_puts(m, "SSTAT( ");
- 	s = GETPORT(SSTAT0);
- 	if (s & TARGET)
--		seq_printf(m, "TARGET ");
-+		seq_puts(m, "TARGET ");
- 	if (s & SELDO)
--		seq_printf(m, "SELDO ");
-+		seq_puts(m, "SELDO ");
- 	if (s & SELDI)
--		seq_printf(m, "SELDI ");
-+		seq_puts(m, "SELDI ");
- 	if (s & SELINGO)
--		seq_printf(m, "SELINGO ");
-+		seq_puts(m, "SELINGO ");
- 	if (s & SWRAP)
--		seq_printf(m, "SWRAP ");
-+		seq_puts(m, "SWRAP ");
- 	if (s & SDONE)
--		seq_printf(m, "SDONE ");
-+		seq_puts(m, "SDONE ");
- 	if (s & SPIORDY)
--		seq_printf(m, "SPIORDY ");
-+		seq_puts(m, "SPIORDY ");
- 	if (s & DMADONE)
--		seq_printf(m, "DMADONE ");
-+		seq_puts(m, "DMADONE ");
- 
- 	s = GETPORT(SSTAT1);
- 	if (s & SELTO)
--		seq_printf(m, "SELTO ");
-+		seq_puts(m, "SELTO ");
- 	if (s & ATNTARG)
--		seq_printf(m, "ATNTARG ");
-+		seq_puts(m, "ATNTARG ");
- 	if (s & SCSIRSTI)
--		seq_printf(m, "SCSIRSTI ");
-+		seq_puts(m, "SCSIRSTI ");
- 	if (s & PHASEMIS)
--		seq_printf(m, "PHASEMIS ");
-+		seq_puts(m, "PHASEMIS ");
- 	if (s & BUSFREE)
--		seq_printf(m, "BUSFREE ");
-+		seq_puts(m, "BUSFREE ");
- 	if (s & SCSIPERR)
--		seq_printf(m, "SCSIPERR ");
-+		seq_puts(m, "SCSIPERR ");
- 	if (s & PHASECHG)
--		seq_printf(m, "PHASECHG ");
-+		seq_puts(m, "PHASECHG ");
- 	if (s & REQINIT)
--		seq_printf(m, "REQINIT ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "REQINIT ");
-+	seq_puts(m, "); ");
- 
- 
--	seq_printf(m, "SSTAT( ");
-+	seq_puts(m, "SSTAT( ");
- 
- 	s = GETPORT(SSTAT0) & GETPORT(SIMODE0);
- 
- 	if (s & TARGET)
--		seq_printf(m, "TARGET ");
-+		seq_puts(m, "TARGET ");
- 	if (s & SELDO)
--		seq_printf(m, "SELDO ");
-+		seq_puts(m, "SELDO ");
- 	if (s & SELDI)
--		seq_printf(m, "SELDI ");
-+		seq_puts(m, "SELDI ");
- 	if (s & SELINGO)
--		seq_printf(m, "SELINGO ");
-+		seq_puts(m, "SELINGO ");
- 	if (s & SWRAP)
--		seq_printf(m, "SWRAP ");
-+		seq_puts(m, "SWRAP ");
- 	if (s & SDONE)
--		seq_printf(m, "SDONE ");
-+		seq_puts(m, "SDONE ");
- 	if (s & SPIORDY)
--		seq_printf(m, "SPIORDY ");
-+		seq_puts(m, "SPIORDY ");
- 	if (s & DMADONE)
--		seq_printf(m, "DMADONE ");
-+		seq_puts(m, "DMADONE ");
- 
- 	s = GETPORT(SSTAT1) & GETPORT(SIMODE1);
- 
- 	if (s & SELTO)
--		seq_printf(m, "SELTO ");
-+		seq_puts(m, "SELTO ");
- 	if (s & ATNTARG)
--		seq_printf(m, "ATNTARG ");
-+		seq_puts(m, "ATNTARG ");
- 	if (s & SCSIRSTI)
--		seq_printf(m, "SCSIRSTI ");
-+		seq_puts(m, "SCSIRSTI ");
- 	if (s & PHASEMIS)
--		seq_printf(m, "PHASEMIS ");
-+		seq_puts(m, "PHASEMIS ");
- 	if (s & BUSFREE)
--		seq_printf(m, "BUSFREE ");
-+		seq_puts(m, "BUSFREE ");
- 	if (s & SCSIPERR)
--		seq_printf(m, "SCSIPERR ");
-+		seq_puts(m, "SCSIPERR ");
- 	if (s & PHASECHG)
--		seq_printf(m, "PHASECHG ");
-+		seq_puts(m, "PHASECHG ");
- 	if (s & REQINIT)
--		seq_printf(m, "REQINIT ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "REQINIT ");
-+	seq_puts(m, "); ");
- 
--	seq_printf(m, "SXFRCTL0( ");
-+	seq_puts(m, "SXFRCTL0( ");
- 
- 	s = GETPORT(SXFRCTL0);
- 	if (s & SCSIEN)
--		seq_printf(m, "SCSIEN ");
-+		seq_puts(m, "SCSIEN ");
- 	if (s & DMAEN)
--		seq_printf(m, "DMAEN ");
-+		seq_puts(m, "DMAEN ");
- 	if (s & CH1)
--		seq_printf(m, "CH1 ");
-+		seq_puts(m, "CH1 ");
- 	if (s & CLRSTCNT)
--		seq_printf(m, "CLRSTCNT ");
-+		seq_puts(m, "CLRSTCNT ");
- 	if (s & SPIOEN)
--		seq_printf(m, "SPIOEN ");
-+		seq_puts(m, "SPIOEN ");
- 	if (s & CLRCH1)
--		seq_printf(m, "CLRCH1 ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "CLRCH1 ");
-+	seq_puts(m, "); ");
- 
--	seq_printf(m, "SIGNAL( ");
-+	seq_puts(m, "SIGNAL( ");
- 
- 	s = GETPORT(SCSISIG);
- 	if (s & SIG_ATNI)
--		seq_printf(m, "ATNI ");
-+		seq_puts(m, "ATNI ");
- 	if (s & SIG_SELI)
--		seq_printf(m, "SELI ");
-+		seq_puts(m, "SELI ");
- 	if (s & SIG_BSYI)
--		seq_printf(m, "BSYI ");
-+		seq_puts(m, "BSYI ");
- 	if (s & SIG_REQI)
--		seq_printf(m, "REQI ");
-+		seq_puts(m, "REQI ");
- 	if (s & SIG_ACKI)
--		seq_printf(m, "ACKI ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "ACKI ");
-+	seq_puts(m, "); ");
- 
- 	seq_printf(m, "SELID(%02x), ", GETPORT(SELID));
- 
- 	seq_printf(m, "STCNT(%d), ", GETSTCNT());
- 
--	seq_printf(m, "SSTAT2( ");
-+	seq_puts(m, "SSTAT2( ");
- 
- 	s = GETPORT(SSTAT2);
- 	if (s & SOFFSET)
--		seq_printf(m, "SOFFSET ");
-+		seq_puts(m, "SOFFSET ");
- 	if (s & SEMPTY)
--		seq_printf(m, "SEMPTY ");
-+		seq_puts(m, "SEMPTY ");
- 	if (s & SFULL)
--		seq_printf(m, "SFULL ");
-+		seq_puts(m, "SFULL ");
- 	seq_printf(m, "); SFCNT (%d); ", s & (SFULL | SFCNT));
- 
- 	s = GETPORT(SSTAT3);
- 	seq_printf(m, "SCSICNT (%d), OFFCNT(%d), ", (s & 0xf0) >> 4, s & 0x0f);
- 
--	seq_printf(m, "SSTAT4( ");
-+	seq_puts(m, "SSTAT4( ");
- 	s = GETPORT(SSTAT4);
- 	if (s & SYNCERR)
--		seq_printf(m, "SYNCERR ");
-+		seq_puts(m, "SYNCERR ");
- 	if (s & FWERR)
--		seq_printf(m, "FWERR ");
-+		seq_puts(m, "FWERR ");
- 	if (s & FRERR)
--		seq_printf(m, "FRERR ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "FRERR ");
-+	seq_puts(m, "); ");
- 
--	seq_printf(m, "DMACNTRL0( ");
-+	seq_puts(m, "DMACNTRL0( ");
- 	s = GETPORT(DMACNTRL0);
- 	seq_printf(m, "%s ", s & _8BIT ? "8BIT" : "16BIT");
- 	seq_printf(m, "%s ", s & DMA ? "DMA" : "PIO");
- 	seq_printf(m, "%s ", s & WRITE_READ ? "WRITE" : "READ");
- 	if (s & ENDMA)
--		seq_printf(m, "ENDMA ");
-+		seq_puts(m, "ENDMA ");
- 	if (s & INTEN)
--		seq_printf(m, "INTEN ");
-+		seq_puts(m, "INTEN ");
- 	if (s & RSTFIFO)
--		seq_printf(m, "RSTFIFO ");
-+		seq_puts(m, "RSTFIFO ");
- 	if (s & SWINT)
--		seq_printf(m, "SWINT ");
--	seq_printf(m, "); ");
-+		seq_puts(m, "SWINT ");
-+	seq_puts(m, "); ");
- 
--	seq_printf(m, "DMASTAT( ");
-+	seq_puts(m, "DMASTAT( ");
- 	s = GETPORT(DMASTAT);
- 	if (s & ATDONE)
--		seq_printf(m, "ATDONE ");
-+		seq_puts(m, "ATDONE ");
- 	if (s & WORDRDY)
--		seq_printf(m, "WORDRDY ");
-+		seq_puts(m, "WORDRDY ");
- 	if (s & DFIFOFULL)
--		seq_printf(m, "DFIFOFULL ");
-+		seq_puts(m, "DFIFOFULL ");
- 	if (s & DFIFOEMP)
--		seq_printf(m, "DFIFOEMP ");
--	seq_printf(m, ")\n");
-+		seq_puts(m, "DFIFOEMP ");
-+	seq_puts(m, ")\n");
- 
--	seq_printf(m, "enabled interrupts( ");
-+	seq_puts(m, "enabled interrupts( ");
- 
- 	s = GETPORT(SIMODE0);
- 	if (s & ENSELDO)
--		seq_printf(m, "ENSELDO ");
-+		seq_puts(m, "ENSELDO ");
- 	if (s & ENSELDI)
--		seq_printf(m, "ENSELDI ");
-+		seq_puts(m, "ENSELDI ");
- 	if (s & ENSELINGO)
--		seq_printf(m, "ENSELINGO ");
-+		seq_puts(m, "ENSELINGO ");
- 	if (s & ENSWRAP)
--		seq_printf(m, "ENSWRAP ");
-+		seq_puts(m, "ENSWRAP ");
- 	if (s & ENSDONE)
--		seq_printf(m, "ENSDONE ");
-+		seq_puts(m, "ENSDONE ");
- 	if (s & ENSPIORDY)
--		seq_printf(m, "ENSPIORDY ");
-+		seq_puts(m, "ENSPIORDY ");
- 	if (s & ENDMADONE)
--		seq_printf(m, "ENDMADONE ");
-+		seq_puts(m, "ENDMADONE ");
- 
- 	s = GETPORT(SIMODE1);
- 	if (s & ENSELTIMO)
--		seq_printf(m, "ENSELTIMO ");
-+		seq_puts(m, "ENSELTIMO ");
- 	if (s & ENATNTARG)
--		seq_printf(m, "ENATNTARG ");
-+		seq_puts(m, "ENATNTARG ");
- 	if (s & ENPHASEMIS)
--		seq_printf(m, "ENPHASEMIS ");
-+		seq_puts(m, "ENPHASEMIS ");
- 	if (s & ENBUSFREE)
--		seq_printf(m, "ENBUSFREE ");
-+		seq_puts(m, "ENBUSFREE ");
- 	if (s & ENSCSIPERR)
--		seq_printf(m, "ENSCSIPERR ");
-+		seq_puts(m, "ENSCSIPERR ");
- 	if (s & ENPHASECHG)
--		seq_printf(m, "ENPHASECHG ");
-+		seq_puts(m, "ENPHASECHG ");
- 	if (s & ENREQINIT)
--		seq_printf(m, "ENREQINIT ");
--	seq_printf(m, ")\n");
-+		seq_puts(m, "ENREQINIT ");
-+	seq_puts(m, ")\n");
- }
- 
- static int aha152x_set_info(struct Scsi_Host *shpnt, char *buffer, int length)
-@@ -2822,7 +2822,7 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
- 	Scsi_Cmnd *ptr;
- 	unsigned long flags;
- 
--	seq_printf(m, AHA152X_REVID "\n");
-+	seq_puts(m, AHA152X_REVID "\n");
- 
- 	seq_printf(m, "ioports 0x%04lx to 0x%04lx\n",
- 		shpnt->io_port, shpnt->io_port + shpnt->n_io_port - 1);
-@@ -2836,7 +2836,7 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
- 	seq_printf(m, "%d commands currently queued\n", HOSTDATA(shpnt)->commands);
- 
- 	if(SYNCHRONOUS) {
--		seq_printf(m, "synchronously operating targets (tick=50 ns):\n");
-+		seq_puts(m, "synchronously operating targets (tick=50 ns):\n");
- 		for (i = 0; i < 8; i++)
- 			if (HOSTDATA(shpnt)->syncrate[i] & 0x7f)
- 				seq_printf(m, "target %d: period %dT/%dns; req/ack offset %d\n",
-@@ -2845,28 +2845,28 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
- 					(((HOSTDATA(shpnt)->syncrate[i] & 0x70) >> 4) + 2) * 50,
- 				    HOSTDATA(shpnt)->syncrate[i] & 0x0f);
- 	}
--	seq_printf(m, "\nqueue status:\n");
-+	seq_puts(m, "\nqueue status:\n");
- 	DO_LOCK(flags);
- 	if (ISSUE_SC) {
--		seq_printf(m, "not yet issued commands:\n");
-+		seq_puts(m, "not yet issued commands:\n");
- 		for (ptr = ISSUE_SC; ptr; ptr = SCNEXT(ptr))
- 			get_command(m, ptr);
- 	} else
--		seq_printf(m, "no not yet issued commands\n");
-+		seq_puts(m, "no not yet issued commands\n");
- 	DO_UNLOCK(flags);
- 
- 	if (CURRENT_SC) {
--		seq_printf(m, "current command:\n");
-+		seq_puts(m, "current command:\n");
- 		get_command(m, CURRENT_SC);
- 	} else
--		seq_printf(m, "no current command\n");
-+		seq_puts(m, "no current command\n");
- 
- 	if (DISCONNECTED_SC) {
--		seq_printf(m, "disconnected commands:\n");
-+		seq_puts(m, "disconnected commands:\n");
- 		for (ptr = DISCONNECTED_SC; ptr; ptr = SCNEXT(ptr))
- 			get_command(m, ptr);
- 	} else
--		seq_printf(m, "no disconnected commands\n");
-+		seq_puts(m, "no disconnected commands\n");
- 
- 	get_ports(m, shpnt);
- 
+ 	if ((intdef & EDGE_TRIG) != 0)
+diff --git a/drivers/scsi/aic7xxx/aic7770_osm.c b/drivers/scsi/aic7xxx/aic7770_osm.c
+index 3d401d0..50f030d 100644
+--- a/drivers/scsi/aic7xxx/aic7770_osm.c
++++ b/drivers/scsi/aic7xxx/aic7770_osm.c
+@@ -51,7 +51,7 @@ aic7770_map_registers(struct ahc_softc *ahc, u_int port)
+ 	 * Lock out other contenders for our i/o space.
+ 	 */
+ 	if (!request_region(port, AHC_EISA_IOSIZE, "aic7xxx"))
+-		return (ENOMEM);
++		return -ENOMEM;
+ 	ahc->tag = BUS_SPACE_PIO;
+ 	ahc->bsh.ioport = port;
+ 	return (0);
+@@ -87,10 +87,10 @@ aic7770_probe(struct device *dev)
+ 	sprintf(buf, "ahc_eisa:%d", eisaBase >> 12);
+ 	name = kstrdup(buf, GFP_ATOMIC);
+ 	if (name == NULL)
+-		return (ENOMEM);
++		return -ENOMEM;
+ 	ahc = ahc_alloc(&aic7xxx_driver_template, name);
+ 	if (ahc == NULL)
+-		return (ENOMEM);
++		return -ENOMEM;
+ 	error = aic7770_config(ahc, aic7770_ident_table + edev->id.driver_data,
+ 			       eisaBase);
+ 	if (error != 0) {
 -- 
-2.0.4
+2.1.3
