@@ -1,48 +1,66 @@
-From: Alex Thorlton <athorlton@sgi.com>
-Subject: Re: [BUG] kzalloc overflow in lpfc driver on 6k core system
-Date: Wed, 3 Dec 2014 10:05:46 -0600
-Message-ID: <20141203160546.GA4720@sgi.com>
-References: <20141202215810.GT4720@sgi.com>
- <94D0CD8314A33A4D9D801C0FE68B4029593EFC9E@G4W3202.americas.hpqcorp.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 00/12] nobody loves the advansys driver
+Date: Wed, 03 Dec 2014 11:06:58 -0500
+Message-ID: <547F3522.4070205@interlog.com>
+References: <1417607105-85455-1-git-send-email-hare@suse.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.180.66]:47107 "EHLO relay.sgi.com"
+Received: from smtp.infotech.no ([82.134.31.41]:53506 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751322AbaLCQFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2014 11:05:43 -0500
-Content-Disposition: inline
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B4029593EFC9E@G4W3202.americas.hpqcorp.net>
+	id S1751291AbaLCQHR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Dec 2014 11:07:17 -0500
+In-Reply-To: <1417607105-85455-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: Alex Thorlton <athorlton@sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Tue, Dec 02, 2014 at 10:39:40PM +0000, Elliott, Robert (Server Storage) wrote:
-> In similar code, mpt3sas and lockless hpsa just call get_cpu_mask()
-> inside the loop:
->         cpu = cpumask_first(cpu_online_mask);
->         for (i = 0; i < h->msix_vector; i++) {
->                 rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
->                 cpu = cpumask_next(cpu, cpu_online_mask);
->         }
-> 
-> get_cpu_mask() uses the global cpu_bit_bitmap array, which is declared
-> in kernel/cpu.c:
-> extern const unsigned long
->         cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)];
-> 
-> That approach should work for lpfc.
+On 14-12-03 06:44 AM, Hannes Reinecke wrote:
+> Hi all,
+>
+> it has been bugged me for ages that the advansys driver always
+> reported a compilation warning about not having been converted
+> to the DMA-API.
+> And even aggressive waiting hasn't made this warning go away.
+>
+> So here's a patchset to update the advansys driver to current
+> standards and use the DMA-API.
+> Tested on ABP940-U2W.
+>
+> As usual, reviews and comments are welcome.
+>
+> Hannes Reinecke (12):
+>    advansys: use host_reset
+>    advansys: use shared host tag map for command lookup
+>    advansys: use DMA-API for mapping sense buffer
+>    advansys: Use DMA-API for carrier buffer
+>    advansys: Use DMA-API for mapping request blocks
+>    advansys: Use dma_pool for sg elements
+>    advansys: use 'bool' instead of 'int'
+>    advansys: use standard data types
+>    advansys: Remove 'TRUE' and 'FALSE' definitions
+>    advansys: Remove 'ERR' definition
+>    advansys: cleanup function return codes
+>    advansys: Update to version 3.5 and remove compilation warning
+>
+>   MAINTAINERS             |    1 +
+>   drivers/scsi/advansys.c | 1073 +++++++++++++++++++++--------------------------
+>   2 files changed, 469 insertions(+), 605 deletions(-)
 
-Ok, good deal.  Thanks for the info, Robert.  Do you know who the
-current maintainer is for this code?  Would that be you?  I included the
-two authors that get_maintainer reported, but haven't heard from them.
+Looks good.
 
-I like this approach and don't mind implementing it myself, but I'd like
-to confirm that whoever would be responsible for merging the code is ok
-with the change before going forward.  Of course, if the code has been
-orphaned, then I guess we just write away :)
+Tried to find my old Advansys HBAs but failed, probably
+the result of a purge a few years back. Hence I was unable
+to test it with my few remaining SPI disks and tape drive.
+If memory serves, for a while Advansys HBAs were bundled
+with SCSI scanners.
 
-Thanks again for the help!
+The original Advansys maintainer, Bob Frey, I suspect was
+the recipient of my first SCSI related queries.
 
-- Alex
+
+Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
+
