@@ -1,94 +1,508 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 00/12] nobody loves the advansys driver
-Date: Wed, 3 Dec 2014 19:29:14 +0100
-Message-ID: <201412031929.14767.linux@rainbow-software.org>
-References: <1417607105-85455-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+Subject: Re: [Scst-devel] New qla2x00tgt Driver Question
+Date: Wed, 3 Dec 2014 14:46:59 -0600
+Message-ID: <201412032046.sB3Kkx7l028625@wind.enjellic.com>
+References: <duane.grigsby@qlogic.com>
+Reply-To: greg@enjellic.com
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:34052 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbaLCSaD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 13:30:03 -0500
-In-Reply-To: <1417607105-85455-1-git-send-email-hare@suse.de>
-Content-Disposition: inline
+Received: from wind.enjellic.com ([76.10.64.91]:58989 "EHLO wind.enjellic.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091AbaLCUrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Dec 2014 15:47:18 -0500
+In-Reply-To: Duane Grigsby <duane.grigsby@qlogic.com>
+       "Re: [Scst-devel] New qla2x00tgt Driver Question" (Nov 30,  4:00pm)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+To: Duane Grigsby <duane.grigsby@qlogic.com>, "greg@enjellic.com" <greg@enjellic.com>, Marc Smith <marc.smith@mcc.edu>, scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wednesday 03 December 2014 12:44:53 Hannes Reinecke wrote:
-> Hi all,
->
-> it has been bugged me for ages that the advansys driver always
-> reported a compilation warning about not having been converted
-> to the DMA-API.
-> And even aggressive waiting hasn't made this warning go away.
->
-> So here's a patchset to update the advansys driver to current
-> standards and use the DMA-API.
-> Tested on ABP940-U2W.
->
-> As usual, reviews and comments are welcome.
->
-> Hannes Reinecke (12):
->   advansys: use host_reset
->   advansys: use shared host tag map for command lookup
->   advansys: use DMA-API for mapping sense buffer
->   advansys: Use DMA-API for carrier buffer
->   advansys: Use DMA-API for mapping request blocks
->   advansys: Use dma_pool for sg elements
->   advansys: use 'bool' instead of 'int'
->   advansys: use standard data types
->   advansys: Remove 'TRUE' and 'FALSE' definitions
->   advansys: Remove 'ERR' definition
->   advansys: cleanup function return codes
->   advansys: Update to version 3.5 and remove compilation warning
->
->  MAINTAINERS             |    1 +
->  drivers/scsi/advansys.c | 1073
-> +++++++++++++++++++++-------------------------- 2 files changed, 469
-> insertions(+), 605 deletions(-)
+On Nov 30,  4:00pm, Duane Grigsby wrote:
+} Subject: Re: [Scst-devel] New qla2x00tgt Driver Question
 
-Seems to break narrow boards, at least mine ASB-3940UA :(
+Hi, Ihope the week is going well for everyone.
 
-[    4.266292] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
-[    7.661374] scsi host2: AdvanSys SCSI 3.5: PCI Ultra: IO 0xA800-0xA80F, IRQ 0x9
-[   28.840078] scsi 2:0:0:0: SCSI bus reset started...
-[   28.846640] scsi 2:0:0:0: SCSI bus reset error: 0x2, status: 0x0
-[   28.846648] scsi 2:0:0:0: Device offlined - not ready after error recovery
-[   28.846803] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.852052] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.860051] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.868047] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.868249] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.876050] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.884048] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.892047] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.892243] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.900051] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.908048] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.916047] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.916241] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.924051] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.932048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.940048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.940240] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.948051] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.956049] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.964047] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.964239] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.972050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.980048] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-[   28.988050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+I've significantly cut information out of this in order to simplify
+the mail.
 
-Before the patch:
-[    4.226690] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
-[    7.644841] scsi host2: AdvanSys SCSI 3.4: PCI Ultra: IO 0xA800-0xA80F, IRQ 0x9
-[    8.072257] scsi 2:0:2:0: Processor         HP       C1790A           3226 PQ: 0 ANSI: 2
-[    8.919128] scsi 2:0:2:0: Attached scsi generic sg3 type 3
+Duane, I had forwarded logs from previous testing to you on Monday and
+hadn't received any response, I wanted to make sure you had received
+that mail.
 
--- 
-Ondrej Zary
+Secondly, Vlad, we have been running additional testing for the last
+two days and we have logs from the SCST core which I am including
+below which suggests that the SCST core target code excessively stalls
+or mishandles an ABORT while processing a NEXUS_LOSS_SESS TMF.
+Regardless of your feelings about the target driver code in the kernel
+we need to make sure there is not some subtle regression in the core
+SCST code paths during TMF processing.
+
+To NAB and company, regardless of your feelings about the SCST target
+core if there are issues with the in-kernel Qlogic target driver we
+are running your code so if there are issues it affects your stack as
+well.
+
+> Yes, it may be related. It has to do with receiving a PLOGI from an
+> initiator with the same port_id, but a different WWPN. Can you send me
+> your complete driver log?
+>
+> Hi Greg, Yes, I think there may be a issue there, but let me look at
+> your logs.
+
+Since we need to get to the bottom of this we've spent the week
+putting the testing harnesses back in place so we can feed
+reproducible data back to the lists and to Qlogic.  We just completed
+the first run of tests which we have thoroughly documented so that we
+know exactly what went into producing these issues.
+
+These tests are run in a multi-datacenter/multi-hop Cisco Nexus FCOE
+fabric.  Some of this may be related to that environment and if that
+is the case we will figure out how to engage further on that front but
+we need to fully understand if the behavior we are seeing out of the
+Qlogic target driver is anomalous.
+
+All testing is being done against a 3.10.57 Linux kernel with a
+handful of patches backported to the Qlogic target driver from later
+kernels.  The target server is running SCST 3.0.x with a Qlogic
+QLE-8362 CNA.  The backing storage is a 30 gigabyte RAM based block
+device using our HPD driver.  We will post a complete kernel diff to
+our FTP server so the kernel can be reproduced.  The target server is
+attached to a Nexus 7009 storage VDC.
+
+The first round of testing was from a Linux 3.10.55 initiator using a
+QLE-2462 HBA.  That initiator is attached to a Nexus 5596 which is
+upstreamed into a Nexus 7010 storage VDC.  That storage VDC has a 20
+GBPS dual-interface ISL to the Nexus 7009 VDC in the second
+data-center.
+
+The Qlogic driver was loaded as a module, along with the target
+interface driver, into the kernel which had SCST statically built into
+it.  The Qlogic driver command line which was used is as follows:
+
+ql2xextended_error_logging=0x00003000
+
+The driver was loaded and the SCST storage stack was configured with
+the virtual fibre-channel interface to the target disabled.  After the
+storage stack was completely configured and target mode enabled on the
+interface the switch interface to the target was enabled.
+
+The following is the output from the Qlogic target driver as it
+processed the fabric events which were generated by its entry into the fabric:
+
+---------------------------------------------------------------------------
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83b:9: qla_target(0): Async LOOP_UP occurred (m[0]=8011, m[1]=13, m[2]=44ef, m[3]=0)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-505f:9: Link is operational (10 Gbps).
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=ffff, m[2]=6, m[3]=0)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=ffff, m[2]=6, m[3]=0)<4>qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x03
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x03
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x03
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x20
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x20
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x20
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x21
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x21
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x21
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:53 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f806:9: Adding sess ffff88081a962d80 to tgt ffff880819f53c00 via ->check_initiator_node_acl()
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f84b:9: qla_target(0): session for wwn 21:01:00:e0:8b:a6:d1:9f (loop_id 3, s_id 45:2:0, confirmed completion not supported) added
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f806:9: Adding sess ffff88081a962180 to tgt ffff880819f53c00 via ->check_initiator_node_acl()
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f84b:9: qla_target(0): session for wwn 21:00:00:0e:1e:31:83:5f (loop_id 4, s_id e:0:0, confirmed completion not supported) added
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x03
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=600)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x20
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=4, m[3]=a00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x21
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=1, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x71:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=2, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x45:fc:ff ELS opcode: 0x05
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=0, m[2]=7, m[3]=b00)
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83f:9: Async MB 2: Port Logged Out
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x0e:fc:ff ELS opcode: 0x05
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c61a8) status 0x0 state 0x1
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x20
+Dec  2 03:13:56 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c61a8) status 0x0 state 0x1
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:00:0e ELS opcode: 0x03
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c61a8) status 0x0 state 0x1
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=4, m[2]=4, m[3]=600)
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=4, m[2]=4, m[3]=600)
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:00:0e ELS opcode: 0x20
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c61a8) status 0x0 state 0x1
+Dec  2 03:13:57 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x52
+---------------------------------------------------------------------------
+
+While this is the raw data the the important thing to highlight is the
+following extract from this log:
+
+---------------------------------------------------------------------------
+0x0e:fc:ff ELS opcode: 0x03
+0x71:fc:ff ELS opcode: 0x03
+0x45:fc:ff ELS opcode: 0x03
+0x0e:fc:ff ELS opcode: 0x20
+0x71:fc:ff ELS opcode: 0x20
+0x45:fc:ff ELS opcode: 0x20
+0x0e:fc:ff ELS opcode: 0x21
+0x71:fc:ff ELS opcode: 0x21
+0x45:fc:ff ELS opcode: 0x21
+0x0e:fc:ff ELS opcode: 0x05
+0x71:fc:ff ELS opcode: 0x05
+0x0e:fc:ff ELS opcode: 0x03
+0x71:fc:ff ELS opcode: 0x03
+0x71:fc:ff ELS opcode: 0x20
+0x45:fc:ff ELS opcode: 0x05
+0x0e:fc:ff ELS opcode: 0x20
+0x45:fc:ff ELS opcode: 0x03
+0x71:fc:ff ELS opcode: 0x21
+0x0e:fc:ff ELS opcode: 0x21
+0x45:fc:ff ELS opcode: 0x20
+0x71:fc:ff ELS opcode: 0x05
+0x45:fc:ff ELS opcode: 0x21
+0x0e:fc:ff ELS opcode: 0x05
+0x45:fc:ff ELS opcode: 0x05
+0x71:fc:ff ELS opcode: 0x03
+0x45:fc:ff ELS opcode: 0x03
+0x0e:fc:ff ELS opcode: 0x03
+0x71:fc:ff ELS opcode: 0x20
+0x45:fc:ff ELS opcode: 0x20
+0x0e:fc:ff ELS opcode: 0x20
+0x71:fc:ff ELS opcode: 0x21
+0x45:fc:ff ELS opcode: 0x21
+0x0e:fc:ff ELS opcode: 0x21
+0x71:fc:ff ELS opcode: 0x05
+0x45:fc:ff ELS opcode: 0x05
+0x0e:fc:ff ELS opcode: 0x05
+---------------------------------------------------------------------------
+
+Which are the domain/switch specific fibre-channel name servers (FCNS)
+which engaged the target with extended link service requests.  There
+are a total of three distinct FCNS instances which issued these and
+they are the three Nexus 55xx switches in the fabric.
+
+It is currently unclear to us why these independent FCNS directory
+servers are engaging with the target.  Our understanding of
+fibre-channel is that an endpoint is responsible for negotiating a
+port login (PLOGI) with the nameserver running on the switch which has
+been elected the principal of the fabric (PS) at the 'well-known'
+FCID/address of 0xff:ff:fc.
+
+Also of note from the the logs was the following:
+
+Dec  2 03:13:54 fc-rp1-targ10-s kernel: [1982]: sqa_qla2xxx_check_initiator_node_acl:626:sqatgt(9/0): Registering initiator: pwwn=21:01:00:e0:8b:a6:d1:9f, fcid=0x450200, loop=0x0003
+
+Which was the initiator registering with the target.  As we have noted
+previously it is our belief that the card is maintaing loop id's of 0,
+1 and 2 for the three FCNS nameservers.
+
+If this is expected behavior it us unclear to us why the storage VDC's
+on the Nexus 7009 and 7010 are not issueing asynchronous transactions
+against the target port since they are independent domains on the
+fabric as well.
+
+We had previously noted that during subsequent NEXUS_LOSS_SESS events
+that these FCNS instances would issue asynchronous events against the
+target.  Marc's logs confirmed this as well.
+
+Since there is the issue that this may be secondary to the target port
+having initial visibility as an initiator on the fabric before
+transitioning to an FCP class of target we had strictly controlled the
+visibility of the target.  We used the sg_reset command to issue an
+adapater reset against the block device which was presented to the
+initiator to see if we could reproduce this behavior.  The initiator adapater request was logged as follows:
+
+---------------------------------------------------------------------------
+Dec  2 03:35:40 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-8018:3: ADAPTER RESET ISSUED nexus=3:3:0.
+Dec  2 03:35:40 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-00af:3: Performing ISP error recovery - ha=ffff880255184000.
+Dec  2 03:35:41 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-505f:3: Link is operational (4 Gbps).
+Dec  2 03:35:42 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-8017:3: ADAPTER RESET SUCCEEDED nexus=3:3:0.
+---------------------------------------------------------------------------
+
+Which presented to the target as follows:
+
+---------------------------------------------------------------------------
+Dec  2 03:35:40 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83c:9: qla_target(0): Async event 0x8015 occurred (m[0]=8015, m[1]=45, m[2]=200, m[3]=0)
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f808:9: qla_tgt_fc_port_deleted ffff88081a962d80<4>qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x20
+Dec  2 03:35:42 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x52
+Dec  2 03:35:52 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f822:9: qla_target(0): Unable to find wwn login (s_id 45:2:0), trying to create it manually
+Dec  2 03:35:52 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f841:9: loop_id 3
+Dec  2 03:36:10 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f805:9: Double sess ffff88081a962d80 found (s_id 45:0:2, loop_id 3), updating to d_id 45:0:2, loop_id 3 rport-9:0-0: blocked FC remote port time out: removing rport
+---------------------------------------------------------------------------
+
+Of interest in the log above is the apparent indication by the target
+driver that it cannot locate the login for the initiator which had
+generated the TMF.
+
+We then ran our standard I/O interruption test in which we use an FIO
+script to generate four separate classes of I/O which are run
+sequentially against the block device.  This test loops continously
+until stopped.
+
+While that I/O test was running we run a script which randomly selects
+either a device, lun, bus or adapter reset and issues it against the
+block device which the test is being run against.
+
+This test, on a fibre-channel initiator, typically runs a small number
+of cycles and then experiences an error during the process of an
+adapter reset sequence.  The log from the initiator seed is as
+follows:
+
+---------------------------------------------------------------------------
+Dec  2 14:06:02 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-8018:3: ADAPTER RESET ISSUED nexus=3:3:0.
+Dec  2 14:06:02 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-00af:3: Performing ISP error recovery - ha=ffff880255184000.
+Dec  2 14:06:04 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-505f:3: Link is operational (4 Gbps).
+Dec  2 14:06:05 fc-iacc1-prox2-s kernel: qla2xxx [0000:0d:00.1]-8017:3: ADAPTER RESET SUCCEEDED nexus=3:3:0.
+Dec  2 14:06:32 fc-iacc1-prox2-s kernel:  rport-3:0-13: blocked FC remote port time out: removing target and saving binding
+Dec  2 14:06:32 fc-iacc1-prox2-s kernel:  rport-3:0-13: blocked FC remote port time out: removing target and saving binding
+Dec  2 14:06:32 fc-iacc1-prox2-s kernel: sd 3:0:3:0: rejecting I/O to offline device
+---------------------------------------------------------------------------
+
+Which is documented on the target as follows:
+
+---------------------------------------------------------------------------
+MESSAGES:
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [0]: sqa_qla2xxx_handle_tmr:497:sqatgt(9/0): NEXUS_LOSS_SESS received.
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [0]: scst: scst_rx_mgmt_fn:6701:TM fn 6 (mcmd ffff88081b39e070, initiator 21:01:00:e0:8b:a6:d1:9f, target 21:00:00:0e:1e:15:19:f1)
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [0]: scst_rx_mgmt_fn:6713:sess=ffff880899878000, tag_set 0, tag 0, lun_set 1, lun=0, cmd_sn_set 0, cmd_sn 0, priv ffff88101a6c6590
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [0]: scst_post_rx_mgmt_cmd:6629:Adding mgmt cmd ffff88081b39e070 to active mgmt cmd list
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst_tm_thread:6514:Deleting mgmt cmd ffff88081b39e070 from active cmd list
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst_abort_all_nexus_loss_sess:6023:Nexus loss or UNREG SESS for sess ffff880899878000 (mcmd ffff88081b39e070)
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5266:Aborting cmd ffff880899830780 (tag 1222816, op WRITE(10))
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5379:cmd ffff880899830780 (tag 1222816, sn 4294967276) being executed/xmitted (state 118, op WRITE(10), proc time 3 sec., timeout 60 sec.), deferring ABORT (cmd_done_wait_count 0, cmd_finish_wait_count 1, internal 0, mcmd fn 6 (mcmd ffff88081b39e070))
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [0]: scst: scst_alloc_set_UA:7963:Queuing new UA ffff88101aa2ecc0 (6:29:7, d_sense 0) to tgt_dev ffff88101a668000 (dev r10:prox2, initiator 21:01:00:e0:8b:a6:d1:9f)
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5221:Calling dev handler vdisk_blockio task_mgmt_fn_done(fn=6)
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5224:Dev handler vdisk_blockio task_mgmt_fn_done() returned
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: [1669]: scst: scst_set_mcmd_next_state:5434:cmd_finish_wait_count(1) not 0, preparing to wait
+Dec  2 14:06:12 fc-rp1-targ10-s kernel: [2043]: __scst_check_local_events:2785:ABORTED set, aborting cmd ffff880899830780
+Dec  2 14:06:12 fc-rp1-targ10-s kernel: [2043]: scst_xmit_process_aborted_cmd:8743:Aborted cmd ffff880899830780 done (cmd_ref 2)
+Dec  2 14:06:12 fc-rp1-targ10-s kernel: [2043]: scst_done_cmd_mgmt:5009:cmd ffff880899830780 done (tag 1222816)
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [0]: sqa_qla2xxx_handle_tmr:497:sqatgt(9/0): NEXUS_LOSS_SESS received.
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [0]: scst: scst_rx_mgmt_fn:6701:TM fn 6 (mcmd ffff880898543000, initiator 21:01:00:e0:8b:a6:d1:9f, target 21:00:00:0e:1e:15:19:f1)
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [0]: scst_rx_mgmt_fn:6713:sess=ffff880899878000, tag_set 0, tag 0, lun_set 1, lun=0, cmd_sn_set 0, cmd_sn 0, priv ffff88101a6c6978
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [0]: scst_post_rx_mgmt_cmd:6629:Adding mgmt cmd ffff880898543000 to active mgmt cmd list
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst_tm_thread:6514:Deleting mgmt cmd ffff880898543000 from active cmd list
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst_abort_all_nexus_loss_sess:6023:Nexus loss or UNREG SESS for sess ffff880899878000 (mcmd ffff880898543000)
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5266:Aborting cmd ffff880899830780 (tag 1222816, op WRITE(10))
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5379:cmd ffff880899830780 (tag 1222816, sn 4294967276) being executed/xmitted (state 123, op WRITE(10), proc time 24 sec., timeout 60 sec.), deferring ABORT (cmd_done_wait_count 0, cmd_finish_wait_count 1, internal 0, mcmd fn 6 (mcmd ffff880898543000))
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5221:Calling dev handler vdisk_blockio task_mgmt_fn_done(fn=6)
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5224:Dev handler vdisk_blockio task_mgmt_fn_done() returned
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: [1669]: scst: scst_set_mcmd_next_state:5434:cmd_finish_wait_count(1) not 0, preparing to wait
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [0]: sqa_qla2xxx_handle_tmr:497:sqatgt(9/0): NEXUS_LOSS_SESS received.
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [0]: scst: scst_rx_mgmt_fn:6701:TM fn 6 (mcmd ffff880898543070, initiator 21:01:00:e0:8b:a6:d1:9f, target 21:00:00:0e:1e:15:19:f1)
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [0]: scst_rx_mgmt_fn:6713:sess=ffff880899878000, tag_set 0, tag 0, lun_set 1, lun=0, cmd_sn_set 0, cmd_sn 0, priv ffff88101a6c6d60
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [0]: scst_post_rx_mgmt_cmd:6629:Adding mgmt cmd ffff880898543070 to active mgmt cmd list
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst_tm_thread:6514:Deleting mgmt cmd ffff880898543070 from active cmd list
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst_abort_all_nexus_loss_sess:6023:Nexus loss or UNREG SESS for sess ffff880899878000 (mcmd ffff880898543070)
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5266:Aborting cmd ffff880899830780 (tag 1222816, op WRITE(10))
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst: scst_abort_cmd:5379:cmd ffff880899830780 (tag 1222816, sn 4294967276) being executed/xmitted (state 123, op WRITE(10), proc time 31 sec., timeout 60 sec.), deferring ABORT (cmd_done_wait_count 0, cmd_finish_wait_count 1, internal 0, mcmd fn 6 (mcmd ffff880898543070))
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5221:Calling dev handler vdisk_blockio task_mgmt_fn_done(fn=6)
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst_call_dev_task_mgmt_fn_done:5224:Dev handler vdisk_blockio task_mgmt_fn_done() returned
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: [1669]: scst: scst_set_mcmd_next_state:5434:cmd_finish_wait_count(1) not 0, preparing to wait
+
+
+SYSLOG:
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83c:9: qla_target(0): Async event 0x8015 occurred (m[0]=8015, m[1]=45, m[2]=200, m[3]=0)
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 14:06:06 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 14:06:12 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f858:9: qla_target(0): CTIO with status 0xb received, state 1, se_cmd ffff880899899820, (LIP_RESET=e, ABORTED=2, TARGET_RESET=17, TIMEOUT=b, INVALID_RX_ID=8)
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 14:06:27 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 14:06:34 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 14:06:55 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x03
+Dec  2 14:06:55 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 14:07:14 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f814:9: qla_target(0): terminating exchange for aborted cmd=ffff880899899810 (se_cmd=ffff880899899820, tag=1222816)
+Dec  2 14:07:14 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c6590) status 0x0 state 0x1
+Dec  2 14:07:14 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c6978) status 0x0 state 0x1
+Dec  2 14:07:14 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c6d60) status 0x0 state 0x1
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c7148) status 0x0 state 0x1
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83d:9: qla_target(0): Port update async event 0x8014 occurred: updating the ports database (m[0]=8014, m[1]=3, m[2]=4, m[3]=600)
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f83e:9: Async MB 2: Got PLOGI Complete
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x20
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-10807:9: qla_target(0): Doing NEXUS_LOSS_SESS
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f813:9: TM response mcmd (ffff88101a6c7530) status 0x0 state 0x1
+Dec  2 14:07:15 fc-rp1-targ10-s kernel: qla2xxx [0000:02:00.3]-f826:9: qla_target(0): Port ID: 0x00:02:45 ELS opcode: 0x52
+---------------------------------------------------------------------------
+
+The logs on the target are separated into two groups since the syslog
+group gets priority *.warn and above while messages are .info and
+.notice.
+
+As can be noted in the 'messages' log the SCST core is processing the
+NEXUS_LOSS_SESS event which was triggered by the sg_reset.  While
+doing that it defers the abort of a WRITE operation, presumably
+covered by the management command, since it believes it hasn't
+completed.  As I have noted previously all of this testing is being
+done with RAM based block devices so there should be no issue with
+backstorage delay unless something is happening in the I/O stack
+downward from the BLOCKIO device to the actual backing device.
+
+Also to be noted is that the target was hit with multiple
+NEXUS_LOSS_SESS events while all of this was going on (14:06:27,
+14:06:34, 14:06:55) which are not attributable to the initiator since
+its next I/O interruption injection was not scheduled until 14:07:46.
+We find it interesting that the number of events is equal to the
+number of sessions which we believe are attributable to the switch
+FCNS servers.
+
+By now everyone has run out of patience so I will leave the group to
+cogitate on all of the above.  We have anecdotal evidence that this
+error which gets thrown during TMF process occurs ONLY when the
+initiator is a native fibre-channel initiator.  We will be running the
+same test with an FCOE initiator to verify this.
+
+Hopefully the above information is helpful.  We will post the target
+driver patch later.
+
+Have a good evening.
+
+Greg
+
+}-- End of excerpt from Duane Grigsby
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"As a software development model, Anarchy does not scale well."
+                                -- Dave Welch
