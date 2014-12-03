@@ -1,36 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: queue_type fixups
-Date: Wed, 3 Dec 2014 01:32:36 -0800
-Message-ID: <20141203093236.GC17698@infradead.org>
-References: <1416839781-26988-1-git-send-email-hch@lst.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] mpt3sas: issue_reset is uninitialized
+Date: Wed, 3 Dec 2014 13:09:18 +0300
+Message-ID: <20141203100918.GA29583@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38802 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbaLCJci (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 04:32:38 -0500
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1416839781-26988-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Doug Ledford <dledford@redhat.com>, "Ewan D. Milne" <emilne@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Robert Elliott <elliott@hp.com>
 
-Any chance to get another review for these to complete the queue depth /
-type changes for this merge window?
+We never set "issue_reset" to zero.
 
-On Mon, Nov 24, 2014 at 03:36:17PM +0100, Christoph Hellwig wrote:
-> These are a few patches that follow up my previous cleanups for the
-> queue depth and type handling.
-> 
-> The first patch removes the now pointless write support for the queue_type
-> sysfs attribute.  The second changes the queue full tracking code to
-> never drop out of tagged mode, as we can't recover from that, and the
-> last two are random cleanups.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 1560115..a6d471a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3419,7 +3419,7 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 smid;
+ 	u32 ioc_state;
+ 	unsigned long timeleft;
+-	u8 issue_reset;
++	bool issue_reset = 0;
+ 	int rc;
+ 	void *request;
+ 	u16 wait_state_count;
+@@ -3523,7 +3523,7 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 smid;
+ 	u32 ioc_state;
+ 	unsigned long timeleft;
+-	u8 issue_reset;
++	bool issue_reset = 0;
+ 	int rc;
+ 	void *request;
+ 	u16 wait_state_count;
