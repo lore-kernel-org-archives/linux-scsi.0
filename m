@@ -1,56 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] ibmvfc: remove unused tag variable
-Date: Wed, 03 Dec 2014 15:10:03 +0100
-Message-ID: <547F19BB.7010809@suse.de>
-References: <1416927010-6036-1-git-send-email-hch@lst.de> <1416927010-6036-2-git-send-email-hch@lst.de>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [patch] mpt2sas: issue reset is not uninitialized
+Date: Wed, 03 Dec 2014 15:14:08 +0100
+Message-ID: <547F1AB0.30705@bfs.de>
+References: <20141203100941.GB29583@mwanda>
+Reply-To: wharms@bfs.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58911 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753109AbaLCOKE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2014 09:10:04 -0500
-In-Reply-To: <1416927010-6036-2-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20141203100941.GB29583@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 11/25/2014 03:50 PM, Christoph Hellwig wrote:
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c | 1 -
->  1 file changed, 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/i=
-bmvfc.c
-> index f58c6d8..8ac49cf 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -1615,7 +1615,6 @@ static int ibmvfc_queuecommand_lck(struct scsi_=
-cmnd *cmnd,
->  	struct fc_rport *rport =3D starget_to_rport(scsi_target(cmnd->devic=
-e));
->  	struct ibmvfc_cmd *vfc_cmd;
->  	struct ibmvfc_event *evt;
-> -	u8 tag[2];
+
+
+Am 03.12.2014 11:09, schrieb Dan Carpenter:
+> The issue_reset variables were never set to zero.  This bug was found
+> with static analysis.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index 58e4521..98bd546 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -3236,7 +3236,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
+>  	u16 smid;
+>  	u32 ioc_state;
+>  	unsigned long timeleft;
+> -	u8 issue_reset;
+> +	bool issue_reset = 0;
 >  	int rc;
-> =20
->  	if (unlikely((rc =3D fc_remote_port_chkready(rport))) ||
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>  	void *request;
+>  	u16 wait_state_count;
+> @@ -3341,7 +3341,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
+>  	u16 smid;
+>  	u32 ioc_state;
+>  	unsigned long timeleft;
+> -	u8 issue_reset;
+> +	bool issue_reset = 0;
+>  	int rc;
+>  	void *request;
+>  	u16 wait_state_count;
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+hi Dan,
+just a minor question:
+
+did you forget to mention that you also changed from u8 to bool or was this unintentional ?
+
+re,
+ wh
