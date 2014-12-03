@@ -1,80 +1,67 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/12] nobody loves the advansys driver
-Date: Wed, 03 Dec 2014 17:28:40 +0100
-Message-ID: <547F3A38.6070908@suse.de>
-References: <1417607105-85455-1-git-send-email-hare@suse.de>	 <20141203152141.GA6175@lst.de>	 <201412031634.48711.linux@rainbow-software.org> <1417621350.2206.3.camel@parallels.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because
+ of write_same check
+Date: Wed, 03 Dec 2014 11:08:23 -0600
+Message-ID: <547F4387.5010207@cs.wisc.edu>
+References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu> <52CF8F0C.3040304@oracle.com> <52CFA440.7030104@cs.wisc.edu> <52CFAA9F.5010706@oracle.com> <52D056E9.8080008@cs.wisc.edu> <52D09CE6.80200@oracle.com> <a90377a8-3ef9-4fc2-a3e9-bfff23560674@googlegroups.com> <547C2E4D.1030802@oracle.com> <E12134C3-7E50-4E13-94FE-7CEDCB7D9537@cs.wisc.edu> <yq17fy9mnsx.fsf@sermon.lab.mkp.net>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33998 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752216AbaLCQ2l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2014 11:28:41 -0500
-In-Reply-To: <1417621350.2206.3.camel@parallels.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRBEEH7WRQKGQECKGFVFA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <yq17fy9mnsx.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, "linux@rainbow-software.org" <linux@rainbow-software.org>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "matthew@wil.cx" <matthew@wil.cx>
 
-On 12/03/2014 04:42 PM, James Bottomley wrote:
-> On Wed, 2014-12-03 at 16:34 +0100, Ondrej Zary wrote:
->> On Wednesday 03 December 2014, Christoph Hellwig wrote:
->>> Thanks for looking into this old driver.
->>>
->>> If you've got a few spare cycles it might make sense to simply spli=
-t
->>> the "wide board" support out - the driver literally is two differen=
-t
->>> drivers with an if/else section in every method for the totally
->>> different narrow vs wide boards.  Having at least a clean and simpl=
-e
->>> driver for the newer wide boards would be good, and narrow ones are
->>> probably old enough that we can let the driver for those fade away.=
-=2E
->>
->> I have an ASB-3940UA (bought around 2000) and use it for scanner so =
-I can test=20
->> patches.
->> The driver was working fine so I never had to look at the code. Now =
-I see that=20
->> it's 12K lines long :( Converting that to something simple would req=
-uire a=20
->> lot of work.
->=20
-> That's the problem: The driver as-is works in all of the use cases, s=
-o
-> no-one has any motivation to fix it.  Plus the complexity is pretty
-> daunting.  It's not even the worst driver we have (that prize goes to
-> atp870u which still has internal bus scanning code).  I'm not saying
-> don't do the conversion, but I am saying it will have to be validated
-> and tested before it can go in because lots of people still seem to u=
-se
-> this family of devices in odd corners of the world.
->=20
-It was actually on my mind, too, to split the driver up.
-The code for the narrow board has some issues even today (I've
-inserted some remarks in the code) which always get in the way when
-trying to update the other side.
+On 12/2/14, 9:09 PM, Martin K. Petersen wrote:
+>>>>>> "Mike" =3D=3D Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org> writes:
+>
+> Mike,
+>
+> Mike> This was the issue we worked with Microsoft on wasn=E2=80=99t it? Y=
+ou guys
+> Mike> figured out it was fixed in their target in a recent release
+> Mike> right?
+>
+> The issue we worked recently was wrt. the thin provisioning reporting.
+>
+> The WRITE SAME problem was that the target returns an iSCSI-specific
+> error code rather than a check condition with ILLEGAL REQUEST. You were
+> going to talk to MS.
 
-But then I only got a wide board, so I couldn't do any testing
-there; I was sort of banking on Matt Wilcox to have a board
-available ...
+Are you sure about this? The issue you are talking about and the one=20
+jazz is is the same issue right?
 
-Ondrej, if you got a narrow board I'd be willing to to the split and
-let you test out the result.
+I do not have any of the old replies from MS, but I have some of the=20
+mails I sent them. It looks like we were asking them about when sd.c=20
+would send a REPORT SUPPORTED OPERATION, the old MS target would return=20
+the iscsi specific error code. And it looks like they had us try a=20
+updated version and in there it was changed to just work on their side.
 
-Cheers,
+Jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org's patch would work around the same problem because in=20
+sd_read_write_same, sd would see no_write_same is set and not send=20
+REPORT SUPPORTED OPERATION.
 
-Hannes
+The subject of that email thread with MS was "Linux iSCSI and Microsoft=20
+target interop question". I started it with MS on Jan 14, 2014. Vaughan=20
+ccd you on that thread a little later to get your help. I do not have=20
+the replies though. I am just going by truncated snippets in mails sent,=20
+so I do not know what version that was fixed in. Do you guys have the=20
+replies by any chance?
+
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 21284 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
