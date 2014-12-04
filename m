@@ -1,40 +1,48 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH v2 3/5] scsi_debug: add Capacity Changed Unit Attention
-Date: Thu, 04 Dec 2014 11:45:44 -0500
-Message-ID: <1417711544.3154.247.camel@localhost.localdomain>
-References: <54740000.3010104@interlog.com>
-Reply-To: emilne@redhat.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH 1/4] scsi_debug: Fixed missing "break;" in SDEBUG_UA_CAPACITY_CHANGED case
+Date: Thu,  4 Dec 2014 11:49:25 -0500
+Message-ID: <1417711768-24167-2-git-send-email-emilne@redhat.com>
+References: <1417711768-24167-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54844 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56142 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932596AbaLDQqN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2014 11:46:13 -0500
-In-Reply-To: <54740000.3010104@interlog.com>
+	id S932092AbaLDQtb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2014 11:49:31 -0500
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sB4GnVLx020599
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2014 11:49:31 -0500
+Received: from emilne.csb ([10.18.25.104])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id sB4GnUgD011313
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2014 11:49:31 -0500
+In-Reply-To: <1417711768-24167-1-git-send-email-emilne@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2014-11-24 at 23:05 -0500, Douglas Gilbert wrote:
-> From: Douglas Gilbert <dgilbert@interlog.com>
-> Date: Mon, 24 Nov 2014 20:27:51 -0500
-> Subject: [PATCH 3/5] add Capacity Changed Unit Attention
-> 
-> Via sysfs the virtual_gb scsi_debug parameter can be changed while
-> LUs are in use. If that changes, the 'Capacity data has changed'
-> Unit Attention is queued on all LUs.
-> ---
->   drivers/scsi/scsi_debug.c | 28 ++++++++++++++++++++++++----
->   1 file changed, 24 insertions(+), 4 deletions(-)
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-I found a couple of things with this patch that should be
-fixed, I'll send patches to correct them, plus a couple of
-other changes while I'm at it.
+This eliminates a superfluous log message when the capacity is changed:
 
--Ewan
+  "check_readiness: unexpected unit attention code=3"
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/scsi_debug.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index aa4b6b8..397cc10 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -817,6 +817,7 @@ static int check_readiness(struct scsi_cmnd *SCpnt, int uas_only,
+ 					UA_CHANGED_ASC, CAPACITY_CHANGED_ASCQ);
+ 			if (debug)
+ 				cp = "capacity data changed";
++			break;
+ 		default:
+ 			pr_warn("%s: unexpected unit attention code=%d\n",
+ 				__func__, k);
+-- 
+1.7.11.7
 
