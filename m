@@ -1,49 +1,172 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because
- of write_same check
-Date: Wed, 03 Dec 2014 17:49:33 -0600
-Message-ID: <547FA18D.7030706@cs.wisc.edu>
-References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu>	<52CF8F0C.3040304@oracle.com> <52CFA440.7030104@cs.wisc.edu>	<52CFAA9F.5010706@oracle.com> <52D056E9.8080008@cs.wisc.edu>	<52D09CE6.80200@oracle.com>	<a90377a8-3ef9-4fc2-a3e9-bfff23560674@googlegroups.com>	<547C2E4D.1030802@oracle.com>	<E12134C3-7E50-4E13-94FE-7CEDCB7D9537@cs.wisc.edu>	<yq17fy9mnsx.fsf@sermon.lab.mkp.net> <547F4387.5010207@cs.wisc.edu> <yq1fvcwl4oy.fsf@sermon.lab.mkp.net>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+Date: Thu, 04 Dec 2014 02:22:01 +0100
+Message-ID: <3237237.IIIiULdqDt@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCZ4TFNN2YMRBFOD72RQKGQEQFKAUHA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <yq1fvcwl4oy.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lu@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/03/2014 05:00 PM, Martin K. Petersen wrote:
-> Mike> Jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org's patch would work around the same problem because
-> Mike> in sd_read_write_same, sd would see no_write_same is set and not
-> Mike> send REPORT SUPPORTED OPERATION.
-> 
-> Yeah. 
-> 
-> I still don't have a problem quirking the MS target. As long as I can
-> get good strings and revs to match on. Obviously setting no_write_same
-> for all iSCSI targets is a no-go.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Shooooot, not sure what was tested in that thread now. I tried out the
-newer MS iscsi target, 3.3, and still hit the same issue that was
-reported here.
+After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
+depending on CONFIG_PM_RUNTIME may now be changed to depend on
+CONFIG_PM.
 
-What info did you need? Here is vendor/product/version info:
+Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
+drivers/scsi/ and in include/scsi/scsi_device.h.
 
- Vendor identification: MSFT
- Product identification: Virtual HD
- Product revision level: 3.3
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+PM_SLEEP is selected) which is only in linux-next at the moment (via the
+linux-pm tree).
+
+Please let me know if it is OK to take this one into linux-pm.
+
+---
+ drivers/scsi/scsi_pm.c           |    4 ++--
+ drivers/scsi/scsi_priv.h         |    5 ++---
+ drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
+ drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
+ include/scsi/scsi_device.h       |    4 ++--
+ 5 files changed, 14 insertions(+), 21 deletions(-)
+
+Index: linux-pm/include/scsi/scsi_device.h
+===================================================================
+--- linux-pm.orig/include/scsi/scsi_device.h
++++ linux-pm/include/scsi/scsi_device.h
+@@ -440,13 +440,13 @@ static inline int scsi_execute_req(struc
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ 
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ extern int scsi_autopm_get_device(struct scsi_device *);
+ extern void scsi_autopm_put_device(struct scsi_device *);
+ #else
+ static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
+ static inline void scsi_autopm_put_device(struct scsi_device *d) {}
+-#endif /* CONFIG_PM_RUNTIME */
++#endif /* CONFIG_PM */
+ 
+ static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
+ {
+Index: linux-pm/drivers/scsi/scsi_priv.h
+===================================================================
+--- linux-pm.orig/drivers/scsi/scsi_priv.h
++++ linux-pm/drivers/scsi/scsi_priv.h
+@@ -157,8 +157,7 @@ static inline void scsi_netlink_exit(voi
+ /* scsi_pm.c */
+ #ifdef CONFIG_PM
+ extern const struct dev_pm_ops scsi_bus_pm_ops;
+-#endif
+-#ifdef CONFIG_PM_RUNTIME
++
+ extern void scsi_autopm_get_target(struct scsi_target *);
+ extern void scsi_autopm_put_target(struct scsi_target *);
+ extern int scsi_autopm_get_host(struct Scsi_Host *);
+@@ -168,7 +167,7 @@ static inline void scsi_autopm_get_targe
+ static inline void scsi_autopm_put_target(struct scsi_target *t) {}
+ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
+ static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
+-#endif /* CONFIG_PM_RUNTIME */
++#endif /* CONFIG_PM */
+ 
+ extern struct async_domain scsi_sd_pm_domain;
+ extern struct async_domain scsi_sd_probe_domain;
+Index: linux-pm/drivers/scsi/scsi_pm.c
+===================================================================
+--- linux-pm.orig/drivers/scsi/scsi_pm.c
++++ linux-pm/drivers/scsi/scsi_pm.c
+@@ -213,7 +213,7 @@ static int scsi_bus_restore(struct devic
+ 
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-#ifdef CONFIG_PM_RUNTIME
++#ifdef CONFIG_PM
+ 
+ static int sdev_runtime_suspend(struct device *dev)
+ {
+@@ -338,7 +338,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
+ #define scsi_runtime_resume	NULL
+ #define scsi_runtime_idle	NULL
+ 
+-#endif /* CONFIG_PM_RUNTIME */
++#endif /* CONFIG_PM */
+ 
+ const struct dev_pm_ops scsi_bus_pm_ops = {
+ 	.prepare =		scsi_bus_prepare,
+Index: linux-pm/drivers/scsi/ufs/ufshcd-pci.c
+===================================================================
+--- linux-pm.orig/drivers/scsi/ufs/ufshcd-pci.c
++++ linux-pm/drivers/scsi/ufs/ufshcd-pci.c
+@@ -62,12 +62,7 @@ static int ufshcd_pci_resume(struct devi
+ {
+ 	return ufshcd_system_resume(dev_get_drvdata(dev));
+ }
+-#else
+-#define ufshcd_pci_suspend	NULL
+-#define ufshcd_pci_resume	NULL
+-#endif /* CONFIG_PM */
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ static int ufshcd_pci_runtime_suspend(struct device *dev)
+ {
+ 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+@@ -80,11 +75,13 @@ static int ufshcd_pci_runtime_idle(struc
+ {
+ 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+ }
+-#else /* !CONFIG_PM_RUNTIME */
++#else /* !CONFIG_PM */
++#define ufshcd_pci_suspend	NULL
++#define ufshcd_pci_resume	NULL
+ #define ufshcd_pci_runtime_suspend	NULL
+ #define ufshcd_pci_runtime_resume	NULL
+ #define ufshcd_pci_runtime_idle	NULL
+-#endif /* CONFIG_PM_RUNTIME */
++#endif /* CONFIG_PM */
+ 
+ /**
+  * ufshcd_pci_shutdown - main function to put the controller in reset state
+Index: linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
+===================================================================
+--- linux-pm.orig/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -266,12 +266,7 @@ static int ufshcd_pltfrm_resume(struct d
+ {
+ 	return ufshcd_system_resume(dev_get_drvdata(dev));
+ }
+-#else
+-#define ufshcd_pltfrm_suspend	NULL
+-#define ufshcd_pltfrm_resume	NULL
+-#endif
+ 
+-#ifdef CONFIG_PM_RUNTIME
+ static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
+ {
+ 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+@@ -284,11 +279,13 @@ static int ufshcd_pltfrm_runtime_idle(st
+ {
+ 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+ }
+-#else /* !CONFIG_PM_RUNTIME */
++#else /* !CONFIG_PM */
++#define ufshcd_pltfrm_suspend	NULL
++#define ufshcd_pltfrm_resume	NULL
+ #define ufshcd_pltfrm_runtime_suspend	NULL
+ #define ufshcd_pltfrm_runtime_resume	NULL
+ #define ufshcd_pltfrm_runtime_idle	NULL
+-#endif /* CONFIG_PM_RUNTIME */
++#endif /* CONFIG_PM */
+ 
+ static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
+ {
+
