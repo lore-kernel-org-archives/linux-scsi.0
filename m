@@ -1,45 +1,37 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH qla2xxx] Race in handling rport deletion in Qlogic driver
- during recovery causes panic
-Date: Thu, 4 Dec 2014 15:18:40 -0500
-Message-ID: <alpine.OSX.2.00.1412041517580.1608@administrators-macbook-pro.local>
-References: <66112100.3203938.1416924145624.JavaMail.zimbra@redhat.com> <827904999.3215615.1416925002571.JavaMail.zimbra@redhat.com> <20141204084437.GA12187@infradead.org>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
+ scanning
+Date: Fri, 5 Dec 2014 00:43:15 +0100
+Message-ID: <20141205004315.00001523@localhost>
+References: <1417711162-102950-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:11325 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751878AbaLDUTN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2014 15:19:13 -0500
-In-Reply-To: <20141204084437.GA12187@infradead.org>
+Received: from mout.gmx.net ([212.227.17.21]:51910 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933119AbaLDXon (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2014 18:44:43 -0500
+In-Reply-To: <1417711162-102950-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org, Chad Dupuis <cdupuis@redhat.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Martthias Roessler <Matthias.Roessler@ts.fujitsu.com>, Sebastian Herbszt <herbszt@gmx.de>
 
+Hannes Reinecke wrote:
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 49014a1..4f446e3 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -166,6 +166,7 @@ static struct {
+>  	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
+>  	{"easyRAID", "F8", NULL, BLIST_NOREPORTLUN},
+>  	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+> +	{"FUJITSU", "ETERNUS_DX", "*", BLIST_TEST_LUN0 },
+>  	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
+>  	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
+>  	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
 
+Does this apply to all ETERNUS DX models and generations?
 
-On Thu, 4 Dec 2014, Christoph Hellwig wrote:
-
-> On Tue, Nov 25, 2014 at 09:16:42AM -0500, Laurence Oberman wrote:
->> When we have an rport disconnect we race during rport deletion and re-connection resulting in a panic.
->> When we do this, we call fc_remote_port_del() just before we do the calls to re-establish the session with
->> the FC transport with fc_remote_port_add() and then fc_remote_port_rolechg().
->>
->> If we remove the call to fc_remote_port_del() before re-establishing the connection this prevents the race.
->> This patch has resolved this for multiple customers via test kernels.
->>
->> Suggested by Chad Dupuis, implemented and tested by Laurence Oberman.
->
-> Chad, can you review this one?  Or do you plan to send it to me with the
-> next qla2xxx update?  Note that the 3.19 merge window is about to end.
-
-This looks good. Thanks.
-
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Sebastian
