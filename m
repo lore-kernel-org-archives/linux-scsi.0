@@ -1,81 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/4] [SCSI] Only blacklist WRITE SAME for VMware virtual disks
-Date: Wed,  3 Dec 2014 21:18:09 -0500
-Message-ID: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org.#.v3.18
+Subject: [PATCH 2/4] [SCSI] Blacklist RSOC for Microsoft iSCSI target devices
+Date: Wed,  3 Dec 2014 21:18:10 -0500
+Message-ID: <1417659492-2679-2-git-send-email-martin.petersen@oracle.com>
+References: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40846 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbaLDCT4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 21:19:56 -0500
+In-Reply-To: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, stable@vger.kernel.org.#.v3.10+
 
-Commit 4089b71cc820 blacklisted WRITE SAME for all VMware disks.
-However, the WRITE SAME commands are supported for passthrough
-disks. Change the heuristic so we only blacklist virtual disks.
+The Microsoft iSCSI target does not support REPORT SUPPORTED OPERATION
+CODES. Blacklist these devices so we don't attempt to send the command.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: Petr Vandrovec <petr@vmware.com>
-Tested-by: Chris J Arges <chris.j.arges@canonical.com>
-Cc: stable@vger.kernel.org # v3.18
+Reported-by: jazz@deti74.ru
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: stable@vger.kernel.org # v3.10+
 ---
- drivers/message/fusion/mptspi.c | 5 -----
- drivers/scsi/scsi_devinfo.c     | 2 ++
- drivers/scsi/scsi_scan.c        | 3 +++
- include/scsi/scsi_devinfo.h     | 1 +
- 4 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 613231c16194..787933d43d32 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -1419,11 +1419,6 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_mptspi_probe;
-         }
- 
--	/* VMWare emulation doesn't properly implement WRITE_SAME
--	 */
--	if (pdev->subsystem_vendor == 0x15AD)
--		sh->no_write_same = 1;
--
- 	spin_lock_irqsave(&ioc->FreeQlock, flags);
- 
- 	/* Attach the SCSI Host to the IOC structure
 diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 49014a143c6a..8c228e049bb6 100644
+index 8c228e049bb6..db42c37e1230 100644
 --- a/drivers/scsi/scsi_devinfo.c
 +++ b/drivers/scsi/scsi_devinfo.c
-@@ -249,6 +249,8 @@ static struct {
- 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
- 	{"Traxdata", "CDR4120", NULL, BLIST_NOLUN},	/* locks up */
- 	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"VMware", "Virtual disk", "1.0", BLIST_NO_WRITE_SAME }, /* ESX */
-+	{"VMware,", "VMware Virtual S", "1.0", BLIST_NO_WRITE_SAME }, /* WS,Fusion */
- 	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 1300", "02.4", BLIST_SELECT_NO_ATN},
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 0cda53adfd35..0dd31752796a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -963,6 +963,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (*bflags & BLIST_NO_DIF)
- 		sdev->no_dif = 1;
- 
-+	if (*bflags & BLIST_NO_WRITE_SAME)
-+		sdev->no_write_same = 1;
-+
- 	sdev->eh_timeout = SCSI_DEFAULT_EH_TIMEOUT;
- 
- 	if (*bflags & BLIST_TRY_VPD_PAGES)
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 183eaab7c380..1a24efb4b1d6 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -36,5 +36,6 @@
- 					     for sequential scan */
- #define BLIST_TRY_VPD_PAGES	0x10000000 /* Attempt to read VPD pages */
- #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
-+#define BLIST_NO_WRITE_SAME	0x40000000 /* don't try to issue WRITE SAME */
- 
- #endif
+@@ -210,6 +210,7 @@ static struct {
+ 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+ 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+ 	{"MICROP", "4110", NULL, BLIST_NOTQ},
++	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
+ 	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
+ 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+ 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
 -- 
 1.9.3
+
