@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/4] [SCSI] sd: Sanity check the optimal I/O size
-Date: Wed,  3 Dec 2014 21:18:11 -0500
-Message-ID: <1417659492-2679-3-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 4/4] [SCSI] Remove VPD quirk for Seagate drives
+Date: Wed,  3 Dec 2014 21:18:12 -0500
+Message-ID: <1417659492-2679-4-git-send-email-martin.petersen@oracle.com>
 References: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
@@ -10,54 +10,26 @@ To: linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-We have come across a couple of devices that report crackpot values in
-the optimal I/O size in the Block Limits VPD page. Since this is a
-32-bit entity that gets multiplied by the logical block size we can get
-disproportionately large values reported to the block layer.
+Now that we sanity check the optimal I/O size reported by the device we
+no longer need to blacklist the VPD pages on certain Seagate drives.
 
-Cap io_opt at 256 MB.
-
-Reported-by: Chris Friesen <chris.friesen@windriver.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: stable@vger.kernel.org
 ---
- drivers/scsi/sd.c | 3 ++-
- drivers/scsi/sd.h | 9 +++++----
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fedab3c21ddf..127e8978fde1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2593,7 +2593,8 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	blk_queue_io_min(sdkp->disk->queue,
- 			 get_unaligned_be16(&buffer[6]) * sector_sz);
- 	blk_queue_io_opt(sdkp->disk->queue,
--			 get_unaligned_be32(&buffer[12]) * sector_sz);
-+			 min_t(unsigned int, SD_MAX_IO_OPT_BYTES,
-+			       get_unaligned_be32(&buffer[12]) * sector_sz));
- 
- 	if (buffer[3] == 0x3c) {
- 		unsigned int lba_count, desc_count;
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 63ba5ca7f9a1..f175a3f2944a 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -44,10 +44,11 @@ enum {
- };
- 
- enum {
--	SD_DEF_XFER_BLOCKS = 0xffff,
--	SD_MAX_XFER_BLOCKS = 0xffffffff,
--	SD_MAX_WS10_BLOCKS = 0xffff,
--	SD_MAX_WS16_BLOCKS = 0x7fffff,
-+	SD_DEF_XFER_BLOCKS	= 0xffff,
-+	SD_MAX_XFER_BLOCKS	= 0xffffffff,
-+	SD_MAX_WS10_BLOCKS	= 0xffff,
-+	SD_MAX_WS16_BLOCKS	= 0x7fffff,
-+	SD_MAX_IO_OPT_BYTES	= 256 * 1024 * 1024,
- };
- 
- enum {
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index db42c37e1230..0f491ab887a4 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -230,7 +230,6 @@ static struct {
+ 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
+ 	{"SEAGATE", "ST34555N", "0930", BLIST_NOTQ},	/* Chokes on tagged INQUIRY */
+ 	{"SEAGATE", "ST3390N", "9546", BLIST_NOTQ},
+-	{"SEAGATE", "ST900MM0006", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+ 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
 -- 
 1.9.3
