@@ -1,105 +1,183 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
- scanning
-Date: Thu, 4 Dec 2014 20:00:23 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593F57E4@G4W3202.americas.hpqcorp.net>
-References: <1417711162-102950-1-git-send-email-hare@suse.de>
+From: Duane Grigsby <duane.grigsby@qlogic.com>
+Subject: Re: [Scst-devel] New qla2x00tgt Driver Question
+Date: Thu, 4 Dec 2014 20:17:01 +0000
+Message-ID: <2D7BBED629475F4BAA85CF6AB9702F130108807A0A@AVMB1.qlogic.org>
+References: <duane.grigsby@qlogic.com>
+ <201412041621.sB4GLx8g003761@wind.enjellic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="_000_2D7BBED629475F4BAA85CF6AB9702F130108807A0AAVMB1qlogicor_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:43949 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbaLDUCc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2014 15:02:32 -0500
-In-Reply-To: <1417711162-102950-1-git-send-email-hare@suse.de>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:15977 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750934AbaLDURG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2014 15:17:06 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sB4KDBHE012834
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2014 12:17:04 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1qw5yubfdt-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 04 Dec 2014 12:17:04 -0800
+In-Reply-To: <201412041621.sB4GLx8g003761@wind.enjellic.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Martthias Roessler <Matthias.Roessler@ts.fujitsu.com>
+To: "greg@enjellic.com" <greg@enjellic.com>, Marc Smith <marc.smith@mcc.edu>, scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+
+--_000_2D7BBED629475F4BAA85CF6AB9702F130108807A0AAVMB1qlogicor_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-ID: <75A40BEAEC417D4C8111E4E7CFD2084C@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
+
+Yes, we=B9ll copy you.
+
+duane
+
+On 12/4/14, 8:21 AM, "Dr. Greg Wettstein" <greg@wind.enjellic.com> wrote:
+
+>On Dec 3, 11:38pm, Duane Grigsby wrote:
+>} Subject: Re: [Scst-devel] New qla2x00tgt Driver Question
+>
+>> Hi Greg,
+>
+>Hi Duane, hope your day is starting out well.
+>
+>> I looked at your logs and also reviewed the PLOGI handling in
+>> Trunk-SCST.15. We found a issue with PLOGI/PRLI cleanup handling that
+>>I'm
+>> addressing. Whatever fixes will get pushed upstream with the qla2xxx and
+>> scst-qla2xxx.git.
+>
+>Very good, I'm glad we were able to cast some illumination on this
+>issue.
+>
+>If you could copy me on the fix I would be happy to roll it into the
+>3.10.x branch which we maintain for all of our storage infrastructure
+>and put it into our test harness.  I'm sure you saw the note from Vlad
+>in which he feels the deferred ABORT messages we are seeing before a
+>block device goes offline during NEXUS_LOSS_SESS handling have nothing
+>to do with SCST SCSI core.  Hopefully your fix will address whatever
+>is getting lost in the shuffle on that front.
+>
+>Once we get that issue addressed we will put the fix into a second
+>test harness to see if it addresses the holy grail of all this which
+>is the catastrophic VMFS corruption which we have documented on
+>adapter resets.
+>
+>> duane
+>
+>Best wishes for a productive afternoon.
+>
+>Greg
+>
+>}-- End of excerpt from Duane Grigsby
+>
+>As always,
+>Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+>4206 N. 19th Ave.           Specializing in information infra-structure
+>Fargo, ND  58102            development.
+>PH: 701-281-1686
+>FAX: 701-281-3949           EMAIL: greg@enjellic.com
+>--------------------------------------------------------------------------
+>----
+>"Sweeny's Law: The length of a progress report is inversely proportional
+> to the amount of progress."
 
 
+--_000_2D7BBED629475F4BAA85CF6AB9702F130108807A0AAVMB1qlogicor_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Thursday, 04 December, 2014 10:39 AM
-...
->  /**
-> + * scsi_test_lun - waiting for a LUN to become ready
-> + * @sdev:	scsi_device to test
-> + *
-> + * Description:
-> + *     Wait for the lun associated with @sdev to become ready
-> + *
-> + *     Send a TEST UNIT READY to detect any unit attention conditions.
-> + *     Retry TEST UNIT READY for up to @scsi_scan_timeout if the
-> + *     returned sense key is 02/04/01 (Not ready, Logical Unit is
-> + *     in process of becoming ready)
-> + **/
-> +static int
-> +scsi_test_lun(struct scsi_device *sdev)
-> +{
-> +	struct scsi_sense_hdr sshdr;
-> +	int res = SCSI_SCAN_TARGET_PRESENT;
-> +	int tur_result;
-> +	unsigned long tur_timeout = jiffies + scsi_scan_timeout * HZ;
-> +
-> +	/* Skip for older devices */
-> +	if (sdev->scsi_level <= SCSI_3)
-> +		return SCSI_SCAN_LUN_PRESENT;
-> +
-> +	/*
-> +	 * Wait for the device to become ready.
-> +	 *
-> +	 * Some targets take some time before the firmware is
-> +	 * fully initialized, during which time they might not
-> +	 * be able to fill out any REPORT_LUN command correctly.
-> +	 * And as we're not capable of handling the
-> +	 * INQUIRY DATA CHANGED unit attention correctly we'd
-> +	 * rather wait here.
-> +	 */
-> +	do {
-> +		tur_result = scsi_test_unit_ready(sdev, SCSI_TIMEOUT,
-> +							  3, &sshdr);
-> +		if (!tur_result) {
-> +			res = SCSI_SCAN_LUN_PRESENT;
-> +			break;
-> +		}
-> +		if ((driver_byte(tur_result) & DRIVER_SENSE) &&
-> +		    scsi_sense_valid(&sshdr)) {
-> +			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-> +				"scsi_scan: tur returned %02x/%02x/%02x\n",
-> +				sshdr.sense_key, sshdr.asc, sshdr.ascq));
-> +			if (sshdr.sense_key == NOT_READY &&
-> +			    sshdr.asc == 0x04 && sshdr.ascq == 0x01) {
-> +				/* Logical Unit is in process
-> +				 * of becoming ready */
-> +				msleep(100);
-> +				continue;
-> +			}
-> +		}
+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
+WJaYMzk0OY+ZRfBNQUlMLjAn0yh6Kib/hcCbz5zfne+e/59CmzoqJkwiUyHwCfB5JwQgTPtbwC4w
+VDphHnAZwD5hd5LvggIJwQQRCXBwCRE1UguA/xoxEgBpYYIRpDIxEQdAKiZ/SyI6UkUAPXEFQFZh
+o4YuDiIjHBVCqXAAHwBCAAEAAAAcAAAARAB1AGEAbgBlACAARwByAGkAZwBzAGIAeQAAAB8AZQAB
+AAAAMgAAAGQAdQBhAG4AZQAuAGcAcgBpAGcAcwBiAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
+AAAfAGQAAQAAAAoAAABTAE0AVABQAAAAAAACAUEAAQAAAHAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9U
+AgAAAIBEAHUAYQBuAGUAIABHAHIAaQBnAHMAYgB5AAAAUwBNAFQAUAAAAGQAdQBhAG4AZQAuAGcA
+cgBpAGcAcwBiAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAAyAAAAZAB1AGEAbgBl
+AC4AZwByAGkAZwBzAGIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAOgAAAHMA
+aQBwADoAZAB1AGEAbgBlAC4AZwByAGkAZwBzAGIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
+AB8AGgwBAAAAHAAAAEQAdQBhAG4AZQAgAEcAcgBpAGcAcwBiAHkAAAAfAB8MAQAAADIAAABkAHUA
+YQBuAGUALgBnAHIAaQBnAHMAYgB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgEZDAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACARAB1AGEA
+bgBlACAARwByAGkAZwBzAGIAeQAAAFMATQBUAFAAAABkAHUAYQBuAGUALgBnAHIAaQBnAHMAYgB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAMgAAAGQAdQBhAG4AZQAuAGcAcgBpAGcA
+cwBiAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAABwAAABEAHUAYQBuAGUAIABH
+AHIAaQBnAHMAYgB5AAAAHwAjQAEAAAAyAAAAZAB1AGEAbgBlAC4AZwByAGkAZwBzAGIAeQBAAHEA
+bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAcAAA
+AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEQAdQBhAG4AZQAgAEcAcgBpAGcAcwBiAHkAAABTAE0A
+VABQAAAAZAB1AGEAbgBlAC4AZwByAGkAZwBzAGIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AAldAQAAADIAAABkAHUAYQBuAGUALgBnAHIAaQBnAHMAYgB5AEAAcQBsAG8AZwBpAGMALgBjAG8A
+bQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAA
+AEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA
+5BwkWGq3E06z3tBd5PhEQwMAFwABAAAAQAA5AIDcEEP/D9ABQAAIMEBkqEP/D9ABCwAAgAggBgAA
+AAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMA
+ZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAA
+AMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABgAAAAUgBlADoAIABbAFMAYwBzAHQALQBkAGUA
+dgBlAGwAXQAgAE4AZQB3ACAAcQBsAGEAMgB4ADAAMAB0AGcAdAAgAEQAcgBpAHYAZQByACAAUQB1
+AGUAcwB0AGkAbwBuAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAAGAA
+AAA8ADIAMAAxADQAMQAyADAANAAxADYAMgAxAC4AcwBCADQARwBMAHgAOABnADAAMAAzADcANgAx
+AEAAdwBpAG4AZAAuAGUAbgBqAGUAbABsAGkAYwAuAGMAbwBtAD4AAAACAXEAAQAAABsAAAABAdAP
+3m0Rx6JAL1grRqhJ1JntKkfnnH/eyAAAHwBwAAEAAABYAAAAWwBTAGMAcwB0AC0AZABlAHYAZQBs
+AF0AIABOAGUAdwAgAHEAbABhADIAeAAwADAAdABnAHQAIABEAHIAaQB2AGUAcgAgAFEAdQBlAHMA
+dABpAG8AbgAAAB8ANRABAAAAfAAAADwAMgBEADcAQgBCAEUARAA2ADIAOQA0ADcANQBGADQAQgBB
+AEEAOAA1AEMARgA2AEEAQgA5ADcAMAAyAEYAMQAzADAAMQAwADgAOAAwADcAQQAwAEEAQABBAFYA
+TQBCADEALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAJYAAAA8AGQAdQBhAG4AZQAu
+AGcAcgBpAGcAcwBiAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADIAMAAxADQAMQAyADAA
+NAAxADYAMgAxAC4AcwBCADQARwBMAHgAOABnADAAMAAzADcANgAxAEAAdwBpAG4AZAAuAGUAbgBq
+AGUAbABsAGkAYwAuAGMAbwBtAD4AAAAAAAMA3j+vbwAAQAAHMCBAoUP/D9ABAwAmAAAAAAACAUcA
+AQAAAC4AAABjPVVTO2E9IDtwPVFMb2dpYztsPUFWTUIxLTE0MTIwNDIwMTcwMVotNjI2MzcAAAAf
+ABUQAQAAAFgAAAA3ADUAQQA0ADAAQgBFAEEARQBDADQAMQA3AEQANABDADgAMQAxADEARQA0AEUA
+NwBDAEYARAAyADAAOAA0AEMAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAA9wAA
+AFJHca9ZAAAAHwD6PwEAAAAcAAAARAB1AGEAbgBlACAARwByAGkAZwBzAGIAeQAAAB8AAICGAwIA
+AAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUAbgB0AAAAAAABAAAARgAAAE0AaQBj
+AHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAvADEANAAuADQALgA2AC4AMQA0ADEA
+MQAwADYAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8AbgB2AGUAcgBzAGEAdABp
+AG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAAAwAQAASQBJAD0AMAAxADAA
+MQBEADAAMABGAEYARgA0ADMANgAyAEMAQQAwAEIANgA4ADUANQA5ADkANwBBADQANQBBADkARAAx
+ADMARQBEADcANAAxAEQAQwA0AEEAOABFADsAUwBCAE0ASQBEAD0AMwA7AFMAMQA9ADwAMgAwADEA
+NAAxADIAMAA0ADEANgAyADEALgBzAEIANABHAEwAeAA4AGcAMAAwADMANwA2ADEAQAB3AGkAbgBk
+AC4AZQBuAGoAZQBsAGwAaQBjAC4AYwBvAG0APgA7AFYAZQByAHMAaQBvAG4APQBWAGUAcgBzAGkA
+bwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAgAFMAdABhAGcAZQA9
+AEgAMgAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
+cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAA
+AHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4A
+NAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBl
+AHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAL79
 
-In SAS, you may see these after power on or after sending a
-START STOP UNIT command with START=1, as the controller or 
-expander is performing staggered spinup:
-04h/11h LOGICAL UNIT NOT READY, NOTIFY (ENABLE SPINUP) REQUIRED
-
-Once the drive receives NOTIFY (ENABLE SPINUP), then it starts
-reporting this until spinup is done:
-04h/01h LOGICAL UNIT IS IN PROCESS OF BECOMING READY
-
-If this function is intended for general "wait for ready" use, 
-then it should sit through both codes.
-
-If this function is only intended for drives that violate the
-rule to always be capable of returning REPORT LUNS data 
-indicating LUN 0, it's hard to guess if 04h/11h could also
-appear.  
-
----
-Rob Elliott    HP Server Storage
-
-
-
+--_000_2D7BBED629475F4BAA85CF6AB9702F130108807A0AAVMB1qlogicor_--
