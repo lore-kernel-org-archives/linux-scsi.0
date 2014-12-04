@@ -1,42 +1,49 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/4] [SCSI] Blacklist RSOC for Microsoft iSCSI target devices
-Date: Wed,  3 Dec 2014 21:18:10 -0500
-Message-ID: <1417659492-2679-2-git-send-email-martin.petersen@oracle.com>
-References: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40846 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302AbaLDCT4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 21:19:56 -0500
-In-Reply-To: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: iSCSI request keep rejected by microsoft iSCSI target because of write_same check
+Date: Wed, 03 Dec 2014 21:20:32 -0500
+Message-ID: <yq1bnnkkvf3.fsf@sermon.lab.mkp.net>
+References: <52CE77FB.8020100@oracle.com> <52CEEC97.8050108@cs.wisc.edu>
+	<52CF8F0C.3040304@oracle.com> <52CFA440.7030104@cs.wisc.edu>
+	<52CFAA9F.5010706@oracle.com> <52D056E9.8080008@cs.wisc.edu>
+	<52D09CE6.80200@oracle.com>
+	<a90377a8-3ef9-4fc2-a3e9-bfff23560674@googlegroups.com>
+	<547C2E4D.1030802@oracle.com>
+	<E12134C3-7E50-4E13-94FE-7CEDCB7D9537@cs.wisc.edu>
+	<yq17fy9mnsx.fsf@sermon.lab.mkp.net> <547F4387.5010207@cs.wisc.edu>
+	<yq1fvcwl4oy.fsf@sermon.lab.mkp.net> <547FA18D.7030706@cs.wisc.edu>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBGUK76RQKGQEX4JX35Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <547FA18D.7030706-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org> (Mike Christie's message of "Wed,
+	03 Dec 2014 17:49:33 -0600")
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, jazz-jYkeLfz6glqHXe+LvDLADg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, stable@vger.kernel.org.#.v3.10+
 
-The Microsoft iSCSI target does not support REPORT SUPPORTED OPERATION
-CODES. Blacklist these devices so we don't attempt to send the command.
+>>>>> "Mike" == Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org> writes:
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: jazz@deti74.ru
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: stable@vger.kernel.org # v3.10+
----
- drivers/scsi/scsi_devinfo.c | 1 +
- 1 file changed, 1 insertion(+)
+Mike> Shooooot, not sure what was tested in that thread now. I tried out
+Mike> the newer MS iscsi target, 3.3, and still hit the same issue that
+Mike> was reported here.
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 8c228e049bb6..db42c37e1230 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -210,6 +210,7 @@ static struct {
- 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
- 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
- 	{"MICROP", "4110", NULL, BLIST_NOTQ},
-+	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
- 	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
- 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
- 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+Mike> What info did you need? Here is vendor/product/version info:
+
+Just sent out a proposed patch.
+
 -- 
-1.9.3
+Martin K. Petersen	Oracle Linux Engineering
 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
