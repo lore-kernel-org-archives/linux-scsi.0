@@ -1,29 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 5/4] scsi: remove MSG_*_TAG defines
-Date: Wed, 03 Dec 2014 21:31:53 -0500
-Message-ID: <yq1h9xcjgbq.fsf@sermon.lab.mkp.net>
-References: <1416839781-26988-1-git-send-email-hch@lst.de>
-	<20141124150725.GA23165@infradead.org>
+Subject: Re: [PATCH 01/22] [SCSI] mpt2sas: MPI2 Rev AA (2.00.19) specifications
+Date: Wed, 03 Dec 2014 21:49:41 -0500
+Message-ID: <yq1zjb4i0xm.fsf@sermon.lab.mkp.net>
+References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1416467155-16869-2-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44531 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719AbaLDCcU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Dec 2014 21:32:20 -0500
-In-Reply-To: <20141124150725.GA23165@infradead.org> (Christoph Hellwig's
-	message of "Mon, 24 Nov 2014 07:07:25 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1416467155-16869-2-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Thu, 20 Nov 2014 12:35:34 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Christoph> For SPI drivers use the message defintions from scsi.c, and
-Christoph> for target drivers introduce a new TCM_*_TAG namespace.
-
-s/defintions/definitions/
+Sreekanth> Below is the changeset from the MPI specification and 2.00.34
+Sreekanth> header files 1) Defined additional bits in the BiosOptions
+Sreekanth> field of BIOS Page 1 to allow for finer control of X86 BIOS
+Sreekanth> and UEFI BSD.  2) For the Clean Tool, reserved bit 26 of the
+Sreekanth> Flags field for product specific use.
 
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
