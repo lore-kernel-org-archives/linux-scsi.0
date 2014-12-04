@@ -1,172 +1,63 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
-Date: Thu, 04 Dec 2014 02:22:01 +0100
-Message-ID: <3237237.IIIiULdqDt@vostro.rjw.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-Sender: linux-pm-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 3/4] [SCSI] sd: Sanity check the optimal I/O size
+Date: Wed,  3 Dec 2014 21:18:11 -0500
+Message-ID: <1417659492-2679-3-git-send-email-martin.petersen@oracle.com>
+References: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com>
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lu@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+We have come across a couple of devices that report crackpot values in
+the optimal I/O size in the Block Limits VPD page. Since this is a
+32-bit entity that gets multiplied by the logical block size we can get
+disproportionately large values reported to the block layer.
 
-After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
-depending on CONFIG_PM_RUNTIME may now be changed to depend on
-CONFIG_PM.
+Cap io_opt at 256 MB.
 
-Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
-drivers/scsi/ and in include/scsi/scsi_device.h.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reported-by: Chris Friesen <chris.friesen@windriver.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org
 ---
+ drivers/scsi/sd.c | 3 ++-
+ drivers/scsi/sd.h | 9 +++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-PM_SLEEP is selected) which is only in linux-next at the moment (via the
-linux-pm tree).
-
-Please let me know if it is OK to take this one into linux-pm.
-
----
- drivers/scsi/scsi_pm.c           |    4 ++--
- drivers/scsi/scsi_priv.h         |    5 ++---
- drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
- drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
- include/scsi/scsi_device.h       |    4 ++--
- 5 files changed, 14 insertions(+), 21 deletions(-)
-
-Index: linux-pm/include/scsi/scsi_device.h
-===================================================================
---- linux-pm.orig/include/scsi/scsi_device.h
-+++ linux-pm/include/scsi/scsi_device.h
-@@ -440,13 +440,13 @@ static inline int scsi_execute_req(struc
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fedab3c21ddf..127e8978fde1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2593,7 +2593,8 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_min(sdkp->disk->queue,
+ 			 get_unaligned_be16(&buffer[6]) * sector_sz);
+ 	blk_queue_io_opt(sdkp->disk->queue,
+-			 get_unaligned_be32(&buffer[12]) * sector_sz);
++			 min_t(unsigned int, SD_MAX_IO_OPT_BYTES,
++			       get_unaligned_be32(&buffer[12]) * sector_sz));
  
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- extern int scsi_autopm_get_device(struct scsi_device *);
- extern void scsi_autopm_put_device(struct scsi_device *);
- #else
- static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
- static inline void scsi_autopm_put_device(struct scsi_device *d) {}
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
+ 	if (buffer[3] == 0x3c) {
+ 		unsigned int lba_count, desc_count;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 63ba5ca7f9a1..f175a3f2944a 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -44,10 +44,11 @@ enum {
+ };
  
- static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
- {
-Index: linux-pm/drivers/scsi/scsi_priv.h
-===================================================================
---- linux-pm.orig/drivers/scsi/scsi_priv.h
-+++ linux-pm/drivers/scsi/scsi_priv.h
-@@ -157,8 +157,7 @@ static inline void scsi_netlink_exit(voi
- /* scsi_pm.c */
- #ifdef CONFIG_PM
- extern const struct dev_pm_ops scsi_bus_pm_ops;
--#endif
--#ifdef CONFIG_PM_RUNTIME
-+
- extern void scsi_autopm_get_target(struct scsi_target *);
- extern void scsi_autopm_put_target(struct scsi_target *);
- extern int scsi_autopm_get_host(struct Scsi_Host *);
-@@ -168,7 +167,7 @@ static inline void scsi_autopm_get_targe
- static inline void scsi_autopm_put_target(struct scsi_target *t) {}
- static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
- static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
+ enum {
+-	SD_DEF_XFER_BLOCKS = 0xffff,
+-	SD_MAX_XFER_BLOCKS = 0xffffffff,
+-	SD_MAX_WS10_BLOCKS = 0xffff,
+-	SD_MAX_WS16_BLOCKS = 0x7fffff,
++	SD_DEF_XFER_BLOCKS	= 0xffff,
++	SD_MAX_XFER_BLOCKS	= 0xffffffff,
++	SD_MAX_WS10_BLOCKS	= 0xffff,
++	SD_MAX_WS16_BLOCKS	= 0x7fffff,
++	SD_MAX_IO_OPT_BYTES	= 256 * 1024 * 1024,
+ };
  
- extern struct async_domain scsi_sd_pm_domain;
- extern struct async_domain scsi_sd_probe_domain;
-Index: linux-pm/drivers/scsi/scsi_pm.c
-===================================================================
---- linux-pm.orig/drivers/scsi/scsi_pm.c
-+++ linux-pm/drivers/scsi/scsi_pm.c
-@@ -213,7 +213,7 @@ static int scsi_bus_restore(struct devic
- 
- #endif /* CONFIG_PM_SLEEP */
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- 
- static int sdev_runtime_suspend(struct device *dev)
- {
-@@ -338,7 +338,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
- #define scsi_runtime_resume	NULL
- #define scsi_runtime_idle	NULL
- 
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- const struct dev_pm_ops scsi_bus_pm_ops = {
- 	.prepare =		scsi_bus_prepare,
-Index: linux-pm/drivers/scsi/ufs/ufshcd-pci.c
-===================================================================
---- linux-pm.orig/drivers/scsi/ufs/ufshcd-pci.c
-+++ linux-pm/drivers/scsi/ufs/ufshcd-pci.c
-@@ -62,12 +62,7 @@ static int ufshcd_pci_resume(struct devi
- {
- 	return ufshcd_system_resume(dev_get_drvdata(dev));
- }
--#else
--#define ufshcd_pci_suspend	NULL
--#define ufshcd_pci_resume	NULL
--#endif /* CONFIG_PM */
- 
--#ifdef CONFIG_PM_RUNTIME
- static int ufshcd_pci_runtime_suspend(struct device *dev)
- {
- 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-@@ -80,11 +75,13 @@ static int ufshcd_pci_runtime_idle(struc
- {
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
--#else /* !CONFIG_PM_RUNTIME */
-+#else /* !CONFIG_PM */
-+#define ufshcd_pci_suspend	NULL
-+#define ufshcd_pci_resume	NULL
- #define ufshcd_pci_runtime_suspend	NULL
- #define ufshcd_pci_runtime_resume	NULL
- #define ufshcd_pci_runtime_idle	NULL
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- /**
-  * ufshcd_pci_shutdown - main function to put the controller in reset state
-Index: linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
-===================================================================
---- linux-pm.orig/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -266,12 +266,7 @@ static int ufshcd_pltfrm_resume(struct d
- {
- 	return ufshcd_system_resume(dev_get_drvdata(dev));
- }
--#else
--#define ufshcd_pltfrm_suspend	NULL
--#define ufshcd_pltfrm_resume	NULL
--#endif
- 
--#ifdef CONFIG_PM_RUNTIME
- static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
- {
- 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-@@ -284,11 +279,13 @@ static int ufshcd_pltfrm_runtime_idle(st
- {
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
--#else /* !CONFIG_PM_RUNTIME */
-+#else /* !CONFIG_PM */
-+#define ufshcd_pltfrm_suspend	NULL
-+#define ufshcd_pltfrm_resume	NULL
- #define ufshcd_pltfrm_runtime_suspend	NULL
- #define ufshcd_pltfrm_runtime_resume	NULL
- #define ufshcd_pltfrm_runtime_idle	NULL
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
- {
-
+ enum {
+-- 
+1.9.3
