@@ -1,42 +1,62 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 02/12] advansys: use shared host tag map for command
-	lookup
-Date: Thu, 4 Dec 2014 10:20:43 +0100
-Message-ID: <20141204092043.GD23891@lst.de>
-References: <1417607105-85455-1-git-send-email-hare@suse.de> <1417607105-85455-3-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 12/12] advansys: Update to version 3.5 and remove
+	compilation warning
+Date: Thu, 4 Dec 2014 10:23:05 +0100
+Message-ID: <20141204092305.GA24091@lst.de>
+References: <1417607105-85455-1-git-send-email-hare@suse.de> <1417607105-85455-13-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57375 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:57387 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753240AbaLDJUq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2014 04:20:46 -0500
+	id S1753332AbaLDJXJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2014 04:23:09 -0500
 Content-Disposition: inline
-In-Reply-To: <1417607105-85455-3-git-send-email-hare@suse.de>
+In-Reply-To: <1417607105-85455-13-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
->  typedef struct asc_scsiq_2 {
-> -	ASC_VADDR srb_ptr;
-> +	__le32 srb_tag;
+>  /* FIXME:
+>   *
+> - *  1. Although all of the necessary command mapping places have the
+> - *     appropriate dma_map.. APIs, the driver still processes its internal
+> - *     queue using bus_to_virt() and virt_to_bus() which are illegal under
+> - *     the API.  The entire queue processing structure will need to be
+> - *     altered to fix this.
+> + *  1. (done)
+>   *  2. Need to add memory mapping workaround. Test the memory mapping.
+>   *     If it doesn't work revert to I/O port access. Can a test be done
+>   *     safely?
+>   *  3. Handle an interrupt not working. Keep an interrupt counter in
+>   *     the interrupt handler. In the timeout function if the interrupt
+>   *     has not occurred then print a message and run in polled mode.
+> - *  4. Need to add support for target mode commands, cf. CAM XPT.
+> - *  5. check DMA mapping functions for failure
+> + *  4. (obsolete)
+> + *  5. (done)
+>   *  6. Use scsi_transport_spi
+>   *  7. advansys_info is not safe against multiple simultaneous callers
+>   *  8. Add module_param to override ISA/VLB ioport array
 
-Given that the tag has no meaning for the hardware why do you
-want to endian switch it?  Keeping the ASC_VADDR for now makes
-it easier to verify the hardware structures don't change.
 
-> @@ -6132,6 +6077,13 @@ static void adv_async_callback(ADV_DVC_VAR *adv_dvc_varp, uchar code)
->  		AdvResetChipAndSB(adv_dvc_varp);
->  		break;
->  
-> +	case ADV_ASYNC_CARRIER_READY_FAILURE:
-> +		/*
-> +		 * Carrier not ready; abort the command.
-> +		 */
-> +		ASC_DBG(0, "ADV_ASYNC_CARRIER_READY_FAILURE\n");
-> +		break;
-> +
+Just drop the done/obsolete items and renumber the rest :)
 
-Where does this one come from?
+> +	if (dma_mapping_error(board->dev, scp->SCp.dma_handle)) {
+> +		ASC_DBG(1, "failed to map sense buffer\n");
+> +		return 0;
+> +	}
+>  	dma_cache_sync(board->dev, scp->sense_buffer,
+>  		       SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
+>  	return cpu_to_le32(scp->SCp.dma_handle);
+> @@ -7794,6 +7794,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+>  	    ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
+>  	asc_scsi_q->q1.sense_addr = advansys_get_sense_buffer_dma(scp);
+>  	asc_scsi_q->q1.sense_len = SCSI_SENSE_BUFFERSIZE;
+> +	if (!asc_scsi_q->q1.sense_addr)
+> +		return ASC_ERROR;
 
+Please split the addition of error handling into a separate patch,
+or in case of newly added mappigns add them to the patch that add the
+mappings.
