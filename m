@@ -1,61 +1,63 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/2] xhci: Add broken-streams quirk for Fresco Logic FL1000G
- xhci controllers
-Date: Fri, 05 Dec 2014 14:15:05 +0300
-Message-ID: <548193B9.5000904@cogentembedded.com>
-References: <1417774289-15025-1-git-send-email-hdegoede@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH] SCSI: SD: set max_ws_blocks as max_unmap_blocks if it isn't provided
+Date: Fri,  5 Dec 2014 20:35:51 +0800
+Message-ID: <1417782952-19908-1-git-send-email-ming.lei@canonical.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:58795 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbaLELPJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2014 06:15:09 -0500
-Received: by mail-la0-f41.google.com with SMTP id hv19so462795lab.14
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Dec 2014 03:15:07 -0800 (PST)
-In-Reply-To: <1417774289-15025-1-git-send-email-hdegoede@redhat.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:57248 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbaLEMhc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2014 07:37:32 -0500
+Received: by mail-pa0-f53.google.com with SMTP id kq14so614857pab.40
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Dec 2014 04:37:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: =?UTF-8?B?TWFyY2luIFphasSFY3prb3dza2k=?= <mszpak@wp.pl>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+To: James Bottomley <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@canonical.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-Hello.
+The commit 7985090aa0201(sd: Disable discard_zeroes_data for UNMAP)
+introduces regresion for QEMU SCSI.
 
-On 12/5/2014 1:11 PM, Hans de Goede wrote:
+QEMU SCSI device claims to support UNMAP, WRITE SAME and WRITE SAME
+16 in LBP VPD page, but only provides "Maximum unmap LBA count"
+in block limits VPD page, and "Maximum write same length" isn't set.
 
-> Streams do not work reliabe on Fresco Logic FL1000G xhci controllers,
+The default max_discard_sectors(SD_MAX_WS16_BLOCKS) can't work at
+all since it is much bigger than the actual Maximum unmap LBA count.
 
-    s/reliabe/reliably/?
+This patch trys to fix the regression by setting 'max_ws_blocks'
+as 'max_unmap_blocks' when block limits VPD page doesn't provide
+"Maximum write same length" under the situation. This approach is
+reasonable because device server supports the use of the WRITE
+SAME or WRITE SAME 10 command to unmap LBAs when LBPWS or LBPWS10
+is set in LBP VPD page.
 
-> trying to use them results in errors like this:
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+---
+ drivers/scsi/sd.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> 21:37:33 kernel: xhci_hcd 0000:04:00.0: ERROR Transfer event for disa=
-bled endpoint or incorrect stream ring
-> 21:37:33 kernel: xhci_hcd 0000:04:00.0: @00000000368b3570 9067b000 00=
-000000 05000000 01078001
-> 21:37:33 kernel: xhci_hcd 0000:04:00.0: ERROR Transfer event for disa=
-bled endpoint or incorrect stream ring
-> 21:37:33 kernel: xhci_hcd 0000:04:00.0: @00000000368b3580 9067b400 00=
-000000 05000000 01038001
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fedab3c..2a69fee 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2624,6 +2624,14 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 
+ 		} else {	/* LBP VPD page tells us what to use */
+ 
++			/*
++			 * Borrow max_unmap_blocks if max_ws_blocks isn't
++			 * provided from block limits VPD page
++			 */
++			if ((sdkp->lbpws10 || sdkp->lbpws) &&
++			    !sdkp->max_ws_blocks)
++				sdkp->max_ws_blocks = sdkp->max_unmap_blocks;
++
+ 			if (sdkp->lbpws)
+ 				sd_config_discard(sdkp, SD_LBP_WS16);
+ 			else if (sdkp->lbpws10)
+-- 
+1.7.9.5
 
-> As always I've ordered a pci-e addon card with a Fresco Logic control=
-ler for
-> myself to see if I can come up with a better fix then the big hammer,=
- in
-> the mean time this will make uas devices work again (in usb-storage m=
-ode)
-> for FL1000G users.
-
-> Reported-by: Marcin Zaj=C4=85czkowski <mszpak@wp.pl>
-> Cc: stable@vger.kernel.org # 3.15
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-
-WBR, Sergei
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
