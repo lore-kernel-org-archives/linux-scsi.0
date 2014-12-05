@@ -1,53 +1,58 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 2/2] uas: Add US_FL_NO_ATA_1X for Seagate devices with usb-id 0bc2:a013
-Date: Fri,  5 Dec 2014 11:11:29 +0100
-Message-ID: <1417774289-15025-2-git-send-email-hdegoede@redhat.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] xhci: Add broken-streams quirk for Fresco Logic FL1000G
+ xhci controllers
+Date: Fri, 05 Dec 2014 14:15:05 +0300
+Message-ID: <548193B9.5000904@cogentembedded.com>
 References: <1417774289-15025-1-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42263 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753223AbaLEKLg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2014 05:11:36 -0500
+Received: from mail-la0-f41.google.com ([209.85.215.41]:58795 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbaLELPJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2014 06:15:09 -0500
+Received: by mail-la0-f41.google.com with SMTP id hv19so462795lab.14
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Dec 2014 03:15:07 -0800 (PST)
 In-Reply-To: <1417774289-15025-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mathias Nyman <mathias.nyman@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: =?UTF-8?q?Marcin=20Zaj=C4=85czkowski?= <mszpak@wp.pl>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: =?UTF-8?B?TWFyY2luIFphasSFY3prb3dza2k=?= <mszpak@wp.pl>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
 
-This is yet another Seagate device which needs the US_FL_NO_ATA_1X quir=
-k
+Hello.
 
-Reported-by: Marcin Zaj=C4=85czkowski <mszpak@wp.pl>
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/unusual_uas.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+On 12/5/2014 1:11 PM, Hans de Goede wrote:
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/un=
-usual_uas.h
-index 18a283d..2918376 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -68,6 +68,13 @@ UNUSUAL_DEV(0x0bc2, 0xa003, 0x0000, 0x9999,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_ATA_1X),
-=20
-+/* Reported-by: Marcin Zaj=C4=85czkowski <mszpak@wp.pl> */
-+UNUSUAL_DEV(0x0bc2, 0xa013, 0x0000, 0x9999,
-+		"Seagate",
-+		"Backup Plus",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_NO_ATA_1X),
-+
- /* https://bbs.archlinux.org/viewtopic.php?id=3D183190 */
- UNUSUAL_DEV(0x0bc2, 0xab20, 0x0000, 0x9999,
- 		"Seagate",
---=20
-2.1.0
+> Streams do not work reliabe on Fresco Logic FL1000G xhci controllers,
+
+    s/reliabe/reliably/?
+
+> trying to use them results in errors like this:
+
+> 21:37:33 kernel: xhci_hcd 0000:04:00.0: ERROR Transfer event for disa=
+bled endpoint or incorrect stream ring
+> 21:37:33 kernel: xhci_hcd 0000:04:00.0: @00000000368b3570 9067b000 00=
+000000 05000000 01078001
+> 21:37:33 kernel: xhci_hcd 0000:04:00.0: ERROR Transfer event for disa=
+bled endpoint or incorrect stream ring
+> 21:37:33 kernel: xhci_hcd 0000:04:00.0: @00000000368b3580 9067b400 00=
+000000 05000000 01038001
+
+> As always I've ordered a pci-e addon card with a Fresco Logic control=
+ler for
+> myself to see if I can come up with a better fix then the big hammer,=
+ in
+> the mean time this will make uas devices work again (in usb-storage m=
+ode)
+> for FL1000G users.
+
+> Reported-by: Marcin Zaj=C4=85czkowski <mszpak@wp.pl>
+> Cc: stable@vger.kernel.org # 3.15
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+WBR, Sergei
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
