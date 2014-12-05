@@ -1,115 +1,56 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
- scanning
-Date: Fri, 5 Dec 2014 00:19:22 +0000
-Message-ID: <1417738774.8998.21.camel@parallels.com>
-References: <1417711162-102950-1-git-send-email-hare@suse.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/4] [SCSI] Blacklist RSOC for Microsoft iSCSI target
+ devices
+Date: Thu, 04 Dec 2014 19:24:39 -0600
+Message-ID: <54810957.8080706@cs.wisc.edu>
+References: <1417659492-2679-1-git-send-email-martin.petersen@oracle.com> <1417659492-2679-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:36833 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaLEATk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2014 19:19:40 -0500
-In-Reply-To: <1417711162-102950-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <424766B1A9F2ED4DA4A59B1B31A3AE94@sw.swsoft.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41223 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751824AbaLEBYs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2014 20:24:48 -0500
+In-Reply-To: <1417659492-2679-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Matthias.Roessler@ts.fujitsu.com" <Matthias.Roessler@ts.fujitsu.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org.#.v3.10+
 
-T24gVGh1LCAyMDE0LTEyLTA0IGF0IDE3OjM5ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQpbLi4uXQ0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jIGIvZHJpdmVy
-cy9zY3NpL3Njc2lfc2Nhbi5jDQo+IGluZGV4IDBhZjcxMzMuLmNhMzllMzIgMTAwNjQ0DQo+IC0t
-LSBhL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9z
-Y2FuLmMNCj4gQEAgLTExOSw2ICsxMTksMTMgQEAgTU9EVUxFX1BBUk1fREVTQyhpbnFfdGltZW91
-dCwNCj4gIAkJICJUaW1lb3V0IChpbiBzZWNvbmRzKSB3YWl0aW5nIGZvciBkZXZpY2VzIHRvIGFu
-c3dlciBJTlFVSVJZLiINCj4gIAkJICIgRGVmYXVsdCBpcyAyMC4gU29tZSBkZXZpY2VzIG1heSBu
-ZWVkIG1vcmU7IG1vc3QgbmVlZCBsZXNzLiIpOw0KPiAgDQo+ICtzdGF0aWMgdW5zaWduZWQgaW50
-IHNjc2lfc2Nhbl90aW1lb3V0ID0gU0NTSV9USU1FT1VUL0haICsgNTg7DQo+ICsNCj4gK21vZHVs
-ZV9wYXJhbV9uYW1lZChzY2FuX3RpbWVvdXQsIHNjc2lfc2Nhbl90aW1lb3V0LCB1aW50LCBTX0lS
-VUdPfFNfSVdVU1IpOw0KPiArTU9EVUxFX1BBUk1fREVTQyhzY2FuX3RpbWVvdXQsDQo+ICsJCSAi
-VGltZW91dCAoaW4gc2Vjb25kcykgd2FpdGluZyBmb3IgZGV2aWNlcyB0byBiZWNvbWUgcmVhZHki
-DQo+ICsJCSAiIGFmdGVyIElOUVVJUlkuIERlZmF1bHQgaXMgNjAuIik7DQo+ICsNCj4gIC8qIFRo
-aXMgbG9jayBwcm90ZWN0cyBvbmx5IHRoaXMgbGlzdCAqLw0KPiAgc3RhdGljIERFRklORV9TUElO
-TE9DSyhhc3luY19zY2FuX2xvY2spOw0KPiAgc3RhdGljIExJU1RfSEVBRChzY2FubmluZ19ob3N0
-cyk7DQo+IEBAIC03MTksMTkgKzcyNiw2IEBAIHN0YXRpYyBpbnQgc2NzaV9wcm9iZV9sdW4oc3Ry
-dWN0IHNjc2lfZGV2aWNlICpzZGV2LCB1bnNpZ25lZCBjaGFyICppbnFfcmVzdWx0LA0KPiAgCX0N
-Cj4gIA0KPiAgCS8qDQo+IC0JICogUmVsYXRlZCB0byB0aGUgYWJvdmUgaXNzdWU6DQo+IC0JICoN
-Cj4gLQkgKiBYWFggRGV2aWNlcyAoZGlzayBvciBhbGw/KSBzaG91bGQgYmUgc2VudCBhIFRFU1Qg
-VU5JVCBSRUFEWSwNCj4gLQkgKiBhbmQgaWYgbm90IHJlYWR5LCBzZW50IGEgU1RBUlRfU1RPUCB0
-byBzdGFydCAobWF5YmUgc3BpbiB1cCkgYW5kDQo+IC0JICogdGhlbiBzZW5kIHRoZSBJTlFVSVJZ
-IGFnYWluLCBzaW5jZSB0aGUgSU5RVUlSWSBjYW4gY2hhbmdlIGFmdGVyDQo+IC0JICogYSBkZXZp
-Y2UgaXMgaW5pdGlhbGl6ZWQuDQoNCllvdSdyZSBub3Qgc2VuZGluZyBhIHN0YXJ0X3N0b3AgdW5p
-dCwgc28gd2h5IGlzIHRoaXMgYmVpbmcgZGVsZXRlZD8gIEFueQ0KdW5zdGFydGVkIHVuaXQgd2ls
-bCBzdGlsbCByZXR1cm4gaW5pdGlhbGl6YXRpb24gY29tbWFuZCByZXF1aXJlZCBhbmQgbWF5DQpv
-ciBtYXkgbm90IHJldHVybiBsdW4gZGF0YS4NCg0KPiAtCSAqDQo+IC0JICogSWRlYWxseSwgc3Rh
-cnQgYSBkZXZpY2UgaWYgZXhwbGljaXRseSBhc2tlZCB0byBkbyBzby4gIFRoaXMNCj4gLQkgKiBh
-c3N1bWVzIHRoYXQgYSBkZXZpY2UgaXMgc3B1biB1cCBvbiBwb3dlciBvbiwgc3B1biBkb3duIG9u
-DQo+IC0JICogcmVxdWVzdCwgYW5kIHRoZW4gc3B1biB1cCBvbiByZXF1ZXN0Lg0KPiAtCSAqLw0K
-PiAtDQo+IC0JLyoNCj4gIAkgKiBUaGUgc2Nhbm5pbmcgY29kZSBuZWVkcyB0byBrbm93IHRoZSBz
-Y3NpX2xldmVsLCBldmVuIGlmIG5vDQo+ICAJICogZGV2aWNlIGlzIGF0dGFjaGVkIGF0IExVTiAw
-IChTQ1NJX1NDQU5fVEFSR0VUX1BSRVNFTlQpIHNvDQo+ICAJICogbm9uLXplcm8gTFVOcyBjYW4g
-YmUgc2Nhbm5lZC4NCj4gQEAgLTc1Niw2ICs3NTAsNjUgQEAgc3RhdGljIGludCBzY3NpX3Byb2Jl
-X2x1bihzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIHVuc2lnbmVkIGNoYXIgKmlucV9yZXN1bHQs
-DQo+ICB9DQo+ICANCj4gIC8qKg0KPiArICogc2NzaV90ZXN0X2x1biAtIHdhaXRpbmcgZm9yIGEg
-TFVOIHRvIGJlY29tZSByZWFkeQ0KPiArICogQHNkZXY6CXNjc2lfZGV2aWNlIHRvIHRlc3QNCj4g
-KyAqDQo+ICsgKiBEZXNjcmlwdGlvbjoNCj4gKyAqICAgICBXYWl0IGZvciB0aGUgbHVuIGFzc29j
-aWF0ZWQgd2l0aCBAc2RldiB0byBiZWNvbWUgcmVhZHkNCj4gKyAqDQo+ICsgKiAgICAgU2VuZCBh
-IFRFU1QgVU5JVCBSRUFEWSB0byBkZXRlY3QgYW55IHVuaXQgYXR0ZW50aW9uIGNvbmRpdGlvbnMu
-DQo+ICsgKiAgICAgUmV0cnkgVEVTVCBVTklUIFJFQURZIGZvciB1cCB0byBAc2NzaV9zY2FuX3Rp
-bWVvdXQgaWYgdGhlDQo+ICsgKiAgICAgcmV0dXJuZWQgc2Vuc2Uga2V5IGlzIDAyLzA0LzAxIChO
-b3QgcmVhZHksIExvZ2ljYWwgVW5pdCBpcw0KPiArICogICAgIGluIHByb2Nlc3Mgb2YgYmVjb21p
-bmcgcmVhZHkpDQo+ICsgKiovDQo+ICtzdGF0aWMgaW50DQo+ICtzY3NpX3Rlc3RfbHVuKHN0cnVj
-dCBzY3NpX2RldmljZSAqc2RldikNCj4gK3sNCj4gKwlzdHJ1Y3Qgc2NzaV9zZW5zZV9oZHIgc3No
-ZHI7DQo+ICsJaW50IHJlcyA9IFNDU0lfU0NBTl9UQVJHRVRfUFJFU0VOVDsNCj4gKwlpbnQgdHVy
-X3Jlc3VsdDsNCj4gKwl1bnNpZ25lZCBsb25nIHR1cl90aW1lb3V0ID0gamlmZmllcyArIHNjc2lf
-c2Nhbl90aW1lb3V0ICogSFo7DQo+ICsNCj4gKwkvKiBTa2lwIGZvciBvbGRlciBkZXZpY2VzICov
-DQo+ICsJaWYgKHNkZXYtPnNjc2lfbGV2ZWwgPD0gU0NTSV8zKQ0KPiArCQlyZXR1cm4gU0NTSV9T
-Q0FOX0xVTl9QUkVTRU5UOw0KPiArDQo+ICsJLyoNCj4gKwkgKiBXYWl0IGZvciB0aGUgZGV2aWNl
-IHRvIGJlY29tZSByZWFkeS4NCj4gKwkgKg0KPiArCSAqIFNvbWUgdGFyZ2V0cyB0YWtlIHNvbWUg
-dGltZSBiZWZvcmUgdGhlIGZpcm13YXJlIGlzDQo+ICsJICogZnVsbHkgaW5pdGlhbGl6ZWQsIGR1
-cmluZyB3aGljaCB0aW1lIHRoZXkgbWlnaHQgbm90DQo+ICsJICogYmUgYWJsZSB0byBmaWxsIG91
-dCBhbnkgUkVQT1JUX0xVTiBjb21tYW5kIGNvcnJlY3RseS4NCj4gKwkgKiBBbmQgYXMgd2UncmUg
-bm90IGNhcGFibGUgb2YgaGFuZGxpbmcgdGhlDQo+ICsJICogSU5RVUlSWSBEQVRBIENIQU5HRUQg
-dW5pdCBhdHRlbnRpb24gY29ycmVjdGx5IHdlJ2QNCj4gKwkgKiByYXRoZXIgd2FpdCBoZXJlLg0K
-DQpDYW4ndCB3ZSBqdXN0IGZpeCB0aGF0PyAgQWxsIHlvdSBuZWVkIGlzIHJlc2NhbiB0byByZS1y
-ZWFkIHRoZSBpbnF1aXJ5DQpkYXRhLg0KDQo+ICsJICovDQo+ICsJZG8gew0KPiArCQl0dXJfcmVz
-dWx0ID0gc2NzaV90ZXN0X3VuaXRfcmVhZHkoc2RldiwgU0NTSV9USU1FT1VULA0KPiArCQkJCQkJ
-CSAgMywgJnNzaGRyKTsNCj4gKwkJaWYgKCF0dXJfcmVzdWx0KSB7DQo+ICsJCQlyZXMgPSBTQ1NJ
-X1NDQU5fTFVOX1BSRVNFTlQ7DQo+ICsJCQlicmVhazsNCj4gKwkJfQ0KPiArCQlpZiAoKGRyaXZl
-cl9ieXRlKHR1cl9yZXN1bHQpICYgRFJJVkVSX1NFTlNFKSAmJg0KPiArCQkgICAgc2NzaV9zZW5z
-ZV92YWxpZCgmc3NoZHIpKSB7DQo+ICsJCQlTQ1NJX0xPR19TQ0FOX0JVUygzLCBzZGV2X3ByaW50
-ayhLRVJOX0lORk8sIHNkZXYsDQo+ICsJCQkJInNjc2lfc2NhbjogdHVyIHJldHVybmVkICUwMngv
-JTAyeC8lMDJ4XG4iLA0KPiArCQkJCXNzaGRyLnNlbnNlX2tleSwgc3NoZHIuYXNjLCBzc2hkci5h
-c2NxKSk7DQoNCklmIHdlJ3JlIHdhaXRpbmcgNjBzIGFuZCBjb21pbmcgaW4gaGVyZSBldmVyeSAx
-MDBtcyB3ZSdsbCBnZXQgNjAwIG9mDQp0aGVzZSBpbiB0aGUgbG9nIC4uLiB0aGF0J3MgZ29pbmcg
-dG8gZHJvd24gb3V0IGFueXRoaW5nIHRoYXQgY2FtZSBiZWZvcmUNCml0Lg0KDQo+ICsJCQlpZiAo
-c3NoZHIuc2Vuc2Vfa2V5ID09IE5PVF9SRUFEWSAmJg0KPiArCQkJICAgIHNzaGRyLmFzYyA9PSAw
-eDA0ICYmIHNzaGRyLmFzY3EgPT0gMHgwMSkgew0KPiArCQkJCS8qIExvZ2ljYWwgVW5pdCBpcyBp
-biBwcm9jZXNzDQo+ICsJCQkJICogb2YgYmVjb21pbmcgcmVhZHkgKi8NCj4gKwkJCQltc2xlZXAo
-MTAwKTsNCj4gKwkJCQljb250aW51ZTsNCj4gKwkJCX0NCj4gKwkJfQ0KPiArCQlyZXMgPSBTQ1NJ
-X1NDQU5fTFVOX1BSRVNFTlQ7DQoNCkFyZW4ndCB5b3UgbWlzc2luZyBhIGJyZWFrIGhlcmU/ICBP
-dGhlcndpc2UgaG93IGRvZXMgYW4gdW5leHBlY3RlZA0KcmV0dXJuIGNvZGUgZnJvbSB0aGUgdGVz
-dCB1bml0IHJlYWR5IGRvIGFueXRoaW5nIG90aGVyIHRoYW4gbG9vcCBhcm91bmQNCmR1bXBpbmcg
-bG9nIG1lc3NhZ2VzIHVudGlsIDYwcyBoYXZlIGV4cGlyZWQuDQoNCj4gKwl9IHdoaWxlICh0aW1l
-X2JlZm9yZV9lcShqaWZmaWVzLCB0dXJfdGltZW91dCkpOw0KPiArCXJldHVybiByZXM7DQo+ICt9
-DQo+ICsNCj4gKy8qKg0KPiAgICogc2NzaV9hZGRfbHVuIC0gYWxsb2NhdGUgYW5kIGZ1bGx5IGlu
-aXRpYWx6ZSBhIHNjc2lfZGV2aWNlDQo+ICAgKiBAc2RldjoJaG9sZHMgaW5mb3JtYXRpb24gdG8g
-YmUgc3RvcmVkIGluIHRoZSBuZXcgc2NzaV9kZXZpY2UNCj4gICAqIEBpbnFfcmVzdWx0Oglob2xk
-cyB0aGUgcmVzdWx0IG9mIGEgcHJldmlvdXMgSU5RVUlSWSB0byB0aGUgTFVODQo+IEBAIC0xMTU5
-LDYgKzEyMTIsMTUgQEAgc3RhdGljIGludCBzY3NpX3Byb2JlX2FuZF9hZGRfbHVuKHN0cnVjdCBz
-Y3NpX3RhcmdldCAqc3RhcmdldCwNCj4gIAkJZ290byBvdXRfZnJlZV9yZXN1bHQ7DQo+ICAJfQ0K
-PiAgDQo+ICsJaWYgKGJmbGFncyAmIEJMSVNUX1RFU1RfTFVOMCkgew0KPiArCQlyZXMgPSBzY3Np
-X3Rlc3RfbHVuKHNkZXYpOw0KPiArCQlpZiAocmVzID09IFNDU0lfU0NBTl9UQVJHRVRfUFJFU0VO
-VCkgew0KPiArCQkJU0NTSV9MT0dfU0NBTl9CVVMoMSwgc2Rldl9wcmludGsoS0VSTl9JTkZPLCBz
-ZGV2LA0KPiArCQkJCSJzY3NpIHNjYW46IGRldmljZSBub3QgcmVhZHlcbiIpKTsNCj4gKwkJCWdv
-dG8gb3V0X2ZyZWVfcmVzdWx0Ow0KPiArCQl9DQo+ICsJfQ0KPiArDQo+ICAJcmVzID0gc2NzaV9h
-ZGRfbHVuKHNkZXYsIHJlc3VsdCwgJmJmbGFncywgc2hvc3QtPmFzeW5jX3NjYW4pOw0KDQpTbyBh
-bnkgcmV0dXJuIG90aGVyIHRoYW4gU0NTSV9TQ0FOX1RBUkdFVF9QUkVTRU5UIGdldHMgdGhyb3du
-IGF3YXkuICBXaHkNCm5vdCBqdXN0IHJldHVybiB0cnVlL2ZhbHNlIGZyb20gdGhlIHNjc2lfdGVz
-dF9sdW4oc2RldikgYW5kIHNldCByZXMgdG8NClNDU0lfU0NBTl9UQVJHRVRfUFJFU0VOVCBpbiB0
-aGUgaWYgY2xhdXNlIGlmIGl0IGZhaWxzPyAgVGhhdCBzaG91bGQNCmdyZWF0bHkgc2ltcGxpZnkg
-dGhlIGxvZ2ljIGluc2lkZSBzY3NpX3Rlc3RfbHVuKCkuDQoNCkphbWVzDQoNCg==
+On 12/3/14, 8:18 PM, Martin K. Petersen wrote:
+> The Microsoft iSCSI target does not support REPORT SUPPORTED OPERATION
+> CODES. Blacklist these devices so we don't attempt to send the command.
+>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: jazz@deti74.ru
+> Cc: Mike Christie <michaelc@cs.wisc.edu>
+> Cc: stable@vger.kernel.org # v3.10+
+> ---
+>   drivers/scsi/scsi_devinfo.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 8c228e049bb6..db42c37e1230 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -210,6 +210,7 @@ static struct {
+>   	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+>   	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+>   	{"MICROP", "4110", NULL, BLIST_NOTQ},
+> +	{"MSFT", "Virtual HD", NULL, BLIST_NO_RSOC},
+>   	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
+>   	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+>   	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>
+
+Thanks Martin.
+
+Tested-by: Mike Christie <michaelc@cs.wisc.edu>
+
+In case other people test this patch, I wanted to warn people that the 
+MS iSCSI target does the same sequence (sends reject PDU then drops the 
+connection on us) for any command it does not support. We end up seeing 
+the same problem for other commands. For example, some distros have 
+tools that send CDB 0x85 during initialization, and the MS target will 
+fail on that in the same way we saw here.
