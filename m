@@ -1,111 +1,96 @@
-From: Rob Evers <revers@redhat.com>
-Subject: [PATCH V5 3/3] scsi: Retry report-luns when reported LU count requres more memory
-Date: Fri,  5 Dec 2014 14:37:43 -0500
-Message-ID: <1417808263-5632-4-git-send-email-revers@redhat.com>
-References: <1417808263-5632-1-git-send-email-revers@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46261 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751549AbaLEThq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2014 14:37:46 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sB5Jbk1K019683
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2014 14:37:46 -0500
-Received: from localhost ([10.18.25.106])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id sB5JbjGC010977
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Dec 2014 14:37:45 -0500
-In-Reply-To: <1417808263-5632-1-git-send-email-revers@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
+ return zeroes after TRIM
+Date: Fri, 5 Dec 2014 22:58:09 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
+ <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Update scsi_report_lun_scan to initially always report up to 511 LUs,
-as the previous default max_report_luns did.  Retry in a loop if not
-enough memory is available for the number of LUs reported.  Parameter
-max_report_luns is removed as it is no longer used.
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Martin K. Petersen
+> Sent: Thursday, 06 November, 2014 11:08 PM
+> To: linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-
+> fsdevel@vger.kernel.org; neilb@suse.de
+> Cc: Martin K. Petersen
+> Subject: [PATCH 1/3] libata: Whitelist SSDs that are known to properly return
+> zeroes after TRIM
+> 
+> As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
+> Zero After Trim) flags in the ATA Command Set are unreliable in the
+> sense that they only define what happens if the device successfully
+> executed the DSM TRIM command. TRIM is only advisory, however, and the
+> device is free to silently ignore all or parts of the request.
+> 
+> In practice this renders the DRAT and RZAT flags completely useless and
+> because the results are unpredictable we decided to disable discard in
+> MD for 3.18 to avoid the risk of data corruption.
+> 
+> Hardware vendors in the real world obviously need better guarantees than
+> what the standards bodies provide. Unfortuntely those guarantees are
+> encoded in product requirements documents rather than somewhere we can
+> key off of them programatically. So we are compelled to disabling
+> discard_zeroes_data for all devices unless we explicitly have data to
+> support whitelisting them.
+> 
+> This patch whitelists SSDs from a few of the main vendors. None of the
+> whitelists are based on written guarantees. They are purely based on
+> empirical evidence collected from internal and external users that have
+> tested or qualified these drives in RAID deployments.
+> 
+> The whitelist is only meant as a starting point and is by no means
+> comprehensive:
+> 
+>    - All intel SSD models except for 510
+>    - Micron M5*
+>    - Samsung SSDs
+>    - Seagate SSDs
+> 
+
+That description and Paolo's reply:
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Paolo Bonzini
+> Sent: Friday, 05 December, 2014 10:45 AM
+...
+> I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
+
+make me concerned about this whitelist approach.
+
+I think you need a manufacturer assertion that this is indeed
+the design intent; you cannot be certain based on observation
+from outside.
+
+Since the SCSI and ATA standards allow ignoring the hint, it 
+might be honored most of the time, but ignored in some rare
+cases (e.g., drive firmware has a malloc() failure that only
+happens when the drive is handling an overtemperature
+condition and six other problems at the same time).
+
+Maybe there should be two levels:
+* vendor asserts the drive is designed to always honor the hint
+* community observes the drive always seems to honor the hint
+
+and a sysfs flag for users to select the level at which 
+they feel safe.
+
+A user running 3 replicas of the data in different sites 
+might be more trusting than a user for which this is the 
+only copy of the data.
+
 ---
- drivers/scsi/scsi_scan.c | 43 ++++++++++++-------------------------------
- 1 file changed, 12 insertions(+), 31 deletions(-)
+Rob Elliott    HP Server Storage
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 8db1f6f..ecd8703 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -80,6 +80,7 @@
- 
- static const char *scsi_null_device_strs = "nullnullnullnull";
- 
-+#define INITIAL_MAX_SCSI_REPORT_LUNS	511
- #define MAX_SCSI_LUNS	512
- 
- static u64 max_scsi_luns = MAX_SCSI_LUNS;
-@@ -99,20 +100,6 @@ char scsi_scan_type[6] = SCSI_SCAN_TYPE_DEFAULT;
- module_param_string(scan, scsi_scan_type, sizeof(scsi_scan_type), S_IRUGO);
- MODULE_PARM_DESC(scan, "sync, async or none");
- 
--/*
-- * max_scsi_report_luns: the maximum number of LUNS that will be
-- * returned from the REPORT LUNS command. 8 times this value must
-- * be allocated. In theory this could be up to an 8 byte value, but
-- * in practice, the maximum number of LUNs suppored by any device
-- * is about 16k.
-- */
--static unsigned int max_scsi_report_luns = 511;
--
--module_param_named(max_report_luns, max_scsi_report_luns, uint, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(max_report_luns,
--		 "REPORT LUNS maximum number of LUNS received (should be"
--		 " between 1 and 16384)");
--
- static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
- 
- module_param_named(inq_timeout, scsi_inq_timeout, uint, S_IRUGO|S_IWUSR);
-@@ -1399,15 +1386,10 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 
- 	/*
- 	 * Allocate enough to hold the header (the same size as one scsi_lun)
--	 * plus the max number of luns we are requesting.
--	 *
--	 * Reallocating and trying again (with the exact amount we need)
--	 * would be nice, but then we need to somehow limit the size
--	 * allocated based on the available memory and the limits of
--	 * kmalloc - we don't want a kmalloc() failure of a huge value to
--	 * prevent us from finding any LUNs on this target.
-+	 * plus the number of luns we are requesting.
- 	 */
--	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
-+	length = (INITIAL_MAX_SCSI_REPORT_LUNS + 1) * sizeof(struct scsi_lun);
-+retry:
- 	lun_data = kmalloc(length, GFP_KERNEL |
- 			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
- 	if (!lun_data) {
-@@ -1473,17 +1455,16 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	/*
- 	 * Get the length from the first four bytes of lun_data.
- 	 */
--	length = get_unaligned_be32(lun_data->scsi_lun);
-+	if (get_unaligned_be32(lun_data->scsi_lun) +
-+	    sizeof(struct scsi_lun) > length) {
-+		length = get_unaligned_be32(lun_data->scsi_lun) +
-+			 sizeof(struct scsi_lun);
-+		kfree(lun_data);
-+		goto retry;
-+	} else
-+		length = get_unaligned_be32(lun_data->scsi_lun);
- 
- 	num_luns = (length / sizeof(struct scsi_lun));
--	if (num_luns > max_scsi_report_luns) {
--		sdev_printk(KERN_WARNING, sdev,
--			    "Only %d (max_scsi_report_luns)"
--			    " of %d luns reported, try increasing"
--			    " max_scsi_report_luns.\n",
--			    max_scsi_report_luns, num_luns);
--		num_luns = max_scsi_report_luns;
--	}
- 
- 	SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
- 		"scsi scan: REPORT LUN scan\n"));
--- 
-1.8.3.1
+
+
 
