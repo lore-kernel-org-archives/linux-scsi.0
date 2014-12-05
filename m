@@ -1,61 +1,68 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v4] scsi: ufs: add support of generic PHY and ICE in Qualcomm
- chips
-Date: Fri, 5 Dec 2014 20:28:01 +0530
-Message-ID: <5481C7F9.1020909@ti.com>
-References: <1417104021-2997-1-git-send-email-ygardi@codeaurora.org> <20141204155451.GA29255@infradead.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH] SCSI: SD: set max_ws_blocks as max_unmap_blocks if it
+ isn't provided
+Date: Fri, 05 Dec 2014 16:43:50 +0100
+Message-ID: <5481D2B6.2050104@redhat.com>
+References: <1417782952-19908-1-git-send-email-ming.lei@canonical.com>	<yq1r3wefe6o.fsf@sermon.lab.mkp.net>	<CACVXFVMB4GT2XewVh3CbamJUqb2VbaW=4yxJnQjw39z1rBgdNw@mail.gmail.com>	<yq1mw72fczo.fsf@sermon.lab.mkp.net>	<CACVXFVO-faCX-yHhrvb=Rt8TS9WcVT2nSMXEbss6mOhaKfC49g@mail.gmail.com>	<yq1iohqfc7i.fsf@sermon.lab.mkp.net>	<CACVXFVM7A2Y+g8gQL4-LMcvp-qpx6kuKbr51gx4paGe1NLyb2A@mail.gmail.com> <yq1egsefbbo.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44373 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaLEO6v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2014 09:58:51 -0500
-In-Reply-To: <20141204155451.GA29255@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36311 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750896AbaLEPoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Dec 2014 10:44:04 -0500
+In-Reply-To: <yq1egsefbbo.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Grant Likely <grant.likely@linaro.org>, Christoph Hellwig <hch@lst.de>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Sahitya Tummala <stummala@codeaurora.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Ming Lei <ming.lei@canonical.com>
+Cc: James Bottomley <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
 
 
-On Thursday 04 December 2014 09:24 PM, Christoph Hellwig wrote:
-> On Thu, Nov 27, 2014 at 05:59:58PM +0200, Yaniv Gardi wrote:
->> In this change we add support to the generic PHY framework.
->> Two UFS phys are implemented:
->> qmp-20nm and qmp-28nm.
->>
->> Also, the files in this change implement the UFS HW (controller & PHY)
->> specific behavior in Qualcomm chips.
->> Relocation of a few header files is needed in order to expose routines
->> and data structures between PHY driver and UFS driver.
->>
->> Also, this change include the implementation of Inline Crypto Engine (ICE)
->> in Qualcomm chips.
+On 05/12/2014 14:58, Martin K. Petersen wrote:
+>>>>>> "Ming" == Ming Lei <ming.lei@canonical.com> writes:
 > 
-> This whole patch is a mess.  It does way to many things in one patch,
-> and it doesn't explain enough of it.
+>>> What about in READ CAPACITY(16)?
 > 
-> Please explain why you need it.  Especially as the PHY API is a generic
-> phy abstraction, so having to share defintions between the provider and
-> consumer seems wrong.  Even if you need some shared bits keep them to an
-> absolute minium insted of moving so much out of the driver directory.
-> Also if at all possible keep the shared data in a single header under
-> include/linux instead of having lots of global headers in a deep
-> directory structure.
+> Ming> It isn't set too.
 > 
-> Second split this into patches that do a single things, and explain why
-> you're doing each:
+> Please try the following patch:
 > 
->  1) header move if/as needed
->  2) add 20nm phy driver
->  3) add 28nm phy driver
->  4) add ufs-qcom driver
->  5) add ufs-qcom-ice support
 > 
-> and so on.
+> [SCSI] sd: Tweak discard heuristics to work around QEMU SCSI issue
+> 
+> 7985090aa020 changed the discard heuristics to give preference to the
+> WRITE SAME commands that (unlike UNMAP) guarantee deterministic results.
+> 
+> Ming Lei discovered that QEMU SCSI's WRITE SAME implementation
+> internally relied on limits that were only communicated for the UNMAP
+> case. And therefore discard commands backed by WRITE SAME would fail.
+> 
+> Tweak the heuristics so we still pick UNMAP in the LBPRZ=0 case and only
+> prefer the WRITE SAME variants if the device has the LBPRZ flag set.
+> 
+> Reported-by: Ming Lei <ming.lei@canonical.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 95bfb7bfbb9d..76c5d1388417 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2623,8 +2623,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+>  				sd_config_discard(sdkp, SD_LBP_WS16);
+>  
+>  		} else {	/* LBP VPD page tells us what to use */
+> -
+> -			if (sdkp->lbpws)
+> +			if (sdkp->lbpu && sdkp->max_unmap_blocks && !sdkp->lbprz)
+> +				sd_config_discard(sdkp, SD_LBP_UNMAP);
+> +			else if (sdkp->lbpws)
+>  				sd_config_discard(sdkp, SD_LBP_WS16);
+>  			else if (sdkp->lbpws10)
+>  				sd_config_discard(sdkp, SD_LBP_WS10);
+> 
 
-+1
+This is the right fix.  Ming, how do you reproduce the QEMU bug?
 
--Kishon
+Acked-by: Paolo Bonzini <pbonzini@redhat.com>
