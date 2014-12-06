@@ -1,38 +1,55 @@
-From: nicole dulac <nicoledulac01@gmail.com>
-Subject: Vorgeschlagene Finanzdarlehen...
-Date: Sat, 6 Dec 2014 19:50:30 +0100
-Message-ID: <CA+=uMqtF2ppC4XCB8ujRRCBm6cyJMvm_jwCkf7cz1hS3NCQtmw__33280.3717501976$1417891866$gmane$org@mail.gmail.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [BUG] kzalloc overflow in lpfc driver on 6k core system
+Date: Sat, 6 Dec 2014 15:14:45 -0500
+Message-ID: <548363B5.1040909@emulex.com>
+References: <20141202215810.GT4720@sgi.com> <94D0CD8314A33A4D9D801C0FE68B4029593EFC9E@G4W3202.americas.hpqcorp.net> <20141203160546.GA4720@sgi.com>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f194.google.com ([209.85.212.194]:59612 "EHLO
-	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbaLFSuc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Dec 2014 13:50:32 -0500
-Received: by mail-wi0-f194.google.com with SMTP id l15so679481wiw.9
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Dec 2014 10:50:31 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141203160546.GA4720@sgi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Thorlton <athorlton@sgi.com>
+Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Vorgeschlagene Finanzdarlehen
-Ich bin ein und bietet privater Investor Raha Darlehen f=C3=BCr alle
-Personen, zu haben und gute Manieren in der Lage, mit einem Zinssatz
-von und 3% einer von Laufzeit 1-30 aastat zur=C3=BCck, von der abh=C3=A4=
-ngig
-gew=C3=BCnschten Menge.
-Ich will meine Br=C3=BCder und einfach nur Schwestern surevad finanziel=
-len
-Schwierigkeiten sind, und sind von den Banken Daher f=C3=BCr weitere
-Informationen zu helfen abgelehnt, kontaktieren saatke mulle bitte koht=
-a
-E-Mail: nicoledulac01@gmail.com
-PS: Ich werde auch zu geben Meinen Vollen Namen, ist nichts verborgen,
-Weil ich mit Vertrauen und Ehrlichkeit. In Wartestellung ...
-nicoledulac01@gmail.com
-nicoledulac01@gmail.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alex,
+
+Myself and several others here at Emulex maintain the code. The 
+recommendations look fine.   Feel free to post something if you beat us 
+to the work.
+
+-- james s
+
+
+On 12/3/2014 11:05 AM, Alex Thorlton wrote:
+> On Tue, Dec 02, 2014 at 10:39:40PM +0000, Elliott, Robert (Server Storage) wrote:
+>> In similar code, mpt3sas and lockless hpsa just call get_cpu_mask()
+>> inside the loop:
+>>          cpu = cpumask_first(cpu_online_mask);
+>>          for (i = 0; i < h->msix_vector; i++) {
+>>                  rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
+>>                  cpu = cpumask_next(cpu, cpu_online_mask);
+>>          }
+>>
+>> get_cpu_mask() uses the global cpu_bit_bitmap array, which is declared
+>> in kernel/cpu.c:
+>> extern const unsigned long
+>>          cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)];
+>>
+>> That approach should work for lpfc.
+> Ok, good deal.  Thanks for the info, Robert.  Do you know who the
+> current maintainer is for this code?  Would that be you?  I included the
+> two authors that get_maintainer reported, but haven't heard from them.
+>
+> I like this approach and don't mind implementing it myself, but I'd like
+> to confirm that whoever would be responsible for merging the code is ok
+> with the change before going forward.  Of course, if the code has been
+> orphaned, then I guess we just write away :)
+>
+> Thanks again for the help!
+>
+> - Alex
+>
+>
