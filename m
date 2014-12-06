@@ -1,60 +1,94 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH RESEND 0/5] Feature enhancements for ses module
-Date: Sat, 6 Dec 2014 00:27:02 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AAEBCC5BF6@PRN-MBX02-4.TheFacebook.com>
-References: <1417824557-13470-1-git-send-email-songliubraving@fb.com>
+Subject: [PATCH RESEND 3/5] SES: add enclosure logical id
+Date: Sat, 6 Dec 2014 00:27:05 +0000
+Message-ID: <C709E4D363AAB64590BFAC54D4C478AAEBCC5C22@PRN-MBX02-4.TheFacebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:18416 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752213AbaLFA1b convert rfc822-to-8bit
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:36669 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752243AbaLFA1d convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2014 19:27:31 -0500
-In-Reply-To: <1417824557-13470-1-git-send-email-songliubraving@fb.com>
+	Fri, 5 Dec 2014 19:27:33 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, Christoph Hellwig <hch@infradead.org>
 
-These patches include a few enhancements to ses module:
+From: Dan Williams <dan.j.williams@intel.com>
 
-1: close potential race condition by at enclosure race condition
+Export the NAA logical id for the enclosure.  This is optionally available from the sas_transport_class, but it is really a property of the enclosure.
 
-2,3,4: add enclosure id and device slot, so we can create symlink
-       in /dev/disk/by-slot:
-  # ls -d /dev/disk/by-slot/*
-    /dev/disk/by-slot/enclosure-0x5000ae41fc1310ff-slot0
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Reviewed-by: Jens Axboe <axboe@fb.com>
+Cc: Hannes Reinecke <hare@suse.de>
+---
+ drivers/misc/enclosure.c  | 13 +++++++++++++
+ drivers/scsi/ses.c        |  9 +++++++++
+ include/linux/enclosure.h |  1 +
+ 3 files changed, 23 insertions(+)
 
-5: add ability to power on/off device with power_status file in
-   sysfs.
-
-Due to the complexity of SES standard, the module is not to replace implement all features (which is the goal of sg_ses from sg3_utils). Patch 5 and existing features for device element and array device elements control of HDDs. It is helpful to handle some HDD related fields in the kernel, as the kernel can generate mapping between a device to the SES device element (or array device element): 
-
-/sys/block/sdc/device/enclosure_deviceXXX/
-
-With patch 5, we can easily power off a running HDD by 
-
-echo off > /sys/block/sdc/device/enclosure_deviceXXX/power_status
-
-This is very useful for systems like Cold Storage, where HDDs are being powered \ on/off frequently
-
-Dan Williams (4):
-  SES: close potential registration race
-  SES: generate KOBJ_CHANGE on enclosure attach
-  SES: add enclosure logical id
-  SES: add reliable slot attribute
-
-Song Liu (1):
-  SES: Add power_status to SES enclosure component
-
- drivers/misc/enclosure.c  | 107 +++++++++++++++++++++++++++++----
- drivers/scsi/ses.c        | 148 +++++++++++++++++++++++++++++++++++++++-------
- include/linux/enclosure.h |  13 +++-
- 3 files changed, 232 insertions(+), 36 deletions(-)
-
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c index 15faf61..18b87de 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -395,8 +395,21 @@ static ssize_t components_show(struct device *cdev,  }  static DEVICE_ATTR_RO(components);
+ 
++static ssize_t id_show(struct device *cdev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct enclosure_device *edev = to_enclosure_device(cdev);
++
++	if (edev->cb->show_id)
++		return edev->cb->show_id(edev, buf);
++	return -EINVAL;
++}
++static DEVICE_ATTR_RO(id);
++
+ static struct attribute *enclosure_class_attrs[] = {
+ 	&dev_attr_components.attr,
++	&dev_attr_id.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(enclosure_class);
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c index 87cf970b..696d5d8 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -258,6 +258,14 @@ static int ses_set_active(struct enclosure_device *edev,
+ 	return ses_set_page2_descriptor(edev, ecomp, desc);  }
+ 
++static int ses_show_id(struct enclosure_device *edev, char *buf) {
++	struct ses_device *ses_dev = edev->scratch;
++	unsigned long long id = get_unaligned_be64(ses_dev->page1+8+4);
++
++	return sprintf(buf, "%#llx\n", id);
++}
++
+ static struct enclosure_component_callbacks ses_enclosure_callbacks = {
+ 	.get_fault		= ses_get_fault,
+ 	.set_fault		= ses_set_fault,
+@@ -265,6 +273,7 @@ static struct enclosure_component_callbacks ses_enclosure_callbacks = {
+ 	.get_locate		= ses_get_locate,
+ 	.set_locate		= ses_set_locate,
+ 	.set_active		= ses_set_active,
++	.show_id		= ses_show_id,
+ };
+ 
+ struct ses_host_edev {
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h index a835d33..807622b 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -79,6 +79,7 @@ struct enclosure_component_callbacks {
+ 	int (*set_locate)(struct enclosure_device *,
+ 			  struct enclosure_component *,
+ 			  enum enclosure_component_setting);
++	int (*show_id)(struct enclosure_device *, char *buf);
+ };
+ 
+ 
 --
 1.8.1
 
