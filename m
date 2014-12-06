@@ -1,57 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 0/4] scsi_debug: Unit Attention fixes/enhancements
-Date: Sat, 06 Dec 2014 11:38:50 -0500
-Message-ID: <5483311A.703@interlog.com>
-References: <1417711768-24167-1-git-send-email-emilne@redhat.com>
-Reply-To: dgilbert@interlog.com
+From: nicole dulac <nicoledulac01@gmail.com>
+Subject: Vorgeschlagene Finanzdarlehen...
+Date: Sat, 6 Dec 2014 19:50:30 +0100
+Message-ID: <CA+=uMqtF2ppC4XCB8ujRRCBm6cyJMvm_jwCkf7cz1hS3NCQtmw__33280.3717501976$1417891866$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53230 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903AbaLFQjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Dec 2014 11:39:11 -0500
-In-Reply-To: <1417711768-24167-1-git-send-email-emilne@redhat.com>
+Received: from mail-wi0-f194.google.com ([209.85.212.194]:59612 "EHLO
+	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbaLFSuc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Dec 2014 13:50:32 -0500
+Received: by mail-wi0-f194.google.com with SMTP id l15so679481wiw.9
+        for <linux-scsi@vger.kernel.org>; Sat, 06 Dec 2014 10:50:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On 14-12-04 11:49 AM, Ewan D. Milne wrote:
-> From: "Ewan D. Milne" <emilne@redhat.com>
->
-> This patch series fixes a couple of problems in the code to generate UAs
-> when "virtual_gb" is changed, and adds the generation of a UA when "max_luns"
-> is changed.  It also adds the generation of a UA when a WRITE BUFFER
-> command is issued.
->
-> Patches were generated against jejb for-next branch, with Doug Gilbert's
-> earlier patches applied.
->
-> Ewan D. Milne (4):
->    scsi_debug: Fixed missing "break;" in SDEBUG_UA_CAPACITY_CHANGED case
->    scsi_debug: Added taking of sdebug_host_list_lock when changing
->      capacity
->    scsi_debug: Add REPORTED LUNS DATA HAS CHANGED Unit Attention
->    scsi_debug: Implement WRITE BUFFER command
->
->   drivers/scsi/scsi_debug.c | 131 ++++++++++++++++++++++++++++++++++++++++++++--
->   1 file changed, 128 insertions(+), 3 deletions(-)
-
-Great work. I have acked and tested each item (i.e. 1 through 4).
-
-I have some other scsi_debug clean ups (e.g. neuter
-the host_lock option) but they can wait until the 3.20 series.
-
-
-BTW I did notice a small regression compared to the existing
-"big switch" version of the scsi_debug driver: the VERIFY and the
-PREVENT ALLOW MEDIUM REMOVAL commands were accepted (but did
-little). Now they are rejected. If that bites anyone, it could
-be corrected as a bug fix in 3.19 .
-
-Doug Gilbert
-
-
-
-
+Vorgeschlagene Finanzdarlehen
+Ich bin ein und bietet privater Investor Raha Darlehen f=C3=BCr alle
+Personen, zu haben und gute Manieren in der Lage, mit einem Zinssatz
+von und 3% einer von Laufzeit 1-30 aastat zur=C3=BCck, von der abh=C3=A4=
+ngig
+gew=C3=BCnschten Menge.
+Ich will meine Br=C3=BCder und einfach nur Schwestern surevad finanziel=
+len
+Schwierigkeiten sind, und sind von den Banken Daher f=C3=BCr weitere
+Informationen zu helfen abgelehnt, kontaktieren saatke mulle bitte koht=
+a
+E-Mail: nicoledulac01@gmail.com
+PS: Ich werde auch zu geben Meinen Vollen Namen, ist nichts verborgen,
+Weil ich mit Vertrauen und Ehrlichkeit. In Wartestellung ...
+nicoledulac01@gmail.com
+nicoledulac01@gmail.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
