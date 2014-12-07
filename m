@@ -1,55 +1,103 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [BUG] kzalloc overflow in lpfc driver on 6k core system
-Date: Sat, 6 Dec 2014 15:14:45 -0500
-Message-ID: <548363B5.1040909@emulex.com>
-References: <20141202215810.GT4720@sgi.com> <94D0CD8314A33A4D9D801C0FE68B4029593EFC9E@G4W3202.americas.hpqcorp.net> <20141203160546.GA4720@sgi.com>
-Reply-To: <james.smart@emulex.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 00/12] nobody loves the advansys driver
+Date: Sun, 7 Dec 2014 15:44:24 +0100
+Message-ID: <201412071544.25049.linux@rainbow-software.org>
+References: <1417607105-85455-1-git-send-email-hare@suse.de> <201412031929.14767.linux@rainbow-software.org> <54800975.2050606@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141203160546.GA4720@sgi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alex Thorlton <athorlton@sgi.com>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-1.atlantis.sk ([80.94.52.57]:55714 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751224AbaLGOpW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2014 09:45:22 -0500
+In-Reply-To: <54800975.2050606@suse.de>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-Alex,
+On Thursday 04 December 2014 08:12:53 Hannes Reinecke wrote:
+> On 12/03/2014 07:29 PM, Ondrej Zary wrote:
+> > On Wednesday 03 December 2014 12:44:53 Hannes Reinecke wrote:
+> >> Hi all,
+> >>
+> >> it has been bugged me for ages that the advansys driver always
+> >> reported a compilation warning about not having been converted
+> >> to the DMA-API.
+> >> And even aggressive waiting hasn't made this warning go away.
+> >>
+> >> So here's a patchset to update the advansys driver to current
+> >> standards and use the DMA-API.
+> >> Tested on ABP940-U2W.
+> >>
+> >> As usual, reviews and comments are welcome.
+> >>
+> >> Hannes Reinecke (12):
+> >>   advansys: use host_reset
+> >>   advansys: use shared host tag map for command lookup
+> >>   advansys: use DMA-API for mapping sense buffer
+> >>   advansys: Use DMA-API for carrier buffer
+> >>   advansys: Use DMA-API for mapping request blocks
+> >>   advansys: Use dma_pool for sg elements
+> >>   advansys: use 'bool' instead of 'int'
+> >>   advansys: use standard data types
+> >>   advansys: Remove 'TRUE' and 'FALSE' definitions
+> >>   advansys: Remove 'ERR' definition
+> >>   advansys: cleanup function return codes
+> >>   advansys: Update to version 3.5 and remove compilation warning
+> >>
+> >>  MAINTAINERS             |    1 +
+> >>  drivers/scsi/advansys.c | 1073
+> >> +++++++++++++++++++++-------------------------- 2 files changed, 469
+> >> insertions(+), 605 deletions(-)
+> >
+> > Seems to break narrow boards, at least mine ASB-3940UA :(
+> >
+> > [    4.266292] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
+> > [    7.661374] scsi host2: AdvanSys SCSI 3.5: PCI Ultra: IO
+> > 0xA800-0xA80F, IRQ 0x9 [   28.840078] scsi 2:0:0:0: SCSI bus reset
+> > started...
+> > [   28.846640] scsi 2:0:0:0: SCSI bus reset error: 0x2, status: 0x0
+> > [   28.846648] scsi 2:0:0:0: Device offlined - not ready after error
+> > recovery [   28.846803] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code
+> > 0x2 [   28.852052] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [
+> >   28.860051] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.868047] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.868249] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.876050] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.884048] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.892047] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.892243] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.900051] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.908048] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.916047] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.916241] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.924051] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.932048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.940048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.940240] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.948051] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.956049] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.964047] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.964239] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.972050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.980048] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
+> > 28.988050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
+> >
+> > Before the patch:
+> > [    4.226690] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
+> > [    7.644841] scsi host2: AdvanSys SCSI 3.4: PCI Ultra: IO
+> > 0xA800-0xA80F, IRQ 0x9 [    8.072257] scsi 2:0:2:0: Processor         HP 
+> >      C1790A           3226 PQ: 0 ANSI: 2 [    8.919128] scsi 2:0:2:0:
+> > Attached scsi generic sg3 type 3
+>
+> Right. So _this_ was the mysterious command about srb_tag '0' being
+> reserved. Can you try with this patch?
 
-Myself and several others here at Emulex maintain the code. The 
-recommendations look fine.   Feel free to post something if you beat us 
-to the work.
+Thanks, it fixes the problem.
 
--- james s
-
-
-On 12/3/2014 11:05 AM, Alex Thorlton wrote:
-> On Tue, Dec 02, 2014 at 10:39:40PM +0000, Elliott, Robert (Server Storage) wrote:
->> In similar code, mpt3sas and lockless hpsa just call get_cpu_mask()
->> inside the loop:
->>          cpu = cpumask_first(cpu_online_mask);
->>          for (i = 0; i < h->msix_vector; i++) {
->>                  rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
->>                  cpu = cpumask_next(cpu, cpu_online_mask);
->>          }
->>
->> get_cpu_mask() uses the global cpu_bit_bitmap array, which is declared
->> in kernel/cpu.c:
->> extern const unsigned long
->>          cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)];
->>
->> That approach should work for lpfc.
-> Ok, good deal.  Thanks for the info, Robert.  Do you know who the
-> current maintainer is for this code?  Would that be you?  I included the
-> two authors that get_maintainer reported, but haven't heard from them.
->
-> I like this approach and don't mind implementing it myself, but I'd like
-> to confirm that whoever would be responsible for merging the code is ok
-> with the change before going forward.  Of course, if the code has been
-> orphaned, then I guess we just write away :)
->
-> Thanks again for the help!
->
-> - Alex
->
->
+-- 
+Ondrej Zary
