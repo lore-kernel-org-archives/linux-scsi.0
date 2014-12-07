@@ -1,208 +1,119 @@
 From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 0/20] fix misspelling of current function in string
-Date: Sun,  7 Dec 2014 20:20:42 +0100
-Message-ID: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, linux@rasmusvillemoes.dk, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org, joe@perches.com, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 9/20] drivers/scsi: fix misspelling of current function in string
+Date: Sun,  7 Dec 2014 20:20:51 +0100
+Message-ID: <1417980062-25151-10-git-send-email-Julia.Lawall@lip6.fr>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk, joe@perches.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-These patches replace what appears to be a reference to the name of the
-current function but is misspelled in some way by either the name of the
-function itself, or by %s and then __func__ in an argument list.
+Replace a misspelled function name by %s and then __func__.
 
-// <smpl>
-// sudo apt-get install python-pip
-// sudo pip install python-Levenshtein
-// spatch requires the argument --in-place
+This was done using Coccinelle, including the use of Levenshtein distance,
+as proposed by Rasmus Villemoes.
 
-virtual after_start
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-@initialize:ocaml@
-@@
+---
+The semantic patch is difficult to summarize, but is available in the cover
+letter of this patch series.
 
-let extensible_functions = ref ([] : string list)
-let restarted = ref false
+ drivers/scsi/atp870u.c   |   10 +++++-----
+ drivers/scsi/imm.c       |    2 +-
+ drivers/scsi/initio.c    |    2 +-
+ drivers/scsi/ncr53c8xx.c |    3 ++-
+ drivers/scsi/ppa.c       |    2 +-
+ 5 files changed, 10 insertions(+), 9 deletions(-)
 
-let restart _ =
-  restarted := true;
-  let it = new iteration() in
-  it#add_virtual_rule After_start;
-  Printf.eprintf "restarting\n";
-  it#register()
-
-@initialize:python@
-@@
-import re
-from Levenshtein import distance
-mindist = 1 // 1 to find only misspellings
-maxdist = 2
-ignore_leading = True
-
-// ---------------------------------------------------------------------
-
-@r0@
-constant char [] c;
-identifier f;
-@@
-
-f(...,c,...)
-
-@script:ocaml@
-c << r0.c;
-f << r0.f;
-@@
-
-(if not !restarted then restart());
-match Str.split_delim (Str.regexp "%") c with
-  _::_::_ ->
-    if not (List.mem f !extensible_functions)
-    then extensible_functions := f :: !extensible_functions
-| _ -> ()
-
-// ---------------------------------------------------------------------
-
-@r depends on after_start@
-constant char [] c;
-position p;
-identifier f;
-@@
-
-f(...,c@p,...)
-
-@script:python flt@
-c << r.c;
-p << r.p;
-matched;
-@@
-
-func = p[0].current_element
-wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
-if ignore_leading:
-   func = func.strip("_")
-   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
-lf = len(func)
-cocci.include_match(False)
-// ignore extremely short function names
-if lf > 3:
-   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
-   for w in words:
-       d = distance(w, func) 
-       if mindist <= d and d <= maxdist:
-          coccinelle.matched = w
-          cocci.include_match(True)
-     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
-	  break
-
-@script:ocaml r2@
-c << r.c;
-f << r.f;
-matched << flt.matched;
-fixed;
-@@
-
-let pieces = Str.split_delim (Str.regexp_string matched) c in
-match pieces with
-  [before;after] ->
-    let preceeding =
-      List.length(Str.split (Str.regexp_string "%") before) > 1 in
-    if preceeding
-    then Coccilib.include_match false
-    else
-      if List.mem f !extensible_functions
-      then fixed := before ^ "%s" ^ after
-      else Coccilib.include_match false
-| _ -> Coccilib.include_match false
-
-@changed1@
-constant char [] r.c;
-identifier r2.fixed;
-position r.p;
-identifier r.f;
-@@
-
-f(...,
--c@p
-+fixed,__func__
- ,...)
-
-// -------------------------------------------------------------------
-
-@s depends on after_start@
-constant char [] c;
-position p;
-identifier f;
-@@
-
-f(...,c@p,...)
-
-@script:python flt2@
-c << s.c;
-p << s.p;
-matched;
-@@
-
-func = p[0].current_element
-wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
-if ignore_leading:
-   func = func.strip("_")
-   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
-lf = len(func)
-cocci.include_match(False)
-// ignore extremely short function names
-if lf > 3:
-   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
-   for w in words:
-       d = distance(w, func) 
-       if mindist <= d and d <= maxdist:
-          coccinelle.matched = w
-          cocci.include_match(True)
-     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
-	  break
-
-@script:ocaml s2@
-c << s.c;
-f << s.f;
-p << s.p;
-matched << flt2.matched;
-fixed;
-@@
-
-let ce = (List.hd p).current_element in
-let pieces = Str.split_delim (Str.regexp_string matched) c in
-match pieces with
-  [before;after] ->
-    let preceeding =
-      List.length(Str.split (Str.regexp_string "%") before) > 1 in
-    if preceeding
-    then Coccilib.include_match false
-    else
-      if List.mem f !extensible_functions
-      then Coccilib.include_match false
-      else fixed := before ^ ce ^ after
-| _ -> Coccilib.include_match false
-
-@changed2@
-constant char [] s.c;
-identifier s2.fixed;
-position s.p;
-identifier s.f;
-@@
-
-f(...,
--c@p
-+fixed
- ,...)
-// </smpl>
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index e5dae7b..85fd163 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -1034,7 +1034,7 @@ static int initio_bad_seq(struct initio_host * host)
+ {
+ 	struct scsi_ctrl_blk *scb;
+ 
+-	printk("initio_bad_seg c=%d\n", host->index);
++	printk("%s c=%d\n", __func__, host->index);
+ 
+ 	if ((scb = host->active) != NULL) {
+ 		initio_unlink_busy_scb(host, scb);
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index 5b93ed8..347fb49 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -772,7 +772,8 @@ static int __init sym53c8xx__setup(char *str)
+ 			break;
+ #endif
+ 		default:
+-			printk("sym53c8xx_setup: unexpected boot option '%.*s' ignored\n", (int)(pc-cur+1), cur);
++			printk("%s: unexpected boot option '%.*s' ignored\n",
++			       __func__, (int)(pc-cur+1), cur);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+index 1db8b26..4c1f08e 100644
+--- a/drivers/scsi/ppa.c
++++ b/drivers/scsi/ppa.c
+@@ -365,7 +365,7 @@ static int ppa_in(ppa_struct *dev, char *buffer, int len)
+ 		break;
+ 
+ 	default:
+-		printk(KERN_ERR "PPA: bug in ppa_ins()\n");
++		printk(KERN_ERR "PPA: bug in %s()\n", __func__);
+ 		r = 0;
+ 		break;
+ 	}
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index a795d81..ebb4556 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -3016,12 +3016,12 @@ flash_ok_885:
+ 			goto scsi_add_fail;
+ 		scsi_scan_host(shpnt);
+ #ifdef ED_DBGP			
+-		printk("atp870u_prob : exit\n");
++		printk("%s : exit\n", __func__);
+ #endif		
+ 		return 0;
+ 
+ scsi_add_fail:
+-	printk("atp870u_prob:scsi_add_fail\n");
++	printk("%s:scsi_add_fail\n", __func__);
+ 	if(ent->device==ATP885_DEVID) {
+ 		release_region(base_io, 0xff);
+ 	} else if((ent->device==ATP880_DEVID1)||(ent->device==ATP880_DEVID2)) {
+@@ -3030,13 +3030,13 @@ scsi_add_fail:
+ 		release_region(base_io, 0x40);
+ 	}
+ request_io_fail:
+-	printk("atp870u_prob:request_io_fail\n");
++	printk("%s:request_io_fail\n", __func__);
+ 	free_irq(pdev->irq, shpnt);
+ free_tables:
+-	printk("atp870u_prob:free_table\n");
++	printk("%s:free_table\n", __func__);
+ 	atp870u_free_tables(shpnt);
+ unregister:
+-	printk("atp870u_prob:unregister\n");
++	printk("%s:unregister\n", __func__);
+ 	scsi_host_put(shpnt);
+ 	return -1;		
+ err_eio:
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 89a8266..1f2a668 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -439,7 +439,7 @@ static int imm_in(imm_struct *dev, char *buffer, int len)
+ 		break;
+ 
+ 	default:
+-		printk("IMM: bug in imm_ins()\n");
++		printk("IMM: bug in %s()\n", __func__);
+ 		r = 0;
+ 		break;
+ 	}
