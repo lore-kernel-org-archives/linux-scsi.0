@@ -1,103 +1,61 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 00/12] nobody loves the advansys driver
-Date: Sun, 7 Dec 2014 15:44:24 +0100
-Message-ID: <201412071544.25049.linux@rainbow-software.org>
-References: <1417607105-85455-1-git-send-email-hare@suse.de> <201412031929.14767.linux@rainbow-software.org> <54800975.2050606@suse.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: bfa: bfa_fcpim.c:  Remove unused function
+Date: Sun,  7 Dec 2014 18:26:02 +0100
+Message-ID: <1417973162-13148-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:55714 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbaLGOpW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2014 09:45:22 -0500
-In-Reply-To: <54800975.2050606@suse.de>
-Content-Disposition: inline
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:36604 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbaLGRXY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Dec 2014 12:23:24 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so2798362wid.15
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Dec 2014 09:23:22 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <matthew@wil.cx>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 04 December 2014 08:12:53 Hannes Reinecke wrote:
-> On 12/03/2014 07:29 PM, Ondrej Zary wrote:
-> > On Wednesday 03 December 2014 12:44:53 Hannes Reinecke wrote:
-> >> Hi all,
-> >>
-> >> it has been bugged me for ages that the advansys driver always
-> >> reported a compilation warning about not having been converted
-> >> to the DMA-API.
-> >> And even aggressive waiting hasn't made this warning go away.
-> >>
-> >> So here's a patchset to update the advansys driver to current
-> >> standards and use the DMA-API.
-> >> Tested on ABP940-U2W.
-> >>
-> >> As usual, reviews and comments are welcome.
-> >>
-> >> Hannes Reinecke (12):
-> >>   advansys: use host_reset
-> >>   advansys: use shared host tag map for command lookup
-> >>   advansys: use DMA-API for mapping sense buffer
-> >>   advansys: Use DMA-API for carrier buffer
-> >>   advansys: Use DMA-API for mapping request blocks
-> >>   advansys: Use dma_pool for sg elements
-> >>   advansys: use 'bool' instead of 'int'
-> >>   advansys: use standard data types
-> >>   advansys: Remove 'TRUE' and 'FALSE' definitions
-> >>   advansys: Remove 'ERR' definition
-> >>   advansys: cleanup function return codes
-> >>   advansys: Update to version 3.5 and remove compilation warning
-> >>
-> >>  MAINTAINERS             |    1 +
-> >>  drivers/scsi/advansys.c | 1073
-> >> +++++++++++++++++++++-------------------------- 2 files changed, 469
-> >> insertions(+), 605 deletions(-)
-> >
-> > Seems to break narrow boards, at least mine ASB-3940UA :(
-> >
-> > [    4.266292] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
-> > [    7.661374] scsi host2: AdvanSys SCSI 3.5: PCI Ultra: IO
-> > 0xA800-0xA80F, IRQ 0x9 [   28.840078] scsi 2:0:0:0: SCSI bus reset
-> > started...
-> > [   28.846640] scsi 2:0:0:0: SCSI bus reset error: 0x2, status: 0x0
-> > [   28.846648] scsi 2:0:0:0: Device offlined - not ready after error
-> > recovery [   28.846803] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code
-> > 0x2 [   28.852052] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [
-> >   28.860051] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.868047] scsi 2:0:1:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.868249] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.876050] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.884048] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.892047] scsi 2:0:2:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.892243] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.900051] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.908048] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.916047] scsi 2:0:3:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.916241] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.924051] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.932048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.940048] scsi 2:0:4:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.940240] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.948051] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.956049] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.964047] scsi 2:0:5:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.964239] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.972050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.980048] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2 [  
-> > 28.988050] scsi 2:0:6:0: ExeScsiQueue() ASC_ERROR, err_code 0x2
-> >
-> > Before the patch:
-> > [    4.226690] ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 9
-> > [    7.644841] scsi host2: AdvanSys SCSI 3.4: PCI Ultra: IO
-> > 0xA800-0xA80F, IRQ 0x9 [    8.072257] scsi 2:0:2:0: Processor         HP 
-> >      C1790A           3226 PQ: 0 ANSI: 2 [    8.919128] scsi 2:0:2:0:
-> > Attached scsi generic sg3 type 3
->
-> Right. So _this_ was the mysterious command about srb_tag '0' being
-> reserved. Can you try with this patch?
+Remove the function bfa_tskim_iodone() that is not used anywhere.
 
-Thanks, it fixes the problem.
+This was partially found by using a static code analysis program called cppcheck.
 
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/bfa/bfa_fcpim.c |    9 ---------
+ drivers/scsi/bfa/bfa_fcpim.h |    1 -
+ 2 files changed, 10 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index d7385d1..ceb18ef 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -3477,15 +3477,6 @@ bfa_tskim_iocdisable_ios(struct bfa_tskim_s *tskim)
+ }
+ 
+ /*
+- * Notification on completions from related ioim.
+- */
+-void
+-bfa_tskim_iodone(struct bfa_tskim_s *tskim)
+-{
+-	bfa_wc_down(&tskim->wc);
+-}
+-
+-/*
+  * Handle IOC h/w failure notification from itnim.
+  */
+ void
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index e693af6..8ab548f 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -286,7 +286,6 @@ void	bfa_ioim_tov(struct bfa_ioim_s *ioim);
+ 
+ void	bfa_tskim_attach(struct bfa_fcpim_s *fcpim);
+ void	bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+-void	bfa_tskim_iodone(struct bfa_tskim_s *tskim);
+ void	bfa_tskim_iocdisable(struct bfa_tskim_s *tskim);
+ void	bfa_tskim_cleanup(struct bfa_tskim_s *tskim);
+ void	bfa_tskim_res_recfg(struct bfa_s *bfa, u16 num_tskim_fw);
 -- 
-Ondrej Zary
+1.7.10.4
+
