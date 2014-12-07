@@ -1,65 +1,41 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: bfa: bfad.c:  Remove unused function
-Date: Sun,  7 Dec 2014 23:07:53 +0100
-Message-ID: <1417990073-18840-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 0/20] fix misspelling of current function in string
+Date: Mon, 8 Dec 2014 10:44:40 +1100
+Message-ID: <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, linux-wireless <linux-wireless@vger.kernel.org>, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, linux@rasmusvillemoes.dk, Joe Perches <joe@perches.com>, "Mailing List,
+ Arm" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the function bfad_drv_uninit() that is not used anywhere.
+Hi Julia,
 
-This was partially found by using a static code analysis program called cppcheck.
+On Mon, Dec 8, 2014 at 6:20 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+> These patches replace what appears to be a reference to the name of the
+> current function but is misspelled in some way by either the name of the
+> function itself, or by %s and then __func__ in an argument list.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/scsi/bfa/bfad.c     |   20 --------------------
- drivers/scsi/bfa/bfad_drv.h |    1 -
- 2 files changed, 21 deletions(-)
+Would there be any value in doing this for _all_ cases where the
+function name is written in a format string?
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index e90a374..336a857 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -865,26 +865,6 @@ bfad_drv_init(struct bfad_s *bfad)
- }
- 
- void
--bfad_drv_uninit(struct bfad_s *bfad)
--{
--	unsigned long   flags;
--
--	spin_lock_irqsave(&bfad->bfad_lock, flags);
--	init_completion(&bfad->comp);
--	bfa_iocfc_stop(&bfad->bfa);
--	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--	wait_for_completion(&bfad->comp);
--
--	del_timer_sync(&bfad->hal_tmo);
--	bfa_isr_disable(&bfad->bfa);
--	bfa_detach(&bfad->bfa);
--	bfad_remove_intr(bfad);
--	bfad_hal_mem_release(bfad);
--
--	bfad->bfad_flags &= ~BFAD_DRV_INIT_DONE;
--}
--
--void
- bfad_drv_start(struct bfad_s *bfad)
- {
- 	unsigned long	flags;
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 8b97877..659132b 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -317,7 +317,6 @@ void		bfad_bfa_tmo(unsigned long data);
- void		bfad_init_timer(struct bfad_s *bfad);
- int		bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad);
- void		bfad_pci_uninit(struct pci_dev *pdev, struct bfad_s *bfad);
--void		bfad_drv_uninit(struct bfad_s *bfad);
- int		bfad_worker(void *ptr);
- void		bfad_debugfs_init(struct bfad_port_s *port);
- void		bfad_debugfs_exit(struct bfad_port_s *port);
+Thanks,
+
 -- 
-1.7.10.4
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
