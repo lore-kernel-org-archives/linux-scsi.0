@@ -1,40 +1,87 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] uas: Add US_FL_NO_REPORT_OPCODES for JMicron JMS566 with usb-id 0bc2:a013
-Date: Mon,  8 Dec 2014 09:50:47 +0100
-Message-ID: <1418028647-3950-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Takeo Nakayama <javhera@gmx.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: kxie@chelsio.com
+Subject: [PATCH net v2 4/5] cxgb4i: use cxgb4's set_wr_txq() for setting
+ tx queues
+Date: Mon, 08 Dec 2014 01:58:17 -0800
+Message-ID: <201412080958.sB89wHmi005505@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
 
-Like the JMicron JMS567 enclosures with the JMS566 choke on report-opcodes,
-so avoid it.
+[PATCH net v2 4/5] cxgb4i: use cxgb4's set_wr_txq() for setting tx queues
 
-Tested-and-reported-by: Takeo Nakayama <javhera@gmx.com>
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+From: Karen Xie <kxie@chelsio.com>
+
+use cxgb4's set_wr_txq() to set the tx queue for a outgoing packet.
+
+Signed-off-by: Karen Xie <kxie@chelsio.com>
 ---
- drivers/usb/storage/unusual_uas.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   16 +++++-----------
+ 1 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 2918376..2f0a3d3 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -111,6 +111,13 @@ UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_ATA_1X),
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 051adab..3c99e5d 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -157,12 +157,6 @@ static struct scsi_transport_template *cxgb4i_stt;
+ #define RCV_BUFSIZ_MASK		0x3FFU
+ #define MAX_IMM_TX_PKT_LEN	128
  
-+/* Reported-by: Takeo Nakayama <javhera@gmx.com> */
-+UNUSUAL_DEV(0x357d, 0x7788, 0x0000, 0x9999,
-+		"JMicron",
-+		"JMS566",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_NO_REPORT_OPCODES),
-+
- /* Reported-by: Hans de Goede <hdegoede@redhat.com> */
- UNUSUAL_DEV(0x4971, 0x1012, 0x0000, 0x9999,
- 		"Hitachi",
--- 
-2.1.0
+-static inline void set_queue(struct sk_buff *skb, unsigned int queue,
+-				const struct cxgbi_sock *csk)
+-{
+-	skb->queue_mapping = queue;
+-}
+-
+ static int push_tx_frames(struct cxgbi_sock *, int);
+ 
+ /*
+@@ -404,7 +398,7 @@ static void send_abort_req(struct cxgbi_sock *csk)
+ 
+ 	csk->cpl_abort_req = NULL;
+ 	req = (struct cpl_abort_req *)skb->head;
+-	set_queue(skb, CPL_PRIORITY_DATA, csk);
++	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
+ 	req->cmd = CPL_ABORT_SEND_RST;
+ 	t4_set_arp_err_handler(skb, csk, abort_arp_failure);
+ 	INIT_TP_WR(req, csk->tid);
+@@ -430,7 +424,7 @@ static void send_abort_rpl(struct cxgbi_sock *csk, int rst_status)
+ 		csk, csk->state, csk->flags, csk->tid, rst_status);
+ 
+ 	csk->cpl_abort_rpl = NULL;
+-	set_queue(skb, CPL_PRIORITY_DATA, csk);
++	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
+ 	INIT_TP_WR(rpl, csk->tid);
+ 	OPCODE_TID(rpl) = cpu_to_be32(MK_OPCODE_TID(CPL_ABORT_RPL, csk->tid));
+ 	rpl->cmd = rst_status;
+@@ -555,7 +549,7 @@ static inline int send_tx_flowc_wr(struct cxgbi_sock *csk)
+ 	flowc->mnemval[8].mnemonic = FW_FLOWC_MNEM_TXDATAPLEN_MAX;
+ 	flowc->mnemval[8].val = 16384;
+ 
+-	set_queue(skb, CPL_PRIORITY_DATA, csk);
++	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
+ 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+ 		"csk 0x%p, tid 0x%x, %u,%u,%u,%u,%u,%u,%u.\n",
+@@ -659,7 +653,7 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 			break;
+ 		}
+ 		__skb_unlink(skb, &csk->write_queue);
+-		set_queue(skb, CPL_PRIORITY_DATA, csk);
++		set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
+ 		skb->csum = credits_needed + flowclen16;
+ 		csk->wr_cred -= credits_needed;
+ 		csk->wr_una_cred += credits_needed;
+@@ -1551,7 +1545,7 @@ static int ddp_ppod_write_idata(struct cxgbi_device *cdev, unsigned int port_id,
+ 		return -ENOMEM;
+ 	}
+ 	req = (struct ulp_mem_io *)skb->head;
+-	set_queue(skb, CPL_PRIORITY_CONTROL, NULL);
++	set_wr_txq(skb, CPL_PRIORITY_CONTROL, 0);
+ 
+ 	ulp_mem_io_set_hdr(lldi, req, wr_len, dlen, pm_addr);
+ 	idata = (struct ulptx_idata *)(req + 1);
