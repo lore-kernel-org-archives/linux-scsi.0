@@ -1,76 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
- return zeroes after TRIM
-Date: Mon, 08 Dec 2014 07:28:45 -0800
-Message-ID: <1418052525.2208.6.camel@HansenPartnership.com>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	 <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-	 <94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
-	 <20141208151559.GB7001@thunk.org>
+From: Matthias Roessler <Matthias.Roessler@ts.fujitsu.com>
+Subject: Re: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
+ scanning
+Date: Mon, 8 Dec 2014 18:11:54 +0100
+Message-ID: <20141208171154.GB32116@ts.fujitsu.com>
+References: <1417711162-102950-1-git-send-email-hare@suse.de>
+ <20141205004315.00001523@localhost>
+ <5481FA9D.6040305@suse.de>
+Reply-To: Matthias.Roessler@ts.fujitsu.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20141208151559.GB7001@thunk.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dgate20.ts.fujitsu.com ([80.70.172.51]:13853 "EHLO
+	dgate20.ts.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbaLHRM3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 12:12:29 -0500
+Content-Disposition: inline
+In-Reply-To: <5481FA9D.6040305@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Sebastian Herbszt <herbszt@gmx.de>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2014-12-08 at 10:15 -0500, Theodore Ts'o wrote:
-> On Fri, Dec 05, 2014 at 10:58:09PM +0000, Elliott, Robert (Server Storage) wrote:
-> > > I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
+> 
+> On 12/05/2014 12:43 AM, Sebastian Herbszt wrote:
+> > Hannes Reinecke wrote:
+> >> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> >> index 49014a1..4f446e3 100644
+> >> --- a/drivers/scsi/scsi_devinfo.c
+> >> +++ b/drivers/scsi/scsi_devinfo.c
+> >> @@ -166,6 +166,7 @@ static struct {
+> >>  	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
+> >>  	{"easyRAID", "F8", NULL, BLIST_NOREPORTLUN},
+> >>  	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+> >> +	{"FUJITSU", "ETERNUS_DX", "*", BLIST_TEST_LUN0 },
+> >>  	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
+> >>  	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
+> >>  	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
 > > 
-> > make me concerned about this whitelist approach.
+> > Does this apply to all ETERNUS DX models and generations?
 > > 
-> > I think you need a manufacturer assertion that this is indeed
-> > the design intent; you cannot be certain based on observation
-> > from outside.
+> So I've been given to understand. Matthias Roessler will have details.
 > 
-> How is this different from a manufacturer assertion that they follow a
-> SCSI or ATA standard?  There have been cases in the distant past
-> (fortunately) of disk manufacturers that ignored a CACHE FLUSH command
-> just to get higher Winbench scores.  Does that mean we can't trust
-> them to do anything right?
 
-That answer depends on device type manufacturer.  USB devices, hell no.
-ATA devices, maybe and SCSI devices usually.
+Yes,
 
-The main problem is usually testing.  Consumer devices like USB and
-(s)ATA rarely get tested on anything but windows.  USB devices tend to
-supply their own driver, so they're on the "we fix it in the driver"
-model which is why they bite us so badly. (S)ATA usually comply, but
-they only test what windows exercises, so if windows doesn't do it,
-chances are it never got tested.  SCSI devices still tend to be tested
-in legacy UNIX environments, which are as diverse as we are.
+Fujitu's main line for Enterprise-grade storage systems 
+is named "ETERNUS DX" over the past years and this product line
+is still valid. Despite of product names like  "ETERNUS DX90 S2" or
+"ETERNUS DX600 S3", they answer the scsi inquiry always with
+    Vendor identification:  FUJITSU 
+    Product identification: ETERNUS_DX*
+where '*' stands for one of [L, M, 400, ...]  depending on the
+exact model variant.
+There was an ETERNUS4000 raid system with the
+Product identification:  E4000
+but this product is not of relevance anymore.
 
-> What I'd suggest instead is that if a vendor states this on a spec
-> sheet --- more than just an e-mail assertion --- so they can be sued
-> if they knowingly misrepresent their product, that we take their word
-> at it.  Of course, there will be bugs, which is why we have
-> blacklists, or why we can remove them from the list if it turns out
-> there are edge conditions where it appears the disk doesn't quite do
-> the right thing.
-> 
-> After all, we generally take the manufacturer's word that air bags
-> will work as claimed, even if potentially 11 million of them are
-> currently subject to recall.  And do we think that "the community"
-> would necessarily be more suited than the vendors and the manufacturer
-> to figure out whether or not air bags or drives are working as
-> desired?
-> 
-> That being said, if someone wants to create a open source program
-> which stress tests SSD's to look for cases where it is dropping a
-> requested discard, that would certainly be a good thing to do...
 
-The purpose of DRAT and RZAT is to enable disk arrays deterministically
-to use TRIM/Unmap so arrays know what happens to stripes on discard.
-Arrays are being built of mostly SATA technology these days, so some
-manufacturers have retargetted to arrays and consumer technology (and
-are testing the array cases).  However, windows doesn't use either
-feature, so manufacturers not targetting arrays will never test this
-feature.  Hence, in this case, I think a whitelist does make sense.
-
-James
+Best regards
+Matthias
 
 
