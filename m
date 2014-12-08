@@ -1,41 +1,33 @@
-From: Julian Calaby <julian.calaby@gmail.com>
+From: Joe Perches <joe@perches.com>
 Subject: Re: [PATCH 0/20] fix misspelling of current function in string
-Date: Mon, 8 Dec 2014 10:44:40 +1100
-Message-ID: <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
+Date: Sun, 07 Dec 2014 19:55:12 -0800
+Message-ID: <1418010912.31745.29.camel@perches.com>
 References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
 In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, linux-wireless <linux-wireless@vger.kernel.org>, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, linux@rasmusvillemoes.dk, Joe Perches <joe@perches.com>, "Mailing List,
- Arm" <linux-arm-kernel@lists.infradead.org>
+Cc: devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, linux@rasmusvillemoes.dk, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Julia,
-
-On Mon, Dec 8, 2014 at 6:20 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
-> These patches replace what appears to be a reference to the name of the
-> current function but is misspelled in some way by either the name of the
-> function itself, or by %s and then __func__ in an argument list.
-
-Would there be any value in doing this for _all_ cases where the
-function name is written in a format string?
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+T24gU3VuLCAyMDE0LTEyLTA3IGF0IDIwOjIwICswMTAwLCBKdWxpYSBMYXdhbGwgd3JvdGU6Cj4g
+VGhlc2UgcGF0Y2hlcyByZXBsYWNlIHdoYXQgYXBwZWFycyB0byBiZSBhIHJlZmVyZW5jZSB0byB0
+aGUgbmFtZSBvZiB0aGUKPiBjdXJyZW50IGZ1bmN0aW9uIGJ1dCBpcyBtaXNzcGVsbGVkIGluIHNv
+bWUgd2F5IGJ5IGVpdGhlciB0aGUgbmFtZSBvZiB0aGUKPiBmdW5jdGlvbiBpdHNlbGYsIG9yIGJ5
+ICVzIGFuZCB0aGVuIF9fZnVuY19fIGluIGFuIGFyZ3VtZW50IGxpc3QuCgpBdCBsZWFzdCBhIGZl
+dyBvZiB0aGVzZSBzZWVtIHRvIGJlIGZ1bmN0aW9uIHRyYWNpbmcKc3R5bGUgdXNlcyB0aGF0IG1p
+Z2h0IGFzIHdlbGwgYmUgZGVsZXRlZCBpbnN0ZWFkLgoKX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxA
+bGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHA6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1h
+bi9saXN0aW5mby9kcmktZGV2ZWwK
