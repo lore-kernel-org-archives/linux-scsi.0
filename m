@@ -1,47 +1,99 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Tagged overlapped commands
-Date: Sun, 07 Dec 2014 23:02:58 -0800
-Message-ID: <1418022178.21408.5.camel@HansenPartnership.com>
-References: <CAHOfOo1WuW8MD=r1zEEfd+csNEWacQA4EYa95zhUn49MxbEEsA@mail.gmail.com>
-	 <1417709828.8998.7.camel@HansenPartnership.com>
-	 <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
+From: kxie@chelsio.com
+Subject: [PATCH net 1/5] cxgb4i: fix tx credit calculation
+Date: Mon, 08 Dec 2014 00:09:08 -0800
+Message-ID: <201412080809.sB8898BV029841@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60176 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753941AbaLHHDA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 02:03:00 -0500
-In-Reply-To: <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Brooks <arb@sat.dundee.ac.uk>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Adding linux-scsi back to cc.  Please don't drop because others may be
-interested and it allows search engines to find the answer.
+[PATCH net 1/5] cxgb4i: fix tx credit calculation
 
-On Fri, 2014-12-05 at 13:09 +0000, Andrew Brooks wrote:
-> On 4 December 2014 at 16:17, James Bottomley <
-> James.Bottomley@hansenpartnership.com> wrote:
-> 
-> > The error message likely means that the tape device had more than one
-> > command outstanding at once (i.e. one command was sent while the current
-> > command was still pending).  It could also mean that a tag got re-used
-> > (same tag issued while command with that tag was outstanding) but for a
-> > tape I think the former is more likely.  Is the queue depth set to one
-> > for the device?
-> >
-> 
-> Thanks for your reply, How can I configure the queue depth?
+From: Karen Xie <kxie@chelsio.com>
 
-it should be under
+- Only data skbs need the wr header added while control skbs do not. Make sure they are treated differently.
+- Any credit related checking should be done before adding the wr header.
+- Fixed compiler warning resulted from added cxgbi_skb_test_flag() call in is_ofld_imm().
 
-/sys/class/scsi_device/<dev>/device/queue_depth
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   24 ++++++++++++++++--------
+ drivers/scsi/cxgbi/libcxgbi.h      |    2 +-
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-you can (as root) echo a value in there to change the depth.
-
-James
-
-
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 1508125..bc4e376 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -173,8 +173,12 @@ static int push_tx_frames(struct cxgbi_sock *, int);
+  */
+ static inline int is_ofld_imm(const struct sk_buff *skb)
+ {
+-	return skb->len <= (MAX_IMM_TX_PKT_LEN -
+-			sizeof(struct fw_ofld_tx_data_wr));
++	int length = skb->len;
++
++	if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
++		length += sizeof(struct fw_ofld_tx_data_wr);
++
++	return length <= MAX_IMM_TX_PKT_LEN;
+ }
+ 
+ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
+@@ -544,15 +548,17 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
+ 	unsigned int submode = cxgbi_skcb_ulp_mode(skb) & 3;
+ 	unsigned int wr_ulp_mode = 0;
+ 
+-	req = (struct fw_ofld_tx_data_wr *)__skb_push(skb, sizeof(*req));
+-
+ 	if (is_ofld_imm(skb)) {
++		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
++							sizeof(*req));
+ 		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
+ 					FW_WR_COMPL(1) |
+ 					FW_WR_IMMDLEN(dlen));
+ 		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
+ 						FW_WR_LEN16(credits));
+ 	} else {
++		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
++							sizeof(*req));
+ 		req->op_to_immdlen =
+ 			cpu_to_be32(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
+ 					FW_WR_COMPL(1) |
+@@ -597,13 +603,15 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 
+ 		skb_reset_transport_header(skb);
+ 		if (is_ofld_imm(skb))
+-			credits_needed = DIV_ROUND_UP(dlen +
+-					sizeof(struct fw_ofld_tx_data_wr), 16);
++			credits_needed = DIV_ROUND_UP(dlen, 16);
+ 		else
+-			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb)
+-					+ sizeof(struct fw_ofld_tx_data_wr),
++			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb),
+ 					16);
+ 
++		if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
++			credits_needed += DIV_ROUND_UP(
++				sizeof(struct fw_ofld_tx_data_wr), 16);
++
+ 		if (csk->wr_cred < credits_needed) {
+ 			log_debug(1 << CXGBI_DBG_PDU_TX,
+ 				"csk 0x%p, skb %u/%u, wr %d < %u.\n",
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 2c7cb1c..631a9b7 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -317,7 +317,7 @@ static inline void cxgbi_skcb_clear_flag(struct sk_buff *skb,
+ 	__clear_bit(flag, &(cxgbi_skcb_flags(skb)));
+ }
+ 
+-static inline int cxgbi_skcb_test_flag(struct sk_buff *skb,
++static inline int cxgbi_skcb_test_flag(const struct sk_buff *skb,
+ 					enum cxgbi_skcb_flags flag)
+ {
+ 	return test_bit(flag, &(cxgbi_skcb_flags(skb)));
