@@ -1,105 +1,95 @@
-From: kxie@chelsio.com
-Subject: [PATCH net v2 1/5] cxgb4i: fix tx credit calculation
-Date: Mon, 08 Dec 2014 01:58:08 -0800
-Message-ID: <201412080958.sB89w8l2005487@localhost6.localdomain6>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH net v2 3/5] cxgb4i: handle non-pdu-aligned rx and additional
+ types of negative advice
+Date: Mon, 08 Dec 2014 14:36:39 +0300
+Message-ID: <54858D47.3080005@cogentembedded.com>
+References: <201412080958.sB89wEsj005499@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:25595 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754655AbaLHJ7Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 04:59:16 -0500
+Received: from mail-la0-f41.google.com ([209.85.215.41]:57528 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755239AbaLHLgi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 06:36:38 -0500
+Received: by mail-la0-f41.google.com with SMTP id hv19so3819329lab.28
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Dec 2014 03:36:37 -0800 (PST)
+In-Reply-To: <201412080958.sB89wEsj005499@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+To: kxie@chelsio.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 
-[PATCH net v2 1/5] cxgb4i: fix tx credit calculation
+Hello.
 
-From: Karen Xie <kxie@chelsio.com>
+On 12/8/2014 12:58 PM, kxie@chelsio.com wrote:
 
-- Only data skbs need the wr header added while control skbs do not. Make sure they are treated differently.
-- Any credit related checking should be done before adding the wr header.
-- Fixed compiler warning resulted from added cxgbi_skb_test_flag() call in is_ofld_imm().
+> [PATCH net v2 3/5] cxgb4i: handle non-pdu-aligned rx data and additional types of negative advice
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   26 +++++++++++++++++---------
- drivers/scsi/cxgbi/libcxgbi.h      |    4 ++--
- 2 files changed, 19 insertions(+), 11 deletions(-)
+    The patch summary shouldn't be duplicated in the change log, at least not 
+like this...
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 1508125..5c3f15d 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -173,8 +173,12 @@ static int push_tx_frames(struct cxgbi_sock *, int);
-  */
- static inline int is_ofld_imm(const struct sk_buff *skb)
- {
--	return skb->len <= (MAX_IMM_TX_PKT_LEN -
--			sizeof(struct fw_ofld_tx_data_wr));
-+	int length = skb->len;
-+
-+	if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
-+		length += sizeof(struct fw_ofld_tx_data_wr);
-+
-+	return length <= MAX_IMM_TX_PKT_LEN;
- }
- 
- static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
-@@ -544,15 +548,17 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
- 	unsigned int submode = cxgbi_skcb_ulp_mode(skb) & 3;
- 	unsigned int wr_ulp_mode = 0;
- 
--	req = (struct fw_ofld_tx_data_wr *)__skb_push(skb, sizeof(*req));
--
- 	if (is_ofld_imm(skb)) {
-+		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
-+							sizeof(*req));
- 		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
- 					FW_WR_COMPL(1) |
- 					FW_WR_IMMDLEN(dlen));
- 		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
- 						FW_WR_LEN16(credits));
- 	} else {
-+		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
-+							sizeof(*req));
- 		req->op_to_immdlen =
- 			cpu_to_be32(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
- 					FW_WR_COMPL(1) |
-@@ -597,12 +603,14 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
- 
- 		skb_reset_transport_header(skb);
- 		if (is_ofld_imm(skb))
--			credits_needed = DIV_ROUND_UP(dlen +
--					sizeof(struct fw_ofld_tx_data_wr), 16);
-+			credits_needed = DIV_ROUND_UP(dlen, 16);
- 		else
--			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb)
--					+ sizeof(struct fw_ofld_tx_data_wr),
--					16);
-+			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb),
-+						      16);
-+
-+		if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
-+			credits_needed += DIV_ROUND_UP(
-+				sizeof(struct fw_ofld_tx_data_wr), 16);
- 
- 		if (csk->wr_cred < credits_needed) {
- 			log_debug(1 << CXGBI_DBG_PDU_TX,
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 2c7cb1c..aba1af7 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -317,8 +317,8 @@ static inline void cxgbi_skcb_clear_flag(struct sk_buff *skb,
- 	__clear_bit(flag, &(cxgbi_skcb_flags(skb)));
- }
- 
--static inline int cxgbi_skcb_test_flag(struct sk_buff *skb,
--					enum cxgbi_skcb_flags flag)
-+static inline int cxgbi_skcb_test_flag(const struct sk_buff *skb,
-+				       enum cxgbi_skcb_flags flag)
- {
- 	return test_bit(flag, &(cxgbi_skcb_flags(skb)));
- }
+> From: Karen Xie <kxie@chelsio.com>
+
+> - abort the connection upon receiving of cpl_rx_data, which means the pdu cannot be recovered from the tcp stream. This could be due to pdu header corruption.
+> - handle additional types of negative advice returned by h/w.
+
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> ---
+>   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   34 +++++++++++++++++++++++++++++++---
+>   1 files changed, 31 insertions(+), 3 deletions(-)
+
+> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> index b834bde..051adab 100644
+> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> @@ -845,6 +845,13 @@ static void csk_act_open_retry_timer(unsigned long data)
+>
+>   }
+>
+> +static inline int is_neg_adv(unsigned int status)
+
+    'bool' fits better.
+
+> +{
+> +	return status == CPL_ERR_RTX_NEG_ADVICE ||
+> +		status == CPL_ERR_KEEPALV_NEG_ADVICE ||
+> +		status == CPL_ERR_PERSIST_NEG_ADVICE;
+> +}
+> +
+[...]
+> @@ -1027,6 +1033,27 @@ rel_skb:
+>   	__kfree_skb(skb);
+>   }
+>
+> +static void do_rx_data(struct cxgbi_device *cdev, struct sk_buff *skb)
+> +{
+> +	struct cxgbi_sock *csk;
+> +	struct cpl_rx_data *cpl = (struct cpl_rx_data *)skb->data;
+> +	unsigned int tid = GET_TID(cpl);
+> +	struct cxgb4_lld_info *lldi = cxgbi_cdev_priv(cdev);
+> +	struct tid_info *t = lldi->tids;
+> +
+> +	csk = lookup_tid(t, tid);
+> +	if (!csk) {
+> +		pr_err("can't find connection for tid %u.\n", tid);
+> +	} else {
+> +		/* not expecting this, reset the connection. */
+> +		pr_err("csk 0x%p, tid %u, rcv cpl_rx_data.\n", csk, tid);
+
+    Both situations considered an error?
+
+> +		spin_lock_bh(&csk->lock);
+> +		send_abort_req(csk);
+> +		spin_unlock_bh(&csk->lock);
+> +	}
+> +	__kfree_skb(skb);
+> +}
+> +
+>   static void do_rx_iscsi_hdr(struct cxgbi_device *cdev, struct sk_buff *skb)
+>   {
+>   	struct cxgbi_sock *csk;
+[...]
+
+WBR, Sergei
+
