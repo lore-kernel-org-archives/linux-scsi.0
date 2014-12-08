@@ -1,95 +1,54 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH net v2 3/5] cxgb4i: handle non-pdu-aligned rx and additional
- types of negative advice
-Date: Mon, 08 Dec 2014 14:36:39 +0300
-Message-ID: <54858D47.3080005@cogentembedded.com>
-References: <201412080958.sB89wEsj005499@localhost6.localdomain6>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH V5 0/3] scsi: Configure number of LUs reported by 'report-luns'
+Date: Mon, 08 Dec 2014 08:04:13 -0500
+Message-ID: <5485A1CD.80804@redhat.com>
+References: <1417808263-5632-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:57528 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755239AbaLHLgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 06:36:38 -0500
-Received: by mail-la0-f41.google.com with SMTP id hv19so3819329lab.28
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Dec 2014 03:36:37 -0800 (PST)
-In-Reply-To: <201412080958.sB89wEsj005499@localhost6.localdomain6>
+Received: from mx1.redhat.com ([209.132.183.28]:41472 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752358AbaLHNEP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Dec 2014 08:04:15 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sB8D4DT0007822
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Dec 2014 08:04:14 -0500
+Received: from revers-dell.usersys.redhat.com ([10.18.25.106])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id sB8D4DvX012838
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Dec 2014 08:04:13 -0500
+In-Reply-To: <1417808263-5632-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+To: linux-scsi@vger.kernel.org
 
-Hello.
-
-On 12/8/2014 12:58 PM, kxie@chelsio.com wrote:
-
-> [PATCH net v2 3/5] cxgb4i: handle non-pdu-aligned rx data and additional types of negative advice
-
-    The patch summary shouldn't be duplicated in the change log, at least not 
-like this...
-
-> From: Karen Xie <kxie@chelsio.com>
-
-> - abort the connection upon receiving of cpl_rx_data, which means the pdu cannot be recovered from the tcp stream. This could be due to pdu header corruption.
-> - handle additional types of negative advice returned by h/w.
-
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> ---
->   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   34 +++++++++++++++++++++++++++++++---
->   1 files changed, 31 insertions(+), 3 deletions(-)
-
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index b834bde..051adab 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> @@ -845,6 +845,13 @@ static void csk_act_open_retry_timer(unsigned long data)
+On 12/05/2014 02:37 PM, Rob Evers wrote:
+> This patch set retrieves the number of LUs available on a target
+> using the report-luns command by re-sizing the returned data
+> buffer and retrying report luns.
 >
->   }
+> A minor bug fix is included.
 >
-> +static inline int is_neg_adv(unsigned int status)
-
-    'bool' fits better.
-
-> +{
-> +	return status == CPL_ERR_RTX_NEG_ADVICE ||
-> +		status == CPL_ERR_KEEPALV_NEG_ADVICE ||
-> +		status == CPL_ERR_PERSIST_NEG_ADVICE;
-> +}
-> +
-[...]
-> @@ -1027,6 +1033,27 @@ rel_skb:
->   	__kfree_skb(skb);
->   }
+> scsi_mod parameter max_report_luns is no longer used and is removed.
 >
-> +static void do_rx_data(struct cxgbi_device *cdev, struct sk_buff *skb)
-> +{
-> +	struct cxgbi_sock *csk;
-> +	struct cpl_rx_data *cpl = (struct cpl_rx_data *)skb->data;
-> +	unsigned int tid = GET_TID(cpl);
-> +	struct cxgb4_lld_info *lldi = cxgbi_cdev_priv(cdev);
-> +	struct tid_info *t = lldi->tids;
-> +
-> +	csk = lookup_tid(t, tid);
-> +	if (!csk) {
-> +		pr_err("can't find connection for tid %u.\n", tid);
-> +	} else {
-> +		/* not expecting this, reset the connection. */
-> +		pr_err("csk 0x%p, tid %u, rcv cpl_rx_data.\n", csk, tid);
+> Changes from previous posting:
+>
+>   - simplify implementation by removing max_report_luns parameter and
+>     removing 2nd kmalloc failure handling
+>
+>   - remove patch to fix return value on first kmalloc failing
+>
+>   - drop do_scsi_report_luns encapsulation as it isn't required
+>     with new implementation
+>
+> Rob Evers (3):
+>    scsi: Avoid unnecessary GFP_ATOMIC allocation in scsi_report_lun_scan
+>    scsi: Use set/get_unaligned_be32 in report_luns
+>    scsi: Retry report-luns when reported LU count requres more memory
+>
+>   drivers/scsi/scsi_scan.c | 54 ++++++++++++++----------------------------------
+>   1 file changed, 15 insertions(+), 39 deletions(-)
+>
 
-    Both situations considered an error?
-
-> +		spin_lock_bh(&csk->lock);
-> +		send_abort_req(csk);
-> +		spin_unlock_bh(&csk->lock);
-> +	}
-> +	__kfree_skb(skb);
-> +}
-> +
->   static void do_rx_iscsi_hdr(struct cxgbi_device *cdev, struct sk_buff *skb)
->   {
->   	struct cxgbi_sock *csk;
-[...]
-
-WBR, Sergei
-
+Patch set Signed-off-by: Rob Evers <revers@redhat.com>
