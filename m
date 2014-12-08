@@ -1,50 +1,47 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 0/20] fix misspelling of current function in
-	string
-Date: Mon, 8 Dec 2014 07:43:16 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Tagged overlapped commands
+Date: Sun, 07 Dec 2014 23:02:58 -0800
+Message-ID: <1418022178.21408.5.camel@HansenPartnership.com>
+References: <CAHOfOo1WuW8MD=r1zEEfd+csNEWacQA4EYa95zhUn49MxbEEsA@mail.gmail.com>
+	 <1417709828.8998.7.camel@HansenPartnership.com>
+	 <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux@rasmusvillemoes.dk, linux-wireless <linux-wireless@vger.kernel.org>, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, Julia Lawall <Julia.Lawall@lip6.fr>, netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org, Joe Perches <joe@perches.com>, "Mailing List,
- Arm" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60176 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753941AbaLHHDA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2014 02:03:00 -0500
+In-Reply-To: <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Brooks <arb@sat.dundee.ac.uk>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-T24gTW9uLCA4IERlYyAyMDE0LCBKdWxpYW4gQ2FsYWJ5IHdyb3RlOgoKPiBIaSBKdWxpYSwKPiAK
-PiBPbiBNb24sIERlYyA4LCAyMDE0IGF0IDY6MjAgQU0sIEp1bGlhIExhd2FsbCA8SnVsaWEuTGF3
-YWxsQGxpcDYuZnI+IHdyb3RlOgo+ID4gVGhlc2UgcGF0Y2hlcyByZXBsYWNlIHdoYXQgYXBwZWFy
-cyB0byBiZSBhIHJlZmVyZW5jZSB0byB0aGUgbmFtZSBvZiB0aGUKPiA+IGN1cnJlbnQgZnVuY3Rp
-b24gYnV0IGlzIG1pc3NwZWxsZWQgaW4gc29tZSB3YXkgYnkgZWl0aGVyIHRoZSBuYW1lIG9mIHRo
-ZQo+ID4gZnVuY3Rpb24gaXRzZWxmLCBvciBieSAlcyBhbmQgdGhlbiBfX2Z1bmNfXyBpbiBhbiBh
-cmd1bWVudCBsaXN0Lgo+IAo+IFdvdWxkIHRoZXJlIGJlIGFueSB2YWx1ZSBpbiBkb2luZyB0aGlz
-IGZvciBfYWxsXyBjYXNlcyB3aGVyZSB0aGUKPiBmdW5jdGlvbiBuYW1lIGlzIHdyaXR0ZW4gaW4g
-YSBmb3JtYXQgc3RyaW5nPwoKUHJvYmFibHkuICBCdXQgdGhlcmUgYXJlIGEgbG90IG9mIHRoZW0u
-ICBFdmVuIGZvciB0aGUgbWlzc3BlbGxpbmdzLCBJIGhhdmUgCm9ubHkgZG9uIGFib3V0IDEvMyBv
-ZiB0aGUgY2FzZXMuCgpPbiB0aGUgb3RoZXIgaGFuZCwgdGhlIG1pc3NwZWxsaW5nIGhhdmUgdG8g
-YmUgY2hlY2tlZCBjYXJlZnVsbHksIGJlY2F1c2UgYSAKbWlzc3BlbGxpbmcgb2Ygb25lIHRoaW5n
-IGNvdWxkIGJlIHRoZSBjb3JyZWN0IHNwZWxsaW5nIG9mIHRoZSB0aGluZyB0aHN0IAp3YXMgYWN0
-dWFsbHkgaW50ZW5kZWQuCgpKb2UsIGhvd2V2ZXIsIHBvaW50cyBvdXQgdGhhdCBhIGxvdCBvZiB0
-aGVzZSBwcmludHMgYXJlIGp1c3QgZm9yIGZ1bmN0aW9uIAp0cmFjaW5nLCBhbmQgY291bGQgYmUg
-cmVtb3ZlZC4gIEkgd29ya2VkIG9uIGFub3RoZXIgc2VtYW50aWMgcGF0Y2ggdGhhdCAKdHJpZXMg
-dG8gZG8gdGhhdC4gIEl0IG1pZ2h0IGJlIGJldHRlciB0byByZW1vdmUgdGhvc2UgcHJpbnRzIGNv
-bXBsZXRlbHksIApyYXRoZXIgdGhhbiBzZW5kaW5nIG9uZSBwYXRjaCB0byB0cmFuc2Zvcm0gdGhl
-bSBhbmQgdGhlbiBvbmUgcGF0Y2ggdG8gCnJlbW92ZSB0aGVtIGFmdGVyIHRoYXQuICBUaGF0IGlz
-IHdoeSBmb3IgdGhpcyBzZXJpZXMgSSBkaWQgb25seSB0aGUgb25lcyAKd2hlcmUgdGhlcmUgd2Fz
-IGFjdHVhbGx5IGEgcHJvYmxlbS4KCmp1bGlhCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3Rz
-LmZyZWVkZXNrdG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlz
-dGluZm8vaW50ZWwtZ2Z4Cg==
+Adding linux-scsi back to cc.  Please don't drop because others may be
+interested and it allows search engines to find the answer.
+
+On Fri, 2014-12-05 at 13:09 +0000, Andrew Brooks wrote:
+> On 4 December 2014 at 16:17, James Bottomley <
+> James.Bottomley@hansenpartnership.com> wrote:
+> 
+> > The error message likely means that the tape device had more than one
+> > command outstanding at once (i.e. one command was sent while the current
+> > command was still pending).  It could also mean that a tag got re-used
+> > (same tag issued while command with that tag was outstanding) but for a
+> > tape I think the former is more likely.  Is the queue depth set to one
+> > for the device?
+> >
+> 
+> Thanks for your reply, How can I configure the queue depth?
+
+it should be under
+
+/sys/class/scsi_device/<dev>/device/queue_depth
+
+you can (as root) echo a value in there to change the depth.
+
+James
+
+
