@@ -1,52 +1,101 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
- return zeroes after TRIM
-Date: Mon, 8 Dec 2014 22:59:15 +0000
-Message-ID: <20141208225915.1ec39f03@lxorguk.ukuu.org.uk>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	<1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-	<94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
-	<20141208151559.GB7001@thunk.org>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+Date: Tue, 09 Dec 2014 14:19:57 +0800
+Message-ID: <5486948D.1060807@intel.com>
+References: <3237237.IIIiULdqDt@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20141208151559.GB7001@thunk.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <3237237.IIIiULdqDt@vostro.rjw.lan>
+Sender: linux-pm-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-scsi@vger.kernel.org
+Cc: Alan Stern <stern@rowland.harvard.edu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 8 Dec 2014 10:15:59 -0500
-"Theodore Ts'o" <tytso@mit.edu> wrote:
-
-> On Fri, Dec 05, 2014 at 10:58:09PM +0000, Elliott, Robert (Server Storage) wrote:
-> > > I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
-> > 
-> > make me concerned about this whitelist approach.
-> > 
-> > I think you need a manufacturer assertion that this is indeed
-> > the design intent; you cannot be certain based on observation
-> > from outside.
+On 12/04/2014 09:22 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> How is this different from a manufacturer assertion that they follow a
-> SCSI or ATA standard?  There have been cases in the distant past
-> (fortunately) of disk manufacturers that ignored a CACHE FLUSH command
-> just to get higher Winbench scores.  Does that mean we can't trust
-> them to do anything right?
+> After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+> selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
+> depending on CONFIG_PM_RUNTIME may now be changed to depend on
+> CONFIG_PM.
+> 
+> Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
+> drivers/scsi/ and in include/scsi/scsi_device.h.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+> PM_SLEEP is selected) which is only in linux-next at the moment (via the
+> linux-pm tree).
+> 
+> Please let me know if it is OK to take this one into linux-pm.
+> 
+> ---
+>  drivers/scsi/scsi_pm.c           |    4 ++--
+>  drivers/scsi/scsi_priv.h         |    5 ++---
+>  drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
+>  drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
+>  include/scsi/scsi_device.h       |    4 ++--
+>  5 files changed, 14 insertions(+), 21 deletions(-)
+> 
+> Index: linux-pm/drivers/scsi/scsi_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/scsi/scsi_pm.c
+> +++ linux-pm/drivers/scsi/scsi_pm.c
+> @@ -213,7 +213,7 @@ static int scsi_bus_restore(struct devic
+>  
+>  #endif /* CONFIG_PM_SLEEP */
+>  
+> -#ifdef CONFIG_PM_RUNTIME
+> +#ifdef CONFIG_PM
+>  
+>  static int sdev_runtime_suspend(struct device *dev)
+>  {
+> @@ -338,7 +338,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
+>  #define scsi_runtime_resume	NULL
+>  #define scsi_runtime_idle	NULL
+>  
+> -#endif /* CONFIG_PM_RUNTIME */
+> +#endif /* CONFIG_PM */
+>  
+>  const struct dev_pm_ops scsi_bus_pm_ops = {
+>  	.prepare =		scsi_bus_prepare,
 
-At the time they never promised to honour cache flush. The reason it was
-became mandatory in the specification was in part so that the vendors
-could all force each other to play fair. If its "optional" then it's
-tough..., if they say they meet the standard it's class action 8)
+Just one nitpeak: since scsi_pm.o is only compiled when CONFIG_PM is
+set, I think we can skip the #ifdef CONFIG_PM ... #endif macro in this
+file now. I mean something like this:
 
-If this is a promise then it ought to be good 
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 7454498..9e43ae1 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -213,8 +213,6 @@ static int scsi_bus_restore(struct device *dev)
+ 
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-#ifdef CONFIG_PM_RUNTIME
+-
+ static int sdev_runtime_suspend(struct device *dev)
+ {
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+@@ -332,14 +330,6 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
+ 	pm_runtime_put_sync(&shost->shost_gendev);
+ }
+ 
+-#else
+-
+-#define scsi_runtime_suspend	NULL
+-#define scsi_runtime_resume	NULL
+-#define scsi_runtime_idle	NULL
+-
+-#endif /* CONFIG_PM_RUNTIME */
+-
+ const struct dev_pm_ops scsi_bus_pm_ops = {
+ 	.prepare =		scsi_bus_prepare,
+ 	.suspend =		scsi_bus_suspend,
 
-James:  "USB devices tend to supply their own driver"
-
-has not been true for some years now. Microsoft provide an in-box driver
-and vendors have the choice of using that or certifying their own via
-WHQL, which is a bit like choosing between free ice cream and banging
-your head against a plank cover in nails.
-
-Alan
+Thanks,
+Aaron
