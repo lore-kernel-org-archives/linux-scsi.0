@@ -1,101 +1,48 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
-Date: Tue, 09 Dec 2014 14:19:57 +0800
-Message-ID: <5486948D.1060807@intel.com>
-References: <3237237.IIIiULdqDt@vostro.rjw.lan>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with
+ DID_RESET status for log_info value 0x0x32010081
+Date: Tue, 9 Dec 2014 17:38:32 +0530
+Message-ID: <CAK=zhgr-+MaT6UeXR96G-nMGfo8RdmHVRN1wkUKjz7h6gwLNhg@mail.gmail.com>
+References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1416467155-16869-8-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<yq1a934i055.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <3237237.IIIiULdqDt@vostro.rjw.lan>
-Sender: linux-pm-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-scsi@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og120.obsmtp.com ([64.18.2.18]:60833 "EHLO
+	exprod7og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671AbaLIMIe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Dec 2014 07:08:34 -0500
+Received: by mail-wg0-f50.google.com with SMTP id a1so623064wgh.23
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2014 04:08:32 -0800 (PST)
+In-Reply-To: <yq1a934i055.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org
 
-On 12/04/2014 09:22 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-> selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
-> depending on CONFIG_PM_RUNTIME may now be changed to depend on
-> CONFIG_PM.
-> 
-> Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
-> drivers/scsi/ and in include/scsi/scsi_device.h.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-> PM_SLEEP is selected) which is only in linux-next at the moment (via the
-> linux-pm tree).
-> 
-> Please let me know if it is OK to take this one into linux-pm.
-> 
-> ---
->  drivers/scsi/scsi_pm.c           |    4 ++--
->  drivers/scsi/scsi_priv.h         |    5 ++---
->  drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
->  drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
->  include/scsi/scsi_device.h       |    4 ++--
->  5 files changed, 14 insertions(+), 21 deletions(-)
-> 
-> Index: linux-pm/drivers/scsi/scsi_pm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/scsi/scsi_pm.c
-> +++ linux-pm/drivers/scsi/scsi_pm.c
-> @@ -213,7 +213,7 @@ static int scsi_bus_restore(struct devic
->  
->  #endif /* CONFIG_PM_SLEEP */
->  
-> -#ifdef CONFIG_PM_RUNTIME
-> +#ifdef CONFIG_PM
->  
->  static int sdev_runtime_suspend(struct device *dev)
->  {
-> @@ -338,7 +338,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
->  #define scsi_runtime_resume	NULL
->  #define scsi_runtime_idle	NULL
->  
-> -#endif /* CONFIG_PM_RUNTIME */
-> +#endif /* CONFIG_PM */
->  
->  const struct dev_pm_ops scsi_bus_pm_ops = {
->  	.prepare =		scsi_bus_prepare,
+On Thu, Dec 4, 2014 at 8:36 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+>
+> Sreekanth> For any SCSI command, if the driver receives IOC status =
+> Sreekanth> SCSI_IOC_TERMINATED and log info = 0x32010081 then that
+> Sreekanth> command will be completed with DID_RESET host status.
+>
+> What does that log info value mean?
 
-Just one nitpeak: since scsi_pm.o is only compiled when CONFIG_PM is
-set, I think we can skip the #ifdef CONFIG_PM ... #endif macro in this
-file now. I mean something like this:
+The meaning of this log info value is "Virtual IO has failed and has
+to be retried".
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 7454498..9e43ae1 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -213,8 +213,6 @@ static int scsi_bus_restore(struct device *dev)
- 
- #endif /* CONFIG_PM_SLEEP */
- 
--#ifdef CONFIG_PM_RUNTIME
--
- static int sdev_runtime_suspend(struct device *dev)
- {
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-@@ -332,14 +330,6 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
- 	pm_runtime_put_sync(&shost->shost_gendev);
- }
- 
--#else
--
--#define scsi_runtime_suspend	NULL
--#define scsi_runtime_resume	NULL
--#define scsi_runtime_idle	NULL
--
--#endif /* CONFIG_PM_RUNTIME */
--
- const struct dev_pm_ops scsi_bus_pm_ops = {
- 	.prepare =		scsi_bus_prepare,
- 	.suspend =		scsi_bus_suspend,
+Firmware will provide this log info value with IOC Status
+"SCSI_IOC_TERMINATED", whenever a drive (with is a part of a volume)
+is pulled and pushed back with some minimal delay.  With this log info
+value, firmware informs the driver to retry the failed IO command
+infinite times, so to provide some time for the firmware to discover
+the reinserted drive successfully instated of just retrying failed
+command for five times( doesn't giving enough time for firmware to
+complete the drive discovery) and failing the IO permanently even
+though drive came back successfully.
 
-Thanks,
-Aaron
+Regards,
+Sreekanth.
