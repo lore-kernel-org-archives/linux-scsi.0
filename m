@@ -1,178 +1,100 @@
-From: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: UAS crash with Apricorn USB3 SATA bridge
-Date: Tue, 9 Dec 2014 11:31:16 -0800
-Message-ID: <20141209193116.GA25163@birch.djwong.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH net v3 1/6] cxgb4i: fix tx credit calculation
+Date: Tue, 09 Dec 2014 22:54:45 +0300
+Message-ID: <54875385.80708@cogentembedded.com>
+References: <201412091732.sB9HWHRm008996@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:47985 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbaLITyu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Dec 2014 14:54:50 -0500
+Received: by mail-la0-f53.google.com with SMTP id gm9so1156306lab.26
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2014 11:54:48 -0800 (PST)
+In-Reply-To: <201412091732.sB9HWHRm008996@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 
-Hi,
+Hello.
 
-I have an Apricorn USB 3 disk dongle thing that claims to support UAS.
-However, the kernel crashes when I plug it in[1].
+On 12/09/2014 08:32 PM, Karen Xie wrote:
 
-I'm not sure what this is caused by, but I also have an ASMedia 2105 SATA
-bridge that works with UAS just fine.  Not sure if the Apricorn thing is simply
-broken, or if this is a bug in UAS.
+> [PATCH net v3 1/6] cxgb4i: fix tx credit calculation
 
-I've attached the lsusb -v output[2] if that'll help.  I can try to poke around
-with the source code if there's time.
+> From: Karen Xie <kxie@chelsio.com>
 
---D
+> - Only data skbs need the wr header added while control skbs do not. Make sure they are treated differently.
+> - Any credit related checking should be done before adding the wr header.
 
-[1] https://lh6.googleusercontent.com/-oiOwZmkROQk/VIdNGPTWFDI/AAAAAAAAC3w/bEw6fSmZpkc/s0-U-I/IMG_0167.JPG
+    Looks like a spearate issue deserving its own patch?
 
-[2] Bus 002 Device 004: ID 0984:0301 Apricorn 
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               3.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0         9
-  idVendor           0x0984 Apricorn
-  idProduct          0x0301 
-  bcdDevice            1.28
-  iManufacturer           1 Apricorn
-  iProduct                2                               
-  iSerial                 3 303930363130464232323031
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength          121
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          0 
-    bmAttributes         0xc0
-      Self Powered
-    MaxPower                2mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           2
-      bInterfaceClass         8 Mass Storage
-      bInterfaceSubClass      6 SCSI
-      bInterfaceProtocol     80 Bulk-Only
-      iInterface              0 
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x8b  EP 11 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               7
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0a  EP 10 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               7
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       1
-      bNumEndpoints           4
-      bInterfaceClass         8 Mass Storage
-      bInterfaceSubClass      6 SCSI
-      bInterfaceProtocol     98 
-      iInterface              0 
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x08  EP 8 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               0
-        Command pipe (0x01)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x89  EP 9 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               7
-        MaxStreams             32
-        Status pipe (0x02)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0a  EP 10 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               7
-        MaxStreams             32
-        Data-out pipe (0x04)
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x8b  EP 11 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0400  1x 1024 bytes
-        bInterval               0
-        bMaxBurst               7
-        MaxStreams             32
-        Data-in pipe (0x03)
-Binary Object Store Descriptor:
-  bLength                 5
-  bDescriptorType        15
-  wTotalLength           22
-  bNumDeviceCaps          2
-  USB 2.0 Extension Device Capability:
-    bLength                 7
-    bDescriptorType        16
-    bDevCapabilityType      2
-    bmAttributes   0x00000002
-      Link Power Management (LPM) Supported
-  SuperSpeed USB Device Capability:
-    bLength                10
-    bDescriptorType        16
-    bDevCapabilityType      3
-    bmAttributes         0x00
-    wSpeedsSupported   0x000e
-      Device can operate at Full Speed (12Mbps)
-      Device can operate at High Speed (480Mbps)
-      Device can operate at SuperSpeed (5Gbps)
-    bFunctionalitySupport   1
-      Lowest fully-functional device speed is Full Speed (12Mbps)
-    bU1DevExitLat          10 micro seconds
-    bU2DevExitLat         128 micro seconds
-Device Status:     0x0000
-  (Bus Powered)
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> - Fixed compiler warning resulted from added cxgbi_skb_test_flag() call in is_ofld_imm().
+
+    Isn't it called cxgbi_skcb_test_flag()?
+
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> ---
+>   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   26 +++++++++++++++++---------
+>   drivers/scsi/cxgbi/libcxgbi.h      |    4 ++--
+>   2 files changed, 19 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> index 1508125..5c3f15d 100644
+> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+[...]
+> @@ -544,15 +548,17 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
+>   	unsigned int submode = cxgbi_skcb_ulp_mode(skb) & 3;
+>   	unsigned int wr_ulp_mode = 0;
+>
+> -	req = (struct fw_ofld_tx_data_wr *)__skb_push(skb, sizeof(*req));
+> -
+
+    Perhaps it makes sense to store the result of is_ofld_imm() before 
+__skb_push() call
+instead of duplicating the same call in 2 branches?
+
+>   	if (is_ofld_imm(skb)) {
+> +		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
+> +							sizeof(*req));
+
+    The continuation line should start right under 'skb' on the previous line.
+
+>   		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
+>   					FW_WR_COMPL(1) |
+>   					FW_WR_IMMDLEN(dlen));
+>   		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
+>   						FW_WR_LEN16(credits));
+>   	} else {
+> +		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
+> +							sizeof(*req));
+
+    Likewise.
+
+>   		req->op_to_immdlen =
+>   			cpu_to_be32(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
+>   					FW_WR_COMPL(1) |
+> @@ -597,12 +603,14 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+>
+>   		skb_reset_transport_header(skb);
+>   		if (is_ofld_imm(skb))
+> -			credits_needed = DIV_ROUND_UP(dlen +
+> -					sizeof(struct fw_ofld_tx_data_wr), 16);
+> +			credits_needed = DIV_ROUND_UP(dlen, 16);
+>   		else
+> -			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb)
+> -					+ sizeof(struct fw_ofld_tx_data_wr),
+> -					16);
+> +			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb),
+
+    It would have been good if you added spaces around *, while at it, to keep
+it consistent with the general kernel coding  style...
+
+[...]
+
+WBR, Sergei
+
