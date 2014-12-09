@@ -1,76 +1,182 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: RE: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
-Date: Tue,  9 Dec 2014 18:57:23 +0530
-Message-ID: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH net v3 2/6] cxgb4/cxgb4i: set the max. pdu length in
+ firmware
+Date: Tue, 09 Dec 2014 09:32:20 -0800
+Message-ID: <201412091732.sB9HWK21009002@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
 
-> Shouldn't you be capping at SCSI_MAX_SG_CHAIN_SEGMENTS (or the actual hw
-> limit)?
+[PATCH net v3 2/6] cxgb4/cxgb4i: set the max. pdu length in firmware.
 
-Agreed. And set the Upper limit to SCSI_MAX_SG_CHAIN_SEGMENTS.
+From: Karen Xie <kxie@chelsio.com>
 
-Change Set:
+Programs the firmware of the maximum outgoing iscsi pdu length per connection.
 
-1. Extended the upper boundary restriction for the module parameter max_sgl_entries.
-   Earlier, the max_sgl_entries was capped at the SCSI_MAX_SG_SEGMENTS kernel definition.
-   With this change, the user would be able to set the max_sgl_entries to
-   any value which is greater than SCSI_MAX_SG_SEGMENTS and less than the minimum of
-   SCSI_MAX_SG_CHAIN_SEGMENTS & hardware limit(Calculated using IOCFacts's MaxChainDepth).
-
-2. Added a print for the message log whenever the user sets the max_sgl_entries to a value
-   greater than SCSI_MAX_SG_SEGMENTS to warn about the kernel definition overriding.
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Signed-off-by: Karen Xie <kxie@chelsio.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c | 10 +++++++---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 10 ++++++++--
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h |    1 
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c            |   69 ++++++++++++++++++-------
+ 2 files changed, 52 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 58e4521..ca3b564 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -2486,9 +2486,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+index 3409756..743a350 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4fw_api.h
+@@ -529,6 +529,7 @@ enum fw_flowc_mnem {
+ 	FW_FLOWC_MNEM_RCVNXT,
+ 	FW_FLOWC_MNEM_SNDBUF,
+ 	FW_FLOWC_MNEM_MSS,
++	FW_FLOWC_MNEM_TXDATAPLEN_MAX,
+ };
  
- 	/* command line tunables  for max sgl entries */
- 	if (max_sgl_entries != -1) {
--		ioc->shost->sg_tablesize = (max_sgl_entries <
--		    MPT2SAS_SG_DEPTH) ? max_sgl_entries :
--		    MPT2SAS_SG_DEPTH;
-+		if (max_sgl_entries > MPT2SAS_SG_DEPTH)
-+			printk(MPT2SAS_WARN_FMT
-+			 "setting max_sgl_entries(%d), overriding kernel"
-+			 " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-+			  max_sgl_entries, MPT2SAS_SG_DEPTH);
-+		ioc->shost->sg_tablesize =  min_t(unsigned short,
-+			     max_sgl_entries, SCSI_MAX_SG_CHAIN_SEGMENTS);
- 	} else {
- 		ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
- 	}
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 1560115..96db582 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2659,8 +2659,14 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+ struct fw_flowc_mnemval {
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 5c3f15d..b834bde 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -75,6 +75,7 @@ typedef void (*cxgb4i_cplhandler_func)(struct cxgbi_device *, struct sk_buff *);
+ static void *t4_uld_add(const struct cxgb4_lld_info *);
+ static int t4_uld_rx_handler(void *, const __be64 *, const struct pkt_gl *);
+ static int t4_uld_state_change(void *, enum cxgb4_state state);
++static inline int send_tx_flowc_wr(struct cxgbi_sock *);
  
- 	if (sg_tablesize < MPT3SAS_MIN_PHYS_SEGMENTS)
- 		sg_tablesize = MPT3SAS_MIN_PHYS_SEGMENTS;
--	else if (sg_tablesize > MPT3SAS_MAX_PHYS_SEGMENTS)
--		sg_tablesize = MPT3SAS_MAX_PHYS_SEGMENTS;
-+	else if (sg_tablesize > MPT3SAS_MAX_PHYS_SEGMENTS) {
-+		pr_warn(MPT3SAS_FMT
-+		 "setting max_sgl_entries(%d), overriding kernel"
-+		 " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-+		 max_sgl_entries, MPT3SAS_MAX_PHYS_SEGMENTS);
-+		sg_tablesize = min_t(unsigned short, sg_tablesize,
-+				      SCSI_MAX_SG_CHAIN_SEGMENTS);
+ static const struct cxgb4_uld_info cxgb4i_uld_info = {
+ 	.name = DRV_MODULE_NAME,
+@@ -391,6 +392,12 @@ static void send_abort_req(struct cxgbi_sock *csk)
+ 
+ 	if (unlikely(csk->state == CTP_ABORTING) || !skb || !csk->cdev)
+ 		return;
++
++	if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT)) {
++		send_tx_flowc_wr(csk);
++		cxgbi_sock_set_flag(csk, CTPF_TX_DATA_SENT);
 +	}
- 	ioc->shost->sg_tablesize = sg_tablesize;
++
+ 	cxgbi_sock_set_state(csk, CTP_ABORTING);
+ 	cxgbi_sock_set_flag(csk, CTPF_ABORT_RPL_PENDING);
+ 	cxgbi_sock_purge_write_queue(csk);
+@@ -493,20 +500,40 @@ static inline unsigned int calc_tx_flits_ofld(const struct sk_buff *skb)
+ 	return flits + sgl_len(cnt);
+ }
  
- 	ioc->hi_priority_depth = facts->HighPriorityCredit;
--- 
-2.0.2
+-static inline void send_tx_flowc_wr(struct cxgbi_sock *csk)
++#define FLOWC_WR_NPARAMS_MIN   9
++static inline int tx_flowc_wr_credits(int *nparamsp, int *flowclenp)
++{
++	int nparams, flowclen16, flowclen;
++
++	nparams = FLOWC_WR_NPARAMS_MIN;
++	flowclen = offsetof(struct fw_flowc_wr, mnemval[nparams]);
++	flowclen16 = DIV_ROUND_UP(flowclen, 16);
++	flowclen = flowclen16 * 16;
++	/*
++	 * Return the number of 16-byte credits used by the FlowC request.
++	 * Pass back the nparams and actual FlowC length if requested.
++	 */
++	if (nparamsp)
++		*nparamsp = nparams;
++	if (flowclenp)
++		*flowclenp = flowclen;
++
++	return flowclen16;
++}
++
++static inline int send_tx_flowc_wr(struct cxgbi_sock *csk)
+ {
+ 	struct sk_buff *skb;
+ 	struct fw_flowc_wr *flowc;
+-	int flowclen, i;
++	int nparams, flowclen16, flowclen;
+ 
+-	flowclen = 80;
++	flowclen16 = tx_flowc_wr_credits(&nparams, &flowclen);
+ 	skb = alloc_wr(flowclen, 0, GFP_ATOMIC);
+ 	flowc = (struct fw_flowc_wr *)skb->head;
+ 	flowc->op_to_nparams =
+-		htonl(FW_WR_OP(FW_FLOWC_WR) | FW_FLOWC_WR_NPARAMS(8));
++		htonl(FW_WR_OP(FW_FLOWC_WR) | FW_FLOWC_WR_NPARAMS(nparams));
+ 	flowc->flowid_len16 =
+-		htonl(FW_WR_LEN16(DIV_ROUND_UP(72, 16)) |
+-				FW_WR_FLOWID(csk->tid));
++		htonl(FW_WR_LEN16(flowclen16) | FW_WR_FLOWID(csk->tid));
+ 	flowc->mnemval[0].mnemonic = FW_FLOWC_MNEM_PFNVFN;
+ 	flowc->mnemval[0].val = htonl(csk->cdev->pfvf);
+ 	flowc->mnemval[1].mnemonic = FW_FLOWC_MNEM_CH;
+@@ -525,11 +552,9 @@ static inline void send_tx_flowc_wr(struct cxgbi_sock *csk)
+ 	flowc->mnemval[7].val = htonl(csk->advmss);
+ 	flowc->mnemval[8].mnemonic = 0;
+ 	flowc->mnemval[8].val = 0;
+-	for (i = 0; i < 9; i++) {
+-		flowc->mnemval[i].r4[0] = 0;
+-		flowc->mnemval[i].r4[1] = 0;
+-		flowc->mnemval[i].r4[2] = 0;
+-	}
++	flowc->mnemval[8].mnemonic = FW_FLOWC_MNEM_TXDATAPLEN_MAX;
++	flowc->mnemval[8].val = 16384;
++
+ 	set_queue(skb, CPL_PRIORITY_DATA, csk);
+ 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+@@ -539,6 +564,8 @@ static inline void send_tx_flowc_wr(struct cxgbi_sock *csk)
+ 		csk->advmss);
+ 
+ 	cxgb4_ofld_send(csk->cdev->ports[csk->port_id], skb);
++
++	return flowclen16;
+ }
+ 
+ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
+@@ -600,6 +627,7 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 		int dlen = skb->len;
+ 		int len = skb->len;
+ 		unsigned int credits_needed;
++		int flowclen16 = 0;
+ 
+ 		skb_reset_transport_header(skb);
+ 		if (is_ofld_imm(skb))
+@@ -612,6 +640,17 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 			credits_needed += DIV_ROUND_UP(
+ 				sizeof(struct fw_ofld_tx_data_wr), 16);
+ 
++		/*
++		 * Assumes the initial credits is large enough to support
++		 * fw_flowc_wr plus largest possible first payload
++		 */
++		if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT)) {
++			flowclen16 = send_tx_flowc_wr(csk);
++			csk->wr_cred -= flowclen16;
++			csk->wr_una_cred += flowclen16;
++			cxgbi_sock_set_flag(csk, CTPF_TX_DATA_SENT);
++		}
++
+ 		if (csk->wr_cred < credits_needed) {
+ 			log_debug(1 << CXGBI_DBG_PDU_TX,
+ 				"csk 0x%p, skb %u/%u, wr %d < %u.\n",
+@@ -621,7 +660,7 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 		}
+ 		__skb_unlink(skb, &csk->write_queue);
+ 		set_queue(skb, CPL_PRIORITY_DATA, csk);
+-		skb->csum = credits_needed;
++		skb->csum = credits_needed + flowclen16;
+ 		csk->wr_cred -= credits_needed;
+ 		csk->wr_una_cred += credits_needed;
+ 		cxgbi_sock_enqueue_wr(csk, skb);
+@@ -632,12 +671,6 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 			csk->wr_cred, csk->wr_una_cred);
+ 
+ 		if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR))) {
+-			if (!cxgbi_sock_flag(csk, CTPF_TX_DATA_SENT)) {
+-				send_tx_flowc_wr(csk);
+-				skb->csum += 5;
+-				csk->wr_cred -= 5;
+-				csk->wr_una_cred += 5;
+-			}
+ 			len += cxgbi_ulp_extra_len(cxgbi_skcb_ulp_mode(skb));
+ 			make_tx_data_wr(csk, skb, dlen, len, credits_needed,
+ 					req_completion);
