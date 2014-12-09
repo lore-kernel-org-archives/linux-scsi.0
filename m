@@ -1,100 +1,115 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH net v3 1/6] cxgb4i: fix tx credit calculation
-Date: Tue, 09 Dec 2014 22:54:45 +0300
-Message-ID: <54875385.80708@cogentembedded.com>
-References: <201412091732.sB9HWHRm008996@localhost6.localdomain6>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+Date: Tue, 09 Dec 2014 22:26:24 +0100
+Message-ID: <2376741.OhfndhC6F0@vostro.rjw.lan>
+References: <3237237.IIIiULdqDt@vostro.rjw.lan> <5486948D.1060807@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:47985 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369AbaLITyu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Dec 2014 14:54:50 -0500
-Received: by mail-la0-f53.google.com with SMTP id gm9so1156306lab.26
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2014 11:54:48 -0800 (PST)
-In-Reply-To: <201412091732.sB9HWHRm008996@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <5486948D.1060807@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 
-Hello.
+On Tuesday, December 09, 2014 02:19:57 PM Aaron Lu wrote:
+> On 12/04/2014 09:22 AM, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
+> > selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
+> > depending on CONFIG_PM_RUNTIME may now be changed to depend on
+> > CONFIG_PM.
+> > 
+> > Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
+> > drivers/scsi/ and in include/scsi/scsi_device.h.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> > 
+> > Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
+> > PM_SLEEP is selected) which is only in linux-next at the moment (via the
+> > linux-pm tree).
+> > 
+> > Please let me know if it is OK to take this one into linux-pm.
+> > 
+> > ---
+> >  drivers/scsi/scsi_pm.c           |    4 ++--
+> >  drivers/scsi/scsi_priv.h         |    5 ++---
+> >  drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
+> >  drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
+> >  include/scsi/scsi_device.h       |    4 ++--
+> >  5 files changed, 14 insertions(+), 21 deletions(-)
+> > 
+> > Index: linux-pm/drivers/scsi/scsi_pm.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/scsi/scsi_pm.c
+> > +++ linux-pm/drivers/scsi/scsi_pm.c
+> > @@ -213,7 +213,7 @@ static int scsi_bus_restore(struct devic
+> >  
+> >  #endif /* CONFIG_PM_SLEEP */
+> >  
+> > -#ifdef CONFIG_PM_RUNTIME
+> > +#ifdef CONFIG_PM
+> >  
+> >  static int sdev_runtime_suspend(struct device *dev)
+> >  {
+> > @@ -338,7 +338,7 @@ void scsi_autopm_put_host(struct Scsi_Ho
+> >  #define scsi_runtime_resume	NULL
+> >  #define scsi_runtime_idle	NULL
+> >  
+> > -#endif /* CONFIG_PM_RUNTIME */
+> > +#endif /* CONFIG_PM */
+> >  
+> >  const struct dev_pm_ops scsi_bus_pm_ops = {
+> >  	.prepare =		scsi_bus_prepare,
+> 
+> Just one nitpeak: since scsi_pm.o is only compiled when CONFIG_PM is
+> set, I think we can skip the #ifdef CONFIG_PM ... #endif macro in this
+> file now. I mean something like this:
 
-On 12/09/2014 08:32 PM, Karen Xie wrote:
+Ah, right, I overlooked that, thanks!
 
-> [PATCH net v3 1/6] cxgb4i: fix tx credit calculation
+I've folded the below into the SCSI patch.
 
-> From: Karen Xie <kxie@chelsio.com>
-
-> - Only data skbs need the wr header added while control skbs do not. Make sure they are treated differently.
-> - Any credit related checking should be done before adding the wr header.
-
-    Looks like a spearate issue deserving its own patch?
-
-> - Fixed compiler warning resulted from added cxgbi_skb_test_flag() call in is_ofld_imm().
-
-    Isn't it called cxgbi_skcb_test_flag()?
-
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> ---
->   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   26 +++++++++++++++++---------
->   drivers/scsi/cxgbi/libcxgbi.h      |    4 ++--
->   2 files changed, 19 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index 1508125..5c3f15d 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-[...]
-> @@ -544,15 +548,17 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
->   	unsigned int submode = cxgbi_skcb_ulp_mode(skb) & 3;
->   	unsigned int wr_ulp_mode = 0;
->
-> -	req = (struct fw_ofld_tx_data_wr *)__skb_push(skb, sizeof(*req));
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 7454498..9e43ae1 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -213,8 +213,6 @@ static int scsi_bus_restore(struct device *dev)
+>  
+>  #endif /* CONFIG_PM_SLEEP */
+>  
+> -#ifdef CONFIG_PM_RUNTIME
 > -
+>  static int sdev_runtime_suspend(struct device *dev)
+>  {
+>  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> @@ -332,14 +330,6 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
+>  	pm_runtime_put_sync(&shost->shost_gendev);
+>  }
+>  
+> -#else
+> -
+> -#define scsi_runtime_suspend	NULL
+> -#define scsi_runtime_resume	NULL
+> -#define scsi_runtime_idle	NULL
+> -
+> -#endif /* CONFIG_PM_RUNTIME */
+> -
+>  const struct dev_pm_ops scsi_bus_pm_ops = {
+>  	.prepare =		scsi_bus_prepare,
+>  	.suspend =		scsi_bus_suspend,
+> 
+> Thanks,
+> Aaron
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-    Perhaps it makes sense to store the result of is_ofld_imm() before 
-__skb_push() call
-instead of duplicating the same call in 2 branches?
-
->   	if (is_ofld_imm(skb)) {
-> +		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
-> +							sizeof(*req));
-
-    The continuation line should start right under 'skb' on the previous line.
-
->   		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
->   					FW_WR_COMPL(1) |
->   					FW_WR_IMMDLEN(dlen));
->   		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
->   						FW_WR_LEN16(credits));
->   	} else {
-> +		req = (struct fw_ofld_tx_data_wr *)__skb_push(skb,
-> +							sizeof(*req));
-
-    Likewise.
-
->   		req->op_to_immdlen =
->   			cpu_to_be32(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
->   					FW_WR_COMPL(1) |
-> @@ -597,12 +603,14 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
->
->   		skb_reset_transport_header(skb);
->   		if (is_ofld_imm(skb))
-> -			credits_needed = DIV_ROUND_UP(dlen +
-> -					sizeof(struct fw_ofld_tx_data_wr), 16);
-> +			credits_needed = DIV_ROUND_UP(dlen, 16);
->   		else
-> -			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb)
-> -					+ sizeof(struct fw_ofld_tx_data_wr),
-> -					16);
-> +			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb),
-
-    It would have been good if you added spaces around *, while at it, to keep
-it consistent with the general kernel coding  style...
-
-[...]
-
-WBR, Sergei
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
