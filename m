@@ -1,30 +1,33 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net v6 7/7] libcxgbi: free skb after debug prints
-Date: Wed, 10 Dec 2014 15:32:30 -0500 (EST)
-Message-ID: <20141210.153230.2033230187234379219.davem@davemloft.net>
-References: <201412101625.sBAGPSXC011110@localhost6.localdomain6>
-	<5488A119.8080505@cogentembedded.com>
-	<1442C3287A121140B690F7F20F94463D82F0A5@nice.asicdesigners.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with DID_RESET status for log_info value 0x0x32010081
+Date: Wed, 10 Dec 2014 15:40:38 -0500
+Message-ID: <yq161djdyrd.fsf@sermon.lab.mkp.net>
+References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1416467155-16869-8-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<yq1a934i055.fsf@sermon.lab.mkp.net>
+	<CAK=zhgr-+MaT6UeXR96G-nMGfo8RdmHVRN1wkUKjz7h6gwLNhg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:47592 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932806AbaLJUcd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 15:32:33 -0500
-In-Reply-To: <1442C3287A121140B690F7F20F94463D82F0A5@nice.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgr-+MaT6UeXR96G-nMGfo8RdmHVRN1wkUKjz7h6gwLNhg@mail.gmail.com>
+	(Sreekanth Reddy's message of "Tue, 9 Dec 2014 17:38:32 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com
-Cc: sergei.shtylyov@cogentembedded.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-From: Karen Xie <kxie@chelsio.com>
-Date: Wed, 10 Dec 2014 20:26:59 +0000
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-> Thanks, v7 has been submitted to address your comment. Please review.
+Sreekanth> For any SCSI command, if the driver receives IOC status =
+Sreekanth> SCSI_IOC_TERMINATED and log info = 0x32010081 then that
+Sreekanth> command will be completed with DID_RESET host status.
+>> 
+>> What does that log info value mean?
 
-Sorry, you did not actually address his comments.
+Sreekanth> The meaning of this log info value is "Virtual IO has failed
+Sreekanth> and has to be retried".
 
-He said to not duplicate your Subject lines in your message bodies,
-and you did not fix that.
+OK, I'd prefer to see that documented in the patch.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
