@@ -1,40 +1,42 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH net v8 7/7] libcxgbi: fix freeing skb prematurely
-Date: Wed, 10 Dec 2014 13:11:24 -0800
-Message-ID: <201412102111.sBALBOjn011692@localhost6.localdomain6>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: [v3.16][v3.17][v3.18][ Regression]  scsi: handle flush errors properly
+Date: Wed, 10 Dec 2014 17:08:56 -0500
+Message-ID: <5488C478.9000209@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:39532 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbaLJWJE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 17:09:04 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com
+Cc: steven@qumulo.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-From: Karen Xie <kxie@chelsio.com>
+Hello James,
 
-With debug turned on the debug print would access the skb after it is freed. Fix it to free the skb after the debug print.
+A kernel bug report was opened against Ubuntu [0].  After a kernel
+bisect, it was found that reverting the following commit resolved this bug:
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/libcxgbi.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+commit 89fb4cd1f717a871ef79fa7debbe840e3225cd54
+Author: James Bottomley <JBottomley@Parallels.com>
+Date:   Thu Jul 3 19:17:34 2014 +0200
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 7da59c3..eb58afc 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -2294,10 +2294,12 @@ int cxgbi_conn_xmit_pdu(struct iscsi_task *task)
- 		return err;
- 	}
- 
--	kfree_skb(skb);
- 	log_debug(1 << CXGBI_DBG_ISCSI | 1 << CXGBI_DBG_PDU_TX,
- 		"itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
- 		task->itt, skb, skb->len, skb->data_len, err);
-+
-+	kfree_skb(skb);
-+
- 	iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
- 	iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
- 	return err;
+    scsi: handle flush errors properly
+
+The regression was introduced as of v3.16 and still exits in the 3.18
+kernel.  It has also made it's way into the stable kernels.
+
+I was hoping to get your feedback, since you are the patch author.  Do
+you think gathering any additional data will help diagnose this issue,
+or would it be best to submit a revert request?
+
+
+Thanks,
+
+Joe
+
+[0] http://pad.lv/1366538
+
