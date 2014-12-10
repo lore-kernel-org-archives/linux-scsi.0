@@ -1,40 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
-Date: Wed, 10 Dec 2014 15:52:58 -0500
-Message-ID: <yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
-References: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+Date: Wed, 10 Dec 2014 20:57:46 +0000
+Message-ID: <20141210205746.GB1209@sucs.org>
+References: <1418200705-488-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	(Sreekanth Reddy's message of "Tue, 9 Dec 2014 18:57:23 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <1418200705-488-1-git-send-email-longli@microsoft.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+On Wed, Dec 10, 2014 at 12:38:25AM -0800, Long Li wrote:
+> MSFT targets currently claim SPC-2 compliance while they implement
+> post SPC-2 features. With this patch we can correctly handle
+> WRITE_SAME_16 issues.
+> 
+> This patch fixes an issue where the flag is setup too late in drive
+> initialization process.
 
-@@ -2486,9 +2486,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
- 
- 	/* command line tunables  for max sgl entries */
- 	if (max_sgl_entries != -1) {
--		ioc->shost->sg_tablesize = (max_sgl_entries <
--		    MPT2SAS_SG_DEPTH) ? max_sgl_entries :
--		    MPT2SAS_SG_DEPTH;
-+		if (max_sgl_entries > MPT2SAS_SG_DEPTH)
-+			printk(MPT2SAS_WARN_FMT
-+			 "setting max_sgl_entries(%d), overriding kernel"
-+			 " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-+			  max_sgl_entries, MPT2SAS_SG_DEPTH);
-+		ioc->shost->sg_tablesize =  min_t(unsigned short,
-+			     max_sgl_entries, SCSI_MAX_SG_CHAIN_SEGMENTS);
- 	} else {
- 		ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
- 	}
+Li, is this a fix for the issue I keep whinging about over in
+https://lkml.org/lkml/2014/10/21/23 ?
 
-Wouldn't it be better to print the new scatterlist limit after it has
-been clamped to reflect what it's actually being set to?
+If is the same issue you may want to CC Martin on this...
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Sitsofe | http://sucs.org/~sits/
