@@ -1,43 +1,48 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
- for internal shared functions using
-Date: Wed, 10 Dec 2014 16:59:01 +0800
-Message-ID: <54880B55.306@gmail.com>
-References: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com> <1085092fd0c2eadae3a0f8de3ee09b95@mail.gmail.com> <547A89E9.6010804@gmail.com> <a308c0f17b7938d3c0f35409f0a4f000@mail.gmail.com>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [V3 PATCH 4/4] scsi:stex.c Add S3/S4 support
+Date: Wed, 10 Dec 2014 10:02:33 +0100
+Message-ID: <1418202153.7241.6.camel@linux-0dmf.site>
+References: <5487A406.8060902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:64538 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbaLJIwe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 03:52:34 -0500
-In-Reply-To: <a308c0f17b7938d3c0f35409f0a4f000@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5487A406.8060902@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grace.chang@tw.promise.com, victor.p@promise.com, ed.lin@promise.com
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@avagotech.com>
-Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 12/10/14 16:47, Sumit Saxena wrote:
->> From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
->> Sent: Sunday, November 30, 2014 8:37 AM
->>
->> Is it OK?  or if possible, please help rebase and send the patch for it
->> based on
->> the related branches and patches.
-> Sorry for delay in response, patch series sent by me is accepted at
-> upstream. Please rebase "for-next" branch of scsi.git, here is git address
-> of tree-
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
+On Wed, 2014-12-10 at 09:38 +0800, Charles Chiou wrote:
+>  From 91868d4afe10533b8a4496075109e411100217bb Mon Sep 17 00:00:00 2001
+> From: Charles Chiou <charles.chiou@tw.promise.com>
+> Date: Fri, 7 Nov 2014 10:15:18 +0800
+> Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
 > 
-> Please sent out patch v2, I will ACK.
+> Add S3/S4 support, add .suspend and .resume function in pci_driver.
+> 
+> Pegasus need 30~40 seconds to boot up. We don't want to OS wait
+> in .resume function. Create a thread to handle device boot up.
 > 
 
-OK, thanks, I shall try to send patch v2 within this week (2014-12-14).
+> +static int stex_resume(struct pci_dev *pdev)
+> +{
+> +	struct st_hba *hba = pci_get_drvdata(pdev);
+> +	struct hba_handshake_workstruct *hswork;
+> +	int sts;
+> +
+> +	hba->mu_status = MU_STATE_STARTING;
+> +	hswork = kzalloc(sizeof(struct hba_handshake_workstruct), GFP_KERNEL);
 
+The system is coming back from sleep. You cannot swap or page out
+as disks may still be asleep. GFP_KERNEL is automatically changed
+to GFP_NOIO. It would be nice to outright use GFP_NOIO.
 
-Thanks.
--- 
-Chen Gang
+> +	INIT_WORK(&hswork->handshake_work, resume_handshake);
 
-Open, share, and attitude like air, water, and life which God blessed
+Memory allocations can fail.
+I suggest you allocate the memory in suspend(). There you can just
+return -ENOMEM in the error case.
+
+	Regards
+		Oliver
