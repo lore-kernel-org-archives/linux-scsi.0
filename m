@@ -1,76 +1,74 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [patch v2] mpt2sas: issue reset is never uninitialized
-Date: Wed, 10 Dec 2014 12:22:21 +0530
-Message-ID: <CAK=zhgrs3OA6GsMv+m4pzpRkxzCVEYOVjnPdmedVEgNAtg+zzQ@mail.gmail.com>
-References: <20141204105610.GA22643@mwanda>
+From: Long Li <longli@microsoft.com>
+Subject: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+Date: Wed, 10 Dec 2014 00:38:25 -0800
+Message-ID: <1418200705-488-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og103.obsmtp.com ([64.18.2.159]:51113 "EHLO
-	exprod7og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbaLJGwW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 01:52:22 -0500
-Received: by mail-ob0-f172.google.com with SMTP id va8so1779933obc.31
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2014 22:52:21 -0800 (PST)
-In-Reply-To: <20141204105610.GA22643@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, JBottomley@parallels.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-This patch seems to be good. Please consider this patch as Acked-by:
-"Sreekanth Reddy" <Sreekanth.Reddy@avagotech.com>
+MSFT targets currently claim SPC-2 compliance while they implement post SPC-2 features. With this patch we can correctly handle WRITE_SAME_16 issues.
 
-Regards,
-Sreekanth
+This patch fixes an issue where the flag is setup too late in drive initialization process.
 
-On Thu, Dec 4, 2014 at 4:26 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> The "issue_reset" variable can be used uninitialized.  It should be set
-> to false at the start.
->
-> Also I cleaned up the types by using bool.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> v2: style fix
->
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 58e4521..3fb01d1 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -3236,7 +3236,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
->         u16 smid;
->         u32 ioc_state;
->         unsigned long timeleft;
-> -       u8 issue_reset;
-> +       bool issue_reset = false;
->         int rc;
->         void *request;
->         u16 wait_state_count;
-> @@ -3300,7 +3300,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
->                 _debug_dump_mf(mpi_request,
->                     sizeof(Mpi2SasIoUnitControlRequest_t)/4);
->                 if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-> -                       issue_reset = 1;
-> +                       issue_reset = true;
->                 goto issue_host_reset;
->         }
->         if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
-> @@ -3341,7 +3341,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
->         u16 smid;
->         u32 ioc_state;
->         unsigned long timeleft;
-> -       u8 issue_reset;
-> +       bool issue_reset = false;
->         int rc;
->         void *request;
->         u16 wait_state_count;
-> @@ -3398,7 +3398,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
->                 _debug_dump_mf(mpi_request,
->                     sizeof(Mpi2SepRequest_t)/4);
->                 if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-> -                       issue_reset = 1;
-> +                       issue_reset = true;
->                 goto issue_host_reset;
->         }
->         if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
+Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/scsi_devinfo.c |  1 +
+ drivers/scsi/storvsc_drv.c  | 10 ----------
+ 2 files changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c1d04d4..f6fe0b2 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -211,6 +211,7 @@ static struct {
+ 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+ 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+ 	{"MICROP", "4110", NULL, BLIST_NOTQ},
++	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
+ 	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
+ 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+ 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index e3ba251..2452bb4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -327,8 +327,6 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+  */
+ static int storvsc_timeout = 180;
+ 
+-static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
+-
+ #define STORVSC_MAX_IO_REQUESTS				200
+ 
+ static void storvsc_on_channel_callback(void *context);
+@@ -1439,14 +1437,6 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 
+ 	sdevice->no_write_same = 1;
+ 
+-	/*
+-	 * Add blist flags to permit the reading of the VPD pages even when
+-	 * the target may claim SPC-2 compliance. MSFT targets currently
+-	 * claim SPC-2 compliance while they implement post SPC-2 features.
+-	 * With this patch we can correctly handle WRITE_SAME_16 issues.
+-	 */
+-	sdevice->sdev_bflags |= msft_blist_flags;
+-
+ 	return 0;
+ }
+ 
+-- 
+2.1.0
