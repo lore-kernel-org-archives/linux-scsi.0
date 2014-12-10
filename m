@@ -1,43 +1,41 @@
 From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH net v7 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
-Date: Wed, 10 Dec 2014 12:57:58 -0800
-Message-ID: <201412102057.sBAKvwYq011564@localhost6.localdomain6>
+Subject: RE: [PATCH net v6 7/7] libcxgbi: free skb after debug prints
+Date: Wed, 10 Dec 2014 21:02:34 +0000
+Message-ID: <1442C3287A121140B690F7F20F94463D82F1B3@nice.asicdesigners.com>
+References: <201412101625.sBAGPSXC011110@localhost6.localdomain6>
+	<5488A119.8080505@cogentembedded.com>
+	<1442C3287A121140B690F7F20F94463D82F0A5@nice.asicdesigners.com>
+ <20141210.153230.2033230187234379219.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:16430 "EHLO
+Received: from stargate.chelsio.com ([67.207.112.58]:7656 "EHLO
 	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932400AbaLJU6r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 15:58:47 -0500
+	with ESMTP id S933098AbaLJVDW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 16:03:22 -0500
+In-Reply-To: <20141210.153230.2033230187234379219.davem@davemloft.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+To: David Miller <davem@davemloft.net>
+Cc: "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Hariprasad S <hariprasad@chelsio.com>, Anish Bhatt <anish@chelsio.com>, "hch@infradead.org" <hch@infradead.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
 
-[PATCH net v7 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
+Sorry, misread the comment, will resubmit. Thanks.
 
-This patch set fixes cxgb4i's tx credit calculation and adds handling of additional rx message and negative advice types. It also removes the duplicate code in cxgb4i to set the outgoing queues of a packet. 
+-----Original Message-----
+From: David Miller [mailto:davem@davemloft.net] 
+Sent: Wednesday, December 10, 2014 12:33 PM
+To: Karen Xie
+Cc: sergei.shtylyov@cogentembedded.com; linux-scsi@vger.kernel.org; netdev@vger.kernel.org; Hariprasad S; Anish Bhatt; hch@infradead.org; James.Bottomley@HansenPartnership.com; michaelc@cs.wisc.edu
+Subject: Re: [PATCH net v6 7/7] libcxgbi: free skb after debug prints
 
-Karen Xie (7):
-cxgb4i: fix tx immediate data credit check
-cxgb4i: fix credit check for tx_data_wr
-cxgb4/cxgb4i: set max. outgoing pdu length in the f/w
-cxgb4i: add more types of negative advice 
-cxgb4i: handle non pdu-aligned rx data
-cxgb4i: use cxgb4's set_wr_txq() for setting outgoing queues
-libcxgbi: fix the debug print accessing skb after it is freed
+From: Karen Xie <kxie@chelsio.com>
+Date: Wed, 10 Dec 2014 20:26:59 +0000
 
-Sending to net as the fixes are mostly in the network area and it touches cxgb4's header file (t4fw_api.h).
+> Thanks, v7 has been submitted to address your comment. Please review.
 
-v2 corrects the "CHECK"s flagged by checkpatch.pl --strict.
+Sorry, you did not actually address his comments.
 
-v3 splits the 3rd patch from v2 to two separate patches. Adds detailed commit messages and makes subject more concise. Patch 3/6 also changes the return value of is_neg_adv() from int to bool.
+He said to not duplicate your Subject lines in your message bodies, and you did not fix that.
 
-v4 -- please ignore.
-
-v5 splits the 1st patch from v3 to two separate patches and reduces code duplication in make_tx_data_wr().
-
-v6 removed the code style cleanup in the 2nd patch. The style update will be addressed in a separate patch.
-
-v7 updates the 7th patch with more detailed commit message.
