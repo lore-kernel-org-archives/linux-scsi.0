@@ -1,180 +1,103 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [Update][PATCH] SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
-Date: Tue, 09 Dec 2014 22:47:47 +0100
-Message-ID: <3039454.iyzHXUp3Uj@vostro.rjw.lan>
-References: <3237237.IIIiULdqDt@vostro.rjw.lan>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [V3 PATCH 1/4] scsi:stex.c Support to Pegasus series.
+Date: Wed, 10 Dec 2014 09:27:32 +0800
+Message-ID: <5487A184.6000307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3237237.IIIiULdqDt@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lu@intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Vinayak Holikatti <vinholikatti@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:62253 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753225AbaLJB1h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Dec 2014 20:27:37 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linus.chen@tw.promise.com, victor.p@promise.com, grace.chang@tw.promise.com, ed.lin@promise.com
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: SCSI / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+ From 8be76ec282e4e344e88c63d5c1e72c0a8394e703 Mon Sep 17 00:00:00 2001
+From: Charles Chiou <charles.chiou@tw.promise.com>
+Date: Wed, 5 Nov 2014 14:18:43 +0800
+Subject: [PATCH 1/4] scsi:stex.c Support to Pegasus series.
 
-After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
-depending on CONFIG_PM_RUNTIME may now be changed to depend on
-CONFIG_PM.
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
 
-Replace CONFIG_PM_RUNTIME with CONFIG_PM everywhere under
-drivers/scsi/ and in include/scsi/scsi_device.h.
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+    It should support backward compatibility.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+2. Change the driver version.
+
+Signed-off-by: charles.chiou@tw.promise.com
 ---
+  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+  1 file changed, 26 insertions(+), 6 deletions(-)
 
-Note: This depends on commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if
-PM_SLEEP is selected) which is only in linux-next at the moment (via the
-linux-pm tree).
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1aa4bef..08e7bc8 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+  /*
+   * SuperTrak EX Series Storage Controller driver for Linux
+   *
+- *	Copyright (C) 2005-2009 Promise Technology Inc.
++ *	Copyright (C) 2005-2014 Promise Technology Inc.
+   *
+   *	This program is free software; you can redistribute it and/or
+   *	modify it under the terms of the GNU General Public License
+@@ -37,11 +37,11 @@
+  #include <scsi/scsi_eh.h>
 
-Please let me know if it is OK to take this one into linux-pm.
+  #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION "5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM			0000
++#define ST_BUILD_VER		01
 
----
- drivers/scsi/scsi_pm.c           |   10 ----------
- drivers/scsi/scsi_priv.h         |    5 ++---
- drivers/scsi/ufs/ufshcd-pci.c    |   11 ++++-------
- drivers/scsi/ufs/ufshcd-pltfrm.c |   11 ++++-------
- include/scsi/scsi_device.h       |    4 ++--
- 5 files changed, 12 insertions(+), 29 deletions(-)
+  enum {
+  	/* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+  	u16 rq_count;
+  	u16 rq_size;
+  	u16 sts_count;
++	u8  supports_pm;
+  };
 
-Index: linux-pm/include/scsi/scsi_device.h
-===================================================================
---- linux-pm.orig/include/scsi/scsi_device.h
-+++ linux-pm/include/scsi/scsi_device.h
-@@ -440,13 +440,13 @@ static inline int scsi_execute_req(struc
- extern void sdev_disable_disk_events(struct scsi_device *sdev);
- extern void sdev_enable_disk_events(struct scsi_device *sdev);
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- extern int scsi_autopm_get_device(struct scsi_device *);
- extern void scsi_autopm_put_device(struct scsi_device *);
- #else
- static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
- static inline void scsi_autopm_put_device(struct scsi_device *d) {}
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
- {
-Index: linux-pm/drivers/scsi/scsi_priv.h
-===================================================================
---- linux-pm.orig/drivers/scsi/scsi_priv.h
-+++ linux-pm/drivers/scsi/scsi_priv.h
-@@ -157,8 +157,7 @@ static inline void scsi_netlink_exit(voi
- /* scsi_pm.c */
- #ifdef CONFIG_PM
- extern const struct dev_pm_ops scsi_bus_pm_ops;
--#endif
--#ifdef CONFIG_PM_RUNTIME
+  struct st_card_info {
+@@ -1590,6 +1591,25 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+
+  	hba->cardtype = (unsigned int) id->driver_data;
+  	ci = &stex_card_info[hba->cardtype];
++	switch (id->subdevice) {
++	case 0x4221:
++	case 0x4222:
++	case 0x4223:
++	case 0x4224:
++	case 0x4225:
++	case 0x4226:
++	case 0x4227:
++	case 0x4261:
++	case 0x4262:
++	case 0x4263:
++	case 0x4264:
++	case 0x4265:
++		break;
++	default:
++		if (hba->cardtype == st_yel)
++			hba->supports_pm = 1;
++	}
 +
- extern void scsi_autopm_get_target(struct scsi_target *);
- extern void scsi_autopm_put_target(struct scsi_target *);
- extern int scsi_autopm_get_host(struct Scsi_Host *);
-@@ -168,7 +167,7 @@ static inline void scsi_autopm_get_targe
- static inline void scsi_autopm_put_target(struct scsi_target *t) {}
- static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
- static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- extern struct async_domain scsi_sd_pm_domain;
- extern struct async_domain scsi_sd_probe_domain;
-Index: linux-pm/drivers/scsi/scsi_pm.c
-===================================================================
---- linux-pm.orig/drivers/scsi/scsi_pm.c
-+++ linux-pm/drivers/scsi/scsi_pm.c
-@@ -213,8 +213,6 @@ static int scsi_bus_restore(struct devic
- 
- #endif /* CONFIG_PM_SLEEP */
- 
--#ifdef CONFIG_PM_RUNTIME
--
- static int sdev_runtime_suspend(struct device *dev)
- {
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-@@ -332,14 +330,6 @@ void scsi_autopm_put_host(struct Scsi_Ho
- 	pm_runtime_put_sync(&shost->shost_gendev);
- }
- 
--#else
--
--#define scsi_runtime_suspend	NULL
--#define scsi_runtime_resume	NULL
--#define scsi_runtime_idle	NULL
--
--#endif /* CONFIG_PM_RUNTIME */
--
- const struct dev_pm_ops scsi_bus_pm_ops = {
- 	.prepare =		scsi_bus_prepare,
- 	.suspend =		scsi_bus_suspend,
-Index: linux-pm/drivers/scsi/ufs/ufshcd-pci.c
-===================================================================
---- linux-pm.orig/drivers/scsi/ufs/ufshcd-pci.c
-+++ linux-pm/drivers/scsi/ufs/ufshcd-pci.c
-@@ -62,12 +62,7 @@ static int ufshcd_pci_resume(struct devi
- {
- 	return ufshcd_system_resume(dev_get_drvdata(dev));
- }
--#else
--#define ufshcd_pci_suspend	NULL
--#define ufshcd_pci_resume	NULL
--#endif /* CONFIG_PM */
- 
--#ifdef CONFIG_PM_RUNTIME
- static int ufshcd_pci_runtime_suspend(struct device *dev)
- {
- 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-@@ -80,11 +75,13 @@ static int ufshcd_pci_runtime_idle(struc
- {
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
--#else /* !CONFIG_PM_RUNTIME */
-+#else /* !CONFIG_PM */
-+#define ufshcd_pci_suspend	NULL
-+#define ufshcd_pci_resume	NULL
- #define ufshcd_pci_runtime_suspend	NULL
- #define ufshcd_pci_runtime_resume	NULL
- #define ufshcd_pci_runtime_idle	NULL
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- /**
-  * ufshcd_pci_shutdown - main function to put the controller in reset state
-Index: linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
-===================================================================
---- linux-pm.orig/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ linux-pm/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -266,12 +266,7 @@ static int ufshcd_pltfrm_resume(struct d
- {
- 	return ufshcd_system_resume(dev_get_drvdata(dev));
- }
--#else
--#define ufshcd_pltfrm_suspend	NULL
--#define ufshcd_pltfrm_resume	NULL
--#endif
- 
--#ifdef CONFIG_PM_RUNTIME
- static int ufshcd_pltfrm_runtime_suspend(struct device *dev)
- {
- 	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
-@@ -284,11 +279,13 @@ static int ufshcd_pltfrm_runtime_idle(st
- {
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
--#else /* !CONFIG_PM_RUNTIME */
-+#else /* !CONFIG_PM */
-+#define ufshcd_pltfrm_suspend	NULL
-+#define ufshcd_pltfrm_resume	NULL
- #define ufshcd_pltfrm_runtime_suspend	NULL
- #define ufshcd_pltfrm_runtime_resume	NULL
- #define ufshcd_pltfrm_runtime_idle	NULL
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- static void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
- {
+  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+  	if (hba->cardtype == st_yel)
+  		sts_offset += (ci->sts_count+1) * sizeof(u32);
+-- 
+1.9.1
+
