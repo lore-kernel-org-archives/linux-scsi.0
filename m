@@ -1,39 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-Date: Wed, 10 Dec 2014 16:12:32 -0500
-Message-ID: <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
-References: <1418200705-488-1-git-send-email-longli@microsoft.com>
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH net v8 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
+Date: Wed, 10 Dec 2014 13:11:03 -0800
+Message-ID: <201412102111.sBALB3gp011649@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1418200705-488-1-git-send-email-longli@microsoft.com> (Long Li's
- message of "Wed, 10 Dec 2014 00:38:25 -0800")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, devel@linuxdriverproject.org
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Long" == Long Li <longli@microsoft.com> writes:
+This patch set fixes cxgb4i's tx credit calculation and adds handling of additional rx message and negative advice types. It also removes the duplicate code in cxgb4i to set the outgoing queues of a packet. 
 
-Long> MSFT targets currently claim SPC-2 compliance while they implement
-Long> post SPC-2 features. With this patch we can correctly handle
-Long> WRITE_SAME_16 issues.
+Karen Xie (7):
+cxgb4i: fix tx immediate data credit check
+cxgb4i: fix credit check for tx_data_wr
+cxgb4/cxgb4i: set max. outgoing pdu length in the f/w
+cxgb4i: add more types of negative advice 
+cxgb4i: handle non pdu-aligned rx data
+cxgb4i: use cxgb4's set_wr_txq() for setting outgoing queues
+libcxgbi: fix the debug print accessing skb after it is freed
 
-Handle the issues or handle WRITE SAME(10/16)?
+Sending to net as the fixes are mostly in the network area and it touches cxgb4's header file (t4fw_api.h).
 
-+	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
+v2 corrects the "CHECK"s flagged by checkpatch.pl --strict.
 
-Is that version field meaningful or is it safe for us to inquire about
-VPD pages without problems on older versions?
+v3 splits the 3rd patch from v2 to two separate patches. Adds detailed commit messages and makes subject more concise. Patch 3/6 also changes the return value of is_neg_adv() from int to bool.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+v4 -- please ignore.
+
+v5 splits the 1st patch from v3 to two separate patches and reduces code duplication in make_tx_data_wr().
+
+v6 removed the code style cleanup in the 2nd patch. The style update will be addressed in a separate patch.
+
+v7 updates the 7th patch with more detailed commit message.
+
+v8 removes the duplicate subject lines from the message bodies.
