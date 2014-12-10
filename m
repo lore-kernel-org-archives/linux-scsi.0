@@ -1,48 +1,50 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [V3 PATCH 4/4] scsi:stex.c Add S3/S4 support
-Date: Wed, 10 Dec 2014 10:02:33 +0100
-Message-ID: <1418202153.7241.6.camel@linux-0dmf.site>
-References: <5487A406.8060902@gmail.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: UAS crash with Apricorn USB3 SATA bridge
+Date: Wed, 10 Dec 2014 01:04:58 -0800
+Message-ID: <20141210090458.GA21955@birch.djwong.org>
+References: <20141209193116.GA25163@birch.djwong.org>
+ <548801F8.8080207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5487A406.8060902@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grace.chang@tw.promise.com, victor.p@promise.com, ed.lin@promise.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:22689 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbaLJJFL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 04:05:11 -0500
+Content-Disposition: inline
+In-Reply-To: <548801F8.8080207@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Wed, 2014-12-10 at 09:38 +0800, Charles Chiou wrote:
->  From 91868d4afe10533b8a4496075109e411100217bb Mon Sep 17 00:00:00 2001
-> From: Charles Chiou <charles.chiou@tw.promise.com>
-> Date: Fri, 7 Nov 2014 10:15:18 +0800
-> Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
+On Wed, Dec 10, 2014 at 09:19:04AM +0100, Hans de Goede wrote:
+> Hi,
 > 
-> Add S3/S4 support, add .suspend and .resume function in pci_driver.
+> On 09-12-14 20:31, Darrick J. Wong wrote:
+> >Hi,
+> >
+> >I have an Apricorn USB 3 disk dongle thing that claims to support UAS.
+> >However, the kernel crashes when I plug it in[1].
 > 
-> Pegasus need 30~40 seconds to boot up. We don't want to OS wait
-> in .resume function. Create a thread to handle device boot up.
+> Yes there are some known issues with uas error handling which are fixed
+> in 3.18, can you try with a 3.18 kernel please ?
+
+The crash pic was from 3.18.0, blk_mq disabled.  I'll work on getting a fuller
+dmesg output.  Looking at the code, it looks like we end up in
+queue_bulk_sg_tx() with a sg list that is shorter than num_sgs, so we fall off
+the end.
+
+(Alas it's now 1am here, so I'm going to bed. :/ )
+
+--D
+
 > 
-
-> +static int stex_resume(struct pci_dev *pdev)
-> +{
-> +	struct st_hba *hba = pci_get_drvdata(pdev);
-> +	struct hba_handshake_workstruct *hswork;
-> +	int sts;
-> +
-> +	hba->mu_status = MU_STATE_STARTING;
-> +	hswork = kzalloc(sizeof(struct hba_handshake_workstruct), GFP_KERNEL);
-
-The system is coming back from sleep. You cannot swap or page out
-as disks may still be asleep. GFP_KERNEL is automatically changed
-to GFP_NOIO. It would be nice to outright use GFP_NOIO.
-
-> +	INIT_WORK(&hswork->handshake_work, resume_handshake);
-
-Memory allocations can fail.
-I suggest you allocate the memory in suspend(). There you can just
-return -ENOMEM in the error case.
-
-	Regards
-		Oliver
+> Note that the device will likely still not work, but it should no
+> longer crash things. When running 3.18 please collect the output of
+> "dmesg" after plugging in the drive and send that to me, then we'll see
+> if we can get it to work from there.
+> 
+> Regards,
+> 
+> Hans
