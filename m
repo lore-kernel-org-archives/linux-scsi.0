@@ -1,61 +1,73 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: RE: [PATCH net v5 2/7] cxgb4i: fix credit check for tx_data_wr
-Date: Wed, 10 Dec 2014 16:27:22 +0000
-Message-ID: <1442C3287A121140B690F7F20F94463D82EC63@nice.asicdesigners.com>
-References: <201412100143.sBA1hSF4024918@localhost6.localdomain6>
- <54885415.4020105@cogentembedded.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 89531] New: mpt2sas: only every second disk working with PCIe
+ x4 connection
+Date: Wed, 10 Dec 2014 18:36:38 +0000
+Message-ID: <bug-89531-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <54885415.4020105@cogentembedded.com>
-Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc: Hariprasad S <hariprasad@chelsio.com>, Anish Bhatt <anish@chelsio.com>, "hch@infradead.org" <hch@infradead.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "davem@davemloft.net" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:33496 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932087AbaLJSgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2014 13:36:41 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9654C2015A
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2014 18:36:40 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id F2C0D20166
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2014 18:36:38 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Thanks for the review. V6 has been submitted to address this.
+https://bugzilla.kernel.org/show_bug.cgi?id=89531
 
------Original Message-----
-From: Sergei Shtylyov [mailto:sergei.shtylyov@cogentembedded.com] 
-Sent: Wednesday, December 10, 2014 6:09 AM
-To: Karen Xie; linux-scsi@vger.kernel.org; netdev@vger.kernel.org
-Cc: Hariprasad S; Anish Bhatt; hch@infradead.org; James.Bottomley@HansenPartnership.com; michaelc@cs.wisc.edu; davem@davemloft.net
-Subject: Re: [PATCH net v5 2/7] cxgb4i: fix credit check for tx_data_wr
+            Bug ID: 89531
+           Summary: mpt2sas: only every second disk working with PCIe x4
+                    connection
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.16.5
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: abusse@cs.tu-berlin.de
+        Regression: No
 
-Hello.
+Created attachment 160351
+  --> https://bugzilla.kernel.org/attachment.cgi?id=160351&action=edit
+syslog
 
-On 12/10/2014 4:43 AM, Karen Xie wrote:
+I have an SAS controller with LSI SAS 2008 controller in a PCIe slot with only
+four lanes where the card can use up to eight lanes. I have the following
+issue. Lets assume there are four drives attached to the controller
+(sda...sdd). I use the following simple benchmark "cat /dev/sdX | pipebench >
+/dev/null". When accessing every drive individually, every thing works fine.
+However when I run the experiment on sda and sdb concurrently, it still works
+on sda but the benchmarks stalls on sdb. When I kill the benchmark after some
+seconds I see the error messages in the attachment. 
 
-> [PATCH net v5 2/7] cxgb4i: fix credit check for tx_data_wr
+However, it gets more strange. When I run the benchmark concurrently on sda and
+sdc every thing works as expected. When trying to read sdb or sdd concurrently
+it always results in the error described above.
 
-> From: Karen Xie <kxie@chelsio.com>
+I also tried to change the hardware setup and only used every second connection
+of the card. However the result stayed the same: concurrent access to every
+second disk fails.
 
-> make sure any tx credit related checking is done before adding the wr header.
+In the same machine I have the same SAS controller model in a PCIe x16 slot and
+there every thing works like a charm. I also swaped the cards and the issue
+stays with the PCIe x4 slot. So a defective card as the source of the problem
+can be ruled out.
 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> ---
->   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    9 +++++----
->   1 files changed, 5 insertions(+), 4 deletions(-)
+Thank you
 
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c 
-> b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index f119a67..56dbd25 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> @@ -547,15 +547,16 @@ static inline void make_tx_data_wr(struct 
-> cxgbi_sock *csk, struct sk_buff *skb,
-[...]
->   		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
-> -					FW_WR_COMPL(1) |
-> -					FW_WR_IMMDLEN(dlen));
-> +					   FW_WR_COMPL(1) |
-> +					   FW_WR_IMMDLEN(dlen));
->   		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
-> -						FW_WR_LEN16(credits));
-> +					  FW_WR_LEN16(credits));
-
-    The above looks like unrelated cleanup, worth putting in a separate net-next patch...
-
-WBR, Sergei
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
