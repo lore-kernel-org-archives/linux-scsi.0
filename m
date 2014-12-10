@@ -1,38 +1,66 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: UAS crash with Apricorn USB3 SATA bridge
-Date: Wed, 10 Dec 2014 09:19:04 +0100
-Message-ID: <548801F8.8080207@redhat.com>
-References: <20141209193116.GA25163@birch.djwong.org>
+From: Sumit Saxena <sumit.saxena@avagotech.com>
+Subject: RE: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+ for internal shared functions using
+Date: Wed, 10 Dec 2014 14:17:34 +0530
+Message-ID: <a308c0f17b7938d3c0f35409f0a4f000@mail.gmail.com>
+References: <lfdrro7paac7tbj4ofn0f3dk.1416224479458@email.android.com>
+ <1085092fd0c2eadae3a0f8de3ee09b95@mail.gmail.com> <547A89E9.6010804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20141209193116.GA25163-PTl6brltDGh4DFYR7WNSRA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <547A89E9.6010804@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 09-12-14 20:31, Darrick J. Wong wrote:
-> Hi,
+>-----Original Message-----
+>From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
+>Sent: Sunday, November 30, 2014 8:37 AM
+>To: Sumit Saxena
+>Cc: megaraidlinux@lsi.com; linux-scsi@vger.kernel.org; linux-
+>kernel@vger.kernel.org
+>Subject: Re: [PATCH] drivers: scsi: megaraid: Add "megaraid_sas_internal.h"
+>for internal shared functions using
 >
-> I have an Apricorn USB 3 disk dongle thing that claims to support UAS.
-> However, the kernel crashes when I plug it in[1].
+>On 11/17/14 19:51, Sumit Saxena wrote:
+>>> -----Original Message-----
+>>> From: Chen Gang [mailto:gang.chen.5i5j@gmail.com]
+>>> Sent: Monday, November 17, 2014 5:17 PM
+>>> To: Sumit Saxena
+>>> Cc: megaraidlinux@lsi.com; linux-scsi@vger.kernel.org; linux-
+>>> kernel@vger.kernel.org
+>>> Subject: RE: [PATCH] drivers: scsi: megaraid: Add
+>"megaraid_sas_internal.h"
+>>> for internal shared functions using
+>>>
+>>>
+>>> OK, I will send patch v2 for it.
+>>>
+>>> I sent this patch based on Linux next tree, please tell me the tree
+>>> location (git
+>>> address) which I shall base on for sending patch v2.
+>>
+>> I posted the patch series today, once the patches make it to scsi-next
+>> tree, I will let you know.
+>>
+>
+>Is it OK?  or if possible, please help rebase and send the patch for it
+>based on
+>the related branches and patches.
+Sorry for delay in response, patch series sent by me is accepted at
+upstream. Please rebase "for-next" branch of scsi.git, here is git address
+of tree-
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
 
-Yes there are some known issues with uas error handling which are fixed
-in 3.18, can you try with a 3.18 kernel please ?
+Please sent out patch v2, I will ACK.
 
-Note that the device will likely still not work, but it should no
-longer crash things. When running 3.18 please collect the output of
-"dmesg" after plugging in the drive and send that to me, then we'll see
-if we can get it to work from there.
+Thanks
+Sumit
 
-Regards,
-
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>Thanks.
+>--
+>Chen Gang
+>
+>Open, share, and attitude like air, water, and life which God blessed
