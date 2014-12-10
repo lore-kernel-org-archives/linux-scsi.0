@@ -1,56 +1,37 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH net v5 2/7] cxgb4i: fix credit check for tx_data_wr
-Date: Wed, 10 Dec 2014 17:09:25 +0300
-Message-ID: <54885415.4020105@cogentembedded.com>
-References: <201412100143.sBA1hSF4024918@localhost6.localdomain6>
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH net v6 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
+Date: Wed, 10 Dec 2014 08:25:07 -0800
+Message-ID: <201412101625.sBAGP7Aq011067@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:53441 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756412AbaLJOJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 09:09:29 -0500
-Received: by mail-la0-f41.google.com with SMTP id hv19so2480765lab.28
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2014 06:09:28 -0800 (PST)
-In-Reply-To: <201412100143.sBA1hSF4024918@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 
-Hello.
+[PATCH net v6 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
 
-On 12/10/2014 4:43 AM, Karen Xie wrote:
+This patch set fixes cxgb4i's tx credit calculation and adds handling of additional rx message and negative advice types. It also removes the duplicate code in cxgb4i to set the outgoing queues of a packet. 
 
-> [PATCH net v5 2/7] cxgb4i: fix credit check for tx_data_wr
+Karen Xie (7):
+cxgb4i: fix tx immediate data credit check
+cxgb4i: fix credit check for tx_data_wr
+cxgb4/cxgb4i: set max. outgoing pdu length in the f/w
+cxgb4i: add more types of negative advice 
+cxgb4i: handle non pdu-aligned rx data
+cxgb4i: use cxgb4's set_wr_txq() for setting outgoing queues
+libcxgbi: fix the debug print accessing skb after it is freed
 
-> From: Karen Xie <kxie@chelsio.com>
+Sending to net as the fixes are mostly in the network area and it touches cxgb4's header file (t4fw_api.h).
 
-> make sure any tx credit related checking is done before adding the wr header.
+v2 corrects the "CHECK"s flagged by checkpatch.pl --strict.
 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> ---
->   drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    9 +++++----
->   1 files changed, 5 insertions(+), 4 deletions(-)
+v3 splits the 3rd patch from v2 to two separate patches. Adds detailed commit messages and makes subject more concise. Patch 3/6 also changes the return value of is_neg_adv() from int to bool.
 
-> diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> index f119a67..56dbd25 100644
-> --- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> +++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-> @@ -547,15 +547,16 @@ static inline void make_tx_data_wr(struct cxgbi_sock *csk, struct sk_buff *skb,
-[...]
->   		req->op_to_immdlen = htonl(FW_WR_OP(FW_OFLD_TX_DATA_WR) |
-> -					FW_WR_COMPL(1) |
-> -					FW_WR_IMMDLEN(dlen));
-> +					   FW_WR_COMPL(1) |
-> +					   FW_WR_IMMDLEN(dlen));
->   		req->flowid_len16 = htonl(FW_WR_FLOWID(csk->tid) |
-> -						FW_WR_LEN16(credits));
-> +					  FW_WR_LEN16(credits));
+v4 -- please ignore.
 
-    The above looks like unrelated cleanup, worth putting in a separate 
-net-next patch...
+v5 splits the 1st patch from v3 to two separate patches and reduces code duplication in make_tx_data_wr().
 
-WBR, Sergei
-
+v6 removed the code style cleanup in the 2nd patch. The style update will be addressed in a separate patch.
