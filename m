@@ -1,62 +1,39 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH net v8 5/7] cxgb4i: handle non-pdu-aligned rx data
-Date: Wed, 10 Dec 2014 13:11:18 -0800
-Message-ID: <201412102111.sBALBIQa011680@localhost6.localdomain6>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+Date: Wed, 10 Dec 2014 16:12:32 -0500
+Message-ID: <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
+References: <1418200705-488-1-git-send-email-longli@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1418200705-488-1-git-send-email-longli@microsoft.com> (Long Li's
+ message of "Wed, 10 Dec 2014 00:38:25 -0800")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Karen Xie <kxie@chelsio.com>
+>>>>> "Long" == Long Li <longli@microsoft.com> writes:
 
-Abort the connection upon receiving of cpl_rx_data, which means the pdu cannot be recovered from the tcp stream. This generally is due to pdu header corruption.
+Long> MSFT targets currently claim SPC-2 compliance while they implement
+Long> post SPC-2 features. With this patch we can correctly handle
+Long> WRITE_SAME_16 issues.
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+Handle the issues or handle WRITE SAME(10/16)?
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 2880f200..dff7345 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1034,6 +1034,27 @@ rel_skb:
- 	__kfree_skb(skb);
- }
- 
-+static void do_rx_data(struct cxgbi_device *cdev, struct sk_buff *skb)
-+{
-+	struct cxgbi_sock *csk;
-+	struct cpl_rx_data *cpl = (struct cpl_rx_data *)skb->data;
-+	unsigned int tid = GET_TID(cpl);
-+	struct cxgb4_lld_info *lldi = cxgbi_cdev_priv(cdev);
-+	struct tid_info *t = lldi->tids;
-+
-+	csk = lookup_tid(t, tid);
-+	if (!csk) {
-+		pr_err("can't find connection for tid %u.\n", tid);
-+	} else {
-+		/* not expecting this, reset the connection. */
-+		pr_err("csk 0x%p, tid %u, rcv cpl_rx_data.\n", csk, tid);
-+		spin_lock_bh(&csk->lock);
-+		send_abort_req(csk);
-+		spin_unlock_bh(&csk->lock);
-+	}
-+	__kfree_skb(skb);
-+}
-+
- static void do_rx_iscsi_hdr(struct cxgbi_device *cdev, struct sk_buff *skb)
- {
- 	struct cxgbi_sock *csk;
-@@ -1453,6 +1474,7 @@ cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_SET_TCB_RPL] = do_set_tcb_rpl,
- 	[CPL_RX_DATA_DDP] = do_rx_data_ddp,
- 	[CPL_RX_ISCSI_DDP] = do_rx_data_ddp,
-+	[CPL_RX_DATA] = do_rx_data,
- };
- 
- int cxgb4i_ofld_init(struct cxgbi_device *cdev)
++	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
+
+Is that version field meaningful or is it safe for us to inquire about
+VPD pages without problems on older versions?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
