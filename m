@@ -1,39 +1,43 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-Date: Wed, 10 Dec 2014 20:57:46 +0000
-Message-ID: <20141210205746.GB1209@sucs.org>
-References: <1418200705-488-1-git-send-email-longli@microsoft.com>
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH net v7 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
+Date: Wed, 10 Dec 2014 12:57:58 -0800
+Message-ID: <201412102057.sBAKvwYq011564@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1418200705-488-1-git-send-email-longli@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, JBottomley@parallels.com, devel@linuxdriverproject.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:16430 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932400AbaLJU6r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 15:58:47 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 
-On Wed, Dec 10, 2014 at 12:38:25AM -0800, Long Li wrote:
-> MSFT targets currently claim SPC-2 compliance while they implement
-> post SPC-2 features. With this patch we can correctly handle
-> WRITE_SAME_16 issues.
-> 
-> This patch fixes an issue where the flag is setup too late in drive
-> initialization process.
+[PATCH net v7 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
 
-Li, is this a fix for the issue I keep whinging about over in
-https://lkml.org/lkml/2014/10/21/23 ?
+This patch set fixes cxgb4i's tx credit calculation and adds handling of additional rx message and negative advice types. It also removes the duplicate code in cxgb4i to set the outgoing queues of a packet. 
 
-If is the same issue you may want to CC Martin on this...
+Karen Xie (7):
+cxgb4i: fix tx immediate data credit check
+cxgb4i: fix credit check for tx_data_wr
+cxgb4/cxgb4i: set max. outgoing pdu length in the f/w
+cxgb4i: add more types of negative advice 
+cxgb4i: handle non pdu-aligned rx data
+cxgb4i: use cxgb4's set_wr_txq() for setting outgoing queues
+libcxgbi: fix the debug print accessing skb after it is freed
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Sending to net as the fixes are mostly in the network area and it touches cxgb4's header file (t4fw_api.h).
+
+v2 corrects the "CHECK"s flagged by checkpatch.pl --strict.
+
+v3 splits the 3rd patch from v2 to two separate patches. Adds detailed commit messages and makes subject more concise. Patch 3/6 also changes the return value of is_neg_adv() from int to bool.
+
+v4 -- please ignore.
+
+v5 splits the 1st patch from v3 to two separate patches and reduces code duplication in make_tx_data_wr().
+
+v6 removed the code style cleanup in the 2nd patch. The style update will be addressed in a separate patch.
+
+v7 updates the 7th patch with more detailed commit message.
