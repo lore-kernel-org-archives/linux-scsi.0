@@ -1,43 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net v7 3/7] cxgb4/cxgb4i: set the max. pdu length in
- firmware
-Date: Wed, 10 Dec 2014 15:44:09 -0500 (EST)
-Message-ID: <20141210.154409.2096662693437513943.davem@davemloft.net>
-References: <201412102024.sBAKO9eA011525@localhost6.localdomain6>
-	<20141210.153159.617405179156473446.davem@davemloft.net>
-	<1418244089.8310.15.camel@HansenPartnership.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set cpu affinity for each MSIX vector enabled by the HBA
+Date: Wed, 10 Dec 2014 15:48:45 -0500
+Message-ID: <yq11to7dydu.fsf@sermon.lab.mkp.net>
+References: <1418127401-10090-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:47708 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932116AbaLJUoN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 15:44:13 -0500
-In-Reply-To: <1418244089.8310.15.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1418127401-10090-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Tue, 9 Dec 2014 17:46:41 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: kxie@chelsio.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, michaelc@cs.wisc.edu
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Wed, 10 Dec 2014 23:41:29 +0300
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-> On Wed, 2014-12-10 at 15:31 -0500, David Miller wrote:
->> From: Karen Xie <kxie@chelsio.com>
->> Date: Wed, 10 Dec 2014 12:24:09 -0800
->> 
->> > [PATCH net v7 3/7] cxgb4/cxgb4i: set the max. pdu length in firmware.
->> 
->> Please listen to the feedback you have been given.
->> 
->> Again, you should not duplicate the Subject line in your message
->> body, that makes more work for the people integrating your patches
->> as we have to remove all of these things by hand.
-> 
-> While we're on the subject of making life easier for maintainers, could
-> I put in a plea for threading your patch set?  It really does make it
-> easier to find and apply all the patches, especially on a high traffic
-> list where they otherwise get interspersed with other messages.
+Sreekanth,
 
-With patchwork I never need to even think about this issue.
+@@ -1373,20 +1380,30 @@ _base_assign_reply_queues(struct MPT2SAS_ADAPTER *ioc)
+ 
+ 	cpu = cpumask_first(cpu_online_mask);
+ 
+-	do {
++	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
++
+
+Why are you reverting to iterating over the queues? A while back I fixed
+this up so it wouldn't fail when nr_cpus > the number of reply queues.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
