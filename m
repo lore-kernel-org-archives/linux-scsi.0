@@ -1,64 +1,57 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH net v5 5/7] cxgb4i: handle non-pdu-aligned rx data
-Date: Tue, 09 Dec 2014 17:43:37 -0800
-Message-ID: <201412100143.sBA1hbBV024936@localhost6.localdomain6>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 0/20] fix misspelling of current function in
+	string
+Date: Wed, 10 Dec 2014 13:56:23 +1100
+Message-ID: <CAGRGNgVGEo8qqpjDvYOJRBtEjXsKmFtXSQrS_Q+tDEYS+nAQqA@mail.gmail.com>
+References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
+ <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
+ <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, linux-wireless <linux-wireless@vger.kernel.org>, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, linux@rasmusvillemoes.dk, Joe Perches <joe@perches.com>, "Mailing List,
+ Arm" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-[PATCH net v5 5/7] cxgb4i: handle non-pdu-aligned rx data
-
-From: Karen Xie <kxie@chelsio.com>
-
-Abort the connection upon receiving of cpl_rx_data, which means the pdu cannot be recovered from the tcp stream. This generally is due to pdu header corruption.
-
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index c4a22e9..bc66308 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1034,6 +1034,27 @@ rel_skb:
- 	__kfree_skb(skb);
- }
- 
-+static void do_rx_data(struct cxgbi_device *cdev, struct sk_buff *skb)
-+{
-+	struct cxgbi_sock *csk;
-+	struct cpl_rx_data *cpl = (struct cpl_rx_data *)skb->data;
-+	unsigned int tid = GET_TID(cpl);
-+	struct cxgb4_lld_info *lldi = cxgbi_cdev_priv(cdev);
-+	struct tid_info *t = lldi->tids;
-+
-+	csk = lookup_tid(t, tid);
-+	if (!csk) {
-+		pr_err("can't find connection for tid %u.\n", tid);
-+	} else {
-+		/* not expecting this, reset the connection. */
-+		pr_err("csk 0x%p, tid %u, rcv cpl_rx_data.\n", csk, tid);
-+		spin_lock_bh(&csk->lock);
-+		send_abort_req(csk);
-+		spin_unlock_bh(&csk->lock);
-+	}
-+	__kfree_skb(skb);
-+}
-+
- static void do_rx_iscsi_hdr(struct cxgbi_device *cdev, struct sk_buff *skb)
- {
- 	struct cxgbi_sock *csk;
-@@ -1453,6 +1474,7 @@ cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_SET_TCB_RPL] = do_set_tcb_rpl,
- 	[CPL_RX_DATA_DDP] = do_rx_data_ddp,
- 	[CPL_RX_ISCSI_DDP] = do_rx_data_ddp,
-+	[CPL_RX_DATA] = do_rx_data,
- };
- 
- int cxgb4i_ofld_init(struct cxgbi_device *cdev)
+SGkgSnVsaWEsCgpPbiBNb24sIERlYyA4LCAyMDE0IGF0IDU6NDMgUE0sIEp1bGlhIExhd2FsbCA8
+anVsaWEubGF3YWxsQGxpcDYuZnI+IHdyb3RlOgo+IE9uIE1vbiwgOCBEZWMgMjAxNCwgSnVsaWFu
+IENhbGFieSB3cm90ZToKPgo+PiBIaSBKdWxpYSwKPj4KPj4gT24gTW9uLCBEZWMgOCwgMjAxNCBh
+dCA2OjIwIEFNLCBKdWxpYSBMYXdhbGwgPEp1bGlhLkxhd2FsbEBsaXA2LmZyPiB3cm90ZToKPj4g
+PiBUaGVzZSBwYXRjaGVzIHJlcGxhY2Ugd2hhdCBhcHBlYXJzIHRvIGJlIGEgcmVmZXJlbmNlIHRv
+IHRoZSBuYW1lIG9mIHRoZQo+PiA+IGN1cnJlbnQgZnVuY3Rpb24gYnV0IGlzIG1pc3NwZWxsZWQg
+aW4gc29tZSB3YXkgYnkgZWl0aGVyIHRoZSBuYW1lIG9mIHRoZQo+PiA+IGZ1bmN0aW9uIGl0c2Vs
+Ziwgb3IgYnkgJXMgYW5kIHRoZW4gX19mdW5jX18gaW4gYW4gYXJndW1lbnQgbGlzdC4KPj4KPj4g
+V291bGQgdGhlcmUgYmUgYW55IHZhbHVlIGluIGRvaW5nIHRoaXMgZm9yIF9hbGxfIGNhc2VzIHdo
+ZXJlIHRoZQo+PiBmdW5jdGlvbiBuYW1lIGlzIHdyaXR0ZW4gaW4gYSBmb3JtYXQgc3RyaW5nPwo+
+Cj4gUHJvYmFibHkuICBCdXQgdGhlcmUgYXJlIGEgbG90IG9mIHRoZW0uICBFdmVuIGZvciB0aGUg
+bWlzc3BlbGxpbmdzLCBJIGhhdmUKPiBvbmx5IGRvbiBhYm91dCAxLzMgb2YgdGhlIGNhc2VzLgo+
+Cj4gT24gdGhlIG90aGVyIGhhbmQsIHRoZSBtaXNzcGVsbGluZyBoYXZlIHRvIGJlIGNoZWNrZWQg
+Y2FyZWZ1bGx5LCBiZWNhdXNlIGEKPiBtaXNzcGVsbGluZyBvZiBvbmUgdGhpbmcgY291bGQgYmUg
+dGhlIGNvcnJlY3Qgc3BlbGxpbmcgb2YgdGhlIHRoaW5nIHRoc3QKPiB3YXMgYWN0dWFsbHkgaW50
+ZW5kZWQuCj4KPiBKb2UsIGhvd2V2ZXIsIHBvaW50cyBvdXQgdGhhdCBhIGxvdCBvZiB0aGVzZSBw
+cmludHMgYXJlIGp1c3QgZm9yIGZ1bmN0aW9uCj4gdHJhY2luZywgYW5kIGNvdWxkIGJlIHJlbW92
+ZWQuICBJIHdvcmtlZCBvbiBhbm90aGVyIHNlbWFudGljIHBhdGNoIHRoYXQKPiB0cmllcyB0byBk
+byB0aGF0LiAgSXQgbWlnaHQgYmUgYmV0dGVyIHRvIHJlbW92ZSB0aG9zZSBwcmludHMgY29tcGxl
+dGVseSwKPiByYXRoZXIgdGhhbiBzZW5kaW5nIG9uZSBwYXRjaCB0byB0cmFuc2Zvcm0gdGhlbSBh
+bmQgdGhlbiBvbmUgcGF0Y2ggdG8KPiByZW1vdmUgdGhlbSBhZnRlciB0aGF0LiAgVGhhdCBpcyB3
+aHkgZm9yIHRoaXMgc2VyaWVzIEkgZGlkIG9ubHkgdGhlIG9uZXMKPiB3aGVyZSB0aGVyZSB3YXMg
+YWN0dWFsbHkgYSBwcm9ibGVtLgoKT2ssIHRoYXQgbWFrZXMgc2Vuc2UuCgpFaXRoZXIgd2F5IHRo
+b3VnaCwgdGhpcyBpcyBhIHJlYWxseSBpbnRlcmVzdGluZyBhcHBsaWNhdGlvbiBvZiB0aGUKc2Vt
+YW50aWMgcGF0Y2hpbmcuIE5pY2Ugd29yayEKClRoYW5rcywKCi0tIApKdWxpYW4gQ2FsYWJ5CgpF
+bWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20KUHJvZmlsZTogaHR0cDovL3d3dy5nb29nbGUu
+Y29tL3Byb2ZpbGVzL2p1bGlhbi5jYWxhYnkvCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3Rz
+LmZyZWVkZXNrdG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlz
+dGluZm8vaW50ZWwtZ2Z4Cg==
