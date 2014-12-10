@@ -1,70 +1,67 @@
-From: Steven Haber <steven@qumulo.com>
-Subject: Re: [v3.16][v3.17][v3.18][ Regression] scsi: handle flush errors properly
-Date: Wed, 10 Dec 2014 15:06:50 -0800
-Message-ID: <CAPK7rjejMdQ45sVS-ebnqmeYWz3vqaYVXxTdVwUzhByB+nbsLA@mail.gmail.com>
-References: <5488C478.9000209@canonical.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+Date: Wed, 10 Dec 2014 23:30:30 +0000
+Message-ID: <BY2PR0301MB0711CF1C9FBD8EFED89B3911A0620@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1418200705-488-1-git-send-email-longli@microsoft.com>
+ <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
+ <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <5488C478.9000209@canonical.com>
-Sender: stable-owner@vger.kernel.org
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: JBottomley@parallels.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hey Joe,
 
-Here's some context:
 
-The SCSI flush command was being treated by a zero-byte write, which
-means that if an error was returned, you wouldn't catch it until a
-subsequent write (or flush). The way writes work is that all possible
-bytes are written, and if something bad happens, an error bubbles out
-on the next write attempt. This holds true even for a zero-byte write.
-This means that before this bug, to guarantee durability you had to
-flush twice (and verify both were error-free). I'm working on a
-storage appliance that relies on the fact that a single flush command
-guarantees a write made durably to a SCSI device. I'm sure many other
-storage products rely on this behavior, too. The patch James shipped
-fixes this bug by special-casing the flush error path. Before flush
-wouldn't return errors; now it does.
+> -----Original Message-----
+> From: Long Li
+> Sent: Wednesday, December 10, 2014 2:28 PM
+> To: Martin K. Petersen
+> Cc: KY Srinivasan; Haiyang Zhang; JBottomley@parallels.com; linux-
+> scsi@vger.kernel.org; devel@linuxdriverproject.org; linux-
+> kernel@vger.kernel.org
+> Subject: RE: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+> 
+> > >>>>> "Long" == Long Li <longli@microsoft.com> writes:
+> >
+> > Long> MSFT targets currently claim SPC-2 compliance while they
+> > Long> implement post SPC-2 features. With this patch we can correctly
+> > Long> handle
+> > Long> WRITE_SAME_16 issues.
+> >
+> > Handle the issues or handle WRITE SAME(10/16)?
+> 
+> With this patch, the SCSI layer will be able to correctly send WRITE_SAME_16
+> to the Hyper-V host. It will not send WRITE_SAME_10: it has been disabled in
+> the driver template. Do you want me to send another patch with these
+> details?
+> 
+> >
+> > +	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
+> >
+> > Is that version field meaningful or is it safe for us to inquire about
+> > VPD pages without problems on older versions?
+> 
+> This version is used in all current Hyper-V hosts: Windows 2008 R2, 2012 and
+> 2012 R2. However it may change in future Windows releases.
 
-I'm not sure why certain USB drives are failing in the flush path on
-unmount. Since the flush bug existed for such a long time, I suspect
-certain drivers coded around this behavior, and now that it is correct
-we are seeing new bugs exposed.
+The next version of the host will be claiming conformance to SPC-3
 
-Based on the simplicity and obviousness of our patch for the flush
-bug, it would really be ideal to diagnose this further rather than
-reverting.
-
-Steven Haber
-Qumulo, Inc.
-
-On Wed, Dec 10, 2014 at 2:08 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> Hello James,
->
-> A kernel bug report was opened against Ubuntu [0].  After a kernel
-> bisect, it was found that reverting the following commit resolved this bug:
->
-> commit 89fb4cd1f717a871ef79fa7debbe840e3225cd54
-> Author: James Bottomley <JBottomley@Parallels.com>
-> Date:   Thu Jul 3 19:17:34 2014 +0200
->
->     scsi: handle flush errors properly
->
-> The regression was introduced as of v3.16 and still exits in the 3.18
-> kernel.  It has also made it's way into the stable kernels.
->
-> I was hoping to get your feedback, since you are the patch author.  Do
-> you think gathering any additional data will help diagnose this issue,
-> or would it be best to submit a revert request?
->
->
-> Thanks,
->
-> Joe
->
-> [0] http://pad.lv/1366538
->
+K. Y
+> 
+> >
+> > --
+> > Martin K. Petersen	Oracle Linux Engineering
