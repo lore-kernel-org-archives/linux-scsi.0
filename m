@@ -1,57 +1,77 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH 0/20] fix misspelling of current function in
-	string
-Date: Wed, 10 Dec 2014 13:56:23 +1100
-Message-ID: <CAGRGNgVGEo8qqpjDvYOJRBtEjXsKmFtXSQrS_Q+tDEYS+nAQqA@mail.gmail.com>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAGRGNgWDJqV=XD+6q26Ma=m1sEi1kvLWsjq6=RjRVSFTxow0Qg@mail.gmail.com>
- <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [patch v2] mpt3sas: issue_reset is uninitialized
+Date: Wed, 10 Dec 2014 12:21:29 +0530
+Message-ID: <CAK=zhgpGzt4tyu-knsJdYkFFH9jXE2HHgsoDq-rnYMi983MUcA@mail.gmail.com>
+References: <20141203100918.GA29583@mwanda>
+	<20141204105705.GB22643@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <alpine.DEB.2.02.1412080738210.2100@localhost6.localdomain6>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, linux-samsung-soc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org, linux-wireless <linux-wireless@vger.kernel.org>, intel-gfx@lists.freedesktop.org, linux-usb@vger.kernel.org, kernel-janitors@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org, netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, linux@rasmusvillemoes.dk, Joe Perches <joe@perches.com>, "Mailing List,
- Arm" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og114.obsmtp.com ([64.18.2.215]:37766 "EHLO
+	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbaLJGvb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 01:51:31 -0500
+Received: by mail-ob0-f169.google.com with SMTP id vb8so1774274obc.14
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2014 22:51:30 -0800 (PST)
+In-Reply-To: <20141204105705.GB22643@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-SGkgSnVsaWEsCgpPbiBNb24sIERlYyA4LCAyMDE0IGF0IDU6NDMgUE0sIEp1bGlhIExhd2FsbCA8
-anVsaWEubGF3YWxsQGxpcDYuZnI+IHdyb3RlOgo+IE9uIE1vbiwgOCBEZWMgMjAxNCwgSnVsaWFu
-IENhbGFieSB3cm90ZToKPgo+PiBIaSBKdWxpYSwKPj4KPj4gT24gTW9uLCBEZWMgOCwgMjAxNCBh
-dCA2OjIwIEFNLCBKdWxpYSBMYXdhbGwgPEp1bGlhLkxhd2FsbEBsaXA2LmZyPiB3cm90ZToKPj4g
-PiBUaGVzZSBwYXRjaGVzIHJlcGxhY2Ugd2hhdCBhcHBlYXJzIHRvIGJlIGEgcmVmZXJlbmNlIHRv
-IHRoZSBuYW1lIG9mIHRoZQo+PiA+IGN1cnJlbnQgZnVuY3Rpb24gYnV0IGlzIG1pc3NwZWxsZWQg
-aW4gc29tZSB3YXkgYnkgZWl0aGVyIHRoZSBuYW1lIG9mIHRoZQo+PiA+IGZ1bmN0aW9uIGl0c2Vs
-Ziwgb3IgYnkgJXMgYW5kIHRoZW4gX19mdW5jX18gaW4gYW4gYXJndW1lbnQgbGlzdC4KPj4KPj4g
-V291bGQgdGhlcmUgYmUgYW55IHZhbHVlIGluIGRvaW5nIHRoaXMgZm9yIF9hbGxfIGNhc2VzIHdo
-ZXJlIHRoZQo+PiBmdW5jdGlvbiBuYW1lIGlzIHdyaXR0ZW4gaW4gYSBmb3JtYXQgc3RyaW5nPwo+
-Cj4gUHJvYmFibHkuICBCdXQgdGhlcmUgYXJlIGEgbG90IG9mIHRoZW0uICBFdmVuIGZvciB0aGUg
-bWlzc3BlbGxpbmdzLCBJIGhhdmUKPiBvbmx5IGRvbiBhYm91dCAxLzMgb2YgdGhlIGNhc2VzLgo+
-Cj4gT24gdGhlIG90aGVyIGhhbmQsIHRoZSBtaXNzcGVsbGluZyBoYXZlIHRvIGJlIGNoZWNrZWQg
-Y2FyZWZ1bGx5LCBiZWNhdXNlIGEKPiBtaXNzcGVsbGluZyBvZiBvbmUgdGhpbmcgY291bGQgYmUg
-dGhlIGNvcnJlY3Qgc3BlbGxpbmcgb2YgdGhlIHRoaW5nIHRoc3QKPiB3YXMgYWN0dWFsbHkgaW50
-ZW5kZWQuCj4KPiBKb2UsIGhvd2V2ZXIsIHBvaW50cyBvdXQgdGhhdCBhIGxvdCBvZiB0aGVzZSBw
-cmludHMgYXJlIGp1c3QgZm9yIGZ1bmN0aW9uCj4gdHJhY2luZywgYW5kIGNvdWxkIGJlIHJlbW92
-ZWQuICBJIHdvcmtlZCBvbiBhbm90aGVyIHNlbWFudGljIHBhdGNoIHRoYXQKPiB0cmllcyB0byBk
-byB0aGF0LiAgSXQgbWlnaHQgYmUgYmV0dGVyIHRvIHJlbW92ZSB0aG9zZSBwcmludHMgY29tcGxl
-dGVseSwKPiByYXRoZXIgdGhhbiBzZW5kaW5nIG9uZSBwYXRjaCB0byB0cmFuc2Zvcm0gdGhlbSBh
-bmQgdGhlbiBvbmUgcGF0Y2ggdG8KPiByZW1vdmUgdGhlbSBhZnRlciB0aGF0LiAgVGhhdCBpcyB3
-aHkgZm9yIHRoaXMgc2VyaWVzIEkgZGlkIG9ubHkgdGhlIG9uZXMKPiB3aGVyZSB0aGVyZSB3YXMg
-YWN0dWFsbHkgYSBwcm9ibGVtLgoKT2ssIHRoYXQgbWFrZXMgc2Vuc2UuCgpFaXRoZXIgd2F5IHRo
-b3VnaCwgdGhpcyBpcyBhIHJlYWxseSBpbnRlcmVzdGluZyBhcHBsaWNhdGlvbiBvZiB0aGUKc2Vt
-YW50aWMgcGF0Y2hpbmcuIE5pY2Ugd29yayEKClRoYW5rcywKCi0tIApKdWxpYW4gQ2FsYWJ5CgpF
-bWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20KUHJvZmlsZTogaHR0cDovL3d3dy5nb29nbGUu
-Y29tL3Byb2ZpbGVzL2p1bGlhbi5jYWxhYnkvCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3Rz
-LmZyZWVkZXNrdG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlz
-dGluZm8vaW50ZWwtZ2Z4Cg==
+This patch seems to be good. Please consider this patch as Acked-by:
+"Sreekanth Reddy" <Sreekanth.Reddy@avagotech.com>
+
+Regards,
+Sreekanth
+
+On Thu, Dec 4, 2014 at 4:27 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> The "issue_reset" can be used uninitialized.  It should be set to false
+> at the start.
+>
+> Also I cleaned up the types a little by using bool.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> v2: style fix.  use true/false instead of 1/0.
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 1560115..b9c2739 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -3419,7 +3419,7 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
+>         u16 smid;
+>         u32 ioc_state;
+>         unsigned long timeleft;
+> -       u8 issue_reset;
+> +       bool issue_reset = false;
+>         int rc;
+>         void *request;
+>         u16 wait_state_count;
+> @@ -3483,7 +3483,7 @@ mpt3sas_base_sas_iounit_control(struct MPT3SAS_ADAPTER *ioc,
+>                 _debug_dump_mf(mpi_request,
+>                     sizeof(Mpi2SasIoUnitControlRequest_t)/4);
+>                 if (!(ioc->base_cmds.status & MPT3_CMD_RESET))
+> -                       issue_reset = 1;
+> +                       issue_reset = true;
+>                 goto issue_host_reset;
+>         }
+>         if (ioc->base_cmds.status & MPT3_CMD_REPLY_VALID)
+> @@ -3523,7 +3523,7 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
+>         u16 smid;
+>         u32 ioc_state;
+>         unsigned long timeleft;
+> -       u8 issue_reset;
+> +       bool issue_reset = false;
+>         int rc;
+>         void *request;
+>         u16 wait_state_count;
+> @@ -3581,7 +3581,7 @@ mpt3sas_base_scsi_enclosure_processor(struct MPT3SAS_ADAPTER *ioc,
+>                 _debug_dump_mf(mpi_request,
+>                     sizeof(Mpi2SepRequest_t)/4);
+>                 if (!(ioc->base_cmds.status & MPT3_CMD_RESET))
+> -                       issue_reset = 1;
+> +                       issue_reset = false;
+>                 goto issue_host_reset;
+>         }
+>         if (ioc->base_cmds.status & MPT3_CMD_REPLY_VALID)
