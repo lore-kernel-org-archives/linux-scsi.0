@@ -1,41 +1,81 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with
- DID_RESET status for log_info value 0x0x32010081
-Date: Thu, 11 Dec 2014 17:48:18 +0530
-Message-ID: <CAK=zhgr5h7_uTQRfXgXeyLtEf-_zReem4oGEzROnRoHDYaw-hA@mail.gmail.com>
-References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<1416467155-16869-8-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<yq1a934i055.fsf@sermon.lab.mkp.net>
-	<CAK=zhgr-+MaT6UeXR96G-nMGfo8RdmHVRN1wkUKjz7h6gwLNhg@mail.gmail.com>
-	<yq161djdyrd.fsf@sermon.lab.mkp.net>
+From: Karen Xie <kxie@chelsio.com>
+Subject: [PATCH net v9 1/7] cxgb4i: fix tx immediate data credit check
+Date: Thu, 11 Dec 2014 07:25:40 -0800
+Message-ID: <201412111525.sBBFPeZt012927@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:41436 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbaLKMSZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2014 07:18:25 -0500
-Received: by mail-wg0-f52.google.com with SMTP id x12so6210602wgg.11
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2014 04:18:19 -0800 (PST)
-In-Reply-To: <yq161djdyrd.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-> Sreekanth> For any SCSI command, if the driver receives IOC status =
-> Sreekanth> SCSI_IOC_TERMINATED and log info = 0x32010081 then that
-> Sreekanth> command will be completed with DID_RESET host status.
->>>
->>> What does that log info value mean?
->
-> Sreekanth> The meaning of this log info value is "Virtual IO has failed
-> Sreekanth> and has to be retried".
->
-> OK, I'd prefer to see that documented in the patch.
+From: Karen Xie <kxie@chelsio.com>
 
-Ok sure Martin, I will add this description in the next version of
-this patch once review completes on this patch set.
+Only data skbs need the wr header added while control skbs do not. Make sure
+they are treated differently.
 
-Thanks,
-Sreekanth
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   22 +++++++++++++++-------
+ drivers/scsi/cxgbi/libcxgbi.h      |    4 ++--
+ 2 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 1508125..f119a67 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -171,10 +171,14 @@ static int push_tx_frames(struct cxgbi_sock *, int);
+  * Returns true if a packet can be sent as an offload WR with immediate
+  * data.  We currently use the same limit as for Ethernet packets.
+  */
+-static inline int is_ofld_imm(const struct sk_buff *skb)
++static inline bool is_ofld_imm(const struct sk_buff *skb)
+ {
+-	return skb->len <= (MAX_IMM_TX_PKT_LEN -
+-			sizeof(struct fw_ofld_tx_data_wr));
++	int len = skb->len;
++
++	if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
++		len += sizeof(struct fw_ofld_tx_data_wr);
++
++	return len <= MAX_IMM_TX_PKT_LEN;
+ }
+ 
+ static void send_act_open_req(struct cxgbi_sock *csk, struct sk_buff *skb,
+@@ -597,11 +601,15 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
+ 
+ 		skb_reset_transport_header(skb);
+ 		if (is_ofld_imm(skb))
+-			credits_needed = DIV_ROUND_UP(dlen +
+-					sizeof(struct fw_ofld_tx_data_wr), 16);
++			credits_needed = DIV_ROUND_UP(dlen, 16);
+ 		else
+-			credits_needed = DIV_ROUND_UP(8*calc_tx_flits_ofld(skb)
+-					+ sizeof(struct fw_ofld_tx_data_wr),
++			credits_needed = DIV_ROUND_UP(
++						8 * calc_tx_flits_ofld(skb),
++						16);
++
++		if (likely(cxgbi_skcb_test_flag(skb, SKCBF_TX_NEED_HDR)))
++			credits_needed += DIV_ROUND_UP(
++					sizeof(struct fw_ofld_tx_data_wr),
+ 					16);
+ 
+ 		if (csk->wr_cred < credits_needed) {
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 2c7cb1c..aba1af7 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -317,8 +317,8 @@ static inline void cxgbi_skcb_clear_flag(struct sk_buff *skb,
+ 	__clear_bit(flag, &(cxgbi_skcb_flags(skb)));
+ }
+ 
+-static inline int cxgbi_skcb_test_flag(struct sk_buff *skb,
+-					enum cxgbi_skcb_flags flag)
++static inline int cxgbi_skcb_test_flag(const struct sk_buff *skb,
++				       enum cxgbi_skcb_flags flag)
+ {
+ 	return test_bit(flag, &(cxgbi_skcb_flags(skb)));
+ }
