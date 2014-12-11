@@ -1,36 +1,50 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set cpu
- affinity for each MSIX vector enabled by the HBA
-Date: Thu, 11 Dec 2014 17:28:37 +0530
-Message-ID: <CAK=zhgpJ353oA3xiHatQ61tEZwrs09wcUsWBCb0bsYaWvVaMqw@mail.gmail.com>
-References: <1418127401-10090-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<94D0CD8314A33A4D9D801C0FE68B402959408BB5@G4W3202.americas.hpqcorp.net>
+Subject: Re: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary
+ restriction for the module parameter max_sgl_entries
+Date: Thu, 11 Dec 2014 17:44:03 +0530
+Message-ID: <CAK=zhgrr=9+3dynE6fuTikNwnBFKe5x=jA+UTzPKqfNAyXt_ow@mail.gmail.com>
+References: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402959408BB5@G4W3202.americas.hpqcorp.net>
+In-Reply-To: <yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@Parallels.com" <JBottomley@parallels.com>, "Sathya.Prakash@avagotech.com" <Sathya.Prakash@avagotech.com>, "Nagalakshmi.Nandigama@avagotech.com" <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
->> @@ -1609,6 +1611,10 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8
->> index, u32 vector)
->>       reply_q->ioc = ioc;
->>       reply_q->msix_index = index;
->>       reply_q->vector = vector;
->> +
->> +     if (!zalloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
->> +             return -ENOMEM;
+> @@ -2486,9 +2486,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
 >
-> I think this will create the problem Alex Thorlton just reported
-> with lpfc on a system with a huge number (6144) of CPUs.
+>         /* command line tunables  for max sgl entries */
+>         if (max_sgl_entries != -1) {
+> -               ioc->shost->sg_tablesize = (max_sgl_entries <
+> -                   MPT2SAS_SG_DEPTH) ? max_sgl_entries :
+> -                   MPT2SAS_SG_DEPTH;
+> +               if (max_sgl_entries > MPT2SAS_SG_DEPTH)
+> +                       printk(MPT2SAS_WARN_FMT
+> +                        "setting max_sgl_entries(%d), overriding kernel"
+> +                        " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
+> +                         max_sgl_entries, MPT2SAS_SG_DEPTH);
+> +               ioc->shost->sg_tablesize =  min_t(unsigned short,
+> +                            max_sgl_entries, SCSI_MAX_SG_CHAIN_SEGMENTS);
+>         } else {
+>                 ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
+>         }
 >
-> See this thread:
->         [BUG] kzalloc overflow in lpfc driver on 6k core system
+> Wouldn't it be better to print the new scatterlist limit after it has
+> been clamped to reflect what it's actually being set to?
 
-Oh ok, Then I will use alloc_cpumask_var() API and cpumask_clear() to
-initialize all the CPU bits in the mask to zero. Is it fine?
+but Martin, I though to warn the user that the module parameter
+max_sgl_entries value what they provided is greater than the kernel
+defined SCSI_MAX_SG_SEGMENTS, whether if this module parameter value
+is greater than or less than the SCSI_MAX_SG_CHAIN_SEGMENTS. Also I
+thought, user may confuse if see observes SCSI_MAX_SG_CHAIN_SEGMENTS
+value instead of max_sgl_entries value in the warning message.
 
-Regards,
+Please let me known If my assumption is wrong. Then I will modify this
+patch according to your suggestion i.e I will print the scatterlist
+limit after it has been clamped.
+
+Thanks,
 Sreekanth
