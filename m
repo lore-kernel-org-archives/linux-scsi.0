@@ -1,47 +1,48 @@
-From: Sitsofe Wheeler <sitsofe@gmail.com>
-Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-Date: Thu, 11 Dec 2014 10:53:45 +0000
-Message-ID: <20141211101945.GA25624@sucs.org>
-References: <1418200705-488-1-git-send-email-longli@microsoft.com>
- <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
- <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
- <BY2PR0301MB0711CF1C9FBD8EFED89B3911A0620@BY2PR0301MB0711.namprd03.prod.outlook.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set cpu
+ affinity for each MSIX vector enabled by the HBA
+Date: Thu, 11 Dec 2014 17:21:33 +0530
+Message-ID: <CAK=zhgq12Go0YXY+msuoeXeUoRJZQ=hKqChuoesaAzu-T=FjpA@mail.gmail.com>
+References: <1418127401-10090-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<yq11to7dydu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <BY2PR0301MB0711CF1C9FBD8EFED89B3911A0620@BY2PR0301MB0711.namprd03.prod.outlook.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq11to7dydu.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 10, 2014 at 11:30:30PM +0000, KY Srinivasan wrote:
-> 
-> > >
-> > > +	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
-> > >
-> > > Is that version field meaningful or is it safe for us to inquire about
-> > > VPD pages without problems on older versions?
-> > 
-> > This version is used in all current Hyper-V hosts: Windows 2008 R2, 2012 and
-> > 2012 R2. However it may change in future Windows releases.
-> 
-> The next version of the host will be claiming conformance to SPC-3
+> @@ -1373,20 +1380,30 @@ _base_assign_reply_queues(struct MPT2SAS_ADAPTER *ioc)
+>
+>         cpu = cpumask_first(cpu_online_mask);
+>
+> -       do {
+> +       list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+> +
+>
+> Why are you reverting to iterating over the queues? A while back I fixed
+> this up so it wouldn't fail when nr_cpus > the number of reply queues.
+>
 
-Will the version number ("1.0") of Virtual Disks also be changed? Part
-of me hopes it will as it will mean certain quirks for virtual disks
-will be easier to apply and won't need host version (are you 2008, 2012,
-2016) version logic...
+I have kept yours CPUs affinity with reply queues logic as it is. This
+patch doesn't break any of it's original CPUs affinity with reply
+queues calculation  even when nr_cpus > the number of reply queues.
+since below loop will help us to calculate CPU groups which needs to
+affinity to particular reply queue when nr_cpus > the number of reply
+queues
 
--- 
-Sitsofe | http://sucs.org/~sits/
+               for (i = 0 ; i < group ; i++) {
+                        ioc->cpu_msix_table[cpu] = index;
++                       cpumask_or(reply_q->affinity_hint,
++                                  reply_q->affinity_hint, get_cpu_mask(cpu));
+                        cpu = cpumask_next(cpu, cpu_online_mask);
+                }
+
+I am iterating over the queues to get the MSIX vector number easily,
+while calling irq_set_affinity_hint() API for setting CPUs affinity
+hint for that MSIX vector.
+
+Regards,
+Sreekanth
