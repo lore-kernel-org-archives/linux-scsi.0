@@ -1,29 +1,24 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] cxgb4/csiostor: Don't use MASTER_MUST for fw_hello call
-Date: Thu, 11 Dec 2014 14:25:43 -0500 (EST)
-Message-ID: <20141211.142543.465362034244812431.davem@davemloft.net>
-References: <1418276503-23001-1-git-send-email-hariprasad@chelsio.com>
+Subject: Re: [PATCH net v9 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
+Date: Thu, 11 Dec 2014 15:04:30 -0500 (EST)
+Message-ID: <20141211.150430.1465687238823811699.davem@davemloft.net>
+References: <201412111525.sBBFPbfn012920@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:55751 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758568AbaLKTZq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2014 14:25:46 -0500
-In-Reply-To: <1418276503-23001-1-git-send-email-hariprasad@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <201412111525.sBBFPbfn012920@localhost6.localdomain6>
+Sender: netdev-owner@vger.kernel.org
+To: kxie@chelsio.com
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 List-Id: linux-scsi@vger.kernel.org
-To: hariprasad@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, praveenm@chelsio.com
 
-From: Hariprasad Shenai <hariprasad@chelsio.com>
-Date: Thu, 11 Dec 2014 11:11:43 +0530
+From: Karen Xie <kxie@chelsio.com>
+Date: Thu, 11 Dec 2014 07:25:37 -0800
 
-> Remove use of calls into t4_fw_hello() with MASTER_MUST, which results in
-> FW_HELLO_CMD_MASTERFORCE being set. The firmware doesn't support this and of
-> course any existing PF Drivers will totally go for a toss.
-> 
-> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
+> This patch set fixes cxgb4i's tx credit calculation and adds handling of
+> additional rx message and negative advice types. It also removes the duplicate
+> code in cxgb4i to set the outgoing queues of a packet. 
 
-Applied, thanks.
+This series does not apply cleanly at all to net-next, it gets many
+rejects.
