@@ -1,65 +1,47 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-Date: Thu, 11 Dec 2014 18:49:58 +0000
-Message-ID: <BY2PR0301MB0711C426CD05C614C655F3A2A0630@BY2PR0301MB0711.namprd03.prod.outlook.com>
-References: <1418200705-488-1-git-send-email-longli@microsoft.com>
- <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
- <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
- <BY2PR0301MB0711CF1C9FBD8EFED89B3911A0620@BY2PR0301MB0711.namprd03.prod.outlook.com>
- <20141211101945.GA25624@sucs.org>
+From: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] uas: disable UAS on Apricorn SATA dongles
+Date: Thu, 11 Dec 2014 11:01:11 -0800
+Message-ID: <20141211190111.GD21955@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20141211101945.GA25624@sucs.org>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, Haiyang Zhang <haiyangz@microsoft.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+The Apricorn SATA dongle will occasionally return "USBSUSBSUSB" in
+response to SCSI commands when running in UAS mode.  Therefore,
+disable UAS mode on this dongle.
 
+Signed-off-by: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/usb/storage/unusual_uas.h |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-> -----Original Message-----
-> From: Sitsofe Wheeler [mailto:sitsofe@gmail.com]
-> Sent: Thursday, December 11, 2014 2:54 AM
-> To: KY Srinivasan
-> Cc: Long Li; Martin K. Petersen; Haiyang Zhang; JBottomley@parallels.com;
-> linux-scsi@vger.kernel.org; devel@linuxdriverproject.org; linux-
-> kernel@vger.kernel.org
-> Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-> 
-> On Wed, Dec 10, 2014 at 11:30:30PM +0000, KY Srinivasan wrote:
-> >
-> > > >
-> > > > +	{"Msft", "Virtual Disk", "1.0", BLIST_TRY_VPD_PAGES},
-> > > >
-> > > > Is that version field meaningful or is it safe for us to inquire
-> > > > about VPD pages without problems on older versions?
-> > >
-> > > This version is used in all current Hyper-V hosts: Windows 2008 R2,
-> > > 2012 and
-> > > 2012 R2. However it may change in future Windows releases.
-> >
-> > The next version of the host will be claiming conformance to SPC-3
-> 
-> Will the version number ("1.0") of Virtual Disks also be changed? Part of me
-> hopes it will as it will mean certain quirks for virtual disks will be easier to
-> apply and won't need host version (are you 2008, 2012,
-> 2016) version logic...
-
-Spoke to the folks on Windows side of the house. They currently don't have plans to
-Change the version number ("1.0").
-
-K. Y
-> 
-> --
-> Sitsofe | http://sucs.org/~sits/
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index 18a283d..3530cb0 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -40,6 +40,16 @@
+  * and don't forget to CC: the USB development list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+  */
+ 
++/*
++ * Apricorn USB3 dongle sometimes returns "USBSUSBSUSBS" in response to SCSI
++ * commands in UAS mode.  Observed with the 1.28 firmware; are there others?
++ */
++UNUSUAL_DEV(0x0984, 0x0301, 0x0128, 0x0128,
++		"Apricorn",
++		"",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_IGNORE_UAS),
++
+ /* https://bugzilla.kernel.org/show_bug.cgi?id=79511 */
+ UNUSUAL_DEV(0x0bc2, 0x2312, 0x0000, 0x9999,
+ 		"Seagate",
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
