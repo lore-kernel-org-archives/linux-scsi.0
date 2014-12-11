@@ -1,36 +1,29 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net v8 1/7] cxgb4i: fix tx immediate data credit check
-Date: Wed, 10 Dec 2014 22:54:45 -0500 (EST)
-Message-ID: <20141210.225445.458745535803327140.davem@davemloft.net>
-References: <201412102111.sBALB6sI011656@localhost6.localdomain6>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [v3.16][v3.17][v3.18][ Regression]  scsi: handle flush errors
+ properly
+Date: Thu, 11 Dec 2014 07:45:20 +0300
+Message-ID: <1418273120.8310.20.camel@HansenPartnership.com>
+References: <5488C478.9000209@canonical.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50066 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933460AbaLKDyt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Dec 2014 22:54:49 -0500
-In-Reply-To: <201412102111.sBALB6sI011656@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <5488C478.9000209@canonical.com>
+Sender: stable-owner@vger.kernel.org
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: steven@qumulo.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-From: Karen Xie <kxie@chelsio.com>
-Date: Wed, 10 Dec 2014 13:11:06 -0800
-
-> From: Karen Xie <kxie@chelsio.com>
+On Wed, 2014-12-10 at 17:08 -0500, Joseph Salisbury wrote:
+> Hello James,
 > 
-> Only data skbs need the wr header added while control skbs do not. Make sure they are treated differently.
-> 
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> A kernel bug report was opened against Ubuntu [0].  After a kernel
+> bisect, it was found that reverting the following commit resolved this bug:
 
-Please text format your commit messages to 80 characters or less per
-line.
+If I read this bug report correctly, it's saying a USB attached device
+produces an error when doing a "shred" but the same device PCI attached
+doesn't.  Presumably shred sends some type of zero length command USB
+storage doesn't like.  What is shred actually doing (what commands is it
+sending)?
 
-People are going to read your commits using text tools, not
-necessarily GUI tools which will auto-format your commit message.
-
-I know this seems like we are being difficult, but you are making many
-fundamental mistakes in your efforts to merge in these changes.
+James
