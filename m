@@ -1,48 +1,36 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set cpu
  affinity for each MSIX vector enabled by the HBA
-Date: Thu, 11 Dec 2014 17:21:33 +0530
-Message-ID: <CAK=zhgq12Go0YXY+msuoeXeUoRJZQ=hKqChuoesaAzu-T=FjpA@mail.gmail.com>
+Date: Thu, 11 Dec 2014 17:28:37 +0530
+Message-ID: <CAK=zhgpJ353oA3xiHatQ61tEZwrs09wcUsWBCb0bsYaWvVaMqw@mail.gmail.com>
 References: <1418127401-10090-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<yq11to7dydu.fsf@sermon.lab.mkp.net>
+	<94D0CD8314A33A4D9D801C0FE68B402959408BB5@G4W3202.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq11to7dydu.fsf@sermon.lab.mkp.net>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B402959408BB5@G4W3202.americas.hpqcorp.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jejb@kernel.org, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, linux-kernel@vger.kernel.org
+To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@kernel.org" <jejb@kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@Parallels.com" <JBottomley@parallels.com>, "Sathya.Prakash@avagotech.com" <Sathya.Prakash@avagotech.com>, "Nagalakshmi.Nandigama@avagotech.com" <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> @@ -1373,20 +1380,30 @@ _base_assign_reply_queues(struct MPT2SAS_ADAPTER *ioc)
+>> @@ -1609,6 +1611,10 @@ _base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8
+>> index, u32 vector)
+>>       reply_q->ioc = ioc;
+>>       reply_q->msix_index = index;
+>>       reply_q->vector = vector;
+>> +
+>> +     if (!zalloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL))
+>> +             return -ENOMEM;
 >
->         cpu = cpumask_first(cpu_online_mask);
+> I think this will create the problem Alex Thorlton just reported
+> with lpfc on a system with a huge number (6144) of CPUs.
 >
-> -       do {
-> +       list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-> +
->
-> Why are you reverting to iterating over the queues? A while back I fixed
-> this up so it wouldn't fail when nr_cpus > the number of reply queues.
->
+> See this thread:
+>         [BUG] kzalloc overflow in lpfc driver on 6k core system
 
-I have kept yours CPUs affinity with reply queues logic as it is. This
-patch doesn't break any of it's original CPUs affinity with reply
-queues calculation  even when nr_cpus > the number of reply queues.
-since below loop will help us to calculate CPU groups which needs to
-affinity to particular reply queue when nr_cpus > the number of reply
-queues
-
-               for (i = 0 ; i < group ; i++) {
-                        ioc->cpu_msix_table[cpu] = index;
-+                       cpumask_or(reply_q->affinity_hint,
-+                                  reply_q->affinity_hint, get_cpu_mask(cpu));
-                        cpu = cpumask_next(cpu, cpu_online_mask);
-                }
-
-I am iterating over the queues to get the MSIX vector number easily,
-while calling irq_set_affinity_hint() API for setting CPUs affinity
-hint for that MSIX vector.
+Oh ok, Then I will use alloc_cpumask_var() API and cpumask_clear() to
+initialize all the CPU bits in the mask to zero. Is it fine?
 
 Regards,
 Sreekanth
