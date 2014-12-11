@@ -1,50 +1,41 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary
- restriction for the module parameter max_sgl_entries
-Date: Thu, 11 Dec 2014 17:44:03 +0530
-Message-ID: <CAK=zhgrr=9+3dynE6fuTikNwnBFKe5x=jA+UTzPKqfNAyXt_ow@mail.gmail.com>
-References: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with
+ DID_RESET status for log_info value 0x0x32010081
+Date: Thu, 11 Dec 2014 17:48:18 +0530
+Message-ID: <CAK=zhgr5h7_uTQRfXgXeyLtEf-_zReem4oGEzROnRoHDYaw-hA@mail.gmail.com>
+References: <1416467155-16869-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<1416467155-16869-8-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<yq1a934i055.fsf@sermon.lab.mkp.net>
+	<CAK=zhgr-+MaT6UeXR96G-nMGfo8RdmHVRN1wkUKjz7h6gwLNhg@mail.gmail.com>
+	<yq161djdyrd.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og102.obsmtp.com ([64.18.2.157]:41436 "EHLO
+	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbaLKMSZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2014 07:18:25 -0500
+Received: by mail-wg0-f52.google.com with SMTP id x12so6210602wgg.11
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2014 04:18:19 -0800 (PST)
+In-Reply-To: <yq161djdyrd.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-> @@ -2486,9 +2486,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+> Sreekanth> For any SCSI command, if the driver receives IOC status =
+> Sreekanth> SCSI_IOC_TERMINATED and log info = 0x32010081 then that
+> Sreekanth> command will be completed with DID_RESET host status.
+>>>
+>>> What does that log info value mean?
 >
->         /* command line tunables  for max sgl entries */
->         if (max_sgl_entries != -1) {
-> -               ioc->shost->sg_tablesize = (max_sgl_entries <
-> -                   MPT2SAS_SG_DEPTH) ? max_sgl_entries :
-> -                   MPT2SAS_SG_DEPTH;
-> +               if (max_sgl_entries > MPT2SAS_SG_DEPTH)
-> +                       printk(MPT2SAS_WARN_FMT
-> +                        "setting max_sgl_entries(%d), overriding kernel"
-> +                        " defined SCSI_MAX_SG_SEGMENTS(%d)\n", ioc->name,
-> +                         max_sgl_entries, MPT2SAS_SG_DEPTH);
-> +               ioc->shost->sg_tablesize =  min_t(unsigned short,
-> +                            max_sgl_entries, SCSI_MAX_SG_CHAIN_SEGMENTS);
->         } else {
->                 ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
->         }
+> Sreekanth> The meaning of this log info value is "Virtual IO has failed
+> Sreekanth> and has to be retried".
 >
-> Wouldn't it be better to print the new scatterlist limit after it has
-> been clamped to reflect what it's actually being set to?
+> OK, I'd prefer to see that documented in the patch.
 
-but Martin, I though to warn the user that the module parameter
-max_sgl_entries value what they provided is greater than the kernel
-defined SCSI_MAX_SG_SEGMENTS, whether if this module parameter value
-is greater than or less than the SCSI_MAX_SG_CHAIN_SEGMENTS. Also I
-thought, user may confuse if see observes SCSI_MAX_SG_CHAIN_SEGMENTS
-value instead of max_sgl_entries value in the warning message.
-
-Please let me known If my assumption is wrong. Then I will modify this
-patch according to your suggestion i.e I will print the scatterlist
-limit after it has been clamped.
+Ok sure Martin, I will add this description in the next version of
+this patch once review completes on this patch set.
 
 Thanks,
 Sreekanth
