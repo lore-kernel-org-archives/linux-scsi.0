@@ -1,32 +1,66 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH net v9 0/7] cxgb4/cxgbi: misc. fixes for cxgb4i
-Date: Thu, 11 Dec 2014 15:28:20 -0500 (EST)
-Message-ID: <20141211.152820.1113313283475373586.davem@davemloft.net>
-References: <201412111525.sBBFPbfn012920@localhost6.localdomain6>
-	<20141211.150430.1465687238823811699.davem@davemloft.net>
-	<525DB349B3FB5444AE057A887CB2A8D8D9AA8E@nice.asicdesigners.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] scsi: fix random memory corruption with scsi-mq + T10 PI
+Date: Thu, 11 Dec 2014 14:18:22 -0800
+Message-ID: <1418336302.1709.1.camel@haakon3.risingtidesystems.com>
+References: <54862444.3020901@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56358 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932909AbaLKU2X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2014 15:28:23 -0500
-In-Reply-To: <525DB349B3FB5444AE057A887CB2A8D8D9AA8E@nice.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54862444.3020901@cybernetics.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: anish@chelsio.com
-Cc: kxie@chelsio.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, hariprasad@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-From: Anish Bhatt <anish@chelsio.com>
-Date: Thu, 11 Dec 2014 20:24:48 +0000
+Hi Tony,
 
->> This series does not apply cleanly at all to net-next, it gets many
->> rejects.
+On Mon, 2014-12-08 at 17:20 -0500, Tony Battersby wrote:
+> This fixes random memory corruption triggered when all three of the
+> following are true:
 > 
-> Hey Dave, this patchset was mostly bugfixes and hence meant for net where it
-> applies cleanly. not net-next. We can rebase to net-next and send if you're still
->  willing to take it before net-next closes.
+> * scsi-mq enabled
+> * T10 Protection Information (DIF) enabled
+> * SCSI host with sg_tablesize > SCSI_MAX_SG_SEGMENTS (128)
+> 
+> The symptoms of this bug are unpredictable memory corruption, BUG()s,
+> oopses, lockups, etc., any of which may appear to be completely
+> unrelated to the root cause.
+> 
+> Cc: <stable@vger.kernel.org> # 3.17.x, 3.18.x
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> 
+> ---
+> 
+> I encountered this problem with a QLogic QLE2672 FC HBA using qla2xxx.
+> On my system, this would trigger BUG_ON(atomic_read(&bio->bi_remaining) <= 0)
+> in bio_endio(), or a general protection fault in __sg_free_table()
+> trying to free prot_sdb, or any number of other weird random problems.
+> All of this was caused by cmd->prot_sdb pointing to the wrong memory.
+> To see how the memory is allocated, refer to scsi_mq_setup_tags() in
+> scsi_lib.c.
+> 
+> For inclusion in 3.19, 3.18.x, and 3.17.x.
+> 
+> --- linux-3.18.0/drivers/scsi/scsi_lib.c.orig	2014-12-08 16:23:28.000000000 -0500
+> +++ linux-3.18.0/drivers/scsi/scsi_lib.c	2014-12-08 16:24:00.000000000 -0500
+> @@ -1829,7 +1829,9 @@ static int scsi_mq_prep_fn(struct reques
+>  
+>  	if (scsi_host_get_prot(shost)) {
+>  		cmd->prot_sdb = (void *)sg +
+> -			shost->sg_tablesize * sizeof(struct scatterlist);
+> +			min_t(unsigned int,
+> +			      shost->sg_tablesize, SCSI_MAX_SG_SEGMENTS) *
+> +			sizeof(struct scatterlist);
+>  		memset(cmd->prot_sdb, 0, sizeof(struct scsi_data_buffer));
+>  
+>  		cmd->prot_sdb->table.sgl =
+> 
 
-You absolutely must rebase it on net-next.
+Nice catch.
+
+Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
+Adding a CC' to MKP, and HCH so he can pick it up.
+
+--nab
