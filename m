@@ -1,47 +1,29 @@
-From: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] uas: disable UAS on Apricorn SATA dongles
-Date: Thu, 11 Dec 2014 11:01:11 -0800
-Message-ID: <20141211190111.GD21955@birch.djwong.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] cxgb4/csiostor: Don't use MASTER_MUST for fw_hello call
+Date: Thu, 11 Dec 2014 14:25:43 -0500 (EST)
+Message-ID: <20141211.142543.465362034244812431.davem@davemloft.net>
+References: <1418276503-23001-1-git-send-email-hariprasad@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Gerd Hoffmann <kraxel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:55751 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758568AbaLKTZq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2014 14:25:46 -0500
+In-Reply-To: <1418276503-23001-1-git-send-email-hariprasad@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hariprasad@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, praveenm@chelsio.com
 
-The Apricorn SATA dongle will occasionally return "USBSUSBSUSB" in
-response to SCSI commands when running in UAS mode.  Therefore,
-disable UAS mode on this dongle.
+From: Hariprasad Shenai <hariprasad@chelsio.com>
+Date: Thu, 11 Dec 2014 11:11:43 +0530
 
-Signed-off-by: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
- drivers/usb/storage/unusual_uas.h |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+> Remove use of calls into t4_fw_hello() with MASTER_MUST, which results in
+> FW_HELLO_CMD_MASTERFORCE being set. The firmware doesn't support this and of
+> course any existing PF Drivers will totally go for a toss.
+> 
+> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 18a283d..3530cb0 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -40,6 +40,16 @@
-  * and don't forget to CC: the USB development list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-  */
- 
-+/*
-+ * Apricorn USB3 dongle sometimes returns "USBSUSBSUSBS" in response to SCSI
-+ * commands in UAS mode.  Observed with the 1.28 firmware; are there others?
-+ */
-+UNUSUAL_DEV(0x0984, 0x0301, 0x0128, 0x0128,
-+		"Apricorn",
-+		"",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_IGNORE_UAS),
-+
- /* https://bugzilla.kernel.org/show_bug.cgi?id=79511 */
- UNUSUAL_DEV(0x0bc2, 0x2312, 0x0000, 0x9999,
- 		"Seagate",
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied, thanks.
