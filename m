@@ -1,62 +1,93 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: T10-PI: Getting failed tag info
-Date: Fri, 12 Dec 2014 15:15:20 -0800
-Message-ID: <1418426120.10743.73.camel@haakon3.risingtidesystems.com>
-References: <54892468.5060300@vlnb.net> <yq1r3w5blys.fsf@sermon.lab.mkp.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Clarification for Persistent Reservation + All Registrants
+Date: Sat, 13 Dec 2014 00:52:41 +0100
+Message-ID: <1418428361.2270.13.camel@HansenPartnership.com>
+References: <1418425163.10743.61.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45112 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753416AbaLLXPV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Dec 2014 18:15:21 -0500
-In-Reply-To: <yq1r3w5blys.fsf@sermon.lab.mkp.net>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55994 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751175AbaLLXwq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2014 18:52:46 -0500
+In-Reply-To: <1418425163.10743.61.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "t10@t10.org" <t10@t10.org>, target-devel <target-devel@vger.kernel.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2014-12-11 at 22:12 -0500, Martin K. Petersen wrote:
-> >>>>> "Vlad" == Vladislav Bolkhovitin <vst@vlnb.net> writes:
+On Fri, 2014-12-12 at 14:59 -0800, Nicholas A. Bellinger wrote:
+> Hello T10/SCSI folks,
 > 
-> Vlad,
+> A question came up on the LIO target-devel mailing list recently wrt the
+> proper handling of Persistent Reservations + All Registrants logic in a
+> couple of different scenarios.
+
+I can tell you how it was originally designed over a decade ago to
+support clustering products (being in the business then of negotiating
+with the manufacturers).
+
+> The crux of the confusion stems from how registrations are treated
+> before an explicit PR-OUT RESERVE service action with All Registrants
+> type occurs, and after that explicit PR-OUT RESERVE of All Registrants
+> type has been released.
 > 
-> Vlad> We are currently developing a SCSI target system with T10-PI. We
-> Vlad> are using block integrity interface and found a problem that this
-> Vlad> interface fundamentally can not pass Oracle T10-PI certification
-> Vlad> tests. Those tests require to receive on the initiator side
-> Vlad> information about which particular tag failed the target checks,
-> Vlad> but the block integrity interface does not preserve this
-> Vlad> information, hence the target can not deliver it to the initiator
-> Vlad> => certification failure. The storage provides the right sense,
-> Vlad> but then in scsi_io_completion() it is dropped and replaced by a
-> Vlad> single EILSEQ.
+> My original interpretation was that an explicit PR-OUT RESERVE with All
+> Registrants type had to first occur before other non reservation holding
+> registrations (existing or not) would gain the implicit reservation.
+
+You seem to be asking in the presence of registrations would an
+unregistered initiator receive a reservation conflict before the PR_OUT
+RESERVE is issued?  The answer, categorially is no because there's no
+reservation until a registered initiator establishes one.
+
+> This was primarily because the reservation type was not known until the
+> explicit PR-OUT RESERVE occurred, and AFAICT at the time there where no
+> host implementations that actually specified the reservation type at
+> registration time.
 > 
-> Vlad> What would be the best way to fix that? By making a patch
-> Vlad> introducing new -EXXXXXX error codes for the PI errors?
-> 
-> I posted such a patch a while back. We use that in our qualification
-> tooling to ensure that the right things are reported when a PI error is
-> injected at various places in the stack.
-> 
-> One thing that needs to be done is to make returning these new errors to
-> userland conditional on !BIP_BLOCK_INTEGRITY. I'll put that on my list.
-> 
+> So Is it correct to assume that one explicit PR-OUT RESERVE with All
+> Registrants type needs to occur before other non reservation holding
+> registrations gain an implicit reservation..?
 
-Any chance this patch will be merged up soon..? 
+I don't understand what you mean implicit reservation.  Once an all
+registrants reservation is established, *all* registered initiators
+become the reservation holder ... they're all equal.  This is mandated
+in SPC-3 5.6.9
 
-I still need the same logic for IBLOCK backends to propagate up the
-correct sense codes from bio completion in the event of GUARD check or
-REF tag failure.
+> How about when the explicit reservation is removed..?  Do the implicit
+> reservations need to remain in effect for the existing registrations,
+> even though the explicit reservation of All Registrants type no longer
+> exists..?
 
-Also, AFAICT this patch still doesn't set the failed LBA, right..?
-Any thoughts about the most sane way to get the failed LBA information
-back to a caller like IBLOCK performing submission with bio + bip..?
+Again, I don't understand the distinction between implicit and explicit.
+For an all registrants reservation, all registered initiators are the
+reservation holder so any one of them may release the reservation.  Once
+the reservation is released, there's no reservation at all.
 
---nab
+> The second point that Ilias raised is what should be the correct
+> R_HOLDER bit status for PRIN READ_FULL_STATUS descriptors when All
+> Registrants type is specified.  My original interpretation was that
+> R_HOLDER was to signal the explicit reservation holder obtained with
+> PR-OUT RESERVE, and not for the implicit reservations from the other
+> registrations.  Is this the correct approach..?
 
+R_HOLDER is set for any initiator that would be defined to be the
+persistent reservation holder in section 5.6.9
 
+> Also, does anyone have any experience with a host side implementation of
+> All Registrants to use as a reference for what's already out in the
+> wild..?
 
+I know what was negotiated to support clustering (which is a pretty tiny
+subset).  However, I think your point of confusion is trying to
+distinguish between what you call implicit and explicit reservations ...
+there's no such thing.  There's only a reservation holder which may be
+many initiators, So it's binary: a given initiator either is or is not
+the reservation holder.  Section 5.6 needs to be read in that context.
+
+James
 
 
