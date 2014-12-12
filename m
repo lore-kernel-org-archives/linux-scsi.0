@@ -1,86 +1,71 @@
-From: Karen Xie <kxie@chelsio.com>
-Subject: [PATCH net-next v10 6/7] cxgb4i: use set_wr_txq() to set tx
- queues
-Date: Thu, 11 Dec 2014 19:13:44 -0800
-Message-ID: <201412120313.sBC3Di0t028358@localhost6.localdomain6>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: Backport of a fix for a race condition in HPSA driver (3rd time
+ is the charm)
+Date: Fri, 12 Dec 2014 05:16:44 +0000
+Message-ID: <1418361404.3599.81.camel@decadent.org.uk>
+References: <CANcb+4vTzLBGkkvrBo-dsCERFvX-J=D-4Sgx6Vz_-e1jJpokYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
-Cc: kxie@chelsio.com, hariprasad@chelsio.com, anish@chelsio.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-ljmNzOdKv0AIi4KciJsA"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51513 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759114AbaLLFRB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2014 00:17:01 -0500
+In-Reply-To: <CANcb+4vTzLBGkkvrBo-dsCERFvX-J=D-4Sgx6Vz_-e1jJpokYQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Masoud Sharbiani <msharbiani@twopensource.com>
+Cc: stable@vger.kernel.org, thenzl@redhat.com, scameron@beardog.cce.hp.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-From: Karen Xie <kxie@chelsio.com>
 
-use cxgb4's set_wr_txq() for setting of the tx queue for a outgoing packet.
-remove the similar function in cxgb4i.
+--=-ljmNzOdKv0AIi4KciJsA
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   16 +++++-----------
- 1 files changed, 5 insertions(+), 11 deletions(-)
+On Fri, 2014-11-14 at 11:26 -0800, Masoud Sharbiani wrote:
+> Dear stable maintainers,
+> Can you please backport commitid
+> 2cc5bfaf854463d9d1aa52091f60110fbf102a9 ([SCSI] hpsa: fix a race in
+> cmd_free/scsi_done) to 3.10 stable (and earlier, if applicable)? It
+> seems to fix an issue that we have run into a couple of times.
+>=20
+> Many thanks,
+> Masoud Sharbiani <msharbiani@twitter.com> <msharbiani@twopensource.com>
+>=20
+> PS: Apologies for duplicate message that may have been captured in
+> your spam folder.
 
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 8b7e8f8..a83d2ce 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -158,12 +158,6 @@ static struct scsi_transport_template *cxgb4i_stt;
- #define RCV_BUFSIZ_MASK		0x3FFU
- #define MAX_IMM_TX_PKT_LEN	128
- 
--static inline void set_queue(struct sk_buff *skb, unsigned int queue,
--				const struct cxgbi_sock *csk)
--{
--	skb->queue_mapping = queue;
--}
--
- static int push_tx_frames(struct cxgbi_sock *, int);
- 
- /*
-@@ -405,7 +399,7 @@ static void send_abort_req(struct cxgbi_sock *csk)
- 
- 	csk->cpl_abort_req = NULL;
- 	req = (struct cpl_abort_req *)skb->head;
--	set_queue(skb, CPL_PRIORITY_DATA, csk);
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
- 	req->cmd = CPL_ABORT_SEND_RST;
- 	t4_set_arp_err_handler(skb, csk, abort_arp_failure);
- 	INIT_TP_WR(req, csk->tid);
-@@ -431,7 +425,7 @@ static void send_abort_rpl(struct cxgbi_sock *csk, int rst_status)
- 		csk, csk->state, csk->flags, csk->tid, rst_status);
- 
- 	csk->cpl_abort_rpl = NULL;
--	set_queue(skb, CPL_PRIORITY_DATA, csk);
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
- 	INIT_TP_WR(rpl, csk->tid);
- 	OPCODE_TID(rpl) = cpu_to_be32(MK_OPCODE_TID(CPL_ABORT_RPL, csk->tid));
- 	rpl->cmd = rst_status;
-@@ -557,7 +551,7 @@ static inline int send_tx_flowc_wr(struct cxgbi_sock *csk)
- 	flowc->mnemval[8].mnemonic = FW_FLOWC_MNEM_TXDATAPLEN_MAX;
- 	flowc->mnemval[8].val = 16384;
- 
--	set_queue(skb, CPL_PRIORITY_DATA, csk);
-+	set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
- 
- 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
- 		"csk 0x%p, tid 0x%x, %u,%u,%u,%u,%u,%u,%u.\n",
-@@ -663,7 +657,7 @@ static int push_tx_frames(struct cxgbi_sock *csk, int req_completion)
- 			break;
- 		}
- 		__skb_unlink(skb, &csk->write_queue);
--		set_queue(skb, CPL_PRIORITY_DATA, csk);
-+		set_wr_txq(skb, CPL_PRIORITY_DATA, csk->port_id);
- 		skb->csum = credits_needed + flowclen16;
- 		csk->wr_cred -= credits_needed;
- 		csk->wr_una_cred += credits_needed;
-@@ -1555,7 +1549,7 @@ static int ddp_ppod_write_idata(struct cxgbi_device *cdev, unsigned int port_id,
- 		return -ENOMEM;
- 	}
- 	req = (struct ulp_mem_io *)skb->head;
--	set_queue(skb, CPL_PRIORITY_CONTROL, NULL);
-+	set_wr_txq(skb, CPL_PRIORITY_CONTROL, 0);
- 
- 	ulp_mem_io_set_hdr(lldi, req, wr_len, dlen, pm_addr);
- 	idata = (struct ulptx_idata *)(req + 1);
+I've queued this up for 3.2, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+Kids!  Bringing about Armageddon can be dangerous.  Do not attempt it in
+your own home. - Terry Pratchett and Neil Gaiman, `Good Omens'
+
+--=-ljmNzOdKv0AIi4KciJsA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAVIp6POe/yOyVhhEJAQpgJRAAgZjItJmFoNWAQPhBK9WRF/VnurR/JlWY
+qqP2sj/+RLTilDedQTNseNDCuLQVRa1AaY5k+8BNLK13PdyLdgXAOSZNQDG7u67G
+WBXGhsdO55CrjMCUiaUWH3P4T53PdCjXepYI/AjAJyyD+zEe75glKxbDGwRpYZpx
+1/+NN/2g5Ma/1w+KT3qD+wM/EP3vfTDqvHcPcYGmsRjXM6+RvN/LoDPZl7za+7FQ
+BEAdumZpGK3MAynQWrdtzF1/vLyBMgp9ll0kG1w5CZxjv2IfUmUfQ/wGlmNYGuvH
+UWLzDS79iA6UD9bGxkXOvhpm8YWpQksD3gVPnnqBdZA2yX+AfLW/fKrfNbPJm+9q
+KVfu0gdhfSLpYKrSZlvJqBMtjEFMf1w2bbL9u6OUu2oAHqh2Lc3MO5qzfJEI4TK5
+bIcFyh4rbJU4nfjt5PR4/QGdWB36H2q1Gem7f6cvDH6/afH9qSgb4bD/r9wFfzRM
+9hlWyvu2S2pGiIh8N1PFa7p5mRDyiZgwbbSKwHSYZn9DyMbmUiyTJv+b/3lX2s27
+IM9Y1GWOH3m7IKwPEuMNqVQ+HMPJf9V2ZnhNChB7u181Jy02Dj85os8P0ggHkj1l
+tob6iVRQ8tdywcdXkvdkOLh73VHTfZYsi0EdC0nYmhcy4J0QWAzkKojB+lZWzlfP
+tRm2cwr8Ww8=
+=dDhc
+-----END PGP SIGNATURE-----
+
+--=-ljmNzOdKv0AIi4KciJsA--
