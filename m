@@ -1,66 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] scsi: fix random memory corruption with scsi-mq + T10 PI
-Date: Thu, 11 Dec 2014 14:18:22 -0800
-Message-ID: <1418336302.1709.1.camel@haakon3.risingtidesystems.com>
-References: <54862444.3020901@cybernetics.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
+Date: Thu, 11 Dec 2014 22:03:44 -0500
+Message-ID: <yq1vblhbmcv.fsf@sermon.lab.mkp.net>
+References: <1418200705-488-1-git-send-email-longli@microsoft.com>
+ <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
+ <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54862444.3020901@cybernetics.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
+ (Long Li's message of "Wed, 10 Dec 2014 22:28:07 +0000")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Long Li <longli@microsoft.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Tony,
+>>>>> "Long" == Long Li <longli@microsoft.com> writes:
 
-On Mon, 2014-12-08 at 17:20 -0500, Tony Battersby wrote:
-> This fixes random memory corruption triggered when all three of the
-> following are true:
-> 
-> * scsi-mq enabled
-> * T10 Protection Information (DIF) enabled
-> * SCSI host with sg_tablesize > SCSI_MAX_SG_SEGMENTS (128)
-> 
-> The symptoms of this bug are unpredictable memory corruption, BUG()s,
-> oopses, lockups, etc., any of which may appear to be completely
-> unrelated to the root cause.
-> 
-> Cc: <stable@vger.kernel.org> # 3.17.x, 3.18.x
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> 
-> ---
-> 
-> I encountered this problem with a QLogic QLE2672 FC HBA using qla2xxx.
-> On my system, this would trigger BUG_ON(atomic_read(&bio->bi_remaining) <= 0)
-> in bio_endio(), or a general protection fault in __sg_free_table()
-> trying to free prot_sdb, or any number of other weird random problems.
-> All of this was caused by cmd->prot_sdb pointing to the wrong memory.
-> To see how the memory is allocated, refer to scsi_mq_setup_tags() in
-> scsi_lib.c.
-> 
-> For inclusion in 3.19, 3.18.x, and 3.17.x.
-> 
-> --- linux-3.18.0/drivers/scsi/scsi_lib.c.orig	2014-12-08 16:23:28.000000000 -0500
-> +++ linux-3.18.0/drivers/scsi/scsi_lib.c	2014-12-08 16:24:00.000000000 -0500
-> @@ -1829,7 +1829,9 @@ static int scsi_mq_prep_fn(struct reques
->  
->  	if (scsi_host_get_prot(shost)) {
->  		cmd->prot_sdb = (void *)sg +
-> -			shost->sg_tablesize * sizeof(struct scatterlist);
-> +			min_t(unsigned int,
-> +			      shost->sg_tablesize, SCSI_MAX_SG_SEGMENTS) *
-> +			sizeof(struct scatterlist);
->  		memset(cmd->prot_sdb, 0, sizeof(struct scsi_data_buffer));
->  
->  		cmd->prot_sdb->table.sgl =
-> 
+>> Handle the issues or handle WRITE SAME(10/16)?
 
-Nice catch.
+Long> With this patch, the SCSI layer will be able to correctly send
+Long> WRITE_SAME_16 to the Hyper-V host. It will not send WRITE_SAME_10:
+Long> it has been disabled in the driver template. Do you want me to
+Long> send another patch with these details?
 
-Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+no_write_same prevents us from attempting to use WRITE SAME(10/16) to
+zero block ranges.
 
-Adding a CC' to MKP, and HCH so he can pick it up.
+This is completely orthogonal to using the WRITE SAME(10/16) commands
+with the UNMAP bit set to discard block ranges. The latter is controlled
+by the logical block provisioning heuristics and is not affected by
+no_write_same at all.
 
---nab
+-- 
+Martin K. Petersen	Oracle Linux Engineering
