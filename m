@@ -1,61 +1,29 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [V3 PATCH 4/4] scsi:stex.c Add S3/S4 support
-Date: Mon, 15 Dec 2014 08:29:51 +0100
-Message-ID: <1418628591.4443.0.camel@linux-0dmf.site>
-References: <5487A406.8060902@gmail.com>
-	 <1418202153.7241.6.camel@linux-0dmf.site> <548E51AB.1030506@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: T10-PI: Getting failed tag info
+Date: Mon, 15 Dec 2014 00:18:57 -0800
+Message-ID: <20141215081857.GA24067@infradead.org>
+References: <54892468.5060300@vlnb.net>
+ <yq1r3w5blys.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <548E51AB.1030506@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grace.chang@tw.promise.com, victor.p@promise.com, ed.lin@promise.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40213 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbaLOITB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 03:19:01 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1r3w5blys.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
 
-On Mon, 2014-12-15 at 11:12 +0800, Charles Chiou wrote:
+On Thu, Dec 11, 2014 at 10:12:11PM -0500, Martin K. Petersen wrote:
+> block: Add specific data integrity errors
 > 
-> On 12/10/2014 05:02 PM, Oliver Neukum wrote:
-> > On Wed, 2014-12-10 at 09:38 +0800, Charles Chiou wrote:
-> >>   From 91868d4afe10533b8a4496075109e411100217bb Mon Sep 17 00:00:00 2001
-> >> From: Charles Chiou <charles.chiou@tw.promise.com>
-> >> Date: Fri, 7 Nov 2014 10:15:18 +0800
-> >> Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
-> >>
-> >> Add S3/S4 support, add .suspend and .resume function in pci_driver.
-> >>
-> >> Pegasus need 30~40 seconds to boot up. We don't want to OS wait
-> >> in .resume function. Create a thread to handle device boot up.
-> >>
-> >
-> >> +static int stex_resume(struct pci_dev *pdev)
-> >> +{
-> >> +	struct st_hba *hba = pci_get_drvdata(pdev);
-> >> +	struct hba_handshake_workstruct *hswork;
-> >> +	int sts;
-> >> +
-> >> +	hba->mu_status = MU_STATE_STARTING;
-> >> +	hswork = kzalloc(sizeof(struct hba_handshake_workstruct), GFP_KERNEL);
-> >
-> > The system is coming back from sleep. You cannot swap or page out
-> > as disks may still be asleep. GFP_KERNEL is automatically changed
-> > to GFP_NOIO. It would be nice to outright use GFP_NOIO.
-> >
-> >> +	INIT_WORK(&hswork->handshake_work, resume_handshake);
-> >
-> > Memory allocations can fail.
-> > I suggest you allocate the memory in suspend(). There you can just
-> > return -ENOMEM in the error case.
-> >
-> >
-> Hi Oliver, sorry for the late reply.
-> 
-> Good point, could we move kzalloc function from suspend to probe and 
-> return -ENOMEM when allocation fail? We can avoid to allocate memory
-> again and again in suspend/resume cycles.
+> Introduce a set of error codes that can be used by the block integrity
+> subsystem to signal which class of error was encountered by either the
+> I/O controller or the storage device.
 
-Yes, that would work.
-
-	Regards
-		Oliver
+I really don't like adding new errno codes for all these.  I'd much
+rather have a integrity error field with specific codes in the bio.
