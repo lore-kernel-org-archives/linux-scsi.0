@@ -1,33 +1,18 @@
-From: Tomas Winkler <tomasw@gmail.com>
-Subject: Re: UFS RPMB
-Date: Mon, 15 Dec 2014 11:26:54 +0200
-Message-ID: <CA+i0qc6n-6zoOFg-PRrv2=w9Qod5hDKK+nvJ0GH4DmtPNW-R4g@mail.gmail.com>
-References: <CA+i0qc5MF9_siN05VEOtOdPQfByt1UHEpbwVkYQ5+EObF6H4nQ@mail.gmail.com>
-	<CAP2JTQLouqV-xCPugy4uK_J1gRpa78VKeaVy2AdDiXR4MO3dwQ@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: fix random memory corruption with scsi-mq + T10 PI
+Date: Mon, 15 Dec 2014 05:43:31 -0800
+Message-ID: <20141215134331.GA30961@infradead.org>
+References: <54862444.3020901@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAP2JTQLouqV-xCPugy4uK_J1gRpa78VKeaVy2AdDiXR4MO3dwQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <54862444.3020901@cybernetics.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kyuho Choi <chlrbgh0@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mmc@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Can you be more specific about Linux programming API
-Thanks
+Thanks,
 
-On Mon, Dec 15, 2014 at 6:19 AM, Kyuho Choi <chlrbgh0@gmail.com> wrote:
-> As i know, SECURITY PROTOCOL IN/OUT are support RPMB access for UFS.
->
-> On 12/14/14, Tomas Winkler <tomasw@gmail.com> wrote:
->> Hi, sorry fore a newbie question.
->> What is the current interface for accessing rpmb LUN in a UFS devices.
->> For emmc one need to issue a raw mmc ioctl command  MMC_IOC_CMD.
->>
->> Thanks
->> Tomas
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+applied to drivers-for-3.19.
