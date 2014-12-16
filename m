@@ -1,33 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: T10-PI: Getting failed tag info
-Date: Mon, 15 Dec 2014 19:30:41 -0500
-Message-ID: <yq18ui8a11q.fsf@sermon.lab.mkp.net>
+Date: Mon, 15 Dec 2014 19:32:09 -0500
+Message-ID: <yq14mswa0za.fsf@sermon.lab.mkp.net>
 References: <54892468.5060300@vlnb.net> <yq1r3w5blys.fsf@sermon.lab.mkp.net>
-	<1418426120.10743.73.camel@haakon3.risingtidesystems.com>
+	<548BB911.6090905@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45897 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47089 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbaLPAar (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 19:30:47 -0500
-In-Reply-To: <1418426120.10743.73.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Fri, 12 Dec 2014 15:15:20 -0800")
+	with ESMTP id S1750989AbaLPAcN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 19:32:13 -0500
+In-Reply-To: <548BB911.6090905@vlnb.net> (Vladislav Bolkhovitin's message of
+	"Fri, 12 Dec 2014 19:57:05 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Nic" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+>>>>> "Vlad" == Vladislav Bolkhovitin <vst@vlnb.net> writes:
 
-Nic> Also, AFAICT this patch still doesn't set the failed LBA, right..?
-Nic> Any thoughts about the most sane way to get the failed LBA
-Nic> information back to a caller like IBLOCK performing submission with
-Nic> bio + bip..?
+>> One thing that needs to be done is to make returning these new errors
+>> to userland conditional on !BIP_BLOCK_INTEGRITY. I'll put that on my
+>> list.
 
-That's correct. My original patch did this.
+Vlad> Ever without it this patch is quite valuable.
 
-More on that in my response to hch...
+Well, the concern here is that the new magic errors bubble up to
+userland applications that only check for EIO/EINTR.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
