@@ -1,58 +1,99 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-Date: Tue, 16 Dec 2014 02:11:17 +0000
-Message-ID: <BL2PR03MB1327AFA28FF65067FE4672DCE6C0@BL2PR03MB132.namprd03.prod.outlook.com>
-References: <1418200705-488-1-git-send-email-longli@microsoft.com>
- <yq1h9x3cipr.fsf@sermon.lab.mkp.net>
- <BL2PR03MB1324E11F2CB6EC2652C2F85CE620@BL2PR03MB132.namprd03.prod.outlook.com>
- <yq1vblhbmcv.fsf@sermon.lab.mkp.net>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: [PATCH 1/4 v4] scsi:stex.c Support to Pegasus series.
+Date: Tue, 16 Dec 2014 11:33:55 +0800
+Message-ID: <548FA823.9020100@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <yq1vblhbmcv.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Charles Chiou <ch1102chiou@gmail.com>, Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>
+Cc: ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Martin for the explanation.
 
-I'll send out another patch.
+ From 8be76ec282e4e344e88c63d5c1e72c0a8394e703 Mon Sep 17 00:00:00 2001
+From: Charles Chiou <charles.chiou@tw.promise.com>
+Date: Wed, 5 Nov 2014 14:18:43 +0800
+Subject: [PATCH 1/4] scsi:stex.c Support to Pegasus series.
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Thursday, December 11, 2014 7:04 PM
-> To: Long Li
-> Cc: Martin K. Petersen; KY Srinivasan; Haiyang Zhang;
-> JBottomley@parallels.com; linux-scsi@vger.kernel.org;
-> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] scsi:storvsc enable reading from VPD pages on SPC-2
-> 
-> >>>>> "Long" == Long Li <longli@microsoft.com> writes:
-> 
-> >> Handle the issues or handle WRITE SAME(10/16)?
-> 
-> Long> With this patch, the SCSI layer will be able to correctly send
-> Long> WRITE_SAME_16 to the Hyper-V host. It will not send WRITE_SAME_10:
-> Long> it has been disabled in the driver template. Do you want me to
-> Long> send another patch with these details?
-> 
-> no_write_same prevents us from attempting to use WRITE SAME(10/16) to zero
-> block ranges.
-> 
-> This is completely orthogonal to using the WRITE SAME(10/16) commands with
-> the UNMAP bit set to discard block ranges. The latter is controlled by the logical
-> block provisioning heuristics and is not affected by no_write_same at all.
-> 
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+Pegasus is a high performace hardware RAID solution designed to unleash
+the raw power of Thunderbolt technology.
+
+1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
+    It should support backward compatibility.
+
+2. Change the driver version.
+
+Signed-off-by: charles.chiou@tw.promise.com
+---
+  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
+  1 file changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 1aa4bef..08e7bc8 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1,7 +1,7 @@
+  /*
+   * SuperTrak EX Series Storage Controller driver for Linux
+   *
+- *	Copyright (C) 2005-2009 Promise Technology Inc.
++ *	Copyright (C) 2005-2014 Promise Technology Inc.
+   *
+   *	This program is free software; you can redistribute it and/or
+   *	modify it under the terms of the GNU General Public License
+@@ -37,11 +37,11 @@
+  #include <scsi/scsi_eh.h>
+
+  #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.4"
+-#define ST_VER_MAJOR		4
+-#define ST_VER_MINOR		6
+-#define ST_OEM			0
+-#define ST_BUILD_VER		4
++#define ST_DRIVER_VERSION "5.00.0000.01"
++#define ST_VER_MAJOR		5
++#define ST_VER_MINOR		00
++#define ST_OEM			0000
++#define ST_BUILD_VER		01
+
+  enum {
+  	/* MU register offset */
+@@ -327,6 +327,7 @@ struct st_hba {
+  	u16 rq_count;
+  	u16 rq_size;
+  	u16 sts_count;
++	u8  supports_pm;
+  };
+
+  struct st_card_info {
+@@ -1590,6 +1591,25 @@ static int stex_probe(struct pci_dev *pdev, const 
+struct pci_device_id *id)
+
+  	hba->cardtype = (unsigned int) id->driver_data;
+  	ci = &stex_card_info[hba->cardtype];
++	switch (id->subdevice) {
++	case 0x4221:
++	case 0x4222:
++	case 0x4223:
++	case 0x4224:
++	case 0x4225:
++	case 0x4226:
++	case 0x4227:
++	case 0x4261:
++	case 0x4262:
++	case 0x4263:
++	case 0x4264:
++	case 0x4265:
++		break;
++	default:
++		if (hba->cardtype == st_yel)
++			hba->supports_pm = 1;
++	}
++
+  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
+  	if (hba->cardtype == st_yel)
+  		sts_offset += (ci->sts_count+1) * sizeof(u32);
+-- 
+1.9.1
