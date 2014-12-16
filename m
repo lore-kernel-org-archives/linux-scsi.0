@@ -1,33 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: T10-PI: Getting failed tag info
-Date: Mon, 15 Dec 2014 19:32:09 -0500
-Message-ID: <yq14mswa0za.fsf@sermon.lab.mkp.net>
-References: <54892468.5060300@vlnb.net> <yq1r3w5blys.fsf@sermon.lab.mkp.net>
-	<548BB911.6090905@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH 0/2] target: Fixes for AllRegistrants reservation handling
+Date: Tue, 16 Dec 2014 00:09:02 +0000
+Message-ID: <1418688544-18825-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47089 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbaLPAcN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 19:32:13 -0500
-In-Reply-To: <548BB911.6090905@vlnb.net> (Vladislav Bolkhovitin's message of
-	"Fri, 12 Dec 2014 19:57:05 -0800")
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:50083 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbaLPAk0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 19:40:26 -0500
+Received: by mail-ob0-f179.google.com with SMTP id va2so20736566obc.10
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Dec 2014 16:40:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
->>>>> "Vlad" == Vladislav Bolkhovitin <vst@vlnb.net> writes:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
->> One thing that needs to be done is to make returning these new errors
->> to userland conditional on !BIP_BLOCK_INTEGRITY. I'll put that on my
->> list.
+Hi all,
 
-Vlad> Ever without it this patch is quite valuable.
+This series addresses two issues raised recently by Ilias wrt
+AllRegistrants reservation handling in target code that does not
+adhere to SPC-4 specification requirements.
 
-Well, the concern here is that the new magic errors bubble up to
-userland applications that only check for EIO/EINTR.
+This first is a informational change to PR-IN READ_FULL_STATUS,
+that when an AllRegistrants reservation is in place, all active
+registrations should be setting R_HOLDER=1 within their respective
+descriptors.
+
+The second is a functional change to PR-OUT REGISTER w/ SARK=0
+operation, to avoid dropping the AllRegistrants reservation until
+the last registered I_T nexus has been released.  It also ensures
+that the correct reservation type + scope is retained when the
+new reservation is set within __core_scsi3_complete_pro_release()
+for this AllRegistrants special case.
+
+Also, thanks to James for the extra SPC-4 clarifications.
+
+Please review.
+
+--nab
+
+Nicholas Bellinger (2):
+  target: Fix R_HOLDER bit usage for AllRegistrants
+  target: Avoid dropping AllRegistrants reservation during unregister
+
+ drivers/target/target_core_pr.c | 113 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 88 insertions(+), 25 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.9.1
+
