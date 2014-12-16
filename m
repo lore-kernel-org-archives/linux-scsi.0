@@ -1,81 +1,89 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 3/4] Drivers: scsi: storvsc: Fix a bug in storvsc limits
-Date: Tue, 16 Dec 2014 13:21:44 -0800
-Message-ID: <1418764905-11250-3-git-send-email-kys@microsoft.com>
-References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
- <1418764905-11250-1-git-send-email-kys@microsoft.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [SCSI] bfa: fix bfa_fcb_itnim_alloc() error handling
+Date: Wed, 17 Dec 2014 02:51:44 +0300
+Message-ID: <20141216235144.GA31467@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1418764905-11250-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35197 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbaLPXw2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 18:52:28 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Commit 4cd83ecdac20d30725b4f96e5d7814a1e290bc7e changed the limits to
-reflect the values on the host. It turns out that WS2008R2 cannot
-correctly handle these new limits. Fix this bug by setting the limits
-based on the host.
+The caller assumes that "itnim" is NULL on error and non-NULL on
+success but really "itnim" is uninitialized on error.  This
+function should just use normal error handling where it returns zero on
+success and negative on failure.
 
-Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/scsi/storvsc_drv.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+Static checker stuff.  Not tested.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index a7163c6..fdc5164 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1782,6 +1782,9 @@ static int storvsc_probe(struct hv_device *device,
- 	bool dev_is_ide = ((dev_id->driver_data == IDE_GUID) ? true : false);
- 	int target = 0;
- 	struct storvsc_device *stor_device;
-+	int max_luns_per_target;
-+	int max_targets;
-+	int max_channels;
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 42bcb97..af220e9 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -873,8 +873,8 @@ bfa_status_t bfa_fcb_rport_alloc(struct bfad_s *bfad,
+ /*
+  * itnim callbacks
+  */
+-void bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+-			 struct bfad_itnim_s **itnim_drv);
++int bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
++			struct bfad_itnim_s **itnim_drv);
+ void bfa_fcb_itnim_free(struct bfad_s *bfad,
+ 			struct bfad_itnim_s *itnim_drv);
+ void bfa_fcb_itnim_online(struct bfad_itnim_s *itnim_drv);
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 7223b00..31426ae 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -413,13 +413,13 @@ bfad_im_slave_destroy(struct scsi_device *sdev)
+  * BFA FCS itnim alloc callback, after successful PRLI
+  * Context: Interrupt
+  */
+-void
++int
+ bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+ 		    struct bfad_itnim_s **itnim_drv)
+ {
+ 	*itnim_drv = kzalloc(sizeof(struct bfad_itnim_s), GFP_ATOMIC);
+ 	if (*itnim_drv == NULL)
+-		return;
++		return -ENOMEM;
+ 
+ 	(*itnim_drv)->im = bfad->im;
+ 	*itnim = &(*itnim_drv)->fcs_itnim;
+@@ -430,6 +430,7 @@ bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
+ 	 */
+ 	INIT_WORK(&(*itnim_drv)->itnim_work, bfad_im_itnim_work_handler);
+ 	bfad->bfad_flags |= BFAD_RPORT_ONLINE;
++	return 0;
+ }
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcs_fcpim.c b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+index 6dc7926..829247e 100644
+--- a/drivers/scsi/bfa/bfa_fcs_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+@@ -587,12 +587,13 @@ bfa_fcs_itnim_create(struct bfa_fcs_rport_s *rport)
+ 	struct bfa_fcs_lport_s *port = rport->port;
+ 	struct bfa_fcs_itnim_s *itnim;
+ 	struct bfad_itnim_s   *itnim_drv;
++	int ret;
  
  	/*
- 	 * Based on the windows host we are running on,
-@@ -1795,12 +1798,18 @@ static int storvsc_probe(struct hv_device *device,
- 		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
- 		vmstor_current_major = VMSTOR_WIN7_MAJOR;
- 		vmstor_current_minor = VMSTOR_WIN7_MINOR;
-+		max_luns_per_target = STORVSC_IDE_MAX_LUNS_PER_TARGET;
-+		max_targets = STORVSC_IDE_MAX_TARGETS;
-+		max_channels = STORVSC_IDE_MAX_CHANNELS;
- 		break;
- 	default:
- 		sense_buffer_size = POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
- 		vmscsi_size_delta = 0;
- 		vmstor_current_major = VMSTOR_WIN8_MAJOR;
- 		vmstor_current_minor = VMSTOR_WIN8_MINOR;
-+		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
-+		max_targets = STORVSC_MAX_TARGETS;
-+		max_channels = STORVSC_MAX_CHANNELS;
- 		break;
+ 	 * call bfad to allocate the itnim
+ 	 */
+-	bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
+-	if (itnim == NULL) {
++	ret = bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
++	if (ret) {
+ 		bfa_trc(port->fcs, rport->pwwn);
+ 		return NULL;
  	}
- 
-@@ -1848,9 +1857,9 @@ static int storvsc_probe(struct hv_device *device,
- 		break;
- 
- 	case SCSI_GUID:
--		host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
--		host->max_id = STORVSC_MAX_TARGETS;
--		host->max_channel = STORVSC_MAX_CHANNELS - 1;
-+		host->max_lun = max_luns_per_target;
-+		host->max_id = max_targets;
-+		host->max_channel = max_channels - 1;
- 		break;
- 
- 	default:
--- 
-1.7.4.1
