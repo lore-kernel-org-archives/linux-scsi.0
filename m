@@ -1,8 +1,8 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 2/4] Drivers: scsi: storvsc: Force discovery of LUNs that may
- have been removed.
-Date: Tue, 16 Dec 2014 13:21:43 -0800
-Message-ID: <1418764905-11250-2-git-send-email-kys@microsoft.com>
+Subject: [PATCH 4/4] Drivers: scsi: storvsc: Force SPC-3 compliance on win8
+ and win8 r2 hosts
+Date: Tue, 16 Dec 2014 13:21:45 -0800
+Message-ID: <1418764905-11250-4-git-send-email-kys@microsoft.com>
 References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
  <1418764905-11250-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
@@ -22,60 +22,42 @@ Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The host asks the guest to scan when a LUN is removed or added.
-The only way a guest can identify the removed LUN is when an I/O is
-attempted on a removed LUN - the SRB status code indicates that the LUN
-is invalid. We currently handle this SRB status and remove the device.
+On win8 and win8 r2 hosts force SPC-3 compliance for MSFT virtual disks.
+Ubuntu has been carrying a similar patch outside the tree for a while now.
+Starting with win10, the host will support SPC-3 compliance. Based on all
+the testing that has been done on win8 and win8 r2 hosts, we are comfortable
+claiming SPC-3 compliance on these hosts as well. This will enable TRIM
+support on these hosts.
 
-Rather than waiting for an I/O to remove the device, force the discovery of
-LUNs that may have been removed prior to discovering LUNs that may have
-been added.
-
+Suggested by: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/scsi/storvsc_drv.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 0a96fef..a7163c6 100644
+index fdc5164..7487e07 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -430,10 +430,36 @@ static void storvsc_host_scan(struct work_struct *work)
- {
- 	struct storvsc_scan_work *wrk;
- 	struct Scsi_Host *host;
-+	struct scsi_device *sdev;
-+	unsigned long flags;
- 
- 	wrk = container_of(work, struct storvsc_scan_work, work);
- 	host = wrk->host;
+@@ -1468,6 +1468,19 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
+ 	 */
+ 	sdevice->sdev_bflags |= msft_blist_flags;
  
 +	/*
-+	 * Before scanning the host, first check to see if any of the
-+	 * currrently known devices have been hot removed. We issue a
-+	 * "unit ready" command against all currently known devices.
-+	 * This I/O will result in an error for devices that have been
-+	 * removed. As part of handling the I/O error, we remove the device.
-+	 *
-+	 * When a LUN is added or removed, the host sends us a signal to
-+	 * scan the host. Thus we are forced to discover the LUNs that
-+	 * may have been removed this way.
++	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
++	 * if the device is a MSFT virtual device.
 +	 */
-+	mutex_lock(&host->scan_mutex);
-+	spin_lock_irqsave(host->host_lock, flags);
-+	list_for_each_entry(sdev, &host->__devices, siblings) {
-+		spin_unlock_irqrestore(host->host_lock, flags);
-+		scsi_test_unit_ready(sdev, 1, 1, NULL);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		continue;
++	if (!strncmp(sdevice->vendor, "Msft", 4)) {
++		switch (vmbus_proto_version) {
++		case VERSION_WIN8:
++		case VERSION_WIN8_1:
++			sdevice->scsi_level = SCSI_SPC_3;
++			break;
++		}
 +	}
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+	mutex_unlock(&host->scan_mutex);
-+	/*
-+	 * Now scan the host to discover LUNs that may have been added.
-+	 */
- 	scsi_scan_host(host);
++
+ 	return 0;
+ }
  
- 	kfree(wrk);
 -- 
 1.7.4.1
