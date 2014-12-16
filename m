@@ -1,89 +1,105 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 1/2] target: Fix R_HOLDER bit usage for AllRegistrants
-Date: Tue, 16 Dec 2014 00:09:03 +0000
-Message-ID: <1418688544-18825-2-git-send-email-nab@daterainc.com>
-References: <1418688544-18825-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1418688544-18825-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: T10-PI: Getting failed tag info
+Date: Mon, 15 Dec 2014 19:45:39 -0500
+Message-ID: <yq1zjao8lsc.fsf@sermon.lab.mkp.net>
+References: <54892468.5060300@vlnb.net> <yq1r3w5blys.fsf@sermon.lab.mkp.net>
+	<20141215081857.GA24067@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25821 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbaLPAqJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Dec 2014 19:46:09 -0500
+In-Reply-To: <20141215081857.GA24067@infradead.org> (Christoph Hellwig's
+	message of "Mon, 15 Dec 2014 00:18:57 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-This patch fixes the usage of R_HOLDER bit for an All Registrants
-reservation in READ_FULL_STATUS, where only the registration who
-issued RESERVE was being reported as having an active reservation.
+Christoph> I really don't like adding new errno codes for all these.
 
-It changes core_scsi3_pri_read_full_status() to check ahead of the
-list walk of active registrations to see if All Registrants is active,
-and if so set R_HOLDER bit and scope/type fields for all active
-registrations.
+This was mainly done to accommodate Darrick's work on aio extensions. If
+these errors were forever trapped inside the kernel I would agree with
+you but the plan is to make this generally applicable.
 
-Reported-by: Ilias Tsitsimpis <i.tsitsimpis@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_pr.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+Christoph> I'd much rather have a integrity error field with specific
+Christoph> codes in the bio.
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index f91b6a1..c4a8da5 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -3834,7 +3834,8 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	unsigned char *buf;
- 	u32 add_desc_len = 0, add_len = 0, desc_len, exp_desc_len;
- 	u32 off = 8; /* off into first Full Status descriptor */
--	int format_code = 0;
-+	int format_code = 0, pr_res_type = 0, pr_res_scope = 0;
-+	bool all_reg = false;
+My original device qualification code did this. I also had one that
+included a field for the offending LBA but that appears to be lost in
+the mist of time.
+
+(Patch against a 2.6.3x era kernel so will need some massaging).
+
+diff --git a/fs/bio-integrity.c b/fs/bio-integrity.c
+index ba48f0b..716285a 100644
+--- a/fs/bio-integrity.c
++++ b/fs/bio-integrity.c
+@@ -757,6 +757,7 @@ int bio_integrity_clone(struct bio *bio, struct bio *bio_src,
+ 	bip->bip_vcnt = bip_src->bip_vcnt;
+ 	bip->bip_idx = bip_src->bip_idx;
+ 	bip->bip_flags = bip_src->bip_flags;
++	bip->bip_completion = bip_src->bip_completion;
  
- 	if (cmd->data_length < 8) {
- 		pr_err("PRIN SA READ_FULL_STATUS SCSI Data Length: %u"
-@@ -3851,6 +3852,19 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	buf[2] = ((dev->t10_pr.pr_generation >> 8) & 0xff);
- 	buf[3] = (dev->t10_pr.pr_generation & 0xff);
+ 	return 0;
+ }
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 1aa9ee4..b4c08b8 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -163,6 +163,21 @@ static inline int bio_has_allocated_vec(struct bio *bio)
+ #define bio_get(bio)	atomic_inc(&(bio)->bi_cnt)
  
-+	spin_lock(&dev->dev_reservation_lock);
-+	if (dev->dev_pr_res_holder) {
-+		struct t10_pr_registration *pr_holder = dev->dev_pr_res_holder;
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
 +
-+		if (pr_holder->pr_res_type == PR_TYPE_WRITE_EXCLUSIVE_ALLREG ||
-+		    pr_holder->pr_res_type == PR_TYPE_EXCLUSIVE_ACCESS_ALLREG) {
-+			all_reg = true;
-+			pr_res_type = pr_holder->pr_res_type;
-+			pr_res_scope = pr_holder->pr_res_scope;
-+		}
-+	}
-+	spin_unlock(&dev->dev_reservation_lock);
++enum bio_integrity_errors {
++	BIP_ERR_NONE = 0,	/* no error */
++	BIP_ERR_CTRL_GUARD,	/* controller detected guard tag error */
++	BIP_ERR_CTRL_APP,	/* controller detected app tag error */
++	BIP_ERR_CTRL_REF,	/* controller detected ref tag error */
++	BIP_ERR_DISK_GUARD,	/* disk detected guard tag error */
++	BIP_ERR_DISK_APP,	/* disk detected app tag error */
++	BIP_ERR_DISK_REF,	/* disk detected ref tag error */
++};
 +
- 	spin_lock(&pr_tmpl->registration_lock);
- 	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
- 			&pr_tmpl->registration_list, pr_reg_list) {
-@@ -3898,14 +3912,20 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 		 * reservation holder for PR_HOLDER bit.
- 		 *
- 		 * Also, if this registration is the reservation
--		 * holder, fill in SCOPE and TYPE in the next byte.
-+		 * holder or there is an All Registrants reservation
-+		 * active, fill in SCOPE and TYPE in the next byte.
- 		 */
- 		if (pr_reg->pr_res_holder) {
- 			buf[off++] |= 0x01;
- 			buf[off++] = (pr_reg->pr_res_scope & 0xf0) |
- 				     (pr_reg->pr_res_type & 0x0f);
--		} else
-+		} else if (all_reg) {
-+			buf[off++] |= 0x01;
-+			buf[off++] = (pr_res_scope & 0xf0) |
-+				     (pr_res_type & 0x0f);
-+		} else {
- 			off += 2;
-+		}
++struct bio_integrity_completion {
++	enum bio_integrity_errors	error;
++};
++
+ /*
+  * bio integrity payload
+  */
+@@ -173,13 +188,14 @@ struct bio_integrity_payload {
  
- 		off += 4; /* Skip over reserved area */
- 		/*
+ 	void			*bip_buf;	/* generated integrity data */
+ 	bio_end_io_t		*bip_end_io;	/* saved I/O completion fn */
++	struct bio_integrity_completion	*bip_completion; /* I/O completion */
+ 
+ 	unsigned int		bip_size;
+ 
+ 	unsigned short		bip_slab;	/* slab the bip came from */
+ 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
+ 	unsigned short		bip_idx;	/* current bip_vec index */
+-	unsigned short		bip_flags;	/* control and status flags */
++	unsigned short		bip_flags;	/* control flags */
+ 
+ 	struct work_struct	bip_work;	/* I/O completion */
+ 	struct bio_vec		bip_vec[0];	/* embedded bvec array */
+
+The thing that bugged me about this approach was the shared completion
+mask for all clones. I felt that was a bit icky. However, it seemed like
+a major hassle to have this be clone-private and have to register endio
+handlers for each and every clone to get status bubbled up. That was
+something that the switch to errnos handled much more elegantly.
+However, if we want to have accurate offset reporting we will need to do
+the completion struct thing.
+
+Open to ideas. The many-clones-to-one-completion-status issue isn't
+entirely trivial to tackle.
+
 -- 
-1.9.1
+Martin K. Petersen	Oracle Linux Engineering
