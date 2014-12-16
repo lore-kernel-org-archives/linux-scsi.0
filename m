@@ -1,73 +1,46 @@
 From: Rob Evers <revers@redhat.com>
-Subject: [PATCH V6 2/3] scsi: Use set/get_unaligned_be32 in report_luns
-Date: Tue, 16 Dec 2014 11:01:19 -0500
-Message-ID: <1418745680-18126-3-git-send-email-revers@redhat.com>
-References: <1418745680-18126-1-git-send-email-revers@redhat.com>
+Subject: [PATCH V6 0/3] scsi: Configure number of LUs reported by 'report-luns'
+Date: Tue, 16 Dec 2014 11:01:17 -0500
+Message-ID: <1418745680-18126-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34871 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36238 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750918AbaLPQBX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Dec 2014 11:01:23 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sBGG1Mvf010631
+	id S1750954AbaLPQBW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Dec 2014 11:01:22 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sBGG1LqT026180
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
 	for <linux-scsi@vger.kernel.org>; Tue, 16 Dec 2014 11:01:22 -0500
 Received: from localhost ([10.18.25.106])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id sBGG1MGe014868
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Dec 2014 11:01:22 -0500
-In-Reply-To: <1418745680-18126-1-git-send-email-revers@redhat.com>
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id sBGG1L2Z006029
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Dec 2014 11:01:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Rob Evers <revers@redhat.com>
----
- drivers/scsi/scsi_scan.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+This patch set retrieves the number of LUs available on a target
+using the report-luns command by re-sizing the returned data
+buffer and retrying report luns.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e460b35..8db1f6f 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -34,6 +34,7 @@
- #include <linux/spinlock.h>
- #include <linux/async.h>
- #include <linux/slab.h>
-+#include <asm/unaligned.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -1359,7 +1360,6 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	unsigned int retries;
- 	int result;
- 	struct scsi_lun *lunp, *lun_data;
--	u8 *data;
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdev;
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-@@ -1425,10 +1425,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	/*
- 	 * bytes 6 - 9: length of the command.
- 	 */
--	scsi_cmd[6] = (unsigned char) (length >> 24) & 0xff;
--	scsi_cmd[7] = (unsigned char) (length >> 16) & 0xff;
--	scsi_cmd[8] = (unsigned char) (length >> 8) & 0xff;
--	scsi_cmd[9] = (unsigned char) length & 0xff;
-+	put_unaligned_be32(length, &scsi_cmd[6]);
- 
- 	scsi_cmd[10] = 0;	/* reserved */
- 	scsi_cmd[11] = 0;	/* control */
-@@ -1476,9 +1473,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	/*
- 	 * Get the length from the first four bytes of lun_data.
- 	 */
--	data = (u8 *) lun_data->scsi_lun;
--	length = ((data[0] << 24) | (data[1] << 16) |
--		  (data[2] << 8) | (data[3] << 0));
-+	length = get_unaligned_be32(lun_data->scsi_lun);
- 
- 	num_luns = (length / sizeof(struct scsi_lun));
- 	if (num_luns > max_scsi_report_luns) {
+A minor bug fix is included.
+
+scsi_mod parameter max_report_luns is no longer used and is removed.
+
+Changes from previous posting:
+
+ - remove exteraneous else
+
+ - remove INITIAL_MAX_REPORT_LUNS, hardwire buffer sizing, and touch up
+   related comment
+
+Rob Evers (3):
+  scsi: Avoid unnecessary GFP_ATOMIC allocation in scsi_report_lun_scan
+  scsi: Use set/get_unaligned_be32 in report_luns
+  scsi: retry report-luns when reported LU count requres more memory
+
+ drivers/scsi/scsi_scan.c | 54 ++++++++++++++----------------------------------
+ 1 file changed, 15 insertions(+), 39 deletions(-)
+
 -- 
 1.8.3.1
 
