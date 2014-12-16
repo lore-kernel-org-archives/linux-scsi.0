@@ -1,11 +1,15 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 0/4] Drivers: scsi: storvsc: Fix miscellaneous issues
-Date: Tue, 16 Dec 2014 13:21:20 -0800
-Message-ID: <1418764880-11183-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH 2/4] Drivers: scsi: storvsc: Force discovery of LUNs that may
+ have been removed.
+Date: Tue, 16 Dec 2014 13:21:43 -0800
+Message-ID: <1418764905-11250-2-git-send-email-kys@microsoft.com>
+References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
+ <1418764905-11250-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1418764905-11250-1-git-send-email-kys@microsoft.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -18,22 +22,60 @@ Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The first two patches in this series are a resend; these were submitted
-some months ago and as far as I know, there were no outstanding issues.
+The host asks the guest to scan when a LUN is removed or added.
+The only way a guest can identify the removed LUN is when an I/O is
+attempted on a removed LUN - the SRB status code indicates that the LUN
+is invalid. We currently handle this SRB status and remove the device.
 
-Win8 and win8 r2 hosts do support SPC-3 features but claim SPC-2 compliance.
-This issue is fixed here as well.
+Rather than waiting for an I/O to remove the device, force the discovery of
+LUNs that may have been removed prior to discovering LUNs that may have
+been added.
 
-K. Y. Srinivasan (4):
-  Drivers: scsi: storvsc: In responce to a scan event, scan the host
-  Drivers: scsi: storvsc: Force discovery of LUNs that may have been
-    removed.
-  Drivers: scsi: storvsc: Fix a bug in storvsc limits
-  Drivers: scsi: storvsc: Force SPC-3 compliance on win8 and win8 r2
-    hosts
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
 
- drivers/scsi/storvsc_drv.c |   71 +++++++++++++++++++++++++++++++++++--------
- 1 files changed, 57 insertions(+), 14 deletions(-)
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 0a96fef..a7163c6 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -430,10 +430,36 @@ static void storvsc_host_scan(struct work_struct *work)
+ {
+ 	struct storvsc_scan_work *wrk;
+ 	struct Scsi_Host *host;
++	struct scsi_device *sdev;
++	unsigned long flags;
+ 
+ 	wrk = container_of(work, struct storvsc_scan_work, work);
+ 	host = wrk->host;
+ 
++	/*
++	 * Before scanning the host, first check to see if any of the
++	 * currrently known devices have been hot removed. We issue a
++	 * "unit ready" command against all currently known devices.
++	 * This I/O will result in an error for devices that have been
++	 * removed. As part of handling the I/O error, we remove the device.
++	 *
++	 * When a LUN is added or removed, the host sends us a signal to
++	 * scan the host. Thus we are forced to discover the LUNs that
++	 * may have been removed this way.
++	 */
++	mutex_lock(&host->scan_mutex);
++	spin_lock_irqsave(host->host_lock, flags);
++	list_for_each_entry(sdev, &host->__devices, siblings) {
++		spin_unlock_irqrestore(host->host_lock, flags);
++		scsi_test_unit_ready(sdev, 1, 1, NULL);
++		spin_lock_irqsave(host->host_lock, flags);
++		continue;
++	}
++	spin_unlock_irqrestore(host->host_lock, flags);
++	mutex_unlock(&host->scan_mutex);
++	/*
++	 * Now scan the host to discover LUNs that may have been added.
++	 */
+ 	scsi_scan_host(host);
+ 
+ 	kfree(wrk);
 -- 
 1.7.4.1
