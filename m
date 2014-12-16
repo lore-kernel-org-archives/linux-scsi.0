@@ -1,34 +1,35 @@
-From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-Subject: [PATCH RESEND 0/2] ahci_xgene: Bug fixes in APM X-Gene Soc AHCI SATA controller driver.
-Date: Tue, 16 Dec 2014 22:21:06 +0530
-Message-ID: <1418748666-27348-1-git-send-email-stripathi@apm.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/4] be2iscsi : Fix the retry count for boot targets
+Date: Tue, 16 Dec 2014 10:53:00 -0600
+Message-ID: <5490636C.5050706@cs.wisc.edu>
+References: <0cb35f54-b286-4416-971f-b0fd9d389ce7@CMEXHTCAS1.ad.emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49133 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750981AbaLPQxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Dec 2014 11:53:09 -0500
+In-Reply-To: <0cb35f54-b286-4416-971f-b0fd9d389ce7@CMEXHTCAS1.ad.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Soni Jose <sony.john-n@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org, Minh Tran <minhduc.tran@Emulex.Com>, Jayamohan Kallickal <jayamohan.kallickal@Emulex.Com>
 
-These patches address the following two issues :
+On 12/16/14, 8:33 PM, John Soni Jose wrote:
+> +#define GET_BOOT_RETRIES	45
+> +#define GET_BOOT_TO		20
+>   /**
 
-1. Endianess issue with xgene_read_id function.
-2. ATAPI device enumeration failure with ATA_CMD_PACKET PIO mode command.
+Does beiscsi_get_boot_info() succeed when the fw is able to log into the 
+target (go into iscsi full feature phase) or just able to reach it (ICMP 
+ping the port or something like that)? It was not clear why the above 
+values were selected. Was it meant to detect when the target could be 
+down for extended periods due to something like maintenance or a reboot, 
+or is just handling some shorter settle period where the link is up but 
+the fw could not reach the target port due to needing to do some other 
+network setup.
 
-Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
----
-
-Suman Tripathi (2):
-  ahci_xgene: Fix the endianess issue in APM X-Gene SoC AHCI SATA
-    controller driver.
-  ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_PACKET
-    PIO mode command.
-
- drivers/ata/ahci_xgene.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
---
-1.8.2.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, I think you want to add some sort of BEISCSI or at least BE prefix 
+to the names to avoid collisions since they are pretty generic.
