@@ -1,7 +1,7 @@
 From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [PATCH 1/4 v4] scsi:stex.c Support to Pegasus series.
-Date: Tue, 16 Dec 2014 11:33:55 +0800
-Message-ID: <548FA823.9020100@gmail.com>
+Subject: [PATCH 2/4 v4] scsi:stex.c Add hotplug support
+Date: Tue, 16 Dec 2014 11:35:51 +0800
+Message-ID: <548FA897.8000607@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -12,88 +12,134 @@ Cc: ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, v
 List-Id: linux-scsi@vger.kernel.org
 
 
- From 8be76ec282e4e344e88c63d5c1e72c0a8394e703 Mon Sep 17 00:00:00 2001
+ From 901f2c1b2d1ae2991182f0f62cedc70f87ea49bc Mon Sep 17 00:00:00 2001
 From: Charles Chiou <charles.chiou@tw.promise.com>
-Date: Wed, 5 Nov 2014 14:18:43 +0800
-Subject: [PATCH 1/4] scsi:stex.c Support to Pegasus series.
+Date: Wed, 5 Nov 2014 17:18:37 +0800
+Subject: [PATCH 2/4] scsi:stex.c Add hotplug support
 
-Pegasus is a high performace hardware RAID solution designed to unleash
-the raw power of Thunderbolt technology.
+1. Add hotplug support. Pegasus support surprise removal. To this end, I
+    use return_abnormal_state function to return DID_NO_CONNECT for all
+    commands which sent to driver.
 
-1. Add code to distinct SuperTrack and Pegasus series by sub device ID.
-    It should support backward compatibility.
+2. Remove stex_hba_stop in stex_remove because we cannot send command to
+    device after hotplug.
 
-2. Change the driver version.
+3. Add new device status:  MU_STATE_STOP, MU_STATE_NOCONNECT
+    , MU_STATE_STOP. MU_STATE_STOP is currently not referenced.
+    MU_STATE_NOCONNECT represent that device is plugged out
+    from the host.
+
+4. Use return_abnormal_function() to substitute part of code
+    in stex_do_reset.
 
 Signed-off-by: charles.chiou@tw.promise.com
 ---
-  drivers/scsi/stex.c | 32 ++++++++++++++++++++++++++------
-  1 file changed, 26 insertions(+), 6 deletions(-)
+  drivers/scsi/stex.c | 51 
++++++++++++++++++++++++++++++++++------------------
+  1 file changed, 33 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 1aa4bef..08e7bc8 100644
+index 08e7bc8..7dc6afe 100644
 --- a/drivers/scsi/stex.c
 +++ b/drivers/scsi/stex.c
-@@ -1,7 +1,7 @@
-  /*
-   * SuperTrak EX Series Storage Controller driver for Linux
-   *
-- *	Copyright (C) 2005-2009 Promise Technology Inc.
-+ *	Copyright (C) 2005-2014 Promise Technology Inc.
-   *
-   *	This program is free software; you can redistribute it and/or
-   *	modify it under the terms of the GNU General Public License
-@@ -37,11 +37,11 @@
-  #include <scsi/scsi_eh.h>
+@@ -83,6 +83,8 @@ enum {
+  	MU_STATE_STARTED			= 2,
+  	MU_STATE_RESETTING			= 3,
+  	MU_STATE_FAILED				= 4,
++	MU_STATE_STOP				= 5,
++	MU_STATE_NOCONNECT			= 6,
 
-  #define DRV_NAME "stex"
--#define ST_DRIVER_VERSION "4.6.0000.4"
--#define ST_VER_MAJOR		4
--#define ST_VER_MINOR		6
--#define ST_OEM			0
--#define ST_BUILD_VER		4
-+#define ST_DRIVER_VERSION "5.00.0000.01"
-+#define ST_VER_MAJOR		5
-+#define ST_VER_MINOR		00
-+#define ST_OEM			0000
-+#define ST_BUILD_VER		01
+  	MU_MAX_DELAY				= 120,
+  	MU_HANDSHAKE_SIGNATURE			= 0x55aaaa55,
+@@ -544,6 +546,27 @@ stex_ss_send_cmd(struct st_hba *hba, struct req_msg 
+*req, u16 tag)
+  	readl(hba->mmio_base + YH2I_REQ); /* flush */
+  }
 
-  enum {
-  	/* MU register offset */
-@@ -327,6 +327,7 @@ struct st_hba {
-  	u16 rq_count;
-  	u16 rq_size;
-  	u16 sts_count;
-+	u8  supports_pm;
-  };
-
-  struct st_card_info {
-@@ -1590,6 +1591,25 @@ static int stex_probe(struct pci_dev *pdev, const 
-struct pci_device_id *id)
-
-  	hba->cardtype = (unsigned int) id->driver_data;
-  	ci = &stex_card_info[hba->cardtype];
-+	switch (id->subdevice) {
-+	case 0x4221:
-+	case 0x4222:
-+	case 0x4223:
-+	case 0x4224:
-+	case 0x4225:
-+	case 0x4226:
-+	case 0x4227:
-+	case 0x4261:
-+	case 0x4262:
-+	case 0x4263:
-+	case 0x4264:
-+	case 0x4265:
-+		break;
-+	default:
-+		if (hba->cardtype == st_yel)
-+			hba->supports_pm = 1;
-+	}
++static void return_abnormal_state(struct st_hba *hba, int status)
++{
++	struct st_ccb *ccb;
++	unsigned long flags;
++	u16 tag;
 +
-  	sts_offset = scratch_offset = (ci->rq_count+1) * ci->rq_size;
-  	if (hba->cardtype == st_yel)
-  		sts_offset += (ci->sts_count+1) * sizeof(u32);
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	for (tag = 0; tag < hba->host->can_queue; tag++) {
++		ccb = &hba->ccb[tag];
++		if (ccb->req == NULL)
++			continue;
++		ccb->req = NULL;
++		if (ccb->cmd) {
++			scsi_dma_unmap(ccb->cmd);
++			ccb->cmd->result = status << 16;
++			ccb->cmd->scsi_done(ccb->cmd);
++			ccb->cmd = NULL;
++		}
++	}
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++}
+  static int
+  stex_slave_alloc(struct scsi_device *sdev)
+  {
+@@ -585,7 +608,11 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void 
+(*done)(struct scsi_cmnd *))
+  	id = cmd->device->id;
+  	lun = cmd->device->lun;
+  	hba = (struct st_hba *) &host->hostdata[0];
+-
++	if (hba->mu_status == MU_STATE_NOCONNECT) {
++		cmd->result = DID_NO_CONNECT;
++		done(cmd);
++		return 0;
++	}
+  	if (unlikely(hba->mu_status == MU_STATE_RESETTING))
+  		return SCSI_MLQUEUE_HOST_BUSY;
+
+@@ -1287,10 +1314,8 @@ static void stex_ss_reset(struct st_hba *hba)
+
+  static int stex_do_reset(struct st_hba *hba)
+  {
+-	struct st_ccb *ccb;
+  	unsigned long flags;
+  	unsigned int mu_status = MU_STATE_RESETTING;
+-	u16 tag;
+
+  	spin_lock_irqsave(hba->host->host_lock, flags);
+  	if (hba->mu_status == MU_STATE_STARTING) {
+@@ -1324,20 +1349,8 @@ static int stex_do_reset(struct st_hba *hba)
+  	else if (hba->cardtype == st_yel)
+  		stex_ss_reset(hba);
+
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	for (tag = 0; tag < hba->host->can_queue; tag++) {
+-		ccb = &hba->ccb[tag];
+-		if (ccb->req == NULL)
+-			continue;
+-		ccb->req = NULL;
+-		if (ccb->cmd) {
+-			scsi_dma_unmap(ccb->cmd);
+-			ccb->cmd->result = DID_RESET << 16;
+-			ccb->cmd->scsi_done(ccb->cmd);
+-			ccb->cmd = NULL;
+-		}
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	return_abnormal_state(hba, DID_RESET);
+
+  	if (stex_handshake(hba) == 0)
+  		return 0;
+@@ -1808,9 +1821,11 @@ static void stex_remove(struct pci_dev *pdev)
+  {
+  	struct st_hba *hba = pci_get_drvdata(pdev);
+
++	hba->mu_status = MU_STATE_NOCONNECT;
++	return_abnormal_state(hba, DID_NO_CONNECT);
+  	scsi_remove_host(hba->host);
+
+-	stex_hba_stop(hba);
++	scsi_block_requests(hba->host);
+
+  	stex_hba_free(hba);
+
 -- 
 1.9.1
