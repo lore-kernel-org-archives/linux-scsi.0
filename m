@@ -1,40 +1,51 @@
-From: Andrew Brooks <arb@sat.dundee.ac.uk>
-Subject: Re: Tagged overlapped commands
-Date: Tue, 16 Dec 2014 10:23:25 +0000
-Message-ID: <CAHOfOo1wGTLvhqtY6s4eCW0Ny+sboEFr8d5A7R1G91DaRRejFw@mail.gmail.com>
-References: <CAHOfOo1WuW8MD=r1zEEfd+csNEWacQA4EYa95zhUn49MxbEEsA@mail.gmail.com>
- <1417709828.8998.7.camel@HansenPartnership.com> <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
- <1418022178.21408.5.camel@HansenPartnership.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Integrated Unit Attention handling
+Date: Tue, 16 Dec 2014 16:30:34 +0100
+Message-ID: <5490501A.2020706@suse.de>
+References: <548EFB97.2080501@suse.de> <20141216083245.GA29219@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:65197 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaLPKXr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:23:47 -0500
-Received: by mail-ie0-f169.google.com with SMTP id y20so12659325ier.0
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Dec 2014 02:23:46 -0800 (PST)
-In-Reply-To: <1418022178.21408.5.camel@HansenPartnership.com>
+Received: from cantor2.suse.de ([195.135.220.15]:55019 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976AbaLPPai (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Tue, 16 Dec 2014 10:30:38 -0500
+In-Reply-To: <20141216083245.GA29219@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
 
-On 8 December 2014 at 07:02, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> The error message likely means that the tape device had more than one
-> command outstanding at once (i.e. one command was sent while the current
-> command was still pending).  It could also mean that a tag got re-used
-> (same tag issued while command with that tag was outstanding) but for a
-> tape I think the former is more likely.  Is the queue depth set to one
-> for the device?
->
-> /sys/class/scsi_device/<dev>/device/queue_depth
-> you can (as root) echo a value in there to change the depth.
+On 12/16/2014 09:32 AM, Christoph Hellwig wrote:
+> Sounds like a good topic, altough I hope we'll see considerable
+> progress before LSF on this item..
+>=20
+=46ull integration requires a change of the SCSI device model;
+currently struct scsi_device has a fixed type and inquiry data, so
+rescan is essentially a no-op.
+So the current model requires the complete removal of the device and
+a rescan on the host.
+Doing that from within the SCSI stack will open quite some
+interesting race conditions, let alone interesting userspace
+interactions.
+Alternatively we can change the model to allow for a change of the
+inquiry data, but that should be discussed.
 
-Sadly setting the queue depth to 1 didn't prevent the error message :-(
-All other ideas and suggestions for debugging gratefully received!
+And then there is the Power-On/Reset handling, which probably would
+warrant a discussion on its own ...
 
-st0: Sense Key : Aborted Command [current]
-st0: Add. Sense: Tagged overlapped commands (task tag 0)
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
