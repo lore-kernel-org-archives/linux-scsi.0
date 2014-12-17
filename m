@@ -1,35 +1,31 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH 4/4 v4] scsi:stex.c Add S3/S4 support
-Date: Tue, 16 Dec 2014 10:34:10 +0100
-Message-ID: <1418722450.2448.3.camel@linux-0dmf.site>
-References: <548FCDC8.1010900@gmail.com>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH 0/4] be2iscsi driver update to 10.4.200.0
+Date: Wed, 17 Dec 2014 08:03:09 +0530
+Message-ID: <ea43e0f7-3e87-46f1-9644-dc6fd1905644@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <548FCDC8.1010900@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Charles Chiou <ch1102chiou@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:28216 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbaLPKHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:07:08 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: John Soni Jose <sony.john-n@emulex.com>
 
-On Tue, 2014-12-16 at 14:14 +0800, Charles Chiou wrote:
->  From f9d84df080c16097218092630db9b5df31d487b5 Mon Sep 17 00:00:00 2001
-> From: Charles Chiou <charles.chiou@tw.promise.com>
-> Date: Fri, 7 Nov 2014 10:15:18 +0800
-> Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
-> 
-> Add S3/S4 support, add .suspend and .resume function in pci_driver.
-> 
-> Pegasus need 30~40 seconds to boot up. We don't want to OS wait
-> in .resume function. Create a thread to handle device boot up.
+ The patchset updates be2iscsi driver  to 10.4.200.0.
+ These patches are generated aganist the SCSI for-next branch.
 
-I am sorry to be obnoxious, but this patch raises another
-question. What happens if the the system is suspended again
-while the work scheduled in resume is still running?
+John Soni Jose (4):
+  be2iscsi : Fix the retry count for boot targets
+  be2iscsi : Fix the PCI request region reserving. Reserve the device
+    PCI I/O and Memory resources.
+  be2iscsi : Fix memory leak in the unload path
+  be2iscsi : Bump the driver version
 
-Furthermore, what happens in the case of a PCI hotunplug while
-the work is still scheduled?
+ drivers/scsi/be2iscsi/be_cmds.c |    4 +++
+ drivers/scsi/be2iscsi/be_main.c |   53 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/be2iscsi/be_main.h |    6 +++-
+ 3 files changed, 53 insertions(+), 10 deletions(-)
 
-	Regards
-		Oliver
