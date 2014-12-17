@@ -1,40 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Using common code for csiostor.
-Date: Wed, 17 Dec 2014 08:10:15 -0800
-Message-ID: <1418832615.3052.36.camel@HansenPartnership.com>
-References: <24C222ADD7729F4FB5113B41FF0028A1BC8C12@nice.asicdesigners.com>
+From: Andrew Brooks <arb@sat.dundee.ac.uk>
+Subject: Re: Tagged overlapped commands
+Date: Wed, 17 Dec 2014 17:18:53 +0000
+Message-ID: <CAHOfOo1pDc5DNSYX9-bWitFVbHX2Amw_qWtobS=hYWYua+gmmA@mail.gmail.com>
+References: <CAHOfOo25V9Qqv=K7n5DnwDyN6TGBEzikMzhZ6OhF_2=+wG=bMg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57405 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750900AbaLQQKS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2014 11:10:18 -0500
-In-Reply-To: <24C222ADD7729F4FB5113B41FF0028A1BC8C12@nice.asicdesigners.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:44993 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbaLQRTO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 12:19:14 -0500
+Received: by mail-ie0-f170.google.com with SMTP id rd18so15512105iec.15
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2014 09:19:13 -0800 (PST)
+In-Reply-To: <CAHOfOo25V9Qqv=K7n5DnwDyN6TGBEzikMzhZ6OhF_2=+wG=bMg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Praveen Madhavan <praveenm@chelsio.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2014-12-17 at 15:51 +0000, Praveen Madhavan wrote:
-> Hi Christoph,
-> csiostor is chelsio full offload FCoE physical function driver. I
-> would like to reuse common hardware interface functions defined in
-> t4_hw.c of chelsio networking driver(cxgb4). Below is makefile change
-> that creates softlink to t4_hw.c and builds the same. Is this change
-> is acceptable? Please suggest if there is any better way of doing
-> this.
+On 1 December 2014 at 12:22, Andrew Brooks <arb@sat.dundee.ac.uk> wrote:
+> I'm having trouble writing to an LTO-5 tape drive connected via Adaptec 1405
+> Writing aborts with this in syslog:
+>
+> st0: Sense Key : Aborted Command [current]
+> st0: Add. Sense: Tagged overlapped commands (task tag 0)
+>
+> Both the drive and adapter have the latest firmware.
+> I've tried ubuntu 12.04 (3.2.0-70) and the latest fedora 20.1.
+>
+> Does anyone have any ideas on how to troubleshoot and fix this?
 
-The usual way to do this is to make the common hardware function a base
-module and make all drivers that use it depend on it.  Like iwldvm ->
-iwlwifi -> mac80211 etc.
+I've tried the latest 3.18.0 kernel and tried setting the queue_depth to 1
+but it still fails.
 
-We really wouldn't want to do the link and build because that will
-create two identical binary copies of the interface (one in SCSI and one
-in net) which is a waste of text space.
+I've tried the mvsas driver and the adaptec open-source driver but both fail.
+Maybe it's a fault in the underlying scsi driver?
 
-James
+Please could someone offer some assistance in helping me find the cause.
 
+Thank you
 
+Andrew
