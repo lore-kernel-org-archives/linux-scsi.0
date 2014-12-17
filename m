@@ -1,105 +1,53 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 1/1] [SCSI] mpt2sas: Convert non-returned local variable
- to boolean when relevant
-Date: Wed, 17 Dec 2014 10:52:40 -0800
-Message-ID: <1418842360.14140.29.camel@perches.com>
-References: <20141217145618.GA2812@sloth>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 81861] Oops by mvsas v0.8.16: sas: ataX: end_device-Y:0:Z: dev
+ error handler -> general protection fault, RIP: mvs_task_prep_ata+0x80/0x3a0
+Date: Wed, 17 Dec 2014 19:49:06 +0000
+Message-ID: <bug-81861-11613-Y7Ip9a6Pkg@https.bugzilla.kernel.org/>
+References: <bug-81861-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0092.hostedemail.com ([216.40.44.92]:46429 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751323AbaLQSwp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2014 13:52:45 -0500
-In-Reply-To: <20141217145618.GA2812@sloth>
+Received: from mail.kernel.org ([198.145.19.201]:51938 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751222AbaLQTtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2014 14:49:11 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2709220A29
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2014 19:49:10 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 66BC620A24
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2014 19:49:08 +0000 (UTC)
+In-Reply-To: <bug-81861-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Quentin Lambert <lambert.quentin@gmail.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2014-12-17 at 15:56 +0100, Quentin Lambert wrote:
-> This patch was produced using Coccinelle. A simplified version of the
-> semantic patch is:
+https://bugzilla.kernel.org/show_bug.cgi?id=81861
 
-[...]
+Christian Vilhelm <christian.vilhelm@univ-lille2.fr> changed:
 
-Interesting.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |christian.vilhelm@univ-lill
+                   |                            |e2.fr
 
-Some of these conversions show what I think is
-relatively poor logic.  For instance:
+--- Comment #19 from Christian Vilhelm <christian.vilhelm@univ-lille2.fr> ---
+The problem was introduced with this patch :
+commit 7c237c5f6d5c62724ccd82aecdcd1fd9bd71dc75
+Author: Xiangliang Yu <yuxiangl@marvell.com>
+Date:   Wed Jan 30 00:25:53 2013 +0800
 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-[]
-> @@ -1414,10 +1414,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
->  	struct msix_entry *entries, *a;
->  	int r;
->  	int i;
-> -	u8 try_msix = 0;
-> +	bool try_msix = false;
->  
->  	if (msix_disable == -1 || msix_disable == 0)
-> -		try_msix = 1;
-> +		try_msix = true;
->  
->  	if (!try_msix)
->  		goto try_ioapic;
-
-This might as well remove the try_msix variable
-and become:
-
-	if (msix_disable != -1 && msix_disable != 0)
-		goto try_ioapic;
-
-> @@ -3236,7 +3236,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
->  	u16 smid;
->  	u32 ioc_state;
->  	unsigned long timeleft;
-> -	u8 issue_reset;
-> +	bool issue_reset;
->  	int rc;
->  	void *request;
->  	u16 wait_state_count;
-> @@ -3300,7 +3300,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
->  		_debug_dump_mf(mpi_request,
->  		    sizeof(Mpi2SasIoUnitControlRequest_t)/4);
->  		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-> -			issue_reset = 1;
-> +			issue_reset = true;
->  		goto issue_host_reset;
->  	}
->  	if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
-
-It seems like issue_reset should be initialized to false.
-issue_reset can be an arbitrary value before the goto issue_host_reset
-which is:
-
- issue_host_reset:
-	if (issue_reset)
-		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
-		    FORCE_BIG_HAMMER);
-
-> @@ -3341,7 +3341,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
->  	u16 smid;
->  	u32 ioc_state;p
->  	unsigned long timeleft;
-> -	u8 issue_reset;
-> +	bool issue_reset;
->  	int rc;
->  	void *request;
->  	u16 wait_state_count;
-> @@ -3398,7 +3398,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
->  		_debug_dump_mf(mpi_request,
->  		    sizeof(Mpi2SepRequest_t)/4);
->  		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
-> -			issue_reset = 1;
-> +			issue_reset = true;
->  		goto issue_host_reset;
->  	}
-
-same
-
-I stopped looking here.
+    [SCSI] mvsas: fixed timeout issue when removing module
 
 
+The offending line :
+    (MVS_PHY_ID << TXQ_PHY_SHIFT)
+was before :
+    (sas_port->phy_mask << TXQ_PHY_SHIFT)
+
+Reverting the patch corrects the problem for me (kernel 3.18.1)
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
