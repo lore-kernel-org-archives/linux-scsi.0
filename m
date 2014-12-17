@@ -1,87 +1,105 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for
- the ATA_CMD_PACKET PIO mode command.
-Date: Wed, 17 Dec 2014 20:32:01 +0300
-Message-ID: <5491BE11.4070500@cogentembedded.com>
-References: <1418748575-27301-1-git-send-email-stripathi@apm.com>	<1418748575-27301-3-git-send-email-stripathi@apm.com>	<54906CF0.9010908@cogentembedded.com> <CAOHikRCRHPnVAziU8jwD9gGFODyt_5DpL1dm7Eb8uGA-WOfxOw@mail.gmail.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 1/1] [SCSI] mpt2sas: Convert non-returned local variable
+ to boolean when relevant
+Date: Wed, 17 Dec 2014 10:52:40 -0800
+Message-ID: <1418842360.14140.29.camel@perches.com>
+References: <20141217145618.GA2812@sloth>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:40555 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbaLQRcG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 12:32:06 -0500
-Received: by mail-la0-f47.google.com with SMTP id hz20so13754407lab.34
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2014 09:32:04 -0800 (PST)
-In-Reply-To: <CAOHikRCRHPnVAziU8jwD9gGFODyt_5DpL1dm7Eb8uGA-WOfxOw@mail.gmail.com>
+Received: from smtprelay0092.hostedemail.com ([216.40.44.92]:46429 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751323AbaLQSwp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2014 13:52:45 -0500
+In-Reply-To: <20141217145618.GA2812@sloth>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+To: Quentin Lambert <lambert.quentin@gmail.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Wed, 2014-12-17 at 15:56 +0100, Quentin Lambert wrote:
+> This patch was produced using Coccinelle. A simplified version of the
+> semantic patch is:
 
-On 12/17/2014 08:21 AM, Suman Tripathi wrote:
+[...]
 
->     This patch addresses the issue with ATA_CMD_PACKET pio mode
->     command for enumeration and device detection with ATAPI devices.It is the
->     same issue as in patch
+Interesting.
 
-    Ugh, HTML... Please stick to plain text when posting to the 
-'vger.kernel.org' mailing lists (HTML mails are supposed to be ignored).
+Some of these conversions show what I think is
+relatively poor logic.  For instance:
 
->     www.spinics.net/lists/linux-__ide/msg49092.html
->     <http://www.spinics.net/lists/linux-ide/msg49092.html>
->
->
->     Signed-off-by: Suman Tripathi <stripathi@apm.com <mailto:stripathi@apm.com>>
->     ---
->        drivers/ata/ahci_xgene.c | 12 +++++++-----
->        1 file changed, 7 insertions(+), 5 deletions(-)
->
->
->     diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
->     index 0ffd3c9..9730907 100644
->     --- a/drivers/ata/ahci_xgene.c
->     +++ b/drivers/ata/ahci_xgene.c
->     @@ -125,10 +125,11 @@ static int xgene_ahci_restart_engine(__struct
->     ata_port *ap)
->         * xgene_ahci_qc_issue - Issue commands to the device
->         * @qc: Command to issue
->         *
->     - * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
->     - * clear the BSY bit after receiving the PIO setup FIS. This results in
->     the dma
->     - * state machine goes into the CMFatalErrorUpdate state and locks up. By
->     - * restarting the dma engine, it removes the controller out of lock up state.
->     + * Due to Hardware errata for IDENTIFY DEVICE command and COMMAND PACKET
->
->
->     Just PACKET.
->
->     + * command of ATAPI protocol set, the controller cannot clear the BSY bit
->     + * after receiving the PIO setup FIS. This results in the dma state machine
->
->
->     DMA.
->
->     + * goes into the CMFatalErrorUpdate state and locks up. By restarting the
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+[]
+> @@ -1414,10 +1414,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+>  	struct msix_entry *entries, *a;
+>  	int r;
+>  	int i;
+> -	u8 try_msix = 0;
+> +	bool try_msix = false;
+>  
+>  	if (msix_disable == -1 || msix_disable == 0)
+> -		try_msix = 1;
+> +		try_msix = true;
+>  
+>  	if (!try_msix)
+>  		goto try_ioapic;
 
->     s/goes/going/.
+This might as well remove the try_msix variable
+and become:
 
-> [suman] : Didn't understand this. Do you mean to change to going ?
+	if (msix_disable != -1 && msix_disable != 0)
+		goto try_ioapic;
 
-    It's a 'sed' command to replace "goes" by "going" IIRC. Yes. Also, 
-s/locks/locking/.
+> @@ -3236,7 +3236,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
+>  	u16 smid;
+>  	u32 ioc_state;
+>  	unsigned long timeleft;
+> -	u8 issue_reset;
+> +	bool issue_reset;
+>  	int rc;
+>  	void *request;
+>  	u16 wait_state_count;
+> @@ -3300,7 +3300,7 @@ mpt2sas_base_sas_iounit_control(struct MPT2SAS_ADAPTER *ioc,
+>  		_debug_dump_mf(mpi_request,
+>  		    sizeof(Mpi2SasIoUnitControlRequest_t)/4);
+>  		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
+> -			issue_reset = 1;
+> +			issue_reset = true;
+>  		goto issue_host_reset;
+>  	}
+>  	if (ioc->base_cmds.status & MPT2_CMD_REPLY_VALID)
 
-> It is already goes there.
+It seems like issue_reset should be initialized to false.
+issue_reset can be an arbitrary value before the goto issue_host_reset
+which is:
 
-> [...]
+ issue_host_reset:
+	if (issue_reset)
+		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
+		    FORCE_BIG_HAMMER);
 
-> Thanks,
-> with regards,
-> suman
+> @@ -3341,7 +3341,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
+>  	u16 smid;
+>  	u32 ioc_state;p
+>  	unsigned long timeleft;
+> -	u8 issue_reset;
+> +	bool issue_reset;
+>  	int rc;
+>  	void *request;
+>  	u16 wait_state_count;
+> @@ -3398,7 +3398,7 @@ mpt2sas_base_scsi_enclosure_processor(struct MPT2SAS_ADAPTER *ioc,
+>  		_debug_dump_mf(mpi_request,
+>  		    sizeof(Mpi2SepRequest_t)/4);
+>  		if (!(ioc->base_cmds.status & MPT2_CMD_RESET))
+> -			issue_reset = 1;
+> +			issue_reset = true;
+>  		goto issue_host_reset;
+>  	}
 
-MBR, Sergei
+same
+
+I stopped looking here.
+
 
