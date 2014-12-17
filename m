@@ -1,31 +1,137 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 0/4] be2iscsi driver update to 10.4.200.0
-Date: Wed, 17 Dec 2014 08:03:09 +0530
-Message-ID: <ea43e0f7-3e87-46f1-9644-dc6fd1905644@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH 1/4] be2iscsi : Fix the retry count for boot targets
+Date: Wed, 17 Dec 2014 08:03:36 +0530
+Message-ID: <0cb35f54-b286-4416-971f-b0fd9d389ce7@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmexedge2.emulex.com ([138.239.224.100]:28216 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbaLPKHI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:07:08 -0500
+	with ESMTP id S1750974AbaLPKHJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:07:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: John Soni Jose <sony.john-n@emulex.com>
+Cc: John Soni Jose <sony.john-n@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- The patchset updates be2iscsi driver  to 10.4.200.0.
- These patches are generated aganist the SCSI for-next branch.
+ Increment the retry count to get the boot target info when
+ port async event is received by the driver. Update sysfs enteries
+ with the boot target  parameters.
 
-John Soni Jose (4):
-  be2iscsi : Fix the retry count for boot targets
-  be2iscsi : Fix the PCI request region reserving. Reserve the device
-    PCI I/O and Memory resources.
-  be2iscsi : Fix memory leak in the unload path
-  be2iscsi : Bump the driver version
+Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_cmds.c |    4 ++++
+ drivers/scsi/be2iscsi/be_main.c |   23 ++++++++++++++++++++---
+ drivers/scsi/be2iscsi/be_main.h |    4 ++++
+ 3 files changed, 28 insertions(+), 3 deletions(-)
 
- drivers/scsi/be2iscsi/be_cmds.c |    4 +++
- drivers/scsi/be2iscsi/be_main.c |   53 ++++++++++++++++++++++++++++++++------
- drivers/scsi/be2iscsi/be_main.h |    6 +++-
- 3 files changed, 53 insertions(+), 10 deletions(-)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 80d97f3..ee90611 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -452,6 +452,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
+ 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
+ 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
+ 		phba->state = BE_ADAPTER_LINK_UP | BE_ADAPTER_CHECK_BOOT;
++		phba->get_boot = GET_BOOT_RETRIES;
+ 
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
+@@ -480,6 +481,7 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 				case ASYNC_EVENT_NEW_ISCSI_CONN:
+ 				case ASYNC_EVENT_NEW_TCP_CONN:
+ 					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+@@ -488,6 +490,8 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
+ 						    compl->flags);
+ 					break;
+ 				default:
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = GET_BOOT_RETRIES;
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_CONFIG |
+ 						    BEISCSI_LOG_MBOX,
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index f319340..228bd7a 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2039,11 +2039,16 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
+ 				/* Interpret compl as a async link evt */
+ 				beiscsi_async_link_state_process(phba,
+ 				(struct be_async_event_link_state *) mcc_compl);
+-			else
++			else {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX,
+ 					    "BM_%d :  Unsupported Async Event, flags"
+ 					    " = 0x%08x\n",
+ 					    mcc_compl->flags);
++				if (phba->state & BE_ADAPTER_LINK_UP) {
++					phba->state |= BE_ADAPTER_CHECK_BOOT;
++					phba->get_boot = GET_BOOT_RETRIES;
++				}
++			}
+ 		} else if (mcc_compl->flags & CQE_FLAGS_COMPLETED_MASK) {
+ 			be_mcc_compl_process_isr(&phba->ctrl, mcc_compl);
+ 			atomic_dec(&phba->ctrl.mcc_obj.q.used);
+@@ -4330,8 +4335,14 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 			    "BM_%d : No boot session\n");
++
++		if (ret == -ENXIO)
++			phba->get_boot = 0;
++
++
+ 		return ret;
+ 	}
++	phba->get_boot = 0;
+ 	nonemb_cmd.va = pci_zalloc_consistent(phba->ctrl.pdev,
+ 					      sizeof(*session_resp),
+ 					      &nonemb_cmd.dma);
+@@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
+ 	be_eqd_update(phba);
+ 
+ 	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
+-		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+-		be_check_boot_session(phba);
++		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
++			phba->get_boot--;
++			if (!(phba->get_boot % GET_BOOT_TO))
++				be_check_boot_session(phba);
++		} else {
++			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
++			phba->get_boot = 0;
++		}
+ 	}
+ 
+ 	beiscsi_ue_detect(phba);
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 7ee0ffc..fbfdc42 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -109,6 +109,9 @@
+ 
+ #define BEISCSI_CLEAN_UNLOAD	0x01
+ #define BEISCSI_EEH_UNLOAD	0x02
++
++#define GET_BOOT_RETRIES	45
++#define GET_BOOT_TO		20
+ /**
+  * hardware needs the async PDU buffers to be posted in multiples of 8
+  * So have atleast 8 of them by default
+@@ -413,6 +416,7 @@ struct beiscsi_hba {
+ 	} fw_config;
+ 
+ 	unsigned int state;
++	int get_boot;
+ 	bool fw_timeout;
+ 	bool ue_detected;
+ 	struct delayed_work beiscsi_hw_check_task;
+-- 
+1.7.1
 
