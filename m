@@ -1,41 +1,26 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Integrated Unit Attention handling
-Date: Wed, 17 Dec 2014 01:31:28 -0800
-Message-ID: <20141217093128.GB13198@infradead.org>
-References: <548EFB97.2080501@suse.de>
- <20141216083245.GA29219@infradead.org>
- <5490501A.2020706@suse.de>
+Subject: Re: [PATCH 3/4 v3] scsi:stex.c Add reboot support
+Date: Wed, 17 Dec 2014 01:30:27 -0800
+Message-ID: <20141217093027.GA13198@infradead.org>
+References: <548FCD81.7030106@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52566 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:52438 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbaLQJb2 (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 04:31:28 -0500
+	with ESMTP id S1750799AbaLQJaj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 04:30:39 -0500
 Content-Disposition: inline
-In-Reply-To: <5490501A.2020706@suse.de>
+In-Reply-To: <548FCD81.7030106@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+To: Charles Chiou <ch1102chiou@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 16, 2014 at 04:30:34PM +0100, Hannes Reinecke wrote:
-> On 12/16/2014 09:32 AM, Christoph Hellwig wrote:
-> > Sounds like a good topic, altough I hope we'll see considerable
-> > progress before LSF on this item..
-> > 
-> Full integration requires a change of the SCSI device model;
-> currently struct scsi_device has a fixed type and inquiry data, so
-> rescan is essentially a no-op.
-> So the current model requires the complete removal of the device and
-> a rescan on the host.
-> Doing that from within the SCSI stack will open quite some
-> interesting race conditions, let alone interesting userspace
-> interactions.
-> Alternatively we can change the model to allow for a change of the
-> inquiry data, but that should be discussed.
+I'm not going to add a new reboot notifier for a driver.  If you can
+convince the driver model / PM people to pass this information to
+->shutdown we can add support for this difference, but not in this way.
 
-For now we can just react to new LUNs or size changes, which would be
-what most people want, and offline devices for anything else.
+Can you send me a series that just adds the hardware support for now, so
+we can dash this PM issue out separately?
 
-That alone would be a gigantic improvement.
