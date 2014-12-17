@@ -1,42 +1,36 @@
-From: Andrew Brooks <arb@sat.dundee.ac.uk>
-Subject: Re: Tagged overlapped commands
-Date: Wed, 17 Dec 2014 17:18:53 +0000
-Message-ID: <CAHOfOo1pDc5DNSYX9-bWitFVbHX2Amw_qWtobS=hYWYua+gmmA@mail.gmail.com>
-References: <CAHOfOo25V9Qqv=K7n5DnwDyN6TGBEzikMzhZ6OhF_2=+wG=bMg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:44993 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751451AbaLQRTO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 12:19:14 -0500
-Received: by mail-ie0-f170.google.com with SMTP id rd18so15512105iec.15
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Dec 2014 09:19:13 -0800 (PST)
-In-Reply-To: <CAHOfOo25V9Qqv=K7n5DnwDyN6TGBEzikMzhZ6OhF_2=+wG=bMg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v1 1/2] ahci_xgene: Fix the endianess issue in APM X-Gene SoC AHCI SATA controller driver.
+Date: Wed, 17 Dec 2014 22:57:56 +0530
+Message-ID: <1418837277-23260-2-git-send-email-stripathi@apm.com>
+References: <1418837277-23260-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1418837277-23260-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 1 December 2014 at 12:22, Andrew Brooks <arb@sat.dundee.ac.uk> wrote:
-> I'm having trouble writing to an LTO-5 tape drive connected via Adaptec 1405
-> Writing aborts with this in syslog:
->
-> st0: Sense Key : Aborted Command [current]
-> st0: Add. Sense: Tagged overlapped commands (task tag 0)
->
-> Both the drive and adapter have the latest firmware.
-> I've tried ubuntu 12.04 (3.2.0-70) and the latest fedora 20.1.
->
-> Does anyone have any ideas on how to troubleshoot and fix this?
+This patch fixes the big endian mode issue with function
+xgene_ahci_read_id.
 
-I've tried the latest 3.18.0 kernel and tried setting the queue_depth to 1
-but it still fails.
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ drivers/ata/ahci_xgene.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I've tried the mvsas driver and the adaptec open-source driver but both fail.
-Maybe it's a fault in the underlying scsi driver?
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 0f8538f..0ffd3c9 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -188,7 +188,7 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+ 	 *
+ 	 * Clear reserved bit 8 (DEVSLP bit) as we don't support DEVSLP
+ 	 */
+-	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
++	id[ATA_ID_FEATURE_SUPP] &= cpu_to_le16(~(1 << 8));
 
-Please could someone offer some assistance in helping me find the cause.
+ 	return 0;
+ }
+--
+1.8.2.1
 
-Thank you
-
-Andrew
