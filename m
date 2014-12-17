@@ -1,89 +1,55 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH 2/4] be2iscsi : Fix the PCI request region reserving.
-Date: Wed, 17 Dec 2014 08:03:58 +0530
-Message-ID: <b871f4d9-096e-4883-8cb1-840f1115620b@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH 3/4] be2iscsi : Fix memory leak in the unload path
+Date: Wed, 17 Dec 2014 08:04:23 +0530
+Message-ID: <bbf55987-6abf-4ed9-a4de-9935f62f1e3e@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:28217 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbaLPKH3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:07:29 -0500
+Received: from cmexedge1.emulex.com ([138.239.224.99]:25692 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbaLPKIQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Dec 2014 05:08:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Reserve the device PCI I/O and Memory resources.
+ Driver was not freeing the DMA memory allocated for EQ/CQ in the
+ unload path. This patch frees the DMA memory during the driver unload.
 
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   22 ++++++++++++++++++----
- 1 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 228bd7a..2f2207a 100644
+index 2f2207a..409b13d 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -670,14 +670,20 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
- 		return ret;
+@@ -3748,8 +3748,10 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
+ 
+ 	for (i = 0; i < (phba->num_cpus); i++) {
+ 		q = &phwi_context->be_cq[i];
+-		if (q->created)
++		if (q->created) {
++			be_queue_free(phba, q);
+ 			beiscsi_cmd_q_destroy(ctrl, q, QTYPE_CQ);
++		}
  	}
  
-+	ret = pci_request_regions(pcidev, DRV_NAME);
-+	if (ret) {
-+		dev_err(&pcidev->dev,
-+				"beiscsi_enable_pci - request region failed\n");
-+		goto pci_dev_disable;
-+	}
-+
- 	pci_set_master(pcidev);
- 	ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(64));
- 	if (ret) {
- 		ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(32));
- 		if (ret) {
- 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
--			pci_disable_device(pcidev);
--			return ret;
-+			goto pci_region_release;
- 		} else {
- 			ret = pci_set_consistent_dma_mask(pcidev,
- 							  DMA_BIT_MASK(32));
-@@ -686,11 +692,17 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
- 		ret = pci_set_consistent_dma_mask(pcidev, DMA_BIT_MASK(64));
- 		if (ret) {
- 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
--			pci_disable_device(pcidev);
--			return ret;
-+			goto pci_region_release;
- 		}
+ 	be_mcc_queues_destroy(phba);
+@@ -3759,8 +3761,10 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
+ 		eq_for_mcc = 0;
+ 	for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
+ 		q = &phwi_context->be_eq[i].q;
+-		if (q->created)
++		if (q->created) {
++			be_queue_free(phba, q);
+ 			beiscsi_cmd_q_destroy(ctrl, q, QTYPE_EQ);
++		}
  	}
- 	return 0;
-+
-+pci_region_release:
-+	pci_release_regions(pcidev);
-+pci_dev_disable:
-+	pci_disable_device(pcidev);
-+
-+	return ret;
- }
- 
- static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
-@@ -5277,6 +5289,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 	iscsi_host_free(phba->shost);
- 	pci_disable_pcie_error_reporting(pcidev);
- 	pci_set_drvdata(pcidev, NULL);
-+	pci_release_regions(pcidev);
- 	pci_disable_device(pcidev);
- }
- 
-@@ -5757,6 +5770,7 @@ hba_free:
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
- disable_pci:
-+	pci_release_regions(pcidev);
- 	pci_disable_device(pcidev);
- 	return ret;
+ 	be_cmd_fw_uninit(ctrl);
  }
 -- 
 1.7.1
