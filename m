@@ -1,48 +1,62 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: Clarification for Persistent Reservation + All Registrants
-Date: Wed, 17 Dec 2014 15:46:45 -0800
-Message-ID: <549215E5.905@suse.com>
-References: <1418425163.10743.61.camel@haakon3.risingtidesystems.com>	 <1418428361.2270.13.camel@HansenPartnership.com>	 <1418435595.10743.130.camel@haakon3.risingtidesystems.com>	 <1418456023.2351.1.camel@HansenPartnership.com> <1418538447.5431.56.camel@haakon3.risingtidesystems.com>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: Tagged overlapped commands
+Date: Thu, 18 Dec 2014 00:16:45 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959427ED2@G9W0745.americas.hpqcorp.net>
+References: <CAHOfOo1WuW8MD=r1zEEfd+csNEWacQA4EYa95zhUn49MxbEEsA@mail.gmail.com>
+ <1417709828.8998.7.camel@HansenPartnership.com>
+ <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
+ <1418022178.21408.5.camel@HansenPartnership.com>
+ <CAHOfOo1wGTLvhqtY6s4eCW0Ny+sboEFr8d5A7R1G91DaRRejFw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1418538447.5431.56.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "t10@t10.org" <t10@t10.org>, target-devel <target-devel@vger.kernel.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:36621 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbaLRATh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 19:19:37 -0500
+In-Reply-To: <CAHOfOo1wGTLvhqtY6s4eCW0Ny+sboEFr8d5A7R1G91DaRRejFw@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Brooks <arb@sat.dundee.ac.uk>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Sorry to come to this late, but I have one addition ...
-
-On 12/13/2014 10:27 PM, Nicholas A. Bellinger wrote:
-> On Sat, 2014-12-13 at 08:33 +0100, James Bottomley wrote:
->> On Fri, 2014-12-12 at 17:53 -0800, Nicholas A. Bellinger wrote:
->>> On Sat, 2014-12-13 at 00:52 +0100, James Bottomley wrote:
->>>> On Fri, 2014-12-12 at 14:59 -0800, Nicholas A. Bellinger wrote:
-> lots of SNIP
->>
->> There is no reservation until a reserve command is issued.  Once an all
->> registrants reservation is issued, by any registered initator, all
->> registered initators then become the reservation holder.
->>
-> 
-> So based on the above, the issue raised by Ilias where once the original
-> All Registrants reservation is released, the other registrations lose
-> their 'implicit' reservation until someone does another RESERVE +
-> type=All Registrants is a bug.
-
-U belive your target Nicholas is working correctly. See that other
-thread for more details.
-
-> 
-> Working on a proper bugfix for this now.
-> 
-> Thanks James!
-> 
-> --nab
-> 
-
-
--- 
-Lee Duncan
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIEFuZHJldyBCcm9va3MNCj4gU2VudDogVHVlc2RheSwgMTYgRGVjZW1i
+ZXIsIDIwMTQgNDoyMyBBTQ0KLi4uDQo+IA0KPiBPbiA4IERlY2VtYmVyIDIwMTQgYXQgMDc6MDIs
+IEphbWVzIEJvdHRvbWxleQ0KPiA8SmFtZXMuQm90dG9tbGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNv
+bT4gd3JvdGU6DQo+ID4NCj4gPiBUaGUgZXJyb3IgbWVzc2FnZSBsaWtlbHkgbWVhbnMgdGhhdCB0
+aGUgdGFwZSBkZXZpY2UgaGFkIG1vcmUgdGhhbiBvbmUNCj4gPiBjb21tYW5kIG91dHN0YW5kaW5n
+IGF0IG9uY2UgKGkuZS4gb25lIGNvbW1hbmQgd2FzIHNlbnQgd2hpbGUgdGhlIGN1cnJlbnQNCj4g
+PiBjb21tYW5kIHdhcyBzdGlsbCBwZW5kaW5nKS4gIEl0IGNvdWxkIGFsc28gbWVhbiB0aGF0IGEg
+dGFnIGdvdCByZS11c2VkDQo+ID4gKHNhbWUgdGFnIGlzc3VlZCB3aGlsZSBjb21tYW5kIHdpdGgg
+dGhhdCB0YWcgd2FzIG91dHN0YW5kaW5nKSBidXQgZm9yIGENCj4gPiB0YXBlIEkgdGhpbmsgdGhl
+IGZvcm1lciBpcyBtb3JlIGxpa2VseS4gIElzIHRoZSBxdWV1ZSBkZXB0aCBzZXQgdG8gb25lDQo+
+ID4gZm9yIHRoZSBkZXZpY2U/DQo+ID4NCi4uLg0KPiANCj4gc3QwOiBTZW5zZSBLZXkgOiBBYm9y
+dGVkIENvbW1hbmQgW2N1cnJlbnRdDQo+IHN0MDogQWRkLiBTZW5zZTogVGFnZ2VkIG92ZXJsYXBw
+ZWQgY29tbWFuZHMgKHRhc2sgdGFnIDApDQoNClRoYXQgZXJyb3IgY291bGQgYmUgZHVlIHRvOg0K
+MS4gc2VuZCBjb21tYW5kIHdpdGggdGFnIDANCjIuIHRpbWVvdXQgY29tbWFuZCB3aXRoIHRhZyAw
+DQozLiBhYm9ydCBjb21tYW5kIHdpdGggdGFnIDAsIGRvZXNuJ3QgZ2V0IHRocm91Z2gNCjQuIHNl
+bmQgbmV3IGNvbW1hbmQgd2l0aCB0YWcgMA0KDQpXaGF0IGFyZSB0aGUgc2VyaWFsIGxvZyBtZXNz
+YWdlcyBwcmVjZWRpbmcgdGhvc2UgbWVzc2FnZXM/DQoNCkZvciBleGFtcGxlLCBpZiB5b3Ugc2Vl
+IHRoaXMgcHJpbnQgZnJvbSBtdl9zYXMuYyBtdnNfYWJvcnRfdGFzaygpOg0KICAgICAgICAgICAg
+ICAgIGlmIChyYyA9PSAwKSB7DQogICAgICAgICAgICAgICAgICAgICAgICBtdl9wcmludGsoIk5v
+IHN1Y2ggdGFnIGluICVzXG4iLCBfX2Z1bmNfXyk7DQogICAgICAgICAgICAgICAgICAgICAgICBy
+YyA9IFRNRl9SRVNQX0ZVTkNfRkFJTEVEOw0KICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJu
+IHJjOw0KICAgICAgICAgICAgICAgIH0NCmFuZCB0aGlzIGZyb20gbGlic2FzLmM6DQogICAgICAg
+ICAgICAgICAgICAgICAgICBjYXNlIFRNRl9SRVNQX0ZVTkNfRkFJTEVEOg0KICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBTQVNfRFBSSU5USygiJXM6IHRhc2sgMHglcCBmYWlsZWQgdG8g
+YWJvcnRcbiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBfX2Z1bmNfXywgdGFzayk7DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVy
+biBUQVNLX0FCT1JUX0ZBSUxFRDsNCiAgICAgICAgICAgICAgICAgICAgICAgIH0NCg0KdGhlbiBp
+dCBkaWRuJ3Qgc2VuZCB0aGUgQUJPUlQgVEFTSyBhdCBhbGwuICBJZiBpdCByZWFsbHkgbmVlZGVk
+DQp0bywgdGhhdCBjb3VsZCBsZWFkIHRvIGFuIG92ZXJsYXAgaW4gdGFnIDAuDQoNCkJUVywgaW4g
+U0NTSSBhcmNoaXRlY3R1cmUsIEFCT1JUIFRBU0sgaXMgc3VwcG9zZWQgdG8gcmV0dXJuIA0KYSBz
+ZXJ2aWNlIHJlc3BvbnNlIG9mIEZVTkNUSU9OIENPTVBMRVRFIHJhdGhlciB0aGFuIGFuIGVycm9y
+DQppZiB0aGUgdGFnIGlzIG5vdCBwcmVzZW50IChlLmcuLCBiZWNhdXNlIHRoZSBjb21tYW5kIGhh
+cw0KY29tcGxldGVkIGJ5IHRoZSB0aW1lIHRoZSBBQk9SVCBUQVNLIHdhcyByZWNlaXZlZCksIHNv
+IHRoZSANCm12c19hYm9ydF90YXNrKCkgaGFuZGxpbmcgdGhlcmUgaXMgcXVlc3Rpb25hYmxlLg0K
+DQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdlDQoNCg0KDQoNCg0KDQoNCg0K
+DQoNCg==
