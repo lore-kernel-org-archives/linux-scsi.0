@@ -1,72 +1,55 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 3/5] scsi: add support for COMPARE_AND_WRITE
-Date: Thu, 18 Dec 2014 00:23:58 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959427EEF@G9W0745.americas.hpqcorp.net>
-References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
- <1413437835-13778-4-git-send-email-michaelc@cs.wisc.edu>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: Re: [PATCH 4/4 v4] scsi:stex.c Add S3/S4 support
+Date: Thu, 18 Dec 2014 11:09:02 +0800
+Message-ID: <5492454E.8030203@gmail.com>
+References: <548FCDC8.1010900@gmail.com> <1418722450.2448.3.camel@linux-0dmf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1413437835-13778-4-git-send-email-michaelc@cs.wisc.edu>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1418722450.2448.3.camel@linux-0dmf.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, JBottomley@parallels.com, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-I haven't reviewed the whole patch, but noticed one thing:
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of michaelc@cs.wisc.edu
-> Sent: Thursday, 16 October, 2014 12:37 AM
-...
-> @@ -635,6 +646,54 @@ static void sd_prot_op(struct scsi_cmnd *scmd,
-> unsigned int dif)
->  	scsi_set_prot_type(scmd, dif);
->  }
-> 
-> +static void sd_config_cmp_and_write(struct scsi_disk *sdkp)
-> +{
-> +	if (sdkp->max_cmp_and_write_blocks > sdkp->max_xfer_blocks) {
-> +		/* Invalid settings returned. Do not try to support for now
-> */
-> +		blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue, 0);
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * mult by 2, because the block layer wants the total number of
-> +	 * sectors that will be put in bios and transferred.
-> +	 */
-> +	blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue,
-> +					2 * sdkp->max_cmp_and_write_blocks *
-> +					(sdkp->device->sector_size  >> 9));
-> +}
-> +
-> +/**
-> + * sd_setup_cmp_and_write_cmnd - compare and write data
-> + * @cmd: scsi_cmnd to prepare
-> + **/
-> +static int sd_setup_cmd_and_write_cmd(struct scsi_cmnd *cmd)
 
-I suspect you intended to use 
-	setup_cmp_and_write
-rather than 
-	setup_cmd_and_write
-for that function name, to match 
-	sd_config_cmp_and_write
+On 12/16/2014 05:34 PM, Oliver Neukum wrote:
+> On Tue, 2014-12-16 at 14:14 +0800, Charles Chiou wrote:
+>>   From f9d84df080c16097218092630db9b5df31d487b5 Mon Sep 17 00:00:00 2001
+>> From: Charles Chiou <charles.chiou@tw.promise.com>
+>> Date: Fri, 7 Nov 2014 10:15:18 +0800
+>> Subject: [PATCH 4/4] scsi:stex.c Add S3/S4 support
+>>
+>> Add S3/S4 support, add .suspend and .resume function in pci_driver.
+>>
+>> Pegasus need 30~40 seconds to boot up. We don't want to OS wait
+>> in .resume function. Create a thread to handle device boot up.
+>
+> I am sorry to be obnoxious, but this patch raises another
+> question. What happens if the the system is suspended again
+> while the work scheduled in resume is still running?
+>
+> Furthermore, what happens in the case of a PCI hotunplug while
+> the work is still scheduled?
+>
+> 	Regards
+> 		Oliver
+>
+>
 
-...
-> @@ -1134,6 +1193,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
->  		return sd_setup_write_same_cmnd(cmd);
->  	else if (rq->cmd_flags & REQ_FLUSH)
->  		return sd_setup_flush_cmnd(cmd);
-> +	else if (rq->cmd_flags & REQ_CMP_AND_WRITE)
-> +		return sd_setup_cmd_and_write_cmd(cmd);
->  	else
->  		return sd_setup_read_write_cmnd(cmd);
->  }
+Hi Oliver,
+1. When OS is going to suspend again, .suspend function is active,
+    and driver prepare a command send to device, while firmware is
+    not ready. Firmware might loss this command and host can't go
+    to sleep. I'll fix this issue by add while loop to wait device
+    ready (polling hba->mu_status) and return -EBUSY if timeout.
+    I'll fix this issue in the next version. Thanks for your help.
 
----
-Rob Elliott    HP Server Storage
+2. When hotplug, .remove function is active. Return all commands to OS
+    with DID_NO_CONNECT status. And OS can remove the driver. After
+    experiment, it works well.
+
+BRS
+Charles
