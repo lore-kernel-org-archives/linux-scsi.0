@@ -1,62 +1,72 @@
 From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: Tagged overlapped commands
-Date: Thu, 18 Dec 2014 00:16:45 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959427ED2@G9W0745.americas.hpqcorp.net>
-References: <CAHOfOo1WuW8MD=r1zEEfd+csNEWacQA4EYa95zhUn49MxbEEsA@mail.gmail.com>
- <1417709828.8998.7.camel@HansenPartnership.com>
- <CAHOfOo3D9iXmesTGq-tf397WucY95D7kqZ7rtKshWyzBa1U9ow@mail.gmail.com>
- <1418022178.21408.5.camel@HansenPartnership.com>
- <CAHOfOo1wGTLvhqtY6s4eCW0Ny+sboEFr8d5A7R1G91DaRRejFw@mail.gmail.com>
+Subject: RE: [PATCH 3/5] scsi: add support for COMPARE_AND_WRITE
+Date: Thu, 18 Dec 2014 00:23:58 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402959427EEF@G9W0745.americas.hpqcorp.net>
+References: <1413437835-13778-1-git-send-email-michaelc@cs.wisc.edu>
+ <1413437835-13778-4-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:36621 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbaLRATh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Dec 2014 19:19:37 -0500
-In-Reply-To: <CAHOfOo1wGTLvhqtY6s4eCW0Ny+sboEFr8d5A7R1G91DaRRejFw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1413437835-13778-4-git-send-email-michaelc@cs.wisc.edu>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
+To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Brooks <arb@sat.dundee.ac.uk>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEFuZHJldyBCcm9va3MNCj4gU2VudDogVHVlc2RheSwgMTYgRGVjZW1i
-ZXIsIDIwMTQgNDoyMyBBTQ0KLi4uDQo+IA0KPiBPbiA4IERlY2VtYmVyIDIwMTQgYXQgMDc6MDIs
-IEphbWVzIEJvdHRvbWxleQ0KPiA8SmFtZXMuQm90dG9tbGV5QGhhbnNlbnBhcnRuZXJzaGlwLmNv
-bT4gd3JvdGU6DQo+ID4NCj4gPiBUaGUgZXJyb3IgbWVzc2FnZSBsaWtlbHkgbWVhbnMgdGhhdCB0
-aGUgdGFwZSBkZXZpY2UgaGFkIG1vcmUgdGhhbiBvbmUNCj4gPiBjb21tYW5kIG91dHN0YW5kaW5n
-IGF0IG9uY2UgKGkuZS4gb25lIGNvbW1hbmQgd2FzIHNlbnQgd2hpbGUgdGhlIGN1cnJlbnQNCj4g
-PiBjb21tYW5kIHdhcyBzdGlsbCBwZW5kaW5nKS4gIEl0IGNvdWxkIGFsc28gbWVhbiB0aGF0IGEg
-dGFnIGdvdCByZS11c2VkDQo+ID4gKHNhbWUgdGFnIGlzc3VlZCB3aGlsZSBjb21tYW5kIHdpdGgg
-dGhhdCB0YWcgd2FzIG91dHN0YW5kaW5nKSBidXQgZm9yIGENCj4gPiB0YXBlIEkgdGhpbmsgdGhl
-IGZvcm1lciBpcyBtb3JlIGxpa2VseS4gIElzIHRoZSBxdWV1ZSBkZXB0aCBzZXQgdG8gb25lDQo+
-ID4gZm9yIHRoZSBkZXZpY2U/DQo+ID4NCi4uLg0KPiANCj4gc3QwOiBTZW5zZSBLZXkgOiBBYm9y
-dGVkIENvbW1hbmQgW2N1cnJlbnRdDQo+IHN0MDogQWRkLiBTZW5zZTogVGFnZ2VkIG92ZXJsYXBw
-ZWQgY29tbWFuZHMgKHRhc2sgdGFnIDApDQoNClRoYXQgZXJyb3IgY291bGQgYmUgZHVlIHRvOg0K
-MS4gc2VuZCBjb21tYW5kIHdpdGggdGFnIDANCjIuIHRpbWVvdXQgY29tbWFuZCB3aXRoIHRhZyAw
-DQozLiBhYm9ydCBjb21tYW5kIHdpdGggdGFnIDAsIGRvZXNuJ3QgZ2V0IHRocm91Z2gNCjQuIHNl
-bmQgbmV3IGNvbW1hbmQgd2l0aCB0YWcgMA0KDQpXaGF0IGFyZSB0aGUgc2VyaWFsIGxvZyBtZXNz
-YWdlcyBwcmVjZWRpbmcgdGhvc2UgbWVzc2FnZXM/DQoNCkZvciBleGFtcGxlLCBpZiB5b3Ugc2Vl
-IHRoaXMgcHJpbnQgZnJvbSBtdl9zYXMuYyBtdnNfYWJvcnRfdGFzaygpOg0KICAgICAgICAgICAg
-ICAgIGlmIChyYyA9PSAwKSB7DQogICAgICAgICAgICAgICAgICAgICAgICBtdl9wcmludGsoIk5v
-IHN1Y2ggdGFnIGluICVzXG4iLCBfX2Z1bmNfXyk7DQogICAgICAgICAgICAgICAgICAgICAgICBy
-YyA9IFRNRl9SRVNQX0ZVTkNfRkFJTEVEOw0KICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJu
-IHJjOw0KICAgICAgICAgICAgICAgIH0NCmFuZCB0aGlzIGZyb20gbGlic2FzLmM6DQogICAgICAg
-ICAgICAgICAgICAgICAgICBjYXNlIFRNRl9SRVNQX0ZVTkNfRkFJTEVEOg0KICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBTQVNfRFBSSU5USygiJXM6IHRhc2sgMHglcCBmYWlsZWQgdG8g
-YWJvcnRcbiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICBfX2Z1bmNfXywgdGFzayk7DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVy
-biBUQVNLX0FCT1JUX0ZBSUxFRDsNCiAgICAgICAgICAgICAgICAgICAgICAgIH0NCg0KdGhlbiBp
-dCBkaWRuJ3Qgc2VuZCB0aGUgQUJPUlQgVEFTSyBhdCBhbGwuICBJZiBpdCByZWFsbHkgbmVlZGVk
-DQp0bywgdGhhdCBjb3VsZCBsZWFkIHRvIGFuIG92ZXJsYXAgaW4gdGFnIDAuDQoNCkJUVywgaW4g
-U0NTSSBhcmNoaXRlY3R1cmUsIEFCT1JUIFRBU0sgaXMgc3VwcG9zZWQgdG8gcmV0dXJuIA0KYSBz
-ZXJ2aWNlIHJlc3BvbnNlIG9mIEZVTkNUSU9OIENPTVBMRVRFIHJhdGhlciB0aGFuIGFuIGVycm9y
-DQppZiB0aGUgdGFnIGlzIG5vdCBwcmVzZW50IChlLmcuLCBiZWNhdXNlIHRoZSBjb21tYW5kIGhh
-cw0KY29tcGxldGVkIGJ5IHRoZSB0aW1lIHRoZSBBQk9SVCBUQVNLIHdhcyByZWNlaXZlZCksIHNv
-IHRoZSANCm12c19hYm9ydF90YXNrKCkgaGFuZGxpbmcgdGhlcmUgaXMgcXVlc3Rpb25hYmxlLg0K
-DQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdlDQoNCg0KDQoNCg0KDQoNCg0K
-DQoNCg==
+I haven't reviewed the whole patch, but noticed one thing:
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of michaelc@cs.wisc.edu
+> Sent: Thursday, 16 October, 2014 12:37 AM
+...
+> @@ -635,6 +646,54 @@ static void sd_prot_op(struct scsi_cmnd *scmd,
+> unsigned int dif)
+>  	scsi_set_prot_type(scmd, dif);
+>  }
+> 
+> +static void sd_config_cmp_and_write(struct scsi_disk *sdkp)
+> +{
+> +	if (sdkp->max_cmp_and_write_blocks > sdkp->max_xfer_blocks) {
+> +		/* Invalid settings returned. Do not try to support for now
+> */
+> +		blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue, 0);
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * mult by 2, because the block layer wants the total number of
+> +	 * sectors that will be put in bios and transferred.
+> +	 */
+> +	blk_queue_max_cmp_and_write_sectors(sdkp->disk->queue,
+> +					2 * sdkp->max_cmp_and_write_blocks *
+> +					(sdkp->device->sector_size  >> 9));
+> +}
+> +
+> +/**
+> + * sd_setup_cmp_and_write_cmnd - compare and write data
+> + * @cmd: scsi_cmnd to prepare
+> + **/
+> +static int sd_setup_cmd_and_write_cmd(struct scsi_cmnd *cmd)
+
+I suspect you intended to use 
+	setup_cmp_and_write
+rather than 
+	setup_cmd_and_write
+for that function name, to match 
+	sd_config_cmp_and_write
+
+...
+> @@ -1134,6 +1193,8 @@ static int sd_init_command(struct scsi_cmnd *cmd)
+>  		return sd_setup_write_same_cmnd(cmd);
+>  	else if (rq->cmd_flags & REQ_FLUSH)
+>  		return sd_setup_flush_cmnd(cmd);
+> +	else if (rq->cmd_flags & REQ_CMP_AND_WRITE)
+> +		return sd_setup_cmd_and_write_cmd(cmd);
+>  	else
+>  		return sd_setup_read_write_cmnd(cmd);
+>  }
+
+---
+Rob Elliott    HP Server Storage
