@@ -1,245 +1,201 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 2/2] target: Avoid dropping AllRegistrants reservation
- during unregister
-Date: Wed, 17 Dec 2014 23:02:04 -0800
-Message-ID: <54927BEC.4080301@suse.com>
-References: <1418688544-18825-1-git-send-email-nab@daterainc.com> <1418688544-18825-3-git-send-email-nab@daterainc.com>
+From: Ilias Tsitsimpis <iliastsi@arrikto.com>
+Subject: Re: [PATCH 0/2] target: Fixes for AllRegistrants reservation handling
+Date: Thu, 18 Dec 2014 16:54:01 +0200
+Message-ID: <20141218145401.GD2476@iliastsi-m.arr>
+References: <1418688544-18825-1-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="O5XBE6gyVG5Rl6Rj"
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1418688544-18825-3-git-send-email-nab@daterainc.com>
+Content-Disposition: inline
+In-Reply-To: <1418688544-18825-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/15/2014 04:09 PM, Nicholas A. Bellinger wrote:
+
+--O5XBE6gyVG5Rl6Rj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Dec 16, 2014 at 12:09AM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch fixes an issue with AllRegistrants reservations where
-> an unregister operation by the I_T nexus reservation holder would
-> incorrectly drop the reservation, instead of waiting until the
-> last active I_T nexus is unregistered as per SPC-4.
-> 
-> This includes updating __core_scsi3_complete_pro_release() to reset
-> dev->dev_pr_res_holder with another pr_reg for this special case,
-> as well as a new 'unreg' parameter to determine when the release
-> is occuring from an implicit unregister, vs. explicit RELEASE.
-> 
-> It also adds special handling in core_scsi3_free_pr_reg_from_nacl()
-> to release the left-over pr_res_holder, now that pr_reg is deleted
-> from pr_reg_list within __core_scsi3_complete_pro_release().
-> 
-> Reported-by: Ilias Tsitsimpis <i.tsitsimpis@gmail.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_pr.c | 87 ++++++++++++++++++++++++++++++-----------
->  1 file changed, 65 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> index c4a8da5..703890c 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -76,7 +76,7 @@ enum preempt_type {
->  };
->  
->  static void __core_scsi3_complete_pro_release(struct se_device *, struct se_node_acl *,
-> -			struct t10_pr_registration *, int);
-> +					      struct t10_pr_registration *, int, int);
->  
->  static sense_reason_t
->  target_scsi2_reservation_check(struct se_cmd *cmd)
-> @@ -1177,7 +1177,7 @@ static int core_scsi3_check_implicit_release(
->  		 *    service action with the SERVICE ACTION RESERVATION KEY
->  		 *    field set to zero (see 5.7.11.3).
->  		 */
-> -		__core_scsi3_complete_pro_release(dev, nacl, pr_reg, 0);
-> +		__core_scsi3_complete_pro_release(dev, nacl, pr_reg, 0, 1);
->  		ret = 1;
->  		/*
->  		 * For 'All Registrants' reservation types, all existing
-> @@ -1219,7 +1219,8 @@ static void __core_scsi3_free_registration(
->  
->  	pr_reg->pr_reg_deve->def_pr_registered = 0;
->  	pr_reg->pr_reg_deve->pr_res_key = 0;
-> -	list_del(&pr_reg->pr_reg_list);
-> +	if (!list_empty(&pr_reg->pr_reg_list))
-> +		list_del(&pr_reg->pr_reg_list);
->  	/*
->  	 * Caller accessing *pr_reg using core_scsi3_locate_pr_reg(),
->  	 * so call core_scsi3_put_pr_reg() to decrement our reference.
-> @@ -1271,6 +1272,7 @@ void core_scsi3_free_pr_reg_from_nacl(
->  {
->  	struct t10_reservation *pr_tmpl = &dev->t10_pr;
->  	struct t10_pr_registration *pr_reg, *pr_reg_tmp, *pr_res_holder;
-> +	bool free_reg = false;
->  	/*
->  	 * If the passed se_node_acl matches the reservation holder,
->  	 * release the reservation.
-> @@ -1278,13 +1280,18 @@ void core_scsi3_free_pr_reg_from_nacl(
->  	spin_lock(&dev->dev_reservation_lock);
->  	pr_res_holder = dev->dev_pr_res_holder;
->  	if ((pr_res_holder != NULL) &&
-> -	    (pr_res_holder->pr_reg_nacl == nacl))
-> -		__core_scsi3_complete_pro_release(dev, nacl, pr_res_holder, 0);
-> +	    (pr_res_holder->pr_reg_nacl == nacl)) {
-> +		__core_scsi3_complete_pro_release(dev, nacl, pr_res_holder, 0, 1);
-> +		free_reg = true;
-> +	}
->  	spin_unlock(&dev->dev_reservation_lock);
->  	/*
->  	 * Release any registration associated with the struct se_node_acl.
->  	 */
->  	spin_lock(&pr_tmpl->registration_lock);
-> +	if (pr_res_holder && free_reg)
-> +		__core_scsi3_free_registration(dev, pr_res_holder, NULL, 0);
-> +
->  	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
->  			&pr_tmpl->registration_list, pr_reg_list) {
->  
-> @@ -1307,7 +1314,7 @@ void core_scsi3_free_all_registrations(
->  	if (pr_res_holder != NULL) {
->  		struct se_node_acl *pr_res_nacl = pr_res_holder->pr_reg_nacl;
->  		__core_scsi3_complete_pro_release(dev, pr_res_nacl,
-> -				pr_res_holder, 0);
-> +						  pr_res_holder, 0, 0);
->  	}
->  	spin_unlock(&dev->dev_reservation_lock);
->  
-> @@ -2103,13 +2110,13 @@ core_scsi3_emulate_pro_register(struct se_cmd *cmd, u64 res_key, u64 sa_res_key,
->  		/*
->  		 * sa_res_key=0 Unregister Reservation Key for registered I_T Nexus.
->  		 */
-> -		pr_holder = core_scsi3_check_implicit_release(
-> -				cmd->se_dev, pr_reg);
-> +		type = pr_reg->pr_res_type;
-> +		pr_holder = core_scsi3_check_implicit_release(cmd->se_dev,
-> +							      pr_reg);
->  		if (pr_holder < 0) {
->  			ret = TCM_RESERVATION_CONFLICT;
->  			goto out;
->  		}
-> -		type = pr_reg->pr_res_type;
->  
->  		spin_lock(&pr_tmpl->registration_lock);
->  		/*
-> @@ -2383,23 +2390,59 @@ static void __core_scsi3_complete_pro_release(
->  	struct se_device *dev,
->  	struct se_node_acl *se_nacl,
->  	struct t10_pr_registration *pr_reg,
-> -	int explicit)
-> +	int explicit,
-> +	int unreg)
->  {
->  	struct target_core_fabric_ops *tfo = se_nacl->se_tpg->se_tpg_tfo;
->  	char i_buf[PR_REG_ISID_ID_LEN];
-> +	int pr_res_type = 0, pr_res_scope = 0;
->  
->  	memset(i_buf, 0, PR_REG_ISID_ID_LEN);
->  	core_pr_dump_initiator_port(pr_reg, i_buf, PR_REG_ISID_ID_LEN);
->  	/*
->  	 * Go ahead and release the current PR reservation holder.
-> +	 * If an All Registrants reservation is currently active and
-> +	 * a unregister operation is requested, replace the current
-> +	 * dev_pr_res_holder with another active registration.
->  	 */
-> -	dev->dev_pr_res_holder = NULL;
-> +	if (dev->dev_pr_res_holder) {
-> +		pr_res_type = dev->dev_pr_res_holder->pr_res_type;
-> +		pr_res_scope = dev->dev_pr_res_holder->pr_res_scope;
-> +		dev->dev_pr_res_holder->pr_res_type = 0;
-> +		dev->dev_pr_res_holder->pr_res_scope = 0;
-> +		dev->dev_pr_res_holder->pr_res_holder = 0;
-> +		dev->dev_pr_res_holder = NULL;
-> +	}
-> +	if (!unreg)
-> +		goto out;
->  
-> -	pr_debug("SPC-3 PR [%s] Service Action: %s RELEASE cleared"
-> -		" reservation holder TYPE: %s ALL_TG_PT: %d\n",
-> -		tfo->get_fabric_name(), (explicit) ? "explicit" : "implicit",
-> -		core_scsi3_pr_dump_type(pr_reg->pr_res_type),
-> -		(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
-> +	spin_lock(&dev->t10_pr.registration_lock);
-> +	list_del_init(&pr_reg->pr_reg_list);
-> +	/*
-> +	 * If the I_T nexus is a reservation holder, the persistent reservation
-> +	 * is of an all registrants type, and the I_T nexus is the last remaining
-> +	 * registered I_T nexus, then the device server shall also release the
-> +	 * persistent reservation.
-> +	 */
-> +	if (!list_empty(&dev->t10_pr.registration_list) &&
-> +	    ((pr_res_type == PR_TYPE_WRITE_EXCLUSIVE_ALLREG) ||
-> +	     (pr_res_type == PR_TYPE_EXCLUSIVE_ACCESS_ALLREG))) {
-> +		dev->dev_pr_res_holder =
-> +			list_entry(dev->t10_pr.registration_list.next,
-> +				   struct t10_pr_registration, pr_reg_list);
-> +		dev->dev_pr_res_holder->pr_res_type = pr_res_type;
-> +		dev->dev_pr_res_holder->pr_res_scope = pr_res_scope;
-> +		dev->dev_pr_res_holder->pr_res_holder = 1;
-> +	}
-> +	spin_unlock(&dev->t10_pr.registration_lock);
-> +out:
-> +	if (!dev->dev_pr_res_holder) {
-> +		pr_debug("SPC-3 PR [%s] Service Action: %s RELEASE cleared"
-> +			" reservation holder TYPE: %s ALL_TG_PT: %d\n",
-> +			tfo->get_fabric_name(), (explicit) ? "explicit" :
-> +			"implicit", core_scsi3_pr_dump_type(pr_res_type),
-> +			(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
-> +	}
->  	pr_debug("SPC-3 PR [%s] RELEASE Node: %s%s\n",
->  		tfo->get_fabric_name(), se_nacl->initiatorname,
->  		i_buf);
-> @@ -2530,7 +2573,7 @@ core_scsi3_emulate_pro_release(struct se_cmd *cmd, int type, int scope,
->  	 *    server shall not establish a unit attention condition.
->  	 */
->  	__core_scsi3_complete_pro_release(dev, se_sess->se_node_acl,
-> -			pr_reg, 1);
-> +					  pr_reg, 1, 0);
->  
->  	spin_unlock(&dev->dev_reservation_lock);
->  
-> @@ -2618,7 +2661,7 @@ core_scsi3_emulate_pro_clear(struct se_cmd *cmd, u64 res_key)
->  	if (pr_res_holder) {
->  		struct se_node_acl *pr_res_nacl = pr_res_holder->pr_reg_nacl;
->  		__core_scsi3_complete_pro_release(dev, pr_res_nacl,
-> -			pr_res_holder, 0);
-> +						  pr_res_holder, 0, 0);
->  	}
->  	spin_unlock(&dev->dev_reservation_lock);
->  	/*
-> @@ -2677,7 +2720,7 @@ static void __core_scsi3_complete_pro_preempt(
->  	 */
->  	if (dev->dev_pr_res_holder)
->  		__core_scsi3_complete_pro_release(dev, nacl,
-> -				dev->dev_pr_res_holder, 0);
-> +						  dev->dev_pr_res_holder, 0, 0);
->  
->  	dev->dev_pr_res_holder = pr_reg;
->  	pr_reg->pr_res_holder = 1;
-> @@ -2922,8 +2965,8 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
->  	 */
->  	if (pr_reg_n != pr_res_holder)
->  		__core_scsi3_complete_pro_release(dev,
-> -				pr_res_holder->pr_reg_nacl,
-> -				dev->dev_pr_res_holder, 0);
-> +						  pr_res_holder->pr_reg_nacl,
-> +						  dev->dev_pr_res_holder, 0, 0);
->  	/*
->  	 * b) Remove the registrations for all I_T nexuses identified
->  	 *    by the SERVICE ACTION RESERVATION KEY field, except the
-> @@ -3386,7 +3429,7 @@ after_iport_check:
->  	 *    holder (i.e., the I_T nexus on which the
->  	 */
->  	__core_scsi3_complete_pro_release(dev, pr_res_nacl,
-> -			dev->dev_pr_res_holder, 0);
-> +					  dev->dev_pr_res_holder, 0, 0);
->  	/*
->  	 * g) Move the persistent reservation to the specified I_T nexus using
->  	 *    the same scope and type as the persistent reservation released in
-> 
+>=20
+> Hi all,
+>=20
+> This series addresses two issues raised recently by Ilias wrt
+> AllRegistrants reservation handling in target code that does not
+> adhere to SPC-4 specification requirements.
+>=20
+> This first is a informational change to PR-IN READ_FULL_STATUS,
+> that when an AllRegistrants reservation is in place, all active
+> registrations should be setting R_HOLDER=3D1 within their respective
+> descriptors.
+>=20
+> The second is a functional change to PR-OUT REGISTER w/ SARK=3D0
+> operation, to avoid dropping the AllRegistrants reservation until
+> the last registered I_T nexus has been released.  It also ensures
+> that the correct reservation type + scope is retained when the
+> new reservation is set within __core_scsi3_complete_pro_release()
+> for this AllRegistrants special case.
+>=20
+> Also, thanks to James for the extra SPC-4 clarifications.
+>=20
+> Please review.
+
+Hi Nicholas,
+
+Thanks for the quick fix. These patches address the two issues that I
+raised in my previous email but they don't seem to fix all the problems
+with AllRegistrants reservation handling in target code. Please see my
+example below.
+
+I have set up an iSCSI target, using the Linux SCSI Target
+implementation with your patches applied, and I am connecting to it from
+two different nodes using the open-iscsi project.
+
+    root@node1:~# sg_inq /dev/sdc
+    standard INQUIRY:
+      PQual=3D0  Device_type=3D0  RMB=3D0  version=3D0x05  [SPC-3]
+      [AERC=3D0]  [TrmTsk=3D0]  NormACA=3D0  HiSUP=3D0  Resp_data_format=3D2
+      SCCS=3D1  ACC=3D0  TPGS=3D3  3PC=3D1  Protect=3D0  BQue=3D0
+      EncServ=3D0  MultiP=3D0  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
+      [RelAdr=3D0]  WBus16=3D0  Sync=3D0  Linked=3D0  [TranDis=3D0]  CmdQue=
+=3D1
+        length=3D36 (0x24)   Peripheral device type: disk
+     Vendor identification: LIO-ORG=20
+     Product identification: FILEIO         =20
+     Product revision level: 4.0
+     Unit serial number: 853ea439-7fcf-4aaa-9de2-1399e06b45be
+
+    root@node2:~# sg_inq /dev/sdc
+    standard INQUIRY:
+      PQual=3D0  Device_type=3D0  RMB=3D0  version=3D0x05  [SPC-3]
+      [AERC=3D0]  [TrmTsk=3D0]  NormACA=3D0  HiSUP=3D0  Resp_data_format=3D2
+      SCCS=3D1  ACC=3D0  TPGS=3D3  3PC=3D1  Protect=3D0  BQue=3D0
+      EncServ=3D0  MultiP=3D0  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
+      [RelAdr=3D0]  WBus16=3D0  Sync=3D0  Linked=3D0  [TranDis=3D0]  CmdQue=
+=3D1
+        length=3D36 (0x24)   Peripheral device type: disk
+     Vendor identification: LIO-ORG=20
+     Product identification: FILEIO         =20
+     Product revision level: 4.0
+     Unit serial number: 853ea439-7fcf-4aaa-9de2-1399e06b45be
+
+I register both of the I_T nexuses with the target.
+
+    root@node1:~# sg_persist --out --register --param-sark 0x1 /dev/sdc
+
+    root@node2:~# sg_persist --out --register --param-sark 0x2 /dev/sdc
+
+    root@node1:~# sg_persist --in --read-full-status /dev/sdc
+      LIO-ORG   FILEIO            4.0
+      Peripheral device type: disk
+      PR generation=3D0x17
+        Key=3D0x1
+          All target ports bit clear
+          Relative port address: 0x5
+          not reservation holder
+          Transport Id of initiator:
+            iSCSI name and session id: iqn.1993-08.org.debian:01:node1
+        Key=3D0x2
+          All target ports bit clear
+          Relative port address: 0x5
+          not reservation holder
+          Transport Id of initiator:
+            iSCSI name and session id: iqn.1993-08.org.debian:01:node2
+
+Then I get a persistent reservation with type 'Exclusive Access - All
+Registrants' from node1.
+
+    root@node1:~# sg_persist --out --reserve -T 8 --param-rk 0x1 /dev/sdc
+    root@node1:~# sg_persist --in --read-full-status /dev/sdc
+      LIO-ORG   FILEIO            4.0
+      Peripheral device type: disk
+      PR generation=3D0x17
+        Key=3D0x1
+          All target ports bit clear
+          Relative port address: 0x5
+          << Reservation holder >>
+          scope: LU_SCOPE,  type: Exclusive Access, all registrants
+          Transport Id of initiator:
+            iSCSI name and session id: iqn.1993-08.org.debian:01:node1
+        Key=3D0x2
+          All target ports bit clear
+          Relative port address: 0x5
+          << Reservation holder >>
+          scope: LU_SCOPE,  type: Exclusive Access, all registrants
+          Transport Id of initiator:
+            iSCSI name and session id: iqn.1993-08.org.debian:01:node2
+
+As you can see both registrants are reported as reservations holders,
+which is the right thing to do.
+
+Now let's try to get a persistent reservation with the same type from
+node2. SPC4r17 (par. 5.7.9 Reserving) states that:
+
+    If the device server receives a PERSISTENT RESERVE OUT command with
+    RESERVE service action where the TYPE field and the SCOPE field
+    contain the same values as the existing type and scope from a
+    persistent reservation holder, it shall not make any change to the
+    existing persistent reservation and shall complete the command with
+    GOOD status.
+
+Node2 *is* a persistent reservation holder based on the wording of
+SPC4r17 (par. 5.7.10 Persistent reservation holder).
+But instead:
+
+    root@node2:~# sg_persist --out --reserve -T 8 --param-rk 0x2 /dev/sdc
+      LIO-ORG   FILEIO            4.0
+      Peripheral device type: disk
+    persistent reserve out: scsi status: Reservation Conflict
+    PR out: command failed
+
+and on the target machine I get:
+
+    [95713.681066] SPC-3 PR: Attempted RESERVE from [iSCSI]:
+    iqn.1993-08.org.debian:01:node2 while reservation already held by
+    [iSCSI]: iqn.1993-08.org.debian:01:node1, returning
+    RESERVATION_CONFLICT
+
+If I try the same from node1, the target completes the command with GOOD
+status.
 
 
-Tested-by: Lee Duncan <lduncan@suse.com>
+It is clear that the target code still considers node1 as the (only)
+reservation holder and only *reports* node2 as being a reservation
+holder.
+
+I believe we should fix the above errors by changing the
+'pr_res_holder' inside the 't10_reservation' struct to be a list of
+holders rather than trying to handle this implicitly. Having a single
+holder in the code seems prone to more errors similar to this one.
+
+Thanks,
+Ilias
+
+--O5XBE6gyVG5Rl6Rj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJUkuqEAAoJEFDGKLFobHg6wIsQAKFCB1ya56M5XJeAR3M1Acx7
+x+MyzvwX6kEopizgiyB18iTnNhcwIhR7CeGW4gHlakiuyejWvBhvUgAeBQbFK9E+
+6bSrdcpMIW2rjmWIvgBv7SDdEFGeQ33GWPkTdMJ/Hz4Ks5GpjnsjNdyOeoSMNp/y
+F4SNtCd6INgyuk7HW+lKH78QwBp7V64BjmEwQc6moAWGGnn1XGSIcixDPANAkFDu
+WjM4VGFg7n2LSATNhKpRgEJERReD7Kx0JxUeLQdPx00CGXLtSS71MV4pX1/1sv9A
+lAuu24gLWDASgbuyPTcTz8V6sCxeb3wxKMic3jAnogmfTla9lDL+hjh3j8HHOuMx
+s1HogiNuXryAgKEGsJJAYckeCnytfFPAsGEyqa142SBzinEgsazehNAMaHUv6FPM
+kz8oTH+Cn/eZ7+gVfiDgWrJiwy8iwts32FPbSOsP23cjwvts3IHQnrQUNG0zR1Fk
+nP+RNmneDlpgPxCWT+rTIeeLLSvY+jwthbVid9IQ1xRnGYT9R81MVH3DBUaQgvvl
+WrfDxF1C+A4heVIgYSWC/or6V9u2LFFbTQTfqT4+mqk3xgjBFKxXWfmuxE1zW4aY
+isU62tQkSseUtjaEy4mF0WI0Pcpi3svsSGtZoh4ZcIb1+aqfXaRiLTAD/I0Q/rXL
+AjAcyKBFokGWzB1s/0f4
+=u8Id
+-----END PGP SIGNATURE-----
+
+--O5XBE6gyVG5Rl6Rj--
