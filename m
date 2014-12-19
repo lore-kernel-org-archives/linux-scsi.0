@@ -1,62 +1,150 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH] target: Allow AllRegistrants to re-RESERVE existing reservation
-Date: Fri, 19 Dec 2014 00:40:07 +0000
-Message-ID: <1418949607-6919-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Ilias Tsitsimpis <i.tsitsimpis@gmail.com>, Lee Duncan <lduncan@suse.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: Delayed FC rport removal causes errors on other device
+Date: Fri, 19 Dec 2014 01:54:09 +0000
+Message-ID: <D63B9804CB63AD4FAAD96603769566464740726D@avmb2.qlogic.org>
+References: <54920690.3080706@cybernetics.com>
+ <D63B9804CB63AD4FAAD96603769566464740481D@avmb2.qlogic.org>
+ <549302DA.7060006@cybernetics.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="_000_D63B9804CB63AD4FAAD96603769566464740726Davmb2qlogicorg_"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:43862 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751211AbaLSByM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Dec 2014 20:54:12 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sBJ1hdqJ022260
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2014 17:54:11 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjm0kk7-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2014 17:54:11 -0800
+In-Reply-To: <549302DA.7060006@cybernetics.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+--_000_D63B9804CB63AD4FAAD96603769566464740726Davmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <8232D39CB299F04E86C17F3DB5E9EC43@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-This patch changes core_scsi3_pro_release() logic to allow an
-existing AllRegistrants type reservation to be re-reserved by
-any registered I_T nexus.
+Tony,=20
 
-This addresses a issue where AllRegistrants type RESERVE was
-receiving RESERVATION_CONFLICT status if dev_pr_res_holder did
-not match the same I_T nexus, instead of just returning GOOD
-status following spc4r34 Section 5.9.9:
+We will get back to you after looking at the logs.
 
-"If the device server receives a PERSISTENT RESERVE OUT command
- with RESERVE service action where the TYPE field and the SCOPE
- field contain the same values as the existing type and scope
- from a persistent reservation holder, it shall not make any
- change to the existing persistent reservation and shall complete
- the command with GOOD status."
+-- Giri
 
-Reported-by: Ilias Tsitsimpis <i.tsitsimpis@gmail.com>
-Cc: Ilias Tsitsimpis <i.tsitsimpis@gmail.com>
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_pr.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+On 12/18/14 8:37 AM, "Tony Battersby" <tonyb@cybernetics.com> wrote:
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 703890c..f75a4ba 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -2274,6 +2274,7 @@ core_scsi3_pro_reserve(struct se_cmd *cmd, int type, int scope, u64 res_key)
- 	spin_lock(&dev->dev_reservation_lock);
- 	pr_res_holder = dev->dev_pr_res_holder;
- 	if (pr_res_holder) {
-+		int pr_res_type = pr_res_holder->pr_res_type;
- 		/*
- 		 * From spc4r17 Section 5.7.9: Reserving:
- 		 *
-@@ -2284,7 +2285,9 @@ core_scsi3_pro_reserve(struct se_cmd *cmd, int type, int scope, u64 res_key)
- 		 * the logical unit, then the command shall be completed with
- 		 * RESERVATION CONFLICT status.
- 		 */
--		if (pr_res_holder != pr_reg) {
-+		if ((pr_res_holder != pr_reg) &&
-+		    (pr_res_type != PR_TYPE_WRITE_EXCLUSIVE_ALLREG) &&
-+		    (pr_res_type != PR_TYPE_EXCLUSIVE_ACCESS_ALLREG)) {
- 			struct se_node_acl *pr_res_nacl = pr_res_holder->pr_reg_nacl;
- 			pr_err("SPC-3 PR: Attempted RESERVE from"
- 				" [%s]: %s while reservation already held by"
--- 
-1.7.10.4
+>On 12/17/2014 06:17 PM, Giridhar Malavali wrote:
+>> Tony,=20
+>>
+>> We will look into this further and get back to you.
+>>
+>> Do you have driver logs with extended error logging for this failure. If
+>> not, can you please capture one and send it across.
+>>
+>>
+>
+>I have attached two logs - one log from the initiator during the
+>initiator test that I described, and one log from the target during the
+>target test that I described.  Please note that these are logs from two
+>different test procedures, so you cannot correlate events from the
+>initiator log with events from the target log.
+>
+>Thanks,
+>Tony Battersby
+>Cybernetics
+>
+>
+
+
+--_000_D63B9804CB63AD4FAAD96603769566464740726Davmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
+
+eJ8+IqwBAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEU0M0IxMjQz
+OTY5MjQ2NDU4MUYzNkYxQkNCQzMyOURGACYHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HDAATAAEA
+NgAJAAUASQEBIIADAA4AAADeBwwAEwABADYACQAFAEkBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABADsAAABSZTogRGVsYXllZCBGQyBycG9ydCByZW1vdmFsIGNhdXNlcyBl
+cnJvcnMgb24gb3RoZXIgZGV2aWNlAA8VAQOQBgBAEAAANgAAAAIBfwABAAAAPAAAADxENjNCOTgw
+NENCNjNBRDRGQUFEOTY2MDM3Njk1NjY0NjQ3NDA3MjZEQGF2bWIyLnFsb2dpYy5vcmc+AAsAHw4B
+AAAAAgEJEAEAAAABAwAA/QIAAAcFAABMWkZ1yDmwrWEACmZiaWQEAABjY8BwZzEyNTIA/gND8HRl
+eHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjIOwliMTkOwL8JwxZyCjIW
+cQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2AhByAMB0fQhQbhoxECAF
+wAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJrbWsGcwGQACAgQk1fQuBF
+R0lOfQr8AfEL8VMSQAIgeSwDMGwLgGXbCoEiFFcZ4APwbAMgGDAVBUBiANBrHMBvIHm5CGAgYQGA
+G7EJAG8doWZnJFAFQHRoGeAJAGcEcy4iDC0tIEdpGwUQIgxPA6AOkC8xOAEogDQgODozNyD0QU0h
+4CIhoh+wGIAbocBzYnkiIDwYkCHA+GJAYyrQBJESEA5QJeC5BaBtPiMAA2AQIDoiDDI+KDU3LwHQ
+KMEwNrI6LcAgUClRJxJkEdFTBdAHQGF2B0BpLAw+vyvwIasw0DBoIuYkwiALgP8j8SVwBAAccAhw
+JXEFwABw7xxgI20l9jHaRCQEEdAaMHwgZAUQGjEloyMBJXAgfxAxCfABABxgBJADYDgDZz8lAhrh
+M6ULcApACXAuIPRJZjBobiwwIeAeUAOg8yQiC1BlYRIAPFEFMDsB/iACIBngNIISADSROIAkUN8Y
+8iXnMdks5izmSTdUKfHnANAlgBxgdHckADgjJvD/PdIlsRx1JYELgDiABzAYkv5kCHElESVxLOZE
+KBAgH2C/JWElQUFgAQAE8isgZCHg3zSCQx8fcSNiRM8+SUVGj/9HkjswLpA89DwRSSFG4iVx/z0h
+CsAllBx1QnAs5g3gASDXBJAJ8EslcANgYwmAOwH+cyHgGSAkEzxhPBEb0Tlg9mULYE1RZRowAjBO
+pkVPfzmEOGVTDEk2JbE/NyzmVLsZoR9QLFfHKass5kMrGA9AbiIMFUJdYAAAAB8AQgABAAAAJAAA
+AEcAaQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AZQABAAAAOgAAAGcAaQByAGkA
+ZABoAGEAcgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAAB
+AAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcA
+aQByAGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABh
+AHIALgBtAGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwACXQEAAAA6AAAA
+ZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
+AAAAHwDlXwEAAABCAAAAcwBpAHAAOgBnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYAYQBsAGkA
+QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfABoMAQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABN
+AGEAbABhAHYAYQBsAGkAAAAfAB8MAQAAADoAAABnAGkAcgBpAGQAaABhAHIALgBtAGEAbABhAHYA
+YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAAC
+ARkMAQAAAIAAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBHAGkAcgBpAGQAaABhAHIAIABNAGEA
+bABhAHYAYQBsAGkAAABTAE0AVABQAAAAZwBpAHIAaQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABp
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAOgAAAGcAaQByAGkAZABoAGEAcgAuAG0A
+YQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAJAAAAEcAaQBy
+AGkAZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAB8AI0ABAAAAOgAAAGcAaQByAGkAZABoAGEA
+cgAuAG0AYQBsAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAA
+AFMATQBUAFAAAAAAAAIB+T8BAAAAgAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgEcAaQByAGkA
+ZABoAGEAcgAgAE0AYQBsAGEAdgBhAGwAaQAAAFMATQBUAFAAAABnAGkAcgBpAGQAaABhAHIALgBt
+AGEAbABhAHYAYQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA6AAAAZwBpAHIA
+aQBkAGgAYQByAC4AbQBhAGwAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAx
+QAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4A
+TgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA5DsSQ5aSRkWB
+828by8Mp3wMAFwABAAAAQAA5AIA2ra0uG9ABQAAIMBdaEq4uG9ABCwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABh
+AG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABG
+AAAAAAaFAAAAAAAAHwA3AAEAAAB2AAAAUgBlADoAIABEAGUAbABhAHkAZQBkACAARgBDACAAcgBw
+AG8AcgB0ACAAcgBlAG0AbwB2AGEAbAAgAGMAYQB1AHMAZQBzACAAZQByAHIAbwByAHMAIABvAG4A
+IABvAHQAaABlAHIAIABkAGUAdgBpAGMAZQAAAAAAHwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2
+AAAAAAAfAEIQAQAAAEYAAAA8ADUANAA5ADMAMAAyAEQAQQAuADcAMAA2ADAAMAAwADYAQABjAHkA
+YgBlAHIAbgBlAHQAaQBjAHMALgBjAG8AbQA+AAAAAAACAXEAAQAAACUAAAABAdAaSpVhD4DJDKdx
+R4u+4RL5eYRjnJRqt4CAAai3AIAAFVYAAAAAHwBwAAEAAABuAAAARABlAGwAYQB5AGUAZAAgAEYA
+QwAgAHIAcABvAHIAdAAgAHIAZQBtAG8AdgBhAGwAIABjAGEAdQBzAGUAcwAgAGUAcgByAG8AcgBz
+ACAAbwBuACAAbwB0AGgAZQByACAAZABlAHYAaQBjAGUAAAAAAB8ANRABAAAAeAAAADwARAA2ADMA
+QgA5ADgAMAA0AEMAQgA2ADMAQQBEADQARgBBAEEARAA5ADYANgAwADMANwA2ADkANQA2ADYANAA2
+ADQANwA0ADAANwAyADYARABAAGEAdgBtAGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8A
+ORABAAAABAEAADwANQA0ADkAMgAwADYAOQAwAC4AMwAwADgAMAA3ADAANgBAAGMAeQBiAGUAcgBu
+AGUAdABpAGMAcwAuAGMAbwBtAD4AIAA8AEQANgAzAEIAOQA4ADAANABDAEIANgAzAEEARAA0AEYA
+QQBBAEQAOQA2ADYAMAAzADcANgA5ADUANgA2ADQANgA0ADcANAAwADQAOAAxAEQAQABhAHYAbQBi
+ADIALgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AIAA8ADUANAA5ADMAMAAyAEQAQQAuADcAMAA2ADAA
+MAAwADYAQABjAHkAYgBlAHIAbgBlAHQAaQBjAHMALgBjAG8AbQA+AAAAAwDeP59OAABAAAcw9zUL
+ri4b0AEDACYAAAAAAAIBRwABAAAALgAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQxMjE5
+MDE1NDA5Wi0xMTkyNgAAAB8AFRABAAAAWAAAADgAMgAzADIARAAzADkAQwBCADIAOQA5AEYAMAA0
+AEUAOAA2AEMAMQA3AEYAMwBEAEIANQBFADkARQBDADQAMwBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAACARQwAQAAAAwAAAByAAAAXcx6yVQAAAAfAPo/AQAAACQAAABHAGkAcgBpAGQAaABhAHIAIABN
+AGEAbABhAHYAYQBsAGkAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAWAAAAdQBzAGUAcgAtAGEA
+ZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0AYQBjAE8AdQB0AGwAbwBv
+AGsALwAxADQALgA0AC4ANAAuADEANAAwADgAMAA3AAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEA
+AAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBF
+AHgAAAABAAAAFgEAAEkASQA9ADAAMQAwADEARAAwADEAQgAyAEUAQQBFADMAQQAyADUANABFADMA
+NgBFAEUAQgAwAEEAMwA0AEEAQgA1AEYAQgBEAEUANABEADIANwBGAEUAMgA4ADUANgA7AFMAQgBN
+AEkARAA9ADEAOwBTADEAPQA8ADUANAA5ADMAMAAyAEQAQQAuADcAMAA2ADAAMAAwADYAQABjAHkA
+YgBlAHIAbgBlAHQAaQBjAHMALgBjAG8AbQA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBv
+AG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0A
+SAAyAAAAAAADAA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABh
+AHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIA
+AAB4AC0AbwByAGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAu
+ADQALgAxADAAXQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0A
+ZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAABF8g==
+
+--_000_D63B9804CB63AD4FAAD96603769566464740726Davmb2qlogicorg_--
