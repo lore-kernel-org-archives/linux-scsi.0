@@ -1,8 +1,8 @@
 From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH 2/3] [SCSI] mpt2sas: Simplify the code of
- mpt2sas_scsih_tm_flag
-Date: Fri, 19 Dec 2014 12:13:00 +0100
-Message-ID: <20141219111300.GA19924@sloth>
+Subject: [PATCH 3/3] [SCSI] mpt2sas: Remove unnecessary use of a boolean
+ variable
+Date: Fri, 19 Dec 2014 12:13:45 +0100
+Message-ID: <20141219111345.GA19938@sloth>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -12,37 +12,28 @@ To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishna
 Cc: MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Since skip was only used to pass through the rest of the loop,
-a break statment is called where skip was previously assigned 1.
-
 Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index a6f89fd..6162a89 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2265,18 +2265,15 @@ mpt2sas_scsih_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle, u8 action)
- {
- 	struct MPT2SAS_DEVICE *sas_device_priv_data;
- 	struct scsi_device *sdev;
--	u8 skip = 0;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 58e4521..c31de9d 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1414,12 +1414,8 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	struct msix_entry *entries, *a;
+ 	int r;
+ 	int i;
+-	u8 try_msix = 0;
  
- 	shost_for_each_device(sdev, ioc->shost) {
--		if (skip)
--			continue;
- 		sas_device_priv_data = sdev->hostdata;
- 		if (!sas_device_priv_data)
- 			continue;
- 		if (sas_device_priv_data->sas_target->handle == handle) {
- 			sas_device_priv_data->sas_target->tm_busy = action;
--			skip = 1;
- 			ioc->ignore_loginfos = action;
-+			break;
- 		}
- 	}
- }
+-	if (msix_disable == -1 || msix_disable == 0)
+-		try_msix = 1;
+-
+-	if (!try_msix)
++	if (msix_disable != -1 || msix_disable != 0)
+ 		goto try_ioapic;
+ 
+ 	if (_base_check_enable_msix(ioc) != 0)
 -- 
 1.9.1
