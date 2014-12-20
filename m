@@ -1,42 +1,43 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH v5 2/3] libata: async resume
-Date: Fri, 19 Dec 2014 20:42:40 -0500
-Message-ID: <5494D410.6060209@ubuntu.com>
-References: <20140305201443.20088.85361.stgit@viggo.jf.intel.com> <20140305201735.20088.22124.stgit@viggo.jf.intel.com> <5494B8D1.1070608@ubuntu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <5494B8D1.1070608@ubuntu.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Todd Brandt <todd.e.brandt@linux.intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, tj@kernel.org, JBottomley@Parallels.com, Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: arm: cumana_1.c:  Remove unused function
+Date: Sat, 20 Dec 2014 17:36:15 +0100
+Message-ID: <1419093375-8016-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:47839 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753124AbaLTQd3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Dec 2014 11:33:29 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so4614661wiv.6
+        for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2014 08:33:27 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Russell King <linux@arm.linux.org.uk>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Remove the function cumanascsi_setup() that is not used anywhere.
 
-On 12/19/2014 06:46 PM, Phillip Susi wrote:
-> I realize this is a little late but I finally started looking at
-> the patch set I was working on last year again, and now that I look
-> at your version that was accepted, I realize that it only addresses
-> the libata side of things.  sd still issues START_STOP_UNIT
-> synchronously in the resume path, so without the patch fixing that,
-> you shouldn't see any actual speed up in resume times.  Or are you
-> using the manage_start_stop flag to inhibit that ( at the cost of
-> taking an emergency park on each suspend/shutdown )?
+This was partially found by using a static code analysis program called cppcheck.
 
-Sorry for the noise, I missed the patch to the scsi core that makes
-the entire call to sd_resume async.  Very nice.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/arm/cumana_1.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
+index 8ef810a..7c90d9c 100644
+--- a/drivers/scsi/arm/cumana_1.c
++++ b/drivers/scsi/arm/cumana_1.c
+@@ -38,10 +38,6 @@
+ 
+ #include "../NCR5380.h"
+ 
+-void cumanascsi_setup(char *str, int *ints)
+-{
+-}
+-
+ const char *cumanascsi_info(struct Scsi_Host *spnt)
+ {
+ 	return "";
+-- 
+1.7.10.4
 
-iQEcBAEBCgAGBQJUlNQQAAoJENRVrw2cjl5RUP8H/3hz6qRtSbRJPYya2RCsjgWE
-dM5tm9RXJurPYCa615NmMX+bym2ooSVlYFZPAkuEtIh+uOeO7S9z5WX6de7ErtyN
-yNZNSPQXMZDLOzwy0gnZr2BU0Htk4LpX+2mdmos9oVQJJXqc2n1Nje3NXF/F6qm8
-I8fjKTyOLQgI8GbJNFkK028rjvxc1DYTGx2hgC2KYpuktdyrJv6c68TZBUF1jFQm
-UVsp1xpN5BoGGbhb13LBVm1To8V5YyEvR6Ou1Y633VM4089HLUWMwVBwVIjryyiY
-gR6dHdqs/a/1nuXFGZXAMZXhLFuNJ2a/h98QcX5ZxuaKP8XFEN6V/JyXxiekxK8=
-=Vtbl
------END PGP SIGNATURE-----
