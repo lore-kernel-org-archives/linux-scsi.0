@@ -1,137 +1,90 @@
 From: John Soni Jose <sony.john-n@emulex.com>
-Subject: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
-Date: Sat, 20 Dec 2014 06:21:49 +0530
-Message-ID: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com>
+Subject: [PATCH V2 2/4] be2iscsi : Fix the PCI request region reserving.
+Date: Sat, 20 Dec 2014 06:23:26 +0530
+Message-ID: <770f11bc-03da-49f2-94f9-3056f25e1eae@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:55123 "EHLO
+Received: from cmexedge1.emulex.com ([138.239.224.99]:55130 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbaLSIZn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Dec 2014 03:25:43 -0500
+	with ESMTP id S1751907AbaLSI0x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Dec 2014 03:26:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: John Soni Jose <sony.john-n@emulex.com>, Minh Tran <minhduc.tran@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: John Soni Jose <sony.john-n@emulex.com>, Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
- Increment the retry count to get the boot target info when
- port async event is received by the driver. Update sysfs enteries
- with the boot target  parameters.
+ Reserve the device PCI I/O and Memory resources.
 
-Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
 Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |    4 ++++
- drivers/scsi/be2iscsi/be_main.c |   23 ++++++++++++++++++++---
- drivers/scsi/be2iscsi/be_main.h |    4 ++++
- 3 files changed, 28 insertions(+), 3 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   22 ++++++++++++++++++----
+ 1 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 80d97f3..8e16c49 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -452,6 +452,7 @@ void beiscsi_async_link_state_process(struct beiscsi_hba *phba,
- 		    ((evt->port_link_status & ASYNC_EVENT_LOGICAL) &&
- 		     (evt->port_fault == BEISCSI_PHY_LINK_FAULT_NONE))) {
- 		phba->state = BE_ADAPTER_LINK_UP | BE_ADAPTER_CHECK_BOOT;
-+		phba->get_boot = BE_GET_BOOT_RETRIES;
- 
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_INIT,
-@@ -480,6 +481,7 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
- 				case ASYNC_EVENT_NEW_ISCSI_CONN:
- 				case ASYNC_EVENT_NEW_TCP_CONN:
- 					phba->state |= BE_ADAPTER_CHECK_BOOT;
-+					phba->get_boot = BE_GET_BOOT_RETRIES;
- 					beiscsi_log(phba, KERN_ERR,
- 						    BEISCSI_LOG_CONFIG |
- 						    BEISCSI_LOG_MBOX,
-@@ -488,6 +490,8 @@ int beiscsi_process_mcc(struct beiscsi_hba *phba)
- 						    compl->flags);
- 					break;
- 				default:
-+					phba->state |= BE_ADAPTER_CHECK_BOOT;
-+					phba->get_boot = BE_GET_BOOT_RETRIES;
- 					beiscsi_log(phba, KERN_ERR,
- 						    BEISCSI_LOG_CONFIG |
- 						    BEISCSI_LOG_MBOX,
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index f319340..98490da 100644
+index 98490da..2f5eb9c 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2039,11 +2039,16 @@ static void  beiscsi_process_mcc_isr(struct beiscsi_hba *phba)
- 				/* Interpret compl as a async link evt */
- 				beiscsi_async_link_state_process(phba,
- 				(struct be_async_event_link_state *) mcc_compl);
--			else
-+			else {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX,
- 					    "BM_%d :  Unsupported Async Event, flags"
- 					    " = 0x%08x\n",
- 					    mcc_compl->flags);
-+				if (phba->state & BE_ADAPTER_LINK_UP) {
-+					phba->state |= BE_ADAPTER_CHECK_BOOT;
-+					phba->get_boot = BE_GET_BOOT_RETRIES;
-+				}
-+			}
- 		} else if (mcc_compl->flags & CQE_FLAGS_COMPLETED_MASK) {
- 			be_mcc_compl_process_isr(&phba->ctrl, mcc_compl);
- 			atomic_dec(&phba->ctrl.mcc_obj.q.used);
-@@ -4330,8 +4335,14 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
- 			    "BM_%d : No boot session\n");
-+
-+		if (ret == -ENXIO)
-+			phba->get_boot = 0;
-+
-+
+@@ -670,14 +670,20 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
  		return ret;
  	}
-+	phba->get_boot = 0;
- 	nonemb_cmd.va = pci_zalloc_consistent(phba->ctrl.pdev,
- 					      sizeof(*session_resp),
- 					      &nonemb_cmd.dma);
-@@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
- 	be_eqd_update(phba);
  
- 	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
--		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
--		be_check_boot_session(phba);
-+		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
-+			phba->get_boot--;
-+			if (!(phba->get_boot % BE_GET_BOOT_TO))
-+				be_check_boot_session(phba);
-+		} else {
-+			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
-+			phba->get_boot = 0;
-+		}
- 	}
- 
- 	beiscsi_ue_detect(phba);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 7ee0ffc..0aa0cb3 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -109,6 +109,9 @@
- 
- #define BEISCSI_CLEAN_UNLOAD	0x01
- #define BEISCSI_EEH_UNLOAD	0x02
++	ret = pci_request_regions(pcidev, DRV_NAME);
++	if (ret) {
++		dev_err(&pcidev->dev,
++				"beiscsi_enable_pci - request region failed\n");
++		goto pci_dev_disable;
++	}
 +
-+#define BE_GET_BOOT_RETRIES	45
-+#define BE_GET_BOOT_TO		20
- /**
-  * hardware needs the async PDU buffers to be posted in multiples of 8
-  * So have atleast 8 of them by default
-@@ -413,6 +416,7 @@ struct beiscsi_hba {
- 	} fw_config;
+ 	pci_set_master(pcidev);
+ 	ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(64));
+ 	if (ret) {
+ 		ret = pci_set_dma_mask(pcidev, DMA_BIT_MASK(32));
+ 		if (ret) {
+ 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
+-			pci_disable_device(pcidev);
+-			return ret;
++			goto pci_region_release;
+ 		} else {
+ 			ret = pci_set_consistent_dma_mask(pcidev,
+ 							  DMA_BIT_MASK(32));
+@@ -686,11 +692,17 @@ static int beiscsi_enable_pci(struct pci_dev *pcidev)
+ 		ret = pci_set_consistent_dma_mask(pcidev, DMA_BIT_MASK(64));
+ 		if (ret) {
+ 			dev_err(&pcidev->dev, "Could not set PCI DMA Mask\n");
+-			pci_disable_device(pcidev);
+-			return ret;
++			goto pci_region_release;
+ 		}
+ 	}
+ 	return 0;
++
++pci_region_release:
++	pci_release_regions(pcidev);
++pci_dev_disable:
++	pci_disable_device(pcidev);
++
++	return ret;
+ }
  
- 	unsigned int state;
-+	int get_boot;
- 	bool fw_timeout;
- 	bool ue_detected;
- 	struct delayed_work beiscsi_hw_check_task;
+ static int be_ctrl_init(struct beiscsi_hba *phba, struct pci_dev *pdev)
+@@ -5277,6 +5289,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 	iscsi_host_free(phba->shost);
+ 	pci_disable_pcie_error_reporting(pcidev);
+ 	pci_set_drvdata(pcidev, NULL);
++	pci_release_regions(pcidev);
+ 	pci_disable_device(pcidev);
+ }
+ 
+@@ -5757,6 +5770,7 @@ hba_free:
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
+ disable_pci:
++	pci_release_regions(pcidev);
+ 	pci_disable_device(pcidev);
+ 	return ret;
+ }
 -- 
 1.7.1
 
