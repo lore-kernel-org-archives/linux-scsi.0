@@ -1,69 +1,32 @@
-From: Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 17/28] scsi: drop owner assignment from platform_drivers
-Date: Sun, 21 Dec 2014 22:14:38 +0100
-Message-ID: <1419196495-9626-18-git-send-email-wsa@the-dreams.de>
-References: <1419196495-9626-1-git-send-email-wsa@the-dreams.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:52926 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753692AbaLUVPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Dec 2014 16:15:42 -0500
-In-Reply-To: <1419196495-9626-1-git-send-email-wsa@the-dreams.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] scsi: gdth: fix bad integer overflow check
+Date: Mon, 22 Dec 2014 10:51:52 +0300
+Message-ID: <20141222075152.GB9737@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Achim Leubner <achim_leubner@adaptec.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Wolfram Sang <wsa@the-dreams.de>, Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-This platform_driver does not need to set an owner, it will be populated by the
-driver core.
+The integer overflow check was written incorrectly so it doesn't work.
+Whoever wrote this clearly didn't know what they were doing.  (I suck).
 
-Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
----
-Generated with coccinelle. SmPL file is in the introductory msg. The big
-cleanup was pulled in this merge window. This series catches the bits fallen
-through. The patches shall go in via the subsystem trees.
+Fixes: f63ae56e4e97 ('[SCSI] gdth: integer overflow in ioctl')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
- drivers/scsi/atari_scsi.c | 1 -
- drivers/scsi/mac_scsi.c   | 1 -
- drivers/scsi/sun3_scsi.c  | 1 -
- 3 files changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index d1c37a386947..5ede3daa93dc 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -1014,7 +1014,6 @@ static struct platform_driver atari_scsi_driver = {
- 	.remove = __exit_p(atari_scsi_remove),
- 	.driver = {
- 		.name	= DRV_MODULE_NAME,
--		.owner	= THIS_MODULE,
- 	},
- };
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 71e1380..0539147 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -4175,7 +4175,7 @@ static int ioc_general(void __user *arg, char *cmnd)
+         return -EINVAL;
+     if (gen.sense_len > INT_MAX)
+         return -EINVAL;
+-    if (gen.data_len + gen.sense_len > INT_MAX)
++    if (gen.data_len > INT_MAX - gen.sense_len)
+         return -EINVAL;
  
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 1e85c07e3b62..d64a769b8155 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -483,7 +483,6 @@ static struct platform_driver mac_scsi_driver = {
- 	.remove = __exit_p(mac_scsi_remove),
- 	.driver = {
- 		.name	= DRV_MODULE_NAME,
--		.owner	= THIS_MODULE,
- 	},
- };
- 
-diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-index 2a906d1d34ba..22a42836d193 100644
---- a/drivers/scsi/sun3_scsi.c
-+++ b/drivers/scsi/sun3_scsi.c
-@@ -676,7 +676,6 @@ static struct platform_driver sun3_scsi_driver = {
- 	.remove = __exit_p(sun3_scsi_remove),
- 	.driver = {
- 		.name	= DRV_MODULE_NAME,
--		.owner	= THIS_MODULE,
- 	},
- };
- 
--- 
-2.1.3
-
+     if (gen.data_len + gen.sense_len != 0) {
