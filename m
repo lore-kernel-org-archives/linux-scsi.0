@@ -1,41 +1,66 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi_debug: fix sanity check in resp_rsup_opcodes
-Date: Mon, 22 Dec 2014 12:13:00 -0500
-Message-ID: <1419268380.3853.128.camel@localhost.localdomain>
-References: <549848BD.6060402@interlog.com>
-Reply-To: emilne@redhat.com
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: Re: [PATCH] scsi: 3w-9xxx.c: Cleaning up missing null-terminate in
+ conjunction with strncpy
+Date: Mon, 22 Dec 2014 23:52:02 +0100
+Message-ID: <CAFo99gaY5MQ2uDWOGkQgJxseNorv0NRNY3PVJg395gqHtkKrjg@mail.gmail.com>
+References: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+ <CAHtARFFmUJ5_mnJu=yLb8bGXcMNza8oHsThHPb3_QgE-pq4BGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43265 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754841AbaLVRNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Dec 2014 12:13:31 -0500
-In-Reply-To: <549848BD.6060402@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAHtARFFmUJ5_mnJu=yLb8bGXcMNza8oHsThHPb3_QgE-pq4BGg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, dcb314@hotmail.com
 
-On Mon, 2014-12-22 at 11:37 -0500, Douglas Gilbert wrote:
-> David Binderman pointed out in this post:
-> 
-> http://marc.info/?l=linux-scsi&m=141924469523474&w=2
-> 
-> a sanity check that was flawed. See attached fix. Should
-> be applied to lk 3.19.0-rc1 and Christoph's branches.
-> 
-> ChangeLog:
->      fix alloc_len sanity check in resp_rsup_opcodes()
-> 
-> 
-> ---
->   drivers/scsi/scsi_debug.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+2014-08-01 0:19 GMT+02:00 adam radford <aradford@gmail.com>:
+> On Sun, Jul 27, 2014 at 8:11 AM, Rickard Strandqvist
+> <rickard_strandqvist@spectrumdigital.se> wrote:
+>> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
+>> And use the sizeof on the to string rather than strlen on the from string.
+>>
+>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>  drivers/scsi/3w-9xxx.c |    3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+>> index 0a73253..f4d2331 100644
+>> --- a/drivers/scsi/3w-9xxx.c
+>> +++ b/drivers/scsi/3w-9xxx.c
+>> @@ -621,7 +621,8 @@ static int twa_check_srl(TW_Device_Extension *tw_dev, int *flashed)
+>>         }
+>>
+>>         /* Load rest of compatibility struct */
+>> -       strncpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION, strlen(TW_DRIVER_VERSION));
+>> +       strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
+>> +               sizeof(tw_dev->tw_compat_info.driver_version));
+>>         tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
+>>         tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
+>>         tw_dev->tw_compat_info.driver_build_high = TW_CURRENT_DRIVER_BUILD;
+>> --
+>> 1.7.10.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>
+> Rickard,
+>
+> This patch looks fine.
+>
+> Acked-by: Adam Radford <aradford@gmail.com>
+>
+> -Adam
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+
+Hi Adam!
+
+What happened to this patch?
 
 
+Kind regards
+Rickard Strandqvist
