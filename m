@@ -1,71 +1,42 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] scsi: 3w-9xxx.c: Cleaning up missing null-terminate in
- conjunction with strncpy
-Date: Mon, 22 Dec 2014 15:08:14 -0800
-Message-ID: <CAHtARFEVpwPw=OmPvPAxcaiANG_V4f+NBX4g67iCwutvWs=eSg@mail.gmail.com>
-References: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CAHtARFFmUJ5_mnJu=yLb8bGXcMNza8oHsThHPb3_QgE-pq4BGg@mail.gmail.com>
-	<CAFo99gaY5MQ2uDWOGkQgJxseNorv0NRNY3PVJg395gqHtkKrjg@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
+Date: Mon, 22 Dec 2014 17:47:53 -0600
+Message-ID: <5498ADA9.7080104@cs.wisc.edu>
+References: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFo99gaY5MQ2uDWOGkQgJxseNorv0NRNY3PVJg395gqHtkKrjg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57848 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751108AbaLVXsD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Dec 2014 18:48:03 -0500
+In-Reply-To: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Soni Jose <sony.john-n@Emulex.Com>, linux-scsi@vger.kernel.org
+Cc: Minh Tran <minhduc.tran@Emulex.Com>, Jayamohan Kallickal <jayamohan.kallickal@Emulex.Com>
 
-On Mon, Dec 22, 2014 at 2:52 PM, Rickard Strandqvist
-<rickard_strandqvist@spectrumdigital.se> wrote:
-> 2014-08-01 0:19 GMT+02:00 adam radford <aradford@gmail.com>:
->> On Sun, Jul 27, 2014 at 8:11 AM, Rickard Strandqvist
->> <rickard_strandqvist@spectrumdigital.se> wrote:
->>> Replacing strncpy with strlcpy to avoid strings that lacks null terminate.
->>> And use the sizeof on the to string rather than strlen on the from string.
->>>
->>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->>> ---
->>>  drivers/scsi/3w-9xxx.c |    3 ++-
->>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
->>> index 0a73253..f4d2331 100644
->>> --- a/drivers/scsi/3w-9xxx.c
->>> +++ b/drivers/scsi/3w-9xxx.c
->>> @@ -621,7 +621,8 @@ static int twa_check_srl(TW_Device_Extension *tw_dev, int *flashed)
->>>         }
->>>
->>>         /* Load rest of compatibility struct */
->>> -       strncpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION, strlen(TW_DRIVER_VERSION));
->>> +       strlcpy(tw_dev->tw_compat_info.driver_version, TW_DRIVER_VERSION,
->>> +               sizeof(tw_dev->tw_compat_info.driver_version));
->>>         tw_dev->tw_compat_info.driver_srl_high = TW_CURRENT_DRIVER_SRL;
->>>         tw_dev->tw_compat_info.driver_branch_high = TW_CURRENT_DRIVER_BRANCH;
->>>         tw_dev->tw_compat_info.driver_build_high = TW_CURRENT_DRIVER_BUILD;
->>> --
->>> 1.7.10.4
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>
->> Rickard,
->>
->> This patch looks fine.
->>
->> Acked-by: Adam Radford <aradford@gmail.com>
->>
->> -Adam
->
->
-> Hi Adam!
->
-> What happened to this patch?
+On 12/19/2014 06:51 PM, John Soni Jose wrote:
+> @@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
+>  	be_eqd_update(phba);
+>  
+>  	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
+> -		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+> -		be_check_boot_session(phba);
+> +		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
+> +			phba->get_boot--;
+> +			if (!(phba->get_boot % BE_GET_BOOT_TO))
+> +				be_check_boot_session(phba);
+> +		} else {
+> +			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+> +			phba->get_boot = 0;
+> +		}
+>  	}
 
-It just didn't get picked up into scsi.git/for-next for some reason.
+Hey, I just want to make sure I am reading this patch correctly. If the
+user had the network up, but the target was not able to handle the login
+for longer than the timeout we are adding in this patch, then we will
+not be able to get any notification (the iscsi boot info would not show
+up in sysfs) later when we can login.
 
-All I can do is Ack it, which I already did :)
-
--Adam
