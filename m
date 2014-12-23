@@ -1,48 +1,59 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
-Date: Mon, 22 Dec 2014 17:54:54 -0600
-Message-ID: <5498AF4E.1030903@cs.wisc.edu>
-References: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com> <5498ADA9.7080104@cs.wisc.edu>
+From: Charles Chiou <ch1102chiou@gmail.com>
+Subject: Re: [PATCH 3/4 v3] scsi:stex.c Add reboot support
+Date: Tue, 23 Dec 2014 10:58:25 +0800
+Message-ID: <5498DA51.7030207@gmail.com>
+References: <548FCD81.7030106@gmail.com> <20141217093027.GA13198@infradead.org> <54924CEA.3060808@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57944 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752773AbaLVXzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Dec 2014 18:55:02 -0500
-In-Reply-To: <5498ADA9.7080104@cs.wisc.edu>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:47920 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754562AbaLWC6a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Dec 2014 21:58:30 -0500
+In-Reply-To: <54924CEA.3060808@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Soni Jose <sony.john-n@Emulex.Com>, linux-scsi@vger.kernel.org
-Cc: Minh Tran <minhduc.tran@Emulex.Com>, Jayamohan Kallickal <jayamohan.kallickal@Emulex.Com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: JBottomley@parallels.com, Oliver Neukum <oneukum@suse.de>, ed.lin@promise.com, grace.chang@tw.promise.com, linus.chen@tw.promise.com, victor.p@promise.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 12/22/2014 05:47 PM, Mike Christie wrote:
-> On 12/19/2014 06:51 PM, John Soni Jose wrote:
->> @@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
->>  	be_eqd_update(phba);
->>  
->>  	if (phba->state & BE_ADAPTER_CHECK_BOOT) {
->> -		phba->state &= ~BE_ADAPTER_CHECK_BOOT;
->> -		be_check_boot_session(phba);
->> +		if ((phba->get_boot > 0) && (!phba->boot_kset)) {
->> +			phba->get_boot--;
->> +			if (!(phba->get_boot % BE_GET_BOOT_TO))
->> +				be_check_boot_session(phba);
->> +		} else {
->> +			phba->state &= ~BE_ADAPTER_CHECK_BOOT;
->> +			phba->get_boot = 0;
->> +		}
->>  	}
-> 
-> Hey, I just want to make sure I am reading this patch correctly. If the
-> user had the network up, but the target was not able to handle the login
-> for longer than the timeout we are adding in this patch, then we will
-> not be able to get any notification (the iscsi boot info would not show
-> up in sysfs) later when we can login.
-> 
 
-Actually, I think I am wrong. If we hit the above scenario, then
-eventually the fw would log in and we would then get a
-ASYNC_EVENT_NEW_ISCSI_CONN event right?
 
+On 12/18/2014 11:41 AM, Charles Chiou wrote:
+>
+>
+> On 12/17/2014 05:30 PM, Christoph Hellwig wrote:
+>> I'm not going to add a new reboot notifier for a driver.  If you can
+>> convince the driver model / PM people to pass this information to
+>> ->shutdown we can add support for this difference, but not in this way.
+>>
+>> Can you send me a series that just adds the hardware support for now, so
+>> we can dash this PM issue out separately?
+>>
+>
+> Hi, we need to provide this information to our device.
+> We face the HW signal issue on various motherboards.
+> We experiment on many motherboards, and we observe that the restart
+> signal is different on different motherboard. If device misses the
+> signal, PCI loss or volume disappearance might happen.
+>
+>
+> To make power management easier, driver provide the shutdown or reboot
+> information to the device.
+>
+> Sorry, I'm not understand what is meaning of "series".
+> Could you specify what you what me to send you?
+> Thank you
+>
+> BRS
+> Charles
+>
+
+
+Hi, after our internal discussion, we can use shutdown flow for reboot 
+temporarily. Some signal issue will happen (depend on MB), and it can be 
+fixed by plug in and plug out manually. We will add reboot feature after 
+PM can pass reboot information to ->shutdown.
+
+BRS
+Charles
