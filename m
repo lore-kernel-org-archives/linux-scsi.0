@@ -1,30 +1,24 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
-	max_hw_sectors cap")
-Date: Tue, 23 Dec 2014 09:31:40 +0100
-Message-ID: <20141223083140.GB2303@lst.de>
-References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a>
+Subject: Re: [Patch] Fix regression in 3.18 caused by e05fe29248 qla2xxx:
+	Honor FCP_RSP retry delay timer field.
+Date: Tue, 23 Dec 2014 09:32:11 +0100
+Message-ID: <20141223083211.GC2303@lst.de>
+References: <20141219102916.6fcae21a@pluto.restena.lu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:36994 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754872AbaLWIcN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Dec 2014 03:32:13 -0500
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Kenneth R. Crudup" <kenny@panix.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20141219102916.6fcae21a@pluto.restena.lu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
 
-On Sun, Dec 21, 2014 at 02:44:20PM -0800, Kenneth R. Crudup wrote:
-> 
-> I had issues with my Samsung 4GB disk recently in Linus' master tree kernels,
-> and have bisected it to the above commit. When doing running bonnie++ (etc.
-> I get EIOs.
-> 
-> Some info is below, let me know if you need anything else. Is there a "quirks"
-> available for this option so I may special-case this particular disk?
+Chad, Saurav,
 
-Looks like we need to quirk it.  Can you try to echo different limits
-to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
-find the limit
-for it?
+does this look ok to you?
 
