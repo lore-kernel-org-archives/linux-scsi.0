@@ -1,160 +1,114 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] constants.c: asc/ascq codes, sync to T10 20141221
-Date: Tue, 23 Dec 2014 11:29:08 -0500
-Message-ID: <54999854.2070501@interlog.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080208020704050209050002"
+From: Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH] cleanup on stack DECLARE_COMPLETIONs
+Date: Tue, 23 Dec 2014 18:34:08 +0100
+Message-ID: <1419356048-22405-1-git-send-email-der.herr@hofr.at>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:50744 "EHLO smtp.infotech.no"
+Received: from www.osadl.org ([62.245.132.105]:33812 "EHLO www.osadl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756213AbaLWQ3Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Dec 2014 11:29:16 -0500
+	id S1756472AbaLWSCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Dec 2014 13:02:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Dimitri Sivanich <sivanich@sgi.com>, "Juergen E. Fischer" <fischer@norbit.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Felipe Balbi <balbi@ti.com>, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
 
-This is a multi-part message in MIME format.
---------------080208020704050209050002
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+fixups for incorrect use of DECLARE_COMPLETION. see also commit
+6e9a4738 ("completions: lockdep annotate on stack completions")
+The only somewhat special case being
+drivers/misc/sgi-gru/grukservices.c:quicktest2
+which had a static qualifier in the original DECLARE_COMPLETION()
+but that seems to be wrong (why should the completion persisted between
+successive calls ?) so the conversion to DECLARE_COMPLETION_ONSTACK
+was also applied and the static qualifier removed.
 
-The last time these SCSI asc/ascq codes were synced with T10
-was 20130605. This patch is against lk 3.19.0-rc1 .
+Not sure if this is suitable in this form or if it should go out as
+5 seperate patches ? 
 
-ChangeLog:
-   sync the SCSI ASC/ASCQ number to string tables with those
-   found at http://www.t10.org/lists/asc-num.txt dated
-   20141221
+This was only code reviewed and compile tested
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
+ drivers/macintosh/ams/ams-pmu.c       |    4 ++--
+ drivers/misc/sgi-gru/grukservices.c   |    2 +-
+ drivers/scsi/aha152x.c                |    2 +-
+ drivers/usb/gadget/udc/fsl_qe_udc.c   |    2 +-
+ drivers/usb/gadget/udc/fsl_udc_core.c |    2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
---------------080208020704050209050002
-Content-Type: text/x-patch;
- name="constants319rc1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="constants319rc1.patch"
+diff --git a/drivers/macintosh/ams/ams-pmu.c b/drivers/macintosh/ams/ams-pmu.c
+index 4f61b3e..c2b178f 100644
+--- a/drivers/macintosh/ams/ams-pmu.c
++++ b/drivers/macintosh/ams/ams-pmu.c
+@@ -52,7 +52,7 @@ static void ams_pmu_req_complete(struct adb_request *req)
+ static void ams_pmu_set_register(u8 reg, u8 value)
+ {
+ 	static struct adb_request req;
+-	DECLARE_COMPLETION(req_complete);
++	DECLARE_COMPLETION_ONSTACK(req_complete);
 
---- a/drivers/scsi/constants.c	2014-12-22 11:13:19.113270114 -0500
-+++ b/drivers/scsi/constants.c	2014-12-23 10:30:08.799169226 -0500
-@@ -392,7 +392,7 @@ struct error_info {
- 
- /*
-  * The canonical list of T10 Additional Sense Codes is available at:
-- * http://www.t10.org/lists/asc-num.txt [most recent: 20130605]
-+ * http://www.t10.org/lists/asc-num.txt [most recent: 20141221]
-  */
- 
- static const struct error_info additional[] =
-@@ -421,6 +421,7 @@ static const struct error_info additiona
- 	{0x001E, "Conflicting SA creation request"},
- 	{0x001F, "Logical unit transitioning to another power condition"},
- 	{0x0020, "Extended copy information available"},
-+	{0x0021, "Atomic command aborted due to ACA"},
- 
- 	{0x0100, "No index/sector signal"},
- 
-@@ -446,6 +447,7 @@ static const struct error_info additiona
- 	{0x040C, "Logical unit not accessible, target port in unavailable "
- 	 "state"},
- 	{0x040D, "Logical unit not ready, structure check required"},
-+	{0x040E, "Logical unit not ready, security session in progress"},
- 	{0x0410, "Logical unit not ready, auxiliary memory not accessible"},
- 	{0x0411, "Logical unit not ready, notify (enable spinup) required"},
- 	{0x0412, "Logical unit not ready, offline"},
-@@ -462,6 +464,11 @@ static const struct error_info additiona
- 	{0x041C, "Logical unit not ready, additional power use not yet "
- 	 "granted"},
- 	{0x041D, "Logical unit not ready, configuration in progress"},
-+	{0x041E, "Logical unit not ready, microcode activation required"},
-+	{0x041F, "Logical unit not ready, microcode download required"},
-+	{0x0420, "Logical unit not ready, logical unit reset required"},
-+	{0x0421, "Logical unit not ready, hard reset required"},
-+	{0x0422, "Logical unit not ready, power cycle required"},
- 
- 	{0x0500, "Logical unit does not respond to selection"},
- 
-@@ -480,6 +487,7 @@ static const struct error_info additiona
- 	{0x0902, "Focus servo failure"},
- 	{0x0903, "Spindle servo failure"},
- 	{0x0904, "Head select fault"},
-+	{0x0905, "Vibration induced tracking error"},
- 
- 	{0x0A00, "Error log overflow"},
- 
-@@ -510,6 +518,7 @@ static const struct error_info additiona
- 	{0x0C0D, "Write error - not enough unsolicited data"},
- 	{0x0C0E, "Multiple write errors"},
- 	{0x0C0F, "Defects in error window"},
-+	{0x0C10, "Incomplete multiple atomic write operations"},
- 
- 	{0x0D00, "Error detected by third party temporary initiator"},
- 	{0x0D01, "Third party device failure"},
-@@ -635,6 +644,10 @@ static const struct error_info additiona
- 	{0x2101, "Invalid element address"},
- 	{0x2102, "Invalid address for write"},
- 	{0x2103, "Invalid write crossing layer jump"},
-+	{0x2104, "Unaligned write command"},
-+	{0x2105, "Write boundary violation"},
-+	{0x2106, "Attempt to read invalid data"},
-+	{0x2107, "Read boundary violation"},
- 
- 	{0x2200, "Illegal function (use 20 00, 24 00, or 26 00)"},
- 
-@@ -691,6 +704,7 @@ static const struct error_info additiona
- 	{0x2705, "Permanent write protect"},
- 	{0x2706, "Conditional write protect"},
- 	{0x2707, "Space allocation failed write protect"},
-+	{0x2708, "Zone is read only"},
- 
- 	{0x2800, "Not ready to ready change, medium may have changed"},
- 	{0x2801, "Import or export element accessed"},
-@@ -743,10 +757,15 @@ static const struct error_info additiona
- 	{0x2C0A, "Partition or collection contains user objects"},
- 	{0x2C0B, "Not reserved"},
- 	{0x2C0C, "Orwrite generation does not match"},
-+	{0x2C0D, "Reset write pointer not allowed"},
-+	{0x2C0E, "Zone is offline"},
- 
- 	{0x2D00, "Overwrite error on update in place"},
- 
- 	{0x2E00, "Insufficient time for operation"},
-+	{0x2E01, "Command timeout before processing"},
-+	{0x2E02, "Command timeout during processing"},
-+	{0x2E03, "Command timeout during processing due to error recovery"},
- 
- 	{0x2F00, "Commands cleared by another initiator"},
- 	{0x2F01, "Commands cleared by power loss notification"},
-@@ -868,6 +887,7 @@ static const struct error_info additiona
- 	{0x3F13, "iSCSI IP address removed"},
- 	{0x3F14, "iSCSI IP address changed"},
- 	{0x3F15, "Inspect referrals sense descriptors"},
-+	{0x3F16, "Microcode has been changed without reset"},
- /*
-  *	{0x40NN, "Ram failure"},
-  *	{0x40NN, "Diagnostic failure on component nn"},
-@@ -946,6 +966,11 @@ static const struct error_info additiona
- 	{0x5306, "Volume identifier missing"},
- 	{0x5307, "Duplicate volume identifier"},
- 	{0x5308, "Element status unknown"},
-+	{0x5309, "Data transfer device error - load failed"},
-+	{0x530a, "Data transfer device error - unload failed"},
-+	{0x530b, "Data transfer device error - unload missing"},
-+	{0x530c, "Data transfer device error - eject failed"},
-+	{0x530d, "Data transfer device error - library communication failed"},
- 
- 	{0x5400, "Scsi to host system interface failure"},
- 
-@@ -963,6 +988,7 @@ static const struct error_info additiona
- 	{0x550B, "Insufficient power for operation"},
- 	{0x550C, "Insufficient resources to create rod"},
- 	{0x550D, "Insufficient resources to create rod token"},
-+	{0x550E, "Insufficient zone resources"},
- 
- 	{0x5700, "Unable to recover table-of-contents"},
- 
+ 	req.arg = &req_complete;
+ 	if (pmu_request(&req, ams_pmu_req_complete, 4, ams_pmu_cmd, 0x00, reg, value))
+@@ -65,7 +65,7 @@ static void ams_pmu_set_register(u8 reg, u8 value)
+ static u8 ams_pmu_get_register(u8 reg)
+ {
+ 	static struct adb_request req;
+-	DECLARE_COMPLETION(req_complete);
++	DECLARE_COMPLETION_ONSTACK(req_complete);
 
---------------080208020704050209050002--
+ 	req.arg = &req_complete;
+ 	if (pmu_request(&req, ams_pmu_req_complete, 3, ams_pmu_cmd, 0x01, reg))
+diff --git a/drivers/misc/sgi-gru/grukservices.c b/drivers/misc/sgi-gru/grukservices.c
+index 913de07..4e412fe 100644
+--- a/drivers/misc/sgi-gru/grukservices.c
++++ b/drivers/misc/sgi-gru/grukservices.c
+@@ -1044,7 +1044,7 @@ done:
+
+ static int quicktest2(unsigned long arg)
+ {
+-	static DECLARE_COMPLETION(cmp);
++	DECLARE_COMPLETION_ONSTACK(cmp);
+ 	unsigned long han;
+ 	int blade_id = 0;
+ 	int numcb = 4;
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 2b960b3..b16afb9 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1055,7 +1055,7 @@ static int aha152x_abort(Scsi_Cmnd *SCpnt)
+ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+-	DECLARE_COMPLETION(done);
++	DECLARE_COMPLETION_ONSTACK(done);
+ 	int ret, issued, disconnected;
+ 	unsigned char old_cmd_len = SCpnt->cmd_len;
+ 	unsigned long flags;
+diff --git a/drivers/usb/gadget/udc/fsl_qe_udc.c b/drivers/usb/gadget/udc/fsl_qe_udc.c
+index 795c99c..e0822f1 100644
+--- a/drivers/usb/gadget/udc/fsl_qe_udc.c
++++ b/drivers/usb/gadget/udc/fsl_qe_udc.c
+@@ -2630,7 +2630,7 @@ static int qe_udc_remove(struct platform_device *ofdev)
+ 	struct qe_udc *udc = platform_get_drvdata(ofdev);
+ 	struct qe_ep *ep;
+ 	unsigned int size;
+-	DECLARE_COMPLETION(done);
++	DECLARE_COMPLETION_ONSTACK(done);
+
+ 	usb_del_gadget_udc(&udc->gadget);
+
+diff --git a/drivers/usb/gadget/udc/fsl_udc_core.c b/drivers/usb/gadget/udc/fsl_udc_core.c
+index 2df8074..c3830ad 100644
+--- a/drivers/usb/gadget/udc/fsl_udc_core.c
++++ b/drivers/usb/gadget/udc/fsl_udc_core.c
+@@ -2529,7 +2529,7 @@ static int __exit fsl_udc_remove(struct platform_device *pdev)
+ 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	struct fsl_usb2_platform_data *pdata = dev_get_platdata(&pdev->dev);
+
+-	DECLARE_COMPLETION(done);
++	DECLARE_COMPLETION_ONSTACK(done);
+
+ 	if (!udc_controller)
+ 		return -ENODEV;
+--
+1.7.10.4
+
