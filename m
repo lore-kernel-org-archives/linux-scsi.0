@@ -1,60 +1,58 @@
-From: Sony John-N <Sony.John-N@Emulex.Com>
-Subject: RE: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
-Date: Wed, 24 Dec 2014 07:38:32 +0000
-Message-ID: <5a5584cb-5950-4f80-8c74-c53faf714cb6@CMEXHTCAS2.ad.emulex.com>
-References: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com>
- <5498ADA9.7080104@cs.wisc.edu>,<5498AF4E.1030903@cs.wisc.edu>
+From: "Kenneth R. Crudup" <kenny@panix.com>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
+ cap")
+Date: Tue, 23 Dec 2014 23:48:40 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de>
+Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:32630 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbaLXHi7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Dec 2014 02:38:59 -0500
-In-Reply-To: <5498AF4E.1030903@cs.wisc.edu>
-Content-Language: en-US
+Received: from l2mail1.panix.com ([166.84.1.75]:59448 "EHLO l2mail1.panix.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572AbaLXIG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Dec 2014 03:06:27 -0500
+In-Reply-To: <20141223083140.GB2303@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Minh Duc Tran <MinhDuc.Tran@Emulex.Com>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-________________________________________
-From: Mike Christie [michaelc@cs.wisc.edu]
-Sent: Monday, December 22, 2014 3:54 PM
-To: Sony John-N; linux-scsi@vger.kernel.org
-Cc: Minh Duc Tran; Jayamohan Kallickal
-Subject: Re: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
+On Sun, Dec 21, 2014 at 02:44:20PM -0800, Kenneth R. Crudup wrote:
 
-On 12/22/2014 05:47 PM, Mike Christie wrote:
-> On 12/19/2014 06:51 PM, John Soni Jose wrote:
->> @@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
->>      be_eqd_update(phba);
->>
->>      if (phba->state & BE_ADAPTER_CHECK_BOOT) {
->> -            phba->state &= ~BE_ADAPTER_CHECK_BOOT;
->> -            be_check_boot_session(phba);
->> +            if ((phba->get_boot > 0) && (!phba->boot_kset)) {
->> +                    phba->get_boot--;
->> +                    if (!(phba->get_boot % BE_GET_BOOT_TO))
->> +                            be_check_boot_session(phba);
->> +            } else {
->> +                    phba->state &= ~BE_ADAPTER_CHECK_BOOT;
->> +                    phba->get_boot = 0;
->> +            }
->>      }
->
-> Hey, I just want to make sure I am reading this patch correctly. If the
-> user had the network up, but the target was not able to handle the login
-> for longer than the timeout we are adding in this patch, then we will
-> not be able to get any notification (the iscsi boot info would not show
-> up in sysfs) later when we can login.
->
+> > I had issues with my Samsung 4GB disk recently in Linus' master tree kernels,
+> > and have bisected it to the above commit. When doing running bonnie++ (etc.
+> > I get EIOs.
 
-> Actually, I think I am wrong. If we hit the above scenario, then
-> eventually the fw would log in and we would then get a
-> ASYNC_EVENT_NEW_ISCSI_CONN event right?
+> > Is there a "quirks" available for this option so I may special-case this
+> > particular disk?
 
-Yeah you are right Mike.
-When FW logs to any persistent target on the adapter, an ASYNC_EVENT is sent to the driver. In this case when login to boot-target happens driver gets the ASYNC_EVENT and iscsi-boot info will be populated in the sysfs.
+On Tue, 23 Dec 2014, Christoph Hellwig wrote:
+
+> Looks like we need to quirk it.  Can you try to echo different limits
+> to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
+> find the limit for it?
+
+Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
+
+To recap for the various lists:
+
+  Vendor: Samsung  Model: D3 Station       Rev: 0202
+  Type:   Direct-Access                    ANSI  SCSI revision: 06
+
+It's the 4TB model:
+
+/sys/block/sdc/size:7814037160
+/sys/block/sdc/queue/max_hw_sectors_kb:61440
+
+Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
+
+Has anyone seen a disk out there that's got a (properly-supported)
+"max_hw_sectors_kb" >= 32K? If not, maybe we should clamp that value to
+prevent other misreporting(?) disks?
+
+	-Kenny
+
+-- 
+Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
