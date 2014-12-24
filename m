@@ -1,78 +1,60 @@
-From: "Anil Chintalapati (achintal)" <achintal@cisco.com>
-Subject: [PATCH 1/1] IOMMU Fault occurs when IO and abort IO is out of order
-Date: Tue, 23 Dec 2014 19:40:00 +0000
-Message-ID: <1A24EF7A5DFB3449AD456B40D20E12A0011FD5EE@xmb-aln-x09.cisco.com>
-References: <1416263292-25713-1-git-send-email-achintal@cisco.com>
- <D0BF0347.2DC6A%hishah@cisco.com>
+From: Sony John-N <Sony.John-N@Emulex.Com>
+Subject: RE: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
+Date: Wed, 24 Dec 2014 07:38:32 +0000
+Message-ID: <5a5584cb-5950-4f80-8c74-c53faf714cb6@CMEXHTCAS2.ad.emulex.com>
+References: <9c2f23ac-73ce-4b8a-aa91-a64f01d345fd@CMEXHTCAS2.ad.emulex.com>
+ <5498ADA9.7080104@cs.wisc.edu>,<5498AF4E.1030903@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-9.cisco.com ([173.37.86.80]:13565 "EHLO
-	rcdn-iport-9.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbaLWTte convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Dec 2014 14:49:34 -0500
-Received: from xhc-rcd-x12.cisco.com (xhc-rcd-x12.cisco.com [173.37.183.86])
-	by rcdn-core-7.cisco.com (8.14.5/8.14.5) with ESMTP id sBNJe1Js007709
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2014 19:40:01 GMT
-In-Reply-To: <D0BF0347.2DC6A%hishah@cisco.com>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:32630 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbaLXHi7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Dec 2014 02:38:59 -0500
+In-Reply-To: <5498AF4E.1030903@cs.wisc.edu>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Hiral Shah (hishah)" <hishah@cisco.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
-
-When I/O is aborted by mid-layer, fnic FW will complete the I/O before completing the abort task. In some cases abort request is completed before the I/O, which could lead to inconsistent driver and firmware states. In this case firmware reset would clear the inconsistent state
+To: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Minh Duc Tran <MinhDuc.Tran@Emulex.Com>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
 
 
-Signed-off-by: Anil Chintalapati <achintal@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
-Signed-off-by: Hiral Shah <hishah@cisco.com>
+________________________________________
+From: Mike Christie [michaelc@cs.wisc.edu]
+Sent: Monday, December 22, 2014 3:54 PM
+To: Sony John-N; linux-scsi@vger.kernel.org
+Cc: Minh Duc Tran; Jayamohan Kallickal
+Subject: Re: [PATCH V2 1/4]  be2iscsi : Fix the retry count for boot targets
 
----
- drivers/scsi/fnic/fnic.h      |  2 +-
- drivers/scsi/fnic/fnic_scsi.c | 15 +++++++++++++++
- 2 files changed, 16 insertions(+), 1 deletion(-)
+On 12/22/2014 05:47 PM, Mike Christie wrote:
+> On 12/19/2014 06:51 PM, John Soni Jose wrote:
+>> @@ -5376,8 +5387,14 @@ beiscsi_hw_health_check(struct work_struct *work)
+>>      be_eqd_update(phba);
+>>
+>>      if (phba->state & BE_ADAPTER_CHECK_BOOT) {
+>> -            phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+>> -            be_check_boot_session(phba);
+>> +            if ((phba->get_boot > 0) && (!phba->boot_kset)) {
+>> +                    phba->get_boot--;
+>> +                    if (!(phba->get_boot % BE_GET_BOOT_TO))
+>> +                            be_check_boot_session(phba);
+>> +            } else {
+>> +                    phba->state &= ~BE_ADAPTER_CHECK_BOOT;
+>> +                    phba->get_boot = 0;
+>> +            }
+>>      }
+>
+> Hey, I just want to make sure I am reading this patch correctly. If the
+> user had the network up, but the target was not able to handle the login
+> for longer than the timeout we are adding in this patch, then we will
+> not be able to get any notification (the iscsi boot info would not show
+> up in sysfs) later when we can login.
+>
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h index bf8d34c..26270c3 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -39,7 +39,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.6.0.11"
-+#define DRV_VERSION		"1.6.0.17"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c index 961bdf5..9ebc933 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -1873,6 +1873,21 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 		goto fnic_abort_cmd_end;
- 	}
- 
-+	/* IO out of order */
-+
-+	if (!(CMD_FLAGS(sc) & (FNIC_IO_ABORTED | FNIC_IO_DONE))) {
-+		spin_unlock_irqrestore(io_lock, flags);
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"Issuing Host reset due to out of order IO\n");
-+
-+		if (fnic_host_reset(sc) == FAILED) {
-+			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+				"fnic_host_reset failed.\n");
-+		}
-+		ret = FAILED;
-+		goto fnic_abort_cmd_end;
-+	}
-+
- 	CMD_STATE(sc) = FNIC_IOREQ_ABTS_COMPLETE;
- 
- 	/*
---
-1.8.5.4
+> Actually, I think I am wrong. If we hit the above scenario, then
+> eventually the fw would log in and we would then get a
+> ASYNC_EVENT_NEW_ISCSI_CONN event right?
 
-
+Yeah you are right Mike.
+When FW logs to any persistent target on the adapter, an ASYNC_EVENT is sent to the driver. In this case when login to boot-target happens driver gets the ASYNC_EVENT and iscsi-boot info will be populated in the sysfs.
