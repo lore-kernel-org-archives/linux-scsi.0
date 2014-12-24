@@ -1,34 +1,25 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
- cap")
-Date: Wed, 24 Dec 2014 00:18:59 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1412240017480.4626@tosh-p75a>
-References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de> <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
-Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
+From: Praveen Madhavan <praveenm@chelsio.com>
+Subject: [scsi/net-next]Pull csiostor from net-next
+Date: Wed, 24 Dec 2014 17:51:27 +0000
+Message-ID: <24C222ADD7729F4FB5113B41FF0028A1BCB65F@nice.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailbackend.panix.com ([166.84.1.89]:41989 "EHLO
-	mailbackend.panix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaLXITC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Dec 2014 03:19:02 -0500
-In-Reply-To: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+Received: from stargate.chelsio.com ([67.207.112.58]:29019 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbaLXRvz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Dec 2014 12:51:55 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+Hi Christoph,
+Can u please pull the csiostor changes from net-next ?. I need these changes to submit next fixes in scsi tree.
 
-> To recap for the various lists:
->   Vendor: Samsung  Model: D3 Station       Rev: 0202
->   Type:   Direct-Access                    ANSI  SCSI revision: 06
-> It's the 4TB model:
+Last change csiostor 
+666224d  cxgb4/csiostor: Don't use MASTER_MUST for fw_hello call by Hariprasad Shenai
 
-I forgot to add the USB PID/VID information:
-
-  Bus 002 Device 002: ID 04e8:6125 Samsung Electronics Co., Ltd
-
-	-Kenny
-
--- 
-Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
+Thanks
+Praveen
