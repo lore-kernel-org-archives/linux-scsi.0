@@ -1,32 +1,49 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [scsi/net-next]Pull csiostor from net-next
-Date: Sat, 27 Dec 2014 07:09:17 -0800
-Message-ID: <20141227150917.GA16964@infradead.org>
-References: <24C222ADD7729F4FB5113B41FF0028A1BCB65F@nice.asicdesigners.com>
- <20141227145956.GB1094@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
+	max_hw_sectors cap")
+Date: Sat, 27 Dec 2014 16:13:19 +0100
+Message-ID: <20141227151319.GA18607@lst.de>
+References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de> <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20141227145956.GB1094@infradead.org>
-Sender: netdev-owner@vger.kernel.org
-To: Praveen Madhavan <praveenm@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, netdev@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Kenneth R. Crudup" <kenny@panix.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
 
-[fixing the netdev address]
+On Tue, Dec 23, 2014 at 11:48:40PM -0800, Kenneth R. Crudup wrote:
+> > Looks like we need to quirk it.  Can you try to echo different limits
+> > to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
+> > find the limit for it?
+> 
+> Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
+> 
+> To recap for the various lists:
+> 
+>   Vendor: Samsung  Model: D3 Station       Rev: 0202
+>   Type:   Direct-Access                    ANSI  SCSI revision: 06
+> 
+> It's the 4TB model:
+> 
+> /sys/block/sdc/size:7814037160
+> /sys/block/sdc/queue/max_hw_sectors_kb:61440
+> 
+> Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
 
-On Sat, Dec 27, 2014 at 06:59:56AM -0800, hch@infradead.org wrote:
-> On Wed, Dec 24, 2014 at 05:51:27PM +0000, Praveen Madhavan wrote:
-> > Hi Christoph,
-> > Can u please pull the csiostor changes from net-next ?. I need these changes to submit next fixes in scsi tree.
-> 
-> How much do you plan to send for the 3.20 window?  I'd rather avoid
-> having to pull in the net-next tree and merge everything through Dave
-> if that seems feasible.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+Interesting.  Basically this is the limit for modern ATA disks:
+
+drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+include/linux/ata.h:    ATA_MAX_SECTORS_LBA48   = 65535,/* TODO: 65536? */
+
+Seems like the USB bridge isn't properly communicating this limit to the SCSI
+layer.  Maybe it's a good idea to generally limit USB storage to this size?
+
+> Has anyone seen a disk out there that's got a (properly-supported)
+> "max_hw_sectors_kb" >= 32K? If not, maybe we should clamp that value to
+> prevent other misreporting(?) disks?
+
+Yes, lots of SCSI disks and arrays properly support this.
