@@ -1,72 +1,78 @@
-From: Stefan Priebe <s.priebe@profihost.ag>
-Subject: Re: block: remove artifical max_hw_sectors cap
-Date: Sun, 28 Dec 2014 13:08:59 +0100
-Message-ID: <549FF2DB.4000506@profihost.ag>
-References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH] Initialize off value in asd_process_ctrl_a_user()
+Date: Sun, 28 Dec 2014 16:12:16 +0100
+Message-ID: <1419779536.4705.183.camel@decadent.org.uk>
+References: <1417538041-6850-1-git-send-email-emunson@akamai.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ph.de-nserver.de ([85.158.179.214]:38577 "EHLO
-	mail-ph.de-nserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbaL1MOA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Dec 2014 07:14:00 -0500
-In-Reply-To: <20141223082805.GA2303@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-Sq0PTv2v8yVcNJppV786"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1417538041-6850-1-git-send-email-emunson@akamai.com>
+Sender: stable-owner@vger.kernel.org
+To: Eric B Munson <emunson@akamai.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-Hi Christoph,
 
-Am 23.12.2014 um 09:28 schrieb Christoph Hellwig:
-> On Mon, Dec 22, 2014 at 11:31:53AM +0100, Stefan Priebe - Profihost AG wrote:
->> Hi,
->>
->> since the below patch i've some problems with iscsi.
->>
->> The LIO based iscsi Server is full of messages like this:
->> SCSI OP 2ah with too big sectors 8344 exceeds fabric_max_sectors: 8192
->>
->> And the client says:
->> Buffer I/O error on device sdd, logical block 38861907
->> lost page write due to I/O error on sdd
->>
->> May be some code fixes for iscsi client is missing?
->
-> No, the problem seems that the the target is enforcing a size limit
-> without communicating it through the block limits EVPD page.
->
-> Nic, can you fix LIO to expose the proper max xfer size?
+--=-Sq0PTv2v8yVcNJppV786
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-some more problems while running this patch.
+On Tue, 2014-12-02 at 11:34 -0500, Eric B Munson wrote:
+> If the asd_find_flash_de() function returns ENOENT the off value will
+> be used uninitialized in the call to asd_read_flash_seg().
 
-My crucial m500 and m550 ssds (i have around 60 in 30 different cases 
-and motherboards but all attached as jbods at LSI HBAs) print those errors:
+This is just papering over the problem.  This was my attempt at a proper
+fix: http://article.gmane.org/gmane.linux.scsi/91320
 
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194158] Write(10): 2a 00 04 
-f9 db f0 00 0c d8 00
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194162] scsi target0:0:7: 
-handle(0x000a), sas_address(0x4433221107000000), phy(7)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194163] scsi target0:0:7: 
-enclosure_logical_id(0x5003048016aee700), slot(5)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194178] sd 0:0:7:0: task 
-abort: SUCCESS scmd(ffff88018c6b4700)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194178] sd 0:0:7:0: 
-attempting task abort! scmd(ffff8807a12e6800)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194179] sd 0:0:7:0: [sdh] CDB:
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194180] Read(10): 28 00 15 
-d4 f9 60 00 00 10 00
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194183] scsi target0:0:7: 
-handle(0x000a), sas_address(0x4433221107000000), phy(7)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194184] scsi target0:0:7: 
-enclosure_logical_id(0x5003048016aee700), slot(5)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194199] sd 0:0:7:0: task 
-abort: SUCCESS scmd(ffff8807a12e6800)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194199] sd 0:0:7:0: 
-attempting task abort! scmd(ffff88078d989800)
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194200] sd 0:0:7:0: [sdh] CDB:
-Dec 23 03:14:56 cloud2-1375 kernel: [585489.194201] Read(10): 28 00 15 
-aa d2 f9 00 00 20 00
+Ben.
 
-Stefan
+> Signed-off-by: Eric B Munson <emunson@akamai.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/scsi/aic94xx/aic94xx_sds.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/ai=
+c94xx_sds.c
+> index edb43fd..6f6a5b8 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_sds.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+> @@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_stru=
+ct *asd_ha,
+>  				   struct asd_flash_dir *flash_dir)
+>  {
+>  	int err, i;
+> -	u32 offs, size;
+> +	u32 offs =3D 0, size;
+>  	struct asd_ll_el *el;
+>  	struct asd_ctrla_phy_settings *ps;
+>  	struct asd_ctrla_phy_settings dflt_ps;
+
+--=20
+Ben Hutchings
+Life would be so much easier if we could look at the source code.
+
+--=-Sq0PTv2v8yVcNJppV786
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAVKAd1ee/yOyVhhEJAQq/WxAAwRRJ3fx+5TKMHki7q+x2Kw/mHL/1hX7d
+WYE09pe8uhCbAJnS/Yv2m3GcTVg8VaqiVZ1pXziB0tfEurrxayqDnPyEBXk0BLWk
+2pVVZt+tXGBkx0m8R4H9EoTL6cn/xW5+j+w3NtPg8DA6iTMd18P6E8D9ONf3wFft
+hD+1hCTQSehkAJ06tiu/uLApkg59Qi0TJFZgTxiQEaakaO7VBaK3dHbaS0xw2CS2
+aLfclKYIUtOntr1eC1mPbS0TNbGSLZsxC1b1ADLWWBXUd9xR8bQ611Ksb8HW0WRE
+nCIgk8tVFUjtOz+nRrDsErN1HnhUpAZ6v94rMW4J2B6Fsfo1dynkb2fqQp62aEs5
+4XoLaOriHlUKdwpvrb7KrctYwJ04yKVtvm6HsVIF394IK8SiYmUIyxDtyvKrhycQ
++xfV/z21R7A7mHHGp7ycFFs2PsTiVi2c3iMuFAAC50zs2F5VmPKtRcyb3BBm7o8X
+7zZzV2uUrVUFbIeJd9jWQev3f35st7SrUf6ZpvHvwLE7nLNrFJF6TNym3nhL5L4e
+uZndFBTgMo+dA9/enJVrvVQVEpZCXbydWKYRufo3sXHNoCkBL9HM35vEZ2DhS6RQ
+q6NU0j3vzNfBi+X0aEZC7kU1aRQa951iq7TzQE6zZCkWmfjkOKKZ+8n8Qmm4JSfM
+s7zSwKC0Tvw=
+=IrZy
+-----END PGP SIGNATURE-----
+
+--=-Sq0PTv2v8yVcNJppV786--
