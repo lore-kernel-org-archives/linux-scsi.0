@@ -1,49 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
-	max_hw_sectors cap")
-Date: Sat, 27 Dec 2014 16:13:19 +0100
-Message-ID: <20141227151319.GA18607@lst.de>
-References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de> <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] sdparm 1.09 available
+Date: Sat, 27 Dec 2014 20:19:01 -0500
+Message-ID: <549F5A85.8030504@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Kenneth R. Crudup" <kenny@panix.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:48817 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751367AbaL1BTP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2014 20:19:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi development list <linux-scsi@vger.kernel.org>
+Cc: Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, delphij@delphij.net
 
-On Tue, Dec 23, 2014 at 11:48:40PM -0800, Kenneth R. Crudup wrote:
-> > Looks like we need to quirk it.  Can you try to echo different limits
-> > to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
-> > find the limit for it?
-> 
-> Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
-> 
-> To recap for the various lists:
-> 
->   Vendor: Samsung  Model: D3 Station       Rev: 0202
->   Type:   Direct-Access                    ANSI  SCSI revision: 06
-> 
-> It's the 4TB model:
-> 
-> /sys/block/sdc/size:7814037160
-> /sys/block/sdc/queue/max_hw_sectors_kb:61440
-> 
-> Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). The
+parameters are held in mode pages. Apart from SCSI devices
+(e.g. disks, tapes and enclosures) sdparm can be used on
+any device that uses a SCSI command set. sdparm also can
+decode VPD pages including the device identification page.
+Commands to start and stop the media; load and unload
+removable media and some other housekeeping functions are
+supported. sdparm supports both the Linux kernel 2.6 and 3
+series with ports to FreeBSD, Solaris, Tru64 and Windows.
 
-Interesting.  Basically this is the limit for modern ATA disks:
+The version tracks changes in draft standards from
+www.t10.org since June 2013.
 
-drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-include/linux/ata.h:    ATA_MAX_SECTORS_LBA48   = 65535,/* TODO: 65536? */
+For more information and downloads see:
+     http://sg.danny.cz/sg/sdparm.html
 
-Seems like the USB bridge isn't properly communicating this limit to the SCSI
-layer.  Maybe it's a good idea to generally limit USB storage to this size?
+ChangeLog for sdparm-1.09 [20141226] [svn: r257]
+   - decode Third Party Copy VPD page
+   - Supported block lengths and protection types (sbc4r01) +
+     Block device characteristics extension VPD pages added
+   - zoned block device characterics VPD page added (zbc-r01c)
+   - fix manufacturer-assigned serial number VPD page length
+   - device id VPD: T10 vendor identification designator clean up
+   - block device characteristics VPD: add ZONED (sbc4r04)
+   - SAS/SPL disconnect-reconnect mpage: expand
+   - SAS protocol specific port mpage: add MAXR field (spl4r01)
+   - standard inquiry response (sinq): add LU_CONG
+   - change ibm vendor code to lto5 and lto6
+   - point svn:externals to rev 620 of sg3_utils
+   - upgrade automake to version 1.14.1
+   - configure: add --disable-libsgutils so build bypasses that
+     library if present
+   - win32: some --wscan and compile fixes
 
-> Has anyone seen a disk out there that's got a (properly-supported)
-> "max_hw_sectors_kb" >= 32K? If not, maybe we should clamp that value to
-> prevent other misreporting(?) disks?
+ChangeLog for sdparm-1.08 [20130606] [svn: r215]
+....
 
-Yes, lots of SCSI disks and arrays properly support this.
+
+This package may be built to depend on the shared library
+produced by the sg3_utils, version 1.40 package (released
+20141113). Alternatively this package can be built to
+statically include the code it needs from sg3_utils.
+
+
+Doug Gilbert
