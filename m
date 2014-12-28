@@ -1,56 +1,72 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] ddpt, version 0.95 available
-Date: Sat, 27 Dec 2014 20:19:49 -0500
-Message-ID: <549F5AB5.8030803@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Stefan Priebe <s.priebe@profihost.ag>
+Subject: Re: block: remove artifical max_hw_sectors cap
+Date: Sun, 28 Dec 2014 13:08:59 +0100
+Message-ID: <549FF2DB.4000506@profihost.ag>
+References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:48826 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367AbaL1BUA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2014 20:20:00 -0500
+Received: from mail-ph.de-nserver.de ([85.158.179.214]:38577 "EHLO
+	mail-ph.de-nserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbaL1MOA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Dec 2014 07:14:00 -0500
+In-Reply-To: <20141223082805.GA2303@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Tomas Fasth <tomfa@debian.org>, David Sommerseth <davids@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, alexander Motin <mav@FreeBSD.org>
+To: Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-ddpt is yet another variant of the venerable Unix dd command
-line utility. It offers more precise control over a storage
-copy and can bypass upper layers to use SCSI commands like READ,
-WRITE, WRITE AND VERIFY, WRITE ATOMIC or offloaded copy
-mechanisms to move the data. ddpt supports both the Linux
-kernel 2.6 and 3 series with ports to FreeBSD, Solaris, and
-Windows.
+Hi Christoph,
 
-For more information and downloads see:
-     http://sg.danny.cz/sg/ddpt.html
-     http://sg.danny.cz/sg/ddpt_xcopy_odx.html
+Am 23.12.2014 um 09:28 schrieb Christoph Hellwig:
+> On Mon, Dec 22, 2014 at 11:31:53AM +0100, Stefan Priebe - Profihost AG wrote:
+>> Hi,
+>>
+>> since the below patch i've some problems with iscsi.
+>>
+>> The LIO based iscsi Server is full of messages like this:
+>> SCSI OP 2ah with too big sectors 8344 exceeds fabric_max_sectors: 8192
+>>
+>> And the client says:
+>> Buffer I/O error on device sdd, logical block 38861907
+>> lost page write due to I/O error on sdd
+>>
+>> May be some code fixes for iscsi client is missing?
+>
+> No, the problem seems that the the target is enforcing a size limit
+> without communicating it through the block limits EVPD page.
+>
+> Nic, can you fix LIO to expose the proper max xfer size?
 
+some more problems while running this patch.
 
-Changelog for ddpt-0.95 [20141226] [svn: r307]
-   - add oflag=verify[,bytchk] to write using the SCSI
-     WRITE AND VERIFY command
-   - add job file that holds options; specified either
-     freestanding on command line or after --job=
-   - show percent completed
-   - add DDPT_DEF_BS environment variable
-   - add iflag=ff to source 0xff bytes
-   - ddptctl: add --hex and --readonly options
-   - add atomic flag for WRITE ATOMIC(16) command on OFILE
-   - add warning when oflag=strunc copy interrupted
-   - win32: ddpt --wscan fixes
-   - point svn:externals to rev 620 of sg3_utils
-   - upgrade automake to version 1.14.1
+My crucial m500 and m550 ssds (i have around 60 in 30 different cases 
+and motherboards but all attached as jbods at LSI HBAs) print those errors:
 
-Changelog for ddpt-0.94 [20140407] [svn: r277]
-...
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194158] Write(10): 2a 00 04 
+f9 db f0 00 0c d8 00
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194162] scsi target0:0:7: 
+handle(0x000a), sas_address(0x4433221107000000), phy(7)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194163] scsi target0:0:7: 
+enclosure_logical_id(0x5003048016aee700), slot(5)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194178] sd 0:0:7:0: task 
+abort: SUCCESS scmd(ffff88018c6b4700)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194178] sd 0:0:7:0: 
+attempting task abort! scmd(ffff8807a12e6800)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194179] sd 0:0:7:0: [sdh] CDB:
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194180] Read(10): 28 00 15 
+d4 f9 60 00 00 10 00
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194183] scsi target0:0:7: 
+handle(0x000a), sas_address(0x4433221107000000), phy(7)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194184] scsi target0:0:7: 
+enclosure_logical_id(0x5003048016aee700), slot(5)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194199] sd 0:0:7:0: task 
+abort: SUCCESS scmd(ffff8807a12e6800)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194199] sd 0:0:7:0: 
+attempting task abort! scmd(ffff88078d989800)
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194200] sd 0:0:7:0: [sdh] CDB:
+Dec 23 03:14:56 cloud2-1375 kernel: [585489.194201] Read(10): 28 00 15 
+aa d2 f9 00 00 20 00
 
-
-This package may be built to depend on the shared library
-produced by the sg3_utils, version 1.40 package (released
-20141113). Alternatively this package can be built to
-statically include the code it needs from sg3_utils.
-
-Doug Gilbert
+Stefan
