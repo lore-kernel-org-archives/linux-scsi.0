@@ -1,46 +1,59 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] constants.c: asc/ascq codes, sync to T10 20141221
-Date: Mon, 29 Dec 2014 10:36:34 +0100
-Message-ID: <54A120A2.3060601@suse.de>
-References: <54999854.2070501@interlog.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for
+ the ATA_CMD_PACKET PIO mode command.
+Date: Mon, 29 Dec 2014 13:09:04 +0300
+Message-ID: <54A12840.90703@cogentembedded.com>
+References: <1418748575-27301-1-git-send-email-stripathi@apm.com>	<1418748575-27301-3-git-send-email-stripathi@apm.com>	<54906CF0.9010908@cogentembedded.com>	<CAOHikRCRHPnVAziU8jwD9gGFODyt_5DpL1dm7Eb8uGA-WOfxOw@mail.gmail.com>	<5491BE11.4070500@cogentembedded.com> <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34408 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751580AbaL2Jge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Dec 2014 04:36:34 -0500
-In-Reply-To: <54999854.2070501@interlog.com>
+Received: from mail-la0-f43.google.com ([209.85.215.43]:34384 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467AbaL2KJG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2014 05:09:06 -0500
+Received: by mail-la0-f43.google.com with SMTP id s18so10911959lam.2
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Dec 2014 02:09:04 -0800 (PST)
+In-Reply-To: <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
 
-On 12/23/2014 05:29 PM, Douglas Gilbert wrote:
-> The last time these SCSI asc/ascq codes were synced with T10
-> was 20130605. This patch is against lk 3.19.0-rc1 .
->=20
-> ChangeLog:
->   sync the SCSI ASC/ASCQ number to string tables with those
->   found at http://www.t10.org/lists/asc-num.txt dated
->   20141221
->=20
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-Ah, good. I'll need that for my ZBC prototype.
+Hello.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 12/29/2014 8:35 AM, Suman Tripathi wrote:
 
-Cheers,
+>          This patch addresses the issue with ATA_CMD_PACKET pio mode
+>          command for enumeration and device detection with ATAPI devices.It is the
+>          same issue as in patch
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>     Ugh, HTML... Please stick to plain text when posting to the
+> 'vger.kernel.org <http://vger.kernel.org/>' mailing lists (HTML mails are
+> supposed to be ignored).
+
+>     www.spinics.net/lists/linux-____ide/msg49092.html
+>     <http://www.spinics.net/lists/linux-__ide/msg49092.html>
+>          <http://www.spinics.net/lists/__linux-ide/msg49092.html
+>     <http://www.spinics.net/lists/linux-ide/msg49092.html>>
+
+> This is something strange. I posted it in plain text only. Because when I do
+> show original of the patch in gmail, it shows me the plaintext.
+> Please help me out to figure the issue. I saw many other patches referred in
+> the same way. I am sending the patch through git-send-email  that sends in
+> plain text format only,
+
+    The patch was OK, but your replies do use HTML (as well as plain text).
+
+>          Signed-off-by: Suman Tripathi <stripathi@apm.com
+>     <mailto:stripathi@apm.com> <mailto:stripathi@apm.com
+>     <mailto:stripathi@apm.com>>>
+
+> --
+> Thanks,
+> with regards,
+> Suman Tripathi
+
+MBR, Sergei
+
