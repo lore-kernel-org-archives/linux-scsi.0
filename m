@@ -1,59 +1,124 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for
- the ATA_CMD_PACKET PIO mode command.
-Date: Mon, 29 Dec 2014 13:09:04 +0300
-Message-ID: <54A12840.90703@cogentembedded.com>
-References: <1418748575-27301-1-git-send-email-stripathi@apm.com>	<1418748575-27301-3-git-send-email-stripathi@apm.com>	<54906CF0.9010908@cogentembedded.com>	<CAOHikRCRHPnVAziU8jwD9gGFODyt_5DpL1dm7Eb8uGA-WOfxOw@mail.gmail.com>	<5491BE11.4070500@cogentembedded.com> <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
+From: Dimitri Sivanich <sivanich@sgi.com>
+Subject: Re: [PATCH] cleanup on stack DECLARE_COMPLETIONs
+Date: Mon, 29 Dec 2014 09:38:56 -0600
+Message-ID: <20141229153856.GA5661@sgi.com>
+References: <1419356048-22405-1-git-send-email-der.herr@hofr.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:34384 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467AbaL2KJG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Dec 2014 05:09:06 -0500
-Received: by mail-la0-f43.google.com with SMTP id s18so10911959lam.2
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Dec 2014 02:09:04 -0800 (PST)
-In-Reply-To: <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
+Received: from relay3.sgi.com ([192.48.152.1]:33560 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751440AbaL2Pi7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2014 10:38:59 -0500
+Content-Disposition: inline
+In-Reply-To: <1419356048-22405-1-git-send-email-der.herr@hofr.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, "Juergen E. Fischer" <fischer@norbit.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Felipe Balbi <balbi@ti.com>, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-Hello.
+On Tue, Dec 23, 2014 at 06:34:08PM +0100, Nicholas Mc Guire wrote:
+> fixups for incorrect use of DECLARE_COMPLETION. see also commit
+> 6e9a4738 ("completions: lockdep annotate on stack completions")
+> The only somewhat special case being
+> drivers/misc/sgi-gru/grukservices.c:quicktest2
+> which had a static qualifier in the original DECLARE_COMPLETION()
+> but that seems to be wrong (why should the completion persisted between
+> successive calls ?) so the conversion to DECLARE_COMPLETION_ONSTACK
+> was also applied and the static qualifier removed.
+> 
+> Not sure if this is suitable in this form or if it should go out as
+> 5 seperate patches ? 
+> 
+> This was only code reviewed and compile tested
 
-On 12/29/2014 8:35 AM, Suman Tripathi wrote:
+Acking just the drivers/misc/sgi-gru/grukservices.c patch of this set.
 
->          This patch addresses the issue with ATA_CMD_PACKET pio mode
->          command for enumeration and device detection with ATAPI devices.It is the
->          same issue as in patch
+Acked-by: Dimitri Sivanich <sivanich@sgi.com>
 
-
->     Ugh, HTML... Please stick to plain text when posting to the
-> 'vger.kernel.org <http://vger.kernel.org/>' mailing lists (HTML mails are
-> supposed to be ignored).
-
->     www.spinics.net/lists/linux-____ide/msg49092.html
->     <http://www.spinics.net/lists/linux-__ide/msg49092.html>
->          <http://www.spinics.net/lists/__linux-ide/msg49092.html
->     <http://www.spinics.net/lists/linux-ide/msg49092.html>>
-
-> This is something strange. I posted it in plain text only. Because when I do
-> show original of the patch in gmail, it shows me the plaintext.
-> Please help me out to figure the issue. I saw many other patches referred in
-> the same way. I am sending the patch through git-send-email  that sends in
-> plain text format only,
-
-    The patch was OK, but your replies do use HTML (as well as plain text).
-
->          Signed-off-by: Suman Tripathi <stripathi@apm.com
->     <mailto:stripathi@apm.com> <mailto:stripathi@apm.com
->     <mailto:stripathi@apm.com>>>
-
+> 
+> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+> ---
+>  drivers/macintosh/ams/ams-pmu.c       |    4 ++--
+>  drivers/misc/sgi-gru/grukservices.c   |    2 +-
+>  drivers/scsi/aha152x.c                |    2 +-
+>  drivers/usb/gadget/udc/fsl_qe_udc.c   |    2 +-
+>  drivers/usb/gadget/udc/fsl_udc_core.c |    2 +-
+>  5 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/macintosh/ams/ams-pmu.c b/drivers/macintosh/ams/ams-pmu.c
+> index 4f61b3e..c2b178f 100644
+> --- a/drivers/macintosh/ams/ams-pmu.c
+> +++ b/drivers/macintosh/ams/ams-pmu.c
+> @@ -52,7 +52,7 @@ static void ams_pmu_req_complete(struct adb_request *req)
+>  static void ams_pmu_set_register(u8 reg, u8 value)
+>  {
+>  	static struct adb_request req;
+> -	DECLARE_COMPLETION(req_complete);
+> +	DECLARE_COMPLETION_ONSTACK(req_complete);
+> 
+>  	req.arg = &req_complete;
+>  	if (pmu_request(&req, ams_pmu_req_complete, 4, ams_pmu_cmd, 0x00, reg, value))
+> @@ -65,7 +65,7 @@ static void ams_pmu_set_register(u8 reg, u8 value)
+>  static u8 ams_pmu_get_register(u8 reg)
+>  {
+>  	static struct adb_request req;
+> -	DECLARE_COMPLETION(req_complete);
+> +	DECLARE_COMPLETION_ONSTACK(req_complete);
+> 
+>  	req.arg = &req_complete;
+>  	if (pmu_request(&req, ams_pmu_req_complete, 3, ams_pmu_cmd, 0x01, reg))
+> diff --git a/drivers/misc/sgi-gru/grukservices.c b/drivers/misc/sgi-gru/grukservices.c
+> index 913de07..4e412fe 100644
+> --- a/drivers/misc/sgi-gru/grukservices.c
+> +++ b/drivers/misc/sgi-gru/grukservices.c
+> @@ -1044,7 +1044,7 @@ done:
+> 
+>  static int quicktest2(unsigned long arg)
+>  {
+> -	static DECLARE_COMPLETION(cmp);
+> +	DECLARE_COMPLETION_ONSTACK(cmp);
+>  	unsigned long han;
+>  	int blade_id = 0;
+>  	int numcb = 4;
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index 2b960b3..b16afb9 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -1055,7 +1055,7 @@ static int aha152x_abort(Scsi_Cmnd *SCpnt)
+>  static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+>  {
+>  	struct Scsi_Host *shpnt = SCpnt->device->host;
+> -	DECLARE_COMPLETION(done);
+> +	DECLARE_COMPLETION_ONSTACK(done);
+>  	int ret, issued, disconnected;
+>  	unsigned char old_cmd_len = SCpnt->cmd_len;
+>  	unsigned long flags;
+> diff --git a/drivers/usb/gadget/udc/fsl_qe_udc.c b/drivers/usb/gadget/udc/fsl_qe_udc.c
+> index 795c99c..e0822f1 100644
+> --- a/drivers/usb/gadget/udc/fsl_qe_udc.c
+> +++ b/drivers/usb/gadget/udc/fsl_qe_udc.c
+> @@ -2630,7 +2630,7 @@ static int qe_udc_remove(struct platform_device *ofdev)
+>  	struct qe_udc *udc = platform_get_drvdata(ofdev);
+>  	struct qe_ep *ep;
+>  	unsigned int size;
+> -	DECLARE_COMPLETION(done);
+> +	DECLARE_COMPLETION_ONSTACK(done);
+> 
+>  	usb_del_gadget_udc(&udc->gadget);
+> 
+> diff --git a/drivers/usb/gadget/udc/fsl_udc_core.c b/drivers/usb/gadget/udc/fsl_udc_core.c
+> index 2df8074..c3830ad 100644
+> --- a/drivers/usb/gadget/udc/fsl_udc_core.c
+> +++ b/drivers/usb/gadget/udc/fsl_udc_core.c
+> @@ -2529,7 +2529,7 @@ static int __exit fsl_udc_remove(struct platform_device *pdev)
+>  	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  	struct fsl_usb2_platform_data *pdata = dev_get_platdata(&pdev->dev);
+> 
+> -	DECLARE_COMPLETION(done);
+> +	DECLARE_COMPLETION_ONSTACK(done);
+> 
+>  	if (!udc_controller)
+>  		return -ENODEV;
 > --
-> Thanks,
-> with regards,
-> Suman Tripathi
-
-MBR, Sergei
-
+> 1.7.10.4
