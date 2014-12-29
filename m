@@ -1,56 +1,46 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v3 2/2] ahci_xgene: Fix the DMA state machine lockup for the ATA_CMD_PACKET PIO mode command.
-Date: Mon, 29 Dec 2014 08:52:47 +0530
-Message-ID: <1419823367-11279-3-git-send-email-stripathi@apm.com>
-References: <1419823367-11279-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1419823367-11279-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] constants.c: asc/ascq codes, sync to T10 20141221
+Date: Mon, 29 Dec 2014 10:36:34 +0100
+Message-ID: <54A120A2.3060601@suse.de>
+References: <54999854.2070501@interlog.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:34408 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751580AbaL2Jge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2014 04:36:34 -0500
+In-Reply-To: <54999854.2070501@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com, SCSI development list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-This patch addresses the issue with ATA_CMD_PACKET pio mode
-command for enumeration and device detection with ATAPI devices.
-The X-Gene AHCI controller has an errata in which it cannot clear
-the BSY bit after the PIO setup FIS. The dma state machine enters
-CMFatalErrorUpdate state and locks up.
+On 12/23/2014 05:29 PM, Douglas Gilbert wrote:
+> The last time these SCSI asc/ascq codes were synced with T10
+> was 20130605. This patch is against lk 3.19.0-rc1 .
+>=20
+> ChangeLog:
+>   sync the SCSI ASC/ASCQ number to string tables with those
+>   found at http://www.t10.org/lists/asc-num.txt dated
+>   20141221
+>=20
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Ah, good. I'll need that for my ZBC prototype.
 
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 0ffd3c9..d332161 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -125,10 +125,11 @@ static int xgene_ahci_restart_engine(struct ata_port *ap)
-  * xgene_ahci_qc_issue - Issue commands to the device
-  * @qc: Command to issue
-  *
-- * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
-- * clear the BSY bit after receiving the PIO setup FIS. This results in the dma
-- * state machine goes into the CMFatalErrorUpdate state and locks up. By
-- * restarting the dma engine, it removes the controller out of lock up state.
-+ * Due to Hardware errata for IDENTIFY DEVICE command and PACKET
-+ * command of ATAPI protocol set, the controller cannot clear the BSY bit
-+ * after receiving the PIO setup FIS. This results in the DMA state machine
-+ * going into the CMFatalErrorUpdate state and locks up. By restarting the
-+ * DMA engine, it removes the controller out of lock up state.
-  */
- static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- {
-@@ -137,7 +138,8 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- 	struct xgene_ahci_context *ctx = hpriv->plat_data;
- 	int rc = 0;
+Cheers,
 
--	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
-+	if (unlikely((ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA) ||
-+	    (ctx->last_cmd[ap->port_no] == ATA_CMD_PACKET)))
- 		xgene_ahci_restart_engine(ap);
-
- 	rc = ahci_qc_issue(qc);
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
 --
-1.8.2.1
-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
