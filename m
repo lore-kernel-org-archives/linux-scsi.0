@@ -1,54 +1,58 @@
-From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: RE: [scsi/net-next]Pull csiostor from net-next
-Date: Sun, 28 Dec 2014 15:13:14 +0000
-Message-ID: <24C222ADD7729F4FB5113B41FF0028A1BCC18E@nice.asicdesigners.com>
-References: <24C222ADD7729F4FB5113B41FF0028A1BCB65F@nice.asicdesigners.com>
- <20141227145956.GB1094@infradead.org>,<20141227150917.GA16964@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
+ cap")
+Date: Sun, 28 Dec 2014 22:10:01 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1412282200040.24524-100000@netrider.rowland.org>
+References: <20141227151319.GA18607@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:3478 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbaL1PNo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Dec 2014 10:13:44 -0500
-In-Reply-To: <20141227150917.GA16964@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20141227151319.GA18607@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 
-> How much do you plan to send for the 3.20 window?  I'd rather avoid
-> having to pull in the net-next tree and merge everything through Dave
-> if that seems feasible.
-I hv couple of patches fixes for 3.20 window. Can you please pull from linux-next tree ?
+On Sat, 27 Dec 2014, Christoph Hellwig wrote:
 
-________________________________________
-From: linux-scsi-owner@vger.kernel.org [linux-scsi-owner@vger.kernel.org] on behalf of hch@infradead.org [hch@infradead.org]
-Sent: Saturday, December 27, 2014 8:39 PM
-To: Praveen Madhavan
-Cc: linux-scsi@vger.kernel.org; netdev@vger.kernel.org
-Subject: Re: [scsi/net-next]Pull csiostor from net-next
+> On Tue, Dec 23, 2014 at 11:48:40PM -0800, Kenneth R. Crudup wrote:
+> > > Looks like we need to quirk it.  Can you try to echo different limits
+> > > to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
+> > > find the limit for it?
+> > 
+> > Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
+> > 
+> > To recap for the various lists:
+> > 
+> >   Vendor: Samsung  Model: D3 Station       Rev: 0202
+> >   Type:   Direct-Access                    ANSI  SCSI revision: 06
+> > 
+> > It's the 4TB model:
+> > 
+> > /sys/block/sdc/size:7814037160
+> > /sys/block/sdc/queue/max_hw_sectors_kb:61440
+> > 
+> > Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
+> 
+> Interesting.  Basically this is the limit for modern ATA disks:
+> 
+> drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+> drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+> include/linux/ata.h:    ATA_MAX_SECTORS_LBA48   = 65535,/* TODO: 65536? */
+> 
+> Seems like the USB bridge isn't properly communicating this limit to the SCSI
+> layer.  Maybe it's a good idea to generally limit USB storage to this size?
 
-[fixing the netdev address]
+(Is this a USB device?  Presumably you wouldn't have CC'ed the
+linux-usb and usb-storage mailing lists if it wasn't...)
 
-On Sat, Dec 27, 2014 at 06:59:56AM -0800, hch@infradead.org wrote:
-> On Wed, Dec 24, 2014 at 05:51:27PM +0000, Praveen Madhavan wrote:
-> > Hi Christoph,
-> > Can u please pull the csiostor changes from net-next ?. I need these changes to submit next fixes in scsi tree.
->
-> How much do you plan to send for the 3.20 window?  I'd rather avoid
-> having to pull in the net-next tree and merge everything through Dave
-> if that seems feasible.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The only limits usb-storage imposes on max_sectors are those needed to
+work around bugs in the devices' USB bridges.  (Okay, there's also
+something for tape drive devices, but it probably doesn't belong in
+usb-storage -- it should be handled by the SCSI tape driver.)
+
+If the ATA layer needs to set a limit on max_sectors, why doesn't it
+simply go ahead and do so?
+
+Alan Stern
 
