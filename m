@@ -1,30 +1,36 @@
 From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v3 0/2] ahci_xgene: Bug fixes in APM X-Gene Soc AHCI SATA controller driver.
-Date: Mon, 29 Dec 2014 08:52:45 +0530
-Message-ID: <1419823367-11279-1-git-send-email-stripathi@apm.com>
+Subject: [PATCH v3 1/2] ahci_xgene: Fix the endianess issue in APM X-Gene SoC AHCI SATA controller driver.
+Date: Mon, 29 Dec 2014 08:52:46 +0530
+Message-ID: <1419823367-11279-2-git-send-email-stripathi@apm.com>
+References: <1419823367-11279-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1419823367-11279-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-These patches address the following two issues :
-
-1. Endianess issue with xgene_read_id function.
-2. ATAPI device enumeration failure with ATA_CMD_PACKET PIO mode command.
+This patch fixes the big endian mode issue with function
+xgene_ahci_read_id.
 
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
+ drivers/ata/ahci_xgene.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Suman Tripathi (2):
-  ahci_xgene: Fix the endianess issue in APM X-Gene SoC AHCI SATA
-    controller driver.
-  ahci_xgene: Fix the DMA state machine lockup for the ATA_CMD_PACKET
-    PIO mode command.
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 0f8538f..0ffd3c9 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -188,7 +188,7 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+ 	 *
+ 	 * Clear reserved bit 8 (DEVSLP bit) as we don't support DEVSLP
+ 	 */
+-	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
++	id[ATA_ID_FEATURE_SUPP] &= cpu_to_le16(~(1 << 8));
 
- drivers/ata/ahci_xgene.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
+ 	return 0;
+ }
 --
 1.8.2.1
 
