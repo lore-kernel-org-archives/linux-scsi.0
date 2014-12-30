@@ -1,27 +1,100 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Initialize off value in asd_process_ctrl_a_user()
-Date: Tue, 30 Dec 2014 04:04:49 -0800
-Message-ID: <20141230120449.GA32187@infradead.org>
-References: <1417538041-6850-1-git-send-email-emunson@akamai.com>
- <1419779536.4705.183.camel@decadent.org.uk>
+Subject: Re: [PATCH] drivers: scsi: aic7xxx: Fix positive error codes.
+Date: Tue, 30 Dec 2014 04:05:47 -0800
+Message-ID: <20141230120547.GB32187@infradead.org>
+References: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
+ <547F38AD.9050103@suse.de>
+ <CAFKz9WbOwv+f7QcKe7sKf_9ZqWZHVkgPvK7G2aoga_EzHtct9Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1419779536.4705.183.camel@decadent.org.uk>
+In-Reply-To: <CAFKz9WbOwv+f7QcKe7sKf_9ZqWZHVkgPvK7G2aoga_EzHtct9Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Eric B Munson <emunson@akamai.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+To: Jason Wilkes <letshaveanadventure@gmail.com>
+Cc: Hannes Reinecke <hare@suse.de>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Dec 28, 2014 at 04:12:16PM +0100, Ben Hutchings wrote:
-> On Tue, 2014-12-02 at 11:34 -0500, Eric B Munson wrote:
-> > If the asd_find_flash_de() function returns ENOENT the off value will
-> > be used uninitialized in the call to asd_read_flash_seg().
+Hannes, does the patch looks good to you with this explanation?
+
+On Wed, Dec 03, 2014 at 01:34:42PM -0800, Jason Wilkes wrote:
+> I'm pretty sure I did. I'd normally just say "yes I'm sure," but the
+> kernel folks do extremely clever things with the compiler, linker, and
+> basically everything else, so I'm reluctant to assume that *anything*
+> I know about C in userspace or C in less-cleverly-written code holds
+> here. To that end, I'll just describe why I think that I did what you
+> asked, so you'll be able to tell whether my reasoning is flawed, or
+> whether I totally misinterpreted what you said. I promise I won't
+> always be this cautious/obnoxious, but it seems like the responsible
+> thing to do for my first kernel patch.
 > 
-> This is just papering over the problem.  This was my attempt at a proper
-> fix: http://article.gmane.org/gmane.linux.scsi/91320
-
-
-That one looks much more useful to me.  Can someone give it a second
-review?
+> Okay, here's why I think I did what you asked.
+> 
+> For each function foo in which I changed a return code:
+> (1) at most one other function calls foo, and
+> (2) all callers of foo (i.e., just one) only call it like this:
+> 
+> error = foo(args);
+> if (error != 0) {
+>         [possibly some cleanup];
+>         return (error);
+> }
+> 
+> Because of this, all the return codes I changed should only ever be
+> passed up the stack until we hit the driver core (I think).
+> They're never passed to some other function in the same driver that
+> checks their specific return value in order to decide how to behave.
+> All that's ever checked is whether they're nonzero.
+> 
+> Here are some details, which you can skip if the above is sufficient.
+> If you feel like skipping the details, goto out; (see below).
+> 
+> ### Functions I modified, and how they're called: ###
+> 
+> # aic7770_map_registers: only called by aic7770_config.
+> # Here's how that call happens:
+> error = aic7770_map_registers(ahc, io);
+> if (error != 0)
+>         return (error);
+> 
+> # aic7770_config: only called by aic7770_probe.
+> # Here's how that call happens:
+> error = aic7770_config(ahc, aic7770_ident_table +
+> edev->id.driver_data, eisaBase);
+> if (error != 0) {
+>         ahc->bsh.ioport = 0;
+>         ahc_free(ahc);
+>         return (error);
+> }
+> 
+> # aic7770_probe: never called directly. It's presumably only called by
+> the driver core, in some line of the general form:
+> 
+> ret = drv->probe(dev);
+> 
+> Since the driver core doesn't know about this particular driver's
+> unusual behavior of sometimes returning positive error codes, the fact
+> that drv->probe(dev) (or however probe ends up getting called) may be
+> positive is arguably a bug.
+> 
+> out:
+> 
+> Alrighty! Sorry for the verbosity, but hopefully that answered your question.
+> One more caveat: I don't have this hardware, so if by "validate" you
+> meant "test on real hardware," then no. If that fact is sufficient for
+> you to drop the patch, I totally understand. However, I've watched a
+> bunch of Greg KH's videos, and I got the general impression that
+> simple fixes (like the above) are okay to submit if you don't have the
+> hardware. Let me know if that's not the case.
+> 
+> I just figured that since the driver is already inconsistent in its
+> use of return codes, fixing a self-contained subset of them would be a
+> good way to learn how to submit kernel patches.
+> 
+> If you got this far, thanks for reading :-)
+> -Jason
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
