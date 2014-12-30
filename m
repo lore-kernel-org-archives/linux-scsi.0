@@ -1,99 +1,54 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
- cap")
-Date: Tue, 30 Dec 2014 11:19:07 -0500
-Message-ID: <54A2D07B.4040607@interlog.com>
-References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org>
-Reply-To: dgilbert@interlog.com
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 0/4] Drivers: scsi: storvsc: Fix miscellaneous issues
+Date: Tue, 30 Dec 2014 16:22:34 +0000
+Message-ID: <BY2PR0301MB07113BE58A3A3BD1960DA5A3A05E0@BY2PR0301MB0711.namprd03.prod.outlook.com>
+References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
+ <BY2PR0301MB0711853294B88172F1AAF24FA0510@BY2PR0301MB0711.namprd03.prod.outlook.com>
+ <20141230093210.GA6294@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>
-Cc: "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20141230093210.GA6294@infradead.org>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14-12-30 10:34 AM, Alan Stern wrote:
-> On Tue, 30 Dec 2014, Christoph Hellwig wrote:
->
->>> The only limits usb-storage imposes on max_sectors are those needed to
->>> work around bugs in the devices' USB bridges.  (Okay, there's also
->>> something for tape drive devices, but it probably doesn't belong in
->>> usb-storage -- it should be handled by the SCSI tape driver.)
->>>
->>> If the ATA layer needs to set a limit on max_sectors, why doesn't it
->>> simply go ahead and do so?
->>
->> Because the ATA layer doesn't control the device, the bridge does.
->> And it seems like it doesn't communicate the maximum transfer size
->> properly.
->
-> _Is_ there any way to communicate the maximum transfer size?  I'm not
-> aware of any SCSI command for it.  It isn't part of the USB
-> mass-storage spec.
-
-In SCSI, the VPD page 0xb0 (Block limits) has a "Maximum transfer
-length" field (32 bits long). Its units are logical blocks. Useful
-if >0 as 0 means "unreported".
-
-USB to SATA bridges should comply with SAT. However SAT and SAT-2
-don't even mention that VPD page. SAT-3 and SAT-4 mention that page
-but have "unspecified" next to that field. Basically useless.
 
 
-IMO about the best SATL is in the MPT SAS-2 and SAS-3 HBAs and
-here is that page for a SAS expander attached SATA disk:
+> -----Original Message-----
+> From: hch@infradead.org [mailto:hch@infradead.org]
+> Sent: Tuesday, December 30, 2014 1:32 AM
+> To: KY Srinivasan
+> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com;
+> jbottomley@parallels.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 0/4] Drivers: scsi: storvsc: Fix miscellaneous issues
+> 
+> On Mon, Dec 29, 2014 at 09:07:59PM +0000, KY Srinivasan wrote:
+> > Should I be resending these patches.
+> 
+> I don't need a resend, I need a review for the patches.  Note that for driver
+> patches I'm also fine with a review from a co worker, as long as it's a real
+> review not just a rubber stamp.
 
-# sg_vpd -p bl /dev/sg3
-Block limits VPD page (SBC):
-   Write same non-zero (WSNZ): 0
-   Maximum compare and write length: 0 blocks
-   Optimal transfer length granularity: 0 blocks
-   Maximum transfer length: 0 blocks
-   Optimal transfer length: 0 blocks
-   Maximum prefetch length: 0 blocks
-   Maximum unmap LBA count: 0
-   Maximum unmap block descriptor count: 0
-   Optimal unmap granularity: 0
-   Unmap granularity alignment valid: 0
-   Unmap granularity alignment: 0
-   Maximum write same length: 0x0 blocks
-   Maximum atomic transfer length: 0
-   Atomic alignment: 0
-   Atomic transfer length granularity: 0
-   Maximum atomic transfer length with atomic boundary: 0
-   Maximum atomic boundary size: 0
+Thanks; will do.
+> 
+> Talking about process:  for the next submission please only use
+> "storvsc:  " as the subject prefix, I had to remove "Drivers: scsi: "
+> which doesn'd add useful information every time so far.
+Ok.
 
-Not sure why LSI/Avago even bothered even implementing
-that page ...
+Regards,
 
-Doug Gilbert
-
-
-BTW here is the output of that page from a SAS SSD:
-
-# sg_vpd -p bl /dev/sg5
-Block limits VPD page (SBC):
-   Write same non-zero (WSNZ): 0
-   Maximum compare and write length: 0 blocks
-   Optimal transfer length granularity: 8 blocks
-   Maximum transfer length: 65535 blocks
-   Optimal transfer length: 0 blocks
-   Maximum prefetch length: 0 blocks
-   Maximum unmap LBA count: 393216
-   Maximum unmap block descriptor count: 512
-   Optimal unmap granularity: 8
-   Unmap granularity alignment valid: 0
-   Unmap granularity alignment: 0
-   Maximum write same length: 0x0 blocks
-   Maximum atomic transfer length: 0
-   Atomic alignment: 0
-   Atomic transfer length granularity: 0
-   Maximum atomic transfer length with atomic boundary: 0
-   Maximum atomic boundary size: 0
-
-
-
-
+K. Y
