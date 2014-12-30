@@ -1,31 +1,17 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] SCSI: SD: set max_ws_blocks as max_unmap_blocks if it
- isn't provided
-Date: Tue, 30 Dec 2014 04:51:14 -0800
-Message-ID: <20141230125114.GB10980@infradead.org>
-References: <1417782952-19908-1-git-send-email-ming.lei@canonical.com>
- <yq1r3wefe6o.fsf@sermon.lab.mkp.net>
- <CACVXFVMB4GT2XewVh3CbamJUqb2VbaW=4yxJnQjw39z1rBgdNw@mail.gmail.com>
- <yq1mw72fczo.fsf@sermon.lab.mkp.net>
- <CACVXFVO-faCX-yHhrvb=Rt8TS9WcVT2nSMXEbss6mOhaKfC49g@mail.gmail.com>
- <yq1iohqfc7i.fsf@sermon.lab.mkp.net>
- <CACVXFVM7A2Y+g8gQL4-LMcvp-qpx6kuKbr51gx4paGe1NLyb2A@mail.gmail.com>
- <yq1egsefbbo.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH] scsi: 3w-9xxx.c:  Cleaning up missing null-terminate in
+ conjunction with strncpy
+Date: Tue, 30 Dec 2014 04:52:00 -0800
+Message-ID: <20141230125200.GA21852@infradead.org>
+References: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58210 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbaL3MvR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 07:51:17 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq1egsefbbo.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1406473878-12715-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Ming Lei <ming.lei@canonical.com>, James Bottomley <JBottomley@parallels.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>
 
-Thanks,
-
-applied to scsi-for-3.19.
-
+Thanks, applied to scsi-for-3.20.
