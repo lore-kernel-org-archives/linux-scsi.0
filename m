@@ -1,15 +1,16 @@
 From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH 3/4] Drivers: scsi: storvsc: Fix a bug in storvsc limits
-Date: Tue, 30 Dec 2014 19:24:00 +0000
-Message-ID: <BLUPR03MB407EE2C86301CD642F48B7DCE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
+Subject: RE: [PATCH 4/4] Drivers: scsi: storvsc: Force SPC-3 compliance on
+ win8 and win8 r2 hosts
+Date: Tue, 30 Dec 2014 19:28:26 +0000
+Message-ID: <BLUPR03MB407AC20093909377CDA6A4ECE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
 References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
  <1418764905-11250-1-git-send-email-kys@microsoft.com>
- <1418764905-11250-3-git-send-email-kys@microsoft.com>
+ <1418764905-11250-4-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1418764905-11250-3-git-send-email-kys@microsoft.com>
+In-Reply-To: <1418764905-11250-4-git-send-email-kys@microsoft.com>
 Content-Language: en-US
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
@@ -32,66 +33,49 @@ List-Id: linux-scsi@vger.kernel.org
 > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
 > devel@linuxdriverproject.org; ohering@suse.com;
 > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: [PATCH 3/4] Drivers: scsi: storvsc: Fix a bug in storvsc limits
+> Subject: [PATCH 4/4] Drivers: scsi: storvsc: Force SPC-3 compliance on win8
+> and win8 r2 hosts
 > 
-> Commit 4cd83ecdac20d30725b4f96e5d7814a1e290bc7e changed the limits to
-> reflect the values on the host. It turns out that WS2008R2 cannot correctly
-> handle these new limits. Fix this bug by setting the limits based on the host.
+> On win8 and win8 r2 hosts force SPC-3 compliance for MSFT virtual disks.
+> Ubuntu has been carrying a similar patch outside the tree for a while now.
+> Starting with win10, the host will support SPC-3 compliance. Based on all the
+> testing that has been done on win8 and win8 r2 hosts, we are comfortable
+> claiming SPC-3 compliance on these hosts as well. This will enable TRIM
+> support on these hosts.
 > 
+> Suggested by: James Bottomley
+> <James.Bottomley@HansenPartnership.com>
 > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Long Li <longli@microsoft.com>
 > ---
->  drivers/scsi/storvsc_drv.c |   15 ++++++++++++---
->  1 files changed, 12 insertions(+), 3 deletions(-)
+>  drivers/scsi/storvsc_drv.c |   13 +++++++++++++
+>  1 files changed, 13 insertions(+), 0 deletions(-)
 > 
 > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
-> a7163c6..fdc5164 100644
+> fdc5164..7487e07 100644
 > --- a/drivers/scsi/storvsc_drv.c
 > +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1782,6 +1782,9 @@ static int storvsc_probe(struct hv_device *device,
->  	bool dev_is_ide = ((dev_id->driver_data == IDE_GUID) ? true : false);
->  	int target = 0;
->  	struct storvsc_device *stor_device;
-> +	int max_luns_per_target;
-> +	int max_targets;
-> +	int max_channels;
+> @@ -1468,6 +1468,19 @@ static int storvsc_device_configure(struct
+> scsi_device *sdevice)
+>  	 */
+>  	sdevice->sdev_bflags |= msft_blist_flags;
 > 
->  	/*
->  	 * Based on the windows host we are running on, @@ -1795,12
-> +1798,18 @@ static int storvsc_probe(struct hv_device *device,
->  		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
->  		vmstor_current_major = VMSTOR_WIN7_MAJOR;
->  		vmstor_current_minor = VMSTOR_WIN7_MINOR;
-> +		max_luns_per_target =
-> STORVSC_IDE_MAX_LUNS_PER_TARGET;
-> +		max_targets = STORVSC_IDE_MAX_TARGETS;
-> +		max_channels = STORVSC_IDE_MAX_CHANNELS;
->  		break;
->  	default:
->  		sense_buffer_size =
-> POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
->  		vmscsi_size_delta = 0;
->  		vmstor_current_major = VMSTOR_WIN8_MAJOR;
->  		vmstor_current_minor = VMSTOR_WIN8_MINOR;
-> +		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
-> +		max_targets = STORVSC_MAX_TARGETS;
-> +		max_channels = STORVSC_MAX_CHANNELS;
->  		break;
->  	}
+> +	/*
+> +	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
+> +	 * if the device is a MSFT virtual device.
+> +	 */
+> +	if (!strncmp(sdevice->vendor, "Msft", 4)) {
+> +		switch (vmbus_proto_version) {
+> +		case VERSION_WIN8:
+> +		case VERSION_WIN8_1:
+> +			sdevice->scsi_level = SCSI_SPC_3;
+> +			break;
+> +		}
+> +	}
+> +
+>  	return 0;
+>  }
 > 
-> @@ -1848,9 +1857,9 @@ static int storvsc_probe(struct hv_device *device,
->  		break;
-> 
->  	case SCSI_GUID:
-> -		host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
-> -		host->max_id = STORVSC_MAX_TARGETS;
-> -		host->max_channel = STORVSC_MAX_CHANNELS - 1;
-> +		host->max_lun = max_luns_per_target;
-> +		host->max_id = max_targets;
-> +		host->max_channel = max_channels - 1;
->  		break;
-> 
->  	default:
 > --
 > 1.7.4.1
 > 
