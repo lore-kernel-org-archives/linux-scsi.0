@@ -1,56 +1,57 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
  cap")
-Date: Tue, 30 Dec 2014 08:36:34 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1412300830420.12831@tosh-p75a>
-References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org> <54A2D07B.4040607@interlog.com>
-Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
+Date: Tue, 30 Dec 2014 11:45:45 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1412301132130.32416-100000@netrider.rowland.org>
+References: <1419956728.2164.3.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailbackend.panix.com ([166.84.1.89]:60954 "EHLO
-	mailbackend.panix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800AbaL3Qgi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 11:36:38 -0500
-In-Reply-To: <54A2D07B.4040607@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1419956728.2164.3.camel@HansenPartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Kenneth R. Crudup" <kenny@panix.com>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, USB list <linux-usb@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
+On Tue, 30 Dec 2014, James Bottomley wrote:
 
-On Tue, 30 Dec 2014, Douglas Gilbert wrote:
+> > All right.  How does this patch look?
+> 
+> OK, I suppose.  The transfer limits are a little on the low side, but
+> for usb-storage (i.e. non-UAS) performance devices, they should be OK.
 
-> IMO about the best SATL is in the MPT SAS-2 and SAS-3 HBAs and
-> here is that page for a SAS expander attached SATA disk:
-> # sg_vpd -p bl /dev/sg3
+If you're referring to the 32-KB and 64-KB limits, we know from 
+experience that some devices really do need them.  If you're referring 
+to the 32-MB limit...  Well, that's what this whole thread is about, 
+right?
 
-OP here. FWIW, this is what I get when running that command on the SCSI
-generic device that corresponds to the USB-3 (non-UAS) disk[1] that had the
-issue:
+That limit could be restricted to apply only when a device is not 
+connected over a SuperSpeed USB-3 link.  But knowing the low quality of 
+commodity USB hardware, I suspect it wouldn't work well.
 
-----
-$  sudo sg_vpd -p bl /dev/sg4
-Block limits VPD page (SBC):
-  Write same no zero (WSNZ): 0
-  Maximum compare and write length: 0 blocks
-  Optimal transfer length granularity: 1 blocks
-  Maximum transfer length: 8191 blocks
-  Optimal transfer length: 8191 blocks
-  Maximum prefetch length: 8191 blocks
-  Maximum unmap LBA count: 0
-  Maximum unmap block descriptor count: 0
-  Optimal unmap granularity: 0
-  Unmap granularity alignment valid: 0
-  Unmap granularity alignment: 0
-  Maximum write same length: 0x0 blocks
-$
-----
+> For TYPE_TAPE, you still have no guarantee that the bridge won't screw
+> up ... and if the argument is that tapes are always connected to
+> sensible bridges, why aren't SATA devices?
 
-If more info is needed, just let me know.
+True, we have no guarantee.  But tape drives do have special 
+requirements because of the way they write blocks and gaps; this code 
+was added by someone with a tape drive who did need the large limit.
 
-	-Kenny
+I guess there are a lot more bridges in the low-budget consumer world 
+targeted to disk drives than to tape drives.  That could explain a lot.
 
-[1] - SCSI generic devices follow "/proc/scsi/scsi" order, right?
--- 
-Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
+> There's also a spelling mistake below.
+
+I'll fix it in the final patch submission.  Thanks.
+
+Alan Stern
+
+PS: What's the current situation of my "SCSI: fix regression in 
+scsi_send_eh_cmnd()" patch:
+
+	http://marc.info/?l=linux-scsi&m=141658469207765&w=2
+
+submitted on November 21?  Since it was a bug-fix, I rather expected it 
+to get merged before 3.18 was released.  Since it didn't, I certainly 
+hope it will get in before 3.19.
+
