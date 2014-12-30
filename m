@@ -1,25 +1,23 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RESEND 0/5] Feature enhancements for ses module
-Date: Tue, 30 Dec 2014 04:44:34 -0800
-Message-ID: <20141230124434.GA24088@infradead.org>
-References: <1417824557-13470-1-git-send-email-songliubraving@fb.com>
- <C709E4D363AAB64590BFAC54D4C478AAEBCC5BF6@PRN-MBX02-4.TheFacebook.com>
+Subject: Re: [PATCH v2] drivers: scsi: megaraid: Add
+ "megaraid_sas_internal.h" for internal shared functions using
+Date: Tue, 30 Dec 2014 04:45:11 -0800
+Message-ID: <20141230124511.GB24088@infradead.org>
+References: <548DB542.7000400@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:43693 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbaL3Mof (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 07:44:35 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <C709E4D363AAB64590BFAC54D4C478AAEBCC5BF6@PRN-MBX02-4.TheFacebook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <548DB542.7000400@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: megaraidlinux@lsi.com, JBottomley@parallels.com, Sumit Saxena <sumit.saxena@avagotech.com>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, Christoph Hellwig <hch@infradead.org>
 
-This series fails to apply for me, most likely due to whitespace
-corruption.  Can you resend it usign git-send-email, please?
+On Mon, Dec 15, 2014 at 12:05:22AM +0800, Chen Gang wrote:
+> For shared inline functions crossed source files, better to let it as
+> "static inline" in a header file. For extern functions, better to
+> declare them in header file.
 
-Also please replace the "SES:" prefix with "ses:", thanks!
 
+This one doesn't apply.
