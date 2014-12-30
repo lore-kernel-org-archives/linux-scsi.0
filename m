@@ -1,70 +1,95 @@
-From: Laurence Oberman <oberman.l@gmail.com>
-Subject: Re: [PATCH] lpfc: correct device removal deadlock after link bounce
-Date: Tue, 30 Dec 2014 12:15:32 -0500
-Message-ID: <CAAzz28gouFW=2JBcLK+sZb-6-k+-kYhWFRH6prF5kUawgTrchg@mail.gmail.com>
-References: <1419959338.1683.1.camel@myfc17>
+From: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH 1/4] Drivers: scsi: storvsc: In responce to a scan event,
+ scan the host
+Date: Tue, 30 Dec 2014 19:21:52 +0000
+Message-ID: <BLUPR03MB4075B290CA33C4BDFD03B7ACE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
+References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
+ <1418764905-11250-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:64364 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbaL3RPd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 12:15:33 -0500
-Received: by mail-la0-f51.google.com with SMTP id ms9so12810388lab.38
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2014 09:15:32 -0800 (PST)
-In-Reply-To: <1419959338.1683.1.camel@myfc17>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1418764905-11250-1-git-send-email-kys@microsoft.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com, "loberman@redhat.com" <loberman@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch was tested in house at Red Hat and is running in test
-kernels at a couple of Red Hat customers.
-James, thanks for sending it upstream.
-Laurence
 
-On Tue, Dec 30, 2014 at 12:08 PM, James Smart <james.smart@emulex.com> wrote:
-> This patch, applicable to 8G/4G/2G adapters, adds a call that
-> resumes transmit operations after a link bounce. Without it, targets
-> that tried to suspend exchanges after a link bounce (such as tape devices
-> using sequence level error recovery) would never resume io operation,
-> causing scan failures, and eventually deadlocks if a device removal
-> request is made.
->
-> The patches were cut against Christoph's scsi-queue.git,
-> branch "drivers-for-3.18".  The driver rev cut against is 10.4.8000.0
->
-> -- james s
->
->
-> Signed-off-by: James Smart <james.smart@emulex.com>
-> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+
+> -----Original Message-----
+> From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
+> Behalf Of K. Y. Srinivasan
+> Sent: Tuesday, December 16, 2014 1:22 PM
+> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; ohering@suse.com;
+> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org
+> Subject: [PATCH 1/4] Drivers: scsi: storvsc: In responce to a scan event, scan
+> the host
+> 
+> The virtual HBA that storvsc implements can support multiple channels and
+> targets. So, scan the host when the host notifies that a scan is needed.
+> 
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Reviewed-by: Long Li <longli@microsoft.com>
 > ---
->  lpfc_els.c |    9 +++++++++
->  1 file changed, 9 insertions(+)
->
-> diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> --- a/drivers/scsi/lpfc/lpfc_els.c      2014-12-29 12:48:08.000000000 -0500
-> +++ b/drivers/scsi/lpfc/lpfc_els.c      2014-12-30 11:23:04.344426606 -0500
-> @@ -2225,6 +2225,15 @@ lpfc_adisc_done(struct lpfc_vport *vport
->         if ((phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) &&
->             !(vport->fc_flag & FC_RSCN_MODE) &&
->             (phba->sli_rev < LPFC_SLI_REV4)) {
-> +               /* The ADISCs are complete.  Doesn't matter if they
-> +                * succeeded or failed because the ADISC completion
-> +                * routine guarantees to call the state machine and
-> +                * the RPI is either unregistered (failed ADISC response)
-> +                * or the RPI is still valid and the node is marked
-> +                * mapped for a target.  The exchanges should be in the
-> +                * correct state. This code is specific to SLI3.
-> +                */
-> +               lpfc_issue_clear_la(phba, vport);
->                 lpfc_issue_reg_vpi(phba, vport);
->                 return;
->         }
->
->
+>  drivers/scsi/storvsc_drv.c |   19 +++++++------------
+>  1 files changed, 7 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
+> e3ba251..0a96fef 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -426,21 +426,16 @@ done:
+>  	kfree(wrk);
+>  }
+> 
+> -static void storvsc_bus_scan(struct work_struct *work)
+> +static void storvsc_host_scan(struct work_struct *work)
+>  {
+>  	struct storvsc_scan_work *wrk;
+> -	int id, order_id;
+> +	struct Scsi_Host *host;
+> 
+>  	wrk = container_of(work, struct storvsc_scan_work, work);
+> -	for (id = 0; id < wrk->host->max_id; ++id) {
+> -		if (wrk->host->reverse_ordering)
+> -			order_id = wrk->host->max_id - id - 1;
+> -		else
+> -			order_id = id;
+> -
+> -		scsi_scan_target(&wrk->host->shost_gendev, 0,
+> -				order_id, SCAN_WILD_CARD, 1);
+> -	}
+> +	host = wrk->host;
+> +
+> +	scsi_scan_host(host);
+> +
+>  	kfree(wrk);
+>  }
+> 
+> @@ -1198,7 +1193,7 @@ static void storvsc_on_receive(struct hv_device
+> *device,
+>  		if (!work)
+>  			return;
+> 
+> -		INIT_WORK(&work->work, storvsc_bus_scan);
+> +		INIT_WORK(&work->work, storvsc_host_scan);
+>  		work->host = stor_device->host;
+>  		schedule_work(&work->work);
+>  		break;
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.4.1
+> 
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
