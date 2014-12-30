@@ -1,62 +1,43 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/5] ses: generate KOBJ_CHANGE on enclosure attach
-Date: Tue, 30 Dec 2014 14:46:15 -0800
-Message-ID: <1419979578-3793574-3-git-send-email-songliubraving@fb.com>
-References: <1419979578-3793574-1-git-send-email-songliubraving@fb.com>
+Subject: RE: [PATCH RESEND 0/5] Feature enhancements for ses module
+Date: Tue, 30 Dec 2014 23:01:07 +0000
+Message-ID: <C709E4D363AAB64590BFAC54D4C478AAEBCE2D9D@PRN-MBX02-4.TheFacebook.com>
+References: <1417824557-13470-1-git-send-email-songliubraving@fb.com>
+ <C709E4D363AAB64590BFAC54D4C478AAEBCC5BF6@PRN-MBX02-4.TheFacebook.com>
+ <20141230124434.GA24088@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:36907 "EHLO
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:28774 "EHLO
 	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751350AbaL3WsA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Dec 2014 17:48:00 -0500
-Received: from pps.filterd (m0004347 [127.0.0.1])
-	by m0004347.ppops.net (8.14.5/8.14.5) with SMTP id sBUMlQ44025405
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2014 14:47:59 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-	by m0004347.ppops.net with ESMTP id 1rm2ww09f7-7
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2014 14:47:59 -0800
-Received: from facebook.com (2401:db00:20:701c:face:0:3f:0)	by
- mx-out.facebook.com (10.212.236.89) with ESMTP	id
- b533290c907511e4a00f0002c95209d8-5bddb390 for <linux-scsi@vger.kernel.org>;
-	Tue, 30 Dec 2014 14:46:35 -0800
-In-Reply-To: <1419979578-3793574-1-git-send-email-songliubraving@fb.com>
+	by vger.kernel.org with ESMTP id S1751350AbaL3XBr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Dec 2014 18:01:47 -0500
+In-Reply-To: <20141230124434.GA24088@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hch@infradead.org, hare@suse.de, dgilbert@interlog.com, Dan Williams <dan.j.williams@intel.com>, Song Liu <songliubraving@fb.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
 
-From: Dan Williams <dan.j.williams@intel.com>
+Hi Christoph, 
 
-In support of a /dev/disk/by-slot populated with data from the enclosure
-and ses modules udev needs notification when the new interface
-files/links are available.  Otherwise, any udev rules specified for the
-disk cannot assume that the enclosure topology has settled.
+I just send the patches (http://marc.info/?l=linux-scsi&m=141997962124647&w=2). 
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Reviewed-by: Jens Axboe <axboe@fb.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/ses.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
+Song
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 7dd9cf5..6662b0c 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -349,7 +349,8 @@ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
- 		if (scomp->addr != efd->addr)
- 			continue;
- 
--		enclosure_add_device(edev, i, efd->dev);
-+		if (enclosure_add_device(edev, i, efd->dev) == 0)
-+			kobject_uevent(&efd->dev->kobj, KOBJ_CHANGE);
- 		return 1;
- 	}
- 	return 0;
--- 
-1.8.1
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Tuesday, December 30, 2014 4:45 AM
+> To: Song Liu
+> Cc: linux-scsi@vger.kernel.org; Dan Williams; Hannes Reinecke; Jens Axboe;
+> dgilbert@interlog.com; Christoph Hellwig
+> Subject: Re: [PATCH RESEND 0/5] Feature enhancements for ses module
+> 
+> This series fails to apply for me, most likely due to whitespace corruption.  Can
+> you resend it usign git-send-email, please?
+> 
+> Also please replace the "SES:" prefix with "ses:", thanks!
 
