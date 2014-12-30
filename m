@@ -1,100 +1,26 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] drivers: scsi: aic7xxx: Fix positive error codes.
-Date: Tue, 30 Dec 2014 04:05:47 -0800
-Message-ID: <20141230120547.GB32187@infradead.org>
-References: <1417564984-6941-1-git-send-email-letshaveanadventure@gmail.com>
- <547F38AD.9050103@suse.de>
- <CAFKz9WbOwv+f7QcKe7sKf_9ZqWZHVkgPvK7G2aoga_EzHtct9Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
+ scanning
+Date: Tue, 30 Dec 2014 04:09:36 -0800
+Message-ID: <20141230120936.GC32187@infradead.org>
+References: <1417711162-102950-1-git-send-email-hare@suse.de>
+ <1417738774.8998.21.camel@parallels.com>
+ <5481FC30.1090801@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:37246 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752624AbaL3MJk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 07:09:40 -0500
 Content-Disposition: inline
-In-Reply-To: <CAFKz9WbOwv+f7QcKe7sKf_9ZqWZHVkgPvK7G2aoga_EzHtct9Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Wilkes <letshaveanadventure@gmail.com>
-Cc: Hannes Reinecke <hare@suse.de>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <5481FC30.1090801@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Matthias.Roessler@ts.fujitsu.com" <Matthias.Roessler@ts.fujitsu.com>
 
-Hannes, does the patch looks good to you with this explanation?
-
-On Wed, Dec 03, 2014 at 01:34:42PM -0800, Jason Wilkes wrote:
-> I'm pretty sure I did. I'd normally just say "yes I'm sure," but the
-> kernel folks do extremely clever things with the compiler, linker, and
-> basically everything else, so I'm reluctant to assume that *anything*
-> I know about C in userspace or C in less-cleverly-written code holds
-> here. To that end, I'll just describe why I think that I did what you
-> asked, so you'll be able to tell whether my reasoning is flawed, or
-> whether I totally misinterpreted what you said. I promise I won't
-> always be this cautious/obnoxious, but it seems like the responsible
-> thing to do for my first kernel patch.
-> 
-> Okay, here's why I think I did what you asked.
-> 
-> For each function foo in which I changed a return code:
-> (1) at most one other function calls foo, and
-> (2) all callers of foo (i.e., just one) only call it like this:
-> 
-> error = foo(args);
-> if (error != 0) {
->         [possibly some cleanup];
->         return (error);
-> }
-> 
-> Because of this, all the return codes I changed should only ever be
-> passed up the stack until we hit the driver core (I think).
-> They're never passed to some other function in the same driver that
-> checks their specific return value in order to decide how to behave.
-> All that's ever checked is whether they're nonzero.
-> 
-> Here are some details, which you can skip if the above is sufficient.
-> If you feel like skipping the details, goto out; (see below).
-> 
-> ### Functions I modified, and how they're called: ###
-> 
-> # aic7770_map_registers: only called by aic7770_config.
-> # Here's how that call happens:
-> error = aic7770_map_registers(ahc, io);
-> if (error != 0)
->         return (error);
-> 
-> # aic7770_config: only called by aic7770_probe.
-> # Here's how that call happens:
-> error = aic7770_config(ahc, aic7770_ident_table +
-> edev->id.driver_data, eisaBase);
-> if (error != 0) {
->         ahc->bsh.ioport = 0;
->         ahc_free(ahc);
->         return (error);
-> }
-> 
-> # aic7770_probe: never called directly. It's presumably only called by
-> the driver core, in some line of the general form:
-> 
-> ret = drv->probe(dev);
-> 
-> Since the driver core doesn't know about this particular driver's
-> unusual behavior of sometimes returning positive error codes, the fact
-> that drv->probe(dev) (or however probe ends up getting called) may be
-> positive is arguably a bug.
-> 
-> out:
-> 
-> Alrighty! Sorry for the verbosity, but hopefully that answered your question.
-> One more caveat: I don't have this hardware, so if by "validate" you
-> meant "test on real hardware," then no. If that fact is sufficient for
-> you to drop the patch, I totally understand. However, I've watched a
-> bunch of Greg KH's videos, and I got the general impression that
-> simple fixes (like the above) are okay to submit if you don't have the
-> hardware. Let me know if that's not the case.
-> 
-> I just figured that since the driver is already inconsistent in its
-> use of return codes, fixing a self-contained subset of them would be a
-> good way to learn how to submit kernel patches.
-> 
-> If you got this far, thanks for reading :-)
-> -Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+Can you resend a version with the small updates pointed out by
+James?  I'd rather get the full UA handling, but it seems like that will
+take longer, so I'd rather get something in to get the Fujitsu arrays
+working ASAP.
