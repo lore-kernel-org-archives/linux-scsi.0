@@ -1,26 +1,34 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_scan: Send TEST UNIT READY to LUN0 before LUN
- scanning
-Date: Tue, 30 Dec 2014 04:09:36 -0800
-Message-ID: <20141230120936.GC32187@infradead.org>
-References: <1417711162-102950-1-git-send-email-hare@suse.de>
- <1417738774.8998.21.camel@parallels.com>
- <5481FC30.1090801@suse.de>
+Subject: Re: esp_scsi: make number of tags configurable
+Date: Tue, 30 Dec 2014 04:14:28 -0800
+Message-ID: <20141230121428.GE32187@infradead.org>
+References: <20141209053657.75D6A66095A@gitolite.kernel.org>
+ <CAMuHMdXEy6Z4=2off-Y74R6GgKAPnYWwKFTji7ebPE74fddRkA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37246 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752624AbaL3MJk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 07:09:40 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5481FC30.1090801@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CAMuHMdXEy6Z4=2off-Y74R6GgKAPnYWwKFTji7ebPE74fddRkA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Matthias.Roessler@ts.fujitsu.com" <Matthias.Roessler@ts.fujitsu.com>
 
-Can you resend a version with the small updates pointed out by
-James?  I'd rather get the full UA handling, but it seems like that will
-take longer, so I'd rather get something in to get the Fujitsu arrays
-working ASAP.
+On Wed, Dec 10, 2014 at 11:16:47AM +0100, Geert Uytterhoeven wrote:
+> > --- a/drivers/scsi/esp_scsi.c
+> > +++ b/drivers/scsi/esp_scsi.c
+> > @@ -2317,6 +2317,10 @@ int scsi_esp_register(struct esp *esp, struct device *dev)
+> >         static int instance;
+> >         int err;
+> >
+> > +       if (!esp->num_tags)
+> > +               esp->num_tags = ESP_DEFAULT_TAGS;
+> > +       else if (esp->num_tags >= ESP_MAX_TAG)
+> 
+> drivers/scsi/esp_scsi.c: In function ???scsi_esp_register???:
+> drivers/scsi/esp_scsi.c:2399: warning: comparison is always false due
+> to limited range of data type
+> 
+> ESP_MAX_TAG is 256, num_tags is u8.
+
+Can you send me a patch to just remove that conditional?
