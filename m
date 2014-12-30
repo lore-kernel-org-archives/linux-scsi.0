@@ -1,35 +1,26 @@
 From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH 0/4] Drivers: scsi: storvsc: Fix miscellaneous issues
-Date: Tue, 30 Dec 2014 01:32:10 -0800
-Message-ID: <20141230093210.GA6294@infradead.org>
-References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
- <BY2PR0301MB0711853294B88172F1AAF24FA0510@BY2PR0301MB0711.namprd03.prod.outlook.com>
+Subject: Re: [scsi/net-next]Pull csiostor from net-next
+Date: Tue, 30 Dec 2014 01:36:08 -0800
+Message-ID: <20141230093608.GA13711@infradead.org>
+References: <24C222ADD7729F4FB5113B41FF0028A1BCB65F@nice.asicdesigners.com>
+ <20141227145956.GB1094@infradead.org>
+ <20141227150917.GA16964@infradead.org>
+ <24C222ADD7729F4FB5113B41FF0028A1BCC18E@nice.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <BY2PR0301MB0711853294B88172F1AAF24FA0510@BY2PR0301MB0711.namprd03.prod.outlook.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+In-Reply-To: <24C222ADD7729F4FB5113B41FF0028A1BCC18E@nice.asicdesigners.com>
+Sender: netdev-owner@vger.kernel.org
+To: Praveen Madhavan <praveenm@chelsio.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 29, 2014 at 09:07:59PM +0000, KY Srinivasan wrote:
-> Should I be resending these patches.
+On Sun, Dec 28, 2014 at 03:13:14PM +0000, Praveen Madhavan wrote:
+> > How much do you plan to send for the 3.20 window?  I'd rather avoid
+> > having to pull in the net-next tree and merge everything through Dave
+> > if that seems feasible.
+> I hv couple of patches fixes for 3.20 window. Can you please pull from linux-next tree ?
 
-I don't need a resend, I need a review for the patches.  Note that for
-driver patches I'm also fine with a review from a co worker, as long as
-it's a real review not just a rubber stamp.
-
-Talking about process:  for the next submission please only use
-"storvsc:  " as the subject prefix, I had to remove "Drivers: scsi: "
-which doesn'd add useful information every time so far.
+If it's really just a few fixes I'd prefer to just ACK them on the scsi
+list and send them through the net tree to avoid a cross dependency.
