@@ -1,34 +1,34 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: esp_scsi: make number of tags configurable
-Date: Tue, 30 Dec 2014 04:14:28 -0800
-Message-ID: <20141230121428.GE32187@infradead.org>
-References: <20141209053657.75D6A66095A@gitolite.kernel.org>
- <CAMuHMdXEy6Z4=2off-Y74R6GgKAPnYWwKFTji7ebPE74fddRkA@mail.gmail.com>
+Subject: Re: T10-PI: Getting failed tag info
+Date: Tue, 30 Dec 2014 04:15:42 -0800
+Message-ID: <20141230121542.GF32187@infradead.org>
+References: <54892468.5060300@vlnb.net>
+ <yq1r3w5blys.fsf@sermon.lab.mkp.net>
+ <20141215081857.GA24067@infradead.org>
+ <yq1zjao8lsc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:37938 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203AbaL3MPr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Dec 2014 07:15:47 -0500
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdXEy6Z4=2off-Y74R6GgKAPnYWwKFTji7ebPE74fddRkA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <yq1zjao8lsc.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
 
-On Wed, Dec 10, 2014 at 11:16:47AM +0100, Geert Uytterhoeven wrote:
-> > --- a/drivers/scsi/esp_scsi.c
-> > +++ b/drivers/scsi/esp_scsi.c
-> > @@ -2317,6 +2317,10 @@ int scsi_esp_register(struct esp *esp, struct device *dev)
-> >         static int instance;
-> >         int err;
-> >
-> > +       if (!esp->num_tags)
-> > +               esp->num_tags = ESP_DEFAULT_TAGS;
-> > +       else if (esp->num_tags >= ESP_MAX_TAG)
+On Mon, Dec 15, 2014 at 07:45:39PM -0500, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 > 
-> drivers/scsi/esp_scsi.c: In function ???scsi_esp_register???:
-> drivers/scsi/esp_scsi.c:2399: warning: comparison is always false due
-> to limited range of data type
+> Christoph> I really don't like adding new errno codes for all these.
 > 
-> ESP_MAX_TAG is 256, num_tags is u8.
+> This was mainly done to accommodate Darrick's work on aio extensions. If
+> these errors were forever trapped inside the kernel I would agree with
+> you but the plan is to make this generally applicable.
 
-Can you send me a patch to just remove that conditional?
+But those extensions require new structures to pass in the PI info
+anyway..
+
