@@ -1,85 +1,59 @@
-From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH 4/4] Drivers: scsi: storvsc: Force SPC-3 compliance on
- win8 and win8 r2 hosts
-Date: Tue, 30 Dec 2014 19:28:26 +0000
-Message-ID: <BLUPR03MB407AC20093909377CDA6A4ECE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
-References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
- <1418764905-11250-1-git-send-email-kys@microsoft.com>
- <1418764905-11250-4-git-send-email-kys@microsoft.com>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: [SCIS] mpt3sas: wait_for_completion_timeout timeout not reported
+Date: Tue, 30 Dec 2014 16:14:21 -0500
+Message-ID: <54A315AD.7000402@stratus.com>
+References: <1419956387-28252-1-git-send-email-der.herr@hofr.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1418764905-11250-4-git-send-email-kys@microsoft.com>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: KY Srinivasan <kys@microsoft.com>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1419956387-28252-1-git-send-email-der.herr@hofr.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Mc Guire <der.herr@hofr.at>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
-> Behalf Of K. Y. Srinivasan
-> Sent: Tuesday, December 16, 2014 1:22 PM
-> To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; ohering@suse.com;
-> jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: [PATCH 4/4] Drivers: scsi: storvsc: Force SPC-3 compliance on win8
-> and win8 r2 hosts
+On 12/30/2014 11:19 AM, Nicholas Mc Guire wrote:
+> wait_for_completion_timeout reaching timeout was being ignored,
+> this also should fail if timeout condition occurs. 
 > 
-> On win8 and win8 r2 hosts force SPC-3 compliance for MSFT virtual disks.
-> Ubuntu has been carrying a similar patch outside the tree for a while now.
-> Starting with win10, the host will support SPC-3 compliance. Based on all the
-> testing that has been done on win8 and win8 r2 hosts, we are comfortable
-> claiming SPC-3 compliance on these hosts as well. This will enable TRIM
-> support on these hosts.
+> Thanks to Joe Lawrence <joe.lawrence@stratus.com> for confirmation.
+
+How about this instead:
+
+Acked-by: Joe Lawrence <joe.lawrence@stratus.com>
+
+You still probably want a review from the Avago folks though.
+
+BTW, don't worry about the "[SCSI]" subject prefix to the commit,
+"[PATCH]" is fine.  I believe the former is a convention that the
+maintainer applies to patches as he collects them to indicate that they
+originated via the SCSI tree.
+
+Thanks,
+
+-- Joe
+
+> this was only compile tested with
+> x86_64_defconfig + CONFIG_SCSI_LOWLEVEL=y + CONFIG_SCSI_MPT3SAS=m
 > 
-> Suggested by: James Bottomley
-> <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-Reviewed-by: Long Li <longli@microsoft.com>
+> patch is against linux-next 3.19.0-rc1 -next-20141226
+> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
 > ---
->  drivers/scsi/storvsc_drv.c |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_config.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
-> fdc5164..7487e07 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1468,6 +1468,19 @@ static int storvsc_device_configure(struct
-> scsi_device *sdevice)
->  	 */
->  	sdevice->sdev_bflags |= msft_blist_flags;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> index 4472c2a..04ff21b 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> @@ -393,7 +393,7 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+>  	mpt3sas_base_put_smid_default(ioc, smid);
+>  	timeleft = wait_for_completion_timeout(&ioc->config_cmds.done,
+>  	    timeout*HZ);
+> -	if (!(ioc->config_cmds.status & MPT3_CMD_COMPLETE)) {
+> +	if (timeleft == 0 || !(ioc->config_cmds.status & MPT3_CMD_COMPLETE)) {
+>  		pr_err(MPT3SAS_FMT "%s: timeout\n",
+>  		    ioc->name, __func__);
+>  		_debug_dump_mf(mpi_request,
 > 
-> +	/*
-> +	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
-> +	 * if the device is a MSFT virtual device.
-> +	 */
-> +	if (!strncmp(sdevice->vendor, "Msft", 4)) {
-> +		switch (vmbus_proto_version) {
-> +		case VERSION_WIN8:
-> +		case VERSION_WIN8_1:
-> +			sdevice->scsi_level = SCSI_SPC_3;
-> +			break;
-> +		}
-> +	}
-> +
->  	return 0;
->  }
-> 
-> --
-> 1.7.4.1
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
