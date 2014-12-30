@@ -1,26 +1,34 @@
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [scsi/net-next]Pull csiostor from net-next
-Date: Tue, 30 Dec 2014 01:36:08 -0800
-Message-ID: <20141230093608.GA13711@infradead.org>
-References: <24C222ADD7729F4FB5113B41FF0028A1BCB65F@nice.asicdesigners.com>
- <20141227145956.GB1094@infradead.org>
- <20141227150917.GA16964@infradead.org>
- <24C222ADD7729F4FB5113B41FF0028A1BCC18E@nice.asicdesigners.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
+	max_hw_sectors cap")
+Date: Tue, 30 Dec 2014 12:28:09 +0100
+Message-ID: <20141230112809.GA1360@lst.de>
+References: <20141227151319.GA18607@lst.de> <Pine.LNX.4.44L0.1412282200040.24524-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <24C222ADD7729F4FB5113B41FF0028A1BCC18E@nice.asicdesigners.com>
-Sender: netdev-owner@vger.kernel.org
-To: Praveen Madhavan <praveenm@chelsio.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1412282200040.24524-100000@netrider.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Dec 28, 2014 at 03:13:14PM +0000, Praveen Madhavan wrote:
-> > How much do you plan to send for the 3.20 window?  I'd rather avoid
-> > having to pull in the net-next tree and merge everything through Dave
-> > if that seems feasible.
-> I hv couple of patches fixes for 3.20 window. Can you please pull from linux-next tree ?
+On Sun, Dec 28, 2014 at 10:10:01PM -0500, Alan Stern wrote:
+> (Is this a USB device?  Presumably you wouldn't have CC'ed the
+> linux-usb and usb-storage mailing lists if it wasn't...)
 
-If it's really just a few fixes I'd prefer to just ACK them on the scsi
-list and send them through the net tree to avoid a cross dependency.
+It's a usb attached device.  From the inquity information and the
+product name it looks like a SATA device attached via a usb bridge.
+
+> The only limits usb-storage imposes on max_sectors are those needed to
+> work around bugs in the devices' USB bridges.  (Okay, there's also
+> something for tape drive devices, but it probably doesn't belong in
+> usb-storage -- it should be handled by the SCSI tape driver.)
+> 
+> If the ATA layer needs to set a limit on max_sectors, why doesn't it
+> simply go ahead and do so?
+
+Because the ATA layer doesn't control the device, the bridge does.
+And it seems like it doesn't communicate the maximum transfer size
+properly.
