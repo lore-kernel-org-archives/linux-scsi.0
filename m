@@ -1,24 +1,27 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: block: remove artifical max_hw_sectors cap
-Date: Tue, 30 Dec 2014 12:32:06 +0100
-Message-ID: <20141230113206.GA1461@lst.de>
-References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de> <549FF2DB.4000506@profihost.ag>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Initialize off value in asd_process_ctrl_a_user()
+Date: Tue, 30 Dec 2014 04:04:49 -0800
+Message-ID: <20141230120449.GA32187@infradead.org>
+References: <1417538041-6850-1-git-send-email-emunson@akamai.com>
+ <1419779536.4705.183.camel@decadent.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <549FF2DB.4000506@profihost.ag>
-Sender: target-devel-owner@vger.kernel.org
-To: Stefan Priebe <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <1419779536.4705.183.camel@decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Eric B Munson <emunson@akamai.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Dec 28, 2014 at 01:08:59PM +0100, Stefan Priebe wrote:
->> Nic, can you fix LIO to expose the proper max xfer size?
->
-> some more problems while running this patch.
->
-> My crucial m500 and m550 ssds (i have around 60 in 30 different cases and 
-> motherboards but all attached as jbods at LSI HBAs) print those errors:
+On Sun, Dec 28, 2014 at 04:12:16PM +0100, Ben Hutchings wrote:
+> On Tue, 2014-12-02 at 11:34 -0500, Eric B Munson wrote:
+> > If the asd_find_flash_de() function returns ENOENT the off value will
+> > be used uninitialized in the call to asd_read_flash_seg().
+> 
+> This is just papering over the problem.  This was my attempt at a proper
+> fix: http://article.gmane.org/gmane.linux.scsi/91320
 
-What is the max_sectors_kb value for them?
+
+That one looks much more useful to me.  Can someone give it a second
+review?
