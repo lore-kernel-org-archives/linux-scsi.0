@@ -1,16 +1,15 @@
 From: Long Li <longli@microsoft.com>
-Subject: RE: [PATCH 2/4] Drivers: scsi: storvsc: Force discovery of LUNs that
- may have been removed.
-Date: Tue, 30 Dec 2014 19:22:52 +0000
-Message-ID: <BLUPR03MB40787742B3BB04B9FFE891DCE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
+Subject: RE: [PATCH 3/4] Drivers: scsi: storvsc: Fix a bug in storvsc limits
+Date: Tue, 30 Dec 2014 19:24:00 +0000
+Message-ID: <BLUPR03MB407EE2C86301CD642F48B7DCE5E0@BLUPR03MB407.namprd03.prod.outlook.com>
 References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
  <1418764905-11250-1-git-send-email-kys@microsoft.com>
- <1418764905-11250-2-git-send-email-kys@microsoft.com>
+ <1418764905-11250-3-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1418764905-11250-2-git-send-email-kys@microsoft.com>
+In-Reply-To: <1418764905-11250-3-git-send-email-kys@microsoft.com>
 Content-Language: en-US
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
@@ -33,65 +32,66 @@ List-Id: linux-scsi@vger.kernel.org
 > To: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
 > devel@linuxdriverproject.org; ohering@suse.com;
 > jbottomley@parallels.com; hch@infradead.org; linux-scsi@vger.kernel.org
-> Subject: [PATCH 2/4] Drivers: scsi: storvsc: Force discovery of LUNs that may
-> have been removed.
+> Subject: [PATCH 3/4] Drivers: scsi: storvsc: Fix a bug in storvsc limits
 > 
-> The host asks the guest to scan when a LUN is removed or added.
-> The only way a guest can identify the removed LUN is when an I/O is
-> attempted on a removed LUN - the SRB status code indicates that the LUN is
-> invalid. We currently handle this SRB status and remove the device.
-> 
-> Rather than waiting for an I/O to remove the device, force the discovery of
-> LUNs that may have been removed prior to discovering LUNs that may have
-> been added.
+> Commit 4cd83ecdac20d30725b4f96e5d7814a1e290bc7e changed the limits to
+> reflect the values on the host. It turns out that WS2008R2 cannot correctly
+> handle these new limits. Fix this bug by setting the limits based on the host.
 > 
 > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Long Li <longli@microsoft.com>
 > ---
->  drivers/scsi/storvsc_drv.c |   26 ++++++++++++++++++++++++++
->  1 files changed, 26 insertions(+), 0 deletions(-)
+>  drivers/scsi/storvsc_drv.c |   15 ++++++++++++---
+>  1 files changed, 12 insertions(+), 3 deletions(-)
 > 
 > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
-> 0a96fef..a7163c6 100644
+> a7163c6..fdc5164 100644
 > --- a/drivers/scsi/storvsc_drv.c
 > +++ b/drivers/scsi/storvsc_drv.c
-> @@ -430,10 +430,36 @@ static void storvsc_host_scan(struct work_struct
-> *work)  {
->  	struct storvsc_scan_work *wrk;
->  	struct Scsi_Host *host;
-> +	struct scsi_device *sdev;
-> +	unsigned long flags;
+> @@ -1782,6 +1782,9 @@ static int storvsc_probe(struct hv_device *device,
+>  	bool dev_is_ide = ((dev_id->driver_data == IDE_GUID) ? true : false);
+>  	int target = 0;
+>  	struct storvsc_device *stor_device;
+> +	int max_luns_per_target;
+> +	int max_targets;
+> +	int max_channels;
 > 
->  	wrk = container_of(work, struct storvsc_scan_work, work);
->  	host = wrk->host;
+>  	/*
+>  	 * Based on the windows host we are running on, @@ -1795,12
+> +1798,18 @@ static int storvsc_probe(struct hv_device *device,
+>  		vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
+>  		vmstor_current_major = VMSTOR_WIN7_MAJOR;
+>  		vmstor_current_minor = VMSTOR_WIN7_MINOR;
+> +		max_luns_per_target =
+> STORVSC_IDE_MAX_LUNS_PER_TARGET;
+> +		max_targets = STORVSC_IDE_MAX_TARGETS;
+> +		max_channels = STORVSC_IDE_MAX_CHANNELS;
+>  		break;
+>  	default:
+>  		sense_buffer_size =
+> POST_WIN7_STORVSC_SENSE_BUFFER_SIZE;
+>  		vmscsi_size_delta = 0;
+>  		vmstor_current_major = VMSTOR_WIN8_MAJOR;
+>  		vmstor_current_minor = VMSTOR_WIN8_MINOR;
+> +		max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
+> +		max_targets = STORVSC_MAX_TARGETS;
+> +		max_channels = STORVSC_MAX_CHANNELS;
+>  		break;
+>  	}
 > 
-> +	/*
-> +	 * Before scanning the host, first check to see if any of the
-> +	 * currrently known devices have been hot removed. We issue a
-> +	 * "unit ready" command against all currently known devices.
-> +	 * This I/O will result in an error for devices that have been
-> +	 * removed. As part of handling the I/O error, we remove the device.
-> +	 *
-> +	 * When a LUN is added or removed, the host sends us a signal to
-> +	 * scan the host. Thus we are forced to discover the LUNs that
-> +	 * may have been removed this way.
-> +	 */
-> +	mutex_lock(&host->scan_mutex);
-> +	spin_lock_irqsave(host->host_lock, flags);
-> +	list_for_each_entry(sdev, &host->__devices, siblings) {
-> +		spin_unlock_irqrestore(host->host_lock, flags);
-> +		scsi_test_unit_ready(sdev, 1, 1, NULL);
-> +		spin_lock_irqsave(host->host_lock, flags);
-> +		continue;
-> +	}
-> +	spin_unlock_irqrestore(host->host_lock, flags);
-> +	mutex_unlock(&host->scan_mutex);
-> +	/*
-> +	 * Now scan the host to discover LUNs that may have been added.
-> +	 */
->  	scsi_scan_host(host);
+> @@ -1848,9 +1857,9 @@ static int storvsc_probe(struct hv_device *device,
+>  		break;
 > 
->  	kfree(wrk);
+>  	case SCSI_GUID:
+> -		host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
+> -		host->max_id = STORVSC_MAX_TARGETS;
+> -		host->max_channel = STORVSC_MAX_CHANNELS - 1;
+> +		host->max_lun = max_luns_per_target;
+> +		host->max_id = max_targets;
+> +		host->max_channel = max_channels - 1;
+>  		break;
+> 
+>  	default:
 > --
 > 1.7.4.1
 > 
