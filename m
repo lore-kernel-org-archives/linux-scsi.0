@@ -1,43 +1,41 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH RESEND 0/5] Feature enhancements for ses module
-Date: Tue, 30 Dec 2014 23:01:07 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AAEBCE2D9D@PRN-MBX02-4.TheFacebook.com>
-References: <1417824557-13470-1-git-send-email-songliubraving@fb.com>
- <C709E4D363AAB64590BFAC54D4C478AAEBCC5BF6@PRN-MBX02-4.TheFacebook.com>
- <20141230124434.GA24088@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:28774 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751350AbaL3XBr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Dec 2014 18:01:47 -0500
-In-Reply-To: <20141230124434.GA24088@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH v3] scsi: mpt3sas: wait_for_completion_timeout timeout not reported
+Date: Wed, 31 Dec 2014 03:54:12 -0500
+Message-ID: <1420016053-19521-1-git-send-email-der.herr@hofr.at>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Joe Lawrence <joe.lawrence@stratus.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
 
-Hi Christoph, 
+wait_for_completion_timeout reaching timeout was being ignored,
+this also should fail if timeout condition occurs.
 
-I just send the patches (http://marc.info/?l=linux-scsi&m=141997962124647&w=2). 
+v3: proper labeling and attribution - no change of actual patch
 
-Thanks,
-Song
+this was only compile tested with x86_64_defconfig + 
+CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_MPT3SAS=m
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Tuesday, December 30, 2014 4:45 AM
-> To: Song Liu
-> Cc: linux-scsi@vger.kernel.org; Dan Williams; Hannes Reinecke; Jens Axboe;
-> dgilbert@interlog.com; Christoph Hellwig
-> Subject: Re: [PATCH RESEND 0/5] Feature enhancements for ses module
-> 
-> This series fails to apply for me, most likely due to whitespace corruption.  Can
-> you resend it usign git-send-email, please?
-> 
-> Also please replace the "SES:" prefix with "ses:", thanks!
+patch is against linux-next 3.19.0-rc1 -next-20141226
 
+Acked-by: Joe Lawrence <joe.lawrence@stratus.com>
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
+ drivers/scsi/mpt3sas/mpt3sas_config.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 4472c2a..04ff21b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -393,7 +393,7 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 	mpt3sas_base_put_smid_default(ioc, smid);
+ 	timeleft = wait_for_completion_timeout(&ioc->config_cmds.done,
+ 	    timeout*HZ);
+-	if (!(ioc->config_cmds.status & MPT3_CMD_COMPLETE)) {
++	if (timeleft == 0 || !(ioc->config_cmds.status & MPT3_CMD_COMPLETE)) {
+ 		pr_err(MPT3SAS_FMT "%s: timeout\n",
+ 		    ioc->name, __func__);
+ 		_debug_dump_mf(mpi_request,
+-- 
+1.7.10.4
