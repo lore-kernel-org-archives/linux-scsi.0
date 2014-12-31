@@ -1,161 +1,61 @@
-From: Nilesh Javali <nilesh.javali@qlogic.com>
-Subject: RE: [PATCH] scsi: unnecessary double init_completion removed
-Date: Wed, 31 Dec 2014 12:40:50 +0000
-Message-ID: <058691E078642A44B7C96BB0B1DB4F2481C52A55@avmb2.qlogic.org>
-References: <1419357628-23050-1-git-send-email-der.herr@hofr.at>
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: scsi: non atomic allocation in mempool_alloc in atomic context
+Date: Wed, 31 Dec 2014 13:14:19 -0500
+Message-ID: <54A43CFB.2080705@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_058691E078642A44B7C96BB0B1DB4F2481C52A55avmb2qlogicorg_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:5284 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751618AbaLaMkx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2014 07:40:53 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id sBVCdEvp028108
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2014 04:40:52 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1r3vjmf74e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Dec 2014 04:40:52 -0800
-In-Reply-To: <1419357628-23050-1-git-send-email-der.herr@hofr.at>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hch@lst.de
+Cc: bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Mc Guire <der.herr@hofr.at>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@qlogic.com>
 
---_000_058691E078642A44B7C96BB0B1DB4F2481C52A55avmb2qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hi Christoph,
 
-Acked-by: Nilesh Javali <nilesh.javali@qlogic.com>
+I'm seeing an issue which was bisected down to 3c356bde1 ("scsi: stop passing
+a gfp_mask argument down the command setup path"):
 
-I will send the maintainer list update patch.
+[ 3395.328221] BUG: sleeping function called from invalid context at mm/mempool.c:206
+[ 3395.329540] in_atomic(): 1, irqs_disabled(): 0, pid: 6399, name: trinity-c531
+[ 3395.331104] no locks held by trinity-c531/6399.
+[ 3395.331849] Preemption disabled blk_execute_rq_nowait (block/blk-exec.c:95)
+[ 3395.333145]
+[ 3395.333392] CPU: 5 PID: 6399 Comm: trinity-c531 Not tainted 3.19.0-rc1-next-20141226-sasha-00051-g2dd3d73 #1646
+[ 3395.335266]  0000000000000000 0000000000000000 ffff880608948000 ffff880645a07548
+[ 3395.337679]  ffffffff9137c79d 0000000000000000 ffff880608948000 ffff880645a07588
+[ 3395.340220]  ffffffff814ad713 ffffffff9de20590 ffff880608948000 ffffffff926a166c
+[ 3395.342643] Call Trace:
+[ 3395.345099] dump_stack (lib/dump_stack.c:52)
+[ 3395.346793] ___might_sleep (kernel/sched/core.c:7342)
+[ 3395.348571] __might_sleep (kernel/sched/core.c:7308)
+[ 3395.351944] mempool_alloc (mm/mempool.c:206 (discriminator 1))
+[ 3395.355196] scsi_sg_alloc (drivers/scsi/scsi_lib.c:582)
+[ 3395.356893] __sg_alloc_table (lib/scatterlist.c:282)
+[ 3395.358844] ? sdev_disable_disk_events (drivers/scsi/scsi_lib.c:577)
+[ 3395.360873] scsi_alloc_sgtable (drivers/scsi/scsi_lib.c:608)
+[ 3395.362769] scsi_init_sgtable (drivers/scsi/scsi_lib.c:1087)
+[ 3395.364583] ? lockdep_init_map (kernel/locking/lockdep.c:2986)
+[ 3395.366354] scsi_init_io (drivers/scsi/scsi_lib.c:1122)
+[ 3395.368092] ? do_init_timer (kernel/time/timer.c:669)
+[ 3395.369837] scsi_setup_cmnd (drivers/scsi/scsi_lib.c:1220 drivers/scsi/scsi_lib.c:1268)
+[ 3395.371743] scsi_queue_rq (drivers/scsi/scsi_lib.c:1875 drivers/scsi/scsi_lib.c:1980)
+[ 3395.373471] __blk_mq_run_hw_queue (block/blk-mq.c:751)
+[ 3395.375481] blk_mq_run_hw_queue (block/blk-mq.c:831)
+[ 3395.377324] blk_mq_insert_request (block/blk-mq.h:92 block/blk-mq.c:974)
+[ 3395.379377] ? blk_rq_map_user (block/blk-map.c:78 block/blk-map.c:142)
+[ 3395.381307] ? trace_hardirqs_on_caller (kernel/locking/lockdep.c:2559 kernel/locking/lockdep.c:2601)
+[ 3395.383485] blk_execute_rq_nowait (block/blk-exec.c:95)
+[ 3395.386995] sg_common_write.isra.2 (drivers/scsi/sg.c:823)
+[ 3395.388712] ? might_fault (mm/memory.c:3730)
+[ 3395.390624] sg_write (drivers/scsi/sg.c:686)
+[ 3395.403014] do_loop_readv_writev (fs/read_write.c:722)
+[ 3395.407429] do_readv_writev (fs/read_write.c:854)
+[ 3395.415486] vfs_writev (fs/read_write.c:893)
+[ 3395.417116] SyS_writev (fs/read_write.c:926 fs/read_write.c:917)
+[ 3395.418851] ? trace_hardirqs_on_thunk (arch/x86/lib/thunk_64.S:33)
+[ 3395.420922] system_call_fastpath (arch/x86/kernel/entry_64.S:423)
+
 
 Thanks,
-Nilesh
-
------Original Message-----
-From: Nicholas Mc Guire [mailto:der.herr@hofr.at]=20
-Sent: Tuesday, December 23, 2014 11:30 PM
-To: James E.J. Bottomley
-Cc: Dept-Eng iSCSI Driver; linux-scsi; linux-kernel; Nicholas Mc Guire
-Subject: [PATCH] scsi: unnecessary double init_completion removed
-
-The double call to init_completion(&ha->disable_acb_comp); looks like an ed=
-iting mistake only - dropped.
-
-patch is against 3.18.0 linux-next
-
-scripts/get_maintainer.pl -f drivers/scsi/qla4xxx/ql4_os.c returned Vikas C=
-haudhary <vikas.chaudhary@qlogic.com> (supporter:QLOGIC QLA4XXX iS...) but =
-that no longer seems to be a valid e-mail address.
-
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
- drivers/scsi/qla4xxx/ql4_os.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c =
-index 6d25879..0c1da76 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -8672,7 +8672,6 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev=
-,
- 	init_completion(&ha->disable_acb_comp);
- 	init_completion(&ha->idc_comp);
- 	init_completion(&ha->link_up_comp);
--	init_completion(&ha->disable_acb_comp);
-
- 	spin_lock_init(&ha->hardware_lock);
- 	spin_lock_init(&ha->work_lock);
---
-1.7.10.4
-
-
---_000_058691E078642A44B7C96BB0B1DB4F2481C52A55avmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-AGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A5V8BAAAAOgAAAHMA
-aQBwADoAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
-AB8AGgwBAAAAHAAAAE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAAAfAB8MAQAAADIAAABuAGkA
-bABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwAeDAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgEZDAEAAABwAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACATgBpAGwA
-ZQBzAGgAIABKAGEAdgBhAGwAaQAAAFMATQBUAFAAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABp
-AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAV0BAAAAMgAAAG4AaQBsAGUAcwBoAC4AagBhAHYA
-YQBsAGkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAABwAAABOAGkAbABlAHMAaAAg
-AEoAYQB2AGEAbABpAAAAHwAjQAEAAAAyAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AIkABAAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAcAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgE4AaQBsAGUAcwBoACAASgBhAHYAYQBsAGkAAABTAE0A
-VABQAAAAbgBpAGwAZQBzAGgALgBqAGEAdgBhAGwAaQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
-AAldAQAAADIAAABuAGkAbABlAHMAaAAuAGoAYQB2AGEAbABpAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAAAB8AGgABAAAAEgAA
-AEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA
-EMMEoxjtXEyGD6mtgf/NlgMAFwABAAAAQAA5AAD11AH3JNABQAAIMNms4gH3JNABCwApAAAAAAAL
-ACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMAYwBlAHAAdABsAGEAbgBnAHUA
-YQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAABoUA
-AAAAAAAfADcAAQAAAHoAAABSAEUAOgAgAFsAUABBAFQAQwBIAF0AIABzAGMAcwBpADoAIAB1AG4A
-bgBlAGMAZQBzAHMAYQByAHkAIABkAG8AdQBiAGwAZQAgAGkAbgBpAHQAXwBjAG8AbQBwAGwAZQB0
-AGkAbwBuACAAcgBlAG0AbwB2AGUAZAAAAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAA
-AAADAC4AAAAAAB8AQhABAAAAagAAADwAMQA0ADEAOQAzADUANwA2ADIAOAAtADIAMwAwADUAMAAt
-ADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBkAGUAcgAuAGgAZQByAHIAQABoAG8A
-ZgByAC4AYQB0AD4AAAAAAAIBcQABAAAAGwAAAAEB0B7bbKY2h6zMDVRIjjCmv85aj5mcqa60EAAf
-AHAAAQAAAHIAAABbAFAAQQBUAEMASABdACAAcwBjAHMAaQA6ACAAdQBuAG4AZQBjAGUAcwBzAGEA
-cgB5ACAAZABvAHUAYgBsAGUAIABpAG4AaQB0AF8AYwBvAG0AcABsAGUAdABpAG8AbgAgAHIAZQBt
-AG8AdgBlAGQAAAAAAB8ANRABAAAAeAAAADwAMAA1ADgANgA5ADEARQAwADcAOAA2ADQAMgBBADQA
-NABCADcAQwA5ADYAQgBCADAAQgAxAEQAQgA0AEYAMgA0ADgAMQBDADUAMgBBADUANQBAAGEAdgBt
-AGIAMgAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAagAAADwAMQA0ADEAOQAzADUA
-NwA2ADIAOAAtADIAMwAwADUAMAAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQBk
-AGUAcgAuAGgAZQByAHIAQABoAG8AZgByAC4AYQB0AD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAA
-wAAAAAAAAEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/
-////QAAHMBlm+QD3JNABCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzth
-PSA7cD1RTG9naWM7bD1BVk1CMi0xNDEyMzExMjQwNTBaLTEzNzExAAAAAgEQMAEAAABGAAAAAAAA
-AIKnNK2Osf5EtlsbqOm4e9wHAM07NiI6e59Apv5rqsTi2mEAAABseBUAAHSNJ5kuo2ZMmHcmG6iZ
-BVsAdH04YyUAAAAAHwD6PwEAAAAcAAAATgBpAGwAZQBzAGgAIABKAGEAdgBhAGwAaQAAAAMACVkB
-AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAA
-AAAOhQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABiFAAAAAAAACwAAgAggBgAAAAAAwAAA
-AAAAAEYAAAAAgoUAAAAAAABAAACACCAGAAAAAADAAAAAAAAARgAAAAC/hQAAcANd9vYk0AEfAACA
-CCAGAAAAAADAAAAAAAAARgAAAADYhQAAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMADTT9
-PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEA
-YwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBn
-AGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAO
-AAAAYgB5AHAAYQBzAHMAAAAAAMZG
-
---_000_058691E078642A44B7C96BB0B1DB4F2481C52A55avmb2qlogicorg_--
+Sasha
