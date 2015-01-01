@@ -1,85 +1,61 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
-Date: Wed, 31 Dec 2014 14:56:18 -0500
-Message-ID: <54A454E2.4010207@interlog.com>
-References: <54A43CFB.2080705@oracle.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:47055 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbaLaT4h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Dec 2014 14:56:37 -0500
-In-Reply-To: <54A43CFB.2080705@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: cxgbi: libcxgbi.c:  Remove some unused functions
+Date: Thu,  1 Jan 2015 18:02:55 +0100
+Message-ID: <1420131775-31186-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, Anish Bhatt <anish@chelsio.com>, Karen Xie <kxie@chelsio.com>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Hans Wennborg <hans@hanshq.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sasha Levin <sasha.levin@oracle.com>, hch@lst.de
-Cc: bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
 
-On 14-12-31 01:14 PM, Sasha Levin wrote:
-> Hi Christoph,
->
-> I'm seeing an issue which was bisected down to 3c356bde1 ("scsi: stop passing
-> a gfp_mask argument down the command setup path"):
->
-> [ 3395.328221] BUG: sleeping function called from invalid context at mm/mempool.c:206
-> [ 3395.329540] in_atomic(): 1, irqs_disabled(): 0, pid: 6399, name: trinity-c531
-> [ 3395.331104] no locks held by trinity-c531/6399.
-> [ 3395.331849] Preemption disabled blk_execute_rq_nowait (block/blk-exec.c:95)
-> [ 3395.333145]
-> [ 3395.333392] CPU: 5 PID: 6399 Comm: trinity-c531 Not tainted 3.19.0-rc1-next-20141226-sasha-00051-g2dd3d73 #1646
-> [ 3395.335266]  0000000000000000 0000000000000000 ffff880608948000 ffff880645a07548
-> [ 3395.337679]  ffffffff9137c79d 0000000000000000 ffff880608948000 ffff880645a07588
-> [ 3395.340220]  ffffffff814ad713 ffffffff9de20590 ffff880608948000 ffffffff926a166c
-> [ 3395.342643] Call Trace:
-> [ 3395.345099] dump_stack (lib/dump_stack.c:52)
-> [ 3395.346793] ___might_sleep (kernel/sched/core.c:7342)
-> [ 3395.348571] __might_sleep (kernel/sched/core.c:7308)
-> [ 3395.351944] mempool_alloc (mm/mempool.c:206 (discriminator 1))
-> [ 3395.355196] scsi_sg_alloc (drivers/scsi/scsi_lib.c:582)
-> [ 3395.356893] __sg_alloc_table (lib/scatterlist.c:282)
-> [ 3395.358844] ? sdev_disable_disk_events (drivers/scsi/scsi_lib.c:577)
-> [ 3395.360873] scsi_alloc_sgtable (drivers/scsi/scsi_lib.c:608)
-> [ 3395.362769] scsi_init_sgtable (drivers/scsi/scsi_lib.c:1087)
-> [ 3395.364583] ? lockdep_init_map (kernel/locking/lockdep.c:2986)
-> [ 3395.366354] scsi_init_io (drivers/scsi/scsi_lib.c:1122)
-> [ 3395.368092] ? do_init_timer (kernel/time/timer.c:669)
-> [ 3395.369837] scsi_setup_cmnd (drivers/scsi/scsi_lib.c:1220 drivers/scsi/scsi_lib.c:1268)
-> [ 3395.371743] scsi_queue_rq (drivers/scsi/scsi_lib.c:1875 drivers/scsi/scsi_lib.c:1980)
-> [ 3395.373471] __blk_mq_run_hw_queue (block/blk-mq.c:751)
-> [ 3395.375481] blk_mq_run_hw_queue (block/blk-mq.c:831)
-> [ 3395.377324] blk_mq_insert_request (block/blk-mq.h:92 block/blk-mq.c:974)
-> [ 3395.379377] ? blk_rq_map_user (block/blk-map.c:78 block/blk-map.c:142)
-> [ 3395.381307] ? trace_hardirqs_on_caller (kernel/locking/lockdep.c:2559 kernel/locking/lockdep.c:2601)
-> [ 3395.383485] blk_execute_rq_nowait (block/blk-exec.c:95)
-> [ 3395.386995] sg_common_write.isra.2 (drivers/scsi/sg.c:823)
-> [ 3395.388712] ? might_fault (mm/memory.c:3730)
-> [ 3395.390624] sg_write (drivers/scsi/sg.c:686)
-> [ 3395.403014] do_loop_readv_writev (fs/read_write.c:722)
-> [ 3395.407429] do_readv_writev (fs/read_write.c:854)
-> [ 3395.415486] vfs_writev (fs/read_write.c:893)
-> [ 3395.417116] SyS_writev (fs/read_write.c:926 fs/read_write.c:917)
-> [ 3395.418851] ? trace_hardirqs_on_thunk (arch/x86/lib/thunk_64.S:33)
-> [ 3395.420922] system_call_fastpath (arch/x86/kernel/entry_64.S:423)
+Removes some functions that are not used anywhere:
+csk_print_ip() csk_print_port()
 
-Looks interesting: vfs injecting SCSI commands with iovec
-through the sg driver's async interface.
+This was partially found by using a static code analysis program called cppcheck.
 
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/cxgbi/libcxgbi.c |   28 ----------------------------
+ 1 file changed, 28 deletions(-)
 
-The problem seems to be here in scsi_lib.c, mq=true:
-
-static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
-{
-         struct scatterlist *first_chunk = NULL;
-         gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
-         int ret;
-...
-
-What is the downside of setting gfp_mask to GFP_ATOMIC
-in all cases?
-
-Doug Gilbert
-
-
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 674d498..7d2884b 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -2434,34 +2434,6 @@ int cxgbi_set_conn_param(struct iscsi_cls_conn *cls_conn,
+ }
+ EXPORT_SYMBOL_GPL(cxgbi_set_conn_param);
+ 
+-static inline int csk_print_port(struct cxgbi_sock *csk, char *buf)
+-{
+-	int len;
+-
+-	cxgbi_sock_get(csk);
+-	len = sprintf(buf, "%hu\n", ntohs(csk->daddr.sin_port));
+-	cxgbi_sock_put(csk);
+-
+-	return len;
+-}
+-
+-static inline int csk_print_ip(struct cxgbi_sock *csk, char *buf)
+-{
+-	int len;
+-
+-	cxgbi_sock_get(csk);
+-	if (csk->csk_family == AF_INET)
+-		len = sprintf(buf, "%pI4",
+-			      &csk->daddr.sin_addr.s_addr);
+-	else
+-		len = sprintf(buf, "%pI6",
+-			      &csk->daddr6.sin6_addr);
+-
+-	cxgbi_sock_put(csk);
+-
+-	return len;
+-}
+-
+ int cxgbi_get_ep_param(struct iscsi_endpoint *ep, enum iscsi_param param,
+ 		       char *buf)
+ {
+-- 
+1.7.10.4
