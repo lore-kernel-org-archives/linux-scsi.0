@@ -1,76 +1,45 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] [RESEND] scsi_debug: fix sanity check in resp_rsup_opcodes
-Date: Fri, 02 Jan 2015 12:23:28 -0500
-Message-ID: <54A6D410.8050904@interlog.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030001080401050605030600"
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: [PATCH] scsi_debug: clear_luns_changed_on_target return type should be "void"
+Date: Fri,  2 Jan 2015 12:53:43 -0500
+Message-ID: <1420221223-7247-1-git-send-email-emilne@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:33317 "EHLO smtp.infotech.no"
+Received: from mx1.redhat.com ([209.132.183.28]:46993 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752120AbbABRXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jan 2015 12:23:44 -0500
+	id S1750768AbbABRxq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jan 2015 12:53:46 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t02HrjWA003691
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Jan 2015 12:53:46 -0500
+Received: from emilne.csb ([10.18.25.104])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t02Hrj0s009754
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Jan 2015 12:53:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
-Cc: dcb314@hotmail.com, "Ewan D. Milne" <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030001080401050605030600
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-David Binderman pointed out in this post:
+Reported by Fengguang Wu (kbuild test robot).
 
-http://marc.info/?l=linux-scsi&m=141924469523474&w=2
-
-a sanity check that was flawed. See attached fix. Should
-be applied to lk 3.19.0-rc2 and Christoph's branches.
-
-ChangeLog:
-     fix alloc_len sanity check in resp_rsup_opcodes()
-
-
----
-  drivers/scsi/scsi_debug.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
---------------030001080401050605030600
-Content-Type: text/x-patch;
- name="0001-scsi_debug-sanity-check-in-resp_rsup_opcodes.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-scsi_debug-sanity-check-in-resp_rsup_opcodes.patch"
-
->From 89e7ac4920ef22943fe94112221ab3760dc3f763 Mon Sep 17 00:00:00 2001
-From: Douglas Gilbert <dgilbert@interlog.com>
-Date: Mon, 22 Dec 2014 10:16:55 -0500
-Subject: [PATCH] scsi_debug sanity check in resp_rsup_opcodes
-
-fix alloc_len sanity check in resp_rsup_opcodes()
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
  drivers/scsi/scsi_debug.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 7b8b51b..63a2e1f 100644
+index 5ac04d6..edc60fa 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1623,7 +1623,7 @@ resp_rsup_opcodes(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	req_opcode = cmd[3];
- 	req_sa = get_unaligned_be16(cmd + 4);
- 	alloc_len = get_unaligned_be32(cmd + 6);
--	if (alloc_len < 4 && alloc_len > 0xffff) {
-+	if (alloc_len < 4 || alloc_len > 0xffff) {
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
- 		return check_condition_result;
- 	}
+@@ -792,7 +792,7 @@ static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
+ 	/* return -ENOTTY; // correct return but upsets fdisk */
+ }
+ 
+-static int clear_luns_changed_on_target(struct sdebug_dev_info *devip)
++static void clear_luns_changed_on_target(struct sdebug_dev_info *devip)
+ {
+ 	struct sdebug_host_info *sdhp;
+ 	struct sdebug_dev_info *dp;
 -- 
-1.9.1
+1.7.11.7
 
-
---------------030001080401050605030600--
