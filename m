@@ -1,54 +1,59 @@
-From: David Binderman <dcb314@hotmail.com>
-Subject: RE: [PATCH] [RESEND] scsi_debug: fix sanity check in
- resp_rsup_opcodes
-Date: Fri, 2 Jan 2015 18:09:39 +0000
-Message-ID: <DUB128-W710787218653189237DB5E9C5D0@phx.gbl>
-References: <54A6D410.8050904@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dub004-omc4s35.hotmail.com ([157.55.2.110]:58655 "EHLO
-	DUB004-OMC4S35.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750777AbbABSJl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jan 2015 13:09:41 -0500
-In-Reply-To: <54A6D410.8050904@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: aic7xxx: aic7770:  Remove unused function
+Date: Fri,  2 Jan 2015 21:30:56 +0100
+Message-ID: <1420230656-2240-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "Ewan D. Milne" <emilne@redhat.com>
 
-Hello there,
+Remove the function aic7770_find_device() that is not used anywhere.
 
-----------------------------------------
-> David Binderman pointed out in this post:
->
-> http://marc.info/?l=3Dlinux-scsi&m=3D141924469523474&w=3D2
->
-> a sanity check that was flawed. See attached fix. Should
-> be applied to lk 3.19.0-rc2 and Christoph's branches.
+This was partially found by using a static code analysis program called cppcheck.
 
-Actually, there is another fault in the same source code file:
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/scsi/aic7xxx/aic7770.c |   14 --------------
+ drivers/scsi/aic7xxx/aic7xxx.h |    1 -
+ 2 files changed, 15 deletions(-)
 
-Checking drivers/scsi/scsi_debug.c...
-[drivers/scsi/scsi_debug.c:3844] -> [drivers/scsi/scsi_debug.c:3846]: (=
-warning) Possible null pointer dereference: cmnd - otherwise it is redu=
-ndant to check it against null.
-
-Source code is
-
-=A0=A0=A0 struct scsi_device *sdp =3D cmnd->device;
-
-=A0=A0=A0 if (NULL =3D=3D cmnd || NULL =3D=3D devip) {
-
-Suggest postpone use of cmnd until *after* it has been sanity checked.
-
-Regards
-
-David Binderman
- 		 	   		  --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/aic7xxx/aic7770.c b/drivers/scsi/aic7xxx/aic7770.c
+index 5000bd6..cbe10755 100644
+--- a/drivers/scsi/aic7xxx/aic7770.c
++++ b/drivers/scsi/aic7xxx/aic7770.c
+@@ -107,20 +107,6 @@ struct aic7770_identity aic7770_ident_table[] =
+ };
+ const int ahc_num_aic7770_devs = ARRAY_SIZE(aic7770_ident_table);
+ 
+-struct aic7770_identity *
+-aic7770_find_device(uint32_t id)
+-{
+-	struct	aic7770_identity *entry;
+-	int	i;
+-
+-	for (i = 0; i < ahc_num_aic7770_devs; i++) {
+-		entry = &aic7770_ident_table[i];
+-		if (entry->full_id == (id & entry->id_mask))
+-			return (entry);
+-	}
+-	return (NULL);
+-}
+-
+ int
+ aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *entry, u_int io)
+ {
+diff --git a/drivers/scsi/aic7xxx/aic7xxx.h b/drivers/scsi/aic7xxx/aic7xxx.h
+index f695774..ead8924 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx.h
++++ b/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -1144,7 +1144,6 @@ void			 ahc_pci_resume(struct ahc_softc *ahc);
+ #endif
+ 
+ /*************************** EISA/VL Front End ********************************/
+-struct aic7770_identity *aic7770_find_device(uint32_t);
+ int			 aic7770_config(struct ahc_softc *ahc,
+ 					struct aic7770_identity *,
+ 					u_int port);
+-- 
+1.7.10.4
