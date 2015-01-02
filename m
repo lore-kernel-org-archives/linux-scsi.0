@@ -1,35 +1,39 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: Re: [PATCH v2] drivers: scsi: megaraid: Add "megaraid_sas_internal.h" for internal shared functions using
-Date: Fri, 2 Jan 2015 13:03:29 +0800
-Message-ID: <5A7713F0-DDDF-4985-BBDA-66F4D428BAD1@gmail.com>
-References: <548DB542.7000400@gmail.com> <20141230124511.GB24088@infradead.org>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141230124511.GB24088@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "megaraidlinux@lsi.com" <megaraidlinux@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, Sumit Saxena <sumit.saxena@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH][RESEND] esp_scsi: remove check for ESP_MAX_TAGS
+Date: Fri,  2 Jan 2015 15:18:13 +0100
+Message-ID: <1420208293-96647-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:47503 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750962AbbABOSQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jan 2015 09:18:16 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+'num_tags' is an unsigned char, so the check for 'ESP_MAX_TAGS'
+(which is set to 256) is pointless.
 
-Could you provide more detail for it, then I can make patch v3 (or I ha=
-ve no any idea
-about it).
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/esp_scsi.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index ce5bd52..065b25d 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2396,8 +2396,6 @@ int scsi_esp_register(struct esp *esp, struct device *dev)
+ 
+ 	if (!esp->num_tags)
+ 		esp->num_tags = ESP_DEFAULT_TAGS;
+-	else if (esp->num_tags >= ESP_MAX_TAG)
+-		esp->num_tags = ESP_MAX_TAG - 1;
+ 	esp->host->transportt = esp_transport_template;
+ 	esp->host->max_lun = ESP_MAX_LUN;
+ 	esp->host->cmd_per_lun = 2;
+-- 
+1.8.4.5
 
-=B7=A2=D7=D4=CE=D2=B5=C4 iPad
-
-> =D4=DA 2014=C4=EA12=D4=C230=C8=D5=A3=AC=CF=C2=CE=E78:45=A3=ACChristop=
-h Hellwig <hch@infradead.org> =D0=B4=B5=C0=A3=BA
->=20
->> On Mon, Dec 15, 2014 at 12:05:22AM +0800, Chen Gang wrote:
->> For shared inline functions crossed source files, better to let it a=
-s
->> "static inline" in a header file. For extern functions, better to
->> declare them in header file.
->=20
->=20
-> This one doesn't apply.
