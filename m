@@ -1,45 +1,54 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] scsi_debug: clear_luns_changed_on_target return type should be "void"
-Date: Fri,  2 Jan 2015 12:53:43 -0500
-Message-ID: <1420221223-7247-1-git-send-email-emilne@redhat.com>
+From: David Binderman <dcb314@hotmail.com>
+Subject: RE: [PATCH] [RESEND] scsi_debug: fix sanity check in
+ resp_rsup_opcodes
+Date: Fri, 2 Jan 2015 18:09:39 +0000
+Message-ID: <DUB128-W710787218653189237DB5E9C5D0@phx.gbl>
+References: <54A6D410.8050904@interlog.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46993 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750768AbbABRxq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jan 2015 12:53:46 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t02HrjWA003691
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jan 2015 12:53:46 -0500
-Received: from emilne.csb ([10.18.25.104])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t02Hrj0s009754
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jan 2015 12:53:45 -0500
+Received: from dub004-omc4s35.hotmail.com ([157.55.2.110]:58655 "EHLO
+	DUB004-OMC4S35.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750777AbbABSJl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jan 2015 13:09:41 -0500
+In-Reply-To: <54A6D410.8050904@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "Ewan D. Milne" <emilne@redhat.com>
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+Hello there,
 
-Reported by Fengguang Wu (kbuild test robot).
+----------------------------------------
+> David Binderman pointed out in this post:
+>
+> http://marc.info/?l=3Dlinux-scsi&m=3D141924469523474&w=3D2
+>
+> a sanity check that was flawed. See attached fix. Should
+> be applied to lk 3.19.0-rc2 and Christoph's branches.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Actually, there is another fault in the same source code file:
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 5ac04d6..edc60fa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -792,7 +792,7 @@ static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
- 	/* return -ENOTTY; // correct return but upsets fdisk */
- }
- 
--static int clear_luns_changed_on_target(struct sdebug_dev_info *devip)
-+static void clear_luns_changed_on_target(struct sdebug_dev_info *devip)
- {
- 	struct sdebug_host_info *sdhp;
- 	struct sdebug_dev_info *dp;
--- 
-1.7.11.7
+Checking drivers/scsi/scsi_debug.c...
+[drivers/scsi/scsi_debug.c:3844] -> [drivers/scsi/scsi_debug.c:3846]: (=
+warning) Possible null pointer dereference: cmnd - otherwise it is redu=
+ndant to check it against null.
 
+Source code is
+
+=A0=A0=A0 struct scsi_device *sdp =3D cmnd->device;
+
+=A0=A0=A0 if (NULL =3D=3D cmnd || NULL =3D=3D devip) {
+
+Suggest postpone use of cmnd until *after* it has been sanity checked.
+
+Regards
+
+David Binderman
+ 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
