@@ -1,59 +1,67 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] scsi: aic7xxx: aic7770:  Remove unused function
-Date: Fri,  2 Jan 2015 21:30:56 +0100
-Message-ID: <1420230656-2240-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Chen Gang <gang.chen@sunrus.com.cn>
+Subject: [PATCH] scsi: bfa: bfad_bsg: Avoid memory overflow in bfad_iocmd_ioc_get_info()
+Date: Sat, 03 Jan 2015 12:40:41 +0800
+Message-ID: <54A772C9.3050500@sunrus.com.cn>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove the function aic7770_find_device() that is not used anywhere.
+'iocmd->adapter_hwpath' and 'iocmd->hwpath' are both zero terminated
+string within BFA_STRING_32 (include '\0'). So need be sure of it.
 
-This was partially found by using a static code analysis program called cppcheck.
+ - Use strlcpy() instead of strcpy() for copying 'pci_name'.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+ - Check border firstly, before check ':'.
+
+ - Check border firstly, before set '\0'.
+
+The related warning (allmodconfig under s390 by gcc 5):
+
+    CC [M]  drivers/scsi/bfa/bfad_bsg.o
+  drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_ioc_get_info':
+  drivers/scsi/bfa/bfad_bsg.c:108:46: warning: loop exit may only be reached after undefined behavior [-Waggressive-loop-optimizations]
+    for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
+                                                ^
+  drivers/scsi/bfa/bfad_bsg.c:108:35: note: possible undefined statement is here
+    for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
+                                     ^
+
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
 ---
- drivers/scsi/aic7xxx/aic7770.c |   14 --------------
- drivers/scsi/aic7xxx/aic7xxx.h |    1 -
- 2 files changed, 15 deletions(-)
+ drivers/scsi/bfa/bfad_bsg.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7770.c b/drivers/scsi/aic7xxx/aic7770.c
-index 5000bd6..cbe10755 100644
---- a/drivers/scsi/aic7xxx/aic7770.c
-+++ b/drivers/scsi/aic7xxx/aic7770.c
-@@ -107,20 +107,6 @@ struct aic7770_identity aic7770_ident_table[] =
- };
- const int ahc_num_aic7770_devs = ARRAY_SIZE(aic7770_ident_table);
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 023b9d4..cc60773 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -101,15 +101,17 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
  
--struct aic7770_identity *
--aic7770_find_device(uint32_t id)
--{
--	struct	aic7770_identity *entry;
--	int	i;
--
--	for (i = 0; i < ahc_num_aic7770_devs; i++) {
--		entry = &aic7770_ident_table[i];
--		if (entry->full_id == (id & entry->id_mask))
--			return (entry);
--	}
--	return (NULL);
--}
--
- int
- aic7770_config(struct ahc_softc *ahc, struct aic7770_identity *entry, u_int io)
- {
-diff --git a/drivers/scsi/aic7xxx/aic7xxx.h b/drivers/scsi/aic7xxx/aic7xxx.h
-index f695774..ead8924 100644
---- a/drivers/scsi/aic7xxx/aic7xxx.h
-+++ b/drivers/scsi/aic7xxx/aic7xxx.h
-@@ -1144,7 +1144,6 @@ void			 ahc_pci_resume(struct ahc_softc *ahc);
- #endif
+ 	strcpy(iocmd->name, bfad->adapter_name);
+ 	strcpy(iocmd->port_name, bfad->port_name);
+-	strcpy(iocmd->hwpath, bfad->pci_name);
++	strlcpy(iocmd->hwpath, bfad->pci_name, BFA_STRING_32);
  
- /*************************** EISA/VL Front End ********************************/
--struct aic7770_identity *aic7770_find_device(uint32_t);
- int			 aic7770_config(struct ahc_softc *ahc,
- 					struct aic7770_identity *,
- 					u_int port);
+ 	/* set adapter hw path */
+-	strcpy(iocmd->adapter_hwpath, bfad->pci_name);
+-	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
++	strlcpy(iocmd->adapter_hwpath, bfad->pci_name, BFA_STRING_32);
++	for (i = 0; i < BFA_STRING_32 - 1 && iocmd->adapter_hwpath[i] != ':';
++									i++)
+ 		;
+-	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; )
++	for (; i < BFA_STRING_32 - 1 && iocmd->adapter_hwpath[++i] != ':'; )
+ 		;
+-	iocmd->adapter_hwpath[i] = '\0';
++	if (i <  BFA_STRING_32 - 1)
++		iocmd->adapter_hwpath[i] = '\0';
+ 	iocmd->status = BFA_STATUS_OK;
+ 	return 0;
+ }
 -- 
-1.7.10.4
+1.7.9.5
