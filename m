@@ -1,67 +1,75 @@
-From: Chen Gang <gang.chen@sunrus.com.cn>
-Subject: [PATCH] scsi: bfa: bfad_bsg: Avoid memory overflow in bfad_iocmd_ioc_get_info()
-Date: Sat, 03 Jan 2015 12:40:41 +0800
-Message-ID: <54A772C9.3050500@sunrus.com.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-Sender: linux-next-owner@vger.kernel.org
-To: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-next@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] scsi: aic7xxx: aic7xxx_core:  Remove some unused functions
+Date: Sat,  3 Jan 2015 17:35:57 +0100
+Message-ID: <1420302957-12653-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-'iocmd->adapter_hwpath' and 'iocmd->hwpath' are both zero terminated
-string within BFA_STRING_32 (include '\0'). So need be sure of it.
+Removes some functions that are not used anywhere:
+ahc_outq() ahc_inq()
 
- - Use strlcpy() instead of strcpy() for copying 'pci_name'.
+This was partially found by using a static code analysis program called cppcheck.
 
- - Check border firstly, before check ':'.
-
- - Check border firstly, before set '\0'.
-
-The related warning (allmodconfig under s390 by gcc 5):
-
-    CC [M]  drivers/scsi/bfa/bfad_bsg.o
-  drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_ioc_get_info':
-  drivers/scsi/bfa/bfad_bsg.c:108:46: warning: loop exit may only be reached after undefined behavior [-Waggressive-loop-optimizations]
-    for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
-                                                ^
-  drivers/scsi/bfa/bfad_bsg.c:108:35: note: possible undefined statement is here
-    for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
-                                     ^
-
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/scsi/bfa/bfad_bsg.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/aic7xxx/aic7xxx_core.c   |   26 --------------------------
+ drivers/scsi/aic7xxx/aic7xxx_inline.h |    4 ----
+ 2 files changed, 30 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 023b9d4..cc60773 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -101,15 +101,17 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
- 
- 	strcpy(iocmd->name, bfad->adapter_name);
- 	strcpy(iocmd->port_name, bfad->port_name);
--	strcpy(iocmd->hwpath, bfad->pci_name);
-+	strlcpy(iocmd->hwpath, bfad->pci_name, BFA_STRING_32);
- 
- 	/* set adapter hw path */
--	strcpy(iocmd->adapter_hwpath, bfad->pci_name);
--	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
-+	strlcpy(iocmd->adapter_hwpath, bfad->pci_name, BFA_STRING_32);
-+	for (i = 0; i < BFA_STRING_32 - 1 && iocmd->adapter_hwpath[i] != ':';
-+									i++)
- 		;
--	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; )
-+	for (; i < BFA_STRING_32 - 1 && iocmd->adapter_hwpath[++i] != ':'; )
- 		;
--	iocmd->adapter_hwpath[i] = '\0';
-+	if (i <  BFA_STRING_32 - 1)
-+		iocmd->adapter_hwpath[i] = '\0';
- 	iocmd->status = BFA_STATUS_OK;
- 	return 0;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 10172a3..6f91465 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -494,32 +494,6 @@ ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
+ 	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
  }
+ 
+-uint64_t
+-ahc_inq(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port))
+-	      | (ahc_inb(ahc, port+1) << 8)
+-	      | (ahc_inb(ahc, port+2) << 16)
+-	      | (ahc_inb(ahc, port+3) << 24)
+-	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
+-	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
+-	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
+-	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
+-}
+-
+-void
+-ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
+-{
+-	ahc_outb(ahc, port, value & 0xFF);
+-	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+-	ahc_outb(ahc, port+2, (value >> 16) & 0xFF);
+-	ahc_outb(ahc, port+3, (value >> 24) & 0xFF);
+-	ahc_outb(ahc, port+4, (value >> 32) & 0xFF);
+-	ahc_outb(ahc, port+5, (value >> 40) & 0xFF);
+-	ahc_outb(ahc, port+6, (value >> 48) & 0xFF);
+-	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
+-}
+-
+ /*
+  * Get a free scb. If there are none, see if we can allocate a new SCB.
+  */
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_inline.h b/drivers/scsi/aic7xxx/aic7xxx_inline.h
+index 0b57b78..cef8d98 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_inline.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_inline.h
+@@ -77,10 +77,6 @@ uint32_t
+ 	ahc_inl(struct ahc_softc *ahc, u_int port);
+ void	ahc_outl(struct ahc_softc *ahc, u_int port,
+ 		 uint32_t value);
+-uint64_t
+-	ahc_inq(struct ahc_softc *ahc, u_int port);
+-void	ahc_outq(struct ahc_softc *ahc, u_int port,
+-		 uint64_t value);
+ struct scb*
+ 	ahc_get_scb(struct ahc_softc *ahc);
+ void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
 -- 
-1.7.9.5
+1.7.10.4
