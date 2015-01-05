@@ -1,55 +1,32 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH V6 0/3] scsi: Configure number of LUs reported by
- 'report-luns'
-Date: Mon, 05 Jan 2015 09:59:52 -0500
-Message-ID: <1420469992.3891.94.camel@localhost.localdomain>
-References: <1418745680-18126-1-git-send-email-revers@redhat.com>
-Reply-To: emilne@redhat.com
+From: <Sumit.Saxena@avagotech.com>
+Subject: [PATCH 0/8] megaraid_sas : Description Patch
+Date: Mon, 5 Jan 2015 20:05:53 +0530
+Message-ID: <201501051439.t05EdtBQ029946@palmhbs0.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45380 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753202AbbAEO7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 09:59:53 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t05Exr82020779
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Mon, 5 Jan 2015 09:59:53 -0500
-In-Reply-To: <1418745680-18126-1-git-send-email-revers@redhat.com>
+Received: from mail-by2on0090.outbound.protection.outlook.com ([207.46.100.90]:57364
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753292AbbAEPId (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 10:08:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Evers <revers@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-On Tue, 2014-12-16 at 11:01 -0500, Rob Evers wrote:
-> This patch set retrieves the number of LUs available on a target
-> using the report-luns command by re-sizing the returned data
-> buffer and retrying report luns.
-> 
-> A minor bug fix is included.
-> 
-> scsi_mod parameter max_report_luns is no longer used and is removed.
-> 
-> Changes from previous posting:
-> 
->  - remove exteraneous else
-> 
->  - remove INITIAL_MAX_REPORT_LUNS, hardwire buffer sizing, and touch up
->    related comment
-> 
-> Rob Evers (3):
->   scsi: Avoid unnecessary GFP_ATOMIC allocation in scsi_report_lun_scan
->   scsi: Use set/get_unaligned_be32 in report_luns
->   scsi: retry report-luns when reported LU count requres more memory
-> 
->  drivers/scsi/scsi_scan.c | 54 ++++++++++++++----------------------------------
->  1 file changed, 15 insertions(+), 39 deletions(-)
-> 
+megaraid_sas driver changes.
 
-Looks good.
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
+---
+[PATCH 0/8] megaraid_sas : Description Patch.
+[PATCH 1/8] megaraid_sas : Endianness related bug fixes and code optimization.
+[PATCH 2/8] megaraid_sas : Support for secure JBOD.
+[PATCH 3/8] megaraid_sas : Fix the problem of non-existing VD exposed to host.
+[PATCH 4/8] megaraid_sas : Disable interrupt_mask before enabling hardware interrupts.
+[PATCH 5/8] megaraid_sas : Complete outstanding IOCTLs before killing adapter
+[PATCH 6/8] megaraid_sas : Reserve commands for IOCTLs and internal DCMDs.
+[PATCH 7/8] megaraid_sas : Remove redundant code of memset load_balance_info to zero.
+[PATCH 8/8] megaraid_sas : Driver version update. 
