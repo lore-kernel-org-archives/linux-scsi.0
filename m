@@ -1,51 +1,37 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors cap")
-Date: Mon, 05 Jan 2015 12:19:52 -0800
-Message-ID: <9196E79D-9938-4704-AB14-523297F9019F@panix.com>
-References: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next 0/5] RDMA/cxgb4/cxgb4vf/csiostor: Cleanup
+ register defines
+Date: Mon, 05 Jan 2015 16:35:28 -0500 (EST)
+Message-ID: <20150105.163528.2285094223396327404.davem@davemloft.net>
+References: <1420455647-23094-1-git-send-email-hariprasad@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:60774 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240AbbAEVfe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 16:35:34 -0500
+In-Reply-To: <1420455647-23094-1-git-send-email-hariprasad@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hariprasad@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, roland@purestorage.com, leedom@chelsio.com, anish@chelsio.com, nirranjan@chelsio.com, praveenm@chelsio.com, swise@opengridcomputing.com
 
-I will later tonight. For now, I'm using 3.18.x (for another reason), which doesn't have this commit.
+From: Hariprasad Shenai <hariprasad@chelsio.com>
+Date: Mon,  5 Jan 2015 16:30:42 +0530
 
-My Linus-latest tree has a "fix" that imposed a hard limit of 32767, which worked for me then.
+> This series continues to cleanup all the macros/register defines related to
+> SGE, PCIE, MC, MA, TCAM, MAC, etc that are defined in t4_regs.h and the
+> affected files.
+> 
+> Will post another 1 or 2 series so that we can cover all the macros so that
+> they all follow the same style to be consistent.
+> 
+> The patches series is created against 'net-next' tree.
+> And includes patches on cxgb4, cxgb4vf, iw_cxgb4 and csiostor driver.
+> 
+> We have included all the maintainers of respective drivers. Kindly review the
+> change and let us know in case of any review comments.
 
-On January 5, 2015 12:07:56 PM PST, Alan Stern <stern@rowland.harvard.edu> wrote:
->On Mon, 5 Jan 2015, Christoph Hellwig wrote:
->
->> On Tue, Dec 30, 2014 at 08:36:34AM -0800, Kenneth R. Crudup wrote:
->> > OP here. FWIW, this is what I get when running that command on the
->SCSI
->> > generic device that corresponds to the USB-3 (non-UAS) disk[1] that
->had the
->> > issue:
->> 
->> So it looks like this one actually provides sane values, but we don't
->> we never even look at EVPD pages for usb devices due to the wrong
->SCSI
->> level?
->
->According to James Bottomley, it doesn't matter much what the EVPD
->pages say.  The limitation is imposed by the USB _bridge_, whereas the
->EVPD data indicates what the _drive_ is capable of.  So we can't rely
->on that data anyway.  (Although if the EVPD data indicates a limit 
->smaller than the bridge can handle, then we'd need to pay attention to 
->it.)
->
->The patch I posted sets a general limit of 32 MB for USB drives that 
->don't have a quirk flag for a smaller limit.
->
->Kenneth, have you tried that patch?  Does it fix your problem?
->
->Alan Stern
-
--- 
-Sent from my 2014 Galaxy Note 10.1
+Series applied, thanks.
