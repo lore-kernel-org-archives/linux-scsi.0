@@ -1,59 +1,47 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] ses: clear warning for unused variable
-Date: Mon, 5 Jan 2015 11:33:51 -0800
-Message-ID: <1420486431-1700177-1-git-send-email-songliubraving@fb.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
+Date: Mon, 05 Jan 2015 12:38:04 -0700
+Message-ID: <54AAE81C.2080402@kernel.dk>
+References: <54A43CFB.2080705@oracle.com> <20150105091516.GA22226@lst.de> <54AADF6A.6090100@kernel.dk> <20150105193213.GA31955@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:55682 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754355AbbAETd5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 14:33:57 -0500
-Received: from pps.filterd (m0004060 [127.0.0.1])
-	by mx0b-00082601.pphosted.com (8.14.5/8.14.5) with SMTP id t05JUYdG008869
-	for <linux-scsi@vger.kernel.org>; Mon, 5 Jan 2015 11:33:56 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-	by mx0b-00082601.pphosted.com with ESMTP id 1rqwx614ts-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2015 11:33:56 -0800
-Received: from facebook.com (2401:db00:20:701c:face:0:3f:0)	by
- mx-out.facebook.com (10.212.232.63) with ESMTP	id
- c8dbff60951111e4aed80002c992ebde-d46dd390 for <linux-scsi@vger.kernel.org>;
-	Mon, 05 Jan 2015 11:33:54 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150105193213.GA31955@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Sasha Levin <sasha.levin@oracle.com>, bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, dan.j.williams@intel.com, Song Liu <songliubraving@fb.com>
 
-Remove the declaration of variable "err" in function
-'enclosure_component_alloc':
+On 01/05/2015 12:32 PM, Christoph Hellwig wrote:
+> On Mon, Jan 05, 2015 at 12:00:58PM -0700, Jens Axboe wrote:
+>> That's not quite true, the only guarantee is that it WILL execute on the
+>> CPU (or CPUs) that are set in the mask. So unless it ends up offloading
+>> the run to a specific workqueue, we'll disable preempt in the current
+>> path before ->queue_rq() is called.
+> 
+> Oops.  Indeed, with those recent changes ->queue_rq can't safely block
+> for memory allocatios anymore.
+> 
+> The patch below should fix it:
+> 
+> ---
+> From: Christoph Hellwig <hch@lst.de>
+> Subject: scsi: ->queue_rq can't sleep
+> 
+> Since Linux 3.19 blk-mq may disable preemption before calling into
+> ->queue_rq, so we can't actually sleep anymore.
 
- All warnings:
-  drivers/misc/enclosure.c: In function 'enclosure_component_alloc':
-  >> drivers/misc/enclosure.c:295:6: warning: unused variable 'err'
-  >> [-Wunused-variable]
-     int err, i;
-         ^
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Acked-by: Dan Williams <dan.j.williams@intel.com>
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
----
- drivers/misc/enclosure.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That was true in earlier kernels as well, going back a few versions at
+least, preempt was disabled on calling __blk_mq_run_hw_queue(). Just
+checked, and 3.16 and later have that as the behaviour. The only change
+in 3.19 some shuffling around to avoid double preempt_disable in some
+cases, it's now using get_cpu() and friends.
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 3289d4d..38552a3 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -295,7 +295,7 @@ enclosure_component_alloc(struct enclosure_device *edev,
- {
- 	struct enclosure_component *ecomp;
- 	struct device *cdev;
--	int err, i;
-+	int i;
- 	char newname[COMPONENT_NAME_SIZE];
- 
- 	if (number >= edev->components)
+So we probably want do mark that as stable so we reach back to when
+scsi-mq was added, unless the originally referenced patch getting rid of
+the gfp_t mask didn't have the issue.
+
+
 -- 
-1.8.1
-
+Jens Axboe
