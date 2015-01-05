@@ -1,35 +1,68 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] ahci_xgene: Implement the workaround to support PMP
- enumeration and discovery for APM X-Gene SoC AHCI SATA Host Controller
- driver.
-Date: Mon, 5 Jan 2015 09:05:29 -0500
-Message-ID: <20150105140529.GG15833@htj.dyndns.org>
-References: <1420453305-15986-1-git-send-email-stripathi@apm.com>
- <1420453305-15986-3-git-send-email-stripathi@apm.com>
- <20150105133005.GB15833@htj.dyndns.org>
- <20150105135950.GE15833@htj.dyndns.org>
- <CAOHikRBedNy=CrrHA+7UYQJpL3t1BhU0VFixz80bPeSE28iHGw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOHikRBedNy=CrrHA+7UYQJpL3t1BhU0VFixz80bPeSE28iHGw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 0/3] scsi: ufs & ums-*: fix module reference counting
+Date: Mon,  5 Jan 2015 23:34:36 +0900
+Message-ID: <1420468479-4508-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:56908 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459AbbAEOex (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 09:34:53 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Mon, Jan 05, 2015 at 07:33:06PM +0530, Suman Tripathi wrote:
-> Reverted due to conflicts with the endian fix patches.  Please rebase
-> these two on top of them.
-> 
-> Will do that .. I should have wait for the endian patch getting
-> accepted. Sorry for that.
+While accessing a scsi_device, the use count of the underlying LLDD module
+is incremented.  The module reference is retrieved through .module field of
+struct scsi_host_template.
 
-Ooh, please don't be sorry.  It's completely fine.  These things
-happen.
+This mapping between scsi_device and underlying LLDD module works well
+except some scsi drivers (ufs and unusual usb storage drivers).  These
+drivers consist with core driver and actual LLDDs, and scsi_host_template
+is defined in the core driver.  So the actual LLDDs can be unloaded even if
+the scsi_device is being accessed.
 
-Thanks.
+This patch series first adds ability to adjust module reference for
+scsi host by LLDDs and then fixes ufs and unusual usb storage drivers
+by adjusting module reference after scsi host allocation.
 
+Akinobu Mita (3):
+  scsi: add ability to adjust module reference for scsi host
+  scsi: ufs: adjust module reference for scsi host
+  usb: storage: adjust module reference for scsi host
+
+ drivers/scsi/hosts.c                | 1 +
+ drivers/scsi/scsi.c                 | 4 ++--
+ drivers/scsi/ufs/ufshcd-pci.c       | 1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c    | 1 +
+ drivers/scsi/ufs/ufshcd.c           | 1 -
+ drivers/usb/storage/alauda.c        | 1 +
+ drivers/usb/storage/cypress_atacb.c | 2 ++
+ drivers/usb/storage/datafab.c       | 1 +
+ drivers/usb/storage/ene_ub6250.c    | 1 +
+ drivers/usb/storage/freecom.c       | 1 +
+ drivers/usb/storage/isd200.c        | 1 +
+ drivers/usb/storage/jumpshot.c      | 1 +
+ drivers/usb/storage/karma.c         | 1 +
+ drivers/usb/storage/onetouch.c      | 2 ++
+ drivers/usb/storage/realtek_cr.c    | 2 ++
+ drivers/usb/storage/sddr09.c        | 2 ++
+ drivers/usb/storage/sddr55.c        | 1 +
+ drivers/usb/storage/shuttle_usbat.c | 1 +
+ include/scsi/scsi_host.h            | 1 +
+ 19 files changed, 23 insertions(+), 3 deletions(-)
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org
+Cc: usb-storage@lists.one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
 -- 
-tejun
+1.9.1
+
