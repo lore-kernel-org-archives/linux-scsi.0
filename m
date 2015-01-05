@@ -1,8 +1,7 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code
- optimization
-Date: Mon, 5 Jan 2015 20:05:58 +0530
-Message-ID: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com>
+Subject: [PATCH 4/8] megaraid_sas : Disable interrupt_mask before enabling hardware interrupts
+Date: Mon, 5 Jan 2015 20:06:13 +0530
+Message-ID: <201501051440.t05EeF85030030@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -12,179 +11,37 @@ To: linux-scsi@vger.kernel.org
 Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch addresses below issues-
-1) Few endianness bug fixes.
-2) Break the iteration after (MAX_LOGICAL_DRIVES_EXT - 1)), instead of MAX_LOGICAL_DRIVES_EXT.
-3) Optimization in MFI INIT frame before firing.
-4) MFI IO frame should be 256bytes aligned. Code is optimized to reduce the size of frame for fusion adapters
-   and make the MFI frame size calculation a bit transparent and readable.
+Update driver "mask_interrupts" before enable/disable hardware interrupt in order to avoid missing interrupts because of "mask_interrupts" still set to 1 and hardware interrupts are
+enabled.
 
 Cc: <stable@vger.kernel.org>
 
-Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Chaitra Basappa <chaitra.basappa@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   |   24 +++++++++++-------------
- drivers/scsi/megaraid/megaraid_sas_fp.c     |   14 ++++++++------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +++----
- drivers/scsi/megaraid/megaraid_sas_fusion.h |    9 ++-------
- 4 files changed, 24 insertions(+), 30 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f05580e..38e1f8a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3547,7 +3547,6 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 	int i;
- 	u32 max_cmd;
- 	u32 sge_sz;
--	u32 sgl_sz;
- 	u32 total_sz;
- 	u32 frame_count;
- 	struct megasas_cmd *cmd;
-@@ -3566,24 +3565,23 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 	}
- 
- 	/*
--	 * Calculated the number of 64byte frames required for SGL
--	 */
--	sgl_sz = sge_sz * instance->max_num_sge;
--	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
--	frame_count = 15;
--
--	/*
--	 * We need one extra frame for the MFI command
-+	 * For MFI controllers.
-+	 * max_num_sge = 60
-+	 * max_sge_sz  = 16 byte (sizeof megasas_sge_skinny)
-+	 * Total 960 byte (15 MFI frame of 64 byte)
-+	 *
-+	 * Fusion adapter require only 3 extra frame.
-+	 * max_num_sge = 16 (defined as MAX_IOCTL_SGE)
-+	 * max_sge_sz  = 12 byte (sizeof  megasas_sge64)
-+	 * Total 192 byte (3 MFI frame of 64 byte)
- 	 */
--	frame_count++;
--
-+	frame_count = instance->ctrl_context ? (3 + 1) : (15 + 1);
- 	total_sz = MEGAMFI_FRAME_SIZE * frame_count;
- 	/*
- 	 * Use DMA pool facility provided by PCI layer
- 	 */
- 	instance->frame_dma_pool = pci_pool_create("megasas frame pool",
--						   instance->pdev, total_sz, 64,
--						   0);
-+					instance->pdev, total_sz, 256, 0);
- 
- 	if (!instance->frame_dma_pool) {
- 		printk(KERN_DEBUG "megasas: failed to setup frame pool\n");
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 460c6a3..7cae1c2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -172,6 +172,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 	struct MR_FW_RAID_MAP_ALL     *fw_map_old    = NULL;
- 	struct MR_FW_RAID_MAP         *pFwRaidMap    = NULL;
- 	int i;
-+	u16 ld_count;
- 
- 
- 	struct MR_DRV_RAID_MAP_ALL *drv_map =
-@@ -191,9 +192,10 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 		fw_map_old = (struct MR_FW_RAID_MAP_ALL *)
- 			fusion->ld_map[(instance->map_id & 1)];
- 		pFwRaidMap = &fw_map_old->raidMap;
-+		ld_count = (u16)le32_to_cpu(pFwRaidMap->ldCount);
- 
- #if VD_EXT_DEBUG
--		for (i = 0; i < le16_to_cpu(pFwRaidMap->ldCount); i++) {
-+		for (i = 0; i < ld_count; i++) {
- 			dev_dbg(&instance->pdev->dev, "(%d) :Index 0x%x "
- 				"Target Id 0x%x Seq Num 0x%x Size 0/%llx\n",
- 				instance->unique_id, i,
-@@ -205,12 +207,12 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 
- 		memset(drv_map, 0, fusion->drv_map_sz);
- 		pDrvRaidMap->totalSize = pFwRaidMap->totalSize;
--		pDrvRaidMap->ldCount = (__le16)pFwRaidMap->ldCount;
-+		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
- 		pDrvRaidMap->fpPdIoTimeoutSec = pFwRaidMap->fpPdIoTimeoutSec;
- 		for (i = 0; i < MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS; i++)
- 			pDrvRaidMap->ldTgtIdToLd[i] =
- 				(u8)pFwRaidMap->ldTgtIdToLd[i];
--		for (i = 0; i < le16_to_cpu(pDrvRaidMap->ldCount); i++) {
-+		for (i = 0; i < ld_count; i++) {
- 			pDrvRaidMap->ldSpanMap[i] = pFwRaidMap->ldSpanMap[i];
- #if VD_EXT_DEBUG
- 			dev_dbg(&instance->pdev->dev,
-@@ -252,7 +254,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	struct LD_LOAD_BALANCE_INFO *lbInfo;
- 	PLD_SPAN_INFO ldSpanInfo;
- 	struct MR_LD_RAID         *raid;
--	int ldCount, num_lds;
-+	u16 ldCount, num_lds;
- 	u16 ld;
- 	u32 expected_size;
- 
-@@ -356,7 +358,7 @@ static int getSpanInfo(struct MR_DRV_RAID_MAP_ALL *map,
- 
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, map);
--			if (ld >= MAX_LOGICAL_DRIVES_EXT)
-+			if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
- 				continue;
- 		raid = MR_LdRaidGet(ld, map);
- 		dev_dbg(&instance->pdev->dev, "LD %x: span_depth=%x\n",
-@@ -1157,7 +1159,7 @@ void mr_update_span_set(struct MR_DRV_RAID_MAP_ALL *map,
- 
- 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
- 		ld = MR_TargetIdToLdGet(ldCount, map);
--		if (ld >= MAX_LOGICAL_DRIVES_EXT)
-+		if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
- 			continue;
- 		raid = MR_LdRaidGet(ld, map);
- 		for (element = 0; element < MAX_QUAD_DEPTH; element++) {
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 71557f6..b5362c1 100644
+index fe60743..a703c86 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -698,12 +698,11 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		cpu_to_le32(lower_32_bits(ioc_init_handle));
- 	init_frame->data_xfer_len = cpu_to_le32(sizeof(struct MPI2_IOC_INIT_REQUEST));
+@@ -102,6 +102,8 @@ megasas_enable_intr_fusion(struct megasas_instance *instance)
+ {
+ 	struct megasas_register_set __iomem *regs;
+ 	regs = instance->reg_set;
++
++	instance->mask_interrupts = 0;
+ 	/* For Thunderbolt/Invader also clear intr on enable */
+ 	writel(~0, &regs->outbound_intr_status);
+ 	readl(&regs->outbound_intr_status);
+@@ -110,7 +112,6 @@ megasas_enable_intr_fusion(struct megasas_instance *instance)
  
--	req_desc.Words = 0;
-+	req_desc.u.low = cpu_to_le32(lower_32_bits(cmd->frame_phys_addr));
-+	req_desc.u.high = cpu_to_le32(upper_32_bits(cmd->frame_phys_addr));
- 	req_desc.MFAIo.RequestFlags =
- 		(MEGASAS_REQ_DESCRIPT_FLAGS_MFA <<
--		 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
--	cpu_to_le32s((u32 *)&req_desc.MFAIo);
--	req_desc.Words |= cpu_to_le64(cmd->frame_phys_addr);
-+		MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+ 	/* Dummy readl to force pci flush */
+ 	readl(&regs->outbound_intr_mask);
+-	instance->mask_interrupts = 0;
+ }
  
- 	/*
- 	 * disable the intr before firing the init frame
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 5ab7dae..56e6db2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -306,14 +306,9 @@ struct MPI2_RAID_SCSI_IO_REQUEST {
-  * MPT RAID MFA IO Descriptor.
-  */
- struct MEGASAS_RAID_MFA_IO_REQUEST_DESCRIPTOR {
--#if   defined(__BIG_ENDIAN_BITFIELD)
--	u32     MessageAddress1:24; /* bits 31:8*/
--	u32     RequestFlags:8;
--#else
- 	u32     RequestFlags:8;
--	u32     MessageAddress1:24; /* bits 31:8*/
--#endif
--	u32     MessageAddress2;      /* bits 61:32 */
-+	u32     MessageAddress1:24;
-+	u32     MessageAddress2;
- };
- 
- /* Default Request Descriptor */
+ /**
 -- 
 1.7.3
