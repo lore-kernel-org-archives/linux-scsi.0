@@ -1,60 +1,36 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH 2/2] ahci_xgene: Implement the workaround to support PMP
- enumeration and discovery for APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Mon, 5 Jan 2015 19:33:06 +0530
-Message-ID: <CAOHikRBedNy=CrrHA+7UYQJpL3t1BhU0VFixz80bPeSE28iHGw@mail.gmail.com>
-References: <1420453305-15986-1-git-send-email-stripathi@apm.com>
-	<1420453305-15986-3-git-send-email-stripathi@apm.com>
-	<20150105133005.GB15833@htj.dyndns.org>
-	<20150105135950.GE15833@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 2/2] ahci_xgene: Fix the DMA state machine lockup for
+ the ATA_CMD_PACKET PIO mode command.
+Date: Mon, 5 Jan 2015 09:03:48 -0500
+Message-ID: <20150105140348.GF15833@htj.dyndns.org>
+References: <1419823367-11279-1-git-send-email-stripathi@apm.com>
+ <1419823367-11279-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20150105135950.GE15833@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:58987 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbbAEODv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 09:03:51 -0500
+Content-Disposition: inline
+In-Reply-To: <1419823367-11279-3-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 
-Reverted due to conflicts with the endian fix patches.  Please rebase
-these two on top of them.
+On Mon, Dec 29, 2014 at 08:52:47AM +0530, Suman Tripathi wrote:
+> This patch addresses the issue with ATA_CMD_PACKET pio mode
+> command for enumeration and device detection with ATAPI devices.
+> The X-Gene AHCI controller has an errata in which it cannot clear
+> the BSY bit after the PIO setup FIS. The dma state machine enters
+> CMFatalErrorUpdate state and locks up.
+> 
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
-Will do that .. I should have wait for the endian patch getting
-accepted. Sorry for that.
+Ah, you already posted the updated versions.  Applied these instead.
 
-On Mon, Jan 5, 2015 at 7:29 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Mon, Jan 05, 2015 at 08:30:05AM -0500, Tejun Heo wrote:
->> On Mon, Jan 05, 2015 at 03:51:45PM +0530, Suman Tripathi wrote:
->> > Due to H/W errata, the controller is unable to save the PMP
->> > field fetched from command header before sending the H2D FIS.
->> > When the device returns the PMP port field in the D2H FIS, there is
->> > a mismatch and results in command completion failure. The workaround
->> > is to write the pmp value to PxFBS.DEV field before issuing any command
->> > to PMP.
->> >
->> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
->>
->> Applied 1-2 to libata/for-3.20.
->
-> Reverted due to conflicts with the endian fix patches.  Please rebase
-> these two on top of them.
->
-> Thanks.
->
-> --
-> tejun
-
-
+Thanks.
 
 -- 
-Thanks,
-with regards,
-Suman Tripathi
-CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, 
-is for the sole use of the intended recipient(s) and contains information
-that is confidential and proprietary to Applied Micro Circuits Corporation or its subsidiaries. 
-It is to be used solely for the purpose of furthering the parties' business relationship. 
-All unauthorized review, use, disclosure or distribution is prohibited. 
-If you are not the intended recipient, please contact the sender by reply e-mail 
-and destroy all copies of the original message.
-
+tejun
