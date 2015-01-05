@@ -1,30 +1,67 @@
-From: Jacqueline Gardner <jgardner@po-box.esu.edu>
-Subject: =?iso-8859-1?Q?Din_e-lagring_gr=E4ns_har_=F6verskridits?=
-Date: Mon, 5 Jan 2015 05:47:42 +0000
-Message-ID: <0B1EB60BB1696648B43E876E92D651AB0ACB03__11366.5663557642$1420437257$gmane$org@msxmb2.admin.esu.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from msxgate2.admin.esu.edu ([206.225.126.252]:17457 "EHLO
-	msxgate2.admin.esu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbbAEFxo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 00:53:44 -0500
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH] virtio-scsi: Fix the race condition in virtscsi_handle_event
+Date: Mon,  5 Jan 2015 14:04:58 +0800
+Message-ID: <1420437898-32419-1-git-send-email-famz@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Din e-postkonto lagringsgr=E4nsen har =F6verskridits. Du kommer inte at=
-t kunna ta emot eller skicka ett meddelande. F=F6r att =E5terst=E4lla d=
-itt konto klickar du h=E4r: http://webmailnet.weebly.com/
+There is a race condition in virtscsi_handle_event, when many device
+hotplug/unplug events flush in quickly.
 
-och skicka in din webmail information som kr=E4vs f=F6r att du ska b=F6=
-rja skicka e-post i =E5rets 2015
+The scsi_remove_device in virtscsi_handle_transport_reset may trigger
+the BUG_ON in scsi_target_reap, because the state is altered behind it,
+probably by scsi_scan_host of another event. I'm able to reproduce it by
+repeatedly plugging and unplugging a scsi disk with the same lun number.
 
-Tack.
-IT-s=E4kerhet servicekontor 2015
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To make is safe, the mutex added in struct virtio_scsi is held in
+virtscsi_handle_event, so that all the events are processed in a
+synchronized way. With this lock, the panic goes away.
+
+Signed-off-by: Fam Zheng <famz@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index c52bb5d..7f194d4 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -110,6 +110,9 @@ struct virtio_scsi {
+ 	/* CPU hotplug notifier */
+ 	struct notifier_block nb;
+ 
++	/* Protect the hotplug/unplug event handling */
++	struct mutex scan_lock;
++
+ 	/* Protected by event_vq lock */
+ 	bool stop_events;
+ 
+@@ -377,6 +380,7 @@ static void virtscsi_handle_event(struct work_struct *work)
+ 	struct virtio_scsi *vscsi = event_node->vscsi;
+ 	struct virtio_scsi_event *event = &event_node->event;
+ 
++	mutex_lock(&vscsi->scan_lock);
+ 	if (event->event &
+ 	    cpu_to_virtio32(vscsi->vdev, VIRTIO_SCSI_T_EVENTS_MISSED)) {
+ 		event->event &= ~cpu_to_virtio32(vscsi->vdev,
+@@ -397,6 +401,7 @@ static void virtscsi_handle_event(struct work_struct *work)
+ 		pr_err("Unsupport virtio scsi event %x\n", event->event);
+ 	}
+ 	virtscsi_kick_event(vscsi, event_node);
++	mutex_unlock(&vscsi->scan_lock);
+ }
+ 
+ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+@@ -894,6 +899,7 @@ static int virtscsi_init(struct virtio_device *vdev,
+ 	const char **names;
+ 	struct virtqueue **vqs;
+ 
++	mutex_init(&vscsi->scan_lock);
+ 	num_vqs = vscsi->num_queues + VIRTIO_SCSI_VQ_BASE;
+ 	vqs = kmalloc(num_vqs * sizeof(struct virtqueue *), GFP_KERNEL);
+ 	callbacks = kmalloc(num_vqs * sizeof(vq_callback_t *), GFP_KERNEL);
+-- 
+1.9.3
