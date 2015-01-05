@@ -1,33 +1,55 @@
-From: Stefan Priebe <s.priebe@profihost.ag>
-Subject: Re: block: remove artifical max_hw_sectors cap
-Date: Mon, 05 Jan 2015 19:40:57 +0100
-Message-ID: <54AADAB9.6060302@profihost.ag>
-References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de> <549FF2DB.4000506@profihost.ag> <20141230113206.GA1461@lst.de> <54A2B37E.2090104@profihost.ag> <20150105171734.GA30028@lst.de>
+From: Lee Duncan <lduncan@suse.com>
+Subject: [PATCH] Allow EA reservation holders to read from device.
+Date: Mon, 05 Jan 2015 10:49:44 -0800
+Message-ID: <54AADCC8.2010403@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ph.de-nserver.de ([85.158.179.214]:50897 "EHLO
-	mail-ph.de-nserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753500AbbAESk2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 13:40:28 -0500
-In-Reply-To: <20150105171734.GA30028@lst.de>
+Received: from smtp.nue.novell.com ([195.135.221.5]:34296 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754489AbbAEStu (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Mon, 5 Jan 2015 13:49:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-Am 05.01.2015 um 18:17 schrieb Christoph Hellwig:
-> On Tue, Dec 30, 2014 at 03:15:26PM +0100, Stefan Priebe - Profihost AG wrote:
->>> What is the max_sectors_kb value for them?
->>>
->> # cat /sys/block/sdi/queue/max_sectors_kb
->> 16383
->
-> That's odd, it's half of what ATA disks should support.  Is this
-> device attached to the HBA or an expander?
+From: Lee Duncan <lduncan@suse.com>
 
-No the Board has:
-10x SATA3 (6Gbps) via C612 from Intel.
+For PGR reservation type Exclusive Access, allow all
+registrants to read from the device.
 
-Stefan
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_pr.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 85564998500a..cb762b174c08 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -551,6 +551,18 @@ static int core_scsi3_pr_seq_non_holder(
+
+                        return 0;
+                }
++       } else if (we && registered_nexus) {
++               /*
++                * Reads are allowed for Write Exclusive locks
++                * from all registrants.
++                */
++               if (cmd->data_direction == DMA_FROM_DEVICE) {
++                       pr_debug("Allowing READ CDB: 0x%02x for %s"
++                               " reservation\n", cdb[0],
++                               core_scsi3_pr_dump_type(pr_reg_type));
++
++                       return 0;
++               }
+        }
+        pr_debug("%s Conflict for %sregistered nexus %s CDB: 0x%2x"
+                " for %s reservation\n", transport_dump_cmd_direction(cmd),
+-- 
+1.8.5.2
+
