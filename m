@@ -1,218 +1,190 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 6/8] megaraid_sas : Reserve commands for IOCTLs and
- internal DCMDs
-Date: Mon, 5 Jan 2015 20:06:23 +0530
-Message-ID: <201501051440.t05EeP9Q030054@palmhbs0.lsi.com>
+Subject: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code
+ optimization
+Date: Mon, 5 Jan 2015 20:05:58 +0530
+Message-ID: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0063.outbound.protection.outlook.com ([65.55.169.63]:63804
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753388AbbAEOuh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 09:50:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+List-Id: linux-scsi@vger.kernel.org
 
-1)For fusion adapters, limited reserved frames for non SCSI commands to 8(3 for parallel IOCTLs + 5 for driver's internal DCMDs).
-Earlier reserved commands for non SCSI IO frames was set to 32, so with this implementation, increased per controller
-"can_queue". Behavior of MFI controllers will remain unchanged.
+This patch addresses below issues-
+1) Few endianness bug fixes.
+2) Break the iteration after (MAX_LOGICAL_DRIVES_EXT - 1)), instead of MAX_LOGICAL_DRIVES_EXT.
+3) Optimization in MFI INIT frame before firing.
+4) MFI IO frame should be 256bytes aligned. Code is optimized to reduce the size of frame for fusion adapters
+   and make the MFI frame size calculation a bit transparent and readable.
 
-2)Optimized the code related to per controller's 'can_queue' setting.
+Cc: <stable@vger.kernel.org>
 
+Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Chaitra Basappa <chaitra.basappa@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |    7 ++-
- drivers/scsi/megaraid/megaraid_sas_base.c   |   71 ++++++++++++++-------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    8 ++-
- 3 files changed, 46 insertions(+), 40 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   24 +++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |   14 ++++++++------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |    7 +++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |    9 ++-------
+ 4 files changed, 24 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 842e6f7..e2adbf3 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1082,6 +1082,8 @@ enum MR_SCSI_CMD_TYPE {
-  */
- #define MEGASAS_INT_CMDS			32
- #define MEGASAS_SKINNY_INT_CMDS			5
-+#define MEGASAS_FUSION_INTERNAL_CMDS		5
-+#define MEGASAS_FUSION_IOCTL_CMDS		3
- 
- #define MEGASAS_MAX_MSIX_QUEUES			128
- /*
-@@ -1687,9 +1689,8 @@ struct megasas_instance {
- 
- 	u16 max_num_sge;
- 	u16 max_fw_cmds;
--	/* For Fusion its num IOCTL cmds, for others MFI based its
--	   max_fw_cmds */
- 	u16 max_mfi_cmds;
-+	u16 max_scsi_cmds;
- 	u32 max_sectors_per_req;
- 	struct megasas_aen_event *ev;
- 
-@@ -1765,7 +1766,7 @@ struct megasas_instance {
- 	u8 requestorId;
- 	char PlasmaFW111;
- 	char mpio;
--	int throttlequeuedepth;
-+	u16 throttlequeuedepth;
- 	u8 mask_interrupts;
- 	u8 is_imr;
- };
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index fbc1d4c..ac3c04a 100644
+index f05580e..38e1f8a 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -78,7 +78,7 @@ static int allow_vf_ioctls;
- module_param(allow_vf_ioctls, int, S_IRUGO);
- MODULE_PARM_DESC(allow_vf_ioctls, "Allow ioctls in SR-IOV VF mode. Default: 0");
- 
--static int throttlequeuedepth = MEGASAS_THROTTLE_QUEUE_DEPTH;
-+static unsigned int throttlequeuedepth = MEGASAS_THROTTLE_QUEUE_DEPTH;
- module_param(throttlequeuedepth, int, S_IRUGO);
- MODULE_PARM_DESC(throttlequeuedepth,
- 	"Adapter queue depth when throttled due to I/O timeout. Default: 16");
-@@ -1764,6 +1764,7 @@ void
- megasas_check_and_restore_queue_depth(struct megasas_instance *instance)
- {
- 	unsigned long flags;
-+
- 	if (instance->flag & MEGASAS_FW_BUSY
- 	    && time_after(jiffies, instance->last_time + 5 * HZ)
- 	    && atomic_read(&instance->fw_outstanding) <
-@@ -1771,13 +1772,8 @@ megasas_check_and_restore_queue_depth(struct megasas_instance *instance)
- 
- 		spin_lock_irqsave(instance->host->host_lock, flags);
- 		instance->flag &= ~MEGASAS_FW_BUSY;
--		if (instance->is_imr) {
--			instance->host->can_queue =
--				instance->max_fw_cmds - MEGASAS_SKINNY_INT_CMDS;
--		} else
--			instance->host->can_queue =
--				instance->max_fw_cmds - MEGASAS_INT_CMDS;
- 
-+		instance->host->can_queue = instance->max_scsi_cmds;
- 		spin_unlock_irqrestore(instance->host->host_lock, flags);
- 	}
- }
-@@ -4685,23 +4681,38 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (tmp_sectors && (instance->max_sectors_per_req > tmp_sectors))
- 		instance->max_sectors_per_req = tmp_sectors;
- 
--	/* Check for valid throttlequeuedepth module parameter */
--	if (instance->is_imr) {
--		if (throttlequeuedepth > (instance->max_fw_cmds -
--					  MEGASAS_SKINNY_INT_CMDS))
--			instance->throttlequeuedepth =
--				MEGASAS_THROTTLE_QUEUE_DEPTH;
--		else
--			instance->throttlequeuedepth = throttlequeuedepth;
-+	/*
-+	 * 1. For fusion adapters, 3 commands for IOCTL and 5 commands
-+	 *    for driver's internal DCMDs.
-+	 * 2. For MFI skinny adapters, 5 commands for IOCTL + driver's
-+	 *    internal DCMDs.
-+	 * 3. For rest of MFI adapters, 27 commands reserved for IOCTLs
-+	 *    and 5 commands for drivers's internal DCMD.
-+	 */
-+	if (instance->ctrl_context) {
-+		instance->max_scsi_cmds = instance->max_fw_cmds -
-+					(MEGASAS_FUSION_INTERNAL_CMDS +
-+					MEGASAS_FUSION_IOCTL_CMDS);
-+		sema_init(&instance->ioctl_sem, MEGASAS_FUSION_IOCTL_CMDS);
-+	} else if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
-+		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-+		instance->max_scsi_cmds = instance->max_fw_cmds -
-+						MEGASAS_SKINNY_INT_CMDS;
-+		sema_init(&instance->ioctl_sem, MEGASAS_SKINNY_INT_CMDS);
- 	} else {
--		if (throttlequeuedepth > (instance->max_fw_cmds -
--					  MEGASAS_INT_CMDS))
--			instance->throttlequeuedepth =
--				MEGASAS_THROTTLE_QUEUE_DEPTH;
--		else
--			instance->throttlequeuedepth = throttlequeuedepth;
-+		instance->max_scsi_cmds = instance->max_fw_cmds -
-+						MEGASAS_INT_CMDS;
-+		sema_init(&instance->ioctl_sem, (MEGASAS_INT_CMDS - 5));
+@@ -3547,7 +3547,6 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
+ 	int i;
+ 	u32 max_cmd;
+ 	u32 sge_sz;
+-	u32 sgl_sz;
+ 	u32 total_sz;
+ 	u32 frame_count;
+ 	struct megasas_cmd *cmd;
+@@ -3566,24 +3565,23 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
  	}
  
-+	/* Check for valid throttlequeuedepth module parameter */
-+	if (throttlequeuedepth &&
-+			throttlequeuedepth <= instance->max_scsi_cmds)
-+		instance->throttlequeuedepth = throttlequeuedepth;
-+	else
-+		instance->throttlequeuedepth =
-+				MEGASAS_THROTTLE_QUEUE_DEPTH;
-+
-         /*
- 	* Setup tasklet for cmd completion
- 	*/
-@@ -4996,12 +5007,7 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	 */
- 	host->irq = instance->pdev->irq;
- 	host->unique_id = instance->unique_id;
--	if (instance->is_imr) {
--		host->can_queue =
--			instance->max_fw_cmds - MEGASAS_SKINNY_INT_CMDS;
--	} else
--		host->can_queue =
--			instance->max_fw_cmds - MEGASAS_INT_CMDS;
-+	host->can_queue = instance->max_scsi_cmds;
- 	host->this_id = instance->init_id;
- 	host->sg_tablesize = instance->max_num_sge;
- 
-@@ -5264,13 +5270,11 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	instance->init_id = MEGASAS_DEFAULT_INIT_ID;
- 	instance->ctrl_info = NULL;
- 
-+
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
--		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-+		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
- 		instance->flag_ieee = 1;
--		sema_init(&instance->ioctl_sem, MEGASAS_SKINNY_INT_CMDS);
--	} else
--		sema_init(&instance->ioctl_sem, (MEGASAS_INT_CMDS - 5));
--
-+
- 	megasas_dbg_lvl = 0;
- 	instance->flag = 0;
- 	instance->unload = 1;
-@@ -6264,9 +6268,6 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
- 		goto out_kfree_ioc;
- 	}
- 
--	/*
--	 * We will allow only MEGASAS_INT_CMDS number of parallel ioctl cmds
+ 	/*
+-	 * Calculated the number of 64byte frames required for SGL
 -	 */
- 	if (down_interruptible(&instance->ioctl_sem)) {
- 		error = -ERESTARTSYS;
- 		goto out_kfree_ioc;
+-	sgl_sz = sge_sz * instance->max_num_sge;
+-	frame_count = (sgl_sz + MEGAMFI_FRAME_SIZE - 1) / MEGAMFI_FRAME_SIZE;
+-	frame_count = 15;
+-
+-	/*
+-	 * We need one extra frame for the MFI command
++	 * For MFI controllers.
++	 * max_num_sge = 60
++	 * max_sge_sz  = 16 byte (sizeof megasas_sge_skinny)
++	 * Total 960 byte (15 MFI frame of 64 byte)
++	 *
++	 * Fusion adapter require only 3 extra frame.
++	 * max_num_sge = 16 (defined as MAX_IOCTL_SGE)
++	 * max_sge_sz  = 12 byte (sizeof  megasas_sge64)
++	 * Total 192 byte (3 MFI frame of 64 byte)
+ 	 */
+-	frame_count++;
+-
++	frame_count = instance->ctrl_context ? (3 + 1) : (15 + 1);
+ 	total_sz = MEGAMFI_FRAME_SIZE * frame_count;
+ 	/*
+ 	 * Use DMA pool facility provided by PCI layer
+ 	 */
+ 	instance->frame_dma_pool = pci_pool_create("megasas frame pool",
+-						   instance->pdev, total_sz, 64,
+-						   0);
++					instance->pdev, total_sz, 256, 0);
+ 
+ 	if (!instance->frame_dma_pool) {
+ 		printk(KERN_DEBUG "megasas: failed to setup frame pool\n");
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index 460c6a3..7cae1c2 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -172,6 +172,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 	struct MR_FW_RAID_MAP_ALL     *fw_map_old    = NULL;
+ 	struct MR_FW_RAID_MAP         *pFwRaidMap    = NULL;
+ 	int i;
++	u16 ld_count;
+ 
+ 
+ 	struct MR_DRV_RAID_MAP_ALL *drv_map =
+@@ -191,9 +192,10 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 		fw_map_old = (struct MR_FW_RAID_MAP_ALL *)
+ 			fusion->ld_map[(instance->map_id & 1)];
+ 		pFwRaidMap = &fw_map_old->raidMap;
++		ld_count = (u16)le32_to_cpu(pFwRaidMap->ldCount);
+ 
+ #if VD_EXT_DEBUG
+-		for (i = 0; i < le16_to_cpu(pFwRaidMap->ldCount); i++) {
++		for (i = 0; i < ld_count; i++) {
+ 			dev_dbg(&instance->pdev->dev, "(%d) :Index 0x%x "
+ 				"Target Id 0x%x Seq Num 0x%x Size 0/%llx\n",
+ 				instance->unique_id, i,
+@@ -205,12 +207,12 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 
+ 		memset(drv_map, 0, fusion->drv_map_sz);
+ 		pDrvRaidMap->totalSize = pFwRaidMap->totalSize;
+-		pDrvRaidMap->ldCount = (__le16)pFwRaidMap->ldCount;
++		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
+ 		pDrvRaidMap->fpPdIoTimeoutSec = pFwRaidMap->fpPdIoTimeoutSec;
+ 		for (i = 0; i < MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS; i++)
+ 			pDrvRaidMap->ldTgtIdToLd[i] =
+ 				(u8)pFwRaidMap->ldTgtIdToLd[i];
+-		for (i = 0; i < le16_to_cpu(pDrvRaidMap->ldCount); i++) {
++		for (i = 0; i < ld_count; i++) {
+ 			pDrvRaidMap->ldSpanMap[i] = pFwRaidMap->ldSpanMap[i];
+ #if VD_EXT_DEBUG
+ 			dev_dbg(&instance->pdev->dev,
+@@ -252,7 +254,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
+ 	struct LD_LOAD_BALANCE_INFO *lbInfo;
+ 	PLD_SPAN_INFO ldSpanInfo;
+ 	struct MR_LD_RAID         *raid;
+-	int ldCount, num_lds;
++	u16 ldCount, num_lds;
+ 	u16 ld;
+ 	u32 expected_size;
+ 
+@@ -356,7 +358,7 @@ static int getSpanInfo(struct MR_DRV_RAID_MAP_ALL *map,
+ 
+ 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
+ 		ld = MR_TargetIdToLdGet(ldCount, map);
+-			if (ld >= MAX_LOGICAL_DRIVES_EXT)
++			if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
+ 				continue;
+ 		raid = MR_LdRaidGet(ld, map);
+ 		dev_dbg(&instance->pdev->dev, "LD %x: span_depth=%x\n",
+@@ -1157,7 +1159,7 @@ void mr_update_span_set(struct MR_DRV_RAID_MAP_ALL *map,
+ 
+ 	for (ldCount = 0; ldCount < MAX_LOGICAL_DRIVES_EXT; ldCount++) {
+ 		ld = MR_TargetIdToLdGet(ldCount, map);
+-		if (ld >= MAX_LOGICAL_DRIVES_EXT)
++		if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
+ 			continue;
+ 		raid = MR_LdRaidGet(ld, map);
+ 		for (element = 0; element < MAX_QUAD_DEPTH; element++) {
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 8232930..5eefd0c 100644
+index 71557f6..b5362c1 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1019,8 +1019,12 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 	 * does not exceed max cmds that the FW can support
- 	 */
- 	instance->max_fw_cmds = instance->max_fw_cmds-1;
--	/* Only internal cmds (DCMD) need to have MFI frames */
--	instance->max_mfi_cmds = MEGASAS_INT_CMDS;
-+
-+	/*
-+	 * Only Driver's internal DCMDs and IOCTL DCMDs needs to have MFI frames
-+	 */
-+	instance->max_mfi_cmds =
-+		MEGASAS_FUSION_INTERNAL_CMDS + MEGASAS_FUSION_IOCTL_CMDS;
+@@ -698,12 +698,11 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 		cpu_to_le32(lower_32_bits(ioc_init_handle));
+ 	init_frame->data_xfer_len = cpu_to_le32(sizeof(struct MPI2_IOC_INIT_REQUEST));
  
- 	max_cmd = instance->max_fw_cmds;
+-	req_desc.Words = 0;
++	req_desc.u.low = cpu_to_le32(lower_32_bits(cmd->frame_phys_addr));
++	req_desc.u.high = cpu_to_le32(upper_32_bits(cmd->frame_phys_addr));
+ 	req_desc.MFAIo.RequestFlags =
+ 		(MEGASAS_REQ_DESCRIPT_FLAGS_MFA <<
+-		 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+-	cpu_to_le32s((u32 *)&req_desc.MFAIo);
+-	req_desc.Words |= cpu_to_le64(cmd->frame_phys_addr);
++		MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
  
+ 	/*
+ 	 * disable the intr before firing the init frame
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 5ab7dae..56e6db2 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -306,14 +306,9 @@ struct MPI2_RAID_SCSI_IO_REQUEST {
+  * MPT RAID MFA IO Descriptor.
+  */
+ struct MEGASAS_RAID_MFA_IO_REQUEST_DESCRIPTOR {
+-#if   defined(__BIG_ENDIAN_BITFIELD)
+-	u32     MessageAddress1:24; /* bits 31:8*/
+-	u32     RequestFlags:8;
+-#else
+ 	u32     RequestFlags:8;
+-	u32     MessageAddress1:24; /* bits 31:8*/
+-#endif
+-	u32     MessageAddress2;      /* bits 61:32 */
++	u32     MessageAddress1:24;
++	u32     MessageAddress2;
+ };
+ 
+ /* Default Request Descriptor */
 -- 
 1.7.3
-
