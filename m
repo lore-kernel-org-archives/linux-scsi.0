@@ -1,34 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 2/2] ahci_xgene: Fix the DMA state machine lockup for
- the ATA_CMD_PACKET PIO mode command.
-Date: Mon, 5 Jan 2015 09:03:48 -0500
-Message-ID: <20150105140348.GF15833@htj.dyndns.org>
-References: <1419823367-11279-1-git-send-email-stripathi@apm.com>
- <1419823367-11279-3-git-send-email-stripathi@apm.com>
+Subject: Re: [PATCH 2/2] ahci_xgene: Implement the workaround to support PMP
+ enumeration and discovery for APM X-Gene SoC AHCI SATA Host Controller
+ driver.
+Date: Mon, 5 Jan 2015 09:05:29 -0500
+Message-ID: <20150105140529.GG15833@htj.dyndns.org>
+References: <1420453305-15986-1-git-send-email-stripathi@apm.com>
+ <1420453305-15986-3-git-send-email-stripathi@apm.com>
+ <20150105133005.GB15833@htj.dyndns.org>
+ <20150105135950.GE15833@htj.dyndns.org>
+ <CAOHikRBedNy=CrrHA+7UYQJpL3t1BhU0VFixz80bPeSE28iHGw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:58987 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753283AbbAEODv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 09:03:51 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1419823367-11279-3-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <CAOHikRBedNy=CrrHA+7UYQJpL3t1BhU0VFixz80bPeSE28iHGw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 29, 2014 at 08:52:47AM +0530, Suman Tripathi wrote:
-> This patch addresses the issue with ATA_CMD_PACKET pio mode
-> command for enumeration and device detection with ATAPI devices.
-> The X-Gene AHCI controller has an errata in which it cannot clear
-> the BSY bit after the PIO setup FIS. The dma state machine enters
-> CMFatalErrorUpdate state and locks up.
+On Mon, Jan 05, 2015 at 07:33:06PM +0530, Suman Tripathi wrote:
+> Reverted due to conflicts with the endian fix patches.  Please rebase
+> these two on top of them.
 > 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> Will do that .. I should have wait for the endian patch getting
+> accepted. Sorry for that.
 
-Ah, you already posted the updated versions.  Applied these instead.
+Ooh, please don't be sorry.  It's completely fine.  These things
+happen.
 
 Thanks.
 
