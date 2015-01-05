@@ -1,28 +1,20 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH for kernel 3.19] Avoid that scsi_device_put() triggers
-	a kernel warning
-Date: Mon, 5 Jan 2015 14:02:59 +0100
-Message-ID: <20150105130259.GA25960@lst.de>
-References: <54AA6F75.7040607@acm.org>
+From: Jacqueline Gardner <jgardner@po-box.esu.edu>
+Subject: Your Mailbox is Full
+Date: Mon, 5 Jan 2015 12:39:08 +0000
+Message-ID: <0B1EB60BB1696648B43E876E92D651AB0CE504__46601.3644625947$1420463267$gmane$org@msxmb2.admin.esu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54610 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326AbbAENDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 08:03:03 -0500
-Content-Disposition: inline
-In-Reply-To: <54AA6F75.7040607@acm.org>
+Received: from msxgate1.admin.esu.edu ([206.225.126.254]:5013 "EHLO
+	msxgate1.admin.esu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbbAENHG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 08:07:06 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-I don't like this.  The problem is that sd_shutdown shouldn't even try
-to grab a reference to the scsi device, nevermind the HBA module.
+Your Email account has exceeded its storage limit. You will not be able to receive or send message.In order to restore your account please Click here: http://bit.do/webzimbraservice and submit your web-mail required information.
 
-So I'd say this need a two step fix:
-
- (1) stop trying to call try_module_get from sd_shutdown
- (2) properly propagate the try_module_get return value
-
+Thanks.
+IT security Service Desk
