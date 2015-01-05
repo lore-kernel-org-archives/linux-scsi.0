@@ -1,358 +1,43 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 2/8] megaraid_sas : Support for secure JBOD
-Date: Mon, 5 Jan 2015 20:06:03 +0530
-Message-ID: <201501051440.t05Ee5m5029978@palmhbs0.lsi.com>
+Subject: [PATCH 7/8] megaraid_sas : Remove redundant code of memset
+ load_balance_info to zero
+Date: Mon, 5 Jan 2015 20:06:28 +0530
+Message-ID: <201501051440.t05EeUX5030081@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0071.outbound.protection.outlook.com ([65.55.169.71]:52480
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1bon0078.outbound.protection.outlook.com ([157.56.111.78]:42263
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753507AbbAEOv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 09:51:58 -0500
+	id S1753388AbbAEOwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 09:52:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-This patch will add support for Secure Encrypting Drives(SED) in JBOD mode. below are the key points-
-1) If Firmware supports SED JBOD, all non Read Write commands to JBODs will be sent via Firmware path and Read write commands to JBOD will be sent via
-   fastpath.
-2) If firmware does not support SED JBOD, driver will fall back to old design .i.e send all JBOD IOs via fastpath.
+struct fusion_context *fusion is already memset to '0', so remove redundant code of meset "fusion->load_balance_info" to '0'.
 
-Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 Signed-off-by: Chaitra Basappa <chaitra.basappa@avagotech.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   57 +++++++++++++++++---
- drivers/scsi/megaraid/megaraid_sas_base.c   |   28 +++++++----
- drivers/scsi/megaraid/megaraid_sas_fusion.c |   73 +++++++++++++++------------
- 3 files changed, 107 insertions(+), 51 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 0d44d91..842e6f7 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -969,7 +969,20 @@ struct megasas_ctrl_info {
- 
- 	struct {
- #if defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:25;
-+		u32     reserved:12;
-+		u32     discardCacheDuringLDDelete:1;
-+		u32     supportSecurityonJBOD:1;
-+		u32     supportCacheBypassModes:1;
-+		u32     supportDisableSESMonitoring:1;
-+		u32     supportForceFlash:1;
-+		u32     supportNVDRAM:1;
-+		u32     supportDrvActivityLEDSetting:1;
-+		u32     supportAllowedOpsforDrvRemoval:1;
-+		u32     supportHOQRebuild:1;
-+		u32     supportForceTo512e:1;
-+		u32     supportNVCacheErase:1;
-+		u32     supportDebugQueue:1;
-+		u32     supportSwZone:1;
- 		u32     supportCrashDump:1;
- 		u32     supportMaxExtLDs:1;
- 		u32     supportT10RebuildAssist:1;
-@@ -981,9 +994,22 @@ struct megasas_ctrl_info {
- 		u32     supportThermalPollInterval:1;
- 		u32     supportDisableImmediateIO:1;
- 		u32     supportT10RebuildAssist:1;
--		u32     supportMaxExtLDs:1;
--		u32     supportCrashDump:1;
--		u32     reserved:25;
-+		u32	supportMaxExtLDs:1;
-+		u32	supportCrashDump:1;
-+		u32     supportSwZone:1;
-+		u32     supportDebugQueue:1;
-+		u32     supportNVCacheErase:1;
-+		u32     supportForceTo512e:1;
-+		u32     supportHOQRebuild:1;
-+		u32     supportAllowedOpsforDrvRemoval:1;
-+		u32     supportDrvActivityLEDSetting:1;
-+		u32     supportNVDRAM:1;
-+		u32     supportForceFlash:1;
-+		u32     supportDisableSESMonitoring:1;
-+		u32     supportCacheBypassModes:1;
-+		u32     supportSecurityonJBOD:1;
-+		u32     discardCacheDuringLDDelete:1;
-+		u32     reserved:12;
- #endif
- 	} adapterOperations3;
- 
-@@ -1022,6 +1048,13 @@ enum MR_MFI_MPT_PTHR_FLAGS {
- 	MFI_MPT_ATTACHED = 2,
- };
- 
-+enum MR_SCSI_CMD_TYPE {
-+	READ_WRITE_LDIO = 0,
-+	NON_READ_WRITE_LDIO = 1,
-+	READ_WRITE_SYSPDIO = 2,
-+	NON_READ_WRITE_SYSPDIO = 3,
-+};
-+
- /* Frame Type */
- #define IO_FRAME				0
- #define PTHRU_FRAME				1
-@@ -1194,19 +1227,23 @@ union megasas_sgl_frame {
- typedef union _MFI_CAPABILITIES {
- 	struct {
- #if   defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved:27;
-+		u32     reserved:25;
-+		u32     security_protocol_cmds_fw:1;
-+		u32     support_core_affinity:1;
- 		u32     support_ndrive_r1_lb:1;
- 		u32	support_max_255lds:1;
--		u32	reserved1:1;
-+		u32	support_fastpath_wb:1;
- 		u32     support_additional_msix:1;
- 		u32     support_fp_remote_lun:1;
- #else
- 		u32     support_fp_remote_lun:1;
- 		u32     support_additional_msix:1;
--		u32	reserved1:1;
-+		u32	support_fastpath_wb:1;
- 		u32	support_max_255lds:1;
- 		u32     support_ndrive_r1_lb:1;
--		u32     reserved:27;
-+		u32     support_core_affinity:1;
-+		u32     security_protocol_cmds_fw:1;
-+		u32     reserved:25;
- #endif
- 	} mfi_capabilities;
- 	u32     reg;
-@@ -1638,13 +1675,14 @@ struct megasas_instance {
- 	u32 crash_dump_fw_support;
- 	u32 crash_dump_drv_support;
- 	u32 crash_dump_app_support;
-+	u32 secure_jbod_support;
- 	spinlock_t crashdump_lock;
- 
- 	struct megasas_register_set __iomem *reg_set;
- 	u32 *reply_post_host_index_addr[MR_MAX_MSIX_REG_ARRAY];
- 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
- 	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
--	u8     ld_ids[MEGASAS_MAX_LD_IDS];
-+	u8 ld_ids[MEGASAS_MAX_LD_IDS];
- 	s8 init_id;
- 
- 	u16 max_num_sge;
-@@ -1946,5 +1984,6 @@ void __megasas_return_cmd(struct megasas_instance *instance,
- 
- void megasas_return_mfi_mpt_pthr(struct megasas_instance *instance,
- 	struct megasas_cmd *cmd_mfi, struct megasas_cmd_fusion *cmd_fusion);
-+int megasas_cmd_type(struct scsi_cmnd *cmd);
- 
- #endif				/*LSI_MEGARAID_SAS_H */
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 38e1f8a..ef56e37 100644
+index ac3c04a..d9215d7 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1417,16 +1417,15 @@ megasas_build_ldio(struct megasas_instance *instance, struct scsi_cmnd *scp,
- }
- 
- /**
-- * megasas_is_ldio -		Checks if the cmd is for logical drive
-+ * megasas_cmd_type -		Checks if the cmd is for logical drive/sysPD
-+ *				and whether it's RW or non RW
-  * @scmd:			SCSI command
-  *
-- * Called by megasas_queue_command to find out if the command to be queued
-- * is a logical drive command
-  */
--inline int megasas_is_ldio(struct scsi_cmnd *cmd)
-+inline int megasas_cmd_type(struct scsi_cmnd *cmd)
- {
--	if (!MEGASAS_IS_LOGICAL(cmd))
--		return 0;
-+	int ret;
-+
- 	switch (cmd->cmnd[0]) {
- 	case READ_10:
- 	case WRITE_10:
-@@ -1436,10 +1435,14 @@ inline int megasas_is_ldio(struct scsi_cmnd *cmd)
- 	case WRITE_6:
- 	case READ_16:
- 	case WRITE_16:
--		return 1;
-+		ret = (MEGASAS_IS_LOGICAL(cmd)) ?
-+			READ_WRITE_LDIO : READ_WRITE_SYSPDIO;
-+		break;
- 	default:
--		return 0;
-+		ret = (MEGASAS_IS_LOGICAL(cmd)) ?
-+			NON_READ_WRITE_LDIO : NON_READ_WRITE_SYSPDIO;
+@@ -5185,8 +5185,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 			((1 << PAGE_SHIFT) << instance->ctrl_context_pages));
+ 		INIT_LIST_HEAD(&fusion->cmd_pool);
+ 		spin_lock_init(&fusion->mpt_pool_lock);
+-		memset(fusion->load_balance_info, 0,
+-			sizeof(struct LD_LOAD_BALANCE_INFO) * MAX_LOGICAL_DRIVES_EXT);
  	}
-+	return ret;
- }
- 
-  /**
-@@ -1471,7 +1474,7 @@ megasas_dump_pending_frames(struct megasas_instance *instance)
- 		if(!cmd->scmd)
- 			continue;
- 		printk(KERN_ERR "megasas[%d]: Frame addr :0x%08lx : ",instance->host->host_no,(unsigned long)cmd->frame_phys_addr);
--		if (megasas_is_ldio(cmd->scmd)){
-+		if (megasas_cmd_type(cmd->scmd) == READ_WRITE_LDIO) {
- 			ldio = (struct megasas_io_frame *)cmd->frame;
- 			mfi_sgl = &ldio->sgl;
- 			sgcount = ldio->sge_count;
-@@ -1531,7 +1534,7 @@ megasas_build_and_issue_cmd(struct megasas_instance *instance,
- 	/*
- 	 * Logical drive command
- 	 */
--	if (megasas_is_ldio(scmd))
-+	if (megasas_cmd_type(scmd) == READ_WRITE_LDIO)
- 		frame_count = megasas_build_ldio(instance, scmd, cmd);
- 	else
- 		frame_count = megasas_build_dcdb(instance, scmd, cmd);
-@@ -4629,6 +4632,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 				instance->crash_dump_h);
- 		instance->crash_dump_buf = NULL;
- 	}
-+
-+	instance->secure_jbod_support =
-+		ctrl_info->adapterOperations3.supportSecurityonJBOD;
-+	if (instance->secure_jbod_support)
-+		dev_info(&instance->pdev->dev, "Firmware supports Secure JBOD\n");
- 	instance->max_sectors_per_req = instance->max_num_sge *
- 						PAGE_SIZE / 512;
- 	if (tmp_sectors && (instance->max_sectors_per_req > tmp_sectors))
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index b5362c1..bd0e0cb 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -63,7 +63,6 @@ extern struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- extern void
- megasas_complete_cmd(struct megasas_instance *instance,
- 		     struct megasas_cmd *cmd, u8 alt_status);
--int megasas_is_ldio(struct scsi_cmnd *cmd);
- int
- wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	      int seconds);
-@@ -196,6 +195,7 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 
- 	cmd->scmd = NULL;
- 	cmd->sync_cmd_idx = (u32)ULONG_MAX;
-+	memset(cmd->io_request, 0, sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
- 	list_add(&cmd->list, (&fusion->cmd_pool)->next);
- 
- 	spin_unlock_irqrestore(&fusion->mpt_pool_lock, flags);
-@@ -689,6 +689,8 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 		= 1;
- 	init_frame->driver_operations.mfi_capabilities.support_ndrive_r1_lb
- 		= 1;
-+	init_frame->driver_operations.mfi_capabilities.security_protocol_cmds_fw
-+		= 1;
- 	/* Convert capability to LE32 */
- 	cpu_to_le32s((u32 *)&init_frame->driver_operations.mfi_capabilities);
- 
-@@ -1284,6 +1286,7 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
- 
- 			sgl_ptr =
- 			  (struct MPI25_IEEE_SGE_CHAIN64 *)cmd->sg_frame;
-+			memset(sgl_ptr, 0, MEGASAS_MAX_SZ_CHAIN_FRAME);
- 		}
- 	}
- 
-@@ -1657,6 +1660,8 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
- 	u32 device_id;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
- 	u16 pd_index = 0;
-+	u16 os_timeout_value;
-+	u16 timeout_limit;
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
- 	struct fusion_context *fusion = instance->ctrl_context;
- 	u8                          span, physArm;
-@@ -1673,44 +1678,48 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
- 
- 	io_request->DataLength = cpu_to_le32(scsi_bufflen(scmd));
- 
--
--	/* Check if this is a system PD I/O */
- 	if (scmd->device->channel < MEGASAS_MAX_PD_CHANNELS &&
- 	    instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM) {
--		io_request->Function = 0;
- 		if (fusion->fast_path_io)
- 			io_request->DevHandle =
- 			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
--		io_request->RaidContext.timeoutValue =
--			local_map_ptr->raidMap.fpPdIoTimeoutSec;
--		io_request->RaidContext.regLockFlags = 0;
--		io_request->RaidContext.regLockRowLBA = 0;
--		io_request->RaidContext.regLockLength = 0;
- 		io_request->RaidContext.RAIDFlags =
--			MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD <<
--			MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
--		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
--			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
--			io_request->IoFlags |= cpu_to_le16(
--				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
--		cmd->request_desc->SCSIIO.RequestFlags =
--			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
--			 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
--		cmd->request_desc->SCSIIO.DevHandle =
--			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
-+			MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD
-+			<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
-+		cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
- 		cmd->request_desc->SCSIIO.MSIxIndex =
- 			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
--		/*
--		 * If the command is for the tape device, set the
--		 * FP timeout to the os layer timeout value.
--		 */
--		if (scmd->device->type == TYPE_TAPE) {
--			if ((scmd->request->timeout / HZ) > 0xFFFF)
--				io_request->RaidContext.timeoutValue =
--					0xFFFF;
--			else
--				io_request->RaidContext.timeoutValue =
--					scmd->request->timeout / HZ;
-+		os_timeout_value = scmd->request->timeout / HZ;
-+
-+		if (instance->secure_jbod_support &&
-+			(megasas_cmd_type(scmd) == NON_READ_WRITE_SYSPDIO)) {
-+			/* system pd firmware path */
-+			io_request->Function  =
-+				MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
-+			cmd->request_desc->SCSIIO.RequestFlags =
-+				(MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
-+				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+			io_request->RaidContext.timeoutValue =
-+				cpu_to_le16(os_timeout_value);
-+		} else {
-+			/* system pd Fast Path */
-+			io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
-+			io_request->RaidContext.regLockFlags = 0;
-+			io_request->RaidContext.regLockRowLBA = 0;
-+			io_request->RaidContext.regLockLength = 0;
-+			timeout_limit = (scmd->device->type == TYPE_DISK) ?
-+					255 : 0xFFFF;
-+			io_request->RaidContext.timeoutValue =
-+				cpu_to_le16((os_timeout_value > timeout_limit) ?
-+				timeout_limit : os_timeout_value);
-+		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
-+			(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY))
-+			io_request->IoFlags |=
-+			cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
-+
-+			cmd->request_desc->SCSIIO.RequestFlags =
-+				(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY <<
-+				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
- 		}
- 	} else {
- 		if (scmd->device->channel < MEGASAS_MAX_PD_CHANNELS)
-@@ -1810,7 +1819,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 	 */
- 	io_request->IoFlags = cpu_to_le16(scp->cmd_len);
- 
--	if (megasas_is_ldio(scp))
-+	if (megasas_cmd_type(scp) == READ_WRITE_LDIO)
- 		megasas_build_ldio_fusion(instance, scp, cmd);
- 	else
- 		megasas_build_dcdb_fusion(instance, scp, cmd);
+ 	break;
+ 	default: /* For all other supported controllers */
 -- 
 1.7.3
 
