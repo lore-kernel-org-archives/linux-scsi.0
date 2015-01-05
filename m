@@ -1,79 +1,107 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 2/3] scsi: ufs: adjust module reference for scsi host
-Date: Mon,  5 Jan 2015 23:34:38 +0900
-Message-ID: <1420468479-4508-3-git-send-email-akinobu.mita@gmail.com>
-References: <1420468479-4508-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35156 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbbAEOfB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 09:35:01 -0500
-Received: by mail-pa0-f54.google.com with SMTP id fb1so28868296pad.13
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2015 06:35:00 -0800 (PST)
-In-Reply-To: <1420468479-4508-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] ahci_xgene: Fix the xgene_ahci_restart_engine function
+ to support Port Multiplier for APM X-Gene SoC AHCI SATA host controller driver.
+Date: Mon, 05 Jan 2015 17:50:23 +0300
+Message-ID: <54AAA4AF.8030503@cogentembedded.com>
+References: <1420453305-15986-1-git-send-email-stripathi@apm.com> <1420453305-15986-2-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1420453305-15986-2-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-While accessing a UFS device, the module reference count for core driver
-(ufshcd) is incremented but not incremented for the actual glue driver
-(ufshcd-pci or ufshcd-pltfrm).  Because these drivers allocate scsi hosts
-with scsi_host_template defined in ufshcd module.  So these drivers always
-can be unloaded.
+Hello.
 
-This fixes it by adjusting module reference after scsi host allocation.
+On 1/5/2015 1:21 PM, Suman Tripathi wrote:
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/ufs/ufshcd-pci.c    | 1 +
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
- drivers/scsi/ufs/ufshcd.c        | 1 -
- 3 files changed, 2 insertions(+), 1 deletion(-)
+    Your patch summary seems too long.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index d15eaa4..9fe21b4 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -142,6 +142,7 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return err;
- 	}
- 
-+	hba->host->module = THIS_MODULE;
- 	INIT_LIST_HEAD(&hba->clk_list_head);
- 
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 95b64e0..ea3ca99 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -322,6 +322,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
- 
-+	hba->host->module = THIS_MODULE;
- 	hba->vops = get_variant_ops(&pdev->dev);
- 
- 	err = ufshcd_parse_clock_info(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2e26025..f0aff90 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4202,7 +4202,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- }
- 
- static struct scsi_host_template ufshcd_driver_template = {
--	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
- 	.proc_name		= UFSHCD,
- 	.queuecommand		= ufshcd_queuecommand,
--- 
-1.9.1
+> This patch implements the function xgene_ahci_poll_reg_val to poll
+> PxCI for multiple IDENTIFY DEVICE commands to finish before
+> restarting the DMA engine in case of Port Multiplier.
+
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>   drivers/ata/ahci_xgene.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 54 insertions(+), 2 deletions(-)
+
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 0f8538f..2180223 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -105,17 +105,69 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
+>   }
+>
+>   /**
+> + * xgene_ahci_poll_reg_val- Poll a register on a specific value.
+> + * @ap : ATA port of interest.
+> + * @reg : Register of interest.
+> + * @val : Value to be attained.
+> + * @interval : waiting interval for polling.
+> + * @timeout : timeout for achieving the value.
+> + */
+> +static int xgene_ahci_poll_reg_val(struct ata_port *ap,
+> +				   void __iomem *reg, unsigned
+> +				   int val, unsigned long interval,
+> +				   unsigned long timeout)
+> +{
+> +	unsigned long deadline;
+> +	unsigned int tmp;
+> +
+> +	tmp = ioread32(reg);
+> +	deadline = ata_deadline(jiffies, timeout);
+> +
+> +	while ((tmp != val) && (time_before(jiffies, deadline))) {
+
+    Parens around the operands of && are not needed, especially around the 
+right one.
+
+> +		ata_msleep(ap, interval);
+> +		tmp = ioread32(reg);
+> +	}
+> +
+> +	return tmp;
+> +}
+> +
+> +/**
+>    * xgene_ahci_restart_engine - Restart the dma engine.
+>    * @ap : ATA port of interest
+>    *
+> - * Restarts the dma engine inside the controller.
+> + * Waits for completion of multiple commands and restarts
+> + * the DMA engine inside the controller.
+>    */
+>   static int xgene_ahci_restart_engine(struct ata_port *ap)
+>   {
+>   	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct ahci_port_priv *pp = ap->private_data;
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	u32 fbs;
+> +
+> +	/*
+> +	 * In case of PMP multiple IDENTIFY DEVICE commands can be
+> +	 * issued inside PxCI. So need to poll PxCI for the
+> +	 * completion of outstanding IDENTIFY DEVICE commands before
+> +	 * we restart the DMA engine.
+> +	 */
+> +	if (xgene_ahci_poll_reg_val(ap, port_mmio +
+> +				    PORT_CMD_ISSUE, 0x0, 1, 100))
+> +		  return -EBUSY;
+>
+>   	ahci_stop_engine(ap);
+>   	ahci_start_fis_rx(ap);
+> +
+> +	/*
+> +	 * Enable the PxFBS.FBS_EN bit as it
+> +	 * gets cleared due to stop engine.
+
+    s/stop/stopping the/.
+
+[...]
+
+MBR, Sergei
 
