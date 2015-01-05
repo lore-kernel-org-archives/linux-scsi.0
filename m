@@ -1,115 +1,60 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] virtio-scsi: Fix the race condition in
- virtscsi_handle_event
-Date: Tue, 6 Jan 2015 00:10:59 +0200
-Message-ID: <20150105221059.GB23518@redhat.com>
-References: <1420437898-32419-1-git-send-email-famz@redhat.com>
- <CAHdzE-_QmNZVhmChHmy3FgRjJ692Apw2Va-SGoTz25s0fLjbvQ@mail.gmail.com>
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 3/3] usb: storage: adjust module reference for scsi host
+Date: Tue, 6 Jan 2015 08:43:51 +0900
+Message-ID: <CAC5umygLeewW1-CrjA=ibffL6UHEXOYzoCyhMfQKnihff+NGBw@mail.gmail.com>
+References: <1420468479-4508-4-git-send-email-akinobu.mita@gmail.com>
+	<Pine.LNX.4.44L0.1501051021370.1485-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAHdzE-_QmNZVhmChHmy3FgRjJ692Apw2Va-SGoTz25s0fLjbvQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Venkatesh Srinivas <venkateshs@google.com>
-Cc: Fam Zheng <famz@redhat.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Linux Kernel Developers List <linux-kernel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1501051021370.1485-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 05, 2015 at 11:48:47AM -0800, Venkatesh Srinivas wrote:
-> On Sun, Jan 4, 2015 at 10:04 PM, Fam Zheng <famz@redhat.com> wrote:
->=20
->     There is a race condition in virtscsi_handle_event, when many dev=
-ice
->     hotplug/unplug events flush in quickly.
->=20
->     The scsi_remove_device in virtscsi_handle_transport_reset may tri=
-gger
->     the BUG_ON in scsi_target_reap, because the state is altered behi=
-nd it,
->     probably by scsi_scan_host of another event. I'm able to reproduc=
-e it by
->     repeatedly plugging and unplugging a scsi disk with the same lun =
-number.
->=20
->     To make is safe, the mutex added in struct virtio_scsi is held in
->     virtscsi_handle_event, so that all the events are processed in a
->     synchronized way. With this lock, the panic goes away.
->=20
->     Signed-off-by: Fam Zheng <famz@redhat.com>
->     ---
->     =A0drivers/scsi/virtio_scsi.c | 6 ++++++
->     =A01 file changed, 6 insertions(+)
->=20
->     diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scs=
-i.c
->     index c52bb5d..7f194d4 100644
->     --- a/drivers/scsi/virtio_scsi.c
->     +++ b/drivers/scsi/virtio_scsi.c
->     @@ -110,6 +110,9 @@ struct virtio_scsi {
->     =A0 =A0 =A0 =A0 /* CPU hotplug notifier */
->     =A0 =A0 =A0 =A0 struct notifier_block nb;
->=20
->     +=A0 =A0 =A0 =A0/* Protect the hotplug/unplug event handling */
->     +=A0 =A0 =A0 =A0struct mutex scan_lock;
->     +
->     =A0 =A0 =A0 =A0 /* Protected by event_vq lock */
->     =A0 =A0 =A0 =A0 bool stop_events;
->=20
->     @@ -377,6 +380,7 @@ static void virtscsi_handle_event(struct work=
-_struct
->     *work)
->     =A0 =A0 =A0 =A0 struct virtio_scsi *vscsi =3D event_node->vscsi;
->     =A0 =A0 =A0 =A0 struct virtio_scsi_event *event =3D &event_node->=
-event;
->=20
->     +=A0 =A0 =A0 =A0mutex_lock(&vscsi->scan_lock);
->     =A0 =A0 =A0 =A0 if (event->event &
->     =A0 =A0 =A0 =A0 =A0 =A0 cpu_to_virtio32(vscsi->vdev, VIRTIO_SCSI_=
-T_EVENTS_MISSED)) {
->     =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 event->event &=3D ~cpu_to_virtio3=
-2(vscsi->vdev,
->     @@ -397,6 +401,7 @@ static void virtscsi_handle_event(struct work=
-_struct
->     *work)
->     =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_err("Unsupport virtio scsi eve=
-nt %x\n", event->event);
->     =A0 =A0 =A0 =A0 }
->     =A0 =A0 =A0 =A0 virtscsi_kick_event(vscsi, event_node);
->     +=A0 =A0 =A0 =A0mutex_unlock(&vscsi->scan_lock);
->     =A0}
->=20
->     =A0static void virtscsi_complete_event(struct virtio_scsi *vscsi,=
- void *buf)
->     @@ -894,6 +899,7 @@ static int virtscsi_init(struct virtio_device=
- *vdev,
->     =A0 =A0 =A0 =A0 const char **names;
->     =A0 =A0 =A0 =A0 struct virtqueue **vqs;
->=20
->     +=A0 =A0 =A0 =A0mutex_init(&vscsi->scan_lock);
->     =A0 =A0 =A0 =A0 num_vqs =3D vscsi->num_queues + VIRTIO_SCSI_VQ_BA=
-SE;
->     =A0 =A0 =A0 =A0 vqs =3D kmalloc(num_vqs * sizeof(struct virtqueue=
- *), GFP_KERNEL);
->     =A0 =A0 =A0 =A0 callbacks =3D kmalloc(num_vqs * sizeof(vq_callbac=
-k_t *), GFP_KERNEL);
->     --
->     1.9.3
->=20
->=20
-> Nice find.
->=20
-> This fix does have the effect of serializing all event handling via s=
-can_lock;
-> perhaps you want to instead create a singlethreaded workqueue in virt=
-io_scsi
-> and queue handle_event there, rather than waiting on scan_lock on the=
- system
-> workqueue?
+2015-01-06 0:27 GMT+09:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
+> On Mon, 5 Jan 2015, Akinobu Mita wrote:
+>
+>> While accessing a unusual usb storage (ums-alauda, ums-cypress, ...),
+>> the module reference count is not incremented.  Because these drivers
+>> allocate scsi hosts with usb_stor_host_template defined in usb-storage
+>> module.  So these drivers always can be unloaded.
+>>
+>> This fixes it by adjusting module reference after scsi host allocation.
+>
+>> diff --git a/drivers/usb/storage/alauda.c b/drivers/usb/storage/alauda.c
+>> index 62c2d9d..77660d6 100644
+>> --- a/drivers/usb/storage/alauda.c
+>> +++ b/drivers/usb/storage/alauda.c
+>> @@ -1242,6 +1242,7 @@ static int alauda_probe(struct usb_interface *intf,
+>>       us->transport = alauda_transport;
+>>       us->transport_reset = usb_stor_Bulk_reset;
+>>       us->max_lun = 1;
+>> +     us_to_host(us)->module = THIS_MODULE;
+>>
+>>       result = usb_stor_probe2(us);
+>>       return result;
+>
+> ... etc.
+>
+> An easier and more foolproof approach would be to change
+> usb_store_probe2 to take an extra argument for the owner:
+>
+> int _usb_stor_probe2(struct us_data *us, struct module *owner)
+> ...
+>         us_to_host(us)->module = owner;
+> ...
+>
+> Then in usb.h:
+>
+> extern int _usb_stor_probe2(struct us_data *us, struct module *owner);
+> #define usb_stor_probe2(us)     _usb_stor_probe2(us, THIS_MODULE)
+>
+> This pattern is already used in several other places in the kernel.
 
-Or use the system single-threaded wq.
-
-
-> Reviewed-by: Venkatesh Srinivas <venkateshs@google.com>
->=20
-> -- vs;
+Sounds good.  I'll take this idea and update this patch.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
