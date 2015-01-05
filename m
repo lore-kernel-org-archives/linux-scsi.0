@@ -1,27 +1,28 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH 0/2] Add the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Mon,  5 Jan 2015 17:16:02 +0530
-Message-ID: <1420458362-23396-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH for kernel 3.19] Avoid that scsi_device_put() triggers
+	a kernel warning
+Date: Mon, 5 Jan 2015 14:02:59 +0100
+Message-ID: <20150105130259.GA25960@lst.de>
+References: <54AA6F75.7040607@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:54610 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753326AbbAENDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 08:03:03 -0500
+Content-Disposition: inline
+In-Reply-To: <54AA6F75.7040607@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch set implements the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
+I don't like this.  The problem is that sd_shutdown shouldn't even try
+to grab a reference to the scsi device, nevermind the HBA module.
 
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
+So I'd say this need a two step fix:
 
-Suman Tripathi (2):
-  ahci_xgene: Fix the xgene_ahci_restart_engine function to support Port
-    Multiplier for APM X-Gene SoC AHCI SATA host controller driver.
-  ahci_xgene: Implement the workaround to support PMP enumeration and
-    discovery for APM X-Gene SoC AHCI SATA Host Controller driver.
-
- drivers/ata/ahci_xgene.c | 180 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 178 insertions(+), 2 deletions(-)
-
---
-1.8.2.1
+ (1) stop trying to call try_module_get from sd_shutdown
+ (2) properly propagate the try_module_get return value
 
