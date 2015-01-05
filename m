@@ -1,16 +1,21 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/4] Drivers: scsi: storvsc: Fix miscellaneous issues
-Date: Mon, 5 Jan 2015 11:25:53 -0800
-Message-ID: <20150105192553.GB27817@infradead.org>
-References: <1418764880-11183-1-git-send-email-kys@microsoft.com>
+Subject: Re: [PATCH V6 0/3] scsi: Configure number of LUs reported by
+ 'report-luns'
+Date: Mon, 5 Jan 2015 11:25:36 -0800
+Message-ID: <20150105192536.GA27817@infradead.org>
+References: <1418745680-18126-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:37086 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753297AbbAETZg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 14:25:36 -0500
 Content-Disposition: inline
-In-Reply-To: <1418764880-11183-1-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org
+In-Reply-To: <1418745680-18126-1-git-send-email-revers@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
 Thanks, applied to scsi-for-3.20.
