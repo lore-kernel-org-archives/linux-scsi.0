@@ -1,210 +1,97 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 3/3] usb: storage: adjust module reference for scsi host
-Date: Mon,  5 Jan 2015 23:34:39 +0900
-Message-ID: <1420468479-4508-4-git-send-email-akinobu.mita@gmail.com>
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/3] scsi: add ability to adjust module reference for scsi host
+Date: Mon,  5 Jan 2015 23:34:37 +0900
+Message-ID: <1420468479-4508-2-git-send-email-akinobu.mita@gmail.com>
 References: <1420468479-4508-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:63110 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbbAEOfE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 09:35:04 -0500
-In-Reply-To: <1420468479-4508-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1420468479-4508-1-git-send-email-akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-While accessing a unusual usb storage (ums-alauda, ums-cypress, ...),
-the module reference count is not incremented.  Because these drivers
-allocate scsi hosts with usb_stor_host_template defined in usb-storage
-module.  So these drivers always can be unloaded.
+While accessing a scsi_device, the use count of the underlying LLDD module
+is incremented.  The module reference is retrieved through .module field of
+struct scsi_host_template.
 
-This fixes it by adjusting module reference after scsi host allocation.
+This mapping between scsi_device and underlying LLDD module works well
+except some scsi drivers (ufs and unusual usb storage drivers).  These
+drivers consist with core driver and actual LLDDs, and scsi_host_template
+is defined in the core driver.  So the actual LLDDs can be unloaded even if
+the scsi_device is being accessed.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-usb@vger.kernel.org
-Cc: usb-storage@lists.one-eyed-alien.net
-Cc: linux-scsi@vger.kernel.org
+This adds .module field in struct Scsi_Host and let the module reference
+be retrieved though it instead of struct scsi_host_template.  This allows
+the actual LLDDs adjust module reference.
+
+Signed-off-by: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- drivers/usb/storage/alauda.c        | 1 +
- drivers/usb/storage/cypress_atacb.c | 2 ++
- drivers/usb/storage/datafab.c       | 1 +
- drivers/usb/storage/ene_ub6250.c    | 1 +
- drivers/usb/storage/freecom.c       | 1 +
- drivers/usb/storage/isd200.c        | 1 +
- drivers/usb/storage/jumpshot.c      | 1 +
- drivers/usb/storage/karma.c         | 1 +
- drivers/usb/storage/onetouch.c      | 2 ++
- drivers/usb/storage/realtek_cr.c    | 2 ++
- drivers/usb/storage/sddr09.c        | 2 ++
- drivers/usb/storage/sddr55.c        | 1 +
- drivers/usb/storage/shuttle_usbat.c | 1 +
- 13 files changed, 17 insertions(+)
+ drivers/scsi/hosts.c     | 1 +
+ drivers/scsi/scsi.c      | 4 ++--
+ include/scsi/scsi_host.h | 1 +
+ 3 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/usb/storage/alauda.c b/drivers/usb/storage/alauda.c
-index 62c2d9d..77660d6 100644
---- a/drivers/usb/storage/alauda.c
-+++ b/drivers/usb/storage/alauda.c
-@@ -1242,6 +1242,7 @@ static int alauda_probe(struct usb_interface *intf,
- 	us->transport = alauda_transport;
- 	us->transport_reset = usb_stor_Bulk_reset;
- 	us->max_lun = 1;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/cypress_atacb.c b/drivers/usb/storage/cypress_atacb.c
-index 8514a2d..d603d04 100644
---- a/drivers/usb/storage/cypress_atacb.c
-+++ b/drivers/usb/storage/cypress_atacb.c
-@@ -255,6 +255,8 @@ static int cypress_probe(struct usb_interface *intf,
- 	if (result)
- 		return result;
- 
-+	us_to_host(us)->module = THIS_MODULE;
-+
- 	/* Among CY7C68300 chips, the A revision does not support Cypress ATACB
- 	 * Filter out this revision from EEPROM default descriptor values
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8bb173e..21f1442 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -411,6 +411,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
  	 */
-diff --git a/drivers/usb/storage/datafab.c b/drivers/usb/storage/datafab.c
-index 7b17c21..4193caf 100644
---- a/drivers/usb/storage/datafab.c
-+++ b/drivers/usb/storage/datafab.c
-@@ -736,6 +736,7 @@ static int datafab_probe(struct usb_interface *intf,
- 	us->transport = datafab_transport;
- 	us->transport_reset = usb_stor_Bulk_reset;
- 	us->max_lun = 1;
-+	us_to_host(us)->module = THIS_MODULE;
+ 	shost->max_cmd_len = 12;
+ 	shost->hostt = sht;
++	shost->module = sht->module;
+ 	shost->this_id = sht->this_id;
+ 	shost->can_queue = sht->can_queue;
+ 	shost->sg_tablesize = sht->sg_tablesize;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e028854..5905b83 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -988,7 +988,7 @@ int scsi_device_get(struct scsi_device *sdev)
+ 		return -ENXIO;
+ 	/* We can fail this if we're doing SCSI operations
+ 	 * from module exit (like cache flush) */
+-	try_module_get(sdev->host->hostt->module);
++	try_module_get(sdev->host->module);
  
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/ene_ub6250.c b/drivers/usb/storage/ene_ub6250.c
-index 56f782b..c4656bd 100644
---- a/drivers/usb/storage/ene_ub6250.c
-+++ b/drivers/usb/storage/ene_ub6250.c
-@@ -2331,6 +2331,7 @@ static int ene_ub6250_probe(struct usb_interface *intf,
- 	us->transport_name = "ene_ub6250";
- 	us->transport = ene_transport;
- 	us->max_lun = 0;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	if (result)
-diff --git a/drivers/usb/storage/freecom.c b/drivers/usb/storage/freecom.c
-index ef16068..c66ee7a 100644
---- a/drivers/usb/storage/freecom.c
-+++ b/drivers/usb/storage/freecom.c
-@@ -538,6 +538,7 @@ static int freecom_probe(struct usb_interface *intf,
- 	us->transport = freecom_transport;
- 	us->transport_reset = usb_stor_freecom_reset;
- 	us->max_lun = 0;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-index 599d8bf..dcd2a10 100644
---- a/drivers/usb/storage/isd200.c
-+++ b/drivers/usb/storage/isd200.c
-@@ -1550,6 +1550,7 @@ static int isd200_probe(struct usb_interface *intf,
- 
- 	us->protocol_name = "ISD200 ATA/ATAPI";
- 	us->proto_handler = isd200_ata_command;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/jumpshot.c b/drivers/usb/storage/jumpshot.c
-index 563078b..80e14be 100644
---- a/drivers/usb/storage/jumpshot.c
-+++ b/drivers/usb/storage/jumpshot.c
-@@ -662,6 +662,7 @@ static int jumpshot_probe(struct usb_interface *intf,
- 	us->transport = jumpshot_transport;
- 	us->transport_reset = usb_stor_Bulk_reset;
- 	us->max_lun = 1;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/karma.c b/drivers/usb/storage/karma.c
-index 94d16ee..ccfae96 100644
---- a/drivers/usb/storage/karma.c
-+++ b/drivers/usb/storage/karma.c
-@@ -214,6 +214,7 @@ static int karma_probe(struct usb_interface *intf,
- 	us->transport_name = "Rio Karma/Bulk";
- 	us->transport = rio_karma_transport;
- 	us->transport_reset = usb_stor_Bulk_reset;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/onetouch.c b/drivers/usb/storage/onetouch.c
-index 74e2aa2..c69e451 100644
---- a/drivers/usb/storage/onetouch.c
-+++ b/drivers/usb/storage/onetouch.c
-@@ -296,6 +296,8 @@ static int onetouch_probe(struct usb_interface *intf,
- 
- 	/* Use default transport and protocol */
- 
-+	us_to_host(us)->module = THIS_MODULE;
-+
- 	result = usb_stor_probe2(us);
- 	return result;
+ 	return 0;
  }
-diff --git a/drivers/usb/storage/realtek_cr.c b/drivers/usb/storage/realtek_cr.c
-index 27e4a58..d839e1e 100644
---- a/drivers/usb/storage/realtek_cr.c
-+++ b/drivers/usb/storage/realtek_cr.c
-@@ -1048,6 +1048,8 @@ static int realtek_cr_probe(struct usb_interface *intf,
- 	if (result)
- 		return result;
+@@ -1005,7 +1005,7 @@ EXPORT_SYMBOL(scsi_device_get);
+ void scsi_device_put(struct scsi_device *sdev)
+ {
+ #ifdef CONFIG_MODULE_UNLOAD
+-	struct module *module = sdev->host->hostt->module;
++	struct module *module = sdev->host->module;
  
-+	us_to_host(us)->module = THIS_MODULE;
-+
- 	result = usb_stor_probe2(us);
+ 	/* The module refcount will be zero if scsi_device_get()
+ 	 * was called from a module removal routine */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 019e668..5133f2f 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -617,6 +617,7 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned short max_cmd_len;
  
- 	return result;
-diff --git a/drivers/usb/storage/sddr09.c b/drivers/usb/storage/sddr09.c
-index 3847053..b45d751 100644
---- a/drivers/usb/storage/sddr09.c
-+++ b/drivers/usb/storage/sddr09.c
-@@ -1761,6 +1761,8 @@ static int sddr09_probe(struct usb_interface *intf,
- 		us->max_lun = 0;
- 	}
- 
-+	us_to_host(us)->module = THIS_MODULE;
-+
- 	result = usb_stor_probe2(us);
- 	return result;
- }
-diff --git a/drivers/usb/storage/sddr55.c b/drivers/usb/storage/sddr55.c
-index aacedef..74f9c19 100644
---- a/drivers/usb/storage/sddr55.c
-+++ b/drivers/usb/storage/sddr55.c
-@@ -984,6 +984,7 @@ static int sddr55_probe(struct usb_interface *intf,
- 	us->transport = sddr55_transport;
- 	us->transport_reset = sddr55_reset;
- 	us->max_lun = 0;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
-diff --git a/drivers/usb/storage/shuttle_usbat.c b/drivers/usb/storage/shuttle_usbat.c
-index 008d805..899efea 100644
---- a/drivers/usb/storage/shuttle_usbat.c
-+++ b/drivers/usb/storage/shuttle_usbat.c
-@@ -1852,6 +1852,7 @@ static int usbat_probe(struct usb_interface *intf,
- 	us->transport = usbat_flash_transport;
- 	us->transport_reset = usb_stor_CB_reset;
- 	us->max_lun = 0;
-+	us_to_host(us)->module = THIS_MODULE;
- 
- 	result = usb_stor_probe2(us);
- 	return result;
++	struct module *module;
+ 	int this_id;
+ 	int can_queue;
+ 	short cmd_per_lun;
 -- 
 1.9.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
