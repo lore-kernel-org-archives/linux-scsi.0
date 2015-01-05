@@ -1,61 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
-Date: Mon, 5 Jan 2015 20:32:13 +0100
-Message-ID: <20150105193213.GA31955@lst.de>
-References: <54A43CFB.2080705@oracle.com> <20150105091516.GA22226@lst.de> <54AADF6A.6090100@kernel.dk>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] ses: clear warning for unused variable
+Date: Mon, 5 Jan 2015 11:33:51 -0800
+Message-ID: <1420486431-1700177-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54AADF6A.6090100@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Sasha Levin <sasha.levin@oracle.com>, bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:55682 "EHLO
+	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754355AbbAETd5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 14:33:57 -0500
+Received: from pps.filterd (m0004060 [127.0.0.1])
+	by mx0b-00082601.pphosted.com (8.14.5/8.14.5) with SMTP id t05JUYdG008869
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Jan 2015 11:33:56 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+	by mx0b-00082601.pphosted.com with ESMTP id 1rqwx614ts-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2015 11:33:56 -0800
+Received: from facebook.com (2401:db00:20:701c:face:0:3f:0)	by
+ mx-out.facebook.com (10.212.232.63) with ESMTP	id
+ c8dbff60951111e4aed80002c992ebde-d46dd390 for <linux-scsi@vger.kernel.org>;
+	Mon, 05 Jan 2015 11:33:54 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, dan.j.williams@intel.com, Song Liu <songliubraving@fb.com>
 
-On Mon, Jan 05, 2015 at 12:00:58PM -0700, Jens Axboe wrote:
-> That's not quite true, the only guarantee is that it WILL execute on the
-> CPU (or CPUs) that are set in the mask. So unless it ends up offloading
-> the run to a specific workqueue, we'll disable preempt in the current
-> path before ->queue_rq() is called.
+Remove the declaration of variable "err" in function
+'enclosure_component_alloc':
 
-Oops.  Indeed, with those recent changes ->queue_rq can't safely block
-for memory allocatios anymore.
-
-The patch below should fix it:
-
+ All warnings:
+  drivers/misc/enclosure.c: In function 'enclosure_component_alloc':
+  >> drivers/misc/enclosure.c:295:6: warning: unused variable 'err'
+  >> [-Wunused-variable]
+     int err, i;
+         ^
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
 ---
-From: Christoph Hellwig <hch@lst.de>
-Subject: scsi: ->queue_rq can't sleep
+ drivers/misc/enclosure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Since Linux 3.19 blk-mq may disable preemption before calling into
-->queue_rq, so we can't actually sleep anymore.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_lib.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9ea95dd..6d5c0b8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
- static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 3289d4d..38552a3 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -295,7 +295,7 @@ enclosure_component_alloc(struct enclosure_device *edev,
  {
- 	struct scatterlist *first_chunk = NULL;
--	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
- 	int ret;
+ 	struct enclosure_component *ecomp;
+ 	struct device *cdev;
+-	int err, i;
++	int i;
+ 	char newname[COMPONENT_NAME_SIZE];
  
- 	BUG_ON(!nents);
-@@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
- 	}
- 
- 	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
--			       first_chunk, gfp_mask, scsi_sg_alloc);
-+			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
- 	if (unlikely(ret))
- 		scsi_free_sgtable(sdb, mq);
- 	return ret;
+ 	if (number >= edev->components)
 -- 
-1.9.1
+1.8.1
+
