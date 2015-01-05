@@ -1,79 +1,165 @@
 From: <Sumit.Saxena@avagotech.com>
-Subject: [PATCH 3/8] megaraid_sas : Fix the problem of non-existing VD
- exposed to host
-Date: Mon, 5 Jan 2015 20:06:08 +0530
-Message-ID: <201501051440.t05EeAgb029989@palmhbs0.lsi.com>
+Subject: [PATCH 5/8] megaraid_sas : Complete outstanding IOCTLs before
+ killing adapter
+Date: Mon, 5 Jan 2015 20:06:18 +0530
+Message-ID: <201501051440.t05EeK2W030041@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2on0077.outbound.protection.outlook.com ([65.55.169.77]:48880
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0088.outbound.protection.outlook.com ([157.56.110.88]:28264
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753392AbbAEOvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 09:51:24 -0500
+	id S1753418AbbAEOv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 09:51:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-This patch will address the issue of SCSI device created at OS level for non existing VD. ldTgtIdtoLd[] array has size 256
-for Extended VD firmware and 128 for legacy firmware. Accessing indices beyond array size(OS will send TUR, INQUIRY.. commands
-upto device index 255), may return valid LD value and that particular SCSI command will be SUCCESS and creating SCSI device
-for non existing target(VD).
-
-For legacy firmware(64 VD firmware), invalidates LD(by setting LD value to 0xff) in LdTgtIdtoLd[] array for device index beyond
-127, so that invalid LD(0xff) value should be returned beyond device index beyond 127.
+Driver calls megasas_complete_cmd() to call wake_up() for each MFI frame that was issued through the ioctl() interface prior to the kill adapter.
+This ensures userspace ioctl() system calls issued just before a kill adapter don't get stuck in wait state and IOCTLs are returned to application.
 
 Cc: <stable@vger.kernel.org>
 
-Signed-off-by: Kashyap Desai <kashyap.desai@avagotech.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@avagotech.com>
----
- drivers/scsi/megaraid/megaraid_sas_fp.c     |    3 +++
- drivers/scsi/megaraid/megaraid_sas_fusion.c |   14 ++++++++++++--
- 2 files changed, 15 insertions(+), 2 deletions(-)
+Signed-off-by: Chaitra Basappa <chaitra.basappa@avagotech.com>
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 7cae1c2..4f72287 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -212,6 +212,9 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 		for (i = 0; i < MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS; i++)
- 			pDrvRaidMap->ldTgtIdToLd[i] =
- 				(u8)pFwRaidMap->ldTgtIdToLd[i];
-+		for (i = (MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS);
-+			i < MAX_LOGICAL_DRIVES_EXT; i++)
-+			pDrvRaidMap->ldTgtIdToLd[i] = 0xff;
- 		for (i = 0; i < ld_count; i++) {
- 			pDrvRaidMap->ldSpanMap[i] = pFwRaidMap->ldSpanMap[i];
- #if VD_EXT_DEBUG
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   65 ++++++++++++++++++++++-----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |    4 --
+ 2 files changed, 54 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ef56e37..fbc1d4c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1692,22 +1692,66 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 	return 0;
+ }
+ 
++/*
++* megasas_complete_outstanding_ioctls - Complete outstanding ioctls after a
++*                                       kill adapter
++* @instance:				Adapter soft state
++*
++*/
++void megasas_complete_outstanding_ioctls(struct megasas_instance *instance)
++{
++	int i;
++	struct megasas_cmd *cmd_mfi;
++	struct megasas_cmd_fusion *cmd_fusion;
++	struct fusion_context *fusion = instance->ctrl_context;
++
++	/* Find all outstanding ioctls */
++	if (fusion) {
++		for (i = 0; i < instance->max_fw_cmds; i++) {
++			cmd_fusion = fusion->cmd_list[i];
++			if (cmd_fusion->sync_cmd_idx != (u32)ULONG_MAX) {
++				cmd_mfi = instance->cmd_list[cmd_fusion->sync_cmd_idx];
++				if (cmd_mfi->sync_cmd &&
++					cmd_mfi->frame->hdr.cmd != MFI_CMD_ABORT)
++					megasas_complete_cmd(instance,
++							     cmd_mfi, DID_OK);
++			}
++		}
++	} else {
++		for (i = 0; i < instance->max_fw_cmds; i++) {
++			cmd_mfi = instance->cmd_list[i];
++			if (cmd_mfi->sync_cmd && cmd_mfi->frame->hdr.cmd !=
++				MFI_CMD_ABORT)
++				megasas_complete_cmd(instance, cmd_mfi, DID_OK);
++		}
++	}
++}
++
++
+ void megaraid_sas_kill_hba(struct megasas_instance *instance)
+ {
++	/* Set critical error to block I/O & ioctls in case caller didn't */
++	instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
++	/* Wait 1 second to ensure IO or ioctls in build have posted */
++	msleep(1000);
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+-	    (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
+-	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
+-	    (instance->pdev->device == PCI_DEVICE_ID_LSI_PLASMA) ||
+-	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
+-	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
+-		writel(MFI_STOP_ADP, &instance->reg_set->doorbell);
++		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
++		(instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
++		(instance->pdev->device == PCI_DEVICE_ID_LSI_PLASMA) ||
++		(instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) ||
++		(instance->pdev->device == PCI_DEVICE_ID_LSI_FURY)) {
++		writel(MFI_STOP_ADP,
++			&instance->reg_set->doorbell);
+ 		/* Flush */
+ 		readl(&instance->reg_set->doorbell);
+ 		if (instance->mpio && instance->requestorId)
+ 			memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+ 	} else {
+-		writel(MFI_STOP_ADP, &instance->reg_set->inbound_doorbell);
++		writel(MFI_STOP_ADP,
++			&instance->reg_set->inbound_doorbell);
+ 	}
++	/* Complete outstanding ioctls when adapter is killed */
++	megasas_complete_outstanding_ioctls(instance);
+ }
+ 
+  /**
+@@ -3031,10 +3075,9 @@ megasas_issue_pending_cmds_again(struct megasas_instance *instance)
+ 					"was tried multiple times during reset."
+ 					"Shutting down the HBA\n",
+ 					cmd, cmd->scmd, cmd->sync_cmd);
++				instance->instancet->disable_intr(instance);
++				atomic_set(&instance->fw_reset_no_pci_access, 1);
+ 				megaraid_sas_kill_hba(instance);
+-
+-				instance->adprecovery =
+-						MEGASAS_HW_CRITICAL_ERROR;
+ 				return;
+ 			}
+ 		}
+@@ -3168,8 +3211,8 @@ process_fw_state_change_wq(struct work_struct *work)
+ 		if (megasas_transition_to_ready(instance, 1)) {
+ 			printk(KERN_NOTICE "megaraid_sas:adapter not ready\n");
+ 
++			atomic_set(&instance->fw_reset_no_pci_access, 1);
+ 			megaraid_sas_kill_hba(instance);
+-			instance->adprecovery	= MEGASAS_HW_CRITICAL_ERROR;
+ 			return ;
+ 		}
+ 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index bd0e0cb..fe60743 100644
+index a703c86..8232930 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1725,9 +1725,19 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
- 		if (scmd->device->channel < MEGASAS_MAX_PD_CHANNELS)
- 			goto NonFastPath;
- 
-+		/*
-+		 * For older firmware, Driver should not access ldTgtIdToLd
-+		 * beyond index 127 and for Extended VD firmware, ldTgtIdToLd
-+		 * should not go beyond 255.
-+		 */
-+
-+		if ((!fusion->fast_path_io) ||
-+			(device_id >= instance->fw_supported_vd_count))
-+			goto NonFastPath;
-+
- 		ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
--		if ((ld >= instance->fw_supported_vd_count) ||
--			(!fusion->fast_path_io))
-+
-+		if (ld >= instance->fw_supported_vd_count)
- 			goto NonFastPath;
- 
- 		raid = MR_LdRaidGet(ld, local_map_ptr);
+@@ -2631,7 +2631,6 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 				instance->host->host_no);
+ 			megaraid_sas_kill_hba(instance);
+ 			instance->skip_heartbeat_timer_del = 1;
+-			instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
+ 			retval = FAILED;
+ 			goto out;
+ 		}
+@@ -2827,8 +2826,6 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 				dev_info(&instance->pdev->dev,
+ 					"Failed from %s %d\n",
+ 					__func__, __LINE__);
+-				instance->adprecovery =
+-					MEGASAS_HW_CRITICAL_ERROR;
+ 				megaraid_sas_kill_hba(instance);
+ 				retval = FAILED;
+ 			}
+@@ -2877,7 +2874,6 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int iotimeout)
+ 		       "adapter scsi%d.\n", instance->host->host_no);
+ 		megaraid_sas_kill_hba(instance);
+ 		instance->skip_heartbeat_timer_del = 1;
+-		instance->adprecovery = MEGASAS_HW_CRITICAL_ERROR;
+ 		retval = FAILED;
+ 	} else {
+ 		/* For VF: Restart HB timer if we didn't OCR */
 -- 
 1.7.3
 
