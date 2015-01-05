@@ -1,67 +1,63 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH] virtio-scsi: Fix the race condition in virtscsi_handle_event
-Date: Mon,  5 Jan 2015 14:04:58 +0800
-Message-ID: <1420437898-32419-1-git-send-email-famz@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
+Date: Mon, 5 Jan 2015 10:15:16 +0100
+Message-ID: <20150105091516.GA22226@lst.de>
+References: <54A43CFB.2080705@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:54138 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751124AbbAEJPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:15:21 -0500
+Content-Disposition: inline
+In-Reply-To: <54A43CFB.2080705@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: hch@lst.de, bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
 
-There is a race condition in virtscsi_handle_event, when many device
-hotplug/unplug events flush in quickly.
+On Wed, Dec 31, 2014 at 01:14:19PM -0500, Sasha Levin wrote:
+> Hi Christoph,
+> 
+> I'm seeing an issue which was bisected down to 3c356bde1 ("scsi: stop passing
+> a gfp_mask argument down the command setup path"):
 
-The scsi_remove_device in virtscsi_handle_transport_reset may trigger
-the BUG_ON in scsi_target_reap, because the state is altered behind it,
-probably by scsi_scan_host of another event. I'm able to reproduce it by
-repeatedly plugging and unplugging a scsi disk with the same lun number.
+->queue_rq in blk-mq context is designed to be able to sleep and be called
+from process context without any spinlocks held or irqs disabled, so we
+really should fix the
+caller instead.
 
-To make is safe, the mutex added in struct virtio_scsi is held in
-virtscsi_handle_event, so that all the events are processed in a
-synchronized way. With this lock, the panic goes away.
+That being said your trace seems odd to me:
 
-Signed-off-by: Fam Zheng <famz@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> [ 3395.328221] BUG: sleeping function called from invalid context at mm/mempool.c:206
+> [ 3395.329540] in_atomic(): 1, irqs_disabled(): 0, pid: 6399, name: trinity-c531
+> [ 3395.331104] no locks held by trinity-c531/6399.
+> [ 3395.331849] Preemption disabled blk_execute_rq_nowait (block/blk-exec.c:95)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index c52bb5d..7f194d4 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -110,6 +110,9 @@ struct virtio_scsi {
- 	/* CPU hotplug notifier */
- 	struct notifier_block nb;
- 
-+	/* Protect the hotplug/unplug event handling */
-+	struct mutex scan_lock;
-+
- 	/* Protected by event_vq lock */
- 	bool stop_events;
- 
-@@ -377,6 +380,7 @@ static void virtscsi_handle_event(struct work_struct *work)
- 	struct virtio_scsi *vscsi = event_node->vscsi;
- 	struct virtio_scsi_event *event = &event_node->event;
- 
-+	mutex_lock(&vscsi->scan_lock);
- 	if (event->event &
- 	    cpu_to_virtio32(vscsi->vdev, VIRTIO_SCSI_T_EVENTS_MISSED)) {
- 		event->event &= ~cpu_to_virtio32(vscsi->vdev,
-@@ -397,6 +401,7 @@ static void virtscsi_handle_event(struct work_struct *work)
- 		pr_err("Unsupport virtio scsi event %x\n", event->event);
- 	}
- 	virtscsi_kick_event(vscsi, event_node);
-+	mutex_unlock(&vscsi->scan_lock);
- }
- 
- static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
-@@ -894,6 +899,7 @@ static int virtscsi_init(struct virtio_device *vdev,
- 	const char **names;
- 	struct virtqueue **vqs;
- 
-+	mutex_init(&vscsi->scan_lock);
- 	num_vqs = vscsi->num_queues + VIRTIO_SCSI_VQ_BASE;
- 	vqs = kmalloc(num_vqs * sizeof(struct virtqueue *), GFP_KERNEL);
- 	callbacks = kmalloc(num_vqs * sizeof(vq_callback_t *), GFP_KERNEL);
--- 
-1.9.3
+blk_execute_rq_nowait only takes a lock for the non-blk-mq case.  In my
+current kernel that's in line 79, but can you verify that for you
+line 95 is the spin_lock_irq in the !q->mq_ops case?
+
+> [ 3395.348571] __might_sleep (kernel/sched/core.c:7308)
+> [ 3395.351944] mempool_alloc (mm/mempool.c:206 (discriminator 1))
+> [ 3395.355196] scsi_sg_alloc (drivers/scsi/scsi_lib.c:582)
+> [ 3395.356893] __sg_alloc_table (lib/scatterlist.c:282)
+> [ 3395.358844] ? sdev_disable_disk_events (drivers/scsi/scsi_lib.c:577)
+> [ 3395.360873] scsi_alloc_sgtable (drivers/scsi/scsi_lib.c:608)
+> [ 3395.362769] scsi_init_sgtable (drivers/scsi/scsi_lib.c:1087)
+> [ 3395.364583] ? lockdep_init_map (kernel/locking/lockdep.c:2986)
+> [ 3395.366354] scsi_init_io (drivers/scsi/scsi_lib.c:1122)
+> [ 3395.368092] ? do_init_timer (kernel/time/timer.c:669)
+> [ 3395.369837] scsi_setup_cmnd (drivers/scsi/scsi_lib.c:1220 drivers/scsi/scsi_lib.c:1268)
+> [ 3395.371743] scsi_queue_rq (drivers/scsi/scsi_lib.c:1875 drivers/scsi/scsi_lib.c:1980)
+> [ 3395.373471] __blk_mq_run_hw_queue (block/blk-mq.c:751)
+> [ 3395.375481] blk_mq_run_hw_queue (block/blk-mq.c:831)
+> [ 3395.377324] blk_mq_insert_request (block/blk-mq.h:92 block/blk-mq.c:974)
+> [ 3395.379377] ? blk_rq_map_user (block/blk-map.c:78 block/blk-map.c:142)
+> [ 3395.381307] ? trace_hardirqs_on_caller (kernel/locking/lockdep.c:2559 kernel/locking/lockdep.c:2601)
+> [ 3395.383485] blk_execute_rq_nowait (block/blk-exec.c:95)
+
+But this clearly is the blk-mq case.  How does your version of
+blk_execute_rq_nowait look like?
+
