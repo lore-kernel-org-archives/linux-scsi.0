@@ -1,30 +1,28 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [Patch] Fix regression in 3.18 caused by e05fe29248 qla2xxx:
- Honor FCP_RSP retry delay timer field.
-Date: Mon, 5 Jan 2015 12:09:10 -0500
-Message-ID: <alpine.OSX.2.00.1501051208350.914@administrators-macbook-pro.local>
-References: <20141219102916.6fcae21a@pluto.restena.lu> <20141223083211.GC2303@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: block: remove artifical max_hw_sectors cap
+Date: Mon, 5 Jan 2015 18:17:34 +0100
+Message-ID: <20150105171734.GA30028@lst.de>
+References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de> <549FF2DB.4000506@profihost.ag> <20141230113206.GA1461@lst.de> <54A2B37E.2090104@profihost.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:26311 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751511AbbAERJV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2015 12:09:21 -0500
-In-Reply-To: <20141223083211.GC2303@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:55156 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753340AbbAERRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2015 12:17:38 -0500
+Content-Disposition: inline
+In-Reply-To: <54A2B37E.2090104@profihost.ag>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: =?ISO-8859-15?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>, Saurav Kashyap <saurav.kashyap@qlogic.com>, linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+On Tue, Dec 30, 2014 at 03:15:26PM +0100, Stefan Priebe - Profihost AG wrote:
+> > What is the max_sectors_kb value for them?
+> > 
+> # cat /sys/block/sdi/queue/max_sectors_kb
+> 16383
 
+That's odd, it's half of what ATA disks should support.  Is this
+device attached to the HBA or an expander?
 
-On Tue, 23 Dec 2014, Christoph Hellwig wrote:
-
-> Chad, Saurav,
->
-> does this look ok to you?
->
->
-
-Yes, this looks ok.
