@@ -1,35 +1,72 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [PATCH target] nvme_of: nvme_of_fabric_configfs can be static
-Date: Wed, 7 Jan 2015 03:35:56 +0800
-Message-ID: <20150106193556.GA50610@snb>
-References: <201501070334.EgwC5iey%fengguang.wu@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201501070334.EgwC5iey%fengguang.wu@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH] vhost-scsi: Add missing virtio-scsi -> TCM attribute conversion
+Date: Tue,  6 Jan 2015 20:18:05 +0000
+Message-ID: <1420575485-16447-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+While looking at hch's recent conversion to drop the MSG_*_TAG
+definitions, I noticed a long standing bug in vhost-scsi where
+the VIRTIO_SCSI_S_* attribute definitions where incorrectly
+being passed directly into target_submit_cmd_map_sgls().
+
+This patch adds the missing virtio-scsi to TCM/SAM task attribute
+conversion.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- nvme_of_configfs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/vhost/scsi.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/nvme_of/nvme_of_configfs.c b/drivers/target/nvme_of/nvme_of_configfs.c
-index c34603c..43a3abc1 100644
---- a/drivers/target/nvme_of/nvme_of_configfs.c
-+++ b/drivers/target/nvme_of/nvme_of_configfs.c
-@@ -22,7 +22,7 @@
- #include "nvme_of_fabric.h"
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 01c01cb..d695b16 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -911,6 +911,23 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+ 	return 0;
+ }
  
- /* Local pointer to allocated TCM configfs fabric module */
--struct target_fabric_configfs *nvme_of_fabric_configfs;
-+static struct target_fabric_configfs *nvme_of_fabric_configfs;
- 
- static struct se_node_acl *nvme_of_make_nodeacl(
- 	struct se_portal_group *se_tpg,
++static int vhost_scsi_to_tcm_attr(int attr)
++{
++	switch (attr) {
++	case VIRTIO_SCSI_S_SIMPLE:
++		return TCM_SIMPLE_TAG;
++	case VIRTIO_SCSI_S_ORDERED:
++		return TCM_ORDERED_TAG;
++	case VIRTIO_SCSI_S_HEAD:
++		return TCM_HEAD_TAG;
++	case VIRTIO_SCSI_S_ACA:
++		return TCM_ACA_TAG;
++	default:
++		break;
++	}
++	return TCM_SIMPLE_TAG;
++}
++
+ static void tcm_vhost_submission_work(struct work_struct *work)
+ {
+ 	struct tcm_vhost_cmd *cmd =
+@@ -936,9 +953,10 @@ static void tcm_vhost_submission_work(struct work_struct *work)
+ 	rc = target_submit_cmd_map_sgls(se_cmd, tv_nexus->tvn_se_sess,
+ 			cmd->tvc_cdb, &cmd->tvc_sense_buf[0],
+ 			cmd->tvc_lun, cmd->tvc_exp_data_len,
+-			cmd->tvc_task_attr, cmd->tvc_data_direction,
+-			TARGET_SCF_ACK_KREF, sg_ptr, cmd->tvc_sgl_count,
+-			NULL, 0, sg_prot_ptr, cmd->tvc_prot_sgl_count);
++			vhost_scsi_to_tcm_attr(cmd->tvc_task_attr),
++			cmd->tvc_data_direction, TARGET_SCF_ACK_KREF,
++			sg_ptr, cmd->tvc_sgl_count, NULL, 0, sg_prot_ptr,
++			cmd->tvc_prot_sgl_count);
+ 	if (rc < 0) {
+ 		transport_send_check_condition_and_sense(se_cmd,
+ 				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+-- 
+1.9.1
