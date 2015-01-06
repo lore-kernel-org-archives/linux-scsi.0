@@ -1,107 +1,78 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH v2] virtio-scsi: Fix the race condition in
- virtscsi_handle_event
-Date: Tue, 6 Jan 2015 21:25:24 +0800
-Message-ID: <20150106132524.GA21978@fam-t430.nay.redhat.com>
-References: <1420529616-2757-1-git-send-email-famz@redhat.com>
- <20150106093532.GA29800@redhat.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v1 0/2] Add the PMP support for APM X-Gene SoC AHCI SATA
+ Host Controller driver.
+Date: Tue, 6 Jan 2015 19:06:53 +0530
+Message-ID: <CAOHikRBs=tH+MTPTmhDkEpV67grLWJK+6a-i8qeMyx_dJ9oyeA@mail.gmail.com>
+References: <1420538536-32165-1-git-send-email-stripathi@apm.com>
+	<20150106125252.GB3077@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150106093532.GA29800@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Venkatesh Srinivas <venkateshs@google.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod5og119.obsmtp.com ([64.18.0.189]:60697 "HELO
+	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753079AbbAFNgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 08:36:54 -0500
+Received: by mail-yk0-f182.google.com with SMTP id 131so11295439ykp.27
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2015 05:36:53 -0800 (PST)
+In-Reply-To: <20150106125252.GB3077@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
 
-On Tue, 01/06 11:35, Michael S. Tsirkin wrote:
-> On Tue, Jan 06, 2015 at 03:33:36PM +0800, Fam Zheng wrote:
-> > There is a race condition in virtscsi_handle_event, when many device
-> > hotplug/unplug events flush in quickly.
-> > 
-> > The scsi_remove_device in virtscsi_handle_transport_reset may trigger
-> > the BUG_ON in scsi_target_reap, because the state is altered behind it,
-> > probably by scsi_scan_host of another event. I'm able to reproduce it by
-> > repeatedly plugging and unplugging a scsi disk with the same lun number.
-> > 
-> > To make is safe, a single thread workqueue local to the module is added
-> > which runs the scan work. With this change, the panic goes away.
-> > 
-> > Signed-off-by: Fam Zheng <famz@redhat.com>
-> > ---
-> > 
-> > v2: Use a single threaded workqueue instead of mutex to serialize work
-> > (Venkatesh)
-> > ---
-> >  drivers/scsi/virtio_scsi.c | 14 +++++++++++++-
-> >  1 file changed, 13 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> > index c52bb5d..71b0091 100644
-> > --- a/drivers/scsi/virtio_scsi.c
-> > +++ b/drivers/scsi/virtio_scsi.c
-> > @@ -120,6 +120,8 @@ struct virtio_scsi {
-> >  
-> >  static struct kmem_cache *virtscsi_cmd_cache;
-> >  static mempool_t *virtscsi_cmd_pool;
-> > +static struct workqueue_struct *virtscsi_scan_wq;
-> > +
-> >  
-> 
-> Don't add two empty lines please.
-> 
-> >  static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
-> >  {
-> > @@ -404,7 +406,7 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
-> >  	struct virtio_scsi_event_node *event_node = buf;
-> >  
-> >  	if (!vscsi->stop_events)
-> > -		queue_work(system_freezable_wq, &event_node->work);
-> > +		queue_work(virtscsi_scan_wq, &event_node->work);
-> >  }
-> >  
-> >  static void virtscsi_event_done(struct virtqueue *vq)
-> > @@ -1119,6 +1121,12 @@ static int __init init(void)
-> >  		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
-> >  		goto error;
-> >  	}
-> > +	virtscsi_scan_wq = create_singlethread_workqueue("virtscsi-scan");
-> > +	if (!virtscsi_scan_wq) {
-> > +		pr_err("create_singlethread_workqueue() for virtscsi_scan_wq failed\n");
-> > +		goto error;
-> > +	}
-> > +
-> >  	ret = register_virtio_driver(&virtio_scsi_driver);
-> >  	if (ret < 0)
-> >  		goto error;
-> > @@ -1126,6 +1134,9 @@ static int __init init(void)
-> >  	return 0;
-> >  
-> >  error:
-> > +	if (virtscsi_scan_wq) {
-> > +		destroy_workqueue(virtscsi_scan_wq);
-> > +	}
-> >  	if (virtscsi_cmd_pool) {
-> >  		mempool_destroy(virtscsi_cmd_pool);
-> >  		virtscsi_cmd_pool = NULL;
-> > @@ -1142,6 +1153,7 @@ static void __exit fini(void)
-> >  	unregister_virtio_driver(&virtio_scsi_driver);
-> >  	mempool_destroy(virtscsi_cmd_pool);
-> >  	kmem_cache_destroy(virtscsi_cmd_cache);
-> > +	destroy_workqueue(virtscsi_scan_wq);
-> 
-> 
-> Please destroy in reverse order of initialization:
-> between unregister_virtio_driver and mempool_destroy.
+Hi ,
 
-OK, will fix this. Thanks.
+On Tue, Jan 06, 2015 at 03:32:14PM +0530, Suman Tripathi wrote:
+> This patch set implements the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
 
-Fam
+Hmm... still doesn't apply to for-3.20 after pulling in
+for-3.19-fixes.
 
-> 
-> >  }
-> >  module_init(init);
-> >  module_exit(fini);
-> > -- 
-> > 1.9.3
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.20
+
+What am I doing wrong?
+
+I just again cloned git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
+
+switched to remotes/origin/for-3.20
+
+git apply 0001-ahci_xgene-Implement-the-xgene_ahci_poll_reg_val-to-.patch
+git apply 0002-ahci_xgene-Implement-the-workaround-to-support-PMP-e.patch
+
+Even tried with
+
+patch -p1 < 0001-ahci_xgene-Implement-the-xgene_ahci_poll_reg_val-to-.patch
+patch -p1 <  0002-ahci_xgene-Implement-the-workaround-to-support-PMP-e.patch
+
+Both are working fine. Not sure what's wrong with your environment.
+
+On Tue, Jan 6, 2015 at 6:22 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Tue, Jan 06, 2015 at 03:32:14PM +0530, Suman Tripathi wrote:
+>> This patch set implements the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
+>
+> Hmm... still doesn't apply to for-3.20 after pulling in
+> for-3.19-fixes.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.20
+>
+> What am I doing wrong?
+>
+> Thanks.
+>
+> --
+> tejun
+
+
+
+-- 
+Thanks,
+with regards,
+Suman Tripathi
+CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, 
+is for the sole use of the intended recipient(s) and contains information
+that is confidential and proprietary to Applied Micro Circuits Corporation or its subsidiaries. 
+It is to be used solely for the purpose of furthering the parties' business relationship. 
+All unauthorized review, use, disclosure or distribution is prohibited. 
+If you are not the intended recipient, please contact the sender by reply e-mail 
+and destroy all copies of the original message.
+
