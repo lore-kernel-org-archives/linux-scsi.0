@@ -1,100 +1,80 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH v2] virtio-scsi: Fix the race condition in
- virtscsi_handle_event
-Date: Tue, 6 Jan 2015 11:35:32 +0200
-Message-ID: <20150106093532.GA29800@redhat.com>
-References: <1420529616-2757-1-git-send-email-famz@redhat.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] pmcraid: PMC-Sierra MaxRAID driver to support 6Gb/s SAS
+ RAID controller
+Date: Tue, 6 Jan 2015 12:53:08 +0300
+Message-ID: <20150106095308.GA8698@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17414 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbbAFJxW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 04:53:22 -0500
 Content-Disposition: inline
-In-Reply-To: <1420529616-2757-1-git-send-email-famz@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Venkatesh Srinivas <venkateshs@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: anil_ravindranath@pmc-sierra.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 06, 2015 at 03:33:36PM +0800, Fam Zheng wrote:
-> There is a race condition in virtscsi_handle_event, when many device
-> hotplug/unplug events flush in quickly.
-> 
-> The scsi_remove_device in virtscsi_handle_transport_reset may trigger
-> the BUG_ON in scsi_target_reap, because the state is altered behind it,
-> probably by scsi_scan_host of another event. I'm able to reproduce it by
-> repeatedly plugging and unplugging a scsi disk with the same lun number.
-> 
-> To make is safe, a single thread workqueue local to the module is added
-> which runs the scan work. With this change, the panic goes away.
-> 
-> Signed-off-by: Fam Zheng <famz@redhat.com>
-> ---
-> 
-> v2: Use a single threaded workqueue instead of mutex to serialize work
-> (Venkatesh)
-> ---
->  drivers/scsi/virtio_scsi.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index c52bb5d..71b0091 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -120,6 +120,8 @@ struct virtio_scsi {
->  
->  static struct kmem_cache *virtscsi_cmd_cache;
->  static mempool_t *virtscsi_cmd_pool;
-> +static struct workqueue_struct *virtscsi_scan_wq;
-> +
->  
+(Sorry, this code is really old, and normally I wouldn't report it but
+ I'm making a tutorial).
 
-Don't add two empty lines please.
+Hello Anil Ravindranath,
 
->  static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
->  {
-> @@ -404,7 +406,7 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
->  	struct virtio_scsi_event_node *event_node = buf;
->  
->  	if (!vscsi->stop_events)
-> -		queue_work(system_freezable_wq, &event_node->work);
-> +		queue_work(virtscsi_scan_wq, &event_node->work);
->  }
->  
->  static void virtscsi_event_done(struct virtqueue *vq)
-> @@ -1119,6 +1121,12 @@ static int __init init(void)
->  		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
->  		goto error;
->  	}
-> +	virtscsi_scan_wq = create_singlethread_workqueue("virtscsi-scan");
-> +	if (!virtscsi_scan_wq) {
-> +		pr_err("create_singlethread_workqueue() for virtscsi_scan_wq failed\n");
-> +		goto error;
-> +	}
-> +
->  	ret = register_virtio_driver(&virtio_scsi_driver);
->  	if (ret < 0)
->  		goto error;
-> @@ -1126,6 +1134,9 @@ static int __init init(void)
->  	return 0;
->  
->  error:
-> +	if (virtscsi_scan_wq) {
-> +		destroy_workqueue(virtscsi_scan_wq);
-> +	}
->  	if (virtscsi_cmd_pool) {
->  		mempool_destroy(virtscsi_cmd_pool);
->  		virtscsi_cmd_pool = NULL;
-> @@ -1142,6 +1153,7 @@ static void __exit fini(void)
->  	unregister_virtio_driver(&virtio_scsi_driver);
->  	mempool_destroy(virtscsi_cmd_pool);
->  	kmem_cache_destroy(virtscsi_cmd_cache);
-> +	destroy_workqueue(virtscsi_scan_wq);
+The patch 89a368104150: "[SCSI] pmcraid: PMC-Sierra MaxRAID driver to
+support 6Gb/s SAS RAID controller" from Aug 25, 2009, leads to the
+following static checker warning:
 
+	drivers/scsi/pmcraid.c:3860 pmcraid_ioctl_passthrough()
+	error: potential NULL dereference 'cmd->scsi_cmd'.
 
-Please destroy in reverse order of initialization:
-between unregister_virtio_driver and mempool_destroy.
+drivers/scsi/pmcraid.c
+  3764          cmd->scsi_cmd = NULL;
+                ^^^^^^^^^^^^^^^^^^^^
+We set this to NULL here.
 
->  }
->  module_init(init);
->  module_exit(fini);
-> -- 
-> 1.9.3
+  3765          ioarcb = &(cmd->ioa_cb->ioarcb);
+  3766  
+  3767          /* Copy the user-provided IOARCB stuff field by field */
+  3768          ioarcb->resource_handle = buffer->ioarcb.resource_handle;
+  3769          ioarcb->data_transfer_length = buffer->ioarcb.data_transfer_length;
+  3770          ioarcb->cmd_timeout = buffer->ioarcb.cmd_timeout;
+  3771          ioarcb->request_type = buffer->ioarcb.request_type;
+  3772          ioarcb->request_flags0 = buffer->ioarcb.request_flags0;
+  3773          ioarcb->request_flags1 = buffer->ioarcb.request_flags1;
+  3774          memcpy(ioarcb->cdb, buffer->ioarcb.cdb, PMCRAID_MAX_CDB_LEN);
+  3775  
+  3776          if (buffer->ioarcb.add_cmd_param_length) {
+  3777                  ioarcb->add_cmd_param_length =
+  3778                          buffer->ioarcb.add_cmd_param_length;
+  3779                  ioarcb->add_cmd_param_offset =
+  3780                          buffer->ioarcb.add_cmd_param_offset;
+  3781                  memcpy(ioarcb->add_data.u.add_cmd_params,
+  3782                          buffer->ioarcb.add_data.u.add_cmd_params,
+  3783                          buffer->ioarcb.add_cmd_param_length);
+  3784          }
+  3785  
+  3786          /* set hrrq number where the IOA should respond to. Note that all cmds
+  3787           * generated internally uses hrrq_id 0, exception to this is the cmd
+  3788           * block of scsi_cmd which is re-used (e.g. cancel/abort), which uses
+  3789           * hrrq_id assigned here in queuecommand
+  3790           */
+  3791          ioarcb->hrrq_id = atomic_add_return(1, &(pinstance->last_message_id)) %
+  3792                            pinstance->num_hrrq;
+  3793  
+
+[ snip ]
+
+  3857                          cmd->ioa_cb->ioarcb.cdb[0]);
+  3858  
+  3859                  spin_lock_irqsave(pinstance->host->host_lock, lock_flags);
+  3860                  cancel_cmd = pmcraid_abort_cmd(cmd);
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+This will Oops because cmd->scsi_cmd is NULL.
+
+  3861                  spin_unlock_irqrestore(pinstance->host->host_lock, lock_flags);
+  3862  
+  3863                  if (cancel_cmd) {
+
+regards,
+dan carpenter
