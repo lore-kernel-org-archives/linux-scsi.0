@@ -1,8 +1,8 @@
-From: Fam Zheng <famz@redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
 Subject: Re: [PATCH] virtio-scsi: Fix the race condition in
  virtscsi_handle_event
-Date: Tue, 6 Jan 2015 11:57:13 +0800
-Message-ID: <20150106035713.GB2381@fam-t430.nay.redhat.com>
+Date: Tue, 6 Jan 2015 09:15:49 +0200
+Message-ID: <20150106071549.GA29433@redhat.com>
 References: <1420437898-32419-1-git-send-email-famz@redhat.com>
  <CAHdzE-_QmNZVhmChHmy3FgRjJ692Apw2Va-SGoTz25s0fLjbvQ@mail.gmail.com>
  <20150105221059.GB23518@redhat.com>
@@ -10,18 +10,18 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49064 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41025 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753277AbbAFD4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2015 22:56:32 -0500
+	id S1752383AbbAFHQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2015 02:16:01 -0500
 Content-Disposition: inline
 In-Reply-To: <20150105221059.GB23518@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Venkatesh Srinivas <venkateshs@google.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Linux Kernel Developers List <linux-kernel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>
+To: Venkatesh Srinivas <venkateshs@google.com>
+Cc: Fam Zheng <famz@redhat.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Linux Kernel Developers List <linux-kernel@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue, 01/06 00:10, Michael S. Tsirkin wrote:
+On Tue, Jan 06, 2015 at 12:10:59AM +0200, Michael S. Tsirkin wrote:
 > On Mon, Jan 05, 2015 at 11:48:47AM -0800, Venkatesh Srinivas wrote:
 > > On Sun, Jan 4, 2015 at 10:04 PM, Fam Zheng <famz@redhat.com> wrote:
 > >=20
@@ -118,13 +118,11 @@ he system
 >=20
 > Or use the system single-threaded wq.
 
-Good idea, I'll change to that.
 
-Thanks,
+I was sure we have one, but apparently not :(
 
-=46am
+Pls ignore the comment, sorry about the noise.
 
->=20
 >=20
 > > Reviewed-by: Venkatesh Srinivas <venkateshs@google.com>
 > >=20
