@@ -1,43 +1,82 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH] scsi_debug: check for bigger value first
-Date: Tue,  6 Jan 2015 23:03:18 +0200
-Message-ID: <1420578198-24241-1-git-send-email-andy.shevchenko@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] Allow EA reservation holders to read from device.
+Date: Tue, 06 Jan 2015 13:23:27 -0800
+Message-ID: <1420579407.6927.20.camel@haakon3.risingtidesystems.com>
+References: <54AADCC8.2010403@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw03.mail.saunalahti.fi ([195.197.172.111]:56187 "EHLO
-	gw03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbbAFVKD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 16:10:03 -0500
+Received: from mail.linux-iscsi.org ([67.23.28.174]:57646 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755877AbbAFVX3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 16:23:29 -0500
+In-Reply-To: <54AADCC8.2010403@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D . Milne" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Lee Duncan <lduncan@suse.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Even for signed types we have to check for bigger positive value first.
-Otherwise it will be never happened.
+Hi Lee,
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Apologies for the delayed response, just catching up from the holidays.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 8bcf6ad..a34df1d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4850,10 +4850,10 @@ static int __init scsi_debug_init(void)
- 	/* play around with geometry, don't waste too much on track 0 */
- 	sdebug_heads = 8;
- 	sdebug_sectors_per = 32;
--	if (scsi_debug_dev_size_mb >= 16)
--		sdebug_heads = 32;
--	else if (scsi_debug_dev_size_mb >= 256)
-+	if (scsi_debug_dev_size_mb >= 256)
- 		sdebug_heads = 64;
-+	else if (scsi_debug_dev_size_mb >= 16)
-+		sdebug_heads = 32;
- 	sdebug_cylinders_per = (unsigned long)sdebug_capacity /
- 			       (sdebug_sectors_per * sdebug_heads);
- 	if (sdebug_cylinders_per >= 1024) {
--- 
-1.8.3.101.g727a46b
+Comments below.
+
+On Mon, 2015-01-05 at 10:49 -0800, Lee Duncan wrote:
+> From: Lee Duncan <lduncan@suse.com>
+> 
+> For PGR reservation type Exclusive Access, allow all
+> registrants to read from the device.
+> 
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/target_core_pr.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+> index 85564998500a..cb762b174c08 100644
+> --- a/drivers/target/target_core_pr.c
+> +++ b/drivers/target/target_core_pr.c
+> @@ -551,6 +551,18 @@ static int core_scsi3_pr_seq_non_holder(
+> 
+>                         return 0;
+>                 }
+> +       } else if (we && registered_nexus) {
+> +               /*
+> +                * Reads are allowed for Write Exclusive locks
+> +                * from all registrants.
+> +                */
+> +               if (cmd->data_direction == DMA_FROM_DEVICE) {
+> +                       pr_debug("Allowing READ CDB: 0x%02x for %s"
+> +                               " reservation\n", cdb[0],
+> +                               core_scsi3_pr_dump_type(pr_reg_type));
+> +
+> +                       return 0;
+> +               }
+>         }
+>         pr_debug("%s Conflict for %sregistered nexus %s CDB: 0x%2x"
+>                 " for %s reservation\n", transport_dump_cmd_direction(cmd),
+
+I'm confused as to why this is necessary..
+
+Doesn't the conditional check directly above this one ensure that
+all_reg=true && registered_nexus=true implicitly allow READ CDBs to be
+processed..?
+
+How is this new check for PR_TYPE_WRITE_EXCLUSIVE_ALLREG reservation any
+different..?
+
+--nab
+
+
+
+
+
+
+
+
+
+
 
