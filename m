@@ -1,50 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for the
- ATA_CMD_PACKET PIO mode command.
-Date: Tue, 6 Jan 2015 07:46:46 -0500
-Message-ID: <20150106124646.GA3077@htj.dyndns.org>
-References: <1418748575-27301-1-git-send-email-stripathi@apm.com>
- <1418748575-27301-3-git-send-email-stripathi@apm.com>
- <20150105135910.GD15833@htj.dyndns.org>
- <CAOHikRDXvN2guikwBr8E+pdRsm9UKeqMCA7LStGCxOMWRvHdBg@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v1 0/2] Add the PMP support for APM X-Gene SoC AHCI SATA
+ Host Controller driver.
+Date: Tue, 6 Jan 2015 07:52:52 -0500
+Message-ID: <20150106125252.GB3077@htj.dyndns.org>
+References: <1420538536-32165-1-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAOHikRDXvN2guikwBr8E+pdRsm9UKeqMCA7LStGCxOMWRvHdBg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jon Masters <jcm@redhat.com>, patches@apm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Don Dutile <ddutile@redhat.com>, Olof Johansson <olof@lixom.net>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <1420538536-32165-1-git-send-email-stripathi-qTEPVZfXA3Y@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Cc: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 06, 2015 at 01:51:15PM +0530, Suman Tripathi wrote:
-> Hi
-> 
-> On Tue, Dec 16, 2014 at 10:19:35PM +0530, Suman Tripathi wrote:
-> > This patch addresses the issue with ATA_CMD_PACKET pio mode
-> > command for enumeration and device detection with ATAPI devices.It is the
-> > same issue as in patch
-> >
-> > www.spinics.net/lists/linux-ide/msg49092.html
-> >
-> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> 
-> Applied 1-2 to libata/for-3.18-fixes w/ Sergei's suggested edits.
-> 
-> The patch is applied to libata/for-3.19-fixes not libata/for-3.18-fixes ??
+On Tue, Jan 06, 2015 at 03:32:14PM +0530, Suman Tripathi wrote:
+> This patch set implements the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
 
-Yeap, brainfart.  libata/for-3.19-fixes is the right one.
+Hmm... still doesn't apply to for-3.20 after pulling in
+for-3.19-fixes.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.20
+
+What am I doing wrong?
 
 Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
