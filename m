@@ -1,62 +1,38 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: block: remove artifical max_hw_sectors cap
-Date: Tue, 06 Jan 2015 14:39:16 -0800
-Message-ID: <1420583956.6927.61.camel@haakon3.risingtidesystems.com>
-References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de>
+Subject: Re: [target:nvme_of 3/3]
+ drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol
+ 'nvme_of_fabric_configfs' was not declared. Should it be static?
+Date: Tue, 06 Jan 2015 14:44:42 -0800
+Message-ID: <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
+References: <201501070334.EgwC5iey%fengguang.wu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20141223082805.GA2303@lst.de>
+In-Reply-To: <201501070334.EgwC5iey%fengguang.wu@intel.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2014-12-23 at 09:28 +0100, Christoph Hellwig wrote:
-> On Mon, Dec 22, 2014 at 11:31:53AM +0100, Stefan Priebe - Profihost AG wrote:
-> > Hi,
-> > 
-> > since the below patch i've some problems with iscsi.
-> > 
-> > The LIO based iscsi Server is full of messages like this:
-> > SCSI OP 2ah with too big sectors 8344 exceeds fabric_max_sectors: 8192
-> > 
-> > And the client says:
-> > Buffer I/O error on device sdd, logical block 38861907
-> > lost page write due to I/O error on sdd
-> > 
-> > May be some code fixes for iscsi client is missing?
+On Wed, 2015-01-07 at 03:35 +0800, kbuild test robot wrote:
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git nvme_of
+> head:   40d8c11927282d59855d645b35798edd97828da5
+> commit: 40d8c11927282d59855d645b35798edd97828da5 [3/3] nvme_of: Initial skeleton commit
+> reproduce:
+>   # apt-get install sparse
+>   git checkout 40d8c11927282d59855d645b35798edd97828da5
+>   make ARCH=x86_64 allmodconfig
+>   make C=1 CF=-D__CHECK_ENDIAN__
 > 
-> No, the problem seems that the the target is enforcing a size limit
-> without communicating it through the block limits EVPD page.
 > 
-> Nic, can you fix LIO to expose the proper max xfer size?
+> sparse warnings: (new ones prefixed by >>)
+> 
+> >> drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+> 
+> Please review and possibly fold the followup patch.
+> 
 
-The fabric_max_sectors=8192 value is already being exposed by target in
-block limits EVPD as MAXIMUM TRANSFER LENGTH.
-
-I'm guessing that since the host side support was not added until June
-2014 in commit bcdb247c by MKP, Stefan is likely using an earlier
-initiator that is not honoring this value.
-
-However, this same issue has been reported elsewhere [1] with an MSFT FC
-host sending I/Os of 8 MB that also doesn't appear to honor block limits
-MAXIMUM TRANSFER LENGTH either.
-
-So that said, I think it's about time to go ahead and drop the arbitrary
-limitation of fabric_max_sectors, and simply enforce a sane limit (eg:
-not UINT_MAX) for hw_max_sectors.
-
-The only limitations for backends that I'm aware of is the FILEIO
-FD_MAX_BYTES limit for the number of iovecs per vfs_[writev,readv] call,
-and for IBLOCK what queue_max_hw_sectors() reports for raw block
-make_request() based drivers that aren't able to 
-
-I'll put together a patch soon to drop the fabric_max_sectors stuff, and
-use the existing hw_max_sectors to enforce any backend specific I/O size
-limitations.
+Fixed.  Thanks Fengguang!
 
 --nab
-
-[1] http://www.spinics.net/lists/target-devel/msg08024.html
