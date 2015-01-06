@@ -1,39 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 00/10] scsi logging update: the real thing
-Date: Tue, 06 Jan 2015 19:26:38 +0100
-Message-ID: <54AC28DE.7050303@suse.de>
-References: <1416230728-66425-1-git-send-email-hare@suse.de> <20150105165917.GA23473@infradead.org>
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [target:nvme_of 3/3]
+ drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol
+ 'nvme_of_fabric_configfs' was not declared. Should it be static?
+Date: Wed, 7 Jan 2015 03:35:56 +0800
+Message-ID: <201501070334.EgwC5iey%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42290 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047AbbAFS0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:26:41 -0500
-In-Reply-To: <20150105165917.GA23473@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: target-devel-owner@vger.kernel.org
+To: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: kbuild-all@01.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Robert Elliott <elliott@hp.com>, Ewan Milne <emilne@redhat.com>, linux-scsi@vger.kernel.org
 
-On 01/05/2015 05:59 PM, Christoph Hellwig wrote:
-> Can you send an updated version against the scsi-for-3.20 tree so tha=
-t
-> we can get this series in early for the 3.20 cycle?
->=20
-I'm about to prepare it.
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git nvme_of
+head:   40d8c11927282d59855d645b35798edd97828da5
+commit: 40d8c11927282d59855d645b35798edd97828da5 [3/3] nvme_of: Initial skeleton commit
+reproduce:
+  # apt-get install sparse
+  git checkout 40d8c11927282d59855d645b35798edd97828da5
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
