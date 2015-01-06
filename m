@@ -1,47 +1,50 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with DID_RESET status for log_info value 0x0x32010081
-Date: Tue,  6 Jan 2015 17:24:12 +0530
-Message-ID: <1420545252-35340-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for the
+ ATA_CMD_PACKET PIO mode command.
+Date: Tue, 6 Jan 2015 07:46:46 -0500
+Message-ID: <20150106124646.GA3077@htj.dyndns.org>
+References: <1418748575-27301-1-git-send-email-stripathi@apm.com>
+ <1418748575-27301-3-git-send-email-stripathi@apm.com>
+ <20150105135910.GD15833@htj.dyndns.org>
+ <CAOHikRDXvN2guikwBr8E+pdRsm9UKeqMCA7LStGCxOMWRvHdBg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <CAOHikRDXvN2guikwBr8E+pdRsm9UKeqMCA7LStGCxOMWRvHdBg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jon Masters <jcm@redhat.com>, patches@apm.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Don Dutile <ddutile@redhat.com>, Olof Johansson <olof@lixom.net>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-For any SCSI command, if the driver receives IOC status = SCSI_IOC_TERMINATED and log info = 0x32010081
- then that command will be completed with DID_RESET host status.
+On Tue, Jan 06, 2015 at 01:51:15PM +0530, Suman Tripathi wrote:
+> Hi
+> 
+> On Tue, Dec 16, 2014 at 10:19:35PM +0530, Suman Tripathi wrote:
+> > This patch addresses the issue with ATA_CMD_PACKET pio mode
+> > command for enumeration and device detection with ATAPI devices.It is the
+> > same issue as in patch
+> >
+> > www.spinics.net/lists/linux-ide/msg49092.html
+> >
+> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> 
+> Applied 1-2 to libata/for-3.18-fixes w/ Sergei's suggested edits.
+> 
+> The patch is applied to libata/for-3.19-fixes not libata/for-3.18-fixes ??
 
-The definition of this log info value is "Virtual IO has failed and has to be retried".
+Yeap, brainfart.  libata/for-3.19-fixes is the right one.
 
-Firmware will provide this log info value with IOC Status
-"SCSI_IOC_TERMINATED", whenever a drive (with is a part of a volume)
-is pulled and pushed back within some minimal delay.  With this log info
-value, firmware informs the driver to retry the failed IO command
-infinite times, so to provide some time for the firmware to discover
-the reinserted drive successfully instated of just retrying failed
-command for five times( doesn't giving enough time for firmware to
-complete the drive discovery) and failing the IO permanently even
-though drive came back successfully.
+Thanks.
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
- drivers/scsi/mpt2sas/mpt2sas_scsih.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 38acb91..c6bb136 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -4574,6 +4574,10 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 			scmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 			goto out;
- 		}
-+		if (log_info == 0x32010081) {
-+			scmd->result = DID_RESET << 16;
-+			break;
-+		}
- 		scmd->result = DID_SOFT_ERROR << 16;
- 		break;
- 	case MPI2_IOCSTATUS_SCSI_TASK_TERMINATED:
 -- 
-2.0.2
+tejun
