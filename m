@@ -1,82 +1,50 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] Allow EA reservation holders to read from device.
-Date: Tue, 06 Jan 2015 13:23:27 -0800
-Message-ID: <1420579407.6927.20.camel@haakon3.risingtidesystems.com>
-References: <54AADCC8.2010403@suse.com>
+Subject: Re: [PATCH] vhost-scsi: Add missing virtio-scsi -> TCM attribute
+ conversion
+Date: Tue, 06 Jan 2015 13:46:03 -0800
+Message-ID: <1420580763.6927.36.camel@haakon3.risingtidesystems.com>
+References: <1420575485-16447-1-git-send-email-nab@daterainc.com>
+	 <20150106210741.GA14536@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:57646 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36409 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755877AbbAFVX3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 16:23:29 -0500
-In-Reply-To: <54AADCC8.2010403@suse.com>
+	with ESMTP id S932536AbbAFVqF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 16:46:05 -0500
+In-Reply-To: <20150106210741.GA14536@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>
 
-Hi Lee,
-
-Apologies for the delayed response, just catching up from the holidays.
-
-Comments below.
-
-On Mon, 2015-01-05 at 10:49 -0800, Lee Duncan wrote:
-> From: Lee Duncan <lduncan@suse.com>
+On Tue, 2015-01-06 at 23:07 +0200, Michael S. Tsirkin wrote:
+> On Tue, Jan 06, 2015 at 08:18:05PM +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > While looking at hch's recent conversion to drop the MSG_*_TAG
+> > definitions, I noticed a long standing bug in vhost-scsi where
+> > the VIRTIO_SCSI_S_* attribute definitions where incorrectly
+> > being passed directly into target_submit_cmd_map_sgls().
+> > 
+> > This patch adds the missing virtio-scsi to TCM/SAM task attribute
+> > conversion.
+> > 
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Michael S. Tsirkin <mst@redhat.com>
+> > Cc: Paolo Bonzini <pbonzini@redhat.com>
+> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> For PGR reservation type Exclusive Access, allow all
-> registrants to read from the device.
+> Cc stable as well?
 > 
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_pr.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> index 85564998500a..cb762b174c08 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -551,6 +551,18 @@ static int core_scsi3_pr_seq_non_holder(
-> 
->                         return 0;
->                 }
-> +       } else if (we && registered_nexus) {
-> +               /*
-> +                * Reads are allowed for Write Exclusive locks
-> +                * from all registrants.
-> +                */
-> +               if (cmd->data_direction == DMA_FROM_DEVICE) {
-> +                       pr_debug("Allowing READ CDB: 0x%02x for %s"
-> +                               " reservation\n", cdb[0],
-> +                               core_scsi3_pr_dump_type(pr_reg_type));
-> +
-> +                       return 0;
-> +               }
->         }
->         pr_debug("%s Conflict for %sregistered nexus %s CDB: 0x%2x"
->                 " for %s reservation\n", transport_dump_cmd_direction(cmd),
 
-I'm confused as to why this is necessary..
+That makes sense here, but anything < v3.19-rc will need to use the old
+MSG_*_TAG defines.
 
-Doesn't the conditional check directly above this one ensure that
-all_reg=true && registered_nexus=true implicitly allow READ CDBs to be
-processed..?
-
-How is this new check for PR_TYPE_WRITE_EXCLUSIVE_ALLREG reservation any
-different..?
+Will fix up that once Greg-KH complains about the compile failure(s).
 
 --nab
-
-
-
-
-
-
-
-
 
 
 
