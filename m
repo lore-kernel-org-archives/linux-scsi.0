@@ -1,50 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] vhost-scsi: Add missing virtio-scsi -> TCM attribute
- conversion
-Date: Tue, 06 Jan 2015 13:46:03 -0800
-Message-ID: <1420580763.6927.36.camel@haakon3.risingtidesystems.com>
-References: <1420575485-16447-1-git-send-email-nab@daterainc.com>
-	 <20150106210741.GA14536@redhat.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: RFC: should we deprecate unmaintained isa-only drivers?
+Date: Tue, 6 Jan 2015 23:27:28 +0100
+Message-ID: <201501062327.28830.linux@rainbow-software.org>
+References: <20141230160616.GA29149@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36409 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932536AbbAFVqF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 16:46:05 -0500
-In-Reply-To: <20150106210741.GA14536@redhat.com>
+Received: from mail-1.atlantis.sk ([80.94.52.57]:47045 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571AbbAFW2D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 17:28:03 -0500
+In-Reply-To: <20141230160616.GA29149@infradead.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Paolo Bonzini <pbonzini@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Miroslav Zagorac <zaga@fly.cc.fer.hr>, Dario Ballabio <ballabio_dario@emc.com>
 
-On Tue, 2015-01-06 at 23:07 +0200, Michael S. Tsirkin wrote:
-> On Tue, Jan 06, 2015 at 08:18:05PM +0000, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > While looking at hch's recent conversion to drop the MSG_*_TAG
-> > definitions, I noticed a long standing bug in vhost-scsi where
-> > the VIRTIO_SCSI_S_* attribute definitions where incorrectly
-> > being passed directly into target_submit_cmd_map_sgls().
-> > 
-> > This patch adds the missing virtio-scsi to TCM/SAM task attribute
-> > conversion.
-> > 
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Michael S. Tsirkin <mst@redhat.com>
-> > Cc: Paolo Bonzini <pbonzini@redhat.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Cc stable as well?
-> 
+On Tuesday 30 December 2014 17:06:16 Christoph Hellwig wrote:
+> We've got a few very old, isa-only SCSI HBA drivers in the tree.  Of
+> those only one (aha152x) sas significant maintaince since the dawn
+> of git, all others only saw global / automatic updates.  4 of those
+> are fairly trivial wrappers aroudn the NCR538 core, so I don't mind
+> keeping them:
+>
+>  - dtc
+>  - g_NCR5380
+>  - pas16
+>  - t128
+>
+> but I'd love to know if anyone is actually using the other drivers:
+>
+>  - wd7000
+>  - aha1542
+>  - in2000
+>  - NCR53c406
+>  - sym53c416
+>  - u14-34f
+>  - ultrastor
+>
+> note that the last two even drive the same hardware.  There is
+> significant cruft in all these, so dropping them would help
+> further maintainance of the SCSI midlayer.
 
-That makes sense here, but anything < v3.19-rc will need to use the old
-MSG_*_TAG defines.
+I think I have a AHA-1542B ISA card so I can fix the aha1542 driver.
 
-Will fix up that once Greg-KH complains about the compile failure(s).
-
---nab
-
-
-
+-- 
+Ondrej Zary
