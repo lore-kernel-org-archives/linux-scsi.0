@@ -1,34 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 90601] panic on write to 3ware raid array
-Date: Tue, 06 Jan 2015 15:48:21 +0000
-Message-ID: <bug-90601-11613-tNFMMExafc@https.bugzilla.kernel.org/>
-References: <bug-90601-11613@https.bugzilla.kernel.org/>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
+ during kdump) driver
+Date: Tue, 06 Jan 2015 17:15:19 +0100
+Message-ID: <54AC0A17.8020405@redhat.com>
+References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58626 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756167AbbAFPsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:48:24 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 40C72200E6
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2015 15:48:23 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id C2FD3200FF
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2015 15:48:21 +0000 (UTC)
-In-Reply-To: <bug-90601-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org
+Cc: Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=90601
+On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
+> Dear stable maintainers,
+> Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
+>  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
+> earlier, if applicable)?
 
---- Comment #7 from merlin@liao.homelinux.org ---
-Created attachment 162661
-  --> https://bugzilla.kernel.org/attachment.cgi?id=162661&action=edit
-kernel config
+Please do not apply this patch isolated from his friend, the
+859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
+needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+In addition to that, after the original issue goes away you may notice sometimes
+an unhandled irq 16 message, to fix this a patch is posted 
+here http://www.spinics.net/lists/linux-scsi/msg80316.html
+This patch still awaits a maintainers review though.
+
+Probably the best idea is to wait until the issue is solved completely.
+
+Tomas
+ 
+
+> I've tried the 3.10, and it applies cleanly there. Not sure about
+> earlier versions.
+> Many Thanks,
+> Masoud Sharbiani
+> Twitter Inc.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
