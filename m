@@ -1,81 +1,53 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 2/3] scsi: ufs: adjust module reference for scsi host
-Date: Wed,  7 Jan 2015 23:03:01 +0900
-Message-ID: <1420639382-2219-3-git-send-email-akinobu.mita@gmail.com>
-References: <1420639382-2219-1-git-send-email-akinobu.mita@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: ->queue_rq can't sleep
+Date: Wed,  7 Jan 2015 15:20:53 +0100
+Message-ID: <1420640453-3493-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:64360 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbbAGOD3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 09:03:29 -0500
-Received: by mail-pa0-f51.google.com with SMTP id ey11so5018076pad.10
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2015 06:03:29 -0800 (PST)
-In-Reply-To: <1420639382-2219-1-git-send-email-akinobu.mita@gmail.com>
+Received: from casper.infradead.org ([85.118.1.10]:34427 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbbAGOVm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 09:21:42 -0500
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1Y8rUS-00040A-Mo
+	for linux-scsi@vger.kernel.org; Wed, 07 Jan 2015 14:21:40 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-While accessing a UFS device, the module reference count for core driver
-(ufshcd) is incremented but not incremented for the actual glue driver
-(ufshcd-pci or ufshcd-pltfrm).  Because these drivers allocate scsi hosts
-with scsi_host_template defined in ufshcd module.  So these drivers always
-can be unloaded.
+The blk-mq ->queue_rq method is always called from process context,
+but might have preemption disabled.  This means we still always
+have to use GFP_ATOMIC for memory allocations, and thus need to
+revert part of commit 3c356bde1 ("scsi: stop passing a gfp_mask
+argument down the command setup path").
 
-This fixes it by adjusting module reference after scsi host allocation.
-
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Sasha Levin <sasha.levin@oracle.com>
 ---
-No change from v1
+ drivers/scsi/scsi_lib.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
- drivers/scsi/ufs/ufshcd-pci.c    | 1 +
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 +
- drivers/scsi/ufs/ufshcd.c        | 1 -
- 3 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index d15eaa4..9fe21b4 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -142,6 +142,7 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return err;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9ea95dd..6d5c0b8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+ {
+ 	struct scatterlist *first_chunk = NULL;
+-	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+ 	int ret;
+ 
+ 	BUG_ON(!nents);
+@@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
  	}
  
-+	hba->host->module = THIS_MODULE;
- 	INIT_LIST_HEAD(&hba->clk_list_head);
- 
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 95b64e0..ea3ca99 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -322,6 +322,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
- 		goto out;
- 	}
- 
-+	hba->host->module = THIS_MODULE;
- 	hba->vops = get_variant_ops(&pdev->dev);
- 
- 	err = ufshcd_parse_clock_info(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2e26025..f0aff90 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4202,7 +4202,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- }
- 
- static struct scsi_host_template ufshcd_driver_template = {
--	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
- 	.proc_name		= UFSHCD,
- 	.queuecommand		= ufshcd_queuecommand,
+ 	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
+-			       first_chunk, gfp_mask, scsi_sg_alloc);
++			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
+ 	if (unlikely(ret))
+ 		scsi_free_sgtable(sdb, mq);
+ 	return ret;
 -- 
 1.9.1
 
