@@ -1,43 +1,54 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] scsi: ufs & ums-*: fix module reference counting
-Date: Wed, 7 Jan 2015 10:09:03 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501071004310.1374-100000@iolanthe.rowland.org>
-References: <20150107142830.GA659@lst.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150107142830.GA659-jcswGhMUV9g@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+From: Yaniv Gardi <ygardi@qti.qualcomm.com>
+Subject: [PATCH v5 0/4] *** add support for UFS in QCOM platforms ***
+Date: Wed,  7 Jan 2015 17:43:27 +0200
+Message-ID: <1420645411-26222-1-git-send-email-ygardi@qti.qualcomm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:33787 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908AbbAGPnt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 10:43:49 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Yaniv Gardi <ygardi@qti.qualcomm.com>
 
-On Wed, 7 Jan 2015, Christoph Hellwig wrote:
+*** BLURB HERE ***
 
-> On Wed, Jan 07, 2015 at 11:02:59PM +0900, Akinobu Mita wrote:
-> > While accessing a scsi_device, the use count of the underlying LLDD module
-> > is incremented.  The module reference is retrieved through .module field of
-> > struct scsi_host_template.
-> > 
-> > This mapping between scsi_device and underlying LLDD module works well
-> > except some scsi drivers (ufs and unusual usb storage drivers).  These
-> > drivers consist with core driver and actual LLDDs, and scsi_host_template
-> > is defined in the core driver.  So the actual LLDDs can be unloaded even if
-> > the scsi_device is being accessed.
-> 
-> Why don't ufs and usb-storage define the host templates in the sub drivers?
-> That's what libata or the mpt fusion driver do.
+Yaniv Gardi (4):
+  phy: qcom-ufs: add support for 20nm phy
+  scsi:ufs-qcom: add specific support for Qualcomm platforms
+  phy: qcom-ufs: add support for 14nm phy
+  scsi: ufs-qcom-ice: add Inline Crypto Engine (ICE) support for UFS
 
-Originally the subdrivers were all part of usb-storage.  When they were
-split out into separate modules, there didn't seem to be any need to
-copy the host template into each one.  (Especially since some of the
-method pointers in the host template refer to routines in usb-storage
-itself, not in the subdrivers.)  The fact that the .module member was
-no longer adequate escaped our notice at the time.
+ drivers/phy/Makefile                |    3 +
+ drivers/phy/phy-qcom-ufs-i.h        |  167 ++++++
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c |  201 +++++++
+ drivers/phy/phy-qcom-ufs-qmp-14nm.h |  177 ++++++
+ drivers/phy/phy-qcom-ufs-qmp-20nm.c |  257 +++++++++
+ drivers/phy/phy-qcom-ufs-qmp-20nm.h |  235 ++++++++
+ drivers/phy/phy-qcom-ufs.c          |  745 ++++++++++++++++++++++++
+ drivers/scsi/ufs/Kconfig            |   24 +
+ drivers/scsi/ufs/Makefile           |    2 +
+ drivers/scsi/ufs/ufs-qcom-ice.c     |  520 +++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom-ice.h     |  113 ++++
+ drivers/scsi/ufs/ufs-qcom.c         | 1058 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.h         |  195 +++++++
+ include/linux/phy/phy-qcom-ufs.h    |   33 ++
+ 14 files changed, 3730 insertions(+)
+ create mode 100644 drivers/phy/phy-qcom-ufs-i.h
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-14nm.c
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-14nm.h
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.c
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.h
+ create mode 100644 drivers/phy/phy-qcom-ufs.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.h
+ create mode 100644 drivers/scsi/ufs/ufs-qcom.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom.h
+ create mode 100644 include/linux/phy/phy-qcom-ufs.h
 
-Alan Stern
+-- 
+1.8.2.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
