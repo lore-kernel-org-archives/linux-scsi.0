@@ -1,64 +1,46 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Wed, 07 Jan 2015 08:58:37 -0800
-Message-ID: <1420649917.12144.20.camel@haakon3.risingtidesystems.com>
-References: <54AD5DDD.2090808@dev.mellanox.co.il>
+Subject: Re: [LSF/MM ATTEND] discuss blk-mq related to DM-multipath and
+ status of XCOPY
+Date: Wed, 07 Jan 2015 09:00:42 -0800
+Message-ID: <1420650042.12144.21.camel@haakon3.risingtidesystems.com>
+References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54AD5DDD.2090808@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50883 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753775AbbAGRAn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 12:00:43 -0500
+In-Reply-To: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: lsf-pc@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Jej B <James.Bottomley@hansenpartnership.com>, device-mapper development <dm-devel@redhat.com>
 
-On Wed, 2015-01-07 at 18:25 +0200, Sagi Grimberg wrote:
-> Hi everyone,
+On Sun, 2015-01-04 at 12:16 -0500, Mike Snitzer wrote:
+> Hi,
 > 
-> Now that scsi-mq is fully included, we need an iSCSI initiator that
-> would use it to achieve scalable performance. The need is even greater
-> for iSCSI offload devices and transports that support multiple HW
-> queues. As iSER maintainer I'd like to discuss the way we would choose
-> to implement that in iSCSI.
+> I'd like to attend LSF (and the first day of Vault).
 > 
-> My measurements show that iSER initiator can scale up to ~2.1M IOPs
-> with multiple sessions but only ~630K IOPs with a single session where
-> the most significant bottleneck the (single) core processing
-> completions.
+> As a DM maintainer I'm open to discussing anything DM related.  In
+> particular I'd like to at least have hallway track discussions with
+> key people interested in DM multipath support for blk-mq devices.
+> Keith Busch and I have gone ahead and implemented the bulk of this
+> request-based DM support for blk-mq devices, see:
+> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/log/?h=dm-for-3.20-blk-mq
 > 
-> In the existing single connection per session model, given that command
-> ordering must be preserved session-wide, we end up in a serial command
-> execution over a single connection which is basically a single queue
-> model. The best fit seems to be plugging iSCSI MCS as a multi-queued
-> scsi LLDD. In this model, a hardware context will have a 1x1 mapping
-> with an iSCSI connection (TCP socket or a HW queue).
+> But Bart says he is seeing inconsistent performance now that the code
+> appears relatively stable.  I'll continue analyzing this aspect of
+> things and by the time LSF rolls around I hope the code to be sorted.
 > 
-> iSCSI MCS and it's role in the presence of dm-multipath layer was
-> discussed several times in the past decade(s). The basic need for MCS is
-> implementing a multi-queue data path, so perhaps we may want to avoid
-> doing any type link aggregation or load balancing to not overlap
-> dm-multipath. For example we can implement ERL=0 (which is basically the
-> scsi-mq ERL) and/or restrict a session to a single portal.
-> 
-> As I see it, the todo's are:
-> 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
->     round-robin connection selection (per scsi command execution).
-> 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
->     using blk-mq based queue (conn) selection.
-> 3. Rework iSCSI core locking scheme to avoid session-wide locking
->     as much as possible.
-> 4. Use blk-mq pre-allocation and tagging facilities.
-> 
-> I've recently started looking into this. I would like the community to
-> agree (or debate) on this scheme and also talk about implementation
-> with anyone who is also interested in this.
-> 
+> Another topic we need to come to terms with is the state of XCOPY
+> (whether the initial approach needs further work, etc) -- Mikulas
+> Patocka reworked aspects of Martin's initial approach but it hasn't
+> progressed upstream:
+> https://www.redhat.com/archives/dm-devel/2014-October/msg00167.html
 
-(Adding CC' for MNC)
-
-+1.  I'd be up for this discussion to finally get MC/S support into
-open-iscsi, and determining the best method for mapping connection
-conects to scsi-mq hw queues.
+A big +1 on the host side XCOPY support bit.
 
 --nab
+
