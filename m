@@ -1,33 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: block: remove artifical max_hw_sectors cap
-Date: Wed, 7 Jan 2015 15:37:05 +0100
-Message-ID: <20150107143705.GA888@lst.de>
-References: <5497F319.20802@profihost.ag> <20141223082805.GA2303@lst.de> <1420583956.6927.61.camel@haakon3.risingtidesystems.com> <20150107143150.GC659@lst.de> <54AD4389.6030107@profihost.ag>
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other
+ generic file systems)
+Date: Wed, 07 Jan 2015 09:57:47 -0500
+Message-ID: <54AD496B.8080708@oracle.com>
+References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54AD4389.6030107@profihost.ag>
-Sender: target-devel-owner@vger.kernel.org
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19834 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbbAGO5x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 09:57:53 -0500
+In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Palmer <adrian.palmer@seagate.com>, lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Jan 07, 2015 at 03:32:41PM +0100, Stefan Priebe - Profihost AG wrote:
-> > If I understand Stefan correct he was using a recent 3.19-rc kernel,
-> > which contains my commit in the subject that stops capping the
-> > max_sectors used by the kernel below that which the hardware supports.
-> > 
-> > Given that LIO actually implements the block limits EVPD that suggests
-> > we're not properly using that information.
-> > 
-> > Stefant, what does:
-> > 
-> > sg_vpd -p bl /dev/sdX
-> > 
-> > for the LIO device tell?
+On 01/06/2015 06:29 PM, Adrian Palmer wrote:
+> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
+> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
+> required technical kernel changes before this topic is presented at Vault.
 > 
-> I'm sorry i'm using a 3.10.63 vanilla kernel. So i'm missing a commit?
+> Subtopics:
+> 
+> On-disk metadata structures and data algorithms
+> Explicit in-order write requirement and a look at the IO stack
+> New IOCTLs to call from the FS and the need to know about the underlying
+> disk -- no longer completely disk agnostic
 
-You said "block: remove artifical max_hw_sectors cap" causes the I/O
-errors for you, which should only be in a 3.19-ish kernel.
+Where can we read about the details of SMRFFS before LSF/MM / Vault?
+
+
+Thanks,
+Sasha
