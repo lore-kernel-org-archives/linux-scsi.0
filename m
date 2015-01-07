@@ -1,37 +1,45 @@
-From: Sasha Levin <sasha.levin@oracle.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other
- generic file systems)
-Date: Wed, 07 Jan 2015 09:57:47 -0500
-Message-ID: <54AD496B.8080708@oracle.com>
-References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] usb: storage: adjust module reference for scsi
+ host
+Date: Wed, 7 Jan 2015 10:04:27 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1501071004060.1374-100000@iolanthe.rowland.org>
+References: <1420639382-2219-4-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19834 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbbAGO5x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 09:57:53 -0500
-In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1420639382-2219-4-git-send-email-akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Palmer <adrian.palmer@seagate.com>, lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 01/06/2015 06:29 PM, Adrian Palmer wrote:
-> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
-> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
-> required technical kernel changes before this topic is presented at Vault.
+On Wed, 7 Jan 2015, Akinobu Mita wrote:
+
+> While accessing a unusual usb storage (ums-alauda, ums-cypress, ...),
+> the module reference count is not incremented.  Because these drivers
+> allocate scsi hosts with usb_stor_host_template defined in usb-storage
+> module.  So these drivers always can be unloaded.
 > 
-> Subtopics:
+> This fixes it by passing correct module reference to usb_stor_probe1() to
+> adjust it after scsi host allocation.
 > 
-> On-disk metadata structures and data algorithms
-> Explicit in-order write requirement and a look at the IO stack
-> New IOCTLs to call from the FS and the need to know about the underlying
-> disk -- no longer completely disk agnostic
+> Signed-off-by: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+> Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+> Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Cc: "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+> Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+> * v2:
+> - Pass correct module reference to usb_stor_probe1() instead of touching
+>   all ums-* drivers, suggested by Alan Stern
 
-Where can we read about the details of SMRFFS before LSF/MM / Vault?
+Acked-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 
-
-Thanks,
-Sasha
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
