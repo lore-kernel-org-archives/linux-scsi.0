@@ -1,40 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
-Date: Tue, 06 Jan 2015 19:17:32 -0500
-Message-ID: <yq1tx0378bn.fsf@sermon.lab.mkp.net>
-References: <1418131643-11568-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<yq1wq5zcjmd.fsf@sermon.lab.mkp.net>
-	<CAK=zhgrr=9+3dynE6fuTikNwnBFKe5x=jA+UTzPKqfNAyXt_ow@mail.gmail.com>
+Subject: Re: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code optimization
+Date: Tue, 06 Jan 2015 19:24:16 -0500
+Message-ID: <yq1k30z780f.fsf@sermon.lab.mkp.net>
+References: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26419 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667AbbAGASJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 19:18:09 -0500
-In-Reply-To: <CAK=zhgrr=9+3dynE6fuTikNwnBFKe5x=jA+UTzPKqfNAyXt_ow@mail.gmail.com>
-	(Sreekanth Reddy's message of "Thu, 11 Dec 2014 17:44:03 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com> (Sumit Saxena's
+	message of "Mon, 5 Jan 2015 20:05:58 +0530")
+Sender: stable-owner@vger.kernel.org
+To: Sumit.Saxena@avagotech.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Nagalakshmi Nandigama <Nagalakshmi.Nandigama@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+>>>>> "Sumit" ==   <Sumit.Saxena@avagotech.com> writes:
 
-Sreekanth> I though to warn the user that the module parameter
-Sreekanth> max_sgl_entries value what they provided is greater than the
-Sreekanth> kernel defined SCSI_MAX_SG_SEGMENTS, whether if this module
-Sreekanth> parameter value is greater than or less than the
-Sreekanth> SCSI_MAX_SG_CHAIN_SEGMENTS. Also I thought, user may confuse
-Sreekanth> if see observes SCSI_MAX_SG_CHAIN_SEGMENTS value instead of
-Sreekanth> max_sgl_entries value in the warning message.
+Sumit> This patch addresses below issues- 1) Few endianness bug fixes.
+Sumit> 2) Break the iteration after (MAX_LOGICAL_DRIVES_EXT - 1)),
+Sumit> instead of MAX_LOGICAL_DRIVES_EXT.  3) Optimization in MFI INIT
+Sumit> frame before firing.  4) MFI IO frame should be 256bytes
+Sumit> aligned. Code is optimized to reduce the size of frame for fusion
+Sumit> adapters and make the MFI frame size calculation a bit
+Sumit> transparent and readable.
 
-I would just prefer to see the value that is in effect. I know what I
-provided as override value.
-
-At the very least print a warning if you subsequently clamp the value to
-MAX_SG_CHAIN_SEGMENTS. "Requested number of segments %u is bigger than
-kernel max %u".
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
