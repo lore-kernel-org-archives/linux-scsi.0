@@ -1,72 +1,60 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Wed, 7 Jan 2015 20:11:33 +0100
-Message-ID: <20150107191133.GD2802@quack.suse.cz>
-References: <54AD5DDD.2090808@dev.mellanox.co.il>
- <54AD6B45.9080807@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54AD6B45.9080807@suse.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>, lsf-pc@lists.linux-foundation.org, open-iscsi@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Giel van Schijndel <me@mortis.eu>
+Subject: [PATCH RESEND] scsi: cleanup: snprintf() always NUL-terminates: depend on it
+Date: Wed,  7 Jan 2015 20:20:15 +0100
+Message-ID: <1420658416-20839-1-git-send-email-me@mortis.eu>
+References: <1420394759-20345-1-git-send-email-me@mortis.eu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from khitomer.mortis.eu ([185.27.175.75]:21845 "EHLO
+	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbbAGTUe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 14:20:34 -0500
+In-Reply-To: <1420394759-20345-1-git-send-email-me@mortis.eu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Giel van Schijndel <me@mortis.eu>, Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 
-On Wed 07-01-15 09:22:13, Lee Duncan wrote:
-> On 01/07/2015 08:25 AM, Sagi Grimberg wrote:
-> > Hi everyone,
-> > 
-> > Now that scsi-mq is fully included, we need an iSCSI initiator that
-> > would use it to achieve scalable performance. The need is even greater
-> > for iSCSI offload devices and transports that support multiple HW
-> > queues. As iSER maintainer I'd like to discuss the way we would choose
-> > to implement that in iSCSI.
-> > 
-> > My measurements show that iSER initiator can scale up to ~2.1M IOPs
-> > with multiple sessions but only ~630K IOPs with a single session where
-> > the most significant bottleneck the (single) core processing
-> > completions.
-> > 
-> > In the existing single connection per session model, given that command
-> > ordering must be preserved session-wide, we end up in a serial command
-> > execution over a single connection which is basically a single queue
-> > model. The best fit seems to be plugging iSCSI MCS as a multi-queued
-> > scsi LLDD. In this model, a hardware context will have a 1x1 mapping
-> > with an iSCSI connection (TCP socket or a HW queue).
-> > 
-> > iSCSI MCS and it's role in the presence of dm-multipath layer was
-> > discussed several times in the past decade(s). The basic need for MCS is
-> > implementing a multi-queue data path, so perhaps we may want to avoid
-> > doing any type link aggregation or load balancing to not overlap
-> > dm-multipath. For example we can implement ERL=0 (which is basically the
-> > scsi-mq ERL) and/or restrict a session to a single portal.
-> > 
-> > As I see it, the todo's are:
-> > 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
-> >    round-robin connection selection (per scsi command execution).
-> > 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
-> >    using blk-mq based queue (conn) selection.
-> > 3. Rework iSCSI core locking scheme to avoid session-wide locking
-> >    as much as possible.
-> > 4. Use blk-mq pre-allocation and tagging facilities.
-> > 
-> > I've recently started looking into this. I would like the community to
-> > agree (or debate) on this scheme and also talk about implementation
-> > with anyone who is also interested in this.
-> > 
-> > Cheers,
-> > Sagi.
-> 
-> I started looking at this last year (and Hannes' suggestion), and would
-> love to join the discussion.
-> 
-> Please add me to the list of those that wish to attend.
-  For that please send a separate email with attend request as described in
-the call for proposals. Thanks!
+Especially since one very strange piece of code seems to be written in
+such a way that a NUL needs to be placed where a NUL is present already.
+The author probably meant to fill the last byte of the buffer with a NUL
+instead. But regardless of that: that isn't necessary since snprintf()
+already guarantees NUL termination for buffers sizes > 0 and <= INT_MAX.
 
-								Honza
+Signed-off-by: Giel van Schijndel <me@mortis.eu>
+Reported-at: http://www.viva64.com/en/b/0299/
+---
+ drivers/scsi/ipr.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index df4e27c..b49fe45 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3990,7 +3990,6 @@ static ssize_t ipr_store_update_fw(struct device *dev,
+ 		return -EACCES;
+ 
+ 	len = snprintf(fname, 99, "%s", buf);
+-	fname[len-1] = '\0';
+ 
+ 	if (request_firmware(&fw_entry, fname, &ioa_cfg->pdev->dev)) {
+ 		dev_err(&ioa_cfg->pdev->dev, "Firmware file %s not found\n", fname);
+@@ -9358,13 +9357,12 @@ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ 
+ static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
+ {
+-	int vec_idx, n = sizeof(ioa_cfg->vectors_info[0].desc) - 1;
++	int vec_idx;
+ 
+ 	for (vec_idx = 0; vec_idx < ioa_cfg->nvectors; vec_idx++) {
+-		snprintf(ioa_cfg->vectors_info[vec_idx].desc, n,
++		snprintf(ioa_cfg->vectors_info[vec_idx].desc,
++			 sizeof(ioa_cfg->vectors_info[vec_idx].desc),
+ 			 "host%d-%d", ioa_cfg->host->host_no, vec_idx);
+-		ioa_cfg->vectors_info[vec_idx].
+-			desc[strlen(ioa_cfg->vectors_info[vec_idx].desc)] = 0;
+ 	}
+ }
+ 
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+2.1.4
+
