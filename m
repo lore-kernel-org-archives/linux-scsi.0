@@ -1,54 +1,62 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [LSF/MM ATTEND] discuss blk-mq related to DM-multipath
- and status of XCOPY
-Date: Wed, 07 Jan 2015 09:32:19 +0100
-Message-ID: <54ACEF13.7000508@suse.de>
-References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>	<54AA90B1.1030201@suse.de> <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [target:nvme_of 3/3] drivers/target/nvme_of/nvme_of_configfs.c:25:31:
+ sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+Date: Wed, 07 Jan 2015 10:57:58 +0200
+Message-ID: <54ACF516.4080602@dev.mellanox.co.il>
+References: <201501070334.EgwC5iey%fengguang.wu@intel.com> <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59260 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755774AbbAGIcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2015 03:32:21 -0500
-In-Reply-To: <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/07/2015 12:55 AM, Martin K. Petersen wrote:
->>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->=20
-> Hannes> Yep. That definitely needs to be discussed.  Especially we'd
-> Hannes> need to discuss how to handle exceptions, seeing that XCOPY
-> Hannes> might fail basically at any time. =20
->=20
-> Like any SCSI command :)
->=20
-Not quite. XCOPY is optional, and the system works well without it.
-So the exception handling would need to copy things by hand to avoid
-regressions.
+On 1/7/2015 12:44 AM, Nicholas A. Bellinger wrote:
+> On Wed, 2015-01-07 at 03:35 +0800, kbuild test robot wrote:
+>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git nvme_of
+>> head:   40d8c11927282d59855d645b35798edd97828da5
+>> commit: 40d8c11927282d59855d645b35798edd97828da5 [3/3] nvme_of: Initial skeleton commit
+>> reproduce:
+>>    # apt-get install sparse
+>>    git checkout 40d8c11927282d59855d645b35798edd97828da5
+>>    make ARCH=x86_64 allmodconfig
+>>    make C=1 CF=-D__CHECK_ENDIAN__
+>>
+>>
+>> sparse warnings: (new ones prefixed by >>)
+>>
+>>>> drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+>>
+>> Please review and possibly fold the followup patch.
+>>
+>
+> Fixed.  Thanks Fengguang!
+>
 
-Plus XCOPY requires some elaborate setup, and even if those succeeded
-the array might still fail the command.
-_And_ there is no guarantee that that the XCOPY command is actually
-faster than the manual procedure.
+Hey Nic,
 
-I guess we'll need some timing / initialisation routine to figure
-out what speed-up is to be had with XCOPY.
+Hope all is well.
 
-Cheers,
+So this skeleton is interesting to me. As this is a fabric module I
+assume this would be the NVMEoFabrics target mode driver for upstream 
+which would be able to talk to NVMEoFabrics initiator (which by
+the way makes LIO something more than a SCSI target - will this be 
+accepted?).
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm currently participating in nvmexpress working group defining the
+standard of protocol, specifically in the context of RDMA (naturally).
+
+I'm interested in taking an active role in this project, It is
+important to build this layered from day one - separating the fabric 
+logic (RDMA or FCoE) from the core layer.
+
+Moreover, I know that Mellanox has some plans on accelerating this
+area in future devices and we are currently looking into ways to
+do that. I want to see that the SW will be able to support that.
+
+So, Thoughts?
+
+Sagi.
