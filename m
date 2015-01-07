@@ -1,63 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: attempting task abort with block: remove artifical
- max_hw_sectors cap
-Date: Wed, 7 Jan 2015 06:27:19 -0800
-Message-ID: <20150107142719.GA10269@infradead.org>
-References: <54ABC413.6090000@profihost.ag>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 0/3] scsi: ufs & ums-*: fix module reference counting
+Date: Wed, 7 Jan 2015 15:28:30 +0100
+Message-ID: <20150107142830.GA659@lst.de>
+References: <1420639382-2219-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56964 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbbAGO1T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 09:27:19 -0500
+Received: from verein.lst.de ([213.95.11.211]:59742 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752575AbbAGO2f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2015 09:28:35 -0500
 Content-Disposition: inline
-In-Reply-To: <54ABC413.6090000@profihost.ag>
+In-Reply-To: <1420639382-2219-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-Hi Stefan,
-
-On Tue, Jan 06, 2015 at 12:16:35PM +0100, Stefan Priebe - Profihost AG wrote:
-> while testing 595b8ecd47e4dde64f704bf78d8c9b97e070ac67 ([PATCH] block:
-> remove artifical max_hw_sectors cap), i came around a problem with some
-> crucial m500 ssds direct attached.
+On Wed, Jan 07, 2015 at 11:02:59PM +0900, Akinobu Mita wrote:
+> While accessing a scsi_device, the use count of the underlying LLDD module
+> is incremented.  The module reference is retrieved through .module field of
+> struct scsi_host_template.
 > 
-> With the patch applied, i see the following max_sectors_kb value:
-> # cat /sys/block/sdi/queue/max_sectors_kb
-> 16383
-> 
-> But this results in the following error messages (at random time - most
-> probably at high load):
-> 
-> Write(10): 2a 00 04 f9 db f0 00 0c d8 00
-> scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
-> scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
+> This mapping between scsi_device and underlying LLDD module works well
+> except some scsi drivers (ufs and unusual usb storage drivers).  These
+> drivers consist with core driver and actual LLDDs, and scsi_host_template
+> is defined in the core driver.  So the actual LLDDs can be unloaded even if
+> the scsi_device is being accessed.
 
-Seems like I misdirected you to only linux-ide, as from this printk it
-seems like the SSD is attached to a SAS HBA using the mpt2 or mpt3
-drivers.
-
-But 16383 kilobytes if 32766 sectors, which is still only half of what
-ATA disks should support.  It would be interesting if other people
-also see an issue with too large I/Os on a m500 SSD when attached to
-an ATA controller.
-
-
-> sd 0:0:7:0: task abort: SUCCESS scmd(ffff88018c6b4700)
-> sd 0:0:7:0: attempting task abort! scmd(ffff8807a12e6800)
-> sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 d4 f9 60 00 00 10 00
-> scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
-> scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
-> sd 0:0:7:0: task abort: SUCCESS scmd(ffff8807a12e6800)
-> sd 0:0:7:0: attempting task abort! scmd(ffff88078d989800)
-> sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 aa d2 f9 00 00 20 00
-> 
-> Stefan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+Why don't ufs and usb-storage define the host templates in the sub drivers?
+That's what libata or the mpt fusion driver do.
