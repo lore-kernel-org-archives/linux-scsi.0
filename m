@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [dm-devel] [LSF/MM ATTEND] discuss blk-mq related to DM-multipath and status of XCOPY
-Date: Tue, 06 Jan 2015 18:55:48 -0500
-Message-ID: <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
-References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
-	<54AA90B1.1030201@suse.de>
+Subject: Re: [PATCH 07/22] [SCSI] mpt2sas: Complete the SCSI command with DID_RESET status for log_info value 0x0x32010081
+Date: Tue, 06 Jan 2015 19:07:51 -0500
+Message-ID: <yq1y4pf78rs.fsf@sermon.lab.mkp.net>
+References: <1420545252-35340-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51927 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:20841 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbbAFX4T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 18:56:19 -0500
-In-Reply-To: <54AA90B1.1030201@suse.de> (Hannes Reinecke's message of "Mon, 05
-	Jan 2015 14:25:05 +0100")
+	with ESMTP id S1751070AbbAGAI2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jan 2015 19:08:28 -0500
+In-Reply-To: <1420545252-35340-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Tue, 6 Jan 2015 17:24:12 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-Hannes> Yep. That definitely needs to be discussed.  Especially we'd
-Hannes> need to discuss how to handle exceptions, seeing that XCOPY
-Hannes> might fail basically at any time.  
+Sreekanth> For any SCSI command, if the driver receives IOC status =
+Sreekanth> SCSI_IOC_TERMINATED and log info = 0x32010081 then that
+Sreekanth> command will be completed with DID_RESET host status.
 
-Like any SCSI command :)
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
