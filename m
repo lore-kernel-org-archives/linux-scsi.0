@@ -1,334 +1,450 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH for v3.19, v2] Avoid that sd_shutdown() triggers a kernel
- warning
-Date: Wed, 07 Jan 2015 14:03:22 +0100
-Message-ID: <54AD2E9A.50709@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Praveen Madhavan <praveenm@chelsio.com>
+Subject: [PATCH] csiostor:firmware upgrade fix
+Date: Wed,  7 Jan 2015 19:16:28 +0530
+Message-ID: <1420638388-9074-1-git-send-email-praveenm@chelsio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sf1.bxl.stone.is ([87.238.167.36]:35963 "EHLO sf1.bxl.stone.is"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbbAGNiu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:38:50 -0500
+Received: from stargate.chelsio.com ([67.207.112.58]:8159 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752259AbbAGNrL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 08:47:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com, praveenm@chelsio.com
 
-Since kernel v3.19-rc1 module_refcount() returns 1 instead of 0
-when called from inside module_exit(). This breaks the
-module_refcount() test in scsi_device_put() and hence causes the
-following kernel warning to be reported when unloading the ib_srp
-kernel module:
+This patch fixes removes older means of upgrading Firmware using MAJOR version
+and adds newer interface version checking mechanism.
 
-WARNING: CPU: 5 PID: 228 at kernel/module.c:954 module_put+0x207/0x220()
+Please apply this patch on net-next since it depends on previous commits.
 
-Call Trace:
- [<ffffffff814d1fcf>] dump_stack+0x4c/0x65
- [<ffffffff81053ada>] warn_slowpath_common+0x8a/0xc0
- [<ffffffff81053bca>] warn_slowpath_null+0x1a/0x20
- [<ffffffff810d0507>] module_put+0x207/0x220
- [<ffffffffa000bea8>] scsi_device_put+0x48/0x50 [scsi_mod]
- [<ffffffffa03676d2>] scsi_disk_put+0x32/0x50 [sd_mod]
- [<ffffffffa0368d4c>] sd_shutdown+0x8c/0x150 [sd_mod]
- [<ffffffffa0368e79>] sd_remove+0x69/0xc0 [sd_mod]
- [<ffffffff813457ef>] __device_release_driver+0x7f/0xf0
- [<ffffffff81345885>] device_release_driver+0x25/0x40
- [<ffffffff81345134>] bus_remove_device+0x124/0x1b0
- [<ffffffff8134189e>] device_del+0x13e/0x250
- [<ffffffffa001cdcd>] __scsi_remove_device+0xcd/0xe0 [scsi_mod]
- [<ffffffffa001b39f>] scsi_forget_host+0x6f/0x80 [scsi_mod]
- [<ffffffffa000d5f6>] scsi_remove_host+0x86/0x140 [scsi_mod]
- [<ffffffffa07d5c0b>] srp_remove_work+0x9b/0x210 [ib_srp]
- [<ffffffff8106fd28>] process_one_work+0x1d8/0x780
- [<ffffffff810703eb>] worker_thread+0x11b/0x4a0
- [<ffffffff81075a6f>] kthread+0xef/0x110
- [<ffffffff814dad6c>] ret_from_fork+0x7c/0xb0
-
-See also patch "module: Remove stop_machine from module unloading"
-(Masami Hiramatsu; commit e513cc1c07e2; kernel v3.19-rc1).
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
 ---
- drivers/scsi/scsi.c        | 63 ++++++++++++++++++++++++++++++++--------------
- drivers/scsi/sd.c          | 44 +++++++++++++++++---------------
- include/scsi/scsi_device.h |  2 ++
- 3 files changed, 70 insertions(+), 39 deletions(-)
+ drivers/scsi/csiostor/csio_hw.c      | 277 +++++++++++++++++++++++++----------
+ drivers/scsi/csiostor/csio_hw.h      |   5 +-
+ drivers/scsi/csiostor/csio_hw_chip.h |  47 +++++-
+ 3 files changed, 247 insertions(+), 82 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index e028854..2cae46b 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -973,30 +973,63 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
- EXPORT_SYMBOL(scsi_report_opcode);
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 6602835..b70c15f 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -682,43 +682,6 @@ csio_hw_get_tp_version(struct csio_hw *hw, u32 *vers)
+ }
  
- /**
-- * scsi_device_get  -  get an additional reference to a scsi_device
-+ * scsi_dev_get - get an additional reference to a scsi_device
-  * @sdev:	device to get a reference to
-+ * @get_lld:    whether or not to increase the LLD kernel module refcount
-  *
-- * Description: Gets a reference to the scsi_device and increments the use count
-- * of the underlying LLDD module.  You must hold host_lock of the
-- * parent Scsi_Host or already have a reference when calling this.
-+ * Description: Gets a reference to the scsi_device and optionally increments
-+ * the use count of the associated LLDD module. You must hold host_lock of
-+ * the parent Scsi_Host or already have a reference when calling this.
+ /*
+- *	csio_hw_check_fw_version - check if the FW is compatible with
+- *				   this driver
+- *	@hw: HW module
+- *
+- *	Checks if an adapter's FW is compatible with the driver.  Returns 0
+- *	if there's exact match, a negative error if the version could not be
+- *	read or there's a major/minor version mismatch/minor.
+- */
+-static int
+-csio_hw_check_fw_version(struct csio_hw *hw)
+-{
+-	int ret, major, minor, micro;
+-
+-	ret = csio_hw_get_fw_version(hw, &hw->fwrev);
+-	if (!ret)
+-		ret = csio_hw_get_tp_version(hw, &hw->tp_vers);
+-	if (ret)
+-		return ret;
+-
+-	major = FW_HDR_FW_VER_MAJOR_G(hw->fwrev);
+-	minor = FW_HDR_FW_VER_MINOR_G(hw->fwrev);
+-	micro = FW_HDR_FW_VER_MICRO_G(hw->fwrev);
+-
+-	if (major != FW_VERSION_MAJOR(hw)) {	/* major mismatch - fail */
+-		csio_err(hw, "card FW has major version %u, driver wants %u\n",
+-			 major, FW_VERSION_MAJOR(hw));
+-		return -EINVAL;
+-	}
+-
+-	if (minor == FW_VERSION_MINOR(hw) && micro == FW_VERSION_MICRO(hw))
+-		return 0;        /* perfect match */
+-
+-	/* Minor/micro version mismatch */
+-	return -EINVAL;
+-}
+-
+-/*
+  * csio_hw_fw_dload - download firmware.
+  * @hw: HW module
+  * @fw_data: firmware image to write.
+@@ -1967,6 +1930,170 @@ out:
+ 	return rv;
+ }
+ 
++/* Is the given firmware API compatible with the one the driver was compiled
++ * with?
++ */
++static int fw_compatible(const struct fw_hdr *hdr1, const struct fw_hdr *hdr2)
++{
++
++	/* short circuit if it's the exact same firmware version */
++	if (hdr1->chip == hdr2->chip && hdr1->fw_ver == hdr2->fw_ver)
++		return 1;
++
++#define SAME_INTF(x) (hdr1->intfver_##x == hdr2->intfver_##x)
++	if (hdr1->chip == hdr2->chip && SAME_INTF(nic) && SAME_INTF(vnic) &&
++	    SAME_INTF(ri) && SAME_INTF(iscsi) && SAME_INTF(fcoe))
++		return 1;
++#undef SAME_INTF
++
++	return 0;
++}
++
++/* The firmware in the filesystem is usable, but should it be installed?
++ * This routine explains itself in detail if it indicates the filesystem
++ * firmware should be installed.
++ */
++static int csio_should_install_fs_fw(struct csio_hw *hw, int card_fw_usable,
++				int k, int c)
++{
++	const char *reason;
++
++	if (!card_fw_usable) {
++		reason = "incompatible or unusable";
++		goto install;
++	}
++
++	if (k > c) {
++		reason = "older than the version supported with this driver";
++		goto install;
++	}
++
++	return 0;
++
++install:
++	csio_err(hw, "firmware on card (%u.%u.%u.%u) is %s, "
++		"installing firmware %u.%u.%u.%u on card.\n",
++		FW_HDR_FW_VER_MAJOR_G(c), FW_HDR_FW_VER_MINOR_G(c),
++		FW_HDR_FW_VER_MICRO_G(c), FW_HDR_FW_VER_BUILD_G(c), reason,
++		FW_HDR_FW_VER_MAJOR_G(k), FW_HDR_FW_VER_MINOR_G(k),
++		FW_HDR_FW_VER_MICRO_G(k), FW_HDR_FW_VER_BUILD_G(k));
++
++	return 1;
++}
++
++static struct fw_info fw_info_array[] = {
++	{
++		.chip = CHELSIO_T5,
++		.fs_name = FW_CFG_NAME_T5,
++		.fw_mod_name = FW_FNAME_T5,
++		.fw_hdr = {
++			.chip = FW_HDR_CHIP_T5,
++			.fw_ver = __cpu_to_be32(FW_VERSION(T5)),
++			.intfver_nic = FW_INTFVER(T5, NIC),
++			.intfver_vnic = FW_INTFVER(T5, VNIC),
++			.intfver_ri = FW_INTFVER(T5, RI),
++			.intfver_iscsi = FW_INTFVER(T5, ISCSI),
++			.intfver_fcoe = FW_INTFVER(T5, FCOE),
++		},
++	}
++};
++
++static struct fw_info *find_fw_info(int chip)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(fw_info_array); i++) {
++		if (fw_info_array[i].chip == chip)
++			return &fw_info_array[i];
++	}
++	return NULL;
++}
++
++int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
++	       const u8 *fw_data, unsigned int fw_size,
++	       struct fw_hdr *card_fw, enum csio_dev_state state,
++	       int *reset)
++{
++	int ret, card_fw_usable, fs_fw_usable;
++	const struct fw_hdr *fs_fw;
++	const struct fw_hdr *drv_fw;
++
++	drv_fw = &fw_info->fw_hdr;
++
++	/* Read the header of the firmware on the card */
++	ret = csio_hw_read_flash(hw, FLASH_FW_START,
++			    sizeof(*card_fw) / sizeof(uint32_t),
++			    (uint32_t *)card_fw, 1);
++	if (ret == 0) {
++		card_fw_usable = fw_compatible(drv_fw, (const void *)card_fw);
++	} else {
++		csio_err(hw,
++			"Unable to read card's firmware header: %d\n", ret);
++		card_fw_usable = 0;
++	}
++
++	if (fw_data != NULL) {
++		fs_fw = (const void *)fw_data;
++		fs_fw_usable = fw_compatible(drv_fw, fs_fw);
++	} else {
++		fs_fw = NULL;
++		fs_fw_usable = 0;
++	}
++
++	if (card_fw_usable && card_fw->fw_ver == drv_fw->fw_ver &&
++	    (!fs_fw_usable || fs_fw->fw_ver == drv_fw->fw_ver)) {
++		/* Common case: the firmware on the card is an exact match and
++		 * the filesystem one is an exact match too, or the filesystem
++		 * one is absent/incompatible.
++		 */
++	} else if (fs_fw_usable && state == CSIO_DEV_STATE_UNINIT &&
++		   csio_should_install_fs_fw(hw, card_fw_usable,
++					be32_to_cpu(fs_fw->fw_ver),
++					be32_to_cpu(card_fw->fw_ver))) {
++		ret = csio_hw_fw_upgrade(hw, hw->pfn, fw_data,
++				     fw_size, 0);
++		if (ret != 0) {
++			csio_err(hw,
++				"failed to install firmware: %d\n", ret);
++			goto bye;
++		}
++
++		/* Installed successfully, update the cached header too. */
++		memcpy(card_fw, fs_fw, sizeof(*card_fw));
++		card_fw_usable = 1;
++		*reset = 0;	/* already reset as part of load_fw */
++	}
++
++	if (!card_fw_usable) {
++		uint32_t d, c, k;
++
++		d = be32_to_cpu(drv_fw->fw_ver);
++		c = be32_to_cpu(card_fw->fw_ver);
++		k = fs_fw ? be32_to_cpu(fs_fw->fw_ver) : 0;
++
++		csio_err(hw, "Cannot find a usable firmware: "
++			"chip state %d, "
++			"driver compiled with %d.%d.%d.%d, "
++			"card has %d.%d.%d.%d, filesystem has %d.%d.%d.%d\n",
++			state,
++			FW_HDR_FW_VER_MAJOR_G(d), FW_HDR_FW_VER_MINOR_G(d),
++			FW_HDR_FW_VER_MICRO_G(d), FW_HDR_FW_VER_BUILD_G(d),
++			FW_HDR_FW_VER_MAJOR_G(c), FW_HDR_FW_VER_MINOR_G(c),
++			FW_HDR_FW_VER_MICRO_G(c), FW_HDR_FW_VER_BUILD_G(c),
++			FW_HDR_FW_VER_MAJOR_G(k), FW_HDR_FW_VER_MINOR_G(k),
++			FW_HDR_FW_VER_MICRO_G(k), FW_HDR_FW_VER_BUILD_G(k));
++		ret = EINVAL;
++		goto bye;
++	}
++
++	/* We're using whatever's on the card and it's known to be good. */
++	hw->fwrev = be32_to_cpu(card_fw->fw_ver);
++	hw->tp_vers = be32_to_cpu(card_fw->tp_microcode_ver);
++
++bye:
++	return ret;
++}
++
+ /*
+  * Returns -EINVAL if attempts to flash the firmware failed
+  * else returns 0,
+@@ -1974,14 +2101,27 @@ out:
+  * latest firmware ECANCELED is returned
   */
--int scsi_device_get(struct scsi_device *sdev)
-+int scsi_dev_get(struct scsi_device *sdev, bool get_lld)
+ static int
+-csio_hw_flash_fw(struct csio_hw *hw)
++csio_hw_flash_fw(struct csio_hw *hw, int *reset)
  {
- 	if (sdev->sdev_state == SDEV_DEL)
- 		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
- 		return -ENXIO;
--	/* We can fail this if we're doing SCSI operations
--	 * from module exit (like cache flush) */
--	try_module_get(sdev->host->hostt->module);
-+	/* Can fail if invoked during module exit (like cache flush) */
-+	if (get_lld && !try_module_get(sdev->host->hostt->module)) {
-+		put_device(&sdev->sdev_gendev);
-+		return -ENXIO;
+ 	int ret = -ECANCELED;
+ 	const struct firmware *fw;
+-	const struct fw_hdr *hdr;
+-	u32 fw_ver;
++	struct fw_info *fw_info;
++	struct fw_hdr *card_fw;
+ 	struct pci_dev *pci_dev = hw->pdev;
+ 	struct device *dev = &pci_dev->dev ;
++	const u8 *fw_data = NULL;
++	unsigned int fw_size = 0;
++
++	/* This is the firmware whose headers the driver was compiled
++	 * against
++	 */
++	fw_info = find_fw_info(CHELSIO_CHIP_VERSION(hw->chip_id));
++	if (fw_info == NULL) {
++		csio_err(hw,
++			"unable to get firmware info for chip %d.\n",
++			CHELSIO_CHIP_VERSION(hw->chip_id));
++		return -EINVAL;
 +	}
  
- 	return 0;
- }
-+EXPORT_SYMBOL(scsi_dev_get);
-+
-+/**
-+ * scsi_dev_put - release a reference to a scsi_device
-+ * @sdev:	device to release a reference on
-+ * @put_lld:    whether or not to decrease the LLD kernel module refcount
-+ *
-+ * Description: Release a reference to the scsi_device. The device is freed
-+ * once the last user vanishes.
-+ */
-+void scsi_dev_put(struct scsi_device *sdev, bool put_lld)
-+{
-+	if (put_lld)
-+		module_put(sdev->host->hostt->module);
-+	put_device(&sdev->sdev_gendev);
-+}
-+EXPORT_SYMBOL(scsi_dev_put);
-+
-+/**
-+ * scsi_device_get - get an additional reference to a scsi_device
-+ * @sdev:	device to get a reference to
-+ *
-+ * Description: Gets a reference to the scsi_device and increments the use count
-+ * of the underlying LLDD module.  You must hold host_lock of the
-+ * parent Scsi_Host or already have a reference when calling this.
-+ */
-+int scsi_device_get(struct scsi_device *sdev)
-+{
-+	return scsi_dev_get(sdev, true);
-+}
- EXPORT_SYMBOL(scsi_device_get);
+ 	if (request_firmware(&fw, CSIO_FW_FNAME(hw), dev) < 0) {
+ 		csio_err(hw, "could not find firmware image %s, err: %d\n",
+@@ -1989,33 +2129,25 @@ csio_hw_flash_fw(struct csio_hw *hw)
+ 		return -EINVAL;
+ 	}
  
- /**
-- * scsi_device_put  -  release a reference to a scsi_device
-- * @sdev:	device to release a reference on.
-+ * scsi_device_put - release a reference to a scsi_device
-+ * @sdev:	device to release a reference on
-  *
-  * Description: Release a reference to the scsi_device and decrements the use
-  * count of the underlying LLDD module.  The device is freed once the last
-@@ -1004,15 +1037,7 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--#ifdef CONFIG_MODULE_UNLOAD
--	struct module *module = sdev->host->hostt->module;
+-	hdr = (const struct fw_hdr *)fw->data;
+-	fw_ver = ntohl(hdr->fw_ver);
+-	if (FW_HDR_FW_VER_MAJOR_G(fw_ver) != FW_VERSION_MAJOR(hw))
+-		return -EINVAL;      /* wrong major version, won't do */
 -
--	/* The module refcount will be zero if scsi_device_get()
--	 * was called from a module removal routine */
--	if (module && module_refcount(module) != 0)
--		module_put(module);
--#endif
--	put_device(&sdev->sdev_gendev);
-+	scsi_dev_put(sdev, true);
- }
- EXPORT_SYMBOL(scsi_device_put);
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fedab3c..05ab2ec 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -564,13 +564,13 @@ static int sd_major(int major_idx)
- 	}
- }
- 
--static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
-+static struct scsi_disk *__scsi_disk_get(struct gendisk *disk, bool get_lld)
- {
- 	struct scsi_disk *sdkp = NULL;
- 
- 	if (disk->private_data) {
- 		sdkp = scsi_disk(disk);
--		if (scsi_device_get(sdkp->device) == 0)
-+		if (scsi_dev_get(sdkp->device, get_lld) == 0)
- 			get_device(&sdkp->dev);
- 		else
- 			sdkp = NULL;
-@@ -578,35 +578,36 @@ static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
- 	return sdkp;
- }
- 
--static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
-+static struct scsi_disk *scsi_disk_get(struct gendisk *disk, bool get_lld)
- {
- 	struct scsi_disk *sdkp;
- 
- 	mutex_lock(&sd_ref_mutex);
--	sdkp = __scsi_disk_get(disk);
-+	sdkp = __scsi_disk_get(disk, get_lld);
- 	mutex_unlock(&sd_ref_mutex);
- 	return sdkp;
- }
- 
--static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
-+static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev,
-+						bool get_lld)
- {
- 	struct scsi_disk *sdkp;
- 
- 	mutex_lock(&sd_ref_mutex);
- 	sdkp = dev_get_drvdata(dev);
- 	if (sdkp)
--		sdkp = __scsi_disk_get(sdkp->disk);
-+		sdkp = __scsi_disk_get(sdkp->disk, get_lld);
- 	mutex_unlock(&sd_ref_mutex);
- 	return sdkp;
- }
- 
--static void scsi_disk_put(struct scsi_disk *sdkp)
-+static void scsi_disk_put(struct scsi_disk *sdkp, bool put_lld)
- {
- 	struct scsi_device *sdev = sdkp->device;
- 
- 	mutex_lock(&sd_ref_mutex);
- 	put_device(&sdkp->dev);
--	scsi_device_put(sdev);
-+	scsi_dev_put(sdev, put_lld);
- 	mutex_unlock(&sd_ref_mutex);
- }
- 
-@@ -1184,7 +1185,7 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
-  **/
- static int sd_open(struct block_device *bdev, fmode_t mode)
- {
--	struct scsi_disk *sdkp = scsi_disk_get(bdev->bd_disk);
-+	struct scsi_disk *sdkp = scsi_disk_get(bdev->bd_disk, true);
- 	struct scsi_device *sdev;
- 	int retval;
- 
-@@ -1239,7 +1240,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 	return 0;
- 
- error_out:
--	scsi_disk_put(sdkp);
-+	scsi_disk_put(sdkp, true);
- 	return retval;	
- }
- 
-@@ -1273,7 +1274,7 @@ static void sd_release(struct gendisk *disk, fmode_t mode)
- 	 * XXX is followed by a "rmmod sd_mod"?
+-	/*
+-	 * If the flash FW is unusable or we found something newer, load it.
++	/* allocate memory to read the header of the firmware on the
++	 * card
  	 */
+-	if (FW_HDR_FW_VER_MAJOR_G(hw->fwrev) != FW_VERSION_MAJOR(hw) ||
+-	    fw_ver > hw->fwrev) {
+-		ret = csio_hw_fw_upgrade(hw, hw->pfn, fw->data, fw->size,
+-				    /*force=*/false);
+-		if (!ret)
+-			csio_info(hw,
+-				  "firmware upgraded to version %pI4 from %s\n",
+-				  &hdr->fw_ver, CSIO_FW_FNAME(hw));
+-		else
+-			csio_err(hw, "firmware upgrade failed! err=%d\n", ret);
+-	} else
+-		ret = -EINVAL;
++	card_fw = kmalloc(sizeof(*card_fw), GFP_KERNEL);
  
--	scsi_disk_put(sdkp);
-+	scsi_disk_put(sdkp, true);
+-	release_firmware(fw);
++	fw_data = fw->data;
++	fw_size = fw->size;
+ 
++	/* upgrade FW logic */
++	ret = csio_hw_prep_fw(hw, fw_info, fw_data, fw_size, card_fw,
++			 hw->fw_state, reset);
++
++	/* Cleaning up */
++	if (fw != NULL)
++		release_firmware(fw);
++	kfree(card_fw);
+ 	return ret;
  }
  
- static int sd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
-@@ -1525,11 +1526,11 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 
- static void sd_rescan(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, true);
- 
- 	if (sdkp) {
- 		revalidate_disk(sdkp->disk);
--		scsi_disk_put(sdkp);
-+		scsi_disk_put(sdkp, true);
- 	}
- }
- 
-@@ -3142,11 +3143,14 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+-
  /*
-  * Send a SYNCHRONIZE CACHE instruction down to the device through
-  * the normal SCSI command structure.  Wait for the command to
-- * complete.
-+ * complete.  Since this function can be called during SCSI LLD kernel
-+ * module unload and since try_module_get() fails after kernel module
-+ * unload has started this function must not try to increase the SCSI
-+ * LLD kernel module refcount.
-  */
- static void sd_shutdown(struct device *dev)
+  * csio_hw_configure - Configure HW
+  * @hw - HW module
+@@ -2071,25 +2203,18 @@ csio_hw_configure(struct csio_hw *hw)
+ 	if (rv != 0)
+ 		goto out;
+ 
++	csio_hw_get_fw_version(hw, &hw->fwrev);
++	csio_hw_get_tp_version(hw, &hw->tp_vers);
+ 	if (csio_is_hw_master(hw) && hw->fw_state != CSIO_DEV_STATE_INIT) {
+-		rv = csio_hw_check_fw_version(hw);
+-		if (rv == -EINVAL) {
+ 
+ 			/* Do firmware update */
+-			spin_unlock_irq(&hw->lock);
+-			rv = csio_hw_flash_fw(hw);
+-			spin_lock_irq(&hw->lock);
++		spin_unlock_irq(&hw->lock);
++		rv = csio_hw_flash_fw(hw, &reset);
++		spin_lock_irq(&hw->lock);
++
++		if (rv != 0)
++			goto out;
+ 
+-			if (rv == 0) {
+-				reset = 0;
+-				/*
+-				 * Note that the chip was reset as part of the
+-				 * firmware upgrade so we don't reset it again
+-				 * below and grab the new firmware version.
+-				 */
+-				rv = csio_hw_check_fw_version(hw);
+-			}
+-		}
+ 		/*
+ 		 * If the firmware doesn't support Configuration
+ 		 * Files, use the old Driver-based, hard-wired
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index bd97204..1fe8fde 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -201,9 +201,8 @@ enum {
+ 	SF_ERASE_SECTOR = 0xd8,       /* erase sector */
+ 
+ 	FW_START_SEC = 8,             /* first flash sector for FW */
+-	FW_END_SEC = 15,              /* last flash sector for FW */
+ 	FW_IMG_START = FW_START_SEC * SF_SEC_SIZE,
+-	FW_MAX_SIZE = (FW_END_SEC - FW_START_SEC + 1) * SF_SEC_SIZE,
++	FW_MAX_SIZE = 16 * SF_SEC_SIZE,
+ 
+ 	FLASH_CFG_MAX_SIZE    = 0x10000 , /* max size of the flash config file*/
+ 	FLASH_CFG_OFFSET      = 0x1f0000,
+@@ -221,7 +220,7 @@ enum {
+ 	 * Location of firmware image in FLASH.
+ 	 */
+ 	FLASH_FW_START_SEC = 8,
+-	FLASH_FW_NSECS = 8,
++	FLASH_FW_NSECS = 16,
+ 	FLASH_FW_START = FLASH_START(FLASH_FW_START_SEC),
+ 	FLASH_FW_MAX_SIZE = FLASH_MAX_SIZE(FLASH_FW_NSECS),
+ 
+diff --git a/drivers/scsi/csiostor/csio_hw_chip.h b/drivers/scsi/csiostor/csio_hw_chip.h
+index 70c0bdd..eec98f5 100644
+--- a/drivers/scsi/csiostor/csio_hw_chip.h
++++ b/drivers/scsi/csiostor/csio_hw_chip.h
+@@ -50,6 +50,36 @@
+ #define FW_CFG_NAME_T4				"cxgb4/t4-config.txt"
+ #define FW_CFG_NAME_T5				"cxgb4/t5-config.txt"
+ 
++#define T4FW_VERSION_MAJOR 0x01
++#define T4FW_VERSION_MINOR 0x0B
++#define T4FW_VERSION_MICRO 0x1B
++#define T4FW_VERSION_BUILD 0x00
++
++#define T5FW_VERSION_MAJOR 0x01
++#define T5FW_VERSION_MINOR 0x0B
++#define T5FW_VERSION_MICRO 0x1B
++#define T5FW_VERSION_BUILD 0x00
++
++#define CHELSIO_CHIP_CODE(version, revision) (((version) << 4) | (revision))
++#define CHELSIO_CHIP_FPGA          0x100
++#define CHELSIO_CHIP_VERSION(code) (((code) >> 12) & 0xf)
++#define CHELSIO_CHIP_RELEASE(code) ((code) & 0xf)
++
++#define CHELSIO_T4		0x4
++#define CHELSIO_T5		0x5
++
++enum chip_type {
++	T4_A1 = CHELSIO_CHIP_CODE(CHELSIO_T4, 1),
++	T4_A2 = CHELSIO_CHIP_CODE(CHELSIO_T4, 2),
++	T4_FIRST_REV	= T4_A1,
++	T4_LAST_REV	= T4_A2,
++
++	T5_A0 = CHELSIO_CHIP_CODE(CHELSIO_T5, 0),
++	T5_A1 = CHELSIO_CHIP_CODE(CHELSIO_T5, 1),
++	T5_FIRST_REV	= T5_A0,
++	T5_LAST_REV	= T5_A1,
++};
++
+ /* Define static functions */
+ static inline int csio_is_t4(uint16_t chip)
  {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, false);
+@@ -80,10 +110,21 @@ static inline int csio_is_t5(uint16_t chip)
+ 	(csio_is_t4(hw->chip_id) ? (PORT_REG(port, XGMAC_PORT_INT_CAUSE_A)) : \
+ 				(T5_PORT_REG(port, MAC_PORT_INT_CAUSE_A)))
  
- 	if (!sdkp)
- 		return;         /* this can happen */
-@@ -3165,12 +3169,12 @@ static void sd_shutdown(struct device *dev)
- 	}
+-#define FW_VERSION_MAJOR(hw) (csio_is_t4(hw->chip_id) ? 1 : 0)
+-#define FW_VERSION_MINOR(hw) (csio_is_t4(hw->chip_id) ? 2 : 0)
+-#define FW_VERSION_MICRO(hw) (csio_is_t4(hw->chip_id) ? 8 : 0)
++#include "t4fw_api.h"
  
- exit:
--	scsi_disk_put(sdkp);
-+	scsi_disk_put(sdkp, false);
- }
++#define FW_VERSION(chip) ( \
++		FW_HDR_FW_VER_MAJOR_G(chip##FW_VERSION_MAJOR) | \
++		FW_HDR_FW_VER_MINOR_G(chip##FW_VERSION_MINOR) | \
++		FW_HDR_FW_VER_MICRO_G(chip##FW_VERSION_MICRO) | \
++		FW_HDR_FW_VER_BUILD_G(chip##FW_VERSION_BUILD))
++#define FW_INTFVER(chip, intf) (FW_HDR_INTFVER_##intf)
++
++struct fw_info {
++	u8 chip;
++	char *fs_name;
++	char *fw_mod_name;
++	struct fw_hdr fw_hdr;
++};
+ #define CSIO_FW_FNAME(hw)						\
+ 	(csio_is_t4(hw->chip_id) ? FW_FNAME_T4 : FW_FNAME_T5)
  
- static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, true);
- 	int ret = 0;
- 
- 	if (!sdkp)
-@@ -3196,7 +3200,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 	}
- 
- done:
--	scsi_disk_put(sdkp);
-+	scsi_disk_put(sdkp, true);
- 	return ret;
- }
- 
-@@ -3212,7 +3216,7 @@ static int sd_suspend_runtime(struct device *dev)
- 
- static int sd_resume(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, true);
- 	int ret = 0;
- 
- 	if (!sdkp->device->manage_start_stop)
-@@ -3222,7 +3226,7 @@ static int sd_resume(struct device *dev)
- 	ret = sd_start_stop_device(sdkp, 1);
- 
- done:
--	scsi_disk_put(sdkp);
-+	scsi_disk_put(sdkp, true);
- 	return ret;
- }
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 3a4edd1..a4cb852 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -330,6 +330,8 @@ extern void scsi_remove_device(struct scsi_device *);
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
- void scsi_attach_vpd(struct scsi_device *sdev);
- 
-+extern int scsi_dev_get(struct scsi_device *, bool get_lld);
-+extern void scsi_dev_put(struct scsi_device *, bool put_lld);
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
- extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
 -- 
-2.1.2
+2.0.2
 
