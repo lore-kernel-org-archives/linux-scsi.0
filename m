@@ -1,62 +1,82 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [target:nvme_of 3/3] drivers/target/nvme_of/nvme_of_configfs.c:25:31:
- sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
-Date: Wed, 07 Jan 2015 10:57:58 +0200
-Message-ID: <54ACF516.4080602@dev.mellanox.co.il>
-References: <201501070334.EgwC5iey%fengguang.wu@intel.com> <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: RE: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
+Date: Wed,  7 Jan 2015 18:23:55 +0530
+Message-ID: <1420635235-2222-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og120.obsmtp.com ([64.18.2.18]:57114 "EHLO
+	exprod7og120.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982AbbAGMy1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 07:54:27 -0500
+Received: by mail-pa0-f42.google.com with SMTP id et14so4755192pad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2015 04:54:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-On 1/7/2015 12:44 AM, Nicholas A. Bellinger wrote:
-> On Wed, 2015-01-07 at 03:35 +0800, kbuild test robot wrote:
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git nvme_of
->> head:   40d8c11927282d59855d645b35798edd97828da5
->> commit: 40d8c11927282d59855d645b35798edd97828da5 [3/3] nvme_of: Initial skeleton commit
->> reproduce:
->>    # apt-get install sparse
->>    git checkout 40d8c11927282d59855d645b35798edd97828da5
->>    make ARCH=x86_64 allmodconfig
->>    make C=1 CF=-D__CHECK_ENDIAN__
->>
->>
->> sparse warnings: (new ones prefixed by >>)
->>
->>>> drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
->>
->> Please review and possibly fold the followup patch.
->>
->
-> Fixed.  Thanks Fengguang!
->
+Hi Martin,
 
-Hey Nic,
+As per your suggestion I have modified the Warning message. Please review the change.
+ 
+Change Set:
 
-Hope all is well.
+1. Extended the upper boundary restriction for the module parameter max_sgl_entries.
+   Earlier, the max_sgl_entries was capped at the SCSI_MAX_SG_SEGMENTS kernel definition.
+   With this change, the user would be able to set the max_sgl_entries to
+   any value which is greater than SCSI_MAX_SG_SEGMENTS and less than the minimum of
+   SCSI_MAX_SG_CHAIN_SEGMENTS & hardware limit(Calculated using IOCFacts's MaxChainDepth).
 
-So this skeleton is interesting to me. As this is a fabric module I
-assume this would be the NVMEoFabrics target mode driver for upstream 
-which would be able to talk to NVMEoFabrics initiator (which by
-the way makes LIO something more than a SCSI target - will this be 
-accepted?).
+2. Added a print for the message log whenever the user sets the max_sgl_entries to a value
+   greater than SCSI_MAX_SG_SEGMENTS to warn about the kernel definition overriding.
 
-I'm currently participating in nvmexpress working group defining the
-standard of protocol, specifically in the context of RDMA (naturally).
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 10 +++++++---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 10 ++++++++--
+ 2 files changed, 15 insertions(+), 5 deletions(-)
 
-I'm interested in taking an active role in this project, It is
-important to build this layered from day one - separating the fabric 
-logic (RDMA or FCoE) from the core layer.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 13d1d5b..dc088ac 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -2492,9 +2492,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+ 
+ 	/* command line tunables  for max sgl entries */
+ 	if (max_sgl_entries != -1) {
+-		ioc->shost->sg_tablesize = (max_sgl_entries <
+-		    MPT2SAS_SG_DEPTH) ? max_sgl_entries :
+-		    MPT2SAS_SG_DEPTH;
++		ioc->shost->sg_tablesize =  min_t(unsigned short,
++			     max_sgl_entries, SCSI_MAX_SG_CHAIN_SEGMENTS);
++		if (ioc->shost->sg_tablesize > MPT2SAS_SG_DEPTH)
++			printk(MPT2SAS_WARN_FMT
++			 "sg_tablesize(%u) is bigger than kernel defined"
++			 " SCSI_MAX_SG_SEGMENTS(%u)\n", ioc->name,
++			  ioc->shost->sg_tablesize, MPT2SAS_SG_DEPTH);
+ 	} else {
+ 		ioc->shost->sg_tablesize = MPT2SAS_SG_DEPTH;
+ 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index f1918cf..0b8210b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2666,8 +2666,14 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc,  int sleep_flag)
+ 
+ 	if (sg_tablesize < MPT3SAS_MIN_PHYS_SEGMENTS)
+ 		sg_tablesize = MPT3SAS_MIN_PHYS_SEGMENTS;
+-	else if (sg_tablesize > MPT3SAS_MAX_PHYS_SEGMENTS)
+-		sg_tablesize = MPT3SAS_MAX_PHYS_SEGMENTS;
++	else if (sg_tablesize > MPT3SAS_MAX_PHYS_SEGMENTS) {
++		sg_tablesize = min_t(unsigned short, sg_tablesize,
++				      SCSI_MAX_SG_CHAIN_SEGMENTS);
++		pr_warn(MPT3SAS_FMT
++		 "sg_tablesize(%u) is bigger than kernel"
++		 " defined SCSI_MAX_SG_SEGMENTS(%u)\n", ioc->name,
++		 sg_tablesize, MPT3SAS_MAX_PHYS_SEGMENTS);
++	}
+ 	ioc->shost->sg_tablesize = sg_tablesize;
+ 
+ 	ioc->hi_priority_depth = facts->HighPriorityCredit;
+-- 
+2.0.2
 
-Moreover, I know that Mellanox has some plans on accelerating this
-area in future devices and we are currently looking into ways to
-do that. I want to see that the SW will be able to support that.
-
-So, Thoughts?
-
-Sagi.
