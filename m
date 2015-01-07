@@ -1,96 +1,93 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [target:nvme_of 3/3]
- drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol
- 'nvme_of_fabric_configfs' was not declared. Should it be static?
-Date: Wed, 07 Jan 2015 13:33:51 -0800
-Message-ID: <1420666431.12144.71.camel@haakon3.risingtidesystems.com>
-References: <201501070334.EgwC5iey%fengguang.wu@intel.com>
-	 <1420584282.6927.62.camel@haakon3.risingtidesystems.com>
-	 <54ACF516.4080602@dev.mellanox.co.il>
-	 <1420654943.12144.38.camel@haakon3.risingtidesystems.com>
-	 <8F6AF977-2BD7-46FF-A38D-108AF3C05809@dev.mellanox.co.il>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Wed, 07 Jan 2015 15:39:03 -0600
+Message-ID: <54ADA777.6090801@cs.wisc.edu>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55165 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138AbbAGVdw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 16:33:52 -0500
-In-Reply-To: <8F6AF977-2BD7-46FF-A38D-108AF3C05809@dev.mellanox.co.il>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRBAOPW2SQKGQEACJ63SI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <54AD6563.4040603-l3A5Bk7waGM@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Patil, Kiran" <kiran.patil@intel.com>, "Minturn, Dave B" <dave.b.minturn@intel.com>
 
-On Wed, 2015-01-07 at 22:26 +0200, Sagi Grimberg wrote:
-> >> On Wed, 2015-01-07 at 10:57 +0200, Sagi Grimberg wrote:
-> >>> On 1/7/2015 12:44 AM, Nicholas A. Bellinger wrote:
-
-<SNIP>
-
-> >> Hey Nic,
-> >> 
-> >> Hope all is well.
-> >> 
-> >> So this skeleton is interesting to me. As this is a fabric module I
-> >> assume this would be the NVMEoFabrics target mode driver for upstream 
-> >> which would be able to talk to NVMEoFabrics initiator (which by
-> >> the way makes LIO something more than a SCSI target - will this be 
-> >> accepted?).
-> > 
-> > That is currently the plan.
-> > 
-> > It's still unclear how this will work wrt to existing target code, but
-> > given the amount of logic that NVMe is borrowing from SCSI on the
-> > command set side (PR, ALUA, VAAI, DIF), I'm sure there is an opportunity
-> > for code sharing between NVMe and SCSI based fabrics.
+On 01/07/2015 10:57 AM, Hannes Reinecke wrote:
+> On 01/07/2015 05:25 PM, Sagi Grimberg wrote:
+>> Hi everyone,
+>>
+>> Now that scsi-mq is fully included, we need an iSCSI initiator that
+>> would use it to achieve scalable performance. The need is even greater
+>> for iSCSI offload devices and transports that support multiple HW
+>> queues. As iSER maintainer I'd like to discuss the way we would choose
+>> to implement that in iSCSI.
+>>
+>> My measurements show that iSER initiator can scale up to ~2.1M IOPs
+>> with multiple sessions but only ~630K IOPs with a single session where
+>> the most significant bottleneck the (single) core processing
+>> completions.
+>>
+>> In the existing single connection per session model, given that command
+>> ordering must be preserved session-wide, we end up in a serial command
+>> execution over a single connection which is basically a single queue
+>> model. The best fit seems to be plugging iSCSI MCS as a multi-queued
+>> scsi LLDD. In this model, a hardware context will have a 1x1 mapping
+>> with an iSCSI connection (TCP socket or a HW queue).
+>>
+>> iSCSI MCS and it's role in the presence of dm-multipath layer was
+>> discussed several times in the past decade(s). The basic need for MCS is
+>> implementing a multi-queue data path, so perhaps we may want to avoid
+>> doing any type link aggregation or load balancing to not overlap
+>> dm-multipath. For example we can implement ERL=0 (which is basically the
+>> scsi-mq ERL) and/or restrict a session to a single portal.
+>>
+>> As I see it, the todo's are:
+>> 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
+>>    round-robin connection selection (per scsi command execution).
+>> 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
+>>    using blk-mq based queue (conn) selection.
+>> 3. Rework iSCSI core locking scheme to avoid session-wide locking
+>>    as much as possible.
+>> 4. Use blk-mq pre-allocation and tagging facilities.
+>>
+>> I've recently started looking into this. I would like the community to
+>> agree (or debate) on this scheme and also talk about implementation
+>> with anyone who is also interested in this.
+>>
+> Yes, that's a really good topic.
 > 
-> Right, but I assume there will be a different method to provision this
-> stuff given that the target exposes NVME SQs.
+> I've pondered implementing MC/S for iscsi/TCP but then I've figured my
+> network implementation knowledge doesn't spread that far.
+> So yeah, a discussion here would be good.
 > 
+> Mike? Any comments?
 
-Yeah, it's not clear how this is going to work yet, but I'd expect a new
-backend driver will be required for exposing NVMe hardware queues into
-target -> fabric driver code.
+I have been working under the assumption that people would be ok with
+MCS upstream if we are only using it to handle the issue where we want
+to do something like have a tcp/iscsi connection per CPU then map the
+connection to a blk_mq_hw_ctx. In this more limited MCS implementation
+there would be no iscsi layer code to do something like load balance
+across ports or transport paths like how dm-multipath does, so there
+would be no feature/code duplication. For balancing across hctxs, then
+the iscsi layer would also leave that up to whatever we end up with in
+upper layers, so again no feature/code duplication with upper layers.
 
-> > 
-> >> I'm currently participating in nvmexpress working group defining the
-> >> standard of protocol, specifically in the context of RDMA (naturally).
-> > 
-> > Glad to hear that your involved.  ;)
-> 
-> Should say passively involved, at the moment I'm just following this
-> stuff.
-> 
-> > 
-> >> I'm interested in taking an active role in this project, It is
-> >> important to build this layered from day one - separating the fabric 
-> >> logic (RDMA or FCoE) from the core layer.
-> >> 
-> >> Moreover, I know that Mellanox has some plans on accelerating this
-> >> area in future devices and we are currently looking into ways to
-> >> do that. I want to see that the SW will be able to support that.
-> >> 
-> >> So, Thoughts?
-> > 
-> > FYI, Kiran and Dave (CC'ed) from Intel will be driving upstream NVME-OF
-> > target development.
-> > 
-> > I'll be primarily focused on figuring out how NVMe and SCSI can play
-> > nicely in target-core, and helping out on the NVMe-OF side where
-> > necessary.
-> 
-> Is there something open that I can start playing around with? What is
-> the status here? I imagine that the initiator is developed as well...
-> 
+So pretty non controversial I hope :)
 
-I don't believe any public code is available yet, and considering the
-draft spec is only available to members of the NVMe consortium, it's
-likely going to be a while before that happens.
+If people want to add something like round robin connection selection in
+the iscsi layer, then I think we want to leave that for after the
+initial merge, so people can argue about that separately.
 
-However, Dave mentioned off-list that sharing early code amongst NVMe
-consortium members should not be an issue.
-
---nab 
-
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
