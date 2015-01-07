@@ -1,60 +1,87 @@
-From: Giel van Schijndel <me@mortis.eu>
-Subject: [PATCH RESEND] scsi: cleanup: snprintf() always NUL-terminates: depend on it
-Date: Wed,  7 Jan 2015 20:20:15 +0100
-Message-ID: <1420658416-20839-1-git-send-email-me@mortis.eu>
-References: <1420394759-20345-1-git-send-email-me@mortis.eu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from khitomer.mortis.eu ([185.27.175.75]:21845 "EHLO
-	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbbAGTUe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 14:20:34 -0500
-In-Reply-To: <1420394759-20345-1-git-send-email-me@mortis.eu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [target:nvme_of 3/3] drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+Date: Wed, 7 Jan 2015 22:26:26 +0200
+Message-ID: <8F6AF977-2BD7-46FF-A38D-108AF3C05809@dev.mellanox.co.il>
+References: <201501070334.EgwC5iey%fengguang.wu@intel.com> <1420584282.6927.62.camel@haakon3.risingtidesystems.com> <54ACF516.4080602@dev.mellanox.co.il> <1420654943.12144.38.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1420654943.12144.38.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Patil, Kiran" <kiran.patil@intel.com>, "Minturn, Dave B" <dave.b.minturn@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Giel van Schijndel <me@mortis.eu>, Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 
-Especially since one very strange piece of code seems to be written in
-such a way that a NUL needs to be placed where a NUL is present already.
-The author probably meant to fill the last byte of the buffer with a NUL
-instead. But regardless of that: that isn't necessary since snprintf()
-already guarantees NUL termination for buffers sizes > 0 and <= INT_MAX.
 
-Signed-off-by: Giel van Schijndel <me@mortis.eu>
-Reported-at: http://www.viva64.com/en/b/0299/
----
- drivers/scsi/ipr.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+>> On Wed, 2015-01-07 at 10:57 +0200, Sagi Grimberg wrote:
+>>> On 1/7/2015 12:44 AM, Nicholas A. Bellinger wrote:
+>>>> On Wed, 2015-01-07 at 03:35 +0800, kbuild test robot wrote:
+>>>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git nvme_of
+>>>> head:   40d8c11927282d59855d645b35798edd97828da5
+>>>> commit: 40d8c11927282d59855d645b35798edd97828da5 [3/3] nvme_of: Initial skeleton commit
+>>>> reproduce:
+>>>>   # apt-get install sparse
+>>>>   git checkout 40d8c11927282d59855d645b35798edd97828da5
+>>>>   make ARCH=x86_64 allmodconfig
+>>>>   make C=1 CF=-D__CHECK_ENDIAN__
+>>>> 
+>>>> 
+>>>> sparse warnings: (new ones prefixed by >>)
+>>>> 
+>>>>>> drivers/target/nvme_of/nvme_of_configfs.c:25:31: sparse: symbol 'nvme_of_fabric_configfs' was not declared. Should it be static?
+>>>> 
+>>>> Please review and possibly fold the followup patch.
+>>> 
+>>> Fixed.  Thanks Fengguang!
+>> 
+>> Hey Nic,
+>> 
+>> Hope all is well.
+>> 
+>> So this skeleton is interesting to me. As this is a fabric module I
+>> assume this would be the NVMEoFabrics target mode driver for upstream 
+>> which would be able to talk to NVMEoFabrics initiator (which by
+>> the way makes LIO something more than a SCSI target - will this be 
+>> accepted?).
+> 
+> That is currently the plan.
+> 
+> It's still unclear how this will work wrt to existing target code, but
+> given the amount of logic that NVMe is borrowing from SCSI on the
+> command set side (PR, ALUA, VAAI, DIF), I'm sure there is an opportunity
+> for code sharing between NVMe and SCSI based fabrics.
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index df4e27c..b49fe45 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3990,7 +3990,6 @@ static ssize_t ipr_store_update_fw(struct device *dev,
- 		return -EACCES;
- 
- 	len = snprintf(fname, 99, "%s", buf);
--	fname[len-1] = '\0';
- 
- 	if (request_firmware(&fw_entry, fname, &ioa_cfg->pdev->dev)) {
- 		dev_err(&ioa_cfg->pdev->dev, "Firmware file %s not found\n", fname);
-@@ -9358,13 +9357,12 @@ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int vec_idx, n = sizeof(ioa_cfg->vectors_info[0].desc) - 1;
-+	int vec_idx;
- 
- 	for (vec_idx = 0; vec_idx < ioa_cfg->nvectors; vec_idx++) {
--		snprintf(ioa_cfg->vectors_info[vec_idx].desc, n,
-+		snprintf(ioa_cfg->vectors_info[vec_idx].desc,
-+			 sizeof(ioa_cfg->vectors_info[vec_idx].desc),
- 			 "host%d-%d", ioa_cfg->host->host_no, vec_idx);
--		ioa_cfg->vectors_info[vec_idx].
--			desc[strlen(ioa_cfg->vectors_info[vec_idx].desc)] = 0;
- 	}
- }
- 
--- 
-2.1.4
+Right, but I assume there will be a different method to provision this stuff given that the target exposes NVME SQs.
 
+> 
+>> I'm currently participating in nvmexpress working group defining the
+>> standard of protocol, specifically in the context of RDMA (naturally).
+> 
+> Glad to hear that your involved.  ;)
+
+Should say passively involved, at the moment I'm just following this stuff.
+
+> 
+>> I'm interested in taking an active role in this project, It is
+>> important to build this layered from day one - separating the fabric 
+>> logic (RDMA or FCoE) from the core layer.
+>> 
+>> Moreover, I know that Mellanox has some plans on accelerating this
+>> area in future devices and we are currently looking into ways to
+>> do that. I want to see that the SW will be able to support that.
+>> 
+>> So, Thoughts?
+> 
+> FYI, Kiran and Dave (CC'ed) from Intel will be driving upstream NVME-OF
+> target development.
+> 
+> I'll be primarily focused on figuring out how NVMe and SCSI can play
+> nicely in target-core, and helping out on the NVMe-OF side where
+> necessary.
+
+Is there something open that I can start playing around with? What is the status here? I imagine that the initiator is developed as well...
+
+Cheers,
+Sagi.
