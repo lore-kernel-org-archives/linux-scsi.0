@@ -1,48 +1,43 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [LSF/MM ATTEND] iSCSI/iSER MQ + EXTENDED_COPY host support
-Date: Wed, 07 Jan 2015 17:11:21 -0500
-Message-ID: <54ADAF09.8050405@interlog.com>
-References: <1420665695.12144.62.camel@haakon3.risingtidesystems.com>
-Reply-To: dgilbert@interlog.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [dm-devel] [LSF/MM ATTEND] discuss blk-mq related to DM-multipath and status of XCOPY
+Date: Wed, 07 Jan 2015 18:39:41 -0500
+Message-ID: <yq1vbki40ua.fsf@sermon.lab.mkp.net>
+References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
+	<54AA90B1.1030201@suse.de> <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
+	<54ACEF13.7000508@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1420665695.12144.62.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, lsf-pc <lsf-pc@lists.linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:49561 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755166AbbAGXkN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 18:40:13 -0500
+In-Reply-To: <54ACEF13.7000508@suse.de> (Hannes Reinecke's message of "Wed, 07
+	Jan 2015 09:32:19 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, device-mapper development <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 15-01-07 04:21 PM, Nicholas A. Bellinger wrote:
-> Hi LSF-PC folks,
->
-> I'd like to attend LSF/MM 2015 this year in Boston.
->
-> The topics I'm interested in are iSCSI/iSER multi-queue (MC/S) support
-> within the open-iscsi initiator, and pushing forward the pieces
-> necessary for EXTENDED_COPY host side support so we can finally begin to
-> utilize copy-offload in KVM and Xen environments.
->
-> As maintainer of the SCSI target subsystem, I've contributed MC/S
-> support in iscsi-target, as well as EXTENDED_COPY(LID1) support within
-> the upstream LIO target.  Now that we've got upstream target support for
-> these features, I'd like to help facilitate support for these into the
-> initiator / host side stack.
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-T10 have now dropped the LID1 and LID4 stuff (its the length
-of the LIST IDENTIFIER field: 1 byte or 4 bytes) by obsoleting
-all LID1 variants in SPC-5 revision 01. So the LID1 variants
-are now gone and the LID4 appendage is dropped from the remaining
-commands.
+Hannes> Not quite. XCOPY is optional, and the system works well without
+Hannes> it.  So the exception handling would need to copy things by hand
+Hannes> to avoid regressions.
 
-Obviously LID1 based XCOPY support is important for backward
-compatibility (back to SPC-2) but for the future maybe you might
-consider adding the equivalent LID4 support for a basic XCOPY.
-For example it means using the 3PC VPD page instead of the
-RECEIVE COPY RESULTS(operating parameters) command. I believe
-FreeNAS now supports both LID1 and LID4 variants of a basic
-XCOPY (plus a restricted version of ODX without snapshots).
+Or defer to user space.
 
+But it's really no different from how we do WRITE SAME which may or may
+not work. If it fails we fall back to writing zeroes.
 
-Doug Gilbert
+Hannes> Plus XCOPY requires some elaborate setup, and even if those
+Hannes> succeeded the array might still fail the command.  _And_ there
+Hannes> is no guarantee that that the XCOPY command is actually faster
+Hannes> than the manual procedure.
+
+It saves the data a roundtrip on the fabric. That itself may be more
+valuable than a direct bandwidth win if there is concurrent I/O on the
+wire.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
