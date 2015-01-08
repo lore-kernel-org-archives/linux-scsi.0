@@ -1,54 +1,104 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 0/3] scsi: ufs & ums-*: fix module reference counting
-Date: Thu, 8 Jan 2015 23:00:08 +0900
-Message-ID: <CAC5umyj7=e9OxssjTMJ_QszY5y09j7puwDUnCn9wPbcEYob28w@mail.gmail.com>
-References: <20150107142830.GA659@lst.de>
-	<Pine.LNX.4.44L0.1501071004310.1374-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 1/2] uas: Do not blacklist ASM1153 disk enclosures
+Date: Thu,  8 Jan 2015 15:15:14 +0100
+Message-ID: <1420726515-13606-1-git-send-email-hdegoede@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:39944 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753805AbbAHOAK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 09:00:10 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1501071004310.1374-100000@iolanthe.rowland.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32837 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752787AbbAHOPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2015 09:15:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-2015-01-08 0:09 GMT+09:00 Alan Stern <stern@rowland.harvard.edu>:
-> On Wed, 7 Jan 2015, Christoph Hellwig wrote:
->
->> On Wed, Jan 07, 2015 at 11:02:59PM +0900, Akinobu Mita wrote:
->> > While accessing a scsi_device, the use count of the underlying LLDD module
->> > is incremented.  The module reference is retrieved through .module field of
->> > struct scsi_host_template.
->> >
->> > This mapping between scsi_device and underlying LLDD module works well
->> > except some scsi drivers (ufs and unusual usb storage drivers).  These
->> > drivers consist with core driver and actual LLDDs, and scsi_host_template
->> > is defined in the core driver.  So the actual LLDDs can be unloaded even if
->> > the scsi_device is being accessed.
->>
->> Why don't ufs and usb-storage define the host templates in the sub drivers?
->> That's what libata or the mpt fusion driver do.
->
-> Originally the subdrivers were all part of usb-storage.  When they were
-> split out into separate modules, there didn't seem to be any need to
-> copy the host template into each one.  (Especially since some of the
-> method pointers in the host template refer to routines in usb-storage
-> itself, not in the subdrivers.)  The fact that the .module member was
-> no longer adequate escaped our notice at the time.
+Our detection logic to avoid doing UAS on ASM1051 bridge chips causes problems
+with newer ASM1153 disk enclosures in 2 ways:
 
-For ufs, the reason why a host template is shared by sub drivers is similar
-to usb-storage.  Originally there was only a single pci driver for ufs.
-When platform driver for ufs was introduced, it was split into core driver
-(ufshcd) and sub drivers (ufshcd-pci and ufshcd-pltfrm).  They require
-exactly the same host template.
+1) Some ASM1153 disk enclosures re-use the ASM1051 device-id of 5106, which
+   we assume is always an ASM1051, so remove the quirk for 5106, and instead
+   use the same detection logic as we already use for device-id 55aa, which is
+   used for all of ASM1051, ASM1053 and ASM1153 devices <sigh>.
 
-Is there any other preferable way to fix this problem?  The first time I
-found this in ufs driver, I was trying to fix it by merging core and sub
-drivers into a single compound module.  But I realized that usm-* drivers
-have the same problem, then I decided to propose what this patch series do
-instead.
+2) Our detection logic to differentiate between ASM1051 and ASM1053 sees
+   ASM1153 devices as ASM1051 because they have 32 streams like ASM1051 devs.
+   Luckily the ASM1153 descriptors are not 100% identical, unlike the previous
+   models the ASM1153 has bMaxPower == 0, so use that to differentiate it.
+
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/usb/storage/uas-detect.h  | 33 ++++++++++++++++++++++++++++-----
+ drivers/usb/storage/unusual_uas.h |  8 --------
+ 2 files changed, 28 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
+index 8a6f371..9893d69 100644
+--- a/drivers/usb/storage/uas-detect.h
++++ b/drivers/usb/storage/uas-detect.h
+@@ -69,16 +69,39 @@ static int uas_use_uas_driver(struct usb_interface *intf,
+ 		return 0;
+ 
+ 	/*
+-	 * ASM1051 and older ASM1053 devices have the same usb-id, and UAS is
+-	 * broken on the ASM1051, use the number of streams to differentiate.
+-	 * New ASM1053-s also support 32 streams, but have a different prod-id.
++	 * ASMedia has a number of usb3 to sata bridge chips, at the time of
++	 * this writing the following versions exist:
++	 * ASM1051 - no uas support version
++	 * ASM1051 - with broken (*) uas support
++	 * ASM1053 - with working uas support
++	 * ASM1153 - with working uas support
++	 *
++	 * Devices with these chips re-use a number of device-ids over the
++	 * entire line, so the device-id is useless to determine if we're
++	 * dealing with an ASM1051 (which we want to avoid).
++	 *
++	 * The ASM1153 can be identified by config.MaxPower == 0,
++	 * where as the ASM105x models have config.MaxPower == 36.
++	 *
++	 * Differentiating between the ASM1053 and ASM1051 is trickier, when
++	 * connected over USB-3 we can look at the number of streams supported,
++	 * ASM1051 supports 32 streams, where as early ASM1053 versions support
++	 * 16 streams, newer ASM1053-s also support 32 streams, but have a
++	 * different prod-id.
++	 *
++	 * (*) ASM1051 chips do work with UAS with some disks (with the
++	 *     US_FL_NO_REPORT_OPCODES quirk), but are broken with other disks
+ 	 */
+ 	if (le16_to_cpu(udev->descriptor.idVendor) == 0x174c &&
+-			le16_to_cpu(udev->descriptor.idProduct) == 0x55aa) {
+-		if (udev->speed < USB_SPEED_SUPER) {
++			(le16_to_cpu(udev->descriptor.idProduct) == 0x5106 ||
++			 le16_to_cpu(udev->descriptor.idProduct) == 0x55aa)) {
++		if (udev->actconfig->desc.bMaxPower == 0) {
++			/* ASM1153, do nothing */
++		} else if (udev->speed < USB_SPEED_SUPER) {
+ 			/* No streams info, assume ASM1051 */
+ 			flags |= US_FL_IGNORE_UAS;
+ 		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
++			/* Possibly an ASM1051, disable uas */
+ 			flags |= US_FL_IGNORE_UAS;
+ 		}
+ 	}
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index 2f0a3d3..f8492c1 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -96,14 +96,6 @@ UNUSUAL_DEV(0x152d, 0x0567, 0x0000, 0x9999,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_REPORT_OPCODES),
+ 
+-/* Most ASM1051 based devices have issues with uas, blacklist them all */
+-/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
+-UNUSUAL_DEV(0x174c, 0x5106, 0x0000, 0x9999,
+-		"ASMedia",
+-		"ASM1051",
+-		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+-		US_FL_IGNORE_UAS),
+-
+ /* Reported-by: Hans de Goede <hdegoede@redhat.com> */
+ UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
+ 		"VIA",
+-- 
+2.1.0
+
