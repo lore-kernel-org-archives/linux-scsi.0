@@ -1,20 +1,39 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
-Date: Thu, 8 Jan 2015 12:31:36 -0800
-Message-ID: <CAADnVQ+U5=DD555UqYM1gUQxWLE4qN=Xz1kJVHp=Zxmz3Z_ZJQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/3] scsi: Remove scsi_ioctl.h
+Date: Thu, 08 Jan 2015 12:35:02 -0800
+Message-ID: <1420749302.5830.31.camel@HansenPartnership.com>
+References: <1420746479-25949-1-git-send-email-agrover@redhat.com>
+	 <1420746479-25949-4-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Sasha Levin <sasha.levin@oracle.com>, bvanassche <bvanassche@acm.org>, hare <hare@suse.de>, jbottomley <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42392 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752089AbbAHUfF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 15:35:05 -0500
+In-Reply-To: <1420746479-25949-4-git-send-email-agrover@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de
 
-On Thu, Jan 8, 2015 at 1:29 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Wed, Jan 07, 2015 at 07:55:42PM -0800, Alexei Starovoitov wrote:
->> I'm seeing the same splats... what tree I can pull the fix from ?
->
-> None so far.  I'll still need a review to apply it to the scsi-queue tree.
+On Thu, 2015-01-08 at 11:47 -0800, Andy Grover wrote:
+> Now that we have uapi/scsi/scsi.h, that is the logical place for SCSI ioctl
+> definitions to go. The kernel-specific stuff that remains is so little that
+> it can be folded into scsi/scsi.h, and scsi_ioctl.h removed.
+> 
+> Remove all scsi_ioctl.h #includes since they all also include scsi/scsi.h,
+> except for ide-floppy_ioctl.c where we just replace it with including
+> scsi/scsi.h.
 
-applied it manually and warning is gone. It used to
-spam a lot of them.
+What's the transition plan for userspace?  If you look at glibc
+currently, it supplies both scsi.h and scsi_ioctl.h.  If we're
+persuading the glibc folks to go with our versions from uapi, I think
+removing a file which is an effective compile breaker for userspace is a
+really bad idea.  Duplicating scsi_ioctl.h definitions in scsi.h would
+also cause them problems.
+
+James
+
+
