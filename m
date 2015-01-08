@@ -1,104 +1,52 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 1/2] uas: Do not blacklist ASM1153 disk enclosures
-Date: Thu,  8 Jan 2015 15:15:14 +0100
-Message-ID: <1420726515-13606-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32837 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752787AbbAHOPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2015 09:15:23 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Thu, 08 Jan 2015 15:11:28 +0100
+Message-ID: <54AE9010.5080609@acm.org>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <54AE8A02.1030100@dev.mellanox.co.il>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Return-path: <open-iscsi+bncBDI37TE46YCBBQ5AXKSQKGQE7IGLNQA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <54AE8A02.1030100-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Our detection logic to avoid doing UAS on ASM1051 bridge chips causes problems
-with newer ASM1153 disk enclosures in 2 ways:
+On 01/08/15 14:45, Sagi Grimberg wrote:
+> Actually I started with that approach, but the independent connections
+> under a single session (I-T-Nexus) violates the command ordering
+> requirement. Plus, such a solution is specific to iSER...
 
-1) Some ASM1153 disk enclosures re-use the ASM1051 device-id of 5106, which
-   we assume is always an ASM1051, so remove the quirk for 5106, and instead
-   use the same detection logic as we already use for device-id 55aa, which is
-   used for all of ASM1051, ASM1053 and ASM1153 devices <sigh>.
+Hello Sagi,
 
-2) Our detection logic to differentiate between ASM1051 and ASM1053 sees
-   ASM1153 devices as ASM1051 because they have 32 streams like ASM1051 devs.
-   Luckily the ASM1153 descriptors are not 100% identical, unlike the previous
-   models the ASM1153 has bMaxPower == 0, so use that to differentiate it.
+Which command ordering requirement are you referring to ? The Linux 
+storage stack does not guarantee that block layer or SCSI commands will 
+be processed in the same order as these commands have been submitted.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/uas-detect.h  | 33 ++++++++++++++++++++++++++++-----
- drivers/usb/storage/unusual_uas.h |  8 --------
- 2 files changed, 28 insertions(+), 13 deletions(-)
+However, it might be interesting to have a look at virtscsi_pick_vq(). I 
+think the purpose of that function is to keep queueing to the same hwq 
+as long as any commands are being executed. This approach avoids that if 
+an application is migrated by the scheduler from one CPU to another that 
+commands get reordered due to have been submitted to different hwq's. I 
+don't think we already have something similar in blk-mq but this is 
+something that could be discussed further.
 
-diff --git a/drivers/usb/storage/uas-detect.h b/drivers/usb/storage/uas-detect.h
-index 8a6f371..9893d69 100644
---- a/drivers/usb/storage/uas-detect.h
-+++ b/drivers/usb/storage/uas-detect.h
-@@ -69,16 +69,39 @@ static int uas_use_uas_driver(struct usb_interface *intf,
- 		return 0;
- 
- 	/*
--	 * ASM1051 and older ASM1053 devices have the same usb-id, and UAS is
--	 * broken on the ASM1051, use the number of streams to differentiate.
--	 * New ASM1053-s also support 32 streams, but have a different prod-id.
-+	 * ASMedia has a number of usb3 to sata bridge chips, at the time of
-+	 * this writing the following versions exist:
-+	 * ASM1051 - no uas support version
-+	 * ASM1051 - with broken (*) uas support
-+	 * ASM1053 - with working uas support
-+	 * ASM1153 - with working uas support
-+	 *
-+	 * Devices with these chips re-use a number of device-ids over the
-+	 * entire line, so the device-id is useless to determine if we're
-+	 * dealing with an ASM1051 (which we want to avoid).
-+	 *
-+	 * The ASM1153 can be identified by config.MaxPower == 0,
-+	 * where as the ASM105x models have config.MaxPower == 36.
-+	 *
-+	 * Differentiating between the ASM1053 and ASM1051 is trickier, when
-+	 * connected over USB-3 we can look at the number of streams supported,
-+	 * ASM1051 supports 32 streams, where as early ASM1053 versions support
-+	 * 16 streams, newer ASM1053-s also support 32 streams, but have a
-+	 * different prod-id.
-+	 *
-+	 * (*) ASM1051 chips do work with UAS with some disks (with the
-+	 *     US_FL_NO_REPORT_OPCODES quirk), but are broken with other disks
- 	 */
- 	if (le16_to_cpu(udev->descriptor.idVendor) == 0x174c &&
--			le16_to_cpu(udev->descriptor.idProduct) == 0x55aa) {
--		if (udev->speed < USB_SPEED_SUPER) {
-+			(le16_to_cpu(udev->descriptor.idProduct) == 0x5106 ||
-+			 le16_to_cpu(udev->descriptor.idProduct) == 0x55aa)) {
-+		if (udev->actconfig->desc.bMaxPower == 0) {
-+			/* ASM1153, do nothing */
-+		} else if (udev->speed < USB_SPEED_SUPER) {
- 			/* No streams info, assume ASM1051 */
- 			flags |= US_FL_IGNORE_UAS;
- 		} else if (usb_ss_max_streams(&eps[1]->ss_ep_comp) == 32) {
-+			/* Possibly an ASM1051, disable uas */
- 			flags |= US_FL_IGNORE_UAS;
- 		}
- 	}
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 2f0a3d3..f8492c1 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -96,14 +96,6 @@ UNUSUAL_DEV(0x152d, 0x0567, 0x0000, 0x9999,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_REPORT_OPCODES),
- 
--/* Most ASM1051 based devices have issues with uas, blacklist them all */
--/* Reported-by: Hans de Goede <hdegoede@redhat.com> */
--UNUSUAL_DEV(0x174c, 0x5106, 0x0000, 0x9999,
--		"ASMedia",
--		"ASM1051",
--		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
--		US_FL_IGNORE_UAS),
--
- /* Reported-by: Hans de Goede <hdegoede@redhat.com> */
- UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
- 		"VIA",
+> (we might want to leave something for LSF ;)).
+
+Agreed :-)
+
+Bart.
+
 -- 
-2.1.0
-
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
