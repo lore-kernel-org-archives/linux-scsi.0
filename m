@@ -1,37 +1,99 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 6/8] megaraid_sas : Reserve commands for IOCTLs and
- internal DCMDs
-Date: Thu, 8 Jan 2015 16:15:21 +0530
-Message-ID: <038e8350b78402d5b2a431138409e8a7@mail.gmail.com>
-References: <201501051440.t05EeP9Q030054@palmhbs0.lsi.com> <20150108104043.GB600@infradead.org>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v4] virtio-scsi: Fix the race condition in virtscsi_handle_event
+Date: Thu, 08 Jan 2015 14:08:54 +0100
+Message-ID: <54AE8166.2060908@redhat.com>
+References: <1420685852-5078-1-git-send-email-famz@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og102.obsmtp.com ([64.18.2.157]:36311 "EHLO
-	exprod7og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753820AbbAHKpY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 05:45:24 -0500
-Received: by mail-qa0-f45.google.com with SMTP id f12so6665614qad.4
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Jan 2015 02:45:23 -0800 (PST)
-In-Reply-To: <20150108104043.GB600@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1420685852-5078-1-git-send-email-famz@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Venkatesh Srinivas <venkateshs@google.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
 
->-----Original Message-----
->From: Christoph Hellwig [mailto:hch@infradead.org]
->Sent: Thursday, January 08, 2015 4:11 PM
->To: Sumit.Saxena@avagotech.com
->Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
->hch@infradead.org; jbottomley@parallels.com;
->kashyap.desai@avagotech.com
->Subject: Re: [PATCH 6/8] megaraid_sas : Reserve commands for IOCTLs and
->internal DCMDs
->
->Btw, what happend to the plan of using block layer host wide tags?
-Those code changes  are going through internal testing. Once it's
-completed, I will post the patch to upstream.
 
-Thanks,
-Sumit
+
+On 08/01/2015 03:57, Fam Zheng wrote:
+> There is a race condition in virtscsi_handle_event, when many device
+> hotplug/unplug events flush in quickly.
+> 
+> The scsi_remove_device in virtscsi_handle_transport_reset may trigger
+> the BUG_ON in scsi_target_reap, because the state is altered behind it,
+> probably by scsi_scan_host of another event. I'm able to reproduce it by
+> repeatedly plugging and unplugging a scsi disk with the same lun number.
+> 
+> To fix this, a single thread workqueue (local to the module) is added,
+> which makes the scan work serialized. With this change, the panic goes
+> away.
+> 
+> Signed-off-by: Fam Zheng <famz@redhat.com>
+
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+
+> ---
+> 
+> v4: Addressing MST's comments:
+>     Use ordered workqueue, with WQ_FREEZABLE and WQ_MEM_RECLAIM flags.
+>     Coding style fixes.
+> 
+> v3: Fix spacing and destroy order. (MST)
+> ---
+>  drivers/scsi/virtio_scsi.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index c52bb5d..0db63b5 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -120,6 +120,7 @@ struct virtio_scsi {
+>  
+>  static struct kmem_cache *virtscsi_cmd_cache;
+>  static mempool_t *virtscsi_cmd_pool;
+> +static struct workqueue_struct *virtscsi_scan_wq;
+>  
+>  static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
+>  {
+> @@ -404,7 +405,7 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+>  	struct virtio_scsi_event_node *event_node = buf;
+>  
+>  	if (!vscsi->stop_events)
+> -		queue_work(system_freezable_wq, &event_node->work);
+> +		queue_work(virtscsi_scan_wq, &event_node->work);
+>  }
+>  
+>  static void virtscsi_event_done(struct virtqueue *vq)
+> @@ -1119,6 +1120,14 @@ static int __init init(void)
+>  		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
+>  		goto error;
+>  	}
+> +
+> +	virtscsi_scan_wq =
+> +		alloc_ordered_workqueue("virtscsi-scan", WQ_FREEZABLE | WQ_MEM_RECLAIM);
+> +	if (!virtscsi_scan_wq) {
+> +		pr_err("create_singlethread_workqueue() for virtscsi_scan_wq failed\n");
+> +		goto error;
+> +	}
+> +
+>  	ret = register_virtio_driver(&virtio_scsi_driver);
+>  	if (ret < 0)
+>  		goto error;
+> @@ -1126,6 +1135,8 @@ static int __init init(void)
+>  	return 0;
+>  
+>  error:
+> +	if (virtscsi_scan_wq)
+> +		destroy_workqueue(virtscsi_scan_wq);
+>  	if (virtscsi_cmd_pool) {
+>  		mempool_destroy(virtscsi_cmd_pool);
+>  		virtscsi_cmd_pool = NULL;
+> @@ -1140,6 +1151,7 @@ error:
+>  static void __exit fini(void)
+>  {
+>  	unregister_virtio_driver(&virtio_scsi_driver);
+> +	destroy_workqueue(virtscsi_scan_wq);
+>  	mempool_destroy(virtscsi_cmd_pool);
+>  	kmem_cache_destroy(virtscsi_cmd_cache);
+>  }
+> 
