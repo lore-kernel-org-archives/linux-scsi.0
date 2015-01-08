@@ -1,509 +1,1133 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 3/3] scsi: Remove scsi_ioctl.h
-Date: Thu,  8 Jan 2015 11:47:59 -0800
-Message-ID: <1420746479-25949-4-git-send-email-agrover@redhat.com>
+Subject: [PATCH 2/3] scsi: Move user-shareable stuff in scsi/scsi.h to uapi/scsi/scsi.h
+Date: Thu,  8 Jan 2015 11:47:58 -0800
+Message-ID: <1420746479-25949-3-git-send-email-agrover@redhat.com>
 References: <1420746479-25949-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58552 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58563 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751707AbbAHTsI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2015 14:48:08 -0500
+	id S1757171AbbAHTsJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2015 14:48:09 -0500
 In-Reply-To: <1420746479-25949-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: linux-scsi@vger.kernel.org, hch@lst.de
 
-Now that we have uapi/scsi/scsi.h, that is the logical place for SCSI ioctl
-definitions to go. The kernel-specific stuff that remains is so little that
-it can be folded into scsi/scsi.h, and scsi_ioctl.h removed.
+A great many SCSI codes and ioctl values can be made available to userspace
+in a uapi header, while the kernel-only definitions stay in scsi/scsi.h.
 
-Remove all scsi_ioctl.h #includes since they all also include scsi/scsi.h,
-except for ide-floppy_ioctl.c where we just replace it with including
-scsi/scsi.h.
+scsi/scsi.h also includes uapi/scsi/scsi.h so kernel code need not update
+includes.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- block/bsg.c                        |  1 -
- block/scsi_ioctl.c                 |  1 -
- drivers/block/cciss.c              |  1 -
- drivers/block/pktcdvd.c            |  1 -
- drivers/ide/ide-floppy.c           |  2 --
- drivers/ide/ide-floppy_ioctl.c     |  2 +-
- drivers/scsi/ch.c                  |  1 -
- drivers/scsi/fdomain.c             |  1 -
- drivers/scsi/nsp32.c               |  1 -
- drivers/scsi/osd/osd_uld.c         |  1 -
- drivers/scsi/osst.c                |  1 -
- drivers/scsi/pcmcia/aha152x_stub.c |  1 -
- drivers/scsi/pcmcia/fdomain_stub.c |  1 -
- drivers/scsi/pcmcia/nsp_cs.c       |  1 -
- drivers/scsi/pcmcia/qlogic_stub.c  |  1 -
- drivers/scsi/pcmcia/sym53c500_cs.c |  1 -
- drivers/scsi/scsi_error.c          |  1 -
- drivers/scsi/scsi_ioctl.c          |  1 -
- drivers/scsi/sd.c                  |  1 -
- drivers/scsi/sd_dif.c              |  1 -
- drivers/scsi/sg.c                  |  1 -
- drivers/scsi/sr.c                  |  1 -
- drivers/scsi/sr_ioctl.c            |  1 -
- drivers/scsi/sr_vendor.c           |  1 -
- drivers/scsi/st.c                  |  1 -
- fs/compat_ioctl.c                  |  1 -
- include/scsi/scsi.h                |  6 +++++
- include/scsi/scsi_ioctl.h          | 48 --------------------------------------
- include/uapi/scsi/scsi.h           | 42 ++++++++++++++++++++++++++++-----
- 29 files changed, 43 insertions(+), 81 deletions(-)
- delete mode 100644 include/scsi/scsi_ioctl.h
+ include/scsi/scsi.h      | 522 +---------------------------------------------
+ include/uapi/scsi/Kbuild |   1 +
+ include/uapi/scsi/scsi.h | 530 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 534 insertions(+), 519 deletions(-)
+ create mode 100644 include/uapi/scsi/scsi.h
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 276e869..440d0ce 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -23,7 +23,6 @@
- #include <linux/slab.h>
- 
- #include <scsi/scsi.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_driver.h>
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 28163fad..44aec0b 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -31,7 +31,6 @@
- #include <asm/uaccess.h>
- 
- #include <scsi/scsi.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_cmnd.h>
- 
- struct blk_cmd_filter {
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index ff20f19..b28b0f7 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -51,7 +51,6 @@
- #include <linux/completion.h>
- #include <scsi/scsi.h>
- #include <scsi/sg.h>
--#include <scsi/scsi_ioctl.h>
- #include <linux/cdrom.h>
- #include <linux/scatterlist.h>
- #include <linux/kthread.h>
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index 09e628da..932b13d 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -62,7 +62,6 @@
- #include <linux/mutex.h>
- #include <linux/slab.h>
- #include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi.h>
- #include <linux/debugfs.h>
- #include <linux/device.h>
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 8c6363c..1706679 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -32,8 +32,6 @@
- #include <linux/mutex.h>
- #include <linux/scatterlist.h>
- 
--#include <scsi/scsi_ioctl.h>
--
- #include <asm/byteorder.h>
- #include <linux/uaccess.h>
- #include <linux/io.h>
-diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
-index a22ca84..d4dd038 100644
---- a/drivers/ide/ide-floppy_ioctl.c
-+++ b/drivers/ide/ide-floppy_ioctl.c
-@@ -9,7 +9,7 @@
- 
- #include <asm/unaligned.h>
- 
--#include <scsi/scsi_ioctl.h>
-+#include <scsi/scsi.h>
- 
- #include "ide-floppy.h"
- 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 6bac8a7..d3fa6de7 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -27,7 +27,6 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_driver.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_eh.h>
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index fff6829..3547ee5 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -287,7 +287,6 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include "fdomain.h"
- 
- #ifndef PCMCIA
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index 90abb03..c2438ab 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -44,7 +44,6 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include "nsp32.h"
- 
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index 243eab3..a0fb7ec 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -55,7 +55,6 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_device.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include <scsi/osd_initiator.h>
- #include <scsi/osd_sec.h>
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 5033223..04a03ad 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -70,7 +70,6 @@ static const char * osst_version = "0.99.4";
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- 
- #define ST_KILOBYTE 1024
- 
-diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
-index 7d1609f..5e6d675 100644
---- a/drivers/scsi/pcmcia/aha152x_stub.c
-+++ b/drivers/scsi/pcmcia/aha152x_stub.c
-@@ -43,7 +43,6 @@
- #include <scsi/scsi.h>
- #include <linux/major.h>
- #include <linux/blkdev.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include "scsi.h"
- #include <scsi/scsi_host.h>
-diff --git a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
-index 714b248..c3e7ce5 100644
---- a/drivers/scsi/pcmcia/fdomain_stub.c
-+++ b/drivers/scsi/pcmcia/fdomain_stub.c
-@@ -40,7 +40,6 @@
- #include <scsi/scsi.h>
- #include <linux/major.h>
- #include <linux/blkdev.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include "scsi.h"
- #include <scsi/scsi_host.h>
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index 34aad32..e764df5 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -45,7 +45,6 @@
- #include <scsi/scsi_host.h>
- 
- #include <scsi/scsi.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include <pcmcia/cistpl.h>
- #include <pcmcia/cisreg.h>
-diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
-index bcaf89f..8887118 100644
---- a/drivers/scsi/pcmcia/qlogic_stub.c
-+++ b/drivers/scsi/pcmcia/qlogic_stub.c
-@@ -41,7 +41,6 @@
- #include <scsi/scsi.h>
- #include <linux/major.h>
- #include <linux/blkdev.h>
--#include <scsi/scsi_ioctl.h>
- #include <linux/interrupt.h>
- 
- #include "scsi.h"
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index 155f957..c1a9db9 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -65,7 +65,6 @@
- #include <asm/dma.h>
- #include <asm/irq.h>
- 
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi.h>
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9ac9eb1..f265345 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -35,7 +35,6 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
- 
- #include "scsi_priv.h"
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index c4f7b56..391c952 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -19,7 +19,6 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
- #include <scsi/scsi_dbg.h>
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3995169..b4b1585 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -61,7 +61,6 @@
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsicam.h>
- 
- #include "sd.h"
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 14c7d42..ab697a7 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -30,7 +30,6 @@
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsicam.h>
- 
- #include "sd.h"
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index b14f64c..e6fc868 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -56,7 +56,6 @@ static int sg_version_num = 30536;	/* 2 digits for each component */
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_driver.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
- 
- #include "scsi_logging.h"
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 8bd54a6..8b99e0e 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -55,7 +55,6 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
- 
- #include "scsi_logging.h"
- #include "sr.h"
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index fb929fa..ab5b947 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -17,7 +17,6 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_cmnd.h>
- 
- #include "sr.h"
-diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
-index 11a238c..042b2cd 100644
---- a/drivers/scsi/sr_vendor.c
-+++ b/drivers/scsi/sr_vendor.c
-@@ -45,7 +45,6 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- 
- #include "sr.h"
- 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 128d3b5..b12c6e5 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -50,7 +50,6 @@ static const char *verstr = "20101219";
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
- 
- 
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index afec645..ea08c25 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -69,7 +69,6 @@
- #include <linux/cdrom.h>
- #include <linux/fd.h>
- #include <scsi/scsi.h>
--#include <scsi/scsi_ioctl.h>
- #include <scsi/sg.h>
- #endif
- 
 diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 4a33602..d78876f 100644
+index faf2118..4a33602 100644
 --- a/include/scsi/scsi.h
 +++ b/include/scsi/scsi.h
-@@ -73,4 +73,10 @@ scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus);
+@@ -1,6 +1,5 @@
+ /*
+- * This header file contains public constants and structures used by
+- * the scsi code for linux.
++ * This header file contains kernel-specific definitions for SCSI code.
+  *
+  * For documentation on the OPCODES, MESSAGES, and SENSE values,
+  * please consult the SCSI standard.
+@@ -12,6 +11,8 @@
+ #include <linux/scatterlist.h>
+ #include <linux/kernel.h>
+ 
++#include <uapi/scsi/scsi.h>
++
+ struct scsi_cmnd;
+ 
+ enum scsi_timeouts {
+@@ -49,175 +50,6 @@ enum scsi_timeouts {
+  */
+ #define SCAN_WILD_CARD	~0
+ 
+-/*
+- *      SCSI opcodes
+- */
+-
+-#define TEST_UNIT_READY       0x00
+-#define REZERO_UNIT           0x01
+-#define REQUEST_SENSE         0x03
+-#define FORMAT_UNIT           0x04
+-#define READ_BLOCK_LIMITS     0x05
+-#define REASSIGN_BLOCKS       0x07
+-#define INITIALIZE_ELEMENT_STATUS 0x07
+-#define READ_6                0x08
+-#define WRITE_6               0x0a
+-#define SEEK_6                0x0b
+-#define READ_REVERSE          0x0f
+-#define WRITE_FILEMARKS       0x10
+-#define SPACE                 0x11
+-#define INQUIRY               0x12
+-#define RECOVER_BUFFERED_DATA 0x14
+-#define MODE_SELECT           0x15
+-#define RESERVE               0x16
+-#define RELEASE               0x17
+-#define COPY                  0x18
+-#define ERASE                 0x19
+-#define MODE_SENSE            0x1a
+-#define START_STOP            0x1b
+-#define RECEIVE_DIAGNOSTIC    0x1c
+-#define SEND_DIAGNOSTIC       0x1d
+-#define ALLOW_MEDIUM_REMOVAL  0x1e
+-
+-#define READ_FORMAT_CAPACITIES 0x23
+-#define SET_WINDOW            0x24
+-#define READ_CAPACITY         0x25
+-#define READ_10               0x28
+-#define WRITE_10              0x2a
+-#define SEEK_10               0x2b
+-#define POSITION_TO_ELEMENT   0x2b
+-#define WRITE_VERIFY          0x2e
+-#define VERIFY                0x2f
+-#define SEARCH_HIGH           0x30
+-#define SEARCH_EQUAL          0x31
+-#define SEARCH_LOW            0x32
+-#define SET_LIMITS            0x33
+-#define PRE_FETCH             0x34
+-#define READ_POSITION         0x34
+-#define SYNCHRONIZE_CACHE     0x35
+-#define LOCK_UNLOCK_CACHE     0x36
+-#define READ_DEFECT_DATA      0x37
+-#define MEDIUM_SCAN           0x38
+-#define COMPARE               0x39
+-#define COPY_VERIFY           0x3a
+-#define WRITE_BUFFER          0x3b
+-#define READ_BUFFER           0x3c
+-#define UPDATE_BLOCK          0x3d
+-#define READ_LONG             0x3e
+-#define WRITE_LONG            0x3f
+-#define CHANGE_DEFINITION     0x40
+-#define WRITE_SAME            0x41
+-#define UNMAP		      0x42
+-#define READ_TOC              0x43
+-#define READ_HEADER           0x44
+-#define GET_EVENT_STATUS_NOTIFICATION 0x4a
+-#define LOG_SELECT            0x4c
+-#define LOG_SENSE             0x4d
+-#define XDWRITEREAD_10        0x53
+-#define MODE_SELECT_10        0x55
+-#define RESERVE_10            0x56
+-#define RELEASE_10            0x57
+-#define MODE_SENSE_10         0x5a
+-#define PERSISTENT_RESERVE_IN 0x5e
+-#define PERSISTENT_RESERVE_OUT 0x5f
+-#define VARIABLE_LENGTH_CMD   0x7f
+-#define REPORT_LUNS           0xa0
+-#define SECURITY_PROTOCOL_IN  0xa2
+-#define MAINTENANCE_IN        0xa3
+-#define MAINTENANCE_OUT       0xa4
+-#define MOVE_MEDIUM           0xa5
+-#define EXCHANGE_MEDIUM       0xa6
+-#define READ_12               0xa8
+-#define SERVICE_ACTION_OUT_12 0xa9
+-#define WRITE_12              0xaa
+-#define READ_MEDIA_SERIAL_NUMBER 0xab /* Obsolete with SPC-2 */
+-#define SERVICE_ACTION_IN_12  0xab
+-#define WRITE_VERIFY_12       0xae
+-#define VERIFY_12	      0xaf
+-#define SEARCH_HIGH_12        0xb0
+-#define SEARCH_EQUAL_12       0xb1
+-#define SEARCH_LOW_12         0xb2
+-#define SECURITY_PROTOCOL_OUT 0xb5
+-#define READ_ELEMENT_STATUS   0xb8
+-#define SEND_VOLUME_TAG       0xb6
+-#define WRITE_LONG_2          0xea
+-#define EXTENDED_COPY         0x83
+-#define RECEIVE_COPY_RESULTS  0x84
+-#define ACCESS_CONTROL_IN     0x86
+-#define ACCESS_CONTROL_OUT    0x87
+-#define READ_16               0x88
+-#define COMPARE_AND_WRITE     0x89
+-#define WRITE_16              0x8a
+-#define READ_ATTRIBUTE        0x8c
+-#define WRITE_ATTRIBUTE	      0x8d
+-#define WRITE_VERIFY_16       0x8e
+-#define VERIFY_16	      0x8f
+-#define SYNCHRONIZE_CACHE_16  0x91
+-#define WRITE_SAME_16	      0x93
+-#define SERVICE_ACTION_BIDIRECTIONAL 0x9d
+-#define SERVICE_ACTION_IN_16  0x9e
+-#define SERVICE_ACTION_OUT_16 0x9f
+-/* values for service action in */
+-#define	SAI_READ_CAPACITY_16  0x10
+-#define SAI_GET_LBA_STATUS    0x12
+-#define SAI_REPORT_REFERRALS  0x13
+-/* values for VARIABLE_LENGTH_CMD service action codes
+- * see spc4r17 Section D.3.5, table D.7 and D.8 */
+-#define VLC_SA_RECEIVE_CREDENTIAL 0x1800
+-/* values for maintenance in */
+-#define MI_REPORT_IDENTIFYING_INFORMATION 0x05
+-#define MI_REPORT_TARGET_PGS  0x0a
+-#define MI_REPORT_ALIASES     0x0b
+-#define MI_REPORT_SUPPORTED_OPERATION_CODES 0x0c
+-#define MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS 0x0d
+-#define MI_REPORT_PRIORITY    0x0e
+-#define MI_REPORT_TIMESTAMP   0x0f
+-#define MI_MANAGEMENT_PROTOCOL_IN 0x10
+-/* value for MI_REPORT_TARGET_PGS ext header */
+-#define MI_EXT_HDR_PARAM_FMT  0x20
+-/* values for maintenance out */
+-#define MO_SET_IDENTIFYING_INFORMATION 0x06
+-#define MO_SET_TARGET_PGS     0x0a
+-#define MO_CHANGE_ALIASES     0x0b
+-#define MO_SET_PRIORITY       0x0e
+-#define MO_SET_TIMESTAMP      0x0f
+-#define MO_MANAGEMENT_PROTOCOL_OUT 0x10
+-/* values for variable length command */
+-#define XDREAD_32	      0x03
+-#define XDWRITE_32	      0x04
+-#define XPWRITE_32	      0x06
+-#define XDWRITEREAD_32	      0x07
+-#define READ_32		      0x09
+-#define VERIFY_32	      0x0a
+-#define WRITE_32	      0x0b
+-#define WRITE_SAME_32	      0x0d
+-
+-/* Values for T10/04-262r7 */
+-#define	ATA_16		      0x85	/* 16-byte pass-thru */
+-#define	ATA_12		      0xa1	/* 12-byte pass-thru */
+-
+-/*
+- *	SCSI command lengths
+- */
+-
+-#define SCSI_MAX_VARLEN_CDB_SIZE 260
+-
+-/* defined in T10 SCSI Primary Commands-2 (SPC2) */
+-struct scsi_varlen_cdb_hdr {
+-	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
+-	__u8 control;
+-	__u8 misc[5];
+-	__u8 additional_cdb_length;         /* total cdb length - 8 */
+-	__be16 service_action;
+-	/* service specific data follows */
+-};
+-
+-static inline unsigned
+-scsi_varlen_cdb_length(const void *hdr)
+-{
+-	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+-}
+-
+ extern const unsigned char scsi_command_size_tbl[8];
+ #define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+ 
+@@ -238,355 +70,7 @@ extern void
+ scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus);
+ #endif
+ 
+-/*
+- *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+- *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+- */
+-#define SAM_STAT_GOOD            0x00
+-#define SAM_STAT_CHECK_CONDITION 0x02
+-#define SAM_STAT_CONDITION_MET   0x04
+-#define SAM_STAT_BUSY            0x08
+-#define SAM_STAT_INTERMEDIATE    0x10
+-#define SAM_STAT_INTERMEDIATE_CONDITION_MET 0x14
+-#define SAM_STAT_RESERVATION_CONFLICT 0x18
+-#define SAM_STAT_COMMAND_TERMINATED 0x22	/* obsolete in SAM-3 */
+-#define SAM_STAT_TASK_SET_FULL   0x28
+-#define SAM_STAT_ACA_ACTIVE      0x30
+-#define SAM_STAT_TASK_ABORTED    0x40
+-
+-/** scsi_status_is_good - check the status return.
+- *
+- * @status: the status passed up from the driver (including host and
+- *          driver components)
+- *
+- * This returns true for known good conditions that may be treated as
+- * command completed normally
+- */
+-static inline int scsi_status_is_good(int status)
+-{
+-	/*
+-	 * FIXME: bit0 is listed as reserved in SCSI-2, but is
+-	 * significant in SCSI-3.  For now, we follow the SCSI-2
+-	 * behaviour and ignore reserved bits.
+-	 */
+-	status &= 0xfe;
+-	return ((status == SAM_STAT_GOOD) ||
+-		(status == SAM_STAT_INTERMEDIATE) ||
+-		(status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
+-		/* FIXME: this is obsolete in SAM-3 */
+-		(status == SAM_STAT_COMMAND_TERMINATED));
+-}
+-
+-/*
+- *  Status codes. These are deprecated as they are shifted 1 bit right
+- *  from those found in the SCSI standards. This causes confusion for
+- *  applications that are ported to several OSes. Prefer SAM Status codes
+- *  above.
+- */
+-
+-#define GOOD                 0x00
+-#define CHECK_CONDITION      0x01
+-#define CONDITION_GOOD       0x02
+-#define BUSY                 0x04
+-#define INTERMEDIATE_GOOD    0x08
+-#define INTERMEDIATE_C_GOOD  0x0a
+-#define RESERVATION_CONFLICT 0x0c
+-#define COMMAND_TERMINATED   0x11
+-#define QUEUE_FULL           0x14
+-#define ACA_ACTIVE           0x18
+-#define TASK_ABORTED         0x20
+-
+-#define STATUS_MASK          0xfe
+-
+-/*
+- *  SENSE KEYS
+- */
+-
+-#define NO_SENSE            0x00
+-#define RECOVERED_ERROR     0x01
+-#define NOT_READY           0x02
+-#define MEDIUM_ERROR        0x03
+-#define HARDWARE_ERROR      0x04
+-#define ILLEGAL_REQUEST     0x05
+-#define UNIT_ATTENTION      0x06
+-#define DATA_PROTECT        0x07
+-#define BLANK_CHECK         0x08
+-#define COPY_ABORTED        0x0a
+-#define ABORTED_COMMAND     0x0b
+-#define VOLUME_OVERFLOW     0x0d
+-#define MISCOMPARE          0x0e
+-
+-
+-/*
+- *  DEVICE TYPES
+- *  Please keep them in 0x%02x format for $MODALIAS to work
+- */
+-
+-#define TYPE_DISK           0x00
+-#define TYPE_TAPE           0x01
+-#define TYPE_PRINTER        0x02
+-#define TYPE_PROCESSOR      0x03    /* HP scanners use this */
+-#define TYPE_WORM           0x04    /* Treated as ROM by our system */
+-#define TYPE_ROM            0x05
+-#define TYPE_SCANNER        0x06
+-#define TYPE_MOD            0x07    /* Magneto-optical disk - 
+-				     * - treated as TYPE_DISK */
+-#define TYPE_MEDIUM_CHANGER 0x08
+-#define TYPE_COMM           0x09    /* Communications device */
+-#define TYPE_RAID           0x0c
+-#define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
+-#define TYPE_RBC	    0x0e
+-#define TYPE_OSD            0x11
+-#define TYPE_ZBC            0x14
+-#define TYPE_WLUN           0x1e    /* well-known logical unit */
+-#define TYPE_NO_LUN         0x7f
+-
+-/* SCSI protocols; these are taken from SPC-3 section 7.5 */
+-enum scsi_protocol {
+-	SCSI_PROTOCOL_FCP = 0,	/* Fibre Channel */
+-	SCSI_PROTOCOL_SPI = 1,	/* parallel SCSI */
+-	SCSI_PROTOCOL_SSA = 2,	/* Serial Storage Architecture - Obsolete */
+-	SCSI_PROTOCOL_SBP = 3,	/* firewire */
+-	SCSI_PROTOCOL_SRP = 4,	/* Infiniband RDMA */
+-	SCSI_PROTOCOL_ISCSI = 5,
+-	SCSI_PROTOCOL_SAS = 6,
+-	SCSI_PROTOCOL_ADT = 7,	/* Media Changers */
+-	SCSI_PROTOCOL_ATA = 8,
+-	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
+-};
+-
  /* Returns a human-readable name for the device */
  extern const char * scsi_device_type(unsigned type);
  
-+struct scsi_device;
-+
-+int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
-+		int cmd, bool ndelay);
-+extern int scsi_ioctl(struct scsi_device *, int, void __user *);
-+
- #endif /* _SCSI_SCSI_H */
-diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
-deleted file mode 100644
-index 8d19d1d..0000000
---- a/include/scsi/scsi_ioctl.h
-+++ /dev/null
-@@ -1,48 +0,0 @@
--#ifndef _SCSI_IOCTL_H
--#define _SCSI_IOCTL_H 
--
--#define SCSI_IOCTL_SEND_COMMAND 1
--#define SCSI_IOCTL_TEST_UNIT_READY 2
--#define SCSI_IOCTL_BENCHMARK_COMMAND 3
--#define SCSI_IOCTL_SYNC 4			/* Request synchronous parameters */
--#define SCSI_IOCTL_START_UNIT 5
--#define SCSI_IOCTL_STOP_UNIT 6
--/* The door lock/unlock constants are compatible with Sun constants for
--   the cdrom */
--#define SCSI_IOCTL_DOORLOCK 0x5380		/* lock the eject mechanism */
--#define SCSI_IOCTL_DOORUNLOCK 0x5381		/* unlock the mechanism	  */
--
--#define	SCSI_REMOVAL_PREVENT	1
--#define	SCSI_REMOVAL_ALLOW	0
--
--#ifdef __KERNEL__
--
--struct scsi_device;
--
 -/*
-- * Structures used for scsi_ioctl et al.
+- * standard mode-select header prepended to all mode-select commands
 - */
 -
--typedef struct scsi_ioctl_command {
--	unsigned int inlen;
--	unsigned int outlen;
--	unsigned char data[0];
--} Scsi_Ioctl_Command;
+-struct ccs_modesel_head {
+-	__u8 _r1;			/* reserved */
+-	__u8 medium;		/* device-specific medium type */
+-	__u8 _r2;			/* reserved */
+-	__u8 block_desc_length;	/* block descriptor length */
+-	__u8 density;		/* device-specific density code */
+-	__u8 number_blocks_hi;	/* number of blocks in this block desc */
+-	__u8 number_blocks_med;
+-	__u8 number_blocks_lo;
+-	__u8 _r3;
+-	__u8 block_length_hi;	/* block length for blocks in this desc */
+-	__u8 block_length_med;
+-	__u8 block_length_lo;
+-};
 -
--typedef struct scsi_idlun {
--	__u32 dev_id;
--	__u32 host_unique_id;
--} Scsi_Idlun;
+-/*
+- * ScsiLun: 8 byte LUN.
+- */
+-struct scsi_lun {
+-	__u8 scsi_lun[8];
+-};
 -
--/* Fibre Channel WWN, port_id struct */
--typedef struct scsi_fctargaddress {
--	__u32 host_port_id;
--	unsigned char host_wwn[8]; // include NULL term.
--} Scsi_FCTargAddress;
+-/*
+- * The Well Known LUNS (SAM-3) in our int representation of a LUN
+- */
+-#define SCSI_W_LUN_BASE 0xc100
+-#define SCSI_W_LUN_REPORT_LUNS (SCSI_W_LUN_BASE + 1)
+-#define SCSI_W_LUN_ACCESS_CONTROL (SCSI_W_LUN_BASE + 2)
+-#define SCSI_W_LUN_TARGET_LOG_PAGE (SCSI_W_LUN_BASE + 3)
 -
--int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
--		int cmd, bool ndelay);
--extern int scsi_ioctl(struct scsi_device *, int, void __user *);
+-static inline int scsi_is_wlun(u64 lun)
+-{
+-	return (lun & 0xff00) == SCSI_W_LUN_BASE;
+-}
 -
--#endif /* __KERNEL__ */
--#endif /* _SCSI_IOCTL_H */
-diff --git a/include/uapi/scsi/scsi.h b/include/uapi/scsi/scsi.h
-index 4cadafa..87024a0 100644
---- a/include/uapi/scsi/scsi.h
-+++ b/include/uapi/scsi/scsi.h
-@@ -500,13 +500,32 @@ static inline int scsi_is_wlun(u64 lun)
- #define SCSI_INQ_PQ_NOT_CON     0x01
- #define SCSI_INQ_PQ_NOT_CAP     0x03
- 
-+/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
-+static inline __u32 scsi_to_u32(__u8 *ptr)
-+{
-+	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
-+}
- 
- /*
+-
+-/*
+- *  MESSAGE CODES
+- */
+-
+-#define COMMAND_COMPLETE    0x00
+-#define EXTENDED_MESSAGE    0x01
+-#define     EXTENDED_MODIFY_DATA_POINTER    0x00
+-#define     EXTENDED_SDTR                   0x01
+-#define     EXTENDED_EXTENDED_IDENTIFY      0x02    /* SCSI-I only */
+-#define     EXTENDED_WDTR                   0x03
+-#define     EXTENDED_PPR                    0x04
+-#define     EXTENDED_MODIFY_BIDI_DATA_PTR   0x05
+-#define SAVE_POINTERS       0x02
+-#define RESTORE_POINTERS    0x03
+-#define DISCONNECT          0x04
+-#define INITIATOR_ERROR     0x05
+-#define ABORT_TASK_SET      0x06
+-#define MESSAGE_REJECT      0x07
+-#define NOP                 0x08
+-#define MSG_PARITY_ERROR    0x09
+-#define LINKED_CMD_COMPLETE 0x0a
+-#define LINKED_FLG_CMD_COMPLETE 0x0b
+-#define TARGET_RESET        0x0c
+-#define ABORT_TASK          0x0d
+-#define CLEAR_TASK_SET      0x0e
+-#define INITIATE_RECOVERY   0x0f            /* SCSI-II only */
+-#define RELEASE_RECOVERY    0x10            /* SCSI-II only */
+-#define CLEAR_ACA           0x16
+-#define LOGICAL_UNIT_RESET  0x17
+-#define SIMPLE_QUEUE_TAG    0x20
+-#define HEAD_OF_QUEUE_TAG   0x21
+-#define ORDERED_QUEUE_TAG   0x22
+-#define IGNORE_WIDE_RESIDUE 0x23
+-#define ACA                 0x24
+-#define QAS_REQUEST         0x55
+-
+-/* Old SCSI2 names, don't use in new code */
+-#define BUS_DEVICE_RESET    TARGET_RESET
+-#define ABORT               ABORT_TASK_SET
+-
+-/*
+- * Host byte codes
+- */
+-
+-#define DID_OK          0x00	/* NO error                                */
+-#define DID_NO_CONNECT  0x01	/* Couldn't connect before timeout period  */
+-#define DID_BUS_BUSY    0x02	/* BUS stayed busy through time out period */
+-#define DID_TIME_OUT    0x03	/* TIMED OUT for other reason              */
+-#define DID_BAD_TARGET  0x04	/* BAD target.                             */
+-#define DID_ABORT       0x05	/* Told to abort for some other reason     */
+-#define DID_PARITY      0x06	/* Parity error                            */
+-#define DID_ERROR       0x07	/* Internal error                          */
+-#define DID_RESET       0x08	/* Reset by somebody.                      */
+-#define DID_BAD_INTR    0x09	/* Got an interrupt we weren't expecting.  */
+-#define DID_PASSTHROUGH 0x0a	/* Force command past mid-layer            */
+-#define DID_SOFT_ERROR  0x0b	/* The low level driver just wish a retry  */
+-#define DID_IMM_RETRY   0x0c	/* Retry without decrementing retry count  */
+-#define DID_REQUEUE	0x0d	/* Requeue command (no immediate retry) also
+-				 * without decrementing the retry count	   */
+-#define DID_TRANSPORT_DISRUPTED 0x0e /* Transport error disrupted execution
+-				      * and the driver blocked the port to
+-				      * recover the link. Transport class will
+-				      * retry or fail IO */
+-#define DID_TRANSPORT_FAILFAST	0x0f /* Transport class fastfailed the io */
+-#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
+-				 * other paths */
+-#define DID_NEXUS_FAILURE 0x11  /* Permanent nexus failure, retry on other
+-				 * paths might yield different results */
+-#define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+-#define DID_MEDIUM_ERROR  0x13  /* Medium error */
+-#define DRIVER_OK       0x00	/* Driver status                           */
+-
+-/*
+- *  These indicate the error that occurred, and what is available.
+- */
+-
+-#define DRIVER_BUSY         0x01
+-#define DRIVER_SOFT         0x02
+-#define DRIVER_MEDIA        0x03
+-#define DRIVER_ERROR        0x04
+-
+-#define DRIVER_INVALID      0x05
+-#define DRIVER_TIMEOUT      0x06
+-#define DRIVER_HARD         0x07
+-#define DRIVER_SENSE	    0x08
+-
+-/*
+- * Internal return values.
+- */
+-
+-#define NEEDS_RETRY     0x2001
+-#define SUCCESS         0x2002
+-#define FAILED          0x2003
+-#define QUEUED          0x2004
+-#define SOFT_ERROR      0x2005
+-#define ADD_TO_MLQUEUE  0x2006
+-#define TIMEOUT_ERROR   0x2007
+-#define SCSI_RETURN_NOT_HANDLED   0x2008
+-#define FAST_IO_FAIL	0x2009
+-
+-/*
+- * Midlevel queue return values.
+- */
+-#define SCSI_MLQUEUE_HOST_BUSY   0x1055
+-#define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+-#define SCSI_MLQUEUE_EH_RETRY    0x1057
+-#define SCSI_MLQUEUE_TARGET_BUSY 0x1058
+-
+-/*
+- *  Use these to separate status msg and our bytes
+- *
+- *  These are set by:
+- *
+- *      status byte = set from target device
+- *      msg_byte    = return status from host adapter itself.
+- *      host_byte   = set by low-level driver to indicate status.
+- *      driver_byte = set by mid-level.
+- */
+-#define status_byte(result) (((result) >> 1) & 0x7f)
+-#define msg_byte(result)    (((result) >> 8) & 0xff)
+-#define host_byte(result)   (((result) >> 16) & 0xff)
+-#define driver_byte(result) (((result) >> 24) & 0xff)
+-
+-#define sense_class(sense)  (((sense) >> 4) & 0x7)
+-#define sense_error(sense)  ((sense) & 0xf)
+-#define sense_valid(sense)  ((sense) & 0x80)
+-
+-/*
+- * default timeouts
+-*/
+-#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
+-#define START_STOP_TIMEOUT		(60 * HZ)
+-#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
+-#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
+-#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
+-
+-
+-#define IDENTIFY_BASE       0x80
+-#define IDENTIFY(can_disconnect, lun)   (IDENTIFY_BASE |\
+-		     ((can_disconnect) ?  0x40 : 0) |\
+-		     ((lun) & 0x07))
+-
+-/*
+- *  struct scsi_device::scsi_level values. For SCSI devices other than those
+- *  prior to SCSI-2 (i.e. over 12 years old) this value is (resp[2] + 1)
+- *  where "resp" is a byte array of the response to an INQUIRY. The scsi_level
+- *  variable is visible to the user via sysfs.
+- */
+-
+-#define SCSI_UNKNOWN    0
+-#define SCSI_1          1
+-#define SCSI_1_CCS      2
+-#define SCSI_2          3
+-#define SCSI_3          4        /* SPC */
+-#define SCSI_SPC_2      5
+-#define SCSI_SPC_3      6
+-
+-/*
+- * INQ PERIPHERAL QUALIFIERS
+- */
+-#define SCSI_INQ_PQ_CON         0x00
+-#define SCSI_INQ_PQ_NOT_CON     0x01
+-#define SCSI_INQ_PQ_NOT_CAP     0x03
+-
+-
+-/*
 - * Here are some scsi specific ioctl commands which are sometimes useful.
-+ * SCSI specific ioctl commands.
-  *
-  * Note that include/linux/cdrom.h also defines IOCTL 0x5300 - 0x5395
-  */
- 
-+#define SCSI_IOCTL_SEND_COMMAND 1
-+#define SCSI_IOCTL_TEST_UNIT_READY 2
-+#define SCSI_IOCTL_BENCHMARK_COMMAND 3
-+#define SCSI_IOCTL_SYNC 4			/* Request synchronous parameters */
-+#define SCSI_IOCTL_START_UNIT 5
-+#define SCSI_IOCTL_STOP_UNIT 6
-+/* The door lock/unlock constants are compatible with Sun constants for
-+   the cdrom */
-+#define SCSI_IOCTL_DOORLOCK 0x5380		/* lock the eject mechanism */
-+#define SCSI_IOCTL_DOORUNLOCK 0x5381		/* unlock the mechanism	  */
-+
-+#define	SCSI_REMOVAL_PREVENT	1
-+#define	SCSI_REMOVAL_ALLOW	0
-+
- /* Used to obtain PUN and LUN info.  Conflicts with CDROMAUDIOBUFSIZ */
- #define SCSI_IOCTL_GET_IDLUN		0x5382
- 
-@@ -521,10 +540,21 @@ static inline int scsi_is_wlun(u64 lun)
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI		0x5387
- 
+- *
+- * Note that include/linux/cdrom.h also defines IOCTL 0x5300 - 0x5395
+- */
+-
+-/* Used to obtain PUN and LUN info.  Conflicts with CDROMAUDIOBUFSIZ */
+-#define SCSI_IOCTL_GET_IDLUN		0x5382
+-
+-/* 0x5383 and 0x5384 were used for SCSI_IOCTL_TAGGED_{ENABLE,DISABLE} */
+-
+-/* Used to obtain the host number of a device. */
+-#define SCSI_IOCTL_PROBE_HOST		0x5385
+-
+-/* Used to obtain the bus number for a device */
+-#define SCSI_IOCTL_GET_BUS_NUMBER	0x5386
+-
+-/* Used to obtain the PCI location of a device */
+-#define SCSI_IOCTL_GET_PCI		0x5387
+-
 -/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
 -static inline __u32 scsi_to_u32(__u8 *ptr)
 -{
 -	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
 -}
-+typedef struct scsi_ioctl_command {
-+	unsigned int inlen;
-+	unsigned int outlen;
-+	unsigned char data[0];
-+} Scsi_Ioctl_Command;
+-
+ #endif /* _SCSI_SCSI_H */
+diff --git a/include/uapi/scsi/Kbuild b/include/uapi/scsi/Kbuild
+index 75746d5..60a5644 100644
+--- a/include/uapi/scsi/Kbuild
++++ b/include/uapi/scsi/Kbuild
+@@ -1,5 +1,6 @@
+ # UAPI Header export list
+ header-y += fc/
++header-y += scsi.h
+ header-y += scsi_bsg_fc.h
+ header-y += scsi_netlink.h
+ header-y += scsi_netlink_fc.h
+diff --git a/include/uapi/scsi/scsi.h b/include/uapi/scsi/scsi.h
+new file mode 100644
+index 0000000..4cadafa
+--- /dev/null
++++ b/include/uapi/scsi/scsi.h
+@@ -0,0 +1,530 @@
++/*
++ * This header file contains public constants and structures used by
++ * the scsi code for linux.
++ *
++ * For documentation on the OPCODES, MESSAGES, and SENSE values,
++ * please consult the SCSI standard.
++ */
++#ifndef _UAPI_SCSI_SCSI_H
++#define _UAPI_SCSI_SCSI_H
 +
-+typedef struct scsi_idlun {
-+	__u32 dev_id;
-+	__u32 host_unique_id;
-+} Scsi_Idlun;
++#include <linux/types.h>
 +
-+/* Fibre Channel WWN, port_id struct */
-+typedef struct scsi_fctargaddress {
-+	__u32 host_port_id;
-+	unsigned char host_wwn[8]; // include NULL term.
-+} Scsi_FCTargAddress;
- 
- #endif /* _UAPI_SCSI_SCSI_H */
++/*
++ *      SCSI opcodes
++ */
++
++#define TEST_UNIT_READY       0x00
++#define REZERO_UNIT           0x01
++#define REQUEST_SENSE         0x03
++#define FORMAT_UNIT           0x04
++#define READ_BLOCK_LIMITS     0x05
++#define REASSIGN_BLOCKS       0x07
++#define INITIALIZE_ELEMENT_STATUS 0x07
++#define READ_6                0x08
++#define WRITE_6               0x0a
++#define SEEK_6                0x0b
++#define READ_REVERSE          0x0f
++#define WRITE_FILEMARKS       0x10
++#define SPACE                 0x11
++#define INQUIRY               0x12
++#define RECOVER_BUFFERED_DATA 0x14
++#define MODE_SELECT           0x15
++#define RESERVE               0x16
++#define RELEASE               0x17
++#define COPY                  0x18
++#define ERASE                 0x19
++#define MODE_SENSE            0x1a
++#define START_STOP            0x1b
++#define RECEIVE_DIAGNOSTIC    0x1c
++#define SEND_DIAGNOSTIC       0x1d
++#define ALLOW_MEDIUM_REMOVAL  0x1e
++
++#define READ_FORMAT_CAPACITIES 0x23
++#define SET_WINDOW            0x24
++#define READ_CAPACITY         0x25
++#define READ_10               0x28
++#define WRITE_10              0x2a
++#define SEEK_10               0x2b
++#define POSITION_TO_ELEMENT   0x2b
++#define WRITE_VERIFY          0x2e
++#define VERIFY                0x2f
++#define SEARCH_HIGH           0x30
++#define SEARCH_EQUAL          0x31
++#define SEARCH_LOW            0x32
++#define SET_LIMITS            0x33
++#define PRE_FETCH             0x34
++#define READ_POSITION         0x34
++#define SYNCHRONIZE_CACHE     0x35
++#define LOCK_UNLOCK_CACHE     0x36
++#define READ_DEFECT_DATA      0x37
++#define MEDIUM_SCAN           0x38
++#define COMPARE               0x39
++#define COPY_VERIFY           0x3a
++#define WRITE_BUFFER          0x3b
++#define READ_BUFFER           0x3c
++#define UPDATE_BLOCK          0x3d
++#define READ_LONG             0x3e
++#define WRITE_LONG            0x3f
++#define CHANGE_DEFINITION     0x40
++#define WRITE_SAME            0x41
++#define UNMAP		      0x42
++#define READ_TOC              0x43
++#define READ_HEADER           0x44
++#define GET_EVENT_STATUS_NOTIFICATION 0x4a
++#define LOG_SELECT            0x4c
++#define LOG_SENSE             0x4d
++#define XDWRITEREAD_10        0x53
++#define MODE_SELECT_10        0x55
++#define RESERVE_10            0x56
++#define RELEASE_10            0x57
++#define MODE_SENSE_10         0x5a
++#define PERSISTENT_RESERVE_IN 0x5e
++#define PERSISTENT_RESERVE_OUT 0x5f
++#define VARIABLE_LENGTH_CMD   0x7f
++#define REPORT_LUNS           0xa0
++#define SECURITY_PROTOCOL_IN  0xa2
++#define MAINTENANCE_IN        0xa3
++#define MAINTENANCE_OUT       0xa4
++#define MOVE_MEDIUM           0xa5
++#define EXCHANGE_MEDIUM       0xa6
++#define READ_12               0xa8
++#define SERVICE_ACTION_OUT_12 0xa9
++#define WRITE_12              0xaa
++#define READ_MEDIA_SERIAL_NUMBER 0xab /* Obsolete with SPC-2 */
++#define SERVICE_ACTION_IN_12  0xab
++#define WRITE_VERIFY_12       0xae
++#define VERIFY_12	      0xaf
++#define SEARCH_HIGH_12        0xb0
++#define SEARCH_EQUAL_12       0xb1
++#define SEARCH_LOW_12         0xb2
++#define SECURITY_PROTOCOL_OUT 0xb5
++#define READ_ELEMENT_STATUS   0xb8
++#define SEND_VOLUME_TAG       0xb6
++#define WRITE_LONG_2          0xea
++#define EXTENDED_COPY         0x83
++#define RECEIVE_COPY_RESULTS  0x84
++#define ACCESS_CONTROL_IN     0x86
++#define ACCESS_CONTROL_OUT    0x87
++#define READ_16               0x88
++#define COMPARE_AND_WRITE     0x89
++#define WRITE_16              0x8a
++#define READ_ATTRIBUTE        0x8c
++#define WRITE_ATTRIBUTE	      0x8d
++#define WRITE_VERIFY_16       0x8e
++#define VERIFY_16	      0x8f
++#define SYNCHRONIZE_CACHE_16  0x91
++#define WRITE_SAME_16	      0x93
++#define SERVICE_ACTION_BIDIRECTIONAL 0x9d
++#define SERVICE_ACTION_IN_16  0x9e
++#define SERVICE_ACTION_OUT_16 0x9f
++/* values for service action in */
++#define	SAI_READ_CAPACITY_16  0x10
++#define SAI_GET_LBA_STATUS    0x12
++#define SAI_REPORT_REFERRALS  0x13
++/* values for VARIABLE_LENGTH_CMD service action codes
++ * see spc4r17 Section D.3.5, table D.7 and D.8 */
++#define VLC_SA_RECEIVE_CREDENTIAL 0x1800
++/* values for maintenance in */
++#define MI_REPORT_IDENTIFYING_INFORMATION 0x05
++#define MI_REPORT_TARGET_PGS  0x0a
++#define MI_REPORT_ALIASES     0x0b
++#define MI_REPORT_SUPPORTED_OPERATION_CODES 0x0c
++#define MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS 0x0d
++#define MI_REPORT_PRIORITY    0x0e
++#define MI_REPORT_TIMESTAMP   0x0f
++#define MI_MANAGEMENT_PROTOCOL_IN 0x10
++/* value for MI_REPORT_TARGET_PGS ext header */
++#define MI_EXT_HDR_PARAM_FMT  0x20
++/* values for maintenance out */
++#define MO_SET_IDENTIFYING_INFORMATION 0x06
++#define MO_SET_TARGET_PGS     0x0a
++#define MO_CHANGE_ALIASES     0x0b
++#define MO_SET_PRIORITY       0x0e
++#define MO_SET_TIMESTAMP      0x0f
++#define MO_MANAGEMENT_PROTOCOL_OUT 0x10
++/* values for variable length command */
++#define XDREAD_32	      0x03
++#define XDWRITE_32	      0x04
++#define XPWRITE_32	      0x06
++#define XDWRITEREAD_32	      0x07
++#define READ_32		      0x09
++#define VERIFY_32	      0x0a
++#define WRITE_32	      0x0b
++#define WRITE_SAME_32	      0x0d
++
++/* Values for T10/04-262r7 */
++#define	ATA_16		      0x85	/* 16-byte pass-thru */
++#define	ATA_12		      0xa1	/* 12-byte pass-thru */
++
++/*
++ *	SCSI command lengths
++ */
++
++#define SCSI_MAX_VARLEN_CDB_SIZE 260
++
++/* defined in T10 SCSI Primary Commands-2 (SPC2) */
++struct scsi_varlen_cdb_hdr {
++	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
++	__be16 service_action;
++	/* service specific data follows */
++};
++
++static inline unsigned
++scsi_varlen_cdb_length(const void *hdr)
++{
++	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
++}
++
++/*
++ *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
++ *  T10/1561-D Revision 4 Draft dated 7th November 2002.
++ */
++#define SAM_STAT_GOOD            0x00
++#define SAM_STAT_CHECK_CONDITION 0x02
++#define SAM_STAT_CONDITION_MET   0x04
++#define SAM_STAT_BUSY            0x08
++#define SAM_STAT_INTERMEDIATE    0x10
++#define SAM_STAT_INTERMEDIATE_CONDITION_MET 0x14
++#define SAM_STAT_RESERVATION_CONFLICT 0x18
++#define SAM_STAT_COMMAND_TERMINATED 0x22	/* obsolete in SAM-3 */
++#define SAM_STAT_TASK_SET_FULL   0x28
++#define SAM_STAT_ACA_ACTIVE      0x30
++#define SAM_STAT_TASK_ABORTED    0x40
++
++/** scsi_status_is_good - check the status return.
++ *
++ * @status: the status passed up from the driver (including host and
++ *          driver components)
++ *
++ * This returns true for known good conditions that may be treated as
++ * command completed normally
++ */
++static inline int scsi_status_is_good(int status)
++{
++	/*
++	 * FIXME: bit0 is listed as reserved in SCSI-2, but is
++	 * significant in SCSI-3.  For now, we follow the SCSI-2
++	 * behaviour and ignore reserved bits.
++	 */
++	status &= 0xfe;
++	return ((status == SAM_STAT_GOOD) ||
++		(status == SAM_STAT_INTERMEDIATE) ||
++		(status == SAM_STAT_INTERMEDIATE_CONDITION_MET) ||
++		/* FIXME: this is obsolete in SAM-3 */
++		(status == SAM_STAT_COMMAND_TERMINATED));
++}
++
++/*
++ *  Status codes. These are deprecated as they are shifted 1 bit right
++ *  from those found in the SCSI standards. This causes confusion for
++ *  applications that are ported to several OSes. Prefer SAM Status codes
++ *  above.
++ */
++
++#define GOOD                 0x00
++#define CHECK_CONDITION      0x01
++#define CONDITION_GOOD       0x02
++#define BUSY                 0x04
++#define INTERMEDIATE_GOOD    0x08
++#define INTERMEDIATE_C_GOOD  0x0a
++#define RESERVATION_CONFLICT 0x0c
++#define COMMAND_TERMINATED   0x11
++#define QUEUE_FULL           0x14
++#define ACA_ACTIVE           0x18
++#define TASK_ABORTED         0x20
++
++#define STATUS_MASK          0xfe
++
++/*
++ *  SENSE KEYS
++ */
++
++#define NO_SENSE            0x00
++#define RECOVERED_ERROR     0x01
++#define NOT_READY           0x02
++#define MEDIUM_ERROR        0x03
++#define HARDWARE_ERROR      0x04
++#define ILLEGAL_REQUEST     0x05
++#define UNIT_ATTENTION      0x06
++#define DATA_PROTECT        0x07
++#define BLANK_CHECK         0x08
++#define COPY_ABORTED        0x0a
++#define ABORTED_COMMAND     0x0b
++#define VOLUME_OVERFLOW     0x0d
++#define MISCOMPARE          0x0e
++
++
++/*
++ *  DEVICE TYPES
++ *  Please keep them in 0x%02x format for $MODALIAS to work
++ */
++
++#define TYPE_DISK           0x00
++#define TYPE_TAPE           0x01
++#define TYPE_PRINTER        0x02
++#define TYPE_PROCESSOR      0x03    /* HP scanners use this */
++#define TYPE_WORM           0x04    /* Treated as ROM by our system */
++#define TYPE_ROM            0x05
++#define TYPE_SCANNER        0x06
++#define TYPE_MOD            0x07    /* Magneto-optical disk - 
++				     * - treated as TYPE_DISK */
++#define TYPE_MEDIUM_CHANGER 0x08
++#define TYPE_COMM           0x09    /* Communications device */
++#define TYPE_RAID           0x0c
++#define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
++#define TYPE_RBC	    0x0e
++#define TYPE_OSD            0x11
++#define TYPE_ZBC            0x14
++#define TYPE_WLUN           0x1e    /* well-known logical unit */
++#define TYPE_NO_LUN         0x7f
++
++/* SCSI protocols; these are taken from SPC-3 section 7.5 */
++enum scsi_protocol {
++	SCSI_PROTOCOL_FCP = 0,	/* Fibre Channel */
++	SCSI_PROTOCOL_SPI = 1,	/* parallel SCSI */
++	SCSI_PROTOCOL_SSA = 2,	/* Serial Storage Architecture - Obsolete */
++	SCSI_PROTOCOL_SBP = 3,	/* firewire */
++	SCSI_PROTOCOL_SRP = 4,	/* Infiniband RDMA */
++	SCSI_PROTOCOL_ISCSI = 5,
++	SCSI_PROTOCOL_SAS = 6,
++	SCSI_PROTOCOL_ADT = 7,	/* Media Changers */
++	SCSI_PROTOCOL_ATA = 8,
++	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
++};
++
++/*
++ * standard mode-select header prepended to all mode-select commands
++ */
++
++struct ccs_modesel_head {
++	__u8 _r1;			/* reserved */
++	__u8 medium;		/* device-specific medium type */
++	__u8 _r2;			/* reserved */
++	__u8 block_desc_length;	/* block descriptor length */
++	__u8 density;		/* device-specific density code */
++	__u8 number_blocks_hi;	/* number of blocks in this block desc */
++	__u8 number_blocks_med;
++	__u8 number_blocks_lo;
++	__u8 _r3;
++	__u8 block_length_hi;	/* block length for blocks in this desc */
++	__u8 block_length_med;
++	__u8 block_length_lo;
++};
++
++/*
++ * ScsiLun: 8 byte LUN.
++ */
++struct scsi_lun {
++	__u8 scsi_lun[8];
++};
++
++/*
++ * The Well Known LUNS (SAM-3) in our int representation of a LUN
++ */
++#define SCSI_W_LUN_BASE 0xc100
++#define SCSI_W_LUN_REPORT_LUNS (SCSI_W_LUN_BASE + 1)
++#define SCSI_W_LUN_ACCESS_CONTROL (SCSI_W_LUN_BASE + 2)
++#define SCSI_W_LUN_TARGET_LOG_PAGE (SCSI_W_LUN_BASE + 3)
++
++static inline int scsi_is_wlun(u64 lun)
++{
++	return (lun & 0xff00) == SCSI_W_LUN_BASE;
++}
++
++
++/*
++ *  MESSAGE CODES
++ */
++
++#define COMMAND_COMPLETE    0x00
++#define EXTENDED_MESSAGE    0x01
++#define     EXTENDED_MODIFY_DATA_POINTER    0x00
++#define     EXTENDED_SDTR                   0x01
++#define     EXTENDED_EXTENDED_IDENTIFY      0x02    /* SCSI-I only */
++#define     EXTENDED_WDTR                   0x03
++#define     EXTENDED_PPR                    0x04
++#define     EXTENDED_MODIFY_BIDI_DATA_PTR   0x05
++#define SAVE_POINTERS       0x02
++#define RESTORE_POINTERS    0x03
++#define DISCONNECT          0x04
++#define INITIATOR_ERROR     0x05
++#define ABORT_TASK_SET      0x06
++#define MESSAGE_REJECT      0x07
++#define NOP                 0x08
++#define MSG_PARITY_ERROR    0x09
++#define LINKED_CMD_COMPLETE 0x0a
++#define LINKED_FLG_CMD_COMPLETE 0x0b
++#define TARGET_RESET        0x0c
++#define ABORT_TASK          0x0d
++#define CLEAR_TASK_SET      0x0e
++#define INITIATE_RECOVERY   0x0f            /* SCSI-II only */
++#define RELEASE_RECOVERY    0x10            /* SCSI-II only */
++#define CLEAR_ACA           0x16
++#define LOGICAL_UNIT_RESET  0x17
++#define SIMPLE_QUEUE_TAG    0x20
++#define HEAD_OF_QUEUE_TAG   0x21
++#define ORDERED_QUEUE_TAG   0x22
++#define IGNORE_WIDE_RESIDUE 0x23
++#define ACA                 0x24
++#define QAS_REQUEST         0x55
++
++/* Old SCSI2 names, don't use in new code */
++#define BUS_DEVICE_RESET    TARGET_RESET
++#define ABORT               ABORT_TASK_SET
++
++/*
++ * Host byte codes
++ */
++
++#define DID_OK          0x00	/* NO error                                */
++#define DID_NO_CONNECT  0x01	/* Couldn't connect before timeout period  */
++#define DID_BUS_BUSY    0x02	/* BUS stayed busy through time out period */
++#define DID_TIME_OUT    0x03	/* TIMED OUT for other reason              */
++#define DID_BAD_TARGET  0x04	/* BAD target.                             */
++#define DID_ABORT       0x05	/* Told to abort for some other reason     */
++#define DID_PARITY      0x06	/* Parity error                            */
++#define DID_ERROR       0x07	/* Internal error                          */
++#define DID_RESET       0x08	/* Reset by somebody.                      */
++#define DID_BAD_INTR    0x09	/* Got an interrupt we weren't expecting.  */
++#define DID_PASSTHROUGH 0x0a	/* Force command past mid-layer            */
++#define DID_SOFT_ERROR  0x0b	/* The low level driver just wish a retry  */
++#define DID_IMM_RETRY   0x0c	/* Retry without decrementing retry count  */
++#define DID_REQUEUE	0x0d	/* Requeue command (no immediate retry) also
++				 * without decrementing the retry count	   */
++#define DID_TRANSPORT_DISRUPTED 0x0e /* Transport error disrupted execution
++				      * and the driver blocked the port to
++				      * recover the link. Transport class will
++				      * retry or fail IO */
++#define DID_TRANSPORT_FAILFAST	0x0f /* Transport class fastfailed the io */
++#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
++				 * other paths */
++#define DID_NEXUS_FAILURE 0x11  /* Permanent nexus failure, retry on other
++				 * paths might yield different results */
++#define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
++#define DID_MEDIUM_ERROR  0x13  /* Medium error */
++#define DRIVER_OK       0x00	/* Driver status                           */
++
++/*
++ *  These indicate the error that occurred, and what is available.
++ */
++
++#define DRIVER_BUSY         0x01
++#define DRIVER_SOFT         0x02
++#define DRIVER_MEDIA        0x03
++#define DRIVER_ERROR        0x04
++
++#define DRIVER_INVALID      0x05
++#define DRIVER_TIMEOUT      0x06
++#define DRIVER_HARD         0x07
++#define DRIVER_SENSE	    0x08
++
++/*
++ * Internal return values.
++ */
++
++#define NEEDS_RETRY     0x2001
++#define SUCCESS         0x2002
++#define FAILED          0x2003
++#define QUEUED          0x2004
++#define SOFT_ERROR      0x2005
++#define ADD_TO_MLQUEUE  0x2006
++#define TIMEOUT_ERROR   0x2007
++#define SCSI_RETURN_NOT_HANDLED   0x2008
++#define FAST_IO_FAIL	0x2009
++
++/*
++ * Midlevel queue return values.
++ */
++#define SCSI_MLQUEUE_HOST_BUSY   0x1055
++#define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
++#define SCSI_MLQUEUE_EH_RETRY    0x1057
++#define SCSI_MLQUEUE_TARGET_BUSY 0x1058
++
++/*
++ *  Use these to separate status msg and our bytes
++ *
++ *  These are set by:
++ *
++ *      status byte = set from target device
++ *      msg_byte    = return status from host adapter itself.
++ *      host_byte   = set by low-level driver to indicate status.
++ *      driver_byte = set by mid-level.
++ */
++#define status_byte(result) (((result) >> 1) & 0x7f)
++#define msg_byte(result)    (((result) >> 8) & 0xff)
++#define host_byte(result)   (((result) >> 16) & 0xff)
++#define driver_byte(result) (((result) >> 24) & 0xff)
++
++#define sense_class(sense)  (((sense) >> 4) & 0x7)
++#define sense_error(sense)  ((sense) & 0xf)
++#define sense_valid(sense)  ((sense) & 0x80)
++
++/*
++ * default timeouts
++*/
++#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
++#define START_STOP_TIMEOUT		(60 * HZ)
++#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
++#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
++#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
++
++
++#define IDENTIFY_BASE       0x80
++#define IDENTIFY(can_disconnect, lun)   (IDENTIFY_BASE |\
++		     ((can_disconnect) ?  0x40 : 0) |\
++		     ((lun) & 0x07))
++
++/*
++ *  struct scsi_device::scsi_level values. For SCSI devices other than those
++ *  prior to SCSI-2 (i.e. over 12 years old) this value is (resp[2] + 1)
++ *  where "resp" is a byte array of the response to an INQUIRY. The scsi_level
++ *  variable is visible to the user via sysfs.
++ */
++
++#define SCSI_UNKNOWN    0
++#define SCSI_1          1
++#define SCSI_1_CCS      2
++#define SCSI_2          3
++#define SCSI_3          4        /* SPC */
++#define SCSI_SPC_2      5
++#define SCSI_SPC_3      6
++
++/*
++ * INQ PERIPHERAL QUALIFIERS
++ */
++#define SCSI_INQ_PQ_CON         0x00
++#define SCSI_INQ_PQ_NOT_CON     0x01
++#define SCSI_INQ_PQ_NOT_CAP     0x03
++
++
++/*
++ * Here are some scsi specific ioctl commands which are sometimes useful.
++ *
++ * Note that include/linux/cdrom.h also defines IOCTL 0x5300 - 0x5395
++ */
++
++/* Used to obtain PUN and LUN info.  Conflicts with CDROMAUDIOBUFSIZ */
++#define SCSI_IOCTL_GET_IDLUN		0x5382
++
++/* 0x5383 and 0x5384 were used for SCSI_IOCTL_TAGGED_{ENABLE,DISABLE} */
++
++/* Used to obtain the host number of a device. */
++#define SCSI_IOCTL_PROBE_HOST		0x5385
++
++/* Used to obtain the bus number for a device */
++#define SCSI_IOCTL_GET_BUS_NUMBER	0x5386
++
++/* Used to obtain the PCI location of a device */
++#define SCSI_IOCTL_GET_PCI		0x5387
++
++/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
++static inline __u32 scsi_to_u32(__u8 *ptr)
++{
++	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
++}
++
++#endif /* _UAPI_SCSI_SCSI_H */
 -- 
 2.1.0
 
