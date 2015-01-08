@@ -1,115 +1,88 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Thu, 08 Jan 2015 17:01:40 -0600
-Message-ID: <54AF0C54.9070900@cs.wisc.edu>
-References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [LSF/MM ATTEND] iSCSI/iSER MQ + EXTENDED_COPY host support
+Date: Thu, 08 Jan 2015 18:11:25 -0500
+Message-ID: <54AF0E9D.30204@interlog.com>
+References: <1420665695.12144.62.camel@haakon3.risingtidesystems.com> <54ADAF09.8050405@interlog.com> <54AED355.5030705@redhat.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54AE36CE.8020509@acm.org>
+In-Reply-To: <54AED355.5030705@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@dev.mellanox.co.il>, lsf-pc@lists.linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, lsf-pc <lsf-pc@lists.linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/8/15, 1:50 AM, Bart Van Assche wrote:
-> On 01/07/15 22:39, Mike Christie wrote:
->> On 01/07/2015 10:57 AM, Hannes Reinecke wrote:
->>> On 01/07/2015 05:25 PM, Sagi Grimberg wrote:
->>>> Hi everyone,
->>>>
->>>> Now that scsi-mq is fully included, we need an iSCSI initiator that
->>>> would use it to achieve scalable performance. The need is even greater
->>>> for iSCSI offload devices and transports that support multiple HW
->>>> queues. As iSER maintainer I'd like to discuss the way we would choose
->>>> to implement that in iSCSI.
->>>>
->>>> My measurements show that iSER initiator can scale up to ~2.1M IOPs
->>>> with multiple sessions but only ~630K IOPs with a single session where
->>>> the most significant bottleneck the (single) core processing
->>>> completions.
->>>>
->>>> In the existing single connection per session model, given that command
->>>> ordering must be preserved session-wide, we end up in a serial command
->>>> execution over a single connection which is basically a single queue
->>>> model. The best fit seems to be plugging iSCSI MCS as a multi-queued
->>>> scsi LLDD. In this model, a hardware context will have a 1x1 mapping
->>>> with an iSCSI connection (TCP socket or a HW queue).
->>>>
->>>> iSCSI MCS and it's role in the presence of dm-multipath layer was
->>>> discussed several times in the past decade(s). The basic need for
->>>> MCS is
->>>> implementing a multi-queue data path, so perhaps we may want to avoid
->>>> doing any type link aggregation or load balancing to not overlap
->>>> dm-multipath. For example we can implement ERL=0 (which is basically
->>>> the
->>>> scsi-mq ERL) and/or restrict a session to a single portal.
->>>>
->>>> As I see it, the todo's are:
->>>> 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
->>>>     round-robin connection selection (per scsi command execution).
->>>> 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
->>>>     using blk-mq based queue (conn) selection.
->>>> 3. Rework iSCSI core locking scheme to avoid session-wide locking
->>>>     as much as possible.
->>>> 4. Use blk-mq pre-allocation and tagging facilities.
->>>>
->>>> I've recently started looking into this. I would like the community to
->>>> agree (or debate) on this scheme and also talk about implementation
->>>> with anyone who is also interested in this.
->>>>
->>> Yes, that's a really good topic.
->>>
->>> I've pondered implementing MC/S for iscsi/TCP but then I've figured my
->>> network implementation knowledge doesn't spread that far.
->>> So yeah, a discussion here would be good.
->>>
->>> Mike? Any comments?
+On 15-01-08 01:58 PM, Andy Grover wrote:
+> On 01/07/2015 02:11 PM, Douglas Gilbert wrote:
+>> T10 have now dropped the LID1 and LID4 stuff (its the length
+>> of the LIST IDENTIFIER field: 1 byte or 4 bytes) by obsoleting
+>> all LID1 variants in SPC-5 revision 01. So the LID1 variants
+>> are now gone and the LID4 appendage is dropped from the remaining
+>> commands.
 >>
->> I have been working under the assumption that people would be ok with
->> MCS upstream if we are only using it to handle the issue where we want
->> to do something like have a tcp/iscsi connection per CPU then map the
->> connection to a blk_mq_hw_ctx. In this more limited MCS implementation
->> there would be no iscsi layer code to do something like load balance
->> across ports or transport paths like how dm-multipath does, so there
->> would be no feature/code duplication. For balancing across hctxs, then
->> the iscsi layer would also leave that up to whatever we end up with in
->> upper layers, so again no feature/code duplication with upper layers.
->>
->> So pretty non controversial I hope :)
->>
->> If people want to add something like round robin connection selection in
->> the iscsi layer, then I think we want to leave that for after the
->> initial merge, so people can argue about that separately.
+>> Obviously LID1 based XCOPY support is important for backward
+>> compatibility (back to SPC-2) but for the future maybe you might
+>> consider adding the equivalent LID4 support for a basic XCOPY.
+>> For example it means using the 3PC VPD page instead of the
+>> RECEIVE COPY RESULTS(operating parameters) command. I believe
+>> FreeNAS now supports both LID1 and LID4 variants of a basic
+>> XCOPY (plus a restricted version of ODX without snapshots).
 >
-> Hello Sagi and Mike,
+> Hi Doug,
 >
-> I agree with Sagi that adding scsi-mq support in the iSER initiator
-> would help iSER users because that would allow these users to configure
-> a single iSER target and use the multiqueue feature instead of having to
-> configure multiple iSER targets to spread the workload over multiple
-> cpus at the target side.
+> I was trying to learn more about ODX and saw this page:
 >
-> And I agree with Mike that implementing scsi-mq support in the iSER
-> initiator as multiple independent connections probably is a better
-> choice than MC/S. RFC 3720 namely requires that iSCSI numbering is
-> session-wide. This means maintaining a single counter for all MC/S
-> sessions. Such a counter would be a contention point. I'm afraid that
-> because of that counter performance on a multi-socket initiator system
-> with a scsi-mq implementation based on MC/S could be worse than with the
-> approach with multiple iSER targets. Hence my preference for an approach
-> based on multiple independent iSER connections instead of MC/S.
+> http://msdn.microsoft.com/en-us/library/windows/desktop/hh848056%28v=vs.85%29.aspx
 >
+> but it just muddied the waters for me. Is ODX proprietary to MS, or is it XCopy
+> lite, or what? And what's the difference between xcopy lite and LID4 XCOPY?
 
-Above I was actually saying we should do a limited MCS. Originally, I 
-tried something like you are suggesting for the non MCS case, but I hit 
-some snags. While I was rethinking it today, I think I figured out where 
-I messed up though. It was just in how I was doing the 
-device/kobject/sysfs compat stuff.
+Andy,
+XCOPY is huge and keeps getting bigger (apart from the recent
+trimming of the "LID1" generation mentioned above). Most SCSI
+commands are sent to the LU involved, but for EXTENDED COPY
+command itself, should it be sent to the source or destination
+of the copy, or another LU which acts as a third party copy
+manager? Also when you examine the parameter block associated
+with the EXTENDED COPY command, one starts thinking there
+must be a cleaner and simpler way.
 
-Sagi, instead of reviewing that patch you sent me offlist the other day, 
-let me try to update my non MCS patch (I originally did it before you 
-guys did the locking changes so I need to fix it up) and send it 
-tomorrow. We then do not have to worry about MCS support and also issues 
-like the session wide sequence number tracking.
+In the real world VMware have been using the basic disk->disk
+XCOPY for around 10 years. Their usage seems to be dominant in
+the market place.
+
+While the LID4 rewrite/additions were occurring at T10 in 2011,
+a proposal was made to simplify things with a two step,
+disk-to-disk copy. The glue between those two steps is a token.
+The first step (POPULATE TOKEN) is sent to the copy source **,
+the second step is sent to the copy destination (WRITE USING
+TOKEN). The document is called:
+        XCOPYv2: Extended Copy Plus & Lite
+[11-077R1 at www.t10.org] and is worth looking at. The
+"Bucket Of Bytes" (BOB) in that document has become the
+"Representation Of Data" (ROD) found in T10 documents today.
+
+Commercially MS and NetApp (seemingly) were behind this
+new approach. And MS christened it ODX which is found in their
+recent OS products.
+
+
+I have written this page about the ddpt utility's
+implementation of these two disk-to-disk copy approaches:
+   http://sg.danny.cz/sg/ddpt_xcopy_odx.html
+
+Doug Gilbert
+
+
+** and as NAB pointed out a "point-in-time" copy (snapshot)
+    is done in this step, with the copy output going to the
+    ROD. A ROD token can be thought of as a 512 byte long
+    "pointer" to a ROD. That snapshot is a complex and
+    resource consuming action for an implementation and may
+    explain why ODX isn't high on NAB's todo list.
+    FreeNAS's implementation cuts a corner here and just
+    holds the gather-list in the ROD. That seems to violate
+    SBC-3's description but is allowed by SPC-4. Any language
+    lawyers like to comment?
