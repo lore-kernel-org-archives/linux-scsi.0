@@ -1,217 +1,106 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/9] scsi: Implement per-cpu logging buffer
-Date: Thu,  8 Jan 2015 07:43:42 +0100
-Message-ID: <1420699430-9492-2-git-send-email-hare@suse.de>
-References: <1420699430-9492-1-git-send-email-hare@suse.de>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Thu, 08 Jan 2015 08:50:38 +0100
+Message-ID: <54AE36CE.8020509@acm.org>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60283 "EHLO mx2.suse.de"
+Received: from sf1.bxl.stone.is ([87.238.167.36]:37320 "EHLO sf1.bxl.stone.is"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752686AbbAHGoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2015 01:44:13 -0500
-In-Reply-To: <1420699430-9492-1-git-send-email-hare@suse.de>
+	id S1754626AbbAHHuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2015 02:50:51 -0500
+In-Reply-To: <54ADA777.6090801@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: open-iscsi@googlegroups.com, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@dev.mellanox.co.il>, lsf-pc@lists.linux-foundation.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-Implement a per-cpu buffer for formatting messages to
-avoid line break up under high load.
-This patch implements scmd_printk() and sdev_prefix_printk()
-using the per-cpu buffer and makes sdev_printk() a wrapper
-for sdev_prefix_printk().
+On 01/07/15 22:39, Mike Christie wrote:
+> On 01/07/2015 10:57 AM, Hannes Reinecke wrote:
+>> On 01/07/2015 05:25 PM, Sagi Grimberg wrote:
+>>> Hi everyone,
+>>>
+>>> Now that scsi-mq is fully included, we need an iSCSI initiator that
+>>> would use it to achieve scalable performance. The need is even greater
+>>> for iSCSI offload devices and transports that support multiple HW
+>>> queues. As iSER maintainer I'd like to discuss the way we would choose
+>>> to implement that in iSCSI.
+>>>
+>>> My measurements show that iSER initiator can scale up to ~2.1M IOPs
+>>> with multiple sessions but only ~630K IOPs with a single session where
+>>> the most significant bottleneck the (single) core processing
+>>> completions.
+>>>
+>>> In the existing single connection per session model, given that command
+>>> ordering must be preserved session-wide, we end up in a serial command
+>>> execution over a single connection which is basically a single queue
+>>> model. The best fit seems to be plugging iSCSI MCS as a multi-queued
+>>> scsi LLDD. In this model, a hardware context will have a 1x1 mapping
+>>> with an iSCSI connection (TCP socket or a HW queue).
+>>>
+>>> iSCSI MCS and it's role in the presence of dm-multipath layer was
+>>> discussed several times in the past decade(s). The basic need for MCS is
+>>> implementing a multi-queue data path, so perhaps we may want to avoid
+>>> doing any type link aggregation or load balancing to not overlap
+>>> dm-multipath. For example we can implement ERL=0 (which is basically the
+>>> scsi-mq ERL) and/or restrict a session to a single portal.
+>>>
+>>> As I see it, the todo's are:
+>>> 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
+>>>     round-robin connection selection (per scsi command execution).
+>>> 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
+>>>     using blk-mq based queue (conn) selection.
+>>> 3. Rework iSCSI core locking scheme to avoid session-wide locking
+>>>     as much as possible.
+>>> 4. Use blk-mq pre-allocation and tagging facilities.
+>>>
+>>> I've recently started looking into this. I would like the community to
+>>> agree (or debate) on this scheme and also talk about implementation
+>>> with anyone who is also interested in this.
+>>>
+>> Yes, that's a really good topic.
+>>
+>> I've pondered implementing MC/S for iscsi/TCP but then I've figured my
+>> network implementation knowledge doesn't spread that far.
+>> So yeah, a discussion here would be good.
+>>
+>> Mike? Any comments?
+>
+> I have been working under the assumption that people would be ok with
+> MCS upstream if we are only using it to handle the issue where we want
+> to do something like have a tcp/iscsi connection per CPU then map the
+> connection to a blk_mq_hw_ctx. In this more limited MCS implementation
+> there would be no iscsi layer code to do something like load balance
+> across ports or transport paths like how dm-multipath does, so there
+> would be no feature/code duplication. For balancing across hctxs, then
+> the iscsi layer would also leave that up to whatever we end up with in
+> upper layers, so again no feature/code duplication with upper layers.
+>
+> So pretty non controversial I hope :)
+>
+> If people want to add something like round robin connection selection in
+> the iscsi layer, then I think we want to leave that for after the
+> initial merge, so people can argue about that separately.
 
-Tested-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Robert Elliott <elliott@hp.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/Makefile       |   2 +-
- drivers/scsi/scsi_logging.c | 124 ++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h  |  21 +++-----
- 3 files changed, 133 insertions(+), 14 deletions(-)
- create mode 100644 drivers/scsi/scsi_logging.c
+Hello Sagi and Mike,
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 58158f1..447c2d2 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -167,7 +167,7 @@ scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
- scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
- scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
--scsi_mod-y			+= scsi_trace.o
-+scsi_mod-y			+= scsi_trace.o scsi_logging.o
- scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
- 
- hv_storvsc-y			:= storvsc_drv.o
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-new file mode 100644
-index 0000000..09d65de
---- /dev/null
-+++ b/drivers/scsi/scsi_logging.c
-@@ -0,0 +1,124 @@
-+/*
-+ * scsi_logging.c
-+ *
-+ * Copyright (C) 2014 SUSE Linux Products GmbH
-+ * Copyright (C) 2014 Hannes Reinecke <hare@suse.de>
-+ *
-+ * This file is released under the GPLv2
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/atomic.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_dbg.h>
-+
-+#define SCSI_LOG_SPOOLSIZE 4096
-+#define SCSI_LOG_BUFSIZE 128
-+
-+#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
-+#warning SCSI logging bitmask too large
-+#endif
-+
-+struct scsi_log_buf {
-+	char buffer[SCSI_LOG_SPOOLSIZE];
-+	unsigned long map;
-+};
-+
-+static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
-+
-+static char *scsi_log_reserve_buffer(size_t *len)
-+{
-+	struct scsi_log_buf *buf;
-+	unsigned long map_bits = sizeof(buf->buffer) / SCSI_LOG_BUFSIZE;
-+	unsigned long idx = 0;
-+
-+	preempt_disable();
-+	buf = this_cpu_ptr(&scsi_format_log);
-+	idx = find_first_zero_bit(&buf->map, map_bits);
-+	if (likely(idx < map_bits)) {
-+		while (test_and_set_bit(idx, &buf->map)) {
-+			idx = find_next_zero_bit(&buf->map, map_bits, idx);
-+			if (idx >= map_bits)
-+				break;
-+		}
-+	}
-+	if (WARN_ON(idx >= map_bits)) {
-+		preempt_enable();
-+		return NULL;
-+	}
-+	*len = SCSI_LOG_BUFSIZE;
-+	return buf->buffer + idx * SCSI_LOG_BUFSIZE;
-+}
-+
-+static void scsi_log_release_buffer(char *bufptr)
-+{
-+	struct scsi_log_buf *buf;
-+	unsigned long idx;
-+	int ret;
-+
-+	buf = this_cpu_ptr(&scsi_format_log);
-+	if (bufptr >= buf->buffer &&
-+	    bufptr < buf->buffer + SCSI_LOG_SPOOLSIZE) {
-+		idx = (bufptr - buf->buffer) / SCSI_LOG_BUFSIZE;
-+		ret = test_and_clear_bit(idx, &buf->map);
-+		WARN_ON(!ret);
-+	}
-+	preempt_enable();
-+}
-+
-+int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
-+		       const char *name, const char *fmt, ...)
-+{
-+	va_list args;
-+	char *logbuf;
-+	size_t off = 0, logbuf_len;
-+	int ret;
-+
-+	if (!sdev)
-+		return 0;
-+
-+	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-+	if (!logbuf)
-+		return 0;
-+
-+	if (name)
-+		off += scnprintf(logbuf + off, logbuf_len - off,
-+				 "[%s] ", name);
-+	va_start(args, fmt);
-+	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-+	va_end(args);
-+	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
-+	scsi_log_release_buffer(logbuf);
-+	return ret;
-+}
-+EXPORT_SYMBOL(sdev_prefix_printk);
-+
-+int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
-+		const char *fmt, ...)
-+{
-+	struct gendisk *disk = scmd->request->rq_disk;
-+	va_list args;
-+	char *logbuf;
-+	size_t off = 0, logbuf_len;
-+	int ret;
-+
-+	if (!scmd || !scmd->cmnd)
-+		return 0;
-+
-+	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-+	if (!logbuf)
-+		return 0;
-+	if (disk)
-+		off += scnprintf(logbuf + off, logbuf_len - off,
-+				 "[%s] ", disk->disk_name);
-+	va_start(args, fmt);
-+	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-+	va_end(args);
-+	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
-+	scsi_log_release_buffer(logbuf);
-+	return ret;
-+}
-+EXPORT_SYMBOL(scmd_printk);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 3a4edd1..d1aad4d 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -230,9 +230,6 @@ struct scsi_dh_data {
- #define transport_class_to_sdev(class_dev) \
- 	to_scsi_device(class_dev->parent)
- 
--#define sdev_printk(prefix, sdev, fmt, a...)	\
--	dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
--
- #define sdev_dbg(sdev, fmt, a...) \
- 	dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
- 
-@@ -240,16 +237,14 @@ struct scsi_dh_data {
-  * like scmd_printk, but the device name is passed in
-  * as a string pointer
-  */
--#define sdev_prefix_printk(l, sdev, p, fmt, a...)			\
--	(p) ?								\
--	sdev_printk(l, sdev, "[%s] " fmt, p, ##a) :			\
--	sdev_printk(l, sdev, fmt, ##a)
--
--#define scmd_printk(prefix, scmd, fmt, a...)				\
--        (scmd)->request->rq_disk ?					\
--	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
--		    (scmd)->request->rq_disk->disk_name, ##a) :		\
--	sdev_printk(prefix, (scmd)->device, fmt, ##a)
-+extern int sdev_prefix_printk(const char *, const struct scsi_device *,
-+			      const char *, const char *, ...);
-+
-+#define sdev_printk(l, sdev, fmt, a...)				\
-+	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
-+
-+extern int scmd_printk(const char *, const struct scsi_cmnd *,
-+		       const char *, ...);
- 
- #define scmd_dbg(scmd, fmt, a...)					   \
- 	do {								   \
--- 
-1.8.4.5
+I agree with Sagi that adding scsi-mq support in the iSER initiator 
+would help iSER users because that would allow these users to configure 
+a single iSER target and use the multiqueue feature instead of having to 
+configure multiple iSER targets to spread the workload over multiple 
+cpus at the target side.
+
+And I agree with Mike that implementing scsi-mq support in the iSER 
+initiator as multiple independent connections probably is a better 
+choice than MC/S. RFC 3720 namely requires that iSCSI numbering is 
+session-wide. This means maintaining a single counter for all MC/S 
+sessions. Such a counter would be a contention point. I'm afraid that 
+because of that counter performance on a multi-socket initiator system 
+with a scsi-mq implementation based on MC/S could be worse than with the 
+approach with multiple iSER targets. Hence my preference for an approach 
+based on multiple independent iSER connections instead of MC/S.
+
+Bart.
 
