@@ -1,49 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 0/3] scsi: ufs & ums-*: fix module reference counting
-Date: Thu, 8 Jan 2015 10:13:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501081010500.1633-100000@iolanthe.rowland.org>
-References: <CAC5umyj7=e9OxssjTMJ_QszY5y09j7puwDUnCn9wPbcEYob28w@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code optimization
+Date: Thu, 08 Jan 2015 10:15:51 -0500
+Message-ID: <yq1mw5t2ti0.fsf@sermon.lab.mkp.net>
+References: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com>
+	<20150108103842.GA600@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:53934 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932304AbbAHPNZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 10:13:25 -0500
-In-Reply-To: <CAC5umyj7=e9OxssjTMJ_QszY5y09j7puwDUnCn9wPbcEYob28w@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31835 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbbAHPQ0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 10:16:26 -0500
+In-Reply-To: <20150108103842.GA600@infradead.org> (Christoph Hellwig's message
+	of "Thu, 8 Jan 2015 02:38:42 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, martin.petersen@oracle.com, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-On Thu, 8 Jan 2015, Akinobu Mita wrote:
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-> >> Why don't ufs and usb-storage define the host templates in the sub drivers?
-> >> That's what libata or the mpt fusion driver do.
-> >
-> > Originally the subdrivers were all part of usb-storage.  When they were
-> > split out into separate modules, there didn't seem to be any need to
-> > copy the host template into each one.  (Especially since some of the
-> > method pointers in the host template refer to routines in usb-storage
-> > itself, not in the subdrivers.)  The fact that the .module member was
-> > no longer adequate escaped our notice at the time.
-> 
-> For ufs, the reason why a host template is shared by sub drivers is similar
-> to usb-storage.  Originally there was only a single pci driver for ufs.
-> When platform driver for ufs was introduced, it was split into core driver
-> (ufshcd) and sub drivers (ufshcd-pci and ufshcd-pltfrm).  They require
-> exactly the same host template.
-> 
-> Is there any other preferable way to fix this problem?  The first time I
-> found this in ufs driver, I was trying to fix it by merging core and sub
-> drivers into a single compound module.  But I realized that usm-* drivers
-> have the same problem, then I decided to propose what this patch series do
-> instead.
+> -#if   defined(__BIG_ENDIAN_BITFIELD)
+> -	u32     MessageAddress1:24; /* bits 31:8*/
+> -	u32     RequestFlags:8;
+> -#else
+>  	u32     RequestFlags:8;
+> -	u32     MessageAddress1:24; /* bits 31:8*/
+> -#endif
+> -	u32     MessageAddress2;      /* bits 61:32 */
+> +	u32     MessageAddress1:24;
+> +	u32     MessageAddress2;
 
-I can't think of any other ways to fix it.  The only options seem to be
-to duplicate the host template in each subdriver or to add the .module
-field to the host structure.  I prefer the second option because it
-doesn't involve so much code duplication.
+Christoph> Doesn't this break architectures that set
+Christoph> __BIG_ENDIAN_BITFIELD?
 
-Alan Stern
+We went back and forth a few times in debugging this issue. This
+particular struct is always little endian and consists of an 8-bit LSB
+flags field plus a 56-bit pointer.
 
+I am not a fan of wedging these values into a u32 universe (which also
+causes grief when the struct is being filled out). But the Avago folks
+did it this way because they want to keep things in sync with their
+firmware.
+
+In any case the code works fine on big endian with this patch in place.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
