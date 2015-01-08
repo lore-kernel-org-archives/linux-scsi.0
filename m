@@ -1,43 +1,95 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [dm-devel] [LSF/MM ATTEND] discuss blk-mq related to DM-multipath and status of XCOPY
-Date: Wed, 07 Jan 2015 18:39:41 -0500
-Message-ID: <yq1vbki40ua.fsf@sermon.lab.mkp.net>
-References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
-	<54AA90B1.1030201@suse.de> <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
-	<54ACEF13.7000508@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH v4] virtio-scsi: Fix the race condition in virtscsi_handle_event
+Date: Thu,  8 Jan 2015 10:57:32 +0800
+Message-ID: <1420685852-5078-1-git-send-email-famz@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49561 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755166AbbAGXkN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2015 18:40:13 -0500
-In-Reply-To: <54ACEF13.7000508@suse.de> (Hannes Reinecke's message of "Wed, 07
-	Jan 2015 09:32:19 +0100")
+Received: from mx1.redhat.com ([209.132.183.28]:38676 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752125AbbAHC5R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jan 2015 21:57:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, device-mapper development <dm-devel@redhat.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Venkatesh Srinivas <venkateshs@google.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+There is a race condition in virtscsi_handle_event, when many device
+hotplug/unplug events flush in quickly.
 
-Hannes> Not quite. XCOPY is optional, and the system works well without
-Hannes> it.  So the exception handling would need to copy things by hand
-Hannes> to avoid regressions.
+The scsi_remove_device in virtscsi_handle_transport_reset may trigger
+the BUG_ON in scsi_target_reap, because the state is altered behind it,
+probably by scsi_scan_host of another event. I'm able to reproduce it by
+repeatedly plugging and unplugging a scsi disk with the same lun number.
 
-Or defer to user space.
+To fix this, a single thread workqueue (local to the module) is added,
+which makes the scan work serialized. With this change, the panic goes
+away.
 
-But it's really no different from how we do WRITE SAME which may or may
-not work. If it fails we fall back to writing zeroes.
+Signed-off-by: Fam Zheng <famz@redhat.com>
 
-Hannes> Plus XCOPY requires some elaborate setup, and even if those
-Hannes> succeeded the array might still fail the command.  _And_ there
-Hannes> is no guarantee that that the XCOPY command is actually faster
-Hannes> than the manual procedure.
+---
 
-It saves the data a roundtrip on the fabric. That itself may be more
-valuable than a direct bandwidth win if there is concurrent I/O on the
-wire.
+v4: Addressing MST's comments:
+    Use ordered workqueue, with WQ_FREEZABLE and WQ_MEM_RECLAIM flags.
+    Coding style fixes.
 
+v3: Fix spacing and destroy order. (MST)
+---
+ drivers/scsi/virtio_scsi.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index c52bb5d..0db63b5 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -120,6 +120,7 @@ struct virtio_scsi {
+ 
+ static struct kmem_cache *virtscsi_cmd_cache;
+ static mempool_t *virtscsi_cmd_pool;
++static struct workqueue_struct *virtscsi_scan_wq;
+ 
+ static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
+ {
+@@ -404,7 +405,7 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
+ 	struct virtio_scsi_event_node *event_node = buf;
+ 
+ 	if (!vscsi->stop_events)
+-		queue_work(system_freezable_wq, &event_node->work);
++		queue_work(virtscsi_scan_wq, &event_node->work);
+ }
+ 
+ static void virtscsi_event_done(struct virtqueue *vq)
+@@ -1119,6 +1120,14 @@ static int __init init(void)
+ 		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
+ 		goto error;
+ 	}
++
++	virtscsi_scan_wq =
++		alloc_ordered_workqueue("virtscsi-scan", WQ_FREEZABLE | WQ_MEM_RECLAIM);
++	if (!virtscsi_scan_wq) {
++		pr_err("create_singlethread_workqueue() for virtscsi_scan_wq failed\n");
++		goto error;
++	}
++
+ 	ret = register_virtio_driver(&virtio_scsi_driver);
+ 	if (ret < 0)
+ 		goto error;
+@@ -1126,6 +1135,8 @@ static int __init init(void)
+ 	return 0;
+ 
+ error:
++	if (virtscsi_scan_wq)
++		destroy_workqueue(virtscsi_scan_wq);
+ 	if (virtscsi_cmd_pool) {
+ 		mempool_destroy(virtscsi_cmd_pool);
+ 		virtscsi_cmd_pool = NULL;
+@@ -1140,6 +1151,7 @@ error:
+ static void __exit fini(void)
+ {
+ 	unregister_virtio_driver(&virtio_scsi_driver);
++	destroy_workqueue(virtscsi_scan_wq);
+ 	mempool_destroy(virtscsi_cmd_pool);
+ 	kmem_cache_destroy(virtscsi_cmd_cache);
+ }
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.9.3
+
