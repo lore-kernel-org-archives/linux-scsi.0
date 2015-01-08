@@ -1,46 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/2] target: Don't arbitrary limit I/O size to
- fabric_max_sectors
-Date: Thu, 08 Jan 2015 14:49:28 -0800
-Message-ID: <1420757368.2842.33.camel@haakon3.risingtidesystems.com>
-References: <1420590258-21122-1-git-send-email-nab@daterainc.com>
-	 <1420647107.12144.8.camel@haakon3.risingtidesystems.com>
-	 <yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
+From: Al Cooper <alcooperx@gmail.com>
+Subject: [PATCH] scsi: Allow retry on UNIT_ATTENTION media changed if not CDROM drive
+Date: Thu, 8 Jan 2015 17:33:53 -0500
+Message-ID: <1420756433-11850-1-git-send-email-alcooperx@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53085 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921AbbAHWzV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 17:55:21 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+Cc: Al Cooper <alcooperx@gmail.com>
 
-On Thu, 2015-01-08 at 09:37 -0500, Martin K. Petersen wrote:
-> >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> 
-> nab> IIRC, most modern hardware is reporting a large enough value for
-> nab> queue_max_hw_sectors() to support 8 MB I/Os, but I'm thinking that
-> nab> this could end up being problematic for older hardware that is
-> nab> reporting much smaller values.
-> 
-> Reporting queue_max_hw_sectors sounds sane to me.
-> 
-> What's your concern wrt. older hardware?
-> 
+Previous commit dfcf7775815504d13a1d273073810058caf84b9d added
+a workaround for CD-ROM drives that were out of spec. This is causing
+scsi_check_sense() to return an error instead of NEEDS_RETRY on
+some USB thumb drives that return UNIT_ATTENTION Media Changed
+(ASC/ASCQ 28/00) after resuming from S3. This can cause mounted
+thumb drives to fail on the next access to the filesystem after
+S3 resume. This is masked on many systems because udev/dbus event
+handlers open the /dev/sd* device before filesystem access and the
+open always retries the UNIT_ATTENTION. The fix is to limit the
+original workaround to CDROM drives.
 
-The target is still enforcing it's own hw_max_sectors in sbc_parse_cdb()
-based upon what queue_max_hw_sectors() reports for IBLOCK, and will
-throw an exception for I/Os who's sector count exceeds this maximum.
+Signed-off-by: Al Cooper <alcooperx@gmail.com>
+---
+ drivers/scsi/scsi_error.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-The concern is when older hardware drivers are reporting say
-queue_max_hw_sectors=128 with initiators are not actively honoring block
-limits EVPD MAXIMUM TRANSFER LENGTH, that would result in I/Os over 64K
-generating exception status.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 8afb016..eee95d2 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -525,12 +525,13 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		 */
+ 		if (scmd->device->expecting_cc_ua) {
+ 			/*
+-			 * Because some device does not queue unit
++			 * Because some CDROM drives do not queue unit
+ 			 * attentions correctly, we carefully check
+ 			 * additional sense code and qualifier so as
+ 			 * not to squash media change unit attention.
+ 			 */
+-			if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
++			if ((sdev->type != TYPE_ROM) ||
++				(sshdr.asc != 0x28 || sshdr.ascq != 0x00)) {
+ 				scmd->device->expecting_cc_ua = 0;
+ 				return NEEDS_RETRY;
+ 			}
+-- 
+1.9.0.138.g2de3478
 
-So the question is what is a sane minimum for IBLOCK's hw_max_sectors so
-that large I/Os (say up to 8 MB) aren't rejected by sbc_parse_sbc(), and
-don't trigger the subsequent checks in generic_make_request() ->
-generic_make_request_checks().
-
---nab
