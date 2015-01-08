@@ -1,95 +1,30 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: [PATCH v4] virtio-scsi: Fix the race condition in virtscsi_handle_event
-Date: Thu,  8 Jan 2015 10:57:32 +0800
-Message-ID: <1420685852-5078-1-git-send-email-famz@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38676 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752125AbbAHC5R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2015 21:57:17 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: scsi: non atomic allocation in mempool_alloc in atomic context
+Date: Wed, 7 Jan 2015 19:55:42 -0800
+Message-ID: <CAADnVQ+wys8mD+QoMVsWAWWryfZBgxct_XFZM44Xoz_1dPUAuA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Sasha Levin <sasha.levin@oracle.com>, bvanassche@acm.org, hare@suse.de, JBottomley@parallels.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Dave Jones <davej@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Venkatesh Srinivas <venkateshs@google.com>
 
-There is a race condition in virtscsi_handle_event, when many device
-hotplug/unplug events flush in quickly.
+On Mon, Jan 5, 2015 at 11:42 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Mon, Jan 05, 2015 at 12:38:04PM -0700, Jens Axboe wrote:
+>> That was true in earlier kernels as well, going back a few versions at
+>> least, preempt was disabled on calling __blk_mq_run_hw_queue(). Just
+>> checked, and 3.16 and later have that as the behaviour. The only change
+>> in 3.19 some shuffling around to avoid double preempt_disable in some
+>> cases, it's now using get_cpu() and friends.
+>>
+>> So we probably want do mark that as stable so we reach back to when
+>> scsi-mq was added, unless the originally referenced patch getting rid of
+>> the gfp_t mask didn't have the issue.
+>
+> Before that commit we always passed down GFP_ATOMIC, so we'll only
+> need the patch for 3.19.
 
-The scsi_remove_device in virtscsi_handle_transport_reset may trigger
-the BUG_ON in scsi_target_reap, because the state is altered behind it,
-probably by scsi_scan_host of another event. I'm able to reproduce it by
-repeatedly plugging and unplugging a scsi disk with the same lun number.
+I'm seeing the same splats... what tree I can pull the fix from ?
 
-To fix this, a single thread workqueue (local to the module) is added,
-which makes the scan work serialized. With this change, the panic goes
-away.
-
-Signed-off-by: Fam Zheng <famz@redhat.com>
-
----
-
-v4: Addressing MST's comments:
-    Use ordered workqueue, with WQ_FREEZABLE and WQ_MEM_RECLAIM flags.
-    Coding style fixes.
-
-v3: Fix spacing and destroy order. (MST)
----
- drivers/scsi/virtio_scsi.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index c52bb5d..0db63b5 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -120,6 +120,7 @@ struct virtio_scsi {
- 
- static struct kmem_cache *virtscsi_cmd_cache;
- static mempool_t *virtscsi_cmd_pool;
-+static struct workqueue_struct *virtscsi_scan_wq;
- 
- static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
- {
-@@ -404,7 +405,7 @@ static void virtscsi_complete_event(struct virtio_scsi *vscsi, void *buf)
- 	struct virtio_scsi_event_node *event_node = buf;
- 
- 	if (!vscsi->stop_events)
--		queue_work(system_freezable_wq, &event_node->work);
-+		queue_work(virtscsi_scan_wq, &event_node->work);
- }
- 
- static void virtscsi_event_done(struct virtqueue *vq)
-@@ -1119,6 +1120,14 @@ static int __init init(void)
- 		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
- 		goto error;
- 	}
-+
-+	virtscsi_scan_wq =
-+		alloc_ordered_workqueue("virtscsi-scan", WQ_FREEZABLE | WQ_MEM_RECLAIM);
-+	if (!virtscsi_scan_wq) {
-+		pr_err("create_singlethread_workqueue() for virtscsi_scan_wq failed\n");
-+		goto error;
-+	}
-+
- 	ret = register_virtio_driver(&virtio_scsi_driver);
- 	if (ret < 0)
- 		goto error;
-@@ -1126,6 +1135,8 @@ static int __init init(void)
- 	return 0;
- 
- error:
-+	if (virtscsi_scan_wq)
-+		destroy_workqueue(virtscsi_scan_wq);
- 	if (virtscsi_cmd_pool) {
- 		mempool_destroy(virtscsi_cmd_pool);
- 		virtscsi_cmd_pool = NULL;
-@@ -1140,6 +1151,7 @@ error:
- static void __exit fini(void)
- {
- 	unregister_virtio_driver(&virtio_scsi_driver);
-+	destroy_workqueue(virtscsi_scan_wq);
- 	mempool_destroy(virtscsi_cmd_pool);
- 	kmem_cache_destroy(virtscsi_cmd_cache);
- }
--- 
-1.9.3
-
+Thanks!
