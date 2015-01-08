@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/9] libata: use __scsi_format_command()
-Date: Thu,  8 Jan 2015 07:43:45 +0100
-Message-ID: <1420699430-9492-5-git-send-email-hare@suse.de>
+Subject: [PATCH 1/9] scsi: Implement per-cpu logging buffer
+Date: Thu,  8 Jan 2015 07:43:42 +0100
+Message-ID: <1420699430-9492-2-git-send-email-hare@suse.de>
 References: <1420699430-9492-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60281 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60283 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751943AbbAHGoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752686AbbAHGoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 8 Jan 2015 01:44:13 -0500
 In-Reply-To: <1420699430-9492-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,53 +14,204 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-libata already uses an internal buffer, so we should be using
-__scsi_format_command() here.
+Implement a per-cpu buffer for formatting messages to
+avoid line break up under high load.
+This patch implements scmd_printk() and sdev_prefix_printk()
+using the per-cpu buffer and makes sdev_printk() a wrapper
+for sdev_prefix_printk().
 
 Tested-by: Robert Elliott <elliott@hp.com>
 Reviewed-by: Robert Elliott <elliott@hp.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/scsi/Makefile       |   2 +-
+ drivers/scsi/scsi_logging.c | 124 ++++++++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h  |  21 +++-----
+ 3 files changed, 133 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/scsi/scsi_logging.c
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 3dbec89..9179f11 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2482,6 +2482,7 @@ static void ata_eh_link_report(struct ata_link *link)
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
- 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
- 		const u8 *cdb = qc->cdb;
-+		size_t cdb_len = qc->dev->cdb_len;
- 		char data_buf[20] = "";
- 		char cdb_buf[70] = "";
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 58158f1..447c2d2 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -167,7 +167,7 @@ scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
+ scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
+ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
+ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+-scsi_mod-y			+= scsi_trace.o
++scsi_mod-y			+= scsi_trace.o scsi_logging.o
+ scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
  
-@@ -2509,16 +2510,12 @@ static void ata_eh_link_report(struct ata_link *link)
- 		}
+ hv_storvsc-y			:= storvsc_drv.o
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+new file mode 100644
+index 0000000..09d65de
+--- /dev/null
++++ b/drivers/scsi/scsi_logging.c
+@@ -0,0 +1,124 @@
++/*
++ * scsi_logging.c
++ *
++ * Copyright (C) 2014 SUSE Linux Products GmbH
++ * Copyright (C) 2014 Hannes Reinecke <hare@suse.de>
++ *
++ * This file is released under the GPLv2
++ */
++
++#include <linux/kernel.h>
++#include <linux/atomic.h>
++
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_dbg.h>
++
++#define SCSI_LOG_SPOOLSIZE 4096
++#define SCSI_LOG_BUFSIZE 128
++
++#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
++#warning SCSI logging bitmask too large
++#endif
++
++struct scsi_log_buf {
++	char buffer[SCSI_LOG_SPOOLSIZE];
++	unsigned long map;
++};
++
++static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
++
++static char *scsi_log_reserve_buffer(size_t *len)
++{
++	struct scsi_log_buf *buf;
++	unsigned long map_bits = sizeof(buf->buffer) / SCSI_LOG_BUFSIZE;
++	unsigned long idx = 0;
++
++	preempt_disable();
++	buf = this_cpu_ptr(&scsi_format_log);
++	idx = find_first_zero_bit(&buf->map, map_bits);
++	if (likely(idx < map_bits)) {
++		while (test_and_set_bit(idx, &buf->map)) {
++			idx = find_next_zero_bit(&buf->map, map_bits, idx);
++			if (idx >= map_bits)
++				break;
++		}
++	}
++	if (WARN_ON(idx >= map_bits)) {
++		preempt_enable();
++		return NULL;
++	}
++	*len = SCSI_LOG_BUFSIZE;
++	return buf->buffer + idx * SCSI_LOG_BUFSIZE;
++}
++
++static void scsi_log_release_buffer(char *bufptr)
++{
++	struct scsi_log_buf *buf;
++	unsigned long idx;
++	int ret;
++
++	buf = this_cpu_ptr(&scsi_format_log);
++	if (bufptr >= buf->buffer &&
++	    bufptr < buf->buffer + SCSI_LOG_SPOOLSIZE) {
++		idx = (bufptr - buf->buffer) / SCSI_LOG_BUFSIZE;
++		ret = test_and_clear_bit(idx, &buf->map);
++		WARN_ON(!ret);
++	}
++	preempt_enable();
++}
++
++int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
++		       const char *name, const char *fmt, ...)
++{
++	va_list args;
++	char *logbuf;
++	size_t off = 0, logbuf_len;
++	int ret;
++
++	if (!sdev)
++		return 0;
++
++	logbuf = scsi_log_reserve_buffer(&logbuf_len);
++	if (!logbuf)
++		return 0;
++
++	if (name)
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 "[%s] ", name);
++	va_start(args, fmt);
++	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
++	va_end(args);
++	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
++	scsi_log_release_buffer(logbuf);
++	return ret;
++}
++EXPORT_SYMBOL(sdev_prefix_printk);
++
++int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
++		const char *fmt, ...)
++{
++	struct gendisk *disk = scmd->request->rq_disk;
++	va_list args;
++	char *logbuf;
++	size_t off = 0, logbuf_len;
++	int ret;
++
++	if (!scmd || !scmd->cmnd)
++		return 0;
++
++	logbuf = scsi_log_reserve_buffer(&logbuf_len);
++	if (!logbuf)
++		return 0;
++	if (disk)
++		off += scnprintf(logbuf + off, logbuf_len - off,
++				 "[%s] ", disk->disk_name);
++	va_start(args, fmt);
++	off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
++	va_end(args);
++	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
++	scsi_log_release_buffer(logbuf);
++	return ret;
++}
++EXPORT_SYMBOL(scmd_printk);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3a4edd1..d1aad4d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -230,9 +230,6 @@ struct scsi_dh_data {
+ #define transport_class_to_sdev(class_dev) \
+ 	to_scsi_device(class_dev->parent)
  
- 		if (ata_is_atapi(qc->tf.protocol)) {
--			if (qc->scsicmd)
--				scsi_print_command(qc->scsicmd);
--			else
--				snprintf(cdb_buf, sizeof(cdb_buf),
--				 "cdb %02x %02x %02x %02x %02x %02x %02x %02x  "
--				 "%02x %02x %02x %02x %02x %02x %02x %02x\n         ",
--				 cdb[0], cdb[1], cdb[2], cdb[3],
--				 cdb[4], cdb[5], cdb[6], cdb[7],
--				 cdb[8], cdb[9], cdb[10], cdb[11],
--				 cdb[12], cdb[13], cdb[14], cdb[15]);
-+			if (qc->scsicmd) {
-+				cdb = qc->scsicmd->cmnd;
-+				cdb_len = qc->scsicmd->cmd_len;
-+			}
-+			__scsi_format_command(cdb_buf, sizeof(cdb_buf),
-+					      cdb, cdb_len);
- 		} else {
- 			const char *descr = ata_get_cmd_descript(cmd->command);
- 			if (descr)
+-#define sdev_printk(prefix, sdev, fmt, a...)	\
+-	dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
+-
+ #define sdev_dbg(sdev, fmt, a...) \
+ 	dev_dbg(&(sdev)->sdev_gendev, fmt, ##a)
+ 
+@@ -240,16 +237,14 @@ struct scsi_dh_data {
+  * like scmd_printk, but the device name is passed in
+  * as a string pointer
+  */
+-#define sdev_prefix_printk(l, sdev, p, fmt, a...)			\
+-	(p) ?								\
+-	sdev_printk(l, sdev, "[%s] " fmt, p, ##a) :			\
+-	sdev_printk(l, sdev, fmt, ##a)
+-
+-#define scmd_printk(prefix, scmd, fmt, a...)				\
+-        (scmd)->request->rq_disk ?					\
+-	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
+-		    (scmd)->request->rq_disk->disk_name, ##a) :		\
+-	sdev_printk(prefix, (scmd)->device, fmt, ##a)
++extern int sdev_prefix_printk(const char *, const struct scsi_device *,
++			      const char *, const char *, ...);
++
++#define sdev_printk(l, sdev, fmt, a...)				\
++	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
++
++extern int scmd_printk(const char *, const struct scsi_cmnd *,
++		       const char *, ...);
+ 
+ #define scmd_dbg(scmd, fmt, a...)					   \
+ 	do {								   \
 -- 
 1.8.4.5
 
