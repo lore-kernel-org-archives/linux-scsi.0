@@ -1,49 +1,61 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code optimization
-Date: Thu, 08 Jan 2015 10:15:51 -0500
-Message-ID: <yq1mw5t2ti0.fsf@sermon.lab.mkp.net>
-References: <201501051440.t05Ee0Ld029960@palmhbs0.lsi.com>
-	<20150108103842.GA600@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31835 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbbAHPQ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 10:16:26 -0500
-In-Reply-To: <20150108103842.GA600@infradead.org> (Christoph Hellwig's message
-	of "Thu, 8 Jan 2015 02:38:42 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paul Koning <paulkoning-Wuw85uim5zDR7s880joybQ@public.gmane.org>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Thu, 8 Jan 2015 10:57:42 -0500
+Message-ID: <594465E8-4DBB-40AD-BA62-880A364F24A3@comcast.net>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <54AE8A02.1030100@dev.mellanox.co.il> <54AE9010.5080609@acm.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <open-iscsi+bncBDUOZNUSUMARBN6SXKSQKGQEHGKQW4I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <54AE9010.5080609-HInyCGIudOg@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Sumit.Saxena@avagotech.com, linux-scsi@vger.kernel.org, stable@vger.kernel.org, martin.petersen@oracle.com, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-> -#if   defined(__BIG_ENDIAN_BITFIELD)
-> -	u32     MessageAddress1:24; /* bits 31:8*/
-> -	u32     RequestFlags:8;
-> -#else
->  	u32     RequestFlags:8;
-> -	u32     MessageAddress1:24; /* bits 31:8*/
-> -#endif
-> -	u32     MessageAddress2;      /* bits 61:32 */
-> +	u32     MessageAddress1:24;
-> +	u32     MessageAddress2;
+> On Jan 8, 2015, at 9:11 AM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
+>=20
+> On 01/08/15 14:45, Sagi Grimberg wrote:
+>> Actually I started with that approach, but the independent connections
+>> under a single session (I-T-Nexus) violates the command ordering
+>> requirement. Plus, such a solution is specific to iSER=E2=80=A6
 
-Christoph> Doesn't this break architectures that set
-Christoph> __BIG_ENDIAN_BITFIELD?
+The iSCSI standard specifies an ordering requirement for the case of multip=
+le connections under a single session.  That requirement is in fact a reaso=
+n why some iSCSI targets have declined to implement multiple connections.
 
-We went back and forth a few times in debugging this issue. This
-particular struct is always little endian and consists of an 8-bit LSB
-flags field plus a 56-bit pointer.
+On the other hand, there are lots of =E2=80=9CMPIO=E2=80=9D implementations=
+ in many different operating systems that use multiple sessions, so there i=
+s no ordering at the iSCSI level, and whatever ordering is required (if any=
+) is instead implemented at higher layers in the requesting OS.
 
-I am not a fan of wedging these values into a u32 universe (which also
-causes grief when the struct is being filled out). But the Avago folks
-did it this way because they want to keep things in sync with their
-firmware.
+>=20
+> Hello Sagi,
+>=20
+> Which command ordering requirement are you referring to ? The Linux stora=
+ge stack does not guarantee that block layer or SCSI commands will be proce=
+ssed in the same order as these commands have been submitted.
 
-In any case the code works fine on big endian with this patch in place.
+Neither does SCSI, in fact.  The ordering rules of the SCSI standard are wo=
+rth studying.  They are a lot weaker than most people expect.  A particular=
+ly interesting case is multiple concurrent writes with overlapping block ra=
+nges.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+	paul
+
+--=20
+You received this message because you are subscribed to the Google Groups "=
+open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
