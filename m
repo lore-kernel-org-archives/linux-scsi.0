@@ -1,54 +1,54 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and code optimization
-Date: Thu, 8 Jan 2015 19:13:18 +0530
-Message-ID: <a24e6f2fbad0983e24fc583d013b19a8@mail.gmail.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v2 0/3] scsi: ufs & ums-*: fix module reference counting
+Date: Thu, 8 Jan 2015 23:00:08 +0900
+Message-ID: <CAC5umyj7=e9OxssjTMJ_QszY5y09j7puwDUnCn9wPbcEYob28w@mail.gmail.com>
+References: <20150107142830.GA659@lst.de>
+	<Pine.LNX.4.44L0.1501071004310.1374-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og114.obsmtp.com ([64.18.2.215]:58061 "EHLO
-	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbbAHNnV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 08:43:21 -0500
-Received: by mail-qc0-f179.google.com with SMTP id c9so1860455qcz.10
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Jan 2015 05:43:21 -0800 (PST)
+Received: from mail-la0-f51.google.com ([209.85.215.51]:39944 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbbAHOAK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 09:00:10 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1501071004310.1374-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, martin.petersen@oracle.com, jbottomley@parallels.com, Kashyap Desai <kashyap.desai@avagotech.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
->-----Original Message-----
->From: Christoph Hellwig [mailto:hch@infradead.org]
->Sent: Thursday, January 08, 2015 4:09 PM
->To: Sumit.Saxena@avagotech.com
->Cc: linux-scsi@vger.kernel.org; stable@vger.kernel.org;
->martin.petersen@oracle.com; hch@infradead.org;
->jbottomley@parallels.com; kashyap.desai@avagotech.com
->Subject: Re: [PATCH 1/8] megaraid_sas : Endianness related bug fixes and
->code optimization
+2015-01-08 0:09 GMT+09:00 Alan Stern <stern@rowland.harvard.edu>:
+> On Wed, 7 Jan 2015, Christoph Hellwig wrote:
 >
->> -#if   defined(__BIG_ENDIAN_BITFIELD)
->> -	u32     MessageAddress1:24; /* bits 31:8*/
->> -	u32     RequestFlags:8;
->> -#else
->>  	u32     RequestFlags:8;
->> -	u32     MessageAddress1:24; /* bits 31:8*/
->> -#endif
->> -	u32     MessageAddress2;      /* bits 61:32 */
->> +	u32     MessageAddress1:24;
->> +	u32     MessageAddress2;
+>> On Wed, Jan 07, 2015 at 11:02:59PM +0900, Akinobu Mita wrote:
+>> > While accessing a scsi_device, the use count of the underlying LLDD module
+>> > is incremented.  The module reference is retrieved through .module field of
+>> > struct scsi_host_template.
+>> >
+>> > This mapping between scsi_device and underlying LLDD module works well
+>> > except some scsi drivers (ufs and unusual usb storage drivers).  These
+>> > drivers consist with core driver and actual LLDDs, and scsi_host_template
+>> > is defined in the core driver.  So the actual LLDDs can be unloaded even if
+>> > the scsi_device is being accessed.
+>>
+>> Why don't ufs and usb-storage define the host templates in the sub drivers?
+>> That's what libata or the mpt fusion driver do.
 >
->Doesn't this break architectures that set __BIG_ENDIAN_BITFIELD?
-Earlier code create the req_desc in machine format and later we convert it
-into LE format (as FW wants the data In LE format). Now with this change
-we just simplify code, which will first convert req_desc to LE format and
-set the MessageAddres1 and RequestFlags  in LE format. Eventually this
-will pass same address/flag frame as earlier code does, but giving some
-readability.
+> Originally the subdrivers were all part of usb-storage.  When they were
+> split out into separate modules, there didn't seem to be any need to
+> copy the host template into each one.  (Especially since some of the
+> method pointers in the host template refer to routines in usb-storage
+> itself, not in the subdrivers.)  The fact that the .module member was
+> no longer adequate escaped our notice at the time.
 
-We have tested this on PPC and this works fine. Actually, this MFA frame
-will be fired only at driver load time(for firmware initialization), so if
-this setting is not appropriate FW init will fail. We do not refer MFIAIo
-anywhere else.
+For ufs, the reason why a host template is shared by sub drivers is similar
+to usb-storage.  Originally there was only a single pci driver for ufs.
+When platform driver for ufs was introduced, it was split into core driver
+(ufshcd) and sub drivers (ufshcd-pci and ufshcd-pltfrm).  They require
+exactly the same host template.
 
-Thanks,
-Sumit
+Is there any other preferable way to fix this problem?  The first time I
+found this in ufs driver, I was trying to fix it by merging core and sub
+drivers into a single compound module.  But I realized that usm-* drivers
+have the same problem, then I decided to propose what this patch series do
+instead.
