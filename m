@@ -1,39 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [LSF/MM ATTEND] discuss blk-mq related to
-	DM-multipath and status of XCOPY
-Date: Thu, 08 Jan 2015 09:39:10 -0500
-Message-ID: <yq1vbkh2v75.fsf@sermon.lab.mkp.net>
-References: <CAMM=eLdGQ4wQDHy0ACzDsYOs0AYC+KAcx7Mx7FmpBTV293d41Q@mail.gmail.com>
-	<54AA90B1.1030201@suse.de> <yq17fwz8nwb.fsf@sermon.lab.mkp.net>
-	<54ACEF13.7000508@suse.de> <yq1vbki40ua.fsf@sermon.lab.mkp.net>
-	<54AE2436.2000004@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: [PATCH 1/2] target: Don't arbitrary limit I/O size to fabric_max_sectors
+Date: Thu, 08 Jan 2015 09:37:34 -0500
+Message-ID: <yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
+References: <1420590258-21122-1-git-send-email-nab@daterainc.com>
+	<1420647107.12144.8.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <54AE2436.2000004@suse.de> (Hannes Reinecke's message of "Thu, 08
-	Jan 2015 07:31:18 +0100")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1420647107.12144.8.camel@haakon3.risingtidesystems.com>
+	(Nicholas A. Bellinger's message of "Wed, 07 Jan 2015 08:11:47 -0800")
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
 
-Hannes> But the array might prioritize 'normal' I/O requests, and treat
-Hannes> XCOPY with a lower priority. So given enough load XCOPY might
-Hannes> actually be slower than a normal copy ...
+nab> IIRC, most modern hardware is reporting a large enough value for
+nab> queue_max_hw_sectors() to support 8 MB I/Os, but I'm thinking that
+nab> this could end up being problematic for older hardware that is
+nab> reporting much smaller values.
 
-Yes, but may have lower impact on concurrent I/O.
+Reporting queue_max_hw_sectors sounds sane to me.
+
+What's your concern wrt. older hardware?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
