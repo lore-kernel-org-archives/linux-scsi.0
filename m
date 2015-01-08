@@ -1,321 +1,131 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH for v3.19, v2] Avoid that sd_shutdown() triggers a kernel
- warning
-Date: Thu, 8 Jan 2015 05:15:08 -0800
-Message-ID: <20150108131508.GA31022@infradead.org>
-References: <54AD2E9A.50709@acm.org>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Thu, 08 Jan 2015 15:45:38 +0200
+Message-ID: <54AE8A02.1030100@dev.mellanox.co.il>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="dDRMvlgZJXvWKvBx"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52329 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754419AbbAHNPM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2015 08:15:12 -0500
-Content-Disposition: inline
-In-Reply-To: <54AD2E9A.50709@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <54AE36CE.8020509@acm.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>, open-iscsi@googlegroups.com, Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linux-foundation.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Oren Duer <oren@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 1/8/2015 9:50 AM, Bart Van Assche wrote:
+> On 01/07/15 22:39, Mike Christie wrote:
+>> On 01/07/2015 10:57 AM, Hannes Reinecke wrote:
+>>> On 01/07/2015 05:25 PM, Sagi Grimberg wrote:
+>>>> Hi everyone,
+>>>>
+>>>> Now that scsi-mq is fully included, we need an iSCSI initiator that
+>>>> would use it to achieve scalable performance. The need is even greater
+>>>> for iSCSI offload devices and transports that support multiple HW
+>>>> queues. As iSER maintainer I'd like to discuss the way we would choose
+>>>> to implement that in iSCSI.
+>>>>
+>>>> My measurements show that iSER initiator can scale up to ~2.1M IOPs
+>>>> with multiple sessions but only ~630K IOPs with a single session where
+>>>> the most significant bottleneck the (single) core processing
+>>>> completions.
+>>>>
+>>>> In the existing single connection per session model, given that command
+>>>> ordering must be preserved session-wide, we end up in a serial command
+>>>> execution over a single connection which is basically a single queue
+>>>> model. The best fit seems to be plugging iSCSI MCS as a multi-queued
+>>>> scsi LLDD. In this model, a hardware context will have a 1x1 mapping
+>>>> with an iSCSI connection (TCP socket or a HW queue).
+>>>>
+>>>> iSCSI MCS and it's role in the presence of dm-multipath layer was
+>>>> discussed several times in the past decade(s). The basic need for
+>>>> MCS is
+>>>> implementing a multi-queue data path, so perhaps we may want to avoid
+>>>> doing any type link aggregation or load balancing to not overlap
+>>>> dm-multipath. For example we can implement ERL=0 (which is basically
+>>>> the
+>>>> scsi-mq ERL) and/or restrict a session to a single portal.
+>>>>
+>>>> As I see it, the todo's are:
+>>>> 1. Getting MCS to work (kernel + user-space) with ERL=0 and a
+>>>>     round-robin connection selection (per scsi command execution).
+>>>> 2. Plug into scsi-mq - exposing num_connections as nr_hw_queues and
+>>>>     using blk-mq based queue (conn) selection.
+>>>> 3. Rework iSCSI core locking scheme to avoid session-wide locking
+>>>>     as much as possible.
+>>>> 4. Use blk-mq pre-allocation and tagging facilities.
+>>>>
+>>>> I've recently started looking into this. I would like the community to
+>>>> agree (or debate) on this scheme and also talk about implementation
+>>>> with anyone who is also interested in this.
+>>>>
+>>> Yes, that's a really good topic.
+>>>
+>>> I've pondered implementing MC/S for iscsi/TCP but then I've figured my
+>>> network implementation knowledge doesn't spread that far.
+>>> So yeah, a discussion here would be good.
+>>>
+>>> Mike? Any comments?
+>>
+>> I have been working under the assumption that people would be ok with
+>> MCS upstream if we are only using it to handle the issue where we want
+>> to do something like have a tcp/iscsi connection per CPU then map the
+>> connection to a blk_mq_hw_ctx. In this more limited MCS implementation
+>> there would be no iscsi layer code to do something like load balance
+>> across ports or transport paths like how dm-multipath does, so there
+>> would be no feature/code duplication. For balancing across hctxs, then
+>> the iscsi layer would also leave that up to whatever we end up with in
+>> upper layers, so again no feature/code duplication with upper layers.
+>>
+>> So pretty non controversial I hope :)
+>>
+>> If people want to add something like round robin connection selection in
+>> the iscsi layer, then I think we want to leave that for after the
+>> initial merge, so people can argue about that separately.
+>
+> Hello Sagi and Mike,
+>
+> I agree with Sagi that adding scsi-mq support in the iSER initiator
+> would help iSER users because that would allow these users to configure
+> a single iSER target and use the multiqueue feature instead of having to
+> configure multiple iSER targets to spread the workload over multiple
+> cpus at the target side.
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Hey Bart,
 
-On Wed, Jan 07, 2015 at 02:03:22PM +0100, Bart Van Assche wrote:
-> Since kernel v3.19-rc1 module_refcount() returns 1 instead of 0
-> when called from inside module_exit(). This breaks the
-> module_refcount() test in scsi_device_put() and hence causes the
-> following kernel warning to be reported when unloading the ib_srp
-> kernel module:
+IMHO, iSER is an iSCSI extension, so I think the discussion should
+focus the solving this in iSCSI level in a way that would apply both
+for TCP and RDMA (and offload devices).
 
-This is getting better, but I still think we need to sort out the root
-cause.
+>
+> And I agree with Mike that implementing scsi-mq support in the iSER
+> initiator as multiple independent connections probably is a better
+> choice than MC/S.
 
-The problemt started with commit 39b7f1e25 ("[SCSI] sd: Fix refcounting"),
-which added the calls to scsi_device_get in various struct
-device_driver/scsi_driver methods.  From the BZ it seems like the
-rationale was to protect against races between ->rescan and ->remove,
-but instead of doing that using refcounting we better ensure that
-in the SCSI midlayer by taking scan_mutex around calls to ->rescan.
-The first attached patch does that, which allows us to functionally
-revert 39b7f1e25, which then also allows to revert 85b6c720
-("[SCSI] sd: fix cache flushing on module removal (and individual
-device removal)").
+Actually I started with that approach, but the independent connections
+under a single session (I-T-Nexus) violates the command ordering 
+requirement. Plus, such a solution is specific to iSER...
 
-See the attached series to do that.  Warnings: so far it only got
-minimal testing.
+> RFC 3720 namely requires that iSCSI numbering is
+> session-wide. This means maintaining a single counter for all MC/S
+> sessions. Such a counter would be a contention point. I'm afraid that
+> because of that counter performance on a multi-socket initiator system
+> with a scsi-mq implementation based on MC/S could be worse than with the
+> approach with multiple iSER targets. Hence my preference for an approach
+> based on multiple independent iSER connections instead of MC/S.
 
+So this comment is spot on the pros/cons of the discussion (we might 
+want to leave something for LSF ;)).
+MCS would not allow a completely lockless data-path due to command
+ordering. On the other hand implementing some kind of multiple sessions
+solution feels somewhat like a mis-fit (at least in my view).
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-scsi-serialize-rescan-against-remove.patch"
+One of my thoughts about how to overcome the contention on commands
+sequence numbering was to suggest some kind of negotiable "relaxed
+ordering" mode but of course I don't have anything figured out yet.
 
->From f92b9687a9663d4bf304303658acfe03167e0667 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 8 Jan 2015 11:59:56 +0100
-Subject: scsi: serialize ->rescan against ->remove
+I had a short discussion on this with Mallikarjun Chadalapaka at SDC-14.
+He said that if I show some numbers to back up such a proposal it can
+be considered.
 
-Take the scan_mutex when rescanning a device to protect against a
-concurrent device removal.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi_scan.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 0deb385..7d926cd 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1569,16 +1569,18 @@ EXPORT_SYMBOL(scsi_add_device);
- 
- void scsi_rescan_device(struct device *dev)
- {
--	if (!dev->driver)
--		return;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct Scsi_Host *shost = sdev->host;
- 
--	if (try_module_get(dev->driver->owner)) {
-+	mutex_lock(&shost->scan_mutex);
-+	if (dev->driver && try_module_get(dev->driver->owner)) {
- 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
- 
- 		if (drv->rescan)
- 			drv->rescan(dev);
- 		module_put(dev->driver->owner);
- 	}
-+	mutex_unlock(&shost->scan_mutex);
- }
- EXPORT_SYMBOL(scsi_rescan_device);
- 
--- 
-1.9.1
-
-
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0002-sd-don-t-grab-reference-device-references-from-drive.patch"
-
->From c056e4f177617d095eca495f94753f16043eb38b Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 8 Jan 2015 12:07:05 +0100
-Subject: sd: don't grab reference device references from driver methods
-
-The device model already takes care of races from ->remove and ->shutdown
-vs its other methods, and we now take care for the scsi-specific methods
-as well.
-
-This is a partial, manual revert of commit 39b7f1e25
-("[SCSI] sd: Fix refcounting").
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sd.c | 55 +++++++++++--------------------------------------------
- 1 file changed, 11 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ebf35cb6..be76130 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -564,10 +564,12 @@ static int sd_major(int major_idx)
- 	}
- }
- 
--static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
-+static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
- {
- 	struct scsi_disk *sdkp = NULL;
- 
-+	mutex_lock(&sd_ref_mutex);
-+
- 	if (disk->private_data) {
- 		sdkp = scsi_disk(disk);
- 		if (scsi_device_get(sdkp->device) == 0)
-@@ -575,27 +577,6 @@ static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
- 		else
- 			sdkp = NULL;
- 	}
--	return sdkp;
--}
--
--static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
--{
--	struct scsi_disk *sdkp;
--
--	mutex_lock(&sd_ref_mutex);
--	sdkp = __scsi_disk_get(disk);
--	mutex_unlock(&sd_ref_mutex);
--	return sdkp;
--}
--
--static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
--{
--	struct scsi_disk *sdkp;
--
--	mutex_lock(&sd_ref_mutex);
--	sdkp = dev_get_drvdata(dev);
--	if (sdkp)
--		sdkp = __scsi_disk_get(sdkp->disk);
- 	mutex_unlock(&sd_ref_mutex);
- 	return sdkp;
- }
-@@ -610,8 +591,6 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
- 
--
--
- static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 					   unsigned int dix, unsigned int dif)
- {
-@@ -1525,12 +1504,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 
- static void sd_rescan(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
--	if (sdkp) {
--		revalidate_disk(sdkp->disk);
--		scsi_disk_put(sdkp);
--	}
-+	revalidate_disk(sdkp->disk);
- }
- 
- 
-@@ -3147,13 +3123,13 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
-  */
- static void sd_shutdown(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
- 	if (!sdkp)
- 		return;         /* this can happen */
- 
- 	if (pm_runtime_suspended(dev))
--		goto exit;
-+		return;
- 
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-@@ -3164,14 +3140,11 @@ static void sd_shutdown(struct device *dev)
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
--
--exit:
--	scsi_disk_put(sdkp);
- }
- 
- static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 	int ret = 0;
- 
- 	if (!sdkp)
-@@ -3197,7 +3170,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 	}
- 
- done:
--	scsi_disk_put(sdkp);
- 	return ret;
- }
- 
-@@ -3213,18 +3185,13 @@ static int sd_suspend_runtime(struct device *dev)
- 
- static int sd_resume(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
--	int ret = 0;
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		return 0;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
--
--done:
--	scsi_disk_put(sdkp);
--	return ret;
-+	return sd_start_stop_device(sdkp, 1);
- }
- 
- /**
--- 
-1.9.1
-
-
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0003-Revert-SCSI-sd-fix-cache-flushing-on-module-removal-.patch"
-
->From 53378be96577c3fdb31dc1bdc0a73ec49171c763 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 8 Jan 2015 12:10:29 +0100
-Subject: Revert "[SCSI] sd: fix cache flushing on module removal (and
- individual device removal)"
-
-This reverts commit 85b6c720b0931101c8bcc3a5abdc2b8514b0fb4b.
-
-We now never call scsi_device_get from the shutdown path, and this
-workaround turned out to create more problems than it solves.  Move
-back to properly checking the device state and carefully handle
-module refcounting including checking the return value.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/scsi.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 08c90a7..ff8f888 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -975,14 +975,14 @@ EXPORT_SYMBOL(scsi_report_opcode);
-  */
- int scsi_device_get(struct scsi_device *sdev)
- {
--	if (sdev->sdev_state == SDEV_DEL)
-+	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
- 		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
- 		return -ENXIO;
--	/* We can fail this if we're doing SCSI operations
--	 * from module exit (like cache flush) */
--	try_module_get(sdev->host->hostt->module);
--
-+	if (!try_module_get(sdev->host->hostt->module)) {
-+		put_device(&sdev->sdev_gendev);
-+		return -ENXIO;
-+	}
- 	return 0;
- }
- EXPORT_SYMBOL(scsi_device_get);
-@@ -997,14 +997,7 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--#ifdef CONFIG_MODULE_UNLOAD
--	struct module *module = sdev->host->hostt->module;
--
--	/* The module refcount will be zero if scsi_device_get()
--	 * was called from a module removal routine */
--	if (module && module_refcount(module) != 0)
--		module_put(module);
--#endif
-+	module_put(sdev->host->hostt->module);
- 	put_device(&sdev->sdev_gendev);
- }
- EXPORT_SYMBOL(scsi_device_put);
--- 
-1.9.1
-
-
---dDRMvlgZJXvWKvBx--
+Sagi.
