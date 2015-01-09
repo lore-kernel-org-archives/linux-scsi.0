@@ -1,36 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] scsi: Move user-shareable stuff in scsi/scsi.h to
-	uapi/scsi/scsi.h
-Date: Fri, 9 Jan 2015 18:11:48 +0100
-Message-ID: <20150109171148.GA17380@lst.de>
-References: <1420746479-25949-1-git-send-email-agrover@redhat.com> <1420746479-25949-3-git-send-email-agrover@redhat.com> <20150109101422.GA23804@lst.de> <1420817266.2064.1.camel@HansenPartnership.com> <20150109154613.GA29124@lst.de> <1420818638.2064.5.camel@HansenPartnership.com> <20150109160140.GA29372@lst.de> <1420821180.2064.10.camel@HansenPartnership.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: old linux scsi headers
+Date: Fri, 09 Jan 2015 09:38:50 -0800
+Message-ID: <54B0122A.9050509@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:36971 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757279AbbAIRLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jan 2015 12:11:51 -0500
-Content-Disposition: inline
-In-Reply-To: <1420821180.2064.10.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <libc-alpha-return-56168-glibc-alpha=m.gmane.org@sourceware.org>
+List-Unsubscribe: <mailto:libc-alpha-unsubscribe-glibc-alpha=m.gmane.org@sourceware.org>
+List-Subscribe: <mailto:libc-alpha-subscribe@sourceware.org>
+List-Archive: <http://sourceware.org/ml/libc-alpha/>
+List-Post: <mailto:libc-alpha@sourceware.org>
+List-Help: <mailto:libc-alpha-help@sourceware.org>, <http://sourceware.org/ml/#faqs>
+Sender: libc-alpha-owner@sourceware.org
+To: libc-alpha@sourceware.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org
 
-On Fri, Jan 09, 2015 at 08:33:00AM -0800, James Bottomley wrote:
-> Yes, but they have to be delivered to users somehow.  If you look at
-> debian, they deliver the headers through the linux-dev-libc package
-> which installs into the /usr/include directory.
+Hello glibc people,
 
-linux-libc-dev despite the name is provided from the kernel source package:
+This concerns sysdeps/unix/sysv/linux/scsi/{scsi, scsi_ioctl, sg}.h
 
-https://packages.debian.org/sid/linux-libc-dev
+They define common SCSI values, as well as Linux's SCSI-related ioctls.
 
-> Since glibc currently
-> owns the entirety of /usr/include/scsi, we have to help the distros
-> figure out how we deliver the headers, otherwise all uapi exports of
-> SCSI stuff just gets ignored ...
+Apparently they were copied from the Linux kernel tree back in 1999, so 
+they're pretty stale.
 
-That's why I've been arguing for adding a new linux/scsi_ioctl.h header
-to bypass that whole conflict since my first mail in this thread.
+I'm wondering if I should submit a patch to update these to what's 
+current from the Linux tree, or if maybe it wouldn't be better to have 
+users just directly get these as "uapi" headers from the Linux kernel 
+source directly?
+
+The latter method has issues with being a breaking change for code that 
+relies on what's in glibc now, which may or may not be something we can 
+ease, but would ensure the headers would not become stale again in the 
+future.
+
+What do you think about the best way to proceed?
+
+Thanks -- Regards -- Andy
