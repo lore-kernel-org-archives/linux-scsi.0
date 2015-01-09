@@ -1,47 +1,63 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Fri, 09 Jan 2015 13:39:08 +0200
-Message-ID: <54AFBDDC.1000107@dev.mellanox.co.il>
-References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <54AE8A02.1030100@dev.mellanox.co.il> <54AE9010.5080609@acm.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: ->queue_rq can't sleep
+Date: Fri, 9 Jan 2015 03:51:17 -0800
+Message-ID: <20150109115117.GA26918@infradead.org>
+References: <1420640453-3493-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:44212 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755101AbbAILjQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 06:39:16 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so7612401wgh.4
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2015 03:39:14 -0800 (PST)
-In-Reply-To: <54AE9010.5080609@acm.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58022 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754753AbbAILvU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 06:51:20 -0500
+Content-Disposition: inline
+In-Reply-To: <1420640453-3493-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, open-iscsi@googlegroups.com, Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linux-foundation.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Oren Duer <oren@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
 
-On 1/8/2015 4:11 PM, Bart Van Assche wrote:
-> On 01/08/15 14:45, Sagi Grimberg wrote:
->> Actually I started with that approach, but the independent connections
->> under a single session (I-T-Nexus) violates the command ordering
->> requirement. Plus, such a solution is specific to iSER...
->
-> Hello Sagi,
->
-> Which command ordering requirement are you referring to ? The Linux
-> storage stack does not guarantee that block layer or SCSI commands will
-> be processed in the same order as these commands have been submitted.
->
+Any chance to get a review / ack for this one?
 
-I was referring to the iSCSI session requirement. I initially thought of
-an approach to maintain multiple iSER connections under a single session
-but pretty soon I realized that preserving commands ordering this way
-is not feasible. So independent iSER connections means independent
-iSCSI sessions (each with a single connection). This is indeed another
-choice, which we are clearly debating on...
-
-I'm just wandering if we are not trying to force-fit this model. How
-would this model look like? We will need to define another entity to
-track and maintain the sessions and to allocate the scsi_host. Will that
-be communicated to user-space? How will error recovery look like?
-
-Sagi.
+On Wed, Jan 07, 2015 at 03:20:53PM +0100, Christoph Hellwig wrote:
+> The blk-mq ->queue_rq method is always called from process context,
+> but might have preemption disabled.  This means we still always
+> have to use GFP_ATOMIC for memory allocations, and thus need to
+> revert part of commit 3c356bde1 ("scsi: stop passing a gfp_mask
+> argument down the command setup path").
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 9ea95dd..6d5c0b8 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+>  static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+>  {
+>  	struct scatterlist *first_chunk = NULL;
+> -	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+>  	int ret;
+>  
+>  	BUG_ON(!nents);
+> @@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+>  	}
+>  
+>  	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
+> -			       first_chunk, gfp_mask, scsi_sg_alloc);
+> +			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
+>  	if (unlikely(ret))
+>  		scsi_free_sgtable(sdb, mq);
+>  	return ret;
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
