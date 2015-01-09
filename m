@@ -1,64 +1,57 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] scsi: ->queue_rq can't sleep
-Date: Fri, 9 Jan 2015 12:41:07 +0000
-Message-ID: <5EE87F5E6631894E80EB1A63198F964D040A672C@SACMBXIP03.sdcorp.global.sandisk.com>
-References: <1420640453-3493-1-git-send-email-hch@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] scsi: Move user-shareable stuff in scsi/scsi.h to
+ uapi/scsi/scsi.h
+Date: Fri, 09 Jan 2015 07:27:46 -0800
+Message-ID: <1420817266.2064.1.camel@HansenPartnership.com>
+References: <1420746479-25949-1-git-send-email-agrover@redhat.com>
+	 <1420746479-25949-3-git-send-email-agrover@redhat.com>
+	 <20150109101422.GA23804@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0070.outbound.protection.outlook.com ([207.46.100.70]:34225
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756968AbbAIOOi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 09:14:38 -0500
-Content-Language: en-US
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45780 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758093AbbAIP1s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 10:27:48 -0500
+In-Reply-To: <20150109101422.GA23804@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org
 
-On 01/07/15 15:20, Christoph Hellwig wrote:
-> The blk-mq ->queue_rq method is always called from process context,
-> but might have preemption disabled.  This means we still always
-> have to use GFP_ATOMIC for memory allocations, and thus need to
-> revert part of commit 3c356bde1 ("scsi: stop passing a gfp_mask
-> argument down the command setup path").
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Sasha Levin <sasha.levin@oracle.com>
-> ---
->   drivers/scsi/scsi_lib.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 9ea95dd..6d5c0b8 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
->   static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
->   {
->       struct scatterlist *first_chunk = NULL;
-> -     gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
->       int ret;
->
->       BUG_ON(!nents);
-> @@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
->       }
->
->       ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
-> -                            first_chunk, gfp_mask, scsi_sg_alloc);
-> +                            first_chunk, GFP_ATOMIC, scsi_sg_alloc);
->       if (unlikely(ret))
->               scsi_free_sgtable(sdb, mq);
->       return ret;
->
+On Fri, 2015-01-09 at 11:14 +0100, Christoph Hellwig wrote:
+> On Thu, Jan 08, 2015 at 11:47:58AM -0800, Andy Grover wrote:
+> > A great many SCSI codes and ioctl values can be made available to userspace
+> > in a uapi header, while the kernel-only definitions stay in scsi/scsi.h.
+> > 
+> > scsi/scsi.h also includes uapi/scsi/scsi.h so kernel code need not update
+> > includes.
+> 
+> SCSI opcodes are not a user API/ABI, so they should not be exported.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Actually, they are exported.  If you look at what glibc supplies, it has
+it's own copies of scsi.h and scsi_ioctl.h.  If we try to repace those
+with uapi, we have to make sure nothing breaks, so the opcodes have to
+be in scsi.h somehow.
 
-(note: I have been asked to use my company e-mail address for kernel
-related work)
+Now, I agree that the opcodes in our scsi.h shouldn't be the definitive
+ones because they're the only the ones the kernel cares about.  However,
+the fact is that any userspace programme including scsi.h and
+scsi_ioctl.h is expecting to get the opcodes and we can't break that.
 
-________________________________
+Were you thinking of moving opcodes to scsi_opcodes.h and #including
+that in scsi.h but not exporting it so glibc supplies its own?
 
-PLEASE NOTE: The information contained in this electronic mail message is intended only for the use of the designated recipient(s) named above. If the reader of this message is not the intended recipient, you are hereby notified that you have received this message in error and that any review, dissemination, distribution, or copying of this message is strictly prohibited. If you have received this communication in error, please notify the sender by telephone or e-mail (as shown above) immediately and destroy any and all copies of this message in your possession (whether hard copies or electronically stored copies).
+James
+
+> I'm fine with having them in their own header that can be copied
+> into other projects, but guaranteeing any sort of stability for these
+> defines is a mistake.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
