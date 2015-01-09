@@ -1,35 +1,62 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set cpu affinity for each MSIX vector enabled by the HBA
-Date: Fri, 09 Jan 2015 15:58:16 -0500
-Message-ID: <yq1twzzzn6f.fsf@sermon.lab.mkp.net>
-References: <1420635329-2268-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/2] target: Don't arbitrary limit I/O size to
+ fabric_max_sectors
+Date: Fri, 09 Jan 2015 14:10:35 -0800
+Message-ID: <1420841435.29673.19.camel@haakon3.risingtidesystems.com>
+References: <1420590258-21122-1-git-send-email-nab@daterainc.com>
+	 <1420647107.12144.8.camel@haakon3.risingtidesystems.com>
+	 <yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
+	 <1420757368.2842.33.camel@haakon3.risingtidesystems.com>
+	 <yq17fwv1y7z.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1420635329-2268-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	(Sreekanth Reddy's message of "Wed, 7 Jan 2015 18:25:29 +0530")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:39123 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbbAIWKs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 17:10:48 -0500
+In-Reply-To: <yq17fwv1y7z.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
 
->>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
+On Fri, 2015-01-09 at 15:43 -0500, Martin K. Petersen wrote:
+> >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+> 
+> nab> The concern is when older hardware drivers are reporting say
+> nab> queue_max_hw_sectors=128 with initiators are not actively honoring
+> nab> block limits EVPD MAXIMUM TRANSFER LENGTH, that would result in
+> nab> I/Os over 64K generating exception status.
+> 
+> Given that you're already splitting I/Os in IBLOCK I think it would
+> probably be better to pick a size you're comfortable with. 4 or 8 megs
+> sound reasonable to be
+> 
 
-Sreekanth> Change_set: 1. Added affinity_hint varable of type
-Sreekanth> cpumask_var_t in adapter_reply_queue structure. And allocated
-Sreekanth> a memory for this varable by calling alloc_cpumask_var.
-Sreekanth> 2. Call the API irq_set_affinity_hint for each MSIx vector to
-Sreekanth> affiniate it with calculated cpus at driver inilization time.
-Sreekanth> 3. While freeing the MSIX vector, call this same API to
-Sreekanth> release the cpu affinity mask for each MSIx vector by
-Sreekanth> providing the NULL value in cpumask argument.  4. then call
-Sreekanth> the free_cpumask_var API to free the memory allocated in step
-Sreekanth> 2.
+I'm now thinking to go just ahead and drop the hw_max_sectors check in
+sbc_parse_cdb() as well, and leave hw_max_sectors as a purely
+informational attribute representing the granularity each backend driver
+and/or subsystem is splitting I/Os upon.
 
-(Still dreaming of a combined mpt2sas and mpt3sas so I wouldn't have to
-review everything twice).
+Which would mean there is no longer a maximum I/O size enforced by the
+target.  This used to be the case in < v3.5 code, before Roland added
+fabric_max_sectors to enforce the global 4 MB maximum that people
+recently have been starting to run up against with initiators not
+honoring block limits VPD.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+That said, I don't recall there being any issues with the earlier code
+not enforcing a maximum I/O size, so in order to avoid the same problem
+in the future it probably makes the sense to go ahead process any
+arbitrary sized I/O.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Re-spinning a -v2 with this in mind.
+
+--nab
+
+
+
+
+
+
