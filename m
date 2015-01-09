@@ -1,31 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] target: Don't arbitrary limit I/O size to fabric_max_sectors
-Date: Fri, 09 Jan 2015 15:43:44 -0500
-Message-ID: <yq17fwv1y7z.fsf@sermon.lab.mkp.net>
-References: <1420590258-21122-1-git-send-email-nab@daterainc.com>
-	<1420647107.12144.8.camel@haakon3.risingtidesystems.com>
-	<yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
-	<1420757368.2842.33.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 06/22] [SCSI] mpt2sas, mpt3sas: Removing uppper boundary restriction for the module parameter max_sgl_entries
+Date: Fri, 09 Jan 2015 15:55:05 -0500
+Message-ID: <yq1y4pbznbq.fsf@sermon.lab.mkp.net>
+References: <1420635235-2222-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1420757368.2842.33.camel@haakon3.risingtidesystems.com>
-	(Nicholas A. Bellinger's message of "Thu, 08 Jan 2015 14:49:28 -0800")
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1420635235-2222-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	(Sreekanth Reddy's message of "Wed, 7 Jan 2015 18:23:55 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: martin.petersen@oracle.com, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@avagotech.com> writes:
 
-nab> The concern is when older hardware drivers are reporting say
-nab> queue_max_hw_sectors=128 with initiators are not actively honoring
-nab> block limits EVPD MAXIMUM TRANSFER LENGTH, that would result in
-nab> I/Os over 64K generating exception status.
+Sreekanth> 1. Extended the upper boundary restriction for the module
+Sreekanth> parameter max_sgl_entries.  Earlier, the max_sgl_entries was
+Sreekanth> capped at the SCSI_MAX_SG_SEGMENTS kernel definition.  With
+Sreekanth> this change, the user would be able to set the
+Sreekanth> max_sgl_entries to any value which is greater than
+Sreekanth> SCSI_MAX_SG_SEGMENTS and less than the minimum of
+Sreekanth> SCSI_MAX_SG_CHAIN_SEGMENTS & hardware limit(Calculated using
+Sreekanth> IOCFacts's MaxChainDepth).
 
-Given that you're already splitting I/Os in IBLOCK I think it would
-probably be better to pick a size you're comfortable with. 4 or 8 megs
-sound reasonable to be
+Sreekanth> 2. Added a print for the message log whenever the user sets
+Sreekanth> the max_sgl_entries to a value greater than
+Sreekanth> SCSI_MAX_SG_SEGMENTS to warn about the kernel definition
+Sreekanth> overriding.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
