@@ -1,66 +1,27 @@
-From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: [PATCH 1/1] csiostor:fix sparse warnings
-Date: Fri,  9 Jan 2015 21:25:16 +0530
-Message-ID: <1420818916-12185-1-git-send-email-praveenm@chelsio.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] scsi: Move user-shareable stuff in scsi/scsi.h to
+	uapi/scsi/scsi.h
+Date: Fri, 9 Jan 2015 17:01:40 +0100
+Message-ID: <20150109160140.GA29372@lst.de>
+References: <1420746479-25949-1-git-send-email-agrover@redhat.com> <1420746479-25949-3-git-send-email-agrover@redhat.com> <20150109101422.GA23804@lst.de> <1420817266.2064.1.camel@HansenPartnership.com> <20150109154613.GA29124@lst.de> <1420818638.2064.5.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:23995 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751670AbbAIP4C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 10:56:02 -0500
+Received: from verein.lst.de ([213.95.11.211]:36816 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757721AbbAIQBn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jan 2015 11:01:43 -0500
+Content-Disposition: inline
+In-Reply-To: <1420818638.2064.5.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com, praveenm@chelsio.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org
 
-This patch fixes sparse warning reported by kbuild.
-Apply this on net-next since it depends on previous commit.
+On Fri, Jan 09, 2015 at 07:50:38AM -0800, James Bottomley wrote:
+> Right, that's why I'm dubious about this effort.  uapi files either have
+> to become the glibc headers or be exported in a way that allows
+> inclusion into glibc headers for there to be any point.
 
-drivers/scsi/csiostor/csio_hw.c:259:17: sparse: cast to restricted __le32
-drivers/scsi/csiostor/csio_hw.c:536:31: sparse: incorrect type in assignment
-(different base types)
-drivers/scsi/csiostor/csio_hw.c:536:31:    expected unsigned int [unsigned]
-[usertype] <noident>
-drivers/scsi/csiostor/csio_hw.c:536:31:    got restricted __be32 [usertype]
-<noident>
->> drivers/scsi/csiostor/csio_hw.c:2012:5: sparse: symbol 'csio_hw_prep_fw' was
-not declared. Should it be static?
-
-Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
----
- drivers/scsi/csiostor/csio_hw.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index b70c15f..5c31fa6 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -256,7 +256,7 @@ csio_hw_seeprom_read(struct csio_hw *hw, uint32_t addr, uint32_t *data)
- 	}
- 
- 	pci_read_config_dword(hw->pdev, base + PCI_VPD_DATA, data);
--	*data = le32_to_cpu(*data);
-+	*data = le32_to_cpu(*(__le32 *)data);
- 
- 	return 0;
- }
-@@ -533,7 +533,7 @@ csio_hw_read_flash(struct csio_hw *hw, uint32_t addr, uint32_t nwords,
- 		if (ret)
- 			return ret;
- 		if (byte_oriented)
--			*data = htonl(*data);
-+			*data = (__force __u32) htonl(*data);
- 	}
- 	return 0;
- }
-@@ -2009,7 +2009,7 @@ static struct fw_info *find_fw_info(int chip)
- 	return NULL;
- }
- 
--int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
-+static int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
- 	       const u8 *fw_data, unsigned int fw_size,
- 	       struct fw_hdr *card_fw, enum csio_dev_state state,
- 	       int *reset)
--- 
-2.0.2
-
+uapi headers are not just for glibc, they are for any userspace
+application.  Most of our uapi files aren't used by glibc at all.
