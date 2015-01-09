@@ -1,32 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] scsi: Move user-shareable stuff in scsi/scsi.h to
-	uapi/scsi/scsi.h
-Date: Fri, 9 Jan 2015 11:14:22 +0100
-Message-ID: <20150109101422.GA23804@lst.de>
-References: <1420746479-25949-1-git-send-email-agrover@redhat.com> <1420746479-25949-3-git-send-email-agrover@redhat.com>
+From: Mel Gorman <mgorman@suse.de>
+Subject: LSF/MM 2015 Reminder about call for proposals
+Date: Fri, 9 Jan 2015 10:36:59 +0000
+Message-ID: <20150109103659.GI2395@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35950 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756229AbbAIKO0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jan 2015 05:14:26 -0500
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1420746479-25949-3-git-send-email-agrover@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, hch@lst.de
 
-On Thu, Jan 08, 2015 at 11:47:58AM -0800, Andy Grover wrote:
-> A great many SCSI codes and ioctl values can be made available to userspace
-> in a uapi header, while the kernel-only definitions stay in scsi/scsi.h.
-> 
-> scsi/scsi.h also includes uapi/scsi/scsi.h so kernel code need not update
-> includes.
+This is a reminder that the deadline for the LSF/MM 2015 CFP is approaching
+-- see http://lwn.net/Articles/623534/ for the original announcement. The
+deadline for ATTEND and TOPIC requests is January 16th so now is the time
+to get them sent in if you're interested in attending.
 
-SCSI opcodes are not a user API/ABI, so they should not be exported.
+Thank you on behalf of the program committee:
 
-I'm fine with having them in their own header that can be copied
-into other projects, but guaranteeing any sort of stability for these
-defines is a mistake.
+Storage:
+	James Bottomley 
+	Martin Petersen 
+	Christoph Hellwig 
+
+Filesystem:
+	Jeff Layton 
+	Ric Wheeler 
+	Jan Kara 
+	Trond Myklebust 
+	Theodore Ts'o
+
+MM:
+	Rik van Riel 
+	Michel Lespinasse 
+	Sasha Levin
+
+-- 
+Mel Gorman
+SUSE Labs
