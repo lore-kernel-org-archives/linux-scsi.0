@@ -1,51 +1,64 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/2] target: Don't arbitrary limit I/O size to
- fabric_max_sectors
-Date: Fri, 09 Jan 2015 06:09:17 -0800
-Message-ID: <1420812557.21830.23.camel@haakon3.risingtidesystems.com>
-References: <1420590258-21122-1-git-send-email-nab@daterainc.com>
-	 <1420647107.12144.8.camel@haakon3.risingtidesystems.com>
-	 <yq1zj9t2v9t.fsf@sermon.lab.mkp.net>
-	 <1420757368.2842.33.camel@haakon3.risingtidesystems.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] scsi: ->queue_rq can't sleep
+Date: Fri, 9 Jan 2015 12:41:07 +0000
+Message-ID: <5EE87F5E6631894E80EB1A63198F964D040A672C@SACMBXIP03.sdcorp.global.sandisk.com>
+References: <1420640453-3493-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1420757368.2842.33.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0070.outbound.protection.outlook.com ([207.46.100.70]:34225
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756968AbbAIOOi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 09:14:38 -0500
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-01-08 at 14:49 -0800, Nicholas A. Bellinger wrote:
-> On Thu, 2015-01-08 at 09:37 -0500, Martin K. Petersen wrote:
-> > >>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
-> > 
-> > nab> IIRC, most modern hardware is reporting a large enough value for
-> > nab> queue_max_hw_sectors() to support 8 MB I/Os, but I'm thinking that
-> > nab> this could end up being problematic for older hardware that is
-> > nab> reporting much smaller values.
-> > 
-> > Reporting queue_max_hw_sectors sounds sane to me.
-> > 
-> > What's your concern wrt. older hardware?
-> > 
-> 
-> The target is still enforcing it's own hw_max_sectors in sbc_parse_cdb()
-> based upon what queue_max_hw_sectors() reports for IBLOCK, and will
-> throw an exception for I/Os who's sector count exceeds this maximum.
-> 
-> The concern is when older hardware drivers are reporting say
-> queue_max_hw_sectors=128 with initiators are not actively honoring block
-> limits EVPD MAXIMUM TRANSFER LENGTH, that would result in I/Os over 64K
-> generating exception status.
-> 
-> So the question is what is a sane minimum for IBLOCK's hw_max_sectors so
-> that large I/Os (say up to 8 MB) aren't rejected by sbc_parse_sbc(), and
-> don't trigger the subsequent checks in generic_make_request() ->
-> generic_make_request_checks().
-> 
+On 01/07/15 15:20, Christoph Hellwig wrote:
+> The blk-mq ->queue_rq method is always called from process context,
+> but might have preemption disabled.  This means we still always
+> have to use GFP_ATOMIC for memory allocations, and thus need to
+> revert part of commit 3c356bde1 ("scsi: stop passing a gfp_mask
+> argument down the command setup path").
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Sasha Levin <sasha.levin@oracle.com>
+> ---
+>   drivers/scsi/scsi_lib.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 9ea95dd..6d5c0b8 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+>   static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+>   {
+>       struct scatterlist *first_chunk = NULL;
+> -     gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+>       int ret;
+>
+>       BUG_ON(!nents);
+> @@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+>       }
+>
+>       ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
+> -                            first_chunk, gfp_mask, scsi_sg_alloc);
+> +                            first_chunk, GFP_ATOMIC, scsi_sg_alloc);
+>       if (unlikely(ret))
+>               scsi_free_sgtable(sdb, mq);
+>       return ret;
+>
 
-Christoph, any input on this..?
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 
---nab
+(note: I have been asked to use my company e-mail address for kernel
+related work)
+
+________________________________
+
+PLEASE NOTE: The information contained in this electronic mail message is intended only for the use of the designated recipient(s) named above. If the reader of this message is not the intended recipient, you are hereby notified that you have received this message in error and that any review, dissemination, distribution, or copying of this message is strictly prohibited. If you have received this communication in error, please notify the sender by telephone or e-mail (as shown above) immediately and destroy any and all copies of this message in your possession (whether hard copies or electronically stored copies).
+
