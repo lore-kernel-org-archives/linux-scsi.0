@@ -1,63 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: ->queue_rq can't sleep
-Date: Fri, 9 Jan 2015 03:51:17 -0800
-Message-ID: <20150109115117.GA26918@infradead.org>
-References: <1420640453-3493-1-git-send-email-hch@lst.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Fri, 9 Jan 2015 13:31:29 +0000
+Message-ID: <5EE87F5E6631894E80EB1A63198F964D040A6A8F@SACMBXIP03.sdcorp.global.sandisk.com>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de>
+ <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org>
+ <54AE8A02.1030100@dev.mellanox.co.il> <54AE9010.5080609@acm.org>
+ <54AFBDDC.1000107@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58022 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753AbbAILvU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 06:51:20 -0500
-Content-Disposition: inline
-In-Reply-To: <1420640453-3493-1-git-send-email-hch@lst.de>
+Received: from mail-bn1on0072.outbound.protection.outlook.com ([157.56.110.72]:56123
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752669AbbAINbe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 08:31:34 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>
+To: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Hannes Reinecke <hare@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Oren Duer <oren@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>
 
-Any chance to get a review / ack for this one?
+On 01/09/15 12:39, Sagi Grimberg wrote:
+> On 1/8/2015 4:11 PM, Bart Van Assche wrote:
+>> On 01/08/15 14:45, Sagi Grimberg wrote:
+>>> Actually I started with that approach, but the independent connections
+>>> under a single session (I-T-Nexus) violates the command ordering
+>>> requirement. Plus, such a solution is specific to iSER...
+>>
+>> Which command ordering requirement are you referring to ? The Linux
+>> storage stack does not guarantee that block layer or SCSI commands will
+>> be processed in the same order as these commands have been submitted.
+>
+> I was referring to the iSCSI session requirement. I initially thought of
+> an approach to maintain multiple iSER connections under a single session
+> but pretty soon I realized that preserving commands ordering this way
+> is not feasible. So independent iSER connections means independent
+> iSCSI sessions (each with a single connection). This is indeed another
+> choice, which we are clearly debating on...
+>
+> I'm just wandering if we are not trying to force-fit this model. How
+> would this model look like? We will need to define another entity to
+> track and maintain the sessions and to allocate the scsi_host. Will that
+> be communicated to user-space? How will error recovery look like?
 
-On Wed, Jan 07, 2015 at 03:20:53PM +0100, Christoph Hellwig wrote:
-> The blk-mq ->queue_rq method is always called from process context,
-> but might have preemption disabled.  This means we still always
-> have to use GFP_ATOMIC for memory allocations, and thus need to
-> revert part of commit 3c356bde1 ("scsi: stop passing a gfp_mask
-> argument down the command setup path").
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Sasha Levin <sasha.levin@oracle.com>
-> ---
->  drivers/scsi/scsi_lib.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 9ea95dd..6d5c0b8 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
->  static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
->  {
->  	struct scatterlist *first_chunk = NULL;
-> -	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
->  	int ret;
->  
->  	BUG_ON(!nents);
-> @@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
->  	}
->  
->  	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
-> -			       first_chunk, gfp_mask, scsi_sg_alloc);
-> +			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
->  	if (unlikely(ret))
->  		scsi_free_sgtable(sdb, mq);
->  	return ret;
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+Hello Sagi,
+
+As you probably remember scsi-mq support was added in the SRP initiator
+by changing the 1:1 relationship between scsi_host and RDMA connection
+into a 1:n relationship. I don't know how much work it would take to
+implement a similar transformation in the SCSI initiator. Maybe we
+should wait until Mike's workday starts such that Mike has a chance to
+comment on this.
+
+Bart.
+
+
+________________________________
+
+PLEASE NOTE: The information contained in this electronic mail message is intended only for the use of the designated recipient(s) named above. If the reader of this message is not the intended recipient, you are hereby notified that you have received this message in error and that any review, dissemination, distribution, or copying of this message is strictly prohibited. If you have received this communication in error, please notify the sender by telephone or e-mail (as shown above) immediately and destroy any and all copies of this message in your possession (whether hard copies or electronically stored copies).
+
