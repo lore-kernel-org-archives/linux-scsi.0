@@ -1,63 +1,51 @@
-From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Fri, 09 Jan 2015 10:34:12 -0800
-Message-ID: <1420828452.2064.20.camel@HansenPartnership.com>
-References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de>
-	 <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org>
-	 <1420755361.2842.16.camel@haakon3.risingtidesystems.com>
-	 <1420756142.11310.9.camel@HansenPartnership.com>
-	 <1420757822.2842.39.camel@haakon3.risingtidesystems.com>
-	 <1420759360.11310.13.camel@HansenPartnership.com>
-	 <1420779808.21830.21.camel@haakon3.risingtidesystems.com>
-	 <38CE4ECA-D155-4BF9-9D6D-E1A01ADA05E4@cs.wisc.edu>
-	 <54B01DBD.5020707@suse.de>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: RFC: should we deprecate unmaintained isa-only drivers?
+Date: Fri, 9 Jan 2015 20:44:30 +0100
+Message-ID: <201501092044.30710.linux@rainbow-software.org>
+References: <20141230160616.GA29149@infradead.org> <201501062327.28830.linux@rainbow-software.org> <20150107143432.GA6542@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDMOV25X7AMRBJV6YCSQKGQE6SVBSNA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <54B01DBD.5020707-l3A5Bk7waGM@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: Michael Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-1.atlantis.sk ([80.94.52.57]:48244 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755781AbbAITpC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2015 14:45:02 -0500
+In-Reply-To: <20150107143432.GA6542@infradead.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2015-01-09 at 19:28 +0100, Hannes Reinecke wrote:
-[...]
-> > I think you are assuming we are leaving the iscsi code as it is today.
-> > 
-> > For the non-MCS mq session per CPU design, we would be allocating and
-> > binding the session and its resources to specific CPUs. They would only
-> > be accessed by the threads on that one CPU, so we get our
-> > serialization/synchronization from that. That is why we are saying we
-> > do not need something like atomic_t/spin_locks for the sequence number
-> > handling for this type of implementation.
-> > 
-> Wouldn't that need to be coordinated with the networking layer?
-> Doesn't it do the same thing, matching TX/RX queues to CPUs?
-> If so, wouldn't we decrease bandwidth by restricting things to one CPU?
+On Wednesday 07 January 2015 15:34:32 Christoph Hellwig wrote:
+> On Tue, Jan 06, 2015 at 11:27:28PM +0100, Ondrej Zary wrote:
+> > > note that the last two even drive the same hardware.  There is
+> > > significant cruft in all these, so dropping them would help
+> > > further maintainance of the SCSI midlayer.
+> >
+> > I think I have a AHA-1542B ISA card so I can fix the aha1542 driver.
+>
+> Can you simply test that it even works for now?  If that's the case
+> add yourself to MAINTAINERS for it, and and convert it away from using
+> scsi_module.c as a start so that we get rid of the 10 year deprecated
+> old-style host registration.
 
-So this is actually one of the fascinating questions on multi-queue.
-Long ago, when I worked for the NCR OS group and we were bringing up the
-first SMP systems, we actually found that the SCSI stack went faster
-when bound to a single CPU.  The problem in those days was lock
-granularity and contention, so single CPU binding eliminated that
-overhead.  However, nowadays with modern multi-tiered caching and huge
-latencies for cache line bouncing, we're approaching the point where the
-fineness of our lock granularity is hurting performance, so it's worth
-re-asking the question of whether just dumping all the lock latency by
-single CPU binding is a worthwhile exercise.
+Yes, it still works in 3.19-rc3:
+[  691.940019] Configuring Adaptec (SCSI-ID 7) at IO:330, IRQ 11, DMA priority 7
+[  691.942063] scsi host2: Adaptec 1542
+[  691.943474] bounce: isa pool size: 16 pages
+[  691.956495] scsi 2:0:0:0: Direct-Access     IBM      DORS-32160       WA0A PQ: 0 ANSI: 2
+[  693.540016] sd 2:0:0:0: [sdb] 4226725 512-byte logical blocks: (2.16 GB/2.01 GiB)
+[  693.571820] sd 2:0:0:0: [sdb] Write Protect is off
+[  693.571911] sd 2:0:0:0: [sdb] Mode Sense: b3 00 00 08
+[  693.587551] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[  693.590061] sd 2:0:0:0: Attached scsi generic sg1 type 0
+[  693.593491] sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[  693.721206]  sdb: sdb1
+[  693.856355] sd 2:0:0:0: [sdb] Attached SCSI disk
 
-James
 
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+Ondrej Zary
