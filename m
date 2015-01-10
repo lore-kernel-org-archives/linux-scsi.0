@@ -1,39 +1,22 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/10] megaraid_sas: bytewise or should be done on native endian variables
-Date: Sat, 10 Jan 2015 18:11:19 +0100
-Message-ID: <1420909883-19479-7-git-send-email-hch@lst.de>
-References: <1420909883-19479-1-git-send-email-hch@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/8] megaraid_sas : Description Patch
+Date: Sat, 10 Jan 2015 10:01:08 -0800
+Message-ID: <20150110180108.GA23873@infradead.org>
+References: <201501051439.t05EdtBQ029946@palmhbs0.lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:34191 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493AbbAJRMW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2015 12:12:22 -0500
-In-Reply-To: <1420909883-19479-1-git-send-email-hch@lst.de>
+Received: from bombadil.infradead.org ([198.137.202.9]:56050 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201AbbAJSBK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2015 13:01:10 -0500
+Content-Disposition: inline
+In-Reply-To: <201501051439.t05EdtBQ029946@palmhbs0.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com, kashyap.desai@avagotech.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: Sumit.Saxena@avagotech.com
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, jbottomley@parallels.com, kashyap.desai@avagotech.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 82439f9..b1e053b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -673,7 +673,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
- 
- 	frame_hdr = &cmd->frame->hdr;
- 	frame_hdr->cmd_status = 0xFF;
--	frame_hdr->flags |= cpu_to_le16(MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
-+	frame_hdr->flags = cpu_to_le16(
-+		le16_to_cpu(frame_hdr->flags) |
-+		MFI_FRAME_DONT_POST_IN_REPLY_QUEUE);
- 
- 	init_frame->cmd	= MFI_CMD_INIT;
- 	init_frame->cmd_status = 0xFF;
--- 
-1.9.1
-
+applied the whole series to scsi-for-3.20.
