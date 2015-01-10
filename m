@@ -1,29 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/22] [SCSI] mpt2sas, mpt3sas: Added a support to set
- cpu affinity for each MSIX vector enabled by the HBA
-Date: Sat, 10 Jan 2015 02:14:54 -0800
-Message-ID: <20150110101454.GA4919@infradead.org>
-References: <1420635329-2268-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <yq1twzzzn6f.fsf@sermon.lab.mkp.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/5] ses: close potential registration race
+Date: Sat, 10 Jan 2015 14:26:33 +0100
+Message-ID: <54B12889.8050209@suse.de>
+References: <1419979578-3793574-1-git-send-email-songliubraving@fb.com> <1419979578-3793574-2-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1twzzzn6f.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>, jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Elliott@hp.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51910 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752047AbbAJN0g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2015 08:26:36 -0500
+In-Reply-To: <1419979578-3793574-2-git-send-email-songliubraving@fb.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>, linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, dgilbert@interlog.com, Dan Williams <dan.j.williams@intel.com>
 
-On Fri, Jan 09, 2015 at 03:58:16PM -0500, Martin K. Petersen wrote:
-> (Still dreaming of a combined mpt2sas and mpt3sas so I wouldn't have to
-> review everything twice).
+On 12/30/2014 11:46 PM, Song Liu wrote:
+> From: Dan Williams <dan.j.williams@intel.com>
+>=20
+> The slot and address fields have a small window of instability when
+> userspace can read them before initialization. Separate
+> enclosure_component
+> allocation from registration.
+>=20
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> Reviewed-by: Jens Axboe <axboe@fb.com>
+> Cc: Hannes Reinecke <hare@suse.de>
 
-We really need to start that action instead of dreaming.  Once this
-series is in I'll move the two drivers to at least a shared set of
-mpt firmware headers as a start, and then we'll need to find ways to
-work from that piecemail.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Note that the mpt headers also would be useful for the megaraid_sas
-driver which has it's own hand crafted version, but that's another
-story..
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
