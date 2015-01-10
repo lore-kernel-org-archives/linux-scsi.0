@@ -1,69 +1,63 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: old linux scsi headers
-Date: Sat, 10 Jan 2015 11:10:12 +0100
-Message-ID: <20150110101012.GA27454@lst.de>
-References: <54B0122A.9050509@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <libc-alpha-return-56187-glibc-alpha=m.gmane.org@sourceware.org>
-List-Unsubscribe: <mailto:libc-alpha-unsubscribe-glibc-alpha=m.gmane.org@sourceware.org>
-List-Subscribe: <mailto:libc-alpha-subscribe@sourceware.org>
-List-Archive: <http://sourceware.org/ml/libc-alpha/>
-List-Post: <mailto:libc-alpha@sourceware.org>
-List-Help: <mailto:libc-alpha-help@sourceware.org>, <http://sourceware.org/ml/#faqs>
-Sender: libc-alpha-owner@sourceware.org
-Content-Disposition: inline
-In-Reply-To: <54B0122A.9050509@redhat.com>
-To: Andy Grover <agrover@redhat.com>
-Cc: libc-alpha@sourceware.org, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: remove scsi_to_u32
+Date: Sat, 10 Jan 2015 11:10:41 +0100
+Message-ID: <1420884641-29518-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:60197 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730AbbAJKLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2015 05:11:33 -0500
+Received: from [83.175.99.196] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1Y9t11-000627-DA
+	for linux-scsi@vger.kernel.org; Sat, 10 Jan 2015 10:11:31 +0000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jan 09, 2015 at 09:38:50AM -0800, Andy Grover wrote:
-> Hello glibc people,
->
-> This concerns sysdeps/unix/sysv/linux/scsi/{scsi, scsi_ioctl, sg}.h
->
-> They define common SCSI values, as well as Linux's SCSI-related ioctls.
->
-> Apparently they were copied from the Linux kernel tree back in 1999, so 
-> they're pretty stale.
->
-> I'm wondering if I should submit a patch to update these to what's current 
-> from the Linux tree, or if maybe it wouldn't be better to have users just 
-> directly get these as "uapi" headers from the Linux kernel source directly?
->
-> The latter method has issues with being a breaking change for code that 
-> relies on what's in glibc now, which may or may not be something we can 
-> ease, but would ensure the headers would not become stale again in the 
-> future.
->
-> What do you think about the best way to proceed?
+scsi_to_u32 is a non-optimized reimplementation of get_unaligned_be32,
+just use the real thing (TM).
 
-FYI, I'd like to repeat my propsal from the scsi list here, and a
-few alternatives:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/libsas/sas_expander.c | 8 ++++----
+ include/scsi/scsi.h                | 6 ------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-(1) separate namespaces (my proposal):
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 022bb6e..01ff10f 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -678,10 +678,10 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
+ 	if (!res)
+ 		goto out;
+ 
+-	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
+-	phy->running_disparity_error_count = scsi_to_u32(&resp[16]);
+-	phy->loss_of_dword_sync_count = scsi_to_u32(&resp[20]);
+-	phy->phy_reset_problem_count = scsi_to_u32(&resp[24]);
++	phy->invalid_dword_count = get_unaligned_be32(&resp[12]);
++	phy->running_disparity_error_count = get_unaligned_be32(&resp[16]);
++	phy->loss_of_dword_sync_count = get_unaligned_be32(&resp[20]);
++	phy->phy_reset_problem_count = get_unaligned_be32(&resp[24]);
+ 
+  out:
+ 	kfree(resp);
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index d0a66aa..42e5e49 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -585,10 +585,4 @@ static inline int scsi_is_wlun(u64 lun)
+ /* Used to obtain the PCI location of a device */
+ #define SCSI_IOCTL_GET_PCI		0x5387
+ 
+-/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
+-static inline __u32 scsi_to_u32(__u8 *ptr)
+-{
+-	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+-}
+-
+ #endif /* _SCSI_SCSI_H */
+-- 
+1.9.1
 
- - we add uapi linux/scsi_ioctl.h and linux/sg.h files that just
-   add the ioctl defintions and data structures required for them.
- - because they are linux/ instead of scsi/ are not required to keep
-   things like the old opcode or SCSI-2 defintions, which glibc
-   can keep in the scsi/* wrappers, and hopefully slowly deprecate
-   over the long run
-
-(2) just export what we have in the kernel now (Andys patch):
-
- - add uapi scsi/scsi.h and scsi/scsi_ioctl.h (and scsi/sg.h for v2),
-   exporting what we have in them right now, which might be a little
-   different from glibc
- - remove glibcs scsi/*.h
-
-(2a)
-
- - like 2, but only export the ioctls APIs, the other constants
-   will go away at this point
-
-(2b)
-
- - like 2a, but also add defines compatible to glibc under
-   #ifndef __KERNEL__ to the uapi headers.
