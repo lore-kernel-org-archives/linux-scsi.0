@@ -1,43 +1,41 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/10] megaraid_sas: swap whole register in megasas_register_aen
-Date: Sat, 10 Jan 2015 18:11:22 +0100
-Message-ID: <1420909883-19479-10-git-send-email-hch@lst.de>
+Subject: [PATCH 01/10] megaraid_sas: megasas_complete_outstanding_ioctls() can be static
+Date: Sat, 10 Jan 2015 18:11:14 +0100
+Message-ID: <1420909883-19479-2-git-send-email-hch@lst.de>
 References: <1420909883-19479-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:34200 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:34185 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754431AbbAJRMZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2015 12:12:25 -0500
+	with ESMTP id S1754474AbbAJRMV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jan 2015 12:12:21 -0500
 In-Reply-To: <1420909883-19479-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit.Saxena@avagotech.com, kashyap.desai@avagotech.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
 
-Swap the whole 32 bits we read from the hardware instead of swapping
-just the 16bits we care about in place later.
+From: kbuild test robot <fengguang.wu@intel.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+drivers/scsi/megaraid/megaraid_sas_base.c:1701:6: sparse: symbol 'megasas_complete_outstanding_ioctls' was not declared. Should it be static?
+
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5350e18..3d4a080 100644
+index 890637f..2eb5233 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4882,8 +4882,9 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
- 
- 	if (instance->aen_cmd) {
- 
--		prev_aen.word = instance->aen_cmd->frame->dcmd.mbox.w[1];
--		prev_aen.members.locale = le16_to_cpu(prev_aen.members.locale);
-+		prev_aen.word =
-+			le32_to_cpu(instance->aen_cmd->frame->dcmd.mbox.w[1]);
-+		prev_aen.members.locale = prev_aen.members.locale;
- 
- 		/*
- 		 * A class whose enum value is smaller is inclusive of all
+@@ -1698,7 +1698,7 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ * @instance:				Adapter soft state
+ *
+ */
+-void megasas_complete_outstanding_ioctls(struct megasas_instance *instance)
++static void megasas_complete_outstanding_ioctls(struct megasas_instance *instance)
+ {
+ 	int i;
+ 	struct megasas_cmd *cmd_mfi;
 -- 
 1.9.1
 
