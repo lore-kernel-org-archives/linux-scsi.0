@@ -1,46 +1,49 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other
- generic file systems)
-Date: Sat, 10 Jan 2015 14:40:32 +0100
-Message-ID: <54B12BD0.4080608@suse.de>
-References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com> <54AD496B.8080708@oracle.com>
+Subject: Re: [LSF/MM ATTEND] [LSF/MM TOPIC]
+Date: Sat, 10 Jan 2015 14:41:50 +0100
+Message-ID: <54B12C1E.6000504@suse.de>
+References: <1420820048.3891.156.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <54AD496B.8080708@oracle.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sasha Levin <sasha.levin@oracle.com>, Adrian Palmer <adrian.palmer@seagate.com>, lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:52136 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753393AbbAJNlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2015 08:41:52 -0500
+In-Reply-To: <1420820048.3891.156.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: emilne@redhat.com, lsf-pc@lists.linux-foundation.org
+Cc: linux-scsi@vger.kernel.org
 
-On 01/07/2015 03:57 PM, Sasha Levin wrote:
-> On 01/06/2015 06:29 PM, Adrian Palmer wrote:
->> I'd like to host a discussion of SMRFFS and ZAC for consumer and clo=
-ud
->> systems at LSF/MM. I want to gather community consensus at LSF/MM of=
- the
->> required technical kernel changes before this topic is presented at =
-Vault.
->>
->> Subtopics:
->>
->> On-disk metadata structures and data algorithms
->> Explicit in-order write requirement and a look at the IO stack
->> New IOCTLs to call from the FS and the need to know about the underl=
-ying
->> disk -- no longer completely disk agnostic
+On 01/09/2015 05:14 PM, Ewan Milne wrote:
+> I'd like to attend LSF -- I am responsible for maintaining the SCSI
+> subsystem at Red Hat, and in addition to resolving issues for custome=
+rs
+> and partners, I've been participating in upstream development for the
+> past couple of years.  I have an extensive background in SCSI and OS
+> development, including 15 years of working with the Linux kernel.
 >=20
-> Where can we read about the details of SMRFFS before LSF/MM / Vault?
+> I would also like to have a discussion at LSF/MM 2015 about how we co=
+uld
+> better handle devices whose properties change after being probed. Thi=
+s
+> includes:
 >=20
-Please be aware that I've been working on a ZAC prototype, and have
-applied for a session at LSF/MM.
-And my paper for Vault has just been accepted (which will be a survey o=
-f
-existing filesystems and their suitability for SMR drives).
+>   - READ CAPACITY data
+>   - ALUA state
+>   - EMC OWNED/UNOWNED state
+>   - NOT READY state
+>=20
+> Currently, when these properties change, we do not always handle it
+> very well (e.g. multipath stops using a path if the capacity changes,
+> even if it the only good path to the device...)
+>=20
+Hehe. I was waiting for this to pop up :-)
+"Not handling it very well" is an euphemism ...
 
-Can you keep me in the loop here?
-Maybe we should have a joint session at LSF ...
+So yes, I'd definitely like to discuss this.
 
 Cheers,
 
@@ -48,5 +51,11 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
