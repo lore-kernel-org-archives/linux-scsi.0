@@ -1,35 +1,51 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] vhost-scsi: Add missing virtio-scsi -> TCM attribute
-	conversion
-Date: Sun, 11 Jan 2015 12:45:21 +0100
-Message-ID: <20150111114521.GA11971@lst.de>
-References: <1420575485-16447-1-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39257 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbbAKLpZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jan 2015 06:45:25 -0500
-Content-Disposition: inline
-In-Reply-To: <1420575485-16447-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Yaniv Gardi <ygardi@codeaurora.org>
+Subject: [PATCH v6 0/4] *** add support for UFS in Qualcomm Technologies
+Date: Sun, 11 Jan 2015 14:38:05 +0200
+Message-ID: <1420979889-22126-1-git-send-email-ygardi@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-On Tue, Jan 06, 2015 at 08:18:05PM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> While looking at hch's recent conversion to drop the MSG_*_TAG
-> definitions, I noticed a long standing bug in vhost-scsi where
-> the VIRTIO_SCSI_S_* attribute definitions where incorrectly
-> being passed directly into target_submit_cmd_map_sgls().
-> 
-> This patch adds the missing virtio-scsi to TCM/SAM task attribute
-> conversion.
+*** BLURB HERE ***
 
-Btw, ehat is your plan on ordered tag handling in the target code?
-It's fairly broken as it doesn't respect 100% ordering, and as far as I can
-tell it's always been like that.  Maybe it's better to not even advertise
-it?
+Yaniv Gardi (4):
+  phy: qcom-ufs: add support for 20nm phy
+  scsi: ufs-qcom: add support for Qualcomm Technologies Inc platforms
+  phy: qcom-ufs: add support for 14nm phy
+  scsi: ufs-qcom-ice: add Inline Crypto Engine (ICE) support for UFS
+
+ drivers/phy/Kconfig                 |    7 +
+ drivers/phy/Makefile                |    3 +
+ drivers/phy/phy-qcom-ufs-i.h        |  159 ++++++
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c |  201 +++++++
+ drivers/phy/phy-qcom-ufs-qmp-14nm.h |  177 ++++++
+ drivers/phy/phy-qcom-ufs-qmp-20nm.c |  257 +++++++++
+ drivers/phy/phy-qcom-ufs-qmp-20nm.h |  235 ++++++++
+ drivers/phy/phy-qcom-ufs.c          |  745 ++++++++++++++++++++++++
+ drivers/scsi/ufs/Kconfig            |   25 +
+ drivers/scsi/ufs/Makefile           |    2 +
+ drivers/scsi/ufs/ufs-qcom-ice.c     |  520 +++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom-ice.h     |  113 ++++
+ drivers/scsi/ufs/ufs-qcom.c         | 1058 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.h         |  195 +++++++
+ include/linux/phy/phy-qcom-ufs.h    |   59 ++
+ 15 files changed, 3756 insertions(+)
+ create mode 100644 drivers/phy/phy-qcom-ufs-i.h
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-14nm.c
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-14nm.h
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.c
+ create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.h
+ create mode 100644 drivers/phy/phy-qcom-ufs.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.h
+ create mode 100644 drivers/scsi/ufs/ufs-qcom.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom.h
+ create mode 100644 include/linux/phy/phy-qcom-ufs.h
+
+-- 
+1.8.5.2
+
+-- 
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
