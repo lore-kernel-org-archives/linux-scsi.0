@@ -1,13 +1,13 @@
 From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Sun, 11 Jan 2015 11:40:17 +0200
-Message-ID: <54B24501.7090801@dev.mellanox.co.il>
-References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <1420755361.2842.16.camel@haakon3.risingtidesystems.com> <1420756142.11310.9.camel@HansenPartnership.com> <1420757822.2842.39.camel@haakon3.risingtidesystems.com> <1420759360.11310.13.camel@HansenPartnership.com> <1420779808.21830.21.camel@haakon3.risingtidesystems.com> <38CE4ECA-D155-4BF9-9D6D-E1A01ADA05E4@cs.wisc.edu> <54B01DBD.5020707@suse.de> <54B037BF.1010903@cs.wisc.edu>
+Subject: Re: [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Sun, 11 Jan 2015 11:52:39 +0200
+Message-ID: <54B247E7.8040009@dev.mellanox.co.il>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <54AE8A02.1030100@dev.mellanox.co.il> <54AE9010.5080609@acm.org> <54AFBDDC.1000107@dev.mellanox.co.il> <5EE87F5E6631894E80EB1A63198F964D040A6A8F@SACMBXIP03.sdcorp.global.sandisk.com>
 Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Return-path: <open-iscsi+bncBCMYDBGM6EBBBB4KZGSQKGQEFRJECLA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <54B037BF.1010903-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Return-path: <open-iscsi+bncBCMYDBGM6EBBB24PZGSQKGQEAM52MAI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <5EE87F5E6631894E80EB1A63198F964D040A6A8F-cXZ6iGhjG0hm/BozF5lIdDJ2aSJ780jGSxCzGc5ayCJWk0Htik3J/w@public.gmane.org>
 List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/open-iscsi
@@ -15,113 +15,64 @@ Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
  <http://groups.google.com/group/open-iscsi/subscribe>
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Cc: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oren Duer <oren-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/9/2015 10:19 PM, Mike Christie wrote:
-> On 01/09/2015 12:28 PM, Hannes Reinecke wrote:
->> On 01/09/2015 07:00 PM, Michael Christie wrote:
+On 1
+9/2015 3:31 PM, Bart Van Assche wrote:
+> On 01/09/15 12:39, Sagi Grimberg wrote:
+>> On 1/8/2015 4:11 PM, Bart Van Assche wrote:
+>>> On 01/08/15 14:45, Sagi Grimberg wrote:
+>>>> Actually I started with that approach, but the independent connections
+>>>> under a single session (I-T-Nexus) violates the command ordering
+>>>> requirement. Plus, such a solution is specific to iSER...
 >>>
->>> On Jan 8, 2015, at 11:03 PM, Nicholas A. Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
->>>
->>>> On Thu, 2015-01-08 at 15:22 -0800, James Bottomley wrote:
->>>>> On Thu, 2015-01-08 at 14:57 -0800, Nicholas A. Bellinger wrote:
->>>>>> On Thu, 2015-01-08 at 14:29 -0800, James Bottomley wrote:
->>>>>>> On Thu, 2015-01-08 at 14:16 -0800, Nicholas A. Bellinger wrote:
->>>>
->>>> <SNIP>
->>>>
->>>>>> The point is that a simple session wide counter for command sequence
->>>>>> number assignment is significantly less overhead than all of the
->>>>>> overhead associated with running a full multipath stack atop multiple
->>>>>> sessions.
->>>>>
->>>>> I don't see how that's relevant to issue speed, which was the measure we
->>>>> were using: The layers above are just a hopper.  As long as they're
->>>>> loaded, the MQ lower layer can issue at full speed.  So as long as the
->>>>> multipath hopper is efficient enough to keep the queues loaded there's
->>>>> no speed degradation.
->>>>>
->>>>> The problem with a sequence point inside the MQ issue layer is that it
->>>>> can cause a stall that reduces the issue speed. so the counter sequence
->>>>> point causes a degraded issue speed over the multipath hopper approach
->>>>> above even if the multipath approach has a higher CPU overhead.
->>>>>
->>>>> Now, if the system is close to 100% cpu already, *then* the multipath
->>>>> overhead will try to take CPU power we don't have and cause a stall, but
->>>>> it's only in the flat out CPU case.
->>>>>
->>>>>> Not to mention that our iSCSI/iSER initiator is already taking a session
->>>>>> wide lock when sending outgoing PDUs, so adding a session wide counter
->>>>>> isn't adding any additional synchronization overhead vs. what's already
->>>>>> in place.
->>>>>
->>>>> I'll leave it up to the iSER people to decide whether they're redoing
->>>>> this as part of the MQ work.
->>>>>
->>>>
->>>> Session wide command sequence number synchronization isn't something to
->>>> be removed as part of the MQ work.  It's a iSCSI/iSER protocol
->>>> requirement.
->>>>
->>>> That is, the expected + maximum sequence numbers are returned as part of
->>>> every response PDU, which the initiator uses to determine when the
->>>> command sequence number window is open so new non-immediate commands may
->>>> be sent to the target.
->>>>
->>>> So, given some manner of session wide synchronization is required
->>>> between different contexts for the existing single connection case to
->>>> update the command sequence number and check when the window opens, it's
->>>> a fallacy to claim MC/S adds some type of new initiator specific
->>>> synchronization overhead vs. single connection code.
->>>
->>> I think you are assuming we are leaving the iscsi code as it is today.
->>>
->>> For the non-MCS mq session per CPU design, we would be allocating and
->>> binding the session and its resources to specific CPUs. They would only
->>> be accessed by the threads on that one CPU, so we get our
->>> serialization/synchronization from that. That is why we are saying we
->>> do not need something like atomic_t/spin_locks for the sequence number
->>> handling for this type of implementation.
->>>
->> Wouldn't that need to be coordinated with the networking layer?
+>>> Which command ordering requirement are you referring to ? The Linux
+>>> storage stack does not guarantee that block layer or SCSI commands will
+>>> be processed in the same order as these commands have been submitted.
+>>
+>> I was referring to the iSCSI session requirement. I initially thought of
+>> an approach to maintain multiple iSER connections under a single session
+>> but pretty soon I realized that preserving commands ordering this way
+>> is not feasible. So independent iSER connections means independent
+>> iSCSI sessions (each with a single connection). This is indeed another
+>> choice, which we are clearly debating on...
+>>
+>> I'm just wandering if we are not trying to force-fit this model. How
+>> would this model look like? We will need to define another entity to
+>> track and maintain the sessions and to allocate the scsi_host. Will that
+>> be communicated to user-space? How will error recovery look like?
 >
-> Yes.
+> Hello Sagi,
+
+Hey Bart,
+
 >
->> Doesn't it do the same thing, matching TX/RX queues to CPUs?
->
-> Yes.
->
+> As you probably remember scsi-mq support was added in the SRP initiator
+> by changing the 1:1 relationship between scsi_host and RDMA connection
+> into a 1:n relationship.
 
-Hey Hannes, Mike,
+Of course I remember ;)
 
-I would say there is no need for specific coordination from iSCSI PoV.
-This is exactly what flow steering is designed for. As I see it, in
-order to get the TX/RX to match rings, the user can attach 5-tuple rules
-(using standard ethtool) to steer packets to the right rings.
+> I don't know how much work it would take to
+> implement a similar transformation in the SCSI initiator. Maybe we
+> should wait until Mike's workday starts such that Mike has a chance to
+> comment on this.
 
-Sagi.
+So the question of the amount of work is not the main concern here.
+After all I still think that MCS is a better fit to scsi-mq than coming
+up with some other of abstraction layer to manage multiple sessions.
+After all, MCS is specified and well defined.
 
->> If so, wouldn't we decrease bandwidth by restricting things to one CPU?
->
-> We have a session or connection per CPU though, so we end up hitting the
-> same problem you talked about last year where one hctx (iscsi session or
-> connection's socket or nic hw queue) could get overloaded. This is what
-> I meant in my original mail where iscsi would rely on whatever blk/mq
-> load balancers we end up implementing at that layer to balance requests
-> across hctxs.
->
+There is the question of cmdsn as a potential synchronization point, but
+shouldn't we discuss that instead of trying to get around it? If we
+agree that iSCSI session-wide ordering requirements are too restrictive
+in most use-cases, why not suggesting some form of relaxed ordering
+mode that is would leave ordering to upper layers?
 
-I'm not sure I understand,
-
-The submission flow is CPU bound. In the current single queue model
-both CPU X and CPU Y will end up using a single socket. In the
-multi-queue solution, CPU X will go to socket X and CPU Y will go to
-socket Y. This is equal to what we have today (if only CPU X is active)
-or better (if more CPUs are active).
-
-Am I missing something?
+If this kind of mode would appear in the RFC 3720 family, was there
+even a question of what we should do?
 
 Sagi.
 
