@@ -1,80 +1,66 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 9/9] scsi_error: do not display kernel pointer in message
- logs
-Date: Sun, 11 Jan 2015 13:39:22 -0500
-Message-ID: <54B2C35A.4050005@interlog.com>
-References: <1420699430-9492-1-git-send-email-hare@suse.de> <1420699430-9492-10-git-send-email-hare@suse.de> <94D0CD8314A33A4D9D801C0FE68B40295A730091@G9W0745.americas.hpqcorp.net>
-Reply-To: dgilbert@interlog.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.19-rc4
+Date: Sun, 11 Jan 2015 12:26:57 -0800
+Message-ID: <1421008017.13233.8.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:42645 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751044AbbAKSjm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jan 2015 13:39:42 -0500
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295A730091@G9W0745.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 15-01-10 02:17 PM, Elliott, Robert (Server Storage) wrote:
->
->
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
->> Sent: Thursday, January 08, 2015 12:44 AM
->> To: James Bottomley
->> Cc: Christoph Hellwig; linux-scsi@vger.kernel.org; Hannes Reinecke
->> Subject: [PATCH 9/9] scsi_error: do not display kernel pointer in
->> message logs
->>
->> It is not good practice to display the kernel pointer
->> in any message logs, and it doesn't display any additional
->> information. And as we know have block-layer assigned tags
->> we can use them to differentiate the messages.
->> So remove any pointer references from the displayed messages.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/scsi_error.c | 49 +++++++++++++++++++---------------------
->> -------
->>   1 file changed, 20 insertions(+), 29 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index e42fff6..10ffa21 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -124,41 +124,37 @@ scmd_eh_abort_handler(struct work_struct *work)
-> ...
->>   				SCSI_LOG_ERROR_RECOVERY(3,
->>   					scmd_printk(KERN_INFO, scmd,
->> -						    "scmd %p eh timeout, "
->> -						    "not retrying aborted "
->> -						    "command\n", scmd));
->> +						    "eh timeout, not retrying "
->> +						    "aborted command\n"));
->
-> checkpatch allows/encourages keeping strings on one line even when
-> they go past the 80th column.  So, I recommend joining those two
-> lines.
+Hi Linus,
 
-Which in turn conflicts with cleanfile which is another kernel
-supplied utility. So I would suggest checkpatch should back off
-with that particular warning (and several other of its nags).
-Also new code (say a complete new function) should be treated
-differently compared to a patch (e.g. the 2 lines shown above)
-on existing code.
+Here are the target pending fixes for v3.19-rc4.  Please go ahead and
+pull from:
 
-I use cleanfile in the user space since it warns of lines
-greater than 79 characters and trims trailing spaces
-(whitespaces ?) from the end of a line. And I would never use
-checkpatch in the user space since the coherence of the
-resulting source is much more important than the route to
-get there :-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-Doug Gilbert
+Mostly minor fixes this time, including:
 
+  - Add missing virtio-scsi -> TCM attribute conversion in vhost-scsi.
+  - Fix persistent reservations write exclusive handling to allow
+    readers for all registered I_T nexuses.
+  - Drop arbitrary maximum I/O size limit in order to process I/Os
+    larger than 4 MB, required for initiators that don't honor block
+    limits EVPD.
+  - Drop the now left-over fabric_max_sectors attribute.
 
+Thank you,
+
+--nab
+
+Andy Grover (1):
+  iscsi-target: Fix typos in enum cmd_flags_table
+
+Lee Duncan (1):
+  target: Allow Write Exclusive non-reservation holders to READ
+
+Nicholas Bellinger (4):
+  vhost-scsi: Add missing virtio-scsi -> TCM attribute conversion
+  Documentation/target: Update fabric_ops to latest code
+  target: Drop arbitrary maximum I/O size limit
+  target: Drop left-over fabric_max_sectors attribute
+
+Sagi Grimberg (1):
+  MAINTAINERS: Add entry for iSER target driver
+
+ Documentation/target/tcm_mod_builder.py       | 49 ++++++------------------
+ MAINTAINERS                                   |  9 +++++
+ drivers/target/iscsi/iscsi_target.c           | 12 +++---
+ drivers/target/iscsi/iscsi_target_core.h      |  4 +-
+ drivers/target/target_core_device.c           | 54 ++-------------------------
+ drivers/target/target_core_file.c             | 12 +++++-
+ drivers/target/target_core_iblock.c           |  3 +-
+ drivers/target/target_core_pr.c               | 12 ++++++
+ drivers/target/target_core_rd.c               |  1 -
+ drivers/target/target_core_sbc.c              | 15 --------
+ drivers/target/target_core_spc.c              |  5 +--
+ drivers/target/target_core_user.c             |  1 -
+ drivers/vhost/scsi.c                          | 24 ++++++++++--
+ include/target/target_core_backend.h          |  1 -
+ include/target/target_core_backend_configfs.h |  2 -
+ include/target/target_core_base.h             |  3 --
+ 16 files changed, 78 insertions(+), 129 deletions(-)
