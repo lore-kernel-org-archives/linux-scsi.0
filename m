@@ -1,71 +1,79 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH for v3.19, v2] Avoid that sd_shutdown() triggers a kernel
- warning
-Date: Mon, 12 Jan 2015 11:29:15 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501121116220.1707-100000@iolanthe.rowland.org>
-References: <20150108131508.GA31022@infradead.org>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
+Date: Mon, 12 Jan 2015 14:05:06 -0600
+Message-ID: <54B428F2.2010507@cs.wisc.edu>
+References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <1420755361.2842.16.camel@haakon3.risingtidesystems.com> <1420756142.11310.9.camel@HansenPartnership.com> <1420757822.2842.39.camel@haakon3.risingtidesystems.com> <1420759360.11310.13.camel@HansenPartnership.com> <1420779808.21830.21.camel@haakon3.risingtidesystems.com> <38CE4ECA-D155-4BF9-9D6D-E1A01ADA05E4@cs.wisc.edu> <54B24117.7050204@dev.mellanox.co.il>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41568 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751999AbbALQ3Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2015 11:29:16 -0500
-In-Reply-To: <20150108131508.GA31022@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCZ4TFNN2YMRBAGS2CSQKGQEMB7T6YI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <54B24117.7050204-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 8 Jan 2015, Christoph Hellwig wrote:
-
-> On Wed, Jan 07, 2015 at 02:03:22PM +0100, Bart Van Assche wrote:
-> > Since kernel v3.19-rc1 module_refcount() returns 1 instead of 0
-> > when called from inside module_exit(). This breaks the
-> > module_refcount() test in scsi_device_put() and hence causes the
-> > following kernel warning to be reported when unloading the ib_srp
-> > kernel module:
+On 01/11/2015 03:23 AM, Sagi Grimberg wrote:
+> On 1/9/2015 8:00 PM, Michael Christie wrote:
+> <SNIP>
+>>>>
+>>>
+>>> Session wide command sequence number synchronization isn't something to
+>>> be removed as part of the MQ work.  It's a iSCSI/iSER protocol
+>>> requirement.
+>>>
+>>> That is, the expected + maximum sequence numbers are returned as part of
+>>> every response PDU, which the initiator uses to determine when the
+>>> command sequence number window is open so new non-immediate commands may
+>>> be sent to the target.
+>>>
+>>> So, given some manner of session wide synchronization is required
+>>> between different contexts for the existing single connection case to
+>>> update the command sequence number and check when the window opens, it's
+>>> a fallacy to claim MC/S adds some type of new initiator specific
+>>> synchronization overhead vs. single connection code.
+>>
+>> I think you are assuming we are leaving the iscsi code as it is today.
+>>
+>> For the non-MCS mq session per CPU design, we would be allocating and
+>> binding the session and its resources to specific CPUs. They would
+>> only be accessed by the threads on that one CPU, so we get our
+>> serialization/synchronization from that. That is why we are saying we
+>> do not need something like atomic_t/spin_locks for the sequence number
+>> handling for this type of implementation.
+>>
+>> If we just tried to do this with the old code where the session could
+>> be accessed on multiple CPUs then you are right, we need locks/atomics
+>> like how we do in the MCS case.
+>>
 > 
-> This is getting better, but I still think we need to sort out the root
-> cause.
-> 
-> The problemt started with commit 39b7f1e25 ("[SCSI] sd: Fix refcounting"),
-> which added the calls to scsi_device_get in various struct
-> device_driver/scsi_driver methods.  From the BZ it seems like the
-> rationale was to protect against races between ->rescan and ->remove,
-> but instead of doing that using refcounting we better ensure that
-> in the SCSI midlayer by taking scan_mutex around calls to ->rescan.
-> The first attached patch does that, which allows us to functionally
-> revert 39b7f1e25, which then also allows to revert 85b6c720
-> ("[SCSI] sd: fix cache flushing on module removal (and individual
-> device removal)").
-> 
-> See the attached series to do that.  Warnings: so far it only got
-> minimal testing.
+> I don't think we will want to restrict session per CPU. There is a
+> tradeoff question of system resources. We might want to allow a user to
+> configure multiple HW queues but still not to use too much of the system
+> resources. So the session locks would still be used but definitely less
+> congested...
 
-This seems like a good idea and the obvious (once it has been pointed 
-out!) approach.
+Are you talking about specifically the session per CPU or also MCS and
+doing a connection per CPU?
 
-Perhaps not directly related to the issue at hand is this question: In
-scsi_rescan_device() we will now have:
+Based on the srp work, how bad do you think it will be to do a
+session/connection per CPU? What are you thinking will be more common?
+Session per 4 CPU? 2 CPUs? 8?
 
-	mutex_lock(&shost->scan_mutex);
-	if (dev->driver && try_module_get(dev->driver->owner)) {
-		struct scsi_driver *drv = to_scsi_driver(dev->driver);
+There is also multipath to take into account here. We could do a mq/MCS
+session/connection per CPU (or group of CPS) then also one of those per
+transport path. We could also do a mq/MCS session/connection per
+transport path, then bind those to specific CPUs. Or something in between.
 
-		if (drv->rescan)
-			drv->rescan(dev);
-		module_put(dev->driver->owner);
-	}
-	mutex_unlock(&shost->scan_mutex);
-
-What prevents the device from being unbound from its driver while the
-rescan runs?  Evaluating the argument to the module_put() would then
-dereference a NULL pointer.
-
-Unbind events that happen through the normal scsi_remove_host() 
-mechanism are fine, because scsi_remove_host() locks the scan_mutex.  
-But what about writes to the driver's sysfs "unbind" attribute?
-
-Alan Stern
-
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
