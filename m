@@ -1,37 +1,77 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] uas: Add no-report-opcodes quirk for Simpletech devices with id 4971:8017
-Date: Mon, 12 Jan 2015 13:34:33 +0100
-Message-ID: <1421066073-17561-1-git-send-email-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: [PATCH] [SCSI] mpt2sas, mpt3sas: fix sparse warings restricted __le16 degrades to integer
+Date: Mon, 12 Jan 2015 18:22:29 +0530
+Message-ID: <1421067149-12066-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod7og110.obsmtp.com ([64.18.2.173]:49361 "EHLO
+	exprod7og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051AbbALMw7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2015 07:52:59 -0500
+Received: by mail-pa0-f53.google.com with SMTP id kq14so31827726pab.12
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2015 04:52:58 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 
-Like some other uas devices these devices hang when a report-opcodes scsi
-command is send to them.
+Fixed sparse warings 'restricted __le16 degrades to integer' generated
+from below titled patch
 
-BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1124119
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+[PATCH v2 02/22] [SCSI] mpt2sas, mpt3sas: Added support to log message
+ when Temperature Threshold exceeds for any Sensor
+
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/usb/storage/unusual_uas.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c | 12 ++++++------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 ++++++------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index 9ec4561..da3d98c 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -130,3 +130,10 @@ UNUSUAL_DEV(0x4971, 0x1012, 0x0000, 0x9999,
- 		"External HDD",
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_IGNORE_UAS),
-+
-+/* Reported-by: Richard Henderson <rth@redhat.com> */
-+UNUSUAL_DEV(0x4971, 0x8017, 0x0000, 0x9999,
-+		"SimpleTech",
-+		"External HDD",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_NO_REPORT_OPCODES),
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 5950731..3f26147 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -3670,12 +3670,12 @@ _scsih_temp_threshold_events(struct MPT2SAS_ADAPTER *ioc,
+ {
+ 	if (ioc->temp_sensors_count >= event_data->SensorNum) {
+ 		printk(MPT2SAS_ERR_FMT "Temperature Threshold flags %s%s%s%s"
+-			" exceeded for Sensor: %d !!!\n", ioc->name,
+-			((event_data->Status & 0x1) == 1) ? "0 " : " ",
+-			((event_data->Status & 0x2) == 2) ? "1 " : " ",
+-			((event_data->Status & 0x4) == 4) ? "2 " : " ",
+-			((event_data->Status & 0x8) == 8) ? "3 " : " ",
+-			event_data->SensorNum);
++		  " exceeded for Sensor: %d !!!\n", ioc->name,
++		  ((le16_to_cpu(event_data->Status) & 0x1) == 1) ? "0 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x2) == 2) ? "1 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x4) == 4) ? "2 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x8) == 8) ? "3 " : " ",
++		  event_data->SensorNum);
+ 		printk(MPT2SAS_ERR_FMT "Current Temp In Celsius: %d\n",
+ 			ioc->name, event_data->CurrentTemperature);
+ 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index e8e6bd4..5a97e32 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3364,12 +3364,12 @@ _scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
+ {
+ 	if (ioc->temp_sensors_count >= event_data->SensorNum) {
+ 		pr_err(MPT3SAS_FMT "Temperature Threshold flags %s%s%s%s"
+-			" exceeded for Sensor: %d !!!\n", ioc->name,
+-			((event_data->Status & 0x1) == 1) ? "0 " : " ",
+-			((event_data->Status & 0x2) == 2) ? "1 " : " ",
+-			((event_data->Status & 0x4) == 4) ? "2 " : " ",
+-			((event_data->Status & 0x8) == 8) ? "3 " : " ",
+-			event_data->SensorNum);
++		  " exceeded for Sensor: %d !!!\n", ioc->name,
++		  ((le16_to_cpu(event_data->Status) & 0x1) == 1) ? "0 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x2) == 2) ? "1 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x4) == 4) ? "2 " : " ",
++		  ((le16_to_cpu(event_data->Status) & 0x8) == 8) ? "3 " : " ",
++		  event_data->SensorNum);
+ 		pr_err(MPT3SAS_FMT "Current Temp In Celsius: %d\n",
+ 			ioc->name, event_data->CurrentTemperature);
+ 	}
 -- 
-2.1.0
+2.0.2
+
