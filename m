@@ -1,408 +1,215 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH v2 02/22] [SCSI] mpt2sas, mpt3sas: Added support to log message when Temperature Threshold exceeds for any Sensor
-Date: Mon, 12 Jan 2015 11:38:56 +0530
-Message-ID: <1421042944-14988-3-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH v2 01/22] [SCSI] mpt2sas: MPI2 Rev AA (2.00.19) specifications
+Date: Mon, 12 Jan 2015 11:38:55 +0530
+Message-ID: <1421042944-14988-2-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1421042944-14988-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og109.obsmtp.com ([64.18.2.171]:59163 "EHLO
-	exprod7og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbbALGJm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2015 01:09:42 -0500
-Received: by mail-pd0-f179.google.com with SMTP id fp1so28678725pdb.10
-        for <linux-scsi@vger.kernel.org>; Sun, 11 Jan 2015 22:09:41 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1421042944-14988-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch will log a message when driver receives "Temperature Threshold exceeded" event from any temperature sensor.
-
-The message will look similar to like
-mpt3sas0: Temperature Threshold flags a b c d exceeded for Sensor: x !!!
-mpt3sas0: Current Temp In Celsius: y
-
-where a b c d are threshold flags 0 1 2 3
-
-Change_set:
-1. Get the number of sensor count of this IOC by reading IO Unit page 8 at driver initialization time.
-2. Also unmask the Temperature Threshold Event at driver initialization time,
-3. Whenever a MPI2_EVENT_TEMP_THRESHOLD event is received from the firmware then print the sensor number, the maximum threshold number it has exceed and the current temperature of this sensor.
+Below is the changeset from the MPI specification and 2.00.34 header files
+1) Defined additional bits in the BiosOptions field of BIOS Page 1 to allow for finer control of X86 BIOS and UEFI BSD.
+2) For the Clean Tool, reserved bit 26 of the Flags field for product specific use.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c   |  7 +++++++
- drivers/scsi/mpt2sas/mpt2sas_base.h   |  6 ++++++
- drivers/scsi/mpt2sas/mpt2sas_config.c | 36 +++++++++++++++++++++++++++++++++++
- drivers/scsi/mpt2sas/mpt2sas_scsih.c  | 31 ++++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.c   |  8 ++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.h   |  6 ++++++
- drivers/scsi/mpt3sas/mpt3sas_config.c | 36 +++++++++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c  | 31 ++++++++++++++++++++++++++++++
- 8 files changed, 161 insertions(+)
+ drivers/scsi/mpt2sas/mpi/mpi2.h      |  4 +++-
+ drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h | 38 +++++++++++++++++++++++++++++-------
+ drivers/scsi/mpt2sas/mpi/mpi2_ioc.h  |  4 +++-
+ drivers/scsi/mpt2sas/mpi/mpi2_tool.h |  6 ++++--
+ 4 files changed, 41 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 58e4521..13d1d5b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -639,6 +639,9 @@ _base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
- 		if (!ioc->hide_ir_msg)
- 			desc = "Log Entry Added";
- 		break;
-+	case MPI2_EVENT_TEMP_THRESHOLD:
-+		desc = "Temperature Threshold";
-+		break;
- 	}
- 
- 	if (!desc)
-@@ -2338,6 +2341,7 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
- 	mpt2sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
- 	mpt2sas_config_get_iounit_pg0(ioc, &mpi_reply, &ioc->iounit_pg0);
- 	mpt2sas_config_get_iounit_pg1(ioc, &mpi_reply, &ioc->iounit_pg1);
-+	mpt2sas_config_get_iounit_pg8(ioc, &mpi_reply, &ioc->iounit_pg8);
- 	_base_display_ioc_capabilities(ioc);
- 
- 	/*
-@@ -2355,6 +2359,8 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
- 	ioc->iounit_pg1.Flags = cpu_to_le32(iounit_pg1_flags);
- 	mpt2sas_config_set_iounit_pg1(ioc, &mpi_reply, &ioc->iounit_pg1);
- 
-+	if (ioc->iounit_pg8.NumSensors)
-+		ioc->temp_sensors_count = ioc->iounit_pg8.NumSensors;
- }
- 
- /**
-@@ -4594,6 +4600,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	_base_unmask_events(ioc, MPI2_EVENT_IR_PHYSICAL_DISK);
- 	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
- 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
-+	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
- 	r = _base_make_ioc_operational(ioc, CAN_SLEEP);
- 	if (r)
- 		goto out_free_resources;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 239f169..8a41a4e 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -725,6 +725,7 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct MPT2SAS_ADAPTER *ioc);
-  * @ioc_pg8: static ioc page 8
-  * @iounit_pg0: static iounit page 0
-  * @iounit_pg1: static iounit page 1
-+ * @iounit_pg8: static iounit page 8
-  * @sas_hba: sas host object
-  * @sas_expander_list: expander object list
-  * @sas_node_lock:
-@@ -795,6 +796,7 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct MPT2SAS_ADAPTER *ioc);
-  * @reply_post_host_index: head index in the pool where FW completes IO
-  * @delayed_tr_list: target reset link list
-  * @delayed_tr_volume_list: volume target reset link list
-+ * @@temp_sensors_count: flag to carry the number of temperature sensors
-  */
- struct MPT2SAS_ADAPTER {
- 	struct list_head list;
-@@ -892,6 +894,7 @@ struct MPT2SAS_ADAPTER {
- 	Mpi2IOCPage8_t ioc_pg8;
- 	Mpi2IOUnitPage0_t iounit_pg0;
- 	Mpi2IOUnitPage1_t iounit_pg1;
-+	Mpi2IOUnitPage8_t iounit_pg8;
- 
- 	struct _boot_device req_boot_device;
- 	struct _boot_device req_alt_boot_device;
-@@ -992,6 +995,7 @@ struct MPT2SAS_ADAPTER {
- 
- 	struct list_head delayed_tr_list;
- 	struct list_head delayed_tr_volume_list;
-+	u8		temp_sensors_count;
- 
- 	/* diag buffer support */
- 	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
-@@ -1120,6 +1124,8 @@ int mpt2sas_config_get_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2IOUnitPage1_t *config_page);
- int mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2IOUnitPage1_t *config_page);
-+int mpt2sas_config_get_iounit_pg8(struct MPT2SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage8_t *config_page);
- int mpt2sas_config_get_iounit_pg3(struct MPT2SAS_ADAPTER *ioc,
- 	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz);
- int mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index c72a2ff..41a8f84 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -719,6 +719,42 @@ mpt2sas_config_get_iounit_pg3(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * mpt2sas_config_get_iounit_pg8 - obtain iounit page 8
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt2sas_config_get_iounit_pg8(struct MPT2SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage8_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
-+	mpi_request.Header.PageNumber = 8;
-+	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE8_PAGEVERSION;
-+	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-+	    sizeof(*config_page));
-+ out:
-+	return r;
-+}
-+
-+/**
-  * mpt2sas_config_get_ioc_pg8 - obtain ioc page 8
-  * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 6a1c036..bbdea00 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3647,6 +3647,31 @@ _scsih_check_volume_delete_events(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_temp_threshold_events - display temperature threshold exceeded events
-+ * @ioc: per adapter object
-+ * @event_data: the temp threshold event data
-+ * Context: interrupt time.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_temp_threshold_events(struct MPT2SAS_ADAPTER *ioc,
-+	Mpi2EventDataTemperature_t *event_data)
-+{
-+	if (ioc->temp_sensors_count >= event_data->SensorNum) {
-+		printk(MPT2SAS_ERR_FMT "Temperature Threshold flags %s%s%s%s"
-+			" exceeded for Sensor: %d !!!\n", ioc->name,
-+			((event_data->Status & 0x1) == 1) ? "0 " : " ",
-+			((event_data->Status & 0x2) == 2) ? "1 " : " ",
-+			((event_data->Status & 0x4) == 4) ? "2 " : " ",
-+			((event_data->Status & 0x8) == 8) ? "3 " : " ",
-+			event_data->SensorNum);
-+		printk(MPT2SAS_ERR_FMT "Current Temp In Celsius: %d\n",
-+			ioc->name, event_data->CurrentTemperature);
-+	}
-+}
-+
-+/**
-  * _scsih_flush_running_cmds - completing outstanding commands.
-  * @ioc: per adapter object
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index 088eefa..76cde3f 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
   *
-@@ -7557,6 +7582,12 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
- 	case MPI2_EVENT_IR_PHYSICAL_DISK:
- 		break;
- 
-+	case MPI2_EVENT_TEMP_THRESHOLD:
-+		_scsih_temp_threshold_events(ioc,
-+			(Mpi2EventDataTemperature_t *)
-+			mpi_reply->EventData);
-+		break;
-+
- 	default: /* ignore the rest */
- 		return;
- 	}
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 1560115..f1918cf 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -619,6 +619,9 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
- 	case MPI2_EVENT_LOG_ENTRY_ADDED:
- 		desc = "Log Entry Added";
- 		break;
-+	case MPI2_EVENT_TEMP_THRESHOLD:
-+		desc = "Temperature Threshold";
-+		break;
- 	}
- 
- 	if (!desc)
-@@ -2500,6 +2503,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- 	mpt3sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
- 	mpt3sas_config_get_iounit_pg0(ioc, &mpi_reply, &ioc->iounit_pg0);
- 	mpt3sas_config_get_iounit_pg1(ioc, &mpi_reply, &ioc->iounit_pg1);
-+	mpt3sas_config_get_iounit_pg8(ioc, &mpi_reply, &ioc->iounit_pg8);
- 	_base_display_ioc_capabilities(ioc);
- 
- 	/*
-@@ -2516,6 +2520,9 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- 		    MPI2_IOUNITPAGE1_DISABLE_TASK_SET_FULL_HANDLING;
- 	ioc->iounit_pg1.Flags = cpu_to_le32(iounit_pg1_flags);
- 	mpt3sas_config_set_iounit_pg1(ioc, &mpi_reply, &ioc->iounit_pg1);
-+
-+	if (ioc->iounit_pg8.NumSensors)
-+		ioc->temp_sensors_count = ioc->iounit_pg8.NumSensors;
- }
- 
- /**
-@@ -4720,6 +4727,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	_base_unmask_events(ioc, MPI2_EVENT_IR_PHYSICAL_DISK);
- 	_base_unmask_events(ioc, MPI2_EVENT_IR_OPERATION_STATUS);
- 	_base_unmask_events(ioc, MPI2_EVENT_LOG_ENTRY_ADDED);
-+	_base_unmask_events(ioc, MPI2_EVENT_TEMP_THRESHOLD);
- 
- 	r = _base_make_ioc_operational(ioc, CAN_SLEEP);
- 	if (r)
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 40926aa..4fef8f3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -659,6 +659,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @ioc_pg8: static ioc page 8
-  * @iounit_pg0: static iounit page 0
-  * @iounit_pg1: static iounit page 1
-+ * @iounit_pg8: static iounit page 8
-  * @sas_hba: sas host object
-  * @sas_expander_list: expander object list
-  * @sas_node_lock:
-@@ -728,6 +729,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @reply_post_host_index: head index in the pool where FW completes IO
-  * @delayed_tr_list: target reset link list
-  * @delayed_tr_volume_list: volume target reset link list
-+ * @@temp_sensors_count: flag to carry the number of temperature sensors
-  */
- struct MPT3SAS_ADAPTER {
- 	struct list_head list;
-@@ -834,6 +836,7 @@ struct MPT3SAS_ADAPTER {
- 	Mpi2IOCPage8_t ioc_pg8;
- 	Mpi2IOUnitPage0_t iounit_pg0;
- 	Mpi2IOUnitPage1_t iounit_pg1;
-+	Mpi2IOUnitPage8_t iounit_pg8;
- 
- 	struct _boot_device req_boot_device;
- 	struct _boot_device req_alt_boot_device;
-@@ -934,6 +937,7 @@ struct MPT3SAS_ADAPTER {
- 
- 	struct list_head delayed_tr_list;
- 	struct list_head delayed_tr_volume_list;
-+	u8		temp_sensors_count;
- 
- 	/* diag buffer support */
- 	u8		*diag_buffer[MPI2_DIAG_BUF_TYPE_COUNT];
-@@ -1082,6 +1086,8 @@ int mpt3sas_config_get_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
- 	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
- int mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
- 	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
-+int mpt3sas_config_get_iounit_pg8(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-+	*mpi_reply, Mpi2IOUnitPage8_t *config_page);
- int mpt3sas_config_get_sas_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2ConfigReply_t *mpi_reply, Mpi2SasIOUnitPage1_t *config_page,
- 	u16 sz);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 4472c2a..6582193 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -871,6 +871,42 @@ mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * mpt3sas_config_get_iounit_pg8 - obtain iounit page 8
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt3sas_config_get_iounit_pg8(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage8_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
-+	mpi_request.Header.PageNumber = 8;
-+	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE8_PAGEVERSION;
-+	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-+	    sizeof(*config_page));
-+ out:
-+	return r;
-+}
-+
-+/**
-  * mpt3sas_config_get_ioc_pg8 - obtain ioc page 8
-  * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 94261ee..d36c304 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3342,6 +3342,31 @@ _scsih_check_volume_delete_events(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_temp_threshold_events - display temperature threshold exceeded events
-+ * @ioc: per adapter object
-+ * @event_data: the temp threshold event data
-+ * Context: interrupt time.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2EventDataTemperature_t *event_data)
-+{
-+	if (ioc->temp_sensors_count >= event_data->SensorNum) {
-+		pr_err(MPT3SAS_FMT "Temperature Threshold flags %s%s%s%s"
-+			" exceeded for Sensor: %d !!!\n", ioc->name,
-+			((event_data->Status & 0x1) == 1) ? "0 " : " ",
-+			((event_data->Status & 0x2) == 2) ? "1 " : " ",
-+			((event_data->Status & 0x4) == 4) ? "2 " : " ",
-+			((event_data->Status & 0x8) == 8) ? "3 " : " ",
-+			event_data->SensorNum);
-+		pr_err(MPT3SAS_FMT "Current Temp In Celsius: %d\n",
-+			ioc->name, event_data->CurrentTemperature);
-+	}
-+}
-+
-+/**
-  * _scsih_flush_running_cmds - completing outstanding commands.
-  * @ioc: per adapter object
+- *  mpi2.h Version:  02.00.32
++ *  mpi2.h Version:  02.00.34
   *
-@@ -7194,6 +7219,12 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	case MPI2_EVENT_IR_PHYSICAL_DISK:
- 		break;
+  *  Version History
+  *  ---------------
+@@ -83,6 +83,8 @@
+  *  04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
+  */
  
-+	case MPI2_EVENT_TEMP_THRESHOLD:
-+		_scsih_temp_threshold_events(ioc,
-+			(Mpi2EventDataTemperature_t *)
-+			mpi_reply->EventData);
-+		break;
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index 510ef0d..f055310 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.26
++ *    mpi2_cnfg.h Version:  02.00.28
+  *
+  *  Version History
+  *  ---------------
+@@ -157,6 +157,18 @@
+  *  04-09-13  02.00.25  Added MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK.
+  *			Fixed MPI2_IOUNITPAGE5_DMA_CAP_MASK_MAX_REQUESTS to
+  *			match the specification.
++ *  12-05-13  02.00.27  Added MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL for
++ *			MPI2_CONFIG_PAGE_MAN_7.
++ *			Added EnclosureLevel and ConnectorName fields to
++ *			MPI2_CONFIG_PAGE_SAS_DEV_0.
++ *			Added MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID for
++ *			MPI2_CONFIG_PAGE_SAS_DEV_0.
++ *			Added EnclosureLevel field to
++ *			MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
++ *			Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
++ *			MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
++ *  01-08-14  02.00.28  Added more defines for the BiosOptions field of
++ *			MPI2_CONFIG_PAGE_BIOS_1.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -706,6 +718,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
+ #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
+ 
+ /* defines for the Flags field */
++#define MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL         (0x00000008)
+ #define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
+ #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+ 
+@@ -1235,9 +1248,17 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1
+ } MPI2_CONFIG_PAGE_BIOS_1, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_BIOS_1,
+   Mpi2BiosPage1_t, MPI2_POINTER pMpi2BiosPage1_t;
+ 
+-#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
++#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
+ 
+ /* values for BIOS Page 1 BiosOptions field */
++#define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS                 (0x00000400)
 +
- 	default: /* ignore the rest */
- 		return 1;
- 	}
++#define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD       (0x00000300)
++#define MPI2_BIOSPAGE1_OPTIONS_USE_BIT0_REGISTRATION_UEFI_BSD   (0x00000000)
++#define MPI2_BIOSPAGE1_OPTIONS_FULL_REGISTRATION_UEFI_BSD       (0x00000100)
++#define MPI2_BIOSPAGE1_OPTIONS_ADAPTER_REGISTRATION_UEFI_BSD    (0x00000200)
++#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_REGISTRATION_UEFI_BSD    (0x00000300)
++
+ #define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
+ #define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
+ 
+@@ -2420,13 +2441,13 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0
+     U8                                  PortGroups;             /* 0x2C */
+     U8                                  DmaGroup;               /* 0x2D */
+     U8                                  ControlGroup;           /* 0x2E */
+-    U8                                  Reserved1;              /* 0x2F */
+-    U32                                 Reserved2;              /* 0x30 */
++	U8				 EnclosureLevel;	 /* 0x2F */
++	U8				 ConnectorName[4];	 /* 0x30 */
+     U32                                 Reserved3;              /* 0x34 */
+ } MPI2_CONFIG_PAGE_SAS_DEV_0, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SAS_DEV_0,
+   Mpi2SasDevicePage0_t, MPI2_POINTER pMpi2SasDevicePage0_t;
+ 
+-#define MPI2_SASDEVICE0_PAGEVERSION         (0x08)
++#define MPI2_SASDEVICE0_PAGEVERSION         (0x09)
+ 
+ /* values for SAS Device Page 0 AccessStatus field */
+ #define MPI2_SAS_DEVICE0_ASTATUS_NO_ERRORS                  (0x00)
+@@ -2464,6 +2485,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0
+ #define MPI2_SAS_DEVICE0_FLAGS_SATA_NCQ_SUPPORTED           (0x0020)
+ #define MPI2_SAS_DEVICE0_FLAGS_SATA_FUA_SUPPORTED           (0x0010)
+ #define MPI2_SAS_DEVICE0_FLAGS_PORT_SELECTOR_ATTACH         (0x0008)
++#define MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID             (0x0002)
+ #define MPI2_SAS_DEVICE0_FLAGS_DEVICE_PRESENT               (0x0001)
+ 
+ 
+@@ -2732,7 +2754,8 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0
+     U16                                 EnclosureHandle;            /* 0x16 */
+     U16                                 NumSlots;                   /* 0x18 */
+     U16                                 StartSlot;                  /* 0x1A */
+-    U16                                 Reserved2;                  /* 0x1C */
++	U8				 Reserved2;		     /* 0x1C */
++	U8				 EnclosureLevel;	     /* 0x1D */
+     U16                                 SEPDevHandle;               /* 0x1E */
+     U32                                 Reserved3;                  /* 0x20 */
+     U32                                 Reserved4;                  /* 0x24 */
+@@ -2740,9 +2763,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0
+   MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
+   Mpi2SasEnclosurePage0_t, MPI2_POINTER pMpi2SasEnclosurePage0_t;
+ 
+-#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x03)
++#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x04)
+ 
+ /* values for SAS Enclosure Page 0 Flags field */
++#define MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID      (0x0010)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_MASK              (0x000F)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_UNKNOWN           (0x0000)
+ #define MPI2_SAS_ENCLS0_FLAGS_MNG_IOC_SES           (0x0001)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index 2c3b0f2..b02de48 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.23
++ *  mpi2_ioc.h Version:  02.00.24
+  *
+  *  Version History
+  *  ---------------
+@@ -126,6 +126,7 @@
+  *                      Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
+  *                      Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
+  *                      Added Encrypted Hash Extended Image.
++ *  12-05-13  02.00.24  Added MPI25_HASH_IMAGE_TYPE_BIOS.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -1589,6 +1590,7 @@ Mpi25EncryptedHashEntry_t, MPI2_POINTER pMpi25EncryptedHashEntry_t;
+ /* values for HashImageType */
+ #define MPI25_HASH_IMAGE_TYPE_UNUSED            (0x00)
+ #define MPI25_HASH_IMAGE_TYPE_FIRMWARE          (0x01)
++#define MPI25_HASH_IMAGE_TYPE_BIOS              (0x02)
+ 
+ /* values for HashAlgorithm */
+ #define MPI25_HASH_ALGORITHM_UNUSED             (0x00)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+index 9be03ed..659b8ac 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI diagnostic tool structures and definitions
+  *  Creation Date:  March 26, 2007
+  *
+- *    mpi2_tool.h Version:  02.00.11
++ *    mpi2_tool.h Version:  02.00.12
+  *
+  *  Version History
+  *  ---------------
+@@ -29,7 +29,8 @@
+  *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
+  *  07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
+  *			it uses MPI Chain SGE as well as MPI Simple SGE.
+- * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
++ *  08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
++ *  01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -101,6 +102,7 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST
+ #define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
+ #define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
+ #define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
++#define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
+ #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
+ #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
+ #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
 -- 
 2.0.2
-
