@@ -1,61 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 4/4] scsi: esp_scsi: adjust module reference for scsi
- host
-Date: Mon, 12 Jan 2015 10:18:51 +0100
-Message-ID: <54B3917B.7010406@suse.de>
-References: <1420984206-22341-1-git-send-email-akinobu.mita@gmail.com> <1420984206-22341-5-git-send-email-akinobu.mita@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3 0/4] scsi: ufs & ums-* & esp_scsi: fix module
+	reference counting
+Date: Mon, 12 Jan 2015 10:36:10 +0100
+Message-ID: <20150112093610.GA25942@lst.de>
+References: <1420984206-22341-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43210 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:40526 "EHLO newverein.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752051AbbALJSx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2015 04:18:53 -0500
-In-Reply-To: <1420984206-22341-5-git-send-email-akinobu.mita@gmail.com>
+	id S1752121AbbALJgP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2015 04:36:15 -0500
+Content-Disposition: inline
+In-Reply-To: <1420984206-22341-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 01/11/2015 02:50 PM, Akinobu Mita wrote:
-> While accessing a scsi device on host adapter supported by sub driver=
- for
-> the ESP chip (mac_esp, am53c974, sun_esp, jazz_esp, sun3x_esp), the m=
-odule
-> reference count is not incremented.  Because these drivers allocate s=
-csi
-> hosts with scsi_esp_template defined in ESP SCSI driver core module. =
- So
-> these drivers always can be unloaded.
->=20
-> This fixes it by passing correct module reference to newly introduced
-> scsi_esp_host_alloc() so that .module field in struct Scsi_Host can b=
-e
-> adjusted.
->=20
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
-> New patch from v3
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On Sun, Jan 11, 2015 at 10:50:02PM +0900, Akinobu Mita wrote:
+> While accessing a scsi_device, the use count of the underlying LLDD module
+> is incremented.  The module reference is retrieved through .module field of
+> struct scsi_host_template.
+> 
+> This mapping between scsi_device and underlying LLDD module works well
+> except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
+> These drivers consist with core driver and actual LLDDs, and
+> scsi_host_template is defined in the core driver.  So the actual LLDDs can
+> be unloaded even if the scsi_device is being accessed.
+> 
+> This patch series first adds ability to adjust module reference for
+> scsi host by LLDDs and then fixes actual LLDDs by adjusting module
+> reference after scsi host allocation.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Why don't we move the module into the Scsi_Host only, and use
+the same macro that passes THIS_MODULE trick you are using in
+the sub drivers?  That seems to be a fairly common scheme in other
+subsystems as well.
