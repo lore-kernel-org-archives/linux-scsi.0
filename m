@@ -1,66 +1,38 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.19-rc4
-Date: Sun, 11 Jan 2015 12:26:57 -0800
-Message-ID: <1421008017.13233.8.camel@haakon3.risingtidesystems.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 1/1] csiostor:fix sparse warnings
+Date: Mon, 12 Jan 2015 00:40:46 -0500 (EST)
+Message-ID: <20150112.004046.286889948997466119.davem@davemloft.net>
+References: <1420818916-12185-1-git-send-email-praveenm@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:44507 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909AbbALFkt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jan 2015 00:40:49 -0500
+In-Reply-To: <1420818916-12185-1-git-send-email-praveenm@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: praveenm@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com
 
-Hi Linus,
+From: Praveen Madhavan <praveenm@chelsio.com>
+Date: Fri,  9 Jan 2015 21:25:16 +0530
 
-Here are the target pending fixes for v3.19-rc4.  Please go ahead and
-pull from:
+> This patch fixes sparse warning reported by kbuild.
+> Apply this on net-next since it depends on previous commit.
+> 
+> drivers/scsi/csiostor/csio_hw.c:259:17: sparse: cast to restricted __le32
+> drivers/scsi/csiostor/csio_hw.c:536:31: sparse: incorrect type in assignment
+> (different base types)
+> drivers/scsi/csiostor/csio_hw.c:536:31:    expected unsigned int [unsigned]
+> [usertype] <noident>
+> drivers/scsi/csiostor/csio_hw.c:536:31:    got restricted __be32 [usertype]
+> <noident>
+>>> drivers/scsi/csiostor/csio_hw.c:2012:5: sparse: symbol 'csio_hw_prep_fw' was
+> not declared. Should it be static?
+> 
+> Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-Mostly minor fixes this time, including:
-
-  - Add missing virtio-scsi -> TCM attribute conversion in vhost-scsi.
-  - Fix persistent reservations write exclusive handling to allow
-    readers for all registered I_T nexuses.
-  - Drop arbitrary maximum I/O size limit in order to process I/Os
-    larger than 4 MB, required for initiators that don't honor block
-    limits EVPD.
-  - Drop the now left-over fabric_max_sectors attribute.
-
-Thank you,
-
---nab
-
-Andy Grover (1):
-  iscsi-target: Fix typos in enum cmd_flags_table
-
-Lee Duncan (1):
-  target: Allow Write Exclusive non-reservation holders to READ
-
-Nicholas Bellinger (4):
-  vhost-scsi: Add missing virtio-scsi -> TCM attribute conversion
-  Documentation/target: Update fabric_ops to latest code
-  target: Drop arbitrary maximum I/O size limit
-  target: Drop left-over fabric_max_sectors attribute
-
-Sagi Grimberg (1):
-  MAINTAINERS: Add entry for iSER target driver
-
- Documentation/target/tcm_mod_builder.py       | 49 ++++++------------------
- MAINTAINERS                                   |  9 +++++
- drivers/target/iscsi/iscsi_target.c           | 12 +++---
- drivers/target/iscsi/iscsi_target_core.h      |  4 +-
- drivers/target/target_core_device.c           | 54 ++-------------------------
- drivers/target/target_core_file.c             | 12 +++++-
- drivers/target/target_core_iblock.c           |  3 +-
- drivers/target/target_core_pr.c               | 12 ++++++
- drivers/target/target_core_rd.c               |  1 -
- drivers/target/target_core_sbc.c              | 15 --------
- drivers/target/target_core_spc.c              |  5 +--
- drivers/target/target_core_user.c             |  1 -
- drivers/vhost/scsi.c                          | 24 ++++++++++--
- include/target/target_core_backend.h          |  1 -
- include/target/target_core_backend_configfs.h |  2 -
- include/target/target_core_base.h             |  3 --
- 16 files changed, 78 insertions(+), 129 deletions(-)
+Applied, thanks.
