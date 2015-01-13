@@ -1,89 +1,60 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH 3/9] scsi: use external buffer for command logging
-Date: Tue, 13 Jan 2015 18:56:17 +0000
-Message-ID: <1421175409.2076.17.camel@parallels.com>
-References: <1420699430-9492-1-git-send-email-hare@suse.de>
-	 <1420699430-9492-4-git-send-email-hare@suse.de>
+From: Adrian Palmer <adrian.palmer@seagate.com>
+Subject: Re: [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other generic
+ file systems)
+Date: Tue, 13 Jan 2015 13:32:26 -0700
+Message-ID: <CAKdFiL6XVxq-mjJd2TMkoEyE4kss5yTfWGKyeY-EZa2NDyLwFw@mail.gmail.com>
+References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([199.115.105.18]:41892 "EHLO
-	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590AbbAMS4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2015 13:56:52 -0500
-In-Reply-To: <1420699430-9492-4-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <6BCFCE37A83C3944BA5FA3DB6A85EBA2@sw.swsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gVGh1LCAyMDE1LTAxLTA4IGF0IDA3OjQzICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
-DQo+IFVzZSBhbiBleHRlcm5hbCBidWZmZXIgZm9yIF9fc2NzaV9wcmludF9jb21tYW5kKCkgYW5k
-DQo+IG1vdmUgY29tbWFuZCBsb2dnaW5nIG92ZXIgdG8gdXNlIHRoZSBwZXItY3B1IGxvZ2dpbmcN
-Cj4gYnVmZmVyLiBXaXRoIHRoYXQgd2UgY2FuIGd1YXJhbnRlZSB0aGUgY29tbWFuZCBhbHdheXMN
-Cj4gd2lsbCBhbHdheXMgYmUgZm9ybWF0dGVkIGluIG9uZSBsaW5lLg0KPiBTbyB3ZSBjYW4gZXZl
-biBwcmludCBvdXQgYSB2YXJpYWJsZSBsZW5ndGggY29tbWFuZA0KPiBjb3JyZWN0bHkgYWNyb3Nz
-IHNldmVyYWwgbGluZXMuDQo+IEZpbmFsbHkgcmVuYW1lIF9fc2NzaV9wcmludF9jb21tYW5kKCkg
-dG8NCj4gX19zY3NpX2Zvcm1hdF9jb21tZW50KCkgdG8gYmV0dGVyIHJlZmxlY3QgdGhlDQo+IGZ1
-bmN0aW9uYWxpdHkuDQo+IA0KPiBUZXN0ZWQtYnk6IFJvYmVydCBFbGxpb3R0IDxlbGxpb3R0QGhw
-LmNvbT4NCj4gUmV2aWV3ZWQtYnk6IFJvYmVydCBFbGxpb3R0IDxlbGxpb3R0QGhwLmNvbT4NCj4g
-UmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiBTaWduZWQtb2Zm
-LWJ5OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Nj
-c2kvY2guYyAgICAgICAgICAgfCAgIDYgKy0NCj4gIGRyaXZlcnMvc2NzaS9jb25zdGFudHMuYyAg
-ICB8ICA3NCArLS0tLS0tLS0tLS0tLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS9zY3NpX2xvZ2dpbmcu
-YyB8IDE4MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLQ0KPiAg
-ZHJpdmVycy9zY3NpL3NyX2lvY3RsLmMgICAgIHwgIDEzICsrKy0NCj4gIGluY2x1ZGUvc2NzaS9z
-Y3NpLmggICAgICAgICB8ICAgMyArDQo+ICBpbmNsdWRlL3Njc2kvc2NzaV9kYmcuaCAgICAgfCAg
-IDYgKy0NCj4gIDYgZmlsZXMgY2hhbmdlZCwgMTkyIGluc2VydGlvbnMoKyksIDkyIGRlbGV0aW9u
-cygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9jaC5jIGIvZHJpdmVycy9zY3Np
-L2NoLmMNCj4gaW5kZXggNmJhYzhhNy4uNzllNDYyZiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9z
-Y3NpL2NoLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2NoLmMNCj4gQEAgLTE5NSw4ICsxOTUsMTAg
-QEAgY2hfZG9fc2NzaShzY3NpX2NoYW5nZXIgKmNoLCB1bnNpZ25lZCBjaGFyICpjbWQsIGludCBj
-bWRfbGVuLA0KPiAgIHJldHJ5Og0KPiAgCWVycm5vID0gMDsNCj4gIAlpZiAoZGVidWcpIHsNCj4g
-LQkJRFBSSU5USygiY29tbWFuZDogIik7DQo+IC0JCV9fc2NzaV9wcmludF9jb21tYW5kKGNtZCwg
-Y21kX2xlbik7DQo+ICsJCWNoYXIgbG9nYnVmW1NDU0lfTE9HX0JVRlNJWkVdOw0KPiArDQo+ICsJ
-CV9fc2NzaV9mb3JtYXRfY29tbWFuZChsb2didWYsIHNpemVvZihsb2didWYpLCBjbWQsIGNtZF9s
-ZW4pOw0KPiArCQlEUFJJTlRLKCJjb21tYW5kOiAlcyIsIGxvZ2J1Zik7DQoNCkkgcmVhbGx5IGhh
-dGUgdXNpbmcgYW4gb24tc3RhY2sgYnVmZmVyIGhlcmUgLi4uIHdlJ3JlIHByZXR0eSBkZWVwIGlu
-IHRoZQ0KY2FsbCBjaGFpbiBhbHJlYWR5Lg0KDQpTaW5jZSBpdCdzIGp1c3QgcmVxdWlyZWQgZm9y
-IHByaW50aW5nIGEgImNvbW1hbmQ6ICIgcHJlZml4LCB3aHkgbm90IGp1c3QNCnVzZSBzY3NpX3By
-aW50X2NvbW1hbmQoKT8NCg0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3JfaW9jdGwu
-YyBiL2RyaXZlcnMvc2NzaS9zcl9pb2N0bC5jDQo+IGluZGV4IGZiOTI5ZmEuLmU4ZGViOWMgMTAw
-NjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zcl9pb2N0bC5jDQo+ICsrKyBiL2RyaXZlcnMvc2Nz
-aS9zcl9pb2N0bC5jDQo+IEBAIC0xODgsNiArMTg4LDcgQEAgaW50IHNyX2RvX2lvY3RsKFNjc2lf
-Q0QgKmNkLCBzdHJ1Y3QgcGFja2V0X2NvbW1hbmQgKmNnYykNCj4gICAgICAgICBzdHJ1Y3Qgc2Nz
-aV9zZW5zZV9oZHIgc3NoZHI7DQo+ICAgICAgICAgaW50IHJlc3VsdCwgZXJyID0gMCwgcmV0cmll
-cyA9IDA7DQo+ICAgICAgICAgc3RydWN0IHJlcXVlc3Rfc2Vuc2UgKnNlbnNlID0gY2djLT5zZW5z
-ZTsNCj4gKyAgICAgICBjaGFyIGxvZ2J1ZltTQ1NJX0xPR19CVUZTSVpFXTsNCg0KU2FtZSBpc3N1
-ZSBoZXJlLg0KDQo+ICAgICAgICAgU0RldiA9IGNkLT5kZXZpY2U7DQo+ICANCj4gQEAgLTI1Nywx
-NCArMjU4LDIwIEBAIGludCBzcl9kb19pb2N0bChTY3NpX0NEICpjZCwgc3RydWN0IHBhY2tldF9j
-b21tYW5kICpjZ2MpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLyogc2Vuc2U6
-IEludmFsaWQgY29tbWFuZCBvcGVyYXRpb24gY29kZSAqLw0KPiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIGVyciA9IC1FRFJJVkVfQ0FOVF9ET19USElTOw0KPiAgI2lmZGVmIERFQlVH
-DQo+IC0gICAgICAgICAgICAgICAgICAgICAgIF9fc2NzaV9wcmludF9jb21tYW5kKGNnYy0+Y21k
-LCBDRFJPTV9QQUNLRVRfU0laRSk7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIF9fc2NzaV9m
-b3JtYXRfY29tbWFuZChsb2didWYsIHNpemVvZihsb2didWYpLA0KPiArICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2djLT5jbWQsIENEUk9NX1BBQ0tFVF9TSVpF
-KTsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgc3JfcHJpbnRrKEtFUk5fSU5GTywgY2QsDQo+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQ0RST00gKGlvY3RsKSBpbnZhbGlk
-IGNvbW1hbmQ6ICVzXG4iLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbG9n
-YnVmKTsNCg0KTG9va3MgbGlrZSBzY3NpX3ByaW50X2NvbW1hbmQoKSB3aWxsIHdvcmsgaGVyZSB0
-b28uDQoNCj4gICAgICAgICAgICAgICAgICAgICAgICAgc2NzaV9wcmludF9zZW5zZV9oZHIoY2Qt
-PmRldmljZSwgY2QtPmNkaS5uYW1lLCAmc3NoZHIpOw0KPiAgI2VuZGlmDQo+ICAgICAgICAgICAg
-ICAgICAgICAgICAgIGJyZWFrOw0KPiAgICAgICAgICAgICAgICAgZGVmYXVsdDoNCj4gKyAgICAg
-ICAgICAgICAgICAgICAgICAgX19zY3NpX2Zvcm1hdF9jb21tYW5kKGxvZ2J1Ziwgc2l6ZW9mKGxv
-Z2J1ZiksDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBj
-Z2MtPmNtZCwgQ0RST01fUEFDS0VUX1NJWkUpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBz
-cl9wcmludGsoS0VSTl9FUlIsIGNkLA0KPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIkNEUk9NIChpb2N0bCkgZXJyb3IsIGNvbW1hbmQ6ICIpOw0KPiAtICAgICAgICAgICAgICAg
-ICAgICAgICBfX3Njc2lfcHJpbnRfY29tbWFuZChjZ2MtPmNtZCwgQ0RST01fUEFDS0VUX1NJWkUp
-Ow0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIkNEUk9NIChpb2N0bCkgZXJy
-b3IsIGNvbW1hbmQ6ICVzXG4iLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-bG9nYnVmKTsNCg0KQW5kIHJlYWxpc3RpY2FsbHkgaGVyZSAod2l0aCB0aGUgYXBwcm9wcmlhdGUg
-c2Rldl9wcmludCgpJ3MgcHJlY2VkaW5nKS4NCg0KPiAgICAgICAgICAgICAgICAgICAgICAgICBz
-Y3NpX3ByaW50X3NlbnNlX2hkcihjZC0+ZGV2aWNlLCBjZC0+Y2RpLm5hbWUsICZzc2hkcik7DQo+
-ICAgICAgICAgICAgICAgICAgICAgICAgIGVyciA9IC1FSU87DQo+ICAgICAgICAgICAgICAgICB9
-DQoNCkphbWVzDQoNCg==
+This seemed to bounce on most of the lists to which it originally
+sent.  I'm resending..
+
+I've uploaded an introductory design document at
+https://github.com/Seagate/SMR_FS-EXT4. I'll update regularly.  Please
+feel free to send questions my way.
+
+It seems there are many sub topics requested related to SMR for this conference.
+
+Adrian
+
+On Tue, Jan 6, 2015 at 4:29 PM, Adrian Palmer <adrian.palmer@seagate.com> wrote:
+> I agree wholeheartedly with Dr. Reinecke in discussing what is becoming my
+> favourite topic also. I support the need for generic filesystem support with
+> SMR and ZAC/ZBC drives.
+>
+> Dr. Reinecke has already proposed a discussion on the ZAC/ZBC
+> implementation.  As a complementary topic, I want to discuss the generic
+> filesystem support for Host Aware (HA) / Host Managed (HM) drives.
+>
+> We at Seagate are developing an SMR Friendly File System (SMRFFS) for this
+> very purpose.  Instead of a new filesystem with a long development time, we
+> are implementing it as an HA extension to EXT4 (and WILL be backwards
+> compatible with minimal code paths).  I'll be talking about the the on-disk
+> changes we need to consider as well as the needed kernel changes common to
+> all generic filesystems.  Later, we intend to evaluate the work for use in
+> other filesystems and kernel processes.
+>
+> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
+> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
+> required technical kernel changes before this topic is presented at Vault.
+>
+> Subtopics:
+>
+> On-disk metadata structures and data algorithms
+> Explicit in-order write requirement and a look at the IO stack
+> New IOCTLs to call from the FS and the need to know about the underlying
+> disk -- no longer completely disk agnostic
+>
+>
+> Adrian Palmer
+> Firmware Engineer II
+> R&D Firmware
+> Seagate, Longmont Colorado
+> 720-684-1307
