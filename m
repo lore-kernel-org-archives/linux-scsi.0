@@ -1,44 +1,18 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: [PATCH 5/6] virtio/scsi: verify device has config space
-Date: Tue, 13 Jan 2015 16:43:24 +0200
-Message-ID: <1421160167-18498-6-git-send-email-mst@redhat.com>
-References: <1421160167-18498-1-git-send-email-mst@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/10] mpt2sas: Phase19 and Phase20 patch set
+Date: Tue, 13 Jan 2015 07:29:30 -0800
+Message-ID: <20150113152930.GA11300@infradead.org>
+References: <1421042944-14988-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1421160167-18498-1-git-send-email-mst@redhat.com>
+In-Reply-To: <1421042944-14988-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, Nagalakshmi.Nandigama@avagotech.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Some devices might not implement config space access
-(e.g. remoteproc used not to - before 3.9).
-virtio/scsi needs config space access so make it
-fail gracefully if not there.
+Thanks,
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/scsi/virtio_scsi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index c52bb5d..f164f24 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -950,6 +950,12 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	u32 num_queues;
- 	struct scsi_host_template *hostt;
- 
-+	if (!vdev->config->get) {
-+		dev_err(&vdev->dev, "%s failure: config access disabled\n",
-+			__func__);
-+		return -EINVAL;
-+	}
-+
- 	/* We need to know how many queues before we allocate. */
- 	num_queues = virtscsi_config_get(vdev, num_queues) ? : 1;
- 
--- 
-MST
+Ive applied the series to the scsi-for-3.20 branch.
