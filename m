@@ -1,60 +1,66 @@
-From: Adrian Palmer <adrian.palmer@seagate.com>
-Subject: Re: [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other generic
- file systems)
-Date: Tue, 13 Jan 2015 13:32:26 -0700
-Message-ID: <CAKdFiL6XVxq-mjJd2TMkoEyE4kss5yTfWGKyeY-EZa2NDyLwFw@mail.gmail.com>
-References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] SCSI: initio: remove duplicate module device table
+Date: Tue, 13 Jan 2015 22:18:23 +0100
+Message-ID: <2519565.3zTHBMRR3g@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:50645 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbbAMVS0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2015 16:18:26 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This seemed to bounce on most of the lists to which it originally
-sent.  I'm resending..
+The initio driver has for many years had two copies of the
+same module device table. One of them is also used for registering
+the other driver, the other one is entirely useless after the
+large scale cleanup that Alan Cox did back in 2007.
 
-I've uploaded an introductory design document at
-https://github.com/Seagate/SMR_FS-EXT4. I'll update regularly.  Please
-feel free to send questions my way.
+The compiler warns about this whenever the driver is built-in:
 
-It seems there are many sub topics requested related to SMR for this conference.
+drivers/scsi/initio.c:131:29: warning: 'i91u_pci_devices' defined but not used [-Wunused-variable]
 
-Adrian
+This removes the extraneous table and the warning.
 
-On Tue, Jan 6, 2015 at 4:29 PM, Adrian Palmer <adrian.palmer@seagate.com> wrote:
-> I agree wholeheartedly with Dr. Reinecke in discussing what is becoming my
-> favourite topic also. I support the need for generic filesystem support with
-> SMR and ZAC/ZBC drives.
->
-> Dr. Reinecke has already proposed a discussion on the ZAC/ZBC
-> implementation.  As a complementary topic, I want to discuss the generic
-> filesystem support for Host Aware (HA) / Host Managed (HM) drives.
->
-> We at Seagate are developing an SMR Friendly File System (SMRFFS) for this
-> very purpose.  Instead of a new filesystem with a long development time, we
-> are implementing it as an HA extension to EXT4 (and WILL be backwards
-> compatible with minimal code paths).  I'll be talking about the the on-disk
-> changes we need to consider as well as the needed kernel changes common to
-> all generic filesystems.  Later, we intend to evaluate the work for use in
-> other filesystems and kernel processes.
->
-> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
-> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
-> required technical kernel changes before this topic is presented at Vault.
->
-> Subtopics:
->
-> On-disk metadata structures and data algorithms
-> Explicit in-order write requirement and a look at the IO stack
-> New IOCTLs to call from the FS and the need to know about the underlying
-> disk -- no longer completely disk agnostic
->
->
-> Adrian Palmer
-> Firmware Engineer II
-> R&D Firmware
-> Seagate, Longmont Colorado
-> 720-684-1307
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 72d39fea901 ("[SCSI] initio: Convert into a real Linux driver and update to modern style")
+
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index e5dae7b54d9a..51063177f18e 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -110,11 +110,6 @@
+ #define i91u_MAXQUEUE		2
+ #define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
+ 
+-#define I950_DEVICE_ID	0x9500	/* Initio's inic-950 product ID   */
+-#define I940_DEVICE_ID	0x9400	/* Initio's inic-940 product ID   */
+-#define I935_DEVICE_ID	0x9401	/* Initio's inic-935 product ID   */
+-#define I920_DEVICE_ID	0x0002	/* Initio's other product ID      */
+-
+ #ifdef DEBUG_i91u
+ static unsigned int i91u_debug = DEBUG_DEFAULT;
+ #endif
+@@ -127,17 +122,6 @@ static int setup_debug = 0;
+ 
+ static void i91uSCBPost(u8 * pHcb, u8 * pScb);
+ 
+-/* PCI Devices supported by this driver */
+-static struct pci_device_id i91u_pci_devices[] = {
+-	{ PCI_VENDOR_ID_INIT,  I950_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I940_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I935_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_INIT,  I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ PCI_VENDOR_ID_DOMEX, I920_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, i91u_pci_devices);
+-
+ #define DEBUG_INTERRUPT 0
+ #define DEBUG_QUEUE     0
+ #define DEBUG_STATE     0
+
