@@ -1,106 +1,89 @@
-From: Tina Johnson <tinajohnson.1234@gmail.com>
-Subject: [PATCH] drivers: message: Clean up error handling for calls to pci_map_single
-Date: Wed, 14 Jan 2015 00:16:02 +0530
-Message-ID: <1421174763-8802-1-git-send-email-tinajohnson.1234@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nagalakshmi.nandigama@avagotech.com
-Cc: praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, abhijit.mahajan@avagotech.com, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@avagotech.com, linux-kernel@vger.kernel.org, julia.lawall@lip6.fr, Tina Johnson <tinajohnson.1234@gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH 3/9] scsi: use external buffer for command logging
+Date: Tue, 13 Jan 2015 18:56:17 +0000
+Message-ID: <1421175409.2076.17.camel@parallels.com>
+References: <1420699430-9492-1-git-send-email-hare@suse.de>
+	 <1420699430-9492-4-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:41892 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590AbbAMS4w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2015 13:56:52 -0500
+In-Reply-To: <1420699430-9492-4-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <6BCFCE37A83C3944BA5FA3DB6A85EBA2@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Replaced null tests on the value return by pci_map_single by calls to
-pci_dma_mapping_error.
-
-Added initialization of the ret variable, to return an error code on
-failure.
-
-Reorganized error handling code to remove the need for tests on
-dma_addr_out, dma_addr_in, and mf.
-
-Added new error labels for freeing dma_addr_out (unmap_out) and
-dma_addr_in (unmap_in).
-
-Coccinelle was used to find unchecked dma handles, as follows:
-
-@rule1@
-expression e1;
-identifier x;
-@@
-
-*x = pci_map_single(...);
- ... when != pci_dma_mapping_error(e1,x)
-
-Signed-off-by: Tina Johnson <tinajohnson.1234@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/message/fusion/mptsas.c |   30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 5bdaae1..bac6bec 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -2282,8 +2282,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 
- 	dma_addr_out = pci_map_single(ioc->pcidev, bio_data(req->bio),
- 				      blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
--	if (!dma_addr_out)
-+	if (pci_dma_mapping_error(ioc->pcidev, dma_addr_out)) {
-+		ret = -ENOMEM;
- 		goto put_mf;
-+	}
- 	ioc->add_sge(psge, flagsLength, dma_addr_out);
- 	psge += ioc->SGE_size;
- 
-@@ -2297,8 +2299,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	flagsLength |= blk_rq_bytes(rsp) + 4;
- 	dma_addr_in =  pci_map_single(ioc->pcidev, bio_data(rsp->bio),
- 				      blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
--	if (!dma_addr_in)
--		goto unmap;
-+	if (pci_dma_mapping_error(ioc->pcidev, dma_addr_in)) {
-+		ret = -ENOMEM;
-+		goto unmap_out;
-+	}
- 	ioc->add_sge(psge, flagsLength, dma_addr_in);
- 
- 	INITIALIZE_MGMT_STATUS(ioc->sas_mgmt.status)
-@@ -2310,10 +2314,10 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		mpt_free_msg_frame(ioc, mf);
- 		mf = NULL;
- 		if (ioc->sas_mgmt.status & MPT_MGMT_STATUS_DID_IOCRESET)
--			goto unmap;
-+			goto unmap_in;
- 		if (!timeleft)
- 			mpt_Soft_Hard_ResetHandler(ioc, CAN_SLEEP);
--		goto unmap;
-+		goto unmap_in;
- 	}
- 	mf = NULL;
- 
-@@ -2331,16 +2335,14 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		    ioc->name, __func__);
- 		ret = -ENXIO;
- 	}
--unmap:
--	if (dma_addr_out)
--		pci_unmap_single(ioc->pcidev, dma_addr_out, blk_rq_bytes(req),
--				 PCI_DMA_BIDIRECTIONAL);
--	if (dma_addr_in)
--		pci_unmap_single(ioc->pcidev, dma_addr_in, blk_rq_bytes(rsp),
--				 PCI_DMA_BIDIRECTIONAL);
-+unmap_in:
-+	pci_unmap_single(ioc->pcidev, dma_addr_in, blk_rq_bytes(rsp),
-+			 PCI_DMA_BIDIRECTIONAL);
-+unmap_out:
-+	pci_unmap_single(ioc->pcidev, dma_addr_out, blk_rq_bytes(req),
-+			 PCI_DMA_BIDIRECTIONAL);
- put_mf:
--	if (mf)
--		mpt_free_msg_frame(ioc, mf);
-+	mpt_free_msg_frame(ioc, mf);
- out_unlock:
- 	CLEAR_MGMT_STATUS(ioc->sas_mgmt.status)
- 	mutex_unlock(&ioc->sas_mgmt.mutex);
--- 
-1.7.10.4
+T24gVGh1LCAyMDE1LTAxLTA4IGF0IDA3OjQzICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6
+DQo+IFVzZSBhbiBleHRlcm5hbCBidWZmZXIgZm9yIF9fc2NzaV9wcmludF9jb21tYW5kKCkgYW5k
+DQo+IG1vdmUgY29tbWFuZCBsb2dnaW5nIG92ZXIgdG8gdXNlIHRoZSBwZXItY3B1IGxvZ2dpbmcN
+Cj4gYnVmZmVyLiBXaXRoIHRoYXQgd2UgY2FuIGd1YXJhbnRlZSB0aGUgY29tbWFuZCBhbHdheXMN
+Cj4gd2lsbCBhbHdheXMgYmUgZm9ybWF0dGVkIGluIG9uZSBsaW5lLg0KPiBTbyB3ZSBjYW4gZXZl
+biBwcmludCBvdXQgYSB2YXJpYWJsZSBsZW5ndGggY29tbWFuZA0KPiBjb3JyZWN0bHkgYWNyb3Nz
+IHNldmVyYWwgbGluZXMuDQo+IEZpbmFsbHkgcmVuYW1lIF9fc2NzaV9wcmludF9jb21tYW5kKCkg
+dG8NCj4gX19zY3NpX2Zvcm1hdF9jb21tZW50KCkgdG8gYmV0dGVyIHJlZmxlY3QgdGhlDQo+IGZ1
+bmN0aW9uYWxpdHkuDQo+IA0KPiBUZXN0ZWQtYnk6IFJvYmVydCBFbGxpb3R0IDxlbGxpb3R0QGhw
+LmNvbT4NCj4gUmV2aWV3ZWQtYnk6IFJvYmVydCBFbGxpb3R0IDxlbGxpb3R0QGhwLmNvbT4NCj4g
+UmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiBTaWduZWQtb2Zm
+LWJ5OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Nj
+c2kvY2guYyAgICAgICAgICAgfCAgIDYgKy0NCj4gIGRyaXZlcnMvc2NzaS9jb25zdGFudHMuYyAg
+ICB8ICA3NCArLS0tLS0tLS0tLS0tLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS9zY3NpX2xvZ2dpbmcu
+YyB8IDE4MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLQ0KPiAg
+ZHJpdmVycy9zY3NpL3NyX2lvY3RsLmMgICAgIHwgIDEzICsrKy0NCj4gIGluY2x1ZGUvc2NzaS9z
+Y3NpLmggICAgICAgICB8ICAgMyArDQo+ICBpbmNsdWRlL3Njc2kvc2NzaV9kYmcuaCAgICAgfCAg
+IDYgKy0NCj4gIDYgZmlsZXMgY2hhbmdlZCwgMTkyIGluc2VydGlvbnMoKyksIDkyIGRlbGV0aW9u
+cygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9jaC5jIGIvZHJpdmVycy9zY3Np
+L2NoLmMNCj4gaW5kZXggNmJhYzhhNy4uNzllNDYyZiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9z
+Y3NpL2NoLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2NoLmMNCj4gQEAgLTE5NSw4ICsxOTUsMTAg
+QEAgY2hfZG9fc2NzaShzY3NpX2NoYW5nZXIgKmNoLCB1bnNpZ25lZCBjaGFyICpjbWQsIGludCBj
+bWRfbGVuLA0KPiAgIHJldHJ5Og0KPiAgCWVycm5vID0gMDsNCj4gIAlpZiAoZGVidWcpIHsNCj4g
+LQkJRFBSSU5USygiY29tbWFuZDogIik7DQo+IC0JCV9fc2NzaV9wcmludF9jb21tYW5kKGNtZCwg
+Y21kX2xlbik7DQo+ICsJCWNoYXIgbG9nYnVmW1NDU0lfTE9HX0JVRlNJWkVdOw0KPiArDQo+ICsJ
+CV9fc2NzaV9mb3JtYXRfY29tbWFuZChsb2didWYsIHNpemVvZihsb2didWYpLCBjbWQsIGNtZF9s
+ZW4pOw0KPiArCQlEUFJJTlRLKCJjb21tYW5kOiAlcyIsIGxvZ2J1Zik7DQoNCkkgcmVhbGx5IGhh
+dGUgdXNpbmcgYW4gb24tc3RhY2sgYnVmZmVyIGhlcmUgLi4uIHdlJ3JlIHByZXR0eSBkZWVwIGlu
+IHRoZQ0KY2FsbCBjaGFpbiBhbHJlYWR5Lg0KDQpTaW5jZSBpdCdzIGp1c3QgcmVxdWlyZWQgZm9y
+IHByaW50aW5nIGEgImNvbW1hbmQ6ICIgcHJlZml4LCB3aHkgbm90IGp1c3QNCnVzZSBzY3NpX3By
+aW50X2NvbW1hbmQoKT8NCg0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3JfaW9jdGwu
+YyBiL2RyaXZlcnMvc2NzaS9zcl9pb2N0bC5jDQo+IGluZGV4IGZiOTI5ZmEuLmU4ZGViOWMgMTAw
+NjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9zcl9pb2N0bC5jDQo+ICsrKyBiL2RyaXZlcnMvc2Nz
+aS9zcl9pb2N0bC5jDQo+IEBAIC0xODgsNiArMTg4LDcgQEAgaW50IHNyX2RvX2lvY3RsKFNjc2lf
+Q0QgKmNkLCBzdHJ1Y3QgcGFja2V0X2NvbW1hbmQgKmNnYykNCj4gICAgICAgICBzdHJ1Y3Qgc2Nz
+aV9zZW5zZV9oZHIgc3NoZHI7DQo+ICAgICAgICAgaW50IHJlc3VsdCwgZXJyID0gMCwgcmV0cmll
+cyA9IDA7DQo+ICAgICAgICAgc3RydWN0IHJlcXVlc3Rfc2Vuc2UgKnNlbnNlID0gY2djLT5zZW5z
+ZTsNCj4gKyAgICAgICBjaGFyIGxvZ2J1ZltTQ1NJX0xPR19CVUZTSVpFXTsNCg0KU2FtZSBpc3N1
+ZSBoZXJlLg0KDQo+ICAgICAgICAgU0RldiA9IGNkLT5kZXZpY2U7DQo+ICANCj4gQEAgLTI1Nywx
+NCArMjU4LDIwIEBAIGludCBzcl9kb19pb2N0bChTY3NpX0NEICpjZCwgc3RydWN0IHBhY2tldF9j
+b21tYW5kICpjZ2MpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLyogc2Vuc2U6
+IEludmFsaWQgY29tbWFuZCBvcGVyYXRpb24gY29kZSAqLw0KPiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIGVyciA9IC1FRFJJVkVfQ0FOVF9ET19USElTOw0KPiAgI2lmZGVmIERFQlVH
+DQo+IC0gICAgICAgICAgICAgICAgICAgICAgIF9fc2NzaV9wcmludF9jb21tYW5kKGNnYy0+Y21k
+LCBDRFJPTV9QQUNLRVRfU0laRSk7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIF9fc2NzaV9m
+b3JtYXRfY29tbWFuZChsb2didWYsIHNpemVvZihsb2didWYpLA0KPiArICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2djLT5jbWQsIENEUk9NX1BBQ0tFVF9TSVpF
+KTsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgc3JfcHJpbnRrKEtFUk5fSU5GTywgY2QsDQo+
+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiQ0RST00gKGlvY3RsKSBpbnZhbGlk
+IGNvbW1hbmQ6ICVzXG4iLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbG9n
+YnVmKTsNCg0KTG9va3MgbGlrZSBzY3NpX3ByaW50X2NvbW1hbmQoKSB3aWxsIHdvcmsgaGVyZSB0
+b28uDQoNCj4gICAgICAgICAgICAgICAgICAgICAgICAgc2NzaV9wcmludF9zZW5zZV9oZHIoY2Qt
+PmRldmljZSwgY2QtPmNkaS5uYW1lLCAmc3NoZHIpOw0KPiAgI2VuZGlmDQo+ICAgICAgICAgICAg
+ICAgICAgICAgICAgIGJyZWFrOw0KPiAgICAgICAgICAgICAgICAgZGVmYXVsdDoNCj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgX19zY3NpX2Zvcm1hdF9jb21tYW5kKGxvZ2J1Ziwgc2l6ZW9mKGxv
+Z2J1ZiksDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBj
+Z2MtPmNtZCwgQ0RST01fUEFDS0VUX1NJWkUpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBz
+cl9wcmludGsoS0VSTl9FUlIsIGNkLA0KPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIkNEUk9NIChpb2N0bCkgZXJyb3IsIGNvbW1hbmQ6ICIpOw0KPiAtICAgICAgICAgICAgICAg
+ICAgICAgICBfX3Njc2lfcHJpbnRfY29tbWFuZChjZ2MtPmNtZCwgQ0RST01fUEFDS0VUX1NJWkUp
+Ow0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIkNEUk9NIChpb2N0bCkgZXJy
+b3IsIGNvbW1hbmQ6ICVzXG4iLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+bG9nYnVmKTsNCg0KQW5kIHJlYWxpc3RpY2FsbHkgaGVyZSAod2l0aCB0aGUgYXBwcm9wcmlhdGUg
+c2Rldl9wcmludCgpJ3MgcHJlY2VkaW5nKS4NCg0KPiAgICAgICAgICAgICAgICAgICAgICAgICBz
+Y3NpX3ByaW50X3NlbnNlX2hkcihjZC0+ZGV2aWNlLCBjZC0+Y2RpLm5hbWUsICZzc2hkcik7DQo+
+ICAgICAgICAgICAgICAgICAgICAgICAgIGVyciA9IC1FSU87DQo+ICAgICAgICAgICAgICAgICB9
+DQoNCkphbWVzDQoNCg==
