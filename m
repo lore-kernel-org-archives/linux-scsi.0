@@ -1,99 +1,48 @@
-From: Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion
-Date: Tue, 13 Jan 2015 11:55:34 +0200
-Message-ID: <54B4EB96.3040303@dev.mellanox.co.il>
-References: <54AD5DDD.2090808@dev.mellanox.co.il> <54AD6563.4040603@suse.de> <54ADA777.6090801@cs.wisc.edu> <54AE36CE.8020509@acm.org> <1420755361.2842.16.camel@haakon3.risingtidesystems.com> <1420756142.11310.9.camel@HansenPartnership.com> <1420757822.2842.39.camel@haakon3.risingtidesystems.com> <1420759360.11310.13.camel@HansenPartnership.com> <1420779808.21830.21.camel@haakon3.risingtidesystems.com> <38CE4ECA-D155-4BF9-9D6D-E1A01ADA05E4@cs.wisc.edu> <54B24117.7050204@dev.mellanox.co.il> <54B428F2.2010507@cs.wisc.edu>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference counting
+Date: Tue, 13 Jan 2015 22:57:16 +0900
+Message-ID: <CAC5umyj=6RfuyhvV02khOH=m7=DcWD3=p2ydV0aoSVeK64DxFw@mail.gmail.com>
+References: <1420984206-22341-1-git-send-email-akinobu.mita@gmail.com>
+	<20150112093610.GA25942@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Return-path: <open-iscsi+bncBCMYDBGM6EBBBG6X2OSQKGQEECYDQ5Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <54B428F2.2010507-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150112093610.GA25942-jcswGhMUV9g@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 1/12/2015 10:05 PM, Mike Christie wrote:
-> On 01/11/2015 03:23 AM, Sagi Grimberg wrote:
->> On 1/9/2015 8:00 PM, Michael Christie wrote:
->> <SNIP>
->>>>>
->>>>
->>>> Session wide command sequence number synchronization isn't something to
->>>> be removed as part of the MQ work.  It's a iSCSI/iSER protocol
->>>> requirement.
->>>>
->>>> That is, the expected + maximum sequence numbers are returned as part of
->>>> every response PDU, which the initiator uses to determine when the
->>>> command sequence number window is open so new non-immediate commands may
->>>> be sent to the target.
->>>>
->>>> So, given some manner of session wide synchronization is required
->>>> between different contexts for the existing single connection case to
->>>> update the command sequence number and check when the window opens, it's
->>>> a fallacy to claim MC/S adds some type of new initiator specific
->>>> synchronization overhead vs. single connection code.
->>>
->>> I think you are assuming we are leaving the iscsi code as it is today.
->>>
->>> For the non-MCS mq session per CPU design, we would be allocating and
->>> binding the session and its resources to specific CPUs. They would
->>> only be accessed by the threads on that one CPU, so we get our
->>> serialization/synchronization from that. That is why we are saying we
->>> do not need something like atomic_t/spin_locks for the sequence number
->>> handling for this type of implementation.
->>>
->>> If we just tried to do this with the old code where the session could
->>> be accessed on multiple CPUs then you are right, we need locks/atomics
->>> like how we do in the MCS case.
->>>
+2015-01-12 18:36 GMT+09:00 Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>:
+> On Sun, Jan 11, 2015 at 10:50:02PM +0900, Akinobu Mita wrote:
+>> While accessing a scsi_device, the use count of the underlying LLDD module
+>> is incremented.  The module reference is retrieved through .module field of
+>> struct scsi_host_template.
 >>
->> I don't think we will want to restrict session per CPU. There is a
->> tradeoff question of system resources. We might want to allow a user to
->> configure multiple HW queues but still not to use too much of the system
->> resources. So the session locks would still be used but definitely less
->> congested...
+>> This mapping between scsi_device and underlying LLDD module works well
+>> except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
+>> These drivers consist with core driver and actual LLDDs, and
+>> scsi_host_template is defined in the core driver.  So the actual LLDDs can
+>> be unloaded even if the scsi_device is being accessed.
+>>
+>> This patch series first adds ability to adjust module reference for
+>> scsi host by LLDDs and then fixes actual LLDDs by adjusting module
+>> reference after scsi host allocation.
 >
-> Are you talking about specifically the session per CPU or also MCS and
-> doing a connection per CPU?
+> Why don't we move the module into the Scsi_Host only, and use
+> the same macro that passes THIS_MODULE trick you are using in
+> the sub drivers?  That seems to be a fairly common scheme in other
+> subsystems as well.
 
-This applies to both.
+Sure, we can take this approach.  But ata drivers require more changes for
+it because ata drivers don't call scsi_host_alloc() directly so we need to
+pass THIS_MODULE to a variety of init functions() provided by libata.
 
->
-> Based on the srp work, how bad do you think it will be to do a
-> session/connection per CPU? What are you thinking will be more common?
-> Session per 4 CPU? 2 CPUs? 8?
-
-This is a level of degree which demonstrates why we need to let the
-user choose. I don't think there is a magic number here, there is a
-tradeoff between performance and memory footprint.
-
->
-> There is also multipath to take into account here. We could do a mq/MCS
-> session/connection per CPU (or group of CPS) then also one of those per
-> transport path. We could also do a mq/MCS session/connection per
-> transport path, then bind those to specific CPUs. Or something in between.
->
-
-Is it a good idea to tie iSCSI implementation in multipath? I've seen
-deployments where multipath was not used for HA (NIC bonding was used
-for that).
-
-The srp implementation allowed the user to choose the number of
-channels per target and the default was chosen by empirical results
-(Bart, please correct me if I'm wrong here).
-
-Sagi.
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+While looking through ata drivers, I found that libahci_platform sub-drivers
+and pata_of_platform driver also have module reference mismatch problem.  So
+ata drivers need to be touched anyway.  I'll update this patch series with
+the new approach.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
