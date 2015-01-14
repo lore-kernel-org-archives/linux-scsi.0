@@ -1,83 +1,64 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 04/48] hpsa: change how SA controllers are reset
-Date: Wed, 14 Jan 2015 15:59:55 -0600
-Message-ID: <20150114215955.21325.47215.stgit@brunhilda>
+Subject: [PATCH 06/48] hpsa: adjust RAID-1, RAID-1ADM, and RAID-6 names
+Date: Wed, 14 Jan 2015 16:00:05 -0600
+Message-ID: <20150114220005.21325.17021.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55197 "EHLO
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55208 "EHLO
 	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752876AbbANWAm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:00:42 -0500
-Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
+	with ESMTP id S1752879AbbANWAw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:00:52 -0500
+Received: from g2t2353.austin.hp.com (g2t2353.austin.hp.com [15.217.128.52])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 3C4ED44A2
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:00:42 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id AAFEA4526
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:00:52 +0000 (UTC)
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-Change how SA controllers are reset by changing PCI power levels.
-The hpsa driver was finding the PCI_PM_CTRL_STATE_MASK offset
-then reading/writing a bitmask to change the power state. There
-are kernel functions that do the same operations. Better to use
-the kernel functions.
+From: Robert Elliott <elliott@hp.com>
 
-Signed-off-by: Don Brace <don.brace@pmcs.com>
+HP now uses RAID-6 rather than RAID-ADG (Advanced Data Guarding)
+as the marketing name for our implementation of RAID-6.
+
+The driver considers RAID-1 and RAID-1+0 to be the same level, and
+considers RAID-1ADM and RAID-1+0ADM to be the same level.  Parenthesis
+can be used to reflect the optional +0 portion of both those RAID levels.
+
+Rename: RAID-ADG to RAID-6
+	RAID-1(1+0) to RAID-1(+0)
+	RAID-1(ADM) to RAID-1(+0)ADM
+
+Also, add another const after the pointer type as suggested
+by checkpatch.pl so the array is:
+	static const char * const raid_label[]
+
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Webb Scales <webbnh@hp.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   28 ++++++++++------------------
- 1 file changed, 10 insertions(+), 18 deletions(-)
+ drivers/scsi/hpsa.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9edacff..371d0a8 100644
+index 7dfe829..4252b63 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5689,30 +5689,22 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 		 * the controller, place the interface device in D3 then to D0,
- 		 * this causes a secondary PCI reset which will reset the
- 		 * controller." */
--		int pos;
--		u16 pmcsr;
--
--		pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
--		if (pos == 0) {
--			dev_err(&pdev->dev,
--				"hpsa_reset_controller: "
--				"PCI PM not supported\n");
--			return -ENODEV;
--		}
-+
-+		int rc = 0;
-+
- 		dev_info(&pdev->dev, "using PCI PM to reset controller\n");
-+
- 		/* enter the D3hot power management state */
--		pci_read_config_word(pdev, pos + PCI_PM_CTRL,
--					(__force u16 *)&pmcsr);
--		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
--		pmcsr |= (__force u16) PCI_D3hot;
--		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
-+		rc = pci_set_power_state(pdev, PCI_D3hot);
-+		if (rc)
-+			return rc;
+@@ -507,8 +507,8 @@ static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
+ 	return (scsi3addr[3] & 0xC0) == 0x40;
+ }
  
- 		msleep(500);
- 
- 		/* enter the D0 power management state */
--		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
--		pmcsr |= (__force u16) PCI_D0;
--		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
-+		rc = pci_set_power_state(pdev, PCI_D0);
-+		if (rc)
-+			return rc;
- 
- 		/*
- 		 * The P600 requires a small delay when changing states.
+-static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
+-	"1(ADM)", "UNKNOWN"
++static const char * const raid_label[] = { "0", "4", "1(+0)", "5", "5+1", "6",
++	"1(+0)ADM", "UNKNOWN"
+ };
+ #define HPSA_RAID_0	0
+ #define HPSA_RAID_4	1
 
