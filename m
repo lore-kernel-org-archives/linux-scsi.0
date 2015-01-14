@@ -1,105 +1,75 @@
-From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 10/10] megaraid_sas: fix endianess for the crash dump
- state support
-Date: Wed, 14 Jan 2015 17:31:29 +0530
-Message-ID: <5d58234d141eb9298e1561e53f70f1e0@mail.gmail.com>
-References: <1420909883-19479-1-git-send-email-hch@lst.de> <1420909883-19479-11-git-send-email-hch@lst.de>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Wed, 14 Jan 2015 14:23:46 +0200
+Message-ID: <54B65FD2.5020907@dev.mellanox.co.il>
+References: <54B63F74.2040702@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og115.obsmtp.com ([64.18.2.217]:60230 "EHLO
-	exprod7og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014AbbANMBb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 07:01:31 -0500
-Received: by mail-qa0-f53.google.com with SMTP id n4so6191056qaq.12
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 04:01:31 -0800 (PST)
-In-Reply-To: <1420909883-19479-11-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <54B63F74.2040702@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Christoph Hellwig [mailto:hch@lst.de]
->Sent: Saturday, January 10, 2015 10:41 PM
->To: Sumit.Saxena@avagotech.com; kashyap.desai@avagotech.com
->Cc: martin.petersen@oracle.com; linux-scsi@vger.kernel.org
->Subject: [PATCH 10/10] megaraid_sas: fix endianess for the crash dump
-state
->support
+On 1/14/2015 12:05 PM, Bart Van Assche wrote:
+> The LIO and SCST SCSI target subsystems consist of the following components:
+> * A core that processes SCSI commands and that provides common
+> functionality like persistent reservations, LUN masking and an interface
+> that allows configuration from user space.
+> * Device handlers that allow this core to access SCSI devices, block
+> devices and files uniformly as SCSI devices.
+> * Target drivers that implement a storage protocol (iSCSI, FC, SRP,
+> iSER, FCoE, ...) and that realize the SCSI request and response
+> communication between the target system and an initiator system.
 >
->Note that this one is a bit fishy: it seems like it should always be read
-and
->written using either words or bytes, but never using a mixture.
+> A significant amount of code is shared between several LIO target
+> drivers and the SCST target drivers that implement the same storage
+> protocol. Since there are two sets of these drivers this means that each
+> set has to be maintained, extended and tested separately. This means a
+> lot of redundant work. The main difference between these two sets of
+> drivers is the interface between the target drivers and the SCSI target
+> core.  Hence the proposal to discuss the unification of the API between
+> SCSI target core and SCSI target drivers. Implementing a single unified
+> API would have the following advantages:
+> * A single set of target drivers works for both projects which means a
+> reduction of the maintenance effort for those who maintain target
+> drivers for target driver developers and target driver users.
+> * This would increase the size of the user base for the unified target
+> drivers.
+> * This would reduce the workload for the storage target maintainers.
+> * This would motivate the SCST target driver maintainers to contribute
+> to the upstream target drivers and to bring the upstream SRP and FCoE
+> target drivers to the same feature and stability level as their SCST
+> counterparts. In other words, the LIO users would also benefit from this
+> work.
+> * This effort would also help SCST users by ensuring that all latest
+> target driver features are also available to SCST users. Some time ago
+> (but no longer today) the LIO QLogic target driver was ahead of the SCST
+> QLogic target driver. This motivated an SCST user to port the LIO QLogic
+> target driver to SCST. See also Greg Wettstein, New release of
+> SCST/Qlogic target interface driver, linux-scsi, April 2014,
+> http://marc.info/?l=linux-scsi&m=139649571807085).
 >
->Please verify against the hardware documentation.
->
->Signed-off-by: Christoph Hellwig <hch@lst.de>
->---
-> drivers/scsi/megaraid/megaraid_sas.h      | 2 +-
-> drivers/scsi/megaraid/megaraid_sas_base.c | 7 ++++---
-> 2 files changed, 5 insertions(+), 4 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->b/drivers/scsi/megaraid/megaraid_sas.h
->index 81484f1..465dd45 100644
->--- a/drivers/scsi/megaraid/megaraid_sas.h
->+++ b/drivers/scsi/megaraid/megaraid_sas.h
->@@ -1676,7 +1676,7 @@ struct megasas_instance {
-> 	u32 drv_buf_alloc;
-> 	u32 crash_dump_fw_support;
-> 	u32 crash_dump_drv_support;
->-	u32 crash_dump_app_support;
->+	__le32 crash_dump_app_support;
-> 	u32 secure_jbod_support;
-> 	spinlock_t crashdump_lock;
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 3d4a080..29a1b20 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -6010,7 +6010,7 @@ static int megasas_set_crash_dump_params_ioctl(
-> {
-> 	struct megasas_instance *local_instance;
-> 	int i, error = 0;
->-	int crash_support;
->+	__le32 crash_support;
->
-> 	crash_support = cmd->frame->dcmd.mbox.w[0];
->
->@@ -6020,7 +6020,7 @@ static int megasas_set_crash_dump_params_ioctl(
-> 			if ((local_instance->adprecovery ==
-> 				MEGASAS_HBA_OPERATIONAL) &&
->
->	!megasas_set_crash_dump_params(local_instance,
->-					crash_support)) {
->+					le32_to_cpu(crash_support))) {
-> 				local_instance->crash_dump_app_support =
-> 					crash_support;
-> 				dev_info(&local_instance->pdev->dev,
->@@ -6084,7 +6084,8 @@ megasas_mgmt_fw_ioctl(struct megasas_instance
->*instance,
-> 					       MFI_FRAME_SGL64 |
-> 					       MFI_FRAME_SENSE64));
->
->-	if (cmd->frame->dcmd.opcode ==
->MR_DRIVER_SET_APP_CRASHDUMP_MODE) {
->+	if (cmd->frame->dcmd.opcode ==
->+
->	cpu_to_le32(MR_DRIVER_SET_APP_CRASHDUMP_MODE)) {
 
-Application will not do any byte swapping for this DCMD
-frame(MR_DRIVER_SET_APP_CRASHDUMP_MODE) to convert it in LE format, since
-this DCMD will not be sent to firmware, driver will only process this DCMD
-and fire another DCMD- MR_DCMD_CTRL_SET_CRASH_DUMP_PARAMS to firmware.
-DCMD frame will always be in CPU format only.
-So this "if" condition does not need
-cpu_to_le32(MR_DRIVER_SET_APP_CRASHDUMP_MODE).
+I would definitely like to talk about this. The upstream SRP target
+driver definitely needs more active maintenance.
 
+I still feel that unifying the fabric drivers would not reduce testing
+efforts (at least not dramatically) as these drivers will need to work
+with two different target core stacks. This even might introduce
+additional challenges.
 
-> 		error = megasas_set_crash_dump_params_ioctl(cmd);
-> 		megasas_return_cmd(instance, cmd);
-> 		return error;
->--
->1.9.1
+> During the first phase of this initiative the focus will be on the
+> QLogic FC, SRP and FCoE target drivers since a significant part of the
+> code of these drivers is shared between the two target frameworks.
+>
+
+I would like to discuss about unifying the iSCSI and iSER drivers
+as well. As you said, This might be more challenging since the two
+stacks evolved from different code base and have different architecture,
+so it would be nice to discuss if we would really benefit from a unified
+implementation in the long run.
+
+Sagi.
