@@ -1,50 +1,85 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 08/48] hpsa: Fix -Wunused-but-set-variable warning
-Date: Wed, 14 Jan 2015 16:00:16 -0600
-Message-ID: <20150114220016.21325.18583.stgit@brunhilda>
+Subject: [PATCH 09/48] hpsa: notice all request_irq errors
+Date: Wed, 14 Jan 2015 16:00:21 -0600
+Message-ID: <20150114220021.21325.6083.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:33142 "EHLO
+Received: from g2t2354.austin.hp.com ([15.217.128.53]:33261 "EHLO
 	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492AbbANWBD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:03 -0500
+	with ESMTP id S1753894AbbANWBI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:08 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Fabian Frederick <fabf@skynet.be>
+From: Robert Elliott <elliott@hp.com>
 
-Remove unused variable in hpsa_free_cmd_pool.
+In MSI and MSI-X mode, where hpsa asks for more than one interrupt,
+hpsa_request_irqs forgets if the first request_irq call failed
+if later ones succeed.
+
+It needs to exit the loop on any failure rather than continue,
+freeing all irqs that were requested until that point.
+
+Also, it needs to clear out the q numbers up to MAX_REPLY_QUEUES.
+The same is true for the general hpsa_free_irqs function.
+
+Tested with error injection of -ENOSYS on the 4th call:
+[    9.277691]  injecting error in inj_request_irq: 1 4
+[    9.277780] hpsa 0000:02:00.0: failed to get irq 35 for hpsa1
+[   10.711623] scsi host1: Error handler scsi_eh_1 exiting
+[   10.739170] hpsa: probe of 0000:02:00.0 failed with error -38
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
-Acked-by: Don Brace <don.brace@pmcs.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index dc81d88..11d21ef 100644
+index 11d21ef..97bb718 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6482,11 +6482,11 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
- 
- static void hpsa_irq_affinity_hints(struct ctlr_info *h)
- {
--	int i, cpu, rc;
-+	int i, cpu;
- 
- 	cpu = cpumask_first(cpu_online_mask);
- 	for (i = 0; i < h->msix_vector; i++) {
--		rc = irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
-+		irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
- 		cpu = cpumask_next(cpu, cpu_online_mask);
+@@ -6508,6 +6508,8 @@ static void hpsa_free_irqs(struct ctlr_info *h)
+ 		irq_set_affinity_hint(h->intr[i], NULL);
+ 		free_irq(h->intr[i], &h->q[i]);
  	}
++	for (; i < MAX_REPLY_QUEUES; i++)
++		h->q[i] = 0;
  }
+ 
+ static int hpsa_request_irq(struct ctlr_info *h,
+@@ -6525,10 +6527,25 @@ static int hpsa_request_irq(struct ctlr_info *h,
+ 
+ 	if (h->intr_mode == PERF_MODE_INT && h->msix_vector > 0) {
+ 		/* If performant mode and MSI-X, use multiple reply queues */
+-		for (i = 0; i < h->msix_vector; i++)
++		for (i = 0; i < h->msix_vector; i++) {
+ 			rc = request_irq(h->intr[i], msixhandler,
+ 					0, h->devname,
+ 					&h->q[i]);
++			if (rc) {
++				int j;
++
++				dev_err(&h->pdev->dev,
++					"failed to get irq %d for %s\n",
++				       h->intr[i], h->devname);
++				for (j = 0; j < i; j++) {
++					free_irq(h->intr[j], &h->q[j]);
++					h->q[j] = 0;
++				}
++				for (; j < MAX_REPLY_QUEUES; j++)
++					h->q[j] = 0;
++				return rc;
++			}
++		}
+ 		hpsa_irq_affinity_hints(h);
+ 	} else {
+ 		/* Use single reply pool */
 
