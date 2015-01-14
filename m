@@ -1,16 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 09/48] hpsa: notice all request_irq errors
-Date: Wed, 14 Jan 2015 16:00:21 -0600
-Message-ID: <20150114220021.21325.6083.stgit@brunhilda>
+Subject: [PATCH 10/48] hpsa: remove 0x from queue depth print which is in
+ decimal
+Date: Wed, 14 Jan 2015 16:00:27 -0600
+Message-ID: <20150114220027.21325.59746.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:33261 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894AbbANWBI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:08 -0500
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:57727 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752932AbbANWBO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:14 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,67 +20,27 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-In MSI and MSI-X mode, where hpsa asks for more than one interrupt,
-hpsa_request_irqs forgets if the first request_irq call failed
-if later ones succeed.
-
-It needs to exit the loop on any failure rather than continue,
-freeing all irqs that were requested until that point.
-
-Also, it needs to clear out the q numbers up to MAX_REPLY_QUEUES.
-The same is true for the general hpsa_free_irqs function.
-
-Tested with error injection of -ENOSYS on the 4th call:
-[    9.277691]  injecting error in inj_request_irq: 1 4
-[    9.277780] hpsa 0000:02:00.0: failed to get irq 35 for hpsa1
-[   10.711623] scsi host1: Error handler scsi_eh_1 exiting
-[   10.739170] hpsa: probe of 0000:02:00.0 failed with error -38
+The queue depth printed at startup is in decimal, so
+shouldn't have a 0x prefix.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 11d21ef..97bb718 100644
+index 97bb718..fbeef5b 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6508,6 +6508,8 @@ static void hpsa_free_irqs(struct ctlr_info *h)
- 		irq_set_affinity_hint(h->intr[i], NULL);
- 		free_irq(h->intr[i], &h->q[i]);
- 	}
-+	for (; i < MAX_REPLY_QUEUES; i++)
-+		h->q[i] = 0;
- }
- 
- static int hpsa_request_irq(struct ctlr_info *h,
-@@ -6525,10 +6527,25 @@ static int hpsa_request_irq(struct ctlr_info *h,
- 
- 	if (h->intr_mode == PERF_MODE_INT && h->msix_vector > 0) {
- 		/* If performant mode and MSI-X, use multiple reply queues */
--		for (i = 0; i < h->msix_vector; i++)
-+		for (i = 0; i < h->msix_vector; i++) {
- 			rc = request_irq(h->intr[i], msixhandler,
- 					0, h->devname,
- 					&h->q[i]);
-+			if (rc) {
-+				int j;
-+
-+				dev_err(&h->pdev->dev,
-+					"failed to get irq %d for %s\n",
-+				       h->intr[i], h->devname);
-+				for (j = 0; j < i; j++) {
-+					free_irq(h->intr[j], &h->q[j]);
-+					h->q[j] = 0;
-+				}
-+				for (; j < MAX_REPLY_QUEUES; j++)
-+					h->q[j] = 0;
-+				return rc;
-+			}
-+		}
- 		hpsa_irq_affinity_hints(h);
- 	} else {
- 		/* Use single reply pool */
+@@ -5931,7 +5931,7 @@ static void print_cfg_table(struct device *dev, struct CfgTable __iomem *tb)
+ 	       readl(&(tb->HostWrite.CoalIntDelay)));
+ 	dev_info(dev, "   Coalesce Interrupt Count = 0x%x\n",
+ 	       readl(&(tb->HostWrite.CoalIntCount)));
+-	dev_info(dev, "   Max outstanding commands = 0x%d\n",
++	dev_info(dev, "   Max outstanding commands = %d\n",
+ 	       readl(&(tb->CmdsOutMax)));
+ 	dev_info(dev, "   Bus Types = 0x%x\n", readl(&(tb->BusTypes)));
+ 	for (i = 0; i < 16; i++)
 
