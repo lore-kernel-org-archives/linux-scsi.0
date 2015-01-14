@@ -1,18 +1,18 @@
 From: Sumit Saxena <sumit.saxena@avagotech.com>
-Subject: RE: [PATCH 07/10] megaraid_sas: add missing byte swaps to the sriov code
-Date: Wed, 14 Jan 2015 16:32:01 +0530
-Message-ID: <2255d5d70cf7858afeb4fec547f2dba6@mail.gmail.com>
-References: <1420909883-19479-1-git-send-email-hch@lst.de> <1420909883-19479-8-git-send-email-hch@lst.de>
+Subject: RE: [PATCH 08/10] megaraid_sas: fix megasas_fire_cmd_fusion calling convention
+Date: Wed, 14 Jan 2015 16:35:35 +0530
+Message-ID: <c31ba7b7fe0e44f06e76a4cd9923a6f5@mail.gmail.com>
+References: <1420909883-19479-1-git-send-email-hch@lst.de> <1420909883-19479-9-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og107.obsmtp.com ([64.18.2.167]:41211 "EHLO
-	exprod7og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbbANLCX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 06:02:23 -0500
-Received: by mail-qg0-f46.google.com with SMTP id q107so6316172qgd.5
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 03:02:02 -0800 (PST)
-In-Reply-To: <1420909883-19479-8-git-send-email-hch@lst.de>
+Received: from exprod7og117.obsmtp.com ([64.18.2.6]:54238 "EHLO
+	exprod7og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbbANLFh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 06:05:37 -0500
+Received: by mail-qa0-f54.google.com with SMTP id w8so5209489qac.13
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 03:05:36 -0800 (PST)
+In-Reply-To: <1420909883-19479-9-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, Kashyap Desai <kashyap.desai@avagotech.com>
@@ -23,122 +23,175 @@ Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 >Sent: Saturday, January 10, 2015 10:41 PM
 >To: Sumit.Saxena@avagotech.com; kashyap.desai@avagotech.com
 >Cc: martin.petersen@oracle.com; linux-scsi@vger.kernel.org
->Subject: [PATCH 07/10] megaraid_sas: add missing byte swaps to the sriov
->code
+>Subject: [PATCH 08/10] megaraid_sas: fix megasas_fire_cmd_fusion calling
+>convention
+>
+>The fusion HBAs don't really use the instance template like the other
+variants,
+>as it branches off at a much higher level.  So instead of trying to
+squeeze
+>megasas_fire_cmd_fusion into the wrong calling convention call it locally
+with
+>argument data types that match what is passed.
 >
 >Signed-off-by: Christoph Hellwig <hch@lst.de>
 >---
-> drivers/scsi/megaraid/megaraid_sas_base.c | 46 +++++++++++++++++-------
->-------
-> 1 file changed, 25 insertions(+), 21 deletions(-)
+> drivers/scsi/megaraid/megaraid_sas_fusion.c | 73
+++++++++++++-------------
+>----
+> 1 file changed, 29 insertions(+), 44 deletions(-)
 >
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 548d033..5350e18 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -1924,20 +1924,22 @@ static int
->megasas_get_ld_vf_affiliation_111(struct megasas_instance *instance,
-> 	dcmd->cmd = MFI_CMD_DCMD;
-> 	dcmd->cmd_status = 0xFF;
-> 	dcmd->sge_count = 1;
->-	dcmd->flags = MFI_FRAME_DIR_BOTH;
->+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
-> 	dcmd->timeout = 0;
-> 	dcmd->pad_0 = 0;
->-	dcmd->data_xfer_len = sizeof(struct MR_LD_VF_AFFILIATION_111);
->-	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111;
->+	dcmd->data_xfer_len =
->+		cpu_to_le32(sizeof(struct MR_LD_VF_AFFILIATION_111));
->+	dcmd->opcode =
->cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111);
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>index b1e053b..5a45764 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>@@ -230,6 +230,31 @@ inline void megasas_return_mfi_mpt_pthr(struct
+>megasas_instance *instance,  }
 >
-> 	if (initial)
-> 		dcmd->sgl.sge32[0].phys_addr =
->-			instance->vf_affiliation_111_h;
->+			cpu_to_le32(instance->vf_affiliation_111_h);
-> 	else
->-		dcmd->sgl.sge32[0].phys_addr = new_affiliation_111_h;
->+		dcmd->sgl.sge32[0].phys_addr =
->+			cpu_to_le32(new_affiliation_111_h);
->
->-	dcmd->sgl.sge32[0].length =
->-		sizeof(struct MR_LD_VF_AFFILIATION_111);
->+	dcmd->sgl.sge32[0].length = cpu_to_le32(
->+		sizeof(struct MR_LD_VF_AFFILIATION_111));
->
-> 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation
->for "
-> 	       "scsi%d\n", instance->host->host_no); @@ -2039,20 +2041,22
-@@
->static int megasas_get_ld_vf_affiliation_12(struct megasas_instance
->*instance,
-> 	dcmd->cmd = MFI_CMD_DCMD;
-> 	dcmd->cmd_status = 0xFF;
-> 	dcmd->sge_count = 1;
->-	dcmd->flags = MFI_FRAME_DIR_BOTH;
->+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
-> 	dcmd->timeout = 0;
-> 	dcmd->pad_0 = 0;
->-	dcmd->data_xfer_len = (MAX_LOGICAL_DRIVES + 1) *
->-		sizeof(struct MR_LD_VF_AFFILIATION);
->-	dcmd->opcode = MR_DCMD_LD_VF_MAP_GET_ALL_LDS;
->+	dcmd->data_xfer_len = cpu_to_le32((MAX_LOGICAL_DRIVES + 1) *
->+		sizeof(struct MR_LD_VF_AFFILIATION));
->+	dcmd->opcode =
->cpu_to_le32(MR_DCMD_LD_VF_MAP_GET_ALL_LDS);
->
-> 	if (initial)
->-		dcmd->sgl.sge32[0].phys_addr = instance->vf_affiliation_h;
->+		dcmd->sgl.sge32[0].phys_addr =
->+			cpu_to_le32(instance->vf_affiliation_h);
-> 	else
->-		dcmd->sgl.sge32[0].phys_addr = new_affiliation_h;
->+		dcmd->sgl.sge32[0].phys_addr =
->+			cpu_to_le32(new_affiliation_h);;
->
->-	dcmd->sgl.sge32[0].length = (MAX_LOGICAL_DRIVES + 1) *
->-		sizeof(struct MR_LD_VF_AFFILIATION);
->+	dcmd->sgl.sge32[0].length = cpu_to_le32((MAX_LOGICAL_DRIVES +
->1) *
->+		sizeof(struct MR_LD_VF_AFFILIATION));
->
-> 	printk(KERN_WARNING "megasas: SR-IOV: Getting LD/VF affiliation
->for "
-> 	       "scsi%d\n", instance->host->host_no); @@ -2204,17 +2208,17
-@@
->int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
->
-> 	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
->
->-	dcmd->mbox.s[0] = sizeof(struct MR_CTRL_HB_HOST_MEM);
->+	dcmd->mbox.s[0] = cpu_to_le16(sizeof(struct
->MR_CTRL_HB_HOST_MEM));
-> 	dcmd->cmd = MFI_CMD_DCMD;
-> 	dcmd->cmd_status = 0xFF;
-> 	dcmd->sge_count = 1;
->-	dcmd->flags = MFI_FRAME_DIR_BOTH;
->+	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_BOTH);
-> 	dcmd->timeout = 0;
-> 	dcmd->pad_0 = 0;
->-	dcmd->data_xfer_len = sizeof(struct MR_CTRL_HB_HOST_MEM);
->-	dcmd->opcode = MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC;
->-	dcmd->sgl.sge32[0].phys_addr = instance->hb_host_mem_h;
->-	dcmd->sgl.sge32[0].length = sizeof(struct
->MR_CTRL_HB_HOST_MEM);
->+	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct
->MR_CTRL_HB_HOST_MEM));
->+	dcmd->opcode =
->cpu_to_le32(MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC);
->+	dcmd->sgl.sge32[0].phys_addr = cpu_to_le32(instance-
->>hb_host_mem_h);
->+	dcmd->sgl.sge32[0].length = cpu_to_le32(sizeof(struct
->+MR_CTRL_HB_HOST_MEM));
->
-> 	printk(KERN_WARNING "megasas: SR-IOV: Starting heartbeat for
->scsi%d\n",
-> 	       instance->host->host_no);
-Acked-by: Sumit Saxena <sumit.saxena@avagotech.com>
+> /**
+>+ * megasas_fire_cmd_fusion -	Sends command to the FW
+>+ */
+>+static void
+>+megasas_fire_cmd_fusion(struct megasas_instance *instance,
+>+		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
+>{ #if
+>+defined(writeq) && defined(CONFIG_64BIT)
+>+	u64 req_data = (((u64)le32_to_cpu(req_desc->u.low) << 32) |
+>+			le32_to_cpu(req_desc->u.high));
 
+In req_data building, positions of "req_desc->u.low" and
+"req_desc->u.high" are swapped.
+req_data should be like below:
+	u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
+			le32_to_cpu(req_desc->u.low));
+
+I will post new patch with this change.
+
+Thanks,
+Sumit
+
+>+
+>+	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
+>+#else
+>+	unsigned long flags;
+>+
+>+	spin_lock_irqsave(&instance->hba_lock, flags);
+>+	writel(le32_to_cpu(req_desc->u.low),
+>+		&instance->reg_set->inbound_low_queue_port);
+>+	writel(le32_to_cpu(req_desc.u.high),
+>+		&instance->reg_set->inbound_high_queue_port);
+>+	spin_unlock_irqrestore(&instance->hba_lock, flags); #endif }
+>+
+>+
+>+/**
+>  * megasas_teardown_frame_pool_fusion -	Destroy the cmd frame DMA
+>pool
+>  * @instance:				Adapter soft state
+>  */
+>@@ -721,8 +746,7 @@ megasas_ioc_init_fusion(struct megasas_instance
+>*instance)
+> 			break;
+> 	}
+>
+>-	instance->instancet->fire_cmd(instance, req_desc.u.low,
+>-				      req_desc.u.high, instance->reg_set);
+>+	megasas_fire_cmd_fusion(instance, &req_desc);
+>
+> 	wait_and_poll(instance, cmd, MFI_POLL_TIMEOUT_SECS);
+>
+>@@ -1133,34 +1157,6 @@ fail_alloc_mfi_cmds:
+> }
+>
+> /**
+>- * megasas_fire_cmd_fusion -	Sends command to the FW
+>- * @frame_phys_addr :		Physical address of cmd
+>- * @frame_count :		Number of frames for the command
+>- * @regs :			MFI register set
+>- */
+>-void
+>-megasas_fire_cmd_fusion(struct megasas_instance *instance,
+>-			dma_addr_t req_desc_lo,
+>-			u32 req_desc_hi,
+>-			struct megasas_register_set __iomem *regs)
+>-{
+>-#if defined(writeq) && defined(CONFIG_64BIT)
+>-	u64 req_data = (((u64)le32_to_cpu(req_desc_hi) << 32) |
+>-			le32_to_cpu(req_desc_lo));
+>-
+>-	writeq(req_data, &(regs)->inbound_low_queue_port);
+>-#else
+>-	unsigned long flags;
+>-
+>-	spin_lock_irqsave(&instance->hba_lock, flags);
+>-
+>-	writel(le32_to_cpu(req_desc_lo), &(regs)-
+>>inbound_low_queue_port);
+>-	writel(le32_to_cpu(req_desc_hi), &(regs)-
+>>inbound_high_queue_port);
+>-	spin_unlock_irqrestore(&instance->hba_lock, flags);
+>-#endif
+>-}
+>-
+>-/**
+>  * map_cmd_status -	Maps FW cmd status to OS cmd status
+>  * @cmd :		Pointer to cmd
+>  * @status :		status of cmd returned by FW
+>@@ -1947,9 +1943,7 @@ megasas_build_and_issue_cmd_fusion(struct
+>megasas_instance *instance,
+> 	 */
+> 	atomic_inc(&instance->fw_outstanding);
+>
+>-	instance->instancet->fire_cmd(instance,
+>-				      req_desc->u.low, req_desc->u.high,
+>-				      instance->reg_set);
+>+	megasas_fire_cmd_fusion(instance, req_desc);
+>
+> 	return 0;
+> }
+>@@ -2328,8 +2322,7 @@ megasas_issue_dcmd_fusion(struct
+>megasas_instance *instance,
+> 		return;
+> 	}
+> 	atomic_set(&cmd->mfi_mpt_pthr, MFI_MPT_ATTACHED);
+>-	instance->instancet->fire_cmd(instance, req_desc->u.low,
+>-				      req_desc->u.high,
+instance->reg_set);
+>+	megasas_fire_cmd_fusion(instance, req_desc);
+> }
+>
+> /**
+>@@ -2816,14 +2809,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost,
+>int iotimeout)
+> 							   frame */
+>
+>	megasas_return_cmd_fusion(instance, cmd_fusion);
+> 						} else {
+>-
+instance->instancet->
+>-							fire_cmd(instance,
+>-
+req_desc->
+>-								 u.low,
+>-
+req_desc->
+>-								 u.high,
+>-
+instance->
+>-								 reg_set);
+>+
+>	megasas_fire_cmd_fusion(instance, req_desc);
+> 						}
+> 					}
+> 				}
+>@@ -2978,7 +2964,6 @@ void megasas_fusion_ocr_wq(struct work_struct
+>*work)
+> }
+>
+> struct megasas_instance_template megasas_instance_template_fusion = {
+>-	.fire_cmd = megasas_fire_cmd_fusion,
+> 	.enable_intr = megasas_enable_intr_fusion,
+> 	.disable_intr = megasas_disable_intr_fusion,
+> 	.clear_intr = megasas_clear_intr_fusion,
 >--
 >1.9.1
