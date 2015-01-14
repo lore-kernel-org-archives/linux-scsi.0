@@ -1,57 +1,76 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 39/48] hpsa: return failed from device reset/abort handlers
-Date: Wed, 14 Jan 2015 16:03:04 -0600
-Message-ID: <20150114220304.21325.73863.stgit@brunhilda>
+Subject: [PATCH 40/48] hpsa: do not use a void pointer for scsi_cmd field of
+ struct CommandList
+Date: Wed, 14 Jan 2015 16:03:09 -0600
+Message-ID: <20150114220309.21325.99541.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:38191 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692AbbANWDu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:50 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:19640 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbbANWDz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:55 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-Returning failed from the device reset handler will get the device
-kicked offline, which is fine if the controller is locked up anyhow.
+From: Stephen Cameron <stephenmcameron@gmail.com>
 
-Cannot abort a command from a failed controller.
+There's no reason for it to be a void *, it should be a struct scsi_cmnd *
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Justin Lindley <justin.lindley@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/hpsa.c     |    6 +++---
+ drivers/scsi/hpsa_cmd.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 834ac78..a02ea7f 100644
+index a02ea7f..8f2569c 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4343,6 +4343,10 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	h = sdev_to_hba(scsicmd->device);
- 	if (h == NULL) /* paranoia */
- 		return FAILED;
-+
-+	if (lockup_detected(h))
-+		return FAILED;
-+
- 	dev = scsicmd->device->hostdata;
- 	if (!dev) {
- 		dev_err(&h->pdev->dev, "hpsa_eh_device_reset_handler: "
-@@ -4566,6 +4570,9 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- 			"ABORT REQUEST FAILED, Controller lookup failed.\n"))
- 		return FAILED;
+@@ -1764,7 +1764,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	unsigned long sense_data_size;
  
-+	if (lockup_detected(h))
-+		return FAILED;
-+
- 	/* Check that controller supports some kind of task abort */
- 	if (!(HPSATMF_PHYS_TASK_ABORT & h->TMFSupportFlags) &&
- 		!(HPSATMF_LOG_TASK_ABORT & h->TMFSupportFlags))
+ 	ei = cp->err_info;
+-	cmd = (struct scsi_cmnd *) cp->scsi_cmd;
++	cmd = cp->scsi_cmd;
+ 	h = cp->h;
+ 	dev = cmd->device->hostdata;
+ 
+@@ -4466,7 +4466,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 	unsigned char *psa = &phys_scsi3addr[0];
+ 
+ 	/* Get a pointer to the hpsa logical device. */
+-	scmd = (struct scsi_cmnd *) abort->scsi_cmd;
++	scmd = abort->scsi_cmd;
+ 	dev = (struct hpsa_scsi_dev_t *)(scmd->device->hostdata);
+ 	if (dev == NULL) {
+ 		dev_warn(&h->pdev->dev,
+@@ -4604,7 +4604,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	}
+ 	hpsa_get_tag(h, abort, &taglower, &tagupper);
+ 	ml += sprintf(msg+ml, "Tag:0x%08x:%08x ", tagupper, taglower);
+-	as  = (struct scsi_cmnd *) abort->scsi_cmd;
++	as  = abort->scsi_cmd;
+ 	if (as != NULL)
+ 		ml += sprintf(msg+ml, "Command:0x%x SN:0x%lx ",
+ 			as->cmnd[0], as->serial_number);
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 071b64c..3a621c7 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -408,7 +408,7 @@ struct CommandList {
+ 	int			   cmd_type;
+ 	long			   cmdindex;
+ 	struct completion *waiting;
+-	void   *scsi_cmd;
++	struct scsi_cmnd *scsi_cmd;
+ 	struct work_struct work;
+ 
+ 	/*
 
