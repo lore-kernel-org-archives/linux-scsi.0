@@ -1,21 +1,22 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 17/48] hpsa: rename hpsa_request_irq to hpsa_request_irqs
-Date: Wed, 14 Jan 2015 16:01:06 -0600
-Message-ID: <20150114220106.21325.46966.stgit@brunhilda>
+Subject: [PATCH 18/48] hpsa: pass error from pci_set_consistent_dma_mask
+ from hpsa_message
+Date: Wed, 14 Jan 2015 16:01:11 -0600
+Message-ID: <20150114220111.21325.2016.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:58142 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbbANWBy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:54 -0500
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55241 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471AbbANWB7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:01:59 -0500
+Received: from g5t1627.atlanta.hp.com (g5t1627.atlanta.hp.com [15.192.137.10])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id D507B63556
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:01:53 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id E5C8F52BE
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:01:58 +0000 (UTC)
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,52 +25,26 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-Make the function name more descriptive. We use more than
-one interrupt.
+Return the actual error code instead of a generic error code.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 354e7f8..f29f569 100644
+index f29f569..64d17d1 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6526,7 +6526,8 @@ static void hpsa_free_irqs(struct ctlr_info *h)
- 		h->q[i] = 0;
- }
+@@ -5610,7 +5610,7 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ 	err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+ 	if (err) {
+ 		iounmap(vaddr);
+-		return -ENOMEM;
++		return err;
+ 	}
  
--static int hpsa_request_irq(struct ctlr_info *h,
-+/* returns 0 on success; cleans up and returns -Enn on error */
-+static int hpsa_request_irqs(struct ctlr_info *h,
- 	irqreturn_t (*msixhandler)(int, void *),
- 	irqreturn_t (*intxhandler)(int, void *))
- {
-@@ -6934,7 +6935,7 @@ reinit_after_soft_reset:
- 	/* make sure the board interrupts are off */
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
- 
--	if (hpsa_request_irq(h, do_hpsa_intr_msi, do_hpsa_intr_intx))
-+	if (hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx))
- 		goto clean2;
- 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
- 	       h->devname, pdev->device,
-@@ -6970,11 +6971,11 @@ reinit_after_soft_reset:
- 		h->access.set_intr_mask(h, HPSA_INTR_OFF);
- 		spin_unlock_irqrestore(&h->lock, flags);
- 		hpsa_free_irqs(h);
--		rc = hpsa_request_irq(h, hpsa_msix_discard_completions,
-+		rc = hpsa_request_irqs(h, hpsa_msix_discard_completions,
- 					hpsa_intx_discard_completions);
- 		if (rc) {
--			dev_warn(&h->pdev->dev, "Failed to request_irq after "
--				"soft reset.\n");
-+			dev_warn(&h->pdev->dev,
-+				"Failed to request_irq after soft reset.\n");
- 			goto clean4;
- 		}
- 
+ 	cmd = pci_alloc_consistent(pdev, cmd_sz, &paddr64);
 
