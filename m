@@ -1,97 +1,107 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 41/48] hpsa: print CDBs instead of kernel virtual addresses
- for uncommon errors
-Date: Wed, 14 Jan 2015 16:03:14 -0600
-Message-ID: <20150114220314.21325.37112.stgit@brunhilda>
+Subject: [PATCH 44/48] hpsa: refactor duplicated scan completion code into a
+ new routine
+Date: Wed, 14 Jan 2015 16:03:30 -0600
+Message-ID: <20150114220330.21325.24802.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:59365 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752308AbbANWEA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:04:00 -0500
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:38509 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424AbbANWEQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:04:16 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Webb Scales <webbnh@hp.com>
 
-Printing the address of the command pointer is of little value, change
-to print the CDB.
+Hoist the conditional out of do_not_scan_if_controller_locked_up() and
+place it in the caller (this improves the code structure, making it
+more consistent with other uses and enabling tail-call optimization);
+rename the function to hpsa_scan_complete(), and use it at the end of
+hpsa_scan_start() as well.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   29 ++++++++++++++++-------------
- 1 file changed, 16 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c |   40 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8f2569c..18bcba9 100644
+index 7915dc4..a92653a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1882,9 +1882,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 	case CMD_DATA_UNDERRUN: /* let mid layer handle it. */
- 		break;
- 	case CMD_DATA_OVERRUN:
--		dev_warn(&h->pdev->dev, "cp %p has"
--			" completed with data overrun "
--			"reported\n", cp);
-+		dev_warn(&h->pdev->dev,
-+			"CDB %16phN data overrun\n", cp->Request.CDB);
- 		break;
- 	case CMD_INVALID: {
- 		/* print_bytes(cp, sizeof(*cp), 1, 0);
-@@ -1900,34 +1899,38 @@ static void complete_scsi_command(struct CommandList *cp)
- 		break;
- 	case CMD_PROTOCOL_ERR:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p has "
--			"protocol error\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : protocol error\n",
-+				cp->Request.CDB);
- 		break;
- 	case CMD_HARDWARE_ERR:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p had  hardware error\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : hardware error\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_CONNECTION_LOST:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p had connection lost\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : connection lost\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_ABORTED:
- 		cmd->result = DID_ABORT << 16;
--		dev_warn(&h->pdev->dev, "cp %p was aborted with status 0x%x\n",
--				cp, ei->ScsiStatus);
-+		dev_warn(&h->pdev->dev, "CDB %16phN was aborted with status 0x%x\n",
-+				cp->Request.CDB, ei->ScsiStatus);
- 		break;
- 	case CMD_ABORT_FAILED:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p reports abort failed\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : abort failed\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_UNSOLICITED_ABORT:
- 		cmd->result = DID_SOFT_ERROR << 16; /* retry the command */
--		dev_warn(&h->pdev->dev, "cp %p aborted due to an unsolicited "
--			"abort\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : unsolicited abort\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_TIMEOUT:
- 		cmd->result = DID_TIME_OUT << 16;
--		dev_warn(&h->pdev->dev, "cp %p timedout\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN timed out\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_UNABORTABLE:
- 		cmd->result = DID_ERROR << 16;
+@@ -4149,25 +4149,14 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	return hpsa_ciss_submit(h, c, cmd, scsi3addr);
+ }
+ 
+-static int do_not_scan_if_controller_locked_up(struct ctlr_info *h)
++static void hpsa_scan_complete(struct ctlr_info *h)
+ {
+ 	unsigned long flags;
+ 
+-	/*
+-	 * Don't let rescans be initiated on a controller known
+-	 * to be locked up.  If the controller locks up *during*
+-	 * a rescan, that thread is probably hosed, but at least
+-	 * we can prevent new rescan threads from piling up on a
+-	 * locked up controller.
+-	 */
+-	if (unlikely(lockup_detected(h))) {
+-		spin_lock_irqsave(&h->scan_lock, flags);
+-		h->scan_finished = 1;
+-		wake_up_all(&h->scan_wait_queue);
+-		spin_unlock_irqrestore(&h->scan_lock, flags);
+-		return 1;
+-	}
+-	return 0;
++	spin_lock_irqsave(&h->scan_lock, flags);
++	h->scan_finished = 1;
++	wake_up_all(&h->scan_wait_queue);
++	spin_unlock_irqrestore(&h->scan_lock, flags);
+ }
+ 
+ static void hpsa_scan_start(struct Scsi_Host *sh)
+@@ -4175,8 +4164,14 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
+ 	struct ctlr_info *h = shost_to_hba(sh);
+ 	unsigned long flags;
+ 
+-	if (do_not_scan_if_controller_locked_up(h))
+-		return;
++	/*
++	 * Don't let rescans be initiated on a controller known to be locked
++	 * up.  If the controller locks up *during* a rescan, that thread is
++	 * probably hosed, but at least we can prevent new rescan threads from
++	 * piling up on a locked up controller.
++	 */
++	if (unlikely(lockup_detected(h)))
++		return hpsa_scan_complete(h);
+ 
+ 	/* wait until any scan already in progress is finished. */
+ 	while (1) {
+@@ -4194,15 +4189,12 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
+ 	h->scan_finished = 0; /* mark scan as in progress */
+ 	spin_unlock_irqrestore(&h->scan_lock, flags);
+ 
+-	if (do_not_scan_if_controller_locked_up(h))
+-		return;
++	if (unlikely(lockup_detected(h)))
++		return hpsa_scan_complete(h);
+ 
+ 	hpsa_update_scsi_devices(h, h->scsi_host->host_no);
+ 
+-	spin_lock_irqsave(&h->scan_lock, flags);
+-	h->scan_finished = 1; /* mark scan as finished. */
+-	wake_up_all(&h->scan_wait_queue);
+-	spin_unlock_irqrestore(&h->scan_lock, flags);
++	hpsa_scan_complete(h);
+ }
+ 
+ static int hpsa_change_queue_depth(struct scsi_device *sdev, int qdepth)
 
