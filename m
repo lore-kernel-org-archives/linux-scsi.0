@@ -1,31 +1,43 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 3/9] scsi: use external buffer for command logging
-Date: Wed, 14 Jan 2015 10:36:19 +0100
-Message-ID: <20150114093619.GA11129@lst.de>
-References: <1420699430-9492-1-git-send-email-hare@suse.de> <1420699430-9492-4-git-send-email-hare@suse.de> <1421175409.2076.17.camel@parallels.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [linux-devel:devel-lkp-ib03-powerpc-201501140043 30/31]
+ drivers/scsi/scsi_logging.c:254:3: error: format not a string literal and no
+ format arguments
+Date: Wed, 14 Jan 2015 01:40:43 -0800
+Message-ID: <20150114094043.GA21820@infradead.org>
+References: <201501140133.IhMp3BqI%fengguang.wu@intel.com>
+ <1421170252.2076.9.camel@parallels.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45932 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753286AbbANJgW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2015 04:36:22 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:55910 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751530AbbANJkn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 04:40:43 -0500
 Content-Disposition: inline
-In-Reply-To: <1421175409.2076.17.camel@parallels.com>
+In-Reply-To: <1421170252.2076.9.camel@parallels.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: "hare@suse.de" <hare@suse.de>, "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "kbuild-all@01.org" <kbuild-all@01.org>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>
 
-On Tue, Jan 13, 2015 at 06:56:17PM +0000, James Bottomley wrote:
-> I really hate using an on-stack buffer here ... we're pretty deep in the
-> call chain already.
+On Tue, Jan 13, 2015 at 05:30:20PM +0000, James Bottomley wrote:
+> Just for everyone's sake the problem is printk format strings (and all
+> the things that indirect there, like pr_xxx and dev_printk).  We must
+> never pass a mutable string directly to printk because of the mayhem
+> that would result if its contents were altered by the user (because some
+> of the things we do in string format parsing are very dangerous), making
+> this a potential security issue.  Only ever pass static strings (in the
+> ro section) to printk formats.
 > 
-> Since it's just required for printing a "command: " prefix, why not just
-> use scsi_print_command()?
+> So this is wrong:
+> 
+> dev_printk(KERN_INFO, dev, logbuf);
+> 
+> This is correct:
+> 
+> dev_printk(KERN_INFO, dev, "%s", logbuf);
 
-Both the ch and sr callers are not really a problem in terms of stack
-usage, as they are directly in file operations of character or block
-devices, so the whole FS/MM stack stack problem isn't an issue.
-
-But using higher level functions might still be useful here.
+In this case the logbug comes from actually doing just that string
+formatting earlier in the function, so it practice it's harmles.
+It would be useful to have a dev_puts to avoid that reinterpretation again,
+though.
