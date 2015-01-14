@@ -1,192 +1,68 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 26/48] hpsa: factor out hpsa_ciss_submit function
-Date: Wed, 14 Jan 2015 16:01:55 -0600
-Message-ID: <20150114220155.21325.28266.stgit@brunhilda>
+Subject: [PATCH 21/48] hpsa: avoid unneccesary calls to resource freeing
+ functions
+Date: Wed, 14 Jan 2015 16:01:28 -0600
+Message-ID: <20150114220128.21325.90126.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:58623 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754196AbbANWCl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:02:41 -0500
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:58535 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbbANWCq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:02:46 -0500
+Received: from g6t1524.atlanta.hp.com (g6t1524.atlanta.hp.com [15.193.200.67])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 0DE59601BD
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:02:16 +0000 (UTC)
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Robert Elliott <elliott@hp.com>
 
-Factor out the bottom part of the queuecommand function
-which is the part that builds commands for submitting down
-the "normal' RAID stack path of a Smart Array.
+If hpsa_allocate_cmd_pool failed, we were calling two functions unnecessarily:
 
-Need to factor this out to improve how commands that
-were initially sent down one of the "ioaccellerated"
-paths but which have some sort of error condition are
-retried down the "normal" path.
+  hpsa_free_sg_chain_blocks(h);
+  hpsa_free_cmd_pool(h);
+
+This didn't cause any problem, as those functions can tolerate being called
+when what they free hasn't been allocated (relevant pointers would be NULL)
+but it is potentially confusing.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |  126 +++++++++++++++++++++++++++------------------------
- 1 file changed, 67 insertions(+), 59 deletions(-)
+ drivers/scsi/hpsa.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 94a82e3..cc3128f 100644
+index a66a50e..bee24b2 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2034,7 +2034,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 
- 	c = cmd_alloc(h);
- 
--	if (c == NULL) {			/* trouble... */
-+	if (c == NULL) {
- 		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
- 		return -ENOMEM;
- 	}
-@@ -3807,68 +3807,14 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 						dev->scsi3addr);
- }
- 
--/* Running in struct Scsi_Host->host_lock less mode */
--static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
-+/* Submit commands down the "normal" RAID stack path */
-+static int hpsa_ciss_submit(struct ctlr_info *h,
-+	struct CommandList *c, struct scsi_cmnd *cmd,
-+	unsigned char scsi3addr[])
- {
--	struct ctlr_info *h;
--	struct hpsa_scsi_dev_t *dev;
--	unsigned char scsi3addr[8];
--	struct CommandList *c;
--	int rc = 0;
--
--	/* Get the ptr to our adapter structure out of cmd->host. */
--	h = sdev_to_hba(cmd->device);
--	dev = cmd->device->hostdata;
--	if (!dev) {
--		cmd->result = DID_NO_CONNECT << 16;
--		cmd->scsi_done(cmd);
--		return 0;
--	}
--	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
--
--	if (unlikely(lockup_detected(h))) {
--		cmd->result = DID_ERROR << 16;
--		cmd->scsi_done(cmd);
--		return 0;
--	}
--	c = cmd_alloc(h);
--	if (c == NULL) {			/* trouble... */
--		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return SCSI_MLQUEUE_HOST_BUSY;
--	}
--
--	/* Fill in the command list header */
--	/* save c in case we have to abort it  */
- 	cmd->host_scribble = (unsigned char *) c;
--
- 	c->cmd_type = CMD_SCSI;
- 	c->scsi_cmd = cmd;
--
--	/* Call alternate submit routine for I/O accelerated commands.
--	 * Retries always go down the normal I/O path.
--	 */
--	if (likely(cmd->retries == 0 &&
--		cmd->request->cmd_type == REQ_TYPE_FS &&
--		h->acciopath_status)) {
--		if (dev->offload_enabled) {
--			rc = hpsa_scsi_ioaccel_raid_map(h, c);
--			if (rc == 0)
--				return 0; /* Sent on ioaccel path */
--			if (rc < 0) {   /* scsi_dma_map failed. */
--				cmd_free(h, c);
--				return SCSI_MLQUEUE_HOST_BUSY;
--			}
--		} else if (dev->ioaccel_handle) {
--			rc = hpsa_scsi_ioaccel_direct_map(h, c);
--			if (rc == 0)
--				return 0; /* Sent on direct map path */
--			if (rc < 0) {   /* scsi_dma_map failed. */
--				cmd_free(h, c);
--				return SCSI_MLQUEUE_HOST_BUSY;
--			}
--		}
--	}
--
- 	c->Header.ReplyQueue = 0;  /* unused in simple mode */
- 	memcpy(&c->Header.LUN.LunAddrBytes[0], &scsi3addr[0], 8);
- 	c->Header.tag = cpu_to_le64((c->cmdindex << DIRECT_LOOKUP_SHIFT));
-@@ -3927,6 +3873,68 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	return 0;
- }
- 
-+/* Running in struct Scsi_Host->host_lock less mode */
-+static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
-+{
-+	struct ctlr_info *h;
-+	struct hpsa_scsi_dev_t *dev;
-+	unsigned char scsi3addr[8];
-+	struct CommandList *c;
-+	int rc = 0;
-+
-+	/* Get the ptr to our adapter structure out of cmd->host. */
-+	h = sdev_to_hba(cmd->device);
-+	dev = cmd->device->hostdata;
-+	if (!dev) {
-+		cmd->result = DID_NO_CONNECT << 16;
-+		cmd->scsi_done(cmd);
-+		return 0;
-+	}
-+	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
-+
-+	if (unlikely(lockup_detected(h))) {
-+		cmd->result = DID_ERROR << 16;
-+		cmd->scsi_done(cmd);
-+		return 0;
-+	}
-+	c = cmd_alloc(h);
-+	if (c == NULL) {			/* trouble... */
-+		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
-+	/* Call alternate submit routine for I/O accelerated commands.
-+	 * Retries always go down the normal I/O path.
-+	 */
-+	if (likely(cmd->retries == 0 &&
-+		cmd->request->cmd_type == REQ_TYPE_FS &&
-+		h->acciopath_status)) {
-+
-+		cmd->host_scribble = (unsigned char *) c;
-+		c->cmd_type = CMD_SCSI;
-+		c->scsi_cmd = cmd;
-+
-+		if (dev->offload_enabled) {
-+			rc = hpsa_scsi_ioaccel_raid_map(h, c);
-+			if (rc == 0)
-+				return 0; /* Sent on ioaccel path */
-+			if (rc < 0) {   /* scsi_dma_map failed. */
-+				cmd_free(h, c);
-+				return SCSI_MLQUEUE_HOST_BUSY;
-+			}
-+		} else if (dev->ioaccel_handle) {
-+			rc = hpsa_scsi_ioaccel_direct_map(h, c);
-+			if (rc == 0)
-+				return 0; /* Sent on direct map path */
-+			if (rc < 0) {   /* scsi_dma_map failed. */
-+				cmd_free(h, c);
-+				return SCSI_MLQUEUE_HOST_BUSY;
-+			}
-+		}
-+	}
-+	return hpsa_ciss_submit(h, c, cmd, scsi3addr);
-+}
-+
- static int do_not_scan_if_controller_locked_up(struct ctlr_info *h)
- {
- 	unsigned long flags;
+@@ -6948,8 +6948,9 @@ reinit_after_soft_reset:
+ 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
+ 	       h->devname, pdev->device,
+ 	       h->intr[h->intr_mode], dac ? "" : " not");
+-	if (hpsa_allocate_cmd_pool(h))
+-		goto clean4;
++	rc = hpsa_allocate_cmd_pool(h);
++	if (rc)
++		goto clean2_and_free_irqs;
+ 	if (hpsa_allocate_sg_chain_blocks(h))
+ 		goto clean4;
+ 	init_waitqueue_head(&h->scan_wait_queue);
+@@ -7038,6 +7039,7 @@ reinit_after_soft_reset:
+ clean4:
+ 	hpsa_free_sg_chain_blocks(h);
+ 	hpsa_free_cmd_pool(h);
++clean2_and_free_irqs:
+ 	hpsa_free_irqs(h);
+ clean2:
+ clean1:
 
