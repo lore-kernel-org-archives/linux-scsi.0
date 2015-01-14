@@ -1,17 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 36/48] hpsa: do not ack controller events on controllers
- that do not support it
-Date: Wed, 14 Jan 2015 16:02:48 -0600
-Message-ID: <20150114220248.21325.81694.stgit@brunhilda>
+Subject: [PATCH 37/48] hpsa: guard against overflowing raid map array
+Date: Wed, 14 Jan 2015 16:02:53 -0600
+Message-ID: <20150114220253.21325.95343.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:19400 "EHLO
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:19458 "EHLO
 	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480AbbANWDf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:35 -0500
+	with ESMTP id S1752692AbbANWDk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:40 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,28 +19,29 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen Cameron <stephenmcameron@gmail.com>
 
-Acking controller events on controllers that do not support
-it can cause such controllers to lock up.
+In the code that translates logical drive LBAs to physical
+drive LBAs if we overflow the raid map disk data array we
+will get the wrong answers.  We do not expect that to happen,
+but best to be on the safe side and guard against it anyway.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
  drivers/scsi/hpsa.c |    3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5abd49d..afd192d 100644
+index afd192d..03fae8a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6674,6 +6674,9 @@ static void hpsa_ack_ctlr_events(struct ctlr_info *h)
- 	int i;
- 	char *event_type;
+@@ -3921,6 +3921,9 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 		return IO_ACCEL_INELIGIBLE;
+ 	}
  
-+	if (!(h->fw_support & MISC_FW_EVENT_NOTIFY))
-+		return;
++	if (unlikely(map_index >= RAID_MAP_MAX_ENTRIES))
++		return IO_ACCEL_INELIGIBLE;
 +
- 	/* Ask the controller to clear the events we're handling. */
- 	if ((h->transMethod & (CFGTBL_Trans_io_accel1
- 			| CFGTBL_Trans_io_accel2)) &&
+ 	c->phys_disk = dev->phys_disk[map_index];
+ 
+ 	disk_handle = dd[map_index].ioaccel_handle;
 
