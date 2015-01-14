@@ -1,43 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [linux-devel:devel-lkp-ib03-powerpc-201501140043 30/31]
- drivers/scsi/scsi_logging.c:254:3: error: format not a string literal and no
- format arguments
-Date: Wed, 14 Jan 2015 01:40:43 -0800
-Message-ID: <20150114094043.GA21820@infradead.org>
-References: <201501140133.IhMp3BqI%fengguang.wu@intel.com>
- <1421170252.2076.9.camel@parallels.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [LSF/MM TOPIC] How SRP initiator performance has been improved via
+ scsi-mq
+Date: Wed, 14 Jan 2015 10:37:39 +0100
+Message-ID: <54B638E3.3030406@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:55910 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbbANJkn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 04:40:43 -0500
-Content-Disposition: inline
-In-Reply-To: <1421170252.2076.9.camel@parallels.com>
+Received: from mail-bn1on0071.outbound.protection.outlook.com ([157.56.110.71]:47872
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750980AbbANJxM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2015 04:53:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "kbuild-all@01.org" <kbuild-all@01.org>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
 
-On Tue, Jan 13, 2015 at 05:30:20PM +0000, James Bottomley wrote:
-> Just for everyone's sake the problem is printk format strings (and all
-> the things that indirect there, like pr_xxx and dev_printk).  We must
-> never pass a mutable string directly to printk because of the mayhem
-> that would result if its contents were altered by the user (because some
-> of the things we do in string format parsing are very dangerous), making
-> this a potential security issue.  Only ever pass static strings (in the
-> ro section) to printk formats.
-> 
-> So this is wrong:
-> 
-> dev_printk(KERN_INFO, dev, logbuf);
-> 
-> This is correct:
-> 
-> dev_printk(KERN_INFO, dev, "%s", logbuf);
+Recently it has been proposed to discuss how to add scsi-mq support in
+the iSER initiator during the 2015 edition of the LSF/MM summit. In the
+discussion that followed that proposal several questions were asked
+about how scsi-mq support has been added in the SRP initiator driver,
+which design choices have been made and which lessons have been learned.
+Hence the proposal to add a topic to the LSF/MM schedule for reporting
+how scsi-mq support has been added in the SRP initiator.
 
-In this case the logbug comes from actually doing just that string
-formatting earlier in the function, so it practice it's harmles.
-It would be useful to have a dev_puts to avoid that reinterpretation again,
-though.
+For the actual discussion see also Sagi Grimberg, [LSF/MM TOPIC] iSCSI
+MQ adoption via MCS discussion, linux-scsi mailing list, January 7, 2015
+(http://thread.gmane.org/gmane.linux.scsi/98199).
+
+Christoph and Mike, if you would like to complement this topic with a
+presentation about the scsi-mq core itself and/or integration of
+multiqueue support in the device mapper multipath driver, I would
+welcome this.
+
+Bart.
