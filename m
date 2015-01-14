@@ -1,22 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 35/48] hpsa: remove incorrect BUG_ONs checking for raid
- offload enable
-Date: Wed, 14 Jan 2015 16:02:43 -0600
-Message-ID: <20150114220243.21325.80254.stgit@brunhilda>
+Subject: [PATCH 36/48] hpsa: do not ack controller events on controllers
+ that do not support it
+Date: Wed, 14 Jan 2015 16:02:48 -0600
+Message-ID: <20150114220248.21325.81694.stgit@brunhilda>
 References: <20150114215756.21325.41198.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:58585 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754256AbbANWDa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:30 -0500
-Received: from g2t2353.austin.hp.com (g2t2353.austin.hp.com [15.217.128.52])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id E7229632FE
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 22:03:29 +0000 (UTC)
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:19400 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480AbbANWDf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:03:35 -0500
 In-Reply-To: <20150114215756.21325.41198.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,51 +20,28 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen Cameron <stephenmcameron@gmail.com>
 
-In set_encrypt_ioaccel2() and in hpsa_scsi_ioaccel_raid_map
-there were BUG_ONs that looked like this:
-
-	BUG_ON(!(dev->offload_config && dev->offload_enabled));
-
-But, In hpsa_ack_ctlr_events() we have this,
-
-	/* Stop sending new RAID offload reqs via the IO accelerator */
-	scsi_block_requests(h->scsi_host);
-	for (i = 0; i < h->ndevices; i++)
-		h->dev[i]->offload_enabled = 0;
-	hpsa_drain_accel_commands(h);
-
-So, we set offload_enabled = 0 for all drives, then do this
-drain_accel_commands, so that means accel commands could still
-be in flight, ie. perhaps having just been submitted into
-hpsa_scsi_ioaccel_raid_map concurrent with ->offload_enabled
-having just been set to zero.
+Acking controller events on controllers that do not support
+it can cause such controllers to lock up.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/hpsa.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index bae3759..5abd49d 100644
+index 5abd49d..afd192d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3456,8 +3456,6 @@ static void set_encrypt_ioaccel2(struct ctlr_info *h,
- 	struct raid_map_data *map = &dev->raid_map;
- 	u64 first_block;
+@@ -6674,6 +6674,9 @@ static void hpsa_ack_ctlr_events(struct ctlr_info *h)
+ 	int i;
+ 	char *event_type;
  
--	BUG_ON(!(dev->offload_config && dev->offload_enabled));
--
- 	/* Are we doing encryption on this device */
- 	if (!(le16_to_cpu(map->flags) & RAID_MAP_FLAG_ENCRYPT_ON))
- 		return;
-@@ -3688,8 +3686,6 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- #endif
- 	int offload_to_mirror;
- 
--	BUG_ON(!(dev->offload_config && dev->offload_enabled));
--
- 	/* check for valid opcode, get LBA and block count */
- 	switch (cmd->cmnd[0]) {
- 	case WRITE_6:
++	if (!(h->fw_support & MISC_FW_EVENT_NOTIFY))
++		return;
++
+ 	/* Ask the controller to clear the events we're handling. */
+ 	if ((h->transMethod & (CFGTBL_Trans_io_accel1
+ 			| CFGTBL_Trans_io_accel2)) &&
 
