@@ -1,58 +1,102 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] scsi: Avoid crashing if device uses DIX but adapter does not support it
-Date: Wed, 14 Jan 2015 16:13:37 -0500
-Message-ID: <1421270017-14103-1-git-send-email-emilne@redhat.com>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH 00/48] hpsa driver updates
+Date: Wed, 14 Jan 2015 15:59:32 -0600
+Message-ID: <20150114215756.21325.41198.stgit@brunhilda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36914 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751286AbbANVNk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2015 16:13:40 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t0ELDdY9028158
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 16:13:40 -0500
-Received: from emilne.csb ([10.18.25.104])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t0ELDduh002852
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2015 16:13:39 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:17656 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbbANWAU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jan 2015 17:00:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+This patch set is based on Linus's tree.
 
-This can happen if a multipathed device uses DIX and another path is
-added via an adapter that does not support it.  Multipath should not
-allow this path to be added, but we should not depend upon that to avoid
-crashing.
-
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+The changes are:
+ - correct sparse warnings
+ - correct memory leaks
+ - correct kdump issues
+ - correct queue depth updates
+ - cleanup function return values
+ - cleanup and enhance messages
+ - cleanup and enhance error handling
+ - minor code refactoring
+ - performance enhancements.
+ - removal of command queueing in driver
+ - elimination of race conditions around aborts
+ - change to internal driver workqueues
 ---
- drivers/scsi/scsi_lib.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6d5c0b8..4f14f4a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1143,7 +1143,17 @@ int scsi_init_io(struct scsi_cmnd *cmd)
- 		struct scsi_data_buffer *prot_sdb = cmd->prot_sdb;
- 		int ivecs, count;
- 
--		BUG_ON(prot_sdb == NULL);
-+		if (prot_sdb == NULL) {
-+			/*
-+			 * This can happen if someone (e.g. multipath)
-+			 * queues a command to a device on an adapter
-+			 * that does not support T10 PI.
-+			 */
-+			WARN_ON_ONCE(1);
-+			error = BLKPREP_KILL;
-+			goto err_exit;
-+		}
-+
- 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
- 
- 		if (scsi_alloc_sgtable(prot_sdb, ivecs, is_mq)) {
--- 
-1.7.11.7
+Don Brace (11):
+      hpsa: correct endian sparse warnings
+      hpsa: change how SA controllers are reset
+      hpsa: correct change_queue_depth
+      hpsa: do not queue commands internally in driver
+      hpsa: use workqueue to resubmit failed ioaccel commands
+      hpsa: honor queue depth of physical devices
+      hpsa: count passthru cmds with atomics, not a spin locked int
+      hpsa: slightly optimize SA5_performant_completed
+      hpsa: return failed from device reset/abort handlers
+      hpsa: add in gen9 controller model names
+      hpsa: add in P840ar controller model name
 
+Fabian Frederick (1):
+      hpsa: Fix -Wunused-but-set-variable warning
+
+Robert Elliott (16):
+      hpsa: adjust RAID-1, RAID-1ADM, and RAID-6 names
+      hpsa: rename free_irqs to hpsa_free_irqs
+      hpsa: notice all request_irq errors
+      hpsa: remove 0x from queue depth print which is in decimal
+      hpsa: propagate hard_reset failures in reset_devices mode
+      hpsa: propagate return value from board ID lookup
+      hpsa: downgrade the Waiting for no-op print to dev_info
+      hpsa: report failure to ioremap config table
+      hpsa: rename hpsa_request_irq to hpsa_request_irqs
+      hpsa: pass error from pci_set_consistent_dma_mask from hpsa_message
+      hpsa: report allocation failures while allocating SG chain blocks
+      hpsa: fix memory leak in hpsa_alloc_cmd_pool
+      hpsa: avoid unneccesary calls to resource freeing functions
+      hpsa: optimize cmd_alloc function by remembering last allocation
+      hpsa: shorten the wait for the CISS doorbell mode change ack
+      hpsa: detect and report failures changing controller transport modes
+
+Stephen Cameron (13):
+      hpsa: trivial message and comment clean ups
+      hpsa: reserve some commands for use by driver
+      hpsa: get rid of cmd_special_alloc and cmd_special_free
+      hpsa: do not request device rescan on every ioaccel path error
+      hpsa: factor out hpsa_ciss_submit function
+      hpsa: do not check for msi(x) in interrupt_pending
+      hpsa: remove incorrect BUG_ONs checking for raid offload enable
+      hpsa: do not ack controller events on controllers that do not support it
+      hpsa: guard against overflowing raid map array
+      hpsa: check for ctlr lockup after command allocation in main io path
+      hpsa: do not use a void pointer for scsi_cmd field of struct CommandList
+      hpsa: print CDBs instead of kernel virtual addresses for uncommon errors
+      hpsa: do not use function pointers in fast path command submission
+
+Tomas Henzl (2):
+      hpsa: fix memory leak in kdump hard reset
+      hpsa: turn off interrupts when kdump starts
+
+Webb Scales (5):
+      hpsa: refactor hpsa_find_board_params() to encapsulate legacy test
+      hpsa: use per-controller work queue
+      hpsa: fix race between abort handler and main i/o path
+      hpsa: move SG descriptor set-up out of hpsa_scatter_gather()
+      hpsa: refactor duplicated scan completion code into a new routine
+
+
+ drivers/scsi/hpsa.c     | 1796 +++++++++++++++++++++++------------------------
+ drivers/scsi/hpsa.h     |   59 +-
+ drivers/scsi/hpsa_cmd.h |  334 ++++++---
+ 3 files changed, 1150 insertions(+), 1039 deletions(-)
+
+--
+Signature
