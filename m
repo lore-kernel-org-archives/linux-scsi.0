@@ -1,7 +1,7 @@
 From: dovl@codeaurora.org
 Subject: Re: [PATCH v7 2/5] phy: qcom-ufs: add support for 20nm phy
-Date: Thu, 15 Jan 2015 15:18:17 -0000
-Message-ID: <b82598227a967b6bbd32c8a95b37b0cf.squirrel@www.codeaurora.org>
+Date: Thu, 15 Jan 2015 15:18:05 -0000
+Message-ID: <53364ecebcd19745656a73d188224e8a.squirrel@www.codeaurora.org>
 References: <1421332359-31785-1-git-send-email-ygardi@codeaurora.org>
     <1421332359-31785-3-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
