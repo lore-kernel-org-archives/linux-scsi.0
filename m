@@ -1,110 +1,77 @@
 From: Yaniv Gardi <ygardi@codeaurora.org>
-Subject: [PATCH v7 2/5] phy: qcom-ufs: add support for 20nm phy
-Date: Thu, 15 Jan 2015 16:32:36 +0200
-Message-ID: <1421332359-31785-3-git-send-email-ygardi@codeaurora.org>
+Subject: [PATCH v7 5/5] scsi: ufs-qcom-ice: add Inline Crypto Engine (ICE) support for UFS
+Date: Thu, 15 Jan 2015 16:32:39 +0200
+Message-ID: <1421332359-31785-6-git-send-email-ygardi@codeaurora.org>
 References: <1421332359-31785-1-git-send-email-ygardi@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:37072 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753594AbbAOOdS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2015 09:33:18 -0500
 In-Reply-To: <1421332359-31785-1-git-send-email-ygardi@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Kishon Vijay Abraham I <kishon@ti.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, "open list:OPEN FIRMWARE AND..." <devicetree@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Yaniv Gardi <ygardi@qti.qualcomm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-This change adds a support for a 20nm qcom-ufs phy that is required in
-platforms that use ufs-qcom controller.
+From: Yaniv Gardi <ygardi@qti.qualcomm.com>
+
+In-order to enhance storage encryption performance,
+an Inline Cryptographic Engine is introduced to UFS.
+This patch adds in-line encryption capabilities to the UFS
+driver.
 
 Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
 ---
- drivers/phy/Makefile                |   1 +
- drivers/phy/phy-qcom-ufs-i.h        |  43 +++++-
- drivers/phy/phy-qcom-ufs-qmp-20nm.c | 257 ++++++++++++++++++++++++++++++++++++
- drivers/phy/phy-qcom-ufs-qmp-20nm.h | 235 +++++++++++++++++++++++++++++++++
- include/linux/phy/phy-qcom-ufs.h    |  59 +++++++++
- 5 files changed, 594 insertions(+), 1 deletion(-)
- create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.c
- create mode 100644 drivers/phy/phy-qcom-ufs-qmp-20nm.h
- create mode 100644 include/linux/phy/phy-qcom-ufs.h
+ drivers/scsi/ufs/Kconfig        |  12 +
+ drivers/scsi/ufs/Makefile       |   1 +
+ drivers/scsi/ufs/ufs-qcom-ice.c | 520 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom-ice.h | 113 +++++++++
+ drivers/scsi/ufs/ufs-qcom.c     |  56 ++++-
+ drivers/scsi/ufs/ufs-qcom.h     |  25 ++
+ 6 files changed, 726 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.h
 
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index 335965d..781b2fa 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -35,3 +35,4 @@ obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
- obj-$(CONFIG_PHY_STIH407_USB)		+= phy-stih407-usb.o
- obj-$(CONFIG_PHY_STIH41X_USB)		+= phy-stih41x-usb.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+= phy-qcom-ufs.o
-+obj-$(CONFIG_PHY_QCOM_UFS) 	+= phy-qcom-ufs-qmp-20nm.o
-diff --git a/drivers/phy/phy-qcom-ufs-i.h b/drivers/phy/phy-qcom-ufs-i.h
-index dac200f..591a391 100644
---- a/drivers/phy/phy-qcom-ufs-i.h
-+++ b/drivers/phy/phy-qcom-ufs-i.h
-@@ -15,15 +15,56 @@
- #ifndef UFS_QCOM_PHY_I_H_
- #define UFS_QCOM_PHY_I_H_
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 8a1f4b3..ecf34ed 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -83,3 +83,15 @@ config SCSI_UFS_QCOM
  
-+#include <linux/module.h>
- #include <linux/clk.h>
-+#include <linux/regulator/consumer.h>
- #include <linux/slab.h>
--#include <linux/phy/phy.h>
-+#include <linux/phy/phy-qcom-ufs.h>
- #include <linux/platform_device.h>
- #include <linux/io.h>
- #include <linux/delay.h>
- 
-+#define readl_poll_timeout(addr, val, cond, sleep_us, timeout_us) \
-+({ \
-+	ktime_t timeout = ktime_add_us(ktime_get(), timeout_us); \
-+	might_sleep_if(timeout_us); \
-+	for (;;) { \
-+		(val) = readl(addr); \
-+		if (cond) \
-+			break; \
-+		if (timeout_us && ktime_compare(ktime_get(), timeout) > 0) { \
-+			(val) = readl(addr); \
-+			break; \
-+		} \
-+		if (sleep_us) \
-+			usleep_range(DIV_ROUND_UP(sleep_us, 4), sleep_us); \
-+	} \
-+	(cond) ? 0 : -ETIMEDOUT; \
-+})
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
 +
-+#define UFS_QCOM_PHY_CAL_ENTRY(reg, val)	\
-+	{				\
-+		.reg_offset = reg,	\
-+		.cfg_value = val,	\
-+	}
++config SCSI_UFS_QCOM_ICE
++	bool "QCOM specific hooks to Inline Crypto Engine for UFS driver"
++	depends on SCSI_UFS_QCOM && CRYPTO_DEV_QCOM_ICE
++	help
++	  This selects the QCOM specific additions to support Inline Crypto
++	  Engine (ICE).
++	  ICE accelerates the crypto operations and maintains the high UFS
++	  performance.
 +
- #define UFS_QCOM_PHY_NAME_LEN	30
- 
-+enum {
-+	MASK_SERDES_START       = 0x1,
-+	MASK_PCS_READY          = 0x1,
-+};
-+
-+enum {
-+	OFFSET_SERDES_START     = 0x0,
-+};
-+
-+struct ufs_qcom_phy_stored_attributes {
-+	u32 att;
-+	u32 value;
-+};
-+
-+
- struct ufs_qcom_phy_calibration {
- 	u32 reg_offset;
- 	u32 cfg_value;
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
++	  Select this if you have ICE supported for UFS on QCOM chipset.
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 8303bcc..31adca5 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -1,5 +1,6 @@
+ # UFSHCD makefile
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
++obj-$(CONFIG_SCSI_UFS_QCOM_ICE) += ufs-qcom-ice.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/scsi/ufs/ufs-qcom-ice.c b/drivers/scsi/ufs/ufs-qcom-ice.c
 new file mode 100644
-index 0000000..8332f96
+index 0000000..9202b73
 --- /dev/null
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-@@ -0,0 +1,257 @@
-+/*
-+ * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
++++ b/drivers/scsi/ufs/ufs-qcom-ice.c
+@@ -0,0 +1,520 @@
++/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 and
@@ -114,260 +81,523 @@ index 0000000..8332f96
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *
 + */
 +
-+#include "phy-qcom-ufs-qmp-20nm.h"
++#include <linux/of.h>
++#include <linux/async.h>
++#include <linux/blkdev.h>
++#include <crypto/ice.h>
 +
-+#define UFS_PHY_NAME "ufs_phy_qmp_20nm"
++#include "ufs-qcom-ice.h"
++#include "ufshcd.h"
++
++#define UFS_QCOM_CRYPTO_LABEL "ufs-qcom-crypto"
++/* Timeout waiting for ICE initialization, that requires TZ access */
++#define UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS 500
++
++static void ufs_qcom_ice_success_cb(void *host_ctrl,
++				enum ice_event_completion evt)
++{
++	struct ufs_qcom_host *qcom_host = (struct ufs_qcom_host *)host_ctrl;
++
++	if (qcom_host->ice.state == UFS_QCOM_ICE_STATE_DISABLED &&
++	    evt == ICE_INIT_COMPLETION)
++		qcom_host->ice.state = UFS_QCOM_ICE_STATE_ACTIVE;
++	 else if (qcom_host->ice.state == UFS_QCOM_ICE_STATE_SUSPENDED &&
++		   evt == ICE_RESUME_COMPLETION)
++		qcom_host->ice.state = UFS_QCOM_ICE_STATE_ACTIVE;
++
++	complete(&qcom_host->ice.async_done);
++}
++
++static void ufs_qcom_ice_error_cb(void *host_ctrl, enum ice_error_code evt)
++{
++	struct ufs_qcom_host *qcom_host = (struct ufs_qcom_host *)host_ctrl;
++
++	dev_err(qcom_host->hba->dev, "%s: Error in ice operation %d",
++		__func__, evt);
++
++	if (qcom_host->ice.state == UFS_QCOM_ICE_STATE_ACTIVE)
++		qcom_host->ice.state = UFS_QCOM_ICE_STATE_DISABLED;
++
++	complete(&qcom_host->ice.async_done);
++}
++
++static struct platform_device *ufs_qcom_ice_get_pdevice(struct device *ufs_dev)
++{
++	struct device_node *node;
++	struct platform_device *ice_pdev = NULL;
++
++	node = of_parse_phandle(ufs_dev->of_node, UFS_QCOM_CRYPTO_LABEL, 0);
++
++	if (!node) {
++		dev_err(ufs_dev, "%s: ufs-qcom-crypto property not specified\n",
++			__func__);
++		goto out;
++	}
++
++	ice_pdev = qcom_ice_get_pdevice(node);
++out:
++	return ice_pdev;
++}
 +
 +static
-+int ufs_qcom_phy_qmp_20nm_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
-+					bool is_rate_B)
++struct qcom_ice_variant_ops *ufs_qcom_ice_get_vops(struct device *ufs_dev)
 +{
-+	struct ufs_qcom_phy_calibration *tbl_A, *tbl_B;
-+	int tbl_size_A, tbl_size_B;
-+	u8 major = ufs_qcom_phy->host_ctrl_rev_major;
-+	u16 minor = ufs_qcom_phy->host_ctrl_rev_minor;
-+	u16 step = ufs_qcom_phy->host_ctrl_rev_step;
-+	int err;
++	struct qcom_ice_variant_ops *ice_vops = NULL;
++	struct device_node *node;
 +
-+	if ((major == 0x1) && (minor == 0x002) && (step == 0x0000)) {
-+		tbl_size_A = ARRAY_SIZE(phy_cal_table_rate_A_1_2_0);
-+		tbl_A = phy_cal_table_rate_A_1_2_0;
-+	} else if ((major == 0x1) && (minor == 0x003) && (step == 0x0000)) {
-+		tbl_size_A = ARRAY_SIZE(phy_cal_table_rate_A_1_3_0);
-+		tbl_A = phy_cal_table_rate_A_1_3_0;
-+	} else {
-+		dev_err(ufs_qcom_phy->dev, "%s: Unknown UFS-PHY version, no calibration values\n",
++	node = of_parse_phandle(ufs_dev->of_node, UFS_QCOM_CRYPTO_LABEL, 0);
++
++	if (!node) {
++		dev_err(ufs_dev, "%s: ufs-qcom-crypto property not specified\n",
 +			__func__);
++		goto out;
++	}
++
++	ice_vops = qcom_ice_get_variant_ops(node);
++
++	if (!ice_vops)
++		dev_err(ufs_dev, "%s: invalid ice_vops\n", __func__);
++
++	of_node_put(node);
++out:
++	return ice_vops;
++}
++
++/**
++ * ufs_qcom_ice_get_dev() - sets pointers to ICE data structs in UFS QCom host
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *
++ * Sets ICE platform device pointer and ICE vops structure
++ * corresponding to the current UFS device.
++ *
++ * Return: -EINVAL in-case of invalid input parameters:
++ *  qcom_host, qcom_host->hba or qcom_host->hba->dev
++ *         -ENODEV in-case ICE device is not required
++ *         -EPROBE_DEFER in-case ICE is required and hasn't been probed yet
++ *         0 otherwise
++ */
++int ufs_qcom_ice_get_dev(struct ufs_qcom_host *qcom_host)
++{
++	struct device *ufs_dev;
++	int err = 0;
++
++	if (!qcom_host || !qcom_host->hba || !qcom_host->hba->dev) {
++		pr_err("%s: invalid qcom_host %p or qcom_host->hba or qcom_host->hba->dev\n",
++			__func__, qcom_host);
++		err = -EINVAL;
++		goto out;
++	}
++
++	ufs_dev = qcom_host->hba->dev;
++
++	qcom_host->ice.vops  = ufs_qcom_ice_get_vops(ufs_dev);
++	qcom_host->ice.pdev = ufs_qcom_ice_get_pdevice(ufs_dev);
++
++	if (qcom_host->ice.pdev == ERR_PTR(-EPROBE_DEFER)) {
++		dev_err(ufs_dev, "%s: ICE device not probed yet\n",
++			__func__);
++		qcom_host->ice.pdev = NULL;
++		qcom_host->ice.vops = NULL;
++		err = -EPROBE_DEFER;
++		goto out;
++	}
++
++	if (!qcom_host->ice.pdev || !qcom_host->ice.vops) {
++		dev_err(ufs_dev, "%s: invalid platform device %p or vops %p\n",
++			__func__, qcom_host->ice.pdev, qcom_host->ice.vops);
++		qcom_host->ice.pdev = NULL;
++		qcom_host->ice.vops = NULL;
 +		err = -ENODEV;
 +		goto out;
 +	}
 +
-+	tbl_size_B = ARRAY_SIZE(phy_cal_table_rate_B);
-+	tbl_B = phy_cal_table_rate_B;
++	qcom_host->ice.state = UFS_QCOM_ICE_STATE_DISABLED;
 +
-+	err = ufs_qcom_phy_calibrate(ufs_qcom_phy, tbl_A, tbl_size_A,
-+						tbl_B, tbl_size_B, is_rate_B);
++out:
++	return err;
 +
-+	if (err)
-+		dev_err(ufs_qcom_phy->dev, "%s: ufs_qcom_phy_calibrate() failed %d\n",
++}
++
++/**
++ * ufs_qcom_ice_init() - initializes the ICE-UFS interface and ICE device
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_init(struct ufs_qcom_host *qcom_host)
++{
++	struct device *ufs_dev = qcom_host->hba->dev;
++	int err = -EINVAL;
++
++	init_completion(&qcom_host->ice.async_done);
++	err = qcom_host->ice.vops->init(qcom_host->ice.pdev,
++				qcom_host,
++				ufs_qcom_ice_success_cb,
++				ufs_qcom_ice_error_cb);
++	if (err) {
++		dev_err(ufs_dev, "%s: ice init failed. err = %d\n",
 +			__func__, err);
++		goto out;
++	}
++
++	if (!wait_for_completion_timeout(&qcom_host->ice.async_done,
++			msecs_to_jiffies(UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS))) {
++		dev_err(qcom_host->hba->dev,
++			"%s: error. got timeout after %d ms\n",
++			__func__, UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS);
++		err = -ETIMEDOUT;
++		goto out;
++	}
++
++	if (qcom_host->ice.state != UFS_QCOM_ICE_STATE_ACTIVE) {
++		dev_err(qcom_host->hba->dev,
++			"%s: error. ice.state (%d) is not in active state\n",
++			__func__, qcom_host->ice.state);
++		err = -EINVAL;
++	}
 +
 +out:
 +	return err;
 +}
 +
-+static
-+void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
++static inline bool ufs_qcom_is_data_cmd(char cmd_op, bool is_write)
 +{
-+	phy_common->quirks =
-+		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
-+}
-+
-+static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
-+{
-+	struct ufs_qcom_phy_qmp_20nm *phy = phy_get_drvdata(generic_phy);
-+	struct ufs_qcom_phy *phy_common = &phy->common_cfg;
-+	int err = 0;
-+
-+	err = ufs_qcom_phy_init_clks(generic_phy, phy_common);
-+	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
-+			__func__, err);
-+		goto out;
-+	}
-+
-+	err = ufs_qcom_phy_init_vregulators(generic_phy, phy_common);
-+	if (err) {
-+		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
-+			__func__, err);
-+		goto out;
-+	}
-+
-+	ufs_qcom_phy_qmp_20nm_advertise_quirks(phy_common);
-+
-+out:
-+	return err;
-+}
-+
-+static
-+void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, bool val)
-+{
-+	bool hibern8_exit_after_pwr_collapse = phy->quirks &
-+		UFS_QCOM_PHY_QUIRK_HIBERN8_EXIT_AFTER_PHY_PWR_COLLAPSE;
-+
-+	if (val) {
-+		writel_relaxed(0x1, phy->mmio + UFS_PHY_POWER_DOWN_CONTROL);
-+		/*
-+		 * Before any transactions involving PHY, ensure PHY knows
-+		 * that it's analog rail is powered ON.
-+		 */
-+		mb();
-+
-+		if (hibern8_exit_after_pwr_collapse) {
-+			/*
-+			 * Give atleast 1us delay after restoring PHY analog
-+			 * power.
-+			 */
-+			usleep_range(1, 2);
-+			writel_relaxed(0x0A, phy->mmio +
-+				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
-+			writel_relaxed(0x08, phy->mmio +
-+				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
-+			/*
-+			 * Make sure workaround is deactivated before proceeding
-+			 * with normal PHY operations.
-+			 */
-+			mb();
-+		}
++	if (is_write) {
++		if (cmd_op == WRITE_6 || cmd_op == WRITE_10 ||
++		    cmd_op == WRITE_16)
++			return true;
 +	} else {
-+		if (hibern8_exit_after_pwr_collapse) {
-+			writel_relaxed(0x0A, phy->mmio +
-+				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
-+			writel_relaxed(0x02, phy->mmio +
-+				       QSERDES_COM_SYSCLK_EN_SEL_TXBAND);
-+			/*
-+			 * Make sure that above workaround is activated before
-+			 * PHY analog power collapse.
-+			 */
-+			mb();
-+		}
-+
-+		writel_relaxed(0x0, phy->mmio + UFS_PHY_POWER_DOWN_CONTROL);
-+		/*
-+		 * ensure that PHY knows its PHY analog rail is going
-+		 * to be powered down
-+		 */
-+		mb();
++		if (cmd_op == READ_6 || cmd_op == READ_10 ||
++		    cmd_op == READ_16)
++			return true;
 +	}
++
++	return false;
 +}
 +
-+static
-+void ufs_qcom_phy_qmp_20nm_set_tx_lane_enable(struct ufs_qcom_phy *phy, u32 val)
++/**
++ * ufs_qcom_ice_cfg() - configures UFS's ICE registers for an ICE transaction
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ * @cmd:	Pointer to a valid scsi command. cmd->request should also be
++ *              a valid pointer.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_cfg(struct ufs_qcom_host *qcom_host, struct scsi_cmnd *cmd)
 +{
-+	writel_relaxed(val & UFS_PHY_TX_LANE_ENABLE_MASK,
-+			phy->mmio + UFS_PHY_TX_LANE_ENABLE);
-+	mb();
-+}
-+
-+static inline void ufs_qcom_phy_qmp_20nm_start_serdes(struct ufs_qcom_phy *phy)
-+{
-+	u32 tmp;
-+
-+	tmp = readl_relaxed(phy->mmio + UFS_PHY_PHY_START);
-+	tmp &= ~MASK_SERDES_START;
-+	tmp |= (1 << OFFSET_SERDES_START);
-+	writel_relaxed(tmp, phy->mmio + UFS_PHY_PHY_START);
-+	mb();
-+}
-+
-+static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
-+{
++	struct device *dev = qcom_host->hba->dev;
 +	int err = 0;
-+	u32 val;
++	struct ice_data_setting ice_set;
++	unsigned int slot = 0;
++	sector_t lba = 0;
++	unsigned int ctrl_info_2_val = 0;
++	unsigned int bypass = 0;
++	struct request *req;
++	char cmd_op;
 +
-+	err = readl_poll_timeout(phy_common->mmio + UFS_PHY_PCS_READY_STATUS,
-+			val, (val & MASK_PCS_READY), 10, 1000000);
-+	if (err)
-+		dev_err(phy_common->dev, "%s: poll for pcs failed err = %d\n",
-+			__func__, err);
++	if (!qcom_host->ice.pdev || !qcom_host->ice.vops) {
++		dev_dbg(dev, "%s: ice device is not enabled\n", __func__);
++		goto out;
++	}
++
++	if (qcom_host->ice.state != UFS_QCOM_ICE_STATE_ACTIVE) {
++		dev_err(dev, "%s: ice state (%d) is not active\n",
++			__func__, qcom_host->ice.state);
++		return -EINVAL;
++	}
++
++	req = cmd->request;
++	if (req->bio)
++		lba = req->bio->bi_sector;
++
++	slot = req->tag;
++	if (slot < 0 || slot > qcom_host->hba->nutrs) {
++		dev_err(dev, "%s: slot (%d) is out of boundaries (0...%d)\n",
++			__func__, slot, qcom_host->hba->nutrs);
++		return -EINVAL;
++	}
++
++	memset(&ice_set, sizeof(ice_set), 0);
++	if (qcom_host->ice.vops->config) {
++		err = qcom_host->ice.vops->config(qcom_host->ice.pdev,
++							req, &ice_set);
++
++		if (err) {
++			dev_err(dev, "%s: error in ice_vops->config %d\n",
++				__func__, err);
++			goto out;
++		}
++	}
++
++	cmd_op = cmd->cmnd[0];
++
++#define UFS_QCOM_DIR_WRITE	true
++#define UFS_QCOM_DIR_READ	false
++	/* if non data command, bypass shall be enabled */
++	if (!ufs_qcom_is_data_cmd(cmd_op, UFS_QCOM_DIR_WRITE) &&
++	    !ufs_qcom_is_data_cmd(cmd_op, UFS_QCOM_DIR_READ))
++		bypass = UFS_QCOM_ICE_ENABLE_BYPASS;
++	/* if writing data command */
++	else if (ufs_qcom_is_data_cmd(cmd_op, UFS_QCOM_DIR_WRITE))
++		bypass = ice_set.encr_bypass ? UFS_QCOM_ICE_ENABLE_BYPASS :
++						UFS_QCOM_ICE_DISABLE_BYPASS;
++	/* if reading data command */
++	else if (ufs_qcom_is_data_cmd(cmd_op, UFS_QCOM_DIR_READ))
++		bypass = ice_set.decr_bypass ? UFS_QCOM_ICE_ENABLE_BYPASS :
++						UFS_QCOM_ICE_DISABLE_BYPASS;
++
++	/* Configure ICE index */
++	ctrl_info_2_val =
++		(ice_set.crypto_data.key_index &
++		 MASK_UFS_QCOM_ICE_CTRL_INFO_2_KEY_INDEX)
++		 << OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_KEY_INDEX;
++
++	/* Configure data unit size of transfer request */
++	ctrl_info_2_val |=
++		(UFS_QCOM_ICE_TR_DATA_UNIT_4_KB &
++		 MASK_UFS_QCOM_ICE_CTRL_INFO_2_CDU)
++		 << OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_CDU;
++
++	/* Configure ICE bypass mode */
++	ctrl_info_2_val |=
++		(bypass & MASK_UFS_QCOM_ICE_CTRL_INFO_2_BYPASS)
++		 << OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_BYPASS;
++
++	ufshcd_writel(qcom_host->hba, lba,
++		     (REG_UFS_QCOM_ICE_CTRL_INFO_1_n + 8 * slot));
++
++	ufshcd_writel(qcom_host->hba, ctrl_info_2_val,
++		     (REG_UFS_QCOM_ICE_CTRL_INFO_2_n + 8 * slot));
++
++	/*
++	 * Ensure UFS-ICE registers are being configured
++	 * before next operation, otherwise UFS Host Controller might
++	 * set get errors
++	 */
++	mb();
++out:
 +	return err;
 +}
 +
-+static struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
-+	.init		= ufs_qcom_phy_qmp_20nm_init,
-+	.exit		= ufs_qcom_phy_exit,
-+	.power_on	= ufs_qcom_phy_power_on,
-+	.power_off	= ufs_qcom_phy_power_off,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static struct ufs_qcom_phy_specific_ops phy_20nm_ops = {
-+	.calibrate_phy		= ufs_qcom_phy_qmp_20nm_phy_calibrate,
-+	.start_serdes		= ufs_qcom_phy_qmp_20nm_start_serdes,
-+	.is_physical_coding_sublayer_ready = ufs_qcom_phy_qmp_20nm_is_pcs_ready,
-+	.set_tx_lane_enable	= ufs_qcom_phy_qmp_20nm_set_tx_lane_enable,
-+	.power_control		= ufs_qcom_phy_qmp_20nm_power_control,
-+};
-+
-+static int ufs_qcom_phy_qmp_20nm_probe(struct platform_device *pdev)
++/**
++ * ufs_qcom_ice_reset() - resets UFS-ICE interface and ICE device
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_reset(struct ufs_qcom_host *qcom_host)
 +{
-+	struct device *dev = &pdev->dev;
-+	struct phy *generic_phy;
-+	struct ufs_qcom_phy_qmp_20nm *phy;
++	struct device *dev = qcom_host->hba->dev;
 +	int err = 0;
 +
-+	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
-+	if (!phy) {
-+		dev_err(dev, "%s: failed to allocate phy\n", __func__);
-+		err = -ENOMEM;
++	if (!qcom_host->ice.pdev) {
++		dev_dbg(dev, "%s: ice device is not enabled\n", __func__);
 +		goto out;
 +	}
 +
-+	generic_phy = ufs_qcom_phy_generic_probe(pdev, &phy->common_cfg,
-+				&ufs_qcom_phy_qmp_20nm_phy_ops, &phy_20nm_ops);
-+
-+	if (!generic_phy) {
-+		dev_err(dev, "%s: ufs_qcom_phy_generic_probe() failed\n",
-+			__func__);
-+		err = -EIO;
-+		goto out;
++	if (!qcom_host->ice.vops) {
++		dev_err(dev, "%s: invalid ice_vops\n", __func__);
++		return -EINVAL;
 +	}
 +
-+	phy_set_drvdata(generic_phy, phy);
++	if (qcom_host->ice.state != UFS_QCOM_ICE_STATE_ACTIVE)
++		goto out;
 +
-+	strlcpy(phy->common_cfg.name, UFS_PHY_NAME,
-+			sizeof(phy->common_cfg.name));
++	init_completion(&qcom_host->ice.async_done);
++
++	if (qcom_host->ice.vops->reset) {
++		err = qcom_host->ice.vops->reset(qcom_host->ice.pdev);
++		if (err) {
++			dev_err(dev, "%s: ice_vops->reset failed. err %d\n",
++				__func__, err);
++			goto out;
++		}
++	}
++
++	if (!wait_for_completion_timeout(&qcom_host->ice.async_done,
++	     msecs_to_jiffies(UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS))) {
++		dev_err(dev,
++			"%s: error. got timeout after %d ms\n",
++			__func__, UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS);
++		err = -ETIMEDOUT;
++	}
 +
 +out:
 +	return err;
 +}
 +
-+static int ufs_qcom_phy_qmp_20nm_remove(struct platform_device *pdev)
++/**
++ * ufs_qcom_ice_resume() - resumes UFS-ICE interface and ICE device from power
++ * collapse
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_resume(struct ufs_qcom_host *qcom_host)
 +{
-+	struct device *dev = &pdev->dev;
-+	struct phy *generic_phy = to_phy(dev);
-+	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
++	struct device *dev = qcom_host->hba->dev;
 +	int err = 0;
 +
-+	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
-+	if (err)
-+		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
-+			__func__, err);
++	if (!qcom_host->ice.pdev) {
++		dev_dbg(dev, "%s: ice device is not enabled\n", __func__);
++		goto out;
++	}
 +
++	if (qcom_host->ice.state !=
++			UFS_QCOM_ICE_STATE_SUSPENDED) {
++		goto out;
++	}
++
++	if (!qcom_host->ice.vops) {
++		dev_err(dev, "%s: invalid ice_vops\n", __func__);
++		return -EINVAL;
++	}
++
++	init_completion(&qcom_host->ice.async_done);
++
++	if (qcom_host->ice.vops->resume) {
++		err = qcom_host->ice.vops->resume(qcom_host->ice.pdev);
++		if (err) {
++			dev_err(dev, "%s: ice_vops->resume failed. err %d\n",
++				__func__, err);
++			return -EINVAL;
++		}
++	}
++
++	if (!wait_for_completion_timeout(&qcom_host->ice.async_done,
++			msecs_to_jiffies(UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS))) {
++		dev_err(dev,
++			"%s: error. got timeout after %d ms\n",
++			__func__, UFS_QCOM_ICE_COMPLETION_TIMEOUT_MS);
++		err = -ETIMEDOUT;
++		goto out;
++	}
++
++	if (qcom_host->ice.state != UFS_QCOM_ICE_STATE_ACTIVE)
++		err = -EINVAL;
++out:
 +	return err;
 +}
 +
-+static const struct of_device_id ufs_qcom_phy_qmp_20nm_of_match[] = {
-+	{.compatible = "qcom,ufs-phy-qmp-20nm"},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_20nm_of_match);
++/**
++ * ufs_qcom_ice_suspend() - suspends UFS-ICE interface and ICE device
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_suspend(struct ufs_qcom_host *qcom_host)
++{
++	struct device *dev = qcom_host->hba->dev;
++	int err = 0;
 +
-+static struct platform_driver ufs_qcom_phy_qmp_20nm_driver = {
-+	.probe = ufs_qcom_phy_qmp_20nm_probe,
-+	.remove = ufs_qcom_phy_qmp_20nm_remove,
-+	.driver = {
-+		.of_match_table = ufs_qcom_phy_qmp_20nm_of_match,
-+		.name = "ufs_qcom_phy_qmp_20nm",
-+		.owner = THIS_MODULE,
-+	},
-+};
++	if (!qcom_host->ice.pdev) {
++		dev_dbg(dev, "%s: ice device is not enabled\n", __func__);
++		goto out;
++	}
 +
-+module_platform_driver(ufs_qcom_phy_qmp_20nm_driver);
++	if (qcom_host->ice.vops->suspend) {
++		err = qcom_host->ice.vops->suspend(qcom_host->ice.pdev);
++		if (err) {
++			dev_err(qcom_host->hba->dev,
++				"%s: ice_vops->suspend failed. err %d\n",
++				__func__, err);
++			return -EINVAL;
++		}
++	}
 +
-+MODULE_DESCRIPTION("Universal Flash Storage (UFS) QCOM PHY QMP 20nm");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.h b/drivers/phy/phy-qcom-ufs-qmp-20nm.h
++	if (qcom_host->ice.state == UFS_QCOM_ICE_STATE_ACTIVE) {
++		qcom_host->ice.state = UFS_QCOM_ICE_STATE_SUSPENDED;
++	} else if (qcom_host->ice.state == UFS_QCOM_ICE_STATE_DISABLED) {
++		dev_err(qcom_host->hba->dev,
++				"%s: ice state is invalid: disabled\n",
++				__func__);
++		err = -EINVAL;
++	}
++
++out:
++	return err;
++}
++
++/**
++ * ufs_qcom_ice_get_status() - returns the status of an ICE transaction
++ * @qcom_host:	Pointer to a UFS QCom internal host structure.
++ *		qcom_host, qcom_host->hba and qcom_host->hba->dev should all
++ *		be valid pointers.
++ * @ice_status:	Pointer to a valid output parameter.
++ *		< 0 in case of ICE transaction failure.
++ *		0 otherwise.
++ *
++ * Return: -EINVAL in-case of an error
++ *         0 otherwise
++ */
++int ufs_qcom_ice_get_status(struct ufs_qcom_host *qcom_host, int *ice_status)
++{
++	struct device *dev = NULL;
++	int err = 0;
++	int stat = -EINVAL;
++
++	ice_status = 0;
++
++	dev = qcom_host->hba->dev;
++	if (!dev) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (!qcom_host->ice.pdev) {
++		dev_dbg(dev, "%s: ice device is not enabled\n", __func__);
++		goto out;
++	}
++
++	if (qcom_host->ice.state != UFS_QCOM_ICE_STATE_ACTIVE) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (!qcom_host->ice.vops) {
++		dev_err(dev, "%s: invalid ice_vops\n", __func__);
++		return -EINVAL;
++	}
++
++	if (qcom_host->ice.vops->status) {
++		stat = qcom_host->ice.vops->status(qcom_host->ice.pdev);
++		if (stat < 0) {
++			dev_err(dev, "%s: ice_vops->status failed. stat %d\n",
++				__func__, stat);
++			err = -EINVAL;
++			goto out;
++		}
++
++		*ice_status = stat;
++	}
++
++out:
++	return err;
++}
+diff --git a/drivers/scsi/ufs/ufs-qcom-ice.h b/drivers/scsi/ufs/ufs-qcom-ice.h
 new file mode 100644
-index 0000000..4f3076b
+index 0000000..5ccbf5f
 --- /dev/null
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.h
-@@ -0,0 +1,235 @@
-+/*
-+ * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
++++ b/drivers/scsi/ufs/ufs-qcom-ice.h
+@@ -0,0 +1,113 @@
++/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 and
@@ -380,292 +610,259 @@ index 0000000..4f3076b
 + *
 + */
 +
-+#ifndef UFS_QCOM_PHY_QMP_20NM_H_
-+#define UFS_QCOM_PHY_QMP_20NM_H_
++#ifndef _UFS_QCOM_ICE_H_
++#define _UFS_QCOM_ICE_H_
 +
-+#include "phy-qcom-ufs-i.h"
++#include <scsi/scsi_cmnd.h>
 +
-+/* QCOM UFS PHY control registers */
-+
-+#define COM_OFF(x)     (0x000 + x)
-+#define PHY_OFF(x)     (0xC00 + x)
-+#define TX_OFF(n, x)   (0x400 + (0x400 * n) + x)
-+#define RX_OFF(n, x)   (0x600 + (0x400 * n) + x)
-+
-+/* UFS PHY PLL block registers */
-+#define QSERDES_COM_SYS_CLK_CTRL		COM_OFF(0x0)
-+#define QSERDES_COM_PLL_VCOTAIL_EN		COM_OFF(0x04)
-+#define QSERDES_COM_PLL_CNTRL			COM_OFF(0x14)
-+#define QSERDES_COM_PLL_IP_SETI			COM_OFF(0x24)
-+#define QSERDES_COM_CORE_CLK_IN_SYNC_SEL	COM_OFF(0x28)
-+#define QSERDES_COM_BIAS_EN_CLKBUFLR_EN		COM_OFF(0x30)
-+#define QSERDES_COM_PLL_CP_SETI			COM_OFF(0x34)
-+#define QSERDES_COM_PLL_IP_SETP			COM_OFF(0x38)
-+#define QSERDES_COM_PLL_CP_SETP			COM_OFF(0x3C)
-+#define QSERDES_COM_SYSCLK_EN_SEL_TXBAND	COM_OFF(0x48)
-+#define QSERDES_COM_RESETSM_CNTRL		COM_OFF(0x4C)
-+#define QSERDES_COM_RESETSM_CNTRL2		COM_OFF(0x50)
-+#define QSERDES_COM_PLLLOCK_CMP1		COM_OFF(0x90)
-+#define QSERDES_COM_PLLLOCK_CMP2		COM_OFF(0x94)
-+#define QSERDES_COM_PLLLOCK_CMP3		COM_OFF(0x98)
-+#define QSERDES_COM_PLLLOCK_CMP_EN		COM_OFF(0x9C)
-+#define QSERDES_COM_BGTC			COM_OFF(0xA0)
-+#define QSERDES_COM_DEC_START1			COM_OFF(0xAC)
-+#define QSERDES_COM_PLL_AMP_OS			COM_OFF(0xB0)
-+#define QSERDES_COM_RES_CODE_UP_OFFSET		COM_OFF(0xD8)
-+#define QSERDES_COM_RES_CODE_DN_OFFSET		COM_OFF(0xDC)
-+#define QSERDES_COM_DIV_FRAC_START1		COM_OFF(0x100)
-+#define QSERDES_COM_DIV_FRAC_START2		COM_OFF(0x104)
-+#define QSERDES_COM_DIV_FRAC_START3		COM_OFF(0x108)
-+#define QSERDES_COM_DEC_START2			COM_OFF(0x10C)
-+#define QSERDES_COM_PLL_RXTXEPCLK_EN		COM_OFF(0x110)
-+#define QSERDES_COM_PLL_CRCTRL			COM_OFF(0x114)
-+#define QSERDES_COM_PLL_CLKEPDIV		COM_OFF(0x118)
-+
-+/* TX LANE n (0, 1) registers */
-+#define QSERDES_TX_EMP_POST1_LVL(n)		TX_OFF(n, 0x08)
-+#define QSERDES_TX_DRV_LVL(n)			TX_OFF(n, 0x0C)
-+#define QSERDES_TX_LANE_MODE(n)			TX_OFF(n, 0x54)
-+
-+/* RX LANE n (0, 1) registers */
-+#define QSERDES_RX_CDR_CONTROL1(n)		RX_OFF(n, 0x0)
-+#define QSERDES_RX_CDR_CONTROL_HALF(n)		RX_OFF(n, 0x8)
-+#define QSERDES_RX_RX_EQ_GAIN1_LSB(n)		RX_OFF(n, 0xA8)
-+#define QSERDES_RX_RX_EQ_GAIN1_MSB(n)		RX_OFF(n, 0xAC)
-+#define QSERDES_RX_RX_EQ_GAIN2_LSB(n)		RX_OFF(n, 0xB0)
-+#define QSERDES_RX_RX_EQ_GAIN2_MSB(n)		RX_OFF(n, 0xB4)
-+#define QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2(n)	RX_OFF(n, 0xBC)
-+#define QSERDES_RX_CDR_CONTROL_QUARTER(n)	RX_OFF(n, 0xC)
-+#define QSERDES_RX_SIGDET_CNTRL(n)		RX_OFF(n, 0x100)
-+
-+/* UFS PHY registers */
-+#define UFS_PHY_PHY_START			PHY_OFF(0x00)
-+#define UFS_PHY_POWER_DOWN_CONTROL		PHY_OFF(0x4)
-+#define UFS_PHY_TX_LANE_ENABLE			PHY_OFF(0x44)
-+#define UFS_PHY_PWM_G1_CLK_DIVIDER		PHY_OFF(0x08)
-+#define UFS_PHY_PWM_G2_CLK_DIVIDER		PHY_OFF(0x0C)
-+#define UFS_PHY_PWM_G3_CLK_DIVIDER		PHY_OFF(0x10)
-+#define UFS_PHY_PWM_G4_CLK_DIVIDER		PHY_OFF(0x14)
-+#define UFS_PHY_CORECLK_PWM_G1_CLK_DIVIDER	PHY_OFF(0x34)
-+#define UFS_PHY_CORECLK_PWM_G2_CLK_DIVIDER	PHY_OFF(0x38)
-+#define UFS_PHY_CORECLK_PWM_G3_CLK_DIVIDER	PHY_OFF(0x3C)
-+#define UFS_PHY_CORECLK_PWM_G4_CLK_DIVIDER	PHY_OFF(0x40)
-+#define UFS_PHY_OMC_STATUS_RDVAL		PHY_OFF(0x68)
-+#define UFS_PHY_LINE_RESET_TIME			PHY_OFF(0x28)
-+#define UFS_PHY_LINE_RESET_GRANULARITY		PHY_OFF(0x2C)
-+#define UFS_PHY_TSYNC_RSYNC_CNTL		PHY_OFF(0x48)
-+#define UFS_PHY_PLL_CNTL			PHY_OFF(0x50)
-+#define UFS_PHY_TX_LARGE_AMP_DRV_LVL		PHY_OFF(0x54)
-+#define UFS_PHY_TX_SMALL_AMP_DRV_LVL		PHY_OFF(0x5C)
-+#define UFS_PHY_TX_LARGE_AMP_POST_EMP_LVL	PHY_OFF(0x58)
-+#define UFS_PHY_TX_SMALL_AMP_POST_EMP_LVL	PHY_OFF(0x60)
-+#define UFS_PHY_CFG_CHANGE_CNT_VAL		PHY_OFF(0x64)
-+#define UFS_PHY_RX_SYNC_WAIT_TIME		PHY_OFF(0x6C)
-+#define UFS_PHY_TX_MIN_SLEEP_NOCONFIG_TIME_CAPABILITY	PHY_OFF(0xB4)
-+#define UFS_PHY_RX_MIN_SLEEP_NOCONFIG_TIME_CAPABILITY	PHY_OFF(0xE0)
-+#define UFS_PHY_TX_MIN_STALL_NOCONFIG_TIME_CAPABILITY	PHY_OFF(0xB8)
-+#define UFS_PHY_RX_MIN_STALL_NOCONFIG_TIME_CAPABILITY	PHY_OFF(0xE4)
-+#define UFS_PHY_TX_MIN_SAVE_CONFIG_TIME_CAPABILITY	PHY_OFF(0xBC)
-+#define UFS_PHY_RX_MIN_SAVE_CONFIG_TIME_CAPABILITY	PHY_OFF(0xE8)
-+#define UFS_PHY_RX_PWM_BURST_CLOSURE_LENGTH_CAPABILITY	PHY_OFF(0xFC)
-+#define UFS_PHY_RX_MIN_ACTIVATETIME_CAPABILITY		PHY_OFF(0x100)
-+#define UFS_PHY_RX_SIGDET_CTRL3				PHY_OFF(0x14c)
-+#define UFS_PHY_RMMI_ATTR_CTRL			PHY_OFF(0x160)
-+#define UFS_PHY_RMMI_RX_CFGUPDT_L1	(1 << 7)
-+#define UFS_PHY_RMMI_TX_CFGUPDT_L1	(1 << 6)
-+#define UFS_PHY_RMMI_CFGWR_L1		(1 << 5)
-+#define UFS_PHY_RMMI_CFGRD_L1		(1 << 4)
-+#define UFS_PHY_RMMI_RX_CFGUPDT_L0	(1 << 3)
-+#define UFS_PHY_RMMI_TX_CFGUPDT_L0	(1 << 2)
-+#define UFS_PHY_RMMI_CFGWR_L0		(1 << 1)
-+#define UFS_PHY_RMMI_CFGRD_L0		(1 << 0)
-+#define UFS_PHY_RMMI_ATTRID			PHY_OFF(0x164)
-+#define UFS_PHY_RMMI_ATTRWRVAL			PHY_OFF(0x168)
-+#define UFS_PHY_RMMI_ATTRRDVAL_L0_STATUS	PHY_OFF(0x16C)
-+#define UFS_PHY_RMMI_ATTRRDVAL_L1_STATUS	PHY_OFF(0x170)
-+#define UFS_PHY_PCS_READY_STATUS		PHY_OFF(0x174)
-+
-+#define UFS_PHY_TX_LANE_ENABLE_MASK		0x3
++#include "ufs-qcom.h"
 +
 +/*
-+ * This structure represents the 20nm specific phy.
-+ * common_cfg MUST remain the first field in this structure
-+ * in case extra fields are added. This way, when calling
-+ * get_ufs_qcom_phy() of generic phy, we can extract the
-+ * common phy structure (struct ufs_qcom_phy) out of it
-+ * regardless of the relevant specific phy.
++ * UFS host controller ICE registers. There are n [0..31]
++ * of each of these registers
 + */
-+struct ufs_qcom_phy_qmp_20nm {
-+	struct ufs_qcom_phy common_cfg;
++enum {
++	REG_UFS_QCOM_ICE_CTRL_INFO_1_n           = 0x2204,
++	REG_UFS_QCOM_ICE_CTRL_INFO_2_n           = 0x2208,
 +};
 +
-+static struct ufs_qcom_phy_calibration phy_cal_table_rate_A_1_2_0[] = {
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_POWER_DOWN_CONTROL, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_SIGDET_CTRL3, 0x0D),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_VCOTAIL_EN, 0xe1),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CRCTRL, 0xcc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_SYSCLK_EN_SEL_TXBAND, 0x08),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CLKEPDIV, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_RXTXEPCLK_EN, 0x10),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DEC_START1, 0x82),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DEC_START2, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START1, 0x80),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START2, 0x80),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START3, 0x40),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP1, 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP2, 0x19),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP3, 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP_EN, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RESETSM_CNTRL, 0x90),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RESETSM_CNTRL2, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL1(0), 0xf2),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_HALF(0), 0x0c),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_QUARTER(0), 0x12),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL1(1), 0xf2),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_HALF(1), 0x0c),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_QUARTER(1), 0x12),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_LSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_MSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_LSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_MSB(0), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_LSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_MSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_LSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_MSB(1), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CP_SETI, 0x3f),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_IP_SETP, 0x1b),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CP_SETP, 0x0f),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_IP_SETI, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_EMP_POST1_LVL(0), 0x2F),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_DRV_LVL(0), 0x20),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_EMP_POST1_LVL(1), 0x2F),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_DRV_LVL(1), 0x20),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_LANE_MODE(0), 0x68),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_LANE_MODE(1), 0x68),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2(1), 0xdc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2(0), 0xdc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_BIAS_EN_CLKBUFLR_EN, 0x3),
++/* UFS QCOM ICE CTRL Info 2 register offset */
++enum {
++	OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_BYPASS     = 0,
++	OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_KEY_INDEX  = 0x1,
++	OFFSET_UFS_QCOM_ICE_CTRL_INFO_2_CDU        = 0x6,
 +};
 +
-+static struct ufs_qcom_phy_calibration phy_cal_table_rate_A_1_3_0[] = {
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_POWER_DOWN_CONTROL, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(UFS_PHY_RX_SIGDET_CTRL3, 0x0D),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_VCOTAIL_EN, 0xe1),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CRCTRL, 0xcc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_SYSCLK_EN_SEL_TXBAND, 0x08),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CLKEPDIV, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_RXTXEPCLK_EN, 0x10),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DEC_START1, 0x82),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DEC_START2, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START1, 0x80),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START2, 0x80),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DIV_FRAC_START3, 0x40),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP1, 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP2, 0x19),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP3, 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP_EN, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RESETSM_CNTRL, 0x90),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RESETSM_CNTRL2, 0x03),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL1(0), 0xf2),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_HALF(0), 0x0c),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_QUARTER(0), 0x12),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL1(1), 0xf2),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_HALF(1), 0x0c),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_CDR_CONTROL_QUARTER(1), 0x12),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_LSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_MSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_LSB(0), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_MSB(0), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_LSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN1_MSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_LSB(1), 0xff),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQ_GAIN2_MSB(1), 0x00),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CP_SETI, 0x2b),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_IP_SETP, 0x38),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CP_SETP, 0x3c),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RES_CODE_UP_OFFSET, 0x02),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_RES_CODE_DN_OFFSET, 0x02),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_IP_SETI, 0x01),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLL_CNTRL, 0x40),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_LANE_MODE(0), 0x68),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_TX_LANE_MODE(1), 0x68),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2(1), 0xdc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2(0), 0xdc),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_BIAS_EN_CLKBUFLR_EN, 0x3),
++/* UFS QCOM ICE CTRL Info 2 register masks */
++enum {
++	MASK_UFS_QCOM_ICE_CTRL_INFO_2_BYPASS     = 0x1,
++	MASK_UFS_QCOM_ICE_CTRL_INFO_2_KEY_INDEX  = 0x1F,
++	MASK_UFS_QCOM_ICE_CTRL_INFO_2_CDU        = 0x8,
 +};
 +
-+static struct ufs_qcom_phy_calibration phy_cal_table_rate_B[] = {
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_DEC_START1, 0x98),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP1, 0x65),
-+	UFS_QCOM_PHY_CAL_ENTRY(QSERDES_COM_PLLLOCK_CMP2, 0x1e),
++/* UFS QCOM ICE encryption/decryption bypass state */
++enum {
++	UFS_QCOM_ICE_DISABLE_BYPASS  = 0,
++	UFS_QCOM_ICE_ENABLE_BYPASS = 1,
 +};
 +
-+#endif
-diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
-new file mode 100644
-index 0000000..9d18e9f
---- /dev/null
-+++ b/include/linux/phy/phy-qcom-ufs.h
-@@ -0,0 +1,59 @@
-+/*
-+ * Copyright (c) 2013-2015, Linux Foundation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 and
-+ * only version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ */
++/* UFS QCOM ICE Crypto Data Unit of target DUN of Transfer Request */
++enum {
++	UFS_QCOM_ICE_TR_DATA_UNIT_512_B          = 0,
++	UFS_QCOM_ICE_TR_DATA_UNIT_1_KB           = 1,
++	UFS_QCOM_ICE_TR_DATA_UNIT_2_KB           = 2,
++	UFS_QCOM_ICE_TR_DATA_UNIT_4_KB           = 3,
++	UFS_QCOM_ICE_TR_DATA_UNIT_8_KB           = 4,
++	UFS_QCOM_ICE_TR_DATA_UNIT_16_KB          = 5,
++	UFS_QCOM_ICE_TR_DATA_UNIT_32_KB          = 6,
++};
 +
-+#ifndef PHY_QCOM_UFS_H_
-+#define PHY_QCOM_UFS_H_
++/* UFS QCOM ICE internal state */
++enum {
++	UFS_QCOM_ICE_STATE_DISABLED   = 0,
++	UFS_QCOM_ICE_STATE_ACTIVE     = 1,
++	UFS_QCOM_ICE_STATE_SUSPENDED  = 2,
++};
 +
-+#include "phy.h"
++#ifdef CONFIG_SCSI_UFS_QCOM_ICE
++int ufs_qcom_ice_get_dev(struct ufs_qcom_host *qcom_host);
++int ufs_qcom_ice_init(struct ufs_qcom_host *qcom_host);
++int ufs_qcom_ice_cfg(struct ufs_qcom_host *qcom_host, struct scsi_cmnd *cmd);
++int ufs_qcom_ice_reset(struct ufs_qcom_host *qcom_host);
++int ufs_qcom_ice_resume(struct ufs_qcom_host *qcom_host);
++int ufs_qcom_ice_suspend(struct ufs_qcom_host *qcom_host);
++int ufs_qcom_ice_get_status(struct ufs_qcom_host *qcom_host, int *ice_status);
++#else
++inline int ufs_qcom_ice_get_dev(struct ufs_qcom_host *qcom_host)
++{
++	if (qcom_host) {
++		qcom_host->ice.pdev = NULL;
++		qcom_host->ice.vops = NULL;
++	}
++	return -ENODEV;
++}
++inline int ufs_qcom_ice_init(struct ufs_qcom_host *qcom_host)
++{
++	return 0;
++}
++inline int ufs_qcom_ice_cfg(struct ufs_qcom_host *qcom_host,
++			    struct scsi_cmnd *cmd)
++{
++	return 0;
++}
++inline int ufs_qcom_ice_reset(struct ufs_qcom_host *qcom_host)
++{
++	return 0;
++}
++inline int ufs_qcom_ice_resume(struct ufs_qcom_host *qcom_host)
++{
++	return 0;
++}
++inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *qcom_host)
++{
++	return 0;
++}
++inline int ufs_qcom_ice_get_status(struct ufs_qcom_host *qcom_host,
++				   int *ice_status)
++{
++	return 0;
++}
++#endif /* CONFIG_SCSI_UFS_QCOM_ICE */
 +
++#endif /* UFS_QCOM_ICE_H_ */
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 9217af9..fd01255 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -22,6 +22,7 @@
+ #include "unipro.h"
+ #include "ufs-qcom.h"
+ #include "ufshci.h"
++#include "ufs-qcom-ice.h"
+ 
+ static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+ 
+@@ -294,6 +295,13 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba, bool status)
+ 		/* check if UFS PHY moved from DISABLED to HIBERN8 */
+ 		err = ufs_qcom_check_hibern8(hba);
+ 		ufs_qcom_enable_hw_clk_gating(hba);
++		if (!err) {
++			err = ufs_qcom_ice_reset(host);
++			if (err)
++				dev_err(hba->dev,
++					"%s: ufs_qcom_ice_reset() failed %d\n",
++					__func__, err);
++		}
+ 
+ 		break;
+ 	default:
+@@ -453,6 +461,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		 */
+ 		ufs_qcom_disable_lane_clks(host);
+ 		phy_power_off(phy);
++		ret = ufs_qcom_ice_suspend(host);
++		if (ret)
++			dev_err(hba->dev, "%s: failed ufs_qcom_ice_suspend %d\n",
++					__func__, ret);
+ 
+ 		/* Assert PHY soft reset */
+ 		ufs_qcom_assert_reset(hba);
+@@ -463,8 +475,10 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	 * If UniPro link is not active, PHY ref_clk, main PHY analog power
+ 	 * rail and low noise analog power rail for PLL can be switched off.
+ 	 */
+-	if (!ufs_qcom_is_link_active(hba))
++	if (!ufs_qcom_is_link_active(hba)) {
+ 		phy_power_off(phy);
++		ufs_qcom_ice_suspend(host);
++	}
+ 
+ out:
+ 	return ret;
+@@ -483,6 +497,13 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		goto out;
+ 	}
+ 
++	err = ufs_qcom_ice_resume(host);
++	if (err) {
++		dev_err(hba->dev, "%s: ufs_qcom_ice_resume failed, err = %d\n",
++			__func__, err);
++		goto out;
++	}
++
+ 	hba->is_sys_suspended = false;
+ 
+ out:
+@@ -917,6 +938,30 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	host->hba = hba;
+ 	hba->priv = (void *)host;
+ 
++	err = ufs_qcom_ice_get_dev(host);
++	if (err == -EPROBE_DEFER) {
++		/*
++		 * UFS driver might be probed before ICE driver does.
++		 * In that case we would like to return EPROBE_DEFER code
++		 * in order to delay its probing.
++		 */
++		dev_err(dev, "%s: required ICE device not probed yet err = %d\n",
++			__func__, err);
++		goto out_host_free;
++
++	} else if (err == -ENODEV) {
++		/*
++		 * ICE device is not enabled in DTS file. No need for further
++		 * initialization of ICE driver.
++		 */
++		dev_warn(dev, "%s: ICE device is not enabled",
++			__func__);
++	} else if (err) {
++		dev_err(dev, "%s: ufs_qcom_ice_get_dev failed %d\n",
++			__func__, err);
++		goto out_host_free;
++	}
++
+ 	host->generic_phy = devm_phy_get(dev, "ufsphy");
+ 
+ 	if (IS_ERR(host->generic_phy)) {
+@@ -944,6 +989,15 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+ 
+ 	ufs_qcom_setup_clocks(hba, true);
++	if (host->ice.pdev) {
++		err = ufs_qcom_ice_init(host);
++		if (err) {
++			dev_err(dev, "%s: ICE driver initialization failed (%d)\n",
++				__func__, err);
++			device_remove_file(dev, &host->bus_vote.max_bus_bw);
++			goto out_disable_phy;
++		}
++	}
+ 
+ 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+ 		ufs_qcom_hosts[hba->dev->id] = host;
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 9a6febd..8340f2c 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -151,6 +151,30 @@ struct ufs_qcom_bus_vote {
+ 	struct device_attribute max_bus_bw;
+ };
+ 
 +/**
-+ * ufs_qcom_phy_enable_ref_clk() - Enable the phy
-+ * ref clock.
-+ * @phy: reference to a generic phy
-+ *
-+ * returns 0 for success, and non-zero for error.
++ * struct ufs_qcom_ice_data - ICE related information
++ * @vops:	pointer to variant operations of ICE
++ * @async_done:	completion for supporting ICE's driver asynchronous nature
++ * @pdev:	pointer to the proper ICE platform device
++ * @state:      UFS-ICE interface's internal state (see
++ *       ufs-qcom-ice.h for possible internal states)
++ * @quirks:     UFS-ICE interface related quirks
 + */
-+int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
++struct ufs_qcom_ice_data {
++	struct qcom_ice_variant_ops *vops;
++	struct completion async_done;
++	struct platform_device *pdev;
++	int state;
 +
-+/**
-+ * ufs_qcom_phy_disable_ref_clk() - Disable the phy
-+ * ref clock.
-+ * @phy: reference to a generic phy.
-+ */
-+void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
++	/*
++	 * If UFS host controller should handle cryptographic engine's
++	 * errors, enables this quirk.
++	 */
++	#define UFS_QCOM_ICE_QUIRK_HANDLE_CRYPTO_ENGINE_ERRORS	UFS_BIT(0)
 +
-+/**
-+ * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
-+ * ref clock.
-+ * @phy: reference to a generic phy.
-+ */
-+void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
++	u16 quirks;
++};
 +
-+/**
-+ * ufs_qcom_phy_disable_dev_ref_clk() - Disable the device
-+ * ref clock.
-+ * @phy: reference to a generic phy.
-+ */
-+void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
-+
-+int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
-+void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
-+int ufs_qcom_phy_start_serdes(struct phy *phy);
-+int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
-+int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
-+int ufs_qcom_phy_is_pcs_ready(struct phy *phy);
-+void ufs_qcom_phy_save_controller_version(struct phy *phy,
-+			u8 major, u16 minor, u16 step);
-+
-+#endif /* PHY_QCOM_UFS_H_ */
+ struct ufs_qcom_host {
+ 	struct phy *generic_phy;
+ 	struct ufs_hba *hba;
+@@ -161,6 +185,7 @@ struct ufs_qcom_host {
+ 	struct clk *rx_l1_sync_clk;
+ 	struct clk *tx_l1_sync_clk;
+ 	bool is_lane_clks_enabled;
++	struct ufs_qcom_ice_data ice;
+ };
+ 
+ #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
 -- 
 1.8.5.2
 
