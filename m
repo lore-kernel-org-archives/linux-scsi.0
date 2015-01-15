@@ -1,36 +1,51 @@
-From: Don Brace <brace77070@gmail.com>
-Subject: Re: [PATCH for v3.19, v2] Avoid that sd_shutdown() triggers a kernel
- warning
-Date: Thu, 15 Jan 2015 09:23:17 -0600
-Message-ID: <54B7DB65.2070502@gmail.com>
-References: <54AD2E9A.50709@acm.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm + blk-mq soft lockup complaint
+Date: Thu, 15 Jan 2015 10:43:43 -0500
+Message-ID: <20150115154343.GA11859@redhat.com>
+References: <alpine.LNX.2.00.1501121830010.4026@localhost.lm.intel.com>
+ <20150112191138.GC21518@redhat.com>
+ <20150112202113.GA23234@redhat.com>
+ <54B50F9D.2040000@sandisk.com>
+ <20150113141746.GA30411@redhat.com>
+ <54B52B73.7040807@sandisk.com>
+ <20150113162052.GA30837@redhat.com>
+ <54B633DC.4090806@sandisk.com>
+ <20150114185926.GB6012@redhat.com>
+ <54B7764C.9000402@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:47793 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbbAOPXT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jan 2015 10:23:19 -0500
-Received: by mail-oi0-f49.google.com with SMTP id a141so12788258oig.8
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Jan 2015 07:23:18 -0800 (PST)
-In-Reply-To: <54AD2E9A.50709@acm.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45842 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753647AbbAOPoQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jan 2015 10:44:16 -0500
+Content-Disposition: inline
+In-Reply-To: <54B7764C.9000402@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, device-mapper development <dm-devel@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, linux-scsi@vger.kernel.org
 
-On 01/07/2015 07:03 AM, Bart Van Assche wrote:
-> Since kernel v3.19-rc1 module_refcount() returns 1 instead of 0
-> when called from inside module_exit(). This breaks the
-> module_refcount() test in scsi_device_put() and hence causes the
-> following kernel warning to be reported when unloading the ib_srp
-> kernel module:
->
+On Thu, Jan 15 2015 at  3:11am -0500,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-Tested-by: Don Brace <don.brace@pmcs.com>
+> On 01/14/15 20:00, Mike Snitzer wrote:
+> > IB aside, I haven't been following along close enough on scsi-mq
+> > developments, but does a regular iscsi initiator have support for
+> > scsi-mq?  I'd like to validate scsi-mq devices with the dm-mpath
+> > changes.
+> 
+> Hello Mike,
+> 
+> scsi-mq support for the iSCSI initiator is being considered but has not
+> yet been implemented. For more information, see also Sagi Grimberg,
+> [LSF/MM TOPIC] iSCSI MQ adoption via MCS discussion, linux-scsi mailing
+> list, January 7, 2015 (http://thread.gmane.org/gmane.linux.scsi/98199).
 
-This patch fixed module removal crashes I was seeing with the hpsa 
-driver running on 3.19-rc4 kernel. Ran ~200 insmod/rmmod tests with no 
-issues.
+OK, thanks.
 
+FYI, I just used your fio test against an mpath device that is using 4
+virtio-scsi devices with blk-mq enabled and all worked fine.
+
+How easily could you reproduce your SRP hang?  Did it happen every run
+or did it take multiple runs to see it?
