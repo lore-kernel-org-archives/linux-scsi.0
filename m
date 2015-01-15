@@ -1,33 +1,75 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [LSF/MM TOPIC] Storage tools
-Date: Thu, 15 Jan 2015 22:23:49 +0100
-Message-ID: <54B82FE5.1010006@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] be2iscsi: add block valid bit to iBFT flag
+Date: Thu, 15 Jan 2015 17:16:35 -0600
+Message-ID: <54B84A53.3030300@cs.wisc.edu>
+References: <5c5aa6a1-3ab9-4f4b-88c6-3ffe4dd0c342@CMEXHTCAS2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44042 "EHLO smtp.infotech.no"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60781 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932185AbbAOVYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jan 2015 16:24:07 -0500
+	id S1754089AbbAOXQn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jan 2015 18:16:43 -0500
+In-Reply-To: <5c5aa6a1-3ab9-4f4b-88c6-3ffe4dd0c342@CMEXHTCAS2.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc <lsf-pc@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Minh Duc Tran <MinhDuc.Tran@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
 
-I have written and continue to maintain several user space
-packages used for the SCSI and ATA subsystems. These include
-sg3_utils (a collection of tools), lsscsi, sdparm, ddpt and
-smp_utils. I also maintain the Linux scsi_debug driver which may
-be viewed as a test tool rather than a production driver. There
-are many other storage tools which I monitor and summarize in
-a web page as they are sometimes hard to find.
+On 01/12/2015 05:05 PM, Minh Duc Tran wrote:
+> 
+>> From: Minh Duc Tran 
+>> Sent: Sunday, November 09, 2014 10:52 PM
+>> To: 'linux-scsi@vger.kernel.org'
+>> Cc: Mike Christie (michaelc@cs.wisc.edu); Jayamohan Kallickal
+>> Subject: [PATCH 1/1] be2iscsi: add block valid bit to iBFT flag
+> 
+>> From: Minh Tran minhduc.tran@emulex.com
+> 
+>>               We are starting to see problems with certain open-iscsi versions out there checking block valid bit.  Iscsi boot target login will not happen without this bit being set.
+> 
+>> Signed-off-by: Minh Tran <minhduc.tran@emulex.com>
+>> ---
+>> scsi/be2iscsi/be_main.c |    4 ++--
+>> 1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+>> diff --git a/scsi/be2iscsi/be_main.c b/scsi/be2iscsi/be_main.c
+>> index 30d74a0..aacf223 100644
+>> --- a/scsi/be2iscsi/be_main.c
+>> +++ b/scsi/be2iscsi/be_main.c
+>> @@ -429,7 +429,7 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+>>                             auth_data.chap.intr_secret);
+>>                break;
+>>        case ISCSI_BOOT_TGT_FLAGS:
+>> -               rc = sprintf(str, "2\n");
+>> +               rc = sprintf(str, "3\n");
+>>                break;
+>>        case ISCSI_BOOT_TGT_NIC_ASSOC:
+>>                rc = sprintf(str, "0\n");
+>> @@ -466,7 +466,7 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
+> 
+>>        switch (type) {
+>>        case ISCSI_BOOT_ETH_FLAGS:
+>> -               rc = sprintf(str, "2\n");
+>> +               rc = sprintf(str, "3\n");
+>>                break;
+>>        case ISCSI_BOOT_ETH_INDEX:
+>>                rc = sprintf(str, "0\n");
+>> --
+>> 1.7.1
+> 
+> Hi Mike,
+> I think we have lost track of this patch.  I've checked 3.19-rc3 today and it's not in yet.  Can we get this in as soon as possible?
+> 
 
-If there is sufficient interest I could present an overview
-of my tools including recent additions. The audience could make
-suggestions for improvements and future directions. This might
-also be done in the corridors if a slot is not available. The
-XCOPY discussions are also something that I would like to
-follow.
+The thread got a little busted in my mailer, so I might have missed
+something.
 
-Doug Gilbert
+Did you see my review comments:
+https://www.marc.info/?l=linux-scsi&m=141564103903024&w=2
+here?
+
+I am not seeing a follow up patch or comment from you saying you did not
+want to do it that way. Did you send that to the list in a new thread?
+If so, I lost it.
