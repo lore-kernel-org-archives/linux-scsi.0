@@ -1,103 +1,75 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH] Subject: Enclosure: fix WARN ON when doing dlpar removing an adapter in dual patch devices
-Date: Fri, 16 Jan 2015 19:02:33 -0600
-Message-ID: <1421456553-33828-2-git-send-email-wenxiong@linux.vnet.ibm.com>
-References: <1421456553-33828-1-git-send-email-wenxiong@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:42677 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353AbbAQAkb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jan 2015 19:40:31 -0500
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Fri, 16 Jan 2015 17:40:30 -0700
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 65E0819D803F
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2015 17:31:40 -0700 (MST)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0H0efEr39845998
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2015 17:40:41 -0700
-Received: from d03av03.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0H0eSwK024641
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2015 17:40:28 -0700
-In-Reply-To: <1421456553-33828-1-git-send-email-wenxiong@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.19-rc4
+Date: Sat, 17 Jan 2015 12:40:34 -0800
+Message-ID: <1421527234.2076.69.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+This is one fix for a Multiqueue sleeping in invalid context problem and
+a MAINTAINER file update for Qlogic.
 
-This issue is happened in dual path devices when we tried to do dlpar removing one of adapter in the system. We got the following error:
+The patch is available here:
 
-Dec 10 01:17:02 powerio-blue-lp5 : drmgr: -r -c phb -s PHB 32 -w 5 -d 1
-Dec 10 01:17:02 powerio-blue-lp5 kernel: sysfs: can not remove 'device', no directory
-Dec 10 01:17:02 powerio-blue-lp5 kernel: ------------[ cut here ]------------
-Dec 10 01:17:02 powerio-blue-lp5 kernel: WARNING: at fs/sysfs/inode.c:324
-Dec 10 01:17:02 powerio-blue-lp5 kernel: Modules linked in: ipr sg vfat fat isofs ext4 mbcache jbd2 cfg80211 rfkill ses enclosure pseries_rng xfs libcrc32c sd_mod crc_t10dif crct10dif_common ibmvscsi scsi_transport_srp libata ibmveth scsi_tgt dm_mirror dm_region_hash dm_log dm_mod [last unloaded: ipr]
-Dec 10 01:17:02 powerio-blue-lp5 kernel: CPU: 10 PID: 2714 Comm: drmgr Not tainted 3.10.0-201.ael7a.ppc64le #1
-Dec 10 01:17:02 powerio-blue-lp5 kernel: task: c0000003ec420000 ti: c0000003e9580000 task.ti: c0000003e9580000
-Dec 10 01:17:02 powerio-blue-lp5 kernel: NIP: c000000000395e08 LR: c000000000395e04 CTR: 00000000006dac44
-Dec 10 01:17:02 powerio-blue-lp5 kernel: REGS: c0000003e95831c0 TRAP: 0700   Not tainted  (3.10.0-201.ael7a.ppc64le)
-Dec 10 01:17:02 powerio-blue-lp5 kernel: MSR: 8000000100029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28088424  XER: 20000000
-Dec 10 01:17:02 powerio-blue-lp5 kernel: CFAR: c000000000911f34 SOFTE: 1
-GPR00: c000000000395e04 c0000003e9583440 c0000000010adae8 000000000000002c
-GPR04: c000000001885888 c0000000018964f8 000000000000004d 000000000000005d
-GPR08: c000000000c6dae8 0000000000000000 0000000000000000 0000000000000080
-GPR12: 0000000042088482 c000000007df2300 0000000000000000 0000000000000000
-GPR16: c0000003f2cad828 0000000000000000 c0000003fe1a9000 0000000000000000
-GPR20: 0000000000000000 0000000000000000 c0000003f2cad818 0000000000000000
-GPR24: 0000000000000000 c00000000097a258 c0000003eefa89d0 c000000001031308
-GPR28: c0000000010369c0 c0000003e47bd200 c0000003ecd082d8 0000000000000000
-Dec 10 01:17:02 powerio-blue-lp5 kernel: NIP [c000000000395e08] sysfs_hash_and_remove+0xc8/0xe0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: LR [c000000000395e04] sysfs_hash_and_remove+0xc4/0xe0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: Call Trace:
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583440] [c000000000395e04] sysfs_hash_and_remove+0xc4/0xe0 (unreliable)
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95834d0] [c00000000039a5bc] sysfs_remove_link+0x2c/0x70
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95834f0] [d000000002e80e90] enclosure_component_release+0x90/0xe0 [enclosure]
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583560] [c0000000005ac608] device_release+0x58/0xf0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95835e0] [c000000000478a9c] kobject_put+0x12c/0x360
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583670] [c0000000005ad7c4] device_unregister+0x44/0xa0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95836e0] [d000000002e80768] enclosure_unregister+0x98/0xf0 [enclosure]
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583720] [d000000002ee0120] ses_intf_remove+0xb0/0x140 [ses]
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583750] [c0000000005ad5a4] device_del+0x164/0x340
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95837e0] [c0000000005ad7b4] device_unregister+0x34/0xa0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583850] [c0000000005fc064] __scsi_remove_device+0x104/0x130
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583880] [c0000000005f8c94] scsi_forget_host+0x94/0xa0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95838b0] [c0000000005e6008] scsi_remove_host+0x138/0x370
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583940] [d0000000060e1bc4] ipr_remove+0x84/0x100 [ipr]
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e95839c0] [c0000000004db224] pci_device_remove+0x64/0x100
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583a00] [c0000000005b4ec8] device_release_driver+0xe8/0x1b0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583a40] [c0000000004caae8] pci_stop_bus_device+0x678/0x700
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583b40] [c0000000004cb48c] pci_stop_and_remove_bus_device+0x2c/0x120
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583b80] [c00000000004b80c] pcibios_remove_pci_devices+0x54c/0x790
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583ca0] [c0000000004fcb78] disable_slot+0x38/0x80
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583cd0] [c0000000004f7160] power_write_file+0xa0/0x190
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583d50] [c0000000004e8abc] pci_slot_attr_store+0x3c/0x60
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583d70] [c0000000003960c0] sysfs_write_file+0xf0/0x1d0
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583dd0] [c0000000002d4e28] SyS_write+0x148/0x390
-Dec 10 01:17:02 powerio-blue-lp5 kernel: [c0000003e9583e30] [c00000000000a0fc] syscall_exit+0x0/0x7c
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+The short changelog is:
+
+Christoph Hellwig (1):
+      scsi: ->queue_rq can't sleep
+
+Nilesh Javali (1):
+      MAINTAINERS: Update maintainer list for qla4xxx
+
+And the diffstat:
+
+ MAINTAINERS             | 3 +--
+ drivers/scsi/scsi_lib.c | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/misc/enclosure.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index 38552a3..0d20e19 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -209,6 +209,9 @@ static void enclosure_remove_links(struct enclosure_component *cdev)
- 	if (!cdev->dev->kobj.sd)
- 		return;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ddb9ac8..f6dee56 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7737,8 +7737,7 @@ F:	Documentation/scsi/LICENSE.qla2xxx
+ F:	drivers/scsi/qla2xxx/
  
-+	if (!cdev->cdev.kobj.sd)
-+		return;
-+
- 	enclosure_link_name(cdev, name);
- 	sysfs_remove_link(&cdev->dev->kobj, name);
- 	sysfs_remove_link(&cdev->cdev.kobj, "device");
--- 
-1.7.1
-
+ QLOGIC QLA4XXX iSCSI DRIVER
+-M:	Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+-M:	iscsi-driver@qlogic.com
++M:	QLogic-Storage-Upstream@qlogic.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	Documentation/scsi/LICENSE.qla4xxx
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9ea95dd..6d5c0b8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -591,7 +591,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+ {
+ 	struct scatterlist *first_chunk = NULL;
+-	gfp_t gfp_mask = mq ? GFP_NOIO : GFP_ATOMIC;
+ 	int ret;
+ 
+ 	BUG_ON(!nents);
+@@ -606,7 +605,7 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents, bool mq)
+ 	}
+ 
+ 	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
+-			       first_chunk, gfp_mask, scsi_sg_alloc);
++			       first_chunk, GFP_ATOMIC, scsi_sg_alloc);
+ 	if (unlikely(ret))
+ 		scsi_free_sgtable(sdb, mq);
+ 	return ret;
