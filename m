@@ -1,107 +1,127 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v4 10/11] ata: ahci_platform: adjust module reference for scsi host
-Date: Mon, 19 Jan 2015 00:06:08 +0900
-Message-ID: <1421593569-5089-11-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v4 11/11] ata: pata_of_platform: adjust module reference for scsi host
+Date: Mon, 19 Jan 2015 00:06:09 +0900
+Message-ID: <1421593569-5089-12-git-send-email-akinobu.mita@gmail.com>
 References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The ahci platform drivers depend on libahci_platform module.  The
-module reference of these scsi host is initialized to libahci_platform's
-one.  Because these drivers use ahci_platform_init_host() which is
-defined in libahci_platform module and calls scsi_host_alloc()
-internally.  So these drivers can be unloaded even if the scsi device
-is being accessed.
+The pata_of_platform driver depends on pata_platform module.  The
+module reference of this scsi host is initialized to pata_platform's
+one.  Because this drivers use __pata_platform_probe() which is
+defined in pata_platform module and calls scsi_host_alloc() internally.
+So these drivers can be unloaded even if the scsi device is being
+accessed.
 
-This fixes it by converting into ahci_platform_init_host() macro so that
+This fixes it by converting into __pata_platform_probe() macro so that
 these drivers can pass their correct module reference through
-__ata_host_alloc_pinfo().
+__ata_host_alloc().
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Hans de Goede <hdegoede@redhat.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-ide@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/ata/libahci_platform.c | 14 ++++++++------
- include/linux/ahci_platform.h  |  9 ++++++---
- 2 files changed, 14 insertions(+), 9 deletions(-)
+ drivers/ata/pata_platform.c  | 18 ++++++++++--------
+ include/linux/ata_platform.h | 16 ++++++++++------
+ 2 files changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 0b03f90..ea75416 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -395,10 +395,11 @@ err_out:
- EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 1eedfe4..c84e834 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -71,13 +71,14 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+ }
  
  /**
-- * ahci_platform_init_host - Bring up an ahci-platform host
-+ * __ahci_platform_init_host - Bring up an ahci-platform host
-  * @pdev: platform device pointer for the host
-  * @hpriv: ahci-host private data for the host
-  * @pi_template: template for the ata_port_info to use
-+ * @owner: module which will be the owner of the ahci-platform host
+- *	__pata_platform_probe		-	attach a platform interface
++ *	___pata_platform_probe		-	attach a platform interface
+  *	@dev: device
+  *	@io_res: Resource representing I/O base
+  *	@ctl_res: Resource representing CTL base
+  *	@irq_res: Resource representing IRQ and its flags
+  *	@ioport_shift: I/O port shift
+  *	@__pio_mask: PIO mask
++ *	@owner: module which will be the owner of the ATA host
   *
-  * This function does all the usual steps needed to bring up an
-  * ahci-platform host, note any necessary resources (ie clks, phys, etc.)
-@@ -407,9 +408,10 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  * RETURNS:
-  * 0 on success otherwise a negative error code
+  *	Register a platform bus IDE interface. Such interfaces are PIO and we
+  *	assume do not support IRQ sharing.
+@@ -97,9 +98,10 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+  *
+  *	If no IRQ resource is present, PIO polling mode is used instead.
   */
--int ahci_platform_init_host(struct platform_device *pdev,
--			    struct ahci_host_priv *hpriv,
--			    const struct ata_port_info *pi_template)
-+int __ahci_platform_init_host(struct platform_device *pdev,
-+			      struct ahci_host_priv *hpriv,
-+			      const struct ata_port_info *pi_template,
-+			      struct module *owner)
+-int __pata_platform_probe(struct device *dev, struct resource *io_res,
+-			  struct resource *ctl_res, struct resource *irq_res,
+-			  unsigned int ioport_shift, int __pio_mask)
++int ___pata_platform_probe(struct device *dev, struct resource *io_res,
++			   struct resource *ctl_res, struct resource *irq_res,
++			   unsigned int ioport_shift, int __pio_mask,
++			   struct module *owner)
  {
- 	struct device *dev = &pdev->dev;
- 	struct ata_port_info pi = *pi_template;
-@@ -443,7 +445,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	struct ata_host *host;
+ 	struct ata_port *ap;
+@@ -124,7 +126,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 	/*
+ 	 * Now that that's out of the way, wire up the port..
  	 */
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
- 
--	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
-+	host = __ata_host_alloc_pinfo(dev, ppi, n_ports, owner);
+-	host = ata_host_alloc(dev, 1);
++	host = __ata_host_alloc(dev, 1, owner);
  	if (!host)
  		return -ENOMEM;
- 
-@@ -495,7 +497,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
- 
- 	return ahci_host_activate(host, irq, &ahci_platform_sht);
+ 	ap = host->ports[0];
+@@ -172,7 +174,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
+ 				 irq_flags, &pata_platform_sht);
  }
--EXPORT_SYMBOL_GPL(ahci_platform_init_host);
-+EXPORT_SYMBOL_GPL(__ahci_platform_init_host);
+-EXPORT_SYMBOL_GPL(__pata_platform_probe);
++EXPORT_SYMBOL_GPL(___pata_platform_probe);
  
- static void ahci_host_stop(struct ata_host *host)
+ static int pata_platform_probe(struct platform_device *pdev)
  {
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index 642d6ae..0dcac84 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -28,9 +28,12 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
- struct ahci_host_priv *ahci_platform_get_resources(
- 	struct platform_device *pdev);
--int ahci_platform_init_host(struct platform_device *pdev,
--			    struct ahci_host_priv *hpriv,
--			    const struct ata_port_info *pi_template);
-+int __ahci_platform_init_host(struct platform_device *pdev,
-+			      struct ahci_host_priv *hpriv,
-+			      const struct ata_port_info *pi_template,
-+			      struct module *owner);
-+#define ahci_platform_init_host(pdev, hpriv, pi_template) \
-+	__ahci_platform_init_host(pdev, hpriv, pi_template, THIS_MODULE)
+@@ -215,8 +217,8 @@ static int pata_platform_probe(struct platform_device *pdev)
+ 	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
  
- int ahci_platform_suspend_host(struct device *dev);
- int ahci_platform_resume_host(struct device *dev);
+ 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
+-				     pp_info ? pp_info->ioport_shift : 0,
+-				     pio_mask);
++				   pp_info ? pp_info->ioport_shift : 0,
++				   pio_mask);
+ }
+ 
+ static struct platform_driver pata_platform_driver = {
+diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
+index 5c618a0..20bca38 100644
+--- a/include/linux/ata_platform.h
++++ b/include/linux/ata_platform.h
+@@ -10,12 +10,16 @@ struct pata_platform_info {
+ 	unsigned int ioport_shift;
+ };
+ 
+-extern int __pata_platform_probe(struct device *dev,
+-				 struct resource *io_res,
+-				 struct resource *ctl_res,
+-				 struct resource *irq_res,
+-				 unsigned int ioport_shift,
+-				 int __pio_mask);
++extern int ___pata_platform_probe(struct device *dev,
++				  struct resource *io_res,
++				  struct resource *ctl_res,
++				  struct resource *irq_res,
++				  unsigned int ioport_shift,
++				  int __pio_mask, struct module *owner);
++#define __pata_platform_probe(dev, io_res, ctl_res, irq_res,		\
++			      ioport_shift, __pio_mask)			\
++	___pata_platform_probe(dev, io_res, ctl_res, irq_res,		\
++			       ioport_shift, __pio_mask, THIS_MODULE)
+ 
+ /*
+  * Marvell SATA private data
 -- 
 1.9.1
 
