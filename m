@@ -1,114 +1,109 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v4 09/11] usb: storage: adjust module reference for scsi host
-Date: Mon, 19 Jan 2015 00:06:07 +0900
-Message-ID: <1421593569-5089-10-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v4 08/11] scsi: ufs: adjust module reference for scsi host
+Date: Mon, 19 Jan 2015 00:06:06 +0900
+Message-ID: <1421593569-5089-9-git-send-email-akinobu.mita@gmail.com>
 References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:64648 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912AbbARPHF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2015 10:07:05 -0500
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:40698 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbbARPHB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2015 10:07:01 -0500
+Received: by mail-pa0-f46.google.com with SMTP id lf10so33528122pab.5
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Jan 2015 07:07:00 -0800 (PST)
 In-Reply-To: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-The unusual usb storage drivers (ums-alauda, ums-cypress, ...) depend
-on usb-storage module.  The module reference of these scsi host is
-initialized to usb-storage's one.  Because these drivers use
-usb_stor_probe1() which is defined in usb-storage module and calls
-scsi_host_alloc().  So these drivers can be unloaded even if the scsi
-device is being accessed.
+The ufs support consists with the core driver (ufshcd) and the actual
+glue driver (ufshcd-pci or ufshcd-pltfrm).  The module reference of
+this scsi host is initialized to the core driver's one.  Because the
+glue drivers use ufshcd_alloc_host() which is defined in ufshcd module
+and calls scsi_host_alloc().  So the glue drivers can be unloaded even
+if the scsi device is being accessed.
 
-This fixes it by converting usb_stor_probe1() into macro so that these
-drivers can pass their correct module reference through
+This fixes it by converting ufshcd_alloc_host() into macro so that the
+glue drivers can pass their correct module reference through
 __scsi_host_alloc().
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-usb@vger.kernel.org
-Cc: usb-storage@lists.one-eyed-alien.net
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/usb/storage/scsiglue.c | 3 ---
- drivers/usb/storage/usb.c      | 9 +++++----
- drivers/usb/storage/usb.h      | 7 +++++--
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 13 +++++++------
+ drivers/scsi/ufs/ufshcd.h |  5 ++++-
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 0e400f3..04fab36 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -587,9 +587,6 @@ struct scsi_host_template usb_stor_host_template = {
- 
- 	/* sysfs device attributes */
- 	.sdev_attrs =			sysfs_device_attr_list,
--
--	/* module management */
--	.module =			THIS_MODULE
- };
- 
- /* To Report "Illegal Request: Invalid Field in CDB */
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index d468d02..768413f0 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -911,10 +911,11 @@ static unsigned int usb_stor_sg_tablesize(struct usb_interface *intf)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2e26025..59a4855 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4202,7 +4202,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
  }
  
- /* First part of general USB mass-storage probing */
--int usb_stor_probe1(struct us_data **pus,
-+int __usb_stor_probe1(struct us_data **pus,
- 		struct usb_interface *intf,
- 		const struct usb_device_id *id,
--		struct us_unusual_dev *unusual_dev)
-+		struct us_unusual_dev *unusual_dev,
-+		struct module *owner)
+ static struct scsi_host_template ufshcd_driver_template = {
+-	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+ 	.proc_name		= UFSHCD,
+ 	.queuecommand		= ufshcd_queuecommand,
+@@ -5256,12 +5255,14 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
++ * __ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+  * @dev: pointer to device handle
+  * @hba_handle: driver private handle
++ * @owner: module which will be the owner of the scsi host
+  * Returns 0 on success, non-zero value on failure
+  */
+-int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
++int __ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle,
++			struct module *owner)
  {
  	struct Scsi_Host *host;
- 	struct us_data *us;
-@@ -926,7 +927,7 @@ int usb_stor_probe1(struct us_data **pus,
- 	 * Ask the SCSI layer to allocate a host structure, with extra
- 	 * space at the end for our private us_data structure.
- 	 */
--	host = scsi_host_alloc(&usb_stor_host_template, sizeof(*us));
-+	host = __scsi_host_alloc(&usb_stor_host_template, sizeof(*us), owner);
+ 	struct ufs_hba *hba;
+@@ -5274,8 +5275,8 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 		goto out_error;
+ 	}
+ 
+-	host = scsi_host_alloc(&ufshcd_driver_template,
+-				sizeof(struct ufs_hba));
++	host = __scsi_host_alloc(&ufshcd_driver_template,
++				sizeof(struct ufs_hba), owner);
  	if (!host) {
- 		dev_warn(&intf->dev, "Unable to allocate the scsi host\n");
- 		return -ENOMEM;
-@@ -969,7 +970,7 @@ BadDevice:
- 	release_everything(us);
- 	return result;
+ 		dev_err(dev, "scsi_host_alloc failed\n");
+ 		err = -ENOMEM;
+@@ -5289,7 +5290,7 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ out_error:
+ 	return err;
  }
--EXPORT_SYMBOL_GPL(usb_stor_probe1);
-+EXPORT_SYMBOL_GPL(__usb_stor_probe1);
+-EXPORT_SYMBOL(ufshcd_alloc_host);
++EXPORT_SYMBOL(__ufshcd_alloc_host);
  
- /* Second part of general USB mass-storage probing */
- int usb_stor_probe2(struct us_data *us)
-diff --git a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
-index 307e339..0cb74ba 100644
---- a/drivers/usb/storage/usb.h
-+++ b/drivers/usb/storage/usb.h
-@@ -194,10 +194,13 @@ extern int usb_stor_reset_resume(struct usb_interface *iface);
- extern int usb_stor_pre_reset(struct usb_interface *iface);
- extern int usb_stor_post_reset(struct usb_interface *iface);
+ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 4a574aa..ac7d72f 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -515,7 +515,10 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+ 	ufshcd_writel(hba, tmp, reg);
+ }
  
--extern int usb_stor_probe1(struct us_data **pus,
-+extern int __usb_stor_probe1(struct us_data **pus,
- 		struct usb_interface *intf,
- 		const struct usb_device_id *id,
--		struct us_unusual_dev *unusual_dev);
-+		struct us_unusual_dev *unusual_dev,
-+		struct module *owner);
-+#define usb_stor_probe1(pus, intf, id, unusual_dev) \
-+	__usb_stor_probe1(pus, intf, id, unusual_dev, THIS_MODULE)
- extern int usb_stor_probe2(struct us_data *us);
- extern void usb_stor_disconnect(struct usb_interface *intf);
+-int ufshcd_alloc_host(struct device *, struct ufs_hba **);
++int __ufshcd_alloc_host(struct device *, struct ufs_hba **,
++			struct module *owner);
++#define ufshcd_alloc_host(dev, hba_handle) \
++	__ufshcd_alloc_host(dev, hba_handle, THIS_MODULE)
+ int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+ void ufshcd_remove(struct ufs_hba *);
  
 -- 
 1.9.1
