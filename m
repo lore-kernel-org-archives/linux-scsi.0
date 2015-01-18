@@ -1,91 +1,22 @@
-From: Sasha Levin <sasha.levin@oracle.com>
-Subject: [PATCH] scsi_debug: use atomic allocation in resp_rsup_opcodes
-Date: Sat, 17 Jan 2015 17:47:37 -0500
-Message-ID: <1421534857-4683-1-git-send-email-sasha.levin@oracle.com>
+From: Tina Johnson <tinajohnson.1234@gmail.com>
+Subject: [PATCH 0/2] Added pci_mapping_error() call and related clean up
+Date: Sun, 18 Jan 2015 12:11:01 +0530
+Message-ID: <cover.1421489699.git.tinajohnson.1234@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: dgilbert@interlog.com, hch@lst.de, Sasha Levin <sasha.levin@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+To: JBottomley@parallels.com
+Cc: praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, julia.lawall@lip6.fr, abhijit.mahajan@avagotech.com, nagalakshmi.nandigama@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tina Johnson <tinajohnson.1234@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-resp_rsup_opcodes() may get called from atomic context and would need to
-use GFP_ATOMIC for allocations:
+Replaced null test on dma handle with pci_dma_mapping_error() and cleaned 
+up the error handling code.
 
-[ 1237.913419] BUG: sleeping function called from invalid context at mm/slub.c:1262
-[ 1237.914865] in_atomic(): 1, irqs_disabled(): 0, pid: 7556, name: trinity-c311
-[ 1237.916142] 3 locks held by trinity-c311/7556:
-[ 1237.916981] #0: (sb_writers#5){.+.+.+}, at: do_readv_writev (include/linux/fs.h:2346 fs/read_write.c:844)
-[ 1237.919713] #1: (&of->mutex){+.+.+.}, at: kernfs_fop_write (fs/kernfs/file.c:297)
-[ 1237.922626] Mutex: counter: -1 owner: trinity-c311
-[ 1237.924044] #2: (s_active#51){.+.+.+}, at: kernfs_fop_write (fs/kernfs/file.c:297)
-[ 1237.925960] Preemption disabled blk_execute_rq_nowait (block/blk-exec.c:95)
-[ 1237.927416]
-[ 1237.927680] CPU: 24 PID: 7556 Comm: trinity-c311 Not tainted 3.19.0-rc4-next-20150116-sasha-00054-g4ad498c-dirty #1744
-[ 1237.929603]  ffff8804fc9d8000 ffff8804d9bc3548 ffffffff9d439fb2 0000000000000000
-[ 1237.931097]  0000000000000000 ffff8804d9bc3588 ffffffff9a18389a ffff8804d9bc3598
-[ 1237.932466]  ffffffff9a1b1715 ffffffffa15935d8 ffffffff9e6f8cb1 00000000000004ee
-[ 1237.933984] Call Trace:
-[ 1237.934434] dump_stack (lib/dump_stack.c:52)
-[ 1237.935323] ___might_sleep (kernel/sched/core.c:7339)
-[ 1237.936259] ? mark_held_locks (kernel/locking/lockdep.c:2549)
-[ 1237.937293] __might_sleep (kernel/sched/core.c:7305)
-[ 1237.938272] __kmalloc (mm/slub.c:1262 mm/slub.c:2419 mm/slub.c:2491 mm/slub.c:3291)
-[ 1237.939137] ? resp_rsup_opcodes (include/linux/slab.h:435 drivers/scsi/scsi_debug.c:1689)
-[ 1237.940173] resp_rsup_opcodes (include/linux/slab.h:435 drivers/scsi/scsi_debug.c:1689)
-[ 1237.941211] ? add_host_store (drivers/scsi/scsi_debug.c:1584)
-[ 1237.942261] scsi_debug_queuecommand (drivers/scsi/scsi_debug.c:5276)
-[ 1237.943404] ? blk_rq_map_sg (block/blk-merge.c:254)
-[ 1237.944398] ? scsi_init_sgtable (drivers/scsi/scsi_lib.c:1095)
-[ 1237.945402] sdebug_queuecommand_lock_or_not (drivers/scsi/scsi_debug.c:5300)
-[ 1237.946735] scsi_dispatch_cmd (drivers/scsi/scsi_lib.c:1706)
-[ 1237.947720] scsi_queue_rq (drivers/scsi/scsi_lib.c:1996)
-[ 1237.948687] __blk_mq_run_hw_queue (block/blk-mq.c:816)
-[ 1237.949796] blk_mq_run_hw_queue (block/blk-mq.c:896)
-[ 1237.950903] ? _raw_spin_unlock (./arch/x86/include/asm/preempt.h:95 include/linux/spinlock_api_smp.h:154 kernel/locking/spinlock.c:183)
-[ 1237.951862] blk_mq_insert_request (block/blk-mq.c:1037)
-[ 1237.952876] blk_execute_rq_nowait (block/blk-exec.c:95)
-[ 1237.953981] ? lockdep_init_map (kernel/locking/lockdep.c:3034)
-[ 1237.954967] blk_execute_rq (block/blk-exec.c:131)
-[ 1237.955929] ? blk_rq_bio_prep (block/blk-core.c:2835)
-[ 1237.956913] scsi_execute (drivers/scsi/scsi_lib.c:252)
-[ 1237.957821] scsi_execute_req_flags (drivers/scsi/scsi_lib.c:281)
-[ 1237.958968] scsi_report_opcode (drivers/scsi/scsi.c:956)
-[ 1237.960009] sd_revalidate_disk (drivers/scsi/sd.c:2707 drivers/scsi/sd.c:2792)
-[ 1237.961139] revalidate_disk (fs/block_dev.c:1081)
-[ 1237.962223] sd_rescan (drivers/scsi/sd.c:1532)
-[ 1237.963142] scsi_rescan_device (drivers/scsi/scsi_scan.c:1579)
-[ 1237.964165] store_rescan_field (drivers/scsi/scsi_sysfs.c:672)
-[ 1237.965254] dev_attr_store (drivers/base/core.c:138)
-[ 1237.966319] sysfs_kf_write (fs/sysfs/file.c:131)
-[ 1237.967289] kernfs_fop_write (fs/kernfs/file.c:311)
-[ 1237.968274] do_readv_writev (fs/read_write.c:722 fs/read_write.c:854)
-[ 1237.969295] ? __acct_update_integrals (kernel/tsacct.c:145)
-[ 1237.970452] ? kernfs_fop_open (fs/kernfs/file.c:271)
-[ 1237.971505] ? _raw_spin_unlock (./arch/x86/include/asm/preempt.h:95 include/linux/spinlock_api_smp.h:154 kernel/locking/spinlock.c:183)
-[ 1237.972512] ? context_tracking_user_exit (include/linux/vtime.h:89 include/linux/jump_label.h:114 include/trace/events/context_tracking.h:47 kernel/context_tracking.c:140)
-[ 1237.973668] ? trace_hardirqs_on_caller (kernel/locking/lockdep.c:2578 kernel/locking/lockdep.c:2625)
-[ 1237.974882] ? trace_hardirqs_on (kernel/locking/lockdep.c:2633)
-[ 1237.975850] vfs_writev (fs/read_write.c:893)
-[ 1237.976691] SyS_writev (fs/read_write.c:926 fs/read_write.c:917)
-[ 1237.977538] system_call_fastpath (arch/x86/kernel/entry_64.S:423)
+Tina Johnson (2):
+  drivers: scsi: mpt2sas: Added pci_dma_mapping_error() call
+  drivers: scsi: mpt2sas: Clean up error handling for calls to pci_map_single
 
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/scsi/scsi_debug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |   35 +++++++++++++++---------------
+ 1 file changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 8bcf6ad..f828ba7 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1686,7 +1686,7 @@ resp_rsup_opcodes(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		a_len = 8192;
- 	else
- 		a_len = alloc_len;
--	arr = kzalloc((a_len < 256) ? 320 : a_len + 64, GFP_KERNEL);
-+	arr = kzalloc((a_len < 256) ? 320 : a_len + 64, GFP_ATOMIC);
- 	if (NULL == arr) {
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
- 				INSUFF_RES_ASCQ);
 -- 
 1.7.10.4
