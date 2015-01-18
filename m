@@ -1,125 +1,115 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v4 10/11] ata: ahci_platform: adjust module reference
- for scsi host
-Date: Sun, 18 Jan 2015 16:30:54 +0100
-Message-ID: <54BBD1AE.4070805@redhat.com>
-References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com> <1421593569-5089-11-git-send-email-akinobu.mita@gmail.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH for kernel 3.19] Avoid that scsi_device_put() triggers a
+ kernel warning
+Date: Sun, 18 Jan 2015 16:22:23 +0000
+Message-ID: <1421598177.2080.3.camel@parallels.com>
+References: <54AA6F75.7040607@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751504AbbARPbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2015 10:31:05 -0500
-In-Reply-To: <1421593569-5089-11-git-send-email-akinobu.mita@gmail.com>
+Received: from mx2.parallels.com ([199.115.105.18]:35108 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751590AbbARQXI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Jan 2015 11:23:08 -0500
+In-Reply-To: <54AA6F75.7040607@acm.org>
+Content-Language: en-US
+Content-ID: <DBF15DDF1C36144B8EFAE553D147661B@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
+To: "bvanassche@acm.org" <bvanassche@acm.org>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "hare@suse.de" <hare@suse.de>, "masami.hiramatsu.pt@hitachi.com" <masami.hiramatsu.pt@hitachi.com>
 
-Hi,
-
-On 18-01-15 16:06, Akinobu Mita wrote:
-> The ahci platform drivers depend on libahci_platform module.  The
-> module reference of these scsi host is initialized to libahci_platform's
-> one.  Because these drivers use ahci_platform_init_host() which is
-> defined in libahci_platform module and calls scsi_host_alloc()
-> internally.  So these drivers can be unloaded even if the scsi device
-> is being accessed.
->
-> This fixes it by converting into ahci_platform_init_host() macro so that
-> these drivers can pass their correct module reference through
-> __ata_host_alloc_pinfo().
->
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Hans de Goede <hdegoede@redhat.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-
-Looks good to me:
-
-Acked-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-> ---
->   drivers/ata/libahci_platform.c | 14 ++++++++------
->   include/linux/ahci_platform.h  |  9 ++++++---
->   2 files changed, 14 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 0b03f90..ea75416 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -395,10 +395,11 @@ err_out:
->   EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
->
->   /**
-> - * ahci_platform_init_host - Bring up an ahci-platform host
-> + * __ahci_platform_init_host - Bring up an ahci-platform host
->    * @pdev: platform device pointer for the host
->    * @hpriv: ahci-host private data for the host
->    * @pi_template: template for the ata_port_info to use
-> + * @owner: module which will be the owner of the ahci-platform host
->    *
->    * This function does all the usual steps needed to bring up an
->    * ahci-platform host, note any necessary resources (ie clks, phys, etc.)
-> @@ -407,9 +408,10 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
->    * RETURNS:
->    * 0 on success otherwise a negative error code
->    */
-> -int ahci_platform_init_host(struct platform_device *pdev,
-> -			    struct ahci_host_priv *hpriv,
-> -			    const struct ata_port_info *pi_template)
-> +int __ahci_platform_init_host(struct platform_device *pdev,
-> +			      struct ahci_host_priv *hpriv,
-> +			      const struct ata_port_info *pi_template,
-> +			      struct module *owner)
->   {
->   	struct device *dev = &pdev->dev;
->   	struct ata_port_info pi = *pi_template;
-> @@ -443,7 +445,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
->   	 */
->   	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
->
-> -	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
-> +	host = __ata_host_alloc_pinfo(dev, ppi, n_ports, owner);
->   	if (!host)
->   		return -ENOMEM;
->
-> @@ -495,7 +497,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
->
->   	return ahci_host_activate(host, irq, &ahci_platform_sht);
->   }
-> -EXPORT_SYMBOL_GPL(ahci_platform_init_host);
-> +EXPORT_SYMBOL_GPL(__ahci_platform_init_host);
->
->   static void ahci_host_stop(struct ata_host *host)
->   {
-> diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-> index 642d6ae..0dcac84 100644
-> --- a/include/linux/ahci_platform.h
-> +++ b/include/linux/ahci_platform.h
-> @@ -28,9 +28,12 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
->   void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
->   struct ahci_host_priv *ahci_platform_get_resources(
->   	struct platform_device *pdev);
-> -int ahci_platform_init_host(struct platform_device *pdev,
-> -			    struct ahci_host_priv *hpriv,
-> -			    const struct ata_port_info *pi_template);
-> +int __ahci_platform_init_host(struct platform_device *pdev,
-> +			      struct ahci_host_priv *hpriv,
-> +			      const struct ata_port_info *pi_template,
-> +			      struct module *owner);
-> +#define ahci_platform_init_host(pdev, hpriv, pi_template) \
-> +	__ahci_platform_init_host(pdev, hpriv, pi_template, THIS_MODULE)
->
->   int ahci_platform_suspend_host(struct device *dev);
->   int ahci_platform_resume_host(struct device *dev);
->
+T24gTW9uLCAyMDE1LTAxLTA1IGF0IDEyOjAzICswMTAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IEF2b2lkIHRoYXQgdGhlIGZvbGxvd2luZyB3YXJuaW5nIGlzIHJlcG9ydGVkIHdoZW4gYSBT
+Q1NJIExMRCBrZXJuZWwNCj4gbW9kdWxlIGlzIHVubG9hZGVkOg0KPiANCj4gV0FSTklORzogQ1BV
+OiA1IFBJRDogMjI4IGF0IGtlcm5lbC9tb2R1bGUuYzo5NTQgbW9kdWxlX3B1dCsweDIwNy8weDIy
+MCgpDQo+IENhbGwgVHJhY2U6DQo+ICBbPGZmZmZmZmZmODE0ZDFmY2Y+XSBkdW1wX3N0YWNrKzB4
+NGMvMHg2NQ0KPiAgWzxmZmZmZmZmZjgxMDUzYWRhPl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg4
+YS8weGMwDQo+ICBbPGZmZmZmZmZmODEwNTNiY2E+XSB3YXJuX3Nsb3dwYXRoX251bGwrMHgxYS8w
+eDIwDQo+ICBbPGZmZmZmZmZmODEwZDA1MDc+XSBtb2R1bGVfcHV0KzB4MjA3LzB4MjIwDQo+ICBb
+PGZmZmZmZmZmYTAwMGJlYTg+XSBzY3NpX2RldmljZV9wdXQrMHg0OC8weDUwIFtzY3NpX21vZF0N
+Cj4gIFs8ZmZmZmZmZmZhMDM2NzZkMj5dIHNjc2lfZGlza19wdXQrMHgzMi8weDUwIFtzZF9tb2Rd
+DQo+ICBbPGZmZmZmZmZmYTAzNjhkNGM+XSBzZF9zaHV0ZG93bisweDhjLzB4MTUwIFtzZF9tb2Rd
+DQo+ICBbPGZmZmZmZmZmYTAzNjhlNzk+XSBzZF9yZW1vdmUrMHg2OS8weGMwIFtzZF9tb2RdDQo+
+ICBbPGZmZmZmZmZmODEzNDU3ZWY+XSBfX2RldmljZV9yZWxlYXNlX2RyaXZlcisweDdmLzB4ZjAN
+Cj4gIFs8ZmZmZmZmZmY4MTM0NTg4NT5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1LzB4NDAN
+Cj4gIFs8ZmZmZmZmZmY4MTM0NTEzND5dIGJ1c19yZW1vdmVfZGV2aWNlKzB4MTI0LzB4MWIwDQo+
+ICBbPGZmZmZmZmZmODEzNDE4OWU+XSBkZXZpY2VfZGVsKzB4MTNlLzB4MjUwDQo+ICBbPGZmZmZm
+ZmZmYTAwMWNkY2Q+XSBfX3Njc2lfcmVtb3ZlX2RldmljZSsweGNkLzB4ZTAgW3Njc2lfbW9kXQ0K
+PiAgWzxmZmZmZmZmZmEwMDFiMzlmPl0gc2NzaV9mb3JnZXRfaG9zdCsweDZmLzB4ODAgW3Njc2lf
+bW9kXQ0KPiAgWzxmZmZmZmZmZmEwMDBkNWY2Pl0gc2NzaV9yZW1vdmVfaG9zdCsweDg2LzB4MTQw
+IFtzY3NpX21vZF0NCj4gIFs8ZmZmZmZmZmZhMDdkNWMwYj5dIHNycF9yZW1vdmVfd29yaysweDli
+LzB4MjEwIFtpYl9zcnBdDQo+ICBbPGZmZmZmZmZmODEwNmZkMjg+XSBwcm9jZXNzX29uZV93b3Jr
+KzB4MWQ4LzB4NzgwDQo+ICBbPGZmZmZmZmZmODEwNzAzZWI+XSB3b3JrZXJfdGhyZWFkKzB4MTFi
+LzB4NGEwDQo+ICBbPGZmZmZmZmZmODEwNzVhNmY+XSBrdGhyZWFkKzB4ZWYvMHgxMTANCj4gIFs8
+ZmZmZmZmZmY4MTRkYWQ2Yz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwDQo+IA0KPiBTZWUgYWxz
+byBwYXRjaCAibW9kdWxlOiBSZW1vdmUgc3RvcF9tYWNoaW5lIGZyb20gbW9kdWxlIHVubG9hZGlu
+ZyINCj4gKE1hc2FtaSBIaXJhbWF0c3U7IGNvbW1pdCBlNTEzY2MxYzA3ZTI7IGtlcm5lbCB2My4x
+OS1yYzEpLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQmFydCBWYW4gQXNzY2hlIDxidmFuYXNzY2hl
+QGFjbS5vcmc+DQo+IENjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCj4gQ2M6IEhh
+bm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiAtLS0NCj4gIGRyaXZlcnMvc2NzaS9ob3N0
+cy5jICAgICB8ICAxICsNCj4gIGRyaXZlcnMvc2NzaS9zY3NpLmMgICAgICB8IDEzICsrKystLS0t
+LS0tLS0NCj4gIGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaCB8ICAzICsrKw0KPiAgMyBmaWxlcyBj
+aGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9zY3NpL2hvc3RzLmMgYi9kcml2ZXJzL3Njc2kvaG9zdHMuYw0KPiBpbmRleCA4
+YmIxNzNlLi5lOTE1NWQwIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvaG9zdHMuYw0KPiAr
+KysgYi9kcml2ZXJzL3Njc2kvaG9zdHMuYw0KPiBAQCAtMzgwLDYgKzM4MCw3IEBAIHN0cnVjdCBT
+Y3NpX0hvc3QgKnNjc2lfaG9zdF9hbGxvYyhzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlICpzaHQs
+IGludCBwcml2c2l6ZSkNCj4gIA0KPiAgCXNob3N0LT5ob3N0X2xvY2sgPSAmc2hvc3QtPmRlZmF1
+bHRfbG9jazsNCj4gIAlzcGluX2xvY2tfaW5pdChzaG9zdC0+aG9zdF9sb2NrKTsNCj4gKwlhdG9t
+aWNfc2V0KCZzaG9zdC0+bW9kdWxlX3JlZmNudCwgMCk7DQo+ICAJc2hvc3QtPnNob3N0X3N0YXRl
+ID0gU0hPU1RfQ1JFQVRFRDsNCj4gIAlJTklUX0xJU1RfSEVBRCgmc2hvc3QtPl9fZGV2aWNlcyk7
+DQo+ICAJSU5JVF9MSVNUX0hFQUQoJnNob3N0LT5fX3RhcmdldHMpOw0KPiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9zY3NpL3Njc2kuYyBiL2RyaXZlcnMvc2NzaS9zY3NpLmMNCj4gaW5kZXggZTAyODg1
+NC4uZWQzMjVkMSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Njc2kuYw0KPiArKysgYi9k
+cml2ZXJzL3Njc2kvc2NzaS5jDQo+IEBAIC05ODgsNyArOTg4LDggQEAgaW50IHNjc2lfZGV2aWNl
+X2dldChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQo+ICAJCXJldHVybiAtRU5YSU87DQo+ICAJ
+LyogV2UgY2FuIGZhaWwgdGhpcyBpZiB3ZSdyZSBkb2luZyBTQ1NJIG9wZXJhdGlvbnMNCj4gIAkg
+KiBmcm9tIG1vZHVsZSBleGl0IChsaWtlIGNhY2hlIGZsdXNoKSAqLw0KPiAtCXRyeV9tb2R1bGVf
+Z2V0KHNkZXYtPmhvc3QtPmhvc3R0LT5tb2R1bGUpOw0KPiArCWlmICh0cnlfbW9kdWxlX2dldChz
+ZGV2LT5ob3N0LT5ob3N0dC0+bW9kdWxlKSkNCj4gKwkJYXRvbWljX2luYygmc2Rldi0+aG9zdC0+
+bW9kdWxlX3JlZmNudCk7DQo+ICANCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gQEAgLTEwMDQsMTQg
+KzEwMDUsOCBAQCBFWFBPUlRfU1lNQk9MKHNjc2lfZGV2aWNlX2dldCk7DQo+ICAgKi8NCj4gIHZv
+aWQgc2NzaV9kZXZpY2VfcHV0KHN0cnVjdCBzY3NpX2RldmljZSAqc2RldikNCj4gIHsNCj4gLSNp
+ZmRlZiBDT05GSUdfTU9EVUxFX1VOTE9BRA0KPiAtCXN0cnVjdCBtb2R1bGUgKm1vZHVsZSA9IHNk
+ZXYtPmhvc3QtPmhvc3R0LT5tb2R1bGU7DQo+IC0NCj4gLQkvKiBUaGUgbW9kdWxlIHJlZmNvdW50
+IHdpbGwgYmUgemVybyBpZiBzY3NpX2RldmljZV9nZXQoKQ0KPiAtCSAqIHdhcyBjYWxsZWQgZnJv
+bSBhIG1vZHVsZSByZW1vdmFsIHJvdXRpbmUgKi8NCj4gLQlpZiAobW9kdWxlICYmIG1vZHVsZV9y
+ZWZjb3VudChtb2R1bGUpICE9IDApDQo+IC0JCW1vZHVsZV9wdXQobW9kdWxlKTsNCj4gLSNlbmRp
+Zg0KPiArCWlmIChhdG9taWNfZGVjX2lmX3Bvc2l0aXZlKCZzZGV2LT5ob3N0LT5tb2R1bGVfcmVm
+Y250KSA+PSAwKQ0KPiArCQltb2R1bGVfcHV0KHNkZXYtPmhvc3QtPmhvc3R0LT5tb2R1bGUpOw0K
+PiAgCXB1dF9kZXZpY2UoJnNkZXYtPnNkZXZfZ2VuZGV2KTsNCj4gIH0NCj4gIEVYUE9SVF9TWU1C
+T0woc2NzaV9kZXZpY2VfcHV0KTsNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvc2NzaS9zY3NpX2hv
+c3QuaCBiL2luY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaA0KPiBpbmRleCAwMTllNjY4Li5iOGU2ZjAx
+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3Njc2kvc2NzaV9ob3N0LmgNCj4gKysrIGIvaW5jbHVk
+ZS9zY3NpL3Njc2lfaG9zdC5oDQo+IEBAIC01NjYsNiArNTY2LDkgQEAgc3RydWN0IFNjc2lfSG9z
+dCB7DQo+ICAJc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqaG9zdHQ7DQo+ICAJc3RydWN0IHNj
+c2lfdHJhbnNwb3J0X3RlbXBsYXRlICp0cmFuc3BvcnR0Ow0KPiAgDQo+ICsJLyogTnVtYmVyIG9m
+IExMRCBrZXJuZWwgbW9kdWxlIHJlZmVyZW5jZXMgaGVsZCBieSB0aGUgU0NTSSBjb3JlLiAqLw0K
+PiArCWF0b21pY190CQkgbW9kdWxlX3JlZmNudDsNCj4gKw0KPiAgCS8qDQo+ICAJICogQXJlYSB0
+byBrZWVwIGEgc2hhcmVkIHRhZyBtYXAgKGlmIG5lZWRlZCwgd2lsbCBiZQ0KPiAgCSAqIE5VTEwg
+aWYgbm90KS4NCg0KVGhpcyBpcyBhIGJpdCBvdmVyIGNvZGVkIGZvciBhIGZpeC4gIFdlIGRvbid0
+IG5lZWQgdG8gZHVwbGljYXRlIHRoZQ0KbW9kdWxlIHJlZmVyZW5jZSwgbWVyZWx5IHRha2UgaW50
+byBhY2NvdW50IHRoYXQgaW4gdGhlIHJlbW92ZSBjb2RlDQptb2R1bGVfcmVmY250KCkgY2FuIG5v
+dyByZXR1cm4gLTEsIHdoaWNoIHdlJ3JlIG5vdCBleHBlY3RpbmcuDQoNCk1hc2FtaSwgdGhpcyBs
+b29rcyBsaWtlIGEgbmFzdHkgdW5pbnRlbmRlZCBjb25zZXF1ZW5jZSBvZiANCg0KY29tbWl0IGU1
+MTNjYzFjMDdlMmFiOTNhNDUxNGVlYzk4MzNlMDMxZGYzZTMwYmINCkF1dGhvcjogTWFzYW1pIEhp
+cmFtYXRzdSA8bWFzYW1pLmhpcmFtYXRzdS5wdEBoaXRhY2hpLmNvbT4NCkRhdGU6ICAgTW9uIE5v
+diAxMCAwOTozMDoyOSAyMDE0ICsxMDMwDQoNCiAgICBtb2R1bGU6IFJlbW92ZSBzdG9wX21hY2hp
+bmUgZnJvbSBtb2R1bGUgdW5sb2FkaW5nDQoNCkFyZSB5b3Ugc3VyZSB3ZSBhbGwgc2hvdWxkIGhh
+dmUgdG8gYWx0ZXIgb3VyIG1vZHVsZSByZWZjb3VudGluZyBpbg0KcmVtb3ZhbCByb3V0aW5lcyBs
+aWtlIHRoaXM/ICBJIHRoaW5rIHRoZSBiZXR0ZXIgZml4IGlzIGhhdmluZw0KbW9kdWxlX3JlZmNv
+dW50KCkgbmV2ZXIgcmV0dXJuIGEgbmVnYXRpdmUgbnVtYmVyOg0KDQp1bnNpZ25lZCBsb25nIG1v
+ZHVsZV9yZWZjb3VudChzdHJ1Y3QgbW9kdWxlICptb2QpDQp7DQoJdW5zaWduZWQgbG9uZyByZXQg
+PSAodW5zaWduZWQgbG9uZylhdG9taWNfcmVhZCgmbW9kLT5yZWZjbnQpOw0KDQoJaWYgKHJldCA9
+PSAwKQ0KCQlyZXR1cm4gcmV0DQoJcmV0dXJuIHJldCAtIE1PRFVMRV9SRUZfQkFTRTsNCn0NCg0K
+SmFtZXMNCg0KLS0tDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaS5jIGIvZHJpdmVy
+cy9zY3NpL3Njc2kuYw0KaW5kZXggZTAyODg1NC4uOTBkY2IyZiAxMDA2NDQNCi0tLSBhL2RyaXZl
+cnMvc2NzaS9zY3NpLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpLmMNCkBAIC0xMDA5LDcgKzEw
+MDksNyBAQCB2b2lkIHNjc2lfZGV2aWNlX3B1dChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQog
+DQogCS8qIFRoZSBtb2R1bGUgcmVmY291bnQgd2lsbCBiZSB6ZXJvIGlmIHNjc2lfZGV2aWNlX2dl
+dCgpDQogCSAqIHdhcyBjYWxsZWQgZnJvbSBhIG1vZHVsZSByZW1vdmFsIHJvdXRpbmUgKi8NCi0J
+aWYgKG1vZHVsZSAmJiBtb2R1bGVfcmVmY291bnQobW9kdWxlKSAhPSAwKQ0KKwlpZiAobW9kdWxl
+ICYmIG1vZHVsZV9yZWZjb3VudChtb2R1bGUpID4gMCkNCiAJCW1vZHVsZV9wdXQobW9kdWxlKTsN
+CiAjZW5kaWYNCiAJcHV0X2RldmljZSgmc2Rldi0+c2Rldl9nZW5kZXYpOw0KDQo=
