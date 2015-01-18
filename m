@@ -1,114 +1,35 @@
-From: Tina Johnson <tinajohnson.1234@gmail.com>
-Subject: [PATCH 2/2] drivers: scsi: mpt2sas: Clean up error handling for calls to pci_map_single
-Date: Sun, 18 Jan 2015 12:11:03 +0530
-Message-ID: <88d75f3ab255a7f0d485544adb81d6e0d35d6f7c.1421489699.git.tinajohnson.1234@gmail.com>
-References: <cover.1421489699.git.tinajohnson.1234@gmail.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/3] block: Deletion of checks before three function calls
+Date: Sun, 18 Jan 2015 15:31:07 +0100
+Message-ID: <54BBC3AB.6040207@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1421489699.git.tinajohnson.1234@gmail.com>
-In-Reply-To: <cover.1421489699.git.tinajohnson.1234@gmail.com>
-References: <cover.1421489699.git.tinajohnson.1234@gmail.com>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: praveen.krishnamoorthy@avagotech.com, sreekanth.reddy@avagotech.com, julia.lawall@lip6.fr, abhijit.mahajan@avagotech.com, nagalakshmi.nandigama@avagotech.com, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Tina Johnson <tinajohnson.1234@gmail.com>
+To: Don Brace <don.brace@pmcs.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-*Currently, the error handling code is organized to free dma_addr_out,
- dma_addr_in and then pci_addr_out, pci_addr_in. Since dma_addr_out and
- pci_addr_out are allocated first and then dma_addr_in and  pci_addr_in,
- the error handling code is reorganized to free the in variables first and
- then the out variables. Labels were renamed and gotos altered accordingly.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 18 Jan 2015 14:50:06 +0100
 
-*At the point of the goto free_pci, neither the in nor the out variables
- are allocated and hence no freeing required. The free_pci label is removed
- and the goto free_pci is replaced with goto out.
+Functions which release a system resource are occasionally documented in the way
+that they tolerate the passing of a null pointer for example. I do not see a need
+because of this fact that a function caller repeats a corresponding check.
 
-Signed-off-by: Tina Johnson <tinajohnson.1234@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/scsi/mpt2sas/mpt2sas_transport.c |   31 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+Markus Elfring (3):
+  cciss: Deletion of an unnecessary check before the function call "put_disk"
+  z2ram: Delete an unnecessary check before the function call "kfree"
+  Deletion of checks before the function call "iounmap"
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index b283140..1740506 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -1966,7 +1966,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 			printk(MPT2SAS_INFO_FMT "%s(): DMA Addr out = NULL\n",
- 			    ioc->name, __func__);
- 			rc = -ENOMEM;
--			goto free_pci;
-+			goto out;
- 		}
- 	}
- 
-@@ -1979,7 +1979,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 			printk(MPT2SAS_INFO_FMT "%s(): PCI Addr in = NULL\n",
- 			    ioc->name, __func__);
- 			rc = -ENOMEM;
--			goto unmap;
-+			goto release_out;
- 		}
- 	} else {
- 		dma_addr_in =  pci_map_single(ioc->pdev, bio_data(rsp->bio),
-@@ -1988,7 +1988,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 			printk(MPT2SAS_INFO_FMT "%s(): DMA Addr in = NULL\n",
- 			    ioc->name, __func__);
- 			rc = -ENOMEM;
--			goto unmap;
-+			goto release_out;
- 		}
- 	}
- 
-@@ -2000,7 +2000,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 			    "%s: failed due to ioc not operational\n",
- 			    ioc->name, __func__);
- 			rc = -EFAULT;
--			goto unmap;
-+			goto release_in;
- 		}
- 		ssleep(1);
- 		ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
-@@ -2017,7 +2017,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
- 		    ioc->name, __func__);
- 		rc = -EAGAIN;
--		goto unmap;
-+		goto release_in;
- 	}
- 
- 	rc = 0;
-@@ -2132,22 +2132,21 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		rc = -ETIMEDOUT;
- 	}
- 
-- unmap:
--	if (dma_addr_out)
--		pci_unmap_single(ioc->pdev, dma_addr_out, blk_rq_bytes(req),
--		    PCI_DMA_BIDIRECTIONAL);
-+ release_in:
- 	if (dma_addr_in)
- 		pci_unmap_single(ioc->pdev, dma_addr_in, blk_rq_bytes(rsp),
--		    PCI_DMA_BIDIRECTIONAL);
-+				 PCI_DMA_BIDIRECTIONAL);
-+	if (pci_addr_in)
-+		pci_free_consistent(ioc->pdev, blk_rq_bytes(rsp), pci_addr_in,
-+				    pci_dma_in);
- 
-- free_pci:
-+ release_out:
-+	if (dma_addr_out)
-+		pci_unmap_single(ioc->pdev, dma_addr_out, blk_rq_bytes(req),
-+				 PCI_DMA_BIDIRECTIONAL);
- 	if (pci_addr_out)
- 		pci_free_consistent(ioc->pdev, blk_rq_bytes(req), pci_addr_out,
--		    pci_dma_out);
--
--	if (pci_addr_in)
--		pci_free_consistent(ioc->pdev, blk_rq_bytes(rsp), pci_addr_in,
--		    pci_dma_in);
-+				    pci_dma_out);
- 
-  out:
- 	ioc->transport_cmds.status = MPT2_CMD_NOT_USED;
+ drivers/block/cciss.c    | 18 ++++++------------
+ drivers/block/mg_disk.c  |  3 +--
+ drivers/block/skd_main.c |  6 ++----
+ 3 files changed, 9 insertions(+), 18 deletions(-)
+
 -- 
-1.7.10.4
+2.2.2
