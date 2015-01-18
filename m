@@ -1,107 +1,109 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/3] block: Deletion of checks before the function call "iounmap"
-Date: Sun, 18 Jan 2015 15:43:01 +0100
-Message-ID: <54BBC675.2030205@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <54BBC3AB.6040207@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54BBC3AB.6040207@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, iss_storagedev@hp.com, storagedev@pmcs.com, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v4 00/11] scsi: fix module reference mismatch for scsi host
+Date: Mon, 19 Jan 2015 00:05:58 +0900
+Message-ID: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Robert Love <robert.w.love@intel.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, fcoe-devel@open-fcoe.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 18 Jan 2015 13:33:25 +0100
+While accessing a scsi_device, the use count of the underlying LLDD
+module is incremented.  The module reference is retrieved through
+.module field of struct scsi_host_template.
 
-The iounmap() function performs also input parameter validation.
-Thus the test around the call is not needed.
+This mapping between scsi_device and underlying LLDD module works well
+except some drivers which consist with the core driver and the actual
+LLDDs and scsi_host_template is defined in the core driver.  In these
+cases, the actual LLDDs can be unloaded even if the scsi_device is
+being accessed.
 
-This issue was detected by using the Coccinelle software.
+This patch series fixes the module reference mismatch problem for
+ufs, usb-storage, esp_scsi, ahci_platform, and pata_platform drivers
+by moving owner module reference field from struct scsi_host_template
+to struct Scsi_Host and allowing the LLDDs to set their correct module
+reference.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/block/cciss.c    | 18 ++++++------------
- drivers/block/mg_disk.c  |  3 +--
- drivers/block/skd_main.c |  6 ++----
- 3 files changed, 9 insertions(+), 18 deletions(-)
+* v4:
+- Patch series is almost rewritten as module reference field in
+  struct scsi_host_template has been unused anymore.  So Acked-by: and
+  Reviewed-by: tags that have been received are deleted.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index ff20f19..d13ef0f 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4382,12 +4382,9 @@ err_out_free_res:
- 	 * Deliberately omit pci_disable_device(): it does something nasty to
- 	 * Smart Array controllers that pci_enable_device does not undo
- 	 */
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	if (h->vaddr)
--		iounmap(h->vaddr);
-+	iounmap(h->transtable);
-+	iounmap(h->cfgtable);
-+	iounmap(h->vaddr);
- 	pci_release_regions(h->pdev);
- 	return err;
- }
-@@ -4939,12 +4936,9 @@ static void cciss_undo_allocations_after_kdump_soft_reset(ctlr_info_t *h)
- 	if (h->reply_pool)
- 		pci_free_consistent(h->pdev, h->max_commands * sizeof(__u64),
- 				h->reply_pool, h->reply_pool_dhandle);
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	if (h->vaddr)
--		iounmap(h->vaddr);
-+	iounmap(h->transtable);
-+	iounmap(h->cfgtable);
-+	iounmap(h->vaddr);
- 	unregister_blkdev(h->major, h->devname);
- 	cciss_destroy_hba_sysfs_entry(h);
- 	pci_release_regions(h->pdev);
-diff --git a/drivers/block/mg_disk.c b/drivers/block/mg_disk.c
-index 145ce2a..9f738ee 100644
---- a/drivers/block/mg_disk.c
-+++ b/drivers/block/mg_disk.c
-@@ -1068,8 +1068,7 @@ static int mg_remove(struct platform_device *plat_dev)
- 		gpio_free(host->rst);
- 
- 	/* unmap io */
--	if (host->dev_base)
--		iounmap(host->dev_base);
-+	iounmap(host->dev_base);
- 
- 	/* free mg_host */
- 	kfree(host);
-diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
-index 1e46eb2..d4c7c4b 100644
---- a/drivers/block/skd_main.c
-+++ b/drivers/block/skd_main.c
-@@ -4944,8 +4944,7 @@ err_out_timer:
- 
- err_out_iounmap:
- 	for (i = 0; i < SKD_MAX_BARS; i++)
--		if (skdev->mem_map[i])
--			iounmap(skdev->mem_map[i]);
-+		iounmap(skdev->mem_map[i]);
- 
- 	if (skdev->pcie_error_reporting_is_enabled)
- 		pci_disable_pcie_error_reporting(pdev);
-@@ -5108,8 +5107,7 @@ err_out_timer:
- 
- err_out_iounmap:
- 	for (i = 0; i < SKD_MAX_BARS; i++)
--		if (skdev->mem_map[i])
--			iounmap(skdev->mem_map[i]);
-+		iounmap(skdev->mem_map[i]);
- 
- 	if (skdev->pcie_error_reporting_is_enabled)
- 		pci_disable_pcie_error_reporting(pdev);
+* v3:
+- Add fix for ESP SCSI drivers
+
+* v2:
+- Pass correct module reference to usb_stor_probe1() instead of touching
+  all ums-* drivers, suggested by Alan Stern
+
+Akinobu Mita (11):
+  ata: prepare to move module reference from scsi_host_template to
+    Scsi_Host
+  iscsi: prepare to move module reference from scsi_host_template to
+    Scsi_Host
+  cxgbi: prepare to move module reference from scsi_host_template to
+    Scsi_Host
+  libfc: prepare to move module reference from scsi_host_template to
+    Scsi_Host
+  53c700: prepare move module reference from scsi_host_template to
+    Scsi_Host
+  scsi: legacy: prepare to move module reference from scsi_host_template
+    to Scsi_Host
+  scsi: move module reference from scsi_host_template to Scsi_Host
+  scsi: ufs: adjust module reference for scsi host
+  usb: storage: adjust module reference for scsi host
+  ata: ahci_platform: adjust module reference for scsi host
+  ata: pata_of_platform: adjust module reference for scsi host
+
+ drivers/ata/libahci_platform.c | 14 +++++-----
+ drivers/ata/libata-core.c      | 22 ++++++++-------
+ drivers/ata/libata-scsi.c      |  2 +-
+ drivers/ata/libata-sff.c       | 61 +++++++++++++++++++++++-------------------
+ drivers/ata/pata_platform.c    | 18 +++++++------
+ drivers/scsi/53c700.c          |  9 ++++---
+ drivers/scsi/53c700.h          |  7 +++--
+ drivers/scsi/cxgbi/libcxgbi.c  |  8 +++---
+ drivers/scsi/cxgbi/libcxgbi.h  |  6 +++--
+ drivers/scsi/hosts.c           | 16 ++++++-----
+ drivers/scsi/libfc/fc_lport.c  | 26 ++++++++++++++++++
+ drivers/scsi/libfc/fc_npiv.c   |  2 +-
+ drivers/scsi/libiscsi.c        | 12 +++++----
+ drivers/scsi/scsi.c            |  4 +--
+ drivers/scsi/ufs/ufshcd.c      | 13 ++++-----
+ drivers/scsi/ufs/ufshcd.h      |  5 +++-
+ drivers/usb/storage/scsiglue.c |  3 ---
+ drivers/usb/storage/usb.c      |  9 ++++---
+ drivers/usb/storage/usb.h      |  7 +++--
+ include/linux/ahci_platform.h  |  9 ++++---
+ include/linux/ata_platform.h   | 16 ++++++-----
+ include/linux/libata.h         | 52 ++++++++++++++++++++++++-----------
+ include/scsi/libfc.h           | 27 +++----------------
+ include/scsi/libiscsi.h        |  9 ++++---
+ include/scsi/scsi_host.h       | 13 +++++++--
+ 25 files changed, 224 insertions(+), 146 deletions(-)
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Karen Xie <kxie@chelsio.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: open-iscsi@googlegroups.com
+Cc: fcoe-devel@open-fcoe.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: usb-storage@lists.one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
 -- 
-2.2.2
+1.9.1
+
