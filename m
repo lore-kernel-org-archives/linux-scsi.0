@@ -1,19 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4] virtio-scsi: Fix the race condition in
- virtscsi_handle_event
-Date: Mon, 19 Jan 2015 01:52:54 -0800
-Message-ID: <20150119095254.GA7333@infradead.org>
-References: <1420685852-5078-1-git-send-email-famz@redhat.com>
+From: John Watson <jw25743@gmail.com>
+Subject: GOOD DAY
+Date: Mon, 19 Jan 2015 12:53:20 +0100
+Message-ID: <CAG7hsk5VQa++PmJxSnsUUJ4OkpF19GX3sNp+tmFYS=XW+w_64A__22041.2989998751$1421668422$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1420685852-5078-1-git-send-email-famz@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Michael S. Tsirkin" <mst@redhat.com>, Venkatesh Srinivas <venkateshs@google.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:59673 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbbASLxV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 06:53:21 -0500
+Received: by mail-ob0-f194.google.com with SMTP id gq1so6012418obb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2015 03:53:20 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Michael,
+Watson Investment Group.
+22 Pasteur Drive,Leegomery Telford
+United Kingdom ,TF1 6PQ
+Tel: 447053834136
+Fax: +44 8435 622250
+E-mail:jw25743@gmail.com
 
-are you fine with this version?
+
+We are a private financial company based in the united Kingdom. We
+offer funding for investments across the world. We have funded and
+invested in businesses and given personal,multi-purpose loans to
+individuals and groups. We have transformed DREAMS into REALITIES.
+
+We will like to invest in your company or project using our
+BG/Monetization Program, please send more details about your company
+to provide you with our procedure for the loan.
+
+
+John Watson
+CEO Watson Investment Group
