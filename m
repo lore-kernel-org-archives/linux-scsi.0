@@ -1,17 +1,18 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/4] scsi: always use format argumets for dev_printk
-Date: Mon, 19 Jan 2015 08:04:39 +0100
-Message-ID: <54BCAC87.3050006@suse.de>
-References: <1421593891-19984-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 2/4] scsi: annotate sdev_prefix_printk and scmd_printk
+ as printf-like
+Date: Mon, 19 Jan 2015 08:04:58 +0100
+Message-ID: <54BCAC9A.10708@suse.de>
+References: <1421593891-19984-1-git-send-email-hch@lst.de> <1421593891-19984-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44809 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:44814 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757AbbASHEl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2015 02:04:41 -0500
-In-Reply-To: <1421593891-19984-1-git-send-email-hch@lst.de>
+	id S1750719AbbASHFA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2015 02:05:00 -0500
+In-Reply-To: <1421593891-19984-2-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
