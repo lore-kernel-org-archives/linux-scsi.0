@@ -1,7 +1,7 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] sd: fix an error return in probe()
-Date: Mon, 19 Jan 2015 17:41:12 +0300
-Message-ID: <20150119144112.GB19086@mwanda>
+Subject: [patch] [SCSI] mvumi: return a correct error code
+Date: Mon, 19 Jan 2015 17:42:16 +0300
+Message-ID: <20150119144216.GC19086@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <kernel-janitors-owner@vger.kernel.org>
@@ -11,22 +11,20 @@ To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If device_add() fails then it should return the error code but instead
-the current code returns success.
+If kthread_create() fails then this should return an error code but the
+current code returns zero instead.
 
 Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ebf35cb6..75a0b55 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3019,7 +3019,8 @@ static int sd_probe(struct device *dev)
- 	sdkp->dev.class = &sd_disk_class;
- 	dev_set_name(&sdkp->dev, "%s", dev_name(dev));
- 
--	if (device_add(&sdkp->dev))
-+	error = device_add(&sdkp->dev);
-+	if (error)
- 		goto out_free_index;
- 
- 	get_device(dev);
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 3e6b866..586f72b 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2477,6 +2477,7 @@ static int mvumi_io_attach(struct mvumi_hba *mhba)
+ 		dev_err(&mhba->pdev->dev,
+ 			"failed to create device scan thread\n");
+ 		mutex_unlock(&mhba->sas_discovery_mutex);
++		ret = PTR_ERR(mhba->dm_thread);
+ 		goto fail_create_thread;
+ 	}
+ 	atomic_set(&mhba->pnp_count, 1);
