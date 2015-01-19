@@ -1,96 +1,109 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 08/13] aha1542: remove empty aha1542_stat
-Date: Mon, 19 Jan 2015 23:37:52 +0100
-Message-ID: <1421707077-25291-9-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 11/13] aha1542: Unify aha1542_in and aha1542_in1
+Date: Mon, 19 Jan 2015 23:37:55 +0100
+Message-ID: <1421707077-25291-12-git-send-email-linux@rainbow-software.org>
 References: <1421707077-25291-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:44255 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:44276 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752045AbbASWiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2015 17:38:11 -0500
+	id S1751623AbbASWn0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2015 17:43:26 -0500
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1YDKxV-0006A4-IG
-	for linux-scsi@vger.kernel.org; Mon, 19 Jan 2015 23:38:09 +0100
+	id 1YDKxW-0006A4-21
+	for linux-scsi@vger.kernel.org; Mon, 19 Jan 2015 23:38:10 +0100
 In-Reply-To: <1421707077-25291-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Unify aha1542_in and aha1542_in1 functions, they differ only in timeout
+and printk.
+
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/aha1542.c |   16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ drivers/scsi/aha1542.c |   33 +++++++--------------------------
+ 1 file changed, 7 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index af1e8fa..ebc5476 100644
+index 0e58cef..b4ada24 100644
 --- a/drivers/scsi/aha1542.c
 +++ b/drivers/scsi/aha1542.c
-@@ -154,12 +154,6 @@ static inline void aha1542_intr_reset(u16 base)
-    }									\
-  }
+@@ -191,34 +191,13 @@ fail:
+ /* Only used at boot time, so we do not need to worry about latency as much
+    here */
  
--static void aha1542_stat(void)
--{
--/*	int s = inb(STATUS), i = inb(INTRFLAGS);
--	printk("status=%x intrflags=%x\n", s, i, WAITnexttimeout-WAITtimeout); */
+-static int aha1542_in(unsigned int base, u8 *cmdp, int len)
++static int aha1542_in(unsigned int base, u8 *cmdp, int len, int timeout)
+ {
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&aha1542_lock, flags);
+ 	while (len--) {
+-		if (!wait_mask(STATUS(base), DF, DF, 0, 0))
+-			goto fail;
+-		*cmdp++ = inb(DATA(base));
+-	}
+-	spin_unlock_irqrestore(&aha1542_lock, flags);
+-	return 0;
+-fail:
+-	spin_unlock_irqrestore(&aha1542_lock, flags);
+-	printk(KERN_ERR "aha1542_in failed(%d): ", len + 1);
+-	return 1;
 -}
 -
- /* This is a bit complicated, but we need to make sure that an interrupt
-    routine does not send something out while we are in the middle of this.
-    Fortunately, it is only at boot time that multi-byte messages
-@@ -196,7 +190,6 @@ fail:
- 	if (got_lock)
- 		spin_unlock_irqrestore(&aha1542_lock, flags);
- 	printk(KERN_ERR "aha1542_out failed(%d): ", len + 1);
--	aha1542_stat();
- 	return 1;
- }
- 
-@@ -217,7 +210,6 @@ static int aha1542_in(unsigned int base, u8 *cmdp, int len)
+-/* Similar to aha1542_in, except that we wait a very short period of time.
+-   We use this if we know the board is alive and awake, but we are not sure
+-   if the board will respond to the command we are about to send or not */
+-static int aha1542_in1(unsigned int base, u8 *cmdp, int len)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&aha1542_lock, flags);
+-	while (len--) {
+-		if (!wait_mask(STATUS(base), DF, DF, 0, 100))
++		if (!wait_mask(STATUS(base), DF, DF, 0, timeout))
+ 			goto fail;
+ 		*cmdp++ = inb(DATA(base));
+ 	}
+@@ -226,6 +205,8 @@ static int aha1542_in1(unsigned int base, u8 *cmdp, int len)
+ 	return 0;
  fail:
  	spin_unlock_irqrestore(&aha1542_lock, flags);
- 	printk(KERN_ERR "aha1542_in failed(%d): ", len + 1);
--	aha1542_stat();
++	if (timeout == 0)
++		printk(KERN_ERR "aha1542_in failed(%d): ", len + 1);
  	return 1;
  }
  
-@@ -590,7 +582,6 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
- 		printk(KERN_DEBUG "aha1542_queuecommand: dev %d cmd %02x pos %d len %d ", target, *cmd, i, bufflen);
- 	else
- 		printk(KERN_DEBUG "aha1542_command: dev %d cmd %02x pos %d len %d ", target, *cmd, i, bufflen);
--	aha1542_stat();
- 	printk(KERN_DEBUG "aha1542_queuecommand: dumping scsi cmd:");
- 	for (i = 0; i < SCpnt->cmd_len; i++)
- 		printk("%02x ", cmd[i]);
-@@ -691,12 +682,10 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
- #endif
+@@ -730,7 +711,7 @@ static int aha1542_getconfig(int base_io, unsigned char *irq_level, unsigned cha
+ 		i = inb(DATA(base_io));
+ 	};
+ 	aha1542_out(base_io, inquiry_cmd, 1);
+-	aha1542_in(base_io, inquiry_result, 3);
++	aha1542_in(base_io, inquiry_result, 3, 0);
+ 	if (!wait_mask(INTRFLAGS(base_io), INTRMASK, HACC, 0, 0))
+ 		goto fail;
+ 	while (0) {
+@@ -800,7 +781,7 @@ static int aha1542_mbenable(int base)
  
- 	if (done) {
--		DEB(printk("aha1542_queuecommand: now waiting for interrupt ");
--		    aha1542_stat());
-+		DEB(printk("aha1542_queuecommand: now waiting for interrupt "));
- 		SCpnt->scsi_done = done;
- 		mb[mbo].status = 1;
- 		aha1542_out(SCpnt->device->host->io_port, &ahacmd, 1);	/* start scsi command */
--		DEB(aha1542_stat());
- 	} else
- 		printk("aha1542_queuecommand: done can't be NULL\n");
- 
-@@ -1017,11 +1006,8 @@ fail:
- 				printk(", DMA priority %d", dma_chan);
- 			printk("\n");
- 
--			DEB(aha1542_stat());
- 			setup_mailboxes(base_io, shpnt);
- 
--			DEB(aha1542_stat());
--
- 			DEB(printk("aha1542_detect: enable interrupt channel %d\n", irq_level));
- 			spin_lock_irqsave(&aha1542_lock, flags);
- 			if (request_irq(irq_level, do_aha1542_intr_handle, 0,
+ 	mbenable_cmd[0] = CMD_EXTBIOS;
+ 	aha1542_out(base, mbenable_cmd, 1);
+-	if (aha1542_in1(base, mbenable_result, 2))
++	if (aha1542_in(base, mbenable_result, 2, 100))
+ 		return retval;
+ 	if (!wait_mask(INTRFLAGS(base), INTRMASK, HACC, 0, 100))
+ 		goto fail;
+@@ -837,7 +818,7 @@ static int aha1542_query(int base_io, int *transl)
+ 		i = inb(DATA(base_io));
+ 	};
+ 	aha1542_out(base_io, inquiry_cmd, 1);
+-	aha1542_in(base_io, inquiry_result, 4);
++	aha1542_in(base_io, inquiry_result, 4, 0);
+ 	if (!wait_mask(INTRFLAGS(base_io), INTRMASK, HACC, 0, 0))
+ 		goto fail;
+ 	while (0) {
 -- 
 Ondrej Zary
 
