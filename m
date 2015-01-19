@@ -1,36 +1,35 @@
-From: John Watson <jw25743@gmail.com>
-Subject: GOOD DAY
-Date: Mon, 19 Jan 2015 12:53:20 +0100
-Message-ID: <CAG7hsk5VQa++PmJxSnsUUJ4OkpF19GX3sNp+tmFYS=XW+w_64A__22041.2989998751$1421668422$gmane$org@mail.gmail.com>
+From: "Peter Wong" <peterwong@hangsengbank.com>
+Subject: Interesse
+Date: Mon, 19 Jan 2015 03:22:04 -0800
+Message-ID: <b0080009d63fbb5d60277b0137c152eb.squirrel__23261.1583699056$1421673121$gmane$org@secure167.servconfig.com>
+Reply-To: peterwong913@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:59673 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbbASLxV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 06:53:21 -0500
-Received: by mail-ob0-f194.google.com with SMTP id gq1so6012418obb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2015 03:53:20 -0800 (PST)
+Received: from res167.servconfig.com ([192.249.122.39]:60792 "EHLO
+	res167.servconfig.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbbASNLl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 08:11:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Watson Investment Group.
-22 Pasteur Drive,Leegomery Telford
-United Kingdom ,TF1 6PQ
-Tel: 447053834136
-Fax: +44 8435 622250
-E-mail:jw25743@gmail.com
+Jeg vil foresl=E5 relasjoner som er av felles interesse. Det er overf=F8=
+ring
+av en stor sum penger.Jeg skriver til deg fordi du har blitt anbefalt t=
+il
+meg som en som kan v=E6re egnet for mitt prosjekt.
+Ta kontakt med meg p=E5 min personlige e-postadresse; en rask respons, =
+ville
+jeg stor pris p=E5 det.
+
+Med v=E5re beste =F8nsker
+Peter Wong
 
 
-We are a private financial company based in the united Kingdom. We
-offer funding for investments across the world. We have funded and
-invested in businesses and given personal,multi-purpose loans to
-individuals and groups. We have transformed DREAMS into REALITIES.
 
-We will like to invest in your company or project using our
-BG/Monetization Program, please send more details about your company
-to provide you with our procedure for the loan.
-
-
-John Watson
-CEO Watson Investment Group
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
