@@ -1,29 +1,29 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] aha1542: Stop using scsi_module.c
-Date: Mon, 19 Jan 2015 00:57:53 -0800
-Message-ID: <20150119085753.GC15809@infradead.org>
-References: <1421447489-28835-1-git-send-email-linux@rainbow-software.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Mon, 19 Jan 2015 01:21:53 -0800
+Message-ID: <20150119092153.GA8666@infradead.org>
+References: <54B63F74.2040702@sandisk.com>
+ <20150115090829.GA14154@infradead.org>
+ <54B7E70C.8020304@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46883 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223AbbASI5z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 03:57:55 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1421447489-28835-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <54B7E70C.8020304@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Fri, Jan 16, 2015 at 11:31:29PM +0100, Ondrej Zary wrote:
-> Convert aha1542 to use scsi_add_host instead of scsi_module.c
-> Use pnp_driver and isa_driver to manage cards.
-> 
-> I hope that the PnP code is OK, don't have a PnP card to test.
-> 
-> The code needs much more work, there's a lot of things to delete.
+On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
+> My goal is to realize this proposal without adding hooks for out-of-tree
+> code in the upstream kernel. What I had in mind is to raise the
+> abstraction level of the API between LIO core and target drivers a
+> little bit (e.g. by using accessor functions where necessary instead of
+> accessing structure members directly)
 
-Thanks this looks pretty nice to me.  The use of the ->match for the isa
-driver looks weird, but lots of the isa drivers seem to do it that way.
+That's very much a hook, althiugh a week one.
+
+Either way I don't think bringing up a very much political topic
+without even any code to discuss isn't a very valueable use of our time
+slots.
