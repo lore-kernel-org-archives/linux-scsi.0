@@ -1,58 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: module: fix module_refcount() return when running in a module
- exit routine
-Date: Mon, 19 Jan 2015 08:08:21 -0800
-Message-ID: <1421683701.2080.25.camel@HansenPartnership.com>
-References: <1421600146.2080.8.camel@HansenPartnership.com>
-	 <54BC93C3.7010808@hitachi.com> <878ugzco8c.fsf@rustcorp.com.au>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCHv2] libata: fixup oops in ata_eh_link_report()
+Date: Mon, 19 Jan 2015 20:26:15 +0300
+Message-ID: <54BD3E37.8060306@cogentembedded.com>
+References: <1421682938-14073-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <878ugzco8c.fsf@rustcorp.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:61925 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752475AbbASR0U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 12:26:20 -0500
+Received: by mail-lb0-f173.google.com with SMTP id p9so6094563lbv.4
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2015 09:26:19 -0800 (PST)
+In-Reply-To: <1421682938-14073-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
 
-On Mon, 2015-01-19 at 16:21 +1030, Rusty Russell wrote:
-> Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com> writes:
-> > (2015/01/19 1:55), James Bottomley wrote:
-> >> From: James Bottomley <JBottomley@Parallels.com>
-> >> 
-> >> After e513cc1 module: Remove stop_machine from module unloading,
-> >> module_refcount() is returning (unsigned long)-1 when called from within
-> >> a routine that runs in module_exit.  This is confusing the scsi device
-> >> put code which is coded to detect a module_refcount() of zero for
-> >> running within a module exit routine and not try to do another
-> >> module_put.  The fix is to restore the original behaviour of
-> >> module_refcount() and return zero if we're running inside an exit
-> >> routine.
-> >> 
-> >> Fixes: e513cc1c07e2ab93a4514eec9833e031df3e30bb
-> >> Reported-by: Bart Van Assche <bvanassche@acm.org>
-> >> Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-> >> 
-> >
-> > Yes, this should be fixed as you said, since it must return "unsigned long" value.
-> 
-> But there are only three non-module callers:
-> 
-> drivers/scsi/scsi.c:1012:	if (module && module_refcount(module) != 0)
-> drivers/staging/lustre/lustre/obdclass/lu_object.c:1359:			LINVRNT(module_refcount(key->lct_owner) > 0);
-> include/linux/module.h:447:unsigned long module_refcount(struct module *mod);
-> kernel/debug/kdb/kdb_main.c:2026:		kdb_printf("%4ld ", module_refcount(mod));
-> kernel/module.c:775:unsigned long module_refcount(struct module *mod)
-> kernel/module.c:779:EXPORT_SYMBOL(module_refcount);
-> kernel/module.c:859:	seq_printf(m, " %lu ", module_refcount(mod));
-> kernel/module.c:911:	return sprintf(buffer, "%lu\n", module_refcount(mk->mod));
-> 
-> The first one I think should be eliminated, and the second one is simply
-> an assertion before calling module_put() (which should probably be
-> eliminated).  The others are just printing information.
+Hello.
 
-If you really want to insist on module_reference() returning -1 when the
-module is in it's exit phase, OK, but in that case, I think it should
-return a signed value, not an unsigned one.
+On 01/19/2015 06:55 PM, Hannes Reinecke wrote:
 
-James
+> We should only try to evaluate the cdb if this is an ATAPI
+> device, for any other device the 'cdb' field and the cdb_len
+> has no meaning.
+
+> Fixes: cbba5b0ee4c6c2fc8b78a21d0900099d480cf2e9
+
+    According to Documentation/SubmittingPatches, 12 digits is enough and, 
+more importantly, that commit's summary line needs to be specified enclosed in 
+parens and double quotes.
+
+> Reported-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Tejun Heo <tj@kernel.org>
+> Tested-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+
+MBR, Sergei
+
