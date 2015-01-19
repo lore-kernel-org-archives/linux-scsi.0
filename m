@@ -1,42 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sr: reduce debug noise in sr_do_ioctl
-Date: Mon, 19 Jan 2015 08:05:36 +0100
-Message-ID: <54BCACC0.4080907@suse.de>
-References: <1421593891-19984-1-git-send-email-hch@lst.de> <1421593891-19984-4-git-send-email-hch@lst.de>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: module: fix module_refcount() return when running in a module exit routine
+Date: Mon, 19 Jan 2015 16:21:15 +1030
+Message-ID: <878ugzco8c.fsf@rustcorp.com.au>
+References: <1421600146.2080.8.camel@HansenPartnership.com> <54BC93C3.7010808@hitachi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44824 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968AbbASHFh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2015 02:05:37 -0500
-In-Reply-To: <1421593891-19984-4-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54BC93C3.7010808@hitachi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <JBottomley@Parallels.com>, linux-scsi@vger.kernel.org
 
-On 01/18/2015 04:11 PM, Christoph Hellwig wrote:
-> The midlayer scsi logging already logs the command and sense code
-> if the logging level is high enough, no need to duplicate that
-> in the sr driver.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com> writes:
+> (2015/01/19 1:55), James Bottomley wrote:
+>> From: James Bottomley <JBottomley@Parallels.com>
+>> 
+>> After e513cc1 module: Remove stop_machine from module unloading,
+>> module_refcount() is returning (unsigned long)-1 when called from within
+>> a routine that runs in module_exit.  This is confusing the scsi device
+>> put code which is coded to detect a module_refcount() of zero for
+>> running within a module exit routine and not try to do another
+>> module_put.  The fix is to restore the original behaviour of
+>> module_refcount() and return zero if we're running inside an exit
+>> routine.
+>> 
+>> Fixes: e513cc1c07e2ab93a4514eec9833e031df3e30bb
+>> Reported-by: Bart Van Assche <bvanassche@acm.org>
+>> Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+>> 
+>
+> Yes, this should be fixed as you said, since it must return "unsigned long" value.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+But there are only three non-module callers:
+
+drivers/scsi/scsi.c:1012:	if (module && module_refcount(module) != 0)
+drivers/staging/lustre/lustre/obdclass/lu_object.c:1359:			LINVRNT(module_refcount(key->lct_owner) > 0);
+include/linux/module.h:447:unsigned long module_refcount(struct module *mod);
+kernel/debug/kdb/kdb_main.c:2026:		kdb_printf("%4ld ", module_refcount(mod));
+kernel/module.c:775:unsigned long module_refcount(struct module *mod)
+kernel/module.c:779:EXPORT_SYMBOL(module_refcount);
+kernel/module.c:859:	seq_printf(m, " %lu ", module_refcount(mod));
+kernel/module.c:911:	return sprintf(buffer, "%lu\n", module_refcount(mk->mod));
+
+The first one I think should be eliminated, and the second one is simply
+an assertion before calling module_put() (which should probably be
+eliminated).  The others are just printing information.
 
 Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Rusty.
