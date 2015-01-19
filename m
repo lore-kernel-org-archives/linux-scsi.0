@@ -1,42 +1,70 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Mon, 19 Jan 2015 10:36:13 +0100
-Message-ID: <54BCD00D.4080603@sandisk.com>
-References: <54B63F74.2040702@sandisk.com>
- <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
- <20150119092153.GA8666@infradead.org>
+From: "Kenneth R. Crudup" <kenny@panix.com>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
+ cap")
+Date: Mon, 19 Jan 2015 01:45:50 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1501190139360.4837@tosh-p75a>
+References: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
+Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0058.outbound.protection.outlook.com ([157.56.111.58]:45472
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751501AbbASJgW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2015 04:36:22 -0500
-In-Reply-To: <20150119092153.GA8666@infradead.org>
+Received: from mailbackend.panix.com ([166.84.1.89]:42990 "EHLO
+	mailbackend.panix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751897AbbASJpx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jan 2015 04:45:53 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 01/19/15 10:22, Christoph Hellwig wrote:
-> On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
->> My goal is to realize this proposal without adding hooks for out-of-tree
->> code in the upstream kernel. What I had in mind is to raise the
->> abstraction level of the API between LIO core and target drivers a
->> little bit (e.g. by using accessor functions where necessary instead of
->> accessing structure members directly)
-> 
-> That's very much a hook, althiugh a week one.
-> 
-> Either way I don't think bringing up a very much political topic
-> without even any code to discuss isn't a very valueable use of our time
-> slots.
 
-A possible approach is that I start implementing a unified SRP target
-driver and post that driver together with the necessary LIO and SCST
-core changes before the LSF/MM starts. That could be a helpful starting
-point for further discussions.
+Sorry for taking so long to get back to you guys about this (the 3.19-rc series has been
+problematic for me in a couple of areas, so I'd let it go for a while):
 
-Bart.
+On Mon, 5 Jan 2015, Alan Stern wrote:
+
+> The patch I posted sets a general limit of 32 MB for USB drives that
+> don't have a quirk flag for a smaller limit.
+> Kenneth, have you tried that patch?  Does it fix your problem?
+
+No, it fails in the same way (applied to 3.19-rc5):
+
+----
+Jan 19 01:38:16 tosh-p75a kernel: [  268.606258] sd 5:0:0:0: [sdc] FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+Jan 19 01:38:16 tosh-p75a kernel: [  268.606262] sd 5:0:0:0: [sdc] CDB:
+Jan 19 01:38:16 tosh-p75a kernel: [  268.606263] Write(10): 2a 00 0f e8 e0 40 00 3c 00 00
+Jan 19 01:38:16 tosh-p75a kernel: [  268.606268] blk_update_request: I/O error, dev sdc, sector 2135360000
+Jan 19 01:38:16 tosh-p75a kernel: [  268.839597] sd 5:0:0:0: [sdc] FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+Jan 19 01:38:16 tosh-p75a kernel: [  268.839603] sd 5:0:0:0: [sdc] CDB:
+Jan 19 01:38:16 tosh-p75a kernel: [  268.839605] Write(10): 2a 00 0f e9 68 40 00 3c 00 00
+Jan 19 01:38:16 tosh-p75a kernel: [  268.839615] blk_update_request: I/O error, dev sdc, sector 2135638528
+<snip>
+Jan 19 01:38:47 tosh-p75a kernel: [  300.103494] usb 2-4.2: reset SuperSpeed USB device number 3 using xhci_hcd
+Jan 19 01:38:47 tosh-p75a kernel: [  300.115145] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff880448c9bf00
+Jan 19 01:38:47 tosh-p75a kernel: [  300.115150] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff880448c9bf48
+Jan 19 01:38:48 tosh-p75a kernel: [  300.443729] INFO: task kworker/u16:6:197 blocked for more than 30 seconds.
+----
+
+FWIW, my quick fix gets me going again:
+
+----
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 6ed2cbe..3a10bf6 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -257,7 +257,8 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
+                       __func__, max_hw_sectors);
+        }
+
+-       limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
++       limits->max_sectors = limits->max_hw_sectors =
++               min_t(unsigned int, max_hw_sectors, 65535);
+ }
+ EXPORT_SYMBOL(blk_limits_max_hw_sectors);
+----
+
+	-Kenny
+
+-- 
+Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
