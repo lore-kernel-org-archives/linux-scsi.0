@@ -1,75 +1,37 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH for v3.19, v2] Avoid that sd_shutdown() triggers a kernel
- warning
-Date: Tue, 20 Jan 2015 10:11:15 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501200954330.1150-100000@iolanthe.rowland.org>
-References: <20150114093302.GA17532@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 00/11] scsi: fix module reference mismatch for scsi
+ host
+Date: Tue, 20 Jan 2015 10:18:24 -0500
+Message-ID: <20150120151824.GA8684@htj.dyndns.org>
+References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
+ <20150119142206.GE8140@htj.dyndns.org>
+ <CAC5umyh+x_B3GOc4q=Q+2NsAK8KmaHvpyW329iG-d1yAUwN02A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150114093302.GA17532@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kernel development list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAC5umyh+x_B3GOc4q=Q+2NsAK8KmaHvpyW329iG-d1yAUwN02A@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Hans de Goede <hdegoede@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Robert Love <robert.w.love@intel.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, fcoe-devel@open-fcoe.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 14 Jan 2015, Christoph Hellwig wrote:
+Hello, Akinobu.
 
-> On Mon, Jan 12, 2015 at 11:29:15AM -0500, Alan Stern wrote:
-> > This seems like a good idea and the obvious (once it has been pointed 
-> > out!) approach.
-> > 
-> > Perhaps not directly related to the issue at hand is this question: In
-> > scsi_rescan_device() we will now have:
-> > 
-> > 	mutex_lock(&shost->scan_mutex);
-> > 	if (dev->driver && try_module_get(dev->driver->owner)) {
-> > 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
-> > 
-> > 		if (drv->rescan)
-> > 			drv->rescan(dev);
-> > 		module_put(dev->driver->owner);
-> > 	}
-> > 	mutex_unlock(&shost->scan_mutex);
-> > 
-> > What prevents the device from being unbound from its driver while the
-> > rescan runs?  Evaluating the argument to the module_put() would then
-> > dereference a NULL pointer.
-> > 
-> > Unbind events that happen through the normal scsi_remove_host() 
-> > mechanism are fine, because scsi_remove_host() locks the scan_mutex.  
-> > But what about writes to the driver's sysfs "unbind" attribute?
-> 
-> Looks like we should still get an unconditional reference to
-> the device using get_device in scsi_rescan_device at least.
-> 
-> But this seems like a more generic problem, and at least a quick glance at
-> the pci_driver methods seems like others don't have a good
-> synchroniation of ->remove against random driver methods.
+On Tue, Jan 20, 2015 at 11:57:37PM +0900, Akinobu Mita wrote:
+> The reason I didn't move sht from the core driver to the LLDDs for
+> fixing ufs and ums-* in the first place is to avoid exporting many
+> symbols for callbacks in sht.  But I realized that we can do it
+> without that many exported symbols by creating a single function that
+> returns a kmemdup()ed sht with a few change including ->module.
 
-This particular problem comes down to the fact that 
-scsi_rescan_device() accesses dev->driver without appropriate mutual 
-exclusion.  SCSI's scan_mutex won't help because it doesn't protect 
-dev->driver.  Rather, dev->driver is protected by dev->mutex, and so 
-scsi_rescan_device() needs to use device_lock/unlock.
+Hmmm, libata already exports most of the necessary symbols.  libahci
+or platform drivers might have to export more but that shouldn't be
+much.  For libata, pushing sht's to the leaf drivers would make far
+more sense as sht's already get inherited and modified along the
+hierarchy.
 
-This suggests that the scan_mutex may not be necessary at all.
-Historically, it seems to be quite old, predating the device model.  
-Now that we have the device model, maybe scan_mutex simply isn't 
-needed.
+Thanks.
 
-Scanning for channels or targets beneath a host should be protected by
-shost->gendev.mutex.  Scanning for logical units beneath a target
-should be protected by starget->dev.mutex.  Scanning for partitions 
-beneath a SCSI drive should be protected by sdev->sdev_gendev.mutex.
-
-James, here's a related question.  Suppose userspace writes to the 
-rescan attribute file for a disk drive for sd_probe_async() has 
-started.  What will happen?  What _ought_ to happen?  Do we need to 
-call
-
-	async_synchronize_full_domain(&scsi_sd_probe_domain);
-
-somewhere in this pathway, or will it be okay?
-
-Alan Stern
+-- 
+tejun
