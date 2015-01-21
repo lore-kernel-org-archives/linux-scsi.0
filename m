@@ -1,53 +1,46 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] scsi: qla2xxx: print port name via %*phC
-Date: Tue, 20 Jan 2015 15:39:30 -0800
-Message-ID: <1421797170.9970.11.camel@haakon3.risingtidesystems.com>
-References: <1421321287-22235-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: Re: tcmu-runner (target userspace passthrough daemon) development
+Date: Tue, 20 Jan 2015 16:35:35 -0800
+Message-ID: <1421800535.9970.27.camel@haakon3.risingtidesystems.com>
+References: <54BEE479.4050503@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49093 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:42025 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbbATXjc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2015 18:39:32 -0500
-In-Reply-To: <1421321287-22235-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	with ESMTP id S1751037AbbAUAfh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jan 2015 19:35:37 -0500
+In-Reply-To: <54BEE479.4050503@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: qla2xxx-upstream@qlogic.com, Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-01-15 at 13:28 +0200, Andy Shevchenko wrote:
-> Instead of pushing each byte via stack let's use custom specifier which allows
-> to print small buffers as a hex string.
+On Tue, 2015-01-20 at 15:27 -0800, Andy Grover wrote:
+> Hi all,
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> tcmu-runner is a userspace daemon that simplifies the configuration and 
+> processing of SCSI commands from LIO to userspace handlers, via the new 
+> TCMU userspace passthrough backstore.
 > 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index 73f9fee..99f43b7 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -1570,9 +1570,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
->  	 * match the format by tcm_qla2xxx explict ConfigFS NodeACLs.
->  	 */
->  	memset(&port_name, 0, 36);
-> -	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-> -		fc_wwpn[0], fc_wwpn[1], fc_wwpn[2], fc_wwpn[3], fc_wwpn[4],
-> -		fc_wwpn[5], fc_wwpn[6], fc_wwpn[7]);
-> +	snprintf(port_name, sizeof(port_name), "%8phC", fc_wwpn);
->  	/*
->  	 * Locate our struct se_node_acl either from an explict NodeACL created
->  	 * via ConfigFS, or via running in TPG demo mode.
+> https://github.com/agrover/tcmu-runner
+> 
 
-Picking this one up, since it's specific to tcm_qla2xxx code.
+Thanks for posting.  ;)
 
-Applied to target-pending/for-next.
+> As a proof-of-concept, I've implemented a Gluster backend handler. I'm 
+> looking for code review and collaborators, as well as suggestions on 
+> what other userspace handlers we might want to work on. Tape or optical 
+> jukebox emulation? VMDK files?? Video RAM???
 
-Thanks Andy!
+How about a user-space handler for qcow2, so we could have a mechanism
+for exposing qcow2 images into KVM guest using vhost-scsi export..?
+
+Ideally there would be a library that QEMU provides so that from TCMU's
+user-space handler perspective, it's simply issuing fd reads/writes into
+qcow2 library code that is doing the fancy feature stuff outside of
+user-space handler logic..
 
 --nab
-
 
