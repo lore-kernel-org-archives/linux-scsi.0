@@ -1,241 +1,39 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
-Date: Thu, 22 Jan 2015 01:50:28 -0800
-Message-ID: <1421920228.7061.48.camel@haakon3.risingtidesystems.com>
-References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
+Subject: Re: sc_data_direction and bidi commands
+Date: Thu, 22 Jan 2015 02:02:54 -0800
+Message-ID: <1421920974.7061.55.camel@haakon3.risingtidesystems.com>
+References: <54BFD163.4020802@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Gavin Guo <gavin.guo@canonical.com>
-Cc: linux-scsi@vger.kernel.org, kernel@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54927 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbbAVKCz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2015 05:02:55 -0500
+In-Reply-To: <54BFD163.4020802@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Gavin,
+On Wed, 2015-01-21 at 17:18 +0100, Bart Van Assche wrote:
+> Hello,
+> 
+> Although several SCSI LLDs compare sc_data_direction with the value
+> DMA_BIDIRECTIONAL apparently scsi_setup_cmnd() never sets
+> sc_data_direction to the value DMA_BIDIRECTIONAL. Is this behavior on
+> purpose ?
+> 
 
-On Thu, 2015-01-22 at 06:38 +0800, Gavin Guo wrote:
-> Hi all,
->=20
-> The general protection fault screenshot is attached.
->=20
-> Summary:
-> The kernel is Ubuntu-3.13.0-39.66. I've done basic analysis and found
-> the fault is in list_del of iscsi_del_ts_from_active_list. And it
-> looks like deleting the iscsi_thread_set *ts two times. The point to
-> delete including iscsi_get_ts_from_inactive_list, was also checked bu=
-t
-> still can't find the clue. Really appreciate if anyone can provide an=
-y
-> idea on the bug.
->=20
-> static void iscsi_del_ts_from_active_list(struct iscsi_thread_set *ts=
-)
-> {
-> <...>
-> list_del(&ts->ts_list);
-> <...>
-> }
-> static inline void list_del(struct list_head *entry)
-> {
-> __list_del(entry->prev, entry->next);
-> entry->next =3D LIST_POISON1;
-> entry->prev =3D LIST_POISON2;
-> }
->=20
->=20
-> static inline void __list_del(struct list_head * prev, struct list_he=
-ad * next)
-> {
-> next->prev =3D prev;
-> prev->next =3D next;
-> }
->=20
-> According coredump is trace3.png. The %rdx is ts->ts_list->next
-> (0xdead000000100100, LIST_POISON1), %rax is ts->ts_list->prev
-> (0xdead000000200200, LIST_POISON2). When the =E2=80=9Cnext->prev =3D =
-prev;=E2=80=9D
-> executes, it=E2=80=99s the instruction:
->=20
-> 48 89 42 08 mov %rax,0x8(%rdx)
->=20
-> The %rdx is the value (0xdead000000100100, LIST_POISON1). So, general
-> protection fault happened. List_del() is the one of the only three
-> points to set LIST_POISON1/2. The other two are hlist_bl_del() and
-> hlist_del(). The root cause has high possibility related to calling
-> __list_del() twice for deleting the ts->ts_list.
->=20
-> Detailed analysis:
->=20
-> 00000000000057a0 <iscsi_del_ts_from_active_list>:
-> __list_del():
-> /build/buildd/linux-3.13.0/drivers/target/iscsi/iscsi_target_tq.c:50
-> 57a0: e8 00 00 00 00 callq 57a5 <iscsi_del_ts_from_active_list+0
-> x5>
-> list_del():
-> 57a5: 55 push %rbp
-> 57a6: 48 89 e5 mov %rsp,%rbp
-> 57a9: 53 push %rbx
-> 57aa: 48 89 fb mov %rdi,%rbx <--iscsi_thread_set *ts
-> /build/buildd/linux-3.13.0/include/linux/spinlock.h:293
-> 57ad: 48 c7 c7 00 00 00 00 mov $0x0,%rdi
-> 57b4: e8 00 00 00 00 callq 57b9 <iscsi_del_ts_from_active_list+0
-> x19>
->=20
-> __list_del(entry->prev, entry->next);
->=20
-> /build/buildd/linux-3.13.0/include/linux/list.h:106
-> 57b9: 48 8b 83 c8 00 00 00 mov 0xc8(%rbx),%rax <--ts->ts_list->prev
-> 57c0: 48 8b 93 c0 00 00 00 mov 0xc0(%rbx),%rdx <--ts->ts_list->next
-> iscsi_del_ts_from_active_list():
-> /build/buildd/linux-3.13.0/include/linux/spinlock.h:333
-> 57c7: 48 c7 c7 00 00 00 00 mov $0x0,%rdi
-> /build/buildd/linux-3.13.0/include/linux/list.h:88
-> 57ce: 48 89 42 08 mov %rax,0x8(%rdx) ts->ts_list->next->prev =3D ts->=
-ts_list->prev
-> spin_unlock():
-> /build/buildd/linux-3.13.0/include/linux/list.h:89
-> 57d2: 48 89 10 mov %rdx,(%rax) ts->ts_list->prev->next =3D ts->ts_lis=
-t->next
->=20
-> entry->next =3D LIST_POISON1;
->=20
-> /build/buildd/linux-3.13.0/include/linux/list.h:107
-> 57d5: 48 b8 00 01 10 00 00 movabs $0xdead000000100100,%rax
-> 57dc: 00 ad de
-> iscsi_del_ts_from_active_list():
-> 57df: 48 89 83 c0 00 00 00 mov %rax,0xc0(%rbx)
->=20
-> entry->prev =3D LIST_POISON2;
->=20
-> iscsi_deallocate_thread_one():
-> /build/buildd/linux-3.13.0/include/linux/list.h:108
-> 57e6: 48 b8 00 02 20 00 00 movabs $0xdead000000200200,%rax
-> 57ed: 00 ad de
-> 57f0: 48 89 83 c8 00 00 00 mov %rax,0xc8(%rbx)
->=20
+Yes.  Bi-directional CDBs are signaled using scsi_bidi_cmnd(), and IIRC
+->sc_data_direction = DMA_TO_DEVICE is set for those cases.
 
-Thanks for your detailed analysis.
-
-A similar bug was reported off-list some months back by a person using
-iser-target + RoCE export on v3.12.y code.  Just to confirm, your
-environment is using traditional iscsi-target + TCP export, right..?
-
-At the time, a different set of iser-target related changes ended up
-avoiding this issue on his particular setup, so we thought it was likel=
-y
-a race triggered by login failures specific to iser-target code.
-
-There was a untested patch (included inline below) to drop the legacy
-active_ts_list usage all-together, but IIRC he was not able to reproduc=
-e
-further so the patch didn't get picked up for mainline.
-
-If your able to reliability reproduce, please try with the following
-patch and let us know your progress.
-
-Thank you,
+There is an example in drivers/target/loopback/tcm_loop.c, btw.
 
 --nab
 
-=46rom 33f211fcf0f4149b13de826dcbe204241f71b2e8 Mon Sep 17 00:00:00 200=
-1
-=46rom: Nicholas Bellinger <nab@linux-iscsi.org>
-Date: Thu, 22 Jan 2015 00:56:53 -0800
-Subject: [PATCH] iscsi-target: Drop problematic active_ts_list usage
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target_tq.c | 28 +++++---------------------=
---
- 1 file changed, 5 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_tq.c b/drivers/target/is=
-csi/iscsi_target_tq.c
-index 601e9cc..bb2890e 100644
---- a/drivers/target/iscsi/iscsi_target_tq.c
-+++ b/drivers/target/iscsi/iscsi_target_tq.c
-@@ -24,36 +24,22 @@
- #include "iscsi_target_tq.h"
- #include "iscsi_target.h"
-=20
--static LIST_HEAD(active_ts_list);
- static LIST_HEAD(inactive_ts_list);
--static DEFINE_SPINLOCK(active_ts_lock);
- static DEFINE_SPINLOCK(inactive_ts_lock);
- static DEFINE_SPINLOCK(ts_bitmap_lock);
-=20
--static void iscsi_add_ts_to_active_list(struct iscsi_thread_set *ts)
--{
--	spin_lock(&active_ts_lock);
--	list_add_tail(&ts->ts_list, &active_ts_list);
--	iscsit_global->active_ts++;
--	spin_unlock(&active_ts_lock);
--}
--
- static void iscsi_add_ts_to_inactive_list(struct iscsi_thread_set *ts)
- {
-+	if (!list_empty(&ts->ts_list)) {
-+		WARN_ON(1);
-+		return;
-+	}
- 	spin_lock(&inactive_ts_lock);
- 	list_add_tail(&ts->ts_list, &inactive_ts_list);
- 	iscsit_global->inactive_ts++;
- 	spin_unlock(&inactive_ts_lock);
- }
-=20
--static void iscsi_del_ts_from_active_list(struct iscsi_thread_set *ts)
--{
--	spin_lock(&active_ts_lock);
--	list_del(&ts->ts_list);
--	iscsit_global->active_ts--;
--	spin_unlock(&active_ts_lock);
--}
--
- static struct iscsi_thread_set *iscsi_get_ts_from_inactive_list(void)
- {
- 	struct iscsi_thread_set *ts;
-@@ -66,7 +52,7 @@ static struct iscsi_thread_set *iscsi_get_ts_from_ina=
-ctive_list(void)
-=20
- 	ts =3D list_first_entry(&inactive_ts_list, struct iscsi_thread_set, t=
-s_list);
-=20
--	list_del(&ts->ts_list);
-+	list_del_init(&ts->ts_list);
- 	iscsit_global->inactive_ts--;
- 	spin_unlock(&inactive_ts_lock);
-=20
-@@ -204,8 +190,6 @@ static void iscsi_deallocate_extra_thread_sets(void=
-)
-=20
- void iscsi_activate_thread_set(struct iscsi_conn *conn, struct iscsi_t=
-hread_set *ts)
- {
--	iscsi_add_ts_to_active_list(ts);
--
- 	spin_lock_bh(&ts->ts_state_lock);
- 	conn->thread_set =3D ts;
- 	ts->conn =3D conn;
-@@ -397,7 +381,6 @@ struct iscsi_conn *iscsi_rx_thread_pre_handler(stru=
-ct iscsi_thread_set *ts)
-=20
- 	if (ts->delay_inactive && (--ts->thread_count =3D=3D 0)) {
- 		spin_unlock_bh(&ts->ts_state_lock);
--		iscsi_del_ts_from_active_list(ts);
-=20
- 		if (!iscsit_global->in_shutdown)
- 			iscsi_deallocate_extra_thread_sets();
-@@ -452,7 +435,6 @@ struct iscsi_conn *iscsi_tx_thread_pre_handler(stru=
-ct iscsi_thread_set *ts)
-=20
- 	if (ts->delay_inactive && (--ts->thread_count =3D=3D 0)) {
- 		spin_unlock_bh(&ts->ts_state_lock);
--		iscsi_del_ts_from_active_list(ts);
-=20
- 		if (!iscsit_global->in_shutdown)
- 			iscsi_deallocate_extra_thread_sets();
---=20
-1.9.1
+
+
