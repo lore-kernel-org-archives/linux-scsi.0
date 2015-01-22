@@ -1,50 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: sc_data_direction and bidi commands
-Date: Thu, 22 Jan 2015 02:39:28 -0800
-Message-ID: <1421923168.7061.66.camel@haakon3.risingtidesystems.com>
-References: <54BFD163.4020802@sandisk.com>
-	 <1421920974.7061.55.camel@haakon3.risingtidesystems.com>
-	 <54C0CD85.4000700@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54552 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbbAVKja (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jan 2015 05:39:30 -0500
-In-Reply-To: <54C0CD85.4000700@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi_debug: test always evaluates to false, || should be used instead
+Date: Thu, 22 Jan 2015 11:20:40 +0000
+Message-ID: <1421925640-9894-1-git-send-email-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-01-22 at 11:14 +0100, Bart Van Assche wrote:
-> On 01/22/15 11:02, Nicholas A. Bellinger wrote:
-> > On Wed, 2015-01-21 at 17:18 +0100, Bart Van Assche wrote:
-> >> Although several SCSI LLDs compare sc_data_direction with the value
-> >> DMA_BIDIRECTIONAL apparently scsi_setup_cmnd() never sets
-> >> sc_data_direction to the value DMA_BIDIRECTIONAL. Is this behavior on
-> >> purpose ?
-> > 
-> > Yes.  Bi-directional CDBs are signaled using scsi_bidi_cmnd(), and IIRC
-> > ->sc_data_direction = DMA_TO_DEVICE is set for those cases.
-> 
-> But why is sc_data_direction set to DMA_BIDIRECTIONAL in
-> scsi_ioctl_reset() in drivers/scsi/scsi_error.c ? I think
-> scsi_bidi_cmnd() will return false for the SCSI command submitted by
-> scsi_ioctl_reset() since in this case scmd->request->next_rq == NULL.
-> 
+From: Colin Ian King <colin.king@canonical.com>
 
-Well, according to DMA-API.txt it's classified as:
+cppcheck found the following issue:
+(warning) Logical conjunction always evaluates to false:
+  alloc_len < 4 && alloc_len > 65535.
 
-   DMA_BIDIRECTIONAL       direction isn't known
+..the test should be instead:
 
-and is unrelated to any actual SCSI bidi commands containing both WRITE
-and READ payload buffers.
+  if (alloc_len < 4 || alloc_len > 65536)
 
-scsi_ioctl_reset() is only generating TMFs btw, and can't inject any
-SCSI bidi commands.
+This error was introduced by recent commit 38d5c8336e60bf6e53a1da9
+("scsi_debug: add Report supported opcodes+tmfs; Compare and write")
 
---nab
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 7b8b51b..63a2e1f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1623,7 +1623,7 @@ resp_rsup_opcodes(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	req_opcode = cmd[3];
+ 	req_sa = get_unaligned_be16(cmd + 4);
+ 	alloc_len = get_unaligned_be32(cmd + 6);
+-	if (alloc_len < 4 && alloc_len > 0xffff) {
++	if (alloc_len < 4 || alloc_len > 0xffff) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
+ 		return check_condition_result;
+ 	}
+-- 
+2.1.4
