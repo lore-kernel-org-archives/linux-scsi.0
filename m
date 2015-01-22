@@ -1,110 +1,264 @@
-From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v4 00/11] scsi: fix module reference mismatch for scsi host
-Date: Thu, 22 Jan 2015 22:17:58 +0900
-Message-ID: <CAC5umyh9wgTdtHbnRHtB16JaDbHrpkbOF+eVK4onkCs9s1pqCQ@mail.gmail.com>
-References: <CAC5umyh+x_B3GOc4q=Q+2NsAK8KmaHvpyW329iG-d1yAUwN02A@mail.gmail.com>
-	<Pine.LNX.4.44L0.1501201013440.1150-100000@iolanthe.rowland.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Gavin Guo <gavin.guo@canonical.com>
+Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
+Date: Thu, 22 Jan 2015 23:56:17 +0800
+Message-ID: <CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
+References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
+	<1421920228.7061.48.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCPM5SUWUYIRBB7RQOTAKGQEZCEM4MY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1501201013440.1150-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/open-iscsi/subscribe>
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1421920228.7061.48.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-2015-01-21 0:20 GMT+09:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
-> On Tue, 20 Jan 2015, Akinobu Mita wrote:
+Hi Nicolas,
+
+On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Hi Gavin,
 >
->> 2015-01-19 23:22 GMT+09:00 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
->> > On Mon, Jan 19, 2015 at 12:05:58AM +0900, Akinobu Mita wrote:
->> >> While accessing a scsi_device, the use count of the underlying LLDD
->> >> module is incremented.  The module reference is retrieved through
->> >> .module field of struct scsi_host_template.
->> >>
->> >> This mapping between scsi_device and underlying LLDD module works well
->> >> except some drivers which consist with the core driver and the actual
->> >> LLDDs and scsi_host_template is defined in the core driver.  In these
->> >> cases, the actual LLDDs can be unloaded even if the scsi_device is
->> >> being accessed.
->> >>
->> >> This patch series fixes the module reference mismatch problem for
->> >> ufs, usb-storage, esp_scsi, ahci_platform, and pata_platform drivers
->> >> by moving owner module reference field from struct scsi_host_template
->> >> to struct Scsi_Host and allowing the LLDDs to set their correct module
->> >> reference.
->> >
->> > Hmmm, can't we just move sht definitions to actual LLDDs?  libata can
->> > do that easily.  sht, as its name implies, is the template for
->> > creating the scsi_hosts of a given type.  We're now just moving module
->> > ownership from sht definition site to whatever callsite the actual
->> > instance is being created which can also be wrapped in a separate
->> > layer requiring explicit propagation.  Why not just propagate sht's
->> > directly?  What's the difference?
+> On Thu, 2015-01-22 at 06:38 +0800, Gavin Guo wrote:
+>> Hi all,
 >>
->> The reason I didn't move sht from the core driver to the LLDDs for
->> fixing ufs and ums-* in the first place is to avoid exporting many
->> symbols for callbacks in sht.  But I realized that we can do it
->> without that many exported symbols by creating a single function that
->> returns a kmemdup()ed sht with a few change including ->module.
+>> The general protection fault screenshot is attached.
 >>
->> So there are three options we can take for fixing this problem.
->> I would like to know the opinions which one should be taken.
+>> Summary:
+>> The kernel is Ubuntu-3.13.0-39.66. I've done basic analysis and foun=
+d
+>> the fault is in list_del of iscsi_del_ts_from_active_list. And it
+>> looks like deleting the iscsi_thread_set *ts two times. The point to
+>> delete including iscsi_get_ts_from_inactive_list, was also checked b=
+ut
+>> still can't find the clue. Really appreciate if anyone can provide a=
+ny
+>> idea on the bug.
 >>
->> (1) Add owner module field to Scsi_Host for allowing LLDDs to adjust
->> it after scsi host allocation.  This approach is used by v1,2,3 of
->> this patch series and the scsi midlayer change is minimum.
+>> static void iscsi_del_ts_from_active_list(struct iscsi_thread_set *t=
+s)
+>> {
+>> <...>
+>> list_del(&ts->ts_list);
+>> <...>
+>> }
+>> static inline void list_del(struct list_head *entry)
+>> {
+>> __list_del(entry->prev, entry->next);
+>> entry->next =3D LIST_POISON1;
+>> entry->prev =3D LIST_POISON2;
+>> }
 >>
->> (2) Move owner module field from scsi_host_template to Scsi_Host.
->> The owner module reference is retrieved from the callsite of
->> scsi_host_alloc() by passing THIS_MODULE to the extra argument.
->> The scsi midlayer change is small, but we need the same macro trick
->> for each scsi_host_alloc() wrapper and these changes are relatively
->> large (required by libata, libiscsi, libfc, cxgbi, 53c700, legacy).
->> This approach is used by v4 of this patch series.
 >>
->> (3) Allocate scsi host template for each module.  No scsi midlayer
->> change is required.  Instead of sharing a single scsi host template
->> defined in the core, create a single function that returns a
->> kmemdup()ed sht with a few change including ->module so that the sub
->> modules can use it as their sht.
+>> static inline void __list_del(struct list_head * prev, struct list_h=
+ead * next)
+>> {
+>> next->prev =3D prev;
+>> prev->next =3D next;
+>> }
+>>
+>> According coredump is trace3.png. The %rdx is ts->ts_list->next
+>> (0xdead000000100100, LIST_POISON1), %rax is ts->ts_list->prev
+>> (0xdead000000200200, LIST_POISON2). When the =E2=80=9Cnext->prev =3D=
+ prev;=E2=80=9D
+>> executes, it=E2=80=99s the instruction:
+>>
+>> 48 89 42 08 mov %rax,0x8(%rdx)
+>>
+>> The %rdx is the value (0xdead000000100100, LIST_POISON1). So, genera=
+l
+>> protection fault happened. List_del() is the one of the only three
+>> points to set LIST_POISON1/2. The other two are hlist_bl_del() and
+>> hlist_del(). The root cause has high possibility related to calling
+>> __list_del() twice for deleting the ts->ts_list.
+>>
+>> Detailed analysis:
+>>
+>> 00000000000057a0 <iscsi_del_ts_from_active_list>:
+>> __list_del():
+>> /build/buildd/linux-3.13.0/drivers/target/iscsi/iscsi_target_tq.c:50
+>> 57a0: e8 00 00 00 00 callq 57a5 <iscsi_del_ts_from_active_list+0
+>> x5>
+>> list_del():
+>> 57a5: 55 push %rbp
+>> 57a6: 48 89 e5 mov %rsp,%rbp
+>> 57a9: 53 push %rbx
+>> 57aa: 48 89 fb mov %rdi,%rbx <--iscsi_thread_set *ts
+>> /build/buildd/linux-3.13.0/include/linux/spinlock.h:293
+>> 57ad: 48 c7 c7 00 00 00 00 mov $0x0,%rdi
+>> 57b4: e8 00 00 00 00 callq 57b9 <iscsi_del_ts_from_active_list+0
+>> x19>
+>>
+>> __list_del(entry->prev, entry->next);
+>>
+>> /build/buildd/linux-3.13.0/include/linux/list.h:106
+>> 57b9: 48 8b 83 c8 00 00 00 mov 0xc8(%rbx),%rax <--ts->ts_list->prev
+>> 57c0: 48 8b 93 c0 00 00 00 mov 0xc0(%rbx),%rdx <--ts->ts_list->next
+>> iscsi_del_ts_from_active_list():
+>> /build/buildd/linux-3.13.0/include/linux/spinlock.h:333
+>> 57c7: 48 c7 c7 00 00 00 00 mov $0x0,%rdi
+>> /build/buildd/linux-3.13.0/include/linux/list.h:88
+>> 57ce: 48 89 42 08 mov %rax,0x8(%rdx) ts->ts_list->next->prev =3D ts-=
+>ts_list->prev
+>> spin_unlock():
+>> /build/buildd/linux-3.13.0/include/linux/list.h:89
+>> 57d2: 48 89 10 mov %rdx,(%rax) ts->ts_list->prev->next =3D ts->ts_li=
+st->next
+>>
+>> entry->next =3D LIST_POISON1;
+>>
+>> /build/buildd/linux-3.13.0/include/linux/list.h:107
+>> 57d5: 48 b8 00 01 10 00 00 movabs $0xdead000000100100,%rax
+>> 57dc: 00 ad de
+>> iscsi_del_ts_from_active_list():
+>> 57df: 48 89 83 c0 00 00 00 mov %rax,0xc0(%rbx)
+>>
+>> entry->prev =3D LIST_POISON2;
+>>
+>> iscsi_deallocate_thread_one():
+>> /build/buildd/linux-3.13.0/include/linux/list.h:108
+>> 57e6: 48 b8 00 02 20 00 00 movabs $0xdead000000200200,%rax
+>> 57ed: 00 ad de
+>> 57f0: 48 89 83 c8 00 00 00 mov %rax,0xc8(%rbx)
+>>
 >
-> (3) means duplicating a reasonably large data structure in order to
-> alter just one field.  It also means changing all the subdrivers to
-> make them call the new function.
+> Thanks for your detailed analysis.
 >
-> (1) is the simplest.  Since the use of subdrivers in general tends to
-> be a special case (most SCSI drivers don't do it), I prefer to keep the
-> code optimized for it.  In other words, I prefer option (1).  If people
-> think (2) is better, it can always be layered on top of (1).
+> A similar bug was reported off-list some months back by a person usin=
+g
+> iser-target + RoCE export on v3.12.y code.  Just to confirm, your
+> environment is using traditional iscsi-target + TCP export, right..?
 
-OK, I agree that (1) is the simplest.
+I am sorry that I'm not an expert of the field and already google RoCE
+on the internet but still don't really know what RoCE is. However, I
+can provide the informations.  We used iscsiadm on the initiator side
+and lio_node and tcm_node commands to create the targets for
+connection. I think it should be normal  iscsi-target using TCP
+export.
 
-Christoph,
+>
+> At the time, a different set of iser-target related changes ended up
+> avoiding this issue on his particular setup, so we thought it was lik=
+ely
+> a race triggered by login failures specific to iser-target code.
+>
+> There was a untested patch (included inline below) to drop the legacy
+> active_ts_list usage all-together, but IIRC he was not able to reprod=
+uce
+> further so the patch didn't get picked up for mainline.
+>
+> If your able to reliability reproduce, please try with the following
+> patch and let us know your progress.
 
-Option (2) required a lot of changes as this v4 shows that
-scsi_host_alloc() is used by several libraries on scsi mid level in
-various forms.  It is a bit different from pci_register_driver() or
-similar registration interfaces.  Although they also use the same
-macro trick to get a module reference, but they are called directly
-or through thin and straightforward wrapper interfaces by lower
-level drivers.
+Thanks for your time reading the mail. I'll let you know the result.
 
-So, option (1) seems to be a better choice than (2), (3) for fixing
-ufs, ums-*, and esp_scsi drivers.  For ahci_platform and pata_platform,
-they can be fixed easily by moving sht definision to LLDDs as Tejun
-suggested.  Do you think it is ok to prepare v5 of series in this way?
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at http://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+>
+> Thank you,
+>
+> --nab
+>
+> From 33f211fcf0f4149b13de826dcbe204241f71b2e8 Mon Sep 17 00:00:00 200=
+1
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date: Thu, 22 Jan 2015 00:56:53 -0800
+> Subject: [PATCH] iscsi-target: Drop problematic active_ts_list usage
+>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/iscsi/iscsi_target_tq.c | 28 +++++-------------------=
+----
+>  1 file changed, 5 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/target/iscsi/iscsi_target_tq.c b/drivers/target/=
+iscsi/iscsi_target_tq.c
+> index 601e9cc..bb2890e 100644
+> --- a/drivers/target/iscsi/iscsi_target_tq.c
+> +++ b/drivers/target/iscsi/iscsi_target_tq.c
+> @@ -24,36 +24,22 @@
+>  #include "iscsi_target_tq.h"
+>  #include "iscsi_target.h"
+>
+> -static LIST_HEAD(active_ts_list);
+>  static LIST_HEAD(inactive_ts_list);
+> -static DEFINE_SPINLOCK(active_ts_lock);
+>  static DEFINE_SPINLOCK(inactive_ts_lock);
+>  static DEFINE_SPINLOCK(ts_bitmap_lock);
+>
+> -static void iscsi_add_ts_to_active_list(struct iscsi_thread_set *ts)
+> -{
+> -       spin_lock(&active_ts_lock);
+> -       list_add_tail(&ts->ts_list, &active_ts_list);
+> -       iscsit_global->active_ts++;
+> -       spin_unlock(&active_ts_lock);
+> -}
+> -
+>  static void iscsi_add_ts_to_inactive_list(struct iscsi_thread_set *t=
+s)
+>  {
+> +       if (!list_empty(&ts->ts_list)) {
+> +               WARN_ON(1);
+> +               return;
+> +       }
+>         spin_lock(&inactive_ts_lock);
+>         list_add_tail(&ts->ts_list, &inactive_ts_list);
+>         iscsit_global->inactive_ts++;
+>         spin_unlock(&inactive_ts_lock);
+>  }
+>
+> -static void iscsi_del_ts_from_active_list(struct iscsi_thread_set *t=
+s)
+> -{
+> -       spin_lock(&active_ts_lock);
+> -       list_del(&ts->ts_list);
+> -       iscsit_global->active_ts--;
+> -       spin_unlock(&active_ts_lock);
+> -}
+> -
+>  static struct iscsi_thread_set *iscsi_get_ts_from_inactive_list(void=
+)
+>  {
+>         struct iscsi_thread_set *ts;
+> @@ -66,7 +52,7 @@ static struct iscsi_thread_set *iscsi_get_ts_from_i=
+nactive_list(void)
+>
+>         ts =3D list_first_entry(&inactive_ts_list, struct iscsi_threa=
+d_set, ts_list);
+>
+> -       list_del(&ts->ts_list);
+> +       list_del_init(&ts->ts_list);
+>         iscsit_global->inactive_ts--;
+>         spin_unlock(&inactive_ts_lock);
+>
+> @@ -204,8 +190,6 @@ static void iscsi_deallocate_extra_thread_sets(vo=
+id)
+>
+>  void iscsi_activate_thread_set(struct iscsi_conn *conn, struct iscsi=
+_thread_set *ts)
+>  {
+> -       iscsi_add_ts_to_active_list(ts);
+> -
+>         spin_lock_bh(&ts->ts_state_lock);
+>         conn->thread_set =3D ts;
+>         ts->conn =3D conn;
+> @@ -397,7 +381,6 @@ struct iscsi_conn *iscsi_rx_thread_pre_handler(st=
+ruct iscsi_thread_set *ts)
+>
+>         if (ts->delay_inactive && (--ts->thread_count =3D=3D 0)) {
+>                 spin_unlock_bh(&ts->ts_state_lock);
+> -               iscsi_del_ts_from_active_list(ts);
+>
+>                 if (!iscsit_global->in_shutdown)
+>                         iscsi_deallocate_extra_thread_sets();
+> @@ -452,7 +435,6 @@ struct iscsi_conn *iscsi_tx_thread_pre_handler(st=
+ruct iscsi_thread_set *ts)
+>
+>         if (ts->delay_inactive && (--ts->thread_count =3D=3D 0)) {
+>                 spin_unlock_bh(&ts->ts_state_lock);
+> -               iscsi_del_ts_from_active_list(ts);
+>
+>                 if (!iscsit_global->in_shutdown)
+>                         iscsi_deallocate_extra_thread_sets();
+> --
+> 1.9.1
+>
