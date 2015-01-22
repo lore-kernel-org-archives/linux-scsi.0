@@ -1,64 +1,70 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: test always evaluates to false, || should
- be used instead
-Date: Thu, 22 Jan 2015 12:31:33 +0100
-Message-ID: <54C0DF95.8000103@interlog.com>
-References: <1421925640-9894-1-git-send-email-colin.king@canonical.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH] scsi: ncr5380: use msecs_to_jiffies for conversions
+Date: Thu, 22 Jan 2015 12:42:17 +0100
+Message-ID: <1421926937-1535-1-git-send-email-der.herr@hofr.at>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:50117 "EHLO smtp.infotech.no"
+Received: from www.osadl.org ([62.245.132.105]:43083 "EHLO www.osadl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915AbbAVLbx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2015 06:31:53 -0500
-In-Reply-To: <1421925640-9894-1-git-send-email-colin.king@canonical.com>
+	id S1751036AbbAVLuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jan 2015 06:50:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
 
-On 15-01-22 12:20 PM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> cppcheck found the following issue:
-> (warning) Logical conjunction always evaluates to false:
->    alloc_len < 4 && alloc_len > 65535.
->
-> ..the test should be instead:
->
->    if (alloc_len < 4 || alloc_len > 65536)
->
-> This error was introduced by recent commit 38d5c8336e60bf6e53a1da9
-> ("scsi_debug: add Report supported opcodes+tmfs; Compare and write")
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/scsi/scsi_debug.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 7b8b51b..63a2e1f 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -1623,7 +1623,7 @@ resp_rsup_opcodes(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   	req_opcode = cmd[3];
->   	req_sa = get_unaligned_be16(cmd + 4);
->   	alloc_len = get_unaligned_be32(cmd + 6);
-> -	if (alloc_len < 4 && alloc_len > 0xffff) {
-> +	if (alloc_len < 4 || alloc_len > 0xffff) {
->   		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
->   		return check_condition_result;
->   	}
->
+This is only an API consolidation to make things more readable
 
-I have presented this fix twice already. Most recently in
-"[PATCH] [RESEND] scsi_debug: fix sanity check in resp_rsup_opcodes"
-20150102. So one more time, with feeling:
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+ok but msecs_to_jiffies(val) is the cleaner solution and handles all 
+corner cases correctly. This is a minor API cleanup only.
 
+This patch was only compile tested with i386_defconfig + CONFIG_ISA=y,
+CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_GENERIC_NCR5380=m
 
+Patch is against 3.19.0-rc5 -next-20150119
 
+ drivers/scsi/NCR5380.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 36244d6..5008a0e 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -474,11 +474,11 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+  */
+ #ifndef USLEEP_SLEEP
+ /* 20 ms (reasonable hard disk speed) */
+-#define USLEEP_SLEEP (20*HZ/1000)
++#define USLEEP_SLEEP msecs_to_jiffies(20)
+ #endif
+ /* 300 RPM (floppy speed) */
+ #ifndef USLEEP_POLL
+-#define USLEEP_POLL (200*HZ/1000)
++#define USLEEP_POLL msecs_to_jiffies(200)
+ #endif
+ #ifndef USLEEP_WAITLONG
+ /* RvC: (reasonable time to wait on select error) */
+@@ -576,7 +576,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+ 		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+ 			trying_irqs |= mask;
+ 
+-	timeout = jiffies + (250 * HZ / 1000);
++	timeout = jiffies + msecs_to_jiffies(250);
+ 	probe_irq = NO_IRQ;
+ 
+ 	/*
+@@ -1348,7 +1348,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ 	 * selection.
+ 	 */
+ 
+-	timeout = jiffies + (250 * HZ / 1000);
++	timeout = jiffies + msecs_to_jiffies(250);
+ 
+ 	/* 
+ 	 * XXX very interesting - we're seeing a bounce where the BSY we 
+-- 
+1.7.10.4
 
