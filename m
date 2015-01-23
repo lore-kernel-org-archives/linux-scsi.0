@@ -1,113 +1,70 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 15/48] hpsa: trivial message and comment clean ups
-Date: Fri, 23 Jan 2015 16:42:22 -0600
-Message-ID: <20150123224222.14919.17126.stgit@brunhilda>
+Subject: [PATCH v2 17/48] hpsa: rename hpsa_request_irq to hpsa_request_irqs
+Date: Fri, 23 Jan 2015 16:42:32 -0600
+Message-ID: <20150123224232.14919.60547.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:34665 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbbAWWnP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:43:15 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:30499 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbbAWWn0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:43:26 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Robert Elliott <elliott@hp.com>
 
-Cleanup comments to be more specific. Make messages more
-informational.
+Make the function name more descriptive. We use more than
+one interrupt.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/scsi/hpsa.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 08d96a9..5973018 100644
+index 354e7f8..f29f569 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5863,8 +5863,8 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	} else {
- 		use_doorbell = misc_fw_support & MISC_FW_DOORBELL_RESET;
- 		if (use_doorbell) {
--			dev_warn(&pdev->dev, "Soft reset not supported. "
--				"Firmware update is required.\n");
-+			dev_warn(&pdev->dev,
-+				"Soft reset not supported. Firmware update is required.\n");
- 			rc = -ENOTSUPP; /* try soft reset */
- 			goto unmap_cfgtable;
- 		}
-@@ -5884,8 +5884,7 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_READY);
- 	if (rc) {
- 		dev_warn(&pdev->dev,
--			"failed waiting for board to become ready "
--			"after hard reset\n");
-+			"Failed waiting for board to become ready after hard reset\n");
- 		goto unmap_cfgtable;
- 	}
- 
-@@ -5984,7 +5983,7 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
+@@ -6526,7 +6526,8 @@ static void hpsa_free_irqs(struct ctlr_info *h)
+ 		h->q[i] = 0;
  }
  
- /* If MSI/MSI-X is supported by the kernel we will try to enable it on
-- * controllers that are capable. If not, we use IO-APIC mode.
-+ * controllers that are capable. If not, we use legacy INTx mode.
-  */
- 
- static void hpsa_interrupt_mode(struct ctlr_info *h)
-@@ -6003,7 +6002,7 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 	    (h->board_id == 0x40820E11) || (h->board_id == 0x40830E11))
- 		goto default_int_mode;
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
--		dev_info(&h->pdev->dev, "MSIX\n");
-+		dev_info(&h->pdev->dev, "MSI-X capable controller\n");
- 		h->msix_vector = MAX_REPLY_QUEUES;
- 		if (h->msix_vector > num_online_cpus())
- 			h->msix_vector = num_online_cpus();
-@@ -6024,7 +6023,7 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 	}
- single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
--		dev_info(&h->pdev->dev, "MSI\n");
-+		dev_info(&h->pdev->dev, "MSI capable controller\n");
- 		if (!pci_enable_msi(h->pdev))
- 			h->msi_vector = 1;
- 		else
-@@ -6209,7 +6208,7 @@ static void hpsa_find_board_params(struct ctlr_info *h)
- static inline bool hpsa_CISS_signature_present(struct ctlr_info *h)
+-static int hpsa_request_irq(struct ctlr_info *h,
++/* returns 0 on success; cleans up and returns -Enn on error */
++static int hpsa_request_irqs(struct ctlr_info *h,
+ 	irqreturn_t (*msixhandler)(int, void *),
+ 	irqreturn_t (*intxhandler)(int, void *))
  {
- 	if (!check_signature(h->cfgtable->Signature, "CISS", 4)) {
--		dev_warn(&h->pdev->dev, "not a valid CISS config table\n");
-+		dev_err(&h->pdev->dev, "not a valid CISS config table\n");
- 		return false;
- 	}
- 	return true;
-@@ -6301,7 +6300,7 @@ static int hpsa_enter_simple_mode(struct ctlr_info *h)
- 	h->transMethod = CFGTBL_Trans_Simple;
- 	return 0;
- error:
--	dev_warn(&h->pdev->dev, "unable to get board into simple mode\n");
-+	dev_err(&h->pdev->dev, "failed to enter simple mode\n");
- 	return -ENODEV;
- }
+@@ -6934,7 +6935,7 @@ reinit_after_soft_reset:
+ 	/* make sure the board interrupts are off */
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
  
-@@ -7282,8 +7281,8 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
- 	hpsa_wait_for_mode_change_ack(h);
- 	register_value = readl(&(h->cfgtable->TransportActive));
- 	if (!(register_value & CFGTBL_Trans_Performant)) {
--		dev_warn(&h->pdev->dev, "unable to get board into"
--					" performant mode\n");
-+		dev_err(&h->pdev->dev,
-+			"performant mode problem - transport not active\n");
- 		return;
- 	}
- 	/* Change the access methods to the performant access methods */
+-	if (hpsa_request_irq(h, do_hpsa_intr_msi, do_hpsa_intr_intx))
++	if (hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx))
+ 		goto clean2;
+ 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
+ 	       h->devname, pdev->device,
+@@ -6970,11 +6971,11 @@ reinit_after_soft_reset:
+ 		h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		hpsa_free_irqs(h);
+-		rc = hpsa_request_irq(h, hpsa_msix_discard_completions,
++		rc = hpsa_request_irqs(h, hpsa_msix_discard_completions,
+ 					hpsa_intx_discard_completions);
+ 		if (rc) {
+-			dev_warn(&h->pdev->dev, "Failed to request_irq after "
+-				"soft reset.\n");
++			dev_warn(&h->pdev->dev,
++				"Failed to request_irq after soft reset.\n");
+ 			goto clean4;
+ 		}
+ 
 
