@@ -1,17 +1,22 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 42/48] hpsa: move SG descriptor set-up out of
- hpsa_scatter_gather()
-Date: Fri, 23 Jan 2015 16:44:45 -0600
-Message-ID: <20150123224445.14919.26299.stgit@brunhilda>
+Subject: [PATCH v2 43/48] hpsa: refactor duplicated scan completion code
+ into a new routine
+Date: Fri, 23 Jan 2015 16:44:50 -0600
+Message-ID: <20150123224450.14919.31550.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:31077 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514AbbAWWpj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:39 -0500
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:49121 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbbAWWpp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:45 -0500
+Received: from g5t1625.atlanta.hp.com (g5t1625.atlanta.hp.com [15.192.137.8])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 341713B4F
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2015 22:45:45 +0000 (UTC)
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,67 +25,88 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Webb Scales <webbnh@hp.com>
 
-Move the code which sets up the SG descriptor out of hpsa_scatter_gather()
-and into a subroutine where it can be reused (in the next patch).  The Ext
-field is now assigned unconditionally: this makes the refactor much simpler,
-but more importantly it removes a conditional operation from inside the
-loop.  The case for which the conditional formerly tested is now executed
-(unconditionally) after the loop is exited.
+Hoist the conditional out of do_not_scan_if_controller_locked_up() and
+place it in the caller (this improves the code structure, making it
+more consistent with other uses and enabling tail-call optimization);
+rename the function to hpsa_scan_complete(), and use it at the end of
+hpsa_scan_start() as well.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/hpsa.c |   40 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a23277d..7915dc4 100644
+index 7915dc4..a92653a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3236,6 +3236,17 @@ out:
- 	kfree(id_phys);
+@@ -4149,25 +4149,14 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	return hpsa_ciss_submit(h, c, cmd, scsi3addr);
  }
  
-+static void hpsa_set_sg_descriptor(struct SGDescriptor *desc,
-+				   struct scatterlist *sg)
-+{
-+	u64 addr64 = (u64) sg_dma_address(sg);
-+	unsigned int len = sg_dma_len(sg);
-+
-+	desc->Addr = cpu_to_le64(addr64);
-+	desc->Len = cpu_to_le32(len);
-+	desc->Ext = 0;
-+}
-+
- /*
-  * hpsa_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci
-  * dma mapping  and fills in the scatter gather entries of the
-@@ -3245,9 +3256,7 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
- 		struct CommandList *cp,
- 		struct scsi_cmnd *cmd)
+-static int do_not_scan_if_controller_locked_up(struct ctlr_info *h)
++static void hpsa_scan_complete(struct ctlr_info *h)
  {
--	unsigned int len;
- 	struct scatterlist *sg;
--	u64 addr64;
- 	int use_sg, i, sg_index, chained;
- 	struct SGDescriptor *curr_sg;
+ 	unsigned long flags;
  
-@@ -3270,13 +3279,11 @@ static int hpsa_scatter_gather(struct ctlr_info *h,
- 			curr_sg = h->cmd_sg_list[cp->cmdindex];
- 			sg_index = 0;
- 		}
--		addr64 = (u64) sg_dma_address(sg);
--		len  = sg_dma_len(sg);
--		curr_sg->Addr = cpu_to_le64(addr64);
--		curr_sg->Len = cpu_to_le32(len);
--		curr_sg->Ext = cpu_to_le32(0);
-+		hpsa_set_sg_descriptor(curr_sg, sg);
- 		curr_sg++;
- 	}
-+
-+	/* Back the pointer up to the last entry and mark it as "last". */
- 	(--curr_sg)->Ext = cpu_to_le32(HPSA_SG_LAST);
+-	/*
+-	 * Don't let rescans be initiated on a controller known
+-	 * to be locked up.  If the controller locks up *during*
+-	 * a rescan, that thread is probably hosed, but at least
+-	 * we can prevent new rescan threads from piling up on a
+-	 * locked up controller.
+-	 */
+-	if (unlikely(lockup_detected(h))) {
+-		spin_lock_irqsave(&h->scan_lock, flags);
+-		h->scan_finished = 1;
+-		wake_up_all(&h->scan_wait_queue);
+-		spin_unlock_irqrestore(&h->scan_lock, flags);
+-		return 1;
+-	}
+-	return 0;
++	spin_lock_irqsave(&h->scan_lock, flags);
++	h->scan_finished = 1;
++	wake_up_all(&h->scan_wait_queue);
++	spin_unlock_irqrestore(&h->scan_lock, flags);
+ }
  
- 	if (use_sg + chained > h->maxSG)
+ static void hpsa_scan_start(struct Scsi_Host *sh)
+@@ -4175,8 +4164,14 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
+ 	struct ctlr_info *h = shost_to_hba(sh);
+ 	unsigned long flags;
+ 
+-	if (do_not_scan_if_controller_locked_up(h))
+-		return;
++	/*
++	 * Don't let rescans be initiated on a controller known to be locked
++	 * up.  If the controller locks up *during* a rescan, that thread is
++	 * probably hosed, but at least we can prevent new rescan threads from
++	 * piling up on a locked up controller.
++	 */
++	if (unlikely(lockup_detected(h)))
++		return hpsa_scan_complete(h);
+ 
+ 	/* wait until any scan already in progress is finished. */
+ 	while (1) {
+@@ -4194,15 +4189,12 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
+ 	h->scan_finished = 0; /* mark scan as in progress */
+ 	spin_unlock_irqrestore(&h->scan_lock, flags);
+ 
+-	if (do_not_scan_if_controller_locked_up(h))
+-		return;
++	if (unlikely(lockup_detected(h)))
++		return hpsa_scan_complete(h);
+ 
+ 	hpsa_update_scsi_devices(h, h->scsi_host->host_no);
+ 
+-	spin_lock_irqsave(&h->scan_lock, flags);
+-	h->scan_finished = 1; /* mark scan as finished. */
+-	wake_up_all(&h->scan_wait_queue);
+-	spin_unlock_irqrestore(&h->scan_lock, flags);
++	hpsa_scan_complete(h);
+ }
+ 
+ static int hpsa_change_queue_depth(struct scsi_device *sdev, int qdepth)
 
