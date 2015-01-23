@@ -1,46 +1,974 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 02/48] hpsa: fix memory leak in kdump hard reset
-Date: Fri, 23 Jan 2015 16:41:14 -0600
-Message-ID: <20150123224114.14919.52121.stgit@brunhilda>
+Subject: [PATCH v2 01/48] hpsa: correct endian sparse warnings
+Date: Fri, 23 Jan 2015 16:41:09 -0600
+Message-ID: <20150123224109.14919.680.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:34086 "EHLO
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:34044 "EHLO
 	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbbAWWmI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:42:08 -0500
+	with ESMTP id S1751461AbbAWWmD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:42:03 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Tomas Henzl <thenzl@redhat.com>
+Correct endiness issues reported by sparse. SA controllers are
+little endian. This patch ensures endiness correctness.
 
-There is a potential memory leak in hpsa_kdump_hard_reset_controller.
-
-
-Reviewed-by: Don Brace <don.brace@pmcs.com>
-Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
+Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Reviewed-by: Webb Scales <webbnh@hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c     |  275 +++++++++++++++++++----------------------------
+ drivers/scsi/hpsa_cmd.h |  172 +++++++++++++++--------------
+ 2 files changed, 198 insertions(+), 249 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 2b9baea..d97f455 100644
+index 6bb4611..2b9baea 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5840,7 +5840,7 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	}
- 	rc = write_driver_ver_to_cfgtable(cfgtable);
- 	if (rc)
--		goto unmap_vaddr;
-+		goto unmap_cfgtable;
+@@ -50,6 +50,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/percpu-defs.h>
+ #include <linux/percpu.h>
++#include <asm/unaligned.h>
+ #include <asm/div64.h>
+ #include "hpsa_cmd.h"
+ #include "hpsa.h"
+@@ -229,7 +230,7 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
+ 	struct CommandList *c);
+ /* performant mode helper functions */
+ static void calc_bucket_map(int *bucket, int num_buckets,
+-	int nsgs, int min_blocks, int *bucket_map);
++	int nsgs, int min_blocks, u32 *bucket_map);
+ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h);
+ static inline u32 next_command(struct ctlr_info *h, u8 q);
+ static int hpsa_find_cfg_addrs(struct pci_dev *pdev, void __iomem *vaddr,
+@@ -919,7 +920,7 @@ static int hpsa_scsi_add_entry(struct ctlr_info *h, int hostno,
  
- 	/* If reset via doorbell register is supported, use that.
- 	 * There are two such methods.  Favor the newest method.
+ 	/* If this device a non-zero lun of a multi-lun device
+ 	 * byte 4 of the 8-byte LUN addr will contain the logical
+-	 * unit no, zero otherise.
++	 * unit no, zero otherwise.
+ 	 */
+ 	if (device->scsi3addr[4] == 0) {
+ 		/* This is not a non-zero lun of a multi-lun device */
+@@ -1504,7 +1505,7 @@ static int hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 	chain_block = h->cmd_sg_list[c->cmdindex];
+ 	chain_sg->Ext = cpu_to_le32(HPSA_SG_CHAIN);
+ 	chain_len = sizeof(*chain_sg) *
+-		(c->Header.SGTotal - h->max_cmd_sg_entries);
++		(le16_to_cpu(c->Header.SGTotal) - h->max_cmd_sg_entries);
+ 	chain_sg->Len = cpu_to_le32(chain_len);
+ 	temp64 = pci_map_single(h->pdev, chain_block, chain_len,
+ 				PCI_DMA_TODEVICE);
+@@ -1693,7 +1694,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 
+ 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
+ 	if ((cp->cmd_type == CMD_SCSI) &&
+-		(cp->Header.SGTotal > h->max_cmd_sg_entries))
++		(le16_to_cpu(cp->Header.SGTotal) > h->max_cmd_sg_entries))
+ 		hpsa_unmap_sg_chain_block(h, cp);
+ 
+ 	cmd->result = (DID_OK << 16); 		/* host byte */
+@@ -1726,8 +1727,10 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	 */
+ 	if (cp->cmd_type == CMD_IOACCEL1) {
+ 		struct io_accel1_cmd *c = &h->ioaccel_cmd_pool[cp->cmdindex];
+-		cp->Header.SGList = cp->Header.SGTotal = scsi_sg_count(cmd);
+-		cp->Request.CDBLen = c->io_flags & IOACCEL1_IOFLAGS_CDBLEN_MASK;
++		cp->Header.SGList = scsi_sg_count(cmd);
++		cp->Header.SGTotal = cpu_to_le16(cp->Header.SGList);
++		cp->Request.CDBLen = le16_to_cpu(c->io_flags) &
++			IOACCEL1_IOFLAGS_CDBLEN_MASK;
+ 		cp->Header.tag = c->tag;
+ 		memcpy(cp->Header.LUN.LunAddrBytes, c->CISS_LUN, 8);
+ 		memcpy(cp->Request.CDB, c->CDB, cp->Request.CDBLen);
+@@ -2191,15 +2194,13 @@ static void hpsa_debug_map_buff(struct ctlr_info *h, int rc,
+ 			le16_to_cpu(map_buff->row_cnt));
+ 	dev_info(&h->pdev->dev, "layout_map_count = %u\n",
+ 			le16_to_cpu(map_buff->layout_map_count));
+-	dev_info(&h->pdev->dev, "flags = %u\n",
++	dev_info(&h->pdev->dev, "flags = 0x%x\n",
+ 			le16_to_cpu(map_buff->flags));
+-	if (map_buff->flags & RAID_MAP_FLAG_ENCRYPT_ON)
+-		dev_info(&h->pdev->dev, "encrypytion = ON\n");
+-	else
+-		dev_info(&h->pdev->dev, "encrypytion = OFF\n");
++	dev_info(&h->pdev->dev, "encrypytion = %s\n",
++			le16_to_cpu(map_buff->flags) &
++			RAID_MAP_FLAG_ENCRYPT_ON ?  "ON" : "OFF");
+ 	dev_info(&h->pdev->dev, "dekindex = %u\n",
+ 			le16_to_cpu(map_buff->dekindex));
+-
+ 	map_cnt = le16_to_cpu(map_buff->layout_map_count);
+ 	for (map = 0; map < map_cnt; map++) {
+ 		dev_info(&h->pdev->dev, "Map%u:\n", map);
+@@ -2741,8 +2742,8 @@ static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
+ 	struct scsi_cmnd *scmd;	/* scsi command within request being aborted */
+ 	struct hpsa_scsi_dev_t *d; /* device of request being aborted */
+ 	struct io_accel2_cmd *c2a; /* ioaccel2 command to abort */
+-	u32 it_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
+-	u32 scsi_nexus;		/* 4 byte device handle for the ioaccel2 cmd */
++	__le32 it_nexus;	/* 4 byte device handle for the ioaccel2 cmd */
++	__le32 scsi_nexus;	/* 4 byte device handle for the ioaccel2 cmd */
+ 
+ 	if (ioaccel2_cmd_to_abort->cmd_type != CMD_IOACCEL2)
+ 		return 0; /* no match */
+@@ -2761,8 +2762,8 @@ static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
+ 		return 0; /* no match */
+ 
+ 	it_nexus = cpu_to_le32(d->ioaccel_handle);
+-	scsi_nexus = cpu_to_le32(c2a->scsi_nexus);
+-	find = c2a->scsi_nexus;
++	scsi_nexus = c2a->scsi_nexus;
++	find = le32_to_cpu(c2a->scsi_nexus);
+ 
+ 	if (h->raid_offload_debug > 0)
+ 		dev_info(&h->pdev->dev,
+@@ -3284,11 +3285,11 @@ static int hpsa_scsi_ioaccel1_queue_command(struct ctlr_info *h,
+ 
+ 	c->Header.SGList = use_sg;
+ 	/* Fill out the command structure to submit */
+-	cp->dev_handle = ioaccel_handle & 0xFFFF;
+-	cp->transfer_len = total_len;
+-	cp->io_flags = IOACCEL1_IOFLAGS_IO_REQ |
+-			(cdb_len & IOACCEL1_IOFLAGS_CDBLEN_MASK);
+-	cp->control = control;
++	cp->dev_handle = cpu_to_le16(ioaccel_handle & 0xFFFF);
++	cp->transfer_len = cpu_to_le32(total_len);
++	cp->io_flags = cpu_to_le16(IOACCEL1_IOFLAGS_IO_REQ |
++			(cdb_len & IOACCEL1_IOFLAGS_CDBLEN_MASK));
++	cp->control = cpu_to_le32(control);
+ 	memcpy(cp->CDB, cdb, cdb_len);
+ 	memcpy(cp->CISS_LUN, scsi3addr, 8);
+ 	/* Tag was already set at init time. */
+@@ -3324,7 +3325,7 @@ static void set_encrypt_ioaccel2(struct ctlr_info *h,
+ 	BUG_ON(!(dev->offload_config && dev->offload_enabled));
+ 
+ 	/* Are we doing encryption on this device */
+-	if (!(map->flags & RAID_MAP_FLAG_ENCRYPT_ON))
++	if (!(le16_to_cpu(map->flags) & RAID_MAP_FLAG_ENCRYPT_ON))
+ 		return;
+ 	/* Set the data encryption key index. */
+ 	cp->dekindex = map->dekindex;
+@@ -3340,96 +3341,33 @@ static void set_encrypt_ioaccel2(struct ctlr_info *h,
+ 	/* Required? 6-byte cdbs eliminated by fixup_ioaccel_cdb */
+ 	case WRITE_6:
+ 	case READ_6:
+-		if (map->volume_blk_size == 512) {
+-			cp->tweak_lower =
+-				(((u32) cmd->cmnd[2]) << 8) |
+-					cmd->cmnd[3];
+-			cp->tweak_upper = 0;
+-		} else {
+-			first_block =
+-				(((u64) cmd->cmnd[2]) << 8) |
+-					cmd->cmnd[3];
+-			first_block = (first_block * map->volume_blk_size)/512;
+-			cp->tweak_lower = (u32)first_block;
+-			cp->tweak_upper = (u32)(first_block >> 32);
+-		}
++		first_block = get_unaligned_be16(&cmd->cmnd[2]);
+ 		break;
+ 	case WRITE_10:
+ 	case READ_10:
+-		if (map->volume_blk_size == 512) {
+-			cp->tweak_lower =
+-				(((u32) cmd->cmnd[2]) << 24) |
+-				(((u32) cmd->cmnd[3]) << 16) |
+-				(((u32) cmd->cmnd[4]) << 8) |
+-					cmd->cmnd[5];
+-			cp->tweak_upper = 0;
+-		} else {
+-			first_block =
+-				(((u64) cmd->cmnd[2]) << 24) |
+-				(((u64) cmd->cmnd[3]) << 16) |
+-				(((u64) cmd->cmnd[4]) << 8) |
+-					cmd->cmnd[5];
+-			first_block = (first_block * map->volume_blk_size)/512;
+-			cp->tweak_lower = (u32)first_block;
+-			cp->tweak_upper = (u32)(first_block >> 32);
+-		}
+-		break;
+ 	/* Required? 12-byte cdbs eliminated by fixup_ioaccel_cdb */
+ 	case WRITE_12:
+ 	case READ_12:
+-		if (map->volume_blk_size == 512) {
+-			cp->tweak_lower =
+-				(((u32) cmd->cmnd[2]) << 24) |
+-				(((u32) cmd->cmnd[3]) << 16) |
+-				(((u32) cmd->cmnd[4]) << 8) |
+-					cmd->cmnd[5];
+-			cp->tweak_upper = 0;
+-		} else {
+-			first_block =
+-				(((u64) cmd->cmnd[2]) << 24) |
+-				(((u64) cmd->cmnd[3]) << 16) |
+-				(((u64) cmd->cmnd[4]) << 8) |
+-					cmd->cmnd[5];
+-			first_block = (first_block * map->volume_blk_size)/512;
+-			cp->tweak_lower = (u32)first_block;
+-			cp->tweak_upper = (u32)(first_block >> 32);
+-		}
++		first_block = get_unaligned_be32(&cmd->cmnd[2]);
+ 		break;
+ 	case WRITE_16:
+ 	case READ_16:
+-		if (map->volume_blk_size == 512) {
+-			cp->tweak_lower =
+-				(((u32) cmd->cmnd[6]) << 24) |
+-				(((u32) cmd->cmnd[7]) << 16) |
+-				(((u32) cmd->cmnd[8]) << 8) |
+-					cmd->cmnd[9];
+-			cp->tweak_upper =
+-				(((u32) cmd->cmnd[2]) << 24) |
+-				(((u32) cmd->cmnd[3]) << 16) |
+-				(((u32) cmd->cmnd[4]) << 8) |
+-					cmd->cmnd[5];
+-		} else {
+-			first_block =
+-				(((u64) cmd->cmnd[2]) << 56) |
+-				(((u64) cmd->cmnd[3]) << 48) |
+-				(((u64) cmd->cmnd[4]) << 40) |
+-				(((u64) cmd->cmnd[5]) << 32) |
+-				(((u64) cmd->cmnd[6]) << 24) |
+-				(((u64) cmd->cmnd[7]) << 16) |
+-				(((u64) cmd->cmnd[8]) << 8) |
+-					cmd->cmnd[9];
+-			first_block = (first_block * map->volume_blk_size)/512;
+-			cp->tweak_lower = (u32)first_block;
+-			cp->tweak_upper = (u32)(first_block >> 32);
+-		}
++		first_block = get_unaligned_be64(&cmd->cmnd[2]);
+ 		break;
+ 	default:
+ 		dev_err(&h->pdev->dev,
+-			"ERROR: %s: IOACCEL request CDB size not supported for encryption\n",
+-			__func__);
++			"ERROR: %s: size (0x%x) not supported for encryption\n",
++			__func__, cmd->cmnd[0]);
+ 		BUG();
+ 		break;
+ 	}
++
++	if (le32_to_cpu(map->volume_blk_size) != 512)
++		first_block = first_block *
++				le32_to_cpu(map->volume_blk_size)/512;
++
++	cp->tweak_lower = cpu_to_le32(first_block);
++	cp->tweak_upper = cpu_to_le32(first_block >> 32);
+ }
+ 
+ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+@@ -3506,9 +3444,9 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	/* Set encryption parameters, if necessary */
+ 	set_encrypt_ioaccel2(h, c, cp);
+ 
+-	cp->scsi_nexus = ioaccel_handle;
+-	cp->Tag = (c->cmdindex << DIRECT_LOOKUP_SHIFT) |
+-				DIRECT_LOOKUP_BIT;
++	cp->scsi_nexus = cpu_to_le32(ioaccel_handle);
++	cp->Tag = cpu_to_le32(c->cmdindex << DIRECT_LOOKUP_SHIFT |
++				DIRECT_LOOKUP_BIT);
+ 	memcpy(cp->cdb, cdb, sizeof(cp->cdb));
+ 
+ 	/* fill in sg elements */
+@@ -3543,21 +3481,22 @@ static void raid_map_helper(struct raid_map_data *map,
+ {
+ 	if (offload_to_mirror == 0)  {
+ 		/* use physical disk in the first mirrored group. */
+-		*map_index %= map->data_disks_per_row;
++		*map_index %= le16_to_cpu(map->data_disks_per_row);
+ 		return;
+ 	}
+ 	do {
+ 		/* determine mirror group that *map_index indicates */
+-		*current_group = *map_index / map->data_disks_per_row;
++		*current_group = *map_index /
++			le16_to_cpu(map->data_disks_per_row);
+ 		if (offload_to_mirror == *current_group)
+ 			continue;
+-		if (*current_group < (map->layout_map_count - 1)) {
++		if (*current_group < le16_to_cpu(map->layout_map_count) - 1) {
+ 			/* select map index from next group */
+-			*map_index += map->data_disks_per_row;
++			*map_index += le16_to_cpu(map->data_disks_per_row);
+ 			(*current_group)++;
+ 		} else {
+ 			/* select map index from first group */
+-			*map_index %= map->data_disks_per_row;
++			*map_index %= le16_to_cpu(map->data_disks_per_row);
+ 			*current_group = 0;
+ 		}
+ 	} while (offload_to_mirror != *current_group);
+@@ -3595,6 +3534,7 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 	u32 disk_block_cnt;
+ 	u8 cdb[16];
+ 	u8 cdb_len;
++	u16 strip_size;
+ #if BITS_PER_LONG == 32
+ 	u64 tmpdiv;
+ #endif
+@@ -3668,11 +3608,14 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 		return IO_ACCEL_INELIGIBLE;
+ 
+ 	/* check for invalid block or wraparound */
+-	if (last_block >= map->volume_blk_cnt || last_block < first_block)
++	if (last_block >= le64_to_cpu(map->volume_blk_cnt) ||
++		last_block < first_block)
+ 		return IO_ACCEL_INELIGIBLE;
+ 
+ 	/* calculate stripe information for the request */
+-	blocks_per_row = map->data_disks_per_row * map->strip_size;
++	blocks_per_row = le16_to_cpu(map->data_disks_per_row) *
++				le16_to_cpu(map->strip_size);
++	strip_size = le16_to_cpu(map->strip_size);
+ #if BITS_PER_LONG == 32
+ 	tmpdiv = first_block;
+ 	(void) do_div(tmpdiv, blocks_per_row);
+@@ -3683,18 +3626,18 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 	first_row_offset = (u32) (first_block - (first_row * blocks_per_row));
+ 	last_row_offset = (u32) (last_block - (last_row * blocks_per_row));
+ 	tmpdiv = first_row_offset;
+-	(void) do_div(tmpdiv,  map->strip_size);
++	(void) do_div(tmpdiv, strip_size);
+ 	first_column = tmpdiv;
+ 	tmpdiv = last_row_offset;
+-	(void) do_div(tmpdiv, map->strip_size);
++	(void) do_div(tmpdiv, strip_size);
+ 	last_column = tmpdiv;
+ #else
+ 	first_row = first_block / blocks_per_row;
+ 	last_row = last_block / blocks_per_row;
+ 	first_row_offset = (u32) (first_block - (first_row * blocks_per_row));
+ 	last_row_offset = (u32) (last_block - (last_row * blocks_per_row));
+-	first_column = first_row_offset / map->strip_size;
+-	last_column = last_row_offset / map->strip_size;
++	first_column = first_row_offset / strip_size;
++	last_column = last_row_offset / strip_size;
+ #endif
+ 
+ 	/* if this isn't a single row/column then give to the controller */
+@@ -3702,10 +3645,10 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 		return IO_ACCEL_INELIGIBLE;
+ 
+ 	/* proceeding with driver mapping */
+-	total_disks_per_row = map->data_disks_per_row +
+-				map->metadata_disks_per_row;
++	total_disks_per_row = le16_to_cpu(map->data_disks_per_row) +
++				le16_to_cpu(map->metadata_disks_per_row);
+ 	map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
+-				map->row_cnt;
++				le16_to_cpu(map->row_cnt);
+ 	map_index = (map_row * total_disks_per_row) + first_column;
+ 
+ 	switch (dev->raid_level) {
+@@ -3716,23 +3659,24 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 		 * (2-drive R1 and R10 with even # of drives.)
+ 		 * Appropriate for SSDs, not optimal for HDDs
+ 		 */
+-		BUG_ON(map->layout_map_count != 2);
++		BUG_ON(le16_to_cpu(map->layout_map_count) != 2);
+ 		if (dev->offload_to_mirror)
+-			map_index += map->data_disks_per_row;
++			map_index += le16_to_cpu(map->data_disks_per_row);
+ 		dev->offload_to_mirror = !dev->offload_to_mirror;
+ 		break;
+ 	case HPSA_RAID_ADM:
+ 		/* Handles N-way mirrors  (R1-ADM)
+ 		 * and R10 with # of drives divisible by 3.)
+ 		 */
+-		BUG_ON(map->layout_map_count != 3);
++		BUG_ON(le16_to_cpu(map->layout_map_count) != 3);
+ 
+ 		offload_to_mirror = dev->offload_to_mirror;
+ 		raid_map_helper(map, offload_to_mirror,
+ 				&map_index, &current_group);
+ 		/* set mirror group to use next time */
+ 		offload_to_mirror =
+-			(offload_to_mirror >= map->layout_map_count - 1)
++			(offload_to_mirror >=
++			le16_to_cpu(map->layout_map_count) - 1)
+ 			? 0 : offload_to_mirror + 1;
+ 		dev->offload_to_mirror = offload_to_mirror;
+ 		/* Avoid direct use of dev->offload_to_mirror within this
+@@ -3742,14 +3686,16 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 		break;
+ 	case HPSA_RAID_5:
+ 	case HPSA_RAID_6:
+-		if (map->layout_map_count <= 1)
++		if (le16_to_cpu(map->layout_map_count) <= 1)
+ 			break;
+ 
+ 		/* Verify first and last block are in same RAID group */
+ 		r5or6_blocks_per_row =
+-			map->strip_size * map->data_disks_per_row;
++			le16_to_cpu(map->strip_size) *
++			le16_to_cpu(map->data_disks_per_row);
+ 		BUG_ON(r5or6_blocks_per_row == 0);
+-		stripesize = r5or6_blocks_per_row * map->layout_map_count;
++		stripesize = r5or6_blocks_per_row *
++			le16_to_cpu(map->layout_map_count);
+ #if BITS_PER_LONG == 32
+ 		tmpdiv = first_block;
+ 		first_group = do_div(tmpdiv, stripesize);
+@@ -3812,19 +3758,19 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 						r5or6_blocks_per_row);
+ 
+ 		first_column = r5or6_first_column =
+-			r5or6_first_row_offset / map->strip_size;
++			r5or6_first_row_offset / le16_to_cpu(map->strip_size);
+ 		r5or6_last_column =
+-			r5or6_last_row_offset / map->strip_size;
++			r5or6_last_row_offset / le16_to_cpu(map->strip_size);
+ #endif
+ 		if (r5or6_first_column != r5or6_last_column)
+ 			return IO_ACCEL_INELIGIBLE;
+ 
+ 		/* Request is eligible */
+ 		map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
+-			map->row_cnt;
++			le16_to_cpu(map->row_cnt);
+ 
+ 		map_index = (first_group *
+-			(map->row_cnt * total_disks_per_row)) +
++			(le16_to_cpu(map->row_cnt) * total_disks_per_row)) +
+ 			(map_row * total_disks_per_row) + first_column;
+ 		break;
+ 	default:
+@@ -3832,8 +3778,10 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 	}
+ 
+ 	disk_handle = dd[map_index].ioaccel_handle;
+-	disk_block = map->disk_starting_blk + (first_row * map->strip_size) +
+-			(first_row_offset - (first_column * map->strip_size));
++	disk_block = le64_to_cpu(map->disk_starting_blk) +
++			first_row * le16_to_cpu(map->strip_size) +
++			(first_row_offset - first_column *
++			le16_to_cpu(map->strip_size));
+ 	disk_block_cnt = block_cnt;
+ 
+ 	/* handle differing logical/physical block sizes */
+@@ -4227,13 +4175,15 @@ static void swizzle_abort_tag(u8 *tag)
+ }
+ 
+ static void hpsa_get_tag(struct ctlr_info *h,
+-	struct CommandList *c, u32 *taglower, u32 *tagupper)
++	struct CommandList *c, __le32 *taglower, __le32 *tagupper)
+ {
++	u64 tag;
+ 	if (c->cmd_type == CMD_IOACCEL1) {
+ 		struct io_accel1_cmd *cm1 = (struct io_accel1_cmd *)
+ 			&h->ioaccel_cmd_pool[c->cmdindex];
+-		*tagupper = (u32) (cm1->tag >> 32);
+-		*taglower = (u32) (cm1->tag & 0x0ffffffffULL);
++		tag = le64_to_cpu(cm1->tag);
++		*tagupper = cpu_to_le32(tag >> 32);
++		*taglower = cpu_to_le32(tag);
+ 		return;
+ 	}
+ 	if (c->cmd_type == CMD_IOACCEL2) {
+@@ -4244,8 +4194,9 @@ static void hpsa_get_tag(struct ctlr_info *h,
+ 		*taglower = cm2->Tag;
+ 		return;
+ 	}
+-	*tagupper = (u32) (c->Header.tag >> 32);
+-	*taglower = (u32) (c->Header.tag & 0x0ffffffffULL);
++	tag = le64_to_cpu(c->Header.tag);
++	*tagupper = cpu_to_le32(tag >> 32);
++	*taglower = cpu_to_le32(tag);
+ }
+ 
+ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+@@ -4254,7 +4205,7 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	int rc = IO_OK;
+ 	struct CommandList *c;
+ 	struct ErrorInfo *ei;
+-	u32 tagupper, taglower;
++	__le32 tagupper, taglower;
+ 
+ 	c = cmd_special_alloc(h);
+ 	if (c == NULL) {	/* trouble... */
+@@ -4479,7 +4430,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	struct scsi_cmnd *as;	/* ptr to scsi cmd inside aborted command. */
+ 	char msg[256];		/* For debug messaging. */
+ 	int ml = 0;
+-	u32 tagupper, taglower;
++	__le32 tagupper, taglower;
+ 
+ 	/* Find the controller of the command to be aborted */
+ 	h = sdev_to_hba(sc->device);
+@@ -4884,7 +4835,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	}
+ 	memcpy(&c->Header.LUN, &iocommand.LUN_info, sizeof(c->Header.LUN));
+ 	/* use the kernel address the cmd block for tag */
+-	c->Header.tag = c->busaddr;
++	c->Header.tag = cpu_to_le64(c->busaddr);
+ 
+ 	/* Fill in Request block */
+ 	memcpy(&c->Request, &iocommand.Request,
+@@ -4940,7 +4891,6 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	u64 temp64;
+ 	BYTE sg_used = 0;
+ 	int status = 0;
+-	int i;
+ 	u32 left;
+ 	u32 sz;
+ 	BYTE __user *data_ptr;
+@@ -5014,7 +4964,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	c->Header.SGList = (u8) sg_used;
+ 	c->Header.SGTotal = cpu_to_le16(sg_used);
+ 	memcpy(&c->Header.LUN, &ioc->LUN_info, sizeof(c->Header.LUN));
+-	c->Header.tag = c->busaddr;
++	c->Header.tag = cpu_to_le64(c->busaddr);
+ 	memcpy(&c->Request, &ioc->Request, sizeof(c->Request));
+ 	if (ioc->buf_size > 0) {
+ 		int i;
+@@ -5047,6 +4997,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		goto cleanup0;
+ 	}
+ 	if ((ioc->Request.Type.Direction & XFER_READ) && ioc->buf_size > 0) {
++		int i;
++
+ 		/* Copy the data out of the buffer we created */
+ 		BYTE __user *ptr = ioc->buf;
+ 		for (i = 0; i < sg_used; i++) {
+@@ -5062,6 +5014,8 @@ cleanup0:
+ 	cmd_special_free(h, c);
+ cleanup1:
+ 	if (buff) {
++		int i;
++
+ 		for (i = 0; i < sg_used; i++)
+ 			kfree(buff[i]);
+ 		kfree(buff);
+@@ -5173,7 +5127,6 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ {
+ 	int pci_dir = XFER_NONE;
+ 	struct CommandList *a; /* for commands to be aborted */
+-	u32 tupper, tlower;
+ 
+ 	c->cmd_type = CMD_IOCTL_PEND;
+ 	c->Header.ReplyQueue = 0;
+@@ -5184,7 +5137,7 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 		c->Header.SGList = 0;
+ 		c->Header.SGTotal = cpu_to_le16(0);
+ 	}
+-	c->Header.tag = c->busaddr;
++	c->Header.tag = cpu_to_le64(c->busaddr);
+ 	memcpy(c->Header.LUN.LunAddrBytes, scsi3addr, 8);
+ 
+ 	if (cmd_type == TYPE_CMD) {
+@@ -5281,10 +5234,9 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 			break;
+ 		case  HPSA_ABORT_MSG:
+ 			a = buff;       /* point to command to be aborted */
+-			dev_dbg(&h->pdev->dev, "Abort Tag:0x%016llx using request Tag:0x%016llx",
++			dev_dbg(&h->pdev->dev,
++				"Abort Tag:0x%016llx request Tag:0x%016llx",
+ 				a->Header.tag, c->Header.tag);
+-			tlower = (u32) (a->Header.tag >> 32);
+-			tupper = (u32) (a->Header.tag & 0x0ffffffffULL);
+ 			c->Request.CDBLen = 16;
+ 			c->Request.type_attr_dir =
+ 					TYPE_ATTR_DIR(cmd_type,
+@@ -5295,14 +5247,8 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
+ 			c->Request.CDB[2] = 0x00; /* reserved */
+ 			c->Request.CDB[3] = 0x00; /* reserved */
+ 			/* Tag to abort goes in CDB[4]-CDB[11] */
+-			c->Request.CDB[4] = tlower & 0xFF;
+-			c->Request.CDB[5] = (tlower >> 8) & 0xFF;
+-			c->Request.CDB[6] = (tlower >> 16) & 0xFF;
+-			c->Request.CDB[7] = (tlower >> 24) & 0xFF;
+-			c->Request.CDB[8] = tupper & 0xFF;
+-			c->Request.CDB[9] = (tupper >> 8) & 0xFF;
+-			c->Request.CDB[10] = (tupper >> 16) & 0xFF;
+-			c->Request.CDB[11] = (tupper >> 24) & 0xFF;
++			memcpy(&c->Request.CDB[4], &a->Header.tag,
++				sizeof(a->Header.tag));
+ 			c->Request.CDB[12] = 0x00; /* reserved */
+ 			c->Request.CDB[13] = 0x00; /* reserved */
+ 			c->Request.CDB[14] = 0x00; /* reserved */
+@@ -5633,7 +5579,8 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ 	static const size_t cmd_sz = sizeof(*cmd) +
+ 					sizeof(cmd->ErrorDescriptor);
+ 	dma_addr_t paddr64;
+-	uint32_t paddr32, tag;
++	__le32 paddr32;
++	u32 tag;
+ 	void __iomem *vaddr;
+ 	int i, err;
+ 
+@@ -5661,12 +5608,12 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ 	 * although there's no guarantee, we assume that the address is at
+ 	 * least 4-byte aligned (most likely, it's page-aligned).
+ 	 */
+-	paddr32 = paddr64;
++	paddr32 = cpu_to_le32(paddr64);
+ 
+ 	cmd->CommandHeader.ReplyQueue = 0;
+ 	cmd->CommandHeader.SGList = 0;
+ 	cmd->CommandHeader.SGTotal = cpu_to_le16(0);
+-	cmd->CommandHeader.tag = paddr32;
++	cmd->CommandHeader.tag = cpu_to_le64(paddr64);
+ 	memset(&cmd->CommandHeader.LUN.LunAddrBytes, 0, 8);
+ 
+ 	cmd->Request.CDBLen = 16;
+@@ -5677,14 +5624,14 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ 	cmd->Request.CDB[1] = type;
+ 	memset(&cmd->Request.CDB[2], 0, 14); /* rest of the CDB is reserved */
+ 	cmd->ErrorDescriptor.Addr =
+-			cpu_to_le64((paddr32 + sizeof(*cmd)));
++			cpu_to_le64((le32_to_cpu(paddr32) + sizeof(*cmd)));
+ 	cmd->ErrorDescriptor.Len = cpu_to_le32(sizeof(struct ErrorInfo));
+ 
+-	writel(paddr32, vaddr + SA5_REQUEST_PORT_OFFSET);
++	writel(le32_to_cpu(paddr32), vaddr + SA5_REQUEST_PORT_OFFSET);
+ 
+ 	for (i = 0; i < HPSA_MSG_SEND_RETRY_LIMIT; i++) {
+ 		tag = readl(vaddr + SA5_REPLY_PORT_OFFSET);
+-		if ((tag & ~HPSA_SIMPLE_ERROR_BITS) == paddr32)
++		if ((tag & ~HPSA_SIMPLE_ERROR_BITS) == paddr64)
+ 			break;
+ 		msleep(HPSA_MSG_SEND_RETRY_INTERVAL_MSECS);
+ 	}
+@@ -5718,8 +5665,6 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 	void __iomem *vaddr, u32 use_doorbell)
+ {
+-	u16 pmcsr;
+-	int pos;
+ 
+ 	if (use_doorbell) {
+ 		/* For everything after the P600, the PCI power state method
+@@ -5744,6 +5689,8 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		 * the controller, place the interface device in D3 then to D0,
+ 		 * this causes a secondary PCI reset which will reset the
+ 		 * controller." */
++		int pos;
++		u16 pmcsr;
+ 
+ 		pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+ 		if (pos == 0) {
+@@ -5754,16 +5701,17 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		}
+ 		dev_info(&pdev->dev, "using PCI PM to reset controller\n");
+ 		/* enter the D3hot power management state */
+-		pci_read_config_word(pdev, pos + PCI_PM_CTRL, &pmcsr);
++		pci_read_config_word(pdev, pos + PCI_PM_CTRL,
++					(__force u16 *)&pmcsr);
+ 		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-		pmcsr |= PCI_D3hot;
++		pmcsr |= (__force u16) PCI_D3hot;
+ 		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 
+ 		msleep(500);
+ 
+ 		/* enter the D0 power management state */
+ 		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-		pmcsr |= PCI_D0;
++		pmcsr |= (__force u16) PCI_D0;
+ 		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 
+ 		/*
+@@ -7172,7 +7120,7 @@ static struct pci_driver hpsa_pci_driver = {
+  * bits of the command address.
+  */
+ static void  calc_bucket_map(int bucket[], int num_buckets,
+-	int nsgs, int min_blocks, int *bucket_map)
++	int nsgs, int min_blocks, u32 *bucket_map)
+ {
+ 	int i, j, b, size;
+ 
+@@ -7328,7 +7276,8 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 					(i * sizeof(struct ErrorInfo)));
+ 			cp->err_info_len = sizeof(struct ErrorInfo);
+ 			cp->sgl_offset = IOACCEL1_SGLOFFSET;
+-			cp->host_context_flags = IOACCEL1_HCFLAGS_CISS_FORMAT;
++			cp->host_context_flags =
++				cpu_to_le16(IOACCEL1_HCFLAGS_CISS_FORMAT);
+ 			cp->timeout_sec = 0;
+ 			cp->ReplyQueue = 0;
+ 			cp->tag =
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index cb988c4..9bae50c 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -206,27 +206,27 @@ struct raid_map_disk_data {
+ };
+ 
+ struct raid_map_data {
+-	u32   structure_size;		/* Size of entire structure in bytes */
+-	u32   volume_blk_size;		/* bytes / block in the volume */
+-	u64   volume_blk_cnt;		/* logical blocks on the volume */
++	__le32   structure_size;	/* Size of entire structure in bytes */
++	__le32   volume_blk_size;	/* bytes / block in the volume */
++	__le64   volume_blk_cnt;	/* logical blocks on the volume */
+ 	u8    phys_blk_shift;		/* Shift factor to convert between
+ 					 * units of logical blocks and physical
+ 					 * disk blocks */
+ 	u8    parity_rotation_shift;	/* Shift factor to convert between units
+ 					 * of logical stripes and physical
+ 					 * stripes */
+-	u16   strip_size;		/* blocks used on each disk / stripe */
+-	u64   disk_starting_blk;	/* First disk block used in volume */
+-	u64   disk_blk_cnt;		/* disk blocks used by volume / disk */
+-	u16   data_disks_per_row;	/* data disk entries / row in the map */
+-	u16   metadata_disks_per_row;	/* mirror/parity disk entries / row
++	__le16   strip_size;		/* blocks used on each disk / stripe */
++	__le64   disk_starting_blk;	/* First disk block used in volume */
++	__le64   disk_blk_cnt;		/* disk blocks used by volume / disk */
++	__le16   data_disks_per_row;	/* data disk entries / row in the map */
++	__le16   metadata_disks_per_row;/* mirror/parity disk entries / row
+ 					 * in the map */
+-	u16   row_cnt;			/* rows in each layout map */
+-	u16   layout_map_count;		/* layout maps (1 map per mirror/parity
++	__le16   row_cnt;		/* rows in each layout map */
++	__le16   layout_map_count;	/* layout maps (1 map per mirror/parity
+ 					 * group) */
+-	u16   flags;			/* Bit 0 set if encryption enabled */
++	__le16   flags;			/* Bit 0 set if encryption enabled */
+ #define RAID_MAP_FLAG_ENCRYPT_ON  0x01
+-	u16   dekindex;			/* Data encryption key index. */
++	__le16   dekindex;		/* Data encryption key index. */
+ 	u8    reserved[16];
+ 	struct raid_map_disk_data data[RAID_MAP_MAX_ENTRIES];
+ };
+@@ -313,8 +313,8 @@ union LUNAddr {
+ struct CommandListHeader {
+ 	u8              ReplyQueue;
+ 	u8              SGList;
+-	u16             SGTotal;
+-	u64		tag;
++	__le16          SGTotal;
++	__le64		tag;
+ 	union LUNAddr     LUN;
+ };
+ 
+@@ -338,14 +338,14 @@ struct RequestBlock {
+ };
+ 
+ struct ErrDescriptor {
+-	u64 Addr;
+-	u32  Len;
++	__le64 Addr;
++	__le32 Len;
+ };
+ 
+ struct SGDescriptor {
+-	u64 Addr;
+-	u32  Len;
+-	u32  Ext;
++	__le64 Addr;
++	__le32 Len;
++	__le32 Ext;
+ };
+ 
+ union MoreErrInfo {
+@@ -420,7 +420,7 @@ struct CommandList {
+  */
+ #define IOACCEL1_COMMANDLIST_ALIGNMENT 128
+ struct io_accel1_cmd {
+-	u16 dev_handle;			/* 0x00 - 0x01 */
++	__le16 dev_handle;		/* 0x00 - 0x01 */
+ 	u8  reserved1;			/* 0x02 */
+ 	u8  function;			/* 0x03 */
+ 	u8  reserved2[8];		/* 0x04 - 0x0B */
+@@ -430,20 +430,20 @@ struct io_accel1_cmd {
+ 	u8  reserved4;			/* 0x13 */
+ 	u8  sgl_offset;			/* 0x14 */
+ 	u8  reserved5[7];		/* 0x15 - 0x1B */
+-	u32 transfer_len;		/* 0x1C - 0x1F */
++	__le32 transfer_len;		/* 0x1C - 0x1F */
+ 	u8  reserved6[4];		/* 0x20 - 0x23 */
+-	u16 io_flags;			/* 0x24 - 0x25 */
++	__le16 io_flags;		/* 0x24 - 0x25 */
+ 	u8  reserved7[14];		/* 0x26 - 0x33 */
+ 	u8  LUN[8];			/* 0x34 - 0x3B */
+-	u32 control;			/* 0x3C - 0x3F */
++	__le32 control;			/* 0x3C - 0x3F */
+ 	u8  CDB[16];			/* 0x40 - 0x4F */
+ 	u8  reserved8[16];		/* 0x50 - 0x5F */
+-	u16 host_context_flags;		/* 0x60 - 0x61 */
+-	u16 timeout_sec;		/* 0x62 - 0x63 */
++	__le16 host_context_flags;	/* 0x60 - 0x61 */
++	__le16 timeout_sec;		/* 0x62 - 0x63 */
+ 	u8  ReplyQueue;			/* 0x64 */
+ 	u8  reserved9[3];		/* 0x65 - 0x67 */
+-	u64 tag;			/* 0x68 - 0x6F */
+-	u64 host_addr;			/* 0x70 - 0x77 */
++	__le64 tag;			/* 0x68 - 0x6F */
++	__le64 host_addr;		/* 0x70 - 0x77 */
+ 	u8  CISS_LUN[8];		/* 0x78 - 0x7F */
+ 	struct SGDescriptor SG[IOACCEL1_MAXSGENTRIES];
+ } __aligned(IOACCEL1_COMMANDLIST_ALIGNMENT);
+@@ -470,8 +470,8 @@ struct io_accel1_cmd {
+ #define IOACCEL1_BUSADDR_CMDTYPE        0x00000060
+ 
+ struct ioaccel2_sg_element {
+-	u64 address;
+-	u32 length;
++	__le64 address;
++	__le32 length;
+ 	u8 reserved[3];
+ 	u8 chain_indicator;
+ #define IOACCEL2_CHAIN 0x80
+@@ -526,20 +526,20 @@ struct io_accel2_cmd {
+ 					     /*     0=off, 1=on */
+ 	u8  reply_queue;		/* Reply Queue ID */
+ 	u8  reserved1;			/* Reserved */
+-	u32 scsi_nexus;			/* Device Handle */
+-	u32 Tag;			/* cciss tag, lower 4 bytes only */
+-	u32 tweak_lower;		/* Encryption tweak, lower 4 bytes */
++	__le32 scsi_nexus;		/* Device Handle */
++	__le32 Tag;			/* cciss tag, lower 4 bytes only */
++	__le32 tweak_lower;		/* Encryption tweak, lower 4 bytes */
+ 	u8  cdb[16];			/* SCSI Command Descriptor Block */
+ 	u8  cciss_lun[8];		/* 8 byte SCSI address */
+-	u32 data_len;			/* Total bytes to transfer */
++	__le32 data_len;		/* Total bytes to transfer */
+ 	u8  cmd_priority_task_attr;	/* priority and task attrs */
+ #define IOACCEL2_PRIORITY_MASK 0x78
+ #define IOACCEL2_ATTR_MASK 0x07
+ 	u8  sg_count;			/* Number of sg elements */
+-	u16 dekindex;			/* Data encryption key index */
+-	u64 err_ptr;			/* Error Pointer */
+-	u32 err_len;			/* Error Length*/
+-	u32 tweak_upper;		/* Encryption tweak, upper 4 bytes */
++	__le16 dekindex;		/* Data encryption key index */
++	__le64 err_ptr;			/* Error Pointer */
++	__le32 err_len;			/* Error Length*/
++	__le32 tweak_upper;		/* Encryption tweak, upper 4 bytes */
+ 	struct ioaccel2_sg_element sg[IOACCEL2_MAXSGENTRIES];
+ 	struct io_accel2_scsi_response error_data;
+ } __aligned(IOACCEL2_COMMANDLIST_ALIGNMENT);
+@@ -563,18 +563,18 @@ struct hpsa_tmf_struct {
+ 	u8 reserved1;		/* byte 3 Reserved */
+ 	u32 it_nexus;		/* SCSI I-T Nexus */
+ 	u8 lun_id[8];		/* LUN ID for TMF request */
+-	u64 tag;		/* cciss tag associated w/ request */
+-	u64 abort_tag;		/* cciss tag of SCSI cmd or task to abort */
+-	u64 error_ptr;		/* Error Pointer */
+-	u32 error_len;		/* Error Length */
++	__le64 tag;		/* cciss tag associated w/ request */
++	__le64 abort_tag;	/* cciss tag of SCSI cmd or TMF to abort */
++	__le64 error_ptr;		/* Error Pointer */
++	__le32 error_len;		/* Error Length */
+ };
+ 
+ /* Configuration Table Structure */
+ struct HostWrite {
+-	u32 TransportRequest;
+-	u32 command_pool_addr_hi;
+-	u32 CoalIntDelay;
+-	u32 CoalIntCount;
++	__le32		TransportRequest;
++	__le32		command_pool_addr_hi;
++	__le32		CoalIntDelay;
++	__le32		CoalIntCount;
+ };
+ 
+ #define SIMPLE_MODE     0x02
+@@ -585,54 +585,54 @@ struct HostWrite {
+ #define DRIVER_SUPPORT_UA_ENABLE        0x00000001
+ 
+ struct CfgTable {
+-	u8            Signature[4];
+-	u32		SpecValence;
+-	u32           TransportSupport;
+-	u32           TransportActive;
+-	struct 		HostWrite HostWrite;
+-	u32           CmdsOutMax;
+-	u32           BusTypes;
+-	u32           TransMethodOffset;
+-	u8            ServerName[16];
+-	u32           HeartBeat;
+-	u32           driver_support;
+-#define			ENABLE_SCSI_PREFETCH 0x100
+-#define			ENABLE_UNIT_ATTN 0x01
+-	u32	 	MaxScatterGatherElements;
+-	u32		MaxLogicalUnits;
+-	u32		MaxPhysicalDevices;
+-	u32		MaxPhysicalDrivesPerLogicalUnit;
+-	u32		MaxPerformantModeCommands;
+-	u32		MaxBlockFetch;
+-	u32		PowerConservationSupport;
+-	u32		PowerConservationEnable;
+-	u32		TMFSupportFlags;
++	u8		Signature[4];
++	__le32		SpecValence;
++	__le32		TransportSupport;
++	__le32		TransportActive;
++	struct HostWrite HostWrite;
++	__le32		CmdsOutMax;
++	__le32		BusTypes;
++	__le32		TransMethodOffset;
++	u8		ServerName[16];
++	__le32		HeartBeat;
++	__le32		driver_support;
++#define			ENABLE_SCSI_PREFETCH		0x100
++#define			ENABLE_UNIT_ATTN		0x01
++	__le32		MaxScatterGatherElements;
++	__le32		MaxLogicalUnits;
++	__le32		MaxPhysicalDevices;
++	__le32		MaxPhysicalDrivesPerLogicalUnit;
++	__le32		MaxPerformantModeCommands;
++	__le32		MaxBlockFetch;
++	__le32		PowerConservationSupport;
++	__le32		PowerConservationEnable;
++	__le32		TMFSupportFlags;
+ 	u8		TMFTagMask[8];
+ 	u8		reserved[0x78 - 0x70];
+-	u32		misc_fw_support; /* offset 0x78 */
+-#define			MISC_FW_DOORBELL_RESET (0x02)
+-#define			MISC_FW_DOORBELL_RESET2 (0x010)
+-#define			MISC_FW_RAID_OFFLOAD_BASIC (0x020)
+-#define			MISC_FW_EVENT_NOTIFY (0x080)
++	__le32		misc_fw_support;		/* offset 0x78 */
++#define			MISC_FW_DOORBELL_RESET		0x02
++#define			MISC_FW_DOORBELL_RESET2		0x010
++#define			MISC_FW_RAID_OFFLOAD_BASIC	0x020
++#define			MISC_FW_EVENT_NOTIFY		0x080
+ 	u8		driver_version[32];
+-	u32             max_cached_write_size;
+-	u8              driver_scratchpad[16];
+-	u32             max_error_info_length;
+-	u32		io_accel_max_embedded_sg_count;
+-	u32		io_accel_request_size_offset;
+-	u32		event_notify;
+-#define HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_STATE_CHANGE (1 << 30)
+-#define HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_CONFIG_CHANGE (1 << 31)
+-	u32		clear_event_notify;
++	__le32		max_cached_write_size;
++	u8		driver_scratchpad[16];
++	__le32		max_error_info_length;
++	__le32		io_accel_max_embedded_sg_count;
++	__le32		io_accel_request_size_offset;
++	__le32		event_notify;
++#define		HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_STATE_CHANGE (1 << 30)
++#define		HPSA_EVENT_NOTIFY_ACCEL_IO_PATH_CONFIG_CHANGE (1 << 31)
++	__le32		clear_event_notify;
+ };
+ 
+ #define NUM_BLOCKFETCH_ENTRIES 8
+ struct TransTable_struct {
+-	u32            BlockFetch[NUM_BLOCKFETCH_ENTRIES];
+-	u32            RepQSize;
+-	u32            RepQCount;
+-	u32            RepQCtrAddrLow32;
+-	u32            RepQCtrAddrHigh32;
++	__le32		BlockFetch[NUM_BLOCKFETCH_ENTRIES];
++	__le32		RepQSize;
++	__le32		RepQCount;
++	__le32		RepQCtrAddrLow32;
++	__le32		RepQCtrAddrHigh32;
+ #define MAX_REPLY_QUEUES 64
+ 	struct vals32  RepQAddr[MAX_REPLY_QUEUES];
+ };
 
