@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 40/48] hpsa: print CDBs instead of kernel virtual
- addresses for uncommon errors
-Date: Fri, 23 Jan 2015 16:44:35 -0600
-Message-ID: <20150123224435.14919.58312.stgit@brunhilda>
+Subject: [PATCH v2 41/48] hpsa: do not use function pointers in fast path
+ command submission
+Date: Fri, 23 Jan 2015 16:44:40 -0600
+Message-ID: <20150123224440.14919.5776.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:31028 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbbAWWp3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:29 -0500
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:40458 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbbAWWpe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:34 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,78 +20,58 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen Cameron <stephenmcameron@gmail.com>
 
-Printing the address of the command pointer is of little value, change
-to print the CDB.
+Performance tweak, avoid unnecessary function calls.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   29 ++++++++++++++++-------------
- 1 file changed, 16 insertions(+), 13 deletions(-)
+ drivers/scsi/hpsa.c |    8 +++++---
+ drivers/scsi/hpsa.h |    5 +----
+ 2 files changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8f2569c..18bcba9 100644
+index 18bcba9..a23277d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1882,9 +1882,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 	case CMD_DATA_UNDERRUN: /* let mid layer handle it. */
+@@ -821,19 +821,21 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
+ static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
++	dial_down_lockup_detection_during_fw_flash(h, c);
++	atomic_inc(&h->commands_outstanding);
+ 	switch (c->cmd_type) {
+ 	case CMD_IOACCEL1:
+ 		set_ioaccel1_performant_mode(h, c);
++		writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
  		break;
- 	case CMD_DATA_OVERRUN:
--		dev_warn(&h->pdev->dev, "cp %p has"
--			" completed with data overrun "
--			"reported\n", cp);
-+		dev_warn(&h->pdev->dev,
-+			"CDB %16phN data overrun\n", cp->Request.CDB);
+ 	case CMD_IOACCEL2:
+ 		set_ioaccel2_performant_mode(h, c);
++		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
  		break;
- 	case CMD_INVALID: {
- 		/* print_bytes(cp, sizeof(*cp), 1, 0);
-@@ -1900,34 +1899,38 @@ static void complete_scsi_command(struct CommandList *cp)
- 		break;
- 	case CMD_PROTOCOL_ERR:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p has "
--			"protocol error\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : protocol error\n",
-+				cp->Request.CDB);
- 		break;
- 	case CMD_HARDWARE_ERR:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p had  hardware error\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : hardware error\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_CONNECTION_LOST:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p had connection lost\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : connection lost\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_ABORTED:
- 		cmd->result = DID_ABORT << 16;
--		dev_warn(&h->pdev->dev, "cp %p was aborted with status 0x%x\n",
--				cp, ei->ScsiStatus);
-+		dev_warn(&h->pdev->dev, "CDB %16phN was aborted with status 0x%x\n",
-+				cp->Request.CDB, ei->ScsiStatus);
- 		break;
- 	case CMD_ABORT_FAILED:
- 		cmd->result = DID_ERROR << 16;
--		dev_warn(&h->pdev->dev, "cp %p reports abort failed\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : abort failed\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_UNSOLICITED_ABORT:
- 		cmd->result = DID_SOFT_ERROR << 16; /* retry the command */
--		dev_warn(&h->pdev->dev, "cp %p aborted due to an unsolicited "
--			"abort\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN : unsolicited abort\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_TIMEOUT:
- 		cmd->result = DID_TIME_OUT << 16;
--		dev_warn(&h->pdev->dev, "cp %p timedout\n", cp);
-+		dev_warn(&h->pdev->dev, "CDB %16phN timed out\n",
-+			cp->Request.CDB);
- 		break;
- 	case CMD_UNABORTABLE:
- 		cmd->result = DID_ERROR << 16;
+ 	default:
+ 		set_performant_mode(h, c);
++		h->access.submit_command(h, c);
+ 	}
+-	dial_down_lockup_detection_during_fw_flash(h, c);
+-	atomic_inc(&h->commands_outstanding);
+-	h->access.submit_command(h, c);
+ }
+ 
+ static inline int is_hba_lunid(unsigned char scsi3addr[])
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 239ecea..62c50c3 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -367,10 +367,7 @@ static void SA5_submit_command_no_read(struct ctlr_info *h,
+ static void SA5_submit_command_ioaccel2(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
+-	if (c->cmd_type == CMD_IOACCEL2)
+-		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
+-	else
+-		writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
++	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+ }
+ 
+ /*
 
