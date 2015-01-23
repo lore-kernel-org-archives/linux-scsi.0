@@ -1,17 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 10/48] hpsa: remove 0x from queue depth print which is in
- decimal
-Date: Fri, 23 Jan 2015 16:41:56 -0600
-Message-ID: <20150123224156.14919.23268.stgit@brunhilda>
+Subject: [PATCH v2 12/48] hpsa: propagate return value from board ID lookup
+Date: Fri, 23 Jan 2015 16:42:06 -0600
+Message-ID: <20150123224206.14919.89173.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:34387 "EHLO
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:34474 "EHLO
 	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514AbbAWWmu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:42:50 -0500
+	with ESMTP id S1751505AbbAWWnA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:43:00 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,27 +19,55 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-The queue depth printed at startup is in decimal, so
-shouldn't have a 0x prefix.
+If the board ID lookup function fails, return the return
+code rather than return -ENODEV.
+
+The only board ID failure reason right now is -ENODEV,
+so this just provides more informative prints in kdump
+and adapts to future changes.
+
+Tested with error injection while booting with
+	reset_devices
+on the kernel command line:
+[   62.804324]  injecting error in inj_hpsa_lookup_board_id: 1 11
+[   62.804423] hpsa 0000:04:00.0: Board ID not found
+
+(the pci probe layer does not print an additional
+message if -ENODEV is the reason)
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 97bb718..fbeef5b 100644
+index 92ac76a..85b3d73 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5931,7 +5931,7 @@ static void print_cfg_table(struct device *dev, struct CfgTable __iomem *tb)
- 	       readl(&(tb->HostWrite.CoalIntDelay)));
- 	dev_info(dev, "   Coalesce Interrupt Count = 0x%x\n",
- 	       readl(&(tb->HostWrite.CoalIntCount)));
--	dev_info(dev, "   Max outstanding commands = 0x%d\n",
-+	dev_info(dev, "   Max outstanding commands = %d\n",
- 	       readl(&(tb->CmdsOutMax)));
- 	dev_info(dev, "   Bus Types = 0x%x\n", readl(&(tb->BusTypes)));
- 	for (i = 0; i < 16; i++)
+@@ -5812,8 +5812,12 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	 */
+ 
+ 	rc = hpsa_lookup_board_id(pdev, &board_id);
+-	if (rc < 0 || !ctlr_is_resettable(board_id)) {
+-		dev_warn(&pdev->dev, "Not resetting device.\n");
++	if (rc < 0) {
++		dev_warn(&pdev->dev, "Board ID not found\n");
++		return rc;
++	}
++	if (!ctlr_is_resettable(board_id)) {
++		dev_warn(&pdev->dev, "Controller not resettable\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6295,7 +6299,7 @@ static int hpsa_pci_init(struct ctlr_info *h)
+ 
+ 	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id);
+ 	if (prod_index < 0)
+-		return -ENODEV;
++		return prod_index;
+ 	h->product_name = products[prod_index].product_name;
+ 	h->access = *(products[prod_index].access);
+ 
 
