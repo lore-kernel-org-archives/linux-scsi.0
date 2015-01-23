@@ -1,16 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 36/48] hpsa: guard against overflowing raid map array
-Date: Fri, 23 Jan 2015 16:44:14 -0600
-Message-ID: <20150123224414.14919.59442.stgit@brunhilda>
+Subject: [PATCH v2 37/48] hpsa: check for ctlr lockup after command
+ allocation in main io path
+Date: Fri, 23 Jan 2015 16:44:19 -0600
+Message-ID: <20150123224419.14919.79108.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:35533 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbbAWWpI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:08 -0500
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:30952 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbbAWWpN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:13 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,29 +20,35 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Stephen Cameron <stephenmcameron@gmail.com>
 
-In the code that translates logical drive LBAs to physical
-drive LBAs if we overflow the raid map disk data array we
-will get the wrong answers.  We do not expect that to happen,
-but best to be on the safe side and guard against it anyway.
+Command allocation is the thing that takes the longest in the main i/o
+path, so check for controller lockup immediately after this to prevent
+submitting commands to locked up controller as much as possible.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/hpsa.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index afd192d..03fae8a 100644
+index 03fae8a..834ac78 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3921,6 +3921,9 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 		return IO_ACCEL_INELIGIBLE;
+@@ -4097,8 +4097,15 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  	}
++	if (unlikely(lockup_detected(h))) {
++		cmd->result = DID_ERROR << 16;
++		cmd_free(h, c);
++		cmd->scsi_done(cmd);
++		return 0;
++	}
  
-+	if (unlikely(map_index >= RAID_MAP_MAX_ENTRIES))
-+		return IO_ACCEL_INELIGIBLE;
-+
- 	c->phys_disk = dev->phys_disk[map_index];
- 
- 	disk_handle = dd[map_index].ioaccel_handle;
+-	/* Call alternate submit routine for I/O accelerated commands.
++	/*
++	 * Call alternate submit routine for I/O accelerated commands.
+ 	 * Retries always go down the normal I/O path.
+ 	 */
+ 	if (likely(cmd->retries == 0 &&
 
