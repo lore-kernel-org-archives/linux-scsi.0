@@ -1,41 +1,168 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 47/48] hpsa: add in P840ar controller model name
-Date: Fri, 23 Jan 2015 16:45:12 -0600
-Message-ID: <20150123224512.14919.60430.stgit@brunhilda>
+Subject: [PATCH v2 45/48] hpsa: detect and report failures changing
+ controller transport modes
+Date: Fri, 23 Jan 2015 16:45:01 -0600
+Message-ID: <20150123224501.14919.86538.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:31209 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbbAWWqG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:46:06 -0500
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:49128 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752621AbbAWWp4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:56 -0500
+Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 190533BFC
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2015 22:45:56 +0000 (UTC)
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-Add in P840ar model name for gen9
+From: Robert Elliott <elliott@hp.com>
+
+Detect failues when attempting to change controller to use simple
+or performant transport modes (mode change ack) rather than just
+proceeding ahead after timeouts.
+
+Return values are added to:
+	hpsa_put_ctlr_into_performant_mode
+	hpsa_wait_for_mode_change_ack
+and all their callers check/propagate the result.
+
+More consistency in printing errors and whether
+dev_err is used.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |   40 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 6568da5..15ef65c 100644
+index 89744a1..c1f4a95 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -172,7 +172,7 @@ static struct board_type products[] = {
- 	{0x21BE103C, "Smart Array P741m", &SA5_access},
- 	{0x21BF103C, "Smart HBA H240ar", &SA5_access},
- 	{0x21C0103C, "Smart Array P440ar", &SA5_access},
--	{0x21C1103C, "Smart Array", &SA5_access},
-+	{0x21C1103C, "Smart Array P840ar", &SA5_access},
- 	{0x21C2103C, "Smart Array P440", &SA5_access},
- 	{0x21C3103C, "Smart Array P441", &SA5_access},
- 	{0x21C4103C, "Smart Array", &SA5_access},
+@@ -243,7 +243,7 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
+ static int hpsa_wait_for_board_state(struct pci_dev *pdev, void __iomem *vaddr,
+ 				     int wait_for_ready);
+ static inline void finish_cmd(struct CommandList *c);
+-static void hpsa_wait_for_mode_change_ack(struct ctlr_info *h);
++static int hpsa_wait_for_mode_change_ack(struct ctlr_info *h);
+ #define BOARD_NOT_READY 0
+ #define BOARD_READY 1
+ static void hpsa_drain_accel_commands(struct ctlr_info *h);
+@@ -6191,7 +6191,7 @@ static inline void hpsa_p600_dma_prefetch_quirk(struct ctlr_info *h)
+ 	writel(dma_prefetch, h->vaddr + I2O_DMA1_CFG);
+ }
+ 
+-static void hpsa_wait_for_clear_event_notify_ack(struct ctlr_info *h)
++static int hpsa_wait_for_clear_event_notify_ack(struct ctlr_info *h)
+ {
+ 	int i;
+ 	u32 doorbell_value;
+@@ -6202,13 +6202,16 @@ static void hpsa_wait_for_clear_event_notify_ack(struct ctlr_info *h)
+ 		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		if (!(doorbell_value & DOORBELL_CLEAR_EVENTS))
+-			break;
++			goto done;
+ 		/* delay and try again */
+ 		msleep(CLEAR_EVENT_WAIT_INTERVAL);
+ 	}
++	return -ENODEV;
++done:
++	return 0;
+ }
+ 
+-static void hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
++static int hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+ {
+ 	int i;
+ 	u32 doorbell_value;
+@@ -6223,12 +6226,16 @@ static void hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+ 		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		if (!(doorbell_value & CFGTBL_ChangeReq))
+-			break;
++			goto done;
+ 		/* delay and try again */
+ 		msleep(MODE_CHANGE_WAIT_INTERVAL);
+ 	}
++	return -ENODEV;
++done:
++	return 0;
+ }
+ 
++/* return -ENODEV or other reason on error, 0 on success */
+ static int hpsa_enter_simple_mode(struct ctlr_info *h)
+ {
+ 	u32 trans_support;
+@@ -6243,7 +6250,8 @@ static int hpsa_enter_simple_mode(struct ctlr_info *h)
+ 	writel(CFGTBL_Trans_Simple, &(h->cfgtable->HostWrite.TransportRequest));
+ 	writel(0, &h->cfgtable->HostWrite.command_pool_addr_hi);
+ 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
+-	hpsa_wait_for_mode_change_ack(h);
++	if (hpsa_wait_for_mode_change_ack(h))
++		goto error;
+ 	print_cfg_table(&h->pdev->dev, h->cfgtable);
+ 	if (!(readl(&(h->cfgtable->TransportActive)) & CFGTBL_Trans_Simple))
+ 		goto error;
+@@ -7144,7 +7152,8 @@ static void  calc_bucket_map(int bucket[], int num_buckets,
+ 	}
+ }
+ 
+-static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
++/* return -ENODEV or other reason on error, 0 on success */
++static int hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ {
+ 	int i;
+ 	unsigned long register_value;
+@@ -7236,12 +7245,16 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 		}
+ 	}
+ 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
+-	hpsa_wait_for_mode_change_ack(h);
++	if (hpsa_wait_for_mode_change_ack(h)) {
++		dev_err(&h->pdev->dev,
++			"performant mode problem - doorbell timeout\n");
++		return -ENODEV;
++	}
+ 	register_value = readl(&(h->cfgtable->TransportActive));
+ 	if (!(register_value & CFGTBL_Trans_Performant)) {
+ 		dev_err(&h->pdev->dev,
+ 			"performant mode problem - transport not active\n");
+-		return;
++		return -ENODEV;
+ 	}
+ 	/* Change the access methods to the performant access methods */
+ 	h->access = access;
+@@ -7249,7 +7262,7 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 
+ 	if (!((trans_support & CFGTBL_Trans_io_accel1) ||
+ 		(trans_support & CFGTBL_Trans_io_accel2)))
+-		return;
++		return 0;
+ 
+ 	if (trans_support & CFGTBL_Trans_io_accel1) {
+ 		/* Set up I/O accelerator mode */
+@@ -7313,7 +7326,12 @@ static void hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 			writel(bft2[i], &h->ioaccel2_bft2_regs[i]);
+ 	}
+ 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
+-	hpsa_wait_for_mode_change_ack(h);
++	if (hpsa_wait_for_mode_change_ack(h)) {
++		dev_err(&h->pdev->dev,
++			"performant mode problem - enabling ioaccel mode\n");
++		return -ENODEV;
++	}
++	return 0;
+ }
+ 
+ static int hpsa_alloc_ioaccel_cmd_and_bft(struct ctlr_info *h)
 
