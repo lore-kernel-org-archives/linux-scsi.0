@@ -1,16 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 12/48] hpsa: propagate return value from board ID lookup
-Date: Fri, 23 Jan 2015 16:42:06 -0600
-Message-ID: <20150123224206.14919.89173.stgit@brunhilda>
+Subject: [PATCH v2 11/48] hpsa: propagate hard_reset failures in
+ reset_devices mode
+Date: Fri, 23 Jan 2015 16:42:01 -0600
+Message-ID: <20150123224201.14919.72729.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:34474 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbbAWWnA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:43:00 -0500
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:38687 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbbAWWmz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:42:55 -0500
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,55 +20,31 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-If the board ID lookup function fails, return the return
-code rather than return -ENODEV.
-
-The only board ID failure reason right now is -ENODEV,
-so this just provides more informative prints in kdump
-and adapts to future changes.
-
-Tested with error injection while booting with
-	reset_devices
-on the kernel command line:
-[   62.804324]  injecting error in inj_hpsa_lookup_board_id: 1 11
-[   62.804423] hpsa 0000:04:00.0: Board ID not found
-
-(the pci probe layer does not print an additional
-message if -ENODEV is the reason)
+Return the real reason for kdump_hard_reset failure rather
+than change them all to -ENODEV.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 92ac76a..85b3d73 100644
+index fbeef5b..92ac76a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5812,8 +5812,12 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+@@ -6416,11 +6416,8 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
+ 	 * "performant mode".  Or, it might be 640x, which can't reset
+ 	 * due to concerns about shared bbwc between 6402/6404 pair.
  	 */
+-	if (rc) {
+-		if (rc != -ENOTSUPP) /* just try to do the kdump anyhow. */
+-			rc = -ENODEV;
++	if (rc)
+ 		goto out_disable;
+-	}
  
- 	rc = hpsa_lookup_board_id(pdev, &board_id);
--	if (rc < 0 || !ctlr_is_resettable(board_id)) {
--		dev_warn(&pdev->dev, "Not resetting device.\n");
-+	if (rc < 0) {
-+		dev_warn(&pdev->dev, "Board ID not found\n");
-+		return rc;
-+	}
-+	if (!ctlr_is_resettable(board_id)) {
-+		dev_warn(&pdev->dev, "Controller not resettable\n");
- 		return -ENODEV;
- 	}
- 
-@@ -6295,7 +6299,7 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 
- 	prod_index = hpsa_lookup_board_id(h->pdev, &h->board_id);
- 	if (prod_index < 0)
--		return -ENODEV;
-+		return prod_index;
- 	h->product_name = products[prod_index].product_name;
- 	h->access = *(products[prod_index].access);
- 
+ 	/* Now try to get the controller to respond to a no-op */
+ 	dev_warn(&pdev->dev, "Waiting for controller to respond to no-op\n");
 
