@@ -1,88 +1,113 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: module: fix module_refcount() return when running in a module exit routine
-Date: Fri, 23 Jan 2015 13:24:15 +1030
-Message-ID: <87iofyurzc.fsf@rustcorp.com.au>
-References: <1421600146.2080.8.camel@HansenPartnership.com> <54BC93C3.7010808@hitachi.com> <878ugzco8c.fsf@rustcorp.com.au> <1421683701.2080.25.camel@HansenPartnership.com> <871tmqcmau.fsf@rustcorp.com.au> <1421774615.2080.88.camel@HansenPartnership.com> <20150122165018.GA27377@infradead.org> <1421946175.2093.1.camel@HansenPartnership.com>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH v7 5/5] scsi: ufs-qcom-ice: add Inline Crypto Engine
+ (ICE) support for UFS
+Date: Fri, 23 Jan 2015 09:48:06 +0100
+Message-ID: <1422002886.30730.8.camel@x220>
+References: <1421332359-31785-1-git-send-email-ygardi@codeaurora.org>
+	 <1421332359-31785-6-git-send-email-ygardi@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:35159 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753754AbbAWDKW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2015 22:10:22 -0500
-In-Reply-To: <1421946175.2093.1.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1421332359-31785-6-git-send-email-ygardi@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Valentin Rothberg <valentinrothberg@gmail.com>, Dov Levenglick <dovl@codeaurora.org>, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Yaniv Gardi <ygardi@qti.qualcomm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> On Thu, 2015-01-22 at 08:50 -0800, Christoph Hellwig wrote:
->> We'll also still need to change scsi_device_put to deal with
->> a negative refcount..
->
-> I don't believe so ... we never call module_refcount() now, and the
-> actual module ref count never goes negative.  That's the point of
-> Rusty's change.  In the unload routines, the actual module refcount is
-> zero.  __module_get() will increment this and the final module_put()
-> will decrement it without triggering a warning.
->
-> In the old code, we expected try_module_get() to fail but then used
-> module_refcount() to detect the failure and not do a put.
+Yaniv,
 
-Yep, I've put that patch in my fixes queue now.
+On Thu, 2015-01-15 at 16:32 +0200, Yaniv Gardi wrote:
+> From: Yaniv Gardi <ygardi@qti.qualcomm.com>
+> 
+> In-order to enhance storage encryption performance,
+> an Inline Cryptographic Engine is introduced to UFS.
+> This patch adds in-line encryption capabilities to the UFS
+> driver.
+> 
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 
-Thanks,
-Rusty.
+This patch became commit 8805ccd069b7 ("ufs-qcom-ice: add Inline Crypto
+Engine (ICE) support for UFS") in today's linux-next (ie,
+next-20150123). I noticed because a script I use to check linux-next
+spotted a problem with it.
 
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: scsi: always increment reference count
+> ---
+>  drivers/scsi/ufs/Kconfig        |  12 +
+>  drivers/scsi/ufs/Makefile       |   1 +
+>  drivers/scsi/ufs/ufs-qcom-ice.c | 520 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-qcom-ice.h | 113 +++++++++
+>  drivers/scsi/ufs/ufs-qcom.c     |  56 ++++-
+>  drivers/scsi/ufs/ufs-qcom.h     |  25 ++
+>  6 files changed, 726 insertions(+), 1 deletion(-)
+>  create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
+>  create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.h
+> 
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 8a1f4b3..ecf34ed 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -83,3 +83,15 @@ config SCSI_UFS_QCOM
+>  
+>  	  Select this if you have UFS controller on QCOM chipset.
+>  	  If unsure, say N.
+> +
+> +config SCSI_UFS_QCOM_ICE
+> +	bool "QCOM specific hooks to Inline Crypto Engine for UFS driver"
+> +	depends on SCSI_UFS_QCOM && CRYPTO_DEV_QCOM_ICE
 
-James reported:
-> After e513cc1 module: Remove stop_machine from module unloading,
-> module_refcount() is returning (unsigned long)-1 when called from within
-> a routine that runs in module_exit.  This is confusing the scsi device
-> put code which is coded to detect a module_refcount() of zero for
-> running within a module exit routine and not try to do another
-> module_put.  The fix is to restore the original behaviour of
-> module_refcount() and return zero if we're running inside an exit
-> routine.
+There's currently no Kconfig symbol CRYPTO_DEV_QCOM_ICE in linux-next.
+So SCSI_UFS_QCOM_ICE can not be set and these "in-line encryption
+capabilities" can not be enabled.
 
-The correct fix is to turn try_module_get() into __module_get(), and
-always do the module_put().
+> +	help
+> +	  This selects the QCOM specific additions to support Inline Crypto
+> +	  Engine (ICE).
+> +	  ICE accelerates the crypto operations and maintains the high UFS
+> +	  performance.
+> +
+> +	  Select this if you have ICE supported for UFS on QCOM chipset.
+> +	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 8303bcc..31adca5 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -1,5 +1,6 @@
+>  # UFSHCD makefile
+>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+> +obj-$(CONFIG_SCSI_UFS_QCOM_ICE) += ufs-qcom-ice.o
+>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+> diff --git a/drivers/scsi/ufs/ufs-qcom-ice.c b/drivers/scsi/ufs/ufs-qcom-ice.c
+> new file mode 100644
+> index 0000000..9202b73
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-qcom-ice.c
+> @@ -0,0 +1,520 @@
+> +/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 and
+> + * only version 2 as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + */
+> +
+> +#include <linux/of.h>
+> +#include <linux/async.h>
+> +#include <linux/blkdev.h>
+> +#include <crypto/ice.h>
 
-Acked-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
+This header is not included in linux-next so manually building
+ufs-qcom-ice.o isn't possible either.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index e02885451425..9b3829931f40 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -986,9 +986,9 @@ int scsi_device_get(struct scsi_device *sdev)
- 		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
- 		return -ENXIO;
--	/* We can fail this if we're doing SCSI operations
-+	/* We can fail try_module_get if we're doing SCSI operations
- 	 * from module exit (like cache flush) */
--	try_module_get(sdev->host->hostt->module);
-+	__module_get(sdev->host->hostt->module);
- 
- 	return 0;
- }
-@@ -1004,14 +1004,7 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--#ifdef CONFIG_MODULE_UNLOAD
--	struct module *module = sdev->host->hostt->module;
--
--	/* The module refcount will be zero if scsi_device_get()
--	 * was called from a module removal routine */
--	if (module && module_refcount(module) != 0)
--		module_put(module);
--#endif
-+	module_put(sdev->host->hostt->module);
- 	put_device(&sdev->sdev_gendev);
- }
- EXPORT_SYMBOL(scsi_device_put);
+I assume a series to add CRYPTO_DEV_QCOM_ICE and crypto/ice.h (and
+whatever else is needed to build this) is queued somewhere. Is that
+correct?
+
+
+Paul Bolle
