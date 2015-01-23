@@ -1,112 +1,96 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 43/48] hpsa: refactor duplicated scan completion code
- into a new routine
-Date: Fri, 23 Jan 2015 16:44:50 -0600
-Message-ID: <20150123224450.14919.31550.stgit@brunhilda>
+Subject: [PATCH v2 44/48] hpsa: shorten the wait for the CISS doorbell mode
+ change ack
+Date: Fri, 23 Jan 2015 16:44:56 -0600
+Message-ID: <20150123224456.14919.54962.stgit@brunhilda>
 References: <20150123224020.14919.29458.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:49121 "EHLO
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:49127 "EHLO
 	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbbAWWpp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:45 -0500
-Received: from g5t1625.atlanta.hp.com (g5t1625.atlanta.hp.com [15.192.137.8])
+	with ESMTP id S1751901AbbAWWpx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jan 2015 17:45:53 -0500
+Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 341713B4F
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2015 22:45:45 +0000 (UTC)
+	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id C5AEB3BFC
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2015 22:45:52 +0000 (UTC)
 In-Reply-To: <20150123224020.14919.29458.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Webb Scales <webbnh@hp.com>
+From: Robert Elliott <elliott@hp.com>
 
-Hoist the conditional out of do_not_scan_if_controller_locked_up() and
-place it in the caller (this improves the code structure, making it
-more consistent with other uses and enabling tail-call optimization);
-rename the function to hpsa_scan_complete(), and use it at the end of
-hpsa_scan_start() as well.
+Shorten the wait for the CISS configuration table doorbell mode
+change acknowledgment from 300-600 s to 20 s, which is the value
+specified in the CISS specification that should be honored by
+all controllers.
+
+Wait using interruptible msleep() rather than uninterruptible
+usleep_range(), which triggers rt_sched timeout errors if the
+wait is long.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Signed-off-by: Webb Scales <webbnh@hp.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   40 ++++++++++++++++------------------------
- 1 file changed, 16 insertions(+), 24 deletions(-)
+ drivers/scsi/hpsa.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 7915dc4..a92653a 100644
+index a92653a..89744a1 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4149,25 +4149,14 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	return hpsa_ciss_submit(h, c, cmd, scsi3addr);
- }
+@@ -60,8 +60,11 @@
+ #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
+ #define HPSA "hpsa"
  
--static int do_not_scan_if_controller_locked_up(struct ctlr_info *h)
-+static void hpsa_scan_complete(struct ctlr_info *h)
- {
+-/* How long to wait (in milliseconds) for board to go into simple mode */
+-#define MAX_CONFIG_WAIT 30000
++/* How long to wait for CISS doorbell communication */
++#define CLEAR_EVENT_WAIT_INTERVAL 20	/* ms for each msleep() call */
++#define MODE_CHANGE_WAIT_INTERVAL 10	/* ms for each msleep() call */
++#define MAX_CLEAR_EVENT_WAIT 30000	/* times 20 ms = 600 s */
++#define MAX_MODE_CHANGE_WAIT 2000	/* times 10 ms = 20 s */
+ #define MAX_IOCTL_CONFIG_WAIT 1000
+ 
+ /*define how many times we will try a command because of bus resets */
+@@ -6194,14 +6197,14 @@ static void hpsa_wait_for_clear_event_notify_ack(struct ctlr_info *h)
+ 	u32 doorbell_value;
  	unsigned long flags;
- 
--	/*
--	 * Don't let rescans be initiated on a controller known
--	 * to be locked up.  If the controller locks up *during*
--	 * a rescan, that thread is probably hosed, but at least
--	 * we can prevent new rescan threads from piling up on a
--	 * locked up controller.
--	 */
--	if (unlikely(lockup_detected(h))) {
--		spin_lock_irqsave(&h->scan_lock, flags);
--		h->scan_finished = 1;
--		wake_up_all(&h->scan_wait_queue);
--		spin_unlock_irqrestore(&h->scan_lock, flags);
--		return 1;
--	}
--	return 0;
-+	spin_lock_irqsave(&h->scan_lock, flags);
-+	h->scan_finished = 1;
-+	wake_up_all(&h->scan_wait_queue);
-+	spin_unlock_irqrestore(&h->scan_lock, flags);
+ 	/* wait until the clear_event_notify bit 6 is cleared by controller. */
+-	for (i = 0; i < MAX_CONFIG_WAIT; i++) {
++	for (i = 0; i < MAX_CLEAR_EVENT_WAIT; i++) {
+ 		spin_lock_irqsave(&h->lock, flags);
+ 		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		if (!(doorbell_value & DOORBELL_CLEAR_EVENTS))
+ 			break;
+ 		/* delay and try again */
+-		msleep(20);
++		msleep(CLEAR_EVENT_WAIT_INTERVAL);
+ 	}
  }
  
- static void hpsa_scan_start(struct Scsi_Host *sh)
-@@ -4175,8 +4164,14 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
- 	struct ctlr_info *h = shost_to_hba(sh);
- 	unsigned long flags;
- 
--	if (do_not_scan_if_controller_locked_up(h))
--		return;
-+	/*
-+	 * Don't let rescans be initiated on a controller known to be locked
-+	 * up.  If the controller locks up *during* a rescan, that thread is
-+	 * probably hosed, but at least we can prevent new rescan threads from
-+	 * piling up on a locked up controller.
-+	 */
-+	if (unlikely(lockup_detected(h)))
-+		return hpsa_scan_complete(h);
- 
- 	/* wait until any scan already in progress is finished. */
- 	while (1) {
-@@ -4194,15 +4189,12 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
- 	h->scan_finished = 0; /* mark scan as in progress */
- 	spin_unlock_irqrestore(&h->scan_lock, flags);
- 
--	if (do_not_scan_if_controller_locked_up(h))
--		return;
-+	if (unlikely(lockup_detected(h)))
-+		return hpsa_scan_complete(h);
- 
- 	hpsa_update_scsi_devices(h, h->scsi_host->host_no);
- 
--	spin_lock_irqsave(&h->scan_lock, flags);
--	h->scan_finished = 1; /* mark scan as finished. */
--	wake_up_all(&h->scan_wait_queue);
--	spin_unlock_irqrestore(&h->scan_lock, flags);
-+	hpsa_scan_complete(h);
+@@ -6215,14 +6218,14 @@ static void hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+ 	 * (e.g.: hot replace a failed 144GB drive in a RAID 5 set right
+ 	 * as we enter this code.)
+ 	 */
+-	for (i = 0; i < MAX_CONFIG_WAIT; i++) {
++	for (i = 0; i < MAX_MODE_CHANGE_WAIT; i++) {
+ 		spin_lock_irqsave(&h->lock, flags);
+ 		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+ 		if (!(doorbell_value & CFGTBL_ChangeReq))
+ 			break;
+ 		/* delay and try again */
+-		usleep_range(10000, 20000);
++		msleep(MODE_CHANGE_WAIT_INTERVAL);
+ 	}
  }
  
- static int hpsa_change_queue_depth(struct scsi_device *sdev, int qdepth)
 
