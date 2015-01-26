@@ -1,46 +1,49 @@
 From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/5] PCI: Add defines for max read request sizes
-Date: Mon, 26 Jan 2015 18:05:22 +0100
-Message-ID: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
+Subject: [PATCH 4/5] [SCSI] esas2r: use PCI define for max read request size
+Date: Mon, 26 Jan 2015 18:06:24 +0100
+Message-ID: <1422291984-12488-1-git-send-email-zajec5@gmail.com>
+References: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:58211 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100AbbAZRFs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2015 12:05:48 -0500
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:61001 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbbAZRMF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jan 2015 12:12:05 -0500
+In-Reply-To: <1422291922-12324-1-git-send-email-zajec5@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Matt Porter <mporter@kernel.crashing.org>, Alexandre Bounine <alexandre.bounine@idt.com>, Chris Metcalf <cmetcalf@ezchip.com>, Bradley Grove <linuxdrivers@attotech.com>, linux-scsi@vger.kernel.org, Realtek linux nic maintainers <nic_swsd@realtek.com>, netdev@vger.kernel.org, =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-
-There are few drivers using magic numbers when operating with PCIe
-capabilities and PCI_EXP_DEVCTL_READRQ. Define known values to allow
-cleaning their code a bit.
+Cc: Bradley Grove <linuxdrivers@attotech.com>, linux-scsi@vger.kernel.org, =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 
 Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
 ---
- include/uapi/linux/pci_regs.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/esas2r/esas2r_init.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_reg=
-s.h
-index 4a1d0cc..efe3443 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -451,6 +451,10 @@
- #define  PCI_EXP_DEVCTL_AUX_PME	0x0400	/* Auxiliary Power PM Enable */
- #define  PCI_EXP_DEVCTL_NOSNOOP_EN 0x0800  /* Enable No Snoop */
- #define  PCI_EXP_DEVCTL_READRQ	0x7000	/* Max_Read_Request_Size */
-+#define  PCI_EXP_DEVCTL_READRQ_128B  0x0000 /* 128 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
- #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry =
-/ FLR */
- #define PCI_EXP_DEVSTA		10	/* Device Status */
- #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/es=
+as2r_init.c
+index 6776931..c0b37a5 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -813,12 +813,13 @@ static void esas2r_init_pci_cfg_space(struct esas=
+2r_adapter *a)
+ 		pci_read_config_word(a->pcid, pcie_cap_reg + PCI_EXP_DEVCTL,
+ 				     &devcontrol);
+=20
+-		if ((devcontrol & PCI_EXP_DEVCTL_READRQ) > 0x2000) {
++		if (devcontrol & PCI_EXP_DEVCTL_READRQ >
++		    PCI_EXP_DEVCTL_READRQ_512B) {
+ 			esas2r_log(ESAS2R_LOG_INFO,
+ 				   "max read request size > 512B");
+=20
+ 			devcontrol &=3D ~PCI_EXP_DEVCTL_READRQ;
+-			devcontrol |=3D 0x2000;
++			devcontrol |=3D PCI_EXP_DEVCTL_READRQ_512B;
+ 			pci_write_config_word(a->pcid,
+ 					      pcie_cap_reg + PCI_EXP_DEVCTL,
+ 					      devcontrol);
 --=20
 1.8.4.5
 
