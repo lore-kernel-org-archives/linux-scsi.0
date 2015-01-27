@@ -1,36 +1,27 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 0/2 v2] hpsa: workqueue + minor fix
-Date: Tue, 27 Jan 2015 18:17:33 +0100
-Message-ID: <54C7C82D.5090906@redhat.com>
-References: <1422377799-14696-1-git-send-email-thenzl@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39883 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755212AbbA0RRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jan 2015 12:17:38 -0500
-In-Reply-To: <1422377799-14696-1-git-send-email-thenzl@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH] Fix the dma state machine lockup for the ATA_CMD_SMART PIO mode command.
+Date: Tue, 27 Jan 2015 23:26:10 +0530
+Message-ID: <1422381371-11361-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: don.brace@pmcs.com, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, Justin.Lindley@pmcs.com
 
-On 01/27/2015 05:56 PM, Tomas Henzl wrote:
-> I've adapted previously posted changes on top of the latest hpsa series.
-> And once again.
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+---
 
-And because I haven't read the code in the last hpsa series properly
-I haven't realised that the body of this patch is already there.
+Suman Tripathi (1):
+  ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_SMART PIO
+    mode command.
 
-Please ignore this series.
+ drivers/ata/ahci_xgene.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->
-> Tomas
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+1.8.2.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
