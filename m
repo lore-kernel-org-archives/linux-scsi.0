@@ -1,62 +1,63 @@
-From: lizf@kernel.org
-Subject: [PATCH 3.4 100/177] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
-Date: Wed, 28 Jan 2015 12:09:18 +0800
-Message-ID: <1422418236-12852-191-git-send-email-lizf@kernel.org>
-References: <1422418050-12581-1-git-send-email-lizf@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1422418050-12581-1-git-send-email-lizf@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Zefan Li <lizefan@huawei.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH] ahci_xgene: Fix the dma state machine lockup for the
+ ATA_CMD_SMART PIO mode command.
+Date: Wed, 28 Jan 2015 09:54:21 +0530
+Message-ID: <CAOHikRBBG2p7kBn=bwP9rw0RYecvjNqz-zAiHeKT4+TyP8sCoA@mail.gmail.com>
+References: <1422381371-11361-1-git-send-email-stripathi@apm.com>
+ <1422381371-11361-2-git-send-email-stripathi@apm.com>
+ <20150127181950.GE12314@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20150127181950.GE12314@htj.dyndns.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mark Langsdorf <mlangsdo@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Olof Johansson <olof@lixom.net>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jan Kara <jack@suse.cz>
+On Tue, Jan 27, 2015 at 11:26:11PM +0530, Suman Tripathi wrote:
+> This patch addresses the issue with ATA_CMD_SMART pio mode
+> command for enumeration and device detection with ATA devices.It is the
+> same issue as in patch
+>
+> www.spinics.net/lists/linux-ide/msg49092.html
 
-3.4.106-rc1 review patch.  If anyone has any objections, please let me know.
+The link is broken.  Can you please include at least a brief
+explanation of the problem and preferably link to something more
+permanant (commit ID, http://lkml.kernel.org/g/MSG_ID)?
+Ok some problem might be there, But the link is opening. Sure I will
+add the explanation rather than providing a link in the next version
 
-------------------
+
+On Tue, Jan 27, 2015 at 11:49 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Tue, Jan 27, 2015 at 11:26:11PM +0530, Suman Tripathi wrote:
+>> This patch addresses the issue with ATA_CMD_SMART pio mode
+>> command for enumeration and device detection with ATA devices.It is the
+>> same issue as in patch
+>>
+>> www.spinics.net/lists/linux-ide/msg49092.html
+>
+> The link is broken.  Can you please include at least a brief
+> explanation of the problem and preferably link to something more
+> permanant (commit ID, http://lkml.kernel.org/g/MSG_ID)?
+>
+> Thanks.
+>
+> --
+> tejun
 
 
-commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
 
-When sg_scsi_ioctl() fails to prepare request to submit in
-blk_rq_map_kern() we jump to a label where we just end up copying
-(luckily zeroed-out) kernel buffer to userspace instead of reporting
-error. Fix the problem by jumping to the right label.
-
-CC: Jens Axboe <axboe@kernel.dk>
-CC: linux-scsi@vger.kernel.org
-Coverity-id: 1226871
-Signed-off-by: Jan Kara <jack@suse.cz>
-
-Fixed up the, now unused, out label.
-
-Signed-off-by: Jens Axboe <axboe@fb.com>
-Signed-off-by: Zefan Li <lizefan@huawei.com>
----
- block/scsi_ioctl.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 9a87daa..f1c00c9 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -505,7 +505,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
- 
- 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
- 		err = DRIVER_ERROR << 24;
--		goto out;
-+		goto error;
- 	}
- 
- 	memset(sense, 0, sizeof(sense));
-@@ -515,7 +515,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
- 
- 	blk_execute_rq(q, disk, rq, 0);
- 
--out:
- 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
- 	if (err) {
- 		if (rq->sense_len && rq->sense) {
 -- 
-1.9.1
+Thanks,
+with regards,
+Suman Tripathi
