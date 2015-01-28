@@ -1,41 +1,32 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Backport of a fix for HPSA (Disabling a disabled device problem
- during kdump) driver
-Date: Tue, 27 Jan 2015 16:18:37 -0800
-Message-ID: <20150128001837.GE17677@kroah.com>
-References: <CANcb+4va2cYPtfTwd-Mv2X=cG5vTy=pz_wE3S+-d1-5Z9qSFoA@mail.gmail.com>
- <54AC0A17.8020405@redhat.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] csiostor:T5 Firmware fix and cleanup.
+Date: Tue, 27 Jan 2015 17:17:45 -0800 (PST)
+Message-ID: <20150127.171745.2186381509685560794.davem@davemloft.net>
+References: <1422368197-22086-1-git-send-email-praveenm@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54AC0A17.8020405@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: Masoud Sharbiani <msharbiani@twopensource.com>, stable@vger.kernel.org, Don Brace <Don.Brace@pmcs.com>, JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:54220 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856AbbA1BRq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jan 2015 20:17:46 -0500
+In-Reply-To: <1422368197-22086-1-git-send-email-praveenm@chelsio.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: praveenm@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com, varun@chelsio.com
 
-On Tue, Jan 06, 2015 at 05:15:19PM +0100, Tomas Henzl wrote:
-> On 01/05/2015 07:41 PM, Masoud Sharbiani wrote:
-> > Dear stable maintainers,
-> > Can you please backport commitid 132aa220b45d60e9b20def1e9d8be9422eed9616
-> >  (hpsa: refine the pci enable/disable handling) to 3.10 stable (and
-> > earlier, if applicable)?
+From: Praveen Madhavan <praveenm@chelsio.com>
+Date: Tue, 27 Jan 2015 19:46:37 +0530
+
+> This patch fix is to use default firmware configuration files
+> present in the adapter incase if not available in standard
+> /lib/firmware/* dir. Additional cleanup is done to reuse flash
+> related defines from cxgb4 header file.
 > 
-> Please do not apply this patch isolated from his friend, the
-> 859c75aba20264d87dd026bab0d0ca3bff385955 hpsa: add missing pci_set_master in kdump path
-> needs to be applied together with the 132aa220b45d60e9b20def1e9d8be9422eed9616 .
+> Please apply over net-next since it depends on previous commit.
 > 
-> In addition to that, after the original issue goes away you may notice sometimes
-> an unhandled irq 16 message, to fix this a patch is posted 
-> here http://www.spinics.net/lists/linux-scsi/msg80316.html
-> This patch still awaits a maintainers review though.
-> 
-> Probably the best idea is to wait until the issue is solved completely.
+> Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
 
-I'll wait, when it all gets worked out, please let stable@ know what
-patches to apply where.
-
-thanks,
-
-greg k-h
+Applied, thanks.
