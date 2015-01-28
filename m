@@ -1,36 +1,140 @@
-From: Daeseok Youn <daeseok.youn@gmail.com>
-Subject: [PATCH 4/4] scsi: aic79xx: Use kzalloc instead of kmalloc/memset
-Date: Wed, 28 Jan 2015 16:38:21 +0900
-Message-ID: <20150128073821.GA13659@devel.8.8.4.4>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: hare@suse.de
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 2/2] ata: pata_platform: fix owner module reference mismatch for scsi host
+Date: Thu, 29 Jan 2015 08:30:30 +0900
+Message-ID: <1422487830-5366-2-git-send-email-akinobu.mita@gmail.com>
+References: <1422487830-5366-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:63203 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754941AbbA2BZj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2015 20:25:39 -0500
+In-Reply-To: <1422487830-5366-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
+The owner module reference of the pata_of_platform's scsi_host is
+initialized to pata_platform's one, because pata_of_platform driver
+use a scsi_host_template defined in pata_platform.  So this drivers
+can be unloaded even if the scsi device is being accessed.
+
+This fixes it by propagating the scsi_host_template to pata_of_platform
+driver.  The scsi_host_template is passed through a new
+argument of __pata_platform_probe().
+
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+* Change in v2
+- use the specific platform driver name for pata_of_platform sht
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index d5c7b19..ce96a0b 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -1326,10 +1326,9 @@ int
- ahd_platform_alloc(struct ahd_softc *ahd, void *platform_arg)
+ drivers/ata/pata_of_platform.c | 10 ++++++++--
+ drivers/ata/pata_platform.c    |  8 +++++---
+ include/linux/ata_platform.h   |  5 ++++-
+ 3 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index dcc408a..b6b7af8 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -16,6 +16,12 @@
+ #include <linux/ata_platform.h>
+ #include <linux/libata.h>
+ 
++#define DRV_NAME "pata_of_platform"
++
++static struct scsi_host_template pata_platform_sht = {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
+ static int pata_of_platform_probe(struct platform_device *ofdev)
  {
- 	ahd->platform_data =
--	    kmalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
-+	    kzalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
- 	if (ahd->platform_data == NULL)
- 		return (ENOMEM);
--	memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
- 	ahd->platform_data->irq = AHD_LINUX_NOIRQ;
- 	ahd_lockinit(ahd);
- 	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
+ 	int ret;
+@@ -63,7 +69,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 	pio_mask |= (1 << pio_mode) - 1;
+ 
+ 	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
+-				     reg_shift, pio_mask);
++				     reg_shift, pio_mask, &pata_platform_sht);
+ }
+ 
+ static struct of_device_id pata_of_platform_match[] = {
+@@ -74,7 +80,7 @@ MODULE_DEVICE_TABLE(of, pata_of_platform_match);
+ 
+ static struct platform_driver pata_of_platform_driver = {
+ 	.driver = {
+-		.name = "pata_of_platform",
++		.name = DRV_NAME,
+ 		.of_match_table = pata_of_platform_match,
+ 	},
+ 	.probe		= pata_of_platform_probe,
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 1eedfe4..c503ded 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -78,6 +78,7 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+  *	@irq_res: Resource representing IRQ and its flags
+  *	@ioport_shift: I/O port shift
+  *	@__pio_mask: PIO mask
++ *	@sht: scsi_host_template to use when registering
+  *
+  *	Register a platform bus IDE interface. Such interfaces are PIO and we
+  *	assume do not support IRQ sharing.
+@@ -99,7 +100,8 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+  */
+ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 			  struct resource *ctl_res, struct resource *irq_res,
+-			  unsigned int ioport_shift, int __pio_mask)
++			  unsigned int ioport_shift, int __pio_mask,
++			  struct scsi_host_template *sht)
+ {
+ 	struct ata_host *host;
+ 	struct ata_port *ap;
+@@ -170,7 +172,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 
+ 	/* activate */
+ 	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
+-				 irq_flags, &pata_platform_sht);
++				 irq_flags, sht);
+ }
+ EXPORT_SYMBOL_GPL(__pata_platform_probe);
+ 
+@@ -216,7 +218,7 @@ static int pata_platform_probe(struct platform_device *pdev)
+ 
+ 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
+ 				     pp_info ? pp_info->ioport_shift : 0,
+-				     pio_mask);
++				     pio_mask, &pata_platform_sht);
+ }
+ 
+ static struct platform_driver pata_platform_driver = {
+diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
+index 5c618a0..619d9e7 100644
+--- a/include/linux/ata_platform.h
++++ b/include/linux/ata_platform.h
+@@ -10,12 +10,15 @@ struct pata_platform_info {
+ 	unsigned int ioport_shift;
+ };
+ 
++struct scsi_host_template;
++
+ extern int __pata_platform_probe(struct device *dev,
+ 				 struct resource *io_res,
+ 				 struct resource *ctl_res,
+ 				 struct resource *irq_res,
+ 				 unsigned int ioport_shift,
+-				 int __pio_mask);
++				 int __pio_mask,
++				 struct scsi_host_template *sht);
+ 
+ /*
+  * Marvell SATA private data
 -- 
-1.7.1
+1.9.1
+
