@@ -1,32 +1,62 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] csiostor:T5 Firmware fix and cleanup.
-Date: Tue, 27 Jan 2015 17:17:45 -0800 (PST)
-Message-ID: <20150127.171745.2186381509685560794.davem@davemloft.net>
-References: <1422368197-22086-1-git-send-email-praveenm@chelsio.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54220 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbbA1BRq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jan 2015 20:17:46 -0500
-In-Reply-To: <1422368197-22086-1-git-send-email-praveenm@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: lizf@kernel.org
+Subject: [PATCH 3.4 100/177] scsi: Fix error handling in SCSI_IOCTL_SEND_COMMAND
+Date: Wed, 28 Jan 2015 12:09:18 +0800
+Message-ID: <1422418236-12852-191-git-send-email-lizf@kernel.org>
+References: <1422418050-12581-1-git-send-email-lizf@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1422418050-12581-1-git-send-email-lizf@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Zefan Li <lizefan@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: praveenm@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com, varun@chelsio.com
 
-From: Praveen Madhavan <praveenm@chelsio.com>
-Date: Tue, 27 Jan 2015 19:46:37 +0530
+From: Jan Kara <jack@suse.cz>
 
-> This patch fix is to use default firmware configuration files
-> present in the adapter incase if not available in standard
-> /lib/firmware/* dir. Additional cleanup is done to reuse flash
-> related defines from cxgb4 header file.
-> 
-> Please apply over net-next since it depends on previous commit.
-> 
-> Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
+3.4.106-rc1 review patch.  If anyone has any objections, please let me know.
 
-Applied, thanks.
+------------------
+
+
+commit 84ce0f0e94ac97217398b3b69c21c7a62ebeed05 upstream.
+
+When sg_scsi_ioctl() fails to prepare request to submit in
+blk_rq_map_kern() we jump to a label where we just end up copying
+(luckily zeroed-out) kernel buffer to userspace instead of reporting
+error. Fix the problem by jumping to the right label.
+
+CC: Jens Axboe <axboe@kernel.dk>
+CC: linux-scsi@vger.kernel.org
+Coverity-id: 1226871
+Signed-off-by: Jan Kara <jack@suse.cz>
+
+Fixed up the, now unused, out label.
+
+Signed-off-by: Jens Axboe <axboe@fb.com>
+Signed-off-by: Zefan Li <lizefan@huawei.com>
+---
+ block/scsi_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 9a87daa..f1c00c9 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -505,7 +505,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, __GFP_WAIT)) {
+ 		err = DRIVER_ERROR << 24;
+-		goto out;
++		goto error;
+ 	}
+ 
+ 	memset(sense, 0, sizeof(sense));
+@@ -515,7 +515,6 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	blk_execute_rq(q, disk, rq, 0);
+ 
+-out:
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
+-- 
+1.9.1
