@@ -1,162 +1,64 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] sd: don't grab a device references from driver methods
-Date: Thu, 29 Jan 2015 00:00:55 +0100
-Message-ID: <1422486056-11591-2-git-send-email-hch@lst.de>
+Subject: [PATCH 3/3] scsi: proper state checking and module refcount handling in scsi_device_get
+Date: Thu, 29 Jan 2015 00:00:56 +0100
+Message-ID: <1422486056-11591-3-git-send-email-hch@lst.de>
 References: <1422486056-11591-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:50913 "EHLO
+Received: from casper.infradead.org ([85.118.1.10]:50912 "EHLO
 	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374AbbA2BVV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2015 20:21:21 -0500
+	with ESMTP id S1753025AbbA2BVU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2015 20:21:20 -0500
 In-Reply-To: <1422486056-11591-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
-The device model already takes care of races between ->remove and
-->shutdown vs its other methods, and we now take care about locking
-them out for ->rescan as well.
+This effectively reverts commits 85b6c7 ("[SCSI] sd: fix cache flushing on
+module removal (and individual device removal)" and dc4515ea ("scsi: always
+increment reference count").
 
-This is a partial revert of commit 39b7f1 ("[SCSI] sd: Fix refcounting").
+We now never call scsi_device_get from the shutdown path, and the fact
+that we started grabbing reference there in commit 85b6c7 turned out
+turned out to create more problems than it solves, and required
+workarounds for workarounds for workarounds. Move back to properly checking
+the device state and carefully handle module refcounting.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c | 55 +++++++++++--------------------------------------------
- 1 file changed, 11 insertions(+), 44 deletions(-)
+ drivers/scsi/scsi.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3995169..1f06274 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -564,10 +564,12 @@ static int sd_major(int major_idx)
- 	}
- }
- 
--static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
-+static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
- {
- 	struct scsi_disk *sdkp = NULL;
- 
-+	mutex_lock(&sd_ref_mutex);
-+
- 	if (disk->private_data) {
- 		sdkp = scsi_disk(disk);
- 		if (scsi_device_get(sdkp->device) == 0)
-@@ -575,27 +577,6 @@ static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
- 		else
- 			sdkp = NULL;
- 	}
--	return sdkp;
--}
--
--static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
--{
--	struct scsi_disk *sdkp;
--
--	mutex_lock(&sd_ref_mutex);
--	sdkp = __scsi_disk_get(disk);
--	mutex_unlock(&sd_ref_mutex);
--	return sdkp;
--}
--
--static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
--{
--	struct scsi_disk *sdkp;
--
--	mutex_lock(&sd_ref_mutex);
--	sdkp = dev_get_drvdata(dev);
--	if (sdkp)
--		sdkp = __scsi_disk_get(sdkp->disk);
- 	mutex_unlock(&sd_ref_mutex);
- 	return sdkp;
- }
-@@ -610,8 +591,6 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
- 
--
--
- static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 					   unsigned int dix, unsigned int dif)
- {
-@@ -1525,12 +1504,9 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 
- static void sd_rescan(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
--	if (sdkp) {
--		revalidate_disk(sdkp->disk);
--		scsi_disk_put(sdkp);
--	}
-+	revalidate_disk(sdkp->disk);
- }
- 
- 
-@@ -3147,13 +3123,13 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 9b38299..95f0293 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -982,15 +982,18 @@ EXPORT_SYMBOL(scsi_report_opcode);
   */
- static void sd_shutdown(struct device *dev)
+ int scsi_device_get(struct scsi_device *sdev)
  {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
- 	if (!sdkp)
- 		return;         /* this can happen */
- 
- 	if (pm_runtime_suspended(dev))
--		goto exit;
-+		return;
- 
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-@@ -3164,14 +3140,11 @@ static void sd_shutdown(struct device *dev)
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
+-	if (sdev->sdev_state == SDEV_DEL)
+-		return -ENXIO;
++	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
++		goto fail;
+ 	if (!get_device(&sdev->sdev_gendev))
+-		return -ENXIO;
+-	/* We can fail try_module_get if we're doing SCSI operations
+-	 * from module exit (like cache flush) */
+-	__module_get(sdev->host->hostt->module);
 -
--exit:
--	scsi_disk_put(sdkp);
++		goto fail;
++	if (!try_module_get(sdev->host->hostt->module))
++		goto fail_put_device;
+ 	return 0;
++
++fail_put_device:
++	put_device(&sdev->sdev_gendev);
++fail:
++	return -ENXIO;
  }
+ EXPORT_SYMBOL(scsi_device_get);
  
- static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 	int ret = 0;
- 
- 	if (!sdkp)
-@@ -3197,7 +3170,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 	}
- 
- done:
--	scsi_disk_put(sdkp);
- 	return ret;
- }
- 
-@@ -3213,18 +3185,13 @@ static int sd_suspend_runtime(struct device *dev)
- 
- static int sd_resume(struct device *dev)
- {
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
--	int ret = 0;
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		return 0;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
--
--done:
--	scsi_disk_put(sdkp);
--	return ret;
-+	return sd_start_stop_device(sdkp, 1);
- }
- 
- /**
 -- 
 1.9.1
 
