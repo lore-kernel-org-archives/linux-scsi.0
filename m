@@ -1,220 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: module: fix module_refcount() return when running in a module
- exit routine
-Date: Wed, 28 Jan 2015 13:45:50 -0800
-Message-ID: <1422481550.2086.16.camel@HansenPartnership.com>
-References: <1421600146.2080.8.camel@HansenPartnership.com>
-	 <54BC93C3.7010808@hitachi.com> <878ugzco8c.fsf@rustcorp.com.au>
-	 <1421683701.2080.25.camel@HansenPartnership.com>
-	 <871tmqcmau.fsf@rustcorp.com.au>
-	 <1421774615.2080.88.camel@HansenPartnership.com>
-	 <20150122165018.GA27377@infradead.org>
-	 <1421946175.2093.1.camel@HansenPartnership.com>
-	 <87iofyurzc.fsf@rustcorp.com.au> <20150123131758.GC8045@infradead.org>
-	 <1422038567.2126.14.camel@HansenPartnership.com>
-	 <54C8AAA9.7060300@sandisk.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH 08/17] ibmvscsi: Fix bidi command test
+Date: Wed, 28 Jan 2015 14:42:28 -0800
+Message-ID: <54C965D4.1080704@linux.vnet.ibm.com>
+References: <54C2390A.3000700@sandisk.com> <54C23A2F.1090005@sandisk.com> <54C80CE8.40506@linux.vnet.ibm.com> <54C8965D.2040008@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54C8AAA9.7060300@sandisk.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Rusty Russell <rusty@rustcorp.com.au>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:35883 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308AbbA2BM4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jan 2015 20:12:56 -0500
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+	Wed, 28 Jan 2015 17:42:33 -0500
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 54B9938C803B
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2015 17:42:31 -0500 (EST)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0SMgVqW28049488
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2015 22:42:31 GMT
+Received: from d01av03.pok.ibm.com (localhost [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0SMgUkj010329
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2015 17:42:31 -0500
+In-Reply-To: <54C8965D.2040008@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Nathan Fontenot <nfont@linux.vnet.ibm.com>
 
-On Wed, 2015-01-28 at 10:23 +0100, Bart Van Assche wrote:
-> On 01/23/15 19:42, James Bottomley wrote:
-> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > index 08c90a7..31ba254 100644
-> > --- a/drivers/scsi/scsi.c
-> > +++ b/drivers/scsi/scsi.c
-> > @@ -965,6 +965,15 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
-> >  }
-> >  EXPORT_SYMBOL(scsi_report_opcode);
-> >  
-> > +static int __scsi_device_get_common(struct scsi_device *sdev)
-> > +{
-> > +	if (sdev->sdev_state == SDEV_DEL)
-> > +		return -ENXIO;
-> > +	if (!get_device(&sdev->sdev_gendev))
-> > +		return -ENXIO;
-> > +	return 0;
-> > +}
-> > +
-> >  /**
-> >   * scsi_device_get  -  get an additional reference to a scsi_device
-> >   * @sdev:	device to get a reference to
-> > @@ -975,19 +984,45 @@ EXPORT_SYMBOL(scsi_report_opcode);
-> >   */
-> >  int scsi_device_get(struct scsi_device *sdev)
-> >  {
-> > -	if (sdev->sdev_state == SDEV_DEL)
-> > -		return -ENXIO;
-> > -	if (!get_device(&sdev->sdev_gendev))
-> > -		return -ENXIO;
-> > -	/* We can fail this if we're doing SCSI operations
-> > -	 * from module exit (like cache flush) */
-> > -	try_module_get(sdev->host->hostt->module);
-> > +	int ret;
-> >  
-> > -	return 0;
-> > +	ret = __scsi_device_get_common(sdev);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	ret = try_module_get(sdev->host->hostt->module);
-> > +
-> > +	if (ret)
-> > +		put_device(&sdev->sdev_gendev);
-> > +
-> > +	return ret;
-> >  }
-> >  EXPORT_SYMBOL(scsi_device_get);
-> >  
-> >  /**
-> > + * scsi_device_get_in_module_exit() - get an additional reference to a scsi_device
-> > + * @sdev:	device to get a reference to
-> > + *
-> > + * Functions identically to scsi_device_get() except that it unconditionally
-> > + * gets the module reference.  This allows it to be called from module exit
-> > + * routines where scsi_device_get() will fail.  This routine is still paired
-> > + * with scsi_device_put().
-> > + */
-> > +int scsi_device_get_in_module_exit(struct scsi_device *sdev)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = __scsi_device_get_common(sdev);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	__module_get(sdev->host->hostt->module);
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL(scsi_device_get_in_module_exit);
-> > +
-> > +/**
-> >   * scsi_device_put  -  release a reference to a scsi_device
-> >   * @sdev:	device to release a reference on.
-> >   *
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index ebf35cb6..057604e 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -564,16 +564,22 @@ static int sd_major(int major_idx)
-> >  	}
-> >  }
-> >  
-> > -static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
-> > +static struct scsi_disk *__scsi_disk_get(struct gendisk *disk, int in_exit)
-> >  {
-> >  	struct scsi_disk *sdkp = NULL;
-> >  
-> >  	if (disk->private_data) {
-> > +		int ret;
-> > +
-> >  		sdkp = scsi_disk(disk);
-> > -		if (scsi_device_get(sdkp->device) == 0)
-> > -			get_device(&sdkp->dev);
-> > +		if (in_exit)
-> > +			ret = scsi_device_get_in_module_exit(sdkp->device);
-> >  		else
-> > +			ret = scsi_device_get(sdkp->device);
-> > +		if (unlikely(ret))
-> >  			sdkp = NULL;
-> > +		else
-> > +			get_device(&sdkp->dev);
-> >  	}
-> >  	return sdkp;
-> >  }
-> > @@ -583,19 +589,19 @@ static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
-> >  	struct scsi_disk *sdkp;
-> >  
-> >  	mutex_lock(&sd_ref_mutex);
-> > -	sdkp = __scsi_disk_get(disk);
-> > +	sdkp = __scsi_disk_get(disk, 0);
-> >  	mutex_unlock(&sd_ref_mutex);
-> >  	return sdkp;
-> >  }
-> >  
-> > -static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
-> > +static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev, int in_exit)
-> >  {
-> >  	struct scsi_disk *sdkp;
-> >  
-> >  	mutex_lock(&sd_ref_mutex);
-> >  	sdkp = dev_get_drvdata(dev);
-> >  	if (sdkp)
-> > -		sdkp = __scsi_disk_get(sdkp->disk);
-> > +		sdkp = __scsi_disk_get(sdkp->disk, in_exit);
-> >  	mutex_unlock(&sd_ref_mutex);
-> >  	return sdkp;
-> >  }
-> > @@ -1525,7 +1531,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
-> >  
-> >  static void sd_rescan(struct device *dev)
-> >  {
-> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
-> >  
-> >  	if (sdkp) {
-> >  		revalidate_disk(sdkp->disk);
-> > @@ -3147,7 +3153,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
-> >   */
-> >  static void sd_shutdown(struct device *dev)
-> >  {
-> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 1);
-> >  
-> >  	if (!sdkp)
-> >  		return;         /* this can happen */
-> > @@ -3171,7 +3177,7 @@ exit:
-> >  
-> >  static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
-> >  {
-> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
-> >  	int ret = 0;
-> >  
-> >  	if (!sdkp)
-> > @@ -3213,7 +3219,7 @@ static int sd_suspend_runtime(struct device *dev)
-> >  
-> >  static int sd_resume(struct device *dev)
-> >  {
-> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
-> >  	int ret = 0;
-> >  
-> >  	if (!sdkp->device->manage_start_stop)
-> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > index 2e0281e..0bad37c 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -327,6 +327,7 @@ extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
-> >  void scsi_attach_vpd(struct scsi_device *sdev);
-> >  
-> >  extern int scsi_device_get(struct scsi_device *);
-> > +extern int scsi_device_get_in_module_exit(struct scsi_device *);
-> >  extern void scsi_device_put(struct scsi_device *);
-> >  extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
-> >  					      uint, uint, u64);
+On 01/27/2015 11:57 PM, Bart Van Assche wrote:
+
+[snip]
+
 > 
-> Hello James,
+> Hello Tyrel,
 > 
-> Is this the latest version of this patch that is available ? I have
-> tried to test the above patch. However, I couldn't test the impact of
-> this patch on the SRP initiator driver since my test system didn't boot
-> anymore with the above patch applied. That test system boots from an ATA
-> disk managed by the SCSI subsystem:
-> $ lsscsi | head -n1
-> [0:0:0:0]    disk    ATA      KINGSTON SH103S3 BBF0  /dev/sda
+> Since the ibmvscsi driver does not set QUEUE_FLAG_BIDI neither the code
+> under "case DMA_BIDIRECTIONAL" nor the code under "if
+> (scsi_bidi_cmnd(cmd))" is ever executed. The only reason why I proposed
+> this change is to avoid that an author of another SCSI LLD driver would
+> use the code that compares sc_data_direction with DMA_BIDIRECTIONAL as
+> an example.
+> 
+> BTW, had you already noticed that Christoph Hellwig proposed to modify
+> the SCSI core such that sc_data_direction is set to DMA_BIDIRECTIONAL
+> for bidi commands ? I'd like to rework this patch series accordingly.
+> With that approach no changes are necessary in the ibmvscsi driver.
+> 
+> Bart.
+> 
+> 
 
-Not yet, since I knew it would need a bit of testing to identify all the
-potential in_exit acquisitions.  However, you could help me by
-diagnosing the current failure.
+I only saw the ibmvscsi patch on my way out of the office yesterday
+because Brian King forwarded it to me. After looking at the full
+patchset I now understand the intent. I did see Christoph's proposal and
+agree with the logic of setting DMA_BIDIRECTIONAL for bidi commands.
 
-Thanks,
+-Tyrel
 
-James
