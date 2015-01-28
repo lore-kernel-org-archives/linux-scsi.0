@@ -1,140 +1,220 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 2/2] ata: pata_platform: fix owner module reference mismatch for scsi host
-Date: Thu, 29 Jan 2015 08:30:30 +0900
-Message-ID: <1422487830-5366-2-git-send-email-akinobu.mita@gmail.com>
-References: <1422487830-5366-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:63203 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbbA2BZj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jan 2015 20:25:39 -0500
-In-Reply-To: <1422487830-5366-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: module: fix module_refcount() return when running in a module
+ exit routine
+Date: Wed, 28 Jan 2015 13:45:50 -0800
+Message-ID: <1422481550.2086.16.camel@HansenPartnership.com>
+References: <1421600146.2080.8.camel@HansenPartnership.com>
+	 <54BC93C3.7010808@hitachi.com> <878ugzco8c.fsf@rustcorp.com.au>
+	 <1421683701.2080.25.camel@HansenPartnership.com>
+	 <871tmqcmau.fsf@rustcorp.com.au>
+	 <1421774615.2080.88.camel@HansenPartnership.com>
+	 <20150122165018.GA27377@infradead.org>
+	 <1421946175.2093.1.camel@HansenPartnership.com>
+	 <87iofyurzc.fsf@rustcorp.com.au> <20150123131758.GC8045@infradead.org>
+	 <1422038567.2126.14.camel@HansenPartnership.com>
+	 <54C8AAA9.7060300@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54C8AAA9.7060300@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Rusty Russell <rusty@rustcorp.com.au>, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-The owner module reference of the pata_of_platform's scsi_host is
-initialized to pata_platform's one, because pata_of_platform driver
-use a scsi_host_template defined in pata_platform.  So this drivers
-can be unloaded even if the scsi device is being accessed.
+On Wed, 2015-01-28 at 10:23 +0100, Bart Van Assche wrote:
+> On 01/23/15 19:42, James Bottomley wrote:
+> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> > index 08c90a7..31ba254 100644
+> > --- a/drivers/scsi/scsi.c
+> > +++ b/drivers/scsi/scsi.c
+> > @@ -965,6 +965,15 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
+> >  }
+> >  EXPORT_SYMBOL(scsi_report_opcode);
+> >  
+> > +static int __scsi_device_get_common(struct scsi_device *sdev)
+> > +{
+> > +	if (sdev->sdev_state == SDEV_DEL)
+> > +		return -ENXIO;
+> > +	if (!get_device(&sdev->sdev_gendev))
+> > +		return -ENXIO;
+> > +	return 0;
+> > +}
+> > +
+> >  /**
+> >   * scsi_device_get  -  get an additional reference to a scsi_device
+> >   * @sdev:	device to get a reference to
+> > @@ -975,19 +984,45 @@ EXPORT_SYMBOL(scsi_report_opcode);
+> >   */
+> >  int scsi_device_get(struct scsi_device *sdev)
+> >  {
+> > -	if (sdev->sdev_state == SDEV_DEL)
+> > -		return -ENXIO;
+> > -	if (!get_device(&sdev->sdev_gendev))
+> > -		return -ENXIO;
+> > -	/* We can fail this if we're doing SCSI operations
+> > -	 * from module exit (like cache flush) */
+> > -	try_module_get(sdev->host->hostt->module);
+> > +	int ret;
+> >  
+> > -	return 0;
+> > +	ret = __scsi_device_get_common(sdev);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	ret = try_module_get(sdev->host->hostt->module);
+> > +
+> > +	if (ret)
+> > +		put_device(&sdev->sdev_gendev);
+> > +
+> > +	return ret;
+> >  }
+> >  EXPORT_SYMBOL(scsi_device_get);
+> >  
+> >  /**
+> > + * scsi_device_get_in_module_exit() - get an additional reference to a scsi_device
+> > + * @sdev:	device to get a reference to
+> > + *
+> > + * Functions identically to scsi_device_get() except that it unconditionally
+> > + * gets the module reference.  This allows it to be called from module exit
+> > + * routines where scsi_device_get() will fail.  This routine is still paired
+> > + * with scsi_device_put().
+> > + */
+> > +int scsi_device_get_in_module_exit(struct scsi_device *sdev)
+> > +{
+> > +	int ret;
+> > +
+> > +	ret = __scsi_device_get_common(sdev);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	__module_get(sdev->host->hostt->module);
+> > +
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL(scsi_device_get_in_module_exit);
+> > +
+> > +/**
+> >   * scsi_device_put  -  release a reference to a scsi_device
+> >   * @sdev:	device to release a reference on.
+> >   *
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index ebf35cb6..057604e 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -564,16 +564,22 @@ static int sd_major(int major_idx)
+> >  	}
+> >  }
+> >  
+> > -static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
+> > +static struct scsi_disk *__scsi_disk_get(struct gendisk *disk, int in_exit)
+> >  {
+> >  	struct scsi_disk *sdkp = NULL;
+> >  
+> >  	if (disk->private_data) {
+> > +		int ret;
+> > +
+> >  		sdkp = scsi_disk(disk);
+> > -		if (scsi_device_get(sdkp->device) == 0)
+> > -			get_device(&sdkp->dev);
+> > +		if (in_exit)
+> > +			ret = scsi_device_get_in_module_exit(sdkp->device);
+> >  		else
+> > +			ret = scsi_device_get(sdkp->device);
+> > +		if (unlikely(ret))
+> >  			sdkp = NULL;
+> > +		else
+> > +			get_device(&sdkp->dev);
+> >  	}
+> >  	return sdkp;
+> >  }
+> > @@ -583,19 +589,19 @@ static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
+> >  	struct scsi_disk *sdkp;
+> >  
+> >  	mutex_lock(&sd_ref_mutex);
+> > -	sdkp = __scsi_disk_get(disk);
+> > +	sdkp = __scsi_disk_get(disk, 0);
+> >  	mutex_unlock(&sd_ref_mutex);
+> >  	return sdkp;
+> >  }
+> >  
+> > -static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
+> > +static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev, int in_exit)
+> >  {
+> >  	struct scsi_disk *sdkp;
+> >  
+> >  	mutex_lock(&sd_ref_mutex);
+> >  	sdkp = dev_get_drvdata(dev);
+> >  	if (sdkp)
+> > -		sdkp = __scsi_disk_get(sdkp->disk);
+> > +		sdkp = __scsi_disk_get(sdkp->disk, in_exit);
+> >  	mutex_unlock(&sd_ref_mutex);
+> >  	return sdkp;
+> >  }
+> > @@ -1525,7 +1531,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+> >  
+> >  static void sd_rescan(struct device *dev)
+> >  {
+> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
+> >  
+> >  	if (sdkp) {
+> >  		revalidate_disk(sdkp->disk);
+> > @@ -3147,7 +3153,7 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+> >   */
+> >  static void sd_shutdown(struct device *dev)
+> >  {
+> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 1);
+> >  
+> >  	if (!sdkp)
+> >  		return;         /* this can happen */
+> > @@ -3171,7 +3177,7 @@ exit:
+> >  
+> >  static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+> >  {
+> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
+> >  	int ret = 0;
+> >  
+> >  	if (!sdkp)
+> > @@ -3213,7 +3219,7 @@ static int sd_suspend_runtime(struct device *dev)
+> >  
+> >  static int sd_resume(struct device *dev)
+> >  {
+> > -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> > +	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev, 0);
+> >  	int ret = 0;
+> >  
+> >  	if (!sdkp->device->manage_start_stop)
+> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> > index 2e0281e..0bad37c 100644
+> > --- a/include/scsi/scsi_device.h
+> > +++ b/include/scsi/scsi_device.h
+> > @@ -327,6 +327,7 @@ extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+> >  void scsi_attach_vpd(struct scsi_device *sdev);
+> >  
+> >  extern int scsi_device_get(struct scsi_device *);
+> > +extern int scsi_device_get_in_module_exit(struct scsi_device *);
+> >  extern void scsi_device_put(struct scsi_device *);
+> >  extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+> >  					      uint, uint, u64);
+> 
+> Hello James,
+> 
+> Is this the latest version of this patch that is available ? I have
+> tried to test the above patch. However, I couldn't test the impact of
+> this patch on the SRP initiator driver since my test system didn't boot
+> anymore with the above patch applied. That test system boots from an ATA
+> disk managed by the SCSI subsystem:
+> $ lsscsi | head -n1
+> [0:0:0:0]    disk    ATA      KINGSTON SH103S3 BBF0  /dev/sda
 
-This fixes it by propagating the scsi_host_template to pata_of_platform
-driver.  The scsi_host_template is passed through a new
-argument of __pata_platform_probe().
+Not yet, since I knew it would need a bit of testing to identify all the
+potential in_exit acquisitions.  However, you could help me by
+diagnosing the current failure.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Hans de Goede <hdegoede@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
-* Change in v2
-- use the specific platform driver name for pata_of_platform sht
+Thanks,
 
- drivers/ata/pata_of_platform.c | 10 ++++++++--
- drivers/ata/pata_platform.c    |  8 +++++---
- include/linux/ata_platform.h   |  5 ++++-
- 3 files changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index dcc408a..b6b7af8 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -16,6 +16,12 @@
- #include <linux/ata_platform.h>
- #include <linux/libata.h>
- 
-+#define DRV_NAME "pata_of_platform"
-+
-+static struct scsi_host_template pata_platform_sht = {
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-+
- static int pata_of_platform_probe(struct platform_device *ofdev)
- {
- 	int ret;
-@@ -63,7 +69,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 	pio_mask |= (1 << pio_mode) - 1;
- 
- 	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
--				     reg_shift, pio_mask);
-+				     reg_shift, pio_mask, &pata_platform_sht);
- }
- 
- static struct of_device_id pata_of_platform_match[] = {
-@@ -74,7 +80,7 @@ MODULE_DEVICE_TABLE(of, pata_of_platform_match);
- 
- static struct platform_driver pata_of_platform_driver = {
- 	.driver = {
--		.name = "pata_of_platform",
-+		.name = DRV_NAME,
- 		.of_match_table = pata_of_platform_match,
- 	},
- 	.probe		= pata_of_platform_probe,
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 1eedfe4..c503ded 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -78,6 +78,7 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  *	@irq_res: Resource representing IRQ and its flags
-  *	@ioport_shift: I/O port shift
-  *	@__pio_mask: PIO mask
-+ *	@sht: scsi_host_template to use when registering
-  *
-  *	Register a platform bus IDE interface. Such interfaces are PIO and we
-  *	assume do not support IRQ sharing.
-@@ -99,7 +100,8 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  */
- int __pata_platform_probe(struct device *dev, struct resource *io_res,
- 			  struct resource *ctl_res, struct resource *irq_res,
--			  unsigned int ioport_shift, int __pio_mask)
-+			  unsigned int ioport_shift, int __pio_mask,
-+			  struct scsi_host_template *sht)
- {
- 	struct ata_host *host;
- 	struct ata_port *ap;
-@@ -170,7 +172,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
- 
- 	/* activate */
- 	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
--				 irq_flags, &pata_platform_sht);
-+				 irq_flags, sht);
- }
- EXPORT_SYMBOL_GPL(__pata_platform_probe);
- 
-@@ -216,7 +218,7 @@ static int pata_platform_probe(struct platform_device *pdev)
- 
- 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
- 				     pp_info ? pp_info->ioport_shift : 0,
--				     pio_mask);
-+				     pio_mask, &pata_platform_sht);
- }
- 
- static struct platform_driver pata_platform_driver = {
-diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-index 5c618a0..619d9e7 100644
---- a/include/linux/ata_platform.h
-+++ b/include/linux/ata_platform.h
-@@ -10,12 +10,15 @@ struct pata_platform_info {
- 	unsigned int ioport_shift;
- };
- 
-+struct scsi_host_template;
-+
- extern int __pata_platform_probe(struct device *dev,
- 				 struct resource *io_res,
- 				 struct resource *ctl_res,
- 				 struct resource *irq_res,
- 				 unsigned int ioport_shift,
--				 int __pio_mask);
-+				 int __pio_mask,
-+				 struct scsi_host_template *sht);
- 
- /*
-  * Marvell SATA private data
--- 
-1.9.1
-
+James
