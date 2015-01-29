@@ -1,71 +1,84 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 17/28] scsi: drop owner assignment from
- platform_drivers
-Date: Thu, 29 Jan 2015 17:54:46 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1501291747020.7510@nippy.intranet>
-References: <1419196495-9626-1-git-send-email-wsa@the-dreams.de> <1419196495-9626-18-git-send-email-wsa@the-dreams.de>
+Subject: Re: [PATCH v2 0/6] scsi: Some seq_file cleanups/optimizations
+Date: Thu, 29 Jan 2015 17:56:37 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1501291636140.7510@nippy.intranet>
+References: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk> <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1419196495-9626-18-git-send-email-wsa@the-dreams.de>
+In-Reply-To: <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-Acked-by: Finn Thain <fthain@telegraphics.com.au>
+I have one reservation about this patch series.
 
-On Sun, 21 Dec 2014, Wolfram Sang wrote:
+For example, the changes,
 
-> This platform_driver does not need to set an owner, it will be populated by the
-> driver core.
+-	seq_printf(m, "%s", p);
++	seq_puts(m, p);
+
+These calls are not equivalent because the bounds check is not the same. 
+seq_puts will fail when m->count + strlen(p) == m->size.
+
+seq_write() does the same check as seq_puts() but the other routines vary.
+
+There's a similar situation with the changes,
+
+-	seq_puts(m, "x");
++	seq_putc(m, 'x');
+
+Have you considered what the implications might be? Are there any?
+
+-- 
+
+On Wed, 3 Dec 2014, Rasmus Villemoes wrote:
+
+> These patches mostly replace seq_printf with simpler and faster
+> equivalents, e.g. seq_printf(m, "something") => seq_puts(m,
+> "something") and seq_printf(m, "\n") => seq_putc(m, '\n). But before
+> my Coccinelle scripts could be unleashed I had to clean up an
+> unnecessary macro.
 > 
-> Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
-> ---
-> Generated with coccinelle. SmPL file is in the introductory msg. The big
-> cleanup was pulled in this merge window. This series catches the bits fallen
-> through. The patches shall go in via the subsystem trees.
+> The patches don't change the semantics of the code (well, that's the
+> idea anyway), but should make it slightly smaller and faster.
 > 
->  drivers/scsi/atari_scsi.c | 1 -
->  drivers/scsi/mac_scsi.c   | 1 -
->  drivers/scsi/sun3_scsi.c  | 1 -
->  3 files changed, 3 deletions(-)
+> v2: Redone on top of git://git.infradead.org/users/hch/scsi-queue.git drivers-for-3.19
 > 
-> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-> index d1c37a386947..5ede3daa93dc 100644
-> --- a/drivers/scsi/atari_scsi.c
-> +++ b/drivers/scsi/atari_scsi.c
-> @@ -1014,7 +1014,6 @@ static struct platform_driver atari_scsi_driver = {
->  	.remove = __exit_p(atari_scsi_remove),
->  	.driver = {
->  		.name	= DRV_MODULE_NAME,
-> -		.owner	= THIS_MODULE,
->  	},
->  };
->  
-> diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-> index 1e85c07e3b62..d64a769b8155 100644
-> --- a/drivers/scsi/mac_scsi.c
-> +++ b/drivers/scsi/mac_scsi.c
-> @@ -483,7 +483,6 @@ static struct platform_driver mac_scsi_driver = {
->  	.remove = __exit_p(mac_scsi_remove),
->  	.driver = {
->  		.name	= DRV_MODULE_NAME,
-> -		.owner	= THIS_MODULE,
->  	},
->  };
->  
-> diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-> index 2a906d1d34ba..22a42836d193 100644
-> --- a/drivers/scsi/sun3_scsi.c
-> +++ b/drivers/scsi/sun3_scsi.c
-> @@ -676,7 +676,6 @@ static struct platform_driver sun3_scsi_driver = {
->  	.remove = __exit_p(sun3_scsi_remove),
->  	.driver = {
->  		.name	= DRV_MODULE_NAME,
-> -		.owner	= THIS_MODULE,
->  	},
->  };
->  
+> Rasmus Villemoes (6):
+>   scsi: Remove SPRINTF macro
+>   scsi/advansys: Replace seq_printf with seq_puts
+>   scsi/aha152x: Replace seq_printf with seq_puts
+>   scsi: misc:  Replace seq_printf with seq_puts
+>   scsi: misc: Merge consecutive seq_puts calls
+>   scsi: misc: Print single-character strings with seq_putc
+> 
+>  drivers/scsi/BusLogic.c             |  10 +-
+>  drivers/scsi/NCR5380.c              |  20 ++-
+>  drivers/scsi/advansys.c             | 142 ++++++++---------
+>  drivers/scsi/aha152x.c              | 295 ++++++++++++++++++------------------
+>  drivers/scsi/aic7xxx/aic79xx_proc.c |  38 +++--
+>  drivers/scsi/aic7xxx/aic7xxx_proc.c |  24 +--
+>  drivers/scsi/arm/fas216.c           |   6 +-
+>  drivers/scsi/atari_NCR5380.c        |   4 +-
+>  drivers/scsi/atp870u.c              |   5 +-
+>  drivers/scsi/dc395x.c               |  79 +++++-----
+>  drivers/scsi/dpt_i2o.c              |   2 +-
+>  drivers/scsi/eata_pio.c             |   2 +-
+>  drivers/scsi/esas2r/esas2r_main.c   |   2 +-
+>  drivers/scsi/gdth_proc.c            |  24 +--
+>  drivers/scsi/in2000.c               |  18 +--
+>  drivers/scsi/ips.c                  |   7 +-
+>  drivers/scsi/megaraid.c             |   2 +-
+>  drivers/scsi/nsp32.c                |  41 +++--
+>  drivers/scsi/pcmcia/nsp_cs.c        |  50 +++---
+>  drivers/scsi/qla2xxx/qla_dfs.c      |   8 +-
+>  drivers/scsi/scsi_proc.c            |  22 +--
+>  drivers/scsi/scsi_trace.c           |   6 +-
+>  drivers/scsi/wd33c93.c              |  18 +--
+>  drivers/scsi/wd7000.c               |  41 +++--
+>  24 files changed, 412 insertions(+), 454 deletions(-)
+> 
 > 
