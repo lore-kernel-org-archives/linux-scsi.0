@@ -1,54 +1,54 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
-Date: Thu, 29 Jan 2015 15:09:18 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501291508440.1837-100000@iolanthe.rowland.org>
-References: <1422486056-11591-1-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] scsi: Fix max transfer length for 4k disks
+Date: Thu, 29 Jan 2015 15:54:40 -0600
+Message-ID: <201501292155.t0TLt4qF025739@d01av05.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49811 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754418AbbA2UJT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 15:09:19 -0500
-In-Reply-To: <1422486056-11591-1-git-send-email-hch@lst.de>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:58523 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757888AbbA2Vzl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2015 16:55:41 -0500
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Thu, 29 Jan 2015 16:55:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: hch@lst.de, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, stable@vger.kernel.org
 
-On Thu, 29 Jan 2015, Christoph Hellwig wrote:
 
-> Lock the device embedded in the scsi_device to protect against
-> concurrent calls to ->remove.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/scsi_scan.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 983aed1..523faee 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1593,16 +1593,15 @@ EXPORT_SYMBOL(scsi_add_device);
->  
->  void scsi_rescan_device(struct device *dev)
->  {
-> -	if (!dev->driver)
-> -		return;
-> -
-> -	if (try_module_get(dev->driver->owner)) {
-> +	device_lock(dev);
-> +	if (dev->driver && try_module_get(dev->driver->owner)) {
->  		struct scsi_driver *drv = to_scsi_driver(dev->driver);
->  
->  		if (drv->rescan)
->  			drv->rescan(dev);
->  		module_put(dev->driver->owner);
->  	}
-> +	device_unlock(dev);
->  }
->  EXPORT_SYMBOL(scsi_rescan_device);
+The following patch fixes an issue observed with 4k sector disks
+where the max_hw_sectors attribute was getting set too large in
+sd_revalidate_disk. Since sdkp->max_xfer_blocks is in units
+of SCSI logical blocks and queue_max_hw_sectors is in units of
+512 byte blocks, on a 4k sector disk, every time we went through
+sd_revalidate_disk, we were taking the current value of
+queue_max_hw_sectors and increasing it by a factor of 8. Fix
+this by only shifting sdkp->max_xfer_blocks.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Cc: stable<stable@vger.kernel.org>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/sd.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff -puN drivers/scsi/sd.c~sd_revalidate_4k drivers/scsi/sd.c
+--- linux/drivers/scsi/sd.c~sd_revalidate_4k	2015-01-29 14:44:23.316171187 -0600
++++ linux-bjking1/drivers/scsi/sd.c	2015-01-29 14:51:05.846126392 -0600
+@@ -2800,9 +2800,11 @@ static int sd_revalidate_disk(struct gen
+ 	 */
+ 	sd_set_flush_flag(sdkp);
+ 
+-	max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
+-				sdkp->max_xfer_blocks);
++	max_xfer = sdkp->max_xfer_blocks;
+ 	max_xfer <<= ilog2(sdp->sector_size) - 9;
++
++	max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
++				max_xfer);
+ 	blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
+ 	set_capacity(disk, sdkp->capacity);
+ 	sd_config_write_same(sdkp);
+_
 
