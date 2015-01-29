@@ -1,126 +1,83 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: usb-storage URB use-after-free
-Date: Thu, 29 Jan 2015 11:42:18 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1501291139380.1837-100000@iolanthe.rowland.org>
-References: <54C95DA9.2050306@stratus.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] IB/srp: Process REQ_PREEMPT requests correctly
+Date: Thu, 29 Jan 2015 13:38:52 -0600
+Message-ID: <54CA8C4C.1080508@cs.wisc.edu>
+References: <54CA2F48.605@sandisk.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <54C95DA9.2050306-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45699 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418AbbA2TjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2015 14:39:11 -0500
+In-Reply-To: <54CA2F48.605@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Roland Dreier <roland@purestorage.com>, Max Gurtuvoy <maxg@mellanox.com>, Sagi Grimberg <sagig@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 28 Jan 2015, Joe Lawrence wrote:
+On 1/29/15, 7:02 AM, Bart Van Assche wrote:
+> Delay REQ_PREEMPT requests submitted against a blocked device
+> until the device is unblocked by returning SCSI_MLQUEUE_HOST_BUSY
+> to the SCSI mid-layer. This avoids that a rescan shortly after a
+> cable pull sporadically triggers the following kernel oops:
+>
+> BUG: unable to handle kernel paging request at ffffc9001a6bc084
+> IP: [<ffffffffa04e08f2>] mlx4_ib_post_send+0xd2/0xb30 [mlx4_ib]
+> Process rescan-scsi-bus (pid: 9241, threadinfo ffff88053484a000, task ffff880534aae100)
+> Call Trace:
+>   [<ffffffffa0718135>] srp_post_send+0x65/0x70 [ib_srp]
+>   [<ffffffffa071b9df>] srp_queuecommand+0x1cf/0x3e0 [ib_srp]
+>   [<ffffffffa0001ff1>] scsi_dispatch_cmd+0x101/0x280 [scsi_mod]
+>   [<ffffffffa0009ad1>] scsi_request_fn+0x411/0x4d0 [scsi_mod]
+>   [<ffffffff81223b37>] __blk_run_queue+0x27/0x30
+>   [<ffffffff8122a8d2>] blk_execute_rq_nowait+0x82/0x110
+>   [<ffffffff8122a9c2>] blk_execute_rq+0x62/0xf0
+>   [<ffffffffa000b0e8>] scsi_execute+0xe8/0x190 [scsi_mod]
+>   [<ffffffffa000b2f3>] scsi_execute_req+0xa3/0x130 [scsi_mod]
+>   [<ffffffffa000c1aa>] scsi_probe_lun+0x17a/0x450 [scsi_mod]
+>   [<ffffffffa000ce86>] scsi_probe_and_add_lun+0x156/0x480 [scsi_mod]
+>   [<ffffffffa000dc2f>] __scsi_scan_target+0xdf/0x1f0 [scsi_mod]
+>   [<ffffffffa000dfa3>] scsi_scan_host_selected+0x183/0x1c0 [scsi_mod]
+>   [<ffffffffa000edfb>] scsi_scan+0xdb/0xe0 [scsi_mod]
+>   [<ffffffffa000ee13>] store_scan+0x13/0x20 [scsi_mod]
+>   [<ffffffff811c8d9b>] sysfs_write_file+0xcb/0x160
+>   [<ffffffff811589de>] vfs_write+0xce/0x140
+>   [<ffffffff81158b53>] sys_write+0x53/0xa0
+>   [<ffffffff81464592>] system_call_fastpath+0x16/0x1b
+>   [<00007f611c9d9300>] 0x7f611c9d92ff
+>
+> Reported-by: Max Gurtuvoy <maxg@mellanox.com>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Sagi Grimberg <sagig@mellanox.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>   drivers/infiniband/ulp/srp/ib_srp.c | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+> index 0747c05..77a7a2f 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -2003,8 +2003,13 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+>   	if (in_scsi_eh)
+>   		mutex_lock(&rport->mutex);
+>
+> +	/*
+> +	 * The "blocked" state of SCSI devices is ignored by the SCSI core for
+> +	 * REQ_PREEMPT requests. Hence the explicit check below for the SCSI
+> +	 * device state.
+> +	 */
+>   	scmnd->result = srp_chkready(target->rport);
+> -	if (unlikely(scmnd->result))
+> +	if (unlikely(scmnd->result != 0 || scsi_device_blocked(scmnd->device)))
+>   		goto err;
+>
+>   	WARN_ON_ONCE(scmnd->request->tag < 0);
+>
 
-> This one should have gone over to linux-usb.
-> 
-> -- Joe
-> 
-> On 01/28/2015 05:04 PM, Joe Lawrence wrote:
-> > Hello linux-usb,
-> > 
-> > We've hit a USB use-after-free on Stratus HW during device removal tests.
-> > We're running fio disk I/O to a scsi disk hanging off USB when the USB
-> > controller is hotplug removed.  This crash is very consistent (usually the
-> > first device pull during testing).  Without I/O, it may take days to
-> > encounter.
-> > 
-> > general protection fault: 0000 [#1] SMP
-> > ...
-> > CPU: 35 PID: 19626 Comm: kworker/u97:0 Tainted: PF       W  O--------------   3.10.0-210.el7.dev02.x86_64 #1
-> > Hardware name: Stratus ftServer 6800/G7LYY, BIOS BIOS Version 8.0:30 11/12/2014
-> > Workqueue: scsi_tmf_872 scmd_eh_abort_handler
-> > task: ffff88031bd91960 ti: ffff880981318000 task.ti: ffff880981318000
-> > RIP: 0010:[<ffffffff812d5e2d>]  [<ffffffff812d5e2d>] kobject_put+0xd/0x60
-> > RSP: 0018:ffff88098131bd28  EFLAGS: 00010002
-> > RAX: 0000000000000000 RBX: 6b6b6b6b6b6b6c0b RCX: 00000001002f0009
-> > RDX: 000000000000002f RSI: ffffea0015719800 RDI: 6b6b6b6b6b6b6c0b
-> > RBP: ffff88098131bd30 R08: ffff88055c6622f0 R09: 00000001002f0008
-> > R10: ffff88085f407a80 R11: ffffffff81450503 R12: ffff8804bab6d248
-> > R13: 00000000ffffff98 R14: 0000000000000086 R15: 0000000000000c20
-> > FS:  0000000000000000(0000) GS:ffff88085fce0000(0000) knlGS:0000000000000000
-> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > CR2: 00007f2ebb5d6008 CR3: 0000001038dc5000 CR4: 00000000001407e0
-> > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> > DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> > Stack:
-> >  0000000000000000 ffff88098131bd40 ffffffff813cd327 ffff88098131bd50
-> >  ffffffff8140a65a ffff88098131bd78 ffffffff81416795 0000000000000000
-> >  ffff880414791968 ffff880414791978 ffff88098131bd88 ffffffff814175f6
-> > Call Trace:
-> >  [<ffffffff813cd327>] put_device+0x17/0x20
-> >  [<ffffffff8140a65a>] usb_put_dev+0x1a/0x20
-> >  [<ffffffff81416795>] usb_hcd_unlink_urb+0x65/0xe0
-> >  [<ffffffff814175f6>] usb_unlink_urb+0x26/0x50
-> >  [<ffffffff81418e92>] usb_sg_cancel+0x82/0xe0
-> >  [<ffffffffa0074e71>] usb_stor_stop_transport+0x31/0x50 [usb_storage]
-> >  [<ffffffffa0073b8d>] command_abort+0xcd/0xe0 [usb_storage]
-> >  [<ffffffff813f51ef>] scmd_eh_abort_handler+0xbf/0x480
-> >  [<ffffffff8108f06b>] process_one_work+0x17b/0x470
-> >  [<ffffffff8108fe4b>] worker_thread+0x11b/0x400
-> >  [<ffffffff8108fd30>] ? rescuer_thread+0x400/0x400
-> >  [<ffffffff8109722f>] kthread+0xcf/0xe0
-> >  [<ffffffff81097160>] ? kthread_create_on_node+0x140/0x140
-> >  [<ffffffff8161387c>] ret_from_fork+0x7c/0xb0
-> >  [<ffffffff81097160>] ? kthread_create_on_node+0x140/0x140
-> > 
-> > from another crash, we know that the URB itself has been freed:
-
-> > but the underlying usb_device->device is still present:
-
-> > It looks like usb_hcd_unlink_urb takes a reference out on the underlying
-> > device but not the URB, which in our test case consistently gets freed
-> > just before usb_hcd_unlink_urb tries to return a reference on urb->device. 
-
-The analysis looks correct.
-
-> > Maybe the URB is a reference count short when usb_hcd_unlink_urb calls
-> > unlink1?  Somewhere usb-storage missed taking out a ref?
-
-No; it's a simple use-after-free error.
-
-> > A tourniquet hack-patch follows (probably inside out, as the URB should stay
-> > intact while usb_hcd_unlink_urb does its thing) and has been running a
-> > little over 30 surprise device removals under I/O without incident.
-> > 
-> > Any better suggestions?
-
-Please try this instead.
-
-Alan Stern
-
-
-
-Index: usb-3.19/drivers/usb/core/hcd.c
-===================================================================
---- usb-3.19.orig/drivers/usb/core/hcd.c
-+++ usb-3.19/drivers/usb/core/hcd.c
-@@ -1618,6 +1618,7 @@ static int unlink1(struct usb_hcd *hcd,
- int usb_hcd_unlink_urb (struct urb *urb, int status)
- {
- 	struct usb_hcd		*hcd;
-+	struct usb_device	*udev = urb->dev;
- 	int			retval = -EIDRM;
- 	unsigned long		flags;
- 
-@@ -1629,20 +1630,19 @@ int usb_hcd_unlink_urb (struct urb *urb,
- 	spin_lock_irqsave(&hcd_urb_unlink_lock, flags);
- 	if (atomic_read(&urb->use_count) > 0) {
- 		retval = 0;
--		usb_get_dev(urb->dev);
-+		usb_get_dev(udev);
- 	}
- 	spin_unlock_irqrestore(&hcd_urb_unlink_lock, flags);
- 	if (retval == 0) {
- 		hcd = bus_to_hcd(urb->dev->bus);
- 		retval = unlink1(hcd, urb, status);
--		usb_put_dev(urb->dev);
-+		if (retval == 0)
-+			retval = -EINPROGRESS;
-+		else if (retval != -EIDRM && retval != -EBUSY)
-+			dev_dbg(&udev->dev, "hcd_unlink_urb %p fail %d\n",
-+					urb, retval);
-+		usb_put_dev(udev);
- 	}
+What is the case where a driver blocks the device and can handle or 
+wants commands? iSCSI and FC also do not want commands, even PREEMPT 
+ones, at this time. It looks like they have been hitting internal checks 
+to prevent hitting similar issues.
