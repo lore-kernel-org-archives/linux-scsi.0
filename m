@@ -1,79 +1,88 @@
-From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: [PATCH 0/17] Clear up bidi command confusion
-Date: Thu, 29 Jan 2015 16:56:25 +0200
-Message-ID: <54CA4A19.2090905@plexistor.com>
-References: <54C2390A.3000700@sandisk.com>	 <20150123131249.GA8045@infradead.org> <54CA2EDF.7060405@plexistor.com> <1422542489.2091.2.camel@HansenPartnership.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: Another (ESP?) scsi blk-mq problem on sparc64
+Date: Thu, 29 Jan 2015 08:37:51 -0800
+Message-ID: <54CA61DF.30807@kernel.dk>
+References: <20141124162249.GG5050@linux.vnet.ibm.com> <547367DF.5060706@kernel.dk> <alpine.LRH.2.11.1411250022470.31497@siim2.ut.ee> <20141124.172857.1186013178918344826.davem@davemloft.net> <alpine.LRH.2.11.1501290952340.25245@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090800070602080809090603"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:64509 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876AbbA2O43 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 09:56:29 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so27445585wiv.0
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2015 06:56:27 -0800 (PST)
-In-Reply-To: <1422542489.2091.2.camel@HansenPartnership.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:48037 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830AbbA2QiK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 11:38:10 -0500
+Received: by mail-ie0-f172.google.com with SMTP id rd18so35470361iec.3
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2015 08:38:08 -0800 (PST)
+In-Reply-To: <alpine.LRH.2.11.1501290952340.25245@math.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Meelis Roos <mroos@linux.ee>, David Miller <davem@davemloft.net>
+Cc: paulmck@linux.vnet.ibm.com, hch@infradead.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 
-On 01/29/2015 04:41 PM, James Bottomley wrote:
-> On Thu, 2015-01-29 at 15:00 +0200, Boaz Harrosh wrote:
->> On 01/23/2015 03:12 PM, Christoph Hellwig wrote:
->>> On Fri, Jan 23, 2015 at 01:05:30PM +0100, Bart Van Assche wrote:
->>>> There is some confusion in the SCSI core and in SCSI LLDs around the
->>>> meaning of sc_data_direction and whether or not this member can have the
->>>> value DMA_BIDIRECTIONAL. Clear up this confusion. The patches in this
->>>> series are:
->>>
->>> I wonder if we should change the code to set DMA_BIDIRECTIONAL for
->>> bidi commands.  That seems a lot more logical than the current
->>> version.
->>>
+This is a multi-part message in MIME format.
+--------------090800070602080809090603
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 01/28/2015 11:53 PM, Meelis Roos wrote:
+> On Mon, 24 Nov 2014, David Miller wrote:
+>
+>> From: mroos@linux.ee
+>> Date: Tue, 25 Nov 2014 00:23:20 +0200 (EET)
 >>
->> You cannot do this. Because a Bidi Command is actually two commands
->> one for the WRITE side (DMA_TO_DEVICE) which is this one, and another
->> command for the READ side (DMA_FROM_DEVICE).
-> 
-> You're not thinking about this the correct way.  DMA_BIDIRECTIONAL is a
-> DMA engine flag.  We use it in SCSI for historical reasons (mainly to
-> prevent a translation from the SCSI version).  Since it was never used,
-> most SCSI drivers have code to check and reject commands with it set.
-> For actual bidirectional commands, you have to check scsi_bidi_command()
-> and programme the DMA engine separately for both phases, so the flag is
-> useless in this case.
-> 
+>>>>>>> Yes, that does look like the case.  Do you have a good trick on how
+>>>>>>> to allocate a map for the highest possible cpu number without first
+>>>>>>> iterating the cpu map?  I couldn't find something that looks like a
+>>>>>>> highest_possible_cpu() helper.
+>>>>>>
+>>>>>> Honestly I think that num_posible_cpus() should return the max of
+>>>>>> number of CPUs (weigt), and the highest numbered CPU. It's a pain in
+>>>>>> the butt to handle this otherwise.
+>>>>>
+>>>>> Hear, hear!!!  That would make my life easier, and would make this sort
+>>>>> of problem much less likely to occur!
+>>>>
+>>>> How about this one?
+>>>
+>>> It make the machine work.
+>>
+>> Thanks for testing!
+>>
+>
+> What's the status of this fix? It is still not applied on yesterdays
+> 3.19.0-rc6-00105-gc59c961 git...
 
-This is what I meant how is above different from what I said?
+Hmm, I thought commit a33c1ba29138 took care of it... Does the attached 
+work?
 
-> The proposal is to make it the signal for bidirectional commands
+-- 
+Jens Axboe
 
-This I disagree, and would be a very bad idea and will take us back, to
-hacking time. As you noted, please let us leave DMA_BIDIRECTIONAL to the
-DMA engines. Let us just stir away from the DMA_XXX flags altogether and
-move back to block layer flags. 
 
- (in which case most HBAs would make it do the right thing; i.e. reject) 
+--------------090800070602080809090603
+Content-Type: text/x-patch;
+ name="map-sz.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="map-sz.patch"
 
-This is not necessary, (the check and rejection), commands will not be issued
-to LLDs that did not mark support for BiDi. So they will never receive
-such commands and it is added dead code.
+diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+index 5f13f4d0bcce..527d315dc1a5 100644
+--- a/block/blk-mq-cpumap.c
++++ b/block/blk-mq-cpumap.c
+@@ -88,10 +88,11 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
+ unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
+ {
+ 	unsigned int *map;
++	size_t sz;
+ 
+ 	/* If cpus are offline, map them to first hctx */
+-	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL,
+-				set->numa_node);
++	sz = max_t(unsigned int, nr_cpu_ids, num_possible_cpus());
++	map = kzalloc_node(sizeof(*map) * sz, GFP_KERNEL, set->numa_node);
+ 	if (!map)
+ 		return NULL;
+ 
 
-> but
-> it still wouldn't be how you'd program the DMA enigne; that still would
-> have to be done in two phases as it is today.
-> 
-
-Exactly my point. Only one small correction, these are not two phases, as in
-phases-1 then phases-2. These are "two" memory buffers independently programmed
-for DMA transfer. The actual transfer occurs simultaneously, on both buffers.
-
-> James
-> 
-> 
-
-Thanks
-Boaz
-
+--------------090800070602080809090603--
