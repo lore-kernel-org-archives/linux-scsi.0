@@ -1,55 +1,72 @@
-From: Nate Dailey <nate.dailey@stratus.com>
-Subject: raid1 narrow_write_error with 4K disks, sd "bad block number requested"
- messages
-Date: Wed, 28 Jan 2015 10:29:46 -0500
-Message-ID: <54C9006A.2030807@stratus.com>
+From: <anil.gurumurthy@qlogic.com>
+Subject: [PATCH 0/4] bfa: Patches for scsi "misc" branch
+Date: Thu, 29 Jan 2015 03:55:53 -0500
+Message-ID: <1422521757-18724-1-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o148.mxlogic.net ([208.65.145.81]:50823 "EHLO
-	p02c12o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760664AbbA2JTg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 04:19:36 -0500
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:20931 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932545AbbA2JfG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2015 04:35:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, hch@infradead.org
 Cc: linux-scsi@vger.kernel.org
 
-I'm writing about something that appears to be an issue with raid1's 
-narrow_write_error, particular to non-512-byte-sector disks. Here's what 
-I'm doing:
+Hi James, Christoph,
 
-- 2 disk raid1, 4K disks, each connected to a different SAS HBA
-- mount a filesystem on the raid1, run a test that writes to it
-- remove one of the SAS HBAs (echo 1 > 
-/sys/bus/pci/devices/0000\:45\:00.0/remove)
+Please apply the following patches to the scsi tree, misc branch  at your
+earliest convenience.
 
-At this point, writes fail and narrow_write_error breaks them up and 
-retries, one sector at a time. But these are 512-byte sectors, and sd 
-doesn't like it:
+Thanks,
+Anil
 
-[ 2645.310517] sd 3:0:1:0: [sde] Bad block number requested
-[ 2645.310610] sd 3:0:1:0: [sde] Bad block number requested
-[ 2645.310690] sd 3:0:1:0: [sde] Bad block number requested
-...
+Anil Gurumurthy (4):
+  Updating copyright messages
+  Fix for crash when bfa_itnim is NULL
+  File header and user visible string changes
+  Update driver version to 3.2.25.0
 
-There appears to be no real harm done, but there can be a huge number of 
-these messages in the log.
-
-I can avoid this by disabling bad block tracking, but it looks like 
-maybe the superblock's bblog_shift is intended to address this exact 
-issue. However, I don't see a way to change it. Presumably this is 
-something mdadm should be setting up? I don't see bblog_shift ever set 
-to anything other than 0.
-
-This is on a RHEL 7.1 kernel, version 3.10.0-221.el7. I took a look at 
-upstream sd and md changes and nothing jumps out at me that would have 
-affected this (but I have not tested to see if the bad block messages do 
-or do not happen on an upstream kernel).
-
-I'd appreciate any advice re: how to handle this. Thanks!
-
-Nate Dailey
-Stratus Technologies
+ drivers/scsi/bfa/bfa.h           |    7 ++--
+ drivers/scsi/bfa/bfa_core.c      |    7 ++--
+ drivers/scsi/bfa/bfa_cs.h        |    7 ++--
+ drivers/scsi/bfa/bfa_defs.h      |    7 ++--
+ drivers/scsi/bfa/bfa_defs_fcs.h  |    7 ++--
+ drivers/scsi/bfa/bfa_defs_svc.h  |    7 ++--
+ drivers/scsi/bfa/bfa_fc.h        |    7 ++--
+ drivers/scsi/bfa/bfa_fcbuild.c   |    7 ++--
+ drivers/scsi/bfa/bfa_fcbuild.h   |    7 ++--
+ drivers/scsi/bfa/bfa_fcpim.c     |    7 ++--
+ drivers/scsi/bfa/bfa_fcpim.h     |    7 ++--
+ drivers/scsi/bfa/bfa_fcs.c       |    7 ++--
+ drivers/scsi/bfa/bfa_fcs.h       |    9 +++--
+ drivers/scsi/bfa/bfa_fcs_fcpim.c |    7 ++--
+ drivers/scsi/bfa/bfa_fcs_lport.c |    9 +++--
+ drivers/scsi/bfa/bfa_fcs_rport.c |    7 ++--
+ drivers/scsi/bfa/bfa_hw_cb.c     |    7 ++--
+ drivers/scsi/bfa/bfa_hw_ct.c     |    7 ++--
+ drivers/scsi/bfa/bfa_ioc.c       |    9 +++--
+ drivers/scsi/bfa/bfa_ioc.h       |    7 ++--
+ drivers/scsi/bfa/bfa_ioc_cb.c    |    7 ++--
+ drivers/scsi/bfa/bfa_ioc_ct.c    |    7 ++--
+ drivers/scsi/bfa/bfa_modules.h   |    7 ++--
+ drivers/scsi/bfa/bfa_plog.h      |    7 ++--
+ drivers/scsi/bfa/bfa_port.c      |    7 ++--
+ drivers/scsi/bfa/bfa_port.h      |    7 ++--
+ drivers/scsi/bfa/bfa_svc.c       |    7 ++--
+ drivers/scsi/bfa/bfa_svc.h       |    7 ++--
+ drivers/scsi/bfa/bfad.c          |   24 +++++-------
+ drivers/scsi/bfa/bfad_attr.c     |   75 +++++++++++++++++++-------------------
+ drivers/scsi/bfa/bfad_bsg.c      |    7 ++--
+ drivers/scsi/bfa/bfad_bsg.h      |    7 ++--
+ drivers/scsi/bfa/bfad_debugfs.c  |    7 ++--
+ drivers/scsi/bfa/bfad_drv.h      |    9 +++--
+ drivers/scsi/bfa/bfad_im.c       |   35 ++++++++++++++++--
+ drivers/scsi/bfa/bfad_im.h       |    7 ++--
+ drivers/scsi/bfa/bfi.h           |    7 ++--
+ drivers/scsi/bfa/bfi_ms.h        |    7 ++--
+ drivers/scsi/bfa/bfi_reg.h       |    9 +++--
+ 39 files changed, 228 insertions(+), 168 deletions(-)
 
