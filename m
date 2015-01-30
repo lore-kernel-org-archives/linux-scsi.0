@@ -1,41 +1,129 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
-Date: Fri, 30 Jan 2015 10:46:17 +0100
-Message-ID: <54CB52E9.6000302@redhat.com>
-References: <1422486056-11591-1-git-send-email-hch@lst.de> <54CABE29.5080909@redhat.com> <20150130010849.GA4794@ad.nay.redhat.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 4/8] vhost/scsi: Change vhost_scsi_map_to_sgl to accept
+ iov ptr + len
+Date: Fri, 30 Jan 2015 12:51:19 +0200
+Message-ID: <20150130105119.GA21531@redhat.com>
+References: <1422605552-24797-1-git-send-email-nab@daterainc.com>
+ <1422605552-24797-5-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:62946 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874AbbA3JqW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2015 04:46:22 -0500
-Received: by mail-wg0-f48.google.com with SMTP id x12so25824486wgg.7
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2015 01:46:21 -0800 (PST)
-In-Reply-To: <20150130010849.GA4794@ad.nay.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1422605552-24797-5-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Fam Zheng <famz@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
-
-
-On 30/01/2015 02:08, Fam Zheng wrote:
-> On Fri, 01/30 00:11, Paolo Bonzini wrote:
->>
->>
->> On 29/01/2015 00:00, Christoph Hellwig wrote:
->>> Lock the device embedded in the scsi_device to protect against
->>> concurrent calls to ->remove.
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> I wonder if this makes this problem: https://lkml.org/lkml/2015/1/5/9 go
->> away.
+On Fri, Jan 30, 2015 at 08:12:28AM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> A quick test says yes.
+> This patch changes vhost_scsi_map_to_sgl() parameters to accept virtio
+> iovec ptr + len when determing pages_nr.
+> 
+> This is currently done with iov_num_pages() -> PAGE_ALIGN, so allow
+> the same parameters as well.
+> 
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/vhost/scsi.c | 37 +++++++++++++++----------------------
+>  1 file changed, 15 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 9c5ac23..049e603 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -220,10 +220,10 @@ static struct workqueue_struct *tcm_vhost_workqueue;
+>  static DEFINE_MUTEX(tcm_vhost_mutex);
+>  static LIST_HEAD(tcm_vhost_list);
+>  
+> -static int iov_num_pages(struct iovec *iov)
+> +static int iov_num_pages(void __user *iov_base, size_t iov_len)
+>  {
+> -	return (PAGE_ALIGN((unsigned long)iov->iov_base + iov->iov_len) -
+> -	       ((unsigned long)iov->iov_base & PAGE_MASK)) >> PAGE_SHIFT;
+> +	return (PAGE_ALIGN((unsigned long)iov_base + iov_len) -
+> +	       ((unsigned long)iov_base & PAGE_MASK)) >> PAGE_SHIFT;
+>  }
+>  
+>  static void tcm_vhost_done_inflight(struct kref *kref)
+> @@ -777,25 +777,18 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
+>   * Returns the number of scatterlist entries used or -errno on error.
+>   */
+>  static int
+> -vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
+> +vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *cmd,
+> +		      void __user *ptr,
+> +		      size_t len,
+>  		      struct scatterlist *sgl,
+> -		      unsigned int sgl_count,
+> -		      struct iovec *iov,
+> -		      struct page **pages,
+>  		      bool write)
+>  {
+> -	unsigned int npages = 0, pages_nr, offset, nbytes;
+> +	unsigned int npages = 0, offset, nbytes;
+> +	unsigned int pages_nr = iov_num_pages(ptr, len);
+>  	struct scatterlist *sg = sgl;
+> -	void __user *ptr = iov->iov_base;
+> -	size_t len = iov->iov_len;
+> +	struct page **pages = cmd->tvc_upages;
+>  	int ret, i;
+>  
+> -	pages_nr = iov_num_pages(iov);
+> -	if (pages_nr > sgl_count) {
+> -		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
+> -		       " sgl_count: %u\n", pages_nr, sgl_count);
+> -		return -ENOBUFS;
+> -	}
+>  	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
+>  		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
+>  		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
+> @@ -840,7 +833,7 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+>  	int ret, i;
+>  
+>  	for (i = 0; i < niov; i++)
+> -		sgl_count += iov_num_pages(&iov[i]);
+> +		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
+>  
 
-Great, we might want to revert that patch in 3.21.
+A helper function for this loop seems in order as well?
 
-Paolo
+
+>  	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
+>  		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
+> @@ -856,8 +849,8 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+>  	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
+>  
+>  	for (i = 0; i < niov; i++) {
+> -		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
+> -					    cmd->tvc_upages, write);
+> +		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
+> +					    sg, write);
+>  		if (ret < 0) {
+>  			for (i = 0; i < cmd->tvc_sgl_count; i++) {
+>  				struct page *page = sg_page(&cmd->tvc_sgl[i]);
+> @@ -884,7 +877,7 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+>  	int ret, i;
+>  
+>  	for (i = 0; i < niov; i++)
+> -		prot_sgl_count += iov_num_pages(&iov[i]);
+> +		prot_sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
+>  
+>  	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
+>  		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
+> @@ -899,8 +892,8 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+>  	cmd->tvc_prot_sgl_count = prot_sgl_count;
+>  
+>  	for (i = 0; i < niov; i++) {
+> -		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
+> -					    cmd->tvc_upages, write);
+> +		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
+> +					    prot_sg, write);
+>  		if (ret < 0) {
+>  			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
+>  				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
+> -- 
+> 1.9.1
