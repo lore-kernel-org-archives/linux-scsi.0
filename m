@@ -1,100 +1,46 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH 3/6] pm80xx : Different SAS addresses for phys.
-Date: Fri, 30 Jan 2015 11:36:42 +0530
-Message-ID: <20150130060645.23653-4-Viswas.G@microsemi.com>
+Subject: [PATCH 5/6] pm80xx : panic on ncq error cleaning up the read log
+Date: Fri, 30 Jan 2015 11:36:44 +0530
+Message-ID: <20150130060645.23653-6-Viswas.G@microsemi.com>
 References: <20150130060645.23653-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03hn0233.outbound.protection.outlook.com ([104.47.41.233]:43456
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03hn0228.outbound.protection.outlook.com ([104.47.40.228]:26624
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755814AbdHYRMK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Aug 2017 13:12:10 -0400
+        id S1755814AbdHYRMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Aug 2017 13:12:18 -0400
 In-Reply-To: <20150130060645.23653-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: xjtuwjp@gmail.com, Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com
 
-Different SAS addresses are assigned for each set of phys.
+when there's an error in 'ncq mode' the host has to read the ncq
+error log (10h) to clear the error state. however, the ccb that
+is setup for doing this doesn't setup the ccb so that the
+previous state is cleared. if the ccb was previously used for an IO
+n_elems is set and pm8001_ccb_task_free() treats this as the signal
+to go free a scatter-gather list (that's already been free-ed).
 
+Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
 Signed-off-by: Viswas G <Viswas.G@microsemi.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 13 +++++++++----
- drivers/scsi/pm8001/pm80xx_hwi.c  |  3 +--
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 034b2f7d1135..d282f1562615 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -132,7 +132,7 @@ static void pm8001_phy_init(struct pm8001_hba_info *pm8001_ha, int phy_id)
- 	sas_phy->oob_mode = OOB_NOT_CONNECTED;
- 	sas_phy->linkrate = SAS_LINK_RATE_UNKNOWN;
- 	sas_phy->id = phy_id;
--	sas_phy->sas_addr = &pm8001_ha->sas_addr[0];
-+	sas_phy->sas_addr = (u8 *)&phy->dev_sas_addr;
- 	sas_phy->frame_rcvd = &phy->frame_rcvd[0];
- 	sas_phy->ha = (struct sas_ha_struct *)pm8001_ha->shost->hostdata;
- 	sas_phy->lldd_phy = phy;
-@@ -593,10 +593,12 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
- 	for (i = 0; i < chip_info->n_phy; i++) {
- 		sha->sas_phy[i] = &pm8001_ha->phy[i].sas_phy;
- 		sha->sas_port[i] = &pm8001_ha->port[i].sas_port;
-+		sha->sas_phy[i]->sas_addr =
-+			(u8 *)&pm8001_ha->phy[i].dev_sas_addr;
- 	}
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = pm8001_ha->dev;
--
-+	sha->strict_wide_ports = 1;
- 	sha->lldd_module = THIS_MODULE;
- 	sha->sas_addr = &pm8001_ha->sas_addr[0];
- 	sha->num_phys = chip_info->n_phy;
-@@ -613,6 +615,7 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
- static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- {
- 	u8 i, j;
-+	u8 sas_add[8];
- #ifdef PM8001_READ_VPD
- 	/* For new SPC controllers WWN is stored in flash vpd
- 	*  For SPC/SPCve controllers WWN is stored in EEPROM
-@@ -674,10 +677,12 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->sas_addr[j] =
- 					payload.func_specific[0x804 + i];
- 	}
--
-+	memcpy(sas_add, pm8001_ha->sas_addr, SAS_ADDR_SIZE);
- 	for (i = 0; i < pm8001_ha->chip->n_phy; i++) {
-+		if (i && ((i % 4) == 0))
-+			sas_add[7] = sas_add[7] + 4;
- 		memcpy(&pm8001_ha->phy[i].dev_sas_addr,
--			pm8001_ha->sas_addr, SAS_ADDR_SIZE);
-+			sas_add, SAS_ADDR_SIZE);
- 		PM8001_INIT_DBG(pm8001_ha,
- 			pm8001_printk("phy %d sas_addr = %016llx\n", i,
- 			pm8001_ha->phy[i].dev_sas_addr));
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 8fb5ddf08cc4..a07b023c09bf 100644
+index ae9252cf1706..e75b0aa497f0 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3041,7 +3041,6 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	port->port_state = portstate;
- 	phy->identify.device_type = 0;
- 	phy->phy_attached = 0;
--	memset(&phy->dev_sas_addr, 0, SAS_ADDR_SIZE);
- 	switch (portstate) {
- 	case PORT_VALID:
- 		break;
-@@ -4394,7 +4393,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
- 	payload.sas_identify.dev_type = SAS_END_DEVICE;
- 	payload.sas_identify.initiator_bits = SAS_PROTOCOL_ALL;
- 	memcpy(payload.sas_identify.sas_addr,
--		pm8001_ha->sas_addr, SAS_ADDR_SIZE);
-+		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
- 	payload.sas_identify.phy_id = phy_id;
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opcode, &payload, 0);
- 	return ret;
+@@ -1489,6 +1489,7 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 	ccb->device = pm8001_ha_dev;
+ 	ccb->ccb_tag = ccb_tag;
+ 	ccb->task = task;
++	ccb->n_elem = 0;
+ 	pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
+ 	pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
+ 
 -- 
 2.12.3
