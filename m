@@ -1,474 +1,99 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v2 6/6] scsi: misc: Print single-character strings with
- seq_putc
-Date: Fri, 30 Jan 2015 12:44:51 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1501301047220.28204@nippy.intranet>
-References: <1417221258-4937-1-git-send-email-linux@rasmusvillemoes.dk> <1417561854-17188-1-git-send-email-linux@rasmusvillemoes.dk> <1417561854-17188-7-git-send-email-linux@rasmusvillemoes.dk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] IB/srp: Process REQ_PREEMPT requests correctly
+Date: Thu, 29 Jan 2015 20:06:20 -0600
+Message-ID: <54CAE71C.6020002@cs.wisc.edu>
+References: <54CA2F48.605@sandisk.com> <54CA8C4C.1080508@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1417561854-17188-7-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49656 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752270AbbA3CGx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2015 21:06:53 -0500
+In-Reply-To: <54CA8C4C.1080508@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Roland Dreier <roland@purestorage.com>, Max Gurtuvoy <maxg@mellanox.com>, Sagi Grimberg <sagig@mellanox.com>, linux-rdma <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 1/29/15, 1:38 PM, Mike Christie wrote:
+> On 1/29/15, 7:02 AM, Bart Van Assche wrote:
+>> Delay REQ_PREEMPT requests submitted against a blocked device
+>> until the device is unblocked by returning SCSI_MLQUEUE_HOST_BUSY
+>> to the SCSI mid-layer. This avoids that a rescan shortly after a
+>> cable pull sporadically triggers the following kernel oops:
+>>
+>> BUG: unable to handle kernel paging request at ffffc9001a6bc084
+>> IP: [<ffffffffa04e08f2>] mlx4_ib_post_send+0xd2/0xb30 [mlx4_ib]
+>> Process rescan-scsi-bus (pid: 9241, threadinfo ffff88053484a000, task
+>> ffff880534aae100)
+>> Call Trace:
+>>   [<ffffffffa0718135>] srp_post_send+0x65/0x70 [ib_srp]
+>>   [<ffffffffa071b9df>] srp_queuecommand+0x1cf/0x3e0 [ib_srp]
+>>   [<ffffffffa0001ff1>] scsi_dispatch_cmd+0x101/0x280 [scsi_mod]
+>>   [<ffffffffa0009ad1>] scsi_request_fn+0x411/0x4d0 [scsi_mod]
+>>   [<ffffffff81223b37>] __blk_run_queue+0x27/0x30
+>>   [<ffffffff8122a8d2>] blk_execute_rq_nowait+0x82/0x110
+>>   [<ffffffff8122a9c2>] blk_execute_rq+0x62/0xf0
+>>   [<ffffffffa000b0e8>] scsi_execute+0xe8/0x190 [scsi_mod]
+>>   [<ffffffffa000b2f3>] scsi_execute_req+0xa3/0x130 [scsi_mod]
+>>   [<ffffffffa000c1aa>] scsi_probe_lun+0x17a/0x450 [scsi_mod]
+>>   [<ffffffffa000ce86>] scsi_probe_and_add_lun+0x156/0x480 [scsi_mod]
+>>   [<ffffffffa000dc2f>] __scsi_scan_target+0xdf/0x1f0 [scsi_mod]
+>>   [<ffffffffa000dfa3>] scsi_scan_host_selected+0x183/0x1c0 [scsi_mod]
+>>   [<ffffffffa000edfb>] scsi_scan+0xdb/0xe0 [scsi_mod]
+>>   [<ffffffffa000ee13>] store_scan+0x13/0x20 [scsi_mod]
+>>   [<ffffffff811c8d9b>] sysfs_write_file+0xcb/0x160
+>>   [<ffffffff811589de>] vfs_write+0xce/0x140
+>>   [<ffffffff81158b53>] sys_write+0x53/0xa0
+>>   [<ffffffff81464592>] system_call_fastpath+0x16/0x1b
+>>   [<00007f611c9d9300>] 0x7f611c9d92ff
+>>
+>> Reported-by: Max Gurtuvoy <maxg@mellanox.com>
+>> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>> Cc: <stable@vger.kernel.org>
+>> ---
+>>   drivers/infiniband/ulp/srp/ib_srp.c | 7 ++++++-
+>>   1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c
+>> b/drivers/infiniband/ulp/srp/ib_srp.c
+>> index 0747c05..77a7a2f 100644
+>> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+>> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+>> @@ -2003,8 +2003,13 @@ static int srp_queuecommand(struct Scsi_Host
+>> *shost, struct scsi_cmnd *scmnd)
+>>       if (in_scsi_eh)
+>>           mutex_lock(&rport->mutex);
+>>
+>> +    /*
+>> +     * The "blocked" state of SCSI devices is ignored by the SCSI
+>> core for
+>> +     * REQ_PREEMPT requests. Hence the explicit check below for the SCSI
+>> +     * device state.
+>> +     */
+>>       scmnd->result = srp_chkready(target->rport);
+>> -    if (unlikely(scmnd->result))
+>> +    if (unlikely(scmnd->result != 0 ||
+>> scsi_device_blocked(scmnd->device)))
+>>           goto err;
+>>
+>>       WARN_ON_ONCE(scmnd->request->tag < 0);
+>>
+>
+> What is the case where a driver blocks the device and can handle or
+> wants commands? iSCSI and FC also do not want commands, even PREEMPT
+> ones, at this time. It looks like they have been hitting internal checks
+> to prevent hitting similar issues.
 
-Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
+I think I figured this out. I think we want to change the 
+scsi_prep_state_check check instead of each driver/class.
 
-For the NCR5380 bits:
+It looks like for the SDEV_QUIESCE state we want to allow REQ_PREEMPT 
+commands. James would know best, but I think SPI needs that ability.
 
-Acked-by: Finn Thain <fthain@telegraphics.com.au>
-
-
-On Wed, 3 Dec 2014, Rasmus Villemoes wrote:
-
-> Using seq_putc to print a single character saves at least a strlen()
-> call and a memory access, and may also give a small .text reduction.
-> 
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->  drivers/scsi/NCR5380.c              |  2 +-
->  drivers/scsi/advansys.c             | 34 +++++++++++++++++-----------------
->  drivers/scsi/aic7xxx/aic79xx_proc.c | 10 +++++-----
->  drivers/scsi/aic7xxx/aic7xxx_proc.c | 10 +++++-----
->  drivers/scsi/atari_NCR5380.c        |  2 +-
->  drivers/scsi/dc395x.c               |  4 ++--
->  drivers/scsi/esas2r/esas2r_main.c   |  2 +-
->  drivers/scsi/in2000.c               |  2 +-
->  drivers/scsi/ips.c                  |  2 +-
->  drivers/scsi/nsp32.c                |  2 +-
->  drivers/scsi/pcmcia/nsp_cs.c        |  4 ++--
->  drivers/scsi/qla2xxx/qla_dfs.c      |  2 +-
->  drivers/scsi/scsi_proc.c            | 10 +++++-----
->  drivers/scsi/scsi_trace.c           |  2 +-
->  drivers/scsi/wd33c93.c              |  2 +-
->  15 files changed, 45 insertions(+), 45 deletions(-)
-> 
-> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index a30af00..8981701 100644
-> --- a/drivers/scsi/NCR5380.c
-> +++ b/drivers/scsi/NCR5380.c
-> @@ -764,7 +764,7 @@ static void lprint_command(unsigned char *command, struct seq_file *m)
->  	lprint_opcode(command[0], m);
->  	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
->  		seq_printf(m, "%02x ", command[i]);
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  }
->  
->  static void lprint_opcode(int opcode, struct seq_file *m)
-> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> index c4d0910..81ffb0f 100644
-> --- a/drivers/scsi/advansys.c
-> +++ b/drivers/scsi/advansys.c
-> @@ -3088,7 +3088,7 @@ static void asc_prt_asc_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	for (i = 0; i <= ASC_MAX_TID; i++)
->  		seq_printf(m, " %c",
->  			   (ep->init_sdtr & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  #ifdef CONFIG_ISA
->  	if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
-> @@ -3203,7 +3203,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	seq_puts(m, " Target ID:           ");
->  	for (i = 0; i <= ADV_MAX_TID; i++)
->  		seq_printf(m, " %X", i);
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
->  		word = ep_3550->disc_enable;
-> @@ -3216,7 +3216,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	for (i = 0; i <= ADV_MAX_TID; i++)
->  		seq_printf(m, " %c",
->  			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
->  		word = ep_3550->tagqng_able;
-> @@ -3229,7 +3229,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	for (i = 0; i <= ADV_MAX_TID; i++)
->  		seq_printf(m, " %c",
->  			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
->  		word = ep_3550->start_motor;
-> @@ -3242,7 +3242,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	for (i = 0; i <= ADV_MAX_TID; i++)
->  		seq_printf(m, " %c",
->  			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
->  		seq_puts(m, " Synchronous Transfer:");
-> @@ -3250,7 +3250,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  			seq_printf(m, " %c",
->  				   (ep_3550->sdtr_able & ADV_TID_TO_TIDMASK(i)) ?
->  				   'Y' : 'N');
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
-> @@ -3259,7 +3259,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  			seq_printf(m, " %c",
->  				   (ep_3550->ultra_able & ADV_TID_TO_TIDMASK(i))
->  				   ? 'Y' : 'N');
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
-> @@ -3273,7 +3273,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  	for (i = 0; i <= ADV_MAX_TID; i++)
->  		seq_printf(m, " %c",
->  			   (word & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800 ||
->  	    adv_dvc_varp->chip_type == ADV_CHIP_ASC38C1600) {
-> @@ -3318,7 +3318,7 @@ static void asc_prt_adv_board_eeprom(struct seq_file *m, struct Scsi_Host *shost
->  				seq_puts(m, "\n  ");
->  			sdtr_speed >>= 4;
->  		}
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
->  }
->  
-> @@ -3448,7 +3448,7 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  			   i,
->  			   (v->sdtr_done & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	for (i = 0; i <= ASC_MAX_TID; i++) {
->  		uchar syn_period_ix;
-> @@ -3483,7 +3483,7 @@ static void asc_prt_asc_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  			seq_puts(m, "*\n");
->  			renegotiate = 1;
->  		} else {
-> -			seq_puts(m, "\n");
-> +			seq_putc(m, '\n');
->  		}
->  	}
->  
-> @@ -3570,7 +3570,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  
->  		seq_printf(m, " %X:%d", i, lrambyte);
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	AdvReadWordLram(iop_base, ASC_MC_WDTR_ABLE, wdtr_able);
->  	seq_puts(m, " Wide Enabled:");
-> @@ -3584,7 +3584,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  			   i,
->  			   (wdtr_able & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	AdvReadWordLram(iop_base, ASC_MC_WDTR_DONE, wdtr_done);
->  	seq_puts(m, " Transfer Bit Width:");
-> @@ -3603,11 +3603,11 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  
->  		if ((wdtr_able & ADV_TID_TO_TIDMASK(i)) &&
->  		    (wdtr_done & ADV_TID_TO_TIDMASK(i)) == 0) {
-> -			seq_puts(m, "*");
-> +			seq_putc(m, '*');
->  			renegotiate = 1;
->  		}
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	AdvReadWordLram(iop_base, ASC_MC_SDTR_ABLE, sdtr_able);
->  	seq_puts(m, " Synchronous Enabled:");
-> @@ -3621,7 +3621,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  			   i,
->  			   (sdtr_able & ADV_TID_TO_TIDMASK(i)) ? 'Y' : 'N');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	AdvReadWordLram(iop_base, ASC_MC_SDTR_DONE, sdtr_done);
->  	for (i = 0; i <= ADV_MAX_TID; i++) {
-> @@ -3670,7 +3670,7 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
->  			seq_puts(m, "*\n");
->  			renegotiate = 1;
->  		} else {
-> -			seq_puts(m, "\n");
-> +			seq_putc(m, '\n');
->  		}
->  	}
->  
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_proc.c b/drivers/scsi/aic7xxx/aic79xx_proc.c
-> index e095598..add2da5 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_proc.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_proc.c
-> @@ -148,9 +148,9 @@ ahd_format_transinfo(struct seq_file *m, struct ahd_transinfo *tinfo)
->  		}
->  		seq_printf(m, "%dbit)", 8 * (0x01 << tinfo->width));
->  	} else if (freq != 0) {
-> -		seq_puts(m, ")");
-> +		seq_putc(m, ')');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  }
->  
->  static void
-> @@ -294,14 +294,14 @@ ahd_linux_show_info(struct seq_file *m, struct Scsi_Host *shost)
->  		seq_puts(m, "Serial EEPROM:\n");
->  		for (i = 0; i < sizeof(*ahd->seep_config)/2; i++) {
->  			if (((i % 8) == 0) && (i != 0)) {
-> -				seq_puts(m, "\n");
-> +				seq_putc(m, '\n');
->  			}
->  			seq_printf(m, "0x%.4x ",
->  				  ((uint16_t*)ahd->seep_config)[i]);
->  		}
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	if ((ahd->features & AHD_WIDE) == 0)
->  		max_targ = 8;
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_proc.c b/drivers/scsi/aic7xxx/aic7xxx_proc.c
-> index 25511ca..1845960 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_proc.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_proc.c
-> @@ -125,9 +125,9 @@ ahc_format_transinfo(struct seq_file *m, struct ahc_transinfo *tinfo)
->  		}
->  		seq_printf(m, "%dbit)", 8 * (0x01 << tinfo->width));
->  	} else if (freq != 0) {
-> -		seq_puts(m, ")");
-> +		seq_putc(m, ')');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  }
->  
->  static void
-> @@ -308,14 +308,14 @@ ahc_linux_show_info(struct seq_file *m, struct Scsi_Host *shost)
->  		seq_puts(m, "Serial EEPROM:\n");
->  		for (i = 0; i < sizeof(*ahc->seep_config)/2; i++) {
->  			if (((i % 8) == 0) && (i != 0)) {
-> -				seq_puts(m, "\n");
-> +				seq_putc(m, '\n');
->  			}
->  			seq_printf(m, "0x%.4x ",
->  				  ((uint16_t*)ahc->seep_config)[i]);
->  		}
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	max_targ = 16;
->  	if ((ahc->features & (AHC_WIDE|AHC_TWIN)) == 0)
-> diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
-> index 04d0c6e..a702554 100644
-> --- a/drivers/scsi/atari_NCR5380.c
-> +++ b/drivers/scsi/atari_NCR5380.c
-> @@ -716,7 +716,7 @@ static void show_Scsi_Cmnd(struct scsi_cmnd *cmd, struct seq_file *m)
->  	seq_printf(m, "%2d (0x%02x)", command[0], command[0]);
->  	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
->  		seq_printf(m, " %02x", command[i]);
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  }
->  
->  static int __maybe_unused NCR5380_show_info(struct seq_file *m,
-> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> index 48c79f9..5ee7f44 100644
-> --- a/drivers/scsi/dc395x.c
-> +++ b/drivers/scsi/dc395x.c
-> @@ -4692,7 +4692,7 @@ static int dc395x_show_info(struct seq_file *m, struct Scsi_Host *host)
->  	if (timer_pending(&acb->waiting_timer))
->  		seq_puts(m, "Waiting queue timer running\n");
->  	else
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  
->  	list_for_each_entry(dcb, &acb->dcb_list, list) {
->  		struct ScsiReqBlk *srb;
-> @@ -4709,7 +4709,7 @@ static int dc395x_show_info(struct seq_file *m, struct Scsi_Host *host)
->  		list_for_each_entry(srb, &dcb->srb_going_list, list)
->  			seq_printf(m, " %p", srb->cmd);
->  		if (!list_empty(&dcb->srb_waiting_list) || !list_empty(&dcb->srb_going_list))
-> -			seq_puts(m, "\n");
-> +			seq_putc(m, '\n');
->  	}
->  
->  	if (debug_enabled(DBG_1)) {
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index 593ff8a..226c280 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -750,7 +750,7 @@ int esas2r_show_info(struct seq_file *m, struct Scsi_Host *sh)
->  	if (dev_count == 0)
->  		seq_puts(m, "none\n");
->  
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  	return 0;
->  
->  }
-> diff --git a/drivers/scsi/in2000.c b/drivers/scsi/in2000.c
-> index a73395e..3882d9f 100644
-> --- a/drivers/scsi/in2000.c
-> +++ b/drivers/scsi/in2000.c
-> @@ -2273,7 +2273,7 @@ static int in2000_show_info(struct seq_file *m, struct Scsi_Host *instance)
->  	if (hd->proc & PR_TEST) {
->  		;		/* insert your own custom function here */
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  	spin_unlock_irqrestore(instance->host_lock, flags);
->  #endif				/* PROC_INTERFACE */
->  	return 0;
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-> index 615a9a3..7542f11 100644
-> --- a/drivers/scsi/ips.c
-> +++ b/drivers/scsi/ips.c
-> @@ -2137,7 +2137,7 @@ ips_host_info(ips_ha_t *ha, struct seq_file *m)
->  	seq_printf(m, "\tCurrent Active PT Commands        : %d\n",
->  		  ha->num_ioctl);
->  
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  	return 0;
->  }
-> diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-> index 8f6b1b4..c6077ce 100644
-> --- a/drivers/scsi/nsp32.c
-> +++ b/drivers/scsi/nsp32.c
-> @@ -1509,7 +1509,7 @@ static int nsp32_show_info(struct seq_file *m, struct Scsi_Host *host)
->  				data->target[id].offset
->  				);
->  		}
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
->  	return 0;
->  }
-> diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-> index acf558a..1b6c883 100644
-> --- a/drivers/scsi/pcmcia/nsp_cs.c
-> +++ b/drivers/scsi/pcmcia/nsp_cs.c
-> @@ -1398,7 +1398,7 @@ static int nsp_show_info(struct seq_file *m, struct Scsi_Host *host)
->  		seq_puts(m, "???");
->  		break;
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  
->  
->  	spin_lock_irqsave(&(data->Lock), flags);
-> @@ -1439,7 +1439,7 @@ static int nsp_show_info(struct seq_file *m, struct Scsi_Host *host)
->  				data->Sync[id].SyncOffset
->  				);
->  		}
-> -		seq_puts(m, "\n");
-> +		seq_putc(m, '\n');
->  	}
->  	return 0;
->  }
-> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-> index c837ba3..15cf074 100644
-> --- a/drivers/scsi/qla2xxx/qla_dfs.c
-> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-> @@ -38,7 +38,7 @@ qla2x00_dfs_fce_show(struct seq_file *s, void *unused)
->  			seq_printf(s, "\n%llx: ",
->  			    (unsigned long long)((cnt * 4) + fce_start));
->  		else
-> -			seq_puts(s, " ");
-> +			seq_putc(s, ' ');
->  		seq_printf(s, "%08x", *fce++);
->  	}
->  
-> diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-> index 581de8f..251598e 100644
-> --- a/drivers/scsi/scsi_proc.c
-> +++ b/drivers/scsi/scsi_proc.c
-> @@ -191,7 +191,7 @@ static int proc_print_scsidevice(struct device *dev, void *data)
->  		if (sdev->vendor[i] >= 0x20)
->  			seq_putc(s, sdev->vendor[i]);
->  		else
-> -			seq_puts(s, " ");
-> +			seq_putc(s, ' ');
->  	}
->  
->  	seq_puts(s, " Model: ");
-> @@ -199,7 +199,7 @@ static int proc_print_scsidevice(struct device *dev, void *data)
->  		if (sdev->model[i] >= 0x20)
->  			seq_putc(s, sdev->model[i]);
->  		else
-> -			seq_puts(s, " ");
-> +			seq_putc(s, ' ');
->  	}
->  
->  	seq_puts(s, " Rev: ");
-> @@ -207,10 +207,10 @@ static int proc_print_scsidevice(struct device *dev, void *data)
->  		if (sdev->rev[i] >= 0x20)
->  			seq_putc(s, sdev->rev[i]);
->  		else
-> -			seq_puts(s, " ");
-> +			seq_putc(s, ' ');
->  	}
->  
-> -	seq_puts(s, "\n");
-> +	seq_putc(s, '\n');
->  
->  	seq_printf(s, "  Type:   %s ", scsi_device_type(sdev->type));
->  	seq_printf(s, "               ANSI  SCSI revision: %02x",
-> @@ -218,7 +218,7 @@ static int proc_print_scsidevice(struct device *dev, void *data)
->  	if (sdev->scsi_level == 2)
->  		seq_puts(s, " CCS\n");
->  	else
-> -		seq_puts(s, "\n");
-> +		seq_putc(s, '\n');
->  
->  out:
->  	return 0;
-> diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-> index e4e122b..5cc386c 100644
-> --- a/drivers/scsi/scsi_trace.c
-> +++ b/drivers/scsi/scsi_trace.c
-> @@ -249,7 +249,7 @@ scsi_trace_misc(struct trace_seq *p, unsigned char *cdb, int len)
->  {
->  	const char *ret = trace_seq_buffer_ptr(p);
->  
-> -	trace_seq_puts(p, "-");
-> +	trace_seq_putc(p, '-');
->  	trace_seq_putc(p, 0);
->  
->  	return ret;
-> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-> index 6e041a7..9e09da4 100644
-> --- a/drivers/scsi/wd33c93.c
-> +++ b/drivers/scsi/wd33c93.c
-> @@ -2192,7 +2192,7 @@ wd33c93_show_info(struct seq_file *m, struct Scsi_Host *instance)
->  			cmd = (struct scsi_cmnd *) cmd->host_scribble;
->  		}
->  	}
-> -	seq_puts(m, "\n");
-> +	seq_putc(m, '\n');
->  	spin_unlock_irq(&hd->lock);
->  #endif				/* PROC_INTERFACE */
->  	return 0;
-> 
+For SDEV_BLOCK/SDEV_CREATED_BLOCK, it looks like drivers/classes that 
+use that state do not want any commands to be queued at that time, 
+because the transport is normally down.
