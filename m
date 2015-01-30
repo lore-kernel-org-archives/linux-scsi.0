@@ -1,98 +1,41 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/8] lib/iovec: Add memcpy_fromiovec_out library function
-Date: Fri, 30 Jan 2015 10:33:32 +0100
-Message-ID: <54CB4FEC.7080908@redhat.com>
-References: <1422605552-24797-1-git-send-email-nab@daterainc.com> <1422605552-24797-2-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
+Date: Fri, 30 Jan 2015 10:46:17 +0100
+Message-ID: <54CB52E9.6000302@redhat.com>
+References: <1422486056-11591-1-git-send-email-hch@lst.de> <54CABE29.5080909@redhat.com> <20150130010849.GA4794@ad.nay.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:63206 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755039AbbA3Jdi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2015 04:33:38 -0500
-In-Reply-To: <1422605552-24797-2-git-send-email-nab@daterainc.com>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:62946 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874AbbA3JqW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2015 04:46:22 -0500
+Received: by mail-wg0-f48.google.com with SMTP id x12so25824486wgg.7
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2015 01:46:21 -0800 (PST)
+In-Reply-To: <20150130010849.GA4794@ad.nay.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Fam Zheng <famz@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
 
 
-On 30/01/2015 09:12, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 30/01/2015 02:08, Fam Zheng wrote:
+> On Fri, 01/30 00:11, Paolo Bonzini wrote:
+>>
+>>
+>> On 29/01/2015 00:00, Christoph Hellwig wrote:
+>>> Lock the device embedded in the scsi_device to protect against
+>>> concurrent calls to ->remove.
+>>>
+>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>
+>> I wonder if this makes this problem: https://lkml.org/lkml/2015/1/5/9 go
+>> away.
 > 
-> This patch adds a new memcpy_fromiovec_out() library function which modifies
-> the passed *iov following memcpy_fromiovec(), but also returns the next current
-> iovec pointer via **iov_out.
-> 
-> This is useful for vhost ANY_LAYOUT support when guests are allowed to generate
-> incoming virtio request headers combined with subsequent SGL payloads into a
-> single iovec.
-> 
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  include/linux/uio.h |  2 ++
->  lib/iovec.c         | 27 +++++++++++++++++++++++++++
->  2 files changed, 29 insertions(+)
-> 
-> diff --git a/include/linux/uio.h b/include/linux/uio.h
-> index 1c5e453..3e4473d 100644
-> --- a/include/linux/uio.h
-> +++ b/include/linux/uio.h
-> @@ -136,6 +136,8 @@ size_t csum_and_copy_to_iter(void *addr, size_t bytes, __wsum *csum, struct iov_
->  size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum, struct iov_iter *i);
->  
->  int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len);
-> +int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
-> +			 struct iovec **iov_out, int len);
->  int memcpy_fromiovecend(unsigned char *kdata, const struct iovec *iov,
->  			int offset, int len);
->  int memcpy_toiovecend(const struct iovec *v, unsigned char *kdata,
-> diff --git a/lib/iovec.c b/lib/iovec.c
-> index 2d99cb4..6a813dd 100644
-> --- a/lib/iovec.c
-> +++ b/lib/iovec.c
-> @@ -28,6 +28,33 @@ int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len)
->  EXPORT_SYMBOL(memcpy_fromiovec);
->  
->  /*
-> + *	Copy iovec to kernel, saving the current iov to *iov_out.
-> + *	Returns -EFAULT on error.
+> A quick test says yes.
 
-Perhaps document that iov is modified, zeroing everything in [iov,
-*iov_out) and possibly removing the front of *iov_out?
+Great, we might want to revert that patch in 3.21.
 
 Paolo
-
-> + */
-> +
-> +int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
-> +			 struct iovec **iov_out, int len)
-> +{
-> +	while (len > 0) {
-> +		if (iov->iov_len) {
-> +			int copy = min_t(unsigned int, len, iov->iov_len);
-> +			if (copy_from_user(kdata, iov->iov_base, copy))
-> +				return -EFAULT;
-> +			len -= copy;
-> +			kdata += copy;
-> +			iov->iov_base += copy;
-> +			iov->iov_len -= copy;
-> +		}
-> +		if (!iov->iov_len)
-> +			iov++;
-> +	}
-> +	*iov_out = iov;
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(memcpy_fromiovec_out);
-> +
-> +/*
->   *	Copy kernel to iovec. Returns -EFAULT on error.
->   */
->  
-> 
