@@ -1,47 +1,78 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: RE: block layer copying user io vectors
-Date: Fri, 30 Jan 2015 17:43:04 +0000
-Message-ID: <60F6FAE47D1BCE4380CC06D18F49789B95301D66@NTXBOIMBX02.micron.com>
-References: <60F6FAE47D1BCE4380CC06D18F49789B952F7ED3@NTXBOIMBX02.micron.com>
- <20150123170627.GA8652@infradead.org>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCHv2 5/5] scsi: move scsi/sg.h to uapi/linux/sg.h
+Date: Fri, 30 Jan 2015 10:07:17 -0800
+Message-ID: <54CBC855.8090908@redhat.com>
+References: <1422579397-18696-1-git-send-email-agrover@redhat.com> <1422579397-18696-6-git-send-email-agrover@redhat.com> <54CBBF44.5060308@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150123170627.GA8652@infradead.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52441 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753462AbbA3SHb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jan 2015 13:07:31 -0500
+In-Reply-To: <54CBBF44.5060308@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, libc-alpha@sourceware.org, David Howells <dhowells@redhat.com>
 
-> > This function does something that seems rather strange.  On line 859,
-> > a for loop determines the number of pages needed for the copying of
-> > the user data to kernel space.  Then the memory is allocated (line
-> > 886 bio_kmalloc()).  Then, strangely, on line 895, there is this
-> > conditional:
-> 
-> This is because the function can also be used with preallocated pages,
-> a feature only used by the sg and tape drivers.
-> 
-> Make sure your user memory is 4k aligned, and you should be able to
-> avoid the copy entirely (1).
+On 01/30/2015 09:28 AM, Douglas Gilbert wrote:
+> At the moment many user space programs in Linux access the SG_IO
+> ioctl related declarations with:
+>     #include <scsi/sg.h>
+>
+> I suspect that file is maintained by the glib folks (because it
+> does not match the kernel file but is logically equivalent). Now
+> if this change encourages those glib folks to break the above
+> include (same applies to '#include <scsi/sg.h>') then that is
+> a serious regression.
 
-Where is this 4k alignment being enforced?  When sg_start_req calls to
-blk_rq_map_user_iov, the only check for alignment is that the data buffers
-are 4-byte aligned (q->dma_alignment == 3).  I have verified that they are.
+This is avoided by putting the new kernel-exported headers in linux/* 
+instead of scsi/*. Then user programs could move to the new include over 
+time, and the old glibc-provided one could be deprecated and eventually 
+removed.
 
-> 
-> (1) except that the sg driver disables the direct mapping of user pages
->     when using readv/writev.  I can't really see why and it should be
->     fixable by just removign that condition from the if in
-> sg_start_req.
+> So is this delayed regression likely to happen??
 
-I am investigating this now.
+It shouldn't, given the different include path.
 
->     Alternatively use the SG_IO ioctl directly on the disk device node,
->     which neither has the read/writev limitation, nor does it use
->     a fixed upper bound preallocated page pool.
+> Do we need to speak to the glib folks?
 
-Unfortunately, the write/read interface of sg is what I need to use for
-asynchronous reasons.
+Yes for phase 2 (but CC'd) to get the glibc scsi/* headers deprecated 
+and eventually removed, but phase 1 is the kernel exporting proper uapi 
+headers, which have just gotten feedback for v2 and I'll be cranking out 
+a v3 shortly.
+
+> What is the appropriate include for a user space program to fetch
+> sg.h in its new (proposed) location?
+
+#include <linux/sg.h>
+
+> For example my utilities currently use:
+>     #include <linux/bsg.h>
+> to fetch the bsg header but need some autotools magic to not break
+> in the absence of that header (e.g. prior to around lk 2.6.30).
+
+CCing dhowells; something similar would be needed for sg.h I imagine. To 
+me it looks like scsi/{scsi, scsi_ioctl, sg}.h should maybe have been 
+included in the scripted uapi changes (607ca46).
+
+> Finally isn't the semi-flat nature of the uapi/linux directory
+> asking for trouble? IOW why isn't there a uapi/linux/scsi
+> directory?
+>
+>    # cd /usr/src/linux-3.19/include/uapi/linux/
+>    # ls | wc
+>      440     440    4350
+>    # ls -p | grep "/" | wc
+>       24      24     204
+>
+> The last command is counting directories (and really should
+> be simpler than that).
+
+I could see #include <linux/scsi/sg.h> as reasonable but I am just a 
+worker bee on a quest to not have to define modern scsi opcodes in my 
+userspace code.
+
+Regards -- Andy
