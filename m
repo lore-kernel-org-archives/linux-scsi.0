@@ -1,52 +1,88 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 2/2] ipr: Driver version 2.6.1
-Date: Fri, 30 Jan 2015 16:30:59 -0600
-Message-ID: <201501302231.t0UMVGDk022759@d03av04.boulder.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:38184 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbbA3Wbp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2015 17:31:45 -0500
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 30 Jan 2015 15:31:44 -0700
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 41CB419D8040
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2015 15:22:52 -0700 (MST)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t0UMUK3f20250786
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2015 15:30:20 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t0UMVG0T023400
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2015 15:31:17 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
+Date: Fri, 30 Jan 2015 14:53:26 -0800
+Message-ID: <1422658406.5117.31.camel@haakon3.risingtidesystems.com>
+References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
+	 <1421920228.7061.48.camel@haakon3.risingtidesystems.com>
+	 <CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
+	 <1421948107.30821.2.camel@haakon3.risingtidesystems.com>
+	 <CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Gavin Guo <gavin.guo@canonical.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: hch@lst.de, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
+On Fri, 2015-01-23 at 09:30 +0800, Gavin Guo wrote:
+> Hi Nicholas,
+> 
+> On Fri, Jan 23, 2015 at 1:35 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > On Thu, 2015-01-22 at 23:56 +0800, Gavin Guo wrote:
+> >> Hi Nicolas,
+> >>
+> >> On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
+> >> <nab@linux-iscsi.org> wrote:
+> >> > Hi Gavin,
+> >> >
+> >> > On Thu, 2015-01-22 at 06:38 +0800, Gavin Guo wrote:
+> >> >> Hi all,
+> >> >>
+> >> >> The general protection fault screenshot is attached.
+> >> >>
+> >> >> Summary:
+> >> >> The kernel is Ubuntu-3.13.0-39.66. I've done basic analysis and found
+> >> >> the fault is in list_del of iscsi_del_ts_from_active_list. And it
+> >> >> looks like deleting the iscsi_thread_set *ts two times. The point to
+> >> >> delete including iscsi_get_ts_from_inactive_list, was also checked but
+> >> >> still can't find the clue. Really appreciate if anyone can provide any
+> >> >> idea on the bug.
+> >> >>
+> >
+> > <SNIP>
+> >
+> >> >
+> >> > Thanks for your detailed analysis.
+> >> >
+> >> > A similar bug was reported off-list some months back by a person using
+> >> > iser-target + RoCE export on v3.12.y code.  Just to confirm, your
+> >> > environment is using traditional iscsi-target + TCP export, right..?
+> >>
+> >> I am sorry that I'm not an expert of the field and already google RoCE
+> >> on the internet but still don't really know what RoCE is. However, I
+> >> can provide the informations.  We used iscsiadm on the initiator side
+> >> and lio_node and tcm_node commands to create the targets for
+> >> connection. I think it should be normal  iscsi-target using TCP
+> >> export.
+> >>
+> >
+> > Yep, that would be traditional iscsi-target + TCP export.
+> >
+> >> >
+> >> > At the time, a different set of iser-target related changes ended up
+> >> > avoiding this issue on his particular setup, so we thought it was likely
+> >> > a race triggered by login failures specific to iser-target code.
+> >> >
+> >> > There was a untested patch (included inline below) to drop the legacy
+> >> > active_ts_list usage all-together, but IIRC he was not able to reproduce
+> >> > further so the patch didn't get picked up for mainline.
+> >> >
+> >> > If your able to reliability reproduce, please try with the following
+> >> > patch and let us know your progress.
+> >>
+> >> Thanks for your time reading the mail. I'll let you know the result.
+> >
+> > Just curious, are you able to reliability reproduce this bug in a VM..?
+> 
+> Thanks for your caring, the machine is on the customer side, I've
+> asked and now waiting for their response.
 
-Bump driver version.
+Hi Gavin,
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+Just curious if there has been any update on this yet..?
 
- drivers/scsi/ipr.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_version_2_6_1 drivers/scsi/ipr.h
---- scsi-queue/drivers/scsi/ipr.h~ipr_version_2_6_1	2015-01-14 10:28:14.227130049 -0600
-+++ scsi-queue-bjking1/drivers/scsi/ipr.h	2015-01-30 16:25:07.005173771 -0600
-@@ -39,8 +39,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.6.0"
--#define IPR_DRIVER_DATE "(November 16, 2012)"
-+#define IPR_DRIVER_VERSION "2.6.1"
-+#define IPR_DRIVER_DATE "(January 30, 2015)"
- 
- /*
-  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
-_
-
+--nab
