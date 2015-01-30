@@ -1,119 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 4/8] vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-Date: Fri, 30 Jan 2015 08:12:28 +0000
-Message-ID: <1422605552-24797-5-git-send-email-nab@daterainc.com>
-References: <1422605552-24797-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1422605552-24797-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] bnx2fc: fix test of "err_warn_bit_map"
+Date: Fri, 30 Jan 2015 11:49:40 +0300
+Message-ID: <20150130084940.GF21357@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+The bug in this code is "if (err_warn_bit_map & (u64) (1 << i)) {".
+The cast to u64 happens after we have already shift wrapped so it's too
+late.  Presumably this means some warnings are ignored.
 
-This patch changes vhost_scsi_map_to_sgl() parameters to accept virtio
-iovec ptr + len when determing pages_nr.
+I also cleanup the other err_warn_bit_map check.
 
-This is currently done with iov_num_pages() -> PAGE_ALIGN, so allow
-the same parameters as well.
-
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/vhost/scsi.c | 37 +++++++++++++++----------------------
- 1 file changed, 15 insertions(+), 22 deletions(-)
+Not tested.
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 9c5ac23..049e603 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -220,10 +220,10 @@ static struct workqueue_struct *tcm_vhost_workqueue;
- static DEFINE_MUTEX(tcm_vhost_mutex);
- static LIST_HEAD(tcm_vhost_list);
- 
--static int iov_num_pages(struct iovec *iov)
-+static int iov_num_pages(void __user *iov_base, size_t iov_len)
- {
--	return (PAGE_ALIGN((unsigned long)iov->iov_base + iov->iov_len) -
--	       ((unsigned long)iov->iov_base & PAGE_MASK)) >> PAGE_SHIFT;
-+	return (PAGE_ALIGN((unsigned long)iov_base + iov_len) -
-+	       ((unsigned long)iov_base & PAGE_MASK)) >> PAGE_SHIFT;
- }
- 
- static void tcm_vhost_done_inflight(struct kref *kref)
-@@ -777,25 +777,18 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
-  * Returns the number of scatterlist entries used or -errno on error.
-  */
- static int
--vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
-+vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *cmd,
-+		      void __user *ptr,
-+		      size_t len,
- 		      struct scatterlist *sgl,
--		      unsigned int sgl_count,
--		      struct iovec *iov,
--		      struct page **pages,
- 		      bool write)
- {
--	unsigned int npages = 0, pages_nr, offset, nbytes;
-+	unsigned int npages = 0, offset, nbytes;
-+	unsigned int pages_nr = iov_num_pages(ptr, len);
- 	struct scatterlist *sg = sgl;
--	void __user *ptr = iov->iov_base;
--	size_t len = iov->iov_len;
-+	struct page **pages = cmd->tvc_upages;
- 	int ret, i;
- 
--	pages_nr = iov_num_pages(iov);
--	if (pages_nr > sgl_count) {
--		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
--		       " sgl_count: %u\n", pages_nr, sgl_count);
--		return -ENOBUFS;
--	}
- 	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
- 		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
- 		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
-@@ -840,7 +833,7 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		sgl_count += iov_num_pages(&iov[i]);
-+		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
-@@ -856,8 +849,8 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_sgl[i]);
-@@ -884,7 +877,7 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		prot_sgl_count += iov_num_pages(&iov[i]);
-+		prot_sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
-@@ -899,8 +892,8 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	cmd->tvc_prot_sgl_count = prot_sgl_count;
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    prot_sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
--- 
-1.9.1
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index c6688d7..a0cb702 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -734,7 +734,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
+ 			(u64)err_entry->data.err_warn_bitmap_lo;
+ 		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
+-			if (err_warn_bit_map & (u64)((u64)1 << i)) {
++			if (err_warn_bit_map & 1ULL << i) {
+ 				err_warn = i;
+ 				break;
+ 			}
+@@ -829,7 +829,7 @@ ret_err_rqe:
+ 			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
+ 			(u64)err_entry->data.err_warn_bitmap_lo;
+ 		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
+-			if (err_warn_bit_map & (u64) (1 << i)) {
++			if (err_warn_bit_map & 1ULL << i) {
+ 				err_warn = i;
+ 				break;
+ 			}
