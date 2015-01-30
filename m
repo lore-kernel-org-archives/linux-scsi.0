@@ -1,75 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv2 5/5] scsi: move scsi/sg.h to uapi/linux/sg.h
-Date: Thu, 29 Jan 2015 17:14:00 -0800
-Message-ID: <1422580440.2091.32.camel@HansenPartnership.com>
-References: <1422579397-18696-1-git-send-email-agrover@redhat.com>
-	 <1422579397-18696-6-git-send-email-agrover@redhat.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 2/4] Fix for crash when bfa_itnim is NULL
+Date: Fri, 30 Jan 2015 12:14:49 +1100
+Message-ID: <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
+References: <1422521757-18724-1-git-send-email-anil.gurumurthy@qlogic.com> <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38318 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754553AbbA3BOC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jan 2015 20:14:02 -0500
-In-Reply-To: <1422579397-18696-6-git-send-email-agrover@redhat.com>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:42441 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751709AbbA3BPL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 20:15:11 -0500
+Received: by mail-we0-f181.google.com with SMTP id k48so24544945wev.12
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2015 17:15:10 -0800 (PST)
+In-Reply-To: <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: linux-scsi@vger.kernel.org, hch@lst.de
+To: anil.gurumurthy@qlogic.com
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-01-29 at 16:56 -0800, Andy Grover wrote:
-> This will enable user programs to have access to the most current
-> definitions.
-> 
-> Modify include sites for new path.
-> 
-> Signed-off-by: Andy Grover <agrover@redhat.com>
+Hi Anil,
+
+On Thu, Jan 29, 2015 at 7:55 PM,  <anil.gurumurthy@qlogic.com> wrote:
+> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+>
+> Signed-off-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+> Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 > ---
->  block/bio.c                    |   2 +-
->  block/blk-map.c                |   2 +-
->  block/bsg.c                    |   2 +-
->  block/scsi_ioctl.c             |   2 +-
->  drivers/block/aoe/aoeblk.c     |   2 +-
->  drivers/block/cciss.c          |   2 +-
->  drivers/block/nvme-core.c      |   2 +-
->  drivers/block/nvme-scsi.c      |   2 +-
->  drivers/block/skd_main.c       |   2 +-
->  drivers/message/i2o/i2o_scsi.c |   2 +-
->  drivers/scsi/ips.c             |   2 +-
->  drivers/scsi/scsi_error.c      |   2 +-
->  drivers/scsi/scsi_ioctl.c      |   2 +-
->  drivers/scsi/sg.c              |   2 +-
->  drivers/scsi/st.c              |   2 +-
->  fs/compat_ioctl.c              |   2 +-
->  include/scsi/sg.h              | 274 -----------------------------------------
->  include/uapi/linux/Kbuild      |   1 +
->  include/uapi/linux/sg.h        | 274 +++++++++++++++++++++++++++++++++++++++++
->  kernel/sysctl.c                |   2 +-
->  20 files changed, 292 insertions(+), 291 deletions(-)
->  delete mode 100644 include/scsi/sg.h
->  create mode 100644 include/uapi/linux/sg.h
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 471d738..ca072bb 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -28,7 +28,7 @@
->  #include <linux/mempool.h>
->  #include <linux/workqueue.h>
->  #include <linux/cgroup.h>
-> -#include <scsi/sg.h>		/* for struct sg_iovec */
-> +#include <uapi/linux/sg.h>		/* for struct sg_iovec */
+>  drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
+>  drivers/scsi/bfa/bfad_im.c       |   26 ++++++++++++++++++++++++++
+>  2 files changed, 27 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+> index d823792..4631630 100644
+> --- a/drivers/scsi/bfa/bfa_fcs_lport.c
+> +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+> @@ -2654,7 +2654,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+>
+>         strncpy(hba_attr->node_sym_name.symname,
+>                 port->port_cfg.node_sym_name.symname, BFA_SYMNAME_MAXLEN);
+> -       strcpy(hba_attr->vendor_info, "BROCADE");
+> +       strcpy(hba_attr->vendor_info, "QLogic");
 
-Good grief, not like this, please.  uapi/linux/sg.h becomes our public,
-or exported set of interfaces, but keep scsi/sg.h as our internal set
-but have it include uapi/linux/sg.h (like you did for scsi.h).  That way
-if we have any kernel private sg stuff, it stays in scsi/sg.h plus we
-don't need to patch the #include path in fifty odd drivers.
+Shouldn't this be in the next patch?
 
-Same goes for scsi_ioctl.h
+Thanks,
 
-James
+-- 
+Julian Calaby
 
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
