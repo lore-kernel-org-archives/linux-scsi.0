@@ -1,52 +1,54 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH 2/4] Fix for crash when bfa_itnim is NULL
-Date: Fri, 30 Jan 2015 12:14:49 +1100
-Message-ID: <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
-References: <1422521757-18724-1-git-send-email-anil.gurumurthy@qlogic.com> <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCHv2 3/5] scsi: Move user-shareable stuff in scsi/scsi.h to
+ uapi/linux/scsi.h
+Date: Thu, 29 Jan 2015 17:24:13 -0800
+Message-ID: <1422581053.2091.34.camel@HansenPartnership.com>
+References: <1422579397-18696-1-git-send-email-agrover@redhat.com>
+	 <1422579397-18696-4-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:42441 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751709AbbA3BPL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jan 2015 20:15:11 -0500
-Received: by mail-we0-f181.google.com with SMTP id k48so24544945wev.12
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2015 17:15:10 -0800 (PST)
-In-Reply-To: <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38352 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752517AbbA3BYR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2015 20:24:17 -0500
+In-Reply-To: <1422579397-18696-4-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: anil.gurumurthy@qlogic.com
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andy Grover <agrover@redhat.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de
 
-Hi Anil,
-
-On Thu, Jan 29, 2015 at 7:55 PM,  <anil.gurumurthy@qlogic.com> wrote:
-> From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
->
-> Signed-off-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-> Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+On Thu, 2015-01-29 at 16:56 -0800, Andy Grover wrote:
+> A great many SCSI codes can be made available to userspace in a uapi
+> header, while the kernel-only definitions stay in scsi/scsi.h.
+> 
+> This will permit userspace apps to stop using the antiquated definitions
+> available in glibc's scsi/scsi.h, which are very old and incomplete.
+> 
+> scsi/scsi.h also includes uapi/scsi/scsi.h so kernel code need not update
+> includes.
+> 
+> Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
->  drivers/scsi/bfa/bfad_im.c       |   26 ++++++++++++++++++++++++++
->  2 files changed, 27 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-> index d823792..4631630 100644
-> --- a/drivers/scsi/bfa/bfa_fcs_lport.c
-> +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-> @@ -2654,7 +2654,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
->
->         strncpy(hba_attr->node_sym_name.symname,
->                 port->port_cfg.node_sym_name.symname, BFA_SYMNAME_MAXLEN);
-> -       strcpy(hba_attr->vendor_info, "BROCADE");
-> +       strcpy(hba_attr->vendor_info, "QLogic");
+>  include/scsi/scsi.h       | 497 +--------------------------------------------
+>  include/uapi/linux/Kbuild |   1 +
+>  include/uapi/linux/scsi.h | 506 ++++++++++++++++++++++++++++++++++++++++++++++
 
-Shouldn't this be in the next patch?
+I think this is too much: lots of things in scsi.h have no meaning to
+the user: our internal definition of scsi_lun for instance, internal
+return codes, mid level queue instructions, our internal markers for
+SCSI levels ...
 
-Thanks,
+What you put in this file becomes a contract for userspace.  The rule
+should be don't put anything in unless we want the user to use it (and
+we're willing to stick by it).
 
--- 
-Julian Calaby
+I really think that nothing that isn't already
+in /usr/include/scsi/scsi.h is a great rule to follow and then, if
+necessary, justify why any additional stuff.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+James
+
+
