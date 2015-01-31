@@ -1,88 +1,106 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
-Date: Fri, 30 Jan 2015 14:53:26 -0800
-Message-ID: <1422658406.5117.31.camel@haakon3.risingtidesystems.com>
-References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
-	 <1421920228.7061.48.camel@haakon3.risingtidesystems.com>
-	 <CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
-	 <1421948107.30821.2.camel@haakon3.risingtidesystems.com>
-	 <CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Gavin Guo <gavin.guo@canonical.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+From: Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH v2] scsi: NCR5380: use msecs_to_jiffies for conversions
+Date: Sat, 31 Jan 2015 09:13:40 +0100
+Message-ID: <1422692020-6607-1-git-send-email-der.herr@hofr.at>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.osadl.org ([62.245.132.105]:53350 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751055AbbAaIVn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 Jan 2015 03:21:43 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
 
-On Fri, 2015-01-23 at 09:30 +0800, Gavin Guo wrote:
-> Hi Nicholas,
-> 
-> On Fri, Jan 23, 2015 at 1:35 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > On Thu, 2015-01-22 at 23:56 +0800, Gavin Guo wrote:
-> >> Hi Nicolas,
-> >>
-> >> On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
-> >> <nab@linux-iscsi.org> wrote:
-> >> > Hi Gavin,
-> >> >
-> >> > On Thu, 2015-01-22 at 06:38 +0800, Gavin Guo wrote:
-> >> >> Hi all,
-> >> >>
-> >> >> The general protection fault screenshot is attached.
-> >> >>
-> >> >> Summary:
-> >> >> The kernel is Ubuntu-3.13.0-39.66. I've done basic analysis and found
-> >> >> the fault is in list_del of iscsi_del_ts_from_active_list. And it
-> >> >> looks like deleting the iscsi_thread_set *ts two times. The point to
-> >> >> delete including iscsi_get_ts_from_inactive_list, was also checked but
-> >> >> still can't find the clue. Really appreciate if anyone can provide any
-> >> >> idea on the bug.
-> >> >>
-> >
-> > <SNIP>
-> >
-> >> >
-> >> > Thanks for your detailed analysis.
-> >> >
-> >> > A similar bug was reported off-list some months back by a person using
-> >> > iser-target + RoCE export on v3.12.y code.  Just to confirm, your
-> >> > environment is using traditional iscsi-target + TCP export, right..?
-> >>
-> >> I am sorry that I'm not an expert of the field and already google RoCE
-> >> on the internet but still don't really know what RoCE is. However, I
-> >> can provide the informations.  We used iscsiadm on the initiator side
-> >> and lio_node and tcm_node commands to create the targets for
-> >> connection. I think it should be normal  iscsi-target using TCP
-> >> export.
-> >>
-> >
-> > Yep, that would be traditional iscsi-target + TCP export.
-> >
-> >> >
-> >> > At the time, a different set of iser-target related changes ended up
-> >> > avoiding this issue on his particular setup, so we thought it was likely
-> >> > a race triggered by login failures specific to iser-target code.
-> >> >
-> >> > There was a untested patch (included inline below) to drop the legacy
-> >> > active_ts_list usage all-together, but IIRC he was not able to reproduce
-> >> > further so the patch didn't get picked up for mainline.
-> >> >
-> >> > If your able to reliability reproduce, please try with the following
-> >> > patch and let us know your progress.
-> >>
-> >> Thanks for your time reading the mail. I'll let you know the result.
-> >
-> > Just curious, are you able to reliability reproduce this bug in a VM..?
-> 
-> Thanks for your caring, the machine is on the customer side, I've
-> asked and now waiting for their response.
+This is only an API consolidation to make things more readable.
+Instances of  var * HZ / 1000  are replaced by  msecs_to_jiffies(var).
 
-Hi Gavin,
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
 
-Just curious if there has been any update on this yet..?
+v2: the original patch was not taking care of all the dependencies
+    as reported by Finn Thain <fthain@telegraphics.com.au> - this
+    version now uses the suggested config to check the patch.
 
---nab
+Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+ok but msecs_to_jiffies(val) is the cleaner solution and handles all
+corner cases correctly. This is a minor API cleanup only.
+
+This patch was only compile tested with i386_defconfig + CONFIG_ISA=y
+as well as all dependent drivers enabled:
+CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_GENERIC_NCR5380=m
+CONFIG_SCSI_DMX3191D=m, CONFIG_SCSI_DTC3280=m
+CONFIG_SCSI_GENERIC_NCR5380=m, CONFIG_SCSI_GENERIC_NCR5380_MMIO=m
+CONFIG_SCSI_PAS16=m, CONFIG_SCSI_T128=m
+
+Patch is against 3.19.0-rc6 -next-20150130
+
+---
+ drivers/scsi/NCR5380.c   |   10 +++++-----
+ drivers/scsi/g_NCR5380.c |    6 +++---
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 36244d6..35bb93b 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -474,11 +474,11 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+  */
+ #ifndef USLEEP_SLEEP
+ /* 20 ms (reasonable hard disk speed) */
+-#define USLEEP_SLEEP (20*HZ/1000)
++#define USLEEP_SLEEP msecs_to_jiffies(20)
+ #endif
+ /* 300 RPM (floppy speed) */
+ #ifndef USLEEP_POLL
+-#define USLEEP_POLL (200*HZ/1000)
++#define USLEEP_POLL msecs_to_jiffies(200)
+ #endif
+ #ifndef USLEEP_WAITLONG
+ /* RvC: (reasonable time to wait on select error) */
+@@ -576,7 +576,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+ 		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+ 			trying_irqs |= mask;
+ 
+-	timeout = jiffies + (250 * HZ / 1000);
++	timeout = jiffies + msecs_to_jiffies(250);
+ 	probe_irq = NO_IRQ;
+ 
+ 	/*
+@@ -634,7 +634,7 @@ static void prepare_info(struct Scsi_Host *instance)
+ 	         "sg_tablesize %d, this_id %d, "
+ 	         "flags { %s%s%s}, "
+ #if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
+-	         "USLEEP_POLL %d, USLEEP_WAITLONG %d, "
++		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
+ #endif
+ 	         "options { %s} ",
+ 	         instance->hostt->name, instance->io_port, instance->n_io_port,
+@@ -1348,7 +1348,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+ 	 * selection.
+ 	 */
+ 
+-	timeout = jiffies + (250 * HZ / 1000);
++	timeout = jiffies + msecs_to_jiffies(250);
+ 
+ 	/* 
+ 	 * XXX very interesting - we're seeing a bounce where the BSY we 
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index f35792f..9f978ad 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -57,9 +57,9 @@
+  */
+ 
+ /* settings for DTC3181E card with only Mustek scanner attached */
+-#define USLEEP_POLL	1
+-#define USLEEP_SLEEP	20
+-#define USLEEP_WAITLONG	500
++#define USLEEP_POLL	msecs_to_jiffies(1)
++#define USLEEP_SLEEP	msecs_to_jiffies(20)
++#define USLEEP_WAITLONG	msecs_to_jiffies(500)
+ 
+ #define AUTOPROBE_IRQ
+ 
+-- 
+1.7.10.4
+
