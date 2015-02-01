@@ -1,67 +1,105 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/8] lib/iovec: Add memcpy_fromiovec_out library function
-Date: Sat, 31 Jan 2015 23:15:11 -0800
-Message-ID: <1422774911.30468.5.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 4/8] vhost/scsi: Change vhost_scsi_map_to_sgl to accept
+ iov ptr + len
+Date: Sat, 31 Jan 2015 23:24:32 -0800
+Message-ID: <1422775472.30468.13.camel@haakon3.risingtidesystems.com>
 References: <1422605552-24797-1-git-send-email-nab@daterainc.com>
-	 <1422605552-24797-2-git-send-email-nab@daterainc.com>
-	 <54CB4FEC.7080908@redhat.com>
+	 <1422605552-24797-5-git-send-email-nab@daterainc.com>
+	 <20150130105119.GA21531@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54CB4FEC.7080908@redhat.com>
+In-Reply-To: <20150130105119.GA21531@redhat.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2015-01-30 at 10:33 +0100, Paolo Bonzini wrote:
-> 
-> On 30/01/2015 09:12, Nicholas A. Bellinger wrote:
+On Fri, 2015-01-30 at 12:51 +0200, Michael S. Tsirkin wrote:
+> On Fri, Jan 30, 2015 at 08:12:28AM +0000, Nicholas A. Bellinger wrote:
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > > 
-> > This patch adds a new memcpy_fromiovec_out() library function which modifies
-> > the passed *iov following memcpy_fromiovec(), but also returns the next current
-> > iovec pointer via **iov_out.
+> > This patch changes vhost_scsi_map_to_sgl() parameters to accept virtio
+> > iovec ptr + len when determing pages_nr.
 > > 
-> > This is useful for vhost ANY_LAYOUT support when guests are allowed to generate
-> > incoming virtio request headers combined with subsequent SGL payloads into a
-> > single iovec.
+> > This is currently done with iov_num_pages() -> PAGE_ALIGN, so allow
+> > the same parameters as well.
 > > 
 > > Cc: Michael S. Tsirkin <mst@redhat.com>
 > > Cc: Paolo Bonzini <pbonzini@redhat.com>
 > > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > > ---
-> >  include/linux/uio.h |  2 ++
-> >  lib/iovec.c         | 27 +++++++++++++++++++++++++++
-> >  2 files changed, 29 insertions(+)
+> >  drivers/vhost/scsi.c | 37 +++++++++++++++----------------------
+> >  1 file changed, 15 insertions(+), 22 deletions(-)
 > > 
-
-<SNIP>
-
-> > --- a/lib/iovec.c
-> > +++ b/lib/iovec.c
-> > @@ -28,6 +28,33 @@ int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len)
-> >  EXPORT_SYMBOL(memcpy_fromiovec);
+> > diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> > index 9c5ac23..049e603 100644
+> > --- a/drivers/vhost/scsi.c
+> > +++ b/drivers/vhost/scsi.c
+> > @@ -220,10 +220,10 @@ static struct workqueue_struct *tcm_vhost_workqueue;
+> >  static DEFINE_MUTEX(tcm_vhost_mutex);
+> >  static LIST_HEAD(tcm_vhost_list);
 > >  
-> >  /*
-> > + *	Copy iovec to kernel, saving the current iov to *iov_out.
-> > + *	Returns -EFAULT on error.
+> > -static int iov_num_pages(struct iovec *iov)
+> > +static int iov_num_pages(void __user *iov_base, size_t iov_len)
+> >  {
+> > -	return (PAGE_ALIGN((unsigned long)iov->iov_base + iov->iov_len) -
+> > -	       ((unsigned long)iov->iov_base & PAGE_MASK)) >> PAGE_SHIFT;
+> > +	return (PAGE_ALIGN((unsigned long)iov_base + iov_len) -
+> > +	       ((unsigned long)iov_base & PAGE_MASK)) >> PAGE_SHIFT;
+> >  }
+> >  
+> >  static void tcm_vhost_done_inflight(struct kref *kref)
+> > @@ -777,25 +777,18 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
+> >   * Returns the number of scatterlist entries used or -errno on error.
+> >   */
+> >  static int
+> > -vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
+> > +vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *cmd,
+> > +		      void __user *ptr,
+> > +		      size_t len,
+> >  		      struct scatterlist *sgl,
+> > -		      unsigned int sgl_count,
+> > -		      struct iovec *iov,
+> > -		      struct page **pages,
+> >  		      bool write)
+> >  {
+> > -	unsigned int npages = 0, pages_nr, offset, nbytes;
+> > +	unsigned int npages = 0, offset, nbytes;
+> > +	unsigned int pages_nr = iov_num_pages(ptr, len);
+> >  	struct scatterlist *sg = sgl;
+> > -	void __user *ptr = iov->iov_base;
+> > -	size_t len = iov->iov_len;
+> > +	struct page **pages = cmd->tvc_upages;
+> >  	int ret, i;
+> >  
+> > -	pages_nr = iov_num_pages(iov);
+> > -	if (pages_nr > sgl_count) {
+> > -		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
+> > -		       " sgl_count: %u\n", pages_nr, sgl_count);
+> > -		return -ENOBUFS;
+> > -	}
+> >  	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
+> >  		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
+> >  		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
+> > @@ -840,7 +833,7 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+> >  	int ret, i;
+> >  
+> >  	for (i = 0; i < niov; i++)
+> > -		sgl_count += iov_num_pages(&iov[i]);
+> > +		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
+> >  
 > 
-> Perhaps document that iov is modified, zeroing everything in [iov,
-> *iov_out) and possibly removing the front of *iov_out?
+> A helper function for this loop seems in order as well?
 > 
 
-Sure, updated the read the following:
+I didn't bother with this, as it's only used by the legacy !ANY_LAYOUT
+related code-path.
 
- *      Copy iovec to kernel, modifying the passed *iov entries.
- *
- *      Save **iov_out for the caller to use upon return, that may either
- *      contain the current entry with a re-calculated iov_base + iov_len
- *      or next unmodified entry.
- *
- *      Also note that any iovec entries preceding the final *iov_out are
- *      zeroed by copy_from_user().
+Also, I don't see a reason at this point to keep the !ANY_LAYOUT bits
+around for >= v3.20 code, so for -v2 I'll just drop the legacy code
+(including the above) all together.
 
 Thank you,
 
