@@ -1,38 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: block layer copying user io vectors
-Date: Mon, 2 Feb 2015 02:00:34 -0800
-Message-ID: <20150202100034.GB26503@infradead.org>
-References: <60F6FAE47D1BCE4380CC06D18F49789B952F7ED3@NTXBOIMBX02.micron.com>
- <20150123170627.GA8652@infradead.org>
- <60F6FAE47D1BCE4380CC06D18F49789B95301D66@NTXBOIMBX02.micron.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <60F6FAE47D1BCE4380CC06D18F49789B95301D66@NTXBOIMBX02.micron.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v1] Fix the dma state machine lockup for the ATA_CMD_SMART PIO mode command.
+Date: Mon,  2 Feb 2015 15:48:47 +0530
+Message-ID: <1422872328-16700-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46759 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753800AbbBBKTv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2015 05:19:51 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 
-On Fri, Jan 30, 2015 at 05:43:04PM +0000, Andy Falanga (afalanga) wrote:
-> > > This function does something that seems rather strange.  On line 859,
-> > > a for loop determines the number of pages needed for the copying of
-> > > the user data to kernel space.  Then the memory is allocated (line
-> > > 886 bio_kmalloc()).  Then, strangely, on line 895, there is this
-> > > conditional:
-> > 
-> > This is because the function can also be used with preallocated pages,
-> > a feature only used by the sg and tape drivers.
-> > 
-> > Make sure your user memory is 4k aligned, and you should be able to
-> > avoid the copy entirely (1).
-> 
-> Where is this 4k alignment being enforced?  When sg_start_req calls to
-> blk_rq_map_user_iov, the only check for alignment is that the data buffers
-> are 4-byte aligned (q->dma_alignment == 3).  I have verified that they are.
+v1 changes:
+ * Update the commit id as per Tejun's comments.
+ * Add a bit explanation.
 
-Indeed, I though we had the more strict direct I/O alignment.
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
 
-Still doesn't help because the sg driver refuses to directly map user
-pages for vectored I/O.
+Suman Tripathi (1):
+  ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_SMART PIO
+    mode command.
+
+ drivers/ata/ahci_xgene.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--
+1.8.2.1
+
