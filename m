@@ -1,134 +1,790 @@
-From: ygardi@codeaurora.org
-Subject: Re: [PATCH v7 5/5] scsi: ufs-qcom-ice: add Inline Crypto Engine
- (ICE) support for UFS
-Date: Mon, 2 Feb 2015 14:36:29 -0000
-Message-ID: <3b5cfece9b27a6622fa654b094c5bb20.squirrel@www.codeaurora.org>
-References: <1421332359-31785-1-git-send-email-ygardi@codeaurora.org>
-    <1421332359-31785-6-git-send-email-ygardi@codeaurora.org>
-    <1422002886.30730.8.camel@x220>
+From: Laurence Oberman <oberman.l@gmail.com>
+Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
+Date: Mon, 2 Feb 2015 10:16:20 -0500
+Message-ID: <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
+References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1422002886.30730.8.camel@x220>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Valentin Rothberg <valentinrothberg@gmail.com>, Dov Levenglick <dovl@codeaurora.org>, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, noag@codeaurora.org, draviv@codeaurora.org, Yaniv Gardi <ygardi@qti.qualcomm.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f42.google.com ([209.85.215.42]:65123 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096AbbBBPQX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2015 10:16:23 -0500
+Received: by mail-la0-f42.google.com with SMTP id ms9so41822057lab.1
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 07:16:21 -0800 (PST)
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hp.com>, "loberman@redhat.com" <loberman@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
 
-Paul,
+I pulled this this morning and will be testing. The prior version was
+stable for me on the upstream and RHEL 6.5 kernel without exhaustive
+testing.
+We also just received more requests to get this into RHEL from HP /
+Red Hat customers.
 
-we have decided to revert the ICE change that support UFS.
-a change already uploaded:
-look for subject:
+Kai, what are your thoughts. I realize this is a large amount of
+additional code. I am not keen to create a driver just for stats as we
+would have to keep the rest of the st driver changes always in sync.
 
-[PATCH v1] Revert "scsi: ufs-qcom-ice: add Inline Crypto Engine (ICE)
-support for UFS"
+Thanks
+Laurence
 
-thanks,
-Yaniv
-
-> Yaniv,
+On Mon, Jan 12, 2015 at 10:43 PM, Seymour, Shane M <shane.seymour@hp.com> wrote:
+> Some small changes since the last version - this version removes two files from sysfs compared to the last version (read and write block counts since they're derived from the byte counts they can be calculated in user space) but that's the only change. This version has been rebased to 3.19.0-rc3-next-20150108.
 >
-> On Thu, 2015-01-15 at 16:32 +0200, Yaniv Gardi wrote:
->> From: Yaniv Gardi <ygardi@qti.qualcomm.com>
->>
->> In-order to enhance storage encryption performance,
->> an Inline Cryptographic Engine is introduced to UFS.
->> This patch adds in-line encryption capabilities to the UFS
->> driver.
->>
->> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+> Since posting the last version an email was received by Kai and myself from an AT&T employee who has a need for tape statistics to be implemented (who gave permission to quote their email), I've included part of the email here:
 >
-> This patch became commit 8805ccd069b7 ("ufs-qcom-ice: add Inline Crypto
-> Engine (ICE) support for UFS") in today's linux-next (ie,
-> next-20150123). I noticed because a script I use to check linux-next
-> spotted a problem with it.
+> "There are over 20,000 tape devices managed by our operations group zoned to tens of thousands of servers.
 >
->> ---
->>  drivers/scsi/ufs/Kconfig        |  12 +
->>  drivers/scsi/ufs/Makefile       |   1 +
->>  drivers/scsi/ufs/ufs-qcom-ice.c | 520
->> ++++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/ufs/ufs-qcom-ice.h | 113 +++++++++
->>  drivers/scsi/ufs/ufs-qcom.c     |  56 ++++-
->>  drivers/scsi/ufs/ufs-qcom.h     |  25 ++
->>  6 files changed, 726 insertions(+), 1 deletion(-)
->>  create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
->>  create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.h
->>
->> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
->> index 8a1f4b3..ecf34ed 100644
->> --- a/drivers/scsi/ufs/Kconfig
->> +++ b/drivers/scsi/ufs/Kconfig
->> @@ -83,3 +83,15 @@ config SCSI_UFS_QCOM
->>
->>  	  Select this if you have UFS controller on QCOM chipset.
->>  	  If unsure, say N.
->> +
->> +config SCSI_UFS_QCOM_ICE
->> +	bool "QCOM specific hooks to Inline Crypto Engine for UFS driver"
->> +	depends on SCSI_UFS_QCOM && CRYPTO_DEV_QCOM_ICE
+> My challenge is that I cannot provide operations a solution that gives them visibility into the tape drive performance metrics when that platform is linux. Our legacy platforms (Solaris,HPUX,AIX) provide facilities to use iostat and sar to determine the write speed of the tape drives. We took for granted that this would be available in linux and its absence has been very troublesome. Because operations cannot measure tape drive performance in this way they cannot easily determine when there is a tape drive performance problem and whether the change improved or worsened the performance problem.
+> ...
+> I have followed the debate https://lkml.org/lkml/2013/3/20/696 and from a service provide perspective we would expect the same maturity and functionality that we have from the traditional unix platform in regards to iostat/sar. This issue is important and urgent because tape drive performance issues are common and I am unable to provide standards and processes to identify and remediate these issues."
 >
-> There's currently no Kconfig symbol CRYPTO_DEV_QCOM_ICE in linux-next.
-> So SCSI_UFS_QCOM_ICE can not be set and these "in-line encryption
-> capabilities" can not be enabled.
+> Another HP customer has also requested the same functionality (but hasn't given permission to be named), they own tape drives numbering in the 1000s and also need the ability to investigate performance issues.
 >
->> +	help
->> +	  This selects the QCOM specific additions to support Inline Crypto
->> +	  Engine (ICE).
->> +	  ICE accelerates the crypto operations and maintains the high UFS
->> +	  performance.
->> +
->> +	  Select this if you have ICE supported for UFS on QCOM chipset.
->> +	  If unsure, say N.
->> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
->> index 8303bcc..31adca5 100644
->> --- a/drivers/scsi/ufs/Makefile
->> +++ b/drivers/scsi/ufs/Makefile
->> @@ -1,5 +1,6 @@
->>  # UFSHCD makefile
->>  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->> +obj-$(CONFIG_SCSI_UFS_QCOM_ICE) += ufs-qcom-ice.o
->>  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o
->>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
->>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
->> diff --git a/drivers/scsi/ufs/ufs-qcom-ice.c
->> b/drivers/scsi/ufs/ufs-qcom-ice.c
->> new file mode 100644
->> index 0000000..9202b73
->> --- /dev/null
->> +++ b/drivers/scsi/ufs/ufs-qcom-ice.c
->> @@ -0,0 +1,520 @@
->> +/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 and
->> + * only version 2 as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + */
->> +
->> +#include <linux/of.h>
->> +#include <linux/async.h>
->> +#include <linux/blkdev.h>
->> +#include <crypto/ice.h>
+> Signed-off-by: shane.seymour@hp.com
+> Tested-by: shane.seymour@hp.com
+> ---
+> diff -uprN a/drivers/scsi/st.c b/drivers/scsi/st.c
+> --- a/drivers/scsi/st.c 2015-01-11 14:46:00.243814755 -0600
+> +++ b/drivers/scsi/st.c 2015-01-12 13:54:52.549117333 -0600
+> @@ -20,6 +20,7 @@
+>  static const char *verstr = "20101219";
 >
-> This header is not included in linux-next so manually building
-> ufs-qcom-ice.o isn't possible either.
+>  #include <linux/module.h>
+> +#include <linux/kobject.h>
 >
-> I assume a series to add CRYPTO_DEV_QCOM_ICE and crypto/ice.h (and
-> whatever else is needed to build this) is queued somewhere. Is that
-> correct?
+>  #include <linux/fs.h>
+>  #include <linux/kernel.h>
+> @@ -226,6 +227,20 @@ static DEFINE_SPINLOCK(st_index_lock);
+>  static DEFINE_SPINLOCK(st_use_lock);
+>  static DEFINE_IDR(st_index_idr);
+>
+> +static inline void st_stats_remove_files(struct scsi_tape *);
+> +static inline void st_stats_create_files(struct scsi_tape *);
+> +static ssize_t st_tape_attr_show(struct kobject *, struct attribute *, char *);
+> +static ssize_t st_tape_attr_store(struct kobject *, struct attribute *,
+> +       const char *, size_t);
+> +static void st_release_stats_kobj(struct kobject *);
+> +static const struct sysfs_ops st_stats_sysfs_ops = {
+> +       .show   = st_tape_attr_show,
+> +       .store  = st_tape_attr_store,
+> +};
+> +static struct kobj_type st_stats_ktype = {
+> +       .release = st_release_stats_kobj,
+> +       .sysfs_ops = &st_stats_sysfs_ops,
+> +};
 >
 >
-> Paul Bolle
 >
+>  #include "osst_detect.h"
+> @@ -476,10 +491,22 @@ static void st_scsi_execute_end(struct r
+>         struct st_request *SRpnt = req->end_io_data;
+>         struct scsi_tape *STp = SRpnt->stp;
+>         struct bio *tmp;
+> +       u64 ticks;
+>
+>         STp->buffer->cmdstat.midlevel_result = SRpnt->result = req->errors;
+>         STp->buffer->cmdstat.residual = req->resid_len;
+>
+> +       if (STp->stats != NULL) {
+> +               ticks = get_jiffies_64();
+> +               STp->stats->in_flight--;
+> +               ticks -= STp->stats->stamp;
+> +               STp->stats->io_ticks += ticks;
+> +               if (req->cmd[0] == WRITE_6)
+> +                       STp->stats->write_ticks += ticks;
+> +               else if (req->cmd[0] == READ_6)
+> +                       STp->stats->read_ticks += ticks;
+> +       }
+> +
+>         tmp = SRpnt->bio;
+>         if (SRpnt->waiting)
+>                 complete(SRpnt->waiting);
+> @@ -496,6 +523,7 @@ static int st_scsi_execute(struct st_req
+>         struct rq_map_data *mdata = &SRpnt->stp->buffer->map_data;
+>         int err = 0;
+>         int write = (data_direction == DMA_TO_DEVICE);
+> +       struct scsi_tape *STp = SRpnt->stp;
+>
+>         req = blk_get_request(SRpnt->stp->device->request_queue, write,
+>                               GFP_KERNEL);
+> @@ -516,6 +544,20 @@ static int st_scsi_execute(struct st_req
+>                 }
+>         }
+>
+> +       if (STp->stats != NULL) {
+> +               if (cmd[0] == WRITE_6) {
+> +                       STp->stats->write_cnt++;
+> +                       STp->stats->write_byte_cnt += bufflen;
+> +               } else if (cmd[0] == READ_6) {
+> +                       STp->stats->read_cnt++;
+> +                       STp->stats->read_byte_cnt += bufflen;
+> +               } else {
+> +                       STp->stats->other_cnt++;
+> +               }
+> +               STp->stats->stamp = get_jiffies_64();
+> +               STp->stats->in_flight++;
+> +       }
+> +
+>         SRpnt->bio = req->bio;
+>         req->cmd_len = COMMAND_SIZE(cmd[0]);
+>         memset(req->cmd, 0, BLK_MAX_CDB);
+> @@ -4064,6 +4106,8 @@ out:
+>  static int create_cdevs(struct scsi_tape *tape)
+>  {
+>         int mode, error;
+> +       struct scsi_tape_stats *tmp;
+> +
+>         for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+>                 error = create_one_cdev(tape, mode, 0);
+>                 if (error)
+> @@ -4072,6 +4116,26 @@ static int create_cdevs(struct scsi_tape
+>                 if (error)
+>                         return error;
+>         }
+> +/* Create statistics directory under device, if it fails we dont
+> +   have statistics. */
+> +       if (tape->stats != NULL) {
+> +               kobject_init(&tape->stats->statistics, &st_stats_ktype);
+> +               error = kobject_add(&tape->stats->statistics,
+> +                       &tape->device->sdev_gendev.kobj,
+> +                       "statistics");
+> +               if (error) {
+> +                       kobject_del(&tape->stats->statistics);
+> +                       tmp = tape->stats;
+> +                       tape->stats = NULL;
+> +                       kfree(tmp);
+> +               } else {
+> +                       st_stats_create_files(tape);
+> +               }
+> +       } else {
+> +               tmp = tape->stats;
+> +               tape->stats = NULL;
+> +               kfree(tmp);
+> +       }
+>
+>         return sysfs_create_link(&tape->device->sdev_gendev.kobj,
+>                                  &tape->modes[0].devs[0]->kobj, "tape");
+> @@ -4081,6 +4145,10 @@ static void remove_cdevs(struct scsi_tap
+>  {
+>         int mode, rew;
+>         sysfs_remove_link(&tape->device->sdev_gendev.kobj, "tape");
+> +       if (tape->stats != NULL) {
+> +               st_stats_remove_files(tape);
+> +               kobject_del(&tape->stats->statistics);
+> +       }
+>         for (mode = 0; mode < ST_NBR_MODES; mode++) {
+>                 struct st_modedef *STm = &(tape->modes[mode]);
+>                 for (rew = 0; rew < 2; rew++) {
+> @@ -4222,6 +4290,8 @@ static int st_probe(struct device *dev)
+>         }
+>         tpnt->index = error;
+>         sprintf(disk->disk_name, "st%d", tpnt->index);
+> +/* Allocate stats structure */
+> +       tpnt->stats = kzalloc(sizeof(struct scsi_tape_stats), GFP_ATOMIC);
+>
+>         dev_set_drvdata(dev, tpnt);
+>
+> @@ -4241,6 +4311,7 @@ static int st_probe(struct device *dev)
+>
+>  out_remove_devs:
+>         remove_cdevs(tpnt);
+> +       dev_set_drvdata(dev, NULL);
+>         spin_lock(&st_index_lock);
+>         idr_remove(&st_index_idr, tpnt->index);
+>         spin_unlock(&st_index_lock);
+> @@ -4248,6 +4319,8 @@ out_put_queue:
+>         blk_put_queue(disk->queue);
+>  out_put_disk:
+>         put_disk(disk);
+> +       if (tpnt->stats != NULL)
+> +               kfree(tpnt->stats);
+>         kfree(tpnt);
+>  out_buffer_free:
+>         kfree(buffer);
+> @@ -4288,6 +4361,7 @@ static void scsi_tape_release(struct kre
+>         struct scsi_tape *tpnt = to_scsi_tape(kref);
+>         struct gendisk *disk = tpnt->disk;
+>
+> +       dev_set_drvdata(&tpnt->device->sdev_gendev, NULL);
+>         tpnt->device = NULL;
+>
+>         if (tpnt->buffer) {
+> @@ -4298,6 +4372,10 @@ static void scsi_tape_release(struct kre
+>
+>         disk->private_data = NULL;
+>         put_disk(disk);
+> +       if (tpnt->stats != NULL) {
+> +               kfree(tpnt->stats);
+> +               tpnt->stats = NULL;
+> +       }
+>         kfree(tpnt);
+>         return;
+>  }
+> @@ -4523,6 +4601,412 @@ static struct attribute *st_dev_attrs[]
+>  };
+>  ATTRIBUTE_GROUPS(st_dev);
+>
+> +/* Support for tape stats */
+> +
+> +struct tape_stats_attr {
+> +       struct attribute attr;
+> +       ssize_t (*show)(struct scsi_tape *, char *);
+> +       ssize_t (*store)(struct scsi_tape *, const char *, size_t);
+> +};
+> +
+> +#define TAPE_STATS_ATTR(_name, _mode, _show, _store)           \
+> +const struct tape_stats_attr tape_stats_attr_##_name = {       \
+> +       .attr = {.name  = __stringify(_name), .mode   = _mode },\
+> +       .show   = _show,                                        \
+> +       .store  = _store,                                       \
+> +}
+> +
+> +void st_release_stats_kobj(struct kobject *dummy)
+> +{
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_read_cnt - return read count - count of reads made
+> + * from tape drive
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_read_cnt(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->read_cnt);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_read_cnt);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_read_byte_cnt - return read byte count - tape drives
+> + * may use blocks less than 512 bytes this gives the raw byte count of
+> + * of data read from the tape drive.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_read_byte_cnt(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->read_byte_cnt);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_read_byte_cnt);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_read_ms - return read ms - overall time spent waiting
+> + * on reads in ms.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_read_ms(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%u",
+> +                       jiffies_to_msecs(st->stats->read_ticks));
+> +       return snprintf(buf, 4096, "%u",
+> +               jiffies_to_msecs(st->stats->sync_read_ticks));
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_write_cnt - write count - number of user calls
+> + * to write(2) that have written data to tape.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_write_cnt(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->write_cnt);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_write_cnt);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_write_byte_cnt - write byte count - raw count of
+> + * bytes written to tape.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_write_byte_cnt(struct scsi_tape *st,
+> +       char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->write_byte_cnt);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_write_byte_cnt);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_write_ms - write ms - number of milliseconds since
+> + * last open waiting on write requests to complete.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_write_ms(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%u",
+> +                       jiffies_to_msecs(st->stats->write_ticks));
+> +       return snprintf(buf, 4096, "%u",
+> +               jiffies_to_msecs(st->stats->sync_write_ticks));
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_in_flight - number of I/Os currently in flight -
+> + * in most cases this will be either 0 or 1. It may be higher if someone
+> + * has also issued other SCSI commands such as via an ioctl.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_in_flight(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->in_flight);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_in_flight);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_io_ms - io wait ms - this is the number of ms spent
+> + * waiting on other I/O to complete. This includes tape movement commands
+> + * such as rewinding, seeking to end of file or tape, etc. Except in
+> + * complex tape management programs these will be indirect commands issued
+> + * by the driver - e.g. rewind on close.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_io_ms(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%u",
+> +                       jiffies_to_msecs(st->stats->io_ticks));
+> +       return snprintf(buf, 4096, "%u",
+> +               jiffies_to_msecs(st->stats->sync_io_ticks));
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_other_cnt - other io count - this is the number of
+> + * I/O requests that make up the time returned from st_stats_attr_show_io_ms.
+> + * Typically these are tape movement requests but will include driver
+> + * tape movement. This includes on requests seen by the st driver.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_other_cnt(struct scsi_tape *st, char *buf)
+> +{
+> +       if (st->stats->sync == 0)
+> +               return snprintf(buf, 4096, "%llu", st->stats->other_cnt);
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync_other_cnt);
+> +}
+> +
+> +/**
+> + * st_stats_attr_show_sync - if 0 is returned the stats are being read
+> + * process holding the stats in sync. The value of the sync file should not
+> + * be non-zero for long. You should be making sure that it is left non-zero
+> + * for the shortest possible time.
+> + * If you do not care about them being in sync you need to take some
+> + * action if the sync value is non-zero as someone could have left it
+> + * non-zero which means the values never change. You should write a "0"
+> + * to the sync file before you read the other stats files if you have
+> + * permission to so.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to return formatted data in
+> + */
+> +static ssize_t st_stats_attr_show_sync(struct scsi_tape *st, char *buf)
+> +{
+> +       return snprintf(buf, 4096, "%llu", st->stats->sync);
+> +}
+> +
+> +/**
+> + * st_stats_attr_store_sync - store the sync value this causes the current
+> + * stats to be saved to their save variables and values are then read from
+> + * them to get a consistent set of values. You must read back the sync value
+> + * after you have read all the values required and check if it has changed
+> + * and decide if you will resync and reread the values if it has been changed.
+> + * Any program writing a sync value must set it back to 0 once they are done.
+> + * You should write your current pid into the sync so you can determine if
+> + * someone else is changing the sync value. There is still a chance for a race
+> + * but the sync file is the only method I could think of when writing this to
+> + * get a best approximation of a set of in sync statistics.
+> + * @st: scsi_tape structure.
+> + * @buf: buffer to containing sync value
+> + * @len length of data
+> + **/
+> +static ssize_t st_stats_attr_store_sync(struct scsi_tape *st, const char *buf,
+> +       size_t len)
+> +{
+> +       if (kstrtoull(buf, 0, &st->stats->sync) != 0)
+> +               st->stats->sync = 0;
+> +       if (st->stats->sync == 0)
+> +               return len;
+> +       st->stats->sync_read_byte_cnt = st->stats->read_byte_cnt;
+> +       st->stats->sync_write_byte_cnt = st->stats->write_byte_cnt;
+> +       st->stats->sync_in_flight = st->stats->in_flight;
+> +       st->stats->sync_read_cnt = st->stats->read_cnt;
+> +       st->stats->sync_write_cnt = st->stats->write_cnt;
+> +       st->stats->sync_other_cnt = st->stats->other_cnt;
+> +       st->stats->sync_read_ticks = st->stats->read_ticks;
+> +       st->stats->sync_write_ticks = st->stats->write_ticks;
+> +       st->stats->sync_io_ticks = st->stats->io_ticks;
+> +       return len;
+> +}
+> +
+> +TAPE_STATS_ATTR(read_cnt, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_read_cnt, NULL);
+> +TAPE_STATS_ATTR(read_byte_cnt, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_read_byte_cnt, NULL);
+> +TAPE_STATS_ATTR(read_ms, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_read_ms, NULL);
+> +TAPE_STATS_ATTR(write_cnt, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_write_cnt, NULL);
+> +TAPE_STATS_ATTR(write_byte_cnt, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_write_byte_cnt, NULL);
+> +TAPE_STATS_ATTR(write_ms, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_write_ms, NULL);
+> +TAPE_STATS_ATTR(in_flight, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_in_flight, NULL);
+> +TAPE_STATS_ATTR(io_ms, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_io_ms, NULL);
+> +TAPE_STATS_ATTR(other_cnt, S_IRUSR | S_IRGRP | S_IROTH,
+> +       st_stats_attr_show_other_cnt, NULL);
+> +TAPE_STATS_ATTR(sync, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH,
+> +       st_stats_attr_show_sync, st_stats_attr_store_sync);
+> +#define to_tape_stats_attr(ptr) container_of(ptr, struct tape_stats_attr, attr)
+> +
+> +static const struct tape_stats_attr *tape_stats_attr_group[] = {
+> +       &tape_stats_attr_read_cnt,
+> +       &tape_stats_attr_read_byte_cnt,
+> +       &tape_stats_attr_read_ms,
+> +       &tape_stats_attr_write_cnt,
+> +       &tape_stats_attr_write_byte_cnt,
+> +       &tape_stats_attr_write_ms,
+> +       &tape_stats_attr_in_flight,
+> +       &tape_stats_attr_io_ms,
+> +       &tape_stats_attr_other_cnt,
+> +       &tape_stats_attr_sync,
+> +       NULL
+> +};
+> +
+> +/**
+> + * st_stats_remove_file - remove sysfs atape stats attribute file.
+> + * @st: scsi_tape structure.
+> + * @attr: device attribute descriptor.
+> + */
+> +static void st_stats_remove_file(struct scsi_tape *st,
+> +       const struct tape_stats_attr *attr)
+> +{
+> +       if (st && st->stats)
+> +               sysfs_remove_file(&st->stats->statistics, &attr->attr);
+> +}
+> +
+> +/**
+> + * st_stats_create_file - create sysfs tape stats attribute file
+> + * @st: scsi_tape structure.
+> + * @attr: device attribute descriptor.
+> + */
+> +static int st_stats_create_file(struct scsi_tape *st,
+> +       const struct tape_stats_attr *attr)
+> +{
+> +       int error = 0;
+> +
+> +       if (st && st->stats)
+> +               error = sysfs_create_file(&st->stats->statistics, &attr->attr);
+> +       return error;
+> +}
+> +
+> +/**
+> + * st_stats_create_files - register files in the device
+> + * statistics directory.
+> + * @st: scsi_tape structure.
+> + */
+> +static void st_stats_create_files(struct scsi_tape *st)
+> +{
+> +       int i = 0, rval = 0;
+> +
+> +       while (tape_stats_attr_group[i] != NULL) {
+> +               rval = st_stats_create_file(st, tape_stats_attr_group[i]);
+> +               if (rval != 0)
+> +                       st_stats_remove_file(st, tape_stats_attr_group[i]);
+> +               i++;
+> +       }
+> +}
+> +
+> +/**
+> + * st_stats_remove_files - remove the files from the statistics directory.
+> + * @st: struct scsi_tape
+> + */
+> +
+> +static void st_stats_remove_files(struct scsi_tape *st)
+> +{
+> +       int i = 0;
+> +
+> +       while (tape_stats_attr_group[i] != NULL) {
+> +               st_stats_remove_file(st, tape_stats_attr_group[i]);
+> +               i++;
+> +       }
+> +}
+> +
+> +/**
+> + * st_tape_attr_store - call functions required to implement the store
+> + * functionality. Works similar to show function.
+> + * @kobj: struct kobject
+> + * @attr: struct attribute
+> + * @buf: data provided by caller
+> + * @len: length of data provided
+> + */
+> +static ssize_t st_tape_attr_store(struct kobject *kobj, struct attribute *attr,
+> +       const char *buf, size_t len)
+> +{
+> +       struct kobject *ktemp = kobj->parent;
+> +       struct device *dev;
+> +       struct scsi_tape *st;
+> +       struct tape_stats_attr *st_attr = to_tape_stats_attr(attr);
+> +       ssize_t ret = -EIO;
+> +       int i = 0;
+> +/* Make sure that we are being asked for an attribute we created */
+> +       while (tape_stats_attr_group[i] != NULL) {
+> +               if (tape_stats_attr_group[i] == st_attr)
+> +                       break;
+> +               i++;
+> +       }
+> +       if (tape_stats_attr_group[i] == NULL)
+> +               return ret;
+> +
+> +       if ((!st_attr->store) || (ktemp == 0))
+> +               return ret;
+> +       dev = kobj_to_dev(ktemp);
+> +       if (dev == 0)
+> +               return ret;
+> +
+> +       mutex_lock(&st_ref_mutex);
+> +       st = dev_get_drvdata(dev);
+> +       if (st == 0) {
+> +               mutex_unlock(&st_ref_mutex);
+> +               return ret;
+> +       }
+> +       kref_get(&st->kref);
+> +       mutex_unlock(&st_ref_mutex);
+> +
+> +       if ((st->stats != NULL) && (st_attr->store))
+> +               ret = st_attr->store(st, buf, len);
+> +
+> +       mutex_lock(&st_ref_mutex);
+> +       kref_put(&st->kref, scsi_tape_release);
+> +       mutex_unlock(&st_ref_mutex);
+> +
+> +       return ret;
+> +}
+> +
+> +/**
+> + * st_tape_attr_show - call the functions that provide the statistics.
+> + * This function makes sure that the struct scsi_tape being referred to is
+> + * current and has not been deleted (e.g. during an unload of the st
+> + * driver or the tape drive disappearing).
+> + * @kobj: struct kobject
+> + * @attr: struct attribute
+> + * @buf: data being returned to caller
+> + */
+> +static ssize_t st_tape_attr_show(struct kobject *kobj, struct attribute *attr,
+> +       char *buf)
+> +{
+> +       struct kobject *ktemp = kobj->parent;
+> +       struct device *dev;
+> +       struct scsi_tape *st;
+> +       struct tape_stats_attr *st_attr = to_tape_stats_attr(attr);
+> +       ssize_t ret = -EIO;
+> +       int i = 0;
+> +/* Make sure that we are being asked for an attribute we created */
+> +       while (tape_stats_attr_group[i] != NULL) {
+> +               if (tape_stats_attr_group[i] == st_attr)
+> +                       break;
+> +               i++;
+> +       }
+> +       if (tape_stats_attr_group[i] == NULL)
+> +               return ret;
+> +/* kobject passed in is for the statistics directory. We need to look at the
+> +   parent kobject (part of a struct device) and from there get the struct
+> +   scsi_tape. If no show function return error as well. */
+> +       if ((!st_attr->show) || (ktemp == 0) || (buf == 0))
+> +               return ret;
+> +       dev = kobj_to_dev(ktemp);
+> +       if (dev == 0)
+> +               return ret;
+> +/* dev_get_drvdata must return 0 if the struct scsi_tape has been freed.
+> +   Holding st_ref_mutex means it cannot be freed while we check and we
+> +   grab a reference to the struct scsi_tape before unlocking. */
+> +       mutex_lock(&st_ref_mutex);
+> +       st = dev_get_drvdata(dev);
+> +       if (st == 0) {
+> +               mutex_unlock(&st_ref_mutex);
+> +               return ret;
+> +       }
+> +       kref_get(&st->kref);
+> +       mutex_unlock(&st_ref_mutex);
+> +
+> +       if ((st->stats != NULL) && (st_attr->show))
+> +               ret = st_attr->show(st, buf);
+> +
+> +       mutex_lock(&st_ref_mutex);
+> +       kref_put(&st->kref, scsi_tape_release);
+> +       mutex_unlock(&st_ref_mutex);
+> +
+> +       return ret;
+> +}
+> +
+> +
+> +
+>  /* The following functions may be useful for a larger audience. */
+>  static int sgl_map_user_pages(struct st_buffer *STbp,
+>                               const unsigned int max_pages, unsigned long uaddr,
+> diff -uprN a/drivers/scsi/st.h b/drivers/scsi/st.h
+> --- a/drivers/scsi/st.h 2015-01-11 14:46:00.243814755 -0600
+> +++ b/drivers/scsi/st.h 2015-01-11 18:04:54.714001944 -0600
+> @@ -92,6 +92,32 @@ struct st_partstat {
+>         int drv_file;
+>  };
+>
+> +/* Tape statistics */
+> +struct scsi_tape_stats {
+> +       struct kobject statistics; /* Object for statistics directory */
+> +       u64 read_byte_cnt;      /* bytes read */
+> +       u64 write_byte_cnt;     /* bytes written */
+> +       u64 in_flight;          /* Number of I/Os in flight */
+> +       u64 read_cnt;           /* Count of read requests */
+> +       u64 write_cnt;          /* Count of write requests */
+> +       u64 other_cnt;          /* Count of other requests either implicit
+> +                                       or from user space via ioctl. */
+> +       u64 read_ticks;         /* Ticks spent completing read requests */
+> +       u64 write_ticks;        /* Ticks spent completing write requests */
+> +       u64 io_ticks;           /* Ticks spent doing any I/O */
+> +       u64 stamp;              /* holds time request was queued */
+> +       u64 sync;               /* Are stats read in sync */
+> +       u64 sync_read_byte_cnt;
+> +       u64 sync_write_byte_cnt;
+> +       u64 sync_in_flight;
+> +       u64 sync_read_cnt;
+> +       u64 sync_write_cnt;
+> +       u64 sync_other_cnt;
+> +       u64 sync_read_ticks;
+> +       u64 sync_write_ticks;
+> +       u64 sync_io_ticks;
+> +};
+> +
+>  #define ST_NBR_PARTITIONS 4
+>
+>  /* The tape drive descriptor */
+> @@ -171,6 +197,7 @@ struct scsi_tape {
+>  #endif
+>         struct gendisk *disk;
+>         struct kref     kref;
+> +       struct scsi_tape_stats *stats;
+>  };
+>
+>  /* Bit masks for use_pf */
+> diff -uprN a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
+> --- a/Documentation/scsi/st.txt 2015-01-11 14:45:56.235815028 -0600
+> +++ b/Documentation/scsi/st.txt 2015-01-12 11:23:37.885398363 -0600
+> @@ -151,6 +151,98 @@ A link named 'tape' is made from the SCS
+>  directory corresponding to the mode 0 auto-rewind device (e.g., st0).
+>
+>
+> +SYSFS AND STATISTICS FOR TAPE DEVICES
+> +
+> +The st driver maintains statistics for tape drives inside the sysfs filesystem.
+> +The following method can be used to locate the statistics directories that are
+> +available (assuming that sysfs is mounted at /sys):
+> +
+> +1. Use opendir(3) on the directory /sys/class/scsi_tape
+> +2. Use readdir(3) to read the directory contents
+> +3. Use regcomp(3)/regexec(3) to match directory entries to the extended
+> +        regular expression "^st[0-9]+$"
+> +4. Access the statistics from the /sys/class/scsi_tape/<match>/device/statistics
+> +        directory (where <match> is a directory entry from /sys/class/scsi_tape
+> +        that matched the extended regular expression)
+> +
+> +An example of a matching directory with the full path to the statistics
+> +directory would be:
+> +
+> +/sys/class/scsi_tape/st0/device/statistics
+> +
+> +This is not the real path to the statistics directory but it does represent a
+> +path which makes the directories easiest to find. The statistics directory is
+> +common to all tape devices associated with a SCSI tape drive the statistics
+> +will be the same for the st0, nst0, etc.
+> +
+> +The statistics directory contains the following files:
+> +
+> +1.  in_flight - The number of I/Os currently outstanding to this device.
+> +2.  io_ms - The amount of time spent waiting (in milliseconds) for all I/O
+> +        to complete (including read and write). This includes tape movement
+> +        commands such as seeking between file or set marks and implicit tape
+> +        movement such as when rewind on close tape devices are used.
+> +3.  other_cnt - The number of I/Os issued to the tape drive other than read or
+> +        write commands. The time taken to complete these commands is tracked
+> +        in io_ms.
+> +4.  read_byte_cnt - The number of bytes read from the tape drive.
+> +5.  read_cnt - The number of read requests issued to the tape drive.
+> +6.  read_ms - The amount of time (in milliseconds) spent waiting for read
+> +        requests to complete.
+> +7.  sync - Described below
+> +8.  write_byte_cnt - The number of bytes written to the tape drive.
+> +9.  write_cnt - The number of write requests issued to the tape drive.
+> +10. write_ms - The amount of time (in milliseconds) spent waiting for write
+> +        requests to complete.
+> +
+> +Note: The count statistics are incrememented at the start of an I/O but the
+> +time they take to complete is not added to the statistics until they complete.
+> +
+> +When read all of the statistics may be out of sync. That is they may not be
+> +on consistent set of statistics because of the amount of time taken to
+> +open/read/close each statistics file if the tape drive is in use.
+> +To alleviate that issue and try to make a set of consistent statistics
+> +the sync file was created.
+> +
+> +When a non-zero value is written into the sync file all of the statistics
+> +are saved. Until a new value is written into the sync file accesses to the
+> +statistics files will return the saved values instead of the current values
+> +(writing the same value as previously written causes the statistics to be
+> +saved again). Writing 0 makes the statistics files provides access to the
+> +current instead of the saved values.
+> +
+> +The following is the suggested way to access the statistics when you require
+> +a consistent set of statistics:
+> +
+> +1. Determine the location of the statistics directory
+> +2. Open the sync file and write a set value into the file (choose one value
+> +        that your application uses always - doing so will allow someone else
+> +        to determine who else is using the sync file)
+> +3. Open, read, then close the individual statistics files
+> +4. Read back the sync value and ensure you read back the value that you wrote.
+> +If the value read back is not the same write your chosen value back into the
+> +sync file and then re-read the statistics. If the sync value has changed again
+> +stop after 3 attempts and just use the values you gathered. There should not
+> +be that many users of the statistics that a collision is likely to happen.
+> +5. Always write 0 back into the sync file when you are done then close it.
+> +
+> +If you wish to manually view the statistics you can do so in the following
+> +manner:
+> +
+> +$ cd /sys/class/scsi_tape/st0/device/statistics
+> +$ grep [0-9] *
+> +in_flight:0
+> +io_ms:33263
+> +other_cnt:5
+> +read_byte_cnt:0
+> +read_cnt:0
+> +read_ms:0
+> +sync:0
+> +write_byte_cnt:104857600
+> +write_cnt:102400
+> +write_ms:24069
+> +
+> +
+>  BSD AND SYS V SEMANTICS
+>
+>  The user can choose between these two behaviours of the tape driver by
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
