@@ -1,98 +1,167 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 01/11] lib/iovec: Add memcpy_fromiovec_out library function
-Date: Mon,  2 Feb 2015 04:06:24 +0000
-Message-ID: <1422849994-3419-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 03/11] vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
+Date: Mon,  2 Feb 2015 04:06:26 +0000
+Message-ID: <1422849994-3419-4-git-send-email-nab@daterainc.com>
 References: <1422849994-3419-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:46735 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103AbbBBEjd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Feb 2015 23:39:33 -0500
-Received: by mail-oi0-f50.google.com with SMTP id h136so42756384oig.9
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Feb 2015 20:39:32 -0800 (PST)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1422849994-3419-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a new memcpy_fromiovec_out() library function which modifies
-the passed *iov following memcpy_fromiovec(), but also returns the next current
-iovec pointer via **iov_out.
+This patch fixes vhost_scsi_handle_vq() failure cases that result in BUG_ON()
+getting triggered when vhost_scsi_free_cmd() is called, and ->tvc_se_cmd has
+not been initialized by target_submit_cmd_map_sgls().
 
-This is useful for vhost ANY_LAYOUT support when guests are allowed to generate
-incoming virtio request headers combined with subsequent SGL payloads into a
-single iovec.
+It changes tcm_vhost_release_cmd() to use tcm_vhost_cmd->tvc_nexus for obtaining
+se_session pointer reference.  Also, avoid calling put_page() on NULL sg->page
+entries in vhost_scsi_map_to_sgl() failure path.
 
 Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- include/linux/uio.h |  2 ++
- lib/iovec.c         | 35 +++++++++++++++++++++++++++++++++++
- 2 files changed, 37 insertions(+)
+ drivers/vhost/scsi.c | 52 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 29 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 1c5e453..3e4473d 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -136,6 +136,8 @@ size_t csum_and_copy_to_iter(void *addr, size_t bytes, __wsum *csum, struct iov_
- size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum, struct iov_iter *i);
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index a03ac41..9c5ac23 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -460,7 +460,7 @@ static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
+ {
+ 	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+ 				struct tcm_vhost_cmd, tvc_se_cmd);
+-	struct se_session *se_sess = se_cmd->se_sess;
++	struct se_session *se_sess = tv_cmd->tvc_nexus->tvn_se_sess;
+ 	int i;
  
- int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len);
-+int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
-+			 struct iovec **iov_out, int len);
- int memcpy_fromiovecend(unsigned char *kdata, const struct iovec *iov,
- 			int offset, int len);
- int memcpy_toiovecend(const struct iovec *v, unsigned char *kdata,
-diff --git a/lib/iovec.c b/lib/iovec.c
-index 2d99cb4..24c8148 100644
---- a/lib/iovec.c
-+++ b/lib/iovec.c
-@@ -28,6 +28,41 @@ int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len)
- EXPORT_SYMBOL(memcpy_fromiovec);
+ 	if (tv_cmd->tvc_sgl_count) {
+@@ -859,9 +859,11 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+ 		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
+ 					    cmd->tvc_upages, write);
+ 		if (ret < 0) {
+-			for (i = 0; i < cmd->tvc_sgl_count; i++)
+-				put_page(sg_page(&cmd->tvc_sgl[i]));
+-
++			for (i = 0; i < cmd->tvc_sgl_count; i++) {
++				struct page *page = sg_page(&cmd->tvc_sgl[i]);
++				if (page)
++					put_page(page);
++			}
+ 			cmd->tvc_sgl_count = 0;
+ 			return ret;
+ 		}
+@@ -900,9 +902,11 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+ 		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
+ 					    cmd->tvc_upages, write);
+ 		if (ret < 0) {
+-			for (i = 0; i < cmd->tvc_prot_sgl_count; i++)
+-				put_page(sg_page(&cmd->tvc_prot_sgl[i]));
+-
++			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
++				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
++				if (page)
++					put_page(page);
++			}
+ 			cmd->tvc_prot_sgl_count = 0;
+ 			return ret;
+ 		}
+@@ -1060,12 +1064,14 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		if (unlikely(vq->iov[0].iov_len < req_size)) {
+ 			pr_err("Expecting virtio-scsi header: %zu, got %zu\n",
+ 			       req_size, vq->iov[0].iov_len);
+-			break;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 		ret = memcpy_fromiovecend(req, &vq->iov[0], 0, req_size);
+ 		if (unlikely(ret)) {
+ 			vq_err(vq, "Faulted on virtio_scsi_cmd_req\n");
+-			break;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
  
- /*
-+ *	Copy iovec to kernel, modifying the passed *iov entries.
-+ *
-+ *	Save **iov_out for the caller to use upon return, that may either
-+ *	contain the current entry with a re-calculated iov_base + iov_len
-+ *	or next unmodified entry.
-+ *
-+ *	Also note that any iovec entries preceeding the final *iov_out are
-+ *	zeroed by copy_from_user().
-+ *
-+ *	Returns -EFAULT on error.
-+ */
-+
-+int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
-+			 struct iovec **iov_out, int len)
-+{
-+	while (len > 0) {
-+		if (iov->iov_len) {
-+			int copy = min_t(unsigned int, len, iov->iov_len);
-+			if (copy_from_user(kdata, iov->iov_base, copy))
-+				return -EFAULT;
-+			len -= copy;
-+			kdata += copy;
-+			iov->iov_base += copy;
-+			iov->iov_len -= copy;
-+		}
-+		if (!iov->iov_len)
-+			iov++;
-+	}
-+	*iov_out = iov;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(memcpy_fromiovec_out);
-+
-+/*
-  *	Copy kernel to iovec. Returns -EFAULT on error.
-  */
+ 		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
+@@ -1096,14 +1102,16 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 				if (data_direction != DMA_TO_DEVICE) {
+ 					vq_err(vq, "Received non zero do_pi_niov"
+ 						", but wrong data_direction\n");
+-					goto err_cmd;
++					vhost_scsi_send_bad_target(vs, vq, head, out);
++					continue;
+ 				}
+ 				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesout);
+ 			} else if (v_req_pi.pi_bytesin) {
+ 				if (data_direction != DMA_FROM_DEVICE) {
+ 					vq_err(vq, "Received non zero di_pi_niov"
+ 						", but wrong data_direction\n");
+-					goto err_cmd;
++					vhost_scsi_send_bad_target(vs, vq, head, out);
++					continue;
+ 				}
+ 				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesin);
+ 			}
+@@ -1143,7 +1151,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 			vq_err(vq, "Received SCSI CDB with command_size: %d that"
+ 				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+ 				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
+-			goto err_cmd;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
  
+ 		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
+@@ -1152,7 +1161,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		if (IS_ERR(cmd)) {
+ 			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
+ 					PTR_ERR(cmd));
+-			goto err_cmd;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 
+ 		pr_debug("Allocated tv_cmd: %p exp_data_len: %d, data_direction"
+@@ -1172,7 +1182,9 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 			if (unlikely(ret)) {
+ 				vq_err(vq, "Failed to map iov to"
+ 					" prot_sgl\n");
+-				goto err_free;
++				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
++				vhost_scsi_send_bad_target(vs, vq, head, out);
++				continue;
+ 			}
+ 		}
+ 		if (data_direction != DMA_NONE) {
+@@ -1181,7 +1193,9 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 					data_direction == DMA_FROM_DEVICE);
+ 			if (unlikely(ret)) {
+ 				vq_err(vq, "Failed to map iov to sgl\n");
+-				goto err_free;
++				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
++				vhost_scsi_send_bad_target(vs, vq, head, out);
++				continue;
+ 			}
+ 		}
+ 		/*
+@@ -1199,14 +1213,6 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		INIT_WORK(&cmd->work, tcm_vhost_submission_work);
+ 		queue_work(tcm_vhost_workqueue, &cmd->work);
+ 	}
+-
+-	mutex_unlock(&vq->mutex);
+-	return;
+-
+-err_free:
+-	vhost_scsi_free_cmd(cmd);
+-err_cmd:
+-	vhost_scsi_send_bad_target(vs, vq, head, out);
+ out:
+ 	mutex_unlock(&vq->mutex);
+ }
 -- 
 1.9.1
-
