@@ -1,113 +1,77 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v2] scsi: NCR5380: use msecs_to_jiffies for conversions
-Date: Mon, 2 Feb 2015 14:04:19 +1300
-Message-ID: <CAOmrzkL=m2renZ0meMMtjhzUGUU0CfTX0AttZhEr4qY9mxuTiQ@mail.gmail.com>
-References: <1422692020-6607-1-git-send-email-der.herr@hofr.at>
-	<alpine.LNX.2.00.1502010957150.30584@nippy.intranet>
-	<d0a6819903df0864d2785bc209409cef@gmail.com>
-	<20150201071412.GA21711@opentech.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:38358 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbbBBBEU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Feb 2015 20:04:20 -0500
-Received: by mail-qg0-f48.google.com with SMTP id z60so45489661qgd.7
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Feb 2015 17:04:19 -0800 (PST)
-In-Reply-To: <20150201071412.GA21711@opentech.at>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 00/11] vhost/scsi: Add ANY_LAYOUT + VERSION_1 support
+Date: Mon,  2 Feb 2015 04:06:23 +0000
+Message-ID: <1422849994-3419-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Mc Guire <der.herr@hofr.at>
-Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, ronald.van.cuijlenborg@tip.nl
 
-Hi Nicholas,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
->> The values for USLEEP_* are taken to be in units jiffies, according to
->> comments in NCR5380.c. Replacing them by the msecs_to_jiffies conversion
->> is in fact wrong.
->>
->> Please drop the changes to g_NCR5380.c for that reason.
->>
->
-> right the comment indicates it should be jiffies - my interpretation
-> of that was that in NCR5380.c
-> were  jiffies + (250 * HZ / 1000); constructs would be correctly
-> converted to e.g. jiffies + msecs_to_jiffies(250)
+Hi MST, Paolo, & Co,
 
-No objection there.
+This -v2 series adds vhost/scsi ANY_LAYOUT + VERSION_1 host feature bit
+support.
 
-> And defines like USLEEP_POLL are noted to be in jiffies:
-> * USLEEP_SLEEP - amount of time, in jiffies, to sleep
->
-> and then defined correctly as HZ indepenedent values:
-> #define USLEEP_SLEEP (20*HZ/1000
->
-> and thus should be the same as msecs_to_jiffies(20)
+It adds a new vhost_virtqueue ->handle_kick() callback to determine the
+start of protection and data payloads iovecs past starting virtio-scsi
+request and response headers, based upon data_direction.
 
-None here either.
+It assumes request/CDB and response/sense_buffer headers may span more
+than a single iovec using lib/iovec.c logic, and adds a new addition of
+memcpy_fromiovec_out() to return the current re-calcuated **iov_out.
 
->
-> now g_NCR5380.c defines
-> #define USLEEP_POLL     1
-> #define USLEEP_SLEEP    20
-> #define USLEEP_WAITLONG 500
->
-> for the DTC3181E card - but without the conversion to ms
-> from the use in the code though (e.g NCR5380_set_timer) it
-> seemed to me that it actually should be jiffeis equivalent ms and
+It also allows virtio-scsi headers + T10_PI + Data SGL payloads to span
+the same iovec when pinning user-space memory via get_user_pages_fast()
+code.  (Not tested yet)
 
-We can't know that - it's a fair guess, but the way it is currently
-defined will see these constants used as jiffies, not ms.
+It's currently functioning against v3.19-rc1 virtio-scsi LLD in T10_PI
+mode with ANY_LAYOUT -> VERSION_1 guest feature bits enabled, using the
+layout following existing convention with protection/data SGL payloads
+residing within seperate iovecs.
 
-'git blame' is of little help here ...
+Here's how the changelog is looking:
 
-^1da177e (Linus Torvalds     2005-04-16 15:20:36 -0700  59) /*
-settings for DTC3181E card with only Mustek scanner attached */
-^1da177e (Linus Torvalds     2005-04-16 15:20:36 -0700  60) #define
-USLEEP_POLL 1
-^1da177e (Linus Torvalds     2005-04-16 15:20:36 -0700  61) #define
-USLEEP_SLEEP        20
-^1da177e (Linus Torvalds     2005-04-16 15:20:36 -0700  62) #define
-USLEEP_WAITLONG     500
+v2 changes:
+  - Update memcpy_fromiovec_out usage comment
+  - Clear ->tvc_sgl_count for vhost_scsi_mapal failure
+  - Make vhost_scsi_mapal + vhost_scsi_calc_sgls accept max_niov
+  - Update vhost_scsi_handle_vqal comments
+  - Minor vhost_scsi_handle_vqal simplifications
+  - Add missing minimum virtio-scsi response buffer size check
+  - Fix pi_bytes* error message typo
+  - Convert to use vhost_skip_iovec_bytes() common code
+  - Add max_niov sanity checks vs. out + in offset into vq
+  - Drop legacy pre virtio v1.0 !ANY_LAYOUT code
 
-The DTC3181E part dates back to '97. Let's see whether Ronald stilll remembers.
+Also included in patch #11 is an over-due change to rename code in scsi.c
+to line up with modern vhost_scsi naming convention.
 
-HZ used to be set to 100 in those days, so USLEEP_POLL=1 equates to
-10ms, not 1ms
+Please review.
 
-> the intent was only to change the USLEEP_POLL and USLEEP_WAITLONG
-> settings for the specific device but not the unit and thus it
-> shuld have been converted by msecs_to_jiffies(1) resp.
-> msecs_to_jiffies(500). The problem with this if it is left in its
-> current form is that the timeouts would actually depend on the HZ
-> setting of the system which is probably not the intent.
+Thank you,
 
-I think it's safe to assume the code in question predates the option
-to configure the scheduling tick frequency, so yes, probably not
-intended.
+--nab
 
-The problem with your replacing jiffies by ms is that this will change
-the timing for this particular combination of hardware by an order of
-magnitude. That large a change in timing would need to be backed up by
-testing on the actual hardware.
+Nicholas Bellinger (11):
+  lib/iovec: Add memcpy_fromiovec_out library function
+  vhost/scsi: Convert completion path to use memcpy_toiovecend
+  vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
+  vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
+  vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
+  vhost/scsi: Add ANY_LAYOUT vhost_skip_iovec_bytes helper
+  vhost/scsi: Add ANY_LAYOUT vhost_virtqueue callback
+  vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
+  vhost/scsi: Drop legacy pre virtio v1.0 !ANY_LAYOUT logic
+  vhost/scsi: Drop left-over scsi_tcq.h include
+  vhost/scsi: Global tcm_vhost -> vhost_scsi rename
 
-Much safer to use
+ drivers/vhost/scsi.c | 1125 +++++++++++++++++++++++++++-----------------------
+ include/linux/uio.h  |    2 +
+ lib/iovec.c          |   35 ++
+ 3 files changed, 646 insertions(+), 516 deletions(-)
 
-#define USLEEP_POLL    msecs_to_jiffies(10)
-#define USLEEP_SLEEP   msecs_to_jiffies(200)
-#define USLEEP_WAITLONG        msecs_to_jiffies(5000)
-
-and make sure no change in timing is incurred at all.
-
-Cheers,
-
-  Michael
-
-
->
-> Pleas do give this one more look if the argument above is
-> not sound I appologize for the noise.
->
-> thx!
-> hofrat
+-- 
+1.9.1
