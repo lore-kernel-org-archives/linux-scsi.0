@@ -1,790 +1,163 @@
-From: Laurence Oberman <oberman.l@gmail.com>
-Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
-Date: Mon, 2 Feb 2015 10:16:20 -0500
-Message-ID: <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
-References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] phy: qcom-ufs: export symbols needed by main drivers
+Date: Mon, 2 Feb 2015 15:30:27 +0000
+Message-ID: <1422891069.2103.1.camel@parallels.com>
+References: <1840882.huchmEIh5K@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:65123 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbbBBPQX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2015 10:16:23 -0500
-Received: by mail-la0-f42.google.com with SMTP id ms9so41822057lab.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 07:16:21 -0800 (PST)
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net>
+Received: from mx2.parallels.com ([199.115.105.18]:47605 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383AbbBBPbS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2015 10:31:18 -0500
+In-Reply-To: <1840882.huchmEIh5K@wuerfel>
+Content-Language: en-US
+Content-ID: <DB3A4F279E36D741A3C1C5CA8F219D82@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>, "loberman@redhat.com" <loberman@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
+To: "arnd@arndb.de" <arnd@arndb.de>
+Cc: "hch@lst.de" <hch@lst.de>, "dovl@codeaurora.org" <dovl@codeaurora.org>, "ygardi@codeaurora.org" <ygardi@codeaurora.org>, "kishon@ti.com" <kishon@ti.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-I pulled this this morning and will be testing. The prior version was
-stable for me on the upstream and RHEL 6.5 kernel without exhaustive
-testing.
-We also just received more requests to get this into RHEL from HP /
-Red Hat customers.
-
-Kai, what are your thoughts. I realize this is a large amount of
-additional code. I am not keen to create a driver just for stats as we
-would have to keep the rest of the st driver changes always in sync.
-
-Thanks
-Laurence
-
-On Mon, Jan 12, 2015 at 10:43 PM, Seymour, Shane M <shane.seymour@hp.com> wrote:
-> Some small changes since the last version - this version removes two files from sysfs compared to the last version (read and write block counts since they're derived from the byte counts they can be calculated in user space) but that's the only change. This version has been rebased to 3.19.0-rc3-next-20150108.
->
-> Since posting the last version an email was received by Kai and myself from an AT&T employee who has a need for tape statistics to be implemented (who gave permission to quote their email), I've included part of the email here:
->
-> "There are over 20,000 tape devices managed by our operations group zoned to tens of thousands of servers.
->
-> My challenge is that I cannot provide operations a solution that gives them visibility into the tape drive performance metrics when that platform is linux. Our legacy platforms (Solaris,HPUX,AIX) provide facilities to use iostat and sar to determine the write speed of the tape drives. We took for granted that this would be available in linux and its absence has been very troublesome. Because operations cannot measure tape drive performance in this way they cannot easily determine when there is a tape drive performance problem and whether the change improved or worsened the performance problem.
-> ...
-> I have followed the debate https://lkml.org/lkml/2013/3/20/696 and from a service provide perspective we would expect the same maturity and functionality that we have from the traditional unix platform in regards to iostat/sar. This issue is important and urgent because tape drive performance issues are common and I am unable to provide standards and processes to identify and remediate these issues."
->
-> Another HP customer has also requested the same functionality (but hasn't given permission to be named), they own tape drives numbering in the 1000s and also need the ability to investigate performance issues.
->
-> Signed-off-by: shane.seymour@hp.com
-> Tested-by: shane.seymour@hp.com
-> ---
-> diff -uprN a/drivers/scsi/st.c b/drivers/scsi/st.c
-> --- a/drivers/scsi/st.c 2015-01-11 14:46:00.243814755 -0600
-> +++ b/drivers/scsi/st.c 2015-01-12 13:54:52.549117333 -0600
-> @@ -20,6 +20,7 @@
->  static const char *verstr = "20101219";
->
->  #include <linux/module.h>
-> +#include <linux/kobject.h>
->
->  #include <linux/fs.h>
->  #include <linux/kernel.h>
-> @@ -226,6 +227,20 @@ static DEFINE_SPINLOCK(st_index_lock);
->  static DEFINE_SPINLOCK(st_use_lock);
->  static DEFINE_IDR(st_index_idr);
->
-> +static inline void st_stats_remove_files(struct scsi_tape *);
-> +static inline void st_stats_create_files(struct scsi_tape *);
-> +static ssize_t st_tape_attr_show(struct kobject *, struct attribute *, char *);
-> +static ssize_t st_tape_attr_store(struct kobject *, struct attribute *,
-> +       const char *, size_t);
-> +static void st_release_stats_kobj(struct kobject *);
-> +static const struct sysfs_ops st_stats_sysfs_ops = {
-> +       .show   = st_tape_attr_show,
-> +       .store  = st_tape_attr_store,
-> +};
-> +static struct kobj_type st_stats_ktype = {
-> +       .release = st_release_stats_kobj,
-> +       .sysfs_ops = &st_stats_sysfs_ops,
-> +};
->
->
->
->  #include "osst_detect.h"
-> @@ -476,10 +491,22 @@ static void st_scsi_execute_end(struct r
->         struct st_request *SRpnt = req->end_io_data;
->         struct scsi_tape *STp = SRpnt->stp;
->         struct bio *tmp;
-> +       u64 ticks;
->
->         STp->buffer->cmdstat.midlevel_result = SRpnt->result = req->errors;
->         STp->buffer->cmdstat.residual = req->resid_len;
->
-> +       if (STp->stats != NULL) {
-> +               ticks = get_jiffies_64();
-> +               STp->stats->in_flight--;
-> +               ticks -= STp->stats->stamp;
-> +               STp->stats->io_ticks += ticks;
-> +               if (req->cmd[0] == WRITE_6)
-> +                       STp->stats->write_ticks += ticks;
-> +               else if (req->cmd[0] == READ_6)
-> +                       STp->stats->read_ticks += ticks;
-> +       }
-> +
->         tmp = SRpnt->bio;
->         if (SRpnt->waiting)
->                 complete(SRpnt->waiting);
-> @@ -496,6 +523,7 @@ static int st_scsi_execute(struct st_req
->         struct rq_map_data *mdata = &SRpnt->stp->buffer->map_data;
->         int err = 0;
->         int write = (data_direction == DMA_TO_DEVICE);
-> +       struct scsi_tape *STp = SRpnt->stp;
->
->         req = blk_get_request(SRpnt->stp->device->request_queue, write,
->                               GFP_KERNEL);
-> @@ -516,6 +544,20 @@ static int st_scsi_execute(struct st_req
->                 }
->         }
->
-> +       if (STp->stats != NULL) {
-> +               if (cmd[0] == WRITE_6) {
-> +                       STp->stats->write_cnt++;
-> +                       STp->stats->write_byte_cnt += bufflen;
-> +               } else if (cmd[0] == READ_6) {
-> +                       STp->stats->read_cnt++;
-> +                       STp->stats->read_byte_cnt += bufflen;
-> +               } else {
-> +                       STp->stats->other_cnt++;
-> +               }
-> +               STp->stats->stamp = get_jiffies_64();
-> +               STp->stats->in_flight++;
-> +       }
-> +
->         SRpnt->bio = req->bio;
->         req->cmd_len = COMMAND_SIZE(cmd[0]);
->         memset(req->cmd, 0, BLK_MAX_CDB);
-> @@ -4064,6 +4106,8 @@ out:
->  static int create_cdevs(struct scsi_tape *tape)
->  {
->         int mode, error;
-> +       struct scsi_tape_stats *tmp;
-> +
->         for (mode = 0; mode < ST_NBR_MODES; ++mode) {
->                 error = create_one_cdev(tape, mode, 0);
->                 if (error)
-> @@ -4072,6 +4116,26 @@ static int create_cdevs(struct scsi_tape
->                 if (error)
->                         return error;
->         }
-> +/* Create statistics directory under device, if it fails we dont
-> +   have statistics. */
-> +       if (tape->stats != NULL) {
-> +               kobject_init(&tape->stats->statistics, &st_stats_ktype);
-> +               error = kobject_add(&tape->stats->statistics,
-> +                       &tape->device->sdev_gendev.kobj,
-> +                       "statistics");
-> +               if (error) {
-> +                       kobject_del(&tape->stats->statistics);
-> +                       tmp = tape->stats;
-> +                       tape->stats = NULL;
-> +                       kfree(tmp);
-> +               } else {
-> +                       st_stats_create_files(tape);
-> +               }
-> +       } else {
-> +               tmp = tape->stats;
-> +               tape->stats = NULL;
-> +               kfree(tmp);
-> +       }
->
->         return sysfs_create_link(&tape->device->sdev_gendev.kobj,
->                                  &tape->modes[0].devs[0]->kobj, "tape");
-> @@ -4081,6 +4145,10 @@ static void remove_cdevs(struct scsi_tap
->  {
->         int mode, rew;
->         sysfs_remove_link(&tape->device->sdev_gendev.kobj, "tape");
-> +       if (tape->stats != NULL) {
-> +               st_stats_remove_files(tape);
-> +               kobject_del(&tape->stats->statistics);
-> +       }
->         for (mode = 0; mode < ST_NBR_MODES; mode++) {
->                 struct st_modedef *STm = &(tape->modes[mode]);
->                 for (rew = 0; rew < 2; rew++) {
-> @@ -4222,6 +4290,8 @@ static int st_probe(struct device *dev)
->         }
->         tpnt->index = error;
->         sprintf(disk->disk_name, "st%d", tpnt->index);
-> +/* Allocate stats structure */
-> +       tpnt->stats = kzalloc(sizeof(struct scsi_tape_stats), GFP_ATOMIC);
->
->         dev_set_drvdata(dev, tpnt);
->
-> @@ -4241,6 +4311,7 @@ static int st_probe(struct device *dev)
->
->  out_remove_devs:
->         remove_cdevs(tpnt);
-> +       dev_set_drvdata(dev, NULL);
->         spin_lock(&st_index_lock);
->         idr_remove(&st_index_idr, tpnt->index);
->         spin_unlock(&st_index_lock);
-> @@ -4248,6 +4319,8 @@ out_put_queue:
->         blk_put_queue(disk->queue);
->  out_put_disk:
->         put_disk(disk);
-> +       if (tpnt->stats != NULL)
-> +               kfree(tpnt->stats);
->         kfree(tpnt);
->  out_buffer_free:
->         kfree(buffer);
-> @@ -4288,6 +4361,7 @@ static void scsi_tape_release(struct kre
->         struct scsi_tape *tpnt = to_scsi_tape(kref);
->         struct gendisk *disk = tpnt->disk;
->
-> +       dev_set_drvdata(&tpnt->device->sdev_gendev, NULL);
->         tpnt->device = NULL;
->
->         if (tpnt->buffer) {
-> @@ -4298,6 +4372,10 @@ static void scsi_tape_release(struct kre
->
->         disk->private_data = NULL;
->         put_disk(disk);
-> +       if (tpnt->stats != NULL) {
-> +               kfree(tpnt->stats);
-> +               tpnt->stats = NULL;
-> +       }
->         kfree(tpnt);
->         return;
->  }
-> @@ -4523,6 +4601,412 @@ static struct attribute *st_dev_attrs[]
->  };
->  ATTRIBUTE_GROUPS(st_dev);
->
-> +/* Support for tape stats */
-> +
-> +struct tape_stats_attr {
-> +       struct attribute attr;
-> +       ssize_t (*show)(struct scsi_tape *, char *);
-> +       ssize_t (*store)(struct scsi_tape *, const char *, size_t);
-> +};
-> +
-> +#define TAPE_STATS_ATTR(_name, _mode, _show, _store)           \
-> +const struct tape_stats_attr tape_stats_attr_##_name = {       \
-> +       .attr = {.name  = __stringify(_name), .mode   = _mode },\
-> +       .show   = _show,                                        \
-> +       .store  = _store,                                       \
-> +}
-> +
-> +void st_release_stats_kobj(struct kobject *dummy)
-> +{
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_read_cnt - return read count - count of reads made
-> + * from tape drive
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_read_cnt(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->read_cnt);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_read_cnt);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_read_byte_cnt - return read byte count - tape drives
-> + * may use blocks less than 512 bytes this gives the raw byte count of
-> + * of data read from the tape drive.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_read_byte_cnt(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->read_byte_cnt);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_read_byte_cnt);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_read_ms - return read ms - overall time spent waiting
-> + * on reads in ms.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_read_ms(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%u",
-> +                       jiffies_to_msecs(st->stats->read_ticks));
-> +       return snprintf(buf, 4096, "%u",
-> +               jiffies_to_msecs(st->stats->sync_read_ticks));
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_write_cnt - write count - number of user calls
-> + * to write(2) that have written data to tape.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_write_cnt(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->write_cnt);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_write_cnt);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_write_byte_cnt - write byte count - raw count of
-> + * bytes written to tape.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_write_byte_cnt(struct scsi_tape *st,
-> +       char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->write_byte_cnt);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_write_byte_cnt);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_write_ms - write ms - number of milliseconds since
-> + * last open waiting on write requests to complete.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_write_ms(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%u",
-> +                       jiffies_to_msecs(st->stats->write_ticks));
-> +       return snprintf(buf, 4096, "%u",
-> +               jiffies_to_msecs(st->stats->sync_write_ticks));
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_in_flight - number of I/Os currently in flight -
-> + * in most cases this will be either 0 or 1. It may be higher if someone
-> + * has also issued other SCSI commands such as via an ioctl.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_in_flight(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->in_flight);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_in_flight);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_io_ms - io wait ms - this is the number of ms spent
-> + * waiting on other I/O to complete. This includes tape movement commands
-> + * such as rewinding, seeking to end of file or tape, etc. Except in
-> + * complex tape management programs these will be indirect commands issued
-> + * by the driver - e.g. rewind on close.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_io_ms(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%u",
-> +                       jiffies_to_msecs(st->stats->io_ticks));
-> +       return snprintf(buf, 4096, "%u",
-> +               jiffies_to_msecs(st->stats->sync_io_ticks));
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_other_cnt - other io count - this is the number of
-> + * I/O requests that make up the time returned from st_stats_attr_show_io_ms.
-> + * Typically these are tape movement requests but will include driver
-> + * tape movement. This includes on requests seen by the st driver.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_other_cnt(struct scsi_tape *st, char *buf)
-> +{
-> +       if (st->stats->sync == 0)
-> +               return snprintf(buf, 4096, "%llu", st->stats->other_cnt);
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync_other_cnt);
-> +}
-> +
-> +/**
-> + * st_stats_attr_show_sync - if 0 is returned the stats are being read
-> + * process holding the stats in sync. The value of the sync file should not
-> + * be non-zero for long. You should be making sure that it is left non-zero
-> + * for the shortest possible time.
-> + * If you do not care about them being in sync you need to take some
-> + * action if the sync value is non-zero as someone could have left it
-> + * non-zero which means the values never change. You should write a "0"
-> + * to the sync file before you read the other stats files if you have
-> + * permission to so.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to return formatted data in
-> + */
-> +static ssize_t st_stats_attr_show_sync(struct scsi_tape *st, char *buf)
-> +{
-> +       return snprintf(buf, 4096, "%llu", st->stats->sync);
-> +}
-> +
-> +/**
-> + * st_stats_attr_store_sync - store the sync value this causes the current
-> + * stats to be saved to their save variables and values are then read from
-> + * them to get a consistent set of values. You must read back the sync value
-> + * after you have read all the values required and check if it has changed
-> + * and decide if you will resync and reread the values if it has been changed.
-> + * Any program writing a sync value must set it back to 0 once they are done.
-> + * You should write your current pid into the sync so you can determine if
-> + * someone else is changing the sync value. There is still a chance for a race
-> + * but the sync file is the only method I could think of when writing this to
-> + * get a best approximation of a set of in sync statistics.
-> + * @st: scsi_tape structure.
-> + * @buf: buffer to containing sync value
-> + * @len length of data
-> + **/
-> +static ssize_t st_stats_attr_store_sync(struct scsi_tape *st, const char *buf,
-> +       size_t len)
-> +{
-> +       if (kstrtoull(buf, 0, &st->stats->sync) != 0)
-> +               st->stats->sync = 0;
-> +       if (st->stats->sync == 0)
-> +               return len;
-> +       st->stats->sync_read_byte_cnt = st->stats->read_byte_cnt;
-> +       st->stats->sync_write_byte_cnt = st->stats->write_byte_cnt;
-> +       st->stats->sync_in_flight = st->stats->in_flight;
-> +       st->stats->sync_read_cnt = st->stats->read_cnt;
-> +       st->stats->sync_write_cnt = st->stats->write_cnt;
-> +       st->stats->sync_other_cnt = st->stats->other_cnt;
-> +       st->stats->sync_read_ticks = st->stats->read_ticks;
-> +       st->stats->sync_write_ticks = st->stats->write_ticks;
-> +       st->stats->sync_io_ticks = st->stats->io_ticks;
-> +       return len;
-> +}
-> +
-> +TAPE_STATS_ATTR(read_cnt, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_read_cnt, NULL);
-> +TAPE_STATS_ATTR(read_byte_cnt, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_read_byte_cnt, NULL);
-> +TAPE_STATS_ATTR(read_ms, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_read_ms, NULL);
-> +TAPE_STATS_ATTR(write_cnt, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_write_cnt, NULL);
-> +TAPE_STATS_ATTR(write_byte_cnt, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_write_byte_cnt, NULL);
-> +TAPE_STATS_ATTR(write_ms, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_write_ms, NULL);
-> +TAPE_STATS_ATTR(in_flight, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_in_flight, NULL);
-> +TAPE_STATS_ATTR(io_ms, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_io_ms, NULL);
-> +TAPE_STATS_ATTR(other_cnt, S_IRUSR | S_IRGRP | S_IROTH,
-> +       st_stats_attr_show_other_cnt, NULL);
-> +TAPE_STATS_ATTR(sync, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH,
-> +       st_stats_attr_show_sync, st_stats_attr_store_sync);
-> +#define to_tape_stats_attr(ptr) container_of(ptr, struct tape_stats_attr, attr)
-> +
-> +static const struct tape_stats_attr *tape_stats_attr_group[] = {
-> +       &tape_stats_attr_read_cnt,
-> +       &tape_stats_attr_read_byte_cnt,
-> +       &tape_stats_attr_read_ms,
-> +       &tape_stats_attr_write_cnt,
-> +       &tape_stats_attr_write_byte_cnt,
-> +       &tape_stats_attr_write_ms,
-> +       &tape_stats_attr_in_flight,
-> +       &tape_stats_attr_io_ms,
-> +       &tape_stats_attr_other_cnt,
-> +       &tape_stats_attr_sync,
-> +       NULL
-> +};
-> +
-> +/**
-> + * st_stats_remove_file - remove sysfs atape stats attribute file.
-> + * @st: scsi_tape structure.
-> + * @attr: device attribute descriptor.
-> + */
-> +static void st_stats_remove_file(struct scsi_tape *st,
-> +       const struct tape_stats_attr *attr)
-> +{
-> +       if (st && st->stats)
-> +               sysfs_remove_file(&st->stats->statistics, &attr->attr);
-> +}
-> +
-> +/**
-> + * st_stats_create_file - create sysfs tape stats attribute file
-> + * @st: scsi_tape structure.
-> + * @attr: device attribute descriptor.
-> + */
-> +static int st_stats_create_file(struct scsi_tape *st,
-> +       const struct tape_stats_attr *attr)
-> +{
-> +       int error = 0;
-> +
-> +       if (st && st->stats)
-> +               error = sysfs_create_file(&st->stats->statistics, &attr->attr);
-> +       return error;
-> +}
-> +
-> +/**
-> + * st_stats_create_files - register files in the device
-> + * statistics directory.
-> + * @st: scsi_tape structure.
-> + */
-> +static void st_stats_create_files(struct scsi_tape *st)
-> +{
-> +       int i = 0, rval = 0;
-> +
-> +       while (tape_stats_attr_group[i] != NULL) {
-> +               rval = st_stats_create_file(st, tape_stats_attr_group[i]);
-> +               if (rval != 0)
-> +                       st_stats_remove_file(st, tape_stats_attr_group[i]);
-> +               i++;
-> +       }
-> +}
-> +
-> +/**
-> + * st_stats_remove_files - remove the files from the statistics directory.
-> + * @st: struct scsi_tape
-> + */
-> +
-> +static void st_stats_remove_files(struct scsi_tape *st)
-> +{
-> +       int i = 0;
-> +
-> +       while (tape_stats_attr_group[i] != NULL) {
-> +               st_stats_remove_file(st, tape_stats_attr_group[i]);
-> +               i++;
-> +       }
-> +}
-> +
-> +/**
-> + * st_tape_attr_store - call functions required to implement the store
-> + * functionality. Works similar to show function.
-> + * @kobj: struct kobject
-> + * @attr: struct attribute
-> + * @buf: data provided by caller
-> + * @len: length of data provided
-> + */
-> +static ssize_t st_tape_attr_store(struct kobject *kobj, struct attribute *attr,
-> +       const char *buf, size_t len)
-> +{
-> +       struct kobject *ktemp = kobj->parent;
-> +       struct device *dev;
-> +       struct scsi_tape *st;
-> +       struct tape_stats_attr *st_attr = to_tape_stats_attr(attr);
-> +       ssize_t ret = -EIO;
-> +       int i = 0;
-> +/* Make sure that we are being asked for an attribute we created */
-> +       while (tape_stats_attr_group[i] != NULL) {
-> +               if (tape_stats_attr_group[i] == st_attr)
-> +                       break;
-> +               i++;
-> +       }
-> +       if (tape_stats_attr_group[i] == NULL)
-> +               return ret;
-> +
-> +       if ((!st_attr->store) || (ktemp == 0))
-> +               return ret;
-> +       dev = kobj_to_dev(ktemp);
-> +       if (dev == 0)
-> +               return ret;
-> +
-> +       mutex_lock(&st_ref_mutex);
-> +       st = dev_get_drvdata(dev);
-> +       if (st == 0) {
-> +               mutex_unlock(&st_ref_mutex);
-> +               return ret;
-> +       }
-> +       kref_get(&st->kref);
-> +       mutex_unlock(&st_ref_mutex);
-> +
-> +       if ((st->stats != NULL) && (st_attr->store))
-> +               ret = st_attr->store(st, buf, len);
-> +
-> +       mutex_lock(&st_ref_mutex);
-> +       kref_put(&st->kref, scsi_tape_release);
-> +       mutex_unlock(&st_ref_mutex);
-> +
-> +       return ret;
-> +}
-> +
-> +/**
-> + * st_tape_attr_show - call the functions that provide the statistics.
-> + * This function makes sure that the struct scsi_tape being referred to is
-> + * current and has not been deleted (e.g. during an unload of the st
-> + * driver or the tape drive disappearing).
-> + * @kobj: struct kobject
-> + * @attr: struct attribute
-> + * @buf: data being returned to caller
-> + */
-> +static ssize_t st_tape_attr_show(struct kobject *kobj, struct attribute *attr,
-> +       char *buf)
-> +{
-> +       struct kobject *ktemp = kobj->parent;
-> +       struct device *dev;
-> +       struct scsi_tape *st;
-> +       struct tape_stats_attr *st_attr = to_tape_stats_attr(attr);
-> +       ssize_t ret = -EIO;
-> +       int i = 0;
-> +/* Make sure that we are being asked for an attribute we created */
-> +       while (tape_stats_attr_group[i] != NULL) {
-> +               if (tape_stats_attr_group[i] == st_attr)
-> +                       break;
-> +               i++;
-> +       }
-> +       if (tape_stats_attr_group[i] == NULL)
-> +               return ret;
-> +/* kobject passed in is for the statistics directory. We need to look at the
-> +   parent kobject (part of a struct device) and from there get the struct
-> +   scsi_tape. If no show function return error as well. */
-> +       if ((!st_attr->show) || (ktemp == 0) || (buf == 0))
-> +               return ret;
-> +       dev = kobj_to_dev(ktemp);
-> +       if (dev == 0)
-> +               return ret;
-> +/* dev_get_drvdata must return 0 if the struct scsi_tape has been freed.
-> +   Holding st_ref_mutex means it cannot be freed while we check and we
-> +   grab a reference to the struct scsi_tape before unlocking. */
-> +       mutex_lock(&st_ref_mutex);
-> +       st = dev_get_drvdata(dev);
-> +       if (st == 0) {
-> +               mutex_unlock(&st_ref_mutex);
-> +               return ret;
-> +       }
-> +       kref_get(&st->kref);
-> +       mutex_unlock(&st_ref_mutex);
-> +
-> +       if ((st->stats != NULL) && (st_attr->show))
-> +               ret = st_attr->show(st, buf);
-> +
-> +       mutex_lock(&st_ref_mutex);
-> +       kref_put(&st->kref, scsi_tape_release);
-> +       mutex_unlock(&st_ref_mutex);
-> +
-> +       return ret;
-> +}
-> +
-> +
-> +
->  /* The following functions may be useful for a larger audience. */
->  static int sgl_map_user_pages(struct st_buffer *STbp,
->                               const unsigned int max_pages, unsigned long uaddr,
-> diff -uprN a/drivers/scsi/st.h b/drivers/scsi/st.h
-> --- a/drivers/scsi/st.h 2015-01-11 14:46:00.243814755 -0600
-> +++ b/drivers/scsi/st.h 2015-01-11 18:04:54.714001944 -0600
-> @@ -92,6 +92,32 @@ struct st_partstat {
->         int drv_file;
->  };
->
-> +/* Tape statistics */
-> +struct scsi_tape_stats {
-> +       struct kobject statistics; /* Object for statistics directory */
-> +       u64 read_byte_cnt;      /* bytes read */
-> +       u64 write_byte_cnt;     /* bytes written */
-> +       u64 in_flight;          /* Number of I/Os in flight */
-> +       u64 read_cnt;           /* Count of read requests */
-> +       u64 write_cnt;          /* Count of write requests */
-> +       u64 other_cnt;          /* Count of other requests either implicit
-> +                                       or from user space via ioctl. */
-> +       u64 read_ticks;         /* Ticks spent completing read requests */
-> +       u64 write_ticks;        /* Ticks spent completing write requests */
-> +       u64 io_ticks;           /* Ticks spent doing any I/O */
-> +       u64 stamp;              /* holds time request was queued */
-> +       u64 sync;               /* Are stats read in sync */
-> +       u64 sync_read_byte_cnt;
-> +       u64 sync_write_byte_cnt;
-> +       u64 sync_in_flight;
-> +       u64 sync_read_cnt;
-> +       u64 sync_write_cnt;
-> +       u64 sync_other_cnt;
-> +       u64 sync_read_ticks;
-> +       u64 sync_write_ticks;
-> +       u64 sync_io_ticks;
-> +};
-> +
->  #define ST_NBR_PARTITIONS 4
->
->  /* The tape drive descriptor */
-> @@ -171,6 +197,7 @@ struct scsi_tape {
->  #endif
->         struct gendisk *disk;
->         struct kref     kref;
-> +       struct scsi_tape_stats *stats;
->  };
->
->  /* Bit masks for use_pf */
-> diff -uprN a/Documentation/scsi/st.txt b/Documentation/scsi/st.txt
-> --- a/Documentation/scsi/st.txt 2015-01-11 14:45:56.235815028 -0600
-> +++ b/Documentation/scsi/st.txt 2015-01-12 11:23:37.885398363 -0600
-> @@ -151,6 +151,98 @@ A link named 'tape' is made from the SCS
->  directory corresponding to the mode 0 auto-rewind device (e.g., st0).
->
->
-> +SYSFS AND STATISTICS FOR TAPE DEVICES
-> +
-> +The st driver maintains statistics for tape drives inside the sysfs filesystem.
-> +The following method can be used to locate the statistics directories that are
-> +available (assuming that sysfs is mounted at /sys):
-> +
-> +1. Use opendir(3) on the directory /sys/class/scsi_tape
-> +2. Use readdir(3) to read the directory contents
-> +3. Use regcomp(3)/regexec(3) to match directory entries to the extended
-> +        regular expression "^st[0-9]+$"
-> +4. Access the statistics from the /sys/class/scsi_tape/<match>/device/statistics
-> +        directory (where <match> is a directory entry from /sys/class/scsi_tape
-> +        that matched the extended regular expression)
-> +
-> +An example of a matching directory with the full path to the statistics
-> +directory would be:
-> +
-> +/sys/class/scsi_tape/st0/device/statistics
-> +
-> +This is not the real path to the statistics directory but it does represent a
-> +path which makes the directories easiest to find. The statistics directory is
-> +common to all tape devices associated with a SCSI tape drive the statistics
-> +will be the same for the st0, nst0, etc.
-> +
-> +The statistics directory contains the following files:
-> +
-> +1.  in_flight - The number of I/Os currently outstanding to this device.
-> +2.  io_ms - The amount of time spent waiting (in milliseconds) for all I/O
-> +        to complete (including read and write). This includes tape movement
-> +        commands such as seeking between file or set marks and implicit tape
-> +        movement such as when rewind on close tape devices are used.
-> +3.  other_cnt - The number of I/Os issued to the tape drive other than read or
-> +        write commands. The time taken to complete these commands is tracked
-> +        in io_ms.
-> +4.  read_byte_cnt - The number of bytes read from the tape drive.
-> +5.  read_cnt - The number of read requests issued to the tape drive.
-> +6.  read_ms - The amount of time (in milliseconds) spent waiting for read
-> +        requests to complete.
-> +7.  sync - Described below
-> +8.  write_byte_cnt - The number of bytes written to the tape drive.
-> +9.  write_cnt - The number of write requests issued to the tape drive.
-> +10. write_ms - The amount of time (in milliseconds) spent waiting for write
-> +        requests to complete.
-> +
-> +Note: The count statistics are incrememented at the start of an I/O but the
-> +time they take to complete is not added to the statistics until they complete.
-> +
-> +When read all of the statistics may be out of sync. That is they may not be
-> +on consistent set of statistics because of the amount of time taken to
-> +open/read/close each statistics file if the tape drive is in use.
-> +To alleviate that issue and try to make a set of consistent statistics
-> +the sync file was created.
-> +
-> +When a non-zero value is written into the sync file all of the statistics
-> +are saved. Until a new value is written into the sync file accesses to the
-> +statistics files will return the saved values instead of the current values
-> +(writing the same value as previously written causes the statistics to be
-> +saved again). Writing 0 makes the statistics files provides access to the
-> +current instead of the saved values.
-> +
-> +The following is the suggested way to access the statistics when you require
-> +a consistent set of statistics:
-> +
-> +1. Determine the location of the statistics directory
-> +2. Open the sync file and write a set value into the file (choose one value
-> +        that your application uses always - doing so will allow someone else
-> +        to determine who else is using the sync file)
-> +3. Open, read, then close the individual statistics files
-> +4. Read back the sync value and ensure you read back the value that you wrote.
-> +If the value read back is not the same write your chosen value back into the
-> +sync file and then re-read the statistics. If the sync value has changed again
-> +stop after 3 attempts and just use the values you gathered. There should not
-> +be that many users of the statistics that a collision is likely to happen.
-> +5. Always write 0 back into the sync file when you are done then close it.
-> +
-> +If you wish to manually view the statistics you can do so in the following
-> +manner:
-> +
-> +$ cd /sys/class/scsi_tape/st0/device/statistics
-> +$ grep [0-9] *
-> +in_flight:0
-> +io_ms:33263
-> +other_cnt:5
-> +read_byte_cnt:0
-> +read_cnt:0
-> +read_ms:0
-> +sync:0
-> +write_byte_cnt:104857600
-> +write_cnt:102400
-> +write_ms:24069
-> +
-> +
->  BSD AND SYS V SEMANTICS
->
->  The user can choose between these two behaviours of the tape driver by
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gV2VkLCAyMDE1LTAxLTI4IGF0IDE3OjE4ICswMTAwLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0K
+PiBUaGUgcWNvbSB1ZnMgcGh5IHN1cHBvcnQgaXMgc3BsaXQgaW50byB0aHJlZSBzZXBhcmF0ZSBs
+b2FkYWJsZQ0KPiBtb2R1bGVzLCBob3dldmVyIG5vbmUgb2YgdGhlIGludGVyZmFjZXMgYXJlIGV4
+cG9ydGVkLCByZXN1bHRpbmcNCj4gaW4gYSBsaW5rIGVycm9yOg0KPiANCj4gRVJST1I6ICJ1ZnNf
+cWNvbV9waHlfcG93ZXJfb2ZmIiBbZHJpdmVycy9waHkvcGh5LXFjb20tdWZzLXFtcC0yMG5tLmtv
+XSB1bmRlZmluZWQhDQo+IEVSUk9SOiAidWZzX3Fjb21fcGh5X3Bvd2VyX29uIiBbZHJpdmVycy9w
+aHkvcGh5LXFjb20tdWZzLXFtcC0yMG5tLmtvXSB1bmRlZmluZWQhDQo+IEVSUk9SOiAidWZzX3Fj
+b21fcGh5X2V4aXQiIFtkcml2ZXJzL3BoeS9waHktcWNvbS11ZnMtcW1wLTIwbm0ua29dIHVuZGVm
+aW5lZCENCj4gRVJST1I6ICJ1ZnNfcWNvbV9waHlfZ2VuZXJpY19wcm9iZSIgW2RyaXZlcnMvcGh5
+L3BoeS1xY29tLXVmcy1xbXAtMjBubS5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogInVmc19xY29t
+X3BoeV9pbml0X3ZyZWd1bGF0b3JzIiBbZHJpdmVycy9waHkvcGh5LXFjb20tdWZzLXFtcC0yMG5t
+LmtvXSB1bmRlZmluZWQhDQo+IEVSUk9SOiAidWZzX3Fjb21fcGh5X2luaXRfY2xrcyIgW2RyaXZl
+cnMvcGh5L3BoeS1xY29tLXVmcy1xbXAtMjBubS5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogInVm
+c19xY29tX3BoeV9jYWxpYnJhdGUiIFtkcml2ZXJzL3BoeS9waHktcWNvbS11ZnMtcW1wLTIwbm0u
+a29dIHVuZGVmaW5lZCENCj4gRVJST1I6ICJ1ZnNfcWNvbV9waHlfcmVtb3ZlIiBbZHJpdmVycy9w
+aHkvcGh5LXFjb20tdWZzLXFtcC0yMG5tLmtvXSB1bmRlZmluZWQhDQo+IEVSUk9SOiAiZ2V0X3Vm
+c19xY29tX3BoeSIgW2RyaXZlcnMvcGh5L3BoeS1xY29tLXVmcy1xbXAtMjBubS5rb10gdW5kZWZp
+bmVkIQ0KPiBFUlJPUjogInVmc19xY29tX3BoeV9wb3dlcl9vZmYiIFtkcml2ZXJzL3BoeS9waHkt
+cWNvbS11ZnMtcW1wLTE0bm0ua29dIHVuZGVmaW5lZCENCj4gRVJST1I6ICJ1ZnNfcWNvbV9waHlf
+cG93ZXJfb24iIFtkcml2ZXJzL3BoeS9waHktcWNvbS11ZnMtcW1wLTE0bm0ua29dIHVuZGVmaW5l
+ZCENCj4gRVJST1I6ICJ1ZnNfcWNvbV9waHlfZXhpdCIgW2RyaXZlcnMvcGh5L3BoeS1xY29tLXVm
+cy1xbXAtMTRubS5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogInVmc19xY29tX3BoeV9nZW5lcmlj
+X3Byb2JlIiBbZHJpdmVycy9waHkvcGh5LXFjb20tdWZzLXFtcC0xNG5tLmtvXSB1bmRlZmluZWQh
+DQo+IEVSUk9SOiAidWZzX3Fjb21fcGh5X2luaXRfdnJlZ3VsYXRvcnMiIFtkcml2ZXJzL3BoeS9w
+aHktcWNvbS11ZnMtcW1wLTE0bm0ua29dIHVuZGVmaW5lZCENCj4gRVJST1I6ICJ1ZnNfcWNvbV9w
+aHlfaW5pdF9jbGtzIiBbZHJpdmVycy9waHkvcGh5LXFjb20tdWZzLXFtcC0xNG5tLmtvXSB1bmRl
+ZmluZWQhDQo+IEVSUk9SOiAidWZzX3Fjb21fcGh5X2NhbGlicmF0ZSIgW2RyaXZlcnMvcGh5L3Bo
+eS1xY29tLXVmcy1xbXAtMTRubS5rb10gdW5kZWZpbmVkIQ0KPiBFUlJPUjogInVmc19xY29tX3Bo
+eV9yZW1vdmUiIFtkcml2ZXJzL3BoeS9waHktcWNvbS11ZnMtcW1wLTE0bm0ua29dIHVuZGVmaW5l
+ZCENCj4gRVJST1I6ICJnZXRfdWZzX3Fjb21fcGh5IiBbZHJpdmVycy9waHkvcGh5LXFjb20tdWZz
+LXFtcC0xNG5tLmtvXSB1bmRlZmluZWQhDQo+IA0KPiBUaGlzIGV4cG9ydHMgYWxsIG9mIHRoZSBz
+eW1ib2xzIHRoYXQgYXJlIHByb3ZpZGVkIGJ5IHRoZSBiYXNlIGxpYnJhcnkNCj4gbW9kdWxlIGFu
+ZCB1c2VkIGJ5IHRoZSB0d28gZHJpdmVyIG1vZHVsZXMuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBB
+cm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KPiBGaXhlczogYWRhYWZhYTM5M2VmICgicGh5
+OiBxY29tLXVmczogYWRkIHN1cHBvcnQgZm9yIFFVQUxDT01NIFRlY2hub2xvZ2llcyBVRlMgUEhZ
+IGRyaXZlcnMiKQ0KPiAtLS0NCg0KDQpDYyBhZGRlZCBmb3IgbGludXgtc2NzaSwgc2luY2UgdGhp
+cyBpcyB0aGUgb3JpZ2luIG9mIHRoZSBwcm9ibGVtLiAgSG93DQppbXBvcnRhbnQgaXMgYmlzZWN0
+YWJpbGl0eSBpbiB0aGlzPyAgSXQgd29uJ3QgYWZmZWN0IGFueSBub24tZW1iZWRkZWQNCnVzZXIs
+IHNpbmNlIG1vc3QgZG9uJ3QgYnVpbGQgd2l0aCBVRlMsIHNvIEkgY2FuIGdvIGVpdGhlciB3YXkg
+b24gZm9sZGluZw0Kb3IganVzdCBhcHBseWluZyBhcyBhbiBleHRyYSBwYXRjaC4NCg0KSmFtZXMN
+Cg0KPiBUaGUgYnJva2VuIHBhdGNoIGlzIGN1cnJlbnRseSBpbiB0aGUgc2NzaSB0cmVlLCBzbyBp
+ZiB0aGUgcGh5IG1haW50YWluZXINCj4gdGhpbmtzIHRoYXQgbXkgZml4IGlzIGNvcnJlY3QsIGl0
+IHNob3VsZCBnbyB0aGVyZSB0b28uDQo+IA0KPiBBbiBhbHRlcm5hdGl2ZSBhcHByb2FjaCB3b3Vs
+ZCBiZSB0byBsaW5rIGFsbCB0aHJlZSBwaHktcWNvbS11ZnMgc291cmNlDQo+IGZpbGVzIGludG8g
+YSBzaW5nbGUgbW9kdWxlLg0KPiANCj4gIGRyaXZlcnMvcGh5L3BoeS1xY29tLXVmcy5jIHwgMjEg
+KysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdlZCwgMjEgaW5zZXJ0aW9ucygr
+KQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGh5L3BoeS1xY29tLXVmcy5jIGIvZHJpdmVy
+cy9waHkvcGh5LXFjb20tdWZzLmMNCj4gaW5kZXggNDRlZTk4M2Q1N2ZlLi5jOGY4YzJkYWMxOGMg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGh5L3BoeS1xY29tLXVmcy5jDQo+ICsrKyBiL2RyaXZl
+cnMvcGh5L3BoeS1xY29tLXVmcy5jDQo+IEBAIC03Myw2ICs3Myw3IEBAIGludCB1ZnNfcWNvbV9w
+aHlfY2FsaWJyYXRlKHN0cnVjdCB1ZnNfcWNvbV9waHkgKnVmc19xY29tX3BoeSwNCj4gIG91dDoN
+Cj4gIAlyZXR1cm4gcmV0Ow0KPiAgfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5
+X2NhbGlicmF0ZSk7DQo+ICANCj4gIHN0cnVjdCBwaHkgKnVmc19xY29tX3BoeV9nZW5lcmljX3By
+b2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYsDQo+ICAJCQkJc3RydWN0IHVmc19xY29t
+X3BoeSAqY29tbW9uX2NmZywNCj4gQEAgLTExMCw2ICsxMTEsNyBAQCBzdHJ1Y3QgcGh5ICp1ZnNf
+cWNvbV9waHlfZ2VuZXJpY19wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2LA0KPiAg
+b3V0Og0KPiAgCXJldHVybiBnZW5lcmljX3BoeTsNCj4gIH0NCj4gK0VYUE9SVF9TWU1CT0xfR1BM
+KHVmc19xY29tX3BoeV9nZW5lcmljX3Byb2JlKTsNCj4gIA0KPiAgLyoNCj4gICAqIFRoaXMgYXNz
+dW1lcyB0aGUgZW1iZWRkZWQgcGh5IHN0cnVjdHVyZSBpbnNpZGUgZ2VuZXJpY19waHkgaXMgb2Yg
+dHlwZQ0KPiBAQCAtMTIxLDYgKzEyMyw3IEBAIHN0cnVjdCB1ZnNfcWNvbV9waHkgKmdldF91ZnNf
+cWNvbV9waHkoc3RydWN0IHBoeSAqZ2VuZXJpY19waHkpDQo+ICB7DQo+ICAJcmV0dXJuIChzdHJ1
+Y3QgdWZzX3Fjb21fcGh5ICopcGh5X2dldF9kcnZkYXRhKGdlbmVyaWNfcGh5KTsNCj4gIH0NCj4g
+K0VYUE9SVF9TWU1CT0xfR1BMKGdldF91ZnNfcWNvbV9waHkpOw0KPiAgDQo+ICBzdGF0aWMNCj4g
+IGludCB1ZnNfcWNvbV9waHlfYmFzZV9pbml0KHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYs
+DQo+IEBAIC0yMjgsNiArMjMxLDcgQEAgdWZzX3Fjb21fcGh5X2luaXRfY2xrcyhzdHJ1Y3QgcGh5
+ICpnZW5lcmljX3BoeSwNCj4gIG91dDoNCj4gIAlyZXR1cm4gZXJyOw0KPiAgfQ0KPiArRVhQT1JU
+X1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5X2luaXRfY2xrcyk7DQo+ICANCj4gIGludA0KPiAgdWZz
+X3Fjb21fcGh5X2luaXRfdnJlZ3VsYXRvcnMoc3RydWN0IHBoeSAqZ2VuZXJpY19waHksDQo+IEBA
+IC0yNTIsNiArMjU2LDcgQEAgdWZzX3Fjb21fcGh5X2luaXRfdnJlZ3VsYXRvcnMoc3RydWN0IHBo
+eSAqZ2VuZXJpY19waHksDQo+ICBvdXQ6DQo+ICAJcmV0dXJuIGVycjsNCj4gIH0NCj4gK0VYUE9S
+VF9TWU1CT0xfR1BMKHVmc19xY29tX3BoeV9pbml0X3ZyZWd1bGF0b3JzKTsNCj4gIA0KPiAgc3Rh
+dGljIGludCBfX3Vmc19xY29tX3BoeV9pbml0X3ZyZWcoc3RydWN0IHBoeSAqcGh5LA0KPiAgCQlz
+dHJ1Y3QgdWZzX3Fjb21fcGh5X3ZyZWcgKnZyZWcsIGNvbnN0IGNoYXIgKm5hbWUsIGJvb2wgb3B0
+aW9uYWwpDQo+IEBAIC00NDMsNiArNDQ4LDcgQEAgb3V0X2Rpc2FibGVfc3JjOg0KPiAgb3V0Og0K
+PiAgCXJldHVybiByZXQ7DQo+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTCh1ZnNfcWNvbV9waHlf
+ZW5hYmxlX3JlZl9jbGspOw0KPiAgDQo+ICBzdGF0aWMNCj4gIGludCB1ZnNfcWNvbV9waHlfZGlz
+YWJsZV92cmVnKHN0cnVjdCBwaHkgKnBoeSwNCj4gQEAgLTQ4NSw2ICs0OTEsNyBAQCB2b2lkIHVm
+c19xY29tX3BoeV9kaXNhYmxlX3JlZl9jbGsoc3RydWN0IHBoeSAqZ2VuZXJpY19waHkpDQo+ICAJ
+CXBoeS0+aXNfcmVmX2Nsa19lbmFibGVkID0gZmFsc2U7DQo+ICAJfQ0KPiAgfQ0KPiArRVhQT1JU
+X1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5X2Rpc2FibGVfcmVmX2Nsayk7DQo+ICANCj4gICNkZWZp
+bmUgVUZTX1JFRl9DTEtfRU4JKDEgPDwgNSkNCj4gIA0KPiBAQCAtNTIzLDE2ICs1MzAsMTkgQEAg
+c3RhdGljIHZvaWQgdWZzX3Fjb21fcGh5X2Rldl9yZWZfY2xrX2N0cmwoc3RydWN0IHBoeSAqZ2Vu
+ZXJpY19waHksIGJvb2wgZW5hYmxlKQ0KPiAgCQlwaHktPmlzX2Rldl9yZWZfY2xrX2VuYWJsZWQg
+PSBlbmFibGU7DQo+ICAJfQ0KPiAgfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5
+X2Rldl9yZWZfY2xrX2N0cmwpOw0KPiAgDQo+ICB2b2lkIHVmc19xY29tX3BoeV9lbmFibGVfZGV2
+X3JlZl9jbGsoc3RydWN0IHBoeSAqZ2VuZXJpY19waHkpDQo+ICB7DQo+ICAJdWZzX3Fjb21fcGh5
+X2Rldl9yZWZfY2xrX2N0cmwoZ2VuZXJpY19waHksIHRydWUpOw0KPiAgfQ0KPiArRVhQT1JUX1NZ
+TUJPTF9HUEwodWZzX3Fjb21fcGh5X2VuYWJsZV9kZXZfcmVmX2Nsayk7DQo+ICANCj4gIHZvaWQg
+dWZzX3Fjb21fcGh5X2Rpc2FibGVfZGV2X3JlZl9jbGsoc3RydWN0IHBoeSAqZ2VuZXJpY19waHkp
+DQo+ICB7DQo+ICAJdWZzX3Fjb21fcGh5X2Rldl9yZWZfY2xrX2N0cmwoZ2VuZXJpY19waHksIGZh
+bHNlKTsNCj4gIH0NCj4gK0VYUE9SVF9TWU1CT0xfR1BMKHVmc19xY29tX3BoeV9kaXNhYmxlX2Rl
+dl9yZWZfY2xrKTsNCj4gIA0KPiAgLyogVHVybiBPTiBNLVBIWSBSTU1JIGludGVyZmFjZSBjbG9j
+a3MgKi8NCj4gIGludCB1ZnNfcWNvbV9waHlfZW5hYmxlX2lmYWNlX2NsayhzdHJ1Y3QgcGh5ICpn
+ZW5lcmljX3BoeSkNCj4gQEAgLTU2MSw2ICs1NzEsNyBAQCBpbnQgdWZzX3Fjb21fcGh5X2VuYWJs
+ZV9pZmFjZV9jbGsoc3RydWN0IHBoeSAqZ2VuZXJpY19waHkpDQo+ICBvdXQ6DQo+ICAJcmV0dXJu
+IHJldDsNCj4gIH0NCj4gK0VYUE9SVF9TWU1CT0xfR1BMKHVmc19xY29tX3BoeV9lbmFibGVfaWZh
+Y2VfY2xrKTsNCj4gIA0KPiAgLyogVHVybiBPRkYgTS1QSFkgUk1NSSBpbnRlcmZhY2UgY2xvY2tz
+ICovDQo+ICB2b2lkIHVmc19xY29tX3BoeV9kaXNhYmxlX2lmYWNlX2NsayhzdHJ1Y3QgcGh5ICpn
+ZW5lcmljX3BoeSkNCj4gQEAgLTU3Myw2ICs1ODQsNyBAQCB2b2lkIHVmc19xY29tX3BoeV9kaXNh
+YmxlX2lmYWNlX2NsayhzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSkNCj4gIAkJcGh5LT5pc19pZmFj
+ZV9jbGtfZW5hYmxlZCA9IGZhbHNlOw0KPiAgCX0NCj4gIH0NCj4gK0VYUE9SVF9TWU1CT0xfR1BM
+KHVmc19xY29tX3BoeV9kaXNhYmxlX2lmYWNlX2Nsayk7DQo+ICANCj4gIGludCB1ZnNfcWNvbV9w
+aHlfc3RhcnRfc2VyZGVzKHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5KQ0KPiAgew0KPiBAQCAtNTg5
+LDYgKzYwMSw3IEBAIGludCB1ZnNfcWNvbV9waHlfc3RhcnRfc2VyZGVzKHN0cnVjdCBwaHkgKmdl
+bmVyaWNfcGh5KQ0KPiAgDQo+ICAJcmV0dXJuIHJldDsNCj4gIH0NCj4gK0VYUE9SVF9TWU1CT0xf
+R1BMKHVmc19xY29tX3BoeV9zdGFydF9zZXJkZXMpOw0KPiAgDQo+ICBpbnQgdWZzX3Fjb21fcGh5
+X3NldF90eF9sYW5lX2VuYWJsZShzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSwgdTMyIHR4X2xhbmVz
+KQ0KPiAgew0KPiBAQCAtNjA2LDYgKzYxOSw3IEBAIGludCB1ZnNfcWNvbV9waHlfc2V0X3R4X2xh
+bmVfZW5hYmxlKHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5LCB1MzIgdHhfbGFuZXMpDQo+ICANCj4g
+IAlyZXR1cm4gcmV0Ow0KPiAgfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5X3Nl
+dF90eF9sYW5lX2VuYWJsZSk7DQo+ICANCj4gIHZvaWQgdWZzX3Fjb21fcGh5X3NhdmVfY29udHJv
+bGxlcl92ZXJzaW9uKHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5LA0KPiAgCQkJCQkgIHU4IG1ham9y
+LCB1MTYgbWlub3IsIHUxNiBzdGVwKQ0KPiBAQCAtNjE2LDYgKzYzMCw3IEBAIHZvaWQgdWZzX3Fj
+b21fcGh5X3NhdmVfY29udHJvbGxlcl92ZXJzaW9uKHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5LA0K
+PiAgCXVmc19xY29tX3BoeS0+aG9zdF9jdHJsX3Jldl9taW5vciA9IG1pbm9yOw0KPiAgCXVmc19x
+Y29tX3BoeS0+aG9zdF9jdHJsX3Jldl9zdGVwID0gc3RlcDsNCj4gIH0NCj4gK0VYUE9SVF9TWU1C
+T0xfR1BMKHVmc19xY29tX3BoeV9zYXZlX2NvbnRyb2xsZXJfdmVyc2lvbik7DQo+ICANCj4gIGlu
+dCB1ZnNfcWNvbV9waHlfY2FsaWJyYXRlX3BoeShzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSwgYm9v
+bCBpc19yYXRlX0IpDQo+ICB7DQo+IEBAIC02MzYsNiArNjUxLDcgQEAgaW50IHVmc19xY29tX3Bo
+eV9jYWxpYnJhdGVfcGh5KHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5LCBib29sIGlzX3JhdGVfQikN
+Cj4gIA0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTCh1ZnNfcWNv
+bV9waHlfY2FsaWJyYXRlX3BoeSk7DQo+ICANCj4gIGludCB1ZnNfcWNvbV9waHlfcmVtb3ZlKHN0
+cnVjdCBwaHkgKmdlbmVyaWNfcGh5LA0KPiAgCQkJc3RydWN0IHVmc19xY29tX3BoeSAqdWZzX3Fj
+b21fcGh5KQ0KPiBAQCAtNjQ3LDYgKzY2Myw3IEBAIGludCB1ZnNfcWNvbV9waHlfcmVtb3ZlKHN0
+cnVjdCBwaHkgKmdlbmVyaWNfcGh5LA0KPiAgDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+ICtFWFBP
+UlRfU1lNQk9MX0dQTCh1ZnNfcWNvbV9waHlfcmVtb3ZlKTsNCj4gIA0KPiAgaW50IHVmc19xY29t
+X3BoeV9leGl0KHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5KQ0KPiAgew0KPiBAQCAtNjU3LDYgKzY3
+NCw3IEBAIGludCB1ZnNfcWNvbV9waHlfZXhpdChzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSkNCj4g
+IA0KPiAgCXJldHVybiAwOw0KPiAgfQ0KPiArRVhQT1JUX1NZTUJPTF9HUEwodWZzX3Fjb21fcGh5
+X2V4aXQpOw0KPiAgDQo+ICBpbnQgdWZzX3Fjb21fcGh5X2lzX3Bjc19yZWFkeShzdHJ1Y3QgcGh5
+ICpnZW5lcmljX3BoeSkNCj4gIHsNCj4gQEAgLTY3MSw2ICs2ODksNyBAQCBpbnQgdWZzX3Fjb21f
+cGh5X2lzX3Bjc19yZWFkeShzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSkNCj4gIAlyZXR1cm4gdWZz
+X3Fjb21fcGh5LT5waHlfc3BlY19vcHMtPg0KPiAgCQkJaXNfcGh5c2ljYWxfY29kaW5nX3N1Ymxh
+eWVyX3JlYWR5KHVmc19xY29tX3BoeSk7DQo+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTCh1ZnNf
+cWNvbV9waHlfaXNfcGNzX3JlYWR5KTsNCj4gIA0KPiAgaW50IHVmc19xY29tX3BoeV9wb3dlcl9v
+bihzdHJ1Y3QgcGh5ICpnZW5lcmljX3BoeSkNCj4gIHsNCj4gQEAgLTcyNSw2ICs3NDQsNyBAQCBv
+dXRfZGlzYWJsZV9waHk6DQo+ICBvdXQ6DQo+ICAJcmV0dXJuIGVycjsNCj4gIH0NCj4gK0VYUE9S
+VF9TWU1CT0xfR1BMKHVmc19xY29tX3BoeV9wb3dlcl9vbik7DQo+ICANCj4gIGludCB1ZnNfcWNv
+bV9waHlfcG93ZXJfb2ZmKHN0cnVjdCBwaHkgKmdlbmVyaWNfcGh5KQ0KPiAgew0KPiBAQCAtNzQz
+LDMgKzc2Myw0IEBAIGludCB1ZnNfcWNvbV9waHlfcG93ZXJfb2ZmKHN0cnVjdCBwaHkgKmdlbmVy
+aWNfcGh5KQ0KPiAgDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTCh1
+ZnNfcWNvbV9waHlfcG93ZXJfb2ZmKTsNCj4gDQoNCg0K
