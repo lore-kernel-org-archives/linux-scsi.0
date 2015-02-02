@@ -1,77 +1,98 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 00/11] vhost/scsi: Add ANY_LAYOUT + VERSION_1 support
-Date: Mon,  2 Feb 2015 04:06:23 +0000
-Message-ID: <1422849994-3419-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Subject: [PATCH-v2 01/11] lib/iovec: Add memcpy_fromiovec_out library function
+Date: Mon,  2 Feb 2015 04:06:24 +0000
+Message-ID: <1422849994-3419-2-git-send-email-nab@daterainc.com>
+References: <1422849994-3419-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:46735 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932103AbbBBEjd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Feb 2015 23:39:33 -0500
+Received: by mail-oi0-f50.google.com with SMTP id h136so42756384oig.9
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Feb 2015 20:39:32 -0800 (PST)
+In-Reply-To: <1422849994-3419-1-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi MST, Paolo, & Co,
+This patch adds a new memcpy_fromiovec_out() library function which modifies
+the passed *iov following memcpy_fromiovec(), but also returns the next current
+iovec pointer via **iov_out.
 
-This -v2 series adds vhost/scsi ANY_LAYOUT + VERSION_1 host feature bit
-support.
+This is useful for vhost ANY_LAYOUT support when guests are allowed to generate
+incoming virtio request headers combined with subsequent SGL payloads into a
+single iovec.
 
-It adds a new vhost_virtqueue ->handle_kick() callback to determine the
-start of protection and data payloads iovecs past starting virtio-scsi
-request and response headers, based upon data_direction.
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ include/linux/uio.h |  2 ++
+ lib/iovec.c         | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
-It assumes request/CDB and response/sense_buffer headers may span more
-than a single iovec using lib/iovec.c logic, and adds a new addition of
-memcpy_fromiovec_out() to return the current re-calcuated **iov_out.
-
-It also allows virtio-scsi headers + T10_PI + Data SGL payloads to span
-the same iovec when pinning user-space memory via get_user_pages_fast()
-code.  (Not tested yet)
-
-It's currently functioning against v3.19-rc1 virtio-scsi LLD in T10_PI
-mode with ANY_LAYOUT -> VERSION_1 guest feature bits enabled, using the
-layout following existing convention with protection/data SGL payloads
-residing within seperate iovecs.
-
-Here's how the changelog is looking:
-
-v2 changes:
-  - Update memcpy_fromiovec_out usage comment
-  - Clear ->tvc_sgl_count for vhost_scsi_mapal failure
-  - Make vhost_scsi_mapal + vhost_scsi_calc_sgls accept max_niov
-  - Update vhost_scsi_handle_vqal comments
-  - Minor vhost_scsi_handle_vqal simplifications
-  - Add missing minimum virtio-scsi response buffer size check
-  - Fix pi_bytes* error message typo
-  - Convert to use vhost_skip_iovec_bytes() common code
-  - Add max_niov sanity checks vs. out + in offset into vq
-  - Drop legacy pre virtio v1.0 !ANY_LAYOUT code
-
-Also included in patch #11 is an over-due change to rename code in scsi.c
-to line up with modern vhost_scsi naming convention.
-
-Please review.
-
-Thank you,
-
---nab
-
-Nicholas Bellinger (11):
-  lib/iovec: Add memcpy_fromiovec_out library function
-  vhost/scsi: Convert completion path to use memcpy_toiovecend
-  vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
-  vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-  vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
-  vhost/scsi: Add ANY_LAYOUT vhost_skip_iovec_bytes helper
-  vhost/scsi: Add ANY_LAYOUT vhost_virtqueue callback
-  vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
-  vhost/scsi: Drop legacy pre virtio v1.0 !ANY_LAYOUT logic
-  vhost/scsi: Drop left-over scsi_tcq.h include
-  vhost/scsi: Global tcm_vhost -> vhost_scsi rename
-
- drivers/vhost/scsi.c | 1125 +++++++++++++++++++++++++++-----------------------
- include/linux/uio.h  |    2 +
- lib/iovec.c          |   35 ++
- 3 files changed, 646 insertions(+), 516 deletions(-)
-
+diff --git a/include/linux/uio.h b/include/linux/uio.h
+index 1c5e453..3e4473d 100644
+--- a/include/linux/uio.h
++++ b/include/linux/uio.h
+@@ -136,6 +136,8 @@ size_t csum_and_copy_to_iter(void *addr, size_t bytes, __wsum *csum, struct iov_
+ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum, struct iov_iter *i);
+ 
+ int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len);
++int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
++			 struct iovec **iov_out, int len);
+ int memcpy_fromiovecend(unsigned char *kdata, const struct iovec *iov,
+ 			int offset, int len);
+ int memcpy_toiovecend(const struct iovec *v, unsigned char *kdata,
+diff --git a/lib/iovec.c b/lib/iovec.c
+index 2d99cb4..24c8148 100644
+--- a/lib/iovec.c
++++ b/lib/iovec.c
+@@ -28,6 +28,41 @@ int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len)
+ EXPORT_SYMBOL(memcpy_fromiovec);
+ 
+ /*
++ *	Copy iovec to kernel, modifying the passed *iov entries.
++ *
++ *	Save **iov_out for the caller to use upon return, that may either
++ *	contain the current entry with a re-calculated iov_base + iov_len
++ *	or next unmodified entry.
++ *
++ *	Also note that any iovec entries preceeding the final *iov_out are
++ *	zeroed by copy_from_user().
++ *
++ *	Returns -EFAULT on error.
++ */
++
++int memcpy_fromiovec_out(unsigned char *kdata, struct iovec *iov,
++			 struct iovec **iov_out, int len)
++{
++	while (len > 0) {
++		if (iov->iov_len) {
++			int copy = min_t(unsigned int, len, iov->iov_len);
++			if (copy_from_user(kdata, iov->iov_base, copy))
++				return -EFAULT;
++			len -= copy;
++			kdata += copy;
++			iov->iov_base += copy;
++			iov->iov_len -= copy;
++		}
++		if (!iov->iov_len)
++			iov++;
++	}
++	*iov_out = iov;
++
++	return 0;
++}
++EXPORT_SYMBOL(memcpy_fromiovec_out);
++
++/*
+  *	Copy kernel to iovec. Returns -EFAULT on error.
+  */
+ 
 -- 
 1.9.1
+
