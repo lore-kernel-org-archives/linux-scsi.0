@@ -1,328 +1,53 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue callback
-Date: Tue,  3 Feb 2015 06:29:59 +0000
-Message-ID: <1422945003-24538-6-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 6/9] vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
+Date: Tue,  3 Feb 2015 06:30:00 +0000
+Message-ID: <1422945003-24538-7-git-send-email-nab@daterainc.com>
 References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:48694 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933957AbbBCHDJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 02:03:09 -0500
-Received: by mail-ob0-f169.google.com with SMTP id wp4so6620153obc.0
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 23:03:08 -0800 (PST)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds ANY_LAYOUT support with a new vqs[].vq.handle_kick()
-callback in vhost_scsi_handle_vqal().
-
-It calculates data_direction + exp_data_len for the new tcm_vhost_cmd
-descriptor by walking both outgoing + incoming iovecs using iov_iter,
-assuming the layout of outgoing request header + T10_PI + Data payload
-comes first.
-
-It also uses copy_from_iter() to copy leading virtio-scsi request header
-that may or may not include SCSI CDB, that returns a re-calculated iovec
-to start of T10_PI or Data SGL memory.
-
-v2 changes:
-  - Fix up vhost_scsi_handle_vqal comments
-  - Minor vhost_scsi_handle_vqal simplifications
-  - Add missing minimum virtio-scsi response buffer size check
-  - Fix pi_bytes* error message typo
-  - Convert to use vhost_skip_iovec_bytes() common code
-  - Add max_niov sanity checks vs. out + in offset into vq
-
-v3 changes:
-  - Convert to copy_from_iter usage
-  - Update vhost_scsi_handle_vqal comments for iov_iter usage
-  - Convert prot_bytes offset to use iov_iter_advance
-  - Drop max_niov usage in vhost_scsi_handle_vqal
-  - Drop vhost_skip_iovec_bytes in favour of iov_iter
+Signal support of VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
+required for virtio-scsi 1.0 spec layout requirements.
 
 Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/scsi.c | 260 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 260 insertions(+)
+ drivers/vhost/scsi.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 7dfff15..e1fe003 100644
+index e1fe003..c25fdd7 100644
 --- a/drivers/vhost/scsi.c
 +++ b/drivers/vhost/scsi.c
-@@ -1062,6 +1062,266 @@ vhost_scsi_send_bad_target(struct vhost_scsi *vs,
+@@ -173,7 +173,9 @@ enum {
+ /* Note: can't set VIRTIO_F_VERSION_1 yet, since that implies ANY_LAYOUT. */
+ enum {
+ 	VHOST_SCSI_FEATURES = VHOST_FEATURES | (1ULL << VIRTIO_SCSI_F_HOTPLUG) |
+-					       (1ULL << VIRTIO_SCSI_F_T10_PI)
++					       (1ULL << VIRTIO_SCSI_F_T10_PI) |
++					       (1ULL << VIRTIO_F_ANY_LAYOUT) |
++					       (1ULL << VIRTIO_F_VERSION_1)
+ };
+ 
+ #define VHOST_SCSI_MAX_TARGET	256
+@@ -1626,7 +1628,10 @@ static void vhost_scsi_handle_kick(struct vhost_work *work)
+ 						poll.work);
+ 	struct vhost_scsi *vs = container_of(vq->dev, struct vhost_scsi, dev);
+ 
+-	vhost_scsi_handle_vq(vs, vq);
++	if (vhost_has_feature(vq, VIRTIO_F_ANY_LAYOUT))
++		vhost_scsi_handle_vqal(vs, vq);
++	else
++		vhost_scsi_handle_vq(vs, vq);
  }
  
- static void
-+vhost_scsi_handle_vqal(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
-+{
-+	struct tcm_vhost_tpg **vs_tpg, *tpg;
-+	struct virtio_scsi_cmd_req v_req;
-+	struct virtio_scsi_cmd_req_pi v_req_pi;
-+	struct tcm_vhost_cmd *cmd;
-+	struct iov_iter out_iter, in_iter, prot_iter, data_iter;
-+	u64 tag;
-+	u32 exp_data_len, data_direction;
-+	unsigned out, in, i;
-+	int head, ret, prot_bytes;
-+	size_t req_size, rsp_size = sizeof(struct virtio_scsi_cmd_resp);
-+	size_t out_size, in_size;
-+	u16 lun;
-+	u8 *target, *lunp, task_attr;
-+	bool t10_pi = vhost_has_feature(vq, VIRTIO_SCSI_F_T10_PI);
-+	void *req, *cdb;
-+
-+	mutex_lock(&vq->mutex);
-+	/*
-+	 * We can handle the vq only after the endpoint is setup by calling the
-+	 * VHOST_SCSI_SET_ENDPOINT ioctl.
-+	 */
-+	vs_tpg = vq->private_data;
-+	if (!vs_tpg)
-+		goto out;
-+
-+	vhost_disable_notify(&vs->dev, vq);
-+
-+	for (;;) {
-+		head = vhost_get_vq_desc(vq, vq->iov,
-+					 ARRAY_SIZE(vq->iov), &out, &in,
-+					 NULL, NULL);
-+		pr_debug("vhost_get_vq_desc: head: %d, out: %u in: %u\n",
-+			 head, out, in);
-+		/* On error, stop handling until the next kick. */
-+		if (unlikely(head < 0))
-+			break;
-+		/* Nothing new?  Wait for eventfd to tell us they refilled. */
-+		if (head == vq->num) {
-+			if (unlikely(vhost_enable_notify(&vs->dev, vq))) {
-+				vhost_disable_notify(&vs->dev, vq);
-+				continue;
-+			}
-+			break;
-+		}
-+		/*
-+		 * Check for a sane response buffer so we can report early
-+		 * errors back to the guest.
-+		 */
-+		if (unlikely(vq->iov[out].iov_len < rsp_size)) {
-+			vq_err(vq, "Expecting at least virtio_scsi_cmd_resp"
-+				" size, got %zu bytes\n", vq->iov[out].iov_len);
-+			break;
-+		}
-+		/*
-+		 * Setup pointers and values based upon different virtio-scsi
-+		 * request header if T10_PI is enabled in KVM guest.
-+		 */
-+		if (t10_pi) {
-+			req = &v_req_pi;
-+			req_size = sizeof(v_req_pi);
-+			lunp = &v_req_pi.lun[0];
-+			target = &v_req_pi.lun[1];
-+		} else {
-+			req = &v_req;
-+			req_size = sizeof(v_req);
-+			lunp = &v_req.lun[0];
-+			target = &v_req.lun[1];
-+		}
-+		/*
-+		 * Determine data_direction for ANY_LAYOUT by calculating the
-+		 * total outgoing iovec sizes / incoming iovec sizes vs.
-+		 * virtio-scsi request / response headers respectively.
-+		 *
-+		 * FIXME: Not correct for BIDI operation
-+		 */
-+		out_size = in_size = 0;
-+		for (i = 0; i < out; i++)
-+			out_size += vq->iov[i].iov_len;
-+		for (i = out; i < out + in; i++)
-+			in_size += vq->iov[i].iov_len;
-+		/*
-+		 * Any associated T10_PI bytes for the outgoing / incoming
-+		 * payloads are included in calculation of exp_data_len here.
-+		 */
-+		if (out_size > req_size) {
-+			data_direction = DMA_TO_DEVICE;
-+			exp_data_len = out_size - req_size;
-+		} else if (in_size > rsp_size) {
-+			data_direction = DMA_FROM_DEVICE;
-+			exp_data_len = in_size - rsp_size;
-+		} else {
-+			data_direction = DMA_NONE;
-+			exp_data_len = 0;
-+		}
-+		/*
-+		 * Copy over the virtio-scsi request header, which when
-+		 * ANY_LAYOUT is enabled may span multiple iovecs, or a
-+		 * single iovec may contain both the header + outgoing
-+		 * WRITE payloads.
-+		 *
-+		 * copy_from_iter() is modifying the iovecs as copies over
-+		 * req_size bytes into req, so the returned out_iter.iov[0]
-+		 * will contain the correct start + offset of the outgoing
-+		 * WRITE payload, if DMA_TO_DEVICE is set.
-+		 */
-+		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
-+			     (data_direction == DMA_TO_DEVICE) ?
-+			      req_size + exp_data_len : req_size);
-+
-+		ret = copy_from_iter(req, req_size, &out_iter);
-+		if (unlikely(ret != req_size)) {
-+			vq_err(vq, "Faulted on copy_from_iter\n");
-+			vhost_scsi_send_bad_target(vs, vq, head, out);
-+			continue;
-+		}
-+		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
-+		if (unlikely(*lunp != 1)) {
-+			vq_err(vq, "Illegal virtio-scsi lun: %u\n", *lunp);
-+			vhost_scsi_send_bad_target(vs, vq, head, out);
-+			continue;
-+		}
-+
-+		tpg = ACCESS_ONCE(vs_tpg[*target]);
-+		if (unlikely(!tpg)) {
-+			/* Target does not exist, fail the request */
-+			vhost_scsi_send_bad_target(vs, vq, head, out);
-+			continue;
-+		}
-+		/*
-+		 * Determine start of T10_PI or data payload iovec in ANY_LAYOUT
-+		 * mode based upon data_direction.
-+		 *
-+		 * For DMA_TO_DEVICE, this is iov_out from copy_from_iter()
-+		 * with the already recalculated iov_base + iov_len.
-+		 *
-+		 * For DMA_FROM_DEVICE, the iovec will be just past the end
-+		 * of the virtio-scsi response header in either the same
-+		 * or immediately following iovec.
-+		 */
-+		prot_bytes = 0;
-+
-+		if (data_direction == DMA_TO_DEVICE) {
-+			data_iter = out_iter;
-+		} else if (data_direction == DMA_FROM_DEVICE) {
-+			iov_iter_init(&in_iter, WRITE, &vq->iov[out], in,
-+				      rsp_size + exp_data_len);
-+			iov_iter_advance(&in_iter, rsp_size);
-+			data_iter = in_iter;
-+		}
-+		/*
-+		 * If T10_PI header + payload is present, setup prot_iter values
-+		 * and recalculate data_iter for vhost_scsi_mapal() mapping to
-+		 * host scatterlists via get_user_pages_fast().
-+		 */
-+		if (t10_pi) {
-+			if (v_req_pi.pi_bytesout) {
-+				if (data_direction != DMA_TO_DEVICE) {
-+					vq_err(vq, "Received non zero pi_bytesout,"
-+						" but wrong data_direction\n");
-+					vhost_scsi_send_bad_target(vs, vq, head, out);
-+					continue;
-+				}
-+				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesout);
-+			} else if (v_req_pi.pi_bytesin) {
-+				if (data_direction != DMA_FROM_DEVICE) {
-+					vq_err(vq, "Received non zero pi_bytesin,"
-+						" but wrong data_direction\n");
-+					vhost_scsi_send_bad_target(vs, vq, head, out);
-+					continue;
-+				}
-+				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesin);
-+			}
-+			/*
-+			 * Set prot_iter to data_iter, and advance past any
-+			 * preceeding prot_bytes that may be present.
-+			 *
-+			 * Also fix up the exp_data_len to reflect only the
-+			 * actual data payload length.
-+			 */
-+			if (prot_bytes) {
-+				exp_data_len -= prot_bytes;
-+				prot_iter = data_iter;
-+				iov_iter_advance(&data_iter, prot_bytes);
-+			}
-+			tag = vhost64_to_cpu(vq, v_req_pi.tag);
-+			task_attr = v_req_pi.task_attr;
-+			cdb = &v_req_pi.cdb[0];
-+			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
-+		} else {
-+			tag = vhost64_to_cpu(vq, v_req.tag);
-+			task_attr = v_req.task_attr;
-+			cdb = &v_req.cdb[0];
-+			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
-+		}
-+		/*
-+		 * Check that the recieved CDB size does not exceeded our
-+		 * hardcoded max for vhost-scsi, then get a pre-allocated
-+		 * cmd descriptor for the new virtio-scsi tag.
-+		 *
-+		 * TODO what if cdb was too small for varlen cdb header?
-+		 */
-+		if (unlikely(scsi_command_size(cdb) > TCM_VHOST_MAX_CDB_SIZE)) {
-+			vq_err(vq, "Received SCSI CDB with command_size: %d that"
-+				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
-+				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
-+			vhost_scsi_send_bad_target(vs, vq, head, out);
-+			continue;
-+		}
-+		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
-+					 exp_data_len + prot_bytes,
-+					 data_direction);
-+		if (IS_ERR(cmd)) {
-+			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
-+			       PTR_ERR(cmd));
-+			vhost_scsi_send_bad_target(vs, vq, head, out);
-+			continue;
-+		}
-+		cmd->tvc_vhost = vs;
-+		cmd->tvc_vq = vq;
-+		cmd->tvc_resp_iov = &vq->iov[out];
-+		cmd->tvc_in_iovs = in;
-+
-+		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
-+			 cmd->tvc_cdb[0], cmd->tvc_lun);
-+		pr_debug("cmd: %p exp_data_len: %d, prot_bytes: %d data_direction:"
-+			 " %d\n", cmd, exp_data_len, prot_bytes, data_direction);
-+
-+		if (data_direction != DMA_NONE) {
-+			ret = vhost_scsi_mapal(cmd,
-+					       prot_bytes, &prot_iter,
-+					       exp_data_len, &data_iter);
-+			if (unlikely(ret)) {
-+				vq_err(vq, "Failed to map iov to sgl\n");
-+				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
-+				vhost_scsi_send_bad_target(vs, vq, head, out);
-+				continue;
-+			}
-+		}
-+		/*
-+		 * Save the descriptor from vhost_get_vq_desc() to be used to
-+		 * complete the virtio-scsi request in TCM callback context via
-+		 * vhost_scsi_queue_data_in() and vhost_scsi_queue_status()
-+		 */
-+		cmd->tvc_vq_desc = head;
-+		/*
-+		 * Dispatch cmd descriptor for cmwq execution in process
-+		 * context provided by vhost_scsi_workqueue.  This also ensures
-+		 * cmd is executed on the same kworker CPU as this vhost
-+		 * thread to gain positive L2 cache locality effects.
-+		 */
-+		INIT_WORK(&cmd->work, tcm_vhost_submission_work);
-+		queue_work(tcm_vhost_workqueue, &cmd->work);
-+	}
-+out:
-+	mutex_unlock(&vq->mutex);
-+}
-+
-+static void
- vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
- {
- 	struct tcm_vhost_tpg **vs_tpg;
+ static void vhost_scsi_flush_vq(struct vhost_scsi *vs, int index)
 -- 
 1.9.1
-
