@@ -1,76 +1,61 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH v1 3/4] scsi: ufs: add trace events and dump prints for
- debug
-Date: Tue, 3 Feb 2015 11:53:51 -0500
-Message-ID: <20150203115351.58994f7d@gandalf.local.home>
-References: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
-	<1422977841-25036-4-git-send-email-gbroner@codeaurora.org>
+From: Venkatesh Srinivas <venkateshs@google.com>
+Subject: Re: [PATCH 1/1] scsi: Fix max transfer length for 4k disks
+Date: Tue, 3 Feb 2015 11:25:12 -0800
+Message-ID: <CAHdzE--L=qP534X9WshZ0BnA66Hn+r1D8fD1drrSKMkfSFNKPA@mail.gmail.com>
+References: <201501292155.t0TLt4qF025739@d01av05.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1422977841-25036-4-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Petr Mladek <pmladek@suse.cz>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Vaibhav Nagarnaik <vnagarnaik@google.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vc0-f170.google.com ([209.85.220.170]:50613 "EHLO
+	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755266AbbBCTZN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 14:25:13 -0500
+Received: by mail-vc0-f170.google.com with SMTP id kv7so17564364vcb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 11:25:12 -0800 (PST)
+In-Reply-To: <201501292155.t0TLt4qF025739@d01av05.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, stable@vger.kernel.org
 
-On Tue,  3 Feb 2015 17:37:19 +0200
-Gilad Broner <gbroner@codeaurora.org> wrote:
-
-> Add trace events to driver to allow monitoring and profilig
-> of activities such as PM suspend/resume, hibernate enter/exit,
-> clock gating and clock scaling up/down.
-> In addition, add UFS host controller register dumps to provide
-> detailed information in case of errors to assist in analysis
-> of issues.
-> 
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
-> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+On Thu, Jan 29, 2015 at 1:54 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+>
+> The following patch fixes an issue observed with 4k sector disks
+> where the max_hw_sectors attribute was getting set too large in
+> sd_revalidate_disk. Since sdkp->max_xfer_blocks is in units
+> of SCSI logical blocks and queue_max_hw_sectors is in units of
+> 512 byte blocks, on a 4k sector disk, every time we went through
+> sd_revalidate_disk, we were taking the current value of
+> queue_max_hw_sectors and increasing it by a factor of 8. Fix
+> this by only shifting sdkp->max_xfer_blocks.
+>
+> Cc: stable<stable@vger.kernel.org>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 > ---
->  drivers/scsi/ufs/ufs-qcom.c  |  53 +++++
->  drivers/scsi/ufs/ufshcd.c    | 509 ++++++++++++++++++++++++++++++++++++++++---
->  drivers/scsi/ufs/ufshcd.h    |  49 ++++-
->  drivers/scsi/ufs/ufshci.h    |   1 +
->  include/linux/ftrace_event.h |   3 +
->  include/trace/events/ufs.h   | 227 +++++++++++++++++++
-
-
-
-> +static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
-> +					unsigned int tag, const char *str)
-> +{
-> +	if (FTRACE_EVENT_ENABLED(ufshcd_command))
-
-What's this? Not mentioned at all in the change log.
-
-> +		ufshcd_add_command_trace(hba, tag, str);
-> +}
-> +#else
-
-
-
-> diff --git a/include/linux/ftrace_event.h b/include/linux/ftrace_event.h
-> index 0bebb5c..54a4a63 100644
-> --- a/include/linux/ftrace_event.h
-> +++ b/include/linux/ftrace_event.h
-> @@ -606,4 +606,7 @@ perf_trace_buf_submit(void *raw_data, int size, int rctx, u64 addr,
->  }
->  #endif
->  
-> +#define FTRACE_EVENT_ENABLED(name)					\
-> +	((event_##name).flags & (1 << (TRACE_EVENT_FL_WAS_ENABLED_BIT)))\
+>
+>  drivers/scsi/sd.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff -puN drivers/scsi/sd.c~sd_revalidate_4k drivers/scsi/sd.c
+> --- linux/drivers/scsi/sd.c~sd_revalidate_4k    2015-01-29 14:44:23.316171187 -0600
+> +++ linux-bjking1/drivers/scsi/sd.c     2015-01-29 14:51:05.846126392 -0600
+> @@ -2800,9 +2800,11 @@ static int sd_revalidate_disk(struct gen
+>          */
+>         sd_set_flush_flag(sdkp);
+>
+> -       max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
+> -                               sdkp->max_xfer_blocks);
+> +       max_xfer = sdkp->max_xfer_blocks;
+>         max_xfer <<= ilog2(sdp->sector_size) - 9;
 > +
->  #endif /* _LINUX_FTRACE_EVENT_H */
+> +       max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
+> +                               max_xfer);
+>         blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
+>         set_capacity(disk, sdkp->capacity);
+>         sd_config_write_same(sdkp);
 
-NACK!
+Heh, nice find.
 
-Please use trace_<event>_enabled(), for instance,
-trace_ufshcd_command_enabled().
+Tested-by: Venkatesh Srinivas <venkateshs@google.com>
 
-This also uses jump_labels and is a nop when it is not enabled.
-
--- Steve
+-- vs;
