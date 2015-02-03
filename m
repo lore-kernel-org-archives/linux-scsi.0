@@ -1,86 +1,168 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 0/9] vhost/scsi: Add ANY_LAYOUT + VERSION_1 support
-Date: Tue,  3 Feb 2015 06:29:54 +0000
-Message-ID: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:53367 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932226AbbBCHDC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 02:03:02 -0500
-Received: by mail-ob0-f170.google.com with SMTP id va2so9094628obc.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 23:03:01 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH-v3 2/9] vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
+Date: Tue,  3 Feb 2015 06:29:56 +0000
+Message-ID: <1422945003-24538-3-git-send-email-nab@daterainc.com>
+References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+Sender: kvm-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi MST, Paolo, Al & Co,
+This patch fixes vhost_scsi_handle_vq() failure cases that result in BUG_ON()
+getting triggered when vhost_scsi_free_cmd() is called, and ->tvc_se_cmd has
+not been initialized by target_submit_cmd_map_sgls().
 
-Here is -v3 for adding vhost/scsi ANY_LAYOUT + VERSION_1 host feature
-bit support.
+It changes tcm_vhost_release_cmd() to use tcm_vhost_cmd->tvc_nexus for obtaining
+se_session pointer reference.  Also, avoid calling put_page() on NULL sg->page
+entries in vhost_scsi_map_to_sgl() failure path.
 
-It adds a new vhost_virtqueue ->handle_kick() callback to determine the
-start of protection and data payloads iovecs past starting virtio-scsi
-request and response headers, based upon data_direction using iov_iter
-primitives.
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/vhost/scsi.c | 52 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 29 insertions(+), 23 deletions(-)
 
-It assumes request/CDB and response/sense_buffer headers may span more
-than a single iovec using mm/iov_iter.c logic.
-
-It also allows virtio-scsi headers + T10_PI + Data SGL payloads to span
-the same iovec when pinning user-space memory via get_user_pages_fast()
-code.  (Not tested yet)
-
-Based upon Al & HCH's feedback, the patch series has been converted to
-use copy_*_iter() for virtio-scsi header copy.  Also, patch #4 has been
-updated to use iov_iter_npages() for sgl_count, and patch #5 updated to
-use iov_iter_advance() for calculating prot_bytes offset to the start
-of data_iter.
-
-v3 changelog:
-  - Convert memcpy_toiovecend -> copy_to_iter usage
-  - Update vhost_scsi_mapal + friends to use iov_iter
-  - Move iov_iter sanity checks into vhost_scsi_calc_sgls
-  - Convert vhost_scsi_calc_sgls() to iov_iter_npages()
-  - Convert to vhost_scsi_handle_vqal to copy_from_iter usage
-  - Update vhost_scsi_handle_vqal comments for iov_iter usage
-  - Convert prot_bytes offset to use iov_iter_advance
-  - Drop max_niov usage in vhost_scsi_handle_vqal
-  - Drop vhost_skip_iovec_bytes in favour of iov_iter
-
-Note the one part that has been left unchanged is vhost_scsi_map_to_sgl()
-into get_user_pages_fast(), for which existing iov_iter_get_pages() code
-will need to allow for a callback to perform the associated scatterlists
-setup from **pages for protection + data payloads.
-
-It's functioning against v3.19-rc1 virtio-scsi LLD in T10_PI mode using
-TYPE-1 DIF with ANY_LAYOUT -> VERSION_1 guest feature bits enabled, using
-the layout following existing convention with protection/data SGL payloads
-residing within seperate iovecs.
-
-Also included in patch #9 is an over-due change to rename code in scsi.c
-to line up with modern vhost_scsi naming convention.
-
-Please review.
-
-Thank you,
-
-Nicholas Bellinger (9):
-  vhost/scsi: Convert completion path to use copy_to_iser
-  vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
-  vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-  vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
-  vhost/scsi: Add ANY_LAYOUT vhost_virtqueue callback
-  vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
-  vhost/scsi: Drop legacy pre virtio v1.0 !ANY_LAYOUT logic
-  vhost/scsi: Drop left-over scsi_tcq.h include
-  vhost/scsi: Global tcm_vhost -> vhost_scsi rename
-
- drivers/vhost/scsi.c | 1073 ++++++++++++++++++++++++++------------------------
- 1 file changed, 549 insertions(+), 524 deletions(-)
-
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 1ad5b0f..e4e9f39 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -462,7 +462,7 @@ static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
+ {
+ 	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+ 				struct tcm_vhost_cmd, tvc_se_cmd);
+-	struct se_session *se_sess = se_cmd->se_sess;
++	struct se_session *se_sess = tv_cmd->tvc_nexus->tvn_se_sess;
+ 	int i;
+ 
+ 	if (tv_cmd->tvc_sgl_count) {
+@@ -864,9 +864,11 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
+ 		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
+ 					    cmd->tvc_upages, write);
+ 		if (ret < 0) {
+-			for (i = 0; i < cmd->tvc_sgl_count; i++)
+-				put_page(sg_page(&cmd->tvc_sgl[i]));
+-
++			for (i = 0; i < cmd->tvc_sgl_count; i++) {
++				struct page *page = sg_page(&cmd->tvc_sgl[i]);
++				if (page)
++					put_page(page);
++			}
+ 			cmd->tvc_sgl_count = 0;
+ 			return ret;
+ 		}
+@@ -905,9 +907,11 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+ 		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
+ 					    cmd->tvc_upages, write);
+ 		if (ret < 0) {
+-			for (i = 0; i < cmd->tvc_prot_sgl_count; i++)
+-				put_page(sg_page(&cmd->tvc_prot_sgl[i]));
+-
++			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
++				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
++				if (page)
++					put_page(page);
++			}
+ 			cmd->tvc_prot_sgl_count = 0;
+ 			return ret;
+ 		}
+@@ -1065,12 +1069,14 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		if (unlikely(vq->iov[0].iov_len < req_size)) {
+ 			pr_err("Expecting virtio-scsi header: %zu, got %zu\n",
+ 			       req_size, vq->iov[0].iov_len);
+-			break;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 		ret = memcpy_fromiovecend(req, &vq->iov[0], 0, req_size);
+ 		if (unlikely(ret)) {
+ 			vq_err(vq, "Faulted on virtio_scsi_cmd_req\n");
+-			break;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 
+ 		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
+@@ -1101,14 +1107,16 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 				if (data_direction != DMA_TO_DEVICE) {
+ 					vq_err(vq, "Received non zero do_pi_niov"
+ 						", but wrong data_direction\n");
+-					goto err_cmd;
++					vhost_scsi_send_bad_target(vs, vq, head, out);
++					continue;
+ 				}
+ 				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesout);
+ 			} else if (v_req_pi.pi_bytesin) {
+ 				if (data_direction != DMA_FROM_DEVICE) {
+ 					vq_err(vq, "Received non zero di_pi_niov"
+ 						", but wrong data_direction\n");
+-					goto err_cmd;
++					vhost_scsi_send_bad_target(vs, vq, head, out);
++					continue;
+ 				}
+ 				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesin);
+ 			}
+@@ -1148,7 +1156,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 			vq_err(vq, "Received SCSI CDB with command_size: %d that"
+ 				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+ 				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
+-			goto err_cmd;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 
+ 		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
+@@ -1157,7 +1166,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		if (IS_ERR(cmd)) {
+ 			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
+ 					PTR_ERR(cmd));
+-			goto err_cmd;
++			vhost_scsi_send_bad_target(vs, vq, head, out);
++			continue;
+ 		}
+ 
+ 		pr_debug("Allocated tv_cmd: %p exp_data_len: %d, data_direction"
+@@ -1178,7 +1188,9 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 			if (unlikely(ret)) {
+ 				vq_err(vq, "Failed to map iov to"
+ 					" prot_sgl\n");
+-				goto err_free;
++				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
++				vhost_scsi_send_bad_target(vs, vq, head, out);
++				continue;
+ 			}
+ 		}
+ 		if (data_direction != DMA_NONE) {
+@@ -1187,7 +1199,9 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 					data_direction == DMA_FROM_DEVICE);
+ 			if (unlikely(ret)) {
+ 				vq_err(vq, "Failed to map iov to sgl\n");
+-				goto err_free;
++				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
++				vhost_scsi_send_bad_target(vs, vq, head, out);
++				continue;
+ 			}
+ 		}
+ 		/*
+@@ -1205,14 +1219,6 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ 		INIT_WORK(&cmd->work, tcm_vhost_submission_work);
+ 		queue_work(tcm_vhost_workqueue, &cmd->work);
+ 	}
+-
+-	mutex_unlock(&vq->mutex);
+-	return;
+-
+-err_free:
+-	vhost_scsi_free_cmd(cmd);
+-err_cmd:
+-	vhost_scsi_send_bad_target(vs, vq, head, out);
+ out:
+ 	mutex_unlock(&vq->mutex);
+ }
 -- 
 1.9.1
 
