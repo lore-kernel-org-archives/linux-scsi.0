@@ -1,115 +1,58 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH v3] scsi: NCR5380: use msecs_to_jiffies for conversions
-Date: Tue,  3 Feb 2015 10:28:29 -0500
-Message-ID: <1422977309-3563-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:38505 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966025AbbBCPc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Feb 2015 10:32:59 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gilad Broner <gbroner@codeaurora.org>
+Subject: [PATCH v1 0/4] Add ioctl and debug utilities to UFS driver
+Date: Tue,  3 Feb 2015 17:37:16 +0200
+Message-ID: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 
-This is only an API consolidation to make things more readable.
-Instances of  var * HZ / 1000  are replaced by  msecs_to_jiffies(var).
-In addition some timing constants that assumed HZ 100 were adjusted
-to HZ independent settings based on review of the original drivers in 
-1.0.31 and 2.2.16.
+This patch series introduces in the first change a new UFS ioctl,
+allowing user-space to send UFS queries and retrieve information from them.
+In addition, the other three patches add utilities to support debugging
+efforts and supply information that will help analysis of issue:
+UFS trace events, dump host controller registers and requests descriptors
+on failures, several statistics.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Dolev Raviv (1):
+  scsi: ufs: add ioctl interface for query request
 
-v2: the original patch was not taking care of all the dependencies
-    as reported by Finn Thain <fthain@telegraphics.com.au> - this
-    version now uses the suggested config to check the patch.
-v3: g_NCR5380.c changes fixed up based on feedback from Michael Schmitz
-    <schmitzmic@gmail.com> as these settings were from around 1.0.31
-    kernel (or earlier) where HZ was 100 only - thus the unit here is
-    actually 10s of microseconds. This was "verified" by checking the
-    setting changes against 2.2.16 indicating that it was forgotten in
-    1998/99.
+Gilad Broner (1):
+  scsi: ufs: add trace events and dump prints for debug
 
-Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-ok but msecs_to_jiffies(val) is the cleaner solution and handles all
-corner cases correctly. This is a minor API cleanup only.
+Lee Susman (1):
+  scsi: ufs: add debugfs for ufs
 
-This patch was only compile tested with i386_defconfig + CONFIG_ISA=y
-as well as all dependent drivers enabled as modules:
-CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_GENERIC_NCR5380=m
-CONFIG_SCSI_DMX3191D=m, CONFIG_SCSI_DTC3280=m
-CONFIG_SCSI_GENERIC_NCR5380=m, CONFIG_SCSI_GENERIC_NCR5380_MMIO=m
-CONFIG_SCSI_PAS16=m, CONFIG_SCSI_T128=m
+Sujit Reddy Thumma (1):
+  scsi: ufs: inject errors to verify error handling
 
-Patch is against 3.19.0-rc7 (localversion-next = -next-20150203)
-
- drivers/scsi/NCR5380.c   |   10 +++++-----
- drivers/scsi/g_NCR5380.c |    6 +++---
- 2 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 8981701..d15411b 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -474,11 +474,11 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
-  */
- #ifndef USLEEP_SLEEP
- /* 20 ms (reasonable hard disk speed) */
--#define USLEEP_SLEEP (20*HZ/1000)
-+#define USLEEP_SLEEP msecs_to_jiffies(20)
- #endif
- /* 300 RPM (floppy speed) */
- #ifndef USLEEP_POLL
--#define USLEEP_POLL (200*HZ/1000)
-+#define USLEEP_POLL msecs_to_jiffies(200)
- #endif
- #ifndef USLEEP_WAITLONG
- /* RvC: (reasonable time to wait on select error) */
-@@ -576,7 +576,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
- 		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
- 			trying_irqs |= mask;
- 
--	timeout = jiffies + (250 * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(250);
- 	probe_irq = NO_IRQ;
- 
- 	/*
-@@ -634,7 +634,7 @@ static void prepare_info(struct Scsi_Host *instance)
- 	         "sg_tablesize %d, this_id %d, "
- 	         "flags { %s%s%s}, "
- #if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--	         "USLEEP_POLL %d, USLEEP_WAITLONG %d, "
-+		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
- #endif
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
-@@ -1346,7 +1346,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- 	 * selection.
- 	 */
- 
--	timeout = jiffies + (250 * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(250);
- 
- 	/* 
- 	 * XXX very interesting - we're seeing a bounce where the BSY we 
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index f35792f..a11b152 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -57,9 +57,9 @@
-  */
- 
- /* settings for DTC3181E card with only Mustek scanner attached */
--#define USLEEP_POLL	1
--#define USLEEP_SLEEP	20
--#define USLEEP_WAITLONG	500
-+#define USLEEP_POLL	msecs_to_jiffies(10)
-+#define USLEEP_SLEEP	msecs_to_jiffies(200)
-+#define USLEEP_WAITLONG	msecs_to_jiffies(5000)
- 
- #define AUTOPROBE_IRQ
- 
+ drivers/scsi/ufs/Makefile     |    1 +
+ drivers/scsi/ufs/debugfs.c    | 1038 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/debugfs.h    |   42 ++
+ drivers/scsi/ufs/ufs-qcom.c   |   53 +++
+ drivers/scsi/ufs/ufs.h        |   53 +--
+ drivers/scsi/ufs/ufshcd.c     |  964 ++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h     |  115 +++++
+ drivers/scsi/ufs/ufshci.h     |    3 +
+ include/linux/ftrace_event.h  |    3 +
+ include/trace/events/ufs.h    |  227 +++++++++
+ include/uapi/scsi/Kbuild      |    1 +
+ include/uapi/scsi/ufs/Kbuild  |    3 +
+ include/uapi/scsi/ufs/ioctl.h |   57 +++
+ include/uapi/scsi/ufs/ufs.h   |   66 +++
+ lib/Kconfig.debug             |   14 +
+ 15 files changed, 2556 insertions(+), 84 deletions(-)
+ create mode 100644 drivers/scsi/ufs/debugfs.c
+ create mode 100644 drivers/scsi/ufs/debugfs.h
+ create mode 100644 include/trace/events/ufs.h
+ create mode 100644 include/uapi/scsi/ufs/Kbuild
+ create mode 100644 include/uapi/scsi/ufs/ioctl.h
+ create mode 100644 include/uapi/scsi/ufs/ufs.h
 -- 
-1.7.10.4
+1.8.5.2
 
+-- 
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
