@@ -1,282 +1,148 @@
-From: Gilad Broner <gbroner@codeaurora.org>
-Subject: [PATCH v1 4/4] scsi: ufs: inject errors to verify error handling
-Date: Tue,  3 Feb 2015 17:37:20 +0200
-Message-ID: <1422977841-25036-5-git-send-email-gbroner@codeaurora.org>
-References: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, "David S. Miller" <davem@davemloft.net>, Ingo Molnar <mingo@kernel.org>, Davidlohr Bueso <davidlohr@hp.com>, Andi Kleen <ak@linux.intel.com>, Alexei Starovoitov <ast@plumgrid.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Al Viro <viro@zeniv.linux.org.uk>, Dan Streetman <ddstreet@ieee.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Kernel Ooops upon USB disconnect of a Western Digital My Passport
+ 1TB drive
+Date: Tue, 3 Feb 2015 11:05:24 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1502031033300.1130-100000@iolanthe.rowland.org>
+References: <CACfp432Vqiu2eeMyYupdkMxs=bNN83ayMgiDrZic54VjhM6aZw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35662 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S965890AbbBCQFZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 11:05:25 -0500
+In-Reply-To: <CACfp432Vqiu2eeMyYupdkMxs=bNN83ayMgiDrZic54VjhM6aZw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Athlion <athlion@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+On Tue, 3 Feb 2015, Athlion wrote:
 
-Use fault-injection framework to simulate error conditions
-in the controller and verify error handling mechanisms
-implemented in UFS host controller driver.
+> On Mon, Feb 2, 2015 at 7:27 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> 
+> > Had you made any changes to the runtime suspend settings?
+> > blk_post_runtime_resume wouldn't be called unless the drive had gone
+> > into runtime suspend.  And even then, it's not likely to be called
+> > after you unplug the USB cable.
+> >
+> > Alan Stern
+> 
+> I have enabled SCSI ATA Bus power management with this udev rule:
+> ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*",
+> ATTR{link_power_management_policy}="min_power"
 
-This is used only during development and hence
-guarded by CONFIG_UFS_FAULT_INJECTION debug config option.
+That won't have any effect on SCSI over USB, as far as I know.
 
-Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
----
- drivers/scsi/ufs/debugfs.c | 140 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/debugfs.h |  12 +++-
- drivers/scsi/ufs/ufshcd.c  |   2 +
- drivers/scsi/ufs/ufshcd.h  |   5 ++
- lib/Kconfig.debug          |  14 +++++
- 5 files changed, 172 insertions(+), 1 deletion(-)
+> ( And generally almost all of actions herein:
+> https://wiki.archlinux.org/index.php/Power_saving#Laptop_Mode )
+> 
+> Here's another with dynamic debugging on (and some of the stack trace):
+> 
+> [ 1565.610481] usb usb2: usb wakeup-resume
+> [ 1565.613019] usb usb2: usb auto-resume
+> [ 1565.615599] hub 2-0:1.0: hub_resume
+> [ 1565.617876] usb usb2-port1: status 0507 change 0000
+> [ 1565.620125] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+> [ 1565.623471] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+> [ 1565.650219] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0002
+> [ 1565.663520] usb 2-1: usb wakeup-resume
+> [ 1565.665518] usb 2-1: finish resume
+> [ 1565.667684] hub 2-1:1.0: hub_resume
+> [ 1565.669812] usb 2-1-port2: status 0101 change 0001
+> [ 1565.773645] usb usb2-port1: resume, status 0
+> [ 1565.776031] hub 2-1:1.0: state 7 ports 8 chg 0004 evt 0000
+> [ 1565.778664] usb 2-1-port2: status 0101, change 0000, 12 Mb/s
+> [ 1565.847291] usb 2-1.2: new high-speed USB device number 3 using ehci-pci
+> [ 1565.860480] usb 2-1-port2: not reset yet, waiting 10ms
+> [ 1565.945202] usb 2-1.2: default language 0x0409
+> [ 1565.947882] usb 2-1.2: udev 3, busnum 2, minor = 130
+> [ 1565.950384] usb 2-1.2: usb_probe_device
+> [ 1565.952704] usb 2-1.2: configuration #1 chosen from 1 choice
+> [ 1565.955145] usb 2-1.2: adding 2-1.2:1.0 (config #1, interface 0)
+> [ 1565.957630] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+> [ 1566.005124] usb-storage 2-1.2:1.0: usb_probe_interface
+> [ 1566.006655] usb-storage 2-1.2:1.0: usb_probe_interface - got id
+> [ 1566.008169] usb-storage 2-1.2:1.0: USB Mass Storage device detected
+> [ 1566.010155] scsi host6: usb-storage 2-1.2:1.0
+> [ 1566.012149] usbcore: registered new interface driver usb-storage
+> [ 1566.016061] usbcore: registered new interface driver uas
+> [ 1567.015852] scsi 6:0:0:0: Direct-Access     WD       My Passport
+> 0748 1016 PQ: 0 ANSI: 6
+> [ 1567.018966] scsi 6:0:0:1: Enclosure         WD       SES Device
+>   1016 PQ: 0 ANSI: 6
 
-diff --git a/drivers/scsi/ufs/debugfs.c b/drivers/scsi/ufs/debugfs.c
-index 10d2b50..add47b0 100644
---- a/drivers/scsi/ufs/debugfs.c
-+++ b/drivers/scsi/ufs/debugfs.c
-@@ -17,6 +17,7 @@
-  *
-  */
- 
-+#include <linux/random.h>
- #include "debugfs.h"
- #include "unipro.h"
- 
-@@ -41,6 +42,143 @@ struct desc_field_offset {
- 	} while (0)
- #define DOORBELL_CLR_TOUT_US	(1000 * 1000) /* 1 sec */
- 
-+#ifdef CONFIG_UFS_FAULT_INJECTION
-+
-+#define INJECT_COMMAND_HANG (0x0)
-+
-+static DECLARE_FAULT_ATTR(fail_default_attr);
-+static char *fail_request;
-+module_param(fail_request, charp, 0);
-+
-+static bool inject_fatal_err_tr(struct ufs_hba *hba, u8 ocs_err)
-+{
-+	int tag;
-+
-+	tag = find_first_bit(&hba->outstanding_reqs, hba->nutrs);
-+	if (tag == hba->nutrs)
-+		return 0;
-+
-+	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	(&hba->lrb[tag])->utr_descriptor_ptr->header.dword_2 =
-+							cpu_to_be32(ocs_err);
-+
-+	/* fatal error injected */
-+	return 1;
-+}
-+
-+static bool inject_fatal_err_tm(struct ufs_hba *hba, u8 ocs_err)
-+{
-+	int tag;
-+
-+	tag = find_first_bit(&hba->outstanding_tasks, hba->nutmrs);
-+	if (tag == hba->nutmrs)
-+		return 0;
-+
-+	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	(&hba->utmrdl_base_addr[tag])->header.dword_2 =
-+						cpu_to_be32(ocs_err);
-+
-+	/* fatal error injected */
-+	return 1;
-+}
-+
-+static bool inject_cmd_hang_tr(struct ufs_hba *hba)
-+{
-+	int tag;
-+
-+	tag = find_first_bit(&hba->outstanding_reqs, hba->nutrs);
-+	if (tag == hba->nutrs)
-+		return 0;
-+
-+	__clear_bit(tag, &hba->outstanding_reqs);
-+	hba->lrb[tag].cmd = NULL;
-+	__clear_bit(tag, &hba->lrb_in_use);
-+
-+	/* command hang injected */
-+	return 1;
-+}
-+
-+static int inject_cmd_hang_tm(struct ufs_hba *hba)
-+{
-+	int tag;
-+
-+	tag = find_first_bit(&hba->outstanding_tasks, hba->nutmrs);
-+	if (tag == hba->nutmrs)
-+		return 0;
-+
-+	__clear_bit(tag, &hba->outstanding_tasks);
-+	__clear_bit(tag, &hba->tm_slots_in_use);
-+
-+	/* command hang injected */
-+	return 1;
-+}
-+
-+void ufsdbg_fail_request(struct ufs_hba *hba, u32 *intr_status)
-+{
-+	u8 ocs_err;
-+	static const u32 errors[] = {
-+		CONTROLLER_FATAL_ERROR,
-+		SYSTEM_BUS_FATAL_ERROR,
-+		INJECT_COMMAND_HANG,
-+	};
-+
-+	if (!should_fail(&hba->debugfs_files.fail_attr, 1))
-+		goto out;
-+
-+	*intr_status = errors[prandom_u32() % ARRAY_SIZE(errors)];
-+	dev_info(hba->dev, "%s: fault-inject error: 0x%x\n",
-+			__func__, *intr_status);
-+
-+	switch (*intr_status) {
-+	case CONTROLLER_FATAL_ERROR: /* fall through */
-+		ocs_err = OCS_FATAL_ERROR;
-+		goto set_ocs;
-+	case SYSTEM_BUS_FATAL_ERROR:
-+		ocs_err = OCS_INVALID_CMD_TABLE_ATTR;
-+set_ocs:
-+		if (!inject_fatal_err_tr(hba, ocs_err))
-+			if (!inject_fatal_err_tm(hba, ocs_err))
-+				*intr_status = 0;
-+		break;
-+	case INJECT_COMMAND_HANG:
-+		if (!inject_cmd_hang_tr(hba))
-+			inject_cmd_hang_tm(hba);
-+		break;
-+	default:
-+		BUG();
-+		/* some configurations ignore panics caused by BUG() */
-+		break;
-+	}
-+out:
-+	return;
-+}
-+
-+static void ufsdbg_setup_fault_injection(struct ufs_hba *hba)
-+{
-+	hba->debugfs_files.fail_attr = fail_default_attr;
-+
-+	if (fail_request)
-+		setup_fault_attr(&hba->debugfs_files.fail_attr, fail_request);
-+
-+	/* suppress dump stack everytime failure is injected */
-+	hba->debugfs_files.fail_attr.verbose = 0;
-+
-+	if (IS_ERR(fault_create_debugfs_attr("inject_fault",
-+					hba->debugfs_files.debugfs_root,
-+					&hba->debugfs_files.fail_attr)))
-+		dev_err(hba->dev, "%s: failed to create debugfs entry\n",
-+				__func__);
-+}
-+#else
-+void ufsdbg_fail_request(struct ufs_hba *hba, u32 *intr_status)
-+{
-+}
-+
-+static void ufsdbg_setup_fault_injection(struct ufs_hba *hba)
-+{
-+}
-+#endif /* CONFIG_UFS_FAULT_INJECTION */
-+
- #define BUFF_LINE_CAPACITY 16
- #define TAB_CHARS 8
- 
-@@ -881,6 +1019,8 @@ void ufsdbg_add_debugfs(struct ufs_hba *hba)
- 		goto err;
- 	}
- 
-+	ufsdbg_setup_fault_injection(hba);
-+
- 	return;
- 
- err:
-diff --git a/drivers/scsi/ufs/debugfs.h b/drivers/scsi/ufs/debugfs.h
-index de7680a..06ff2e4 100644
---- a/drivers/scsi/ufs/debugfs.h
-+++ b/drivers/scsi/ufs/debugfs.h
-@@ -27,6 +27,16 @@
- void ufsdbg_add_debugfs(struct ufs_hba *hba);
- 
- void ufsdbg_remove_debugfs(struct ufs_hba *hba);
-+void ufsdbg_fail_request(struct ufs_hba *hba, u32 *intr_status);
-+#else
-+void ufsdbg_add_debugfs(struct ufs_hba *hba)
-+{
-+}
-+void ufsdbg_remove_debugfs(struct ufs_hba *hba)
-+{
-+}
-+void ufsdbg_fail_request(struct ufs_hba *hba, u32 *intr_status)
-+{
-+}
- #endif
--
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f4dc607..b6ba806 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4009,6 +4009,8 @@ static void ufshcd_tmc_handler(struct ufs_hba *hba)
-  */
- static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- {
-+	ufsdbg_fail_request(hba, &intr_status);
-+
- 	hba->errors = UFSHCD_ERROR_MASK & intr_status;
- 	if (hba->errors)
- 		ufshcd_check_errors(hba);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index d9eb2ca..b065295 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -64,6 +64,8 @@
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_eh.h>
- 
-+#include <linux/fault-inject.h>
-+
- #include "ufs.h"
- #include "ufshci.h"
- 
-@@ -283,6 +285,9 @@ struct debugfs_files {
- 	struct dentry *dme_peer_read;
- 	u32 dme_local_attr_id;
- 	u32 dme_peer_attr_id;
-+#ifdef CONFIG_UFS_FAULT_INJECTION
-+	struct fault_attr fail_attr;
-+#endif
- };
- 
- /* tag stats statistics types */
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 5f2ce61..3fc79e7 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1432,6 +1432,20 @@ config FAIL_MMC_REQUEST
- 	  and to test how the mmc host driver handles retries from
- 	  the block device.
- 
-+config UFS_FAULT_INJECTION
-+	bool "Fault-injection capability for UFS IO"
-+	select DEBUG_FS
-+	depends on FAULT_INJECTION && SCSI_UFSHCD
-+	help
-+	 Provide fault-injection capability for UFS IO.
-+	 This will make the UFS host controller driver to randomly
-+	 abort ongoing commands in the host controller, update OCS
-+	 field according to the injected fatal error and can also
-+	 forcefully hang the command indefinitely till upper layer
-+	 timeout occurs. This is useful to test error handling in
-+	 the UFS contoller driver and test how the driver handles
-+	 the retries from block/SCSI mid layer.
-+
- config FAULT_INJECTION_DEBUG_FS
- 	bool "Debugfs entries for fault-injection capabilities"
- 	depends on FAULT_INJECTION && SYSFS && DEBUG_FS
--- 
-Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Your device contains two Logical Units.  One of them is the My Passport
+disk drive, and the other is the SES Device enclosure.
+
+> [ 1567.027072] scsi 6:0:0:1: scsi_runtime_idle
+> [ 1567.029695] sd 6:0:0:0: [sdb] Spinning up disk...
+> [ 1567.032764] scsi 6:0:0:1: scsi_runtime_suspend
+> [ 1568.031907] .ready
+> [ 1569.060225] sd 6:0:0:0: [sdb] 1953458176 512-byte logical blocks:
+> (1.00 TB/931 GiB)
+> [ 1569.063857] sd 6:0:0:0: [sdb] Write Protect is off
+> [ 1569.065613] ses 6:0:0:1: Attached Enclosure device
+> [ 1569.068492] sd 6:0:0:0: [sdb] Mode Sense: 47 00 10 08
+> [ 1569.071598] sd 6:0:0:0: [sdb] No Caching mode page found
+> [ 1569.073628] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [ 1569.087891]  sdb: sdb1
+> [ 1569.093382] sd 6:0:0:0: [sdb] Attached SCSI disk
+> [ 1615.830142] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+> [ 1615.833066] usb 2-1-port2: status 0100, change 0001, 12 Mb/s
+> [ 1615.835764] usb 2-1.2: USB disconnect, device number 3
+> [ 1615.838471] usb 2-1.2: unregistering device
+> [ 1615.841199] usb 2-1.2: unregistering interface 2-1.2:1.0
+> [ 1615.844996] scsi target6:0:0: scsi_runtime_idle
+> [ 1615.848746] scsi target6:0:0: scsi_runtime_suspend
+> [ 1615.868925] scsi target6:0:0: scsi_runtime_resume
+> [ 1615.870975] ses 6:0:0:1: scsi_runtime_resume
+> [ 1615.872913] BUG: unable to handle kernel NULL pointer dereference
+> at 00000000000001a0
+> [ 1615.874896] IP: [<ffffffff812850d5>] blk_post_runtime_resume+0x65/0x80
+> [ 1615.876843] PGD 0
+> [ 1615.878765] Oops: 0002 [#1] PREEMPT SMP
+> [ 1615.880734] Modules linked in: ses enclosure uas usb_storage
+> netconsole joydev mousedev snd_hda_codec_hdmi snd_hda_codec_conexant
+> snd_hda_codec_generic coretemp intel_rapl x86_pkg_temp_thermal
+> intel_powerclamp kvm_intel kvm arc4 crct10dif_pclmul iwldvm
+> crc32_pclmul iTCO_wdt iTCO_vendor_support crc32c_intel mac80211   
+> ghash_clmulni_intel ip6t_REJECT nf_reject_ipv6 aesni_intel xt_hl
+> aes_x86_64 lrw gf128mul ip6t_rt psmouse iwlwifi glue_helper
+> ablk_helper cryptd i2c_i801 serio_raw cfg80211 nf_conntrack_ipv6
+> nf_defrag_ipv6 snd_hda_intel wmi thinkpad_acpi nvram thermal rfkill
+> ipt_REJECT nf_reject_ipv4 hwmon tpm_tis ac tpm battery
+> snd_hda_controller snd_hda_codec snd_hwdep evdev snd_pcm mac_hid
+> xt_limit e1000e snd_timer xt_tcpudp mei_me snd mei ptp soundcore
+> shpchp pps_core lpc_ich processor xt_addrtype nf_conntrack_ipv4
+> nf_defrag_ipv4 xt_conntrack at ffffffffffffffd8
+> [ 1616.064883] IP: [<ffffffff81091500>] kthread_data+0x10/0x20
+
+Once again, there is no stack trace.  In fact, if you look at the 
+second-to-last line above, it appears that another oops occurred about 
+0.2 seconds after the first one, and part of the kernel log got lost:
+
+> nf_defrag_ipv4 xt_conntrack at ffffffffffffffd8
+-----------------------------^
+
+Right there, the "at ffffffffffffffd8" part appears to be the end of 
+another BUG: line.  Everything in between is missing -- presumably 
+including the stack trace.  Maybe the stack got messed up, so that 
+tracing it caused the second oops to occur.
+
+Anyway, this shows that the problem was associated with the SES Device,
+not the My Passport disk.  It occurred during the runtime resume of the
+SES, as indicated by the reference to blk_post_runtime_resume.  (Note
+that the ses driver doesn't support runtime power management in any
+case.)
+
+Clearly this problem has nothing to do with USB; it is a SCSI matter.  
+Somehow the ses driver interacts badly with runtime PM.
+
+James, do you have any idea what might be going wrong here?  The 
+blk_post_runtime_resume routine in block/blk-core.c does very little 
+other than call __blk_run_queue.  I don't know how the ses driver 
+works, but it looks like it hardly uses its request queue at all.
+
+Alan Stern
+
