@@ -1,119 +1,151 @@
-From: Gavin Guo <gavin.guo@canonical.com>
-Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
-Date: Tue, 3 Feb 2015 08:28:19 +0800
-Message-ID: <CA+eFSM3-Xw1sqN0sCx4LHXYH7d81j+qtx_z6VZ_6QXc7uu2QyA@mail.gmail.com>
-References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
-	<1421920228.7061.48.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
-	<1421948107.30821.2.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
-	<1422658406.5117.31.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM1yp8bxp2zi8OuWs=_R7ddrintYXsDx5q10eOMj2Y04NQ@mail.gmail.com>
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Subject: RE: [PATCH 2/4] Fix for crash when bfa_itnim is NULL
+Date: Tue, 3 Feb 2015 05:13:27 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FEC31C@avmb2.qlogic.org>
+References: <1422521757-18724-1-git-send-email-anil.gurumurthy@qlogic.com>
+ <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
+ <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:46302 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755326AbbBCA2V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Feb 2015 19:28:21 -0500
-Received: by mail-la0-f43.google.com with SMTP id pn19so548677lab.2
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 16:28:19 -0800 (PST)
-In-Reply-To: <CA+eFSM1yp8bxp2zi8OuWs=_R7ddrintYXsDx5q10eOMj2Y04NQ@mail.gmail.com>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:13597 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750983AbbBCFNa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 00:13:30 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t135DTto026513
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Feb 2015 21:13:29 -0800
+Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1s8vueb174-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 21:13:29 -0800
+In-Reply-To: <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Nicholas,
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-On Sun, Feb 1, 2015 at 11:47 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> Hi Nicholas,
->
-> On Sat, Jan 31, 2015 at 6:53 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
->> On Fri, 2015-01-23 at 09:30 +0800, Gavin Guo wrote:
->>> Hi Nicholas,
->>>
->>> On Fri, Jan 23, 2015 at 1:35 AM, Nicholas A. Bellinger
->>> <nab@linux-iscsi.org> wrote:
->>> > On Thu, 2015-01-22 at 23:56 +0800, Gavin Guo wrote:
->>> >> Hi Nicolas,
->>> >>
->>> >> On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
->>> >> <nab@linux-iscsi.org> wrote:
->>> >> > Hi Gavin,
->>> >> >
->>> >> > On Thu, 2015-01-22 at 06:38 +0800, Gavin Guo wrote:
->>> >> >> Hi all,
->>> >> >>
->>> >> >> The general protection fault screenshot is attached.
->>> >> >>
->>> >> >> Summary:
->>> >> >> The kernel is Ubuntu-3.13.0-39.66. I've done basic analysis and found
->>> >> >> the fault is in list_del of iscsi_del_ts_from_active_list. And it
->>> >> >> looks like deleting the iscsi_thread_set *ts two times. The point to
->>> >> >> delete including iscsi_get_ts_from_inactive_list, was also checked but
->>> >> >> still can't find the clue. Really appreciate if anyone can provide any
->>> >> >> idea on the bug.
->>> >> >>
->>> >
->>> > <SNIP>
->>> >
->>> >> >
->>> >> > Thanks for your detailed analysis.
->>> >> >
->>> >> > A similar bug was reported off-list some months back by a person using
->>> >> > iser-target + RoCE export on v3.12.y code.  Just to confirm, your
->>> >> > environment is using traditional iscsi-target + TCP export, right..?
->>> >>
->>> >> I am sorry that I'm not an expert of the field and already google RoCE
->>> >> on the internet but still don't really know what RoCE is. However, I
->>> >> can provide the informations.  We used iscsiadm on the initiator side
->>> >> and lio_node and tcm_node commands to create the targets for
->>> >> connection. I think it should be normal  iscsi-target using TCP
->>> >> export.
->>> >>
->>> >
->>> > Yep, that would be traditional iscsi-target + TCP export.
->>> >
->>> >> >
->>> >> > At the time, a different set of iser-target related changes ended up
->>> >> > avoiding this issue on his particular setup, so we thought it was likely
->>> >> > a race triggered by login failures specific to iser-target code.
->>> >> >
->>> >> > There was a untested patch (included inline below) to drop the legacy
->>> >> > active_ts_list usage all-together, but IIRC he was not able to reproduce
->>> >> > further so the patch didn't get picked up for mainline.
->>> >> >
->>> >> > If your able to reliability reproduce, please try with the following
->>> >> > patch and let us know your progress.
->>> >>
->>> >> Thanks for your time reading the mail. I'll let you know the result.
->>> >
->>> > Just curious, are you able to reliability reproduce this bug in a VM..?
->>>
->>> Thanks for your caring, the machine is on the customer side, I've
->>> asked and now waiting for their response.
->>
->> Hi Gavin,
->>
->> Just curious if there has been any update on this yet..?
->>
->> --nab
->>
->
-> Really thanks for your attention. I'm also currently waiting for the
-> customer's reply and will send the email again to ask for the result.
-> However, I think the symptom may be hard to replicate that's why the
-> customer didn't reply me for a long time. Thanks for your time again.
->
-> Thanks,
-> Gavin
+SGkgSnVsaWFuLA0KICAgWW91IGFyZSByaWdodC4gSXQgbWFrZXMgc2Vuc2UgdG8gbW92ZSBpdCB0
+byB0aGUgbmV4dCBwYXRjaC4gSSB3aWxsIHJlLXNlbmQgdGhlIHBhdGNoIHNlcmllcy4NCg0KVGhh
+bmtzLA0KQW5pbA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSnVsaWFuIENh
+bGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwuY29tXSANClNlbnQ6IDMwIEphbnVhcnkg
+MjAxNSAwNjo0NQ0KVG86IEFuaWwgR3VydW11cnRoeQ0KQ2M6IEplaiBCOyBDaHJpc3RvcGggSGVs
+bHdpZzsgbGludXgtc2NzaQ0KU3ViamVjdDogUmU6IFtQQVRDSCAyLzRdIEZpeCBmb3IgY3Jhc2gg
+d2hlbiBiZmFfaXRuaW0gaXMgTlVMTA0KDQpIaSBBbmlsLA0KDQpPbiBUaHUsIEphbiAyOSwgMjAx
+NSBhdCA3OjU1IFBNLCAgPGFuaWwuZ3VydW11cnRoeUBxbG9naWMuY29tPiB3cm90ZToNCj4gRnJv
+bTogQW5pbCBHdXJ1bXVydGh5IDxhbmlsLmd1cnVtdXJ0aHlAcWxvZ2ljLmNvbT4NCj4NCj4gU2ln
+bmVkLW9mZi1ieTogU3VkYXJzYW5hIEthbGx1cnUgPHN1ZGFyc2FuYS5rYWxsdXJ1QHFsb2dpYy5j
+b20+DQo+IFNpZ25lZC1vZmYtYnk6IEFuaWwgR3VydW11cnRoeSA8YW5pbC5ndXJ1bXVydGh5QHFs
+b2dpYy5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMgfCAg
+ICAyICstDQo+ICBkcml2ZXJzL3Njc2kvYmZhL2JmYWRfaW0uYyAgICAgICB8ICAgMjYgKysrKysr
+KysrKysrKysrKysrKysrKysrKysNCj4gIDIgZmlsZXMgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygr
+KSwgMSBkZWxldGlvbnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9iZmEvYmZh
+X2Zjc19scG9ydC5jIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMNCj4gaW5kZXgg
+ZDgyMzc5Mi4uNDYzMTYzMCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNz
+X2xwb3J0LmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMNCj4gQEAg
+LTI2NTQsNyArMjY1NCw3IEBAIGJmYV9mY3NfZmRtaV9nZXRfaGJhYXR0cihzdHJ1Y3QgYmZhX2Zj
+c19scG9ydF9mZG1pX3MgKmZkbWksDQo+DQo+ICAgICAgICAgc3RybmNweShoYmFfYXR0ci0+bm9k
+ZV9zeW1fbmFtZS5zeW1uYW1lLA0KPiAgICAgICAgICAgICAgICAgcG9ydC0+cG9ydF9jZmcubm9k
+ZV9zeW1fbmFtZS5zeW1uYW1lLCBCRkFfU1lNTkFNRV9NQVhMRU4pOw0KPiAtICAgICAgIHN0cmNw
+eShoYmFfYXR0ci0+dmVuZG9yX2luZm8sICJCUk9DQURFIik7DQo+ICsgICAgICAgc3RyY3B5KGhi
+YV9hdHRyLT52ZW5kb3JfaW5mbywgIlFMb2dpYyIpOw0KDQpTaG91bGRuJ3QgdGhpcyBiZSBpbiB0
+aGUgbmV4dCBwYXRjaD8NCg0KVGhhbmtzLA0KDQotLSANCkp1bGlhbiBDYWxhYnkNCg0KRW1haWw6
+IGp1bGlhbi5jYWxhYnlAZ21haWwuY29tDQpQcm9maWxlOiBodHRwOi8vd3d3Lmdvb2dsZS5jb20v
+cHJvZmlsZXMvanVsaWFuLmNhbGFieS8NCg==
 
-Sorry for making you wait so long. I just got the response from the
-customer, they said the general protection fault happened just 2 times
-in the past and cannot be reliably reproduced. And I am now waiting
-for the verification test.
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-Thanks,
-Gavin
+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
+AGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEA
+AAA+AAAAcwBpAHAAOgBhAG4AaQBsAC4AZwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAA
+HwAfDAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAAgSsfpL6j
+EBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABB
+AG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
+AQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBv
+AG0AAAAAAB8A+D8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwAjQAEA
+AAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDd
+AQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4AaQBs
+AC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADYA
+AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
+AB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAA
+TQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAHJ4rR5J
+SKRKmercEW8KQbEDABcAAQAAAEAAOQCAtTMkcD/QAUAACDCKeEgkcD/QAQsAKQAAAAAACwAjAAAA
+AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBl
+AAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAA
+HwA3AAEAAABqAAAAUgBFADoAIABbAFAAQQBUAEMASAAgADIALwA0AF0AIABGAGkAeAAgAGYAbwBy
+ACAAYwByAGEAcwBoACAAdwBoAGUAbgAgAGIAZgBhAF8AaQB0AG4AaQBtACAAaQBzACAATgBVAEwA
+TAAAAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAigAA
+ADwAQwBBAEcAUgBHAE4AZwBYAHoANwB1AFYAdABLADkAMwBkAFUAdgA3AG8AOABFAG0AeQBMAEYA
+ZAAwAGQAaABHAFMAKwBPAG4AUgArADgAOQBFAFIAcgBBAEYAaQBZADUAWABYAGcAQABtAGEAaQBs
+AC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAgAAAAAQHQO6bdNwNbcC3NEUaETnWp
+r58eupzYYxeAgAYESgAfAHAAAQAAAGIAAABbAFAAQQBUAEMASAAgADIALwA0AF0AIABGAGkAeAAg
+AGYAbwByACAAYwByAGEAcwBoACAAdwBoAGUAbgAgAGIAZgBhAF8AaQB0AG4AaQBtACAAaQBzACAA
+TgBVAEwATAAAAAAAHwA1EAEAAAB0AAAAPAAyADAAQgAxAEEAMwBDAEIARAA5ADgARgAzADgANAA1
+AEIAMwBGADUARgA1ADYARAA4ADUAOQA3AEUARgA1ADkARgBFAEMAMwAxAEMAQABhAHYAbQBiADIA
+LgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAIYBAAA8ADEANAAyADIANQAyADEANwA1
+ADcALQAxADgANwAyADQALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBuAGkA
+bAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEANAAy
+ADIANQAyADEANwA1ADcALQAxADgANwAyADQALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
+aQBsAC0AYQBuAGkAbAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AD4AIAA8AEMAQQBHAFIARwBOAGcAWAB6ADcAdQBWAHQASwA5ADMAZABVAHYANwBvADgARQBtAHkA
+TABGAGQAMABkAGgARwBTACsATwBuAFIAKwA4ADkARQBSAHIAQQBGAGkAWQA1AFgAWABnAEAAbQBh
+AGkAbAAuAGcAbQBhAGkAbAAuAGMAbwBtAD4AAAAAAAMA3j/p/QAACwAAgAggBgAAAAAAwAAAAAAA
+AEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////QAAH
+MN5VNCNwP9ABCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1R
+TG9naWM7bD1BVk1CMi0xNTAyMDMwNTEzMjdaLTM3Nzg1AAAAAgEQMAEAAABGAAAAAAAAAKX2ulj4
+lJxAl6rmQzpEVr8HACCxo8vZjzhFs/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kAS3qm
+IasAAAAAHwD6PwEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZAQAA
+AAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
+DoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAA
+AABGAAAAAIKFAAAAAAAAQAAAgAggBgAAAAAAwAAAAAAAAEYAAAAAv4UAAFD6ucpvP9ABHwAAgAgg
+BgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8A
+AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
+aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
+AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAA
+AGIAeQBwAGEAcwBzAAAAAACdgA==
+
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_--
