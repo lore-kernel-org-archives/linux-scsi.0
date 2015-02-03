@@ -1,358 +1,115 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
- callback
-Date: Tue, 3 Feb 2015 12:14:36 +0200
-Message-ID: <20150203101436.GO2830@redhat.com>
-References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
- <1422945003-24538-6-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Tue, 3 Feb 2015 04:06:20 -0600
+Message-ID: <201502031006.t13A6KhM008961@wind.enjellic.com>
+References: <hch@infradead.org>
+Reply-To: greg@enjellic.com
 Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1422945003-24538-6-git-send-email-nab@daterainc.com>
+In-Reply-To: Christoph Hellwig <hch@infradead.org>
+       "Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers" (Jan 19,  1:21am)
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 03, 2015 at 06:29:59AM +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Jan 19,  1:21am, Christoph Hellwig wrote:
+} Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target driv
+
+Hi, I hope the week is going well for everyone.
+
+I'm a bit behind on e-mail and getting ready for travel but wanted to
+reply back to this thread because of our involvement and interest in
+this whole situation.
+
+> On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
+> > My goal is to realize this proposal without adding hooks for out-of-tree
+> > code in the upstream kernel. What I had in mind is to raise the
+> > abstraction level of the API between LIO core and target drivers a
+> > little bit (e.g. by using accessor functions where necessary instead of
+> > accessing structure members directly)
+
+> That's very much a hook, althiugh a week one.
 > 
-> This patch adds ANY_LAYOUT support with a new vqs[].vq.handle_kick()
-> callback in vhost_scsi_handle_vqal().
-> 
-> It calculates data_direction + exp_data_len for the new tcm_vhost_cmd
-> descriptor by walking both outgoing + incoming iovecs using iov_iter,
-> assuming the layout of outgoing request header + T10_PI + Data payload
-> comes first.
-> 
-> It also uses copy_from_iter() to copy leading virtio-scsi request header
-> that may or may not include SCSI CDB, that returns a re-calculated iovec
-> to start of T10_PI or Data SGL memory.
-> 
-> v2 changes:
->   - Fix up vhost_scsi_handle_vqal comments
->   - Minor vhost_scsi_handle_vqal simplifications
->   - Add missing minimum virtio-scsi response buffer size check
->   - Fix pi_bytes* error message typo
->   - Convert to use vhost_skip_iovec_bytes() common code
->   - Add max_niov sanity checks vs. out + in offset into vq
-> 
-> v3 changes:
->   - Convert to copy_from_iter usage
->   - Update vhost_scsi_handle_vqal comments for iov_iter usage
->   - Convert prot_bytes offset to use iov_iter_advance
->   - Drop max_niov usage in vhost_scsi_handle_vqal
->   - Drop vhost_skip_iovec_bytes in favour of iov_iter
-> 
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/vhost/scsi.c | 260 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 260 insertions(+)
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 7dfff15..e1fe003 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -1062,6 +1062,266 @@ vhost_scsi_send_bad_target(struct vhost_scsi *vs,
->  }
->  
->  static void
-> +vhost_scsi_handle_vqal(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
-> +{
-> +	struct tcm_vhost_tpg **vs_tpg, *tpg;
-> +	struct virtio_scsi_cmd_req v_req;
-> +	struct virtio_scsi_cmd_req_pi v_req_pi;
-> +	struct tcm_vhost_cmd *cmd;
-> +	struct iov_iter out_iter, in_iter, prot_iter, data_iter;
-> +	u64 tag;
-> +	u32 exp_data_len, data_direction;
-> +	unsigned out, in, i;
-> +	int head, ret, prot_bytes;
-> +	size_t req_size, rsp_size = sizeof(struct virtio_scsi_cmd_resp);
-> +	size_t out_size, in_size;
-> +	u16 lun;
-> +	u8 *target, *lunp, task_attr;
-> +	bool t10_pi = vhost_has_feature(vq, VIRTIO_SCSI_F_T10_PI);
-> +	void *req, *cdb;
-> +
-> +	mutex_lock(&vq->mutex);
-> +	/*
-> +	 * We can handle the vq only after the endpoint is setup by calling the
-> +	 * VHOST_SCSI_SET_ENDPOINT ioctl.
-> +	 */
-> +	vs_tpg = vq->private_data;
-> +	if (!vs_tpg)
-> +		goto out;
-> +
-> +	vhost_disable_notify(&vs->dev, vq);
-> +
-> +	for (;;) {
-> +		head = vhost_get_vq_desc(vq, vq->iov,
-> +					 ARRAY_SIZE(vq->iov), &out, &in,
-> +					 NULL, NULL);
-> +		pr_debug("vhost_get_vq_desc: head: %d, out: %u in: %u\n",
-> +			 head, out, in);
-> +		/* On error, stop handling until the next kick. */
-> +		if (unlikely(head < 0))
-> +			break;
-> +		/* Nothing new?  Wait for eventfd to tell us they refilled. */
-> +		if (head == vq->num) {
-> +			if (unlikely(vhost_enable_notify(&vs->dev, vq))) {
-> +				vhost_disable_notify(&vs->dev, vq);
-> +				continue;
-> +			}
-> +			break;
-> +		}
-> +		/*
-> +		 * Check for a sane response buffer so we can report early
-> +		 * errors back to the guest.
-> +		 */
-> +		if (unlikely(vq->iov[out].iov_len < rsp_size)) {
-> +			vq_err(vq, "Expecting at least virtio_scsi_cmd_resp"
-> +				" size, got %zu bytes\n", vq->iov[out].iov_len);
-> +			break;
-> +		}
-> +		/*
-> +		 * Setup pointers and values based upon different virtio-scsi
-> +		 * request header if T10_PI is enabled in KVM guest.
-> +		 */
-> +		if (t10_pi) {
-> +			req = &v_req_pi;
-> +			req_size = sizeof(v_req_pi);
-> +			lunp = &v_req_pi.lun[0];
-> +			target = &v_req_pi.lun[1];
-> +		} else {
-> +			req = &v_req;
-> +			req_size = sizeof(v_req);
-> +			lunp = &v_req.lun[0];
-> +			target = &v_req.lun[1];
-> +		}
-> +		/*
-> +		 * Determine data_direction for ANY_LAYOUT
+> Either way I don't think bringing up a very much political topic
+> without even any code to discuss isn't a very valueable use of our time
+> slots.
 
-It's not just for ANY_LAYOUT though, is it?
-After patchset is fully applied this will run for
-all guests?
+There is code, no one is bothering to look at it or understand the
+issues involved.
 
-> by calculating the
-> +		 * total outgoing iovec sizes / incoming iovec sizes vs.
-> +		 * virtio-scsi request / response headers respectively.
-> +		 *
-> +		 * FIXME: Not correct for BIDI operation
-> +		 */
-> +		out_size = in_size = 0;
-> +		for (i = 0; i < out; i++)
-> +			out_size += vq->iov[i].iov_len;
-> +		for (i = out; i < out + in; i++)
-> +			in_size += vq->iov[i].iov_len;
+It takes a six line patch to the in-kernel Qlogic target driver for
+SCST to leverage and contribute positively to the state of the
+in-kernel driver.  A six line patch, which if we were engaging in
+grounded engineering discussions, implements an interface which we
+haven't found anyone who suggests is unfounded.
 
-Why not use iov_length?
+Our bona-fides in all this is that we developed the SCST target
+interface driver which allows SCST to sit on top of the in-kernel
+Qlogic target driver.  That driver is in use in a number of locations
+driving hundreds and hundreds and hundreds of terrabytes of storage.
 
-> +		/*
-> +		 * Any associated T10_PI bytes for the outgoing / incoming
-> +		 * payloads are included in calculation of exp_data_len here.
-> +		 */
-> +		if (out_size > req_size) {
-> +			data_direction = DMA_TO_DEVICE;
-> +			exp_data_len = out_size - req_size;
-> +		} else if (in_size > rsp_size) {
-> +			data_direction = DMA_FROM_DEVICE;
-> +			exp_data_len = in_size - rsp_size;
-> +		} else {
-> +			data_direction = DMA_NONE;
-> +			exp_data_len = 0;
-> +		}
+See the scst-devel and linux-scsi lists and the following:
 
-We must validate this doesn't cause exp_data_len to be negative.
+ftp://ftp.enjellic.com/pub/scst/sqa_driver-1.1.tar.gz
 
-> +		/*
-> +		 * Copy over the virtio-scsi request header, which when
-> +		 * ANY_LAYOUT is enabled may span multiple iovecs, or a
-> +		 * single iovec may contain both the header + outgoing
-> +		 * WRITE payloads.
-> +		 *
-> +		 * copy_from_iter() is modifying the iovecs as copies over
-> +		 * req_size bytes into req, so the returned out_iter.iov[0]
-> +		 * will contain the correct start + offset of the outgoing
-> +		 * WRITE payload, if DMA_TO_DEVICE is set.
-> +		 */
-> +		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
+Based on these experiences and building and debugging very complex
+converged networks we can state pretty unequivocably that the current
+target driver situation is working to no ones advantage.
 
-I'd prefer just using vq->iov here, then we know that
-any iov[number] user is left-over that needs to be converted
-to use iterators.
+The in-kernel target driver hasn't seen significant improvement or
+work in over a year.  We carry a number of patches and bug fixes to
+the driver which we have identified and fixed locally.  We are so
+frustrated with the whole situation we don't even bother to push fixes
+upstream.  So the notion that holding the in-kernel target driver as a
+sacred bastion of purity will lead to a better codebase is ill
+founded.
 
-> +			     (data_direction == DMA_TO_DEVICE) ?
-> +			      req_size + exp_data_len : req_size);
+We cherry pick patches back and forther between the in-kernel and
+out-of-kernel drivers and can speak pretty authoritatively to the fact
+the in-kernel driver is now slipping behind the out-of-tree code.
 
-Hmm does not look safe: iovecs are pre-validated with
-in_size/out_size, not with req_size.
-The following should be equivalent, should it not?
-		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
-			      out_size);
+There is a significant regression, which we believe can lead to
+catastrophic data corruption under the right conditions, in the Qlogic
+target driver, both in-tree and out-of-tree.  We believe the problem
+is in session handling and have provided logs to Qlogic and were told,
+'there is a issue and we are looking into it', but haven't heard
+anything back.
 
+The simple fact of the matter is that in modern CNA's/HBA's all of
+this behavior is ultimately governed by the firmware in the cards.  No
+one has access to that but the vendors.  We can make their job in
+supporting the whole storage community easier if we are all looking at
+and working on the same code, to the extent that is possible.
 
-> +
-> +		ret = copy_from_iter(req, req_size, &out_iter);
-> +		if (unlikely(ret != req_size)) {
-> +			vq_err(vq, "Faulted on copy_from_iter\n");
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
-> +		if (unlikely(*lunp != 1)) {
-> +			vq_err(vq, "Illegal virtio-scsi lun: %u\n", *lunp);
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +
-> +		tpg = ACCESS_ONCE(vs_tpg[*target]);
-> +		if (unlikely(!tpg)) {
-> +			/* Target does not exist, fail the request */
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +		/*
-> +		 * Determine start of T10_PI or data payload iovec in ANY_LAYOUT
-> +		 * mode based upon data_direction.
+I can't speak to Infiniband but in the realm of fibre-channel/FCOE the
+only problem is political not technical.
 
-Same comments as above.
+This is not an issue of a vendor electing to keep code out of tree.
+The decision was made to take LIO into the kernel and there are not
+going to be two in-kernel target stacks, so SCST is going to live out
+of tree.  Those of us with significant engineering investments are not
+going to dump SCST and move to the in tree code, good, bad or
+indifferent.
 
-> +		 *
-> +		 * For DMA_TO_DEVICE, this is iov_out from copy_from_iter()
-> +		 * with the already recalculated iov_base + iov_len.
-> +		 *
-> +		 * For DMA_FROM_DEVICE, the iovec will be just past the end
-> +		 * of the virtio-scsi response header in either the same
-> +		 * or immediately following iovec.
-> +		 */
-> +		prot_bytes = 0;
-> +
-> +		if (data_direction == DMA_TO_DEVICE) {
-> +			data_iter = out_iter;
-> +		} else if (data_direction == DMA_FROM_DEVICE) {
-> +			iov_iter_init(&in_iter, WRITE, &vq->iov[out], in,
-> +				      rsp_size + exp_data_len);
-> +			iov_iter_advance(&in_iter, rsp_size);
-> +			data_iter = in_iter;
-> +		}
-> +		/*
-> +		 * If T10_PI header + payload is present, setup prot_iter values
-> +		 * and recalculate data_iter for vhost_scsi_mapal() mapping to
-> +		 * host scatterlists via get_user_pages_fast().
-> +		 */
-> +		if (t10_pi) {
-> +			if (v_req_pi.pi_bytesout) {
-> +				if (data_direction != DMA_TO_DEVICE) {
-> +					vq_err(vq, "Received non zero pi_bytesout,"
-> +						" but wrong data_direction\n");
-> +					vhost_scsi_send_bad_target(vs, vq, head, out);
-> +					continue;
-> +				}
-> +				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesout);
-> +			} else if (v_req_pi.pi_bytesin) {
-> +				if (data_direction != DMA_FROM_DEVICE) {
-> +					vq_err(vq, "Received non zero pi_bytesin,"
-> +						" but wrong data_direction\n");
-> +					vhost_scsi_send_bad_target(vs, vq, head, out);
-> +					continue;
-> +				}
-> +				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesin);
-> +			}
-> +			/*
-> +			 * Set prot_iter to data_iter, and advance past any
-> +			 * preceeding prot_bytes that may be present.
-> +			 *
-> +			 * Also fix up the exp_data_len to reflect only the
-> +			 * actual data payload length.
-> +			 */
-> +			if (prot_bytes) {
-> +				exp_data_len -= prot_bytes;
-> +				prot_iter = data_iter;
-> +				iov_iter_advance(&data_iter, prot_bytes);
-> +			}
-> +			tag = vhost64_to_cpu(vq, v_req_pi.tag);
-> +			task_attr = v_req_pi.task_attr;
-> +			cdb = &v_req_pi.cdb[0];
-> +			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
-> +		} else {
-> +			tag = vhost64_to_cpu(vq, v_req.tag);
-> +			task_attr = v_req.task_attr;
-> +			cdb = &v_req.cdb[0];
-> +			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
-> +		}
-> +		/*
-> +		 * Check that the recieved CDB size does not exceeded our
+We are willing and have expended the engineering time to make this
+situation better.  An engineering based discussion comes down to what
+types of legitimate API's the kernel needs to expose.  We do that all
+over the kernel, I'm not sure why storage, other then politics, needs
+to be any different.
 
-received.
+Best wishes for a productive week.
 
-> +		 * hardcoded max for vhost-scsi, then get a pre-allocated
-> +		 * cmd descriptor for the new virtio-scsi tag.
-> +		 *
-> +		 * TODO what if cdb was too small for varlen cdb header?
-> +		 */
-> +		if (unlikely(scsi_command_size(cdb) > TCM_VHOST_MAX_CDB_SIZE)) {
-> +			vq_err(vq, "Received SCSI CDB with command_size: %d that"
-> +				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
-> +				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
-> +					 exp_data_len + prot_bytes,
-> +					 data_direction);
-> +		if (IS_ERR(cmd)) {
-> +			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
-> +			       PTR_ERR(cmd));
-> +			vhost_scsi_send_bad_target(vs, vq, head, out);
-> +			continue;
-> +		}
-> +		cmd->tvc_vhost = vs;
-> +		cmd->tvc_vq = vq;
-> +		cmd->tvc_resp_iov = &vq->iov[out];
-> +		cmd->tvc_in_iovs = in;
-> +
-> +		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
-> +			 cmd->tvc_cdb[0], cmd->tvc_lun);
-> +		pr_debug("cmd: %p exp_data_len: %d, prot_bytes: %d data_direction:"
-> +			 " %d\n", cmd, exp_data_len, prot_bytes, data_direction);
-> +
-> +		if (data_direction != DMA_NONE) {
-> +			ret = vhost_scsi_mapal(cmd,
-> +					       prot_bytes, &prot_iter,
-> +					       exp_data_len, &data_iter);
-> +			if (unlikely(ret)) {
-> +				vq_err(vq, "Failed to map iov to sgl\n");
-> +				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
-> +				vhost_scsi_send_bad_target(vs, vq, head, out);
-> +				continue;
-> +			}
-> +		}
-> +		/*
-> +		 * Save the descriptor from vhost_get_vq_desc() to be used to
-> +		 * complete the virtio-scsi request in TCM callback context via
-> +		 * vhost_scsi_queue_data_in() and vhost_scsi_queue_status()
-> +		 */
-> +		cmd->tvc_vq_desc = head;
-> +		/*
-> +		 * Dispatch cmd descriptor for cmwq execution in process
-> +		 * context provided by vhost_scsi_workqueue.  This also ensures
-> +		 * cmd is executed on the same kworker CPU as this vhost
-> +		 * thread to gain positive L2 cache locality effects.
-> +		 */
-> +		INIT_WORK(&cmd->work, tcm_vhost_submission_work);
-> +		queue_work(tcm_vhost_workqueue, &cmd->work);
-> +	}
-> +out:
-> +	mutex_unlock(&vq->mutex);
-> +}
-> +
-> +static void
->  vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
->  {
->  	struct tcm_vhost_tpg **vs_tpg;
-> -- 
-> 1.9.1
+Greg
+
+}-- End of excerpt from Christoph Hellwig
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"For a successful technology, reality must take precedence over public
+ relations, for nature cannot be fooled."
+                                -- Richard Feynmann
