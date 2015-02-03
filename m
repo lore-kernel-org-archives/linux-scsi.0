@@ -1,396 +1,171 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 7/9] vhost/scsi: Drop legacy pre virtio v1.0 !ANY_LAYOUT logic
-Date: Tue,  3 Feb 2015 06:30:01 +0000
-Message-ID: <1422945003-24538-8-git-send-email-nab@daterainc.com>
-References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Sender: kvm-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Athlion <athlion@gmail.com>
+Subject: Re: Kernel Ooops upon USB disconnect of a Western Digital My Passport
+ 1TB drive
+Date: Tue, 3 Feb 2015 10:37:02 +0200
+Message-ID: <CACfp432Vqiu2eeMyYupdkMxs=bNN83ayMgiDrZic54VjhM6aZw@mail.gmail.com>
+References: <CACfp432AcTBGOdjLhb_id6j6TFdLPav9oofO3Qoibm3QL75eNA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1502021127110.1566-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:45936 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbbBCIhY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 03:37:24 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1502021127110.1566-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, Feb 2, 2015 at 7:27 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
 
-With the new ANY_LAYOUT logic in place for vhost_scsi_handle_vqal(),
-there is no longer a reason to keep around the legacy code with
-!ANY_LAYOUT assumptions.
+> Had you made any changes to the runtime suspend settings?
+> blk_post_runtime_resume wouldn't be called unless the drive had gone
+> into runtime suspend.  And even then, it's not likely to be called
+> after you unplug the USB cable.
+>
+> Alan Stern
 
-Go ahead and drop the pre virtio 1.0 logic in vhost_scsi_handle_vq()
-and associated helpers.
+I have enabled SCSI ATA Bus power management with this udev rule:
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*",
+ATTR{link_power_management_policy}="min_power"
+( And generally almost all of actions herein:
+https://wiki.archlinux.org/index.php/Power_saving#Laptop_Mode )
 
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/vhost/scsi.c | 340 +--------------------------------------------------
- 1 file changed, 1 insertion(+), 339 deletions(-)
+Here's another with dynamic debugging on (and some of the stack trace):
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index c25fdd7..9af93d0 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -830,93 +830,6 @@ out:
- }
- 
- static int
--vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
--			  struct iovec *iov,
--			  int niov,
--			  bool write)
--{
--	struct scatterlist *sg = cmd->tvc_sgl;
--	unsigned int sgl_count = 0;
--	int ret, i;
--
--	for (i = 0; i < niov; i++)
--		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
--
--	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
--		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
--			" preallocated TCM_VHOST_PREALLOC_SGLS: %u\n",
--			sgl_count, TCM_VHOST_PREALLOC_SGLS);
--		return -ENOBUFS;
--	}
--
--	pr_debug("%s sg %p sgl_count %u\n", __func__, sg, sgl_count);
--	sg_init_table(sg, sgl_count);
--	cmd->tvc_sgl_count = sgl_count;
--
--	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
--
--	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
--					    sg, write);
--		if (ret < 0) {
--			for (i = 0; i < cmd->tvc_sgl_count; i++) {
--				struct page *page = sg_page(&cmd->tvc_sgl[i]);
--				if (page)
--					put_page(page);
--			}
--			cmd->tvc_sgl_count = 0;
--			return ret;
--		}
--		sg += ret;
--		sgl_count -= ret;
--	}
--	return 0;
--}
--
--static int
--vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
--			   struct iovec *iov,
--			   int niov,
--			   bool write)
--{
--	struct scatterlist *prot_sg = cmd->tvc_prot_sgl;
--	unsigned int prot_sgl_count = 0;
--	int ret, i;
--
--	for (i = 0; i < niov; i++)
--		prot_sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
--
--	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
--		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
--			" preallocated TCM_VHOST_PREALLOC_PROT_SGLS: %u\n",
--			prot_sgl_count, TCM_VHOST_PREALLOC_PROT_SGLS);
--		return -ENOBUFS;
--	}
--
--	pr_debug("%s prot_sg %p prot_sgl_count %u\n", __func__,
--		 prot_sg, prot_sgl_count);
--	sg_init_table(prot_sg, prot_sgl_count);
--	cmd->tvc_prot_sgl_count = prot_sgl_count;
--
--	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
--					    prot_sg, write);
--		if (ret < 0) {
--			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
--				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
--				if (page)
--					put_page(page);
--			}
--			cmd->tvc_prot_sgl_count = 0;
--			return ret;
--		}
--		prot_sg += ret;
--		prot_sgl_count -= ret;
--	}
--	return 0;
--}
--
--static int
- vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
- {
- 	int sgl_count = 0;
-@@ -1323,254 +1236,6 @@ out:
- 	mutex_unlock(&vq->mutex);
- }
- 
--static void
--vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
--{
--	struct tcm_vhost_tpg **vs_tpg;
--	struct virtio_scsi_cmd_req v_req;
--	struct virtio_scsi_cmd_req_pi v_req_pi;
--	struct tcm_vhost_tpg *tpg;
--	struct tcm_vhost_cmd *cmd;
--	u64 tag;
--	u32 exp_data_len, data_first, data_num, data_direction, prot_first;
--	unsigned out, in, i;
--	int head, ret, data_niov, prot_niov, prot_bytes;
--	size_t req_size;
--	u16 lun;
--	u8 *target, *lunp, task_attr;
--	bool hdr_pi;
--	void *req, *cdb;
--
--	mutex_lock(&vq->mutex);
--	/*
--	 * We can handle the vq only after the endpoint is setup by calling the
--	 * VHOST_SCSI_SET_ENDPOINT ioctl.
--	 */
--	vs_tpg = vq->private_data;
--	if (!vs_tpg)
--		goto out;
--
--	vhost_disable_notify(&vs->dev, vq);
--
--	for (;;) {
--		head = vhost_get_vq_desc(vq, vq->iov,
--					ARRAY_SIZE(vq->iov), &out, &in,
--					NULL, NULL);
--		pr_debug("vhost_get_vq_desc: head: %d, out: %u in: %u\n",
--					head, out, in);
--		/* On error, stop handling until the next kick. */
--		if (unlikely(head < 0))
--			break;
--		/* Nothing new?  Wait for eventfd to tell us they refilled. */
--		if (head == vq->num) {
--			if (unlikely(vhost_enable_notify(&vs->dev, vq))) {
--				vhost_disable_notify(&vs->dev, vq);
--				continue;
--			}
--			break;
--		}
--
--		/* FIXME: BIDI operation */
--		if (out == 1 && in == 1) {
--			data_direction = DMA_NONE;
--			data_first = 0;
--			data_num = 0;
--		} else if (out == 1 && in > 1) {
--			data_direction = DMA_FROM_DEVICE;
--			data_first = out + 1;
--			data_num = in - 1;
--		} else if (out > 1 && in == 1) {
--			data_direction = DMA_TO_DEVICE;
--			data_first = 1;
--			data_num = out - 1;
--		} else {
--			vq_err(vq, "Invalid buffer layout out: %u in: %u\n",
--					out, in);
--			break;
--		}
--
--		/*
--		 * Check for a sane resp buffer so we can report errors to
--		 * the guest.
--		 */
--		if (unlikely(vq->iov[out].iov_len !=
--					sizeof(struct virtio_scsi_cmd_resp))) {
--			vq_err(vq, "Expecting virtio_scsi_cmd_resp, got %zu"
--				" bytes\n", vq->iov[out].iov_len);
--			break;
--		}
--
--		if (vhost_has_feature(vq, VIRTIO_SCSI_F_T10_PI)) {
--			req = &v_req_pi;
--			lunp = &v_req_pi.lun[0];
--			target = &v_req_pi.lun[1];
--			req_size = sizeof(v_req_pi);
--			hdr_pi = true;
--		} else {
--			req = &v_req;
--			lunp = &v_req.lun[0];
--			target = &v_req.lun[1];
--			req_size = sizeof(v_req);
--			hdr_pi = false;
--		}
--
--		if (unlikely(vq->iov[0].iov_len < req_size)) {
--			pr_err("Expecting virtio-scsi header: %zu, got %zu\n",
--			       req_size, vq->iov[0].iov_len);
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--		ret = memcpy_fromiovecend(req, &vq->iov[0], 0, req_size);
--		if (unlikely(ret)) {
--			vq_err(vq, "Faulted on virtio_scsi_cmd_req\n");
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--
--		/* virtio-scsi spec requires byte 0 of the lun to be 1 */
--		if (unlikely(*lunp != 1)) {
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--
--		tpg = ACCESS_ONCE(vs_tpg[*target]);
--
--		/* Target does not exist, fail the request */
--		if (unlikely(!tpg)) {
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--
--		data_niov = data_num;
--		prot_niov = prot_first = prot_bytes = 0;
--		/*
--		 * Determine if any protection information iovecs are preceeding
--		 * the actual data payload, and adjust data_first + data_niov
--		 * values accordingly for vhost_scsi_map_iov_to_sgl() below.
--		 *
--		 * Also extract virtio_scsi header bits for vhost_scsi_get_tag()
--		 */
--		if (hdr_pi) {
--			if (v_req_pi.pi_bytesout) {
--				if (data_direction != DMA_TO_DEVICE) {
--					vq_err(vq, "Received non zero do_pi_niov"
--						", but wrong data_direction\n");
--					vhost_scsi_send_bad_target(vs, vq, head, out);
--					continue;
--				}
--				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesout);
--			} else if (v_req_pi.pi_bytesin) {
--				if (data_direction != DMA_FROM_DEVICE) {
--					vq_err(vq, "Received non zero di_pi_niov"
--						", but wrong data_direction\n");
--					vhost_scsi_send_bad_target(vs, vq, head, out);
--					continue;
--				}
--				prot_bytes = vhost32_to_cpu(vq, v_req_pi.pi_bytesin);
--			}
--			if (prot_bytes) {
--				int tmp = 0;
--
--				for (i = 0; i < data_num; i++) {
--					tmp += vq->iov[data_first + i].iov_len;
--					prot_niov++;
--					if (tmp >= prot_bytes)
--						break;
--				}
--				prot_first = data_first;
--				data_first += prot_niov;
--				data_niov = data_num - prot_niov;
--			}
--			tag = vhost64_to_cpu(vq, v_req_pi.tag);
--			task_attr = v_req_pi.task_attr;
--			cdb = &v_req_pi.cdb[0];
--			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
--		} else {
--			tag = vhost64_to_cpu(vq, v_req.tag);
--			task_attr = v_req.task_attr;
--			cdb = &v_req.cdb[0];
--			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
--		}
--		exp_data_len = 0;
--		for (i = 0; i < data_niov; i++)
--			exp_data_len += vq->iov[data_first + i].iov_len;
--		/*
--		 * Check that the recieved CDB size does not exceeded our
--		 * hardcoded max for vhost-scsi
--		 *
--		 * TODO what if cdb was too small for varlen cdb header?
--		 */
--		if (unlikely(scsi_command_size(cdb) > TCM_VHOST_MAX_CDB_SIZE)) {
--			vq_err(vq, "Received SCSI CDB with command_size: %d that"
--				" exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
--				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--
--		cmd = vhost_scsi_get_tag(vq, tpg, cdb, tag, lun, task_attr,
--					 exp_data_len + prot_bytes,
--					 data_direction);
--		if (IS_ERR(cmd)) {
--			vq_err(vq, "vhost_scsi_get_tag failed %ld\n",
--					PTR_ERR(cmd));
--			vhost_scsi_send_bad_target(vs, vq, head, out);
--			continue;
--		}
--
--		pr_debug("Allocated tv_cmd: %p exp_data_len: %d, data_direction"
--			": %d\n", cmd, exp_data_len, data_direction);
--
--		cmd->tvc_vhost = vs;
--		cmd->tvc_vq = vq;
--		cmd->tvc_resp_iov = &vq->iov[out];
--		cmd->tvc_in_iovs = in;
--
--		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
--			cmd->tvc_cdb[0], cmd->tvc_lun);
--
--		if (prot_niov) {
--			ret = vhost_scsi_map_iov_to_prot(cmd,
--					&vq->iov[prot_first], prot_niov,
--					data_direction == DMA_FROM_DEVICE);
--			if (unlikely(ret)) {
--				vq_err(vq, "Failed to map iov to"
--					" prot_sgl\n");
--				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
--				vhost_scsi_send_bad_target(vs, vq, head, out);
--				continue;
--			}
--		}
--		if (data_direction != DMA_NONE) {
--			ret = vhost_scsi_map_iov_to_sgl(cmd,
--					&vq->iov[data_first], data_niov,
--					data_direction == DMA_FROM_DEVICE);
--			if (unlikely(ret)) {
--				vq_err(vq, "Failed to map iov to sgl\n");
--				tcm_vhost_release_cmd(&cmd->tvc_se_cmd);
--				vhost_scsi_send_bad_target(vs, vq, head, out);
--				continue;
--			}
--		}
--		/*
--		 * Save the descriptor from vhost_get_vq_desc() to be used to
--		 * complete the virtio-scsi request in TCM callback context via
--		 * tcm_vhost_queue_data_in() and tcm_vhost_queue_status()
--		 */
--		cmd->tvc_vq_desc = head;
--		/*
--		 * Dispatch tv_cmd descriptor for cmwq execution in process
--		 * context provided by tcm_vhost_workqueue.  This also ensures
--		 * tv_cmd is executed on the same kworker CPU as this vhost
--		 * thread to gain positive L2 cache locality effects..
--		 */
--		INIT_WORK(&cmd->work, tcm_vhost_submission_work);
--		queue_work(tcm_vhost_workqueue, &cmd->work);
--	}
--out:
--	mutex_unlock(&vq->mutex);
--}
--
- static void vhost_scsi_ctl_handle_kick(struct vhost_work *work)
- {
- 	pr_debug("%s: The handling func for control queue.\n", __func__);
-@@ -1628,10 +1293,7 @@ static void vhost_scsi_handle_kick(struct vhost_work *work)
- 						poll.work);
- 	struct vhost_scsi *vs = container_of(vq->dev, struct vhost_scsi, dev);
- 
--	if (vhost_has_feature(vq, VIRTIO_F_ANY_LAYOUT))
--		vhost_scsi_handle_vqal(vs, vq);
--	else
--		vhost_scsi_handle_vq(vs, vq);
-+	vhost_scsi_handle_vqal(vs, vq);
- }
- 
- static void vhost_scsi_flush_vq(struct vhost_scsi *vs, int index)
--- 
-1.9.1
-
+[ 1565.610481] usb usb2: usb wakeup-resume
+[ 1565.613019] usb usb2: usb auto-resume
+[ 1565.615599] hub 2-0:1.0: hub_resume
+[ 1565.617876] usb usb2-port1: status 0507 change 0000
+[ 1565.620125] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+[ 1565.623471] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+[ 1565.650219] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0002
+[ 1565.663520] usb 2-1: usb wakeup-resume
+[ 1565.665518] usb 2-1: finish resume
+[ 1565.667684] hub 2-1:1.0: hub_resume
+[ 1565.669812] usb 2-1-port2: status 0101 change 0001
+[ 1565.773645] usb usb2-port1: resume, status 0
+[ 1565.776031] hub 2-1:1.0: state 7 ports 8 chg 0004 evt 0000
+[ 1565.778664] usb 2-1-port2: status 0101, change 0000, 12 Mb/s
+[ 1565.847291] usb 2-1.2: new high-speed USB device number 3 using ehci-pci
+[ 1565.860480] usb 2-1-port2: not reset yet, waiting 10ms
+[ 1565.945202] usb 2-1.2: default language 0x0409
+[ 1565.947882] usb 2-1.2: udev 3, busnum 2, minor = 130
+[ 1565.950384] usb 2-1.2: usb_probe_device
+[ 1565.952704] usb 2-1.2: configuration #1 chosen from 1 choice
+[ 1565.955145] usb 2-1.2: adding 2-1.2:1.0 (config #1, interface 0)
+[ 1565.957630] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+[ 1566.005124] usb-storage 2-1.2:1.0: usb_probe_interface
+[ 1566.006655] usb-storage 2-1.2:1.0: usb_probe_interface - got id
+[ 1566.008169] usb-storage 2-1.2:1.0: USB Mass Storage device detected
+[ 1566.010155] scsi host6: usb-storage 2-1.2:1.0
+[ 1566.012149] usbcore: registered new interface driver usb-storage
+[ 1566.016061] usbcore: registered new interface driver uas
+[ 1567.015852] scsi 6:0:0:0: Direct-Access     WD       My Passport
+0748 1016 PQ: 0 ANSI: 6
+[ 1567.018966] scsi 6:0:0:1: Enclosure         WD       SES Device
+  1016 PQ: 0 ANSI: 6
+[ 1567.027072] scsi 6:0:0:1: scsi_runtime_idle
+[ 1567.029695] sd 6:0:0:0: [sdb] Spinning up disk...
+[ 1567.032764] scsi 6:0:0:1: scsi_runtime_suspend
+[ 1568.031907] .ready
+[ 1569.060225] sd 6:0:0:0: [sdb] 1953458176 512-byte logical blocks:
+(1.00 TB/931 GiB)
+[ 1569.063857] sd 6:0:0:0: [sdb] Write Protect is off
+[ 1569.065613] ses 6:0:0:1: Attached Enclosure device
+[ 1569.068492] sd 6:0:0:0: [sdb] Mode Sense: 47 00 10 08
+[ 1569.071598] sd 6:0:0:0: [sdb] No Caching mode page found
+[ 1569.073628] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+[ 1569.087891]  sdb: sdb1
+[ 1569.093382] sd 6:0:0:0: [sdb] Attached SCSI disk
+[ 1615.830142] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+[ 1615.833066] usb 2-1-port2: status 0100, change 0001, 12 Mb/s
+[ 1615.835764] usb 2-1.2: USB disconnect, device number 3
+[ 1615.838471] usb 2-1.2: unregistering device
+[ 1615.841199] usb 2-1.2: unregistering interface 2-1.2:1.0
+[ 1615.844996] scsi target6:0:0: scsi_runtime_idle
+[ 1615.848746] scsi target6:0:0: scsi_runtime_suspend
+[ 1615.868925] scsi target6:0:0: scsi_runtime_resume
+[ 1615.870975] ses 6:0:0:1: scsi_runtime_resume
+[ 1615.872913] BUG: unable to handle kernel NULL pointer dereference
+at 00000000000001a0
+[ 1615.874896] IP: [<ffffffff812850d5>] blk_post_runtime_resume+0x65/0x80
+[ 1615.876843] PGD 0
+[ 1615.878765] Oops: 0002 [#1] PREEMPT SMP
+[ 1615.880734] Modules linked in: ses enclosure uas usb_storage
+netconsole joydev mousedev snd_hda_codec_hdmi snd_hda_codec_conexant
+snd_hda_codec_generic coretemp intel_rapl x86_pkg_temp_thermal
+intel_powerclamp kvm_intel kvm arc4 crct10dif_pclmul iwldvm
+crc32_pclmul iTCO_wdt iTCO_vendor_support crc32c_intel mac80211
+ghash_clmulni_intel ip6t_REJECT nf_reject_ipv6 aesni_intel xt_hl
+aes_x86_64 lrw gf128mul ip6t_rt psmouse iwlwifi glue_helper
+ablk_helper cryptd i2c_i801 serio_raw cfg80211 nf_conntrack_ipv6
+nf_defrag_ipv6 snd_hda_intel wmi thinkpad_acpi nvram thermal rfkill
+ipt_REJECT nf_reject_ipv4 hwmon tpm_tis ac tpm battery
+snd_hda_controller snd_hda_codec snd_hwdep evdev snd_pcm mac_hid
+xt_limit e1000e snd_timer xt_tcpudp mei_me snd mei ptp soundcore
+shpchp pps_core lpc_ich processor xt_addrtype nf_conntrack_ipv4
+nf_defrag_ipv4 xt_conntrack at ffffffffffffffd8
+[ 1616.064883] IP: [<ffffffff81091500>] kthread_data+0x10/0x20
+[ 1616.068189] PGD 1814067 PUD 1816067 PMD 0
+[ 1616.071462] Oops: 0000 [#2] PREEMPT SMP
+[ 1616.074719] Modules linked in: ses enclosure uas usb_storage
+netconsole joydev mousedev snd_hda_codec_hdmi snd_hda_codec_conexant
+snd_hda_codec_generic coretemp intel_rapl x86_pkg_temp_thermal
+intel_powerclamp kvm_intel kvm arc4 crct10dif_pclmul iwldvm
+crc32_pclmul iTCO_wdt iTCO_vendor_support crc32c_intel mac80211
+ghash_clmulni_intel ip6t_REJECT nf_reject_ipv6 aesni_intel xt_hl
+aes_x86_64 lrw gf128mul ip6t_rt psmouse iwlwifi glue_helper
+ablk_helper cryptd i2c_i801 serio_raw cfg80211 nf_conntrack_ipv6
+nf_defrag_ipv6 snd_hda_intel wmi thinkpad_acpi nvram thermal rfkill
+ipt_REJECT nf_reject_ipv4 hwmon tpm_tis ac tpm battery
+snd_hda_controller snd_hda_codec snd_hwdep evdev snd_pcm mac_hid
+xt_limit e1000e snd_timer xt_tcpudp mei_me snd mei ptp soundcore
+shpchp pps_core lpc_ich processor xt_addrtype nf_conntrack_ipv4
+nf_defrag_ipv4 xt_conntrack ip6table_filter ip6_tables
+nf_conntrack_netbios_ns nf_conntrack_broadcast nf_nat_ftp nf_nat
+nf_conntrack_ftp nf_conntrack iptable_filter ehci_pci led_class
+ehci_hcd mmc_core usbcore usb_common i8042 serio i915 button intel_gtt
+i2c_algo_bit video drm_kms_helper drm i2c_core
+[ 1616.102986] CPU: 0 PID: 6951 Comm: kworker/0:0 Tainted: G UD    O
+3.18.5-1-ARCH #1
+[ 1616.107209] Hardware name: LENOVO 4177CTO/4177CTO, BIOS 83ET70WW
+(1.40 ) 06/12/2012
+[ 1616.111411] task: ffff8800d5e62840 ti: ffff8800cbc0c000 task.ti:
+ffff8800cbc0c000
+[ 1616.115629] RIP: 0010:[<ffffffff81091500>] [<ffffffff81091500>]
+kthread_data+0x10/0x20
+[ 1616.119869] RSP: 0018:ffff8800cbc0f3e8  EFLAGS: 00010092
+[ 1616.124122] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[ 1616.128400] RDX: 000000000000000f RSI: 0000000000000000 RDI: ffff8800d5e62840
+[ 1616.132600] RBP: ffff8800cbc0f3e8 R08: 0000000000000000 R09: ffff88021583e600
+[ 1616.136818] R10: ffff88021e216c60 R11: ffffea00032f6000 R12: ffff88021e213640
+[ 1616.141026] R13: ffff88021e213640 R14: ffff8800d5e62840 R15: 0000000000000000
+[ 1616.145204] FS:  0000000000000000(0000) GS:ffff88021e200000(0000)
+knlGS:0000000000000000
+[ 1616.149444] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1616.153723] CR2: 0000000000000028 CR3: 0000000001811000 CR4: 00000000000407f0
+[ 1616.157994] Stack:
+[ 1616.162279]  ffff8800cbc0f408 ffffffff8108c275 ffff8800cbc0f408
+0000000000000000
+[ 1616.166656]  ffff8800cbc0f528 ffffffff81550f55[ 1616.309784]
+[<ffffffff813c4f63>] ? rpm_idle+0x23/0x340
+[ 1616.313120]  [<ffffffff813bb28f>] __device_release_driver+0x7f/0xf0
+[ 1616.316368]  [<ffffffff813bb323>] device_release_driver+0x23/0x30
+[ 1616.319434]  [<ffffffff813babd8>] bus_remove_device+0x108/0x180
+[ 1616.322384]  [<ffffffff813b6f19>] device_del+0x129/0x1f0
+[ 1616.325183]  [<ffffffffa01b2d81>] usb_disable_device+0x91/0x290 [usbcore]
+[ 1616.327934]  [<ffffffffa01a81b4>] usb_disconnect+0x94/0x2d0 [usbcore]
+[ 1616.330617]  [<ffffffffa01aa3fa>] hub_event+0x66a/0x1640 [usbcore]
+[ 1616.333259]  [<ffffffff81550bd8>] ? __schedule+0x3e8/0xa50
+[ 1616.335908]  [<ffffffff8108b815>] process_one_work+0x145/0x400
+[ 1616.338492]  [<ffffffff8108bddb>] worker_thread+0x6b/0x480
+[ 1616.341075]  [<ffffffff8108bd70>] ? init_pwq.part.22+0x10/0x10
+[ 1616.343573]  [<ffffffff81090e3a>] kthread+0xea/0x100
+[ 1616.346135]  [<ffffffff81090d50>] ? kthread_create_on_node+0x1c0/0x1c0
+[ 1616.348738]  [<ffffffff815552fc>] ret_from_fork+0x7c/0xb0
+[ 1616.351304]  [<ffffffff81090d50>] ? kthread_create_on_node+0x1c0/0x1c0
+[ 1616.353876] Code: 00 48 89 e5 5d 48 8b 40 c8 48 c1 e8 02 83 e0 01
+c3 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 48 8b 87 f0
