@@ -1,52 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3] ahci_xgene: Fix the dma state machine lockup for the
- ATA_CMD_SMART PIO mode command.
-Date: Tue, 3 Feb 2015 11:18:09 -0500
-Message-ID: <20150203161809.GG19463@htj.dyndns.org>
-References: <1422900439-5541-1-git-send-email-stripathi@apm.com>
- <1422900439-5541-2-git-send-email-stripathi@apm.com>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v1 3/4] scsi: ufs: add trace events and dump prints for
+ debug
+Date: Tue, 3 Feb 2015 11:53:51 -0500
+Message-ID: <20150203115351.58994f7d@gandalf.local.home>
+References: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
+	<1422977841-25036-4-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1422900439-5541-2-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1422977841-25036-4-git-send-email-gbroner@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gilad Broner <gbroner@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Petr Mladek <pmladek@suse.cz>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Vaibhav Nagarnaik <vnagarnaik@google.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 02, 2015 at 11:37:19PM +0530, Suman Tripathi wrote:
-> This patch addresses the issue with ATA_CMD_SMART pio mode
-> command for enumeration and device detection with ATA devices.
-> The X-Gene AHCI controller has an errata in which it cannot clear
-> the BSY bit after the PIO setup FIS. The dma state machine enters
-> CMFatalErrorUpdate state and locks up. It is the same issue as
-> in the commit 2a0bdff6b958d1b2523d2754b6cd5e0ea4053016 (ahci-xgene:
+On Tue,  3 Feb 2015 17:37:19 +0200
+Gilad Broner <gbroner@codeaurora.org> wrote:
 
-The right format is 2a0bdff6b958 ("ahci-xgene: fix the dma state
-machine lockup for the IDENTIFY DEVICE PIO mode command").
-
-> fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
-> command).
+> Add trace events to driver to allow monitoring and profilig
+> of activities such as PM suspend/resume, hibernate enter/exit,
+> clock gating and clock scaling up/down.
+> In addition, add UFS host controller register dumps to provide
+> detailed information in case of errors to assist in analysis
+> of issues.
 > 
-> For example :  without this patch it results in READ DMA command failure
-> as shown below :
-> 
->  [  126.700072] ata2.00: exception Emask 0x0 SAct 0x0
-> 		SErr 0x0 action 0x6 frozen
->  [  126.707089] ata2.00: failed command: READ DMA
->  [  126.711426] ata2.00: cmd c8/00:08:00:55:57/00:00:00:00:00/e1 tag 1
->                 dma 4096 in
->  [  126.711426]  res 40/00:ff:00:00:00/00:00:00:00:00/40 Emask
-> 		0x4 (timeout)
->  [  126.725956] ata2.00: status: { DRDY }
-> 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> Reported-by:   Mark Langsdorf <mlangsdo@redhat.com>
+> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c  |  53 +++++
+>  drivers/scsi/ufs/ufshcd.c    | 509 ++++++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/ufs/ufshcd.h    |  49 ++++-
+>  drivers/scsi/ufs/ufshci.h    |   1 +
+>  include/linux/ftrace_event.h |   3 +
+>  include/trace/events/ufs.h   | 227 +++++++++++++++++++
 
-Applied to libata/for-3.19-fixes.
 
-Thanks.
 
--- 
-tejun
+> +static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
+> +					unsigned int tag, const char *str)
+> +{
+> +	if (FTRACE_EVENT_ENABLED(ufshcd_command))
+
+What's this? Not mentioned at all in the change log.
+
+> +		ufshcd_add_command_trace(hba, tag, str);
+> +}
+> +#else
+
+
+
+> diff --git a/include/linux/ftrace_event.h b/include/linux/ftrace_event.h
+> index 0bebb5c..54a4a63 100644
+> --- a/include/linux/ftrace_event.h
+> +++ b/include/linux/ftrace_event.h
+> @@ -606,4 +606,7 @@ perf_trace_buf_submit(void *raw_data, int size, int rctx, u64 addr,
+>  }
+>  #endif
+>  
+> +#define FTRACE_EVENT_ENABLED(name)					\
+> +	((event_##name).flags & (1 << (TRACE_EVENT_FL_WAS_ENABLED_BIT)))\
+> +
+>  #endif /* _LINUX_FTRACE_EVENT_H */
+
+NACK!
+
+Please use trace_<event>_enabled(), for instance,
+trace_ufshcd_command_enabled().
+
+This also uses jump_labels and is a nop when it is not enabled.
+
+-- Steve
