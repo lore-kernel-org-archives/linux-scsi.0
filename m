@@ -1,151 +1,86 @@
-From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Subject: RE: [PATCH 2/4] Fix for crash when bfa_itnim is NULL
-Date: Tue, 3 Feb 2015 05:13:27 +0000
-Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59FEC31C@avmb2.qlogic.org>
-References: <1422521757-18724-1-git-send-email-anil.gurumurthy@qlogic.com>
- <1422521757-18724-3-git-send-email-anil.gurumurthy@qlogic.com>
- <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_"
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v3 0/9] vhost/scsi: Add ANY_LAYOUT + VERSION_1 support
+Date: Tue,  3 Feb 2015 06:29:54 +0000
+Message-ID: <1422945003-24538-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:13597 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750983AbbBCFNa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 00:13:30 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t135DTto026513
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Feb 2015 21:13:29 -0800
-Received: from avcashub1.qlogic.com (avcashub2.qlogic.com [198.70.193.116])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1s8vueb174-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 21:13:29 -0800
-In-Reply-To: <CAGRGNgXz7uVtK93dUv7o8EmyLFd0dhGS+OnR+89ERrAFiY5XXg@mail.gmail.com>
-Content-Language: en-US
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:53367 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932226AbbBCHDC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 02:03:02 -0500
+Received: by mail-ob0-f170.google.com with SMTP id va2so9094628obc.1
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Feb 2015 23:03:01 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-SGkgSnVsaWFuLA0KICAgWW91IGFyZSByaWdodC4gSXQgbWFrZXMgc2Vuc2UgdG8gbW92ZSBpdCB0
-byB0aGUgbmV4dCBwYXRjaC4gSSB3aWxsIHJlLXNlbmQgdGhlIHBhdGNoIHNlcmllcy4NCg0KVGhh
-bmtzLA0KQW5pbA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSnVsaWFuIENh
-bGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwuY29tXSANClNlbnQ6IDMwIEphbnVhcnkg
-MjAxNSAwNjo0NQ0KVG86IEFuaWwgR3VydW11cnRoeQ0KQ2M6IEplaiBCOyBDaHJpc3RvcGggSGVs
-bHdpZzsgbGludXgtc2NzaQ0KU3ViamVjdDogUmU6IFtQQVRDSCAyLzRdIEZpeCBmb3IgY3Jhc2gg
-d2hlbiBiZmFfaXRuaW0gaXMgTlVMTA0KDQpIaSBBbmlsLA0KDQpPbiBUaHUsIEphbiAyOSwgMjAx
-NSBhdCA3OjU1IFBNLCAgPGFuaWwuZ3VydW11cnRoeUBxbG9naWMuY29tPiB3cm90ZToNCj4gRnJv
-bTogQW5pbCBHdXJ1bXVydGh5IDxhbmlsLmd1cnVtdXJ0aHlAcWxvZ2ljLmNvbT4NCj4NCj4gU2ln
-bmVkLW9mZi1ieTogU3VkYXJzYW5hIEthbGx1cnUgPHN1ZGFyc2FuYS5rYWxsdXJ1QHFsb2dpYy5j
-b20+DQo+IFNpZ25lZC1vZmYtYnk6IEFuaWwgR3VydW11cnRoeSA8YW5pbC5ndXJ1bXVydGh5QHFs
-b2dpYy5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMgfCAg
-ICAyICstDQo+ICBkcml2ZXJzL3Njc2kvYmZhL2JmYWRfaW0uYyAgICAgICB8ICAgMjYgKysrKysr
-KysrKysrKysrKysrKysrKysrKysNCj4gIDIgZmlsZXMgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygr
-KSwgMSBkZWxldGlvbnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9iZmEvYmZh
-X2Zjc19scG9ydC5jIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMNCj4gaW5kZXgg
-ZDgyMzc5Mi4uNDYzMTYzMCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNz
-X2xwb3J0LmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2JmYS9iZmFfZmNzX2xwb3J0LmMNCj4gQEAg
-LTI2NTQsNyArMjY1NCw3IEBAIGJmYV9mY3NfZmRtaV9nZXRfaGJhYXR0cihzdHJ1Y3QgYmZhX2Zj
-c19scG9ydF9mZG1pX3MgKmZkbWksDQo+DQo+ICAgICAgICAgc3RybmNweShoYmFfYXR0ci0+bm9k
-ZV9zeW1fbmFtZS5zeW1uYW1lLA0KPiAgICAgICAgICAgICAgICAgcG9ydC0+cG9ydF9jZmcubm9k
-ZV9zeW1fbmFtZS5zeW1uYW1lLCBCRkFfU1lNTkFNRV9NQVhMRU4pOw0KPiAtICAgICAgIHN0cmNw
-eShoYmFfYXR0ci0+dmVuZG9yX2luZm8sICJCUk9DQURFIik7DQo+ICsgICAgICAgc3RyY3B5KGhi
-YV9hdHRyLT52ZW5kb3JfaW5mbywgIlFMb2dpYyIpOw0KDQpTaG91bGRuJ3QgdGhpcyBiZSBpbiB0
-aGUgbmV4dCBwYXRjaD8NCg0KVGhhbmtzLA0KDQotLSANCkp1bGlhbiBDYWxhYnkNCg0KRW1haWw6
-IGp1bGlhbi5jYWxhYnlAZ21haWwuY29tDQpQcm9maWxlOiBodHRwOi8vd3d3Lmdvb2dsZS5jb20v
-cHJvZmlsZXMvanVsaWFuLmNhbGFieS8NCg==
+Hi MST, Paolo, Al & Co,
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+Here is -v3 for adding vhost/scsi ANY_LAYOUT + VERSION_1 host feature
+bit support.
 
-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
-AGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEA
-AAA+AAAAcwBpAHAAOgBhAG4AaQBsAC4AZwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAA
-HwAfDAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAu
-AGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAAgSsfpL6j
-EBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABB
-AG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFd
-AQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBv
-AG0AAAAAAB8A+D8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwAjQAEA
-AAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDd
-AQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4AaQBs
-AC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADYA
-AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
-AB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAA
-TQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAHJ4rR5J
-SKRKmercEW8KQbEDABcAAQAAAEAAOQCAtTMkcD/QAUAACDCKeEgkcD/QAQsAKQAAAAAACwAjAAAA
-AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBl
-AAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAA
-HwA3AAEAAABqAAAAUgBFADoAIABbAFAAQQBUAEMASAAgADIALwA0AF0AIABGAGkAeAAgAGYAbwBy
-ACAAYwByAGEAcwBoACAAdwBoAGUAbgAgAGIAZgBhAF8AaQB0AG4AaQBtACAAaQBzACAATgBVAEwA
-TAAAAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAAAAADAC4AAAAAAB8AQhABAAAAigAA
-ADwAQwBBAEcAUgBHAE4AZwBYAHoANwB1AFYAdABLADkAMwBkAFUAdgA3AG8AOABFAG0AeQBMAEYA
-ZAAwAGQAaABHAFMAKwBPAG4AUgArADgAOQBFAFIAcgBBAEYAaQBZADUAWABYAGcAQABtAGEAaQBs
-AC4AZwBtAGEAaQBsAC4AYwBvAG0APgAAAAAAAgFxAAEAAAAgAAAAAQHQO6bdNwNbcC3NEUaETnWp
-r58eupzYYxeAgAYESgAfAHAAAQAAAGIAAABbAFAAQQBUAEMASAAgADIALwA0AF0AIABGAGkAeAAg
-AGYAbwByACAAYwByAGEAcwBoACAAdwBoAGUAbgAgAGIAZgBhAF8AaQB0AG4AaQBtACAAaQBzACAA
-TgBVAEwATAAAAAAAHwA1EAEAAAB0AAAAPAAyADAAQgAxAEEAMwBDAEIARAA5ADgARgAzADgANAA1
-AEIAMwBGADUARgA1ADYARAA4ADUAOQA3AEUARgA1ADkARgBFAEMAMwAxAEMAQABhAHYAbQBiADIA
-LgBxAGwAbwBnAGkAYwAuAG8AcgBnAD4AAAAfADkQAQAAAIYBAAA8ADEANAAyADIANQAyADEANwA1
-ADcALQAxADgANwAyADQALQAxAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEAaQBsAC0AYQBuAGkA
-bAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADEANAAy
-ADIANQAyADEANwA1ADcALQAxADgANwAyADQALQAzAC0AZwBpAHQALQBzAGUAbgBkAC0AZQBtAGEA
-aQBsAC0AYQBuAGkAbAAuAGcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AD4AIAA8AEMAQQBHAFIARwBOAGcAWAB6ADcAdQBWAHQASwA5ADMAZABVAHYANwBvADgARQBtAHkA
-TABGAGQAMABkAGgARwBTACsATwBuAFIAKwA4ADkARQBSAHIAQQBGAGkAWQA1AFgAWABnAEAAbQBh
-AGkAbAAuAGcAbQBhAGkAbAAuAGMAbwBtAD4AAAAAAAMA3j/p/QAACwAAgAggBgAAAAAAwAAAAAAA
-AEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////QAAH
-MN5VNCNwP9ABCwACAAEAAAADACYAAAAAAAsAKwAAAAAAAgFHAAEAAAAuAAAAYz1VUzthPSA7cD1R
-TG9naWM7bD1BVk1CMi0xNTAyMDMwNTEzMjdaLTM3Nzg1AAAAAgEQMAEAAABGAAAAAAAAAKX2ulj4
-lJxAl6rmQzpEVr8HACCxo8vZjzhFs/X1bYWX71kAAAD0jRgAAGcEMYzLcaJIpV3ex7oIX3kAS3qm
-IasAAAAAHwD6PwEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAADAAlZAQAA
-AAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA
-DoUAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAA
-AABGAAAAAIKFAAAAAAAAQAAAgAggBgAAAAAAwAAAAAAAAEYAAAAAv4UAAFD6ucpvP9ABHwAAgAgg
-BgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAA00/T8A
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
-aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
-AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAAXQAAAB8A
-AICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAA
-AGIAeQBwAGEAcwBzAAAAAACdgA==
+It adds a new vhost_virtqueue ->handle_kick() callback to determine the
+start of protection and data payloads iovecs past starting virtio-scsi
+request and response headers, based upon data_direction using iov_iter
+primitives.
 
---_000_20B1A3CBD98F3845B3F5F56D8597EF59FEC31Cavmb2qlogicorg_--
+It assumes request/CDB and response/sense_buffer headers may span more
+than a single iovec using mm/iov_iter.c logic.
+
+It also allows virtio-scsi headers + T10_PI + Data SGL payloads to span
+the same iovec when pinning user-space memory via get_user_pages_fast()
+code.  (Not tested yet)
+
+Based upon Al & HCH's feedback, the patch series has been converted to
+use copy_*_iter() for virtio-scsi header copy.  Also, patch #4 has been
+updated to use iov_iter_npages() for sgl_count, and patch #5 updated to
+use iov_iter_advance() for calculating prot_bytes offset to the start
+of data_iter.
+
+v3 changelog:
+  - Convert memcpy_toiovecend -> copy_to_iter usage
+  - Update vhost_scsi_mapal + friends to use iov_iter
+  - Move iov_iter sanity checks into vhost_scsi_calc_sgls
+  - Convert vhost_scsi_calc_sgls() to iov_iter_npages()
+  - Convert to vhost_scsi_handle_vqal to copy_from_iter usage
+  - Update vhost_scsi_handle_vqal comments for iov_iter usage
+  - Convert prot_bytes offset to use iov_iter_advance
+  - Drop max_niov usage in vhost_scsi_handle_vqal
+  - Drop vhost_skip_iovec_bytes in favour of iov_iter
+
+Note the one part that has been left unchanged is vhost_scsi_map_to_sgl()
+into get_user_pages_fast(), for which existing iov_iter_get_pages() code
+will need to allow for a callback to perform the associated scatterlists
+setup from **pages for protection + data payloads.
+
+It's functioning against v3.19-rc1 virtio-scsi LLD in T10_PI mode using
+TYPE-1 DIF with ANY_LAYOUT -> VERSION_1 guest feature bits enabled, using
+the layout following existing convention with protection/data SGL payloads
+residing within seperate iovecs.
+
+Also included in patch #9 is an over-due change to rename code in scsi.c
+to line up with modern vhost_scsi naming convention.
+
+Please review.
+
+Thank you,
+
+Nicholas Bellinger (9):
+  vhost/scsi: Convert completion path to use copy_to_iser
+  vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
+  vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
+  vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
+  vhost/scsi: Add ANY_LAYOUT vhost_virtqueue callback
+  vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
+  vhost/scsi: Drop legacy pre virtio v1.0 !ANY_LAYOUT logic
+  vhost/scsi: Drop left-over scsi_tcq.h include
+  vhost/scsi: Global tcm_vhost -> vhost_scsi rename
+
+ drivers/vhost/scsi.c | 1073 ++++++++++++++++++++++++++------------------------
+ 1 file changed, 549 insertions(+), 524 deletions(-)
+
+-- 
+1.9.1
+
