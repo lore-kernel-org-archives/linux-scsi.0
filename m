@@ -1,61 +1,58 @@
-From: Venkatesh Srinivas <venkateshs@google.com>
-Subject: Re: [PATCH 1/1] scsi: Fix max transfer length for 4k disks
-Date: Tue, 3 Feb 2015 11:25:12 -0800
-Message-ID: <CAHdzE--L=qP534X9WshZ0BnA66Hn+r1D8fD1drrSKMkfSFNKPA@mail.gmail.com>
-References: <201501292155.t0TLt4qF025739@d01av05.pok.ibm.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
+ callback
+Date: Tue, 3 Feb 2015 23:56:16 +0000
+Message-ID: <20150203235616.GF29656@ZenIV.linux.org.uk>
+References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+ <1422945003-24538-6-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:50613 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755266AbbBCTZN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 14:25:13 -0500
-Received: by mail-vc0-f170.google.com with SMTP id kv7so17564364vcb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 11:25:12 -0800 (PST)
-In-Reply-To: <201501292155.t0TLt4qF025739@d01av05.pok.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kvm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1422945003-24538-6-git-send-email-nab@daterainc.com>
+Sender: kvm-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, stable@vger.kernel.org
 
-On Thu, Jan 29, 2015 at 1:54 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
->
-> The following patch fixes an issue observed with 4k sector disks
-> where the max_hw_sectors attribute was getting set too large in
-> sd_revalidate_disk. Since sdkp->max_xfer_blocks is in units
-> of SCSI logical blocks and queue_max_hw_sectors is in units of
-> 512 byte blocks, on a 4k sector disk, every time we went through
-> sd_revalidate_disk, we were taking the current value of
-> queue_max_hw_sectors and increasing it by a factor of 8. Fix
-> this by only shifting sdkp->max_xfer_blocks.
->
-> Cc: stable<stable@vger.kernel.org>
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
->
->  drivers/scsi/sd.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff -puN drivers/scsi/sd.c~sd_revalidate_4k drivers/scsi/sd.c
-> --- linux/drivers/scsi/sd.c~sd_revalidate_4k    2015-01-29 14:44:23.316171187 -0600
-> +++ linux-bjking1/drivers/scsi/sd.c     2015-01-29 14:51:05.846126392 -0600
-> @@ -2800,9 +2800,11 @@ static int sd_revalidate_disk(struct gen
->          */
->         sd_set_flush_flag(sdkp);
->
-> -       max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
-> -                               sdkp->max_xfer_blocks);
-> +       max_xfer = sdkp->max_xfer_blocks;
->         max_xfer <<= ilog2(sdp->sector_size) - 9;
+On Tue, Feb 03, 2015 at 06:29:59AM +0000, Nicholas A. Bellinger wrote:
+> +		 * Copy over the virtio-scsi request header, which when
+> +		 * ANY_LAYOUT is enabled may span multiple iovecs, or a
+> +		 * single iovec may contain both the header + outgoing
+> +		 * WRITE payloads.
+> +		 *
+> +		 * copy_from_iter() is modifying the iovecs as copies over
+> +		 * req_size bytes into req, so the returned out_iter.iov[0]
+> +		 * will contain the correct start + offset of the outgoing
+> +		 * WRITE payload, if DMA_TO_DEVICE is set.
+
+It does no such thing.  What it does, though, is changing out_iter so
+that subsequent copy_from_iter() will return the data you want.  Note
+that out_iter.iov[0] will contain the correct _segment_ of that vector,
+with the data you want at out_iter.iov_offset bytes from the beginning
+of that segment.  .iov may come to point to subsequent segments and .iov_offset
+keeps changing, but segments themselves are never changed.
+
+> +		 */
+> +		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
+					 ^^^^ WRITE, please - as in "this is
+the source of some write, we'll be copying _from_ it".  READ would be
+"destination of some read, we'll be copying into it".
+
+> +			     (data_direction == DMA_TO_DEVICE) ?
+> +			      req_size + exp_data_len : req_size);
 > +
-> +       max_xfer = min_not_zero(queue_max_hw_sectors(sdkp->disk->queue),
-> +                               max_xfer);
->         blk_queue_max_hw_sectors(sdkp->disk->queue, max_xfer);
->         set_capacity(disk, sdkp->capacity);
->         sd_config_write_same(sdkp);
+> +		ret = copy_from_iter(req, req_size, &out_iter);
 
-Heh, nice find.
+...
 
-Tested-by: Venkatesh Srinivas <venkateshs@google.com>
+> +		/*
+> +		 * Determine start of T10_PI or data payload iovec in ANY_LAYOUT
+> +		 * mode based upon data_direction.
+> +		 *
+> +		 * For DMA_TO_DEVICE, this is iov_out from copy_from_iter()
+> +		 * with the already recalculated iov_base + iov_len.
 
--- vs;
+ITYM "this is out_iter, which is already pointing to the right place"
+
+AFAICS, the actual use is correct, it's just that the comments are confused.
