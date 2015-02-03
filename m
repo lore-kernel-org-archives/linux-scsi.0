@@ -1,652 +1,155 @@
-From: <anil.gurumurthy@qlogic.com>
-Subject: [PATCH RESEND 1/4] bfa:Updating copyright messages
-Date: Tue, 3 Feb 2015 03:45:00 -0500
-Message-ID: <1422953103-5470-2-git-send-email-anil.gurumurthy@qlogic.com>
-References: <1422953103-5470-1-git-send-email-anil.gurumurthy@qlogic.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-v3 4/9] vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping
+ prerequisites
+Date: Tue, 3 Feb 2015 11:32:22 +0200
+Message-ID: <20150203093222.GI2830@redhat.com>
+References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+ <1422945003-24538-5-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:64397 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754828AbbBCJYl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 04:24:41 -0500
-In-Reply-To: <1422953103-5470-1-git-send-email-anil.gurumurthy@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1422945003-24538-5-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-From: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+On Tue, Feb 03, 2015 at 06:29:58AM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch adds ANY_LAYOUT prerequisites logic for accepting a set of
+> protection + data payloads via iov_iter.  Also includes helpers for
+> calcuating SGLs + invoking vhost_scsi_map_to_sgl() with a known number
+> of iovecs.
+> 
+> Required by ANY_LAYOUT processing when struct iovec may be offset into
+> the first outgoing virtio-scsi request header.
+> 
+> v2 changes:
+>   - Clear ->tvc_sgl_count for vhost_scsi_mapal failure
+>   - Make vhost_scsi_mapal + vhost_scsi_calc_sgls accept max_niov
+>   - Minor cleanups
+> 
+> v3 changes:
+>   - Update vhost_scsi_mapal + friends to use iov_iter
+>   - Move iov_iter sanity checks into vhost_scsi_calc_sgls
+>   - Convert vhost_scsi_calc_sgls() to iov_iter_npages()
 
-Signed-off-by: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
----
- drivers/scsi/bfa/bfa.h           |    5 +++--
- drivers/scsi/bfa/bfa_core.c      |    5 +++--
- drivers/scsi/bfa/bfa_cs.h        |    5 +++--
- drivers/scsi/bfa/bfa_defs.h      |    5 +++--
- drivers/scsi/bfa/bfa_defs_fcs.h  |    5 +++--
- drivers/scsi/bfa/bfa_defs_svc.h  |    5 +++--
- drivers/scsi/bfa/bfa_fc.h        |    5 +++--
- drivers/scsi/bfa/bfa_fcbuild.c   |    5 +++--
- drivers/scsi/bfa/bfa_fcbuild.h   |    5 +++--
- drivers/scsi/bfa/bfa_fcpim.c     |    5 +++--
- drivers/scsi/bfa/bfa_fcpim.h     |    5 +++--
- drivers/scsi/bfa/bfa_fcs.c       |    5 +++--
- drivers/scsi/bfa/bfa_fcs.h       |    5 +++--
- drivers/scsi/bfa/bfa_fcs_fcpim.c |    5 +++--
- drivers/scsi/bfa/bfa_fcs_lport.c |    5 +++--
- drivers/scsi/bfa/bfa_fcs_rport.c |    5 +++--
- drivers/scsi/bfa/bfa_hw_cb.c     |    5 +++--
- drivers/scsi/bfa/bfa_hw_ct.c     |    5 +++--
- drivers/scsi/bfa/bfa_ioc.c       |    5 +++--
- drivers/scsi/bfa/bfa_ioc.h       |    5 +++--
- drivers/scsi/bfa/bfa_ioc_cb.c    |    5 +++--
- drivers/scsi/bfa/bfa_ioc_ct.c    |    5 +++--
- drivers/scsi/bfa/bfa_modules.h   |    5 +++--
- drivers/scsi/bfa/bfa_plog.h      |    5 +++--
- drivers/scsi/bfa/bfa_port.c      |    5 +++--
- drivers/scsi/bfa/bfa_port.h      |    5 +++--
- drivers/scsi/bfa/bfa_svc.c       |    5 +++--
- drivers/scsi/bfa/bfa_svc.h       |    5 +++--
- drivers/scsi/bfa/bfad.c          |    5 +++--
- drivers/scsi/bfa/bfad_attr.c     |    5 +++--
- drivers/scsi/bfa/bfad_bsg.c      |    5 +++--
- drivers/scsi/bfa/bfad_bsg.h      |    5 +++--
- drivers/scsi/bfa/bfad_debugfs.c  |    5 +++--
- drivers/scsi/bfa/bfad_drv.h      |    5 +++--
- drivers/scsi/bfa/bfad_im.c       |    5 +++--
- drivers/scsi/bfa/bfad_im.h       |    5 +++--
- drivers/scsi/bfa/bfi.h           |    5 +++--
- drivers/scsi/bfa/bfi_ms.h        |    5 +++--
- drivers/scsi/bfa/bfi_reg.h       |    5 +++--
- 39 files changed, 117 insertions(+), 78 deletions(-)
+I guess if this goes through your tree, you can drop these
+when applying, but it's best not to assume this, and put
+changelog after ---.
 
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index 4ad7e36..7d0337b 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index e3f67b0..f157a37 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_cs.h b/drivers/scsi/bfa/bfa_cs.h
-index 91a8aa3..c8bb20a 100644
---- a/drivers/scsi/bfa/bfa_cs.h
-+++ b/drivers/scsi/bfa/bfa_cs.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index 877b86d..da4f705 100644
---- a/drivers/scsi/bfa/bfa_defs.h
-+++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_defs_fcs.h b/drivers/scsi/bfa/bfa_defs_fcs.h
-index 06f0a16..5185ae3 100644
---- a/drivers/scsi/bfa/bfa_defs_fcs.h
-+++ b/drivers/scsi/bfa/bfa_defs_fcs.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 638f441..fd2fa24 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index 64069a0..7142309 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcbuild.c b/drivers/scsi/bfa/bfa_fcbuild.c
-index dce787f..6f670d3 100644
---- a/drivers/scsi/bfa/bfa_fcbuild.c
-+++ b/drivers/scsi/bfa/bfa_fcbuild.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcbuild.h b/drivers/scsi/bfa/bfa_fcbuild.h
-index 03c753d..85e3c58 100644
---- a/drivers/scsi/bfa/bfa_fcbuild.h
-+++ b/drivers/scsi/bfa/bfa_fcbuild.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index d7385d1..3881a72 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index e693af6..0c37062 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-index 0f19455..043d3c0 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index 42bcb97..30b4555 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcs_fcpim.c b/drivers/scsi/bfa/bfa_fcs_fcpim.c
-index 6dc7926..4fd20d9 100644
---- a/drivers/scsi/bfa/bfa_fcs_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcs_fcpim.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index ff75ef8..d823792 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index 2035b0d..5559faa 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_hw_cb.c b/drivers/scsi/bfa/bfa_hw_cb.c
-index ea24d4c..e3648d9 100644
---- a/drivers/scsi/bfa/bfa_hw_cb.c
-+++ b/drivers/scsi/bfa/bfa_hw_cb.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_hw_ct.c b/drivers/scsi/bfa/bfa_hw_ct.c
-index 637527f..f19bc44 100644
---- a/drivers/scsi/bfa/bfa_hw_ct.c
-+++ b/drivers/scsi/bfa/bfa_hw_ct.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 315d6d6..f9856b1 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index a38aafa..0d6e165 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
-index 453c2f5..10a0042 100644
---- a/drivers/scsi/bfa/bfa_ioc_cb.c
-+++ b/drivers/scsi/bfa/bfa_ioc_cb.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index bd53150..1e5fa61 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index a14c784..5b02415 100644
---- a/drivers/scsi/bfa/bfa_modules.h
-+++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_plog.h b/drivers/scsi/bfa/bfa_plog.h
-index 1c9baa6..4fdba6f 100644
---- a/drivers/scsi/bfa/bfa_plog.h
-+++ b/drivers/scsi/bfa/bfa_plog.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
-index 8ea7697..314548a 100644
---- a/drivers/scsi/bfa/bfa_port.c
-+++ b/drivers/scsi/bfa/bfa_port.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
-index 2fcab6b..ba715ce 100644
---- a/drivers/scsi/bfa/bfa_port.h
-+++ b/drivers/scsi/bfa/bfa_port.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 625225f..93e588f 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index ef07365..efb0497 100644
---- a/drivers/scsi/bfa/bfa_svc.h
-+++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index e90a374..81d8ff6 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index 40be670..66cca48 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 023b9d4..b9d1460 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 90abef6..59aca80 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-index 74a307c..62b11d4 100644
---- a/drivers/scsi/bfa/bfad_debugfs.c
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 8b97877..58fee34 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 7223b00..575efdc 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index f6c1023..31434df 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 9ef91f9..54c93ef 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index 1a3fe5a..8699be4 100644
---- a/drivers/scsi/bfa/bfi_ms.h
-+++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
-diff --git a/drivers/scsi/bfa/bfi_reg.h b/drivers/scsi/bfa/bfi_reg.h
-index 99133bc..7d071a4 100644
---- a/drivers/scsi/bfa/bfi_reg.h
-+++ b/drivers/scsi/bfa/bfi_reg.h
-@@ -1,7 +1,8 @@
- /*
-- * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2005-2014 Brocade Communications Systems, Inc.
-+ * Copyright (c) 2014- QLogic Corporation.
-  * All rights reserved
-- * www.brocade.com
-+ * www.qlogic.com
-  *
-  * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-  *
--- 
-1.7.1
-
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/vhost/scsi.c | 93 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 93 insertions(+)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index c3b12b3..7dfff15 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -914,6 +914,99 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+>  	return 0;
+>  }
+>  
+> +static int
+> +vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
+> +{
+> +	int sgl_count = 0;
+> +
+> +	if (!iter || !iter->iov) {
+> +		pr_err("%s: iter->iov is NULL, but expected bytes: %zu"
+> +		       " present\n", __func__, bytes);
+> +		return -EINVAL;
+> +	}
+> +
+> +	sgl_count = iov_iter_npages(iter, 0xffff);
+> +	if (sgl_count > max_sgls) {
+> +		pr_err("%s: requested sgl_count: %d exceeds pre-allocated"
+> +		       " max_sgls: %d\n", __func__, sgl_count, max_sgls);
+> +		return -EINVAL;
+> +	}
+> +	return sgl_count;
+> +}
+> +
+> +static int
+> +vhost_scsi_iov_to_sgl(struct tcm_vhost_cmd *cmd, bool write,
+> +		      struct iov_iter *iter, struct scatterlist *sg,
+> +		      int sg_count)
+> +{
+> +	size_t off = iter->iov_offset;
+> +	int i, ret;
+> +
+> +	for (i = 0; i < iter->nr_segs; i++) {
+> +		void __user *base = iter->iov[i].iov_base + off;
+> +		size_t len = iter->iov[i].iov_len - off;
+> +
+> +		ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
+> +		if (ret < 0) {
+> +			for (i = 0; i < sg_count; i++) {
+> +				struct page *page = sg_page(&sg[i]);
+> +				if (page)
+> +					put_page(page);
+> +			}
+> +			return ret;
+> +		}
+> +		sg += ret;
+> +		off = 0;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int
+> +vhost_scsi_mapal(struct tcm_vhost_cmd *cmd,
+> +		 size_t prot_bytes, struct iov_iter *prot_iter,
+> +		 size_t data_bytes, struct iov_iter *data_iter)
+> +{
+> +	int sgl_count, ret;
+> +	bool write = (cmd->tvc_data_direction == DMA_FROM_DEVICE);
+> +
+> +	if (prot_bytes) {
+> +		sgl_count = vhost_scsi_calc_sgls(prot_iter, prot_bytes,
+> +						 TCM_VHOST_PREALLOC_PROT_SGLS);
+> +		if (sgl_count < 0)
+> +			return sgl_count;
+> +
+> +		sg_init_table(cmd->tvc_prot_sgl, sgl_count);
+> +		cmd->tvc_prot_sgl_count = sgl_count;
+> +		pr_debug("%s prot_sg %p prot_sgl_count %u\n", __func__,
+> +			 cmd->tvc_prot_sgl, cmd->tvc_prot_sgl_count);
+> +
+> +		ret = vhost_scsi_iov_to_sgl(cmd, write, prot_iter,
+> +					    cmd->tvc_prot_sgl,
+> +					    cmd->tvc_prot_sgl_count);
+> +		if (ret < 0) {
+> +			cmd->tvc_prot_sgl_count = 0;
+> +			return ret;
+> +		}
+> +	}
+> +	sgl_count = vhost_scsi_calc_sgls(data_iter, data_bytes,
+> +					 TCM_VHOST_PREALLOC_SGLS);
+> +	if (sgl_count < 0)
+> +		return sgl_count;
+> +
+> +	sg_init_table(cmd->tvc_sgl, sgl_count);
+> +	cmd->tvc_sgl_count = sgl_count;
+> +	pr_debug("%s data_sg %p data_sgl_count %u\n", __func__,
+> +		  cmd->tvc_sgl, cmd->tvc_sgl_count);
+> +
+> +	ret = vhost_scsi_iov_to_sgl(cmd, write, data_iter,
+> +				    cmd->tvc_sgl, cmd->tvc_sgl_count);
+> +	if (ret < 0) {
+> +		cmd->tvc_sgl_count = 0;
+> +		return ret;
+> +	}
+> +	return 0;
+> +}
+> +
+>  static void tcm_vhost_submission_work(struct work_struct *work)
+>  {
+>  	struct tcm_vhost_cmd *cmd =
+> -- 
+> 1.9.1
