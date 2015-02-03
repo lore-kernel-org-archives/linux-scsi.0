@@ -1,119 +1,90 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v3 3/9] vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-Date: Tue,  3 Feb 2015 06:29:57 +0000
-Message-ID: <1422945003-24538-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v3 1/9] vhost/scsi: Convert completion path to use copy_to_iser
+Date: Tue,  3 Feb 2015 06:29:55 +0000
+Message-ID: <1422945003-24538-2-git-send-email-nab@daterainc.com>
 References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 In-Reply-To: <1422945003-24538-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: kvm-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes vhost_scsi_map_to_sgl() parameters to accept virtio
-iovec ptr + len when determing pages_nr.
+Required for ANY_LAYOUT support when the incoming virtio-scsi response
+header + fixed size sense buffer payload may span more than a single
+iovec entry.
 
-This is currently done with iov_num_pages() -> PAGE_ALIGN, so allow
-the same parameters as well.
+This changes existing code to save cmd->tvc_resp_iov instead of the
+first single iovec base pointer from &vq->iov[out].
+
+v3 changes:
+  - Convert memcpy_toiovecend -> copy_to_iser usage
 
 Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/scsi.c | 37 +++++++++++++++----------------------
- 1 file changed, 15 insertions(+), 22 deletions(-)
+ drivers/vhost/scsi.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index e4e9f39..c3b12b3 100644
+index 01c01cb..1ad5b0f 100644
 --- a/drivers/vhost/scsi.c
 +++ b/drivers/vhost/scsi.c
-@@ -222,10 +222,10 @@ static struct workqueue_struct *tcm_vhost_workqueue;
- static DEFINE_MUTEX(tcm_vhost_mutex);
- static LIST_HEAD(tcm_vhost_list);
+@@ -72,6 +72,8 @@ struct tcm_vhost_cmd {
+ 	int tvc_vq_desc;
+ 	/* virtio-scsi initiator task attribute */
+ 	int tvc_task_attr;
++	/* virtio-scsi response incoming iovecs */
++	int tvc_in_iovs;
+ 	/* virtio-scsi initiator data direction */
+ 	enum dma_data_direction tvc_data_direction;
+ 	/* Expected data transfer length from virtio-scsi header */
+@@ -87,8 +89,8 @@ struct tcm_vhost_cmd {
+ 	struct scatterlist *tvc_sgl;
+ 	struct scatterlist *tvc_prot_sgl;
+ 	struct page **tvc_upages;
+-	/* Pointer to response */
+-	struct virtio_scsi_cmd_resp __user *tvc_resp;
++	/* Pointer to response header iovec */
++	struct iovec *tvc_resp_iov;
+ 	/* Pointer to vhost_scsi for our device */
+ 	struct vhost_scsi *tvc_vhost;
+ 	/* Pointer to vhost_virtqueue for the cmd */
+@@ -682,6 +684,7 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+ 	struct tcm_vhost_cmd *cmd;
+ 	struct llist_node *llnode;
+ 	struct se_cmd *se_cmd;
++	struct iov_iter iov_iter;
+ 	int ret, vq;
  
--static int iov_num_pages(struct iovec *iov)
-+static int iov_num_pages(void __user *iov_base, size_t iov_len)
- {
--	return (PAGE_ALIGN((unsigned long)iov->iov_base + iov->iov_len) -
--	       ((unsigned long)iov->iov_base & PAGE_MASK)) >> PAGE_SHIFT;
-+	return (PAGE_ALIGN((unsigned long)iov_base + iov_len) -
-+	       ((unsigned long)iov_base & PAGE_MASK)) >> PAGE_SHIFT;
- }
+ 	bitmap_zero(signal, VHOST_SCSI_MAX_VQ);
+@@ -703,8 +706,11 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+ 						 se_cmd->scsi_sense_length);
+ 		memcpy(v_rsp.sense, cmd->tvc_sense_buf,
+ 		       se_cmd->scsi_sense_length);
+-		ret = copy_to_user(cmd->tvc_resp, &v_rsp, sizeof(v_rsp));
+-		if (likely(ret == 0)) {
++
++		iov_iter_init(&iov_iter, WRITE, cmd->tvc_resp_iov,
++			      cmd->tvc_in_iovs, sizeof(v_rsp));
++		ret = copy_to_iter(&v_rsp, sizeof(v_rsp), &iov_iter);
++		if (likely(ret == sizeof(v_rsp))) {
+ 			struct vhost_scsi_virtqueue *q;
+ 			vhost_add_used(cmd->tvc_vq, cmd->tvc_vq_desc, 0);
+ 			q = container_of(cmd->tvc_vq, struct vhost_scsi_virtqueue, vq);
+@@ -1159,7 +1165,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
  
- static void tcm_vhost_done_inflight(struct kref *kref)
-@@ -782,25 +782,18 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
-  * Returns the number of scatterlist entries used or -errno on error.
-  */
- static int
--vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
-+vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *cmd,
-+		      void __user *ptr,
-+		      size_t len,
- 		      struct scatterlist *sgl,
--		      unsigned int sgl_count,
--		      struct iovec *iov,
--		      struct page **pages,
- 		      bool write)
- {
--	unsigned int npages = 0, pages_nr, offset, nbytes;
-+	unsigned int npages = 0, offset, nbytes;
-+	unsigned int pages_nr = iov_num_pages(ptr, len);
- 	struct scatterlist *sg = sgl;
--	void __user *ptr = iov->iov_base;
--	size_t len = iov->iov_len;
-+	struct page **pages = cmd->tvc_upages;
- 	int ret, i;
+ 		cmd->tvc_vhost = vs;
+ 		cmd->tvc_vq = vq;
+-		cmd->tvc_resp = vq->iov[out].iov_base;
++		cmd->tvc_resp_iov = &vq->iov[out];
++		cmd->tvc_in_iovs = in;
  
--	pages_nr = iov_num_pages(iov);
--	if (pages_nr > sgl_count) {
--		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
--		       " sgl_count: %u\n", pages_nr, sgl_count);
--		return -ENOBUFS;
--	}
- 	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
- 		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
- 		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
-@@ -845,7 +838,7 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		sgl_count += iov_num_pages(&iov[i]);
-+		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
-@@ -861,8 +854,8 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_sgl[i]);
-@@ -889,7 +882,7 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		prot_sgl_count += iov_num_pages(&iov[i]);
-+		prot_sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
-@@ -904,8 +897,8 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	cmd->tvc_prot_sgl_count = prot_sgl_count;
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    prot_sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
+ 		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
+ 			cmd->tvc_cdb[0], cmd->tvc_lun);
 -- 
 1.9.1
+
