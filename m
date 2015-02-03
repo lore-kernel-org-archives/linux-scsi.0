@@ -1,89 +1,33 @@
-From: Praveen Madhavan <praveenm@chelsio.com>
-Subject: [PATCH] csiostor:Use firmware version from cxgb4/t4fw_version.h
-Date: Tue,  3 Feb 2015 17:18:26 +0530
-Message-ID: <1422964106-4033-1-git-send-email-praveenm@chelsio.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
+ callback
+Date: Tue, 3 Feb 2015 16:22:20 +0100
+Message-ID: <20150203152220.GA9063@redhat.com>
+References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+ <1422945003-24538-6-git-send-email-nab@daterainc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:26623 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932169AbbBCLtH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 06:49:07 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:50376 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933996AbbBCPWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Feb 2015 10:22:32 -0500
+Content-Disposition: inline
+In-Reply-To: <1422945003-24538-6-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com, praveenm@chelsio.com
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch is to use firmware version macros from t4fw_version.h
-and also enables 40g T5 adapter.
+> +		 * copy_from_iter() is modifying the iovecs as copies over
+> +		 * req_size bytes into req, so the returned out_iter.iov[0]
+> +		 * will contain the correct start + offset of the outgoing
+> +		 * WRITE payload, if DMA_TO_DEVICE is set.
+> +		 */
 
-Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
----
- drivers/scsi/csiostor/csio_hw.c      | 6 ++++--
- drivers/scsi/csiostor/csio_hw_chip.h | 6 +-----
- drivers/scsi/csiostor/csio_mb.c      | 3 ++-
- 3 files changed, 7 insertions(+), 8 deletions(-)
+Does it, in fact, do this?
+I thought so too, but Al Viro corrected me that it's
+not supposed to.
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index c81b06b..2e66f34 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -1372,7 +1372,8 @@ csio_config_device_caps(struct csio_hw *hw)
- 	}
- 
- 	/* Validate device capabilities */
--	if (csio_hw_validate_caps(hw, mbp))
-+	rv = csio_hw_validate_caps(hw, mbp);
-+	if (rv != 0)
- 		goto out;
- 
- 	/* Don't config device capabilities if already configured */
-@@ -1776,7 +1777,8 @@ csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
- 	}
- 
- 	/* Validate device capabilities */
--	if (csio_hw_validate_caps(hw, mbp))
-+	rv = csio_hw_validate_caps(hw, mbp);
-+	if (rv != 0)
- 		goto bye;
- 	/*
- 	 * Note that we're operating with parameters
-diff --git a/drivers/scsi/csiostor/csio_hw_chip.h b/drivers/scsi/csiostor/csio_hw_chip.h
-index a5f624f..b56a11d 100644
---- a/drivers/scsi/csiostor/csio_hw_chip.h
-+++ b/drivers/scsi/csiostor/csio_hw_chip.h
-@@ -45,11 +45,6 @@
- #define FW_FNAME_T5				"cxgb4/t5fw.bin"
- #define FW_CFG_NAME_T5				"cxgb4/t5-config.txt"
- 
--#define T5FW_VERSION_MAJOR 0x01
--#define T5FW_VERSION_MINOR 0x0B
--#define T5FW_VERSION_MICRO 0x1B
--#define T5FW_VERSION_BUILD 0x00
--
- #define CHELSIO_CHIP_CODE(version, revision) (((version) << 4) | (revision))
- #define CHELSIO_CHIP_FPGA          0x100
- #define CHELSIO_CHIP_VERSION(code) (((code) >> 12) & 0xf)
-@@ -74,6 +69,7 @@ static inline int csio_is_t5(uint16_t chip)
- 	{ PCI_VENDOR_ID_CHELSIO, (devid), PCI_ANY_ID, PCI_ANY_ID, 0, 0, (idx) }
- 
- #include "t4fw_api.h"
-+#include "t4fw_version.h"
- 
- #define FW_VERSION(chip) ( \
- 		FW_HDR_FW_VER_MAJOR_G(chip##FW_VERSION_MAJOR) | \
-diff --git a/drivers/scsi/csiostor/csio_mb.c b/drivers/scsi/csiostor/csio_mb.c
-index 1132c41..9451787 100644
---- a/drivers/scsi/csiostor/csio_mb.c
-+++ b/drivers/scsi/csiostor/csio_mb.c
-@@ -327,7 +327,8 @@ csio_mb_caps_config(struct csio_hw *hw, struct csio_mb *mbp, uint32_t tmo,
- }
- 
- #define CSIO_ADVERT_MASK     (FW_PORT_CAP_SPEED_100M | FW_PORT_CAP_SPEED_1G |\
--			      FW_PORT_CAP_SPEED_10G | FW_PORT_CAP_ANEG)
-+			      FW_PORT_CAP_SPEED_10G | FW_PORT_CAP_SPEED_40G |\
-+			      FW_PORT_CAP_ANEG)
- 
- /*
-  * csio_mb_port- FW PORT command helper
 -- 
-2.0.2
-
+MST
