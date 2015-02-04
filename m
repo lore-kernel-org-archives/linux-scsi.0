@@ -1,32 +1,32 @@
-From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v1 3/4] scsi: ufs: add trace events and dump prints for
- debug
-Date: Wed, 4 Feb 2015 14:00:50 -0000
-Message-ID: <064b540160e3c08923ae76e715a46fe1.squirrel@www.codeaurora.org>
-References: <1422977841-25036-1-git-send-email-gbroner@codeaurora.org>
-    <1422977841-25036-4-git-send-email-gbroner@codeaurora.org>
-    <20150203115351.58994f7d@gandalf.local.home>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] mpt2sas: Remove usage of 'struct timeval'
+Date: Wed, 04 Feb 2015 15:49:38 +0100
+Message-ID: <4766539.lT9cszg5FO@wuerfel>
+References: <20150204055835.GA4710@tinar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20150203115351.58994f7d@gandalf.local.home>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Gilad Broner <gbroner@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Petr Mladek <pmladek@suse.cz>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Vaibhav Nagarnaik <vnagarnaik@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:60478 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966308AbbBDOtn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2015 09:49:43 -0500
+In-Reply-To: <20150204055835.GA4710@tinar>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tina Ruchandani <ruchandani.tina@gmail.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
 
-> Please use trace_<event>_enabled(), for instance,
-> trace_ufshcd_command_enabled().
->
-> This also uses jump_labels and is a nop when it is not enabled.
+On Wednesday 04 February 2015 11:28:35 Tina Ruchandani wrote:
+> 'struct timeval' will have its tv_sec value overflow on 32-bit systems
+> in year 2038 and beyond. This patch replaces the use of struct timeval
+> for computing mpi_request.TimeStamp, and instead uses ktime_t which provides
+> 64-bit seconds value. The timestamp computed remains unaffected (milliseconds
+> since Unix epoch).
+> 
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+> 
 
-I accept your comment and will fix it.
-I'll wait a bit longer with sending v2 in case there are more comments.
+Looks good to me,
 
-Thanks,
-Gilad.
-
--- 
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+Acked-by: Arnd Bergmann <arnd@arndb.de>
