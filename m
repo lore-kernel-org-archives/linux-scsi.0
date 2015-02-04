@@ -1,45 +1,39 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
- callback
-Date: Wed, 4 Feb 2015 10:42:52 +0100
-Message-ID: <20150204094252.GI9920@redhat.com>
-References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
- <1422945003-24538-6-git-send-email-nab@daterainc.com>
- <20150203101436.GO2830@redhat.com>
- <1423042825.28700.26.camel@haakon3.risingtidesystems.com>
+From: Siim Vahtre <siim@xf.ee>
+Subject: Re: sequential I/O on SSD disk varies from 20 to 300 MBytes/s every
+ week
+Date: Wed, 4 Feb 2015 11:50:58 +0200 (EET)
+Message-ID: <alpine.DEB.2.00.1502041138490.8618@q.xf.ee>
+References: <alpine.DEB.2.00.1502021427020.2997@q.xf.ee> <CAOHikRBjOuUMdeyKDx0=+6YPKNrhZNquukAfdv-qMxYGFdX34Q@mail.gmail.com> <alpine.DEB.2.00.1502021600380.23745@q.xf.ee> <CAN7X1UkducENcF_+GuY7rY3q+qAhAp9H1HWMAXnFFtfTjX7Zrw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1423042825.28700.26.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from q.xf.ee ([89.221.70.14]:43655 "EHLO q.xf.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933616AbbBDJvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2015 04:51:03 -0500
+In-Reply-To: <CAN7X1UkducENcF_+GuY7rY3q+qAhAp9H1HWMAXnFFtfTjX7Zrw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Purush Gupta <purush.gupta@nutanix.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 01:40:25AM -0800, Nicholas A. Bellinger wrote:
-> > > +		/*
-> > > +		 * Any associated T10_PI bytes for the outgoing / incoming
-> > > +		 * payloads are included in calculation of exp_data_len here.
-> > > +		 */
-> > > +		if (out_size > req_size) {
-> > > +			data_direction = DMA_TO_DEVICE;
-> > > +			exp_data_len = out_size - req_size;
-> > > +		} else if (in_size > rsp_size) {
-> > > +			data_direction = DMA_FROM_DEVICE;
-> > > +			exp_data_len = in_size - rsp_size;
-> > > +		} else {
-> > > +			data_direction = DMA_NONE;
-> > > +			exp_data_len = 0;
-> > > +		}
-> > 
-> > We must validate this doesn't cause exp_data_len to be negative.
-> > 
-> 
-> AFAICT, exp_data_len is always >= 0 here.
+> Since you mentioned problem does not happen on Windows, what do you use 
+> to emulate the workload (iometer ?)
 
-What guarantees out_size > req_size and in_size > rsp_size,
-respectively?
+CrystalDiskMark, HD Tune, ATTO Disk Benchmark
 
--- 
-MST
+Tested for 2-3 hours, but got stable results. Directly afterwards booted 
+Live CD with Linux and immediately got poor results.
+
+
+> and did you see the same behaviour with other Kernel versions like 
+> 2.6.32.
+
+I did not test this, as this kernel version wouldn't work for me anyway. 
+If you think it would be very important datapoint, I can try.
+
+
+> You may want to check the per device queue configuration, lsscsi -L
+
+"queue_depth=256", same for all disks
+
