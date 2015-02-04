@@ -1,66 +1,24 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: Device removal lockup with mptsas + scsi-mq
-Date: Wed, 4 Feb 2015 19:29:12 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A7875B6@G4W3202.americas.hpqcorp.net>
-References: <54D2674D.5090503@cybernetics.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] csiostor:Use firmware version from cxgb4/t4fw_version.h
+Date: Wed, 04 Feb 2015 14:00:41 -0800 (PST)
+Message-ID: <20150204.140041.405365438093253038.davem@davemloft.net>
+References: <1422964106-4033-1-git-send-email-praveenm@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:38268 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207AbbBDTae (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2015 14:30:34 -0500
-In-Reply-To: <54D2674D.5090503@cybernetics.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1422964106-4033-1-git-send-email-praveenm@chelsio.com>
+Sender: netdev-owner@vger.kernel.org
+To: praveenm@chelsio.com
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, hch@infradead.org, hariprasad@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBUb255IEJhdHRlcnNieQ0KPiBTZW50OiBXZWRuZXNkYXksIDA0
-IEZlYnJ1YXJ5LCAyMDE1IDEyOjM5IFBNDQo+IFRvOiBsaW51eC1zY3NpOyBKZW5zIEF4Ym9lOyBD
-aHJpc3RvcGggSGVsbHdpZw0KPiBDYzogU3JlZWthbnRoIFJlZGR5DQo+IFN1YmplY3Q6IERldmlj
-ZSByZW1vdmFsIGxvY2t1cCB3aXRoIG1wdHNhcyArIHNjc2ktbXENCj4gDQo+IFN1bW1hcnk6DQo+
-IA0KPiBXaGVuIHJlbW92aW5nIGEgU0NTSSBkZXZpY2Ugd2l0aCBzY3NpLW1xLCBibGtfbXFfdXBk
-YXRlX3RhZ19zZXRfZGVwdGgoKQ0KPiBlbmRzIHVwIHdhaXRpbmcgZm9yIGNvbW1hbmRzIHRvICpv
-dGhlciogU0NTSSBkZXZpY2VzIHRvIGNvbXBsZXRlLiAgSWYNCj4gdGhvc2Ugb3RoZXIgU0NTSSBk
-ZXZpY2VzIGFyZSBpbiB0aGUgU0RFVl9CTE9DSyBzdGF0ZSwgdGhlbiB0aGUgcmVtb3ZhbA0KPiBk
-ZWFkbG9ja3MuDQo+IA0KLi4uDQo+IA0KPiBTbyBmYXIgdGhlIG9ubHkgd2F5IEkgY2FuIGdldCBk
-ZXZpY2UgcmVtb3ZhbCB0byBiZSByZWxpYWJsZSB3aXRoIHNjc2ktbXENCj4gZW5hYmxlZCBpcyBi
-eSBkaXNhYmxpbmcgdGhlIGNhbGwgdG8gc2NzaV9kZXZpY2Vfc2V0X3N0YXRlKHNkZXYsDQo+IFNE
-RVZfQkxPQ0spIGVudGlyZWx5LiAgRGV2aWNlIHJlbW92YWwgY29tcGxldGVzIHN1Y2Nlc3NmdWxs
-eSB3aXRoDQo+IHNjc2ktbXEgZGlzYWJsZWQsIGJvdGggd2l0aCBhbiB1bm1vZGlmaWVkIGtlcm5l
-bCBhbmQgd2l0aCB0aGUgcGF0Y2ggZnJvbQ0KPiAyMDEyLg0KPiANCi4uLg0KPiBSZWdhcmRpbmcg
-bXB0c2FzOg0KPiANCj4gV2hlbiB0aGUgY2FibGUgaXMgcHVsbGVkLCBtcHRzYXMgY2FsbHMgc2Nz
-aV9kZXZpY2Vfc2V0X3N0YXRlKHNkZXYsDQo+IFNERVZfQkxPQ0spIGFuZCBzZXRzIHZ0YXJnZXQt
-PmRlbGV0ZWQgPSAxLiAgSWYgbXB0c2FzIHF1ZXVlY29tbWFuZCgpDQo+IHNlZXMgdnRhcmdldC0+
-ZGVsZXRlZCwgaXQgZmFpbHMgdGhlIEkvTyB3aXRoIERJRF9OT19DT05ORUNULiAgVGhlcmUgaXMN
-Cj4gbm93aGVyZSBpbiBtcHRzYXMgd2hlcmUgaXQgY2FsbHMgc2NzaV9kZXZpY2Vfc2V0X3N0YXRl
-KHNkZXYsDQo+IFNERVZfUlVOTklORykgb3Igc2NzaV9pbnRlcm5hbF9kZXZpY2VfdW5ibG9jaygp
-IChleGNlcHQgaW4gdGhlIHBhdGNoDQo+IGZyb20gMjAxMiBqdXN0IGJlZm9yZSBkZWxldGluZyB0
-aGUgZGV2aWNlKS4gIFNvIHNldHRpbmcgU0RFVl9CTE9DSyBpcw0KPiBqdXN0IGJsb2NraW5nIGNv
-bW1hbmRzIHRoYXQgY2FuIG5ldmVyIGRvIGFueXRoaW5nIGJ1dCBmYWlsIGFueXdheSwgc28gaXQN
-Cj4gY2FuIHByb2JhYmx5IGVpdGhlciBiZSByZW1vdmVkLCBvciBlbHNlIGEgY2FsbCB0bw0KPiBz
-Y3NpX2ludGVybmFsX2RldmljZV91bmJsb2NrKCkgc2hvdWxkIGJlIGFkZGVkIHNvbWV3aGVyZSB0
-byB1bmJsb2NrIGENCj4gZGV2aWNlIHRoYXQgY2FtZSBiYWNrLg0KPiANCg0KSSByYW4gaW50byBp
-c3N1ZXMgd2l0aCBtcHQzc2FzIHVzYWdlIG9mIFNERVZfQkxPQ0sgbGFzdCB5ZWFyLCBhbmQNCnJl
-Y29tbWVuZCBkcm9wcGluZyB0aGF0IGFzIHBhcnQgb2YgYW55IHNvbHV0aW9uLg0KDQpPbGQgZGVz
-Y3JpcHRpb246DQoiQWZ0ZXIgYSBkcml2ZSBTQVMgbGluayBnb2VzIGRvd24sIEkgb2Z0ZW4gc2Vl
-IGRldmljZV9ibG9ja2VkIGdldA0Kc2V0IHRvIDMgYW5kIHN0YXkgdGhlcmUgZm9yZXZlciwgZXZl
-biBpZiB0aGUgZHJpdmUgY29tZXMgYmFjay4NCg0KQWx0aG91Z2ggaXQgc2VlbXMgZ29vZCB0byBr
-ZWVwIHRoZSBDUFVzIGZyb20gcmV0cnlpbmcgb3ZlciBhbmQNCm92ZXIgYWdhaW4sIGl0J3MgYmFk
-IHRoYXQgdGhlIHByb2Nlc3NlcyBoYW5nIGFuZCBiZWNvbWUNCnVua2lsbGFibGUsIGFuZCByZWFs
-bHkgYmFkIHRoYXQgdGhlIHN5c3RlbSBjYW5ub3Qgc2h1dGRvd24uDQoNCkV2ZXJ5dGhpbmcgc2Vl
-bXMgdG8gd29yayBiZXR0ZXIgaWYgeW91IHJldHVybiBob3N0X2J5dGUNCnNldCB0byBESURfU09G
-VF9FUlJPUiwgd2hpY2ggY2F1c2VzIHRoZSBTQ1NJIG1pZGxheWVyIHRvIHJldHJ5DQphIGZldyB0
-aW1lcywgb3IgRElEX0lNTV9SRVRSWSB3aGljaCBjYXVzZXMgaW5maW5pdGUgcmV0cmllcywNCm9y
-IERJRF9FUlJPUiB3aXRoIENIRUNLIENPTkRJVElPTiBzdGF0dXMgYW5kIGFuIGFkZGl0aW9uYWwg
-c2Vuc2UNCmNvZGUgZXhwbGFpbmluZyB0aGUgZXJyb3IuDQoNCklmIHRoZSBkcml2ZSBpcyBnb25l
-IHRvbyBsb25nLCB5b3Ugd2FudCB0aGUgYXBwbGljYXRpb24gdG8gDQpnaXZlIHVwIGFuZCBxdWl0
-LiAgT24gdGhlIG90aGVyIGhhbmQsIHJldHJ5aW5nIHdoaWxlIGdpdmluZyANCml0IHRpbWUgdG8g
-Y29tZSBiYWNrIGlzIGFsc28gaW1wb3J0YW50LiAgSW4gU0FTLCB0aGUgSV9UDQpuZXh1cyBsb3Nz
-IHRpbWUgc2hvdWxkIGJlIHRoZSBiYXNpcyBmb3IgY2FsY3VsYXRpbmcgaG93DQpsb25nIHRvIHdh
-aXQuIg0KDQotLS0NClJvYiBFbGxpb3R0ICAgIEhQIFNlcnZlciBTdG9yYWdlDQoNCg0K
+From: Praveen Madhavan <praveenm@chelsio.com>
+Date: Tue,  3 Feb 2015 17:18:26 +0530
+
+> This patch is to use firmware version macros from t4fw_version.h
+> and also enables 40g T5 adapter.
+> 
+> Signed-off-by: Praveen Madhavan <praveenm@chelsio.com>
+
+Applied.
