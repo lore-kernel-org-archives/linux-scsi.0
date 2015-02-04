@@ -1,58 +1,117 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
- callback
-Date: Tue, 3 Feb 2015 23:56:16 +0000
-Message-ID: <20150203235616.GF29656@ZenIV.linux.org.uk>
-References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
- <1422945003-24538-6-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kvm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1422945003-24538-6-git-send-email-nab@daterainc.com>
-Sender: kvm-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] Sync iscsi fw boot flags
+Date: Tue,  3 Feb 2015 20:28:58 -0600
+Message-ID: <1423016938-28552-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:46690 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753874AbbBDC3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Feb 2015 21:29:08 -0500
+Received: from rh2.localdomain (c-24-245-27-162.hsd1.mn.comcast.net [24.245.27.162])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id t142T3SW013136
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Feb 2015 20:29:07 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Feb 03, 2015 at 06:29:59AM +0000, Nicholas A. Bellinger wrote:
-> +		 * Copy over the virtio-scsi request header, which when
-> +		 * ANY_LAYOUT is enabled may span multiple iovecs, or a
-> +		 * single iovec may contain both the header + outgoing
-> +		 * WRITE payloads.
-> +		 *
-> +		 * copy_from_iter() is modifying the iovecs as copies over
-> +		 * req_size bytes into req, so the returned out_iter.iov[0]
-> +		 * will contain the correct start + offset of the outgoing
-> +		 * WRITE payload, if DMA_TO_DEVICE is set.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-It does no such thing.  What it does, though, is changing out_iter so
-that subsequent copy_from_iter() will return the data you want.  Note
-that out_iter.iov[0] will contain the correct _segment_ of that vector,
-with the data you want at out_iter.iov_offset bytes from the beginning
-of that segment.  .iov may come to point to subsequent segments and .iov_offset
-keeps changing, but segments themselves are never changed.
+iBFT and non-iBFT drivers use the same iscsi boot sysfs
+interface. For iBFT we just directly export whatever
+is left by the FW. For non-iBFT drivers we do vendor
+specific commands to get the info or its just hard coded.
 
-> +		 */
-> +		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
-					 ^^^^ WRITE, please - as in "this is
-the source of some write, we'll be copying _from_ it".  READ would be
-"destination of some read, we'll be copying into it".
+This patch syncs up how non-iBFT drivers export boot flag
+info. The boot flags being defined in this patch match
+the iBFT flags that indicate if the boot info found was
+valid and if it was used for to boot with.
 
-> +			     (data_direction == DMA_TO_DEVICE) ?
-> +			      req_size + exp_data_len : req_size);
-> +
-> +		ret = copy_from_iter(req, req_size, &out_iter);
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/be2iscsi/be_main.c  | 8 +++++---
+ drivers/scsi/qla4xxx/ql4_def.h   | 1 -
+ drivers/scsi/qla4xxx/ql4_os.c    | 6 ++++--
+ include/linux/iscsi_boot_sysfs.h | 3 +++
+ 4 files changed, 12 insertions(+), 6 deletions(-)
 
-...
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index f319340..cd4aff9 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -429,7 +429,8 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+ 			     auth_data.chap.intr_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-		rc = sprintf(str, "2\n");
++		rc = sprintf(str, "%u\n",
++			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+ 		break;
+ 	case ISCSI_BOOT_TGT_NIC_ASSOC:
+ 		rc = sprintf(str, "0\n");
+@@ -466,8 +467,9 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_ETH_FLAGS:
+-		rc = sprintf(str, "2\n");
+-		break;
++		rc = sprintf(str, "%u\n",
++			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
++  		break;
+ 	case ISCSI_BOOT_ETH_INDEX:
+ 		rc = sprintf(str, "0\n");
+ 		break;
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 8f6d0fb..0380669 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -796,7 +796,6 @@ struct scsi_qla_host {
+ #define CHAP_DMA_BLOCK_SIZE    512
+ 	struct workqueue_struct *task_wq;
+ 	unsigned long ddb_idx_map[MAX_DDB_ENTRIES / BITS_PER_LONG];
+-#define SYSFS_FLAG_FW_SEL_BOOT 2
+ 	struct iscsi_boot_kset *boot_kset;
+ 	struct ql4_boot_tgt_info boot_tgt;
+ 	uint16_t phy_port_num;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 6d25879..b63985f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5705,7 +5705,8 @@ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_ETH_FLAGS:
+-		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
++		rc = sprintf(str, "%d\n",
++			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+ 		break;
+ 	case ISCSI_BOOT_ETH_INDEX:
+ 		rc = sprintf(str, "0\n");
+@@ -5814,7 +5815,8 @@ qla4xxx_show_boot_tgt_info(struct ql4_boot_session_info *boot_sess, int type,
+ 			     (char *)&boot_conn->chap.intr_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
++		rc = sprintf(str, "%d\n",
++			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+ 		break;
+ 	case ISCSI_BOOT_TGT_NIC_ASSOC:
+ 		rc = sprintf(str, "0\n");
+diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+index 2a8b165..3f273d6 100644
+--- a/include/linux/iscsi_boot_sysfs.h
++++ b/include/linux/iscsi_boot_sysfs.h
+@@ -16,6 +16,9 @@
+ #ifndef _ISCSI_BOOT_SYSFS_
+ #define _ISCSI_BOOT_SYSFS_
+ 
++#define ISCSI_BOOT_FLAG_VALID		0x1
++#define ISCSI_BOOT_FLAG_FW_BOOT_SEL	0x2
++
+ /*
+  * The text attributes names for each of the kobjects.
+ */
+-- 
+1.8.3.1
 
-> +		/*
-> +		 * Determine start of T10_PI or data payload iovec in ANY_LAYOUT
-> +		 * mode based upon data_direction.
-> +		 *
-> +		 * For DMA_TO_DEVICE, this is iov_out from copy_from_iter()
-> +		 * with the already recalculated iov_base + iov_len.
-
-ITYM "this is out_iter, which is already pointing to the right place"
-
-AFAICS, the actual use is correct, it's just that the comments are confused.
