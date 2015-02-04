@@ -1,119 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_logging: return void for dev_printk() functions
-Date: Wed,  4 Feb 2015 08:11:34 +0100
-Message-ID: <1423033894-27646-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50892 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106AbbBDHLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Feb 2015 02:11:38 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
+ callback
+Date: Wed, 4 Feb 2015 08:14:36 +0100
+Message-ID: <20150204071436.GA7484@redhat.com>
+References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
+ <1422945003-24538-6-git-send-email-nab@daterainc.com>
+ <20150203235616.GF29656@ZenIV.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150203235616.GF29656@ZenIV.linux.org.uk>
+Sender: target-devel-owner@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>, linux-next@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-dev_printk() is now a void function, so the related functions
-scmd_printk() and sdev_prefix_printk() should be made void, too.
+On Tue, Feb 03, 2015 at 11:56:16PM +0000, Al Viro wrote:
+> On Tue, Feb 03, 2015 at 06:29:59AM +0000, Nicholas A. Bellinger wrote:
+> > +		 * Copy over the virtio-scsi request header, which when
+> > +		 * ANY_LAYOUT is enabled may span multiple iovecs, or a
+> > +		 * single iovec may contain both the header + outgoing
+> > +		 * WRITE payloads.
+> > +		 *
+> > +		 * copy_from_iter() is modifying the iovecs as copies over
+> > +		 * req_size bytes into req, so the returned out_iter.iov[0]
+> > +		 * will contain the correct start + offset of the outgoing
+> > +		 * WRITE payload, if DMA_TO_DEVICE is set.
+> 
+> It does no such thing.  What it does, though, is changing out_iter so
+> that subsequent copy_from_iter() will return the data you want.  Note
+> that out_iter.iov[0] will contain the correct _segment_ of that vector,
+> with the data you want at out_iter.iov_offset bytes from the beginning
+> of that segment.  .iov may come to point to subsequent segments and .iov_offset
+> keeps changing, but segments themselves are never changed.
+> 
+> > +		 */
+> > +		iov_iter_init(&out_iter, READ, &vq->iov[0], out,
+> 					 ^^^^ WRITE, please - as in "this is
+> the source of some write, we'll be copying _from_ it".  READ would be
+> "destination of some read, we'll be copying into it".
+> 
+> > +			     (data_direction == DMA_TO_DEVICE) ?
+> > +			      req_size + exp_data_len : req_size);
+> > +
+> > +		ret = copy_from_iter(req, req_size, &out_iter);
+> 
+> ...
+> 
+> > +		/*
+> > +		 * Determine start of T10_PI or data payload iovec in ANY_LAYOUT
+> > +		 * mode based upon data_direction.
+> > +		 *
+> > +		 * For DMA_TO_DEVICE, this is iov_out from copy_from_iter()
+> > +		 * with the already recalculated iov_base + iov_len.
+> 
+> ITYM "this is out_iter, which is already pointing to the right place"
+> 
+> AFAICS, the actual use is correct, it's just that the comments are confused.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_logging.c | 22 +++++++++-------------
- include/scsi/scsi_device.h  |  4 ++--
- 2 files changed, 11 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index ecc5918..bd70339 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -93,20 +93,19 @@ static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
- 	return off;
- }
- 
--int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
--		       const char *name, const char *fmt, ...)
-+void sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
-+			const char *name, const char *fmt, ...)
- {
- 	va_list args;
- 	char *logbuf;
- 	size_t off = 0, logbuf_len;
--	int ret;
- 
- 	if (!sdev)
--		return 0;
-+		return;
- 
- 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
- 	if (!logbuf)
--		return 0;
-+		return;
- 
- 	if (name)
- 		off += scnprintf(logbuf + off, logbuf_len - off,
-@@ -116,26 +115,24 @@ int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
- 		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
- 		va_end(args);
- 	}
--	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
-+	dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
- 	scsi_log_release_buffer(logbuf);
--	return ret;
- }
- EXPORT_SYMBOL(sdev_prefix_printk);
- 
--int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
-+void scmd_printk(const char *level, const struct scsi_cmnd *scmd,
- 		const char *fmt, ...)
- {
- 	va_list args;
- 	char *logbuf;
- 	size_t off = 0, logbuf_len;
--	int ret;
- 
- 	if (!scmd || !scmd->cmnd)
--		return 0;
-+		return;
- 
- 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
- 	if (!logbuf)
--		return 0;
-+		return;
- 	off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
- 				 scmd->request->tag);
- 	if (off < logbuf_len) {
-@@ -143,9 +140,8 @@ int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
- 		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
- 		va_end(args);
- 	}
--	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
-+	dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
- 	scsi_log_release_buffer(logbuf);
--	return ret;
- }
- EXPORT_SYMBOL(scmd_printk);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 2e0281e..a4c9336 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -237,14 +237,14 @@ struct scsi_dh_data {
-  * like scmd_printk, but the device name is passed in
-  * as a string pointer
-  */
--__printf(4, 5) int
-+__printf(4, 5) void
- sdev_prefix_printk(const char *, const struct scsi_device *, const char *,
- 		const char *, ...);
- 
- #define sdev_printk(l, sdev, fmt, a...)				\
- 	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
- 
--__printf(3, 4) int
-+__printf(3, 4) void
- scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
- 
- #define scmd_dbg(scmd, fmt, a...)					   \
--- 
-1.8.5.2
-
+Looks like it'd be nicer to pass iters around as much as possible,
+try to reduce the amount of poking at the underlying iov.
