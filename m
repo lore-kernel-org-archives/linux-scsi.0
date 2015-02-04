@@ -1,57 +1,63 @@
 From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [PATCH] scsi: Remove usage of struct timeval
-Date: Wed, 4 Feb 2015 08:39:54 +0530
-Message-ID: <20150204030954.GA3729@tinar>
+Subject: [PATCH] [SCSI] bfa: Remove use of struct timeval
+Date: Wed, 4 Feb 2015 08:42:03 +0530
+Message-ID: <20150204031203.GA3762@tinar>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:53684 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbbBDDKA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 22:10:00 -0500
-Received: by mail-pa0-f47.google.com with SMTP id lj1so104362625pab.6
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 19:09:59 -0800 (PST)
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:56040 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666AbbBDDMI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 22:12:08 -0500
+Received: by mail-pa0-f41.google.com with SMTP id kq14so104556788pab.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 19:12:07 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 
 struct timeval will have its tv_sec field overflow on 32-bit systems
 in year 2038 and beyond. This patch removes the usage of struct timeval
-and instead uses 64-bit ktime_t to get the current milliseconds
-to populate pmcraid_timestamp_data.
+and instead uses ktime_get_real_seconds() which returns 64-bit wall-clock
+seconds.
 
 Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 ---
- drivers/scsi/pmcraid.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfa_svc.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 8c27b6a..98af06f 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -25,6 +25,7 @@
- #include <linux/fs.h>
- #include <linux/init.h>
- #include <linux/types.h>
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 625225f..5554461 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -14,6 +14,7 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  */
 +#include <linux/ktime.h>
- #include <linux/errno.h>
- #include <linux/kernel.h>
- #include <linux/ioport.h>
-@@ -5569,11 +5570,9 @@ static void pmcraid_set_timestamp(struct pmcraid_cmd *cmd)
- 	__be32 time_stamp_len = cpu_to_be32(PMCRAID_TIMESTAMP_LEN);
- 	struct pmcraid_ioadl_desc *ioadl = ioarcb->add_data.u.ioadl;
  
+ #include "bfad_drv.h"
+ #include "bfad_im.h"
+@@ -303,16 +304,9 @@ plkd_validate_logrec(struct bfa_plog_rec_s *pl_rec)
+ 	return 0;
+ }
+ 
+-static u64
+-bfa_get_log_time(void)
++static u64 bfa_get_log_time(void)
+ {
+-	u64 system_time = 0;
 -	struct timeval tv;
- 	__le64 timestamp;
- 
 -	do_gettimeofday(&tv);
--	timestamp = tv.tv_sec * 1000;
-+	timestamp = ktime_to_ms(ktime_get_real());
+-
+-	/* We are interested in seconds only. */
+-	system_time = tv.tv_sec;
+-	return system_time;
++	return ktime_get_real_seconds();
+ }
  
- 	pinstance->timestamp_data->timestamp[0] = (__u8)(timestamp);
- 	pinstance->timestamp_data->timestamp[1] = (__u8)((timestamp) >> 8);
+ static void
 -- 
 2.2.0.rc0.207.ga3a616c
 
