@@ -1,16 +1,16 @@
 From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [PATCH] mpt3sas: Remove usage of 'struct timeval'
-Date: Wed, 4 Feb 2015 10:15:12 +0530
-Message-ID: <20150204044512.GA4432@tinar>
+Subject: [PATCH] mpt2sas: Remove usage of 'struct timeval'
+Date: Wed, 4 Feb 2015 11:28:35 +0530
+Message-ID: <20150204055835.GA4710@tinar>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:43681 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbbBDEpR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2015 23:45:17 -0500
-Received: by mail-pa0-f52.google.com with SMTP id kx10so105290526pab.11
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 20:45:16 -0800 (PST)
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:62630 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbbBDF6l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2015 00:58:41 -0500
+Received: by mail-pa0-f47.google.com with SMTP id lj1so106027668pab.6
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 21:58:40 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,22 +25,22 @@ since Unix epoch).
 
 Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
+ drivers/scsi/mpt2sas/mpt2sas_base.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 1560115..ee9c3c6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -56,6 +56,7 @@
- #include <linux/dma-mapping.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 58e4521..6d80477 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -57,6 +57,7 @@
+ #include <linux/sort.h>
  #include <linux/io.h>
  #include <linux/time.h>
 +#include <linux/ktime.h>
  #include <linux/kthread.h>
  #include <linux/aer.h>
  
-@@ -3735,7 +3736,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+@@ -3616,7 +3617,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
  	Mpi2IOCInitRequest_t mpi_request;
  	Mpi2IOCInitReply_t mpi_reply;
  	int i, r = 0;
@@ -49,7 +49,7 @@ index 1560115..ee9c3c6 100644
  	u16 ioc_status;
  	u32 reply_post_free_array_sz = 0;
  	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
-@@ -3797,9 +3798,8 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc, int sleep_flag)
+@@ -3678,9 +3679,8 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
  	/* This time stamp specifies number of milliseconds
  	 * since epoch ~ midnight January 1, 1970.
  	 */
