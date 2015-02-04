@@ -1,66 +1,119 @@
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-Subject: [PATCH] mpt2sas: Remove usage of 'struct timeval'
-Date: Wed, 4 Feb 2015 11:28:35 +0530
-Message-ID: <20150204055835.GA4710@tinar>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_logging: return void for dev_printk() functions
+Date: Wed,  4 Feb 2015 08:11:34 +0100
+Message-ID: <1423033894-27646-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:62630 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbbBDF6l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2015 00:58:41 -0500
-Received: by mail-pa0-f47.google.com with SMTP id lj1so106027668pab.6
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2015 21:58:40 -0800 (PST)
-Content-Disposition: inline
+Received: from cantor2.suse.de ([195.135.220.15]:50892 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751106AbbBDHLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Feb 2015 02:11:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>, linux-next@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-'struct timeval' will have its tv_sec value overflow on 32-bit systems
-in year 2038 and beyond. This patch replaces the use of struct timeval
-for computing mpi_request.TimeStamp, and instead uses ktime_t which provides
-64-bit seconds value. The timestamp computed remains unaffected (milliseconds
-since Unix epoch).
+dev_printk() is now a void function, so the related functions
+scmd_printk() and sdev_prefix_printk() should be made void, too.
 
-Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_logging.c | 22 +++++++++-------------
+ include/scsi/scsi_device.h  |  4 ++--
+ 2 files changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 58e4521..6d80477 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -57,6 +57,7 @@
- #include <linux/sort.h>
- #include <linux/io.h>
- #include <linux/time.h>
-+#include <linux/ktime.h>
- #include <linux/kthread.h>
- #include <linux/aer.h>
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index ecc5918..bd70339 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -93,20 +93,19 @@ static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
+ 	return off;
+ }
  
-@@ -3616,7 +3617,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	Mpi2IOCInitRequest_t mpi_request;
- 	Mpi2IOCInitReply_t mpi_reply;
- 	int i, r = 0;
--	struct timeval current_time;
-+	ktime_t current_time;
- 	u16 ioc_status;
- 	u32 reply_post_free_array_sz = 0;
- 	Mpi2IOCInitRDPQArrayEntry *reply_post_free_array = NULL;
-@@ -3678,9 +3679,8 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	/* This time stamp specifies number of milliseconds
- 	 * since epoch ~ midnight January 1, 1970.
- 	 */
--	do_gettimeofday(&current_time);
--	mpi_request.TimeStamp = cpu_to_le64((u64)current_time.tv_sec * 1000 +
--	    (current_time.tv_usec / 1000));
-+	current_time = ktime_get_real();
-+	mpi_request.TimeStamp = cpu_to_le64(ktime_to_ms(current_time));
+-int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
+-		       const char *name, const char *fmt, ...)
++void sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
++			const char *name, const char *fmt, ...)
+ {
+ 	va_list args;
+ 	char *logbuf;
+ 	size_t off = 0, logbuf_len;
+-	int ret;
  
- 	if (ioc->logging_level & MPT_DEBUG_INIT) {
- 		__le32 *mfp;
+ 	if (!sdev)
+-		return 0;
++		return;
+ 
+ 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
+ 	if (!logbuf)
+-		return 0;
++		return;
+ 
+ 	if (name)
+ 		off += scnprintf(logbuf + off, logbuf_len - off,
+@@ -116,26 +115,24 @@ int sdev_prefix_printk(const char *level, const struct scsi_device *sdev,
+ 		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+ 		va_end(args);
+ 	}
+-	ret = dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
++	dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
+ 	scsi_log_release_buffer(logbuf);
+-	return ret;
+ }
+ EXPORT_SYMBOL(sdev_prefix_printk);
+ 
+-int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
++void scmd_printk(const char *level, const struct scsi_cmnd *scmd,
+ 		const char *fmt, ...)
+ {
+ 	va_list args;
+ 	char *logbuf;
+ 	size_t off = 0, logbuf_len;
+-	int ret;
+ 
+ 	if (!scmd || !scmd->cmnd)
+-		return 0;
++		return;
+ 
+ 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
+ 	if (!logbuf)
+-		return 0;
++		return;
+ 	off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
+ 				 scmd->request->tag);
+ 	if (off < logbuf_len) {
+@@ -143,9 +140,8 @@ int scmd_printk(const char *level, const struct scsi_cmnd *scmd,
+ 		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+ 		va_end(args);
+ 	}
+-	ret = dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
++	dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
+ 	scsi_log_release_buffer(logbuf);
+-	return ret;
+ }
+ EXPORT_SYMBOL(scmd_printk);
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 2e0281e..a4c9336 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -237,14 +237,14 @@ struct scsi_dh_data {
+  * like scmd_printk, but the device name is passed in
+  * as a string pointer
+  */
+-__printf(4, 5) int
++__printf(4, 5) void
+ sdev_prefix_printk(const char *, const struct scsi_device *, const char *,
+ 		const char *, ...);
+ 
+ #define sdev_printk(l, sdev, fmt, a...)				\
+ 	sdev_prefix_printk(l, sdev, NULL, fmt, ##a)
+ 
+-__printf(3, 4) int
++__printf(3, 4) void
+ scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
+ 
+ #define scmd_dbg(scmd, fmt, a...)					   \
 -- 
-2.2.0.rc0.207.ga3a616c
+1.8.5.2
 
