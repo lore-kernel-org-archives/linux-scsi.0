@@ -1,8 +1,8 @@
 From: "Michael S. Tsirkin" <mst@redhat.com>
 Subject: Re: [PATCH-v3 5/9] vhost/scsi: Add ANY_LAYOUT vhost_virtqueue
  callback
-Date: Wed, 4 Feb 2015 14:13:49 +0100
-Message-ID: <20150204131349.GB15443@redhat.com>
+Date: Wed, 4 Feb 2015 14:15:14 +0100
+Message-ID: <20150204131514.GC15443@redhat.com>
 References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
  <1422945003-24538-6-git-send-email-nab@daterainc.com>
  <20150203101436.GO2830@redhat.com>
@@ -11,10 +11,10 @@ References: <1422945003-24538-1-git-send-email-nab@daterainc.com>
  <1423046467.28700.48.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <1423046467.28700.48.camel@haakon3.risingtidesystems.com>
-Sender: kvm-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
@@ -58,9 +58,7 @@ On Wed, Feb 04, 2015 at 02:41:07AM -0800, Nicholas A. Bellinger wrote:
 > 
 > --nab
 
-Hmm what do you mean by "there is no guarantee"?
-What will happen if in_size < rsp_size because guest
-supplied an invalid descriptor?
+I don't see any problems with this.
 
 -- 
 MST
