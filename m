@@ -1,136 +1,125 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH v4] scsi: NCR5380: harmonize jiffies conversion with msecs_to_jiffies
-Date: Wed,  4 Feb 2015 13:30:20 -0500
-Message-ID: <1423074621-13180-1-git-send-email-hofrat@osadl.org>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Device removal lockup with mptsas + scsi-mq
+Date: Wed, 04 Feb 2015 13:39:09 -0500
+Message-ID: <54D2674D.5090503@cybernetics.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:53280 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161851AbbBDSes (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Feb 2015 13:34:48 -0500
+Received: from mail.cybernetics.com ([173.71.130.66]:31959 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161728AbbBDSqt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2015 13:46:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
 
-Instances of  var * HZ / 1000  are replaced by  msecs_to_jiffies(var).
-In addition some timing constants that assumed HZ 100 were adjusted
-to HZ independent settings based on review comments from Michael Schmitz
-<schmitzmic@gmail.com> and review of the original drivers in 1.0.31 and
-2.2.16.
+Summary:
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+When removing a SCSI device with scsi-mq, blk_mq_update_tag_set_depth()
+ends up waiting for commands to *other* SCSI devices to complete.  If
+those other SCSI devices are in the SDEV_BLOCK state, then the removal
+deadlocks.
 
-Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-ok but msecs_to_jiffies(val) is the cleaner solution and handles all
-corner cases correctly. 
+Setup:
 
-v2: The original patch was not taking care of all the dependencies
-    as reported by Finn Thain <fthain@telegraphics.com.au> - this
-    version now uses the suggested config to check the patch.
-v3: g_NCR5380.c changes fixed up based on feedback from Michael Schmitz
-    <schmitzmic@gmail.com> as these settings were from around 1.0.31
-    kernel (or earlier) where HZ was 100 only - thus the unit here is
-    actually 10s of microseconds. This was "verified" by checking the
-    setting changes against 2.2.16 indicating that it was forgotten in
-    1998/99.
-v4: Sync changed with atari_NCR5380.c as well as correct the patch 
-    description as suggested by Finn Thain <fthain@telegraphics.com.au>
+kernel 3.19-rc7 with the following additional commits:
+  0f98c38d725f88d6452af46eed96a3a6791b230a
+    Revert "blk-mq: fix hctx/ctx kobject use-after-free"
+    blk-mq: release mq's kobjects in blk_release_queue()
+scsi-mq enabled
+LSI 3.0 Gbps SAS HBA using mptsas
+disk enclosure containing SAS expander and one disk drive
 
-This patch was only compile tested with i386_defconfig + CONFIG_ISA=y
-as well as all (except CONFIG_SCSI_ATARI) drivers enabled as modules:
-CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_GENERIC_NCR5380=m
-CONFIG_SCSI_DMX3191D=m, CONFIG_SCSI_DTC3280=m
-CONFIG_SCSI_GENERIC_NCR5380=m, CONFIG_SCSI_GENERIC_NCR5380_MMIO=m
-CONFIG_SCSI_PAS16=m, CONFIG_SCSI_T128=m
+Procedure:
 
-Note that the change to atari_NCR5380.c was not even compile-tested 
-(crosstool-ng m68k-unknown-elf and m68k-unknown-uclinux-uclibc fail to
-build atari_defconfig or multi_defconfig (or I failed to build the 
-toolchain properly))
+1) connect SAS cable to disk enclosure
+2) two SCSI devices show up - the expander and the disk
+3) begin sending commands to the disk
+4) disconnect SAS cable
+5) cat /proc/scsi/scsi - devices never disappear
 
-Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
+Analysis:
 
- drivers/scsi/NCR5380.c       |   10 +++++-----
- drivers/scsi/atari_NCR5380.c |    2 +-
- drivers/scsi/g_NCR5380.c     |    6 +++---
- 3 files changed, 9 insertions(+), 9 deletions(-)
+When mptsas detects a cable pull, it calls scsi_device_set_state(sdev,
+SDEV_BLOCK) on the expander sdev and the disk sdev.  A moment later it
+calls sas_port_delete(), which eventually calls scsi_remove_device() on
+the expander sdev (and later on the disk sdev, but it never gets that
+far).  This deadlocks in blk_mq_freeze_queue_wait() trying to freeze the
+queue for the *disk*, even though it is the *expander* that is being
+deleted first.  The disk queue cannot be frozen because it has
+outstanding commands that cannot make progress due to the disk being in
+SDEV_BLOCK.  Here is the call chain for the deadlock:
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 8981701..a777e5c 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -474,11 +474,11 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
-  */
- #ifndef USLEEP_SLEEP
- /* 20 ms (reasonable hard disk speed) */
--#define USLEEP_SLEEP (20*HZ/1000)
-+#define USLEEP_SLEEP msecs_to_jiffies(20)
- #endif
- /* 300 RPM (floppy speed) */
- #ifndef USLEEP_POLL
--#define USLEEP_POLL (200*HZ/1000)
-+#define USLEEP_POLL msecs_to_jiffies(200)
- #endif
- #ifndef USLEEP_WAITLONG
- /* RvC: (reasonable time to wait on select error) */
-@@ -576,7 +576,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
- 		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
- 			trying_irqs |= mask;
- 
--	timeout = jiffies + (250 * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(250);
- 	probe_irq = NO_IRQ;
- 
- 	/*
-@@ -634,7 +634,7 @@ static void prepare_info(struct Scsi_Host *instance)
- 	         "sg_tablesize %d, this_id %d, "
- 	         "flags { %s%s%s}, "
- #if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
--	         "USLEEP_POLL %d, USLEEP_WAITLONG %d, "
-+		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
- #endif
- 	         "options { %s} ",
- 	         instance->hostt->name, instance->io_port, instance->n_io_port,
-@@ -1346,7 +1346,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- 	 * selection.
- 	 */
- 
--	timeout = jiffies + (250 * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(250);
- 
- 	/* 
- 	 * XXX very interesting - we're seeing a bounce where the BSY we 
-diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
-index a702554..db87ece 100644
---- a/drivers/scsi/atari_NCR5380.c
-+++ b/drivers/scsi/atari_NCR5380.c
-@@ -1486,7 +1486,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- 	 * selection.
- 	 */
- 
--	timeout = jiffies + (250 * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(250);
- 
- 	/*
- 	 * XXX very interesting - we're seeing a bounce where the BSY we
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index f35792f..a11b152 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -57,9 +57,9 @@
-  */
- 
- /* settings for DTC3181E card with only Mustek scanner attached */
--#define USLEEP_POLL	1
--#define USLEEP_SLEEP	20
--#define USLEEP_WAITLONG	500
-+#define USLEEP_POLL	msecs_to_jiffies(10)
-+#define USLEEP_SLEEP	msecs_to_jiffies(200)
-+#define USLEEP_WAITLONG	msecs_to_jiffies(5000)
- 
- #define AUTOPROBE_IRQ
- 
--- 
-1.7.10.4
+mptsas_firmware_event_work() [mptsas]
+mptsas_send_expander_event() [mptsas]
+mptsas_expander_delete() [mptsas]
+mptsas_delete_expander_siblings() [mptsas]
+mptsas_del_end_device() [mptsas]
+sas_port_delete() [scsi_transport_sas]
+sas_rphy_delete() [scsi_transport_sas]
+sas_rphy_remove() [scsi_transport_sas]
+scsi_remove_target()
+__scsi_remove_target()
+scsi_remove_device()
+__scsi_remove_device()
+blk_cleanup_queue()
+blk_mq_free_queue()
+blk_mq_del_queue_tag_set()
+blk_mq_update_tag_set_depth()
+list_for_each_entry(q, &set->tag_list, tag_set_list)
+blk_mq_freeze_queue()
+blk_mq_freeze_queue_wait()
+
+Apparently the expander and the disk are both in the same "struct
+blk_mq_tag_set", so blk_mq_update_tag_set_depth() ends up waiting for
+commands to complete to the disk when deleting the expander, which
+causes the deadlock.
+
+I found this patch from 2012-07-19 for a different but related issue:
+mptfusion: Fix for issue - The device is removed in blocked state
+http://marc.info/?l=linux-scsi&m=134268885517580&w=4
+http://marc.info/?l=linux-scsi&m=134269193618776&w=4
+
+That patch was apparently ignored and forgotten.  However, that patch
+did not fix my problem.  For one thing, the expander and the disk have
+separate target ids, so the call to mptsas_ublock_io_starget() in the
+patch before deleting the expander took the expander out of the
+SDEV_BLOCK state but left the disk in the SDEV_BLOCK state, so it did
+not prevent the deadlock.  If I change the
+mptsas_find_vtarget()+starget_for_each_device() in the patch to
+shost_for_each_device() to unblock all devices, then sometimes the
+device removal completes successfully, but sometimes it still deadlocks
+(especially with more than one disk) because of
+scsi_internal_device_unblock() racing with scsi_internal_device_block()
+on the other devices.
+
+So far the only way I can get device removal to be reliable with scsi-mq
+enabled is by disabling the call to scsi_device_set_state(sdev,
+SDEV_BLOCK) entirely.  Device removal completes successfully with
+scsi-mq disabled, both with an unmodified kernel and with the patch from
+2012.
+
+I think the best fix would be to change
+blk_mq_del_queue_tag_set()/blk_mq_update_tag_set_depth() not to wait for
+commands to *other* sdevs during device removal.  It looks like the only
+reason this is done currently is to update the BLK_MQ_F_TAG_SHARED flag,
+which is used only by hctx_may_queue() in blk-mq-tag.c, but perhaps
+there is another reason I am missing.  I will leave that change to
+someone more familiar with the blk-mq code.
+
+
+Regarding mptsas:
+
+When the cable is pulled, mptsas calls scsi_device_set_state(sdev,
+SDEV_BLOCK) and sets vtarget->deleted = 1.  If mptsas queuecommand()
+sees vtarget->deleted, it fails the I/O with DID_NO_CONNECT.  There is
+nowhere in mptsas where it calls scsi_device_set_state(sdev,
+SDEV_RUNNING) or scsi_internal_device_unblock() (except in the patch
+from 2012 just before deleting the device).  So setting SDEV_BLOCK is
+just blocking commands that can never do anything but fail anyway, so it
+can probably either be removed, or else a call to
+scsi_internal_device_unblock() should be added somewhere to unblock a
+device that came back.
 
