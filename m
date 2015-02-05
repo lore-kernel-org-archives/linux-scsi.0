@@ -1,94 +1,123 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] Defer processing of REQ_PREEMPT requests for blocked devices
-Date: Thu, 5 Feb 2015 15:49:07 +0100
-Message-ID: <54D382E3.4020705@sandisk.com>
+From: Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 1/1] Sync iscsi fw boot flags
+Date: Thu, 05 Feb 2015 08:09:04 -0800
+Message-ID: <54D395A0.2080102@suse.com>
+References: <1423016938-28552-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0084.outbound.protection.outlook.com ([157.56.110.84]:42880
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753298AbbBEOtS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2015 09:49:18 -0500
+Received: from smtp.nue.novell.com ([195.135.221.5]:38208 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753331AbbBEQJK (ORCPT
+	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+	Thu, 5 Feb 2015 11:09:10 -0500
+In-Reply-To: <1423016938-28552-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Max Gurtuvoy <maxg@mellanox.com>, Mike Christie <michaelc@cs.wisc.edu>, Sagi Grimberg <sagig@mellanox.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-SCSI transport drivers and SCSI LLDs block a SCSI device if the
-transport layer is not operational. This means that in this state
-no requests should be processed, even if the REQ_PREEMPT flag has
-been set. This patch avoids that a rescan shortly after a cable
-pull sporadically triggers the following kernel oops:
+On 02/03/2015 06:28 PM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> iBFT and non-iBFT drivers use the same iscsi boot sysfs
+> interface. For iBFT we just directly export whatever
+> is left by the FW. For non-iBFT drivers we do vendor
+> specific commands to get the info or its just hard coded.
+> 
+> This patch syncs up how non-iBFT drivers export boot flag
+> info. The boot flags being defined in this patch match
+> the iBFT flags that indicate if the boot info found was
+> valid and if it was used for to boot with.
+> 
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c  | 8 +++++---
+>  drivers/scsi/qla4xxx/ql4_def.h   | 1 -
+>  drivers/scsi/qla4xxx/ql4_os.c    | 6 ++++--
+>  include/linux/iscsi_boot_sysfs.h | 3 +++
+>  4 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index f319340..cd4aff9 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -429,7 +429,8 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+>  			     auth_data.chap.intr_secret);
+>  		break;
+>  	case ISCSI_BOOT_TGT_FLAGS:
+> -		rc = sprintf(str, "2\n");
+> +		rc = sprintf(str, "%u\n",
+> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+>  		break;
+>  	case ISCSI_BOOT_TGT_NIC_ASSOC:
+>  		rc = sprintf(str, "0\n");
+> @@ -466,8 +467,9 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
+>  
+>  	switch (type) {
+>  	case ISCSI_BOOT_ETH_FLAGS:
+> -		rc = sprintf(str, "2\n");
+> -		break;
+> +		rc = sprintf(str, "%u\n",
+> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+> +  		break;
+>  	case ISCSI_BOOT_ETH_INDEX:
+>  		rc = sprintf(str, "0\n");
+>  		break;
+> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+> index 8f6d0fb..0380669 100644
+> --- a/drivers/scsi/qla4xxx/ql4_def.h
+> +++ b/drivers/scsi/qla4xxx/ql4_def.h
+> @@ -796,7 +796,6 @@ struct scsi_qla_host {
+>  #define CHAP_DMA_BLOCK_SIZE    512
+>  	struct workqueue_struct *task_wq;
+>  	unsigned long ddb_idx_map[MAX_DDB_ENTRIES / BITS_PER_LONG];
+> -#define SYSFS_FLAG_FW_SEL_BOOT 2
+>  	struct iscsi_boot_kset *boot_kset;
+>  	struct ql4_boot_tgt_info boot_tgt;
+>  	uint16_t phy_port_num;
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 6d25879..b63985f 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -5705,7 +5705,8 @@ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
+>  
+>  	switch (type) {
+>  	case ISCSI_BOOT_ETH_FLAGS:
+> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
+> +		rc = sprintf(str, "%d\n",
+> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+>  		break;
+>  	case ISCSI_BOOT_ETH_INDEX:
+>  		rc = sprintf(str, "0\n");
+> @@ -5814,7 +5815,8 @@ qla4xxx_show_boot_tgt_info(struct ql4_boot_session_info *boot_sess, int type,
+>  			     (char *)&boot_conn->chap.intr_secret);
+>  		break;
+>  	case ISCSI_BOOT_TGT_FLAGS:
+> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
+> +		rc = sprintf(str, "%d\n",
+> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
+>  		break;
+>  	case ISCSI_BOOT_TGT_NIC_ASSOC:
+>  		rc = sprintf(str, "0\n");
+> diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+> index 2a8b165..3f273d6 100644
+> --- a/include/linux/iscsi_boot_sysfs.h
+> +++ b/include/linux/iscsi_boot_sysfs.h
+> @@ -16,6 +16,9 @@
+>  #ifndef _ISCSI_BOOT_SYSFS_
+>  #define _ISCSI_BOOT_SYSFS_
+>  
+> +#define ISCSI_BOOT_FLAG_VALID		0x1
+> +#define ISCSI_BOOT_FLAG_FW_BOOT_SEL	0x2
+> +
+>  /*
+>   * The text attributes names for each of the kobjects.
+>  */
+> 
 
-BUG: unable to handle kernel paging request at ffffc9001a6bc084
-IP: [<ffffffffa04e08f2>] mlx4_ib_post_send+0xd2/0xb30 [mlx4_ib]
-Process rescan-scsi-bus (pid: 9241, threadinfo ffff88053484a000, task ffff880534aae100)
-Call Trace:
- [<ffffffffa0718135>] srp_post_send+0x65/0x70 [ib_srp]
- [<ffffffffa071b9df>] srp_queuecommand+0x1cf/0x3e0 [ib_srp]
- [<ffffffffa0001ff1>] scsi_dispatch_cmd+0x101/0x280 [scsi_mod]
- [<ffffffffa0009ad1>] scsi_request_fn+0x411/0x4d0 [scsi_mod]
- [<ffffffff81223b37>] __blk_run_queue+0x27/0x30
- [<ffffffff8122a8d2>] blk_execute_rq_nowait+0x82/0x110
- [<ffffffff8122a9c2>] blk_execute_rq+0x62/0xf0
- [<ffffffffa000b0e8>] scsi_execute+0xe8/0x190 [scsi_mod]
- [<ffffffffa000b2f3>] scsi_execute_req+0xa3/0x130 [scsi_mod]
- [<ffffffffa000c1aa>] scsi_probe_lun+0x17a/0x450 [scsi_mod]
- [<ffffffffa000ce86>] scsi_probe_and_add_lun+0x156/0x480 [scsi_mod]
- [<ffffffffa000dc2f>] __scsi_scan_target+0xdf/0x1f0 [scsi_mod]
- [<ffffffffa000dfa3>] scsi_scan_host_selected+0x183/0x1c0 [scsi_mod]
- [<ffffffffa000edfb>] scsi_scan+0xdb/0xe0 [scsi_mod]
- [<ffffffffa000ee13>] store_scan+0x13/0x20 [scsi_mod]
- [<ffffffff811c8d9b>] sysfs_write_file+0xcb/0x160
- [<ffffffff811589de>] vfs_write+0xce/0x140
- [<ffffffff81158b53>] sys_write+0x53/0xa0
- [<ffffffff81464592>] system_call_fastpath+0x16/0x1b
- [<00007f611c9d9300>] 0x7f611c9d92ff
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 
-Reported-by: Max Gurtuvoy <maxg@mellanox.com>
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Sagi Grimberg <sagig@mellanox.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/scsi_lib.c   | 4 +++-
- include/linux/blk_types.h | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 17bb541..7129701 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1311,9 +1311,11 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 				    "rejecting I/O to dead device\n");
- 			ret = BLKPREP_KILL;
- 			break;
--		case SDEV_QUIESCE:
- 		case SDEV_BLOCK:
- 		case SDEV_CREATED_BLOCK:
-+			ret = BLKPREP_DEFER;
-+			break;
-+		case SDEV_QUIESCE:
- 			/*
- 			 * If the devices is blocked we defer normal commands.
- 			 */
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index c294e3e..a1b25e3 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -181,7 +181,9 @@ enum rq_flag_bits {
- 	__REQ_ELVPRIV,		/* elevator private data attached */
- 	__REQ_FAILED,		/* set if the request failed */
- 	__REQ_QUIET,		/* don't worry about errors */
--	__REQ_PREEMPT,		/* set for "ide_preempt" requests */
-+	__REQ_PREEMPT,		/* set for "ide_preempt" requests and also
-+				   for requests for which the SCSI "quiesce"
-+				   state must be ignored. */
- 	__REQ_ALLOCED,		/* request came from our alloc pool */
- 	__REQ_COPY_USER,	/* contains copies of user pages */
- 	__REQ_FLUSH_SEQ,	/* request for flush sequence */
 -- 
-2.1.4
-
+Lee Duncan
+SUSE Labs
