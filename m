@@ -1,66 +1,66 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] storvsc: assign wait_for_completion_timeout to appropriately
- typed var
-Date: Thu,  5 Feb 2015 01:47:22 -0500
-Message-ID: <1423118842-25233-1-git-send-email-hofrat@osadl.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] vhost/scsi: potential memory corruption
+Date: Thu, 5 Feb 2015 10:37:33 +0300
+Message-ID: <20150205073733.GA27855@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Nicholas Mc Guire <hofrat@osadl.org>, devel@linuxdriverproject.org
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-wait_for_completion_timeout() returns unsigned long not int. This assigns
-the return value to an appropriately typed variable.
+This code in vhost_scsi_make_tpg() is confusing because we limit "tpgt"
+to UINT_MAX but the data type of "tpg->tport_tpgt" and that is a u16.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+I looked at the context and it turns out that in
+vhost_scsi_set_endpoint(), "tpg->tport_tpgt" is used as an offset into
+the vs_tpg[] array which has VHOST_SCSI_MAX_TARGET (256) elements so
+anything higher than 255 then it is invalid.  I have made that the limit
+now.
+
+In vhost_scsi_send_evt() we mask away values higher than 255, but now
+that the limit has changed, we don't need the mask.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
+Compile tested only.
 
-As a suitable typed and named variable "timeout" is available and there is
-no conflict in this case no new variable is needed rather the declaration
-is simply updated.
-
-Patch was only compile tested for x86_64_defconfig + CONFIG_X86_VSMP=y
-CONFIG_HYPERV=m, SCSI_LOWLEVEL=y, CONFIG_HYPERV_STORAGE=m
-
-Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
-
- drivers/scsi/storvsc_drv.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index efc6e44..a993d12 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -796,7 +796,8 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- 	int num_sc;
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
--	int ret, t;
-+	int ret;
-+	unsigned long t;
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index 3e265ef..4339222 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -1278,7 +1278,7 @@ vhost_scsi_send_evt(struct vhost_scsi *vs,
+ 		 * lun[4-7] need to be zero according to virtio-scsi spec.
+ 		 */
+ 		evt->event.lun[0] = 0x01;
+-		evt->event.lun[1] = tpg->tport_tpgt & 0xFF;
++		evt->event.lun[1] = tpg->tport_tpgt;
+ 		if (lun->unpacked_lun >= 256)
+ 			evt->event.lun[2] = lun->unpacked_lun >> 8 | 0x40 ;
+ 		evt->event.lun[3] = lun->unpacked_lun & 0xFF;
+@@ -2149,12 +2149,12 @@ vhost_scsi_make_tpg(struct se_wwn *wwn,
+ 			struct vhost_scsi_tport, tport_wwn);
  
- 	num_sc = ((max_chns > num_cpus) ? num_cpus : max_chns);
- 	stor_device = get_out_stor_device(device);
-@@ -861,7 +862,8 @@ static int storvsc_channel_init(struct hv_device *device)
- 	struct storvsc_device *stor_device;
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
--	int ret, t;
-+	int ret;
-+	unsigned long t;
- 	int max_chns;
- 	bool process_sub_channels = false;
+ 	struct vhost_scsi_tpg *tpg;
+-	unsigned long tpgt;
++	u16 tpgt;
+ 	int ret;
  
--- 
-1.7.10.4
+ 	if (strstr(name, "tpgt_") != name)
+ 		return ERR_PTR(-EINVAL);
+-	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
++	if (kstrtou16(name + 5, 10, &tpgt) || tpgt >= VHOST_SCSI_MAX_TARGET)
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	tpg = kzalloc(sizeof(struct vhost_scsi_tpg), GFP_KERNEL);
