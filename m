@@ -1,96 +1,66 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1 narrow_write_error with 4K disks, sd "bad block number
- requested" messages
-Date: Thu, 5 Feb 2015 15:59:53 +1100
-Message-ID: <20150205155953.64e9b1e4@notabene.brown>
-References: <54C9006A.2030807@stratus.com>
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] storvsc: assign wait_for_completion_timeout to appropriately
+ typed var
+Date: Thu,  5 Feb 2015 01:47:22 -0500
+Message-ID: <1423118842-25233-1-git-send-email-hofrat@osadl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/3W4Yq7E79ajNF4EzYonf+CP"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54C9006A.2030807@stratus.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Nicholas Mc Guire <hofrat@osadl.org>, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
 
---Sig_/3W4Yq7E79ajNF4EzYonf+CP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+wait_for_completion_timeout() returns unsigned long not int. This assigns
+the return value to an appropriately typed variable.
 
-On Wed, 28 Jan 2015 10:29:46 -0500 Nate Dailey <nate.dailey@stratus.com>
-wrote:
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-> I'm writing about something that appears to be an issue with raid1's=20
-> narrow_write_error, particular to non-512-byte-sector disks. Here's what=
-=20
-> I'm doing:
->=20
-> - 2 disk raid1, 4K disks, each connected to a different SAS HBA
-> - mount a filesystem on the raid1, run a test that writes to it
-> - remove one of the SAS HBAs (echo 1 >=20
-> /sys/bus/pci/devices/0000\:45\:00.0/remove)
->=20
-> At this point, writes fail and narrow_write_error breaks them up and=20
-> retries, one sector at a time. But these are 512-byte sectors, and sd=20
-> doesn't like it:
->=20
-> [ 2645.310517] sd 3:0:1:0: [sde] Bad block number requested
-> [ 2645.310610] sd 3:0:1:0: [sde] Bad block number requested
-> [ 2645.310690] sd 3:0:1:0: [sde] Bad block number requested
-> ...
->=20
-> There appears to be no real harm done, but there can be a huge number of=
-=20
-> these messages in the log.
->=20
-> I can avoid this by disabling bad block tracking, but it looks like=20
-> maybe the superblock's bblog_shift is intended to address this exact=20
-> issue. However, I don't see a way to change it. Presumably this is=20
-> something mdadm should be setting up? I don't see bblog_shift ever set=20
-> to anything other than 0.
->=20
-> This is on a RHEL 7.1 kernel, version 3.10.0-221.el7. I took a look at=20
-> upstream sd and md changes and nothing jumps out at me that would have=20
-> affected this (but I have not tested to see if the bad block messages do=
-=20
-> or do not happen on an upstream kernel).
->=20
-> I'd appreciate any advice re: how to handle this. Thanks!
+As a suitable typed and named variable "timeout" is available and there is
+no conflict in this case no new variable is needed rather the declaration
+is simply updated.
 
-Thanks for the report.
+Patch was only compile tested for x86_64_defconfig + CONFIG_X86_VSMP=y
+CONFIG_HYPERV=m, SCSI_LOWLEVEL=y, CONFIG_HYPERV_STORAGE=m
 
-narrow_write_error() should use bdev_logical_block_size() and round up to
-that.
-Possibly mdadm should get the same information and set bblog_shift
-accordingly when creating a bad block log.
+Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
 
-I've made a note to fix that, but I'm happy to review  patches too :-)
+ drivers/scsi/storvsc_drv.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-thanks,
-NeilBrown
-
-
---Sig_/3W4Yq7E79ajNF4EzYonf+CP
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVNL4yTnsnt1WYoG5AQKCIw//bLdpni6R2CHBVrZKkAFZ4leVE8Z3odih
-ZOsu+zyHWRwc/N92IHvm7HAkAI+u+nmdfV5W2L5WDad4CUXrHa15EzqX2axkyVTR
-EhhiBHcZkNMDKZQ47Y/l7X4EIWT1WKoiTdEEGwbe/CxHk2XohZ07owv6xGQixuBa
-zogWREYqfSlO9unS8NgMjKZc6wRak0nc0bstaIj2qB4RDvYhp/yhdXQIu8r9Y6Po
-VZ9p+DBdNOZ8S1eejnxF5swOCEK4qlGXRzSKr7UEAK382j5N/eM3nZd1+tXP/3iB
-sHpVPERaPp/3Rr76++3rY8X/UclioOb5yShTrUVZHKIa5YfyvnXH+bvecm3wZOGU
-w+7jwhsELfubFQiqvgAMam+3Mgz58u2RKvAQdnknVmYJLf1J53l0+LYrtzraGdKx
-JjUguDsimTe/KBS94u8aCnYYmhUt1t6YUXjrMSYsyW2QXywYHFd6zesm5PmsEx8n
-zCK3npGhhS1Z6hYMfkDomwr+vKecMm1ne8deTf2TxVxrALwZIBGOC9uHN86Mg9W+
-2Xk3tlvaX+Y+Kwy41sQUntuvZXHL+a/4KmzIvjHanRBANYtamOS0gDvDz7DAS7dr
-8Ug/Dqr82xtMvBDvmGKUk+MdhmPgvoOc3KCnr25aJjkD/v0S4V+j3S9+ac6YVvKr
-FVLUo/dNL4I=
-=QfPf
------END PGP SIGNATURE-----
-
---Sig_/3W4Yq7E79ajNF4EzYonf+CP--
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index efc6e44..a993d12 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -796,7 +796,8 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+ 	int num_sc;
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+-	int ret, t;
++	int ret;
++	unsigned long t;
+ 
+ 	num_sc = ((max_chns > num_cpus) ? num_cpus : max_chns);
+ 	stor_device = get_out_stor_device(device);
+@@ -861,7 +862,8 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	struct storvsc_device *stor_device;
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+-	int ret, t;
++	int ret;
++	unsigned long t;
+ 	int max_chns;
+ 	bool process_sub_channels = false;
+ 
+-- 
+1.7.10.4
