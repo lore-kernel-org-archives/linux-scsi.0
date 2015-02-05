@@ -1,22 +1,30 @@
-From: =?utf-8?Q?=22Kai_M=C3=A4kisara_=28Kolumbus=29=22?=
-	<kai.makisara@kolumbus.fi>
+From: Laurence Oberman <loberman@redhat.com>
 Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
-Date: Thu, 5 Feb 2015 19:03:29 +0200
-Message-ID: <5B997489-2D5C-4F85-BAB8-317E62F694E5@kolumbus.fi>
-References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net> <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
+Date: Thu, 5 Feb 2015 12:40:20 -0500 (EST)
+Message-ID: <995891679.6002631.1423158020737.JavaMail.zimbra@redhat.com>
+References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net> <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com> <5B997489-2D5C-4F85-BAB8-317E62F694E5@kolumbus.fi>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs19.mail.saunalahti.fi ([62.142.117.200]:36428 "EHLO
-	vs19.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965030AbbBERPN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 12:15:13 -0500
-In-Reply-To: <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:48027 "EHLO
+	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbbBERkk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 12:40:40 -0500
+In-Reply-To: <5B997489-2D5C-4F85-BAB8-317E62F694E5@kolumbus.fi>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <oberman.l@gmail.com>
-Cc: "Seymour, Shane M" <shane.seymour@hp.com>, "loberman@redhat.com" <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
+To: Kai =?utf-8?Q?M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
+Cc: Laurence Oberman <oberman.l@gmail.com>, Shane M Seymour <shane.seymour@hp.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, jeffm@suse.com
+
+----- Original Message -----
+=46rom: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
+To: "Laurence Oberman" <oberman.l@gmail.com>
+Cc: "Shane M Seymour" <shane.seymour@hp.com>, loberman@redhat.com, linu=
+x-scsi@vger.kernel.org, "James E.J. Bottomley (JBottomley@parallels.com=
+)" <JBottomley@parallels.com>, jeffm@suse.com
+Sent: Thursday, February 5, 2015 12:03:29 PM
+Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
 
 
 > On 2.2.2015, at 17.16, Laurence Oberman <oberman.l@gmail.com> wrote:
@@ -41,6 +49,29 @@ code to him. I will neither ack nor nak this code.
 
 Thanks,
 Kai
+
+Hello Kai,
+
+I missed the earlier conversations with James, I will go search for the=
+m.
+Do you mean add them so they are similar to the /proc/diskstats
+
+cat /proc/diskstats
+=2E.
+   8       0 sda 2258346 152801 291907067 5263795 388817 1518048 150138=
+33 4542062 0 4794931 9803495
+   8       1 sda1 717 102 26154 1179 8 2 80 76 0 1172 1254
+   8       2 sda2 328 31 2872 1554 0 0 0 0 0 1554 1554
+   8       3 sda3 2195205 151617 290898283 5203627 355053 1518046 15009=
+528 4370598 0 4594137 9571937
+   8       4 sda4 61921 1050 978350 57218 18 0 4225 34 0 56384 57185
+  11       0 sr0 0 0 0 0 0 0 0 0 0 0 0
+=2E.
+
+
+Laurence Oberman
+Red Hat Global Support Service
+SEG Team
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
