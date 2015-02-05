@@ -1,7 +1,8 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 03/21] lpfc: EnableBootCode from hbacmd fails on Lancer
-Date: Thu, 5 Feb 2015 14:23:21 -0500
-Message-ID: <1423164201.7917.27.camel@myfc17>
+Subject: [PATCH 05/21] lpfc: Linux lpfc driver doesn't re-establish the link
+ after a cable pull on LPe12002
+Date: Thu, 5 Feb 2015 14:23:43 -0500
+Message-ID: <1423164223.7917.29.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -9,42 +10,56 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmexedge1.emulex.com ([138.239.224.99]:47563 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752739AbbBETXz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 14:23:55 -0500
+	with ESMTP id S1752739AbbBETX4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 14:23:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 1 +
- drivers/scsi/lpfc/lpfc_bsg.h | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_els.c     | 3 +--
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 6 ++----
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index a7bf359..6b4cf31 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -4179,6 +4179,7 @@ lpfc_bsg_handle_sli_cfg_mbox(struct lpfc_hba *phba, struct fc_bsg_job *job,
- 			switch (opcode) {
- 			case COMN_OPCODE_GET_CNTL_ADDL_ATTRIBUTES:
- 			case COMN_OPCODE_GET_CNTL_ATTRIBUTES:
-+			case COMN_OPCODE_GET_PROFILE_CONFIG:
- 				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 						"3106 Handled SLI_CONFIG "
- 						"subsys_comn, opcode:x%x\n",
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
-index 928ef60..7f26a9b 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.h
-+++ b/drivers/scsi/lpfc/lpfc_bsg.h
-@@ -246,6 +246,7 @@ struct lpfc_sli_config_emb1_subsys {
- #define lpfc_emb1_subcmnd_subsys_WORD	word6
- /* Subsystem COMN (0x01) OpCodes */
- #define SLI_CONFIG_SUBSYS_COMN		0x01
-+#define COMN_OPCODE_GET_PROFILE_CONFIG	0xA4
- #define COMN_OPCODE_READ_OBJECT		0xAB
- #define COMN_OPCODE_WRITE_OBJECT	0xAC
- #define COMN_OPCODE_READ_OBJECT_LIST	0xAD
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index c66088d..6350563 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2243,8 +2243,7 @@ lpfc_adisc_done(struct lpfc_vport *vport)
+ 	*/
+ 	if (vport->port_state < LPFC_VPORT_READY) {
+ 		/* If we get here, there is nothing to ADISC */
+-		if (vport->port_type == LPFC_PHYSICAL_PORT)
+-			lpfc_issue_clear_la(phba, vport);
++		lpfc_issue_clear_la(phba, vport);
+ 		if (!(vport->fc_flag & FC_ABORT_DISCOVERY)) {
+ 			vport->num_disc_nodes = 0;
+ 			/* go thru NPR list, issue ELS PLOGIs */
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 5452f1f..b1ad1a0 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5070,8 +5070,7 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 	    !(vport->fc_flag & FC_PT2PT) &&
+ 	    !(vport->fc_flag & FC_RSCN_MODE) &&
+ 	    (phba->sli_rev < LPFC_SLI_REV4)) {
+-		if (vport->port_type == LPFC_PHYSICAL_PORT)
+-			lpfc_issue_clear_la(phba, vport);
++		lpfc_issue_clear_la(phba, vport);
+ 		lpfc_issue_reg_vpi(phba, vport);
+ 		return;
+ 	}
+@@ -5082,8 +5081,7 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 	 */
+ 	if (vport->port_state < LPFC_VPORT_READY && !clear_la_pending) {
+ 		/* If we get here, there is nothing to ADISC */
+-		if (vport->port_type == LPFC_PHYSICAL_PORT)
+-			lpfc_issue_clear_la(phba, vport);
++		lpfc_issue_clear_la(phba, vport);
+ 
+ 		if (!(vport->fc_flag & FC_ABORT_DISCOVERY)) {
+ 			vport->num_disc_nodes = 0;
 -- 
 1.7.11.7
 
