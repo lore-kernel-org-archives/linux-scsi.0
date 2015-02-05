@@ -1,39 +1,26 @@
-From: Lad Prabhakar <prabhakar.csengg@gmail.com>
-Subject: [PATCH] scsi: fix sparse warning
-Date: Thu,  5 Feb 2015 11:29:27 +0000
-Message-ID: <1423135767-18498-1-git-send-email-prabhakar.csengg@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi: fix sparse warnings
+Date: Thu, 5 Feb 2015 12:38:55 +0100
+Message-ID: <54D3564F.8000207@sandisk.com>
+References: <1423129268-16220-1-git-send-email-prabhakar.csengg@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0098.outbound.protection.outlook.com ([157.56.111.98]:57424
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752004AbbBELjD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Feb 2015 06:39:03 -0500
+In-Reply-To: <1423129268-16220-1-git-send-email-prabhakar.csengg@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lad Prabhakar <prabhakar.csengg@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+On 02/05/15 10:41, Lad Prabhakar wrote:
+> this patch fixes following sparse warnings:
+> scsi_sysfs.c:201:25: warning: symbol 'dev_attr_hstate' was not declared. Should it be static?
+> scsi_sysfs.c:376:24: warning: symbol 'scsi_shost_attr_group' was not declared. Should it be static?
 
-this patch fixes following sparse warning:
-
-scsi_debug.c:2687:6: warning: symbol 'dump_sector' was not declared. Should it be static?
-
-Signed-off-by: Lad, Prabhakar <prabhakar.csengg@gmail.com>
----
- Found this issue on linux-next (gcc  version 4.9.2,
- sparse version  0.4.5-rc1)and applies on top linux-next.
-
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1f8e2dc..e8c048b 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2684,7 +2684,7 @@ resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	return 0;
- }
- 
--void dump_sector(unsigned char *buf, int len)
-+static void dump_sector(unsigned char *buf, int len)
- {
- 	int i, j, n;
- 
--- 
-1.9.1
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
