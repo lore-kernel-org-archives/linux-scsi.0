@@ -1,45 +1,39 @@
 From: Lad Prabhakar <prabhakar.csengg@gmail.com>
-Subject: [PATCH] scsi: fix sparse warnings
-Date: Thu,  5 Feb 2015 09:41:08 +0000
-Message-ID: <1423129268-16220-1-git-send-email-prabhakar.csengg@gmail.com>
+Subject: [PATCH] bfa: bfa_core: fix sparse warning
+Date: Thu,  5 Feb 2015 10:10:27 +0000
+Message-ID: <1423131027-7563-1-git-send-email-prabhakar.csengg@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
 
-this patch fixes following sparse warnings:
-scsi_sysfs.c:201:25: warning: symbol 'dev_attr_hstate' was not declared. Should it be static?
-scsi_sysfs.c:376:24: warning: symbol 'scsi_shost_attr_group' was not declared. Should it be static?
+this patch fixes following sparse warning:
+
+bfa_core.c:716:1: warning: symbol 'bfa_isr_rspq' was not declared. Should it be static?
 
 Signed-off-by: Lad, Prabhakar <prabhakar.csengg@gmail.com>
 ---
- drivers/scsi/scsi_sysfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Found this issue on linux-next (gcc  version 4.9.2,
+ sparse version  0.4.5-rc1)and applies on top linux-next.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 1ac38e7..0eac0f7 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -198,7 +198,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
+ drivers/scsi/bfa/bfa_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index e3f67b0..2a613d2 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -712,7 +712,7 @@ bfa_reqq_resume(struct bfa_s *bfa, int qid)
+ 	}
  }
  
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
--struct device_attribute dev_attr_hstate =
-+static struct device_attribute dev_attr_hstate =
- 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
- 
- static ssize_t
-@@ -373,7 +373,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	NULL
- };
- 
--struct attribute_group scsi_shost_attr_group = {
-+static struct attribute_group scsi_shost_attr_group = {
- 	.attrs =	scsi_sysfs_shost_attrs,
- };
- 
+-bfa_boolean_t
++static bfa_boolean_t
+ bfa_isr_rspq(struct bfa_s *bfa, int qid)
+ {
+ 	struct bfi_msg_s *m;
 -- 
 1.9.1
