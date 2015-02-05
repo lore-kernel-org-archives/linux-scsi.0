@@ -1,83 +1,100 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 04/21] lpfc: Fix to handle PLOGI when already logged in
-Date: Thu, 5 Feb 2015 14:23:34 -0500
-Message-ID: <1423164214.7917.28.camel@myfc17>
+Subject: [PATCH 06/21] lpfc: Fix host reset escalation killing all IOs.
+Date: Thu, 5 Feb 2015 14:23:52 -0500
+Message-ID: <1423164232.7917.30.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:47563 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977AbbBETXz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 14:23:55 -0500
+Received: from cmexedge2.emulex.com ([138.239.224.100]:20667 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbbBETYI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 14:24:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
----
- drivers/scsi/lpfc/lpfc_nportdisc.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 5cc1103..3d93363 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -276,6 +276,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	struct Scsi_Host   *shost = lpfc_shost_from_vport(vport);
- 	struct lpfc_hba    *phba = vport->phba;
- 	struct lpfc_dmabuf *pcmd;
-+	uint64_t nlp_portwwn = 0;
- 	uint32_t *lp;
- 	IOCB_t *icmd;
- 	struct serv_parm *sp;
-@@ -332,6 +333,8 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			NULL);
- 		return 0;
- 	}
-+
-+	nlp_portwwn = wwn_to_u64(ndlp->nlp_portname.u.wwn);
- 	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3, 0) == 0)) {
- 		/* Reject this request because invalid parameters */
- 		stat.un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
-@@ -367,7 +370,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	ndlp->nlp_maxframe =
- 		((sp->cmn.bbRcvSizeMsb & 0x0F) << 8) | sp->cmn.bbRcvSizeLsb;
+---
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 +
+ drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.c | 25 +++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 00665a5..665c88c 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -354,6 +354,7 @@ void lpfc_free_sysfs_attr(struct lpfc_vport *);
+ extern struct device_attribute *lpfc_hba_attrs[];
+ extern struct device_attribute *lpfc_vport_attrs[];
+ extern struct scsi_host_template lpfc_template;
++extern struct scsi_host_template lpfc_template_s3;
+ extern struct scsi_host_template lpfc_vport_template;
+ extern struct fc_function_template lpfc_transport_functions;
+ extern struct fc_function_template lpfc_vport_transport_functions;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 4ba91af..74672e0 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3257,12 +3257,17 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	struct Scsi_Host  *shost;
+ 	int error = 0;
  
--	/* no need to reg_login if we are already in one of these states */
-+	/* if already logged in, do implicit logout */
- 	switch (ndlp->nlp_state) {
- 	case  NLP_STE_NPR_NODE:
- 		if (!(ndlp->nlp_flag & NLP_NPR_ADISC))
-@@ -376,8 +379,26 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	case  NLP_STE_PRLI_ISSUE:
- 	case  NLP_STE_UNMAPPED_NODE:
- 	case  NLP_STE_MAPPED_NODE:
--		lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb, ndlp, NULL);
--		return 1;
-+		/* lpfc_plogi_confirm_nport skips fabric did, handle it here */
-+		if (!(ndlp->nlp_type & NLP_FABRIC)) {
-+			lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb,
-+					 ndlp, NULL);
-+			return 1;
-+		}
-+		if (nlp_portwwn != 0 &&
-+		    nlp_portwwn != wwn_to_u64(sp->portName.u.wwn))
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+					 "0143 PLOGI recv'd from DID: x%x "
-+					 "WWPN changed: old %llx new %llx\n",
-+					 ndlp->nlp_DID,
-+					 (unsigned long long)nlp_portwwn,
-+					 (unsigned long long)
-+					 wwn_to_u64(sp->portName.u.wwn));
-+
-+		ndlp->nlp_prev_state = ndlp->nlp_state;
-+		/* rport needs to be unregistered first */
-+		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
-+		break;
- 	}
+-	if (dev != &phba->pcidev->dev)
++	if (dev != &phba->pcidev->dev) {
+ 		shost = scsi_host_alloc(&lpfc_vport_template,
+ 					sizeof(struct lpfc_vport));
+-	else
+-		shost = scsi_host_alloc(&lpfc_template,
++	} else {
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			shost = scsi_host_alloc(&lpfc_template,
+ 					sizeof(struct lpfc_vport));
++		else
++			shost = scsi_host_alloc(&lpfc_template_s3,
++					sizeof(struct lpfc_vport));
++	}
+ 	if (!shost)
+ 		goto out;
  
- 	/* Check for Nport to NPort pt2pt protocol */
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 4f9222e..f623299 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5857,6 +5857,31 @@ lpfc_disable_oas_lun(struct lpfc_hba *phba, struct lpfc_name *vport_wwpn,
+ 	return false;
+ }
+ 
++struct scsi_host_template lpfc_template_s3 = {
++	.module			= THIS_MODULE,
++	.name			= LPFC_DRIVER_NAME,
++	.info			= lpfc_info,
++	.queuecommand		= lpfc_queuecommand,
++	.eh_abort_handler	= lpfc_abort_handler,
++	.eh_device_reset_handler = lpfc_device_reset_handler,
++	.eh_target_reset_handler = lpfc_target_reset_handler,
++	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
++	.slave_alloc		= lpfc_slave_alloc,
++	.slave_configure	= lpfc_slave_configure,
++	.slave_destroy		= lpfc_slave_destroy,
++	.scan_finished		= lpfc_scan_finished,
++	.this_id		= -1,
++	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
++	.cmd_per_lun		= LPFC_CMD_PER_LUN,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.shost_attrs		= lpfc_hba_attrs,
++	.max_sectors		= 0xFFFF,
++	.vendor_id		= LPFC_NL_VENDOR_ID,
++	.change_queue_depth	= scsi_change_queue_depth,
++	.use_blk_tags		= 1,
++	.track_queue_depth	= 1,
++};
++
+ struct scsi_host_template lpfc_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= LPFC_DRIVER_NAME,
 -- 
 1.7.11.7
 
