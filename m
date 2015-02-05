@@ -1,41 +1,81 @@
-From: "Bryn M. Reeves" <bmr@redhat.com>
-Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
-Date: Thu, 5 Feb 2015 18:57:58 +0000
-Message-ID: <20150205185758.GC9303@localhost.localdomain>
-References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net>
- <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
- <5B997489-2D5C-4F85-BAB8-317E62F694E5@kolumbus.fi>
- <995891679.6002631.1423158020737.JavaMail.zimbra@redhat.com>
- <E267A9CB-6A91-4DD6-9BEE-D0DC6C048B07@kolumbus.fi>
- <20150205185040.GB9303@localhost.localdomain>
- <1423162550.5848.21.camel@HansenPartnership.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 00/21] lpfc: Update lpfc version to driver version 10.5.0.0
+Date: Thu, 5 Feb 2015 14:22:52 -0500
+Message-ID: <1423164172.7917.24.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49835 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031AbbBES6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Feb 2015 13:58:22 -0500
-Content-Disposition: inline
-In-Reply-To: <1423162550.5848.21.camel@HansenPartnership.com>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:20659 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752500AbbBETXd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 14:23:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: =?iso-8859-1?Q?=22Kai_M=E4kisara_=28Kolumbus=29=22?= <kai.makisara@kolumbus.fi>, Laurence Oberman <loberman@redhat.com>, Laurence Oberman <oberman.l@gmail.com>, Shane M Seymour <shane.seymour@hp.com>, linux-scsi@vger.kernel.org, jeffm@suse.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, Feb 05, 2015 at 10:55:50AM -0800, James Bottomley wrote:
-> OK, the sysfs bikeshedders hang out on linux-api
-> 
-> https://www.kernel.org/doc/man-pages/linux-api-ml.html
-> 
-> If you can convince them, we'll do the single file approach.
+This patch set updates the lpfc driver to revision 10.5.0.0
 
-Will do - I've got a couple of stats projects on the go at the moment so
-this ties in well with that.
+The patches were cut against Christoph's scsi-queue.git,
+branch "drivers-for-3.20".
 
-I'll sync up with Shane and see if he's interested in running the int array
-version via the linux-api folks.
 
-Regards,
-Bryn.
+-- james s
+
+
+James Smart (21):
+  Fix the iteration count to match the 30 sec comment
+  Add Lancer Temperature Event support to the lpfc driver
+  EnableBootCode from hbacmd fails on Lancer
+  Fix to handle PLOGI when already logged in
+  Linux lpfc driver doesn't re-establish the link after a cable pull on
+    LPe12002
+  Fix host reset escalation killing all IOs.
+  Fix setting of EQ delay Multiplier
+  lpfc does not support option_rom_version sysfs attribute on newer
+    adapters
+  Parse the new 20G, 25G and 40G link speeds in the lpfc driver
+  Fix provide host name and OS name in RSNN-NN FC-GS command
+  Fix FDMI Fabric support in driver for Brocade
+  Fix null ndlp derefernce in target_reset_handler
+  Initiator sends wrong BBCredit value for either FLOGI or FLOGI_ACC
+  Fix premature release of rpi bit in bitmask
+  Implement support for wire-only DIF devices
+  Fix internal loopback failure.
+  OCM causes OS crash when running diagnostics on Lancer
+  Fix crash in device reset handler.
+  Fix for lun discovery issue with saturn adapter.
+  Update copyright to 2015
+  Update version  to 10.5.0.0 for upstream patch set
+
+ drivers/scsi/lpfc/lpfc.h           |  46 ++-
+ drivers/scsi/lpfc/lpfc_attr.c      |  90 ++++-
+ drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
+ drivers/scsi/lpfc/lpfc_bsg.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   7 +-
+ drivers/scsi/lpfc/lpfc_ct.c        | 740 ++++++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_debugfs.c   |   2 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  19 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  77 +++-
+ drivers/scsi/lpfc/lpfc_hw.h        | 208 +++++------
+ drivers/scsi/lpfc/lpfc_hw4.h       |   8 +-
+ drivers/scsi/lpfc/lpfc_init.c      | 289 +++++++++++----
+ drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  29 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      | 493 +++++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.h      |   9 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 108 ++++--
+ drivers/scsi/lpfc/lpfc_sli.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   6 +-
+ 20 files changed, 1633 insertions(+), 518 deletions(-)
+
+-- 
+1.7.11.7
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+
+
 
