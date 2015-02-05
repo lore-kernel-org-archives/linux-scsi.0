@@ -1,123 +1,49 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 1/1] Sync iscsi fw boot flags
-Date: Thu, 05 Feb 2015 08:09:04 -0800
-Message-ID: <54D395A0.2080102@suse.com>
-References: <1423016938-28552-1-git-send-email-michaelc@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: =?utf-8?Q?=22Kai_M=C3=A4kisara_=28Kolumbus=29=22?=
+	<kai.makisara@kolumbus.fi>
+Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
+Date: Thu, 5 Feb 2015 19:03:29 +0200
+Message-ID: <5B997489-2D5C-4F85-BAB8-317E62F694E5@kolumbus.fi>
+References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net> <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:38208 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753331AbbBEQJK (ORCPT
-	<rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-	Thu, 5 Feb 2015 11:09:10 -0500
-In-Reply-To: <1423016938-28552-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from vs19.mail.saunalahti.fi ([62.142.117.200]:36428 "EHLO
+	vs19.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965030AbbBERPN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Feb 2015 12:15:13 -0500
+In-Reply-To: <CAAzz28jJBpu_Uh7b7qOVWk10dS6Q3Ogm087UEW7H9fiTWWGhQQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: Laurence Oberman <oberman.l@gmail.com>
+Cc: "Seymour, Shane M" <shane.seymour@hp.com>, "loberman@redhat.com" <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
 
-On 02/03/2015 06:28 PM, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> iBFT and non-iBFT drivers use the same iscsi boot sysfs
-> interface. For iBFT we just directly export whatever
-> is left by the FW. For non-iBFT drivers we do vendor
-> specific commands to get the info or its just hard coded.
-> 
-> This patch syncs up how non-iBFT drivers export boot flag
-> info. The boot flags being defined in this patch match
-> the iBFT flags that indicate if the boot info found was
-> valid and if it was used for to boot with.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/be2iscsi/be_main.c  | 8 +++++---
->  drivers/scsi/qla4xxx/ql4_def.h   | 1 -
->  drivers/scsi/qla4xxx/ql4_os.c    | 6 ++++--
->  include/linux/iscsi_boot_sysfs.h | 3 +++
->  4 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index f319340..cd4aff9 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -429,7 +429,8 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
->  			     auth_data.chap.intr_secret);
->  		break;
->  	case ISCSI_BOOT_TGT_FLAGS:
-> -		rc = sprintf(str, "2\n");
-> +		rc = sprintf(str, "%u\n",
-> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
->  		break;
->  	case ISCSI_BOOT_TGT_NIC_ASSOC:
->  		rc = sprintf(str, "0\n");
-> @@ -466,8 +467,9 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
->  
->  	switch (type) {
->  	case ISCSI_BOOT_ETH_FLAGS:
-> -		rc = sprintf(str, "2\n");
-> -		break;
-> +		rc = sprintf(str, "%u\n",
-> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
-> +  		break;
->  	case ISCSI_BOOT_ETH_INDEX:
->  		rc = sprintf(str, "0\n");
->  		break;
-> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-> index 8f6d0fb..0380669 100644
-> --- a/drivers/scsi/qla4xxx/ql4_def.h
-> +++ b/drivers/scsi/qla4xxx/ql4_def.h
-> @@ -796,7 +796,6 @@ struct scsi_qla_host {
->  #define CHAP_DMA_BLOCK_SIZE    512
->  	struct workqueue_struct *task_wq;
->  	unsigned long ddb_idx_map[MAX_DDB_ENTRIES / BITS_PER_LONG];
-> -#define SYSFS_FLAG_FW_SEL_BOOT 2
->  	struct iscsi_boot_kset *boot_kset;
->  	struct ql4_boot_tgt_info boot_tgt;
->  	uint16_t phy_port_num;
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index 6d25879..b63985f 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -5705,7 +5705,8 @@ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
->  
->  	switch (type) {
->  	case ISCSI_BOOT_ETH_FLAGS:
-> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-> +		rc = sprintf(str, "%d\n",
-> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
->  		break;
->  	case ISCSI_BOOT_ETH_INDEX:
->  		rc = sprintf(str, "0\n");
-> @@ -5814,7 +5815,8 @@ qla4xxx_show_boot_tgt_info(struct ql4_boot_session_info *boot_sess, int type,
->  			     (char *)&boot_conn->chap.intr_secret);
->  		break;
->  	case ISCSI_BOOT_TGT_FLAGS:
-> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-> +		rc = sprintf(str, "%d\n",
-> +			     ISCSI_BOOT_FLAG_VALID | ISCSI_BOOT_FLAG_FW_BOOT_SEL);
->  		break;
->  	case ISCSI_BOOT_TGT_NIC_ASSOC:
->  		rc = sprintf(str, "0\n");
-> diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
-> index 2a8b165..3f273d6 100644
-> --- a/include/linux/iscsi_boot_sysfs.h
-> +++ b/include/linux/iscsi_boot_sysfs.h
-> @@ -16,6 +16,9 @@
->  #ifndef _ISCSI_BOOT_SYSFS_
->  #define _ISCSI_BOOT_SYSFS_
->  
-> +#define ISCSI_BOOT_FLAG_VALID		0x1
-> +#define ISCSI_BOOT_FLAG_FW_BOOT_SEL	0x2
-> +
->  /*
->   * The text attributes names for each of the kobjects.
->  */
-> 
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+> On 2.2.2015, at 17.16, Laurence Oberman <oberman.l@gmail.com> wrote:
+>=20
+> I pulled this this morning and will be testing. The prior version was
+> stable for me on the upstream and RHEL 6.5 kernel without exhaustive
+> testing.
+> We also just received more requests to get this into RHEL from HP /
+> Red Hat customers.
+>=20
+> Kai, what are your thoughts. I realize this is a large amount of
+> additional code. I am not keen to create a driver just for stats as w=
+e
+> would have to keep the rest of the st driver changes always in sync.
+>=20
 
--- 
-Lee Duncan
-SUSE Labs
+I still think that the tape statistics should be exported like the stat=
+istics of =E2=80=9Creal=E2=80=9D block devices, i.e., one sysfs file ex=
+porting on a single line the statistics that temporally belong together=
+=2E James rejected this approach. I am leaving the decision about this =
+code to him. I will neither ack nor nak this code.
+
+Thanks,
+Kai
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
