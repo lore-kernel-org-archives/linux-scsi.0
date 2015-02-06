@@ -1,48 +1,39 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/3] SCSI-debug: Fix exception handling for an alignment/granularity
- mismatch in scsi_debug_init()
-Date: Fri, 06 Feb 2015 18:26:42 +0100
-Message-ID: <54D4F952.5070206@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <54D4F7DF.8070008@users.sourceforge.net>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
+Date: Fri, 6 Feb 2015 11:49:52 -0600
+Message-ID: <54D4FEC0.8090101@tributary.com>
+References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net> <DDB9C85B850785449757F9914A034FCB3BF3C359@G9W0766.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54D4F7DF.8070008@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay05.mycloudmailbox.com ([199.244.76.202]:39381 "EHLO
+	relay05.mycloudmailbox.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752189AbbBFR6U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 12:58:20 -0500
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF3C359@G9W0766.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 6 Feb 2015 17:57:32 +0100
+On 1/26/2015 6:11 PM, Seymour, Shane M wrote:
+> I was wondering if anyone had any feedback or had any chance to review the changes?
 
-The scsi_debug_init() function returned directly if the data items "alignment"
-and "granularity" did not fit together.
+	Per the other discussion about having the same stat format forever. It seems to
+me that you might want to preemptively add a few additional counters.
+	
+A counter for WRITE_FILEMARKS, particularly non immediate count=0 ones, which
+are often used to flush the drive write buffer. A counter for movement related
+commands like SPACE/LOCATE/REWIND would also be helpful. Finally, abnormal read
+conditions like, ILI's, and hit FMs should have their own stat. Those three
+should provide a better view into how the drive is being used and why
+performance may not be what is expected.
 
-Let us improve the affected exception handling by replacing the return
-statement by a goto statement so that previously allocated resources will also
-be appropriately released.
+There may be others, but those three are high on my list of things I want to
+know about a tape stream that is not performing up to expectations.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/scsi_debug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 756b7be..2c78663 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4909,7 +4909,8 @@ static int __init scsi_debug_init(void)
- 		    scsi_debug_unmap_alignment) {
- 			pr_err("%s: ERR: unmap_granularity <= unmap_alignment\n",
- 			       __func__);
--			return -EINVAL;
-+			ret = -EINVAL;
-+			goto free_dif;
- 		}
- 
- 		map_size = lba_to_map_index(sdebug_store_sectors - 1) + 1;
--- 
-2.2.2
+
+
+
