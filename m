@@ -1,94 +1,136 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 1/8] vhost/scsi: Convert completion path to use copy_to_iter
-Date: Fri,  6 Feb 2015 05:06:34 +0000
-Message-ID: <1423199201-14659-2-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v4 4/8] vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
+Date: Fri,  6 Feb 2015 05:06:37 +0000
+Message-ID: <1423199201-14659-5-git-send-email-nab@daterainc.com>
 References: <1423199201-14659-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:62754 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbBFFjr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 00:39:47 -0500
-Received: by mail-oi0-f50.google.com with SMTP id h136so10378637oig.9
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Feb 2015 21:39:46 -0800 (PST)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1423199201-14659-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>, Al Viro <viro@zeniv.linux.org.uk>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Required for ANY_LAYOUT support when the incoming virtio-scsi response
-header + fixed size sense buffer payload may span more than a single
-iovec entry.
+This patch adds ANY_LAYOUT prerequisites logic for accepting a set of
+protection + data payloads via iov_iter.  Also includes helpers for
+calcuating SGLs + invoking vhost_scsi_map_to_sgl() with a known number
+of iovecs.
 
-This changes existing code to save cmd->tvc_resp_iov instead of the
-first single iovec base pointer from &vq->iov[out].
+Required by ANY_LAYOUT processing when struct iovec may be offset into
+the first outgoing virtio-scsi request header.
 
 Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Paolo Bonzini <pbonzini@redhat.com>
 Cc: Al Viro <viro@zeniv.linux.org.uk>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/scsi.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/vhost/scsi.c | 93 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
 
 diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 01c01cb..29dfdf6 100644
+index b9800c7..5396b8a 100644
 --- a/drivers/vhost/scsi.c
 +++ b/drivers/vhost/scsi.c
-@@ -72,6 +72,8 @@ struct tcm_vhost_cmd {
- 	int tvc_vq_desc;
- 	/* virtio-scsi initiator task attribute */
- 	int tvc_task_attr;
-+	/* virtio-scsi response incoming iovecs */
-+	int tvc_in_iovs;
- 	/* virtio-scsi initiator data direction */
- 	enum dma_data_direction tvc_data_direction;
- 	/* Expected data transfer length from virtio-scsi header */
-@@ -87,8 +89,8 @@ struct tcm_vhost_cmd {
- 	struct scatterlist *tvc_sgl;
- 	struct scatterlist *tvc_prot_sgl;
- 	struct page **tvc_upages;
--	/* Pointer to response */
--	struct virtio_scsi_cmd_resp __user *tvc_resp;
-+	/* Pointer to response header iovec */
-+	struct iovec *tvc_resp_iov;
- 	/* Pointer to vhost_scsi for our device */
- 	struct vhost_scsi *tvc_vhost;
- 	/* Pointer to vhost_virtqueue for the cmd */
-@@ -682,6 +684,7 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
- 	struct tcm_vhost_cmd *cmd;
- 	struct llist_node *llnode;
- 	struct se_cmd *se_cmd;
-+	struct iov_iter iov_iter;
- 	int ret, vq;
+@@ -914,6 +914,99 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
+ 	return 0;
+ }
  
- 	bitmap_zero(signal, VHOST_SCSI_MAX_VQ);
-@@ -703,8 +706,11 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
- 						 se_cmd->scsi_sense_length);
- 		memcpy(v_rsp.sense, cmd->tvc_sense_buf,
- 		       se_cmd->scsi_sense_length);
--		ret = copy_to_user(cmd->tvc_resp, &v_rsp, sizeof(v_rsp));
--		if (likely(ret == 0)) {
++static int
++vhost_scsi_calc_sgls(struct iov_iter *iter, size_t bytes, int max_sgls)
++{
++	int sgl_count = 0;
 +
-+		iov_iter_init(&iov_iter, READ, cmd->tvc_resp_iov,
-+			      cmd->tvc_in_iovs, sizeof(v_rsp));
-+		ret = copy_to_iter(&v_rsp, sizeof(v_rsp), &iov_iter);
-+		if (likely(ret == sizeof(v_rsp))) {
- 			struct vhost_scsi_virtqueue *q;
- 			vhost_add_used(cmd->tvc_vq, cmd->tvc_vq_desc, 0);
- 			q = container_of(cmd->tvc_vq, struct vhost_scsi_virtqueue, vq);
-@@ -1159,7 +1165,8 @@ vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
- 
- 		cmd->tvc_vhost = vs;
- 		cmd->tvc_vq = vq;
--		cmd->tvc_resp = vq->iov[out].iov_base;
-+		cmd->tvc_resp_iov = &vq->iov[out];
-+		cmd->tvc_in_iovs = in;
- 
- 		pr_debug("vhost_scsi got command opcode: %#02x, lun: %d\n",
- 			cmd->tvc_cdb[0], cmd->tvc_lun);
++	if (!iter || !iter->iov) {
++		pr_err("%s: iter->iov is NULL, but expected bytes: %zu"
++		       " present\n", __func__, bytes);
++		return -EINVAL;
++	}
++
++	sgl_count = iov_iter_npages(iter, 0xffff);
++	if (sgl_count > max_sgls) {
++		pr_err("%s: requested sgl_count: %d exceeds pre-allocated"
++		       " max_sgls: %d\n", __func__, sgl_count, max_sgls);
++		return -EINVAL;
++	}
++	return sgl_count;
++}
++
++static int
++vhost_scsi_iov_to_sgl(struct tcm_vhost_cmd *cmd, bool write,
++		      struct iov_iter *iter, struct scatterlist *sg,
++		      int sg_count)
++{
++	size_t off = iter->iov_offset;
++	int i, ret;
++
++	for (i = 0; i < iter->nr_segs; i++) {
++		void __user *base = iter->iov[i].iov_base + off;
++		size_t len = iter->iov[i].iov_len - off;
++
++		ret = vhost_scsi_map_to_sgl(cmd, base, len, sg, write);
++		if (ret < 0) {
++			for (i = 0; i < sg_count; i++) {
++				struct page *page = sg_page(&sg[i]);
++				if (page)
++					put_page(page);
++			}
++			return ret;
++		}
++		sg += ret;
++		off = 0;
++	}
++	return 0;
++}
++
++static int
++vhost_scsi_mapal(struct tcm_vhost_cmd *cmd,
++		 size_t prot_bytes, struct iov_iter *prot_iter,
++		 size_t data_bytes, struct iov_iter *data_iter)
++{
++	int sgl_count, ret;
++	bool write = (cmd->tvc_data_direction == DMA_FROM_DEVICE);
++
++	if (prot_bytes) {
++		sgl_count = vhost_scsi_calc_sgls(prot_iter, prot_bytes,
++						 TCM_VHOST_PREALLOC_PROT_SGLS);
++		if (sgl_count < 0)
++			return sgl_count;
++
++		sg_init_table(cmd->tvc_prot_sgl, sgl_count);
++		cmd->tvc_prot_sgl_count = sgl_count;
++		pr_debug("%s prot_sg %p prot_sgl_count %u\n", __func__,
++			 cmd->tvc_prot_sgl, cmd->tvc_prot_sgl_count);
++
++		ret = vhost_scsi_iov_to_sgl(cmd, write, prot_iter,
++					    cmd->tvc_prot_sgl,
++					    cmd->tvc_prot_sgl_count);
++		if (ret < 0) {
++			cmd->tvc_prot_sgl_count = 0;
++			return ret;
++		}
++	}
++	sgl_count = vhost_scsi_calc_sgls(data_iter, data_bytes,
++					 TCM_VHOST_PREALLOC_SGLS);
++	if (sgl_count < 0)
++		return sgl_count;
++
++	sg_init_table(cmd->tvc_sgl, sgl_count);
++	cmd->tvc_sgl_count = sgl_count;
++	pr_debug("%s data_sg %p data_sgl_count %u\n", __func__,
++		  cmd->tvc_sgl, cmd->tvc_sgl_count);
++
++	ret = vhost_scsi_iov_to_sgl(cmd, write, data_iter,
++				    cmd->tvc_sgl, cmd->tvc_sgl_count);
++	if (ret < 0) {
++		cmd->tvc_sgl_count = 0;
++		return ret;
++	}
++	return 0;
++}
++
+ static void tcm_vhost_submission_work(struct work_struct *work)
+ {
+ 	struct tcm_vhost_cmd *cmd =
 -- 
 1.9.1
-
