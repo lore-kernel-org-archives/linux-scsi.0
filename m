@@ -1,72 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] vhost/scsi: potential memory corruption
-Date: Fri, 06 Feb 2015 10:48:16 -0800
-Message-ID: <1423248496.9544.0.camel@haakon3.risingtidesystems.com>
-References: <20150205073733.GA27855@mwanda>
+From: Vasu Dev <vasu.dev@intel.com>
+Subject: [PATCH] MAINTAINERS: updated open-fcoe maintainer-ship
+Date: Fri, 06 Feb 2015 11:02:33 -0800
+Message-ID: <20150206190233.2050.1929.stgit@lin-nd1-053.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20150205073733.GA27855@mwanda>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: virtualization@lists.linux-foundation.org, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:31101 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751066AbbBFTC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2015 14:02:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Robert Love <robert.w.love@intel.com>
 
-On Thu, 2015-02-05 at 10:37 +0300, Dan Carpenter wrote:
-> This code in vhost_scsi_make_tpg() is confusing because we limit "tpgt"
-> to UINT_MAX but the data type of "tpg->tport_tpgt" and that is a u16.
-> 
-> I looked at the context and it turns out that in
-> vhost_scsi_set_endpoint(), "tpg->tport_tpgt" is used as an offset into
-> the vs_tpg[] array which has VHOST_SCSI_MAX_TARGET (256) elements so
-> anything higher than 255 then it is invalid.  I have made that the limit
-> now.
-> 
-> In vhost_scsi_send_evt() we mask away values higher than 255, but now
-> that the limit has changed, we don't need the mask.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Compile tested only.
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 3e265ef..4339222 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -1278,7 +1278,7 @@ vhost_scsi_send_evt(struct vhost_scsi *vs,
->  		 * lun[4-7] need to be zero according to virtio-scsi spec.
->  		 */
->  		evt->event.lun[0] = 0x01;
-> -		evt->event.lun[1] = tpg->tport_tpgt & 0xFF;
-> +		evt->event.lun[1] = tpg->tport_tpgt;
->  		if (lun->unpacked_lun >= 256)
->  			evt->event.lun[2] = lun->unpacked_lun >> 8 | 0x40 ;
->  		evt->event.lun[3] = lun->unpacked_lun & 0xFF;
-> @@ -2149,12 +2149,12 @@ vhost_scsi_make_tpg(struct se_wwn *wwn,
->  			struct vhost_scsi_tport, tport_wwn);
->  
->  	struct vhost_scsi_tpg *tpg;
-> -	unsigned long tpgt;
-> +	u16 tpgt;
->  	int ret;
->  
->  	if (strstr(name, "tpgt_") != name)
->  		return ERR_PTR(-EINVAL);
-> -	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
-> +	if (kstrtou16(name + 5, 10, &tpgt) || tpgt >= VHOST_SCSI_MAX_TARGET)
->  		return ERR_PTR(-EINVAL);
->  
->  	tpg = kzalloc(sizeof(struct vhost_scsi_tpg), GFP_KERNEL);
+Robert Love sent this patch before along his open-fcoe transition
+announcement in May, 2014. However that was never applied, so
+sending again. Link to original send:
 
-Nice catch Dan.  Applied to target-pending/for-next.
+http://marc.info/?l=linux-scsi&m=140131194613697
 
---nab
+CC: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+---
+ MAINTAINERS |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ab6610e..ba14c4c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3873,7 +3873,7 @@ F:	Documentation/fault-injection/
+ F:	lib/fault-inject.c
+ 
+ FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
+-M:	Robert Love <robert.w.love@intel.com>
++M:	Vasu Dev <vasu.dev@intel.com>
+ L:	fcoe-devel@open-fcoe.org
+ W:	www.Open-FCoE.org
+ S:	Supported
+
