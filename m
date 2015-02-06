@@ -1,34 +1,96 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 0/4] SCSI-QLA4...: Deletion of some unnecessary checks
-Date: Fri, 06 Feb 2015 23:10:44 +0100
-Message-ID: <54D53BE4.7010807@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH 08/36] aha1542: remove empty aha1542_stat
+Date: Fri,  6 Feb 2015 23:11:29 +0100
+Message-ID: <1423260717-15944-9-git-send-email-linux@rainbow-software.org>
+References: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.gsystem.sk ([62.176.172.50]:56937 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755287AbbBFWMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2015 17:12:12 -0500
+Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
+	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <linux@rainbow-software.org>)
+	id 1YJr8E-0006fF-CJ
+	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:10 +0100
+In-Reply-To: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 6 Feb 2015 23:03:41 +0100
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/scsi/aha1542.c |   16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-Further update suggestions were taken into account after a patch was applied
-from static source code analysis.
-
-Markus Elfring (4):
-  Deletion of unnecessary checks before three function calls
-  Less function calls in qla4xxx_is_session_exists() after error detection
-  Less function calls in qla4xxx_is_flash_ddb_exists() after error detection
-  Less function calls in qla4xxx_sysfs_ddb_logout() after error detection
-
- drivers/scsi/qla4xxx/ql4_mbx.c |  2 +-
- drivers/scsi/qla4xxx/ql4_os.c  | 96 ++++++++++++++++++------------------------
- 2 files changed, 42 insertions(+), 56 deletions(-)
-
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index af1e8fa..ebc5476 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -154,12 +154,6 @@ static inline void aha1542_intr_reset(u16 base)
+    }									\
+  }
+ 
+-static void aha1542_stat(void)
+-{
+-/*	int s = inb(STATUS), i = inb(INTRFLAGS);
+-	printk("status=%x intrflags=%x\n", s, i, WAITnexttimeout-WAITtimeout); */
+-}
+-
+ /* This is a bit complicated, but we need to make sure that an interrupt
+    routine does not send something out while we are in the middle of this.
+    Fortunately, it is only at boot time that multi-byte messages
+@@ -196,7 +190,6 @@ fail:
+ 	if (got_lock)
+ 		spin_unlock_irqrestore(&aha1542_lock, flags);
+ 	printk(KERN_ERR "aha1542_out failed(%d): ", len + 1);
+-	aha1542_stat();
+ 	return 1;
+ }
+ 
+@@ -217,7 +210,6 @@ static int aha1542_in(unsigned int base, u8 *cmdp, int len)
+ fail:
+ 	spin_unlock_irqrestore(&aha1542_lock, flags);
+ 	printk(KERN_ERR "aha1542_in failed(%d): ", len + 1);
+-	aha1542_stat();
+ 	return 1;
+ }
+ 
+@@ -590,7 +582,6 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
+ 		printk(KERN_DEBUG "aha1542_queuecommand: dev %d cmd %02x pos %d len %d ", target, *cmd, i, bufflen);
+ 	else
+ 		printk(KERN_DEBUG "aha1542_command: dev %d cmd %02x pos %d len %d ", target, *cmd, i, bufflen);
+-	aha1542_stat();
+ 	printk(KERN_DEBUG "aha1542_queuecommand: dumping scsi cmd:");
+ 	for (i = 0; i < SCpnt->cmd_len; i++)
+ 		printk("%02x ", cmd[i]);
+@@ -691,12 +682,10 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
+ #endif
+ 
+ 	if (done) {
+-		DEB(printk("aha1542_queuecommand: now waiting for interrupt ");
+-		    aha1542_stat());
++		DEB(printk("aha1542_queuecommand: now waiting for interrupt "));
+ 		SCpnt->scsi_done = done;
+ 		mb[mbo].status = 1;
+ 		aha1542_out(SCpnt->device->host->io_port, &ahacmd, 1);	/* start scsi command */
+-		DEB(aha1542_stat());
+ 	} else
+ 		printk("aha1542_queuecommand: done can't be NULL\n");
+ 
+@@ -1017,11 +1006,8 @@ fail:
+ 				printk(", DMA priority %d", dma_chan);
+ 			printk("\n");
+ 
+-			DEB(aha1542_stat());
+ 			setup_mailboxes(base_io, shpnt);
+ 
+-			DEB(aha1542_stat());
+-
+ 			DEB(printk("aha1542_detect: enable interrupt channel %d\n", irq_level));
+ 			spin_lock_irqsave(&aha1542_lock, flags);
+ 			if (request_irq(irq_level, do_aha1542_intr_handle, 0,
 -- 
-2.2.2
+Ondrej Zary
+
