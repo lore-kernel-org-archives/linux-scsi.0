@@ -1,43 +1,34 @@
-From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH] MAINTAINERS: updated open-fcoe maintainer-ship
-Date: Fri, 06 Feb 2015 11:02:33 -0800
-Message-ID: <20150206190233.2050.1929.stgit@lin-nd1-053.jf.intel.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/4] SCSI-QLA4...: Deletion of some unnecessary checks
+Date: Fri, 06 Feb 2015 23:10:44 +0100
+Message-ID: <54D53BE4.7010807@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31101 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066AbbBFTC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2015 14:02:58 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
 
-Robert Love sent this patch before along his open-fcoe transition
-announcement in May, 2014. However that was never applied, so
-sending again. Link to original send:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 6 Feb 2015 23:03:41 +0100
 
-http://marc.info/?l=linux-scsi&m=140131194613697
+Further update suggestions were taken into account after a patch was applied
+from static source code analysis.
 
-CC: Robert Love <robert.w.love@intel.com>
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
----
- MAINTAINERS |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Markus Elfring (4):
+  Deletion of unnecessary checks before three function calls
+  Less function calls in qla4xxx_is_session_exists() after error detection
+  Less function calls in qla4xxx_is_flash_ddb_exists() after error detection
+  Less function calls in qla4xxx_sysfs_ddb_logout() after error detection
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ab6610e..ba14c4c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3873,7 +3873,7 @@ F:	Documentation/fault-injection/
- F:	lib/fault-inject.c
- 
- FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
--M:	Robert Love <robert.w.love@intel.com>
-+M:	Vasu Dev <vasu.dev@intel.com>
- L:	fcoe-devel@open-fcoe.org
- W:	www.Open-FCoE.org
- S:	Supported
+ drivers/scsi/qla4xxx/ql4_mbx.c |  2 +-
+ drivers/scsi/qla4xxx/ql4_os.c  | 96 ++++++++++++++++++------------------------
+ 2 files changed, 42 insertions(+), 56 deletions(-)
 
+-- 
+2.2.2
