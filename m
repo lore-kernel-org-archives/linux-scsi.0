@@ -1,88 +1,101 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 2/4] SCSI-QLA4...: Less function calls in qla4xxx_is_session_exists()
- after error detection
-Date: Fri, 06 Feb 2015 23:15:13 +0100
-Message-ID: <54D53CF1.8050009@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <54D53BE4.7010807@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54D53BE4.7010807@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH 14/36] aha1542: remove useless code from aha1542_test_port
+Date: Fri,  6 Feb 2015 23:11:35 +0100
+Message-ID: <1423260717-15944-15-git-send-email-linux@rainbow-software.org>
+References: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.gsystem.sk ([62.176.172.50]:56954 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758037AbbBFWPj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2015 17:15:39 -0500
+Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
+	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <linux@rainbow-software.org>)
+	id 1YJr8F-0006fF-ED
+	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:11 +0100
+In-Reply-To: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 6 Feb 2015 21:14:40 +0100
 
-The vfree() function was called in two cases by the qla4xxx_is_session_exists()
-function during error handling even if the passed variables "fw_tddb" and
-"tmp_tddb" contained still a null pointer.
-
-* This implementation detail could be improved by adjustments for jump labels.
-
-* Let us return immediately after the first failed function call according to
-  the current Linux coding style convention.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ drivers/scsi/aha1542.c |   15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 2a00fd3..a7ca479 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -6327,17 +6327,15 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
- 				     uint32_t *index)
- {
- 	struct ddb_entry *ddb_entry;
--	struct ql4_tuple_ddb *fw_tddb = NULL;
--	struct ql4_tuple_ddb *tmp_tddb = NULL;
- 	int idx;
- 	int ret = QLA_ERROR;
-+	struct ql4_tuple_ddb *tmp_tddb;
-+	struct ql4_tuple_ddb *fw_tddb = vzalloc(sizeof(*fw_tddb));
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index af2c69e..29ddcc9 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -271,7 +271,6 @@ static int aha1542_test_port(int bse, struct Scsi_Host *shpnt)
+ 	u8 inquiry_result[4];
+ 	u8 *cmdp;
+ 	int len;
+-	volatile int debug = 0;
  
--	fw_tddb = vzalloc(sizeof(*fw_tddb));
- 	if (!fw_tddb) {
- 		DEBUG2(ql4_printk(KERN_WARNING, ha,
- 				  "Memory Allocation failed.\n"));
--		ret = QLA_SUCCESS;
--		goto exit_check;
-+		return QLA_SUCCESS;
+ 	/* Quick and dirty test for presence of the card. */
+ 	if (inb(STATUS(bse)) == 0xff)
+@@ -279,8 +278,6 @@ static int aha1542_test_port(int bse, struct Scsi_Host *shpnt)
+ 
+ 	/* Reset the adapter. I ought to make a hard reset, but it's not really necessary */
+ 
+-	/*  DEB(printk("aha1542_test_port called \n")); */
+-
+ 	/* In case some other card was probing here, reset interrupts */
+ 	aha1542_intr_reset(bse);	/* reset interrupts, so they don't block */
+ 
+@@ -288,23 +285,19 @@ static int aha1542_test_port(int bse, struct Scsi_Host *shpnt)
+ 
+ 	mdelay(20);		/* Wait a little bit for things to settle down. */
+ 
+-	debug = 1;
+ 	/* Expect INIT and IDLE, any of the others are bad */
+ 	if (!wait_mask(STATUS(bse), STATMASK, INIT | IDLE, STST | DIAGF | INVDCMD | DF | CDF, 0))
+ 		return 0;
+ 
+-	debug = 2;
+ 	/* Shouldn't have generated any interrupts during reset */
+ 	if (inb(INTRFLAGS(bse)) & INTRMASK)
+ 		return 0;
+ 
+-
+ 	/* Perform a host adapter inquiry instead so we do not need to set
+ 	   up the mailboxes ahead of time */
+ 
+ 	aha1542_outb(bse, CMD_INQUIRY);
+ 
+-	debug = 3;
+ 	len = 4;
+ 	cmdp = &inquiry_result[0];
+ 
+@@ -314,24 +307,18 @@ static int aha1542_test_port(int bse, struct Scsi_Host *shpnt)
+ 		*cmdp++ = inb(DATA(bse));
  	}
  
- 	tmp_tddb = vzalloc(sizeof(*tmp_tddb));
-@@ -6345,7 +6343,7 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
- 		DEBUG2(ql4_printk(KERN_WARNING, ha,
- 				  "Memory Allocation failed.\n"));
- 		ret = QLA_SUCCESS;
--		goto exit_check;
-+		goto free_fw;
- 	}
+-	debug = 8;
+ 	/* Reading port should reset DF */
+ 	if (inb(STATUS(bse)) & DF)
+ 		return 0;
  
- 	qla4xxx_convert_param_ddb(fw_ddb_entry, fw_tddb, NULL);
-@@ -6360,13 +6358,14 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
- 			ret = QLA_SUCCESS; /* found */
- 			if (index != NULL)
- 				*index = idx;
--			goto exit_check;
-+			goto free_tmp;
- 		}
- 	}
+-	debug = 9;
+ 	/* When HACC, command is completed, and we're though testing */
+ 	if (!wait_mask(INTRFLAGS(bse), HACC, HACC, 0, 0))
+ 		return 0;
+-	/* now initialize adapter */
  
--exit_check:
--	vfree(fw_tddb);
-+free_tmp:
- 	vfree(tmp_tddb);
-+free_fw:
-+	vfree(fw_tddb);
- 	return ret;
+-	debug = 10;
+ 	/* Clear interrupts */
+ 	outb(IRST, CONTROL(bse));
+ 
+-	debug = 11;
+-
+-	return debug;		/* 1 = ok */
++	return 1;
  }
  
+ static int aha1542_restart(struct Scsi_Host *shost)
 -- 
-2.2.2
+Ondrej Zary
+
