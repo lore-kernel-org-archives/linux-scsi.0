@@ -1,119 +1,155 @@
-From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v4 3/8] vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-Date: Fri,  6 Feb 2015 05:06:36 +0000
-Message-ID: <1423199201-14659-4-git-send-email-nab@daterainc.com>
-References: <1423199201-14659-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1423199201-14659-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, kvm-devel <kvm@vger.kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, "Michael S. Tsirkin" <mst@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v4] scsi: NCR5380: harmonize jiffies conversion with msecs_to_jiffies
+Date: Fri, 06 Feb 2015 19:57:16 +1300
+Message-ID: <54D465CC.1040106@gmail.com>
+References: <1423074621-13180-1-git-send-email-hofrat@osadl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:32811 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525AbbBFG5V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 01:57:21 -0500
+Received: by mail-pa0-f46.google.com with SMTP id lj1so15366333pab.5
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Feb 2015 22:57:21 -0800 (PST)
+In-Reply-To: <1423074621-13180-1-git-send-email-hofrat@osadl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+The g_NCR5380.c USLEEP timing change restores driver behaviour to what
+it was before the configurable HZ value introduced in 2005. The
+g_NCR5380.c USLEEP timing settings date back to 1997, so this patch
+fixes a bug with the driver timing introduced in 2005 when the
+conversion from fixed jiffies count to the ms * HZ / 1000 form was
+overlooked.
 
-This patch changes vhost_scsi_map_to_sgl() parameters to accept virtio
-iovec ptr + len when determing pages_nr.
+As no change to the original (i,e. 1997 vintage) driver behaviour is
+introduced, I don't think further testing is required.
 
-This is currently done with iov_num_pages() -> PAGE_ALIGN, so allow
-the same parameters as well.
+Acked-by: Michael Schmitz <schmitzmic@gmail.com>
 
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/vhost/scsi.c | 37 +++++++++++++++----------------------
- 1 file changed, 15 insertions(+), 22 deletions(-)
+On 05/02/15 07:30, Nicholas Mc Guire wrote:
+> Instances of  var * HZ / 1000  are replaced by  msecs_to_jiffies(var).
+> In addition some timing constants that assumed HZ 100 were adjusted
+> to HZ independent settings based on review comments from Michael Schmitz
+> <schmitzmic@gmail.com> and review of the original drivers in 1.0.31 and
+> 2.2.16.
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+> 
+> Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+> ok but msecs_to_jiffies(val) is the cleaner solution and handles all
+> corner cases correctly. 
+> 
+> v2: The original patch was not taking care of all the dependencies
+>     as reported by Finn Thain <fthain@telegraphics.com.au> - this
+>     version now uses the suggested config to check the patch.
+> v3: g_NCR5380.c changes fixed up based on feedback from Michael Schmitz
+>     <schmitzmic@gmail.com> as these settings were from around 1.0.31
+>     kernel (or earlier) where HZ was 100 only - thus the unit here is
+>     actually 10s of microseconds. This was "verified" by checking the
+>     setting changes against 2.2.16 indicating that it was forgotten in
+>     1998/99.
+> v4: Sync changed with atari_NCR5380.c as well as correct the patch 
+>     description as suggested by Finn Thain <fthain@telegraphics.com.au>
+> 
+> This patch was only compile tested with i386_defconfig + CONFIG_ISA=y
+> as well as all (except CONFIG_SCSI_ATARI) drivers enabled as modules:
+> CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_GENERIC_NCR5380=m
+> CONFIG_SCSI_DMX3191D=m, CONFIG_SCSI_DTC3280=m
+> CONFIG_SCSI_GENERIC_NCR5380=m, CONFIG_SCSI_GENERIC_NCR5380_MMIO=m
+> CONFIG_SCSI_PAS16=m, CONFIG_SCSI_T128=m
+> 
+> Note that the change to atari_NCR5380.c was not even compile-tested 
+> (crosstool-ng m68k-unknown-elf and m68k-unknown-uclinux-uclibc fail to
+> build atari_defconfig or multi_defconfig (or I failed to build the 
+> toolchain properly))
+> 
+> Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
+> 
+>  drivers/scsi/NCR5380.c       |   10 +++++-----
+>  drivers/scsi/atari_NCR5380.c |    2 +-
+>  drivers/scsi/g_NCR5380.c     |    6 +++---
+>  3 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index 8981701..a777e5c 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -474,11 +474,11 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+>   */
+>  #ifndef USLEEP_SLEEP
+>  /* 20 ms (reasonable hard disk speed) */
+> -#define USLEEP_SLEEP (20*HZ/1000)
+> +#define USLEEP_SLEEP msecs_to_jiffies(20)
+>  #endif
+>  /* 300 RPM (floppy speed) */
+>  #ifndef USLEEP_POLL
+> -#define USLEEP_POLL (200*HZ/1000)
+> +#define USLEEP_POLL msecs_to_jiffies(200)
+>  #endif
+>  #ifndef USLEEP_WAITLONG
+>  /* RvC: (reasonable time to wait on select error) */
+> @@ -576,7 +576,7 @@ static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+>  		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+>  			trying_irqs |= mask;
+>  
+> -	timeout = jiffies + (250 * HZ / 1000);
+> +	timeout = jiffies + msecs_to_jiffies(250);
+>  	probe_irq = NO_IRQ;
+>  
+>  	/*
+> @@ -634,7 +634,7 @@ static void prepare_info(struct Scsi_Host *instance)
+>  	         "sg_tablesize %d, this_id %d, "
+>  	         "flags { %s%s%s}, "
+>  #if defined(USLEEP_POLL) && defined(USLEEP_WAITLONG)
+> -	         "USLEEP_POLL %d, USLEEP_WAITLONG %d, "
+> +		 "USLEEP_POLL %lu, USLEEP_WAITLONG %lu, "
+>  #endif
+>  	         "options { %s} ",
+>  	         instance->hostt->name, instance->io_port, instance->n_io_port,
+> @@ -1346,7 +1346,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+>  	 * selection.
+>  	 */
+>  
+> -	timeout = jiffies + (250 * HZ / 1000);
+> +	timeout = jiffies + msecs_to_jiffies(250);
+>  
+>  	/* 
+>  	 * XXX very interesting - we're seeing a bounce where the BSY we 
+> diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+> index a702554..db87ece 100644
+> --- a/drivers/scsi/atari_NCR5380.c
+> +++ b/drivers/scsi/atari_NCR5380.c
+> @@ -1486,7 +1486,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
+>  	 * selection.
+>  	 */
+>  
+> -	timeout = jiffies + (250 * HZ / 1000);
+> +	timeout = jiffies + msecs_to_jiffies(250);
+>  
+>  	/*
+>  	 * XXX very interesting - we're seeing a bounce where the BSY we
+> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> index f35792f..a11b152 100644
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -57,9 +57,9 @@
+>   */
+>  
+>  /* settings for DTC3181E card with only Mustek scanner attached */
+> -#define USLEEP_POLL	1
+> -#define USLEEP_SLEEP	20
+> -#define USLEEP_WAITLONG	500
+> +#define USLEEP_POLL	msecs_to_jiffies(10)
+> +#define USLEEP_SLEEP	msecs_to_jiffies(200)
+> +#define USLEEP_WAITLONG	msecs_to_jiffies(5000)
+>  
+>  #define AUTOPROBE_IRQ
+>  
+> 
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 62de820..b9800c7 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -222,10 +222,10 @@ static struct workqueue_struct *tcm_vhost_workqueue;
- static DEFINE_MUTEX(tcm_vhost_mutex);
- static LIST_HEAD(tcm_vhost_list);
- 
--static int iov_num_pages(struct iovec *iov)
-+static int iov_num_pages(void __user *iov_base, size_t iov_len)
- {
--	return (PAGE_ALIGN((unsigned long)iov->iov_base + iov->iov_len) -
--	       ((unsigned long)iov->iov_base & PAGE_MASK)) >> PAGE_SHIFT;
-+	return (PAGE_ALIGN((unsigned long)iov_base + iov_len) -
-+	       ((unsigned long)iov_base & PAGE_MASK)) >> PAGE_SHIFT;
- }
- 
- static void tcm_vhost_done_inflight(struct kref *kref)
-@@ -782,25 +782,18 @@ vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct tcm_vhost_tpg *tpg,
-  * Returns the number of scatterlist entries used or -errno on error.
-  */
- static int
--vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *tv_cmd,
-+vhost_scsi_map_to_sgl(struct tcm_vhost_cmd *cmd,
-+		      void __user *ptr,
-+		      size_t len,
- 		      struct scatterlist *sgl,
--		      unsigned int sgl_count,
--		      struct iovec *iov,
--		      struct page **pages,
- 		      bool write)
- {
--	unsigned int npages = 0, pages_nr, offset, nbytes;
-+	unsigned int npages = 0, offset, nbytes;
-+	unsigned int pages_nr = iov_num_pages(ptr, len);
- 	struct scatterlist *sg = sgl;
--	void __user *ptr = iov->iov_base;
--	size_t len = iov->iov_len;
-+	struct page **pages = cmd->tvc_upages;
- 	int ret, i;
- 
--	pages_nr = iov_num_pages(iov);
--	if (pages_nr > sgl_count) {
--		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
--		       " sgl_count: %u\n", pages_nr, sgl_count);
--		return -ENOBUFS;
--	}
- 	if (pages_nr > TCM_VHOST_PREALLOC_UPAGES) {
- 		pr_err("vhost_scsi_map_to_sgl() pages_nr: %u greater than"
- 		       " preallocated TCM_VHOST_PREALLOC_UPAGES: %u\n",
-@@ -845,7 +838,7 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		sgl_count += iov_num_pages(&iov[i]);
-+		sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (sgl_count > TCM_VHOST_PREALLOC_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_sgl() sgl_count: %u greater than"
-@@ -861,8 +854,8 @@ vhost_scsi_map_iov_to_sgl(struct tcm_vhost_cmd *cmd,
- 	pr_debug("Mapping iovec %p for %u pages\n", &iov[0], sgl_count);
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, sg, sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_sgl[i]);
-@@ -889,7 +882,7 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	int ret, i;
- 
- 	for (i = 0; i < niov; i++)
--		prot_sgl_count += iov_num_pages(&iov[i]);
-+		prot_sgl_count += iov_num_pages(iov[i].iov_base, iov[i].iov_len);
- 
- 	if (prot_sgl_count > TCM_VHOST_PREALLOC_PROT_SGLS) {
- 		pr_err("vhost_scsi_map_iov_to_prot() sgl_count: %u greater than"
-@@ -904,8 +897,8 @@ vhost_scsi_map_iov_to_prot(struct tcm_vhost_cmd *cmd,
- 	cmd->tvc_prot_sgl_count = prot_sgl_count;
- 
- 	for (i = 0; i < niov; i++) {
--		ret = vhost_scsi_map_to_sgl(cmd, prot_sg, prot_sgl_count, &iov[i],
--					    cmd->tvc_upages, write);
-+		ret = vhost_scsi_map_to_sgl(cmd, iov[i].iov_base, iov[i].iov_len,
-+					    prot_sg, write);
- 		if (ret < 0) {
- 			for (i = 0; i < cmd->tvc_prot_sgl_count; i++) {
- 				struct page *page = sg_page(&cmd->tvc_prot_sgl[i]);
--- 
-1.9.1
