@@ -1,79 +1,82 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 25/36] aha1542: fix include guard and remove useless changelog
-Date: Fri,  6 Feb 2015 23:11:46 +0100
-Message-ID: <1423260717-15944-26-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 33/36] aha1542: Don't reduce functionality with DEBUG enabled
+Date: Fri,  6 Feb 2015 23:11:54 +0100
+Message-ID: <1423260717-15944-34-git-send-email-linux@rainbow-software.org>
 References: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56968 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56972 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755797AbbBFWQE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2015 17:16:04 -0500
+	id S1755906AbbBFWQN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2015 17:16:13 -0500
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1YJr8H-0006fF-A5
-	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:13 +0100
+	id 1YJr8I-0006fF-Nc
+	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:14 +0100
 In-Reply-To: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix include guard in header file and remove useless changelog
+Enabling DEBUG disables write commands and devices with ID > 1.
+Remove this "feature" to allow real debugging.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/aha1542.h |   36 +++---------------------------------
- 1 file changed, 3 insertions(+), 33 deletions(-)
+ drivers/scsi/aha1542.c |   31 ++++++++++---------------------
+ 1 file changed, 10 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/aha1542.h b/drivers/scsi/aha1542.h
-index f58792b..0fe9bae 100644
---- a/drivers/scsi/aha1542.h
-+++ b/drivers/scsi/aha1542.h
-@@ -1,35 +1,5 @@
--#ifndef _AHA1542_H
--
--/* $Id: aha1542.h,v 1.1 1992/07/24 06:27:38 root Exp root $
-- *
-- * Header file for the adaptec 1542 driver for Linux
-- *
-- * $Log: aha1542.h,v $
-- * Revision 1.1  1992/07/24  06:27:38  root
-- * Initial revision
-- *
-- * Revision 1.2  1992/07/04  18:41:49  root
-- * Replaced distribution with current drivers
-- *
-- * Revision 1.3  1992/06/23  23:58:20  root
-- * Fixes.
-- *
-- * Revision 1.2  1992/05/26  22:13:23  root
-- * Changed bug that prevented DMA above first 2 mbytes.
-- *
-- * Revision 1.1  1992/05/22  21:00:29  root
-- * Initial revision
-- *
-- * Revision 1.1  1992/04/24  18:01:50  root
-- * Initial revision
-- *
-- * Revision 1.1  1992/04/02  03:23:13  drew
-- * Initial revision
-- *
-- * Revision 1.3  1992/01/27  14:46:29  tthorn
-- * *** empty log message ***
-- *
-- */
-+#ifndef _AHA1542_H_
-+#define _AHA1542_H_
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 87017fb..a19fcb0 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -418,15 +418,7 @@ static int aha1542_queuecommand_lck(struct scsi_cmnd *cmd, void (*done) (struct
+ 	int mbo;
+ 	struct mailbox *mb = aha1542->mb;
+ 	struct ccb *ccb = aha1542->ccb;
+-#ifdef DEBUG
+-	int i;
  
- #include <linux/types.h>
- 
-@@ -129,4 +99,4 @@ struct ccb {		/* Command Control Block 5.3 */
- #define AHA1542_REGION_SIZE 4
- #define AHA1542_MAILBOXES 8
- 
+-	if (target > 1) {
+-		cmd->result = DID_TIME_OUT << 16;
+-		done(cmd);
+-		return 0;
+-	}
 -#endif
-+#endif /* _AHA1542_H_ */
+ 	if (*cmd->cmnd == REQUEST_SENSE) {
+ 		/* Don't do the command - we have the sense data already */
+ 		cmd->result = 0;
+@@ -434,19 +426,16 @@ static int aha1542_queuecommand_lck(struct scsi_cmnd *cmd, void (*done) (struct
+ 		return 0;
+ 	}
+ #ifdef DEBUG
+-	if (*cmd->cmnd == READ_10 || *cmd->cmnd == WRITE_10)
+-		i = xscsi2int(cmd->cmnd + 2);
+-	else if (*cmd->cmnd == READ_6 || *cmd->cmnd == WRITE_6)
+-		i = scsi2int(cmd->cmnd + 2);
+-	else
+-		i = -1;
+-	if (done)
+-		shost_printk(KERN_DEBUG, sh, "aha1542_queuecommand: dev %d cmd %02x pos %d len %d ", target, *cmd->cmnd, i, bufflen);
+-	else
+-		shost_printk(KERN_DEBUG, sh, "aha1542_command: dev %d cmd %02x pos %d len %d ", target, *cmd->cmnd, i, bufflen);
+-	print_hex_dump_bytes("command: ", DUMP_PREFIX_NONE, cmd->cmnd, cmd->cmd_len);
+-	if (*cmd->cmnd == WRITE_10 || *cmd->cmnd == WRITE_6)
+-		return 0;	/* we are still testing, so *don't* write */
++	{
++		int i = -1;
++		if (*cmd->cmnd == READ_10 || *cmd->cmnd == WRITE_10)
++			i = xscsi2int(cmd->cmnd + 2);
++		else if (*cmd->cmnd == READ_6 || *cmd->cmnd == WRITE_6)
++			i = scsi2int(cmd->cmnd + 2);
++		shost_printk(KERN_DEBUG, sh, "aha1542_queuecommand: dev %d cmd %02x pos %d len %d",
++						target, *cmd->cmnd, i, bufflen);
++		print_hex_dump_bytes("command: ", DUMP_PREFIX_NONE, cmd->cmnd, cmd->cmd_len);
++	}
+ #endif
+ 	/* Use the outgoing mailboxes in a round-robin fashion, because this
+ 	   is how the host adapter will scan for them */
 -- 
 Ondrej Zary
 
