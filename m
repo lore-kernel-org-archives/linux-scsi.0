@@ -1,32 +1,43 @@
-From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC] implementing tape statistics single file vs multi-file in
- sysfs
-Date: Fri, 6 Feb 2015 05:01:11 -0800
-Message-ID: <20150206130111.GC26247@kroah.com>
-References: <DDB9C85B850785449757F9914A034FCB3BF3EADA@G9W0766.americas.hpqcorp.net>
- <20150206091354.GA1143@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150206091354.GA1143-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org" <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, "James E.J. Bottomley (JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org)" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Laurence Oberman (loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org)" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
+Date: Fri,  6 Feb 2015 15:33:41 +0100
+Message-ID: <1423233221-27069-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:33329 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755260AbbBFOdx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 09:33:53 -0500
+Received: by mail-lb0-f180.google.com with SMTP id b6so18242189lbj.11
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Feb 2015 06:33:51 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Feb 06, 2015 at 09:13:55AM +0000, Bryn M. Reeves wrote:
-> > The sysfs documentation says that files should contain one item per
-> > file (with some small exceptions):
-> > 
-> > > "Attributes should be ASCII text files, preferably with only one value
-> > > per file. It is noted that it may not be efficient to contain only one
-> > > value per file, so it is socially acceptable to express an array of
-> > > values of the same type."
-> 
-> Right: I think there's good precedent for the array file style when
-> dealing with counter sets.
+There is currently no %po format extension, so currently the letters
+"on" are simply skipped and the pointer is printed as expected (while
+missing the word on). However, it is probably only a matter of time
+before someone comes up with a %po extension, at which point this is
+likely to fail spectacularly.
 
-See my previous reply for why I strongly feel this is incorrect, sorry.
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ff283d23788a..e7c6b9c946d6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3105,7 +3105,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance)
+ 	for (i = 0; i < max_cmd; i++) {
+ 		cmd = instance->cmd_list[i];
+ 		if (cmd->sync_cmd == 1 || cmd->scmd) {
+-			printk(KERN_NOTICE "megasas: moving cmd[%d]:%p:%d:%p"
++			printk(KERN_NOTICE "megasas: moving cmd[%d]:%p:%d:%p "
+ 					"on the defer queue as internal\n",
+ 				defer_index, cmd, cmd->sync_cmd, cmd->scmd);
+ 
+-- 
+2.1.3
+
