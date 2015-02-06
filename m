@@ -1,39 +1,46 @@
-From: Jeremy Linton <jlinton@tributary.com>
-Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
-Date: Fri, 6 Feb 2015 11:49:52 -0600
-Message-ID: <54D4FEC0.8090101@tributary.com>
-References: <DDB9C85B850785449757F9914A034FCB3BF288C6@G9W0766.americas.hpqcorp.net> <DDB9C85B850785449757F9914A034FCB3BF3C359@G9W0766.americas.hpqcorp.net>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] SCSI-csiostor: Delete an unnecessary check before the function
+ call "release_firmware"
+Date: Fri, 06 Feb 2015 19:29:08 +0100
+Message-ID: <54D507F4.5010704@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay05.mycloudmailbox.com ([199.244.76.202]:39381 "EHLO
-	relay05.mycloudmailbox.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752189AbbBFR6U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 12:58:20 -0500
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF3C359@G9W0766.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Kai.Makisara@kolumbus.fi" <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley (JBottomley@parallels.com)" <JBottomley@parallels.com>, "jeffm@suse.com" <jeffm@suse.com>
 
-On 1/26/2015 6:11 PM, Seymour, Shane M wrote:
-> I was wondering if anyone had any feedback or had any chance to review the changes?
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 6 Feb 2015 19:10:25 +0100
 
-	Per the other discussion about having the same stat format forever. It seems to
-me that you might want to preemptively add a few additional counters.
-	
-A counter for WRITE_FILEMARKS, particularly non immediate count=0 ones, which
-are often used to flush the drive write buffer. A counter for movement related
-commands like SPACE/LOCATE/REWIND would also be helpful. Finally, abnormal read
-conditions like, ILI's, and hit FMs should have their own stat. Those three
-should provide a better view into how the drive is being used and why
-performance may not be what is expected.
+The release_firmware() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-There may be others, but those three are high on my list of things I want to
-know about a tape stream that is not performing up to expectations.
+This issue was detected by using the Coccinelle software.
 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/scsi/csiostor/csio_hw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-
-
-
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 35c5f83..37fa8bf 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -2117,8 +2117,7 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
+ 			 hw->fw_state, reset);
+ 
+ 	/* Cleaning up */
+-	if (fw != NULL)
+-		release_firmware(fw);
++	release_firmware(fw);
+ 	kfree(card_fw);
+ 	return ret;
+ }
+-- 
+2.2.2
