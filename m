@@ -1,46 +1,72 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] SCSI-csiostor: Delete an unnecessary check before the function
- call "release_firmware"
-Date: Fri, 06 Feb 2015 19:29:08 +0100
-Message-ID: <54D507F4.5010704@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch] vhost/scsi: potential memory corruption
+Date: Fri, 06 Feb 2015 10:48:16 -0800
+Message-ID: <1423248496.9544.0.camel@haakon3.risingtidesystems.com>
+References: <20150205073733.GA27855@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20150205073733.GA27855@mwanda>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: virtualization@lists.linux-foundation.org, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 6 Feb 2015 19:10:25 +0100
+On Thu, 2015-02-05 at 10:37 +0300, Dan Carpenter wrote:
+> This code in vhost_scsi_make_tpg() is confusing because we limit "tpgt"
+> to UINT_MAX but the data type of "tpg->tport_tpgt" and that is a u16.
+> 
+> I looked at the context and it turns out that in
+> vhost_scsi_set_endpoint(), "tpg->tport_tpgt" is used as an offset into
+> the vs_tpg[] array which has VHOST_SCSI_MAX_TARGET (256) elements so
+> anything higher than 255 then it is invalid.  I have made that the limit
+> now.
+> 
+> In vhost_scsi_send_evt() we mask away values higher than 255, but now
+> that the limit has changed, we don't need the mask.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Compile tested only.
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 3e265ef..4339222 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -1278,7 +1278,7 @@ vhost_scsi_send_evt(struct vhost_scsi *vs,
+>  		 * lun[4-7] need to be zero according to virtio-scsi spec.
+>  		 */
+>  		evt->event.lun[0] = 0x01;
+> -		evt->event.lun[1] = tpg->tport_tpgt & 0xFF;
+> +		evt->event.lun[1] = tpg->tport_tpgt;
+>  		if (lun->unpacked_lun >= 256)
+>  			evt->event.lun[2] = lun->unpacked_lun >> 8 | 0x40 ;
+>  		evt->event.lun[3] = lun->unpacked_lun & 0xFF;
+> @@ -2149,12 +2149,12 @@ vhost_scsi_make_tpg(struct se_wwn *wwn,
+>  			struct vhost_scsi_tport, tport_wwn);
+>  
+>  	struct vhost_scsi_tpg *tpg;
+> -	unsigned long tpgt;
+> +	u16 tpgt;
+>  	int ret;
+>  
+>  	if (strstr(name, "tpgt_") != name)
+>  		return ERR_PTR(-EINVAL);
+> -	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
+> +	if (kstrtou16(name + 5, 10, &tpgt) || tpgt >= VHOST_SCSI_MAX_TARGET)
+>  		return ERR_PTR(-EINVAL);
+>  
+>  	tpg = kzalloc(sizeof(struct vhost_scsi_tpg), GFP_KERNEL);
 
-The release_firmware() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+Nice catch Dan.  Applied to target-pending/for-next.
 
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/scsi/csiostor/csio_hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index 35c5f83..37fa8bf 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -2117,8 +2117,7 @@ csio_hw_flash_fw(struct csio_hw *hw, int *reset)
- 			 hw->fw_state, reset);
- 
- 	/* Cleaning up */
--	if (fw != NULL)
--		release_firmware(fw);
-+	release_firmware(fw);
- 	kfree(card_fw);
- 	return ret;
- }
--- 
-2.2.2
+--nab
