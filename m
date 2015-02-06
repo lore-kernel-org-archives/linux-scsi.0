@@ -1,123 +1,136 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 03/36] aha1542: Remove SCSI_BUF_PA, SCSI_SG_PA, AHA1542_SCATTER and AHA1542_CMDLUN
-Date: Fri,  6 Feb 2015 23:11:24 +0100
-Message-ID: <1423260717-15944-4-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 07/36] aha1542: Reorder functions to remove forward declarations
+Date: Fri,  6 Feb 2015 23:11:28 +0100
+Message-ID: <1423260717-15944-8-git-send-email-linux@rainbow-software.org>
 References: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:56931 "EHLO gsystem.sk"
+Received: from ns.gsystem.sk ([62.176.172.50]:56936 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754741AbbBFWMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756829AbbBFWMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 6 Feb 2015 17:12:12 -0500
 Received: from stip-static-68.213-81-217.telecom.sk ([213.81.217.68] helo=gsql.ggedos.sk)
 	by gsystem.sk with esmtpsa (TLS1.1:DHE_RSA_AES_256_CBC_SHA1:256)
 	(Exim 4.80)
 	(envelope-from <linux@rainbow-software.org>)
-	id 1YJr8D-0006fF-Ia
-	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:09 +0100
+	id 1YJr8E-0006fF-81
+	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2015 23:12:10 +0100
 In-Reply-To: <1423260717-15944-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Remove SCSI_BUF_PA, SCSI_SG_PA, AHA1542_SCATTER and AHA1542_CMDLUN macros
-
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/aha1542.c |   23 ++++++++++-------------
- drivers/scsi/aha1542.h |    2 --
- 2 files changed, 10 insertions(+), 15 deletions(-)
+ drivers/scsi/aha1542.c |   51 +++++++++++++++++++++++-------------------------
+ drivers/scsi/aha1542.h |   12 ------------
+ 2 files changed, 24 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 506e33e..197480d 100644
+index 8851719..af1e8fa 100644
 --- a/drivers/scsi/aha1542.c
 +++ b/drivers/scsi/aha1542.c
-@@ -46,10 +46,6 @@
- #include "scsi.h"
- #include <scsi/scsi_host.h>
- #include "aha1542.h"
+@@ -124,10 +124,6 @@ static DEFINE_SPINLOCK(aha1542_lock);
+ 
+ #define WAITnexttimeout 3000000
+ 
+-static void setup_mailboxes(int base_io, struct Scsi_Host *shpnt);
+-static int aha1542_restart(struct Scsi_Host *shost);
+-static void aha1542_intr_handle(struct Scsi_Host *shost);
 -
--#define SCSI_BUF_PA(address)	isa_virt_to_bus(address)
--#define SCSI_SG_PA(sgent)	(isa_page_to_bus(sg_page((sgent))) + (sgent)->offset)
--
- #include <linux/stat.h>
+ static inline void aha1542_intr_reset(u16 base)
+ {
+ 	outb(IRST, CONTROL(base));
+@@ -368,16 +364,20 @@ fail:
+ 	return 0;		/* 0 = not ok */
+ }
  
- #ifdef DEBUG
-@@ -463,7 +459,7 @@ static void aha1542_intr_handle(struct Scsi_Host *shost)
- 			return;
- 		};
+-/* A quick wrapper for do_aha1542_intr_handle to grab the spin lock */
+-static irqreturn_t do_aha1542_intr_handle(int dummy, void *dev_id)
++static int aha1542_restart(struct Scsi_Host *shost)
+ {
+-	unsigned long flags;
+-	struct Scsi_Host *shost = dev_id;
++	struct aha1542_hostdata *aha1542 = shost_priv(shost);
++	int i;
++	int count = 0;
  
--		mbo = (scsi2int(mb[mbi].ccbptr) - (SCSI_BUF_PA(&ccb[0]))) / sizeof(struct ccb);
-+		mbo = (scsi2int(mb[mbi].ccbptr) - (isa_virt_to_bus(&ccb[0]))) / sizeof(struct ccb);
- 		mbistatus = mb[mbi].status;
- 		mb[mbi].status = 0;
- 		HOSTDATA(shost)->aha1542_last_mbi_used = mbi;
-@@ -622,7 +618,7 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
- 	printk(KERN_DEBUG "Sending command (%d %x)...", mbo, done);
- #endif
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	aha1542_intr_handle(shost);
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-	return IRQ_HANDLED;
++	for (i = 0; i < AHA1542_MAILBOXES; i++)
++		if (aha1542->SCint[i] &&
++		    !(aha1542->SCint[i]->device->soft_reset)) {
++			count++;
++		}
++	printk(KERN_DEBUG "Potential to restart %d stalled commands...\n", count);
++
++	return 0;
+ }
  
--	any2scsi(mb[mbo].ccbptr, SCSI_BUF_PA(&ccb[mbo]));	/* This gets trashed for some reason */
-+	any2scsi(mb[mbo].ccbptr, isa_virt_to_bus(&ccb[mbo]));	/* This gets trashed for some reason */
- 
- 	memset(&ccb[mbo], 0, sizeof(struct ccb));
- 
-@@ -653,11 +649,12 @@ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		}
- 		scsi_for_each_sg(SCpnt, sg, sg_count, i) {
--			any2scsi(cptr[i].dataptr, SCSI_SG_PA(sg));
-+			any2scsi(cptr[i].dataptr, isa_page_to_bus(sg_page(sg))
-+								+ sg->offset);
- 			any2scsi(cptr[i].datalen, sg->length);
- 		};
- 		any2scsi(ccb[mbo].datalen, sg_count * sizeof(struct chain));
--		any2scsi(ccb[mbo].dataptr, SCSI_BUF_PA(cptr));
-+		any2scsi(ccb[mbo].dataptr, isa_virt_to_bus(cptr));
- #ifdef DEBUG
- 		printk("cptr %x: ", cptr);
- 		ptr = (unsigned char *) cptr;
-@@ -713,10 +710,10 @@ static void setup_mailboxes(int bse, struct Scsi_Host *shpnt)
- 
- 	for (i = 0; i < AHA1542_MAILBOXES; i++) {
- 		mb[i].status = mb[AHA1542_MAILBOXES + i].status = 0;
--		any2scsi(mb[i].ccbptr, SCSI_BUF_PA(&ccb[i]));
-+		any2scsi(mb[i].ccbptr, isa_virt_to_bus(&ccb[i]));
+ /* A "high" level interrupt handler */
+@@ -539,6 +539,18 @@ static void aha1542_intr_handle(struct Scsi_Host *shost)
  	};
- 	aha1542_intr_reset(bse);	/* reset interrupts, so they don't block */
--	any2scsi((cmd + 2), SCSI_BUF_PA(mb));
-+	any2scsi((cmd + 2), isa_virt_to_bus(mb));
- 	aha1542_out(bse, cmd, 5);
- 	WAIT(INTRFLAGS(bse), INTRMASK, HACC, 0);
- 	while (0) {
-@@ -1139,7 +1136,7 @@ static int aha1542_dev_reset(Scsi_Cmnd * SCpnt)
- 	HOSTDATA(SCpnt->device->host)->aha1542_last_mbo_used = mbo;
- 	spin_unlock_irqrestore(&aha1542_lock, flags);
+ }
  
--	any2scsi(mb[mbo].ccbptr, SCSI_BUF_PA(&ccb[mbo]));	/* This gets trashed for some reason */
-+	any2scsi(mb[mbo].ccbptr, isa_virt_to_bus(&ccb[mbo]));	/* This gets trashed for some reason */
++/* A quick wrapper for do_aha1542_intr_handle to grab the spin lock */
++static irqreturn_t do_aha1542_intr_handle(int dummy, void *dev_id)
++{
++	unsigned long flags;
++	struct Scsi_Host *shost = dev_id;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	aha1542_intr_handle(shost);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	return IRQ_HANDLED;
++}
++
+ static int aha1542_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ {
+ 	struct aha1542_hostdata *aha1542 = shost_priv(SCpnt->device->host);
+@@ -1078,21 +1090,6 @@ static int aha1542_release(struct Scsi_Host *shost)
+ 	return 0;
+ }
  
- 	memset(&ccb[mbo], 0, sizeof(struct ccb));
+-static int aha1542_restart(struct Scsi_Host *shost)
+-{
+-	struct aha1542_hostdata *aha1542 = shost_priv(shost);
+-	int i;
+-	int count = 0;
+-
+-	for (i = 0; i < AHA1542_MAILBOXES; i++)
+-		if (aha1542->SCint[i] &&
+-		    !(aha1542->SCint[i]->device->soft_reset)) {
+-			count++;
+-		}
+-	printk(KERN_DEBUG "Potential to restart %d stalled commands...\n", count);
+-
+-	return 0;
+-}
  
-@@ -1328,8 +1325,8 @@ static struct scsi_host_template driver_template = {
- 	.bios_param		= aha1542_biosparam,
- 	.can_queue		= AHA1542_MAILBOXES, 
- 	.this_id		= 7,
--	.sg_tablesize		= AHA1542_SCATTER,
--	.cmd_per_lun		= AHA1542_CMDLUN,
-+	.sg_tablesize		= 16,
-+	.cmd_per_lun		= 1,
- 	.unchecked_isa_dma	= 1, 
- 	.use_clustering		= ENABLE_CLUSTERING,
- };
+ /*
+  * This is a device reset.  This is handled by sending a special command
 diff --git a/drivers/scsi/aha1542.h b/drivers/scsi/aha1542.h
-index af91125..812a406 100644
+index 6b418bb..f0b862b 100644
 --- a/drivers/scsi/aha1542.h
 +++ b/drivers/scsi/aha1542.h
-@@ -138,7 +138,5 @@ static int aha1542_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int *);
+@@ -125,18 +125,6 @@ struct ccb {		/* Command Control Block 5.3 */
+ 					/* REQUEST SENSE */
+ };
  
+-static struct Scsi_Host *aha1542_hw_init(struct scsi_host_template *tpnt, struct device *pdev, int indx);
+-static int aha1542_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+-static int aha1542_bus_reset(Scsi_Cmnd * SCpnt);
+-static int aha1542_dev_reset(Scsi_Cmnd * SCpnt);
+-static int aha1542_host_reset(Scsi_Cmnd * SCpnt);
+-#if 0
+-static int aha1542_old_abort(Scsi_Cmnd * SCpnt);
+-static int aha1542_old_reset(Scsi_Cmnd *, unsigned int);
+-#endif
+-static int aha1542_biosparam(struct scsi_device *, struct block_device *,
+-		sector_t, int *);
+-
  #define AHA1542_MAILBOXES 8
--#define AHA1542_SCATTER 16
--#define AHA1542_CMDLUN 1
  
  #endif
 -- 
