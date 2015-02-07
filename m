@@ -1,90 +1,47 @@
-From: Rudy Zhang <rudy.zhangmin@huawei.com>
-Subject: [PATCH] xen-scsiback: some modifications about code comment
-Date: Sat, 7 Feb 2015 03:31:17 +0000
-Message-ID: <1423279877-8048-1-git-send-email-rudy.zhangmin@huawei.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 2/4] SCSI-QLA4...: Less function calls in
+ qla4xxx_is_session_exists() after error detection
+Date: Sat, 7 Feb 2015 12:33:23 +0300
+Message-ID: <20150207093322.GA5206@mwanda>
+References: <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <54D53BE4.7010807@users.sourceforge.net>
+ <54D53CF1.8050009@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54D53CF1.8050009@users.sourceforge.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jgross@suse.com, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com
-Cc: xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, boby.chen@huawei.com, wu.wubin@huawei.com, rudy.zhangmin@huawei.com
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: "James E. J. Bottomley" <JBottomley@parallels.com>, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tao Chen <boby.chen@huawei.com>
+On Fri, Feb 06, 2015 at 11:15:13PM +0100, SF Markus Elfring wrote:
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 2a00fd3..a7ca479 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -6327,17 +6327,15 @@ static int qla4xxx_is_session_exists(struct scsi_qla_host *ha,
+>  				     uint32_t *index)
+>  {
+>  	struct ddb_entry *ddb_entry;
+> -	struct ql4_tuple_ddb *fw_tddb = NULL;
+> -	struct ql4_tuple_ddb *tmp_tddb = NULL;
+>  	int idx;
+>  	int ret = QLA_ERROR;
+> +	struct ql4_tuple_ddb *tmp_tddb;
+> +	struct ql4_tuple_ddb *fw_tddb = vzalloc(sizeof(*fw_tddb));
+>  
 
-Signed-off-by: Tao Chen <boby.chen@huawei.com>
----
- drivers/xen/xen-scsiback.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Don't do allocations in the initializers.  Same for patches 3 and 4 as
+well.
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 3e32146..59f09fd 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -83,7 +83,7 @@ struct ids_tuple {
- 
- struct v2p_entry {
- 	struct ids_tuple v;		/* translate from */
--	struct scsiback_tpg *tpg;	/* translate to   */
-+	struct scsiback_tpg *tpg;	/* translate to */
- 	unsigned int lun;
- 	struct kref kref;
- 	struct list_head l;
-@@ -525,7 +525,7 @@ static int scsiback_gnttab_data_map(struct vscsiif_request *ring_req,
- 		}
- 	}
- 
--	/* free of (sgl) in fast_flush_area()*/
-+	/* free of (sgl) in fast_flush_area() */
- 	pending_req->sgl = kmalloc_array(nr_segments,
- 					sizeof(struct scatterlist), GFP_KERNEL);
- 	if (!pending_req->sgl)
-@@ -1084,7 +1084,7 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
- 			}
- 		}
- 		break;
--	/*When it is necessary, processing is added here.*/
-+	/* When it is necessary, processing is added here. */
- 	default:
- 		break;
- 	}
-@@ -1475,8 +1475,8 @@ static u32 scsiback_tpg_get_inst_index(struct se_portal_group *se_tpg)
- static int scsiback_check_stop_free(struct se_cmd *se_cmd)
- {
- 	/*
--	 * Do not release struct se_cmd's containing a valid TMR
--	 * pointer.  These will be released directly in scsiback_device_action()
-+	 * Do not release struct se_cmd's containing a valid TMR pointer.
-+	 * These will be released directly in scsiback_device_action()
- 	 * with transport_generic_free_cmd().
- 	 */
- 	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
-@@ -1642,7 +1642,7 @@ static int scsiback_make_nexus(struct scsiback_tpg *tpg,
- 		return -ENOMEM;
- 	}
- 	/*
--	 *  Initialize the struct se_session pointer
-+	 * Initialize the struct se_session pointer
- 	 */
- 	tv_nexus->tvn_se_sess = transport_init_session(TARGET_PROT_NORMAL);
- 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
-@@ -1759,7 +1759,7 @@ static ssize_t scsiback_tpg_store_nexus(struct se_portal_group *se_tpg,
- 	unsigned char i_port[VSCSI_NAMELEN], *ptr, *port_ptr;
- 	int ret;
- 	/*
--	 * Shutdown the active I_T nexus if 'NULL' is passed..
-+	 * Shutdown the active I_T nexus if 'NULL' is passed.
- 	 */
- 	if (!strncmp(page, "NULL", 4)) {
- 		ret = scsiback_drop_nexus(tpg);
-@@ -1930,7 +1930,7 @@ static void scsiback_drop_tpg(struct se_portal_group *se_tpg)
- 	 */
- 	scsiback_drop_nexus(tpg);
- 	/*
--	 * Deregister the se_tpg from TCM..
-+	 * Deregister the se_tpg from TCM.
- 	 */
- 	core_tpg_deregister(se_tpg);
- 	kfree(tpg);
--- 
-1.8.5
+regards,
+dan carpenter
