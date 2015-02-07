@@ -1,52 +1,90 @@
-From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH] hpsa: correct compiler warnings introduced by
- hpsa-add-local-workqueue patch
-Date: Fri, 06 Feb 2015 17:44:15 -0600
-Message-ID: <20150206234415.23960.78547.stgit@brunhilda>
+From: Rudy Zhang <rudy.zhangmin@huawei.com>
+Subject: [PATCH] xen-scsiback: some modifications about code comment
+Date: Sat, 7 Feb 2015 03:31:17 +0000
+Message-ID: <1423279877-8048-1-git-send-email-rudy.zhangmin@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:39414 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811AbbBFXpW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2015 18:45:22 -0500
-Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id 545867C5B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Feb 2015 23:45:22 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgross@suse.com, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, boby.chen@huawei.com, wu.wubin@huawei.com, rudy.zhangmin@huawei.com
 List-Id: linux-scsi@vger.kernel.org
-To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
-Cc: keescook@chromium.org, linux-scsi@vger.kernel.org
 
-Correct compiler warning introduced by hpsa-add-local-workqueue patch
-6636e7f455b33b957c5ee016daa6de46148026ab hpsa: Use local workqueues
-instead of system workqueues
+From: Tao Chen <boby.chen@huawei.com>
 
-Suggested-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-Reviewed-by: Webb Scales <webbnh@hp.com>
-Signed-off-by: Don Brace <don.brace@pmcs.com>
+Signed-off-by: Tao Chen <boby.chen@huawei.com>
 ---
- drivers/scsi/hpsa.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/xen/xen-scsiback.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 95d581c..a1cfbd3 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -6831,10 +6831,8 @@ static struct workqueue_struct *hpsa_create_controller_wq(struct ctlr_info *h,
- 						char *name)
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 3e32146..59f09fd 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -83,7 +83,7 @@ struct ids_tuple {
+ 
+ struct v2p_entry {
+ 	struct ids_tuple v;		/* translate from */
+-	struct scsiback_tpg *tpg;	/* translate to   */
++	struct scsiback_tpg *tpg;	/* translate to */
+ 	unsigned int lun;
+ 	struct kref kref;
+ 	struct list_head l;
+@@ -525,7 +525,7 @@ static int scsiback_gnttab_data_map(struct vscsiif_request *ring_req,
+ 		}
+ 	}
+ 
+-	/* free of (sgl) in fast_flush_area()*/
++	/* free of (sgl) in fast_flush_area() */
+ 	pending_req->sgl = kmalloc_array(nr_segments,
+ 					sizeof(struct scatterlist), GFP_KERNEL);
+ 	if (!pending_req->sgl)
+@@ -1084,7 +1084,7 @@ static void scsiback_do_1lun_hotplug(struct vscsibk_info *info, int op,
+ 			}
+ 		}
+ 		break;
+-	/*When it is necessary, processing is added here.*/
++	/* When it is necessary, processing is added here. */
+ 	default:
+ 		break;
+ 	}
+@@ -1475,8 +1475,8 @@ static u32 scsiback_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ static int scsiback_check_stop_free(struct se_cmd *se_cmd)
  {
- 	struct workqueue_struct *wq = NULL;
--	char wq_name[20];
- 
--	snprintf(wq_name, sizeof(wq_name), "%s_%d_hpsa", name, h->ctlr);
--	wq = alloc_ordered_workqueue(wq_name, 0);
-+	wq = alloc_ordered_workqueue("%s_%d_hpsa", 0, name, h->ctlr);
- 	if (!wq)
- 		dev_err(&h->pdev->dev, "failed to create %s workqueue\n", name);
- 
-
+ 	/*
+-	 * Do not release struct se_cmd's containing a valid TMR
+-	 * pointer.  These will be released directly in scsiback_device_action()
++	 * Do not release struct se_cmd's containing a valid TMR pointer.
++	 * These will be released directly in scsiback_device_action()
+ 	 * with transport_generic_free_cmd().
+ 	 */
+ 	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
+@@ -1642,7 +1642,7 @@ static int scsiback_make_nexus(struct scsiback_tpg *tpg,
+ 		return -ENOMEM;
+ 	}
+ 	/*
+-	 *  Initialize the struct se_session pointer
++	 * Initialize the struct se_session pointer
+ 	 */
+ 	tv_nexus->tvn_se_sess = transport_init_session(TARGET_PROT_NORMAL);
+ 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+@@ -1759,7 +1759,7 @@ static ssize_t scsiback_tpg_store_nexus(struct se_portal_group *se_tpg,
+ 	unsigned char i_port[VSCSI_NAMELEN], *ptr, *port_ptr;
+ 	int ret;
+ 	/*
+-	 * Shutdown the active I_T nexus if 'NULL' is passed..
++	 * Shutdown the active I_T nexus if 'NULL' is passed.
+ 	 */
+ 	if (!strncmp(page, "NULL", 4)) {
+ 		ret = scsiback_drop_nexus(tpg);
+@@ -1930,7 +1930,7 @@ static void scsiback_drop_tpg(struct se_portal_group *se_tpg)
+ 	 */
+ 	scsiback_drop_nexus(tpg);
+ 	/*
+-	 * Deregister the se_tpg from TCM..
++	 * Deregister the se_tpg from TCM.
+ 	 */
+ 	core_tpg_deregister(se_tpg);
+ 	kfree(tpg);
+-- 
+1.8.5
