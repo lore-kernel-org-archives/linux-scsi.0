@@ -1,55 +1,52 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: Prevent future %p disaster
-Date: Tue, 10 Feb 2015 08:55:37 -0800
-Message-ID: <1423587337.8339.3.camel@perches.com>
-References: <1423233221-27069-1-git-send-email-linux@rasmusvillemoes.dk>
-	 <bb45ec6cfa94612741a2eb355d0de566@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 93051] New: Oops in kmem_cache_alloc / scsi_host_alloc_command
+Date: Tue, 10 Feb 2015 16:56:06 +0000
+Message-ID: <bug-93051-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bb45ec6cfa94612741a2eb355d0de566@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41501 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752754AbbBJQ4L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2015 11:56:11 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 0321120120
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2015 16:56:10 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4BFEE2013A
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2015 16:56:07 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2015-02-10 at 22:16 +0530, Kashyap Desai wrote:
-> Acked-by: Kashyap Desai <kashyap.desai@avagotech.com>
-> 
-> > -----Original Message-----
-> > From: Rasmus Villemoes [mailto:linux@rasmusvillemoes.dk]
-> > Sent: Friday, February 06, 2015 8:04 PM
-[]
-> > There is currently no %po format extension, so currently the letters
-> "on" are
-> > simply skipped and the pointer is printed as expected (while missing the
-> word
-> > on). However, it is probably only a matter of time before someone comes
-> up
-> > with a %po extension, at which point this is likely to fail
-> spectacularly.
+https://bugzilla.kernel.org/show_bug.cgi?id=93051
 
-Nice tool Rasmus
+            Bug ID: 93051
+           Summary: Oops in kmem_cache_alloc / scsi_host_alloc_command
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.16.0-29-generic #39-Ubuntu
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: nathan.renniewaldock+kernelbugs@gmail.com
+        Regression: No
 
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-[]
-> > @@ -3105,7 +3105,7 @@ megasas_internal_reset_defer_cmds(struct
-> > megasas_instance *instance)
-> >  	for (i = 0; i < max_cmd; i++) {
-> >  		cmd = instance->cmd_list[i];
-> >  		if (cmd->sync_cmd == 1 || cmd->scmd) {
-> > -			printk(KERN_NOTICE "megasas: moving
-> > cmd[%d]:%p:%d:%p"
-> > +			printk(KERN_NOTICE "megasas: moving
-> > cmd[%d]:%p:%d:%p "
-> >  					"on the defer queue as
-> internal\n",
-> >  				defer_index, cmd, cmd->sync_cmd, cmd-
-> > >scmd);
-> >
+Created attachment 166341
+  --> https://bugzilla.kernel.org/attachment.cgi?id=166341&action=edit
+oops 2015-01-30
 
-It'd probably be nicer to coalesce the format.
+Read errors on SCSI controllers appear to cause an oops.
+Since I changed to an SAS controller, I was getting an oops immediately after a
+read error. I've now moved the offending drive back to SATA and not had an oops
+since.
 
-			printk(KERN_NOTICE "megasas: moving cmd[%d]:%p:%d:%p on the defer queue as internal\n",
-				defer_ndex, cmd, cmd->sync, cmd->scmd);
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
