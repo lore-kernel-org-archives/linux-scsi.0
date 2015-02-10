@@ -1,59 +1,43 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: CONFIG_SCSI_MQ_DEFAULT cause slow direct write speed to usb stick
-Date: Tue, 10 Feb 2015 17:10:18 -0500
-Message-ID: <54DA81CA.2030303@interlog.com>
-References: <20150210195036.3dce0e9e@bigpc>
-Reply-To: dgilbert@interlog.com
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [RFC] implementing tape statistics single file vs multi-file in
+ sysfs
+Date: Wed, 11 Feb 2015 06:30:27 +0800
+Message-ID: <20150210223027.GA27269@kroah.com>
+References: <DDB9C85B850785449757F9914A034FCB3BF3EADA@G9W0766.americas.hpqcorp.net>
+ <20150206125916.GB26247@kroah.com>
+ <20150206154157.GD1143@localhost.localdomain>
+ <20150207040743.GB29944@kroah.com>
+ <20150210142719.GA1437@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150210195036.3dce0e9e@bigpc>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrej Gelenberg <andrej.gelenberg@udo.edu>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, martin.petersen@oracle.com, elliott@hp.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150210142719.GA1437-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org" <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, "James E.J. Bottomley (JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org)" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Laurence Oberman (loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org)" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 15-02-10 01:50 PM, Andrej Gelenberg wrote:
-> Hi,
->
-> i had found a problem with CONFIG_SCSI_MQ_DEFAULT config option. If it
-> activated, then the write speeds to the /dev/sd* of an usb stick drops
-> dramatically: it's only about 250 kb/CONFIG_SCSI_MQ_DEFAULTs, but
-> should be about 7 Mb/s. Git bisect also points to commit
-> 24c20f10583647e30afe87b6f6d5e14bc7b1cbc6 'scsi: add a
-> CONFIG_SCSI_MQ_DEFAULT option' (i always set CONFIG_SCSI_MQ_DEFAULT to
-> y, because it sounded interesting). Same problem is also in 3.19
-> present. Write speeds to a filesystem on that USB-Stick were not so
-> bad, but as i tried to dd in Live-DVD Ubuntu image it was painfully
-> slow. After i disabled CONFIG_SCSI_MQ_DEFAULT write speeds are back to
-> normal.
->
-> I created bug report in bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=92571
+On Tue, Feb 10, 2015 at 02:27:20PM +0000, Bryn M. Reeves wrote:
+> On Sat, Feb 07, 2015 at 12:07:43PM +0800, Greg KH wrote:
+> 
+> $ cat /sys/fs/selinux/avc/cache_stats 
+> lookups hits misses allocations reclaims frees
+> 18938916 18921707 17209 17209 17328 22215
+> 38164283 38146514 17769 17769 16800 19049
+> 18078108 18056991 21117 21117 21344 19305
+> 15168204 15150079 18125 18125 17776 13149
+> 0 0 0 0 0 0
+> 0 0 0 0 0 0
+> 0 0 0 0 0 0
+> 0 0 0 0 0 0
+> 
+> $ cat /sys/fs/selinux/avc/hash_stats
+> entries: 506
+> buckets used: 290/512
+> longest chain: 5
 
-Perhaps a related datapoint: when reading from a uSD card via
-a USB dongle in lk 3.19 (SCSI_MQ set), blk_get_request()
-sometimes returns EAGAIN to the sg driver. I'm not sure that
-I have seen the SG_IO ioctl return EAGAIN via this route before
-(i.e. before it can even set up the SCSI command). Arguably doing
-that breaks the long standing interface of ioctl(sg, SG_IO).
+Ugh, those look like they should be debugfs interfaces.  Thanks, I'll
+add them to my list of things to nag people about...
 
-Faster storage devices do not seem to have this problem. The
-laptop involved has plenty of ram and was lightly loaded. This
-was a synchronous copy of a slow device onto local storage
-(a SSD) so it is hard to see why there might be a resource
-problem. By adjusting my user space code (ddpt and sg_dd) to
-repeat the ioctl, the copy continues normally.
-
-Here is an example:
-
-# ddpt if=/dev/sg1 bs=512 of=x.bin
-1953792+0 records in
-1953792+0 records out
-1281 retries after EAGAIN error(s) during IO
-time to transfer data: 59.678788 secs at 16.76 MB/sec
-
-That is not a bad transfer time but other utilities
-or drivers might dwell longer on those (nuisance) EAGAINs.
-
-Doug Gilbert
+greg k-h
