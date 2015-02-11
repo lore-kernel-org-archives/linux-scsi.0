@@ -1,43 +1,28 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [RFC] implementing tape statistics single file vs multi-file in
- sysfs
-Date: Wed, 11 Feb 2015 06:30:27 +0800
-Message-ID: <20150210223027.GA27269@kroah.com>
-References: <DDB9C85B850785449757F9914A034FCB3BF3EADA@G9W0766.americas.hpqcorp.net>
- <20150206125916.GB26247@kroah.com>
- <20150206154157.GD1143@localhost.localdomain>
- <20150207040743.GB29944@kroah.com>
- <20150210142719.GA1437@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150210142719.GA1437-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Bryn M. Reeves" <bmr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Seymour, Shane M" <shane.seymour-VXdhtT5mjnY@public.gmane.org>, "linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org" <Kai.Makisara-9Aww8k/80nUxHbG02/KK1g@public.gmane.org>, "James E.J. Bottomley (JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org)" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "Laurence Oberman (loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org)" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: worley@alum.mit.edu (Dale R. Worley)
+Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
+Date: Tue, 10 Feb 2015 22:38:11 -0500
+Message-ID: <87r3txw21o.fsf@hobgoblin.ariadne.com>
+References: <DDB9C85B850785449757F9914A034FCB3BF3F1BF@G9W0766.americas.hpqcorp.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from resqmta-ch2-05v.sys.comcast.net ([69.252.207.37]:58507 "EHLO
+	resqmta-ch2-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751061AbbBKDiO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2015 22:38:14 -0500
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF3F1BF@G9W0766.americas.hpqcorp.net> (shane.seymour@hp.com)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Seymour, Shane M" <shane.seymour@hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Feb 10, 2015 at 02:27:20PM +0000, Bryn M. Reeves wrote:
-> On Sat, Feb 07, 2015 at 12:07:43PM +0800, Greg KH wrote:
-> 
-> $ cat /sys/fs/selinux/avc/cache_stats 
-> lookups hits misses allocations reclaims frees
-> 18938916 18921707 17209 17209 17328 22215
-> 38164283 38146514 17769 17769 16800 19049
-> 18078108 18056991 21117 21117 21344 19305
-> 15168204 15150079 18125 18125 17776 13149
-> 0 0 0 0 0 0
-> 0 0 0 0 0 0
-> 0 0 0 0 0 0
-> 0 0 0 0 0 0
-> 
-> $ cat /sys/fs/selinux/avc/hash_stats
-> entries: 506
-> buckets used: 290/512
-> longest chain: 5
+"Seymour, Shane M" <shane.seymour@hp.com> writes:
+> Both of those things would have to be futures and require discussion -
+> the very original version cleared stats on a device open but I got
+> asked to keep it the stats cumulative so they would be more similar to
+> disk stats.
 
-Ugh, those look like they should be debugfs interfaces.  Thanks, I'll
-add them to my list of things to nag people about...
+Yes, this is a futures question.  But in a perfect world, there'd be two
+sets of statistics, one cumulative since the last reboot and one that
+was cleared every time a tape was unloaded.
 
-greg k-h
+Dale
