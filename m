@@ -1,23 +1,22 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] blk-mq: fix double-free in error path
-Date: Wed, 11 Feb 2015 09:43:49 -0700
-Message-ID: <54DB86C5.4090607@kernel.dk>
-References: <54DB841E.6030108@cybernetics.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] [SCSI] sg: fix read() error reporting
+Date: Wed, 11 Feb 2015 12:45:32 -0500
+Message-ID: <54DB953C.1090104@interlog.com>
+References: <54DB8406.4020804@cybernetics.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54DB841E.6030108@cybernetics.com>
+In-Reply-To: <54DB8406.4020804@cybernetics.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>
+To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/11/2015 09:32 AM, Tony Battersby wrote:
-> If the allocation of bt->bs fails, then bt->map can be freed twice, once
-> in blk_mq_init_bitmap_tags() -> bt_alloc(), and once in
-> blk_mq_init_bitmap_tags() -> bt_free().  Fix by setting the pointer to
-> NULL after the first free.
+On 15-02-11 11:32 AM, Tony Battersby wrote:
+> Fix SCSI generic read() incorrectly returning success after detecting an
+> error.
 >
 > Cc: <stable@vger.kernel.org>
 > Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
@@ -25,18 +24,38 @@ On 02/11/2015 09:32 AM, Tony Battersby wrote:
 >
 > For inclusion in kernel 3.20.
 >
-> --- linux-3.19.0/block/blk-mq-tag.c.orig	2015-02-08 21:54:22.000000000 -0500
-> +++ linux-3.19.0/block/blk-mq-tag.c	2015-02-10 09:42:38.000000000 -0500
-> @@ -509,6 +509,7 @@ static int bt_alloc(struct blk_mq_bitmap
->   	bt->bs = kzalloc(BT_WAIT_QUEUES * sizeof(*bt->bs), GFP_KERNEL);
->   	if (!bt->bs) {
->   		kfree(bt->map);
-> +		bt->map = NULL;
->   		return -ENOMEM;
+> --- linux-3.19.0/drivers/scsi/sg.c.orig	2015-02-08 21:54:22.000000000 -0500
+> +++ linux-3.19.0/drivers/scsi/sg.c	2015-02-10 09:26:09.000000000 -0500
+> @@ -546,7 +546,7 @@ static ssize_t
+>   sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+>   {
+>   	sg_io_hdr_t *hp = &srp->header;
+> -	int err = 0;
+> +	int err = 0, err2;
+>   	int len;
+>
+>   	if (count < SZ_SG_IO_HDR) {
+> @@ -575,8 +575,8 @@ sg_new_read(Sg_fd * sfp, char __user *bu
+>   		goto err_out;
 >   	}
+>   err_out:
+> -	err = sg_finish_rem_req(srp);
+> -	return (0 == err) ? count : err;
+> +	err2 = sg_finish_rem_req(srp);
+> +	return err ? : err2 ? : count;
 
-Thanks Tony, applied.
+Tony,
+Your point is well made.
 
+I just don't like that last line, using a gcc extension that
+hasn't even made it into C11 (or C++11). Wouldn't:
+     return err ? err : (err2 ? err2 : count);
 
--- 
-Jens Axboe
+be a bit better? I think the following snippet makes the intent
+clear but would it generate any more code:
+     if (err || err2)
+	return err ? err : err2;
+     else
+         return count;
+
+Doug Gilbert
