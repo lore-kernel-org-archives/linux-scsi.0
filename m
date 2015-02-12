@@ -1,94 +1,72 @@
-From: Josh Triplett <josh@joshtriplett.org>
-Subject: Re: scsi: Implement per-cpu logging buffer
-Date: Thu, 12 Feb 2015 09:18:26 -0800
-Message-ID: <20150212171826.GA31750@thin>
-References: <20150211191614.349AF660DDA@gitolite.kernel.org>
- <CAMuHMdUKH1yuLZ9zLAK2STekLFXBufR9PM2_S11xExCtEc9dWg@mail.gmail.com>
- <54DCAABF.20606@suse.de>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v2 3/4] scsi: ufs: add trace events and dump prints for
+ debug
+Date: Thu, 12 Feb 2015 14:55:51 -0500
+Message-ID: <20150212145551.2d234fb1@gandalf.local.home>
+References: <1423576735-26267-1-git-send-email-gbroner@codeaurora.org>
+	<1423576735-26267-4-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay5-d.mail.gandi.net ([217.70.183.197]:35480 "EHLO
-	relay5-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006AbbBLRSh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Feb 2015 12:18:37 -0500
-Content-Disposition: inline
-In-Reply-To: <54DCAABF.20606@suse.de>
+Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:49732 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751573AbbBLTzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2015 14:55:55 -0500
+In-Reply-To: <1423576735-26267-4-git-send-email-gbroner@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+To: Gilad Broner <gbroner@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
 
-On Thu, Feb 12, 2015 at 02:29:35PM +0100, Hannes Reinecke wrote:
-> On 02/12/2015 01:36 PM, Geert Uytterhoeven wrote:
-> > On Wed, Feb 11, 2015 at 8:16 PM, Linux Kernel Mailing List
-> > <linux-kernel@vger.kernel.org> wrote:
-> >> Gitweb:     http://git.kernel.org/linus/;a=commit;h=ded85c193a391a84076d5c6a7a5668fe164a490e
-> >> Commit:     ded85c193a391a84076d5c6a7a5668fe164a490e
-> >> Parent:     b0a93d96b2814c725161f91a4e35d0c29ec0f95b
-> >> Refname:    refs/heads/master
-> >> Author:     Hannes Reinecke <hare@suse.de>
-> >> AuthorDate: Thu Jan 8 07:43:42 2015 +0100
-> >> Committer:  Christoph Hellwig <hch@lst.de>
-> >> CommitDate: Fri Jan 9 15:44:28 2015 +0100
-> >>
-> >>     scsi: Implement per-cpu logging buffer
-> >>
-> >>     Implement a per-cpu buffer for formatting messages to avoid line breaks
-> >>     up under high load.  This patch implements scmd_printk() and
-> >>     sdev_prefix_printk() using the per-cpu buffer and makes sdev_printk() a
-> >>     wrapper for sdev_prefix_printk().
-> >>
-> >>     Tested-by: Robert Elliott <elliott@hp.com>
-> >>     Reviewed-by: Robert Elliott <elliott@hp.com>
-> >>     Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >>     Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> >> --- /dev/null
-> >> +++ b/drivers/scsi/scsi_logging.c
-> > 
-> >> +#define SCSI_LOG_SPOOLSIZE 4096
-> >> +#define SCSI_LOG_BUFSIZE 128
-> >> +
-> >> +#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
-> >> +#warning SCSI logging bitmask too large
-> >> +#endif
-> >> +
-> >> +struct scsi_log_buf {
-> >> +       char buffer[SCSI_LOG_SPOOLSIZE];
-> >> +       unsigned long map;
-> >> +};
-> >> +
-> >> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
-> > 
-> > Do we really need a static 4 KiB per-CPU buffer?
-> > 
-> > bloat-o-meter:
-> > 
-> > add/remove: 183/94 grow/shrink: 314/211 up/down: 33467/-21291 (12176)
-> > function                                     old     new   delta
-> > scsi_format_log                                -    4100   +4100
-> > handle_mm_fault                             1794    2750    +956
-> > scsi_log_print_sense_hdr                       -     774    +774
-> > proc_keys_show                                 -     770    +770
-> > 
-> Define 'need'.
-> We don't absolutely 'need' it. (Configure it out and it's gone).
-> 
-> But when we want to avoid several logging messages coming in from
-> various CPUs overwriting each other and _not_ introduce additional
-> latency by locking a single buffer, then yes.
-> 
-> We can possibly reduce it to, say, 1KiB or even lower by imposing
-> stricter rules on the logging functions.
-> But I don't see a way around the per-CPU buffer.
+On Tue, 10 Feb 2015 15:58:54 +0200
+Gilad Broner <gbroner@codeaurora.org> wrote:
 
-It seems very odd to introduce a mechanism like this specifically for
-SCSI, rather than introducing a generic per-CPU buffered-print mechanism
-in printk, controlled by a config option.  That option could then
-automatically go away when !SMP, or !PRINTK, or if users don't actually
-care about message ordering.
+I really hate large patches like this. So much to dig through.
 
-Also, this doesn't seem to be configurable at all.
+> -#ifdef CONFIG_DEBUG_FS
+> +#define UIC_ERR_REG_HIST_LENGTH 8
+> +/**
+> + * struct ufs_uic_err_reg_hist - keeps history of uic errors
+> + * @pos: index to indicate cyclic buffer position
+> + * @reg: cyclic buffer for registers value
+> + * @tstamp: cyclic buffer for time stamp
+> + */
+> +struct ufs_uic_err_reg_hist {
+> +	int pos;
+> +	u32 reg[UIC_ERR_REG_HIST_LENGTH];
+> +	ktime_t tstamp[UIC_ERR_REG_HIST_LENGTH];
+> +};
+> +
+> +/**
+> + * struct ufs_stats - keeps usage/err statistics
+> + * @enabled: enable tagstats for debugfs
+> + * @tag_stats: pointer to tag statistic counters
+> + * @q_depth: current amount of busy slots
+> + * @err_stats: counters to keep track of various errors
+> + * @hibern8_exit_cnt: Counter to keep track of number of exits,
+> + *		reset this after link-startup.
+> + * @last_hibern8_exit_tstamp: Set time after the hibern8 exit.
+> + *		Clear after the first successful command completion.
+> + * @pa_err: tracks pa-uic errors
+> + * @dl_err: tracks dl-uic errors
+> + * @nl_err: tracks nl-uic errors
+> + * @tl_err: tracks tl-uic errors
+> + * @dme_err: tracks dme errors
+> + */
+>  struct ufs_stats {
+> +#ifdef CONFIG_DEBUG_FS
+>  	bool enabled;
+>  	u64 **tag_stats;
+>  	int q_depth;
+>  	int err_stats[UFS_ERR_MAX];
+> +#endif
 
-- Josh Triplett
+Can any of the tracepoint code be called that references these when
+CONFIG_DEBUG_FS is not set? Because soon (possibly even this merge
+window), tracing will no longer depend on DEBUG_FS, because it will
+have its own filesystem.
+
+-- Steve
+
