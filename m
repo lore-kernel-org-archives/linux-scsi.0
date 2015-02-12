@@ -1,55 +1,32 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 2/4] scsi: ufs: add debugfs for ufs
-Date: Thu, 12 Feb 2015 22:53:44 +0900
-Message-ID: <CAC5umyhX0peGYyh49rb9TPHK4=+s_UT6WFSTVv0cXpycAuu4kw@mail.gmail.com>
-References: <1423576735-26267-1-git-send-email-gbroner@codeaurora.org>
-	<1423576735-26267-3-git-send-email-gbroner@codeaurora.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [RESEND] wd719x: add missing .module to wd719x_template
+Date: Thu, 12 Feb 2015 07:09:03 -0800
+Message-ID: <1423753743.2147.4.camel@HansenPartnership.com>
+References: <1423485501-5992-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1423576735-26267-3-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33173 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755302AbbBLPJF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2015 10:09:05 -0500
+In-Reply-To: <1423485501-5992-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org
 
-2015-02-10 22:58 GMT+09:00 Gilad Broner <gbroner@codeaurora.org>:
-> @@ -5760,6 +5963,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->
->         async_schedule(ufshcd_async_scan, hba);
->
-> +       UFSDBG_ADD_DEBUGFS(hba);
-> +
->         return 0;
->
->  out_remove_scsi_host:
-> @@ -5769,6 +5974,7 @@ exit_gating:
->  out_disable:
->         hba->is_irq_enabled = false;
->         scsi_host_put(host);
-> +       UFSDBG_REMOVE_DEBUGFS(hba);
->         ufshcd_hba_exit(hba);
->  out_error:
->         return err;
+On Mon, 2015-02-09 at 13:38 +0100, Ondrej Zary wrote:
+> wd719x_template is missing the .module field, causing module refcount
+> not to work, allowing to rmmod the driver while in use (mounted filesystem),
+> causing an oops.
+> 
+> Set .module to THIS_MODULE to fix the problem.
 
-UFSDBG_REMOVE_DEBUGFS() is not called in the driver unloading path.
-So ufs debugfs directory is not removed when unloading driver.  It
-should be called in ufshcd_remove().
+This requires a cc to stable, doesn't it?
 
-BTW, do we really need UFSDBG_ADD_DEBUGFS() and UFSDBG_REMOVE_DEBUGFS()
-macros?
-We can use static inline functions in ufs-debugfs.h when !CONFIG_DEBUG_FS.
+James
 
-#ifdef CONFIG_DEBUG_FS
-void ufsdbg_add_debugfs(struct ufs_hba *hba);
 
-void ufsdbg_remove_debugfs(struct ufs_hba *hba);
-#else
-static inline void ufsdbg_add_debugfs(struct ufs_hba *hba)
-{
-}
-
-static inline void ufsdbg_remove_debugfs(struct ufs_hba *hba)
-{
-}
-#endif
