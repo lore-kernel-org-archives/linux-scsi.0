@@ -1,53 +1,117 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 069/104] lib/string_helpers.c:string_get_size(): remove
- redundant prefixes
-Date: Thu, 12 Feb 2015 15:25:08 -0800
-Message-ID: <1423783508.6286.25.camel@HansenPartnership.com>
-References: <54dd30d9.8sIvA5PVH18vSWTI%akpm@linux-foundation.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] [SCSI] sg: fix read() error reporting
+Date: Thu, 12 Feb 2015 18:31:37 -0500
+Message-ID: <54DD37D9.9050202@interlog.com>
+References: <54DB8406.4020804@cybernetics.com> <54DB953C.1090104@interlog.com> <54DB9BD7.7090605@cybernetics.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35461 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751038AbbBLXZM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2015 18:25:12 -0500
-In-Reply-To: <54dd30d9.8sIvA5PVH18vSWTI%akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54DB9BD7.7090605@cybernetics.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: torvalds@linux-foundation.org, linux@rasmusvillemoes.dk, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-02-12 at 15:01 -0800, akpm@linux-foundation.org wrote:
-> From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> Subject: lib/string_helpers.c:string_get_size(): remove redundant prefixes
-> 
-> While 3c9f3681d0b4 "[SCSI] lib: add generic helper to print sizes rounded
-> to the correct SI range" says that Z and Y are included in preparation for
-> 128 bit computers, they just waste .text currently.  If and when we get
-> u128, string_get_size needs updating anyway (and ISO needs to come up with
-> four more prefixes).
+On 15-02-11 01:13 PM, Tony Battersby wrote:
+> On 02/11/2015 12:45 PM, Douglas Gilbert wrote:
+>> On 15-02-11 11:32 AM, Tony Battersby wrote:
+>>> Fix SCSI generic read() incorrectly returning success after detecting an
+>>> error.
+>>>
+>>> Cc: <stable@vger.kernel.org>
+>>> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+>>> ---
+>>>
+>>> For inclusion in kernel 3.20.
+>>>
+>>> --- linux-3.19.0/drivers/scsi/sg.c.orig	2015-02-08 21:54:22.000000000 -0500
+>>> +++ linux-3.19.0/drivers/scsi/sg.c	2015-02-10 09:26:09.000000000 -0500
+>>> @@ -546,7 +546,7 @@ static ssize_t
+>>>    sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+>>>    {
+>>>    	sg_io_hdr_t *hp = &srp->header;
+>>> -	int err = 0;
+>>> +	int err = 0, err2;
+>>>    	int len;
+>>>
+>>>    	if (count < SZ_SG_IO_HDR) {
+>>> @@ -575,8 +575,8 @@ sg_new_read(Sg_fd * sfp, char __user *bu
+>>>    		goto err_out;
+>>>    	}
+>>>    err_out:
+>>> -	err = sg_finish_rem_req(srp);
+>>> -	return (0 == err) ? count : err;
+>>> +	err2 = sg_finish_rem_req(srp);
+>>> +	return err ? : err2 ? : count;
+>> Tony,
+>> Your point is well made.
+>>
+>> I just don't like that last line, using a gcc extension that
+>> hasn't even made it into C11 (or C++11). Wouldn't:
+>>       return err ? err : (err2 ? err2 : count);
+>>
+>> be a bit better? I think the following snippet makes the intent
+>> clear but would it generate any more code:
+>>       if (err || err2)
 
-This is rubbish.  It's nothing to do with 128 bits.  This is to do with
-disk sizes linux gets attached to.  The current largest device clusters
-are Petabytes ... I think we may have some exabyte ones somewhere in the
-Academic community, so it's by no means inconcievable we'll have
-Zettabyte ones within a few years.  The SCSI standard, with 4k blocks
-supports up to 2^76, which is well into Zettabytes.  We obviously run
-off the mmap possibilities a lot sooner, because of the byte offsets,
-but that's fixable.  Someone will probably start first by passing blocks
-into that interface not bytes, so we'd like it not to be based on
-assumptions that think 2^64 is the largest possible value.
+An improvement on the above line would be:
+       if (unlikely(err || err2))
 
-> Also there's no need to include and test for the NULL sentinel; once we
-> reach "E" size is at most 18.  [The test is also wrong; it should be
-> units_str[units][i+1]; if we've reached NULL we're already doomed.]
+>> 	return err ? err : err2;
+>>       else
+>>           return count;
+>>
 
-So fix the bug, don't set us up to run off the end of the array.  And
-please consult the community which keeps track of this rather than
-trying to get it into Linux without review.
+Another approach is to return the good path prior to the
+err_out label. This would require two calls to
+sg_finish_rem_req().
 
-James
+However Tony's clean-up is sufficient.
 
+> I checked before submitting, and the foo ? : bar construct is already
+> used at least 455 times in the kernel, so it is nothing new.
+>
+> find linux-3.19 -type f -name "*.[ch]" | xargs grep '\? :' | wc -l
+> 455
+>
+> But you are probably right; I think that with such small variable names
+> your version is more readable due to the nesting.  Updated patch below.
+>
+> ---
+>
+> Fix SCSI generic read() incorrectly returning success after detecting an
+> error.
+>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+
+> ---
+>
+> --- linux-3.19.0/drivers/scsi/sg.c.orig	2015-02-08 21:54:22.000000000 -0500
+> +++ linux-3.19.0/drivers/scsi/sg.c	2015-02-11 13:02:56.000000000 -0500
+> @@ -546,7 +546,7 @@ static ssize_t
+>   sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+>   {
+>   	sg_io_hdr_t *hp = &srp->header;
+> -	int err = 0;
+> +	int err = 0, err2;
+>   	int len;
+>
+>   	if (count < SZ_SG_IO_HDR) {
+> @@ -575,8 +575,8 @@ sg_new_read(Sg_fd * sfp, char __user *bu
+>   		goto err_out;
+>   	}
+>   err_out:
+> -	err = sg_finish_rem_req(srp);
+> -	return (0 == err) ? count : err;
+> +	err2 = sg_finish_rem_req(srp);
+> +	return err ? err : (err2 ? err2 : count);
+>   }
+>
+>   static ssize_t
+>
+> --
