@@ -1,78 +1,38 @@
-From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: [PATCH 2/5] ufs: Rename of regulator_set_optimum_mode
-Date: Wed, 11 Feb 2015 19:35:28 -0800
-Message-ID: <1423712131-23795-3-git-send-email-bjorn.andersson@sonymobile.com>
-References: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Kernel crash on usb-storage disconnect, multiqueue in use
+Date: Thu, 12 Feb 2015 07:56:47 +0100
+Message-ID: <54DC4EAF.3050802@sandisk.com>
+References: <20150211222552.625882f6@neptune.home>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Mark Brown <broonie@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2on0095.outbound.protection.outlook.com ([207.46.100.95]:38448
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750966AbbBLG44 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2015 01:56:56 -0500
+In-Reply-To: <20150211222552.625882f6@neptune.home>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?windows-1252?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
 
-The function regulator_set_optimum_mode() is changing name to
-regulator_set_load(), so update the code accordingly. Also cleaned up
-ufshcd_config_vreg_load() while touching the code.
+On 02/11/15 22:25, Bruno Pr=E9mont wrote:
+> Since 3.19-rcX kernel crashes when I disconnect an external
+> HDD drive (not sure since which kernel revision tough early
+> 3.19-rcs possibly are not affected).
+>=20
+> It looks like this crash is related to the fact that I enable
+> multiqueue (CONFIG_SCSI_MQ_DEFAULT=3Dy).
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
----
- drivers/scsi/ufs/ufshcd.c | 27 +++++++--------------------
- 1 file changed, 7 insertions(+), 20 deletions(-)
+Can you repeat your test with kernel 3.19, which includes the pull
+request https://lkml.org/lkml/2015/2/3/606 ?
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2e4614b..4b73b94 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4225,22 +4225,15 @@ static struct scsi_host_template ufshcd_driver_template = {
- static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- 				   int ua)
- {
--	int ret = 0;
--	struct regulator *reg = vreg->reg;
--	const char *name = vreg->name;
-+	int ret;
- 
--	BUG_ON(!vreg);
-+	if (!vreg)
-+		return 0;
- 
--	ret = regulator_set_optimum_mode(reg, ua);
--	if (ret >= 0) {
--		/*
--		 * regulator_set_optimum_mode() returns new regulator
--		 * mode upon success.
--		 */
--		ret = 0;
--	} else {
--		dev_err(dev, "%s: %s set optimum mode(ua=%d) failed, err=%d\n",
--				__func__, name, ua, ret);
-+	ret = regulator_set_load(vreg->reg, ua);
-+	if (ret < 0) {
-+		dev_err(dev, "%s: %s set load (ua=%d) failed, err=%d\n",
-+				__func__, vreg->name, ua, ret);
- 	}
- 
- 	return ret;
-@@ -4249,18 +4242,12 @@ static int ufshcd_config_vreg_load(struct device *dev, struct ufs_vreg *vreg,
- static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	if (!vreg)
--		return 0;
--
- 	return ufshcd_config_vreg_load(hba->dev, vreg, UFS_VREG_LPM_LOAD_UA);
- }
- 
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
- {
--	if (!vreg)
--		return 0;
--
- 	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
- 
--- 
-1.8.2.2
+Bart.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
