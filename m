@@ -1,28 +1,42 @@
-From: worley@alum.mit.edu (Dale R. Worley)
-Subject: Re: [PATCH] st: implement sysfs based tape statistics v2
-Date: Tue, 10 Feb 2015 22:38:11 -0500
-Message-ID: <87r3txw21o.fsf@hobgoblin.ariadne.com>
-References: <DDB9C85B850785449757F9914A034FCB3BF3F1BF@G9W0766.americas.hpqcorp.net>
+From: John Soni Jose <sony.john-n@emulex.com>
+Subject: [PATCH]  be2iscsi: Fix kernel panic when device initialization fails
+Date: Thu, 12 Feb 2015 06:45:47 +0530
+Message-ID: <b34d5567-d9e1-44b2-ac6d-42d97d32309f@CMEXHTCAS1.ad.emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from resqmta-ch2-05v.sys.comcast.net ([69.252.207.37]:58507 "EHLO
-	resqmta-ch2-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751061AbbBKDiO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2015 22:38:14 -0500
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB3BF3F1BF@G9W0766.americas.hpqcorp.net> (shane.seymour@hp.com)
+Received: from cmexedge1.emulex.com ([138.239.224.99]:42523 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbbBKIuB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Feb 2015 03:50:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Seymour, Shane M" <shane.seymour@hp.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Jayamohan.Kallickal@Emulex.Com, MinhDuc.Tran@Emulex.Com
+Cc: John Soni Jose <sony.john-n@emulex.com>
 
-"Seymour, Shane M" <shane.seymour@hp.com> writes:
-> Both of those things would have to be futures and require discussion -
-> the very original version cleared stats on a device open but I got
-> asked to keep it the stats cumulative so they would be more similar to
-> disk stats.
+ Kernel panic was happening as iscsi_host_remove() was called on
+ a host which was not yet added.
 
-Yes, this is a futures question.  But in a perfect world, there'd be two
-sets of statistics, one cumulative since the last reboot and one that
-was cleared every time a tape was unloaded.
+Signed-off-by: John Soni Jose <sony.john-n@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Dale
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index f319340..1b0b31c 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5736,9 +5736,9 @@ free_port:
+ hba_free:
+ 	if (phba->msix_enabled)
+ 		pci_disable_msix(phba->pcidev);
+-	iscsi_host_remove(phba->shost);
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
++	pci_set_drvdata(pcidev, NULL);
+ disable_pci:
+ 	pci_disable_device(pcidev);
+ 	return ret;
+-- 
+1.7.1
+
