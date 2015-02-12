@@ -1,81 +1,90 @@
-From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Thu, 12 Feb 2015 07:04:42 -0600
-Message-ID: <201502121304.t1CD4g29020518@wind.enjellic.com>
-References: <bart.vanassche@sandisk.com>
-Reply-To: greg@enjellic.com
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wind.enjellic.com ([76.10.64.91]:35999 "EHLO wind.enjellic.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755302AbbBLNFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2015 08:05:19 -0500
-In-Reply-To: Bart Van Assche <bart.vanassche@sandisk.com>
-       "Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers" (Feb  9,  2:16pm)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: scsi: Implement per-cpu logging buffer
+Date: Thu, 12 Feb 2015 14:29:35 +0100
+Message-ID: <54DCAABF.20606@suse.de>
+References: <20150211191614.349AF660DDA@gitolite.kernel.org> <CAMuHMdUKH1yuLZ9zLAK2STekLFXBufR9PM2_S11xExCtEc9dWg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMuHMdUKH1yuLZ9zLAK2STekLFXBufR9PM2_S11xExCtEc9dWg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>
+Cc: Josh Triplett <josh@joshtriplett.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, greg@enjellic.com, Christoph Hellwig <hch@infradead.org>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Feb 9,  2:16pm, Bart Van Assche wrote:
-} Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target driv
+On 02/12/2015 01:36 PM, Geert Uytterhoeven wrote:
+> On Wed, Feb 11, 2015 at 8:16 PM, Linux Kernel Mailing List
+> <linux-kernel@vger.kernel.org> wrote:
+>> Gitweb:     http://git.kernel.org/linus/;a=3Dcommit;h=3Dded85c193a39=
+1a84076d5c6a7a5668fe164a490e
+>> Commit:     ded85c193a391a84076d5c6a7a5668fe164a490e
+>> Parent:     b0a93d96b2814c725161f91a4e35d0c29ec0f95b
+>> Refname:    refs/heads/master
+>> Author:     Hannes Reinecke <hare@suse.de>
+>> AuthorDate: Thu Jan 8 07:43:42 2015 +0100
+>> Committer:  Christoph Hellwig <hch@lst.de>
+>> CommitDate: Fri Jan 9 15:44:28 2015 +0100
+>>
+>>     scsi: Implement per-cpu logging buffer
+>>
+>>     Implement a per-cpu buffer for formatting messages to avoid line=
+ breaks
+>>     up under high load.  This patch implements scmd_printk() and
+>>     sdev_prefix_printk() using the per-cpu buffer and makes sdev_pri=
+ntk() a
+>>     wrapper for sdev_prefix_printk().
+>>
+>>     Tested-by: Robert Elliott <elliott@hp.com>
+>>     Reviewed-by: Robert Elliott <elliott@hp.com>
+>>     Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>=20
+>> --- /dev/null
+>> +++ b/drivers/scsi/scsi_logging.c
+>=20
+>> +#define SCSI_LOG_SPOOLSIZE 4096
+>> +#define SCSI_LOG_BUFSIZE 128
+>> +
+>> +#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
+>> +#warning SCSI logging bitmask too large
+>> +#endif
+>> +
+>> +struct scsi_log_buf {
+>> +       char buffer[SCSI_LOG_SPOOLSIZE];
+>> +       unsigned long map;
+>> +};
+>> +
+>> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
+>=20
+> Do we really need a static 4 KiB per-CPU buffer?
+>=20
+> bloat-o-meter:
+>=20
+> add/remove: 183/94 grow/shrink: 314/211 up/down: 33467/-21291 (12176)
+> function                                     old     new   delta
+> scsi_format_log                                -    4100   +4100
+> handle_mm_fault                             1794    2750    +956
+> scsi_log_print_sense_hdr                       -     774    +774
+> proc_keys_show                                 -     770    +770
+>=20
+Define 'need'.
+We don't absolutely 'need' it. (Configure it out and it's gone).
 
-> On 02/03/15 11:06, Dr. Greg Wettstein wrote:
-> > It takes a six line patch to the in-kernel Qlogic target driver for
-> > SCST to leverage and contribute positively to the state of the
-> > in-kernel driver.  A six line patch, which if we were engaging in
-> > grounded engineering discussions, implements an interface which we
-> > haven't found anyone who suggests is unfounded.
+But when we want to avoid several logging messages coming in from
+various CPUs overwriting each other and _not_ introduce additional
+latency by locking a single buffer, then yes.
 
-> Hi Greg,
+We can possibly reduce it to, say, 1KiB or even lower by imposing
+stricter rules on the logging functions.
+But I don't see a way around the per-CPU buffer.
 
-Hi Bart, I hope your week is going well.
+Cheers,
 
-> Thanks for your feedback. Although I certainly value your work,
-> please note that what I proposed goes further than what you have
-> done. If I understood your e-mails correctly what you have done is
-> to unify the API between the QLogic initiator and target drivers for
-> SCST and LIO. My proposal comprises not only a unification of the
-> initiator drivers but also of the target drivers.
-
-Just to clarify issues for discussion our work on the SQATGT driver
-centered exclusively on the target component of the Qlogic driver.
-
-Our work focused on providing an SCST equivalant to the tcm_qla2xxx.c
-driver which the in-kernel implementation of the Qlogic target driver
-uses to interface with the TCM target core.  The {scst,tcm}_qla2xxx
-drivers register a function dispatch structure with the Qlogic
-hardware target driver, qla_target.c.  These drivers take the actions
-requested by the hardware driver and translate them into the necessary
-target core processing functions.
-
-As I have indicated the scst_qla2xxx driver could be distributed
-separately from the kernel since it only relies on symbols which are
-exported from the Qlogic driver.  I'm not familiar with IB and such
-but it seems to be a reasonable architecture for both camps of
-interest to collaborate on.
-
-> Last week I finally found the time to start working on an sample
-> implementation of such a unified driver. I hope that I will be able to
-> make that code available for review somewhere next week.
-
-Let us know when that becomes available since we would certainly like
-to be assisting and supporting whatever the community agrees to as a
-solution.
-
-> Bart.
-
-Have a good week.
-
-}-- End of excerpt from Bart Van Assche
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"... Doc (interviews) is closest in look&feel to a Windows word-processor.
- It's even slow.  Very slow.  Hard to set up fonts and printing in the
- version I have...."
-                                -- David Johnson
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
