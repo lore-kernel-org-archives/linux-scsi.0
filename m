@@ -1,72 +1,53 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH v2 3/4] scsi: ufs: add trace events and dump prints for
- debug
-Date: Thu, 12 Feb 2015 14:55:51 -0500
-Message-ID: <20150212145551.2d234fb1@gandalf.local.home>
-References: <1423576735-26267-1-git-send-email-gbroner@codeaurora.org>
-	<1423576735-26267-4-git-send-email-gbroner@codeaurora.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [patch 069/104] lib/string_helpers.c:string_get_size(): remove
+ redundant prefixes
+Date: Thu, 12 Feb 2015 15:25:08 -0800
+Message-ID: <1423783508.6286.25.camel@HansenPartnership.com>
+References: <54dd30d9.8sIvA5PVH18vSWTI%akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:49732 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751573AbbBLTzz (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35461 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751038AbbBLXZM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2015 14:55:55 -0500
-In-Reply-To: <1423576735-26267-4-git-send-email-gbroner@codeaurora.org>
+	Thu, 12 Feb 2015 18:25:12 -0500
+In-Reply-To: <54dd30d9.8sIvA5PVH18vSWTI%akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
+To: akpm@linux-foundation.org
+Cc: torvalds@linux-foundation.org, linux@rasmusvillemoes.dk, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 10 Feb 2015 15:58:54 +0200
-Gilad Broner <gbroner@codeaurora.org> wrote:
+On Thu, 2015-02-12 at 15:01 -0800, akpm@linux-foundation.org wrote:
+> From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> Subject: lib/string_helpers.c:string_get_size(): remove redundant prefixes
+> 
+> While 3c9f3681d0b4 "[SCSI] lib: add generic helper to print sizes rounded
+> to the correct SI range" says that Z and Y are included in preparation for
+> 128 bit computers, they just waste .text currently.  If and when we get
+> u128, string_get_size needs updating anyway (and ISO needs to come up with
+> four more prefixes).
 
-I really hate large patches like this. So much to dig through.
+This is rubbish.  It's nothing to do with 128 bits.  This is to do with
+disk sizes linux gets attached to.  The current largest device clusters
+are Petabytes ... I think we may have some exabyte ones somewhere in the
+Academic community, so it's by no means inconcievable we'll have
+Zettabyte ones within a few years.  The SCSI standard, with 4k blocks
+supports up to 2^76, which is well into Zettabytes.  We obviously run
+off the mmap possibilities a lot sooner, because of the byte offsets,
+but that's fixable.  Someone will probably start first by passing blocks
+into that interface not bytes, so we'd like it not to be based on
+assumptions that think 2^64 is the largest possible value.
 
-> -#ifdef CONFIG_DEBUG_FS
-> +#define UIC_ERR_REG_HIST_LENGTH 8
-> +/**
-> + * struct ufs_uic_err_reg_hist - keeps history of uic errors
-> + * @pos: index to indicate cyclic buffer position
-> + * @reg: cyclic buffer for registers value
-> + * @tstamp: cyclic buffer for time stamp
-> + */
-> +struct ufs_uic_err_reg_hist {
-> +	int pos;
-> +	u32 reg[UIC_ERR_REG_HIST_LENGTH];
-> +	ktime_t tstamp[UIC_ERR_REG_HIST_LENGTH];
-> +};
-> +
-> +/**
-> + * struct ufs_stats - keeps usage/err statistics
-> + * @enabled: enable tagstats for debugfs
-> + * @tag_stats: pointer to tag statistic counters
-> + * @q_depth: current amount of busy slots
-> + * @err_stats: counters to keep track of various errors
-> + * @hibern8_exit_cnt: Counter to keep track of number of exits,
-> + *		reset this after link-startup.
-> + * @last_hibern8_exit_tstamp: Set time after the hibern8 exit.
-> + *		Clear after the first successful command completion.
-> + * @pa_err: tracks pa-uic errors
-> + * @dl_err: tracks dl-uic errors
-> + * @nl_err: tracks nl-uic errors
-> + * @tl_err: tracks tl-uic errors
-> + * @dme_err: tracks dme errors
-> + */
->  struct ufs_stats {
-> +#ifdef CONFIG_DEBUG_FS
->  	bool enabled;
->  	u64 **tag_stats;
->  	int q_depth;
->  	int err_stats[UFS_ERR_MAX];
-> +#endif
+> Also there's no need to include and test for the NULL sentinel; once we
+> reach "E" size is at most 18.  [The test is also wrong; it should be
+> units_str[units][i+1]; if we've reached NULL we're already doomed.]
 
-Can any of the tracepoint code be called that references these when
-CONFIG_DEBUG_FS is not set? Because soon (possibly even this merge
-window), tracing will no longer depend on DEBUG_FS, because it will
-have its own filesystem.
+So fix the bug, don't set us up to run off the end of the array.  And
+please consult the community which keeps track of this rather than
+trying to get it into Linux without review.
 
--- Steve
+James
+
 
