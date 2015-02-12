@@ -1,71 +1,91 @@
-From: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Subject: [PATCH] pm80xx: Added pm8006 controller support
-Date: Thu, 12 Feb 2015 12:04:37 +0530
-Message-ID: <1423722877-17436-1-git-send-email-Suresh.Thiagarajan@pmcs.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:38709 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932109AbbBLHCg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Feb 2015 02:02:36 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
+Date: Wed, 11 Feb 2015 23:16:22 -0800
+Message-ID: <1423725382.8354.34.camel@haakon3.risingtidesystems.com>
+References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
+	 <1421920228.7061.48.camel@haakon3.risingtidesystems.com>
+	 <CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
+	 <1421948107.30821.2.camel@haakon3.risingtidesystems.com>
+	 <CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
+	 <1422658406.5117.31.camel@haakon3.risingtidesystems.com>
+	 <CA+eFSM1yp8bxp2zi8OuWs=_R7ddrintYXsDx5q10eOMj2Y04NQ@mail.gmail.com>
+	 <CA+eFSM3-Xw1sqN0sCx4LHXYH7d81j+qtx_z6VZ_6QXc7uu2QyA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+eFSM3-Xw1sqN0sCx4LHXYH7d81j+qtx_z6VZ_6QXc7uu2QyA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gavin Guo <gavin.guo@canonical.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: xjtuwjp@gmail.com, JBottomley@parallels.com, Suresh.Thiagarajan@pmcs.com, Viswas.G@pmcs.com, pmchba@pmcs.com
 
-Added the pm8006 controller id in pci table
+Hi Gavin,
 
-Signed-off-by: Suresh Thiagarajan <Suresh.Thiagarajan@pmcs.com>
-Signed-off-by: Viswas G <Viswas.G@pmcs.com>
----
- drivers/scsi/pm8001/pm8001_defs.h |    3 ++-
- drivers/scsi/pm8001/pm8001_init.c |    5 ++++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+On Tue, 2015-02-03 at 08:28 +0800, Gavin Guo wrote:
+> Hi Nicholas,
+> 
+> On Sun, Feb 1, 2015 at 11:47 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
+> > Hi Nicholas,
+> >
+> > On Sat, Jan 31, 2015 at 6:53 AM, Nicholas A. Bellinger
+> > <nab@linux-iscsi.org> wrote:
+> >> On Fri, 2015-01-23 at 09:30 +0800, Gavin Guo wrote:
+> >>> Hi Nicholas,
+> >>>
+> >>> On Fri, Jan 23, 2015 at 1:35 AM, Nicholas A. Bellinger
+> >>> <nab@linux-iscsi.org> wrote:
+> >>> > On Thu, 2015-01-22 at 23:56 +0800, Gavin Guo wrote:
+> >>> >> Hi Nicolas,
+> >>> >>
+> >>> >> On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
 
-diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
-index 74a4bb9..dc4233b 100644
---- a/drivers/scsi/pm8001/pm8001_defs.h
-+++ b/drivers/scsi/pm8001/pm8001_defs.h
-@@ -49,7 +49,8 @@ enum chip_flavors {
- 	chip_8019,
- 	chip_8074,
- 	chip_8076,
--	chip_8077
-+	chip_8077,
-+	chip_8006,
- };
- 
- enum phy_speed {
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 6555591..e1aee58 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -57,6 +57,7 @@ static const struct pm8001_chip_info pm8001_chips[] = {
- 	[chip_8074] = {0,  8, &pm8001_80xx_dispatch,},
- 	[chip_8076] = {0,  16, &pm8001_80xx_dispatch,},
- 	[chip_8077] = {0,  16, &pm8001_80xx_dispatch,},
-+	[chip_8006] = {0,  16, &pm8001_80xx_dispatch,},
- };
- static int pm8001_id;
- 
-@@ -1108,6 +1109,8 @@ err_out_enable:
-  */
- static struct pci_device_id pm8001_pci_table[] = {
- 	{ PCI_VDEVICE(PMC_Sierra, 0x8001), chip_8001 },
-+	{ PCI_VDEVICE(PMC_Sierra, 0x8006), chip_8006 },
-+	{ PCI_VDEVICE(ADAPTEC2, 0x8006), chip_8006 },
- 	{ PCI_VDEVICE(ATTO, 0x0042), chip_8001 },
- 	/* Support for SPC/SPCv/SPCve controllers */
- 	{ PCI_VDEVICE(ADAPTEC2, 0x8001), chip_8001 },
-@@ -1218,7 +1221,7 @@ MODULE_AUTHOR("Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>");
- MODULE_AUTHOR("Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com>");
- MODULE_AUTHOR("Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>");
- MODULE_DESCRIPTION(
--		"PMC-Sierra PM8001/8081/8088/8089/8074/8076/8077 "
-+		"PMC-Sierra PM8001/8006/8081/8088/8089/8074/8076/8077 "
- 		"SAS/SATA controller driver");
- MODULE_VERSION(DRV_VERSION);
- MODULE_LICENSE("GPL");
--- 
-1.7.1
+<SNIP>
 
+> >>> >> > At the time, a different set of iser-target related changes ended up
+> >>> >> > avoiding this issue on his particular setup, so we thought it was likely
+> >>> >> > a race triggered by login failures specific to iser-target code.
+> >>> >> >
+> >>> >> > There was a untested patch (included inline below) to drop the legacy
+> >>> >> > active_ts_list usage all-together, but IIRC he was not able to reproduce
+> >>> >> > further so the patch didn't get picked up for mainline.
+> >>> >> >
+> >>> >> > If your able to reliability reproduce, please try with the following
+> >>> >> > patch and let us know your progress.
+> >>> >>
+> >>> >> Thanks for your time reading the mail. I'll let you know the result.
+> >>> >
+> >>> > Just curious, are you able to reliability reproduce this bug in a VM..?
+> >>>
+> >>> Thanks for your caring, the machine is on the customer side, I've
+> >>> asked and now waiting for their response.
+> >>
+> >> Hi Gavin,
+> >>
+> >> Just curious if there has been any update on this yet..?
+> >>
+> >> --nab
+> >>
+> >
+> > Really thanks for your attention. I'm also currently waiting for the
+> > customer's reply and will send the email again to ask for the result.
+> > However, I think the symptom may be hard to replicate that's why the
+> > customer didn't reply me for a long time. Thanks for your time again.
+> >
+> > Thanks,
+> > Gavin
+> 
+> Sorry for making you wait so long. I just got the response from the
+> customer, they said the general protection fault happened just 2 times
+> in the past and cannot be reliably reproduced. And I am now waiting
+> for the verification test.
+> 
+
+Just a heads up that I'm planning to include this patch in the v3.20-rc1
+PULL request.
+
+Please let me know if you have any objections.
+
+Thank you,
+
+--nab
