@@ -1,7 +1,7 @@
 From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH v2 1/2] [SCSI] sg: fix unkillable I/O wait deadlock with scsi-mq
-Date: Fri, 13 Feb 2015 12:09:44 -0500
-Message-ID: <54DE2FD8.8000901@cybernetics.com>
+Subject: [PATCH v2 2/2] [SCSI] sg: fix EWOULDBLOCK errors with scsi-mq
+Date: Fri, 13 Feb 2015 12:10:58 -0500
+Message-ID: <54DE3022.7070803@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
@@ -11,19 +11,14 @@ To: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com
 Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-When using the write()/read() interface for submitting commands, the
-SCSI generic driver does not call blk_put_request() on a completed SCSI
-command until userspace calls read() to get the command completion. 
-Since scsi-mq uses a fixed number of preallocated requests, this makes
-it possible for userspace to exhaust the entire preallocated supply of
-requests.  For places in the kernel that call blk_get_request() with
-GFP_KERNEL, this can cause the calling process to deadlock in a
-permanent unkillable I/O wait in blk_get_request() -> ... -> bt_get(). 
-For places in the kernel that call blk_get_request() with GFP_ATOMIC,
-this can cause blk_get_request() always to return -EWOULDBLOCK.  Note
-that these problems happen only if scsi-mq is enabled.  Prevent the
-problems by calling blk_put_request() as soon as the SCSI command
-completes instead of waiting for userspace to call read().
+With scsi-mq enabled, userspace programs can get unexpected EWOULDBLOCK
+(a.k.a. EAGAIN) errors when submitting commands to the SCSI generic
+driver.  Fix by calling blk_get_request() with GFP_KERNEL instead of
+GFP_ATOMIC.
+
+Note: to avoid introducing a potential deadlock, this patch should be
+applied after the patch titled "sg: fix unkillable I/O wait deadlock
+with scsi-mq".
 
 Cc: Douglas Gilbert <dgilbert@interlog.com>
 Cc: <stable@vger.kernel.org> # 3.17+
@@ -32,42 +27,35 @@ Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 
 For inclusion in kernel 3.20.
 
-This is the exact same patch as before; I have only updated the patch
-description to reflect new details uncovered by myself and Douglas
-Gilbert.  There is also now a second related patch to sg that must be
-applied after this one.
+The difference in behavior is due to bt_get() in block/blk-mq-tag.c
+checking for __GFP_WAIT.
 
---- linux-3.19.0/drivers/scsi/sg.c.orig	2015-02-08 21:54:22.000000000 -0500
-+++ linux-3.19.0/drivers/scsi/sg.c	2015-02-09 17:40:00.000000000 -0500
-@@ -1350,6 +1350,17 @@ sg_rq_end_io(struct request *rq, int upt
+The bsg driver already calls blk_get_request() with GFP_KERNEL, so there
+is no need for a change there.
+
+--- linux-3.19.0/drivers/scsi/sg.c.orig	2015-02-13 11:04:40.000000000 -0500
++++ linux-3.19.0/drivers/scsi/sg.c	2015-02-13 11:05:14.000000000 -0500
+@@ -1695,7 +1695,22 @@ sg_start_req(Sg_request *srp, unsigned c
+ 			return -ENOMEM;
  	}
- 	/* Rely on write phase to clean out srp status values, so no "else" */
  
 +	/*
-+	 * Free the request as soon as it is complete so that its resources
-+	 * can be reused without waiting for userspace to read() the
-+	 * result.  But keep the associated bio (if any) around until
-+	 * blk_rq_unmap_user() can be called from user context.
++	 * NOTE
++	 *
++	 * With scsi-mq enabled, there are a fixed number of preallocated
++	 * requests equal in number to shost->can_queue.  If all of the
++	 * preallocated requests are already in use, then using GFP_ATOMIC with
++	 * blk_get_request() will return -EWOULDBLOCK, whereas using GFP_KERNEL
++	 * will cause blk_get_request() to sleep until an active command
++	 * completes, freeing up a request.  Neither option is ideal, but
++	 * GFP_KERNEL is the better choice to prevent userspace from getting an
++	 * unexpected EWOULDBLOCK.
++	 *
++	 * With scsi-mq disabled, blk_get_request() with GFP_KERNEL usually
++	 * does not sleep except under memory pressure.
 +	 */
-+	srp->rq = NULL;
-+	if (rq->cmd != rq->__cmd)
-+		kfree(rq->cmd);
-+	__blk_put_request(rq->q, rq);
-+
- 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	if (unlikely(srp->orphan)) {
- 		if (sfp->keep_orphan)
-@@ -1777,10 +1788,10 @@ sg_finish_rem_req(Sg_request *srp)
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
- 				      "sg_finish_rem_req: res_used=%d\n",
- 				      (int) srp->res_used));
-+	if (srp->bio)
-+		ret = blk_rq_unmap_user(srp->bio);
-+
- 	if (srp->rq) {
--		if (srp->bio)
--			ret = blk_rq_unmap_user(srp->bio);
--
- 		if (srp->rq->cmd != srp->rq->__cmd)
- 			kfree(srp->rq->cmd);
- 		blk_put_request(srp->rq);
++	rq = blk_get_request(q, rw, GFP_KERNEL);
+-	rq = blk_get_request(q, rw, GFP_ATOMIC);
+ 	if (IS_ERR(rq)) {
+ 		kfree(long_cmdp);
+ 		return PTR_ERR(rq);
