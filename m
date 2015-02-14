@@ -1,164 +1,60 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/8] target: Fail I/O with PROTECT bit when protection is unsupported
-Date: Sat, 14 Feb 2015 03:27:38 +0000
-Message-ID: <1423884463-16797-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH 1/8] target: Add missing WRITE_SAME end-of-device sanity check
+Date: Sat, 14 Feb 2015 03:27:36 +0000
+Message-ID: <1423884463-16797-2-git-send-email-nab@daterainc.com>
 References: <1423884463-16797-1-git-send-email-nab@daterainc.com>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1423884463-16797-1-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds an explicit check for WRPROTECT + RDPROTECT bit usage
-within sbc_check_prot(), and fails with TCM_INVALID_CDB_FIELD if the
-backend device does not have protection enabled.
+This patch adds a check to sbc_setup_write_same() to verify
+the incoming WRITE_SAME LBA + number of blocks does not exceed
+past the end-of-device.
 
-Also, update sbc_check_prot() to return sense_reason_t in order to
-propigate up the correct sense ASQ.
+Also check for potential LBA wrap-around as well.
 
+Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c | 51 +++++++++++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 19 deletions(-)
+ drivers/target/target_core_sbc.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 17259c0..1bb8b4a 100644
+index 11bea19..b26b52f 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -626,14 +626,21 @@ sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
- 	return 0;
- }
- 
--static bool
-+static sense_reason_t
- sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
- 	       u32 sectors, bool is_write)
+@@ -251,6 +251,8 @@ static inline unsigned long long transport_lba_64_ext(unsigned char *cdb)
+ static sense_reason_t
+ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *ops)
  {
- 	u8 protect = cdb[1] >> 5;
++	struct se_device *dev = cmd->se_dev;
++	sector_t end_lba = dev->transport->get_blocks(dev) + 1;
+ 	unsigned int sectors = sbc_get_write_same_sectors(cmd);
  
--	if ((!cmd->t_prot_sg || !cmd->t_prot_nents) && cmd->prot_pto)
--		return true;
-+	if (!cmd->t_prot_sg || !cmd->t_prot_nents) {
-+		if (protect && !dev->dev_attrib.pi_prot_type) {
-+			pr_err("CDB contains protect bit, but device does not"
-+			       " advertise PROTECT=1 feature bit\n");
-+			return TCM_INVALID_CDB_FIELD;
-+		}
-+		if (cmd->prot_pto)
-+			return TCM_NO_SENSE;
-+	}
- 
- 	switch (dev->dev_attrib.pi_prot_type) {
- 	case TARGET_DIF_TYPE3_PROT:
-@@ -641,7 +648,7 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
- 		break;
- 	case TARGET_DIF_TYPE2_PROT:
- 		if (protect)
--			return false;
-+			return TCM_INVALID_CDB_FIELD;
- 
- 		cmd->reftag_seed = cmd->t_task_lba;
- 		break;
-@@ -650,12 +657,12 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
- 		break;
- 	case TARGET_DIF_TYPE0_PROT:
- 	default:
--		return true;
-+		return TCM_NO_SENSE;
+ 	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
+@@ -264,6 +266,16 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 			sectors, cmd->se_dev->dev_attrib.max_write_same_len);
+ 		return TCM_INVALID_CDB_FIELD;
  	}
- 
- 	if (sbc_set_prot_op_checks(protect, dev->dev_attrib.pi_prot_type,
- 				   is_write, cmd))
--		return false;
-+		return TCM_INVALID_CDB_FIELD;
- 
- 	cmd->prot_type = dev->dev_attrib.pi_prot_type;
- 	cmd->prot_length = dev->prot_length * sectors;
-@@ -674,7 +681,7 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
- 		 __func__, cmd->prot_type, cmd->data_length, cmd->prot_length,
- 		 cmd->prot_op, cmd->prot_checks);
- 
--	return true;
-+	return TCM_NO_SENSE;
- }
- 
- sense_reason_t
-@@ -698,8 +705,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_10(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-+		if (ret)
-+			return ret;
- 
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
- 		cmd->execute_rw = ops->execute_rw;
-@@ -709,8 +717,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_12(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-+		if (ret)
-+			return ret;
- 
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
- 		cmd->execute_rw = ops->execute_rw;
-@@ -720,8 +729,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_16(cdb);
- 		cmd->t_task_lba = transport_lba_64(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-+		if (ret)
-+			return ret;
- 
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
- 		cmd->execute_rw = ops->execute_rw;
-@@ -739,8 +749,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_10(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-+		if (ret)
-+			return ret;
- 
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
-@@ -752,8 +763,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_12(cdb);
- 		cmd->t_task_lba = transport_lba_32(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-+		if (ret)
-+			return ret;
- 
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
-@@ -765,8 +777,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
- 		sectors = transport_get_sectors_16(cdb);
- 		cmd->t_task_lba = transport_lba_64(cdb);
- 
--		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
--			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-+		if (ret)
-+			return ret;
- 
- 		if (cdb[1] & 0x8)
- 			cmd->se_cmd_flags |= SCF_FUA;
++	/*
++	 * Sanity check for LBA wrap and request past end of device.
++	 */
++	if (((cmd->t_task_lba + sectors) < cmd->t_task_lba) ||
++	    ((cmd->t_task_lba + sectors) > end_lba)) {
++		pr_err("WRITE_SAME exceeds last lba %llu (lba %llu, sectors %u)\n",
++		       (unsigned long long)end_lba, cmd->t_task_lba, sectors);
++		return TCM_ADDRESS_OUT_OF_RANGE;
++	}
++
+ 	/* We always have ANC_SUP == 0 so setting ANCHOR is always an error */
+ 	if (flags[0] & 0x10) {
+ 		pr_warn("WRITE SAME with ANCHOR not supported\n");
 -- 
 1.9.1
