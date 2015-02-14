@@ -1,106 +1,180 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 4/8] target: Perform PROTECT sanity checks for WRITE_SAME
-Date: Sat, 14 Feb 2015 03:27:39 +0000
-Message-ID: <1423884463-16797-5-git-send-email-nab@daterainc.com>
+Subject: [PATCH 5/8] target: Add sanity checks for DPO/FUA bit usage
+Date: Sat, 14 Feb 2015 03:27:40 +0000
+Message-ID: <1423884463-16797-6-git-send-email-nab@daterainc.com>
 References: <1423884463-16797-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:43053 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901AbbBNEBJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Feb 2015 23:01:09 -0500
-Received: by mail-ob0-f176.google.com with SMTP id wo20so26906393obc.7
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2015 20:01:08 -0800 (PST)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1423884463-16797-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a call to sbc_check_prot() within sbc_setup_write_same()
-code to perform the various protection releated sanity checks, including
-failing if WRPROTECT or RDPROTECT is set for a backend device that has
-not advertised support for T10-PI.
+This patch adds a sbc_check_dpofua() function that performs sanity
+checks for DPO/FUA command bits.
 
-Also, since WRITE_SAME + T10-PI is currently not supported by IBLOCK +
-FILEIO backends, go ahead and fail if ->execute_write_same() is invoked
-with a non zero cmd->prot_op.
+It introduces checks to fail when either bit is set, but the backend
+device is not advertising support for them.
 
-Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Sagi Grimberg <sagig@mellanox.com>
+It also moves the existing cmd->se_cmd_flags |= SCF_FUA assignement
+into the new helper function.
+
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c   | 5 +++++
- drivers/target/target_core_iblock.c | 5 +++++
- drivers/target/target_core_sbc.c    | 8 ++++++++
- 3 files changed, 18 insertions(+)
+ drivers/target/target_core_sbc.c | 56 +++++++++++++++++++++++++++++++++-------
+ 1 file changed, 46 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index c2aea09..9f1ed77 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -494,6 +494,11 @@ fd_execute_write_same(struct se_cmd *cmd)
- 		target_complete_cmd(cmd, SAM_STAT_GOOD);
- 		return 0;
- 	}
-+	if (cmd->prot_op) {
-+		pr_err("WRITE_SAME: Protection information with FILEIO"
-+		       " backends not supported\n");
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+	}
- 	sg = &cmd->t_data_sg[0];
- 
- 	if (cmd->t_data_nents > 1 ||
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 3efff94..303299e 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -464,6 +464,11 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 	sector_t block_lba = cmd->t_task_lba;
- 	sector_t sectors = sbc_get_write_same_sectors(cmd);
- 
-+	if (cmd->prot_op) {
-+		pr_err("WRITE_SAME: Protection information with IBLOCK"
-+		       " backends not supported\n");
-+		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+	}
- 	sg = &cmd->t_data_sg[0];
- 
- 	if (cmd->t_data_nents > 1 ||
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 1bb8b4a..87cbbe2 100644
+index 87cbbe2..856e800 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -37,6 +37,9 @@
- #include "target_core_alua.h"
- 
- static sense_reason_t
-+sbc_check_prot(struct se_device *, struct se_cmd *, unsigned char *, u32, bool);
-+
-+static sense_reason_t
- sbc_emulate_readcapacity(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
-@@ -254,6 +257,7 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
- 	struct se_device *dev = cmd->se_dev;
- 	sector_t end_lba = dev->transport->get_blocks(dev) + 1;
- 	unsigned int sectors = sbc_get_write_same_sectors(cmd);
-+	sense_reason_t ret;
- 
- 	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
- 		pr_err("WRITE_SAME PBDATA and LBDATA"
-@@ -295,6 +299,10 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
- 	if (!ops->execute_write_same)
- 		return TCM_UNSUPPORTED_SCSI_OPCODE;
- 
-+	ret = sbc_check_prot(dev, cmd, &cmd->t_task_cdb[0], sectors, true);
-+	if (ret)
-+		return ret;
-+
- 	cmd->execute_cmd = ops->execute_write_same;
- 	return 0;
+@@ -692,6 +692,29 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
+ 	return TCM_NO_SENSE;
  }
+ 
++static int
++sbc_check_dpofua(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
++{
++	if (cdb[1] & 0x10) {
++		if (!dev->dev_attrib.emulate_dpo) {
++			pr_err("Got CDB: 0x%02x with DPO bit set, but device"
++			       " does not advertise support for DPO\n", cdb[0]);
++			return -EINVAL;
++		}
++	}
++	if (cdb[1] & 0x8) {
++		if (!dev->dev_attrib.emulate_fua_write ||
++		    !dev->dev_attrib.emulate_write_cache) {
++			pr_err("Got CDB: 0x%02x with FUA bit set, but device"
++			       " does not advertise support for FUA write\n",
++			       cdb[0]);
++			return -EINVAL;
++		}
++		cmd->se_cmd_flags |= SCF_FUA;
++	}
++	return 0;
++}
++
+ sense_reason_t
+ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ {
+@@ -713,6 +736,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_10(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+ 		if (ret)
+ 			return ret;
+@@ -725,6 +751,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_12(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+ 		if (ret)
+ 			return ret;
+@@ -737,6 +766,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_16(cdb);
+ 		cmd->t_task_lba = transport_lba_64(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+ 		if (ret)
+ 			return ret;
+@@ -757,12 +789,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_10(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+ 		if (ret)
+ 			return ret;
+ 
+-		if (cdb[1] & 0x8)
+-			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+ 		cmd->execute_rw = ops->execute_rw;
+ 		cmd->execute_cmd = sbc_execute_rw;
+@@ -771,12 +804,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_12(cdb);
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+ 		if (ret)
+ 			return ret;
+ 
+-		if (cdb[1] & 0x8)
+-			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+ 		cmd->execute_rw = ops->execute_rw;
+ 		cmd->execute_cmd = sbc_execute_rw;
+@@ -785,12 +819,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		sectors = transport_get_sectors_16(cdb);
+ 		cmd->t_task_lba = transport_lba_64(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+ 		if (ret)
+ 			return ret;
+ 
+-		if (cdb[1] & 0x8)
+-			cmd->se_cmd_flags |= SCF_FUA;
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+ 		cmd->execute_rw = ops->execute_rw;
+ 		cmd->execute_cmd = sbc_execute_rw;
+@@ -801,6 +836,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 			return TCM_INVALID_CDB_FIELD;
+ 		sectors = transport_get_sectors_10(cdb);
+ 
++		if (sbc_check_dpofua(dev, cmd, cdb))
++			return TCM_INVALID_CDB_FIELD;
++
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+ 
+@@ -810,8 +848,6 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		cmd->execute_rw = ops->execute_rw;
+ 		cmd->execute_cmd = sbc_execute_rw;
+ 		cmd->transport_complete_callback = &xdreadwrite_callback;
+-		if (cdb[1] & 0x8)
+-			cmd->se_cmd_flags |= SCF_FUA;
+ 		break;
+ 	case VARIABLE_LENGTH_CMD:
+ 	{
+@@ -820,6 +856,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 		case XDWRITEREAD_32:
+ 			sectors = transport_get_sectors_32(cdb);
+ 
++			if (sbc_check_dpofua(dev, cmd, cdb))
++				return TCM_INVALID_CDB_FIELD;
+ 			/*
+ 			 * Use WRITE_32 and READ_32 opcodes for the emulated
+ 			 * XDWRITE_READ_32 logic.
+@@ -834,8 +872,6 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+ 			cmd->execute_rw = ops->execute_rw;
+ 			cmd->execute_cmd = sbc_execute_rw;
+ 			cmd->transport_complete_callback = &xdreadwrite_callback;
+-			if (cdb[1] & 0x8)
+-				cmd->se_cmd_flags |= SCF_FUA;
+ 			break;
+ 		case WRITE_SAME_32:
+ 			sectors = transport_get_sectors_32(cdb);
 -- 
 1.9.1
-
