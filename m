@@ -1,88 +1,147 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 069/104] lib/string_helpers.c:string_get_size(): remove
- redundant prefixes
-Date: Fri, 13 Feb 2015 20:03:40 -0800
-Message-ID: <1423886620.10229.10.camel@HansenPartnership.com>
-References: <54dd30d9.8sIvA5PVH18vSWTI%akpm@linux-foundation.org>
-	 <1423783508.6286.25.camel@HansenPartnership.com>
-	 <20150212154019.6c27b3301962c0650ee3a516@linux-foundation.org>
-	 <1423784729.6286.32.camel@HansenPartnership.com>
-	 <20150212155516.937d2df60ad00737096478b2@linux-foundation.org>
-	 <1423872354.10229.7.camel@HansenPartnership.com>
-	 <20150213170246.9c52ad2a.akpm@linux-foundation.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: scsi: Implement per-cpu logging buffer
+Date: Sat, 14 Feb 2015 15:29:37 +0100
+Message-ID: <54DF5BD1.5000906@suse.de>
+References: <20150211191614.349AF660DDA@gitolite.kernel.org> <CAMuHMdUKH1yuLZ9zLAK2STekLFXBufR9PM2_S11xExCtEc9dWg@mail.gmail.com> <54DCAABF.20606@suse.de> <20150212171826.GA31750@thin> <54DDBA64.4060600@suse.de> <20150213154519.GA8527@thin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40686 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753794AbbBNEDn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2015 23:03:43 -0500
-In-Reply-To: <20150213170246.9c52ad2a.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150213154519.GA8527@thin>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Josh Triplett <josh@joshtriplett.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: torvalds@linux-foundation.org, linux@rasmusvillemoes.dk, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2015-02-13 at 17:02 -0800, Andrew Morton wrote:
-> On Fri, 13 Feb 2015 16:05:54 -0800 James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
-> 
-> > @@ -42,31 +44,60 @@ void string_get_size(u64 size, const enum string_size_units units,
-> >  		[STRING_UNITS_2] = 1024,
-> >  	};
-> >  	int i, j;
-> > -	u32 remainder = 0, sf_cap;
-> > +	u32 remainder = 0, sf_cap, exp;
-> >  	char tmp[8];
-> > +	const char *unit;
-> >  
-> >  	tmp[0] = '\0';
-> >  	i = 0;
-> > +	if (!size)
-> > +	  goto out;
-> 
-> whitespace wart.
+On 02/13/2015 04:45 PM, Josh Triplett wrote:
+> On Fri, Feb 13, 2015 at 09:48:36AM +0100, Hannes Reinecke wrote:
+>> On 02/12/2015 06:18 PM, Josh Triplett wrote:
+>>> On Thu, Feb 12, 2015 at 02:29:35PM +0100, Hannes Reinecke wrote:
+>>>> On 02/12/2015 01:36 PM, Geert Uytterhoeven wrote:
+>>>>> On Wed, Feb 11, 2015 at 8:16 PM, Linux Kernel Mailing List
+>>>>> <linux-kernel@vger.kernel.org> wrote:
+>>>>>> Gitweb:     http://git.kernel.org/linus/;a=3Dcommit;h=3Dded85c19=
+3a391a84076d5c6a7a5668fe164a490e
+>>>>>> Commit:     ded85c193a391a84076d5c6a7a5668fe164a490e
+>>>>>> Parent:     b0a93d96b2814c725161f91a4e35d0c29ec0f95b
+>>>>>> Refname:    refs/heads/master
+>>>>>> Author:     Hannes Reinecke <hare@suse.de>
+>>>>>> AuthorDate: Thu Jan 8 07:43:42 2015 +0100
+>>>>>> Committer:  Christoph Hellwig <hch@lst.de>
+>>>>>> CommitDate: Fri Jan 9 15:44:28 2015 +0100
+>>>>>>
+>>>>>>     scsi: Implement per-cpu logging buffer
+>>>>>>
+>>>>>>     Implement a per-cpu buffer for formatting messages to avoid =
+line breaks
+>>>>>>     up under high load.  This patch implements scmd_printk() and
+>>>>>>     sdev_prefix_printk() using the per-cpu buffer and makes sdev=
+_printk() a
+>>>>>>     wrapper for sdev_prefix_printk().
+>>>>>>
+>>>>>>     Tested-by: Robert Elliott <elliott@hp.com>
+>>>>>>     Reviewed-by: Robert Elliott <elliott@hp.com>
+>>>>>>     Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>>>>>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>>>>
+>>>>>> --- /dev/null
+>>>>>> +++ b/drivers/scsi/scsi_logging.c
+>>>>>
+>>>>>> +#define SCSI_LOG_SPOOLSIZE 4096
+>>>>>> +#define SCSI_LOG_BUFSIZE 128
+>>>>>> +
+>>>>>> +#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
+>>>>>> +#warning SCSI logging bitmask too large
+>>>>>> +#endif
+>>>>>> +
+>>>>>> +struct scsi_log_buf {
+>>>>>> +       char buffer[SCSI_LOG_SPOOLSIZE];
+>>>>>> +       unsigned long map;
+>>>>>> +};
+>>>>>> +
+>>>>>> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
+>>>>>
+>>>>> Do we really need a static 4 KiB per-CPU buffer?
+>>>>>
+>>>>> bloat-o-meter:
+>>>>>
+>>>>> add/remove: 183/94 grow/shrink: 314/211 up/down: 33467/-21291 (12=
+176)
+>>>>> function                                     old     new   delta
+>>>>> scsi_format_log                                -    4100   +4100
+>>>>> handle_mm_fault                             1794    2750    +956
+>>>>> scsi_log_print_sense_hdr                       -     774    +774
+>>>>> proc_keys_show                                 -     770    +770
+>>>>>
+>>>> Define 'need'.
+>>>> We don't absolutely 'need' it. (Configure it out and it's gone).
+>>>>
+>>>> But when we want to avoid several logging messages coming in from
+>>>> various CPUs overwriting each other and _not_ introduce additional
+>>>> latency by locking a single buffer, then yes.
+>>>>
+>>>> We can possibly reduce it to, say, 1KiB or even lower by imposing
+>>>> stricter rules on the logging functions.
+>>>> But I don't see a way around the per-CPU buffer.
+>>>
+>>> It seems very odd to introduce a mechanism like this specifically f=
+or
+>>> SCSI, rather than introducing a generic per-CPU buffered-print mech=
+anism
+>>> in printk, controlled by a config option.  That option could then
+>>> automatically go away when !SMP, or !PRINTK, or if users don't actu=
+ally
+>>> care about message ordering.
+>>>
+>> But then we ran afoul with the printk purists.
+>>
+>> Thing is, if we were to use per-CPU buffers for printk() out of
+>> necessity we have to queue these buffers for writing out.
+>> So there is a time window during which the message already is in the
+>> per-CPU buffer but still not printed out as printk() is currently
+>> writing out one of the other per-CPU buffers.
+>>
+>> If there is a consensus that such a delayed printk() is useful and a
+>> valid use case then yes, sure I can give it a go.
+>>
+>> Personally I think printk() currently has an unfortunate double
+>> purpose: on the one hand it should print out emergency messages
+>> immediate so that they'll be visible if the system crashes. On the
+>> other hand it is used as a general logging facility, where frankly
+>> most of the subsystems simple do not care at all if and when the
+>> message are printed.
+>> Splitting that off would indeed be a good idea, as then we can have
+>> the ultra-fast, go to console now printk() thingie, and another 'hey
+>> I don't care, just wanted to let you know something happened'
+>> delayed logging output.
+>>
+>> But I certainly will not attempt to implement this without a broader
+>> consensus. Typically patching printk is a good way of getting flamed=
+=2E
+>=20
+> I'm not suggesting that you change printk(); I'm just suggesting that
+> you drop the scsi_* prefixes from the buffered logging mechanism you'=
+ve
+> already created, and make it a generic buffered logging mechanism tha=
+t
+> other subsystems can use if desired.  More importantly, though, wheth=
+er
+> you keep it SCSI-specific or not, please consider making it
+> configurable, dependent on SMP and PRINTK, and fall through to just
+> printk if configured out.
+>=20
+Ah, right. _that_ is easy to accomplish.
+And sounds even as it would have a chance of succeeding.
 
-Yes, I'll run it through checkpatch before submitting.
+I'll be updating the patch.
 
-> > +	if (blk_size >= divisor[units]) {
-> > +		while (blk_size >= divisor[units]) {
-> > +			remainder = do_div(blk_size, divisor[units]);
-> > +			i++;
-> > +		}
-> > +	}
-> 
-> The `if' doesn't do anything.
+@jejb, hch: should I do a new patch or update the existing one?
 
-Right ... I just copied from the original, but it's true we can unwrap
-this.
+Cheers,
 
-> > +	exp = divisor[units];
-> > +	do_div(exp, blk_size);
-> > +	if (size >= exp) {
-> > +		remainder = do_div(size, divisor[units]);
-> > +		remainder *= blk_size;
-> > +		i++;
-> > +	} else {
-> > +		remainder *= size;
-> > +	}
-> > +	size *= blk_size;
-> > +	size += (remainder/divisor[units]);
-> > +	remainder %= divisor[units];
-> > +
-> >  	if (size >= divisor[units]) {
-> >  		while (size >= divisor[units]) {
-> >  			remainder = do_div(size, divisor[units]);
-> >  			i++;
-> >  		}
-> > +	}
-> 
-> Here too.
-
-Certainly,
-
-James
-
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
