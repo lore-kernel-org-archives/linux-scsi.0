@@ -1,50 +1,106 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 6/8] target: Fail WRITE_SAME w/ UNMAP=1 when emulate_tpws=0
-Date: Sat, 14 Feb 2015 03:27:41 +0000
-Message-ID: <1423884463-16797-7-git-send-email-nab@daterainc.com>
+Subject: [PATCH 4/8] target: Perform PROTECT sanity checks for WRITE_SAME
+Date: Sat, 14 Feb 2015 03:27:39 +0000
+Message-ID: <1423884463-16797-5-git-send-email-nab@daterainc.com>
 References: <1423884463-16797-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:50878 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753898AbbBNEBL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Feb 2015 23:01:11 -0500
-Received: by mail-ob0-f172.google.com with SMTP id nt9so26905441obb.3
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2015 20:01:10 -0800 (PST)
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:43053 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbBNEBJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Feb 2015 23:01:09 -0500
+Received: by mail-ob0-f176.google.com with SMTP id wo20so26906393obc.7
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2015 20:01:08 -0800 (PST)
 In-Reply-To: <1423884463-16797-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a check within sbc_setup_write_same() to fail a
-WRITE_SAME w/ UNMAP=1 op, if the backend device has emulate_tpws
-disabled.
+This patch adds a call to sbc_check_prot() within sbc_setup_write_same()
+code to perform the various protection releated sanity checks, including
+failing if WRPROTECT or RDPROTECT is set for a backend device that has
+not advertised support for T10-PI.
+
+Also, since WRITE_SAME + T10-PI is currently not supported by IBLOCK +
+FILEIO backends, go ahead and fail if ->execute_write_same() is invoked
+with a non zero cmd->prot_op.
 
 Cc: Martin Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/target/target_core_file.c   | 5 +++++
+ drivers/target/target_core_iblock.c | 5 +++++
+ drivers/target/target_core_sbc.c    | 8 ++++++++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 856e800..0d307c3 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -293,6 +293,11 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
- 		if (!ops->execute_write_same_unmap)
- 			return TCM_UNSUPPORTED_SCSI_OPCODE;
- 
-+		if (!dev->dev_attrib.emulate_tpws) {
-+			pr_err("Got WRITE_SAME w/ UNMAP=1, but backend device"
-+			       " has emulate_tpws disabled\n");
-+			return TCM_UNSUPPORTED_SCSI_OPCODE;
-+		}
- 		cmd->execute_cmd = ops->execute_write_same_unmap;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index c2aea09..9f1ed77 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -494,6 +494,11 @@ fd_execute_write_same(struct se_cmd *cmd)
+ 		target_complete_cmd(cmd, SAM_STAT_GOOD);
  		return 0;
  	}
++	if (cmd->prot_op) {
++		pr_err("WRITE_SAME: Protection information with FILEIO"
++		       " backends not supported\n");
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	}
+ 	sg = &cmd->t_data_sg[0];
+ 
+ 	if (cmd->t_data_nents > 1 ||
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 3efff94..303299e 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -464,6 +464,11 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 	sector_t block_lba = cmd->t_task_lba;
+ 	sector_t sectors = sbc_get_write_same_sectors(cmd);
+ 
++	if (cmd->prot_op) {
++		pr_err("WRITE_SAME: Protection information with IBLOCK"
++		       " backends not supported\n");
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++	}
+ 	sg = &cmd->t_data_sg[0];
+ 
+ 	if (cmd->t_data_nents > 1 ||
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 1bb8b4a..87cbbe2 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -37,6 +37,9 @@
+ #include "target_core_alua.h"
+ 
+ static sense_reason_t
++sbc_check_prot(struct se_device *, struct se_cmd *, unsigned char *, u32, bool);
++
++static sense_reason_t
+ sbc_emulate_readcapacity(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+@@ -254,6 +257,7 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 	struct se_device *dev = cmd->se_dev;
+ 	sector_t end_lba = dev->transport->get_blocks(dev) + 1;
+ 	unsigned int sectors = sbc_get_write_same_sectors(cmd);
++	sense_reason_t ret;
+ 
+ 	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
+ 		pr_err("WRITE_SAME PBDATA and LBDATA"
+@@ -295,6 +299,10 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+ 	if (!ops->execute_write_same)
+ 		return TCM_UNSUPPORTED_SCSI_OPCODE;
+ 
++	ret = sbc_check_prot(dev, cmd, &cmd->t_task_cdb[0], sectors, true);
++	if (ret)
++		return ret;
++
+ 	cmd->execute_cmd = ops->execute_write_same;
+ 	return 0;
+ }
 -- 
 1.9.1
 
