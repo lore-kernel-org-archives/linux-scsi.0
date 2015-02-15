@@ -1,173 +1,113 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 3/8] target: Fail I/O with PROTECT bit when protection
- is unsupported
-Date: Sun, 15 Feb 2015 10:33:40 +0200
-Message-ID: <54E059E4.8070208@dev.mellanox.co.il>
-References: <1423884463-16797-1-git-send-email-nab@daterainc.com> <1423884463-16797-4-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH 4/8] target: Perform PROTECT sanity checks for WRITE_SAME
+Date: Sun, 15 Feb 2015 19:22:31 +0200
+Message-ID: <54E0D5D7.2050305@dev.mellanox.co.il>
+References: <1423884463-16797-1-git-send-email-nab@daterainc.com> <1423884463-16797-5-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1423884463-16797-4-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:59909 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbbBORWg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Feb 2015 12:22:36 -0500
+Received: by mail-wg0-f51.google.com with SMTP id y19so25411922wgg.10
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Feb 2015 09:22:35 -0800 (PST)
+In-Reply-To: <1423884463-16797-5-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 2/14/2015 5:27 AM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> This patch adds an explicit check for WRPROTECT + RDPROTECT bit usage
-> within sbc_check_prot(), and fails with TCM_INVALID_CDB_FIELD if the
-> backend device does not have protection enabled.
+> This patch adds a call to sbc_check_prot() within sbc_setup_write_same()
+> code to perform the various protection releated sanity checks, including
+> failing if WRPROTECT or RDPROTECT is set for a backend device that has
+> not advertised support for T10-PI.
 >
-> Also, update sbc_check_prot() to return sense_reason_t in order to
-> propigate up the correct sense ASQ.
+> Also, since WRITE_SAME + T10-PI is currently not supported by IBLOCK +
+> FILEIO backends, go ahead and fail if ->execute_write_same() is invoked
+> with a non zero cmd->prot_op.
+
+So this is OK, for now... But I don't see any reason why we shouldn't
+support T10-PI in write_same as well...
+
 >
 > Cc: Martin Petersen <martin.petersen@oracle.com>
 > Cc: Sagi Grimberg <sagig@mellanox.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_sbc.c | 51 +++++++++++++++++++++++++---------------
->   1 file changed, 32 insertions(+), 19 deletions(-)
+>   drivers/target/target_core_file.c   | 5 +++++
+>   drivers/target/target_core_iblock.c | 5 +++++
+>   drivers/target/target_core_sbc.c    | 8 ++++++++
+>   3 files changed, 18 insertions(+)
 >
+> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+> index c2aea09..9f1ed77 100644
+> --- a/drivers/target/target_core_file.c
+> +++ b/drivers/target/target_core_file.c
+> @@ -494,6 +494,11 @@ fd_execute_write_same(struct se_cmd *cmd)
+>   		target_complete_cmd(cmd, SAM_STAT_GOOD);
+>   		return 0;
+>   	}
+> +	if (cmd->prot_op) {
+> +		pr_err("WRITE_SAME: Protection information with FILEIO"
+> +		       " backends not supported\n");
+> +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	}
+>   	sg = &cmd->t_data_sg[0];
+>
+>   	if (cmd->t_data_nents > 1 ||
+> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+> index 3efff94..303299e 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -464,6 +464,11 @@ iblock_execute_write_same(struct se_cmd *cmd)
+>   	sector_t block_lba = cmd->t_task_lba;
+>   	sector_t sectors = sbc_get_write_same_sectors(cmd);
+>
+> +	if (cmd->prot_op) {
+> +		pr_err("WRITE_SAME: Protection information with IBLOCK"
+> +		       " backends not supported\n");
+> +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> +	}
+>   	sg = &cmd->t_data_sg[0];
+>
+>   	if (cmd->t_data_nents > 1 ||
 > diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 17259c0..1bb8b4a 100644
+> index 1bb8b4a..87cbbe2 100644
 > --- a/drivers/target/target_core_sbc.c
 > +++ b/drivers/target/target_core_sbc.c
-> @@ -626,14 +626,21 @@ sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
+> @@ -37,6 +37,9 @@
+>   #include "target_core_alua.h"
+>
+>   static sense_reason_t
+> +sbc_check_prot(struct se_device *, struct se_cmd *, unsigned char *, u32, bool);
+> +
+> +static sense_reason_t
+>   sbc_emulate_readcapacity(struct se_cmd *cmd)
+>   {
+>   	struct se_device *dev = cmd->se_dev;
+> @@ -254,6 +257,7 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+>   	struct se_device *dev = cmd->se_dev;
+>   	sector_t end_lba = dev->transport->get_blocks(dev) + 1;
+>   	unsigned int sectors = sbc_get_write_same_sectors(cmd);
+> +	sense_reason_t ret;
+>
+>   	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
+>   		pr_err("WRITE_SAME PBDATA and LBDATA"
+> @@ -295,6 +299,10 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
+>   	if (!ops->execute_write_same)
+>   		return TCM_UNSUPPORTED_SCSI_OPCODE;
+>
+> +	ret = sbc_check_prot(dev, cmd, &cmd->t_task_cdb[0], sectors, true);
+> +	if (ret)
+> +		return ret;
+> +
+>   	cmd->execute_cmd = ops->execute_write_same;
 >   	return 0;
 >   }
 >
-> -static bool
-> +static sense_reason_t
->   sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   	       u32 sectors, bool is_write)
->   {
->   	u8 protect = cdb[1] >> 5;
->
-> -	if ((!cmd->t_prot_sg || !cmd->t_prot_nents) && cmd->prot_pto)
-> -		return true;
-> +	if (!cmd->t_prot_sg || !cmd->t_prot_nents) {
-> +		if (protect && !dev->dev_attrib.pi_prot_type) {
-> +			pr_err("CDB contains protect bit, but device does not"
-> +			       " advertise PROTECT=1 feature bit\n");
-> +			return TCM_INVALID_CDB_FIELD;
-> +		}
-> +		if (cmd->prot_pto)
-> +			return TCM_NO_SENSE;
-> +	}
 
-I think this should indicate a strip operation rather than a failure.
-Depends on what we reported in readcapacity wrt backend/frontend
-support & setting.
-
->
->   	switch (dev->dev_attrib.pi_prot_type) {
->   	case TARGET_DIF_TYPE3_PROT:
-> @@ -641,7 +648,7 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   		break;
->   	case TARGET_DIF_TYPE2_PROT:
->   		if (protect)
-> -			return false;
-> +			return TCM_INVALID_CDB_FIELD;
->
->   		cmd->reftag_seed = cmd->t_task_lba;
->   		break;
-> @@ -650,12 +657,12 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   		break;
->   	case TARGET_DIF_TYPE0_PROT:
->   	default:
-> -		return true;
-> +		return TCM_NO_SENSE;
->   	}
->
->   	if (sbc_set_prot_op_checks(protect, dev->dev_attrib.pi_prot_type,
->   				   is_write, cmd))
-> -		return false;
-> +		return TCM_INVALID_CDB_FIELD;
->
->   	cmd->prot_type = dev->dev_attrib.pi_prot_type;
->   	cmd->prot_length = dev->prot_length * sectors;
-> @@ -674,7 +681,7 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   		 __func__, cmd->prot_type, cmd->data_length, cmd->prot_length,
->   		 cmd->prot_op, cmd->prot_checks);
->
-> -	return true;
-> +	return TCM_NO_SENSE;
->   }
->
->   sense_reason_t
-> @@ -698,8 +705,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_10(cdb);
->   		cmd->t_task_lba = transport_lba_32(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-> +		if (ret)
-> +			return ret;
->
->   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
->   		cmd->execute_rw = ops->execute_rw;
-> @@ -709,8 +717,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_12(cdb);
->   		cmd->t_task_lba = transport_lba_32(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-> +		if (ret)
-> +			return ret;
->
->   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
->   		cmd->execute_rw = ops->execute_rw;
-> @@ -720,8 +729,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_16(cdb);
->   		cmd->t_task_lba = transport_lba_64(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, false))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
-> +		if (ret)
-> +			return ret;
->
->   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
->   		cmd->execute_rw = ops->execute_rw;
-> @@ -739,8 +749,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_10(cdb);
->   		cmd->t_task_lba = transport_lba_32(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-> +		if (ret)
-> +			return ret;
->
->   		if (cdb[1] & 0x8)
->   			cmd->se_cmd_flags |= SCF_FUA;
-> @@ -752,8 +763,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_12(cdb);
->   		cmd->t_task_lba = transport_lba_32(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-> +		if (ret)
-> +			return ret;
->
->   		if (cdb[1] & 0x8)
->   			cmd->se_cmd_flags |= SCF_FUA;
-> @@ -765,8 +777,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
->   		sectors = transport_get_sectors_16(cdb);
->   		cmd->t_task_lba = transport_lba_64(cdb);
->
-> -		if (!sbc_check_prot(dev, cmd, cdb, sectors, true))
-> -			return TCM_UNSUPPORTED_SCSI_OPCODE;
-> +		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
-> +		if (ret)
-> +			return ret;
->
->   		if (cdb[1] & 0x8)
->   			cmd->se_cmd_flags |= SCF_FUA;
->
