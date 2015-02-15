@@ -1,136 +1,152 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: scsi: Implement per-cpu logging buffer
-Date: Sat, 14 Feb 2015 09:11:33 -0800
-Message-ID: <1423933893.19864.1.camel@HansenPartnership.com>
-References: <20150211191614.349AF660DDA@gitolite.kernel.org>
-	 <CAMuHMdUKH1yuLZ9zLAK2STekLFXBufR9PM2_S11xExCtEc9dWg@mail.gmail.com>
-	 <54DCAABF.20606@suse.de> <20150212171826.GA31750@thin>
-	 <54DDBA64.4060600@suse.de> <20150213154519.GA8527@thin>
-	 <54DF5BD1.5000906@suse.de>
+From: Athlion <athlion@gmail.com>
+Subject: Re: Kernel Ooops upon USB disconnect of a Western Digital My Passport
+ 1TB drive
+Date: Sun, 15 Feb 2015 10:15:12 +0200
+Message-ID: <CACfp4317g=kLqh8imuDRP_uPRZYYWhi_UfCoAQFZwh+FsJsdmA@mail.gmail.com>
+References: <CACfp432Vqiu2eeMyYupdkMxs=bNN83ayMgiDrZic54VjhM6aZw@mail.gmail.com>
+ <Pine.LNX.4.44L0.1502031033300.1130-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54DF5BD1.5000906@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Josh Triplett <josh@joshtriplett.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:33665 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbbBOIPf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Feb 2015 03:15:35 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1502031033300.1130-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2015-02-14 at 15:29 +0100, Hannes Reinecke wrote:
-> On 02/13/2015 04:45 PM, Josh Triplett wrote:
-> > On Fri, Feb 13, 2015 at 09:48:36AM +0100, Hannes Reinecke wrote:
-> >> On 02/12/2015 06:18 PM, Josh Triplett wrote:
-> >>> On Thu, Feb 12, 2015 at 02:29:35PM +0100, Hannes Reinecke wrote:
-> >>>> On 02/12/2015 01:36 PM, Geert Uytterhoeven wrote:
-> >>>>> On Wed, Feb 11, 2015 at 8:16 PM, Linux Kernel Mailing List
-> >>>>> <linux-kernel@vger.kernel.org> wrote:
-> >>>>>> Gitweb:     http://git.kernel.org/linus/;a=commit;h=ded85c193a391a84076d5c6a7a5668fe164a490e
-> >>>>>> Commit:     ded85c193a391a84076d5c6a7a5668fe164a490e
-> >>>>>> Parent:     b0a93d96b2814c725161f91a4e35d0c29ec0f95b
-> >>>>>> Refname:    refs/heads/master
-> >>>>>> Author:     Hannes Reinecke <hare@suse.de>
-> >>>>>> AuthorDate: Thu Jan 8 07:43:42 2015 +0100
-> >>>>>> Committer:  Christoph Hellwig <hch@lst.de>
-> >>>>>> CommitDate: Fri Jan 9 15:44:28 2015 +0100
-> >>>>>>
-> >>>>>>     scsi: Implement per-cpu logging buffer
-> >>>>>>
-> >>>>>>     Implement a per-cpu buffer for formatting messages to avoid line breaks
-> >>>>>>     up under high load.  This patch implements scmd_printk() and
-> >>>>>>     sdev_prefix_printk() using the per-cpu buffer and makes sdev_printk() a
-> >>>>>>     wrapper for sdev_prefix_printk().
-> >>>>>>
-> >>>>>>     Tested-by: Robert Elliott <elliott@hp.com>
-> >>>>>>     Reviewed-by: Robert Elliott <elliott@hp.com>
-> >>>>>>     Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >>>>>>     Signed-off-by: Christoph Hellwig <hch@lst.de>
-> >>>>>
-> >>>>>> --- /dev/null
-> >>>>>> +++ b/drivers/scsi/scsi_logging.c
-> >>>>>
-> >>>>>> +#define SCSI_LOG_SPOOLSIZE 4096
-> >>>>>> +#define SCSI_LOG_BUFSIZE 128
-> >>>>>> +
-> >>>>>> +#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
-> >>>>>> +#warning SCSI logging bitmask too large
-> >>>>>> +#endif
-> >>>>>> +
-> >>>>>> +struct scsi_log_buf {
-> >>>>>> +       char buffer[SCSI_LOG_SPOOLSIZE];
-> >>>>>> +       unsigned long map;
-> >>>>>> +};
-> >>>>>> +
-> >>>>>> +static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
-> >>>>>
-> >>>>> Do we really need a static 4 KiB per-CPU buffer?
-> >>>>>
-> >>>>> bloat-o-meter:
-> >>>>>
-> >>>>> add/remove: 183/94 grow/shrink: 314/211 up/down: 33467/-21291 (12176)
-> >>>>> function                                     old     new   delta
-> >>>>> scsi_format_log                                -    4100   +4100
-> >>>>> handle_mm_fault                             1794    2750    +956
-> >>>>> scsi_log_print_sense_hdr                       -     774    +774
-> >>>>> proc_keys_show                                 -     770    +770
-> >>>>>
-> >>>> Define 'need'.
-> >>>> We don't absolutely 'need' it. (Configure it out and it's gone).
-> >>>>
-> >>>> But when we want to avoid several logging messages coming in from
-> >>>> various CPUs overwriting each other and _not_ introduce additional
-> >>>> latency by locking a single buffer, then yes.
-> >>>>
-> >>>> We can possibly reduce it to, say, 1KiB or even lower by imposing
-> >>>> stricter rules on the logging functions.
-> >>>> But I don't see a way around the per-CPU buffer.
-> >>>
-> >>> It seems very odd to introduce a mechanism like this specifically for
-> >>> SCSI, rather than introducing a generic per-CPU buffered-print mechanism
-> >>> in printk, controlled by a config option.  That option could then
-> >>> automatically go away when !SMP, or !PRINTK, or if users don't actually
-> >>> care about message ordering.
-> >>>
-> >> But then we ran afoul with the printk purists.
-> >>
-> >> Thing is, if we were to use per-CPU buffers for printk() out of
-> >> necessity we have to queue these buffers for writing out.
-> >> So there is a time window during which the message already is in the
-> >> per-CPU buffer but still not printed out as printk() is currently
-> >> writing out one of the other per-CPU buffers.
-> >>
-> >> If there is a consensus that such a delayed printk() is useful and a
-> >> valid use case then yes, sure I can give it a go.
-> >>
-> >> Personally I think printk() currently has an unfortunate double
-> >> purpose: on the one hand it should print out emergency messages
-> >> immediate so that they'll be visible if the system crashes. On the
-> >> other hand it is used as a general logging facility, where frankly
-> >> most of the subsystems simple do not care at all if and when the
-> >> message are printed.
-> >> Splitting that off would indeed be a good idea, as then we can have
-> >> the ultra-fast, go to console now printk() thingie, and another 'hey
-> >> I don't care, just wanted to let you know something happened'
-> >> delayed logging output.
-> >>
-> >> But I certainly will not attempt to implement this without a broader
-> >> consensus. Typically patching printk is a good way of getting flamed.
-> > 
-> > I'm not suggesting that you change printk(); I'm just suggesting that
-> > you drop the scsi_* prefixes from the buffered logging mechanism you've
-> > already created, and make it a generic buffered logging mechanism that
-> > other subsystems can use if desired.  More importantly, though, whether
-> > you keep it SCSI-specific or not, please consider making it
-> > configurable, dependent on SMP and PRINTK, and fall through to just
-> > printk if configured out.
-> > 
-> Ah, right. _that_ is easy to accomplish.
-> And sounds even as it would have a chance of succeeding.
-> 
-> I'll be updating the patch.
-> 
-> @jejb, hch: should I do a new patch or update the existing one?
+Just one more FYI, by blacklisting the ses module, the oops goes away.
 
-Um, it's already upstream ... that's why it's getting more visibility.
-
-James
+On Tue, Feb 3, 2015 at 6:05 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 3 Feb 2015, Athlion wrote:
+>
+>> On Mon, Feb 2, 2015 at 7:27 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>>
+>> > Had you made any changes to the runtime suspend settings?
+>> > blk_post_runtime_resume wouldn't be called unless the drive had gone
+>> > into runtime suspend.  And even then, it's not likely to be called
+>> > after you unplug the USB cable.
+>> >
+>> > Alan Stern
+>>
+>> I have enabled SCSI ATA Bus power management with this udev rule:
+>> ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*",
+>> ATTR{link_power_management_policy}="min_power"
+>
+> That won't have any effect on SCSI over USB, as far as I know.
+>
+>> ( And generally almost all of actions herein:
+>> https://wiki.archlinux.org/index.php/Power_saving#Laptop_Mode )
+>>
+>> Here's another with dynamic debugging on (and some of the stack trace):
+>>
+>> [ 1565.610481] usb usb2: usb wakeup-resume
+>> [ 1565.613019] usb usb2: usb auto-resume
+>> [ 1565.615599] hub 2-0:1.0: hub_resume
+>> [ 1565.617876] usb usb2-port1: status 0507 change 0000
+>> [ 1565.620125] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+>> [ 1565.623471] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0000
+>> [ 1565.650219] hub 2-0:1.0: state 7 ports 3 chg 0000 evt 0002
+>> [ 1565.663520] usb 2-1: usb wakeup-resume
+>> [ 1565.665518] usb 2-1: finish resume
+>> [ 1565.667684] hub 2-1:1.0: hub_resume
+>> [ 1565.669812] usb 2-1-port2: status 0101 change 0001
+>> [ 1565.773645] usb usb2-port1: resume, status 0
+>> [ 1565.776031] hub 2-1:1.0: state 7 ports 8 chg 0004 evt 0000
+>> [ 1565.778664] usb 2-1-port2: status 0101, change 0000, 12 Mb/s
+>> [ 1565.847291] usb 2-1.2: new high-speed USB device number 3 using ehci-pci
+>> [ 1565.860480] usb 2-1-port2: not reset yet, waiting 10ms
+>> [ 1565.945202] usb 2-1.2: default language 0x0409
+>> [ 1565.947882] usb 2-1.2: udev 3, busnum 2, minor = 130
+>> [ 1565.950384] usb 2-1.2: usb_probe_device
+>> [ 1565.952704] usb 2-1.2: configuration #1 chosen from 1 choice
+>> [ 1565.955145] usb 2-1.2: adding 2-1.2:1.0 (config #1, interface 0)
+>> [ 1565.957630] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+>> [ 1566.005124] usb-storage 2-1.2:1.0: usb_probe_interface
+>> [ 1566.006655] usb-storage 2-1.2:1.0: usb_probe_interface - got id
+>> [ 1566.008169] usb-storage 2-1.2:1.0: USB Mass Storage device detected
+>> [ 1566.010155] scsi host6: usb-storage 2-1.2:1.0
+>> [ 1566.012149] usbcore: registered new interface driver usb-storage
+>> [ 1566.016061] usbcore: registered new interface driver uas
+>> [ 1567.015852] scsi 6:0:0:0: Direct-Access     WD       My Passport
+>> 0748 1016 PQ: 0 ANSI: 6
+>> [ 1567.018966] scsi 6:0:0:1: Enclosure         WD       SES Device
+>>   1016 PQ: 0 ANSI: 6
+>
+> Your device contains two Logical Units.  One of them is the My Passport
+> disk drive, and the other is the SES Device enclosure.
+>
+>> [ 1567.027072] scsi 6:0:0:1: scsi_runtime_idle
+>> [ 1567.029695] sd 6:0:0:0: [sdb] Spinning up disk...
+>> [ 1567.032764] scsi 6:0:0:1: scsi_runtime_suspend
+>> [ 1568.031907] .ready
+>> [ 1569.060225] sd 6:0:0:0: [sdb] 1953458176 512-byte logical blocks:
+>> (1.00 TB/931 GiB)
+>> [ 1569.063857] sd 6:0:0:0: [sdb] Write Protect is off
+>> [ 1569.065613] ses 6:0:0:1: Attached Enclosure device
+>> [ 1569.068492] sd 6:0:0:0: [sdb] Mode Sense: 47 00 10 08
+>> [ 1569.071598] sd 6:0:0:0: [sdb] No Caching mode page found
+>> [ 1569.073628] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+>> [ 1569.087891]  sdb: sdb1
+>> [ 1569.093382] sd 6:0:0:0: [sdb] Attached SCSI disk
+>> [ 1615.830142] hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0004
+>> [ 1615.833066] usb 2-1-port2: status 0100, change 0001, 12 Mb/s
+>> [ 1615.835764] usb 2-1.2: USB disconnect, device number 3
+>> [ 1615.838471] usb 2-1.2: unregistering device
+>> [ 1615.841199] usb 2-1.2: unregistering interface 2-1.2:1.0
+>> [ 1615.844996] scsi target6:0:0: scsi_runtime_idle
+>> [ 1615.848746] scsi target6:0:0: scsi_runtime_suspend
+>> [ 1615.868925] scsi target6:0:0: scsi_runtime_resume
+>> [ 1615.870975] ses 6:0:0:1: scsi_runtime_resume
+>> [ 1615.872913] BUG: unable to handle kernel NULL pointer dereference
+>> at 00000000000001a0
+>> [ 1615.874896] IP: [<ffffffff812850d5>] blk_post_runtime_resume+0x65/0x80
+>> [ 1615.876843] PGD 0
+>> [ 1615.878765] Oops: 0002 [#1] PREEMPT SMP
+>> [ 1615.880734] Modules linked in: ses enclosure uas usb_storage
+>> netconsole joydev mousedev snd_hda_codec_hdmi snd_hda_codec_conexant
+>> snd_hda_codec_generic coretemp intel_rapl x86_pkg_temp_thermal
+>> intel_powerclamp kvm_intel kvm arc4 crct10dif_pclmul iwldvm
+>> crc32_pclmul iTCO_wdt iTCO_vendor_support crc32c_intel mac80211
+>> ghash_clmulni_intel ip6t_REJECT nf_reject_ipv6 aesni_intel xt_hl
+>> aes_x86_64 lrw gf128mul ip6t_rt psmouse iwlwifi glue_helper
+>> ablk_helper cryptd i2c_i801 serio_raw cfg80211 nf_conntrack_ipv6
+>> nf_defrag_ipv6 snd_hda_intel wmi thinkpad_acpi nvram thermal rfkill
+>> ipt_REJECT nf_reject_ipv4 hwmon tpm_tis ac tpm battery
+>> snd_hda_controller snd_hda_codec snd_hwdep evdev snd_pcm mac_hid
+>> xt_limit e1000e snd_timer xt_tcpudp mei_me snd mei ptp soundcore
+>> shpchp pps_core lpc_ich processor xt_addrtype nf_conntrack_ipv4
+>> nf_defrag_ipv4 xt_conntrack at ffffffffffffffd8
+>> [ 1616.064883] IP: [<ffffffff81091500>] kthread_data+0x10/0x20
+>
+> Once again, there is no stack trace.  In fact, if you look at the
+> second-to-last line above, it appears that another oops occurred about
+> 0.2 seconds after the first one, and part of the kernel log got lost:
+>
+>> nf_defrag_ipv4 xt_conntrack at ffffffffffffffd8
+> -----------------------------^
+>
+> Right there, the "at ffffffffffffffd8" part appears to be the end of
+> another BUG: line.  Everything in between is missing -- presumably
+> including the stack trace.  Maybe the stack got messed up, so that
+> tracing it caused the second oops to occur.
+>
+> Anyway, this shows that the problem was associated with the SES Device,
+> not the My Passport disk.  It occurred during the runtime resume of the
+> SES, as indicated by the reference to blk_post_runtime_resume.  (Note
+> that the ses driver doesn't support runtime power management in any
+> case.)
+>
+> Clearly this problem has nothing to do with USB; it is a SCSI matter.
+> Somehow the ses driver interacts badly with runtime PM.
+>
+> James, do you have any idea what might be going wrong here?  The
+> blk_post_runtime_resume routine in block/blk-core.c does very little
+> other than call __blk_run_queue.  I don't know how the ses driver
+> works, but it looks like it hardly uses its request queue at all.
+>
+> Alan Stern
+>
