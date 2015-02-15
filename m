@@ -1,113 +1,62 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 4/8] target: Perform PROTECT sanity checks for WRITE_SAME
-Date: Sun, 15 Feb 2015 19:22:31 +0200
-Message-ID: <54E0D5D7.2050305@dev.mellanox.co.il>
-References: <1423884463-16797-1-git-send-email-nab@daterainc.com> <1423884463-16797-5-git-send-email-nab@daterainc.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] fixed invalid assignment of 64bit mask to host
+ dma_boundary for scatter gather segment boundary limit.
+Date: Sun, 15 Feb 2015 10:38:01 -0800
+Message-ID: <1424025481.2114.22.camel@HansenPartnership.com>
+References: <e20a4b22-45bf-4c2e-9e5e-cdd2a238effd@CMEXHTCAS1.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:59909 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504AbbBORWg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Feb 2015 12:22:36 -0500
-Received: by mail-wg0-f51.google.com with SMTP id y19so25411922wgg.10
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Feb 2015 09:22:35 -0800 (PST)
-In-Reply-To: <1423884463-16797-5-git-send-email-nab@daterainc.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46261 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755048AbbBOSiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Feb 2015 13:38:04 -0500
+In-Reply-To: <e20a4b22-45bf-4c2e-9e5e-cdd2a238effd@CMEXHTCAS1.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@mellanox.com>
+To: Minh Duc Tran <MinhDuc.Tran@Emulex.Com>
+Cc: "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Mike Christie (michaelc@cs.wisc.edu)" <michaelc@cs.wisc.edu>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>, Sony John-N <Sony.John-N@Emulex.Com>
 
-On 2/14/2015 5:27 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> This patch adds a call to sbc_check_prot() within sbc_setup_write_same()
-> code to perform the various protection releated sanity checks, including
-> failing if WRPROTECT or RDPROTECT is set for a backend device that has
-> not advertised support for T10-PI.
->
-> Also, since WRITE_SAME + T10-PI is currently not supported by IBLOCK +
-> FILEIO backends, go ahead and fail if ->execute_write_same() is invoked
-> with a non zero cmd->prot_op.
-
-So this is OK, for now... But I don't see any reason why we shouldn't
-support T10-PI in write_same as well...
-
->
-> Cc: Martin Petersen <martin.petersen@oracle.com>
-> Cc: Sagi Grimberg <sagig@mellanox.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, 2015-02-09 at 18:54 +0000, Minh Duc Tran wrote:
+> In reference to bug https://bugzilla.redhat.com/show_bug.cgi?id=1097141
+> Assert is seen with AMD cpu whenever calling pci_alloc_consistent.
+> 
+> [   29.406183] ------------[ cut here ]------------ 
+> [   29.410505] kernel BUG at lib/iommu-helper.c:13!
+> 
+> Signed-off-by: Minh Tran <minh.tran@emulex.com>
 > ---
->   drivers/target/target_core_file.c   | 5 +++++
->   drivers/target/target_core_iblock.c | 5 +++++
->   drivers/target/target_core_sbc.c    | 8 ++++++++
->   3 files changed, 18 insertions(+)
->
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-> index c2aea09..9f1ed77 100644
-> --- a/drivers/target/target_core_file.c
-> +++ b/drivers/target/target_core_file.c
-> @@ -494,6 +494,11 @@ fd_execute_write_same(struct se_cmd *cmd)
->   		target_complete_cmd(cmd, SAM_STAT_GOOD);
->   		return 0;
->   	}
-> +	if (cmd->prot_op) {
-> +		pr_err("WRITE_SAME: Protection information with FILEIO"
-> +		       " backends not supported\n");
-> +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> +	}
->   	sg = &cmd->t_data_sg[0];
->
->   	if (cmd->t_data_nents > 1 ||
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-> index 3efff94..303299e 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-> @@ -464,6 +464,11 @@ iblock_execute_write_same(struct se_cmd *cmd)
->   	sector_t block_lba = cmd->t_task_lba;
->   	sector_t sectors = sbc_get_write_same_sectors(cmd);
->
-> +	if (cmd->prot_op) {
-> +		pr_err("WRITE_SAME: Protection information with IBLOCK"
-> +		       " backends not supported\n");
-> +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> +	}
->   	sg = &cmd->t_data_sg[0];
->
->   	if (cmd->t_data_nents > 1 ||
-> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 1bb8b4a..87cbbe2 100644
-> --- a/drivers/target/target_core_sbc.c
-> +++ b/drivers/target/target_core_sbc.c
-> @@ -37,6 +37,9 @@
->   #include "target_core_alua.h"
->
->   static sense_reason_t
-> +sbc_check_prot(struct se_device *, struct se_cmd *, unsigned char *, u32, bool);
-> +
-> +static sense_reason_t
->   sbc_emulate_readcapacity(struct se_cmd *cmd)
->   {
->   	struct se_device *dev = cmd->se_dev;
-> @@ -254,6 +257,7 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
->   	struct se_device *dev = cmd->se_dev;
->   	sector_t end_lba = dev->transport->get_blocks(dev) + 1;
->   	unsigned int sectors = sbc_get_write_same_sectors(cmd);
-> +	sense_reason_t ret;
->
->   	if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
->   		pr_err("WRITE_SAME PBDATA and LBDATA"
-> @@ -295,6 +299,10 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char *flags, struct sbc_ops *o
->   	if (!ops->execute_write_same)
->   		return TCM_UNSUPPORTED_SCSI_OPCODE;
->
-> +	ret = sbc_check_prot(dev, cmd, &cmd->t_task_cdb[0], sectors, true);
-> +	if (ret)
-> +		return ret;
-> +
->   	cmd->execute_cmd = ops->execute_write_same;
->   	return 0;
->   }
->
+>  drivers/scsi/be2iscsi/be_main.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index f319340..9cc047b 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -586,7 +586,6 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+>                         "beiscsi_hba_alloc - iscsi_host_alloc failed\n");
+>                 return NULL;
+>         }
+> -       shost->dma_boundary = pcidev->dma_mask;
+>         shost->max_id = BE2_MAX_SESSIONS;
+>         shost->max_channel = 0;
+>         shost->max_cmd_len = BEISCSI_MAX_CMD_LEN;
+
+Please fix your email tool: this patch has all the tabs converted to
+spaces.
+
+Plus, this bug was introduced in 2009 by 
+
+commit 6733b39a1301b0b020bbcbf3295852e93e624cb1
+Author: Jayamohan Kallickal <jayamohank@serverengines.com>
+Date:   Sat Sep 5 07:36:35 2009 +0530
+
+So it needs a cc to stable.  If you added all the information like this
+in the first place and use proper email tools, I wouldn't have to dig
+for it when reviewing the patch and fix up the whitespace damage.
+
+James
+
 
