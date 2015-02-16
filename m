@@ -1,42 +1,78 @@
 From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 0/2] SCSI-lpfc: Deletion of an unnecessary check
-Date: Mon, 16 Feb 2015 10:58:37 -0500
-Message-ID: <54E213AD.2080902@emulex.com>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net> <54D3EDDB.1050905@users.sourceforge.net>
+Subject: Re: [PATCH 02/21] lpfc: Add Lancer Temperature Event support to the
+ lpfc driver
+Date: Mon, 16 Feb 2015 11:10:39 -0500
+Message-ID: <54E2167F.3070500@emulex.com>
+References: <1423164194.7917.26.camel@myfc17> <54D4B0A0.2050602@redhat.com>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <54D3EDDB.1050905@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:31009 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbbBPQLA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Feb 2015 11:11:00 -0500
+In-Reply-To: <54D4B0A0.2050602@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Markus,
-
-Suggestions noted. If not merged, I'll pull them into the next patch set.
-
--- james
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-Acked-By: James Smart  <james.smart@emulex.com>
-
-
-On 2/5/2015 5:25 PM, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Thu, 5 Feb 2015 23:17:52 +0100
+On 2/6/2015 7:16 AM, Tomas Henzl wrote:
+> On 02/05/2015 08:23 PM, James Smart wrote:
+>> ---
+>>   drivers/scsi/lpfc/lpfc_hw4.h  |   1 +
+>>   drivers/scsi/lpfc/lpfc_init.c | 179 +++++++++++++++++++++++++++++-------------
+>>   2 files changed, 125 insertions(+), 55 deletions(-)
+>>
+>> diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+>> index f432ec1..3121ec4 100644
+>> --- a/drivers/scsi/lpfc/lpfc_hw4.h
+>> +++ b/drivers/scsi/lpfc/lpfc_hw4.h
+>> @@ -3244,6 +3244,7 @@ struct lpfc_acqe_sli {
+>>   #define LPFC_SLI_EVENT_TYPE_NVLOG_POST		0x4
+>>   #define LPFC_SLI_EVENT_TYPE_DIAG_DUMP		0x5
+>>   #define LPFC_SLI_EVENT_TYPE_MISCONFIGURED	0x9
+>> +#define LPFC_SLI_EVENT_TYPE_REMOTE_DPORT	0xA
+>>   };
+>>   
+>>   /*
+>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+>> index 2b5b910..4ba91af 100644
+>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>> @@ -1330,13 +1330,14 @@ lpfc_offline_eratt(struct lpfc_hba *phba)
+>>   void
+>>   lpfc_sli4_offline_eratt(struct lpfc_hba *phba)
+>>   {
+>> +	spin_lock_irq(&phba->hbalock);
+>> +	phba->link_state = LPFC_HBA_ERROR;
+>> +	spin_unlock_irq(&phba->hbalock);
+> Hi James,
+> please explain why is the spinlock^ needed?
+> There seems to be lot of other places where link_state is not protected,
+> for example it is evaluated in lpfc_sli4_handle_received_buffer with no lock.
 >
-> Another update suggestion was taken into account after a patch was applied
-> from static source code analysis.
+> Could you please also add some more description to the of the body your mails,
+> sometimes  a subject only is not enough.
 >
-> Markus Elfring (2):
->    Delete an unnecessary check before the function call "kfree"
->    One function call less in lpfc_bsg_hba_set_event() after error detection
->
->   drivers/scsi/lpfc/lpfc_bsg.c | 7 +++----
->   1 file changed, 3 insertions(+), 4 deletions(-)
->
+> Thanks,
+> Tomas
+
+Well - good question - access should be under lock, and it wouldn't 
+surprise me if there are some cases, especially read checks, where it 
+isn't. In most cases, this bad behavior works, as the variable doesn't 
+change often, and even when it does, there's very long time delays 
+before something would reference the change. Not trying to say it 
+shouldn't be fixed, but rather why it hasn't been an issue. This one 
+will take a little bit to clean up - it reached this point historically 
+over many successive changes.
+
+Yes, I'll add a little meat to future patches.
+
+-- james s
+
+
 
