@@ -1,19 +1,55 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: chelsio: Use a more common const struct pci_device_id foo[]
+From: Casey Leedom <leedom@chelsio.com>
+Subject: RE: chelsio: Use a more common const struct pci_device_id foo[]
  style
-Date: Mon, 16 Feb 2015 10:21:19 -0800
-Message-ID: <1424110879.8287.3.camel@perches.com>
+Date: Mon, 16 Feb 2015 19:07:44 +0000
+Message-ID: <4985EFDD773FCB459EF7915D2A3621ADB9E035@nice.asicdesigners.com>
 References: <1423879550.2795.12.camel@perches.com>
-	 <4985EFDD773FCB459EF7915D2A3621ADB9E00A@nice.asicdesigners.com>
+	 <4985EFDD773FCB459EF7915D2A3621ADB9E00A@nice.asicdesigners.com>,<1424110879.8287.3.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=Windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADB9E00A@nice.asicdesigners.com>
+In-Reply-To: <1424110879.8287.3.camel@perches.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Casey Leedom <leedom@chelsio.com>
+To: Joe Perches <joe@perches.com>
 Cc: Hariprasad S <hariprasad@chelsio.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, David Miller <davem@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
+
+  I understand that OS-independence issues aren't something which are n=
+ormally accommodated, but as long as definitions don't introduce unnece=
+ssary "foreign intrusion" I would hope that it would be okay.  As I not=
+ed, our t4_regs.h file is also OS-independent and used by six other OS =
+device drivers.  Putting Linux definitions into t4_pci_id_tbl.h would b=
+e somewhat akin to injecting Linux dependencies into t4_regs.h.
+
+  But, if the change must be made, then we'll just maintain a translati=
+on between our Common Code and the kernel.org code.  If that's the case=
+, probably the best documentation for the proposed CH_PCI_ID_TABLE_ENTR=
+Y_DATA might be something like:
+
+ * CH_PCI_ID_TABLE_ENTRY_DATA
+ *   -- Used for the individual PCI Device ID entries for the PCI_VDEVI=
+CE() "dev"
+ *   -- parameter.
+
+  So it sounds like Chelsio would be required to make this change then?=
+  I'm still unclear on the likes of responsibility/authority here.  We'=
+re being told that we must do this but we have to be the ones requestin=
+g it?  Sorry for my confusion.  (Which is doubly apparent since I came =
+into work this morning only to realize that it's a company holiday.  Co=
+lor me a moron today.)
+
+Casey
+
+________________________________________
+=46rom: Joe Perches [joe@perches.com]
+Sent: Monday, February 16, 2015 10:21 AM
+To: Casey Leedom
+Cc: Hariprasad S; James E.J. Bottomley; netdev@vger.kernel.org; linux-k=
+ernel@vger.kernel.org; linux-scsi; David Miller
+Subject: Re: chelsio: Use a more common const struct pci_device_id foo[=
+] style
 
 On Mon, 2015-02-16 at 18:05 +0000, Casey Leedom wrote:
 >   I can't quite tell if this is a patch request being sent to
@@ -50,7 +86,7 @@ obfuscated/unclear.
 EFINE_BEGIN to guard
 >     the actual contents of t4_pci_id_tbl.h.  That's already being han=
 dled via the check for
->     __T4_PCI_ID_TBL_H__ =E2=80=94 no idea why I put that in there ...
+>     __T4_PCI_ID_TBL_H__ =97 no idea why I put that in there ...
 
 That didn't matter much to me.
 
@@ -99,16 +135,16 @@ Do you have any clarifying text to suggest?
 cheers, Joe
 
 > In conclusion:
->=20
+>
 >  A. I like the use of "const" in the table.
->=20
+>
 >  B. I like removing the redundant content inclusion check of
 >     CH_PCI_DEVICE_ID_TABLE_DEFINE_BEGIN.
->=20
+>
 >  C. I'm uncomfortable with all the other changes.
 
 > Casey
->=20
+>
 > ________________________________________
 > From: Joe Perches [joe@perches.com]
 > Sent: Friday, February 13, 2015 6:05 PM
@@ -116,19 +152,19 @@ cheers, Joe
 > Cc: netdev@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi
 > Subject: chelsio: Use a more common const struct pci_device_id foo[] =
 style
->=20
+>
 > Chelsio code shares a pci_device_table from an #include file.
 > Make the include guard simpler and make the arrays const.
->=20
+>
 > Reduces data by moving tables to text.
->=20
+>
 > Removed unnecessary macros:
 > o CH_PCI_DEVICE_ID_TABLE_DEFINE_BEGIN
 > o CH_PCI_DEVICE_ID_TABLE_DEFINE_END
 > o CH_PCI_ID_TABLE_ENTRY (moved to the .h file)
 > Added new macro define:
 > o CH_PCI_ID_TABLE_ENTRY_DATA
->=20
+>
 >   text     data     bss     dec     hex filename
 >   50550     923     172   51645    c9bd drivers/net/ethernet/chelsio/=
 cxgb4/cxgb4_main.o.new
