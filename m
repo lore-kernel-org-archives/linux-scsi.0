@@ -1,111 +1,191 @@
-From: Gavin Guo <gavin.guo@canonical.com>
-Subject: Re: General protection fault in iscsi_rx_thread_pre_handler
-Date: Mon, 16 Feb 2015 18:56:30 +0800
-Message-ID: <CA+eFSM3qOqfg5gF0SJgzA5Mi38jF9QaBh0642NJM9kVusXB7wQ@mail.gmail.com>
-References: <CA+eFSM1iir5QYsUALigzwcCPiqDGaNKBVq22unydN+-uTxZD2Q@mail.gmail.com>
-	<1421920228.7061.48.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM3H2zO7+bQBd7jO2sjB-MWjGNfGTeqDZDY_8_ruzj_Q_Q@mail.gmail.com>
-	<1421948107.30821.2.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM3yBoqpb-tjz_ztyUyUV9RQEATVJ6nBWJgXJmbXvjGgQQ@mail.gmail.com>
-	<1422658406.5117.31.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM1yp8bxp2zi8OuWs=_R7ddrintYXsDx5q10eOMj2Y04NQ@mail.gmail.com>
-	<CA+eFSM3-Xw1sqN0sCx4LHXYH7d81j+qtx_z6VZ_6QXc7uu2QyA@mail.gmail.com>
-	<1423725382.8354.34.camel@haakon3.risingtidesystems.com>
-	<CA+eFSM0iZhchbNWT5SPtFAa1K4B4==f6QpQ-tYV3eYOfp-ztpg@mail.gmail.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 5/8] target: Add sanity checks for DPO/FUA bit usage
+Date: Mon, 16 Feb 2015 13:10:16 +0200
+Message-ID: <54E1D018.7090108@dev.mellanox.co.il>
+References: <1423884463-16797-1-git-send-email-nab@daterainc.com> <1423884463-16797-6-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CA+eFSM0iZhchbNWT5SPtFAa1K4B4==f6QpQ-tYV3eYOfp-ztpg@mail.gmail.com>
+In-Reply-To: <1423884463-16797-6-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Nicholas,
-
-On Mon, Feb 16, 2015 at 6:52 PM, Gavin Guo <gavin.guo@canonical.com> wrote:
-> Hi Nicholas,
+On 2/14/2015 5:27 AM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> On Thu, Feb 12, 2015 at 3:16 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
->> Hi Gavin,
->>
->> On Tue, 2015-02-03 at 08:28 +0800, Gavin Guo wrote:
->>> Hi Nicholas,
->>>
->>> On Sun, Feb 1, 2015 at 11:47 AM, Gavin Guo <gavin.guo@canonical.com> wrote:
->>> > Hi Nicholas,
->>> >
->>> > On Sat, Jan 31, 2015 at 6:53 AM, Nicholas A. Bellinger
->>> > <nab@linux-iscsi.org> wrote:
->>> >> On Fri, 2015-01-23 at 09:30 +0800, Gavin Guo wrote:
->>> >>> Hi Nicholas,
->>> >>>
->>> >>> On Fri, Jan 23, 2015 at 1:35 AM, Nicholas A. Bellinger
->>> >>> <nab@linux-iscsi.org> wrote:
->>> >>> > On Thu, 2015-01-22 at 23:56 +0800, Gavin Guo wrote:
->>> >>> >> Hi Nicolas,
->>> >>> >>
->>> >>> >> On Thu, Jan 22, 2015 at 5:50 PM, Nicholas A. Bellinger
->>
->> <SNIP>
->>
->>> >>> >> > At the time, a different set of iser-target related changes ended up
->>> >>> >> > avoiding this issue on his particular setup, so we thought it was likely
->>> >>> >> > a race triggered by login failures specific to iser-target code.
->>> >>> >> >
->>> >>> >> > There was a untested patch (included inline below) to drop the legacy
->>> >>> >> > active_ts_list usage all-together, but IIRC he was not able to reproduce
->>> >>> >> > further so the patch didn't get picked up for mainline.
->>> >>> >> >
->>> >>> >> > If your able to reliability reproduce, please try with the following
->>> >>> >> > patch and let us know your progress.
->>> >>> >>
->>> >>> >> Thanks for your time reading the mail. I'll let you know the result.
->>> >>> >
->>> >>> > Just curious, are you able to reliability reproduce this bug in a VM..?
->>> >>>
->>> >>> Thanks for your caring, the machine is on the customer side, I've
->>> >>> asked and now waiting for their response.
->>> >>
->>> >> Hi Gavin,
->>> >>
->>> >> Just curious if there has been any update on this yet..?
->>> >>
->>> >> --nab
->>> >>
->>> >
->>> > Really thanks for your attention. I'm also currently waiting for the
->>> > customer's reply and will send the email again to ask for the result.
->>> > However, I think the symptom may be hard to replicate that's why the
->>> > customer didn't reply me for a long time. Thanks for your time again.
->>> >
->>> > Thanks,
->>> > Gavin
->>>
->>> Sorry for making you wait so long. I just got the response from the
->>> customer, they said the general protection fault happened just 2 times
->>> in the past and cannot be reliably reproduced. And I am now waiting
->>> for the verification test.
->>>
->>
->> Just a heads up that I'm planning to include this patch in the v3.20-rc1
->> PULL request.
->>
->> Please let me know if you have any objections.
->>
->> Thank you,
->>
->> --nab
->>
+> This patch adds a sbc_check_dpofua() function that performs sanity
+> checks for DPO/FUA command bits.
 >
-> The bug
+> It introduces checks to fail when either bit is set, but the backend
+> device is not advertising support for them.
+>
+> It also moves the existing cmd->se_cmd_flags |= SCF_FUA assignement
+> into the new helper function.
+>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>   drivers/target/target_core_sbc.c | 56 +++++++++++++++++++++++++++++++++-------
+>   1 file changed, 46 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 87cbbe2..856e800 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -692,6 +692,29 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
+>   	return TCM_NO_SENSE;
+>   }
+>
+> +static int
+> +sbc_check_dpofua(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
+> +{
+> +	if (cdb[1] & 0x10) {
+> +		if (!dev->dev_attrib.emulate_dpo) {
 
-Sorry, I mistakenly press the send button last time.
+General comment, can you please use unlikely on all these branches in
+the critical path?
 
-The bug doesn't appear after the customer upgraded the kernel with the
-patch. Really thanks for your help. I'll keep you posted if the bug
-appears again.
+> +			pr_err("Got CDB: 0x%02x with DPO bit set, but device"
+> +			       " does not advertise support for DPO\n", cdb[0]);
+> +			return -EINVAL;
+> +		}
+> +	}
+> +	if (cdb[1] & 0x8) {
+> +		if (!dev->dev_attrib.emulate_fua_write ||
+> +		    !dev->dev_attrib.emulate_write_cache) {
+> +			pr_err("Got CDB: 0x%02x with FUA bit set, but device"
+> +			       " does not advertise support for FUA write\n",
+> +			       cdb[0]);
+> +			return -EINVAL;
+> +		}
+> +		cmd->se_cmd_flags |= SCF_FUA;
+> +	}
+> +	return 0;
+> +}
+> +
+>   sense_reason_t
+>   sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   {
+> @@ -713,6 +736,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_10(cdb);
+>   		cmd->t_task_lba = transport_lba_32(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+>   		if (ret)
+>   			return ret;
+> @@ -725,6 +751,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_12(cdb);
+>   		cmd->t_task_lba = transport_lba_32(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+>   		if (ret)
+>   			return ret;
+> @@ -737,6 +766,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_16(cdb);
+>   		cmd->t_task_lba = transport_lba_64(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, false);
+>   		if (ret)
+>   			return ret;
+> @@ -757,12 +789,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_10(cdb);
+>   		cmd->t_task_lba = transport_lba_32(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+>   		if (ret)
+>   			return ret;
+>
+> -		if (cdb[1] & 0x8)
+> -			cmd->se_cmd_flags |= SCF_FUA;
+>   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+>   		cmd->execute_rw = ops->execute_rw;
+>   		cmd->execute_cmd = sbc_execute_rw;
+> @@ -771,12 +804,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_12(cdb);
+>   		cmd->t_task_lba = transport_lba_32(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+>   		if (ret)
+>   			return ret;
+>
+> -		if (cdb[1] & 0x8)
+> -			cmd->se_cmd_flags |= SCF_FUA;
+>   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+>   		cmd->execute_rw = ops->execute_rw;
+>   		cmd->execute_cmd = sbc_execute_rw;
+> @@ -785,12 +819,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		sectors = transport_get_sectors_16(cdb);
+>   		cmd->t_task_lba = transport_lba_64(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		ret = sbc_check_prot(dev, cmd, cdb, sectors, true);
+>   		if (ret)
+>   			return ret;
+>
+> -		if (cdb[1] & 0x8)
+> -			cmd->se_cmd_flags |= SCF_FUA;
+>   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+>   		cmd->execute_rw = ops->execute_rw;
+>   		cmd->execute_cmd = sbc_execute_rw;
+> @@ -801,6 +836,9 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   			return TCM_INVALID_CDB_FIELD;
+>   		sectors = transport_get_sectors_10(cdb);
+>
+> +		if (sbc_check_dpofua(dev, cmd, cdb))
+> +			return TCM_INVALID_CDB_FIELD;
+> +
+>   		cmd->t_task_lba = transport_lba_32(cdb);
+>   		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
+>
+> @@ -810,8 +848,6 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		cmd->execute_rw = ops->execute_rw;
+>   		cmd->execute_cmd = sbc_execute_rw;
+>   		cmd->transport_complete_callback = &xdreadwrite_callback;
+> -		if (cdb[1] & 0x8)
+> -			cmd->se_cmd_flags |= SCF_FUA;
+>   		break;
+>   	case VARIABLE_LENGTH_CMD:
+>   	{
+> @@ -820,6 +856,8 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   		case XDWRITEREAD_32:
+>   			sectors = transport_get_sectors_32(cdb);
+>
+> +			if (sbc_check_dpofua(dev, cmd, cdb))
+> +				return TCM_INVALID_CDB_FIELD;
+>   			/*
+>   			 * Use WRITE_32 and READ_32 opcodes for the emulated
+>   			 * XDWRITE_READ_32 logic.
+> @@ -834,8 +872,6 @@ sbc_parse_cdb(struct se_cmd *cmd, struct sbc_ops *ops)
+>   			cmd->execute_rw = ops->execute_rw;
+>   			cmd->execute_cmd = sbc_execute_rw;
+>   			cmd->transport_complete_callback = &xdreadwrite_callback;
+> -			if (cdb[1] & 0x8)
+> -				cmd->se_cmd_flags |= SCF_FUA;
+>   			break;
+>   		case WRITE_SAME_32:
+>   			sectors = transport_get_sectors_32(cdb);
+>
 
-Thanks,
-Gavin
+Other than that, Looks OK.
+
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
