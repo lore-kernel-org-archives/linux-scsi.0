@@ -1,149 +1,86 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V2 2/9] pm80xx : ILA and inactive firmware version through sysfs
-Date: Wed, 18 Feb 2015 05:06:43 +0530
-Message-ID: <20150217233650.9091-3-Viswas.G@microsemi.com>
+Subject: [PATCH V2 4/9] pm80xx : tag allocation for phy control request.
+Date: Wed, 18 Feb 2015 05:06:45 +0530
+Message-ID: <20150217233650.9091-5-Viswas.G@microsemi.com>
 References: <20150217233650.9091-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03hn0243.outbound.protection.outlook.com ([104.47.40.243]:28696
+Received: from mail-co1nam03hn0220.outbound.protection.outlook.com ([104.47.40.220]:7620
         "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751797AbdIMKmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 06:42:08 -0400
+        id S1751905AbdIMKmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 06:42:11 -0400
 In-Reply-To: <20150217233650.9091-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-Added support to read ILA version and inactive firmware version
-from MPI configuration table and export through sysfs.
+tag is taken from the tag pool instead of using the hardcoded
+tag value(1).
 
 Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
 Signed-off-by: Viswas G <Viswas.G@microsemi.com>
-
-Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c | 54 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/pm8001/pm8001_sas.h |  2 ++
- drivers/scsi/pm8001/pm80xx_hwi.c |  5 ++++
- drivers/scsi/pm8001/pm80xx_hwi.h |  2 ++
- 4 files changed, 63 insertions(+)
+ drivers/scsi/pm8001/pm8001_hwi.c |  3 +++
+ drivers/scsi/pm8001/pm80xx_hwi.c | 10 +++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index be8269c8d127..596f3ff965f5 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -98,6 +98,58 @@ static ssize_t pm8001_ctl_fw_version_show(struct device *cdev,
- 	}
- }
- static DEVICE_ATTR(fw_version, S_IRUGO, pm8001_ctl_fw_version_show, NULL);
-+
-+/**
-+ * pm8001_ctl_ila_version_show - ila version
-+ * @cdev: pointer to embedded class device
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
-+static ssize_t pm8001_ctl_ila_version_show(struct device *cdev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-+
-+	if (pm8001_ha->chip_id != chip_8001) {
-+		return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 24),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 16),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 8),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version));
-+	}
-+	return 0;
-+}
-+static DEVICE_ATTR(ila_version, 0444, pm8001_ctl_ila_version_show, NULL);
-+
-+/**
-+ * pm8001_ctl_inactive_fw_version_show - Inacative firmware version number
-+ * @cdev: pointer to embedded class device
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
-+static ssize_t pm8001_ctl_inactive_fw_version_show(struct device *cdev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-+
-+	if (pm8001_ha->chip_id != chip_8001) {
-+		return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 24),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 16),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 8),
-+		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version));
-+	}
-+	return 0;
-+}
-+static
-+DEVICE_ATTR(inc_fw_ver, 0444, pm8001_ctl_inactive_fw_version_show, NULL);
-+
- /**
-  * pm8001_ctl_max_out_io_show - max outstanding io supported
-  * @cdev: pointer to embedded class device
-@@ -748,6 +800,8 @@ struct device_attribute *pm8001_host_attrs[] = {
- 	&dev_attr_bios_version,
- 	&dev_attr_ib_log,
- 	&dev_attr_ob_log,
-+	&dev_attr_ila_version,
-+	&dev_attr_inc_fw_ver,
- 	NULL,
- };
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 10546faac58c..bc4a6f649ec9 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3198,11 +3198,13 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
  
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index e81a8fa7ef1a..c75de413e062 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -404,6 +404,8 @@ union main_cfg_table {
- 	u32			port_recovery_timer;
- 	u32			interrupt_reassertion_delay;
- 	u32			fatal_n_non_fatal_dump;	        /* 0x28 */
-+	u32			ila_version;
-+	u32			inc_fw_version;
- 	} pm80xx_tbl;
- };
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ {
++	u32 tag;
+ 	struct local_phy_ctl_resp *pPayload =
+ 		(struct local_phy_ctl_resp *)(piomb + 4);
+ 	u32 status = le32_to_cpu(pPayload->status);
+ 	u32 phy_id = le32_to_cpu(pPayload->phyop_phyid) & ID_BITS;
+ 	u32 phy_op = le32_to_cpu(pPayload->phyop_phyid) & OP_BITS;
++	tag = le32_to_cpu(pPayload->tag);
+ 	if (status != 0) {
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("%x phy execute %x phy op failed!\n",
+@@ -3211,6 +3213,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		PM8001_MSG_DBG(pm8001_ha,
+ 			pm8001_printk("%x phy execute %x phy op success!\n",
+ 			phy_id, phy_op));
++	pm8001_tag_free(pm8001_ha, tag);
+ 	return 0;
+ }
  
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index eb4fee61df72..8fb5ddf08cc4 100644
+index 2b26445d1b97..baab8a19c78e 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -312,6 +312,11 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 	/* read port recover and reset timeout */
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer =
- 		pm8001_mr32(address, MAIN_PORT_RECOVERY_TIMER);
-+	/* read ILA and inactive firmware version */
-+	pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version =
-+		pm8001_mr32(address, MAIN_MPI_ILA_RELEASE_TYPE);
-+	pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version =
-+		pm8001_mr32(address, MAIN_MPI_INACTIVE_FW_VERSION);
+@@ -4500,17 +4500,21 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+ static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
+ 	u32 phyId, u32 phy_op)
+ {
++	u32 tag;
++	int rc;
+ 	struct local_phy_ctl_req payload;
+ 	struct inbound_queue_table *circularQ;
+ 	int ret;
+ 	u32 opc = OPC_INB_LOCAL_PHY_CONTROL;
+ 	memset(&payload, 0, sizeof(payload));
++	rc = pm8001_tag_alloc(pm8001_ha, &tag);
++	if (rc)
++		return rc;
+ 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+-	payload.tag = cpu_to_le32(1);
++	payload.tag = cpu_to_le32(tag);
+ 	payload.phyop_phyid =
+ 		cpu_to_le32(((phy_op & 0xFF) << 8) | (phyId & 0xFF));
+-	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
+-	return ret;
++	return pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload, 0);
  }
  
- /**
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index 82b8cf581da9..e36c5176f9a9 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -1445,6 +1445,8 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
- #define MAIN_SAS_PHY_ATTR_TABLE_OFFSET	0x90 /* DWORD 0x24 */
- #define MAIN_PORT_RECOVERY_TIMER	0x94 /* DWORD 0x25 */
- #define MAIN_INT_REASSERTION_DELAY	0x98 /* DWORD 0x26 */
-+#define MAIN_MPI_ILA_RELEASE_TYPE	0xA4 /* DWORD 0x29 */
-+#define MAIN_MPI_INACTIVE_FW_VERSION	0XB0 /* DWORD 0x2C */
- 
- /* Gereral Status Table offset - byte offset */
- #define GST_GSTLEN_MPIS_OFFSET		0x00
+ static u32 pm80xx_chip_is_our_interupt(struct pm8001_hba_info *pm8001_ha)
 -- 
 2.12.3
