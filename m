@@ -1,51 +1,19 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH] scsi/lpfc: use remove handler as shutdown handler
-Date: Mon, 16 Feb 2015 14:41:58 -0500
-Message-ID: <54E24806.5030605@emulex.com>
-References: <1422285538-487-1-git-send-email-cascardo@linux.vnet.ibm.com>
-Reply-To: <james.smart@emulex.com>
+From: "Enden LJ van den, Loura" <l.j.van.den.enden@pl.hanze.nl>
+Subject: work with
+Date: Tue, 17 Feb 2015 05:04:05 +0000
+Message-ID: <FC4C0E89D7C1C04CBFB23F8C689ED1754A64DF5D@HPEMB10W28.hanze.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1422285538-487-1-git-send-email-cascardo@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, JBottomley@parallels.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smarthost.hanze.nl ([145.33.5.182]:32439 "EHLO
+	HPEED04W28.hanze.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbbBQFJX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Feb 2015 00:09:23 -0500
+Content-Language: nl-NL
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Looks good.
-
-Acked-By: James Smart  <james.smart@emulex.com>
-
--- james
 
 
-
-On 1/26/2015 10:18 AM, Thadeu Lima de Souza Cascardo wrote:
-> Without a shutdown handler, some cards behave very badly after a kexec.
-> During probe, pending DMA writes will corrupt kernel memory, for
-> example.
->
-> Using the remove handler guarantees we will use a well tested path.
->
-> With this patch I applied, I managed to use kexec multiple times and
-> probe and SCSI scan worked every time.
->
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c |    1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 0b2c53a..8aa804a 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -11248,6 +11248,7 @@ static struct pci_driver lpfc_driver = {
->   	.id_table	= lpfc_id_table,
->   	.probe		= lpfc_pci_probe_one,
->   	.remove		= lpfc_pci_remove_one,
-> +	.shutdown	= lpfc_pci_remove_one,
->   	.suspend        = lpfc_pci_suspend_one,
->   	.resume		= lpfc_pci_resume_one,
->   	.err_handler    = &lpfc_err_handler,
+My name is Gatan Magsino, I work with Mediterranean Bank in Malta. Can i trust you with a business worth 8.3 million USD? Please reply ONLY to my private email: mgatan@rogers.com for more information.
