@@ -1,150 +1,149 @@
 From: Viswas G <Viswas.G@microsemi.com>
-Subject: [PATCH V2 1/9] pm80xx : redefine sas_identify_frame structure
-Date: Wed, 18 Feb 2015 05:06:42 +0530
-Message-ID: <20150217233650.9091-2-Viswas.G@microsemi.com>
+Subject: [PATCH V2 2/9] pm80xx : ILA and inactive firmware version through sysfs
+Date: Wed, 18 Feb 2015 05:06:43 +0530
+Message-ID: <20150217233650.9091-3-Viswas.G@microsemi.com>
 References: <20150217233650.9091-1-Viswas.G@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02hn0241.outbound.protection.outlook.com ([104.47.38.241]:40323
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03hn0243.outbound.protection.outlook.com ([104.47.40.243]:28696
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751705AbdIMKmH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 06:42:07 -0400
+        id S1751797AbdIMKmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 06:42:08 -0400
 In-Reply-To: <20150217233650.9091-1-Viswas.G@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-sas_identify structure defined by pm80xx doesn't have CRC field.
-So added a new sas_identify structure without CRC.
+Added support to read ILA version and inactive firmware version
+from MPI configuration table and export through sysfs.
 
-v2:
-	- Since the structure changes is applicable for only pm80xx,
-	  sas_identify_frame_local structure moved to pm80xx_hwi.h.
-
-Signed-off-by: Raj Dinesh <Raj.Dinesh@microsemi.com>
+Signed-off-by: Deepak Ukey <deepak.ukey@microsemi.com>
 Signed-off-by: Viswas G <Viswas.G@microsemi.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.h | 98 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 97 insertions(+), 1 deletion(-)
 
+Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
+---
+ drivers/scsi/pm8001/pm8001_ctl.c | 54 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h |  2 ++
+ drivers/scsi/pm8001/pm80xx_hwi.c |  5 ++++
+ drivers/scsi/pm8001/pm80xx_hwi.h |  2 ++
+ 4 files changed, 63 insertions(+)
+
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index be8269c8d127..596f3ff965f5 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -98,6 +98,58 @@ static ssize_t pm8001_ctl_fw_version_show(struct device *cdev,
+ 	}
+ }
+ static DEVICE_ATTR(fw_version, S_IRUGO, pm8001_ctl_fw_version_show, NULL);
++
++/**
++ * pm8001_ctl_ila_version_show - ila version
++ * @cdev: pointer to embedded class device
++ * @buf: the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t pm8001_ctl_ila_version_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++
++	if (pm8001_ha->chip_id != chip_8001) {
++		return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 24),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 16),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version >> 8),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version));
++	}
++	return 0;
++}
++static DEVICE_ATTR(ila_version, 0444, pm8001_ctl_ila_version_show, NULL);
++
++/**
++ * pm8001_ctl_inactive_fw_version_show - Inacative firmware version number
++ * @cdev: pointer to embedded class device
++ * @buf: the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t pm8001_ctl_inactive_fw_version_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
++
++	if (pm8001_ha->chip_id != chip_8001) {
++		return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 24),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 16),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version >> 8),
++		(u8)(pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version));
++	}
++	return 0;
++}
++static
++DEVICE_ATTR(inc_fw_ver, 0444, pm8001_ctl_inactive_fw_version_show, NULL);
++
+ /**
+  * pm8001_ctl_max_out_io_show - max outstanding io supported
+  * @cdev: pointer to embedded class device
+@@ -748,6 +800,8 @@ struct device_attribute *pm8001_host_attrs[] = {
+ 	&dev_attr_bios_version,
+ 	&dev_attr_ib_log,
+ 	&dev_attr_ob_log,
++	&dev_attr_ila_version,
++	&dev_attr_inc_fw_ver,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index e81a8fa7ef1a..c75de413e062 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -404,6 +404,8 @@ union main_cfg_table {
+ 	u32			port_recovery_timer;
+ 	u32			interrupt_reassertion_delay;
+ 	u32			fatal_n_non_fatal_dump;	        /* 0x28 */
++	u32			ila_version;
++	u32			inc_fw_version;
+ 	} pm80xx_tbl;
+ };
+ 
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index eb4fee61df72..8fb5ddf08cc4 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -312,6 +312,11 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
+ 	/* read port recover and reset timeout */
+ 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.port_recovery_timer =
+ 		pm8001_mr32(address, MAIN_PORT_RECOVERY_TIMER);
++	/* read ILA and inactive firmware version */
++	pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version =
++		pm8001_mr32(address, MAIN_MPI_ILA_RELEASE_TYPE);
++	pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version =
++		pm8001_mr32(address, MAIN_MPI_INACTIVE_FW_VERSION);
+ }
+ 
+ /**
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index 7a443bad6163..82b8cf581da9 100644
+index 82b8cf581da9..e36c5176f9a9 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.h
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -229,6 +229,102 @@
- #define IT_NEXUS_TIMEOUT       0x7D0
- #define PORT_RECOVERY_TIMEOUT  ((IT_NEXUS_TIMEOUT/100) + 30)
+@@ -1445,6 +1445,8 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
+ #define MAIN_SAS_PHY_ATTR_TABLE_OFFSET	0x90 /* DWORD 0x24 */
+ #define MAIN_PORT_RECOVERY_TIMER	0x94 /* DWORD 0x25 */
+ #define MAIN_INT_REASSERTION_DELAY	0x98 /* DWORD 0x26 */
++#define MAIN_MPI_ILA_RELEASE_TYPE	0xA4 /* DWORD 0x29 */
++#define MAIN_MPI_INACTIVE_FW_VERSION	0XB0 /* DWORD 0x2C */
  
-+#ifdef __LITTLE_ENDIAN_BITFIELD
-+struct sas_identify_frame_local {
-+	/* Byte 0 */
-+	u8  frame_type:4;
-+	u8  dev_type:3;
-+	u8  _un0:1;
-+
-+	/* Byte 1 */
-+	u8  _un1;
-+
-+	/* Byte 2 */
-+	union {
-+		struct {
-+			u8  _un20:1;
-+			u8  smp_iport:1;
-+			u8  stp_iport:1;
-+			u8  ssp_iport:1;
-+			u8  _un247:4;
-+		};
-+		u8 initiator_bits;
-+	};
-+
-+	/* Byte 3 */
-+	union {
-+		struct {
-+			u8  _un30:1;
-+			u8 smp_tport:1;
-+			u8 stp_tport:1;
-+			u8 ssp_tport:1;
-+			u8 _un347:4;
-+		};
-+		u8 target_bits;
-+	};
-+
-+	/* Byte 4 - 11 */
-+	u8 _un4_11[8];
-+
-+	/* Byte 12 - 19 */
-+	u8 sas_addr[SAS_ADDR_SIZE];
-+
-+	/* Byte 20 */
-+	u8 phy_id;
-+
-+	u8 _un21_27[7];
-+
-+} __packed;
-+
-+#elif defined(__BIG_ENDIAN_BITFIELD)
-+struct sas_identify_frame_local {
-+	/* Byte 0 */
-+	u8  _un0:1;
-+	u8  dev_type:3;
-+	u8  frame_type:4;
-+
-+	/* Byte 1 */
-+	u8  _un1;
-+
-+	/* Byte 2 */
-+	union {
-+		struct {
-+			u8  _un247:4;
-+			u8  ssp_iport:1;
-+			u8  stp_iport:1;
-+			u8  smp_iport:1;
-+			u8  _un20:1;
-+		};
-+		u8 initiator_bits;
-+	};
-+
-+	/* Byte 3 */
-+	union {
-+		struct {
-+			u8 _un347:4;
-+			u8 ssp_tport:1;
-+			u8 stp_tport:1;
-+			u8 smp_tport:1;
-+			u8 _un30:1;
-+		};
-+		u8 target_bits;
-+	};
-+
-+	/* Byte 4 - 11 */
-+	u8 _un4_11[8];
-+
-+	/* Byte 12 - 19 */
-+	u8 sas_addr[SAS_ADDR_SIZE];
-+
-+	/* Byte 20 */
-+	u8 phy_id;
-+
-+	u8 _un21_27[7];
-+} __packed;
-+#else
-+#error "Bitfield order not defined!"
-+#endif
-+
- struct mpi_msg_hdr {
- 	__le32	header;	/* Bits [11:0] - Message operation code */
- 	/* Bits [15:12] - Message Category */
-@@ -248,7 +344,7 @@ struct mpi_msg_hdr {
- struct phy_start_req {
- 	__le32	tag;
- 	__le32	ase_sh_lm_slr_phyid;
--	struct sas_identify_frame sas_identify; /* 28 Bytes */
-+	struct sas_identify_frame_local sas_identify; /* 28 Bytes */
- 	__le32 spasti;
- 	u32	reserved[21];
- } __attribute__((packed, aligned(4)));
+ /* Gereral Status Table offset - byte offset */
+ #define GST_GSTLEN_MPIS_OFFSET		0x00
 -- 
 2.12.3
