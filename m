@@ -1,48 +1,50 @@
-From: Huacai Chen <chenhc@lemote.com>
-Subject: [PATCH V3 3/3] scsi: Align queue to ARCH_DMA_MINALIGN in non-coherent DMA mode
-Date: Wed, 13 Sep 2017 17:21:12 +0800
-Message-ID: <1505294472-21912-1-git-send-email-chenhc@lemote.com>
+From: Viswas G <Viswas.G@microsemi.com>
+Subject: [PATCH V2 0/9] pm80xx updates
+Date: Wed, 18 Feb 2015 05:06:41 +0530
+Message-ID: <20150217233650.9091-1-Viswas.G@microsemi.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpbgsg2.qq.com ([54.254.200.128]:60389 "EHLO smtpbgsg2.qq.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751380AbdIMJYu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Sep 2017 05:24:50 -0400
+Received: from mail-bn3nam01hn0200.outbound.protection.outlook.com ([104.47.33.200]:63856
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751148AbdIMKmE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Sep 2017 06:42:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Fuxin Zhang <zhangfx@lemote.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>, stable@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Vasanthalakshmi.Tharmarajan@microsemi.com, Viswas.G@microsemi.com, deepak.ukey@microsemi.com, Raj.Dinesh@microsemi.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com
 
-In non-coherent DMA mode, kernel uses cache flushing operations to
-maintain I/O coherency, so scsi's block queue should be aligned to
-ARCH_DMA_MINALIGN.
+This patch set include some bug fixes and enhancement for pm80xx driver.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Huacai Chen <chenhc@lemote.com>
----
- drivers/scsi/scsi_lib.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Changes from V1:
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9cf6a80..79433ad 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2132,11 +2132,14 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 		q->limits.cluster = 0;
- 
- 	/*
--	 * set a reasonable default alignment on word boundaries: the
--	 * host and device may alter it using
-+	 * set a reasonable default alignment on word/cacheline boundaries:
-+	 * the host and device may alter it using
- 	 * blk_queue_update_dma_alignment() later.
- 	 */
--	blk_queue_dma_alignment(q, 0x03);
-+	if (plat_device_is_coherent(dev))
-+		blk_queue_dma_alignment(q, 0x04 - 1);
-+	else
-+		blk_queue_dma_alignment(q, dma_get_cache_alignment() - 1);
- }
- EXPORT_SYMBOL_GPL(__scsi_init_queue);
- 
+	- sas_identify_frame_local structure moved to pm80xx_hwi.h
+	- sata abort handling patch split to four patches.
+		- tag allocation for phy control request.
+		- cleanup in pm8001_abort_task function.
+		- modified port reset timer value for PM8006 card
+		- corrected SATA abort handling sequence.
+
+Viswas G (9):
+  pm80xx : redefine sas_identify_frame structure
+  pm80xx : ILA and inactive firmware version through sysfs
+  pm80xx : Different SAS addresses for phys.
+  pm80xx : tag allocation for phy control request.
+  pm80xx : cleanup in pm8001_abort_task function.
+  pm80xx : modified port reset timer value for PM8006 card
+  pm80xx : corrected SATA abort handling sequence.
+  pm80xx : panic on ncq error cleaning up the read log.
+  pm80xx : corrected linkrate value.
+
+ drivers/scsi/pm8001/pm8001_ctl.c  |  54 +++++++++++++++++
+ drivers/scsi/pm8001/pm8001_hwi.c  |  11 +++-
+ drivers/scsi/pm8001/pm8001_init.c |  13 +++--
+ drivers/scsi/pm8001/pm8001_sas.c  | 118 ++++++++++++++++++++++++++------------
+ drivers/scsi/pm8001/pm8001_sas.h  |  10 ++++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  61 ++++++++++++++++----
+ drivers/scsi/pm8001/pm80xx_hwi.h  | 102 +++++++++++++++++++++++++++++++-
+ 7 files changed, 313 insertions(+), 56 deletions(-)
+
 -- 
-2.7.0
+2.12.3
