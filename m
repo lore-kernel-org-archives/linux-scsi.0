@@ -1,38 +1,62 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Concerns about "mpt2sas: Added Reply Descriptor Post Queue
- (RDPQ) Array support"
-Date: Fri, 20 Feb 2015 18:19:21 +1100
-Message-ID: <1424416761.27448.37.camel@kernel.crashing.org>
-References: <1424408500.27448.25.camel@kernel.crashing.org>
-	 <1424408769.27448.28.camel@kernel.crashing.org>
-	 <1424409761.27448.32.camel@kernel.crashing.org>
-	 <1424411110.16222.5.camel@HansenPartnership.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Fri, 20 Feb 2015 11:49:19 +0100
+Message-ID: <54E7112F.2080901@sandisk.com>
+References: <54B63F74.2040702@sandisk.com>
+ <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
+ <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1424411110.16222.5.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:2465
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754056AbbBTKt2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Feb 2015 05:49:28 -0500
+In-Reply-To: <54BCD00D.4080603@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-02-19 at 21:45 -0800, James Bottomley wrote:
-> Ben, this is legal by design.  It was specifically designed for the
-> aic79xx SCSI card, but can be used for a variety of other reasons.  The
-> aic79xx hardware problem was that the DMA engine could address the whole
-> of memory (it had two address modes, a 39 bit one and a 64 bit one) but
-> the script engine that runs the mailboxes only had a 32 bit activation
-> register (the activating write points at the physical address of the
-> script to begin executing).  This meant that the scripts that run in
-> memory had to be in the first 4GB of physical memory, hence the split
-> mask.  The DMA mask specifies that the card can transfer from anywhere
-> in physical memory, but the consistent_dma_mask says that the consistent
-> allocation used to get scripts memory must come from the lower 4GB.
+On 01/19/15 10:36, Bart Van Assche wrote:
+> On 01/19/15 10:22, Christoph Hellwig wrote:
+>> On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
+>>> My goal is to realize this proposal without adding hooks for out-of-tree
+>>> code in the upstream kernel. What I had in mind is to raise the
+>>> abstraction level of the API between LIO core and target drivers a
+>>> little bit (e.g. by using accessor functions where necessary instead of
+>>> accessing structure members directly)
+>>
+>> That's very much a hook, althiugh a week one.
+>>
+>> Either way I don't think bringing up a very much political topic
+>> without even any code to discuss isn't a very valueable use of our time
+>> slots.
+> 
+> A possible approach is that I start implementing a unified SRP target
+> driver and post that driver together with the necessary LIO and SCST
+> core changes before the LSF/MM starts. That could be a helpful starting
+> point for further discussions.
 
-Right, ok, it looks like it's easy enough to support with ZONE_DMA32, I'm
-testing patches to create it unconditionally on ppc64 (it used to depend
-on us using swiotlb on embedded platforms) and I'll shoot that upstream
-if it passes.
+(replying to my own e-mail)
 
-Ben.
+Hello Christoph,
+
+What I proposed myself consists of three steps:
+1. Updating the LIO SRP target driver to a more recent version.
+2. Target driver and LIO core refactoring such that the LIO and
+   SCST APIs can be unified.
+3. Adding support in SCST for the unified target driver API.
+
+This work is taking a little more time than I had expected - I still
+have to start with step (3). But I can already show in which direction I
+would like to go for steps (1) and (2). The 43 patches I came up with so
+far for steps (1) and (2) are available in the lio branch of the
+https://github.com/bvanassche/linux git repository. As you can see in
+that repository 42 of these 43 patches make sense even without knowing
+that something like SCST exists.
+
+Bart.
+
