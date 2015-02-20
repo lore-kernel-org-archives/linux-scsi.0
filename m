@@ -1,62 +1,45 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Fri, 20 Feb 2015 11:49:19 +0100
-Message-ID: <54E7112F.2080901@sandisk.com>
-References: <54B63F74.2040702@sandisk.com>
- <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
- <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
+From: =?UTF-8?B?SsOhbiDFoGVib8Whw61r?= <sebosik@itm8.sk>
+Subject: [PATCH] scsi: mvsas support for Asus P9A-I SAS on-board controller
+Date: Fri, 20 Feb 2015 23:38:35 +0100
+Message-ID: <CAK+pXF29JUyrZQRO5W4cccZuCSKGUV3i_RvyCOUODqKcAM=qsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:2465
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754056AbbBTKt2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2015 05:49:28 -0500
-In-Reply-To: <54BCD00D.4080603@sandisk.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:56943 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945AbbBTWig (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Feb 2015 17:38:36 -0500
+Received: by mail-ig0-f169.google.com with SMTP id hl2so10217958igb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Feb 2015 14:38:35 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 01/19/15 10:36, Bart Van Assche wrote:
-> On 01/19/15 10:22, Christoph Hellwig wrote:
->> On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
->>> My goal is to realize this proposal without adding hooks for out-of-tree
->>> code in the upstream kernel. What I had in mind is to raise the
->>> abstraction level of the API between LIO core and target drivers a
->>> little bit (e.g. by using accessor functions where necessary instead of
->>> accessing structure members directly)
->>
->> That's very much a hook, althiugh a week one.
->>
->> Either way I don't think bringing up a very much political topic
->> without even any code to discuss isn't a very valueable use of our time
->> slots.
-> 
-> A possible approach is that I start implementing a unified SRP target
-> driver and post that driver together with the necessary LIO and SCST
-> core changes before the LSF/MM starts. That could be a helpful starting
-> point for further discussions.
+Add support for ASUS P9A-I SAS controller to 'mvsas' driver (Marvell
+88SE9485 based)
 
-(replying to my own e-mail)
+Signed-off-by: Jan Sebosik <sebosik@itm8.sk>
 
-Hello Christoph,
+---
 
-What I proposed myself consists of three steps:
-1. Updating the LIO SRP target driver to a more recent version.
-2. Target driver and LIO core refactoring such that the LIO and
-   SCST APIs can be unified.
-3. Adding support in SCST for the unified target driver API.
-
-This work is taking a little more time than I had expected - I still
-have to start with step (3). But I can already show in which direction I
-would like to go for steps (1) and (2). The 43 patches I came up with so
-far for steps (1) and (2) are available in the lio branch of the
-https://github.com/bvanassche/linux git repository. As you can see in
-that repository 42 of these 43 patches make sense even without knowing
-that something like SCST exists.
-
-Bart.
-
+--- drivers/scsi/mvsas/mv_init.c.orig   2015-02-20 23:16:33.071890099 +0100
++++ drivers/scsi/mvsas/mv_init.c        2015-02-20 23:18:18.298499615 +0100
+@@ -728,6 +728,15 @@ static struct pci_device_id mvs_pci_tabl
+                .class_mask     = 0,
+                .driver_data    = chip_9485,
+        },
++       {
++               .vendor         = PCI_VENDOR_ID_MARVELL_EXT, /* ASUS
+P9A-I series on-board SAS controller */
++               .device         = 0x9485,
++               .subvendor      = PCI_VENDOR_ID_ASUSTEK,
++               .subdevice      = 0x8635,
++               .class          = 0,
++               .class_mask     = 0,
++               .driver_data    = chip_9485,
++       },
+        { PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
+        { PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ
+RevoDrive3/zDriveR4 (exact model unknown) */
+        { PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ
+RevoDrive3/zDriveR4 (exact model unknown) */
