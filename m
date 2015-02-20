@@ -1,8 +1,8 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: Concerns about "mpt2sas: Added Reply Descriptor Post Queue
  (RDPQ) Array support"
-Date: Thu, 19 Feb 2015 21:45:10 -0800
-Message-ID: <1424411110.16222.5.camel@HansenPartnership.com>
+Date: Fri, 20 Feb 2015 18:16:42 +1100
+Message-ID: <1424416602.27448.36.camel@kernel.crashing.org>
 References: <1424408500.27448.25.camel@kernel.crashing.org>
 	 <1424408769.27448.28.camel@kernel.crashing.org>
 	 <1424409761.27448.32.camel@kernel.crashing.org>
@@ -12,23 +12,12 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1424409761.27448.32.camel@kernel.crashing.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
 On Fri, 2015-02-20 at 16:22 +1100, Benjamin Herrenschmidt wrote:
-> On Fri, 2015-02-20 at 16:06 +1100, Benjamin Herrenschmidt wrote:
-> 
-> > Note that even on powerpc platforms where it would work because we
-> > maintain both 32-bit and 64-bit bypass windows in the device address
-> > space simultaneously, you will leak iommu entries unless you also switch
-> > back to 32-bit when freeing the 32-bit mappings... (and you would
-> > probably crash if you tried to free a 64-bit mapping while in 32-bit
-> > mode).
-> > 
-> > The iommu APIs weren't designed with that "switching mask" facility in
-> > mind...
-> 
+
 > Looking a bit more closely, you basically do
 > 
 >  - set_dma_mask(64-bit)
@@ -44,16 +33,10 @@ On Fri, 2015-02-20 at 16:22 +1100, Benjamin Herrenschmidt wrote:
 > Are architectures really required to support such mismatching dma_mask
 > and consistent_dma_mask ? what a bloody trainwreck ... :-(
 
-Ben, this is legal by design.  It was specifically designed for the
-aic79xx SCSI card, but can be used for a variety of other reasons.  The
-aic79xx hardware problem was that the DMA engine could address the whole
-of memory (it had two address modes, a 39 bit one and a 64 bit one) but
-the script engine that runs the mailboxes only had a 32 bit activation
-register (the activating write points at the physical address of the
-script to begin executing).  This meant that the scripts that run in
-memory had to be in the first 4GB of physical memory, hence the split
-mask.  The DMA mask specifies that the card can transfer from anywhere
-in physical memory, but the consistent_dma_mask says that the consistent
-allocation used to get scripts memory must come from the lower 4GB.
+Oh well, looks like x86 supports it and it won't be too hard to support
+it on ppc64 as well. We even had some code along those lines for FSL
+platforms with an ifdef due to the amount of drivers that used to fail
+setting the consistent mask properly but that seems to be mostly fixed
+nowadays.
 
-James
+Ben.
