@@ -1,142 +1,80 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target updates for v3.20-rc1
-Date: Fri, 20 Feb 2015 15:23:55 -0800
-Message-ID: <1424474635.1477.41.camel@haakon3.risingtidesystems.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Fri, 20 Feb 2015 16:00:07 -0800
+Message-ID: <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
+References: <54B63F74.2040702@sandisk.com>
+	 <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
+	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
+	 <54E7112F.2080901@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48721 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745AbbBUAAJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Feb 2015 19:00:09 -0500
+In-Reply-To: <54E7112F.2080901@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Linus,
+On Fri, 2015-02-20 at 11:49 +0100, Bart Van Assche wrote:
+> On 01/19/15 10:36, Bart Van Assche wrote:
+> > On 01/19/15 10:22, Christoph Hellwig wrote:
+> >> On Thu, Jan 15, 2015 at 05:13:00PM +0100, Bart Van Assche wrote:
+> >>> My goal is to realize this proposal without adding hooks for out-of-tree
+> >>> code in the upstream kernel. What I had in mind is to raise the
+> >>> abstraction level of the API between LIO core and target drivers a
+> >>> little bit (e.g. by using accessor functions where necessary instead of
+> >>> accessing structure members directly)
+> >>
+> >> That's very much a hook, althiugh a week one.
+> >>
+> >> Either way I don't think bringing up a very much political topic
+> >> without even any code to discuss isn't a very valueable use of our time
+> >> slots.
+> > 
+> > A possible approach is that I start implementing a unified SRP target
+> > driver and post that driver together with the necessary LIO and SCST
+> > core changes before the LSF/MM starts. That could be a helpful starting
+> > point for further discussions.
+> 
+> (replying to my own e-mail)
+> 
+> Hello Christoph,
+> 
+> What I proposed myself consists of three steps:
+> 1. Updating the LIO SRP target driver to a more recent version.
+> 2. Target driver and LIO core refactoring such that the LIO and
+>    SCST APIs can be unified.
+> 3. Adding support in SCST for the unified target driver API.
+> 
+> This work is taking a little more time than I had expected - I still
+> have to start with step (3). But I can already show in which direction I
+> would like to go for steps (1) and (2). The 43 patches I came up with so
+> far for steps (1) and (2) are available in the lio branch of the
+> https://github.com/bvanassche/linux git repository. As you can see in
+> that repository 42 of these 43 patches make sense even without knowing
+> that something like SCST exists.
+> 
 
-Here are the target updates for v3.20-rc1 code.  Please go ahead and
-pull from:
+Please go ahead and post the series for review with bug fixes at the
+head of the series, with future improvements following after the fixes.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
+Doing a brief review from your tree, I can see there are some useful
+fixes, but also there are some patches that have incorrect assumptions
+and/or break the existing userspace APIs.
 
-A heads up that you'll hit two merge conflicts as reported by SFR in
-linux-next recently within drivers/vhost/scsi.c code.
+That said, I'm happy to review the full series, and very much appreciate
+your efforts to improve upstream code.
 
-The first is a conflict with a pre-merge window bug-fix in commit
-46243860 that is not included in target-pending/for-next:
-
-  vhost-scsi: Add missing virtio-scsi -> TCM attribute conversion
-
-The resolution should be obvious for this one.
-
-http://marc.info/?l=linux-next&m=142285892408065&w=2
-
-The second is a conflict with Al's recent tree-wide conversion to use
-copy_from_user() in commit 57dd8a073:
-
-  vhost: vhost_scsi_handle_vq() should just use copy_from_user()
-
-For this, please use commit 09b13fa8c included in this PULL request:
-
-  vhost/scsi: Add ANY_LAYOUT support in vhost_scsi_handle_vq
-
-http://marc.info/?l=linux-next&m=142346903105188&w=2
-
-Beyond those two minor conflicts, the highlights this round include:
-
-  - Update vhost-scsi to support F_ANY_LAYOUT using mm/iov_iter.c logic, and
-    signal VERSION_1 support (MST + Viro + nab)
-  - Fix iscsi/iser-target to remove problematic active_ts_set usage (Gavin Guo)
-  - Update iscsi/iser-target to support multi-sequence sendtargets (Sagi)
-  - Fix original PR_APTPL_BUF_LEN 8k size limitation (Martin Svec)
-  - Add missing WRITE_SAME end-of-device sanity check (Bart)
-  - Check for LBA + sectors wrap-around in sbc_parse_cdb() (nab)
-  - Other various minor SPC/SBC compliance fixes based upon Ronnie Sahlberg
-    test suite (nab)
+However, keep in mind that I'll not be merging anything for target-core
+that adds support for out-of-tree code, nor anything that changes
+existing target configfs APIs to fit out-of-tree code requirements.
 
 Thank you,
 
 --nab
 
-Andy Shevchenko (2):
-  tcm_qla2xxx: print port name via %*phC
-  iscsi-target: use '%*ph' specifier to dump hex buffer
-
-Dan Carpenter (1):
-  vhost/scsi: potential memory corruption
-
-Nicholas Bellinger (19):
-  vhost/scsi: Convert completion path to use copy_to_iter
-  vhost/scsi: Fix incorrect early vhost_scsi_handle_vq failures
-  vhost/scsi: Change vhost_scsi_map_to_sgl to accept iov ptr + len
-  vhost/scsi: Add ANY_LAYOUT iov -> sgl mapping prerequisites
-  vhost/scsi: Add ANY_LAYOUT support in vhost_scsi_handle_vq
-  vhost/scsi: Set VIRTIO_F_ANY_LAYOUT + VIRTIO_F_VERSION_1 feature bits
-  vhost/scsi: Drop left-over scsi_tcq.h include
-  vhost/scsi: Global tcm_vhost -> vhost_scsi rename
-  iscsi-target: Drop problematic active_ts_list usage
-  target: Fix PR_APTPL_BUF_LEN buffer size limitation
-  iscsi-target: Avoid IN_LOGOUT failure case for iser-target
-  target: Add missing WRITE_SAME end-of-device sanity check
-  target: Check for LBA + sectors wrap-around in sbc_parse_cdb
-  target: Fail I/O with PROTECT bit when protection is unsupported
-  target: Perform PROTECT sanity checks for WRITE_SAME
-  target: Add sanity checks for DPO/FUA bit usage
-  target: Fail WRITE_SAME w/ UNMAP=1 when emulate_tpws=0
-  target: Fail UNMAP when emulate_tpu=0
-  target: Set LBPWS10 bit in Logical Block Provisioning EVPD
-
-Nicholas Mc Guire (1):
-  ib_srpt: wait_for_completion_timeout does not return negative status
-
-Rasmus Villemoes (1):
-  iser-target: Remove duplicate function names
-
-Sagi Grimberg (8):
-  iscsi-target: Move iscsi_target_[core,stat].h under linux include
-  iser-target: Fix sparse warning
-  iser-target: Fix typo in isert_put_text_rsp
-  iser-target: Use WQ_UNBOUND for completion workqueue
-  iscsi-target: Introduce session_get_next_ttt
-  iscsi-target: Don't over-allocate sendtargets text resp buffer
-  iser-target: Fix wrong allocation in the case of an empty text message
-  iscsi/iser-target: Support multi-sequence sendtargets text response
-
- drivers/infiniband/ulp/isert/ib_isert.c           |   46 +-
- drivers/infiniband/ulp/srpt/ib_srpt.c             |    4 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c                |    4 +-
- drivers/target/iscsi/iscsi_target.c               |  105 +-
- drivers/target/iscsi/iscsi_target_auth.c          |    2 +-
- drivers/target/iscsi/iscsi_target_configfs.c      |   17 +-
- drivers/target/iscsi/iscsi_target_core.h          |  883 -----------------
- drivers/target/iscsi/iscsi_target_datain_values.c |    2 +-
- drivers/target/iscsi/iscsi_target_device.c        |    2 +-
- drivers/target/iscsi/iscsi_target_erl0.c          |    6 +-
- drivers/target/iscsi/iscsi_target_erl1.c          |    2 +-
- drivers/target/iscsi/iscsi_target_erl2.c          |    2 +-
- drivers/target/iscsi/iscsi_target_login.c         |    4 +-
- drivers/target/iscsi/iscsi_target_nego.c          |    2 +-
- drivers/target/iscsi/iscsi_target_nodeattrib.c    |    2 +-
- drivers/target/iscsi/iscsi_target_parameters.c    |    2 +-
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |    2 +-
- drivers/target/iscsi/iscsi_target_stat.c          |    4 +-
- drivers/target/iscsi/iscsi_target_stat.h          |   64 --
- drivers/target/iscsi/iscsi_target_tmr.c           |    2 +-
- drivers/target/iscsi/iscsi_target_tpg.c           |    2 +-
- drivers/target/iscsi/iscsi_target_tq.c            |   30 +-
- drivers/target/iscsi/iscsi_target_util.c          |   12 +-
- drivers/target/iscsi/iscsi_target_util.h          |    1 -
- drivers/target/target_core_file.c                 |    5 +
- drivers/target/target_core_iblock.c               |    5 +
- drivers/target/target_core_pr.c                   |   25 +-
- drivers/target/target_core_sbc.c                  |  140 ++-
- drivers/target/target_core_spc.c                  |    2 +-
- drivers/vhost/scsi.c                              | 1068 +++++++++++----------
- include/target/iscsi/iscsi_target_core.h          |  897 +++++++++++++++++
- include/target/iscsi/iscsi_target_stat.h          |   64 ++
- include/target/iscsi/iscsi_transport.h            |    2 +-
- include/target/target_core_base.h                 |    2 +-
- 34 files changed, 1776 insertions(+), 1636 deletions(-)
- delete mode 100644 drivers/target/iscsi/iscsi_target_core.h
- delete mode 100644 drivers/target/iscsi/iscsi_target_stat.h
- create mode 100644 include/target/iscsi/iscsi_target_core.h
- create mode 100644 include/target/iscsi/iscsi_target_stat.h
