@@ -1,126 +1,276 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 16/43] hpsa: break hpsa_free_irqs_and_disable_msix into two
- functions
-Date: Sat, 21 Feb 2015 16:18:57 -0600
-Message-ID: <20150221221857.21954.25224.stgit@brunhilda>
+Subject: [PATCH 19/43] hpsa: add ioaccel sg chaining for the ioaccel2 path
+Date: Sat, 21 Feb 2015 16:19:13 -0600
+Message-ID: <20150221221913.21954.2947.stgit@brunhilda>
 References: <20150221221553.21954.32599.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:57235 "EHLO
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:57239 "EHLO
 	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbbBUWUQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:20:16 -0500
-Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
+	with ESMTP id S1751850AbbBUWUc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:20:32 -0500
+Received: from g6t1526.atlanta.hp.com (g6t1526.atlanta.hp.com [15.193.200.69])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 611BC6055E
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2015 22:20:16 +0000 (UTC)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 64B2D6055E
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2015 22:20:32 +0000 (UTC)
 In-Reply-To: <20150221221553.21954.32599.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Webb Scales <webbnh@hp.com>
 
-replace calls to hpsa_free_irqs_and_disable_msix with
-hpsa_free_irqs and hpsa_disable_interrupt_mode
+Increase the request size for ioaccel2 path.
+
+The error, if any, returned by hpsa_allocate_ioaccel2_sg_chain_blocks
+to hpsa_alloc_ioaccel2_cmd_and_bft should be returned upstream rather
+than assumed to be -ENOMEM.
+
+This differs slightly from hpsa_alloc_ioaccel1_cmd_and_bft,
+which does not call another hpsa_allocate function and only
+has -ENOMEM to return from some kmalloc calls.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/scsi/hpsa.c |  125 +++++++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/hpsa.h |    1 
+ 2 files changed, 116 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 22e7914..94146c6 100644
+index e61e4eb..9cf7ed7 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6414,10 +6414,22 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
- 	return -1;
+@@ -1750,6 +1750,46 @@ static void hpsa_slave_destroy(struct scsi_device *sdev)
+ 	/* nothing to do. */
  }
  
-+static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
++static void hpsa_free_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
 +{
-+#ifdef CONFIG_PCI_MSI
-+	if (h->msix_vector) {
-+		if (h->pdev->msix_enabled)
-+			pci_disable_msix(h->pdev);
-+	} else if (h->msi_vector) {
-+		if (h->pdev->msi_enabled)
-+			pci_disable_msi(h->pdev);
++	int i;
++
++	if (!h->ioaccel2_cmd_sg_list)
++		return;
++	for (i = 0; i < h->nr_cmds; i++) {
++		kfree(h->ioaccel2_cmd_sg_list[i]);
++		h->ioaccel2_cmd_sg_list[i] = NULL;
 +	}
-+#endif /* CONFIG_PCI_MSI */
++	kfree(h->ioaccel2_cmd_sg_list);
++	h->ioaccel2_cmd_sg_list = NULL;
 +}
 +
- /* If MSI/MSI-X is supported by the kernel we will try to enable it on
-  * controllers that are capable. If not, we use legacy INTx mode.
-  */
--
- static void hpsa_interrupt_mode(struct ctlr_info *h)
- {
- #ifdef CONFIG_PCI_MSI
-@@ -7058,20 +7070,6 @@ static int hpsa_kdump_soft_reset(struct ctlr_info *h)
- 	return 0;
- }
- 
--static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
--{
--	hpsa_free_irqs(h);
--#ifdef CONFIG_PCI_MSI
--	if (h->msix_vector) {
--		if (h->pdev->msix_enabled)
--			pci_disable_msix(h->pdev);
--	} else if (h->msi_vector) {
--		if (h->pdev->msi_enabled)
--			pci_disable_msi(h->pdev);
--	}
--#endif /* CONFIG_PCI_MSI */
--}
--
- static void hpsa_free_reply_queues(struct ctlr_info *h)
++static int hpsa_allocate_ioaccel2_sg_chain_blocks(struct ctlr_info *h)
++{
++	int i;
++
++	if (h->chainsize <= 0)
++		return 0;
++
++	h->ioaccel2_cmd_sg_list =
++		kzalloc(sizeof(*h->ioaccel2_cmd_sg_list) * h->nr_cmds,
++					GFP_KERNEL);
++	if (!h->ioaccel2_cmd_sg_list)
++		return -ENOMEM;
++	for (i = 0; i < h->nr_cmds; i++) {
++		h->ioaccel2_cmd_sg_list[i] =
++			kmalloc(sizeof(*h->ioaccel2_cmd_sg_list[i]) *
++					h->maxsgentries, GFP_KERNEL);
++		if (!h->ioaccel2_cmd_sg_list[i])
++			goto clean;
++	}
++	return 0;
++
++clean:
++	hpsa_free_ioaccel2_sg_chain_blocks(h);
++	return -ENOMEM;
++}
++
+ static void hpsa_free_sg_chain_blocks(struct ctlr_info *h)
  {
  	int i;
-@@ -7088,7 +7086,7 @@ static void hpsa_free_reply_queues(struct ctlr_info *h)
- 
- static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- {
--	hpsa_free_irqs_and_disable_msix(h);
-+	hpsa_free_irqs(h);
- 	hpsa_free_sg_chain_blocks(h);
- 	hpsa_free_cmd_pool(h);
- 	kfree(h->ioaccel1_blockFetchTable);
-@@ -7100,6 +7098,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 		iounmap(h->transtable);
- 	if (h->cfgtable)
- 		iounmap(h->cfgtable);
-+	hpsa_disable_interrupt_mode(h);
- 	pci_disable_device(h->pdev);
- 	pci_release_regions(h->pdev);
- 	kfree(h);
-@@ -7587,7 +7586,8 @@ static void hpsa_shutdown(struct pci_dev *pdev)
- 	 */
- 	hpsa_flush_cache(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
--	hpsa_free_irqs_and_disable_msix(h);
-+	hpsa_free_irqs(h);
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+@@ -1792,6 +1832,39 @@ clean:
+ 	return -ENOMEM;
  }
  
- static void hpsa_free_device_info(struct ctlr_info *h)
-@@ -7618,7 +7618,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	destroy_workqueue(h->rescan_ctlr_wq);
- 	destroy_workqueue(h->resubmit_wq);
- 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
++static int hpsa_map_ioaccel2_sg_chain_block(struct ctlr_info *h,
++	struct io_accel2_cmd *cp, struct CommandList *c)
++{
++	struct ioaccel2_sg_element *chain_block;
++	u64 temp64;
++	u32 chain_size;
 +
-+	/* includes hpsa_free_irqs and hpsa_disable_interrupt_mode */
- 	hpsa_shutdown(pdev);
++	chain_block = h->ioaccel2_cmd_sg_list[c->cmdindex];
++	chain_size = le32_to_cpu(cp->data_len);
++	temp64 = pci_map_single(h->pdev, chain_block, chain_size,
++				PCI_DMA_TODEVICE);
++	if (dma_mapping_error(&h->pdev->dev, temp64)) {
++		/* prevent subsequent unmapping */
++		cp->sg->address = 0;
++		return -1;
++	}
++	cp->sg->address = cpu_to_le64(temp64);
++	return 0;
++}
 +
- 	iounmap(h->vaddr);
- 	iounmap(h->transtable);
- 	iounmap(h->cfgtable);
++static void hpsa_unmap_ioaccel2_sg_chain_block(struct ctlr_info *h,
++	struct io_accel2_cmd *cp)
++{
++	struct ioaccel2_sg_element *chain_sg;
++	u64 temp64;
++	u32 chain_size;
++
++	chain_sg = cp->sg;
++	temp64 = le64_to_cpu(chain_sg->address);
++	chain_size = le32_to_cpu(cp->data_len);
++	pci_unmap_single(h->pdev, temp64, chain_size, PCI_DMA_TODEVICE);
++}
++
+ static int hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
+@@ -2001,6 +2074,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	struct ctlr_info *h;
+ 	struct ErrorInfo *ei;
+ 	struct hpsa_scsi_dev_t *dev;
++	struct io_accel2_cmd *c2;
+ 
+ 	int sense_key;
+ 	int asc;      /* additional sense code */
+@@ -2011,12 +2085,17 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	cmd = cp->scsi_cmd;
+ 	h = cp->h;
+ 	dev = cmd->device->hostdata;
++	c2 = &h->ioaccel2_cmd_pool[cp->cmdindex];
+ 
+ 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
+ 	if ((cp->cmd_type == CMD_SCSI) &&
+ 		(le16_to_cpu(cp->Header.SGTotal) > h->max_cmd_sg_entries))
+ 		hpsa_unmap_sg_chain_block(h, cp);
+ 
++	if ((cp->cmd_type == CMD_IOACCEL2) &&
++		(c2->sg[0].chain_indicator == IOACCEL2_CHAIN))
++		hpsa_unmap_ioaccel2_sg_chain_block(h, c2);
++
+ 	cmd->result = (DID_OK << 16); 		/* host byte */
+ 	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
+ 
+@@ -3858,10 +3937,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	u32 len;
+ 	u32 total_len = 0;
+ 
+-	if (scsi_sg_count(cmd) > h->ioaccel_maxsg) {
+-		atomic_dec(&phys_disk->ioaccel_cmds_out);
+-		return IO_ACCEL_INELIGIBLE;
+-	}
++	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
+ 
+ 	if (fixup_ioaccel_cdb(cdb, &cdb_len)) {
+ 		atomic_dec(&phys_disk->ioaccel_cmds_out);
+@@ -3884,8 +3960,19 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	}
+ 
+ 	if (use_sg) {
+-		BUG_ON(use_sg > IOACCEL2_MAXSGENTRIES);
+ 		curr_sg = cp->sg;
++		if (use_sg > h->ioaccel_maxsg) {
++			addr64 = le64_to_cpu(
++				h->ioaccel2_cmd_sg_list[c->cmdindex]->address);
++			curr_sg->address = cpu_to_le64(addr64);
++			curr_sg->length = 0;
++			curr_sg->reserved[0] = 0;
++			curr_sg->reserved[1] = 0;
++			curr_sg->reserved[2] = 0;
++			curr_sg->chain_indicator = 0x80;
++
++			curr_sg = h->ioaccel2_cmd_sg_list[c->cmdindex];
++		}
+ 		scsi_for_each_sg(cmd, sg, use_sg, i) {
+ 			addr64 = (u64) sg_dma_address(sg);
+ 			len  = sg_dma_len(sg);
+@@ -3930,14 +4017,22 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
+ 	cp->Tag = cpu_to_le32(c->cmdindex << DIRECT_LOOKUP_SHIFT);
+ 	memcpy(cp->cdb, cdb, sizeof(cp->cdb));
+ 
+-	/* fill in sg elements */
+-	cp->sg_count = (u8) use_sg;
+-
+ 	cp->data_len = cpu_to_le32(total_len);
+ 	cp->err_ptr = cpu_to_le64(c->busaddr +
+ 			offsetof(struct io_accel2_cmd, error_data));
+ 	cp->err_len = cpu_to_le32(sizeof(cp->error_data));
+ 
++	/* fill in sg elements */
++	if (use_sg > h->ioaccel_maxsg) {
++		cp->sg_count = 1;
++		if (hpsa_map_ioaccel2_sg_chain_block(h, cp, c)) {
++			atomic_dec(&phys_disk->ioaccel_cmds_out);
++			scsi_dma_unmap(cmd);
++			return -1;
++		}
++	} else
++		cp->sg_count = (u8) use_sg;
++
+ 	enqueue_cmd_and_start_io(h, c);
+ 	return 0;
+ }
+@@ -7950,6 +8045,8 @@ clean_up:
+ /* Free ioaccel2 mode command blocks and block fetch table */
+ static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
++	hpsa_free_ioaccel2_sg_chain_blocks(h);
++
+ 	if (h->ioaccel2_cmd_pool)
+ 		pci_free_consistent(h->pdev,
+ 			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
+@@ -7961,6 +8058,8 @@ static void hpsa_free_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ /* Allocate ioaccel2 mode command blocks and block fetch table */
+ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
++	int rc;
++
+ 	/* Allocate ioaccel2 mode command blocks and block fetch table */
+ 
+ 	h->ioaccel_maxsg =
+@@ -7980,7 +8079,13 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 				sizeof(u32)), GFP_KERNEL);
+ 
+ 	if ((h->ioaccel2_cmd_pool == NULL) ||
+-		(h->ioaccel2_blockFetchTable == NULL))
++		(h->ioaccel2_blockFetchTable == NULL)) {
++		rc = -ENOMEM;
++		goto clean_up;
++	}
++
++	rc = hpsa_allocate_ioaccel2_sg_chain_blocks(h);
++	if (rc)
+ 		goto clean_up;
+ 
+ 	memset(h->ioaccel2_cmd_pool, 0,
+@@ -7989,7 +8094,7 @@ static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ 
+ clean_up:
+ 	hpsa_free_ioaccel2_cmd_and_bft(h);
+-	return 1;
++	return rc;
+ }
+ 
+ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 87a70b5..3acacf6 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -162,6 +162,7 @@ struct ctlr_info {
+ 	u8 max_cmd_sg_entries;
+ 	int chainsize;
+ 	struct SGDescriptor **cmd_sg_list;
++	struct ioaccel2_sg_element **ioaccel2_cmd_sg_list;
+ 
+ 	/* pointers to command and error info pool */
+ 	struct CommandList 	*cmd_pool;
 
