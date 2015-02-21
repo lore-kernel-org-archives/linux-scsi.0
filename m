@@ -1,546 +1,845 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 01/43] hpsa: add masked physical devices into h->dev[] array
-Date: Sat, 21 Feb 2015 16:17:35 -0600
-Message-ID: <20150221221735.21954.24837.stgit@brunhilda>
+Subject: [PATCH 03/43] hpsa: rework controller command submission
+Date: Sat, 21 Feb 2015 16:17:48 -0600
+Message-ID: <20150221221748.21954.81965.stgit@brunhilda>
 References: <20150221221553.21954.32599.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55771 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755AbbBUWS4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:18:56 -0500
-Received: from g5t1626.atlanta.hp.com (g5t1626.atlanta.hp.com [15.192.137.9])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g2t1383g.austin.hp.com (Postfix) with ESMTPS id AF3C213D
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2015 22:18:55 +0000 (UTC)
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:51274 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbbBUWTG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:19:06 -0500
 In-Reply-To: <20150221221553.21954.32599.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Webb Scales <webb.scales@hp.com>
 
-Cache the ioaccel handle so that when we need to abort commands sent
-down the ioaccel2 path, we can look up the LUN ID in h->dev[] instead of
-having to do I/O to the controller.
+Allow driver initiated commands to have a timeout.  It does not
+yet try to do anything with timeouts on such commands.
 
-Add a field to elements in h->dev[] to keep track of how the device is exposed
-to the SCSI mid layer: Not at all, without an upper level driver
-(no_uld_attach) or normally exposed.
+We are sending a reset in order to get rid of a command we want to abort.
+If we make it return on the same reply queue as the command we want to abort,
+the completion of the aborted command will not race with the completion of
+the reset command.
 
-Since masked physical devices are now present in h->dev[] array
-it would be perfectly possible to do
+Rename hpsa_scsi_do_simple_cmd_core() to hpsa_scsi_do_simple_cmd(), since
+this function is the interface for issuing commands to the controller and
+not the "core" of that implementation.  Add a parameter to it which allows
+the caller to specify the reply queue to be used.  Modify existing callers
+to specify the default reply queue.
 
-	echo scsi add-single-device 2 2 0 0 > /proc/scsi/scsi
+Rename __hpsa_scsi_do_simple_cmd_core() to hpsa_scsi_do_simple_cmd_core(),
+since this routine is the "core" implementation of the "do simple command"
+function and there is no longer any other function with a similar name.
+Modify the existing callers of this routine (other than
+hpsa_scsi_do_simple_cmd()) to instead call hpsa_scsi_do_simple_cmd(), since
+it will now accept the reply_queue paramenter, and it provides a controller
+lock-up check.  (Also, tweak two related message strings to make them
+distinct from each other.)
 
-and bring them online.  This was previously not allowed for masked
-physical devices.
+Submitting a command to a locked up controller always results in a timeout,
+so check for controller lock-up before submitting.
 
-Ensure that the mapping of physical disks to logical drives gets updated in a
-consistent way when a RAID migration occurs and is not touched until updates
-to it are complete.
+This is to enable fixing a race between command completions and
+abort completions on different reply queues in a subsequent patch.
+We want to be able to specify which reply queue an abort completion
+should occur on so that it cannot race the completion of the command
+it is trying to abort.
 
-now instead of doing CISS_REPORT_PHYSICAL to get the LUNID for
-the physical disk in hpsa_get_pdisk_of_ioaccel2(), just get
-it out of h->dev[] where we already have it cached.
+The following race was possible in theory:
 
-do not touch phys_disk[] for ioaccel enabled logical drives during rescan
+  1. Abort command is sent to hardware.
+  2. Command to be aborted simultaneously completes on another
+     reply queue.
+  3. Hardware receives abort command, decides command has already
+     completed and indicates this to the driver via another different
+     reply queue.
+  4. driver processes abort completion finds that the hardware does not know
+     about the command, concludes that therefore the command cannot complete,
+     returns SUCCESS indicating to the mid-layer that the scsi_cmnd may be
+     re-used.
+  5. Command from step 2 is processed and completed back to scsi mid
+     layer (after we already promised that would never happen.)
+
+Fix by forcing aborts to complete on the same reply queue as the command
+they are aborting.
+
+Piggybacking device rescanning functionality onto the lockup
+detection thread is not a good idea because if the controller
+locks up during device rescanning, then the thread could get
+stuck, then the lockup isn't detected.  Use separate work
+queues for device rescanning and lockup detection.
+
+Detect controller lockup in abort handler.
+
+After a lockup is detected, return DO_NO_CONNECT which results in immediate
+termination of commands rather than DID_ERR which results in retries.
+
+Modify detect_controller_lockup() to return the result, to remove the need for a separate check.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c     |  255 +++++++++++++++++++++++++----------------------
- drivers/scsi/hpsa.h     |    6 +
- drivers/scsi/hpsa_cmd.h |    3 +
- 3 files changed, 146 insertions(+), 118 deletions(-)
+ drivers/scsi/hpsa.c     |  326 ++++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/hpsa_cmd.h |    5 +
+ 2 files changed, 254 insertions(+), 77 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a1cfbd3..5f12f32 100644
+index 9a82ede..92358ac 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -222,6 +222,7 @@ static int hpsa_change_queue_depth(struct scsi_device *sdev, int qdepth);
- static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd);
- static int hpsa_eh_abort_handler(struct scsi_cmnd *scsicmd);
- static int hpsa_slave_alloc(struct scsi_device *sdev);
-+static int hpsa_slave_configure(struct scsi_device *sdev);
- static void hpsa_slave_destroy(struct scsi_device *sdev);
+@@ -253,6 +253,8 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
+ 	struct CommandList *c, u32 ioaccel_handle, u8 *cdb, int cdb_len,
+ 	u8 *scsi3addr, struct hpsa_scsi_dev_t *phys_disk);
+ static void hpsa_command_resubmit_worker(struct work_struct *work);
++static u32 lockup_detected(struct ctlr_info *h);
++static int detect_controller_lockup(struct ctlr_info *h);
  
- static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno);
-@@ -667,6 +668,9 @@ static struct device_attribute *hpsa_shost_attrs[] = {
- 	NULL,
- };
- 
-+#define HPSA_NRESERVED_CMDS	(HPSA_CMDS_RESERVED_FOR_ABORTS + \
-+		HPSA_CMDS_RESERVED_FOR_DRIVER + HPSA_MAX_CONCURRENT_PASSTHRUS)
-+
- static struct scsi_host_template hpsa_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= HPSA,
-@@ -681,6 +685,7 @@ static struct scsi_host_template hpsa_driver_template = {
- 	.eh_device_reset_handler = hpsa_eh_device_reset_handler,
- 	.ioctl			= hpsa_ioctl,
- 	.slave_alloc		= hpsa_slave_alloc,
-+	.slave_configure	= hpsa_slave_configure,
- 	.slave_destroy		= hpsa_slave_destroy,
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl		= hpsa_compat_ioctl,
-@@ -946,6 +951,8 @@ lun_assigned:
- 
- 	h->dev[n] = device;
- 	h->ndevices++;
-+	device->offload_to_be_enabled = device->offload_enabled;
-+	device->offload_enabled = 0;
- 	added[*nadded] = device;
- 	(*nadded)++;
- 
-@@ -982,16 +989,20 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
- 		 */
- 		h->dev[entry]->raid_map = new_entry->raid_map;
- 		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
--		wmb(); /* ensure raid map updated prior to ->offload_enabled */
- 	}
- 	h->dev[entry]->offload_config = new_entry->offload_config;
- 	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
--	h->dev[entry]->offload_enabled = new_entry->offload_enabled;
- 	h->dev[entry]->queue_depth = new_entry->queue_depth;
- 
--	dev_info(&h->pdev->dev, "%s device c%db%dt%dl%d updated.\n",
--		scsi_device_type(new_entry->devtype), hostno, new_entry->bus,
--		new_entry->target, new_entry->lun);
-+	/*
-+	 * We can turn off ioaccel offload now, but need to delay turning
-+	 * it on until we can update h->dev[entry]->phys_disk[], but we
-+	 * can't do that until all the devices are updated.
-+	 */
-+	h->dev[entry]->offload_to_be_enabled = new_entry->offload_enabled;
-+	if (!new_entry->offload_enabled)
-+		h->dev[entry]->offload_enabled = 0;
-+
- }
- 
- /* Replace an entry from h->dev[] array. */
-@@ -1014,6 +1025,8 @@ static void hpsa_scsi_replace_entry(struct ctlr_info *h, int hostno,
- 		new_entry->lun = h->dev[entry]->lun;
- 	}
- 
-+	new_entry->offload_to_be_enabled = new_entry->offload_enabled;
-+	new_entry->offload_enabled = 0;
- 	h->dev[entry] = new_entry;
- 	added[*nadded] = new_entry;
- 	(*nadded)++;
-@@ -1312,6 +1325,7 @@ static void hpsa_figure_phys_disk_ptrs(struct ctlr_info *h,
- 		 */
- 		if (!logical_drive->phys_disk[i]) {
- 			logical_drive->offload_enabled = 0;
-+			logical_drive->offload_to_be_enabled = 0;
- 			logical_drive->queue_depth = h->nr_cmds;
- 		}
- 	}
-@@ -1335,6 +1349,16 @@ static void hpsa_update_log_drive_phys_drive_ptrs(struct ctlr_info *h,
- 			continue;
- 		if (!is_logical_dev_addr_mode(dev[i]->scsi3addr))
- 			continue;
-+
-+		/*
-+		 * If offload is currently enabled, the RAID map and
-+		 * phys_disk[] assignment *better* not be changing
-+		 * and since it isn't changing, we do not need to
-+		 * update it.
-+		 */
-+		if (dev[i]->offload_enabled)
-+			continue;
-+
- 		hpsa_figure_phys_disk_ptrs(h, dev, ndevices, dev[i]);
- 	}
- }
-@@ -1433,6 +1457,14 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 			/* but if it does happen, we just ignore that device */
- 		}
- 	}
-+	hpsa_update_log_drive_phys_drive_ptrs(h, h->dev, h->ndevices);
-+
-+	/* Now that h->dev[]->phys_disk[] is coherent, we can enable
-+	 * any logical drives that need it enabled.
-+	 */
-+	for (i = 0; i < h->ndevices; i++)
-+		h->dev[i]->offload_enabled = h->dev[i]->offload_to_be_enabled;
-+
- 	spin_unlock_irqrestore(&h->devlock, flags);
- 
- 	/* Monitor devices which are in one of several NOT READY states to be
-@@ -1456,20 +1488,24 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 	sh = h->scsi_host;
- 	/* Notify scsi mid layer of any removed devices */
- 	for (i = 0; i < nremoved; i++) {
--		struct scsi_device *sdev =
--			scsi_device_lookup(sh, removed[i]->bus,
--				removed[i]->target, removed[i]->lun);
--		if (sdev != NULL) {
--			scsi_remove_device(sdev);
--			scsi_device_put(sdev);
--		} else {
--			/* We don't expect to get here.
--			 * future cmds to this device will get selection
--			 * timeout as if the device was gone.
--			 */
--			dev_warn(&h->pdev->dev, "didn't find c%db%dt%dl%d "
--				" for removal.", hostno, removed[i]->bus,
--				removed[i]->target, removed[i]->lun);
-+		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
-+			struct scsi_device *sdev =
-+				scsi_device_lookup(sh, removed[i]->bus,
-+					removed[i]->target, removed[i]->lun);
-+			if (sdev != NULL) {
-+				scsi_remove_device(sdev);
-+				scsi_device_put(sdev);
-+			} else {
-+				/*
-+				 * We don't expect to get here.
-+				 * future cmds to this device will get selection
-+				 * timeout as if the device was gone.
-+				 */
-+				dev_warn(&h->pdev->dev,
-+					"didn't find c%db%dt%dl%d for removal.\n",
-+					hostno, removed[i]->bus,
-+					removed[i]->target, removed[i]->lun);
-+			}
- 		}
- 		kfree(removed[i]);
- 		removed[i] = NULL;
-@@ -1477,6 +1513,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 
- 	/* Notify scsi mid layer of any added devices */
- 	for (i = 0; i < nadded; i++) {
-+		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
-+			continue;
- 		if (scsi_add_device(sh, added[i]->bus,
- 			added[i]->target, added[i]->lun) == 0)
- 			continue;
-@@ -1512,23 +1550,49 @@ static struct hpsa_scsi_dev_t *lookup_hpsa_scsi_dev(struct ctlr_info *h,
- 	return NULL;
- }
- 
--/* link sdev->hostdata to our per-device structure. */
- static int hpsa_slave_alloc(struct scsi_device *sdev)
+ static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
  {
- 	struct hpsa_scsi_dev_t *sd;
- 	unsigned long flags;
- 	struct ctlr_info *h;
-+	int queue_depth;
+@@ -748,30 +750,43 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
+  * a separate special register for submitting commands.
+  */
  
- 	h = sdev_to_hba(sdev);
- 	spin_lock_irqsave(&h->devlock, flags);
- 	sd = lookup_hpsa_scsi_dev(h, sdev_channel(sdev),
- 		sdev_id(sdev), sdev->lun);
--	if (sd != NULL) {
--		sdev->hostdata = sd;
--		if (sd->queue_depth)
-+
-+	if (likely(sd)) {
- 			scsi_change_queue_depth(sdev, sd->queue_depth);
- 		atomic_set(&sd->ioaccel_cmds_out, 0);
-+		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
-+		queue_depth = sd->queue_depth != 0 ?
-+			sd->queue_depth : sdev->host->can_queue;
-+	} else {
-+		sdev->hostdata = NULL;
-+		queue_depth = sdev->host->can_queue;
+-/* set_performant_mode: Modify the tag for cciss performant
++/*
++ * set_performant_mode: Modify the tag for cciss performant
+  * set bit 0 for pull model, bits 3-1 for block fetch
+  * register number
+  */
+-static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
++#define DEFAULT_REPLY_QUEUE (-1)
++static void set_performant_mode(struct ctlr_info *h, struct CommandList *c,
++					int reply_queue)
+ {
+ 	if (likely(h->transMethod & CFGTBL_Trans_Performant)) {
+ 		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+-		if (likely(h->msix_vector > 0))
++		if (unlikely(!h->msix_vector))
++			return;
++		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+ 			c->Header.ReplyQueue =
+ 				raw_smp_processor_id() % h->nreply_queues;
++		else
++			c->Header.ReplyQueue = reply_queue % h->nreply_queues;
  	}
-+
-+	if (shost_use_blk_mq(sdev->host))
-+		scsi_change_queue_depth(sdev, queue_depth);
-+	else /* We depend on tags for cmd allocation. */
-+		sdev->tagged_supported = 1;
-+
-+	spin_unlock_irqrestore(&h->devlock, flags);
-+	return 0;
+ }
+ 
+ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
+-						struct CommandList *c)
++						struct CommandList *c,
++						int reply_queue)
+ {
+ 	struct io_accel1_cmd *cp = &h->ioaccel_cmd_pool[c->cmdindex];
+ 
+-	/* Tell the controller to post the reply to the queue for this
++	/*
++	 * Tell the controller to post the reply to the queue for this
+ 	 * processor.  This seems to give the best I/O throughput.
+ 	 */
+-	cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
+-	/* Set the bits in the address sent down to include:
++	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
++		cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
++	else
++		cp->ReplyQueue = reply_queue % h->nreply_queues;
++	/*
++	 * Set the bits in the address sent down to include:
+ 	 *  - performant mode bit (bit 0)
+ 	 *  - pull count (bits 1-3)
+ 	 *  - command type (bits 4-6)
+@@ -781,15 +796,21 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
+ }
+ 
+ static void set_ioaccel2_performant_mode(struct ctlr_info *h,
+-						struct CommandList *c)
++						struct CommandList *c,
++						int reply_queue)
+ {
+ 	struct io_accel2_cmd *cp = &h->ioaccel2_cmd_pool[c->cmdindex];
+ 
+-	/* Tell the controller to post the reply to the queue for this
++	/*
++	 * Tell the controller to post the reply to the queue for this
+ 	 * processor.  This seems to give the best I/O throughput.
+ 	 */
+-	cp->reply_queue = smp_processor_id() % h->nreply_queues;
+-	/* Set the bits in the address sent down to include:
++	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
++		cp->reply_queue = smp_processor_id() % h->nreply_queues;
++	else
++		cp->reply_queue = reply_queue % h->nreply_queues;
++	/*
++	 * Set the bits in the address sent down to include:
+ 	 *  - performant mode bit not used in ioaccel mode 2
+ 	 *  - pull count (bits 0-3)
+ 	 *  - command type isn't needed for ioaccel2
+@@ -826,26 +847,32 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
+ 		h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+ }
+ 
+-static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+-	struct CommandList *c)
++static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
++	struct CommandList *c, int reply_queue)
+ {
+ 	dial_down_lockup_detection_during_fw_flash(h, c);
+ 	atomic_inc(&h->commands_outstanding);
+ 	switch (c->cmd_type) {
+ 	case CMD_IOACCEL1:
+-		set_ioaccel1_performant_mode(h, c);
++		set_ioaccel1_performant_mode(h, c, reply_queue);
+ 		writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+ 		break;
+ 	case CMD_IOACCEL2:
+-		set_ioaccel2_performant_mode(h, c);
++		set_ioaccel2_performant_mode(h, c, reply_queue);
+ 		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
+ 		break;
+ 	default:
+-		set_performant_mode(h, c);
++		set_performant_mode(h, c, reply_queue);
+ 		h->access.submit_command(h, c);
+ 	}
+ }
+ 
++static void enqueue_cmd_and_start_io(struct ctlr_info *h,
++					struct CommandList *c)
++{
++	__enqueue_cmd_and_start_io(h, c, DEFAULT_REPLY_QUEUE);
 +}
 +
-+/* configure scsi device based on internal per-device structure */
-+static int hpsa_slave_configure(struct scsi_device *sdev)
-+{
-+	struct hpsa_scsi_dev_t *sd;
-+	unsigned long flags;
-+	struct ctlr_info *h;
+ static inline int is_hba_lunid(unsigned char scsi3addr[])
+ {
+ 	return memcmp(scsi3addr, RAID_CTLR_LUNID, 8) == 0;
+@@ -1890,6 +1917,19 @@ static void complete_scsi_command(struct CommandList *cp)
+ 	if (cp->cmd_type == CMD_IOACCEL2 || cp->cmd_type == CMD_IOACCEL1)
+ 		atomic_dec(&cp->phys_disk->ioaccel_cmds_out);
+ 
++	/*
++	 * We check for lockup status here as it may be set for
++	 * CMD_SCSI, CMD_IOACCEL1 and CMD_IOACCEL2 commands by
++	 * fail_all_oustanding_cmds()
++	 */
++	if (unlikely(ei->CommandStatus == CMD_CTLR_LOCKUP)) {
++		/* DID_NO_CONNECT will prevent a retry */
++		cmd->result = DID_NO_CONNECT << 16;
++		cmd_free(h, cp);
++		cmd->scsi_done(cmd);
++		return;
++	}
 +
-+	h = sdev_to_hba(sdev);
-+	spin_lock_irqsave(&h->devlock, flags);
-+	sd = sdev->hostdata;
-+	sdev->no_uld_attach = !sd || !(sd->expose_state & HPSA_ULD_ATTACH);
- 	spin_unlock_irqrestore(&h->devlock, flags);
+ 	if (cp->cmd_type == CMD_IOACCEL2)
+ 		return process_ioaccel2_completion(h, cp, cmd, dev);
+ 
+@@ -2104,14 +2144,36 @@ static int hpsa_map_one(struct pci_dev *pdev,
  	return 0;
  }
-@@ -2438,6 +2502,7 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
  
- 	this_device->offload_config = 0;
- 	this_device->offload_enabled = 0;
-+	this_device->offload_to_be_enabled = 0;
- 
- 	buf = kzalloc(64, GFP_KERNEL);
- 	if (!buf)
-@@ -2461,6 +2526,7 @@ static void hpsa_get_ioaccel_status(struct ctlr_info *h,
- 		if (hpsa_get_raid_map(h, scsi3addr, this_device))
- 			this_device->offload_enabled = 0;
- 	}
-+	this_device->offload_to_be_enabled = this_device->offload_enabled;
- out:
- 	kfree(buf);
- 	return;
-@@ -2708,6 +2774,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
- 		this_device->raid_level = RAID_UNKNOWN;
- 		this_device->offload_config = 0;
- 		this_device->offload_enabled = 0;
-+		this_device->offload_to_be_enabled = 0;
- 		this_device->volume_offline = 0;
- 		this_device->queue_depth = h->nr_cmds;
- 	}
-@@ -2850,88 +2917,23 @@ static int add_ext_target_dev(struct ctlr_info *h,
- static int hpsa_get_pdisk_of_ioaccel2(struct ctlr_info *h,
- 	struct CommandList *ioaccel2_cmd_to_abort, unsigned char *scsi3addr)
+-static inline void hpsa_scsi_do_simple_cmd_core(struct ctlr_info *h,
+-	struct CommandList *c)
++#define NO_TIMEOUT ((unsigned long) -1)
++#define DEFAULT_TIMEOUT 30000 /* milliseconds */
++static int hpsa_scsi_do_simple_cmd_core(struct ctlr_info *h,
++	struct CommandList *c, int reply_queue, unsigned long timeout_msecs)
  {
--	struct ReportExtendedLUNdata *physicals = NULL;
--	int responsesize = 24;	/* size of physical extended response */
--	int reportsize = sizeof(*physicals) + HPSA_MAX_PHYS_LUN * responsesize;
--	u32 nphysicals = 0;	/* number of reported physical devs */
--	int found = 0;		/* found match (1) or not (0) */
--	u32 find;		/* handle we need to match */
-+	struct io_accel2_cmd *c2 =
-+			&h->ioaccel2_cmd_pool[ioaccel2_cmd_to_abort->cmdindex];
-+	unsigned long flags;
- 	int i;
--	struct scsi_cmnd *scmd;	/* scsi command within request being aborted */
--	struct hpsa_scsi_dev_t *d; /* device of request being aborted */
--	struct io_accel2_cmd *c2a; /* ioaccel2 command to abort */
--	__le32 it_nexus;	/* 4 byte device handle for the ioaccel2 cmd */
--	__le32 scsi_nexus;	/* 4 byte device handle for the ioaccel2 cmd */
--
--	if (ioaccel2_cmd_to_abort->cmd_type != CMD_IOACCEL2)
--		return 0; /* no match */
--
--	/* point to the ioaccel2 device handle */
--	c2a = &h->ioaccel2_cmd_pool[ioaccel2_cmd_to_abort->cmdindex];
--	if (c2a == NULL)
--		return 0; /* no match */
--
--	scmd = (struct scsi_cmnd *) ioaccel2_cmd_to_abort->scsi_cmd;
--	if (scmd == NULL)
--		return 0; /* no match */
--
--	d = scmd->device->hostdata;
--	if (d == NULL)
--		return 0; /* no match */
--
--	it_nexus = cpu_to_le32(d->ioaccel_handle);
--	scsi_nexus = c2a->scsi_nexus;
--	find = le32_to_cpu(c2a->scsi_nexus);
--
--	if (h->raid_offload_debug > 0)
--		dev_info(&h->pdev->dev,
--			"%s: scsi_nexus:0x%08x device id: 0x%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x\n",
--			__func__, scsi_nexus,
--			d->device_id[0], d->device_id[1], d->device_id[2],
--			d->device_id[3], d->device_id[4], d->device_id[5],
--			d->device_id[6], d->device_id[7], d->device_id[8],
--			d->device_id[9], d->device_id[10], d->device_id[11],
--			d->device_id[12], d->device_id[13], d->device_id[14],
--			d->device_id[15]);
--
--	/* Get the list of physical devices */
--	physicals = kzalloc(reportsize, GFP_KERNEL);
--	if (physicals == NULL)
--		return 0;
--	if (hpsa_scsi_do_report_phys_luns(h, physicals, reportsize)) {
--		dev_err(&h->pdev->dev,
--			"Can't lookup %s device handle: report physical LUNs failed.\n",
--			"HP SSD Smart Path");
--		kfree(physicals);
--		return 0;
--	}
--	nphysicals = be32_to_cpu(*((__be32 *)physicals->LUNListLength)) /
--							responsesize;
--
--	/* find ioaccel2 handle in list of physicals: */
--	for (i = 0; i < nphysicals; i++) {
--		struct ext_report_lun_entry *entry = &physicals->LUN[i];
--
--		/* handle is in bytes 28-31 of each lun */
--		if (entry->ioaccel_handle != find)
--			continue; /* didn't match */
--		found = 1;
--		memcpy(scsi3addr, entry->lunid, 8);
--		if (h->raid_offload_debug > 0)
--			dev_info(&h->pdev->dev,
--				"%s: Searched h=0x%08x, Found h=0x%08x, scsiaddr 0x%8phN\n",
--				__func__, find,
--				entry->ioaccel_handle, scsi3addr);
--		break; /* found it */
--	}
--
--	kfree(physicals);
--	if (found)
--		return 1;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 
+ 	c->waiting = &wait;
+-	enqueue_cmd_and_start_io(h, c);
+-	wait_for_completion(&wait);
++	__enqueue_cmd_and_start_io(h, c, reply_queue);
++	if (timeout_msecs == NO_TIMEOUT) {
++		/* TODO: get rid of this no-timeout thing */
++		wait_for_completion_io(&wait);
++		return IO_OK;
++	}
++	if (!wait_for_completion_io_timeout(&wait,
++					msecs_to_jiffies(timeout_msecs))) {
++		dev_warn(&h->pdev->dev, "Command timed out.\n");
++		return -ETIMEDOUT;
++	}
++	return IO_OK;
++}
++
++static int hpsa_scsi_do_simple_cmd(struct ctlr_info *h, struct CommandList *c,
++				   int reply_queue, unsigned long timeout_msecs)
++{
++	if (unlikely(lockup_detected(h))) {
++		c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
++		return IO_OK;
++	}
++	return hpsa_scsi_do_simple_cmd_core(h, c, reply_queue, timeout_msecs);
+ }
+ 
+ static u32 lockup_detected(struct ctlr_info *h)
+@@ -2126,25 +2188,19 @@ static u32 lockup_detected(struct ctlr_info *h)
+ 	return rc;
+ }
+ 
+-static void hpsa_scsi_do_simple_cmd_core_if_no_lockup(struct ctlr_info *h,
+-	struct CommandList *c)
+-{
+-	/* If controller lockup detected, fake a hardware error. */
+-	if (unlikely(lockup_detected(h)))
+-		c->err_info->CommandStatus = CMD_HARDWARE_ERR;
 -	else
--		return 0;
- 
-+	spin_lock_irqsave(&h->devlock, flags);
-+	for (i = 0; i < h->ndevices; i++)
-+		if (h->dev[i]->ioaccel_handle == le32_to_cpu(c2->scsi_nexus)) {
-+			memcpy(scsi3addr, h->dev[i]->scsi3addr,
-+				sizeof(h->dev[i]->scsi3addr));
-+			spin_unlock_irqrestore(&h->devlock, flags);
-+			return 1;
-+		}
-+	spin_unlock_irqrestore(&h->devlock, flags);
-+	return 0;
- }
-+
- /*
-  * Do CISS_REPORT_PHYS and CISS_REPORT_LOG.  Data is returned in physdev,
-  * logdev.  The number of luns in physdev and logdev are returned in
-@@ -3142,10 +3144,12 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 		/* Figure out where the LUN ID info is coming from */
- 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
- 			i, nphysicals, nlogicals, physdev_list, logdev_list);
--		/* skip masked physical devices. */
--		if (lunaddrbytes[3] & 0xC0 &&
--			i < nphysicals + (raid_ctlr_position == 0))
--			continue;
-+
-+		/* skip masked non-disk devices */
-+		if (MASKED_DEVICE(lunaddrbytes))
-+			if (i < nphysicals + (raid_ctlr_position == 0) &&
-+				NON_DISK_PHYS_DEV(lunaddrbytes))
-+				continue;
- 
- 		/* Get device type, vendor, model, device id */
- 		if (hpsa_update_device_info(h, lunaddrbytes, tmpdevice,
-@@ -3170,6 +3174,18 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 
- 		*this_device = *tmpdevice;
- 
-+		/* do not expose masked devices */
-+		if (MASKED_DEVICE(lunaddrbytes) &&
-+			i < nphysicals + (raid_ctlr_position == 0)) {
-+			if (h->hba_mode_enabled)
-+				dev_warn(&h->pdev->dev,
-+					"Masked physical device detected\n");
-+			this_device->expose_state = HPSA_DO_NOT_EXPOSE;
-+		} else {
-+			this_device->expose_state =
-+					HPSA_SG_ATTACH | HPSA_ULD_ATTACH;
-+		}
-+
- 		switch (this_device->devtype) {
- 		case TYPE_ROM:
- 			/* We don't *really* support actual CD-ROM devices,
-@@ -3211,6 +3227,10 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 		case TYPE_MEDIUM_CHANGER:
- 			ncurrent++;
- 			break;
-+		case TYPE_ENCLOSURE:
-+			if (h->hba_mode_enabled)
-+				ncurrent++;
-+			break;
- 		case TYPE_RAID:
- 			/* Only present the Smartarray HBA as a RAID controller.
- 			 * If it's a RAID controller other than the HBA itself
-@@ -3227,7 +3247,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
- 		if (ncurrent >= HPSA_MAX_DEVICES)
- 			break;
- 	}
--	hpsa_update_log_drive_phys_drive_ptrs(h, currentsd, ncurrent);
- 	adjust_hpsa_scsi_table(h, hostno, currentsd, ncurrent);
- out:
- 	kfree(tmpdevice);
-@@ -4252,10 +4271,7 @@ static int hpsa_register_scsi(struct ctlr_info *h)
- 	sh->max_cmd_len = MAX_COMMAND_SIZE;
- 	sh->max_lun = HPSA_MAX_LUN;
- 	sh->max_id = HPSA_MAX_LUN;
--	sh->can_queue = h->nr_cmds -
--			HPSA_CMDS_RESERVED_FOR_ABORTS -
--			HPSA_CMDS_RESERVED_FOR_DRIVER -
--			HPSA_MAX_CONCURRENT_PASSTHRUS;
-+	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
- 	sh->cmd_per_lun = sh->can_queue;
- 	sh->sg_tablesize = h->maxsgentries;
- 	h->scsi_host = sh;
-@@ -6097,18 +6113,21 @@ static int hpsa_find_cfgtables(struct ctlr_info *h)
- 
- static void hpsa_get_max_perf_mode_cmds(struct ctlr_info *h)
+-		hpsa_scsi_do_simple_cmd_core(h, c);
+-}
+-
+ #define MAX_DRIVER_CMD_RETRIES 25
+-static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+-	struct CommandList *c, int data_direction)
++static int hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
++	struct CommandList *c, int data_direction, unsigned long timeout_msecs)
  {
--	h->max_commands = readl(&(h->cfgtable->MaxPerformantModeCommands));
-+#define MIN_MAX_COMMANDS 16
-+	BUILD_BUG_ON(MIN_MAX_COMMANDS <= HPSA_NRESERVED_CMDS);
-+
-+	h->max_commands = readl(&h->cfgtable->MaxPerformantModeCommands);
+ 	int backoff_time = 10, retry_count = 0;
++	int rc;
  
- 	/* Limit commands in memory limited kdump scenario. */
- 	if (reset_devices && h->max_commands > 32)
- 		h->max_commands = 32;
- 
--	if (h->max_commands < 16) {
--		dev_warn(&h->pdev->dev, "Controller reports "
--			"max supported commands of %d, an obvious lie. "
--			"Using 16.  Ensure that firmware is up to date.\n",
--			h->max_commands);
--		h->max_commands = 16;
-+	if (h->max_commands < MIN_MAX_COMMANDS) {
-+		dev_warn(&h->pdev->dev,
-+			"Controller reports max supported commands of %d Using %d instead. Ensure that firmware is up to date.\n",
-+			h->max_commands,
-+			MIN_MAX_COMMANDS);
-+		h->max_commands = MIN_MAX_COMMANDS;
- 	}
+ 	do {
+ 		memset(c->err_info, 0, sizeof(*c->err_info));
+-		hpsa_scsi_do_simple_cmd_core(h, c);
++		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
++						  timeout_msecs);
++		if (rc)
++			break;
+ 		retry_count++;
+ 		if (retry_count > 3) {
+ 			msleep(backoff_time);
+@@ -2155,6 +2211,9 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+ 			check_for_busy(h, c)) &&
+ 			retry_count <= MAX_DRIVER_CMD_RETRIES);
+ 	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
++	if (retry_count > MAX_DRIVER_CMD_RETRIES)
++		rc = -EIO;
++	return rc;
  }
  
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 6577130..58f3315 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -54,6 +54,7 @@ struct hpsa_scsi_dev_t {
- 	u32 ioaccel_handle;
- 	int offload_config;		/* I/O accel RAID offload configured */
- 	int offload_enabled;		/* I/O accel RAID offload enabled */
-+	int offload_to_be_enabled;
- 	int offload_to_mirror;		/* Send next I/O accelerator RAID
- 					 * offload request to mirror drive
- 					 */
-@@ -68,6 +69,11 @@ struct hpsa_scsi_dev_t {
- 	 * devices in order to honor physical device queue depth limits.
- 	 */
- 	struct hpsa_scsi_dev_t *phys_disk[RAID_MAP_MAX_ENTRIES];
-+#define HPSA_DO_NOT_EXPOSE	0x0
-+#define HPSA_SG_ATTACH		0x1
-+#define HPSA_ULD_ATTACH		0x2
-+#define HPSA_SCSI_ADD		(HPSA_SG_ATTACH | HPSA_ULD_ATTACH)
-+	u8 expose_state;
- };
+ static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
+@@ -2231,6 +2290,9 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
+ 	case CMD_UNABORTABLE:
+ 		hpsa_print_cmd(h, "unabortable", cp);
+ 		break;
++	case CMD_CTLR_LOCKUP:
++		hpsa_print_cmd(h, "controller lockup detected", cp);
++		break;
+ 	default:
+ 		hpsa_print_cmd(h, "unknown status", cp);
+ 		dev_warn(d, "Unknown command status %x\n",
+@@ -2258,7 +2320,10 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+ 		rc = -1;
+ 		goto out;
+ 	}
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if (rc)
++		goto out;
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+ 		hpsa_scsi_interpret_error(h, c);
+@@ -2288,7 +2353,10 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
+ 		rc = -1;
+ 		goto out;
+ 	}
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++			PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if (rc)
++		goto out;
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+ 		hpsa_scsi_interpret_error(h, c);
+@@ -2300,7 +2368,7 @@ out:
+ 	}
  
- struct reply_queue_buffer {
+ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+-	u8 reset_type)
++	u8 reset_type, int reply_queue)
+ {
+ 	int rc = IO_OK;
+ 	struct CommandList *c;
+@@ -2317,7 +2385,11 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+ 			scsi3addr, TYPE_MSG);
+ 	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to LUN reset */
+-	hpsa_scsi_do_simple_cmd_core(h, c);
++	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
++	if (rc) {
++		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
++		goto out;
++	}
+ 	/* no unmap needed here because no data xfer. */
+ 
+ 	ei = c->err_info;
+@@ -2325,6 +2397,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+ 		hpsa_scsi_interpret_error(h, c);
+ 		rc = -1;
+ 	}
++out:
+ 	cmd_free(h, c);
+ 	return rc;
+ }
+@@ -2442,15 +2515,18 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 			sizeof(this_device->raid_map), 0,
+ 			scsi3addr, TYPE_CMD)) {
+ 		dev_warn(&h->pdev->dev, "Out of memory in hpsa_get_raid_map()\n");
+-		cmd_free(h, c);
+-		return -ENOMEM;
++		rc = -ENOMEM;
++		goto out;
+ 	}
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if (rc)
++		goto out;
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+ 		hpsa_scsi_interpret_error(h, c);
+-		cmd_free(h, c);
+-		return -1;
++		rc = -1;
++		goto out;
+ 	}
+ 	cmd_free(h, c);
+ 
+@@ -2462,6 +2538,9 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+ 	}
+ 	hpsa_debug_map_buff(h, rc, &this_device->raid_map);
+ 	return rc;
++out:
++	cmd_free(h, c);
++	return rc;
+ }
+ 
+ static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
+@@ -2481,7 +2560,8 @@ static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
+ 	c->Request.CDB[2] = bmic_device_index & 0xff;
+ 	c->Request.CDB[9] = (bmic_device_index >> 8) & 0xff;
+ 
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE,
++						NO_TIMEOUT);
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+ 		hpsa_scsi_interpret_error(h, c);
+@@ -2616,7 +2696,10 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+ 	}
+ 	if (extended_response)
+ 		c->Request.CDB[1] = extended_response;
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
++	if (rc)
++		goto out;
+ 	ei = c->err_info;
+ 	if (ei->CommandStatus != 0 &&
+ 	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
+@@ -2709,7 +2792,7 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+ {
+ 	struct CommandList *c;
+ 	unsigned char *sense, sense_key, asc, ascq;
+-	int ldstat = 0;
++	int rc, ldstat = 0;
+ 	u16 cmd_status;
+ 	u8 scsi_status;
+ #define ASC_LUN_NOT_READY 0x04
+@@ -2720,7 +2803,11 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+ 	if (!c)
+ 		return 0;
+ 	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
+-	hpsa_scsi_do_simple_cmd_core(h, c);
++	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
++	if (rc) {
++		cmd_free(h, c);
++		return 0;
++	}
+ 	sense = c->err_info->SenseInfo;
+ 	sense_key = sense[2];
+ 	asc = sense[12];
+@@ -4053,7 +4140,11 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 						dev->phys_disk[map_index]);
+ }
+ 
+-/* Submit commands down the "normal" RAID stack path */
++/*
++ * Submit commands down the "normal" RAID stack path
++ * All callers to hpsa_ciss_submit must check lockup_detected
++ * beforehand, before (opt.) and after calling cmd_alloc
++ */
+ static int hpsa_ciss_submit(struct ctlr_info *h,
+ 	struct CommandList *c, struct scsi_cmnd *cmd,
+ 	unsigned char scsi3addr[])
+@@ -4164,7 +4255,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+ 
+ 	if (unlikely(lockup_detected(h))) {
+-		cmd->result = DID_ERROR << 16;
++		cmd->result = DID_NO_CONNECT << 16;
+ 		cmd->scsi_done(cmd);
+ 		return 0;
+ 	}
+@@ -4174,7 +4265,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 	if (unlikely(lockup_detected(h))) {
+-		cmd->result = DID_ERROR << 16;
++		cmd->result = DID_NO_CONNECT << 16;
+ 		cmd_free(h, c);
+ 		cmd->scsi_done(cmd);
+ 		return 0;
+@@ -4369,7 +4460,10 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 		/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
+ 		(void) fill_cmd(c, TEST_UNIT_READY, h,
+ 				NULL, 0, 0, lunaddr, TYPE_CMD);
+-		hpsa_scsi_do_simple_cmd_core(h, c);
++		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
++						NO_TIMEOUT);
++		if (rc)
++			goto do_it_again;
+ 		/* no unmap needed here because no data xfer. */
+ 
+ 		if (c->err_info->CommandStatus == CMD_SUCCESS)
+@@ -4380,7 +4474,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 			(c->err_info->SenseInfo[2] == NO_SENSE ||
+ 			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
+ 			break;
+-
++do_it_again:
+ 		dev_warn(&h->pdev->dev, "waiting %d secs "
+ 			"for device to become ready.\n", waittime);
+ 		rc = 1; /* device not ready. */
+@@ -4418,13 +4512,46 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 			"device lookup failed.\n");
+ 		return FAILED;
+ 	}
+-	dev_warn(&h->pdev->dev, "resetting device %d:%d:%d:%d\n",
+-		h->scsi_host->host_no, dev->bus, dev->target, dev->lun);
++
++	/* if controller locked up, we can guarantee command won't complete */
++	if (lockup_detected(h)) {
++		dev_warn(&h->pdev->dev,
++			"scsi %d:%d:%d:%d RESET FAILED, lockup detected\n",
++			h->scsi_host->host_no, dev->bus, dev->target,
++			dev->lun);
++		return FAILED;
++	}
++
++	/* this reset request might be the result of a lockup; check */
++	if (detect_controller_lockup(h)) {
++		dev_warn(&h->pdev->dev,
++			 "scsi %d:%d:%d:%d RESET FAILED, new lockup detected\n",
++			 h->scsi_host->host_no, dev->bus, dev->target,
++			 dev->lun);
++		return FAILED;
++	}
++
++	dev_warn(&h->pdev->dev,
++		"resetting scsi %d:%d:%d:%d: %s %.8s %.16s RAID-%s SSDSmartPathCap%c En%c Exp=%d\n",
++		h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
++		scsi_device_type(dev->devtype),
++		dev->vendor,
++		dev->model,
++		dev->raid_level > RAID_UNKNOWN ?
++			"RAID-?" : raid_label[dev->raid_level],
++		dev->offload_config ? '+' : '-',
++		dev->offload_enabled ? '+' : '-',
++		dev->expose_state);
++
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+-	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN);
++	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
++			     DEFAULT_REPLY_QUEUE);
+ 	if (rc == 0 && wait_for_device_to_become_ready(h, dev->scsi3addr) == 0)
+ 		return SUCCESS;
+ 
++	dev_warn(&h->pdev->dev,
++		"resetting scsi %d:%d:%d:%d failed\n",
++		h->scsi_host->host_no, dev->bus, dev->target, dev->lun);
+ 	return FAILED;
+ }
+ 
+@@ -4469,7 +4596,7 @@ static void hpsa_get_tag(struct ctlr_info *h,
+ }
+ 
+ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+-	struct CommandList *abort, int swizzle)
++	struct CommandList *abort, int swizzle, int reply_queue)
+ {
+ 	int rc = IO_OK;
+ 	struct CommandList *c;
+@@ -4487,9 +4614,9 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+ 		0, 0, scsi3addr, TYPE_MSG);
+ 	if (swizzle)
+ 		swizzle_abort_tag(&c->Request.CDB[4]);
+-	hpsa_scsi_do_simple_cmd_core(h, c);
++	(void) hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
+ 	hpsa_get_tag(h, abort, &taglower, &tagupper);
+-	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd_core completed.\n",
++	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd(abort) completed.\n",
+ 		__func__, tagupper, taglower);
+ 	/* no unmap needed here because no data xfer. */
+ 
+@@ -4521,7 +4648,7 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+  */
+ 
+ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+-	unsigned char *scsi3addr, struct CommandList *abort)
++	unsigned char *scsi3addr, struct CommandList *abort, int reply_queue)
+ {
+ 	int rc = IO_OK;
+ 	struct scsi_cmnd *scmd; /* scsi command within request being aborted */
+@@ -4563,7 +4690,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 			"Reset as abort: Resetting physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+ 			psa[0], psa[1], psa[2], psa[3],
+ 			psa[4], psa[5], psa[6], psa[7]);
+-	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET);
++	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET, reply_queue);
+ 	if (rc != 0) {
+ 		dev_warn(&h->pdev->dev,
+ 			"Reset as abort: Failed on physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+@@ -4597,7 +4724,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+  * make this true someday become false.
+  */
+ static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+-	unsigned char *scsi3addr, struct CommandList *abort)
++	unsigned char *scsi3addr, struct CommandList *abort, int reply_queue)
+ {
+ 	/* ioccelerator mode 2 commands should be aborted via the
+ 	 * accelerated path, since RAID path is unaware of these commands,
+@@ -4605,10 +4732,20 @@ static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+ 	 * Change abort to physical device reset.
+ 	 */
+ 	if (abort->cmd_type == CMD_IOACCEL2)
+-		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr, abort);
++		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr,
++							abort, reply_queue);
++
++	return hpsa_send_abort(h, scsi3addr, abort, 0, reply_queue) &&
++			hpsa_send_abort(h, scsi3addr, abort, 1, reply_queue);
++}
+ 
+-	return hpsa_send_abort(h, scsi3addr, abort, 0) &&
+-			hpsa_send_abort(h, scsi3addr, abort, 1);
++/* Find out which reply queue a command was meant to return on */
++static int hpsa_extract_reply_queue(struct ctlr_info *h,
++					struct CommandList *c)
++{
++	if (c->cmd_type == CMD_IOACCEL2)
++		return h->ioaccel2_cmd_pool[c->cmdindex].reply_queue;
++	return c->Header.ReplyQueue;
+ }
+ 
+ /* Send an abort for the specified command.
+@@ -4626,7 +4763,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	char msg[256];		/* For debug messaging. */
+ 	int ml = 0;
+ 	__le32 tagupper, taglower;
+-	int refcount;
++	int refcount, reply_queue;
+ 
+ 	/* Find the controller of the command to be aborted */
+ 	h = sdev_to_hba(sc->device);
+@@ -4634,8 +4771,23 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 			"ABORT REQUEST FAILED, Controller lookup failed.\n"))
+ 		return FAILED;
+ 
+-	if (lockup_detected(h))
++	/* If controller locked up, we can guarantee command won't complete */
++	if (lockup_detected(h)) {
++		dev_warn(&h->pdev->dev,
++			"scsi %d:%d:%d:%llu scmd %p ABORT FAILED, lockup detected\n",
++			h->scsi_host->host_no, sc->device->channel,
++			sc->device->id, sc->device->lun, sc);
+ 		return FAILED;
++	}
++
++	/* This is a good time to check if controller lockup has occurred */
++	if (detect_controller_lockup(h)) {
++		dev_warn(&h->pdev->dev,
++			 "scsi %d:%d:%d:%llu scmd %p ABORT FAILED, new lockup detected\n",
++			 h->scsi_host->host_no, sc->device->channel,
++			 sc->device->id, sc->device->lun, sc);
++		return FAILED;
++	}
+ 
+ 	/* Check that controller supports some kind of task abort */
+ 	if (!(HPSATMF_PHYS_TASK_ABORT & h->TMFSupportFlags) &&
+@@ -4667,6 +4819,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 		return SUCCESS;
+ 	}
+ 	hpsa_get_tag(h, abort, &taglower, &tagupper);
++	reply_queue = hpsa_extract_reply_queue(h, abort);
+ 	ml += sprintf(msg+ml, "Tag:0x%08x:%08x ", tagupper, taglower);
+ 	as  = abort->scsi_cmd;
+ 	if (as != NULL)
+@@ -4680,7 +4833,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	 * by the firmware (but not to the scsi mid layer) but we can't
+ 	 * distinguish which.  Send the abort down.
+ 	 */
+-	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort);
++	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort, reply_queue);
+ 	if (rc != 0) {
+ 		dev_warn(&h->pdev->dev, "FAILED abort command on scsi %d:%d:%d:%d\n",
+ 			h->scsi_host->host_no,
+@@ -5004,7 +5157,9 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		c->SG[0].Len = cpu_to_le32(iocommand.buf_size);
+ 		c->SG[0].Ext = cpu_to_le32(HPSA_SG_LAST); /* not chaining */
+ 	}
+-	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
++	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
++	if (rc)
++		rc = -EIO;
+ 	if (iocommand.buf_size > 0)
+ 		hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_BIDIRECTIONAL);
+ 	check_ioctl_unit_attention(h, c);
+@@ -5134,7 +5289,11 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		}
+ 		c->SG[--i].Ext = cpu_to_le32(HPSA_SG_LAST);
+ 	}
+-	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
++	status = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
++	if (status) {
++		status = -EIO;
++		goto cleanup0;
++	}
+ 	if (sg_used)
+ 		hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
+ 	check_ioctl_unit_attention(h, c);
+@@ -6281,6 +6440,8 @@ static int hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+ 	 * as we enter this code.)
+ 	 */
+ 	for (i = 0; i < MAX_MODE_CHANGE_WAIT; i++) {
++		if (h->remove_in_progress)
++			goto done;
+ 		spin_lock_irqsave(&h->lock, flags);
+ 		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+ 		spin_unlock_irqrestore(&h->lock, flags);
+@@ -6676,17 +6837,21 @@ static void fail_all_outstanding_cmds(struct ctlr_info *h)
+ {
+ 	int i, refcount;
+ 	struct CommandList *c;
++	int failcount = 0;
+ 
+ 	flush_workqueue(h->resubmit_wq); /* ensure all cmds are fully built */
+ 	for (i = 0; i < h->nr_cmds; i++) {
+ 		c = h->cmd_pool + i;
+ 		refcount = atomic_inc_return(&c->refcount);
+ 		if (refcount > 1) {
+-			c->err_info->CommandStatus = CMD_HARDWARE_ERR;
++			c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
+ 			finish_cmd(c);
++			failcount++;
+ 		}
+ 		cmd_free(h, c);
+ 	}
++	dev_warn(&h->pdev->dev,
++		"failed %d commands in fail_all\n", failcount);
+ }
+ 
+ static void set_lockup_detected_for_all_cpus(struct ctlr_info *h, u32 value)
+@@ -6714,18 +6879,19 @@ static void controller_lockup_detected(struct ctlr_info *h)
+ 	if (!lockup_detected) {
+ 		/* no heartbeat, but controller gave us a zero. */
+ 		dev_warn(&h->pdev->dev,
+-			"lockup detected but scratchpad register is zero\n");
++			"lockup detected after %d but scratchpad register is zero\n",
++			h->heartbeat_sample_interval / HZ);
+ 		lockup_detected = 0xffffffff;
+ 	}
+ 	set_lockup_detected_for_all_cpus(h, lockup_detected);
+ 	spin_unlock_irqrestore(&h->lock, flags);
+-	dev_warn(&h->pdev->dev, "Controller lockup detected: 0x%08x\n",
+-			lockup_detected);
++	dev_warn(&h->pdev->dev, "Controller lockup detected: 0x%08x after %d\n",
++			lockup_detected, h->heartbeat_sample_interval / HZ);
+ 	pci_disable_device(h->pdev);
+ 	fail_all_outstanding_cmds(h);
+ }
+ 
+-static void detect_controller_lockup(struct ctlr_info *h)
++static int detect_controller_lockup(struct ctlr_info *h)
+ {
+ 	u64 now;
+ 	u32 heartbeat;
+@@ -6735,7 +6901,7 @@ static void detect_controller_lockup(struct ctlr_info *h)
+ 	/* If we've received an interrupt recently, we're ok. */
+ 	if (time_after64(h->last_intr_timestamp +
+ 				(h->heartbeat_sample_interval), now))
+-		return;
++		return false;
+ 
+ 	/*
+ 	 * If we've already checked the heartbeat recently, we're ok.
+@@ -6744,7 +6910,7 @@ static void detect_controller_lockup(struct ctlr_info *h)
+ 	 */
+ 	if (time_after64(h->last_heartbeat_timestamp +
+ 				(h->heartbeat_sample_interval), now))
+-		return;
++		return false;
+ 
+ 	/* If heartbeat has not changed since we last looked, we're not ok. */
+ 	spin_lock_irqsave(&h->lock, flags);
+@@ -6752,12 +6918,13 @@ static void detect_controller_lockup(struct ctlr_info *h)
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 	if (h->last_heartbeat == heartbeat) {
+ 		controller_lockup_detected(h);
+-		return;
++		return true;
+ 	}
+ 
+ 	/* We're ok. */
+ 	h->last_heartbeat = heartbeat;
+ 	h->last_heartbeat_timestamp = now;
++	return false;
+ }
+ 
+ static void hpsa_ack_ctlr_events(struct ctlr_info *h)
+@@ -7101,8 +7268,10 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+ {
+ 	char *flush_buf;
+ 	struct CommandList *c;
++	int rc;
+ 
+ 	/* Don't bother trying to flush the cache if locked up */
++	/* FIXME not necessary if do_simple_cmd does the check */
+ 	if (unlikely(lockup_detected(h)))
+ 		return;
+ 	flush_buf = kzalloc(4, GFP_KERNEL);
+@@ -7118,7 +7287,10 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+ 		RAID_CTLR_LUNID, TYPE_CMD)) {
+ 		goto out;
+ 	}
+-	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_TODEVICE);
++	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
++					PCI_DMA_TODEVICE, NO_TIMEOUT);
++	if (rc)
++		goto out;
+ 	if (c->err_info->CommandStatus != 0)
+ out:
+ 		dev_warn(&h->pdev->dev,
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 3a621c7..76d5499 100644
+index 76d5499..f52c847 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -240,6 +240,7 @@ struct ReportLUNdata {
+@@ -43,6 +43,11 @@
+ #define CMD_TIMEOUT             0x000B
+ #define CMD_UNABORTABLE		0x000C
+ #define CMD_IOACCEL_DISABLED	0x000E
++#define CMD_CTLR_LOCKUP		0xffff
++/* Note: CMD_CTLR_LOCKUP is not a value defined by the CISS spec
++ * it is a value defined by the driver that commands can be marked
++ * with when a controller lockup has been detected by the driver
++ */
  
- struct ext_report_lun_entry {
- 	u8 lunid[8];
-+#define MASKED_DEVICE(x) ((x)[3] & 0xC0)
- #define GET_BMIC_BUS(lunid) ((lunid)[7] & 0x3F)
- #define GET_BMIC_LEVEL_TWO_TARGET(lunid) ((lunid)[6])
- #define GET_BMIC_DRIVE_NUMBER(lunid) (((GET_BMIC_BUS((lunid)) - 1) << 8) + \
-@@ -247,6 +248,8 @@ struct ext_report_lun_entry {
- 	u8 wwid[8];
- 	u8 device_type;
- 	u8 device_flags;
-+#define NON_DISK_PHYS_DEV(x) ((x)[17] & 0x01)
-+#define PHYS_IOACCEL(x) ((x)[17] & 0x08)
- 	u8 lun_count; /* multi-lun device, how many luns */
- 	u8 redundant_paths;
- 	u32 ioaccel_handle; /* ioaccel1 only uses lower 16 bits */
+ 
+ /* Unit Attentions ASC's as defined for the MSA2012sa */
 
