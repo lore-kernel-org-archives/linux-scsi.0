@@ -1,16 +1,22 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH 17/43] hpsa: clean up error handling
-Date: Sat, 21 Feb 2015 16:19:03 -0600
-Message-ID: <20150221221903.21954.6173.stgit@brunhilda>
+Subject: [PATCH 16/43] hpsa: break hpsa_free_irqs_and_disable_msix into two
+ functions
+Date: Sat, 21 Feb 2015 16:18:57 -0600
+Message-ID: <20150221221857.21954.25224.stgit@brunhilda>
 References: <20150221221553.21954.32599.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:51470 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbbBUWUW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:20:22 -0500
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:57235 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbbBUWUQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Feb 2015 17:20:16 -0500
+Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 611BC6055E
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2015 22:20:16 +0000 (UTC)
 In-Reply-To: <20150221221553.21954.32599.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,220 +25,102 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-refactor error cleanup and shutdown
-disable interrupts and pci_disable_device on critical failures
-add hpsa_free_cfgtables function
+replace calls to hpsa_free_irqs_and_disable_msix with
+hpsa_free_irqs and hpsa_disable_interrupt_mode
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   92 ++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 58 insertions(+), 34 deletions(-)
+ drivers/scsi/hpsa.c |   37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 94146c6..21e3610 100644
+index 22e7914..94146c6 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -6560,6 +6560,17 @@ static int hpsa_find_cfg_addrs(struct pci_dev *pdev, void __iomem *vaddr,
- 	return 0;
+@@ -6414,10 +6414,22 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
+ 	return -1;
  }
  
-+static void hpsa_free_cfgtables(struct ctlr_info *h)
++static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
 +{
-+	if (h->transtable)
-+		iounmap(h->transtable);
-+	if (h->cfgtable)
-+		iounmap(h->cfgtable);
-+}
-+
-+/* Find and map CISS config table and transfer table
-++ * several items must be unmapped (freed) later
-++ * */
- static int hpsa_find_cfgtables(struct ctlr_info *h)
- {
- 	u64 cfg_offset;
-@@ -6586,8 +6597,11 @@ static int hpsa_find_cfgtables(struct ctlr_info *h)
- 	h->transtable = remap_pci_mem(pci_resource_start(h->pdev,
- 				cfg_base_addr_index)+cfg_offset+trans_offset,
- 				sizeof(*h->transtable));
--	if (!h->transtable)
-+	if (!h->transtable) {
-+		dev_err(&h->pdev->dev, "Failed mapping transfer table\n");
-+		hpsa_free_cfgtables(h);
- 		return -ENOMEM;
++#ifdef CONFIG_PCI_MSI
++	if (h->msix_vector) {
++		if (h->pdev->msix_enabled)
++			pci_disable_msix(h->pdev);
++	} else if (h->msi_vector) {
++		if (h->pdev->msi_enabled)
++			pci_disable_msi(h->pdev);
 +	}
- 	return 0;
- }
- 
-@@ -6763,6 +6777,17 @@ error:
- 	return -ENODEV;
- }
- 
-+/* free items allocated or mapped by hpsa_pci_init */
-+static void hpsa_free_pci_init(struct ctlr_info *h)
-+{
-+	hpsa_free_cfgtables(h);			/* pci_init 4 */
-+	iounmap(h->vaddr);			/* pci_init 3 */
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
-+	pci_release_regions(h->pdev);		/* pci_init 2 */
-+	pci_disable_device(h->pdev);		/* pci_init 1 */
++#endif /* CONFIG_PCI_MSI */
 +}
 +
-+/* several items must be freed later */
- static int hpsa_pci_init(struct ctlr_info *h)
+ /* If MSI/MSI-X is supported by the kernel we will try to enable it on
+  * controllers that are capable. If not, we use legacy INTx mode.
+  */
+-
+ static void hpsa_interrupt_mode(struct ctlr_info *h)
  {
- 	int prod_index, err;
-@@ -6781,15 +6806,15 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 
- 	err = pci_enable_device(h->pdev);
- 	if (err) {
--		dev_warn(&h->pdev->dev, "unable to enable PCI device\n");
-+		dev_err(&h->pdev->dev, "failed to enable PCI device\n");
- 		return err;
- 	}
- 
- 	err = pci_request_regions(h->pdev, HPSA);
- 	if (err) {
- 		dev_err(&h->pdev->dev,
--			"cannot obtain PCI resources, aborting\n");
--		return err;
-+			"failed to obtain PCI resources\n");
-+		goto clean1;	/* pci */
- 	}
- 
- 	pci_set_master(h->pdev);
-@@ -6797,40 +6822,41 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 	hpsa_interrupt_mode(h);
- 	err = hpsa_pci_find_memory_BAR(h->pdev, &h->paddr);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean2;	/* intmode+region, pci */
- 	h->vaddr = remap_pci_mem(h->paddr, 0x250);
- 	if (!h->vaddr) {
-+		dev_err(&h->pdev->dev, "failed to remap PCI mem\n");
- 		err = -ENOMEM;
--		goto err_out_free_res;
-+		goto clean2;	/* intmode+region, pci */
- 	}
- 	err = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean3;	/* vaddr, intmode+region, pci */
- 	err = hpsa_find_cfgtables(h);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean3;	/* vaddr, intmode+region, pci */
- 	hpsa_find_board_params(h);
- 
- 	if (!hpsa_CISS_signature_present(h)) {
- 		err = -ENODEV;
--		goto err_out_free_res;
-+		goto clean4;	/* cfgtables, vaddr, intmode+region, pci */
- 	}
- 	hpsa_set_driver_support_bits(h);
- 	hpsa_p600_dma_prefetch_quirk(h);
- 	err = hpsa_enter_simple_mode(h);
- 	if (err)
--		goto err_out_free_res;
-+		goto clean4;	/* cfgtables, vaddr, intmode+region, pci */
+ #ifdef CONFIG_PCI_MSI
+@@ -7058,20 +7070,6 @@ static int hpsa_kdump_soft_reset(struct ctlr_info *h)
  	return 0;
- 
--err_out_free_res:
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	if (h->vaddr)
--		iounmap(h->vaddr);
--	pci_disable_device(h->pdev);
-+clean4:	/* cfgtables, vaddr, intmode+region, pci */
-+	hpsa_free_cfgtables(h);
-+clean3:	/* vaddr, intmode+region, pci */
-+	iounmap(h->vaddr);
-+clean2:	/* intmode+region, pci */
-+	hpsa_disable_interrupt_mode(h);
- 	pci_release_regions(h->pdev);
-+clean1:	/* pci */
-+	pci_disable_device(h->pdev);
- 	return err;
  }
  
-@@ -7039,8 +7065,9 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 		}
- 	}
- 	if (rc) {
--		dev_err(&h->pdev->dev, "unable to get irq %d for %s\n",
-+		dev_err(&h->pdev->dev, "failed to get irq %d for %s\n",
- 		       h->intr[h->intr_mode], h->devname);
-+		hpsa_free_irqs(h);
- 		return -ENODEV;
- 	}
- 	return 0;
-@@ -7092,15 +7119,11 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+-static void hpsa_free_irqs_and_disable_msix(struct ctlr_info *h)
+-{
+-	hpsa_free_irqs(h);
+-#ifdef CONFIG_PCI_MSI
+-	if (h->msix_vector) {
+-		if (h->pdev->msix_enabled)
+-			pci_disable_msix(h->pdev);
+-	} else if (h->msi_vector) {
+-		if (h->pdev->msi_enabled)
+-			pci_disable_msi(h->pdev);
+-	}
+-#endif /* CONFIG_PCI_MSI */
+-}
+-
+ static void hpsa_free_reply_queues(struct ctlr_info *h)
+ {
+ 	int i;
+@@ -7088,7 +7086,7 @@ static void hpsa_free_reply_queues(struct ctlr_info *h)
+ 
+ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ {
+-	hpsa_free_irqs_and_disable_msix(h);
++	hpsa_free_irqs(h);
+ 	hpsa_free_sg_chain_blocks(h);
+ 	hpsa_free_cmd_pool(h);
  	kfree(h->ioaccel1_blockFetchTable);
- 	kfree(h->blockFetchTable);
- 	hpsa_free_reply_queues(h);
--	if (h->vaddr)
--		iounmap(h->vaddr);
--	if (h->transtable)
--		iounmap(h->transtable);
--	if (h->cfgtable)
--		iounmap(h->cfgtable);
--	hpsa_disable_interrupt_mode(h);
-+	hpsa_free_cfgtables(h);			/* pci_init 4 */
-+	iounmap(h->vaddr);			/* pci_init 3 */
-+	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+@@ -7100,6 +7098,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 		iounmap(h->transtable);
+ 	if (h->cfgtable)
+ 		iounmap(h->cfgtable);
++	hpsa_disable_interrupt_mode(h);
  	pci_disable_device(h->pdev);
--	pci_release_regions(h->pdev);
-+	pci_release_regions(h->pdev);		/* pci_init 2 */
+ 	pci_release_regions(h->pdev);
  	kfree(h);
+@@ -7587,7 +7586,8 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+ 	 */
+ 	hpsa_flush_cache(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+-	hpsa_free_irqs_and_disable_msix(h);
++	hpsa_free_irqs(h);
++	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
  }
  
-@@ -7418,7 +7441,7 @@ reinit_after_soft_reset:
- 			dac = 0;
- 		} else {
- 			dev_err(&pdev->dev, "no suitable DMA available\n");
--			goto clean1;
-+			goto clean2;
- 		}
- 	}
- 
-@@ -7528,6 +7551,7 @@ clean4:
- clean2_and_free_irqs:
- 	hpsa_free_irqs(h);
- clean2:
-+	hpsa_free_pci_init(h);
- clean1:
- 	if (h->resubmit_wq)
- 		destroy_workqueue(h->resubmit_wq);
-@@ -7619,12 +7643,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ static void hpsa_free_device_info(struct ctlr_info *h)
+@@ -7618,7 +7618,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	destroy_workqueue(h->rescan_ctlr_wq);
  	destroy_workqueue(h->resubmit_wq);
  	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
- 
--	/* includes hpsa_free_irqs and hpsa_disable_interrupt_mode */
-+	/* includes hpsa_free_irqs */
-+	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
++
++	/* includes hpsa_free_irqs and hpsa_disable_interrupt_mode */
  	hpsa_shutdown(pdev);
- 
--	iounmap(h->vaddr);
--	iounmap(h->transtable);
--	iounmap(h->cfgtable);
- 	hpsa_free_device_info(h);
- 	hpsa_free_sg_chain_blocks(h);
- 	pci_free_consistent(h->pdev,
-@@ -7639,8 +7661,10 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	kfree(h->ioaccel1_blockFetchTable);
- 	kfree(h->ioaccel2_blockFetchTable);
- 	kfree(h->hba_inquiry_data);
--	pci_disable_device(pdev);
--	pci_release_regions(pdev);
 +
-+	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
-+	hpsa_free_pci_init(h);
-+
- 	free_percpu(h->lockup_detected);
- 	kfree(h);
- }
+ 	iounmap(h->vaddr);
+ 	iounmap(h->transtable);
+ 	iounmap(h->cfgtable);
 
