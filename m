@@ -1,43 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Sun, 22 Feb 2015 08:29:31 -0800
-Message-ID: <20150222162931.GA9379@infradead.org>
-References: <54B63F74.2040702@sandisk.com>
- <20150115090829.GA14154@infradead.org>
- <54B7E70C.8020304@sandisk.com>
- <20150119092153.GA8666@infradead.org>
- <54BCD00D.4080603@sandisk.com>
- <54E7112F.2080901@sandisk.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 5/8] target: Add sanity checks for DPO/FUA bit usage
+Date: Sun, 22 Feb 2015 17:41:14 +0100
+Message-ID: <20150222164114.GA1484@lst.de>
+References: <1423884463-16797-1-git-send-email-nab@daterainc.com> <1423884463-16797-6-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <54E7112F.2080901@sandisk.com>
+In-Reply-To: <1423884463-16797-6-git-send-email-nab@daterainc.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Bart Van Assche <bvanassche@acm.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 20, 2015 at 11:49:19AM +0100, Bart Van Assche wrote:
-> Hello Christoph,
+On Sat, Feb 14, 2015 at 03:27:40AM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> What I proposed myself consists of three steps:
-> 1. Updating the LIO SRP target driver to a more recent version.
-> 2. Target driver and LIO core refactoring such that the LIO and
->    SCST APIs can be unified.
-> 3. Adding support in SCST for the unified target driver API.
+> This patch adds a sbc_check_dpofua() function that performs sanity
+> checks for DPO/FUA command bits.
 > 
-> This work is taking a little more time than I had expected - I still
-> have to start with step (3). But I can already show in which direction I
-> would like to go for steps (1) and (2). The 43 patches I came up with so
-> far for steps (1) and (2) are available in the lio branch of the
-> https://github.com/bvanassche/linux git repository. As you can see in
-> that repository 42 of these 43 patches make sense even without knowing
-> that something like SCST exists.
+> It introduces checks to fail when either bit is set, but the backend
+> device is not advertising support for them.
+> 
+> It also moves the existing cmd->se_cmd_flags |= SCF_FUA assignement
+> into the new helper function.
 
-The work in there looks really good and easily mergeable with a few
-mostly cosmetic comments.
+This causes I/O errors with ext4 on tcm_loop on what seems to be the first
+journal commit:
 
-I still don't see the point of adding this to LSF, we have far more
-important and wide ranging topics then cleaning up some target
-internals.
+[   41.818126] EXT4-fs (sdc): mounted filesystem with ordered data mode. Opts: (null)
+[   48.919107] Got CDB: 0x2a with FUA bit set, but device does not advertise support for FUA write
+[   48.920245] sd 3:0:0:0: [sdc] tag#113 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[   48.921219] sd 3:0:0:0: [sdc] tag#113 Sense Key : Illegal Request [current] 
+[   48.921980] sd 3:0:0:0: [sdc] tag#113 Add. Sense: Invalid field in cdb
+[   48.922696] sd 3:0:0:0: [sdc] tag#113 CDB: Write(10) 2a 08 00 c4 22 c8 00 00 08 00
+[   48.923619] blk_update_request: critical target error, dev sdc, sector 12853960
+[   48.924501] blk_update_request: critical target error, dev sdc, sector 12853960
+[   48.925598] Aborting journal on device sdc-8.
