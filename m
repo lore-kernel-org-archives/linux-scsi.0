@@ -1,50 +1,67 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: check for bigger value first
-Date: Mon, 23 Feb 2015 13:02:03 -0500
-Message-ID: <54EB6B1B.2050604@interlog.com>
-References: <1420578198-24241-1-git-send-email-andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 1/3] SCSI-debug: Deletion of unnecessary checks before
+ the function call "vfree"
+Date: Mon, 23 Feb 2015 13:14:11 -0500
+Message-ID: <54EB6DF3.4030909@interlog.com>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net> <54D4F7DF.8070008@users.sourceforge.net> <54D4F87F.2050001@users.sourceforge.net>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51731 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751845AbbBWSCV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 13:02:21 -0500
-In-Reply-To: <1420578198-24241-1-git-send-email-andy.shevchenko@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54D4F87F.2050001@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, "James E. J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>, "Ewan D . Milne" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 15-01-06 04:03 PM, Andy Shevchenko wrote:
-> Even for signed types we have to check for bigger positive value first.
-> Otherwise it will be never happened.
+On 15-02-06 12:23 PM, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 6 Feb 2015 16:56:57 +0100
 >
-> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> The vfree() function performs also input parameter validation.
+> Thus the test around the call is not needed.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
 > ---
->   drivers/scsi/scsi_debug.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
+>   drivers/scsi/scsi_debug.c | 12 +++---------
+>   1 file changed, 3 insertions(+), 9 deletions(-)
 >
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 8bcf6ad..a34df1d 100644
+> index 1132321..9e4add7 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
-> @@ -4850,10 +4850,10 @@ static int __init scsi_debug_init(void)
->   	/* play around with geometry, don't waste too much on track 0 */
->   	sdebug_heads = 8;
->   	sdebug_sectors_per = 32;
-> -	if (scsi_debug_dev_size_mb >= 16)
-> -		sdebug_heads = 32;
-> -	else if (scsi_debug_dev_size_mb >= 256)
-> +	if (scsi_debug_dev_size_mb >= 256)
->   		sdebug_heads = 64;
-> +	else if (scsi_debug_dev_size_mb >= 16)
-> +		sdebug_heads = 32;
->   	sdebug_cylinders_per = (unsigned long)sdebug_capacity /
->   			       (sdebug_sectors_per * sdebug_heads);
->   	if (sdebug_cylinders_per >= 1024) {
+> @@ -4969,12 +4969,9 @@ bus_unreg:
+>   dev_unreg:
+>   	root_device_unregister(pseudo_primary);
+>   free_vm:
+> -	if (map_storep)
+> -		vfree(map_storep);
+> -	if (dif_storep)
+> -		vfree(dif_storep);
+> +	vfree(map_storep);
+> +	vfree(dif_storep);
+>   	vfree(fake_storep);
+> -
+>   	return ret;
+>   }
 >
-
+> @@ -4989,10 +4986,7 @@ static void __exit scsi_debug_exit(void)
+>   	driver_unregister(&sdebug_driverfs_driver);
+>   	bus_unregister(&pseudo_lld_bus);
+>   	root_device_unregister(pseudo_primary);
+> -
+> -	if (dif_storep)
+> -		vfree(dif_storep);
+> -
+> +	vfree(dif_storep);
+>   	vfree(fake_storep);
+>   }
+>
+>
