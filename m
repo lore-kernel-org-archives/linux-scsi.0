@@ -1,64 +1,80 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] sg: fix overflow in timeout calculation
-Date: Mon, 23 Feb 2015 15:05:00 -0500
-Message-ID: <54EB87EC.3030604@interlog.com>
-References: <alpine.LRH.2.02.1502091343310.23787@file01.intranet.prod.int.rdu2.redhat.com>
-Reply-To: dgilbert@interlog.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/43] hpsa: add masked physical devices into h->dev[]
+ array
+Date: Mon, 23 Feb 2015 12:14:42 -0800
+Message-ID: <20150223201442.GA11037@infradead.org>
+References: <20150221221553.21954.32599.stgit@brunhilda>
+ <20150221221735.21954.24837.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:52825 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751959AbbBWUFR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 15:05:17 -0500
-In-Reply-To: <alpine.LRH.2.02.1502091343310.23787@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:60605 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbbBWUOn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Feb 2015 15:14:43 -0500
+Content-Disposition: inline
+In-Reply-To: <20150221221735.21954.24837.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>
+Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com, linux-scsi@vger.kernel.org
 
-On 15-02-09 01:45 PM, Mikulas Patocka wrote:
-> USER_HZ may be greater than HZ and in that case arithmetics tries to
-> calculate the maximum accepted timeout overflows. We need to use INT_MAX
-> in this case.
->
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Cc: stable@vger.kernel.org
-
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-
-> ---
->   drivers/scsi/sg.c |   10 ++++++++--
->   1 file changed, 8 insertions(+), 2 deletions(-)
->
-> Index: linux-3.17-rc6/drivers/scsi/sg.c
-> ===================================================================
-> --- linux-3.17-rc6.orig/drivers/scsi/sg.c	2014-09-26 20:10:22.000000000 +0200
-> +++ linux-3.17-rc6/drivers/scsi/sg.c	2014-09-26 20:10:50.000000000 +0200
-> @@ -90,6 +90,12 @@ static void sg_proc_cleanup(void);
->    */
->   #define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
->
-> +#if USER_HZ < HZ
-> +#define MAX_USER_TIMEOUT MULDIV (INT_MAX, USER_HZ, HZ)
-> +#else
-> +#define MAX_USER_TIMEOUT INT_MAX
-> +#endif
+> -/* link sdev->hostdata to our per-device structure. */
+>  static int hpsa_slave_alloc(struct scsi_device *sdev)
+>  {
+>  	struct hpsa_scsi_dev_t *sd;
+>  	unsigned long flags;
+>  	struct ctlr_info *h;
+> +	int queue_depth;
+>  
+>  	h = sdev_to_hba(sdev);
+>  	spin_lock_irqsave(&h->devlock, flags);
+>  	sd = lookup_hpsa_scsi_dev(h, sdev_channel(sdev),
+>  		sdev_id(sdev), sdev->lun);
+> -	if (sd != NULL) {
+> -		sdev->hostdata = sd;
+> -		if (sd->queue_depth)
 > +
->   #define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
->
->   int sg_big_buff = SG_DEF_RESERVED_SIZE;
-> @@ -892,8 +898,8 @@ sg_ioctl(struct file *filp, unsigned int
->   			return result;
->   		if (val < 0)
->   			return -EIO;
-> -		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
-> -		    val = MULDIV (INT_MAX, USER_HZ, HZ);
-> +		if (val >= MAX_USER_TIMEOUT)
-> +		    val = MAX_USER_TIMEOUT;
->   		sfp->timeout_user = val;
->   		sfp->timeout = MULDIV (val, HZ, USER_HZ);
->
-> --
+> +	if (likely(sd)) {
+>  			scsi_change_queue_depth(sdev, sd->queue_depth);
 
+Looks like the indentation is incorrect here.
+
+>  		atomic_set(&sd->ioaccel_cmds_out, 0);
+> +		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
+> +		queue_depth = sd->queue_depth != 0 ?
+> +			sd->queue_depth : sdev->host->can_queue;
+> +	} else {
+> +		sdev->hostdata = NULL;
+> +		queue_depth = sdev->host->can_queue;
+>  	}
+> +
+> +	if (shost_use_blk_mq(sdev->host))
+> +		scsi_change_queue_depth(sdev, queue_depth);
+
+But why do you have another call here only for the mq case?
+Also in general I'd really prefer if you'd only change the queue
+depth in ->slave_configure as most drivers do unless you have a good
+reason to do it differently.
+
+> +	else /* We depend on tags for cmd allocation. */
+> +		sdev->tagged_supported = 1;
+
+Since 3.19-rc1 you'll always get tags from the first command sent, as
+we now moved the block tagging configuration earlier.
+
+> +/* configure scsi device based on internal per-device structure */
+> +static int hpsa_slave_configure(struct scsi_device *sdev)
+> +{
+> +	struct hpsa_scsi_dev_t *sd;
+> +	unsigned long flags;
+> +	struct ctlr_info *h;
+> +
+> +	h = sdev_to_hba(sdev);
+> +	spin_lock_irqsave(&h->devlock, flags);
+> +	sd = sdev->hostdata;
+
+There should be no need to have this dereference inside the spinlock.
+
+Also can you explain somewhere why some devices might not have this
+hostdata set?
