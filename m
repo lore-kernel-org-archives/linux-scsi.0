@@ -1,22 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 40/43] hpsa: cleanup initialization code.
-Date: Mon, 23 Feb 2015 12:26:41 -0800
-Message-ID: <20150223202641.GG11037@infradead.org>
-References: <20150221221553.21954.32599.stgit@brunhilda>
- <20150221222105.21954.13148.stgit@brunhilda>
+From: Minh Duc Tran <MinhDuc.Tran@Emulex.Com>
+Subject: RE: [PATCH] fixed invalid assignment of 64bit mask to host
+ dma_boundary for scatter gather segment boundary limit.
+Date: Mon, 23 Feb 2015 23:42:54 +0000
+Message-ID: <59b2a5dd-3942-4588-9bf6-1730749d17d6@CMEXHTCAS2.ad.emulex.com>
+References: <e20a4b22-45bf-4c2e-9e5e-cdd2a238effd@CMEXHTCAS1.ad.emulex.com>
+ <1424025481.2114.22.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41568 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752197AbbBWU0m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Feb 2015 15:26:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20150221222105.21954.13148.stgit@brunhilda>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:14157 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751712AbbBWXnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Feb 2015 18:43:20 -0500
+In-Reply-To: <1424025481.2114.22.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Mike Christie (michaelc@cs.wisc.edu)" <michaelc@cs.wisc.edu>, Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>, Sony John-N <Sony.John-N@Emulex.Com>
 
-This is a backwards change.  Please keep the goto unwinding (maybe with
-some better label names) instead of introducing the if allocated free pattern.
+Pj4gSW4gcmVmZXJlbmNlIHRvIGJ1ZyANCj4+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9z
+aG93X2J1Zy5jZ2k/aWQ9MTA5NzE0MQ0KPj4gQXNzZXJ0IGlzIHNlZW4gd2l0aCBBTUQgY3B1IHdo
+ZW5ldmVyIGNhbGxpbmcgcGNpX2FsbG9jX2NvbnNpc3RlbnQuDQo+PiANCj4+IFsgICAyOS40MDYx
+ODNdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLSANCj4+IFsgICAyOS40MTA1
+MDVdIGtlcm5lbCBCVUcgYXQgbGliL2lvbW11LWhlbHBlci5jOjEzIQ0KPj4gDQo+PiBTaWduZWQt
+b2ZmLWJ5OiBNaW5oIFRyYW4gPG1pbmgudHJhbkBlbXVsZXguY29tPg0KPj4gLS0tDQo+PiAgZHJp
+dmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uYyB8IDEgLQ0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAx
+IGRlbGV0aW9uKC0pDQo+PiANCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kv
+YmVfbWFpbi5jIA0KPj4gYi9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jIGluZGV4IGYz
+MTkzNDAuLjljYzA0N2IgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVf
+bWFpbi5jDQo+PiArKysgYi9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jDQo+PiBAQCAt
+NTg2LDcgKzU4Niw2IEBAIHN0YXRpYyBzdHJ1Y3QgYmVpc2NzaV9oYmEgKmJlaXNjc2lfaGJhX2Fs
+bG9jKHN0cnVjdCBwY2lfZGV2ICpwY2lkZXYpDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAi
+YmVpc2NzaV9oYmFfYWxsb2MgLSBpc2NzaV9ob3N0X2FsbG9jIGZhaWxlZFxuIik7DQo+PiAgICAg
+ICAgICAgICAgICAgcmV0dXJuIE5VTEw7DQo+PiAgICAgICAgIH0NCj4+IC0gICAgICAgc2hvc3Qt
+PmRtYV9ib3VuZGFyeSA9IHBjaWRldi0+ZG1hX21hc2s7DQo+PiAgICAgICAgIHNob3N0LT5tYXhf
+aWQgPSBCRTJfTUFYX1NFU1NJT05TOw0KPj4gICAgICAgICBzaG9zdC0+bWF4X2NoYW5uZWwgPSAw
+Ow0KPj4gICAgICAgICBzaG9zdC0+bWF4X2NtZF9sZW4gPSBCRUlTQ1NJX01BWF9DTURfTEVOOw0K
+DQo+UGxlYXNlIGZpeCB5b3VyIGVtYWlsIHRvb2w6IHRoaXMgcGF0Y2ggaGFzIGFsbCB0aGUgdGFi
+cyBjb252ZXJ0ZWQgdG8gc3BhY2VzLg0KDQo+UGx1cywgdGhpcyBidWcgd2FzIGludHJvZHVjZWQg
+aW4gMjAwOSBieSANCg0KPmNvbW1pdCA2NzMzYjM5YTEzMDFiMGIwMjBiYmNiZjMyOTU4NTJlOTNl
+NjI0Y2IxDQo+QXV0aG9yOiBKYXlhbW9oYW4gS2FsbGlja2FsIDxqYXlhbW9oYW5rQHNlcnZlcmVu
+Z2luZXMuY29tPg0KPkRhdGU6ICAgU2F0IFNlcCA1IDA3OjM2OjM1IDIwMDkgKzA1MzANCg0KPlNv
+IGl0IG5lZWRzIGEgY2MgdG8gc3RhYmxlLiAgSWYgeW91IGFkZGVkIGFsbCB0aGUgaW5mb3JtYXRp
+b24gbGlrZSB0aGlzIGluIHRoZSBmaXJzdCBwbGFjZSBhbmQgdXNlIHByb3BlciBlbWFpbCB0b29s
+cywgSSB3b3VsZG4ndCBoYXZlIHRvIGRpZyBmb3IgaXQgd2hlbiByZXZpZXdpbmcgdGhlIHBhdGNo
+IGFuZCBmaXggdXAgdGhlIHdoaXRlc3BhY2UgZGFtYWdlLg0KDQo+SmFtZXMNCg0KVGhhbmsgeW91
+IGZvciBwb2ludGluZyBvdXQgdGhpcyBwcm9ibGVtLiAgSSd2ZSBiZWVuIHVzaW5nIHRoaXMgZW1h
+aWwgdG9vbCAiT3V0bG9vayIgZm9yIGEgd2hpbGUgd2l0aG91dCBrbm93aW5nIGl0LiAgSSB3aWxs
+IHVzZSAiZ2l0IHNlbmQtZW1haWwiIGZyb20gbm93IG9uLg0KDQotTWluaCANCg0K
