@@ -1,62 +1,64 @@
 From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [scsi 2/2] scsi_debug: fix REPORT LUNS Well Known LU
-Date: Mon, 23 Feb 2015 13:28:48 -0500
-Message-ID: <54EB7160.50600@interlog.com>
-References: <1424690001-2482-1-git-send-email-tomas.winkler@intel.com> <1424690001-2482-2-git-send-email-tomas.winkler@intel.com>
+Subject: Re: [PATCH] sg: fix overflow in timeout calculation
+Date: Mon, 23 Feb 2015 15:05:00 -0500
+Message-ID: <54EB87EC.3030604@interlog.com>
+References: <alpine.LRH.2.02.1502091343310.23787@file01.intranet.prod.int.rdu2.redhat.com>
 Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51919 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:52825 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751925AbbBWS3E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 13:29:04 -0500
-In-Reply-To: <1424690001-2482-2-git-send-email-tomas.winkler@intel.com>
+	id S1751959AbbBWUFR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2015 15:05:17 -0500
+In-Reply-To: <alpine.LRH.2.02.1502091343310.23787@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>, "James E.J. Bottomley\"" <JBottomley@parallels.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-On 15-02-23 06:13 AM, Tomas Winkler wrote:
-> The use case to report 'REPORT LUNS WLUN' described
-> in scsi_debug documentation didn't work because:
-> scsi_scan_host_selected() checks for:
-> 	 lun < shost->max_lun
+On 15-02-09 01:45 PM, Mikulas Patocka wrote:
+> USER_HZ may be greater than HZ and in that case arithmetics tries to
+> calculate the maximum accepted timeout overflows. We need to use INT_MAX
+> in this case.
 >
-> To fix this we set:
-> 	max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
->
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Cc: stable@vger.kernel.org
 
 Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
 > ---
->   drivers/scsi/scsi_debug.c | 5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
+>   drivers/scsi/sg.c |   10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index f032aac75997..2c49ddd8d18b 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -700,7 +700,7 @@ static void sdebug_max_tgts_luns(void)
->   		else
->   			hpnt->max_id = scsi_debug_num_tgts;
->   		/* scsi_debug_max_luns; */
-> -		hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS;
-> +		hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
->   	}
->   	spin_unlock(&sdebug_host_list_lock);
->   }
-> @@ -5344,7 +5344,8 @@ static int sdebug_driver_probe(struct device * dev)
->   		hpnt->max_id = scsi_debug_num_tgts + 1;
->   	else
->   		hpnt->max_id = scsi_debug_num_tgts;
-> -	hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS;	/* = scsi_debug_max_luns; */
-> +	/* = scsi_debug_max_luns; */
-> +	hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
+> Index: linux-3.17-rc6/drivers/scsi/sg.c
+> ===================================================================
+> --- linux-3.17-rc6.orig/drivers/scsi/sg.c	2014-09-26 20:10:22.000000000 +0200
+> +++ linux-3.17-rc6/drivers/scsi/sg.c	2014-09-26 20:10:50.000000000 +0200
+> @@ -90,6 +90,12 @@ static void sg_proc_cleanup(void);
+>    */
+>   #define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
 >
->   	host_prot = 0;
+> +#if USER_HZ < HZ
+> +#define MAX_USER_TIMEOUT MULDIV (INT_MAX, USER_HZ, HZ)
+> +#else
+> +#define MAX_USER_TIMEOUT INT_MAX
+> +#endif
+> +
+>   #define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
 >
+>   int sg_big_buff = SG_DEF_RESERVED_SIZE;
+> @@ -892,8 +898,8 @@ sg_ioctl(struct file *filp, unsigned int
+>   			return result;
+>   		if (val < 0)
+>   			return -EIO;
+> -		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
+> -		    val = MULDIV (INT_MAX, USER_HZ, HZ);
+> +		if (val >= MAX_USER_TIMEOUT)
+> +		    val = MAX_USER_TIMEOUT;
+>   		sfp->timeout_user = val;
+>   		sfp->timeout = MULDIV (val, HZ, USER_HZ);
 >
+> --
 
