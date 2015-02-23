@@ -1,55 +1,54 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [scsi 2/2] scsi_debug: fix REPORT LUNS Well Known LU
-Date: Mon, 23 Feb 2015 13:13:21 +0200
-Message-ID: <1424690001-2482-2-git-send-email-tomas.winkler@intel.com>
-References: <1424690001-2482-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43223 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642AbbBWLOZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 06:14:25 -0500
-In-Reply-To: <1424690001-2482-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v3 3/4] scsi: ufs: add trace events and dump prints for
+ debug
+Date: Mon, 23 Feb 2015 06:51:02 -0500
+Message-ID: <20150223065102.53c531a1@gandalf.local.home>
+References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
+	<1424678898-3723-4-git-send-email-gbroner@codeaurora.org>
+	<df4c1939ba0424539166b490f1d4a1f6.squirrel@www.codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <df4c1939ba0424539166b490f1d4a1f6.squirrel@www.codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dov Levenglick <dovl@codeaurora.org>
+Cc: Gilad Broner <gbroner@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley\"" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 
-The use case to report 'REPORT LUNS WLUN' described
-in scsi_debug documentation didn't work because:
-scsi_scan_host_selected() checks for:
-	 lun < shost->max_lun
+On Mon, 23 Feb 2015 09:15:15 -0000
+"Dov Levenglick" <dovl@codeaurora.org> wrote:
 
-To fix this we set:
-	max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
+[ Cut's a 1000 lines of unneeded patch ]
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/scsi/scsi_debug.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> > +#endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ)
+> > */
+> > +
+> > +/* This part must be outside protection */
+> > +#include <trace/define_trace.h>
+> > --
+> > Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+> > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> > a Linux Foundation Collaborative Project
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> Reviewed-by: Dov Levenglick <dovl@codeaurora.org>
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index f032aac75997..2c49ddd8d18b 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -700,7 +700,7 @@ static void sdebug_max_tgts_luns(void)
- 		else
- 			hpnt->max_id = scsi_debug_num_tgts;
- 		/* scsi_debug_max_luns; */
--		hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS;
-+		hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
- 	}
- 	spin_unlock(&sdebug_host_list_lock);
- }
-@@ -5344,7 +5344,8 @@ static int sdebug_driver_probe(struct device * dev)
- 		hpnt->max_id = scsi_debug_num_tgts + 1;
- 	else
- 		hpnt->max_id = scsi_debug_num_tgts;
--	hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS;	/* = scsi_debug_max_luns; */
-+	/* = scsi_debug_max_luns; */
-+	hpnt->max_lun = SCSI_W_LUN_REPORT_LUNS + 1;
- 
- 	host_prot = 0;
- 
--- 
-1.9.3
+Please, when you add a tag, do it just under the change log, not the
+bottom of the patch. And cut out most of the text that people can read
+your email on a single page.
 
+It is extremely annoying to scroll down a 1000 lines to find no
+comments and just someone giving their "Reviewed-by" tag.
+
+-- Steve
+
+> 
+> QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc.
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
