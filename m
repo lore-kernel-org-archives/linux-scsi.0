@@ -1,45 +1,69 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] uas: Add US_FL_NO_REPORT_OPCODES for JMicron JMS539
-Date: Mon, 23 Feb 2015 13:41:14 +0100
-Message-ID: <1424695274-14007-1-git-send-email-hdegoede@redhat.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [SCSI] ipr: Increase max concurrent oustanding commands
+Date: Mon, 23 Feb 2015 08:29:52 -0600
+Message-ID: <54EB3960.7010100@linux.vnet.ibm.com>
+References: <20150223123230.GA7141@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51880 "EHLO mx1.redhat.com"
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:42871 "EHLO e7.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbbBWMlV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 07:41:21 -0500
+	id S1752583AbbBWOaA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2015 09:30:00 -0500
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 23 Feb 2015 09:29:59 -0500
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 3172CC90058
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2015 09:21:06 -0500 (EST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1NETtgn22151378
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2015 14:29:55 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1NETsYk023655
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2015 09:29:55 -0500
+In-Reply-To: <20150223123230.GA7141@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Tom Arild Naess <tanaess@gmail.com>, Hans de Goede <hdegoede@redhat.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-Like the JMicron JMS567 enclosures with the JMS539 choke on report-opcodes,
-so avoid it.
+On 02/23/2015 06:32 AM, Dan Carpenter wrote:
+> Hello Brian King,
+> 
+> This is a semi-automatic email about new static checker warnings.
+> 
+> The patch 89aad4283173: "[SCSI] ipr: Increase max concurrent
+> oustanding commands" from Mar 14, 2012, leads to the following Smatch
+> complaint:
+> 
+> drivers/scsi/ipr.c:9038 ipr_alloc_cmd_blks()
+> 	 error: we previously assumed 'ioa_cfg->ipr_cmnd_list' could be null (see line 9037)
+> 
+> drivers/scsi/ipr.c
+>   9036	
+>   9037		if (!ioa_cfg->ipr_cmnd_list || !ioa_cfg->ipr_cmnd_list_dma) {
+>                      ^^^^^^^^^^^^^^^^^^^^^^
+> This can be NULL.
+> 
+>   9038			ipr_free_cmd_blks(ioa_cfg);
+>                                           ^^^^^^^
+> But we dereference it unconditionally inside the ipr_free_cmd_blks()
+> function when we check: "if (ioa_cfg->ipr_cmnd_list[i])".  These kinds
+> of magic free everything functions are almost always buggy but Smatch
+> missed this bug initialy and I had to update it.  I'll push the Smatch
+> change later this week.  It requires the cross function database to
+> trigger this warning.
 
-Tested-and-reported-by: Tom Arild Naess <tanaess@gmail.com>
-Cc: stable@vger.kernel.org # 3.16
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/unusual_uas.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+Thanks Dan. I'll queue up a fix for this one.
 
-diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
-index dbc00e5..8257042 100644
---- a/drivers/usb/storage/unusual_uas.h
-+++ b/drivers/usb/storage/unusual_uas.h
-@@ -113,6 +113,13 @@ UNUSUAL_DEV(0x0bc2, 0xab2a, 0x0000, 0x9999,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_ATA_1X),
- 
-+/* Reported-by: Tom Arild Naess <tanaess@gmail.com> */
-+UNUSUAL_DEV(0x152d, 0x0539, 0x0000, 0x9999,
-+		"JMicron",
-+		"JMS539",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_NO_REPORT_OPCODES),
-+
- /* Reported-by: Claudio Bizzarri <claudio.bizzarri@gmail.com> */
- UNUSUAL_DEV(0x152d, 0x0567, 0x0000, 0x9999,
- 		"JMicron",
+-Brian
+
 -- 
-2.3.0
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
 
