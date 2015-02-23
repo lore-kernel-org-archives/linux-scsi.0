@@ -1,117 +1,50 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH v3 3/4] scsi: ufs: add trace events and dump prints for
- debug
-Date: Mon, 23 Feb 2015 12:12:42 -0500
-Message-ID: <20150223121242.08d4c008@gandalf.local.home>
-References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
-	<1424678898-3723-4-git-send-email-gbroner@codeaurora.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: check for bigger value first
+Date: Mon, 23 Feb 2015 13:02:03 -0500
+Message-ID: <54EB6B1B.2050604@interlog.com>
+References: <1420578198-24241-1-git-send-email-andy.shevchenko@gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1424678898-3723-4-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:51731 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751845AbbBWSCV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2015 13:02:21 -0500
+In-Reply-To: <1420578198-24241-1-git-send-email-andy.shevchenko@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>, "Ewan D . Milne" <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Mon, 23 Feb 2015 10:08:16 +0200
-Gilad Broner <gbroner@codeaurora.org> wrote:
+On 15-01-06 04:03 PM, Andy Shevchenko wrote:
+> Even for signed types we have to check for bigger positive value first.
+> Otherwise it will be never happened.
+>
+> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-> @@ -5551,14 +5956,23 @@ EXPORT_SYMBOL(ufshcd_system_suspend);
->  
->  int ufshcd_system_resume(struct ufs_hba *hba)
->  {
-> +	int ret = 0;
-> +	ktime_t start = ktime_get();
-> +
->  	if (!hba || !hba->is_powered || pm_runtime_suspended(hba->dev))
->  		/*
->  		 * Let the runtime resume take care of resuming
->  		 * if runtime suspended.
->  		 */
-> -		return 0;
-> -
-> -	return ufshcd_resume(hba, UFS_SYSTEM_PM);
-> +		goto out;
-> +	else
-> +		ret = ufshcd_resume(hba, UFS_SYSTEM_PM);
-> +out:
+> ---
+>   drivers/scsi/scsi_debug.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 8bcf6ad..a34df1d 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -4850,10 +4850,10 @@ static int __init scsi_debug_init(void)
+>   	/* play around with geometry, don't waste too much on track 0 */
+>   	sdebug_heads = 8;
+>   	sdebug_sectors_per = 32;
+> -	if (scsi_debug_dev_size_mb >= 16)
+> -		sdebug_heads = 32;
+> -	else if (scsi_debug_dev_size_mb >= 256)
+> +	if (scsi_debug_dev_size_mb >= 256)
+>   		sdebug_heads = 64;
+> +	else if (scsi_debug_dev_size_mb >= 16)
+> +		sdebug_heads = 32;
+>   	sdebug_cylinders_per = (unsigned long)sdebug_capacity /
+>   			       (sdebug_sectors_per * sdebug_heads);
+>   	if (sdebug_cylinders_per >= 1024) {
+>
 
-If I understand the patch above, you basically have:
-
-	if (....)
-		goto out;
-	else
-		ret = ufshcd_resume();
-out:
-
-Wouldn't it be better to just reverse the above if condition?
-
-	if (!...)
-		ret = ufshcd_resume();
-
-That would be much less confusing.
-
-
-> +	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
-> +		ktime_to_us(ktime_sub(ktime_get(), start)),
-> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
-> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
-> +	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_system_resume);
->  
-> @@ -5572,10 +5986,19 @@ EXPORT_SYMBOL(ufshcd_system_resume);
->   */
->  int ufshcd_runtime_suspend(struct ufs_hba *hba)
->  {
-> -	if (!hba || !hba->is_powered)
-> -		return 0;
-> +	int ret = 0;
-> +	ktime_t start = ktime_get();
->  
-> -	return ufshcd_suspend(hba, UFS_RUNTIME_PM);
-> +	if (!hba || !hba->is_powered)
-> +		goto out;
-> +	else
-> +		ret = ufshcd_suspend(hba, UFS_RUNTIME_PM);
-> +out:
-
-Here too.
-
-> +	trace_ufshcd_runtime_suspend(dev_name(hba->dev), ret,
-> +		ktime_to_us(ktime_sub(ktime_get(), start)),
-> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
-> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
-> +	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_runtime_suspend);
->  
-> @@ -5602,10 +6025,19 @@ EXPORT_SYMBOL(ufshcd_runtime_suspend);
->   */
->  int ufshcd_runtime_resume(struct ufs_hba *hba)
->  {
-> +	int ret = 0;
-> +	ktime_t start = ktime_get();
-> +
->  	if (!hba || !hba->is_powered)
-> -		return 0;
-> +		goto out;
->  	else
-> -		return ufshcd_resume(hba, UFS_RUNTIME_PM);
-> +		ret = ufshcd_resume(hba, UFS_RUNTIME_PM);
-> +out:
-
-And here.
-
--- Steve
-
-> +	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
-> +		ktime_to_us(ktime_sub(ktime_get(), start)),
-> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
-> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
-> +	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_runtime_resume);
-> 
