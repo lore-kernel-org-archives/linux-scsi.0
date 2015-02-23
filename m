@@ -1,58 +1,117 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [scsi 1/2 V2] scsi_debug: schedule_resp fix input variable check
-Date: Mon, 23 Feb 2015 17:18:48 +0200
-Message-ID: <1424704728-16445-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35557 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752351AbbBWPUZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 10:20:25 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v3 3/4] scsi: ufs: add trace events and dump prints for
+ debug
+Date: Mon, 23 Feb 2015 12:12:42 -0500
+Message-ID: <20150223121242.08d4c008@gandalf.local.home>
+References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
+	<1424678898-3723-4-git-send-email-gbroner@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1424678898-3723-4-git-send-email-gbroner@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gilad Broner <gbroner@codeaurora.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley\"" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-The function should never be called with cmnd NULL so
-put a fat WARN there.
-Fix also smatch wraning:
-schedule_resp() warn: variable dereferenced before check 'cmnd'
+On Mon, 23 Feb 2015 10:08:16 +0200
+Gilad Broner <gbroner@codeaurora.org> wrote:
 
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
-V2: 1. Actually drop struct scsi_device *sdp = cmnd->device;
-    2. fix typo in comment
- drivers/scsi/scsi_debug.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+> @@ -5551,14 +5956,23 @@ EXPORT_SYMBOL(ufshcd_system_suspend);
+>  
+>  int ufshcd_system_resume(struct ufs_hba *hba)
+>  {
+> +	int ret = 0;
+> +	ktime_t start = ktime_get();
+> +
+>  	if (!hba || !hba->is_powered || pm_runtime_suspended(hba->dev))
+>  		/*
+>  		 * Let the runtime resume take care of resuming
+>  		 * if runtime suspended.
+>  		 */
+> -		return 0;
+> -
+> -	return ufshcd_resume(hba, UFS_SYSTEM_PM);
+> +		goto out;
+> +	else
+> +		ret = ufshcd_resume(hba, UFS_SYSTEM_PM);
+> +out:
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index ccbe1282e975..6dda38ca83ee 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3945,13 +3945,20 @@ schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	unsigned long iflags;
- 	int k, num_in_q, qdepth, inject;
- 	struct sdebug_queued_cmd *sqcp = NULL;
--	struct scsi_device *sdp = cmnd->device;
-+	struct scsi_device *sdp;
-+
-+	/* this should never happen */
-+	if (WARN_ON(!cmnd))
-+		return SCSI_MLQUEUE_HOST_BUSY;
- 
--	if (NULL == cmnd || NULL == devip) {
--		pr_warn("called with NULL cmnd or devip pointer\n");
-+	if (NULL == devip) {
-+		pr_warn("called devip == NULL\n");
- 		/* no particularly good error to report back */
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
-+
-+	sdp = cmnd->device;
-+
- 	if ((scsi_result) && (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
- 		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
- 			    __func__, scsi_result);
--- 
-1.9.3
+If I understand the patch above, you basically have:
 
+	if (....)
+		goto out;
+	else
+		ret = ufshcd_resume();
+out:
+
+Wouldn't it be better to just reverse the above if condition?
+
+	if (!...)
+		ret = ufshcd_resume();
+
+That would be much less confusing.
+
+
+> +	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+> +		ktime_to_us(ktime_sub(ktime_get(), start)),
+> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
+> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_system_resume);
+>  
+> @@ -5572,10 +5986,19 @@ EXPORT_SYMBOL(ufshcd_system_resume);
+>   */
+>  int ufshcd_runtime_suspend(struct ufs_hba *hba)
+>  {
+> -	if (!hba || !hba->is_powered)
+> -		return 0;
+> +	int ret = 0;
+> +	ktime_t start = ktime_get();
+>  
+> -	return ufshcd_suspend(hba, UFS_RUNTIME_PM);
+> +	if (!hba || !hba->is_powered)
+> +		goto out;
+> +	else
+> +		ret = ufshcd_suspend(hba, UFS_RUNTIME_PM);
+> +out:
+
+Here too.
+
+> +	trace_ufshcd_runtime_suspend(dev_name(hba->dev), ret,
+> +		ktime_to_us(ktime_sub(ktime_get(), start)),
+> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
+> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_runtime_suspend);
+>  
+> @@ -5602,10 +6025,19 @@ EXPORT_SYMBOL(ufshcd_runtime_suspend);
+>   */
+>  int ufshcd_runtime_resume(struct ufs_hba *hba)
+>  {
+> +	int ret = 0;
+> +	ktime_t start = ktime_get();
+> +
+>  	if (!hba || !hba->is_powered)
+> -		return 0;
+> +		goto out;
+>  	else
+> -		return ufshcd_resume(hba, UFS_RUNTIME_PM);
+> +		ret = ufshcd_resume(hba, UFS_RUNTIME_PM);
+> +out:
+
+And here.
+
+-- Steve
+
+> +	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
+> +		ktime_to_us(ktime_sub(ktime_get(), start)),
+> +		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode),
+> +		ufschd_uic_link_state_to_string(hba->uic_link_state));
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_runtime_resume);
+> 
