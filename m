@@ -1,34 +1,70 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 0/10] qla2xxx: Fix various warnings reported by static
- source code analysis tools
-Date: Mon, 23 Feb 2015 09:49:36 +0100
-Message-ID: <54EAE9A0.3090205@sandisk.com>
-References: <54C75AF8.90102@sandisk.com>
- <F5D084D6342F9B479C34599BB0A03E4D012858B38C@AVMB1.qlogic.org>
+From: "Dov Levenglick" <dovl@codeaurora.org>
+Subject: Re: [PATCH v3 0/4] Add ioctl and debug utilities to UFS driver
+Date: Mon, 23 Feb 2015 09:10:31 -0000
+Message-ID: <f6cac2ecf8933042ac82cbff3fb0e143.squirrel@www.codeaurora.org>
+References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1bon0089.outbound.protection.outlook.com ([157.56.111.89]:40416
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751250AbbBWItq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2015 03:49:46 -0500
-In-Reply-To: <F5D084D6342F9B479C34599BB0A03E4D012858B38C@AVMB1.qlogic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Saurav Kashyap <saurav.kashyap@qlogic.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 02/02/15 05:52, Saurav Kashyap wrote:
-> Thanks for the patches. We will run regression with these changes and ack
-> if everything goes through fine.
+> Changes from V2:
+> Fixed comment for debugfs change:
+> Added missing clean up to driver unload path and remove redundant macros.
+>
+> Dolev Raviv (1):
+>   scsi: ufs: add ioctl interface for query request
+>
+> Gilad Broner (1):
+>   scsi: ufs: add trace events and dump prints for debug
+>
+> Lee Susman (1):
+>   scsi: ufs: add debugfs for ufs
+>
+> Sujit Reddy Thumma (1):
+>   scsi: ufs: inject errors to verify error handling
+>
+>  drivers/scsi/ufs/Makefile      |    1 +
+>  drivers/scsi/ufs/ufs-debugfs.c | 1042
+> ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-debugfs.h |   42 ++
+>  drivers/scsi/ufs/ufs-qcom.c    |   53 ++
+>  drivers/scsi/ufs/ufs.h         |   53 +-
+>  drivers/scsi/ufs/ufshcd.c      |  959
+> ++++++++++++++++++++++++++++++++++--
+>  drivers/scsi/ufs/ufshcd.h      |  115 +++++
+>  drivers/scsi/ufs/ufshci.h      |    3 +
+>  include/trace/events/ufs.h     |  227 +++++++++
+>  include/uapi/scsi/Kbuild       |    1 +
+>  include/uapi/scsi/ufs/Kbuild   |    3 +
+>  include/uapi/scsi/ufs/ioctl.h  |   57 +++
+>  include/uapi/scsi/ufs/ufs.h    |   66 +++
+>  lib/Kconfig.debug              |   14 +
+>  14 files changed, 2552 insertions(+), 84 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
+>  create mode 100644 include/trace/events/ufs.h
+>  create mode 100644 include/uapi/scsi/ufs/Kbuild
+>  create mode 100644 include/uapi/scsi/ufs/ioctl.h
+>  create mode 100644 include/uapi/scsi/ufs/ufs.h
+>
+> --
+> Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Hello Saurav,
+Reviewed-by: Dov Levenglick <dovl@codeaurora.org>
 
-That sounds great. Are there perhaps already any results available from
-the regression tests ?
-
-Thanks,
-
-Bart.
+QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
