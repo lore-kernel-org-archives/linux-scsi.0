@@ -1,109 +1,34 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v3 2/4] scsi: ufs: add debugfs for ufs
-Date: Wed, 25 Feb 2015 00:10:12 +0900
-Message-ID: <CAC5umygAXRyJmLPEFSTKKneicPZD4m=_RbkDfwQKoX3fvCP1Dw@mail.gmail.com>
-References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
-	<1424678898-3723-3-git-send-email-gbroner@codeaurora.org>
+From: brace <brace@pmcs.com>
+Subject: RE: [PATCH 38/43] hpsa: clean up new block layer tag error handling
+Date: Tue, 24 Feb 2015 17:39:16 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB38D5D0D3@BBYEXM01.pmc-sierra.internal>
+References: <20150221221553.21954.32599.stgit@brunhilda>
+ <20150221222055.21954.2960.stgit@brunhilda>
+ <20150223202550.GF11037@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1424678898-3723-3-git-send-email-gbroner@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:41414 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752950AbbBXRjZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2015 12:39:25 -0500
+In-Reply-To: <20150223202550.GF11037@infradead.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Scott Teel <Scott.Teel@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, Justin Lindley <Justin.Lindley@pmcs.com>, brace <brace@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-2015-02-23 17:08 GMT+09:00 Gilad Broner <gbroner@codeaurora.org>:
-> From: Lee Susman <lsusman@codeaurora.org>
->
-> Adding debugfs capability for ufshcd.
->
-> debugfs attributes introduced in this patch:
->  - View driver/controller runtime data
->  - Command tag statistics for performance analisis
->  - Dump device descriptor info
->  - Track recoverable errors statistics during runtime
->  - Change UFS power mode during runtime
->      entry a string in the format 'GGLLMM' where:
->          G - selected gear
->          L - number of lanes
->          M - power mode
->              (1=fast mode, 2=slow mode, 4=fast-auto mode,
->               5=slow-auto mode)
->      First letter is for RX, second is for TX.
->  - Get/set DME attributes
+Done.
 
-I have a few nitpick comments on this patch.
-
-> +#ifdef CONFIG_DEBUG_FS
-> +
-> +#define UFSHCD_UPDATE_ERROR_STATS(hba, type)   \
-> +       do {                                    \
-> +               if (type < UFS_ERR_MAX) \
-> +                       hba->ufs_stats.err_stats[type]++;       \
-> +       } while (0)
-> +
-> +#define UFSHCD_UPDATE_TAG_STATS(hba, tag)                      \
-> +       do {                                                    \
-> +               struct request *rq = hba->lrb[task_tag].cmd ?   \
-> +                       hba->lrb[task_tag].cmd->request : NULL; \
-> +               u64 **tag_stats = hba->ufs_stats.tag_stats;     \
-> +               int rq_type = -1;                               \
-> +               if (!hba->ufs_stats.enabled)                    \
-> +                       break;                                  \
-> +               tag_stats[tag][TS_TAG]++;                       \
-> +               if (!rq)                                        \
-> +                       break;                                  \
-> +               WARN_ON(hba->ufs_stats.q_depth > hba->nutrs);   \
-> +               if (rq_data_dir(rq) == READ)                    \
-> +                       rq_type = TS_READ;                      \
-> +               else if (rq_data_dir(rq) == WRITE)              \
-> +                       rq_type = TS_WRITE;                     \
-> +               else if (rq->cmd_flags & REQ_FLUSH)             \
-> +                       rq_type = TS_FLUSH;                     \
-> +               else                                            \
-> +                       break;                                  \
-> +               tag_stats[hba->ufs_stats.q_depth++][rq_type]++; \
-> +       } while (0)
-> +
-> +#define UFSHCD_UPDATE_TAG_STATS_COMPLETION(hba, cmd)           \
-> +       do {                                                    \
-> +               struct request *rq = cmd ? cmd->request : NULL; \
-> +               if (cmd->request &&                             \
-> +                               ((rq_data_dir(rq) == READ) ||   \
-> +                               (rq_data_dir(rq) == WRITE) ||   \
-> +                               (rq->cmd_flags & REQ_FLUSH)))   \
-> +                       hba->ufs_stats.q_depth--;               \
-> +       } while (0)
-> +
-> +#else
-> +#define UFSHCD_UPDATE_TAG_STATS(hba, tag)
-> +#define UFSHCD_UPDATE_TAG_STATS_COMPLETION(hba, cmd)
-> +#define UFSHCD_UPDATE_ERROR_STATS(hba, type)
-> +
-> +#endif
-
-Is there any reason that these are defined as macros instead of
-static functions?
-
-> @@ -5760,6 +5958,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->
->         async_schedule(ufshcd_async_scan, hba);
->
-> +       ufsdbg_add_debugfs(hba);
-> +
->         return 0;
->
->  out_remove_scsi_host:
-> @@ -5769,6 +5969,7 @@ exit_gating:
->  out_disable:
->         hba->is_irq_enabled = false;
->         scsi_host_put(host);
-> +       ufsdbg_remove_debugfs(hba);
->         ufshcd_hba_exit(hba);
->  out_error:
->         return err;
-
-This ufsdbg_remove_debugfs() call on error path of ufshcd_init() is
-unnecessary.  Because ufsdbg_add_debugfs() is called at the last of
-ufshcd_init() and can't fail.
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Monday, February 23, 2015 2:26 PM
+> To: Don Brace
+> Cc: Scott Teel; Kevin Barnett; james.bottomley@parallels.com;
+> hch@infradead.org; Justin Lindley; brace; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 38/43] hpsa: clean up new block layer tag error handling
+> 
+> This needs to be folded into the previous patch.
