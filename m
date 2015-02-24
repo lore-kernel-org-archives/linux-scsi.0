@@ -1,142 +1,109 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH 0/10] qla2xxx: Fix various warnings reported by static
- source code analysis tools
-Date: Tue, 24 Feb 2015 08:39:20 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D0194150207@AVMB1.qlogic.org>
-References: <54C75AF8.90102@sandisk.com>
- <F5D084D6342F9B479C34599BB0A03E4D012858B38C@AVMB1.qlogic.org>
- <54EAE9A0.3090205@sandisk.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v3 2/4] scsi: ufs: add debugfs for ufs
+Date: Wed, 25 Feb 2015 00:10:12 +0900
+Message-ID: <CAC5umygAXRyJmLPEFSTKKneicPZD4m=_RbkDfwQKoX3fvCP1Dw@mail.gmail.com>
+References: <1424678898-3723-1-git-send-email-gbroner@codeaurora.org>
+	<1424678898-3723-3-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D0194150207AVMB1qlogicor_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:31459 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973AbbBXIjW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2015 03:39:22 -0500
-Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
-	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t1O8cKV0022456
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2015 00:39:22 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0b-0016ce01.pphosted.com with ESMTP id 1sm9288u4t-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2015 00:39:22 -0800
-In-Reply-To: <54EAE9A0.3090205@sandisk.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1424678898-3723-3-git-send-email-gbroner@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Gilad Broner <gbroner@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Quinn Tran <quinn.tran@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D0194150207AVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <002671C0A7C5954DB570AA4787773BBC@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-Hi Bart,
-
-Changes are going through our 12 week regression cycle and we will update
-the status.
-
-Thanks,
-~Saurav
-
-
->On 02/02/15 05:52, Saurav Kashyap wrote:
->> Thanks for the patches. We will run regression with these changes and
->>ack
->> if everything goes through fine.
+2015-02-23 17:08 GMT+09:00 Gilad Broner <gbroner@codeaurora.org>:
+> From: Lee Susman <lsusman@codeaurora.org>
 >
->Hello Saurav,
+> Adding debugfs capability for ufshcd.
 >
->That sounds great. Are there perhaps already any results available from
->the regression tests ?
+> debugfs attributes introduced in this patch:
+>  - View driver/controller runtime data
+>  - Command tag statistics for performance analisis
+>  - Dump device descriptor info
+>  - Track recoverable errors statistics during runtime
+>  - Change UFS power mode during runtime
+>      entry a string in the format 'GGLLMM' where:
+>          G - selected gear
+>          L - number of lanes
+>          M - power mode
+>              (1=fast mode, 2=slow mode, 4=fast-auto mode,
+>               5=slow-auto mode)
+>      First letter is for RX, second is for TX.
+>  - Get/set DME attributes
+
+I have a few nitpick comments on this patch.
+
+> +#ifdef CONFIG_DEBUG_FS
+> +
+> +#define UFSHCD_UPDATE_ERROR_STATS(hba, type)   \
+> +       do {                                    \
+> +               if (type < UFS_ERR_MAX) \
+> +                       hba->ufs_stats.err_stats[type]++;       \
+> +       } while (0)
+> +
+> +#define UFSHCD_UPDATE_TAG_STATS(hba, tag)                      \
+> +       do {                                                    \
+> +               struct request *rq = hba->lrb[task_tag].cmd ?   \
+> +                       hba->lrb[task_tag].cmd->request : NULL; \
+> +               u64 **tag_stats = hba->ufs_stats.tag_stats;     \
+> +               int rq_type = -1;                               \
+> +               if (!hba->ufs_stats.enabled)                    \
+> +                       break;                                  \
+> +               tag_stats[tag][TS_TAG]++;                       \
+> +               if (!rq)                                        \
+> +                       break;                                  \
+> +               WARN_ON(hba->ufs_stats.q_depth > hba->nutrs);   \
+> +               if (rq_data_dir(rq) == READ)                    \
+> +                       rq_type = TS_READ;                      \
+> +               else if (rq_data_dir(rq) == WRITE)              \
+> +                       rq_type = TS_WRITE;                     \
+> +               else if (rq->cmd_flags & REQ_FLUSH)             \
+> +                       rq_type = TS_FLUSH;                     \
+> +               else                                            \
+> +                       break;                                  \
+> +               tag_stats[hba->ufs_stats.q_depth++][rq_type]++; \
+> +       } while (0)
+> +
+> +#define UFSHCD_UPDATE_TAG_STATS_COMPLETION(hba, cmd)           \
+> +       do {                                                    \
+> +               struct request *rq = cmd ? cmd->request : NULL; \
+> +               if (cmd->request &&                             \
+> +                               ((rq_data_dir(rq) == READ) ||   \
+> +                               (rq_data_dir(rq) == WRITE) ||   \
+> +                               (rq->cmd_flags & REQ_FLUSH)))   \
+> +                       hba->ufs_stats.q_depth--;               \
+> +       } while (0)
+> +
+> +#else
+> +#define UFSHCD_UPDATE_TAG_STATS(hba, tag)
+> +#define UFSHCD_UPDATE_TAG_STATS_COMPLETION(hba, cmd)
+> +#define UFSHCD_UPDATE_ERROR_STATS(hba, type)
+> +
+> +#endif
+
+Is there any reason that these are defined as macros instead of
+static functions?
+
+> @@ -5760,6 +5958,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
 >
->Thanks,
+>         async_schedule(ufshcd_async_scan, hba);
 >
->Bart.
+> +       ufsdbg_add_debugfs(hba);
+> +
+>         return 0;
+>
+>  out_remove_scsi_host:
+> @@ -5769,6 +5969,7 @@ exit_gating:
+>  out_disable:
+>         hba->is_irq_enabled = false;
+>         scsi_host_put(host);
+> +       ufsdbg_remove_debugfs(hba);
+>         ufshcd_hba_exit(hba);
+>  out_error:
+>         return err;
 
-
---_000_F5D084D6342F9B479C34599BB0A03E4D0194150207AVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+Ik98AQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAERDRDRENkMy
-MEY1OTY5NDM4NTk0NzgzRjlENkVDNTAyADwHAQ2ABAACAAAAAgACAAEFgAMADgAAAN8HAgAYAAgA
-JwAUAAIARQEBIIADAA4AAADfBwIAGAAIACcAFAACAEUBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAF0AAABSZTogW1BBVENIIDAvMTBdIHFsYTJ4eHg6IEZpeCB2YXJpb3Vz
-IHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHN0YXRpYyBzb3VyY2UgY29kZSBhbmFseXNpcyB0b29scwCt
-IAEDkAYAhA8AADYAAAACAX8AAQAAAD4AAAA8RjVEMDg0RDYzNDJGOUI0NzlDMzQ1OTlCQjBBMDNF
-NEQwMTk0MTUwMjA3QEFWTUIxLnFsb2dpYy5vcmc+AAAACwAfDgEAAAACAQkQAQAAAEECAAA9AgAA
-cgMAAExaRnWMJlkVYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQw
-IO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5Q
-A2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ
-5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59CvwB8QvxGCBIaR+wH4Es
-XGztC4BlCoEiNEMZowQgCsCpGeBnbwuAZxzAaANgUHVnaCAIYSAOkCBydwngayAJcAnBBBBp8wIg
-G9B5Yx5wI3AdwCUBRyUAAxADIHVwZBiAZQ8iJSQgGeAfYXR1cy7dIixUGaEfUCIWfgYQCHBMYXYi
-LCIlPk8DoDAkMi8scTE1LGA1Og0OsCwGASqiIEthc3BoeWFwJQADYBAgOv0rxj4SQCmjHHAFsSgC
-CrBGdBHAB5AuIFcmxXL+dQOgJWkD8CQgMAISABvQbyMWHcAuxwDQay7IBpAg+mUaMXkkICPiI8AH
-kSQmlmYiQSimPivGSGUnAP5vLWUiFjeHKZEFQBkgMXD+ZAQgCcEYgDDABxAZ4CgBrSORcASQEdBw
-I2FsOrEcZHkmYTyQJZF1bHT9I2F2C3ALYAJgGeADUivG3ygCJWkQIB9gBCA/OO8pqx83hyHSKK0V
-QkQQAAAAHwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAA
-ADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAA
-HwBkAAEAAAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIA
-AACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4A
-awBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQBy
-AGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAA
-cwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
-AAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAe
-DAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACA
-UwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBh
-AHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEA
-dgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBh
-AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAA
-AAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEA
-cwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABv
-AGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAA
-QABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAAC
-AAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA
-/T/kBAAAAgELMAEAAAAQAAAA3NTWwg9ZaUOFlHg/nW7FAgMAFwABAAAAQAA5AACs1mENUNABQAAI
-MKHkKWINUNABCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAA
-AAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAt
-AFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAC6AAAAUgBlADoA
-IABbAFAAQQBUAEMASAAgADAALwAxADAAXQAgAHEAbABhADIAeAB4AHgAOgAgAEYAaQB4ACAAdgBh
-AHIAaQBvAHUAcwAgAHcAYQByAG4AaQBuAGcAcwAgAHIAZQBwAG8AcgB0AGUAZAAgAGIAeQAgAHMA
-dABhAHQAaQBjACAAcwBvAHUAcgBjAGUAIABjAG8AZABlACAAYQBuAGEAbAB5AHMAaQBzACAAdABv
-AG8AbABzAAAAAAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAPgAAADwA
-NQA0AEUAQQBFADkAQQAwAC4AMwAwADkAMAAyADAANQBAAHMAYQBuAGQAaQBzAGsALgBjAG8AbQA+
-AAAAAAACAXEAAQAAACUAAAABAdA6FBJn7Dn23YRWR4XtnUdYURUCnN22OoCAIOcHAIAB66GAAAAA
-HwBwAAEAAACyAAAAWwBQAEEAVABDAEgAIAAwAC8AMQAwAF0AIABxAGwAYQAyAHgAeAB4ADoAIABG
-AGkAeAAgAHYAYQByAGkAbwB1AHMAIAB3AGEAcgBuAGkAbgBnAHMAIAByAGUAcABvAHIAdABlAGQA
-IABiAHkAIABzAHQAYQB0AGkAYwAgAHMAbwB1AHIAYwBlACAAYwBvAGQAZQAgAGEAbgBhAGwAeQBz
-AGkAcwAgAHQAbwBvAGwAcwAAAAAAHwA1EAEAAAB8AAAAPABGADUARAAwADgANABEADYAMwA0ADIA
-RgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMAAxADkANAAxADUAMAAy
-ADAANwBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA9AAAADwA
-NQA0AEMANwA1AEEARgA4AC4AOQAwADEAMAAyAEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AIAA8
-AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBCAEIAMABBADAA
-MwBFADQARAAwADEAMgA4ADUAOABCADMAOABDAEAAQQBWAE0AQgAxAC4AcQBsAG8AZwBpAGMALgBv
-AHIAZwA+ACAAPAA1ADQARQBBAEUAOQBBADAALgAzADAAOQAwADIAMAA1AEAAcwBhAG4AZABpAHMA
-awAuAGMAbwBtAD4AAAADAN4/n04AAEAABzAhXyBiDVDQAQMAJgAAAAAAAgFHAAEAAAAtAAAAYz1V
-UzthPSA7cD1RTG9naWM7bD1BVk1CMS0xNTAyMjQwODM5MjBaLTY1NzYAAAAAHwAVEAEAAABYAAAA
-MAAwADIANgA3ADEAQwAwAEEANwBDADUAOQA1ADQARABCADUANwAwAEEAQQA0ADcAOAA3ADcANwAz
-AEIAQgBDAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAADAAAADcAAAD7sPKmSAAAAB8A
-+j8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMA
-bwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANAAuADcALgAxADQAMQAxADEANwAA
-AAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkA
-bgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAA4BAABJAEkAPQAwADEAMAAxAEQAMAA1
-ADAAMABEADYAMgA1AEQAQwA1ADMAOAA3ADMARAAwADgAMQA5AEQANAAwAEEANQA1ADMANQA4AEMA
-RgBCADcAMAAyADAARgAwAEEAOwBTAEIATQBJAEQAPQAzADsAUwAxAD0APAA1ADQARQBBAEUAOQBB
-ADAALgAzADAAOQAwADIAMAA1AEAAcwBhAG4AZABpAHMAawAuAGMAbwBtAD4AOwBWAGUAcgBzAGkA
-bwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIAdQBpAGwAZAAgADMAOAA3AC4AMAAp
-ACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
-IAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAA
-AAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBhAHQAaQBuAGcALQBpAHAAAAAAAAEA
-AAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAA
-AGQAaQBzAGMAbABhAGkAbQBlAHIAAAAAAAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAAP6x
-
---_000_F5D084D6342F9B479C34599BB0A03E4D0194150207AVMB1qlogicor_--
+This ufsdbg_remove_debugfs() call on error path of ufshcd_init() is
+unnecessary.  Because ufsdbg_add_debugfs() is called at the last of
+ufshcd_init() and can't fail.
