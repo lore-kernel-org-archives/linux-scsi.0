@@ -1,54 +1,44 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] scsi_debug: rework resp_report_luns
-Date: Wed, 25 Feb 2015 17:01:22 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A7D0002@G9W0745.americas.hpqcorp.net>
-References: <1424813825-1970-1-git-send-email-tomas.winkler@intel.com>
- <54ED0C56.7040900@interlog.com>
- <5B8DA87D05A7694D9FA63FD143655C1B34BB49C6@HASMSX106.ger.corp.intel.com>
+From: brace <brace@pmcs.com>
+Subject: RE: [PATCH 06/43] hpsa: hpsa decode sense data for io and tmf
+Date: Wed, 25 Feb 2015 18:06:25 +0000
+Message-ID: <07F70BBF6832E34FA1C923241E8833AB38D5D65C@BBYEXM01.pmc-sierra.internal>
+References: <20150221221553.21954.32599.stgit@brunhilda>
+ <20150221221803.21954.76453.stgit@brunhilda>
+ <20150223201802.GC11037@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:32933 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbbBYRCE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2015 12:02:04 -0500
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B34BB49C6@HASMSX106.ger.corp.intel.com>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:49628 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752552AbbBYSGh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2015 13:06:37 -0500
+In-Reply-To: <20150223201802.GC11037@infradead.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "James E.J. Bottomley\"" <JBottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Scott Teel <Scott.Teel@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, Justin Lindley <Justin.Lindley@pmcs.com>, brace <brace@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+This is intriguing. And you found a bug in our version of the decode_sense_data function, the ASC/ASCQ bytes are reversed for the descriptor formatted sense data.
 
+Cool.
+
+I'll try to work this in...
 
 > -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Winkler, Tomas
-> Sent: Wednesday, February 25, 2015 1:54 AM
-> To: dgilbert@interlog.com; James E.J. Bottomley"
-> Cc: linux-scsi@vger.kernel.org
-> Subject: RE: [PATCH] scsi_debug: rework resp_report_luns
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Monday, February 23, 2015 2:18 PM
+> To: Don Brace
+> Cc: Scott Teel; Kevin Barnett; james.bottomley@parallels.com;
+> hch@infradead.org; Justin Lindley; brace; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 06/43] hpsa: hpsa decode sense data for io and tmf
 > 
-> > On 15-02-24 04:37 PM, Tomas Winkler wrote:
-> > > 1. Fix the error check: the alloc length should be > 16
-> > > and not > 4
-> >
-> > You are proposing to make a marginally incorrect test
-> > completely incorrect!
+> On Sat, Feb 21, 2015 at 04:18:03PM -0600, Don Brace wrote:
+> > +/* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
+> > +static void decode_sense_data(const u8 *sense_data, int sense_data_len,
+> > +			int *sense_key, int *asc, int *ascq)
+> > +{
 > 
-> Quoting from the spec:
-> The ALLOCATION LENGTH field is defined in 2.2.6. The allocation length
-> should be at least 16.
-> Note. Device servers compliant with SPC return CHECK CONDITION status,
-> with the sense key set to ILLEGAL REQUEST, and the additional sense code
-> set to INVALID FIELD IN CDB when the allocation length is less than 16 bytes.
-> This is how it is implemented also in other drivers in the scsi drivers.
-
-That was just a warning to software that very old devices (compliant with SPC-1)
-returned CHECK CONDITION in that case, explaining why the "should" advice
-is included.  New devices (SPC-2 and later) are not supposed to return
-CHECK CONDITION.  "SPC" means SPC-1 only, not all versions.  This
-warning note was in SPC-2 and SPC-3 and dropped in SPC-4.
-
-
+> Can't you just use scsi_normalize_sense()?
