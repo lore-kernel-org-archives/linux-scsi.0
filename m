@@ -1,79 +1,33 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: sequential I/O on SSD disk varies from 20 to 300 MBytes/s every
- week
-Date: Wed, 25 Feb 2015 22:50:07 +0100
-Message-ID: <20150225215006.GC29527@amd>
-References: <alpine.DEB.2.00.1502021427020.2997@q.xf.ee>
+From: Bjorn Andersson <bjorn@kryo.se>
+Subject: Re: [PATCH 0/5] Rename regulator_set_optimum_mode
+Date: Wed, 25 Feb 2015 15:40:31 -0800
+Message-ID: <CAJAp7Oi67uuLEsXZbfo68zVa1XTOVhr7Q+V6n7QKC7rnQTywyA@mail.gmail.com>
+References: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:48910 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319AbbBYVuL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2015 16:50:11 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1502021427020.2997@q.xf.ee>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:40212 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866AbbBYXkd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2015 18:40:33 -0500
+Received: by lbdu10 with SMTP id u10so7393622lbd.7
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2015 15:40:32 -0800 (PST)
+In-Reply-To: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Siim Vahtre <siim@xf.ee>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Felipe Balbi <balbi@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-Hi!
+On Wed, Feb 11, 2015 at 7:35 PM, Bjorn Andersson
+<bjorn.andersson@sonymobile.com> wrote:
+> Changing the name of the regulator_set_optimum_mode() to
+> regulator_set_load() better reflects that the API is doing.
+>
 
-> During the testing period of about 5 months I have concluded:
-> 
-> 1) There are 3 identical Fujitsu RX200 S6 test servers which all show the
-> same problem, but I also reproduced it on some Sun Fire and Dell server.
-> 
-> 2) The problem happens with both HW RAID (MegaRAID SAS 2108) and when disks
-> were directly on integrated SATA card.
-> 
-> 3) The problem happens with different Kernel versions (tried 3.14, 3.16,
-> 3.18)
-> 
-> 4) The problem happens with newest FW/BIOS versions and on older version
-> 
-> 5) I have checked/replaced the cabling.
-> 
-> 6) It is not a caching issue (controller/disk caches were off during
-> testing, but even putting them on had minor impact on the results)
-> 
-> 7) The problem happens with both 2.5" SATA (12 x HGST Travelstar 1TB, 3 x WD
-> Black 750G), and SSD disks (3 x Samsung Pro 840)
-> 
-> 8) I have NOT been able to reproduce it on Windows - the speeds have been
-> good for all disks at all times.
-> 
-> 9) Changing the disks (eg. taking currently slow disk and putting it to
-> another server) has mixed results - it usually triggers some change of speed
-> (slow becomes fast or vice-versa) but not always.
-> 
-> 
-> The only thing that somewhat correlates with the change of speed is the
-> environment: the IO speed of disks is generally better when testing in the
-> office vs if that exact same server is in the server room. It might just
-> been luck, however.
+Any comments on this?
 
-> I did not find correlation with the uptime, restarts, change of temperature,
-> etc, so I assumed it might be the vibrations/rotations for SATA disks, but
-> now that I have reproduced it with expensive SSD disks as well, I am out of
-> ideas.
+I'm going to propose a patch to the mmc framework calling this api, so
+it would be good to know before I add another consumer of the api.
 
-
-That's strange. Vibrations? But not for SSDs. Does hwmon say anything
-interesting? Anything in smart?
-
-> Only 20Mbytes/s on SSD must be wrong, right? (Especially if week earlier or
-> week later it is ~300MBytes/s).
-
-Yes.
-
-Can you try the disks in different mainboard (but keep software
-version?)
-
-Are there any other performance problems?
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Regards,
+Bjorn
