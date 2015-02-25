@@ -1,36 +1,53 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] [SCSI] mvumi: 64bit value for seconds_since1970
-Date: Wed, 25 Feb 2015 11:48:33 +0100
-Message-ID: <5652033.yqM2roEabN@wuerfel>
-References: <20150225021354.GA2794@tinar>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] bfa: fix bfa_cb_sfp_state_query()
+Date: Wed, 25 Feb 2015 16:12:28 +0300
+Message-ID: <20150225131228.GB19745@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:53391 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbbBYKso (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2015 05:48:44 -0500
-In-Reply-To: <20150225021354.GA2794@tinar>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37246 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbbBYNNE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Feb 2015 08:13:04 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Krishna Gudipati <kgudipat@brocade.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Wednesday 25 February 2015 07:43:54 Tina Ruchandani wrote:
-> struct mvumi_hs_page2 stores a "seconds_since1970" field which is of
-> type u64. It is however, written to, using 'struct timeval' which has
-> a 32-bit seconds field and whose value will overflow in year 2038.
-> This patch uses ktime_get_real_seconds() instead since it provides a
-> 64-bit seconds value, which is 2038 safe.
-> 
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+There are several missing curly braces so this function doesn't work as
+intended.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I note that in this case, the bug exists and is fixed by your patch
-on both 32-bit and 64-bit kernels.
-
-I am unsure whether it is correct that this driver along with 3w-9xxx.c
-and 3w-sas.c, but unlike all others, uses local time instead of UTC,
-but your patch does not change that.
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 315d6d6..59c3492 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -3662,7 +3662,7 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+ 	bfa_trc(sfp, sfp->portspeed);
+ 	if (sfp->media) {
+ 		bfa_sfp_media_get(sfp);
+-		if (sfp->state_query_cbfn)
++		if (sfp->state_query_cbfn) {
+ 			sfp->state_query_cbfn(sfp->state_query_cbarg,
+ 					sfp->status);
+ 			sfp->media = NULL;
+@@ -3670,14 +3670,16 @@ bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
+ 
+ 		if (sfp->portspeed) {
+ 			sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
+-			if (sfp->state_query_cbfn)
++			if (sfp->state_query_cbfn) {
+ 				sfp->state_query_cbfn(sfp->state_query_cbarg,
+ 						sfp->status);
+ 				sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
++			}
+ 		}
+ 
+ 		sfp->state_query_lock = 0;
+ 		sfp->state_query_cbfn = NULL;
++	}
+ }
+ 
+ /*
