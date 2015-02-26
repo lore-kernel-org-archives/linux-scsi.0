@@ -1,179 +1,46 @@
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Remove use of 'struct timeval'
-Date: Thu, 26 Feb 2015 04:34:14 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D01941508DC@AVMB1.qlogic.org>
-References: <20150225021512.GA2837@tinar>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 90601] panic on write to 3ware raid array
+Date: Thu, 26 Feb 2015 05:44:47 +0000
+Message-ID: <bug-90601-11613-q1jChMQq1l@https.bugzilla.kernel.org/>
+References: <bug-90601-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D01941508DCAVMB1qlogicor_"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:63386 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751852AbbBZEeR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2015 23:34:17 -0500
-Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
-	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t1Q4YGpW016731
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2015 20:34:16 -0800
-Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
-	by mx0a-0016ce01.pphosted.com with ESMTP id 1sskqg8mht-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2015 20:34:16 -0800
-In-Reply-To: <20150225021512.GA2837@tinar>
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.29.136]:37716 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750844AbbBZFov (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Feb 2015 00:44:51 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id D0B2320389
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 05:44:49 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 2B8092037F
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 05:44:48 +0000 (UTC)
+In-Reply-To: <bug-90601-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tina Ruchandani <ruchandani.tina@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: linux-scsi@vger.kernel.org
 
---_000_F5D084D6342F9B479C34599BB0A03E4D01941508DCAVMB1qlogicor_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A144AD731EC8EA4B84596F4EC55C7250@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+https://bugzilla.kernel.org/show_bug.cgi?id=90601
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+--- Comment #13 from kashyap <kashyap.desai@avagotech.com> ---
+My old email id is not working now, so I have to update my email id to new
+avagotech domain. Sorry for delay in response.
 
+Does this mean issue does not happen with 3.16.1 
+but only happens with 3.17.1 (onwards) ? This is good data point.
 
->struct register_host_info stores a 64-bit UTC system time timestamp.
->This patch removes the use of 'struct timeval' to obtain that timestamp
->as its tv_sec value will overflow on 32-bit systems in year 2038 beyond.
->The patch uses ktime_get_real_seconds() which returns a 64-bit seconds
->value.
->
->Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
->---
-> drivers/scsi/qla2xxx/qla_mr.c | 5 ++---
-> 1 file changed, 2 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
->index 6d190b4..d64a64a 100644
->--- a/drivers/scsi/qla2xxx/qla_mr.c
->+++ b/drivers/scsi/qla2xxx/qla_mr.c
->@@ -6,6 +6,7 @@
->  */
-> #include "qla_def.h"
-> #include <linux/delay.h>
->+#include <linux/ktime.h>
-> #include <linux/pci.h>
-> #include <linux/ratelimit.h>
-> #include <linux/vmalloc.h>
->@@ -1812,7 +1813,6 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t
->*fcport, uint16_t fx_type)
-> 	struct host_system_info *phost_info;
-> 	struct register_host_info *preg_hsi;
-> 	struct new_utsname *p_sysid =3D NULL;
->-	struct timeval tv;
->=20
-> 	sp =3D qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-> 	if (!sp)
->@@ -1886,8 +1886,7 @@ qlafx00_fx_disc(scsi_qla_host_t *vha, fc_port_t
->*fcport, uint16_t fx_type)
-> 			    p_sysid->domainname, DOMNAME_LENGTH);
-> 			strncpy(phost_info->hostdriver,
-> 			    QLA2XXX_VERSION, VERSION_LENGTH);
->-			do_gettimeofday(&tv);
->-			preg_hsi->utc =3D (uint64_t)tv.tv_sec;
->+			preg_hsi->utc =3D (uint64_t)ktime_get_real_seconds();
-> 			ql_dbg(ql_dbg_init, vha, 0x0149,
-> 			    "ISP%04X: Host registration with firmware\n",
-> 			    ha->pdev->device);
->--=20
->2.2.0.rc0.207.ga3a616c
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can you share whole dmesg logs for both 3.16.1 and 3.17.1 ?
 
+Also are you using intel_iommu=on in your config ? Can you boot without
+enabling Intel IOMMU? 
 
---_000_F5D084D6342F9B479C34599BB0A03E4D01941508DCAVMB1qlogicor_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
+New logs with ""CONFIG_DMA_API_DEBUG" does not help much. You may have to post
+complete logs. We may have some interesting data before crash.
 
-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
-nC+r5y0nknlXIHRtCVAk+xVCszAAAB8AQgABAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5
-AGEAcAAAAAAAHwBlAAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAdAAAAAAAAACB
-Kx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAA
-AABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAC
-XQEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8A
-bQAAAB8A5V8BAAAAPAAAAHMAaQBwADoAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBs
-AG8AZwBpAGMALgBjAG8AbQAAAB8AGgwBAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEA
-cAAAAAAAHwAfDAEAAAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAdAAAAAAAAACBKx+k
-vqMQGZ1uAN0BD1QCAAAAgFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABz
-AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwABXQEA
-AAA0AAAAcwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAA
-AB8A+D8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAAAAHwAjQAEAAAA0AAAA
-cwBhAHUAcgBhAHYALgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AIkAB
-AAAACgAAAFMATQBUAFAAAAAAAAIB+T8BAAAAdAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMA
-YQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAAAFMATQBUAFAAAABzAGEAdQByAGEAdgAuAGsAYQBz
-AGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAJXQEAAAA0AAAAcwBhAHUAcgBhAHYA
-LgBrAGEAcwBoAHkAYQBwAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AMUABAAAAAgAAAAAAAAAL
-AEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA
-8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAAjU7fP3dvdNuSa5ACXBt7EDABcAAQAA
-AEAAOQAApzR5fVHQAUAACDBcvlt5fVHQAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAA
-HwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAA
-AAAAAQAAAAwAAABlAG4ALQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8A
-NwABAAAAaAAAAFIAZQA6ACAAWwBQAEEAVABDAEgAXQAgAHEAbABhADIAeAB4AHgAOgAgAFIAZQBt
-AG8AdgBlACAAdQBzAGUAIABvAGYAIAAnAHMAdAByAHUAYwB0ACAAdABpAG0AZQB2AGEAbAAnAAAA
-HwA9AAEAAAAKAAAAUgBlADoAIAAAAAAAAwA2AAAAAAAfAEIQAQAAADwAAAA8ADIAMAAxADUAMAAy
-ADIANQAwADIAMQA1ADEAMgAuAEcAQQAyADgAMwA3AEAAdABpAG4AYQByAD4AAAACAXEAAQAAABsA
-AAABAdBQoPQH1YSYh9CvS5tKTheMO3khnQM7+QAAHwBwAAEAAABgAAAAWwBQAEEAVABDAEgAXQAg
-AHEAbABhADIAeAB4AHgAOgAgAFIAZQBtAG8AdgBlACAAdQBzAGUAIABvAGYAIAAnAHMAdAByAHUA
-YwB0ACAAdABpAG0AZQB2AGEAbAAnAAAAHwA1EAEAAAB8AAAAPABGADUARAAwADgANABEADYAMwA0
-ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAwADMARQA0AEQAMAAxADkANAAxADUA
-MAA4AEQAQwBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAAPAAA
-ADwAMgAwADEANQAwADIAMgA1ADAAMgAxADUAMQAyAC4ARwBBADIAOAAzADcAQAB0AGkAbgBhAHIA
-PgAAAAMA3j+fTgAAQAAHMBx2TXl9UdABAwAmAAAAAAACAUcAAQAAAC0AAABjPVVTO2E9IDtwPVFM
-b2dpYztsPUFWTUIxLTE1MDIyNjA0MzQxNFotODE2NQAAAAAfABUQAQAAAFgAAABBADEANAA0AEEA
-RAA3ADMAMQBFAEMAOABFAEEANABCADgANAA1ADkANgBGADQARQBDADUANQBDADcAMgA1ADAAQABx
-AGwAbwBnAGkAYwAuAGMAbwBtAAAAAgEUMAEAAAAMAAAAlwAAAFymmpVBAAAAHwD6PwEAAAAeAAAA
-UwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAW
-AAAAdQBzAGUAcgAtAGEAZwBlAG4AdAAAAAAAAQAAAEYAAABNAGkAYwByAG8AcwBvAGYAdAAtAE0A
-YQBjAE8AdQB0AGwAbwBvAGsALwAxADQALgA0AC4ANwAuADEANAAxADEAMQA3AAAAAAAfAACAH6Tr
-M6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4AdgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQA
-cgBhAGMAawBpAG4AZwBFAHgAAAABAAAADgEAAEkASQA9ADAAMQAwADEARAAwADUAMQA3AEQANwA5
-ADgANAA3ADUANgBCADQAQgA0ADAAQgA4ADkANwA0ADYAQQA4ADAARgBEADgAQQAzAEEAMAA2ADQA
-RQA3ADkAMAA7AFMAQgBNAEkARAA9ADIAMAA7AFMAMQA9ADwAMgAwADEANQAwADIAMgA1ADAAMgAx
-ADUAMQAyAC4ARwBBADIAOAAzADcAQAB0AGkAbgBhAHIAPgA7AFYAZQByAHMAaQBvAG4APQBWAGUA
-cgBzAGkAbwBuACAAMQA0AC4AMgAgACgAQgB1AGkAbABkACAAMwA4ADcALgAwACkALAAgAFMAdABh
-AGcAZQA9AEgAMgAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAAeAAtAG0A
-cwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAA
-RgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAAB4AAABbADEA
-MAAuADMANQAuADEAMAAyAC4AMgA3AF0AAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABk
-AGkAcwBjAGwAYQBpAG0AZQByAAAAAAABAAAADgAAAGIAeQBwAGEAcwBzAAAAAACMyA==
+Thanks, Kashyap
 
---_000_F5D084D6342F9B479C34599BB0A03E4D01941508DCAVMB1qlogicor_--
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
