@@ -1,103 +1,140 @@
-From: brace <brace@pmcs.com>
-Subject: RE: [PATCH 01/43] hpsa: add masked physical devices into h->dev[]
- array
-Date: Thu, 26 Feb 2015 15:17:38 +0000
-Message-ID: <07F70BBF6832E34FA1C923241E8833AB38D5D96E@BBYEXM01.pmc-sierra.internal>
-References: <20150221221553.21954.32599.stgit@brunhilda>
- <20150221221735.21954.24837.stgit@brunhilda>
- <20150223201442.GA11037@infradead.org>
+From: Rasesh Mody <rasesh.mody@qlogic.com>
+Subject: RE: [PATCH v2 1/1] linux-firmware: Add QLogic BR Series Adapter
+ Firmware
+Date: Thu, 26 Feb 2015 19:31:43 +0000
+Message-ID: <2552F74A0BCCBE4DBE2AD218C81B2811D8E4D4@avmb3.qlogic.org>
+References: <1424218220-28837-1-git-send-email-rasesh.mody@qlogic.com>
+ <20150224175841.GO30928@merlin.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="_000_2552F74A0BCCBE4DBE2AD218C81B2811D8E4D4avmb3qlogicorg_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53280 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752483AbbBZPRo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Feb 2015 10:17:44 -0500
-In-Reply-To: <20150223201442.GA11037@infradead.org>
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:15757 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932182AbbBZTbq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Feb 2015 14:31:46 -0500
+Received: from pps.filterd (m0000643.ppops.net [127.0.0.1])
+	by mx0b-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t1QJRrtV011373
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 11:31:45 -0800
+Received: from avcashub1.qlogic.com (avcashub3.qlogic.com [198.70.193.117])
+	by mx0b-0016ce01.pphosted.com with ESMTP id 1sm928cr5h-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 11:31:45 -0800
+In-Reply-To: <20150224175841.GO30928@merlin.infradead.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Scott Teel <Scott.Teel@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, Justin Lindley <Justin.Lindley@pmcs.com>, brace <brace@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>, netdev <netdev@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Monday, February 23, 2015 2:15 PM
-> To: Don Brace
-> Cc: Scott Teel; Kevin Barnett; james.bottomley@parallels.com;
-> hch@infradead.org; Justin Lindley; brace; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 01/43] hpsa: add masked physical devices into h->dev[]
-> array
-> 
-> > -/* link sdev->hostdata to our per-device structure. */
-> >  static int hpsa_slave_alloc(struct scsi_device *sdev)
-> >  {
-> >  	struct hpsa_scsi_dev_t *sd;
-> >  	unsigned long flags;
-> >  	struct ctlr_info *h;
-> > +	int queue_depth;
+--_000_2552F74A0BCCBE4DBE2AD218C81B2811D8E4D4avmb3qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+> From: Kyle McMartin [mailto:kyle@infradead.org]
+> Sent: Tuesday, February 24, 2015 9:59 AM
+>=20
+> On Tue, Feb 17, 2015 at 07:10:20PM -0500, Rasesh Mody wrote:
+> > This patch rebrands the BFA/BNA inbox driver firmwares.
+> > This patch adds 3.2.5.1 firmware files for QLogic BR-series Adapters
+> > that will be used with the inbox drivers(BFA and BNA).
 > >
-> >  	h = sdev_to_hba(sdev);
-> >  	spin_lock_irqsave(&h->devlock, flags);
-> >  	sd = lookup_hpsa_scsi_dev(h, sdev_channel(sdev),
-> >  		sdev_id(sdev), sdev->lun);
-> > -	if (sd != NULL) {
-> > -		sdev->hostdata = sd;
-> > -		if (sd->queue_depth)
-> > +
-> > +	if (likely(sd)) {
-> >  			scsi_change_queue_depth(sdev, sd->queue_depth);
-> 
-> Looks like the indentation is incorrect here.
+> > Signed-off-by: Rasesh Mody <rasesh.mody@qlogic.com>
+> > ---
+> >  WHENCE            |  13 +++++++++----
+> >  cbfw-3.2.5.1.bin  | Bin 0 -> 414480 bytes  ct2fw-3.2.5.1.bin | Bin 0
+> > -> 584216 bytes  ctfw-3.2.5.1.bin  | Bin 0 -> 539144 bytes
+> >  4 files changed, 9 insertions(+), 4 deletions(-)  create mode 100644
+> > cbfw-3.2.5.1.bin  create mode 100644 ct2fw-3.2.5.1.bin  create mode
+> > 100644 ctfw-3.2.5.1.bin
+> >
+>=20
+> Thanks, applied. Any chance on the next update of the firmware we could
+> move to putting new files under qlogic/*.bin?
 
-Corrected.
+Thanks Kyle, will keep that in mind.
 
-> 
-> >  		atomic_set(&sd->ioaccel_cmds_out, 0);
-> > +		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd :
-> NULL;
-> > +		queue_depth = sd->queue_depth != 0 ?
-> > +			sd->queue_depth : sdev->host->can_queue;
-> > +	} else {
-> > +		sdev->hostdata = NULL;
-> > +		queue_depth = sdev->host->can_queue;
-> >  	}
-> > +
-> > +	if (shost_use_blk_mq(sdev->host))
-> > +		scsi_change_queue_depth(sdev, queue_depth);
-> 
-> But why do you have another call here only for the mq case?
-> Also in general I'd really prefer if you'd only change the queue
-> depth in ->slave_configure as most drivers do unless you have a good
-> reason to do it differently.
+Regards,
+Rasesh
 
-Thanks, I corrected the code. Also, I asked Webb about setting up the queue
-Depth in slave_alloc. His reply was " We needed to get tagging set up during allocation so that we could use it in the lead-up to configuration, which is why it was done in hpsa_slave_alloc(); and, given that the code there was then already messing about with queue depth, it made sense to also deal with the rest of it there."
+--_000_2552F74A0BCCBE4DBE2AD218C81B2811D8E4D4avmb3qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-But given your next comment, perhaps I need to clean this up more?
-> 
-> > +	else /* We depend on tags for cmd allocation. */
-> > +		sdev->tagged_supported = 1;
-> 
-> Since 3.19-rc1 you'll always get tags from the first command sent, as
-> we now moved the block tagging configuration earlier.
-> 
-> > +/* configure scsi device based on internal per-device structure */
-> > +static int hpsa_slave_configure(struct scsi_device *sdev)
-> > +{
-> > +	struct hpsa_scsi_dev_t *sd;
-> > +	unsigned long flags;
-> > +	struct ctlr_info *h;
-> > +
-> > +	h = sdev_to_hba(sdev);
-> > +	spin_lock_irqsave(&h->devlock, flags);
-> > +	sd = sdev->hostdata;
-> 
-> There should be no need to have this dereference inside the spinlock.
-> 
-> Also can you explain somewhere why some devices might not have this
-> hostdata set?
+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
+AGgAIABNAG8AZAB5AAAAUwBNAFQAUAAAAHIAYQBzAGUAcwBoAC4AbQBvAGQAeQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAfAAFdAQAAAC4AAAByAGEAcwBlAHMAaAAuAG0AbwBkAHkAQABxAGwAbwBn
+AGkAYwAuAGMAbwBtAAAAAAAfAPg/AQAAABgAAABSAGEAcwBlAHMAaAAgAE0AbwBkAHkAAAAfACNA
+AQAAAC4AAAByAGEAcwBlAHMAaAAuAG0AbwBkAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAf
+ACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAGgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAA
+AIBSAGEAcwBlAHMAaAAgAE0AbwBkAHkAAABTAE0AVABQAAAAcgBhAHMAZQBzAGgALgBtAG8AZAB5
+AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8ACV0BAAAALgAAAHIAYQBzAGUAcwBoAC4AbQBvAGQA
+eQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEAB
+AAAAAgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEA
+AAADAP0/5AQAAAIBCzABAAAAEAAAAMETiOPNOuRDvZz8jFIXCEoDABcAAQAAAEAAOQCA+bXZ+lHQ
+AUAACDBjIjna+lHQAQsAKQAAAAAACwAjAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAA
+YQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAI
+IAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAACSAAAAUgBFADoAIABbAFAAQQBUAEMA
+SAAgAHYAMgAgADEALwAxAF0AIABsAGkAbgB1AHgALQBmAGkAcgBtAHcAYQByAGUAOgAgAEEAZABk
+ACAAUQBMAG8AZwBpAGMAIABCAFIAIABTAGUAcgBpAGUAcwAgAEEAZABhAHAAdABlAHIAIABGAGkA
+cgBtAHcAYQByAGUAAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAAAwAuAAAAAAAf
+AEIQAQAAAFwAAAA8ADIAMAAxADUAMAAyADIANAAxADcANQA4ADQAMQAuAEcATwAzADAAOQAyADgA
+QABtAGUAcgBsAGkAbgAuAGkAbgBmAHIAYQBkAGUAYQBkAC4AbwByAGcAPgAAAAIBcQABAAAAIAAA
+AAEB0EsU6eaR7Iaiy7JFoZsnu6bcGx6dAKb9gIACuDfAHwBwAAEAAACKAAAAWwBQAEEAVABDAEgA
+IAB2ADIAIAAxAC8AMQBdACAAbABpAG4AdQB4AC0AZgBpAHIAbQB3AGEAcgBlADoAIABBAGQAZAAg
+AFEATABvAGcAaQBjACAAQgBSACAAUwBlAHIAaQBlAHMAIABBAGQAYQBwAHQAZQByACAARgBpAHIA
+bQB3AGEAcgBlAAAAAAAfADUQAQAAAHQAAAA8ADIANQA1ADIARgA3ADQAQQAwAEIAQwBDAEIARQA0
+AEQAQgBFADIAQQBEADIAMQA4AEMAOAAxAEIAMgA4ADEAMQBEADgARQA0AEQANABAAGEAdgBtAGIA
+MwAuAHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA0gAAADwAMQA0ADIANAAyADEAOAAy
+ADIAMAAtADIAOAA4ADMANwAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQByAGEA
+cwBlAHMAaAAuAG0AbwBkAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAD4AIAA8ADIAMAAxADUAMAAy
+ADIANAAxADcANQA4ADQAMQAuAEcATwAzADAAOQAyADgAQABtAGUAcgBsAGkAbgAuAGkAbgBmAHIA
+YQBkAGUAYQBkAC4AbwByAGcAPgAAAAAAAwDeP59OAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAD
+hQAAAAAAAAMAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAAAwCAEP////9AAAcwbiUH2vpR
+0AELAAIAAQAAAAMAJgAAAAAACwArAAAAAAACAUcAAQAAAC8AAABjPVVTO2E9IDtwPVFMb2dpYzts
+PUFWTUIzLTE1MDIyNjE5MzE0M1otMTM0MDYzAAACARAwAQAAAEYAAAAAAAAAkFQH74smgESurG1o
+wgIElAcAJVL3SgvMvk2+KtIYyBsoEQAAALzkigAAUFObvwRBmkyJFyVu8iYjZACRkVtRbgAAAAAf
+APo/AQAAABgAAABSAGEAcwBlAHMAaAAgAE0AbwBkAHkAAAADAAlZAQAAAAMAAIAIIAYAAAAAAMAA
+AAAAAABGAAAAABCFAAAAAAAACwAAgAggBgAAAAAAwAAAAAAAAEYAAAAADoUAAAAAAAADAACACCAG
+AAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAAAAAA
+HwAAgAggBgAAAAAAwAAAAAAAAEYAAAAA2IUAAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAAD
+AA00/T8AAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQA
+dABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwBy
+AGkAZwBpAG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAGAAAAFsAMQAwAC4AMQAuADQALgAxADAA
+XQAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAABkAGkAcwBjAGwAYQBpAG0AZQByAAAAAAAB
+AAAADgAAAGIAeQBwAGEAcwBzAAAAAAC41g==
 
-For our mixed mode controllers, we have started reporting all devices. The masked devices can be part of a logical volume, or it did not respond during the device scan. These do not get their hostdata set.
+--_000_2552F74A0BCCBE4DBE2AD218C81B2811D8E4D4avmb3qlogicorg_--
