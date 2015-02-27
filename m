@@ -1,58 +1,42 @@
-From: Yannick Guerrini <yguerrini@tomshardware.fr>
-Subject: [PATCH] qla2xxx: Fix trivial typos in ql_log message
-Date: Thu, 26 Feb 2015 22:49:34 +0100
-Message-ID: <1424987374-11148-1-git-send-email-yguerrini@tomshardware.fr>
+From: "Enders A, Anouk" <a.enders@st.hanze.nl>
+Subject: Help-desk Service Center requires your immediate re-activation of
+ your Email
+Date: Fri, 27 Feb 2015 03:37:26 +0000
+Message-ID: <9F88D89CF7055C41BB9D7016AC88DB53586A4863__48222.6635715508$1425008303$gmane$org@HPEMB08W28.hanze.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org, Yannick Guerrini <yguerrini@tomshardware.fr>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailhost.hanze.nl ([145.33.5.182]:34092 "EHLO
+	HPEED04W28.hanze.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983AbbB0Dhr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Feb 2015 22:37:47 -0500
+Content-Language: nl-NL
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Change 'Fimware' to 'Firmware'
-Change 'enalbled' to 'enabled'
+Help-desk Service Center requires your immediate re-activation of your =
+Email
 
-Signed-off-by: Yannick Guerrini <yguerrini@tomshardware.fr>
----
- drivers/scsi/qla2xxx/qla_init.c | 4 ++--
- drivers/scsi/qla2xxx/qla_mid.c  | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+account. This is to upgrade email account to the new anti spam virus de=
+tector
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e59f25b..5bb57c5 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5364,7 +5364,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
- 	blob = qla2x00_request_firmware(vha);
- 	if (!blob) {
- 		ql_log(ql_log_info, vha, 0x0083,
--		    "Fimware image unavailable.\n");
-+		    "Firmware image unavailable.\n");
- 		ql_log(ql_log_info, vha, 0x0084,
- 		    "Firmware images can be retrieved from: "QLA_FW_URL ".\n");
- 		return QLA_FUNCTION_FAILED;
-@@ -5467,7 +5467,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
- 	blob = qla2x00_request_firmware(vha);
- 	if (!blob) {
- 		ql_log(ql_log_warn, vha, 0x0090,
--		    "Fimware image unavailable.\n");
-+		    "Firmware image unavailable.\n");
- 		ql_log(ql_log_warn, vha, 0x0091,
- 		    "Firmware images can be retrieved from: "
- 		    QLA_FW_URL ".\n");
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 5c2e031..ca3804e 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -788,7 +788,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 		rsp->msix = &ha->msix_entries[que_id + 1];
- 	else
- 		ql_log(ql_log_warn, base_vha, 0x00e3,
--		    "MSIX not enalbled.\n");
-+		    "MSIX not enabled.\n");
- 
- 	ha->rsp_q_map[que_id] = rsp;
- 	rsp->rid = rid;
--- 
-1.9.5.msysgit.0
+sever 2014. Inability to complete this procedure will render your accou=
+nt
+
+inactivate. Activate by completing the survey procedure.
+
+CLICK LINK:  to activate.
+
+CLICK HERE:<http://hanzennll.wix.com/henzen>
+
+Thank you for using Webmail
+
+Copyright =A9 2014 Webmail Help Desk
+
+Updating Webmail Technical Center
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
