@@ -1,47 +1,58 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] tcm_fc: missing curly braces in ft_invl_hw_context()
-Date: Fri, 27 Feb 2015 03:52:56 -0800
-Message-ID: <1425037976.30824.90.camel@haakon3.risingtidesystems.com>
-References: <20150225132103.GH19745@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20150225132103.GH19745@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Kiran Patil <kiran.patil@intel.com>, Vasu Dev <vasu.dev@linux.intel.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH -resend 1/1] bfs: bfad_worker cleanup
+Date: Fri, 27 Feb 2015 16:01:28 +0100
+Message-ID: <1425049288-16901-1-git-send-email-jslaby@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: akpm@linux-foundation.org, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2015-02-25 at 16:21 +0300, Dan Carpenter wrote:
-> From the indenting, it looks like curly braces were intended here.
-> 
-> Fixes: dcd998ccdbf7 ('tcm_fc: Handle DDP/SW fc_frame_payload_get failures in ft_recv_write_data')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-> index 97b486c..583e755 100644
-> --- a/drivers/target/tcm_fc/tfc_io.c
-> +++ b/drivers/target/tcm_fc/tfc_io.c
-> @@ -359,7 +359,7 @@ void ft_invl_hw_context(struct ft_cmd *cmd)
->  		ep = fc_seq_exch(seq);
->  		if (ep) {
->  			lport = ep->lp;
-> -			if (lport && (ep->xid <= lport->lro_xid))
-> +			if (lport && (ep->xid <= lport->lro_xid)) {
->  				/*
->  				 * "ddp_done" trigger invalidation of HW
->  				 * specific DDP context
-> @@ -374,6 +374,7 @@ void ft_invl_hw_context(struct ft_cmd *cmd)
->  				 * identified using ep->xid)
->  				 */
->  				cmd->was_ddp_setup = 0;
-> +			}
->  		}
->  	}
->  }
+This kthread is not loop at all due to break at the end of the loop.
+Make that function linear, with no while loop.
 
-Thanks Dan.  Applied to target-pending/master.
+And remove an unnecessary cast.
 
---nab
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+---
+ drivers/scsi/bfa/bfad.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e90a3742f09d..cc3b9d3d6d40 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1079,22 +1079,18 @@ bfad_start_ops(struct bfad_s *bfad) {
+ int
+ bfad_worker(void *ptr)
+ {
+-	struct bfad_s *bfad;
+-	unsigned long   flags;
+-
+-	bfad = (struct bfad_s *)ptr;
+-
+-	while (!kthread_should_stop()) {
++	struct bfad_s *bfad = ptr;
++	unsigned long flags;
+ 
+-		/* Send event BFAD_E_INIT_SUCCESS */
+-		bfa_sm_send_event(bfad, BFAD_E_INIT_SUCCESS);
++	if (kthread_should_stop())
++		return 0;
+ 
+-		spin_lock_irqsave(&bfad->bfad_lock, flags);
+-		bfad->bfad_tsk = NULL;
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	/* Send event BFAD_E_INIT_SUCCESS */
++	bfa_sm_send_event(bfad, BFAD_E_INIT_SUCCESS);
+ 
+-		break;
+-	}
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	bfad->bfad_tsk = NULL;
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	return 0;
+ }
+-- 
+2.3.0
