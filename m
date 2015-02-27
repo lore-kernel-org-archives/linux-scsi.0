@@ -1,42 +1,180 @@
-From: "Enders A, Anouk" <a.enders@st.hanze.nl>
-Subject: Help-desk Service Center requires your immediate re-activation of
- your Email
-Date: Fri, 27 Feb 2015 03:37:26 +0000
-Message-ID: <9F88D89CF7055C41BB9D7016AC88DB53586A4863__48222.6635715508$1425008303$gmane$org@HPEMB08W28.hanze.nl>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Fix trivial typos in ql_log message
+Date: Fri, 27 Feb 2015 05:09:00 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D0194150CD9@AVMB1.qlogic.org>
+References: <1424987374-11148-1-git-send-email-yguerrini@tomshardware.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D0194150CD9AVMB1qlogicor_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.hanze.nl ([145.33.5.182]:34092 "EHLO
-	HPEED04W28.hanze.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753983AbbB0Dhr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Feb 2015 22:37:47 -0500
-Content-Language: nl-NL
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:6593 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750804AbbB0FJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Feb 2015 00:09:07 -0500
+Received: from pps.filterd (m0045602.ppops.net [127.0.0.1])
+	by mx0a-0016ce01.pphosted.com (8.14.5/8.14.5) with SMTP id t1R597Le010780
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 21:09:07 -0800
+Received: from avcashub1.qlogic.com (avcashub1.qlogic.com [198.70.193.115])
+	by mx0a-0016ce01.pphosted.com with ESMTP id 1sskqga7r0-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2015 21:09:07 -0800
+In-Reply-To: <1424987374-11148-1-git-send-email-yguerrini@tomshardware.fr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yannick Guerrini <yguerrini@tomshardware.fr>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "trivial@kernel.org" <trivial@kernel.org>
 
-Help-desk Service Center requires your immediate re-activation of your =
-Email
+--_000_F5D084D6342F9B479C34599BB0A03E4D0194150CD9AVMB1qlogicor_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <E5FB319AC2AFDF4292C667B98C4EBF33@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
 
-account. This is to upgrade email account to the new anti spam virus de=
-tector
+Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-sever 2014. Inability to complete this procedure will render your accou=
-nt
 
-inactivate. Activate by completing the survey procedure.
+>Change 'Fimware' to 'Firmware'
+>Change 'enalbled' to 'enabled'
+>
+>Signed-off-by: Yannick Guerrini <yguerrini@tomshardware.fr>
+>---
+> drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+> drivers/scsi/qla2xxx/qla_mid.c  | 2 +-
+> 2 files changed, 3 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_init.c
+>b/drivers/scsi/qla2xxx/qla_init.c
+>index e59f25b..5bb57c5 100644
+>--- a/drivers/scsi/qla2xxx/qla_init.c
+>+++ b/drivers/scsi/qla2xxx/qla_init.c
+>@@ -5364,7 +5364,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t
+>*srisc_addr)
+> 	blob =3D qla2x00_request_firmware(vha);
+> 	if (!blob) {
+> 		ql_log(ql_log_info, vha, 0x0083,
+>-		    "Fimware image unavailable.\n");
+>+		    "Firmware image unavailable.\n");
+> 		ql_log(ql_log_info, vha, 0x0084,
+> 		    "Firmware images can be retrieved from: "QLA_FW_URL ".\n");
+> 		return QLA_FUNCTION_FAILED;
+>@@ -5467,7 +5467,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha,
+>uint32_t *srisc_addr)
+> 	blob =3D qla2x00_request_firmware(vha);
+> 	if (!blob) {
+> 		ql_log(ql_log_warn, vha, 0x0090,
+>-		    "Fimware image unavailable.\n");
+>+		    "Firmware image unavailable.\n");
+> 		ql_log(ql_log_warn, vha, 0x0091,
+> 		    "Firmware images can be retrieved from: "
+> 		    QLA_FW_URL ".\n");
+>diff --git a/drivers/scsi/qla2xxx/qla_mid.c
+>b/drivers/scsi/qla2xxx/qla_mid.c
+>index 5c2e031..ca3804e 100644
+>--- a/drivers/scsi/qla2xxx/qla_mid.c
+>+++ b/drivers/scsi/qla2xxx/qla_mid.c
+>@@ -788,7 +788,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha,
+>uint16_t options,
+> 		rsp->msix =3D &ha->msix_entries[que_id + 1];
+> 	else
+> 		ql_log(ql_log_warn, base_vha, 0x00e3,
+>-		    "MSIX not enalbled.\n");
+>+		    "MSIX not enabled.\n");
+>=20
+> 	ha->rsp_q_map[que_id] =3D rsp;
+> 	rsp->rid =3D rid;
+>--=20
+>1.9.5.msysgit.0
+>
 
-CLICK LINK:  to activate.
 
-CLICK HERE:<http://hanzennll.wix.com/henzen>
+--_000_F5D084D6342F9B479C34599BB0A03E4D0194150CD9AVMB1qlogicor_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-Thank you for using Webmail
+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
+AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEA
+AAA8AAAAcwBpAHAAOgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAu
+AGMAbwBtAAAAHwAaDAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8M
+AQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBt
+AAAAHwAeDAEAAAAKAAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEP
+VAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2
+AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEA
+dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAe
+AAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEA
+dgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBN
+AFQAUAAAAAAAAgH5PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYA
+IABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABA
+AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
+eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAw
+QAEAAAACAAAAAAAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6
+AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAA6sXq/HRI3UOYbqgHRESDlQMAFwABAAAAQAA5AAC++H5L
+UtABQAAIMNd+Vn9LUtABCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAA
+AADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAA
+AGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAAByAAAA
+UgBlADoAIABbAFAAQQBUAEMASABdACAAcQBsAGEAMgB4AHgAeAA6ACAARgBpAHgAIAB0AHIAaQB2
+AGkAYQBsACAAdAB5AHAAbwBzACAAaQBuACAAcQBsAF8AbABvAGcAIABtAGUAcwBzAGEAZwBlAAAA
+AAAfAD0AAQAAAAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAfAAAADwAMQA0ADIANAA5
+ADgANwAzADcANAAtADEAMQAxADQAOAAtADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwA
+LQB5AGcAdQBlAHIAcgBpAG4AaQBAAHQAbwBtAHMAaABhAHIAZAB3AGEAcgBlAC4AZgByAD4AAAAC
+AXEAAQAAABsAAAABAdBSDlyhy/lm/jpDT67aPHA7uB+rnQTVIgAAHwBwAAEAAABqAAAAWwBQAEEA
+VABDAEgAXQAgAHEAbABhADIAeAB4AHgAOgAgAEYAaQB4ACAAdAByAGkAdgBpAGEAbAAgAHQAeQBw
+AG8AcwAgAGkAbgAgAHEAbABfAGwAbwBnACAAbQBlAHMAcwBhAGcAZQAAAAAAHwA1EAEAAAB8AAAA
+PABGADUARAAwADgANABEADYAMwA0ADIARgA5AEIANAA3ADkAQwAzADQANQA5ADkAQgBCADAAQQAw
+ADMARQA0AEQAMAAxADkANAAxADUAMABDAEQAOQBAAEEAVgBNAEIAMQAuAHEAbABvAGcAaQBjAC4A
+bwByAGcAPgAAAB8AORABAAAAfAAAADwAMQA0ADIANAA5ADgANwAzADcANAAtADEAMQAxADQAOAAt
+ADEALQBnAGkAdAAtAHMAZQBuAGQALQBlAG0AYQBpAGwALQB5AGcAdQBlAHIAcgBpAG4AaQBAAHQA
+bwBtAHMAaABhAHIAZAB3AGEAcgBlAC4AZgByAD4AAAADAN4/n04AAEAABzD3l0p/S1LQAQMAJgAA
+AAAAAgFHAAEAAAAtAAAAYz1VUzthPSA7cD1RTG9naWM7bD1BVk1CMS0xNTAyMjcwNTA5MDBaLTkw
+MjgAAAAAHwAVEAEAAABYAAAARQA1AEYAQgAzADEAOQBBAEMAMgBBAEYARABGADQAMgA5ADIAQwA2
+ADYANwBCADkAOABDADQARQBCAEYAMwAzAEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAIBFDABAAAA
+DAAAAHsAAADzFjGkQQAAAB8A+j8BAAAAHgAAAFMAYQB1AHIAYQB2ACAASwBhAHMAaAB5AGEAcAAA
+AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBlAHIALQBhAGcAZQBuAHQAAAAAAAEA
+AABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUAdABsAG8AbwBrAC8AMQA0AC4ANAAu
+ADcALgAxADQAMQAxADEANwAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYA
+ZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAE4BAABJ
+AEkAPQAwADEAMAAxAEQAMAA1ADIANABCADcARgA5ADMARgAwAEIARgA5ADkAQgBBAEYARQBBADMA
+NAAxAEEAOQA3AEIANwA5AEEAMQA2ADIANgA0ADMANwA3AEMAOwBTAEIATQBJAEQAPQAzADkAOwBT
+ADEAPQA8ADEANAAyADQAOQA4ADcAMwA3ADQALQAxADEAMQA0ADgALQAxAC0AZwBpAHQALQBzAGUA
+bgBkAC0AZQBtAGEAaQBsAC0AeQBnAHUAZQByAHIAaQBuAGkAQAB0AG8AbQBzAGgAYQByAGQAdwBh
+AHIAZQAuAGYAcgA+ADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAA
+KABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAsACAAUwB0AGEAZwBlAD0ASAAyAAAAAAADAA00/T8A
+AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMA
+aAAAAAEAAAACAAAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACIAAAB4AC0AbwByAGkAZwBp
+AG4AYQB0AGkAbgBnAC0AaQBwAAAAAAABAAAAHgAAAFsAMQAwAC4AMwA1AC4AMQAwADIALgAyADcA
+XQAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAGQAaQBzAGMAbABhAGkAbQBlAHIAAAAA
+AAEAAAAOAAAAYgB5AHAAYQBzAHMAAAAAADeL
 
-Copyright =A9 2014 Webmail Help Desk
-
-Updating Webmail Technical Center
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--_000_F5D084D6342F9B479C34599BB0A03E4D0194150CD9AVMB1qlogicor_--
