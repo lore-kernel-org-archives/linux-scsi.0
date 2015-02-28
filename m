@@ -1,76 +1,113 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 0/9] target: Add WRITE_STRIP + READ_INSERT support
-Date: Sat, 28 Feb 2015 10:35:57 +0000
-Message-ID: <1425119766-11878-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: [PATCH 3/9] target: Update SPC/SBC emulation for sess_prot_type
+Date: Sat, 28 Feb 2015 10:36:00 +0000
+Message-ID: <1425119766-11878-4-git-send-email-nab@daterainc.com>
+References: <1425119766-11878-1-git-send-email-nab@daterainc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:42287 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbbB1LKC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 06:10:02 -0500
+Received: by mail-ob0-f181.google.com with SMTP id vb8so23204620obc.12
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2015 03:10:01 -0800 (PST)
+In-Reply-To: <1425119766-11878-1-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi MKP, Sagi, & Co,
+This patch updates standard INQUIRY, INQUIRY EVPD=0x86, READ_CAPACITY_16
+and control mode pages to use se_sess->sess_prot_type when determing which
+type of T10-PI related feature bits can be exposed.
 
-This series adds support for internal WRITE_STRIP + READ_INSERT
-DIX operations using existing target_core_sbc.c DIF emulation.
+This is required for fabric sessions supporting T10-PI metadata to
+backend devices that don't have protection enabled.
 
-It's useful in order for T10-PI fabrics to interoperate between
-backend devices that don't have protection available or enabled yet.
-This should be able to be done both internally using target DIF
-emulation, or by the fabric driver's own HBA/NIC hardware offloads
-outside of target_core_mod code.
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_sbc.c | 13 +++++++++++--
+ drivers/target/target_core_spc.c | 14 +++++++++-----
+ 2 files changed, 20 insertions(+), 7 deletions(-)
 
-This series includes initial tcm_loop support using a new endpoint
-'fabric_prot_type' configfs attribute, and is able to successful
-register SCSI LUNs and process I/Os in TYPE1 mode against a FILEIO
-backend with pi_prot_type=0 set.
-
-Here's how it looks in action:
-
-scsi host6: TCM_Loopback
-scsi 6:0:1:0: Direct-Access     LIO-ORG  FILEIO           4.0 PQ: 0 ANSI: 5
-sd 6:0:1:0: [sda] Enabling DIF Type 1 protection
-sd 6:0:1:0: Attached scsi generic sg1 type 0
-sd 6:0:1:0: [sda] 4194304 512-byte logical blocks: (2.14 GB/2.00 GiB)
-sd 6:0:1:0: [sda] Write Protect is off
-sd 6:0:1:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-sd 6:0:1:0: [sda] Enabling DIX T10-DIF-TYPE1-CRC protection
-sd 6:0:1:0: [sda] DIF application tag size 2
-sd 6:0:1:0: [sda] Attached SCSI disk
-
-root@scsi-mq:~# cat /sys/kernel/config/target/loopback/naa.6001405973efc183/tpgt_1/attrib/fabric_prot_type
-1
-root@scsi-mq:~# cat
-/sys/kernel/config/target/core/fileio_1/tmpfile/attrib/pi_prot_type
-0
-
-Please review as v4.1 material.
-
-Thank you,
-
---nab
-
-Nicholas Bellinger (9):
-  target: Convert DIF emulation to use cmd->prot_type
-  target: Add protected fabric + unprotected device support
-  target: Update SPC/SBC emulation for sess_prot_type
-  target: Move cmd->prot_op check into target_check_write_prot
-  target: Add internal WRITE_STRIP support
-  target: Move cmd->prot_op check into target_check_read_prot
-  target: Add internal READ_INSERT support
-  target/file: Add checks for backend DIF emulation
-  loopback: Add fabric_prot_type attribute support
-
- drivers/target/loopback/tcm_loop.c     | 51 ++++++++++++++++++++-
- drivers/target/loopback/tcm_loop.h     |  1 +
- drivers/target/target_core_file.c      |  8 ++--
- drivers/target/target_core_sbc.c       | 73 ++++++++++++++++++++++--------
- drivers/target/target_core_spc.c       | 14 +++---
- drivers/target/target_core_transport.c | 82 +++++++++++++++++++++++++++-------
- include/target/target_core_base.h      |  1 +
- include/target/target_core_fabric.h    |  8 ++++
- 8 files changed, 191 insertions(+), 47 deletions(-)
-
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 5b3564a..68373c9 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -93,6 +93,8 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
++	int pi_prot_type = dev->dev_attrib.pi_prot_type;
++
+ 	unsigned char *rbuf;
+ 	unsigned char buf[32];
+ 	unsigned long long blocks = dev->transport->get_blocks(dev);
+@@ -114,8 +116,15 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 	 * Set P_TYPE and PROT_EN bits for DIF support
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
+-			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
++		/*
++		 * Only override a device's pi_prot_type if no T10-PI is
++		 * available, and sess_prot_type has been explicitly enabled.
++		 */
++		if (!pi_prot_type)
++			pi_prot_type = sess->sess_prot_type;
++
++		if (pi_prot_type)
++			buf[12] = (pi_prot_type - 1) << 1 | 0x1;
+ 	}
+ 
+ 	if (dev->transport->get_lbppbe)
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 460e931..5b6a0af 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -103,10 +103,12 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 		buf[5] |= 0x8;
+ 	/*
+ 	 * Set Protection (PROTECT) bit when DIF has been enabled on the
+-	 * device, and the transport supports VERIFY + PASS.
++	 * device, and the fabric supports VERIFY + PASS.  Also report
++	 * PROTECT=1 if sess_prot_type has been configured to allow T10-PI
++	 * to unprotected devices.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
++		if (dev->dev_attrib.pi_prot_type || cmd->se_sess->sess_prot_type)
+ 			buf[5] |= 0x1;
+ 	}
+ 
+@@ -480,9 +482,11 @@ spc_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
+ 	 * only for TYPE3 protection.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
++		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT ||
++		    cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE1_PROT)
+ 			buf[4] = 0x5;
+-		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
++		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT ||
++			cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE3_PROT)
+ 			buf[4] = 0x4;
+ 	}
+ 
+@@ -874,7 +878,7 @@ static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+ 	 * TAG field.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
++		if (dev->dev_attrib.pi_prot_type || sess->sess_prot_type)
+ 			p[5] |= 0x80;
+ 	}
+ 
 -- 
 1.9.1
+
