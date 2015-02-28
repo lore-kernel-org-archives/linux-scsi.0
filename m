@@ -1,44 +1,87 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Sat, 28 Feb 2015 12:59:43 +0100
-Message-ID: <54F1ADAF.90808@sandisk.com>
-References: <54B63F74.2040702@sandisk.com>
-	 <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
-	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
-	 <54E7112F.2080901@sandisk.com>
-	 <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
-	 <54ED8B38.10904@sandisk.com>
- <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v5 0/4] scsi: ufs & ums-* & esp_scsi: fix module reference counting
+Date: Sat, 28 Feb 2015 23:16:53 +0900
+Message-ID: <1425133017-7216-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:43589 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366AbbB1ORW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 09:17:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On 02/27/15 22:58, Nicholas A. Bellinger wrote:
-> Looking at how your attempting to drive creation + removal of struct
-> config_group from within kernel code here:
-> 
-> target: Add target port registration API
-> https://github.com/bvanassche/linux/commit/dbb8bf32db3428ede6ecc688ede1e5e01fc59d88
-> 
-> is the exactly the wrong approach to take.
-> 
-> The creation and deletion of struct config_group must be driven by
-> user-space, and by user-space only.  No exceptions will be made.
+While accessing a scsi_device, the use count of the underlying LLDD module
+is incremented.  The module reference is retrieved through .module field of
+struct scsi_host_template.
 
-There exists an approach that preserves the ABI of both SCST and LIO,
-namely:
-* Add empty transport_register_wwn() and transport_unregister_wwn()
-  functions in the LIO core.
-* Add calls to these functions at the appropriate place in the FC
-  and SRP target drivers.
-* In the SCST implementation of the unified target driver API, route
-  calls to transport_register_wwn() and transport_unregister_wwn() to
-  scst_register_target() and scst_unregister_target() respectively.
+This mapping between scsi_device and underlying LLDD module works well
+except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
+These drivers consist with core driver and actual LLDDs, and
+scsi_host_template is defined in the core driver.  So the actual LLDDs can
+be unloaded even if the scsi_device is being accessed.
 
-Bart.
+This patch series first adds ability to adjust module reference for
+scsi host by LLDDs and then fixes actual LLDDs by adjusting module
+reference after scsi host allocation.
+
+* v5:
+- Discard v4 changes and restore to v3.  Because v4 shows that
+  moving owner module field from scsi_host_template to Scsi_Host
+  requires a lot of changes and introduces complication to existing
+  drivers which don't have the module reference mismatch issue.
+- Rebased to the 4.0-rc1
+
+* v4:
+- Patch series is almost rewritten as module reference field in
+  struct scsi_host_template has been unused anymore.  So Acked-by: and
+  Reviewed-by: tags that have been received are deleted.
+
+* v3:
+- Add fix for ESP SCSI drivers
+
+* v2:
+- Pass correct module reference to usb_stor_probe1() instead of touching
+  all ums-* drivers, suggested by Alan Stern
+
+Akinobu Mita (4):
+  scsi: add ability to adjust module reference for scsi host
+  scsi: ufs: adjust module reference for scsi host
+  usb: storage: adjust module reference for scsi host
+  scsi: esp_scsi: adjust module reference for scsi host
+
+ drivers/scsi/am53c974.c          |  3 +--
+ drivers/scsi/esp_scsi.c          | 16 +++++++++++++---
+ drivers/scsi/esp_scsi.h          | 11 +++++++----
+ drivers/scsi/hosts.c             |  1 +
+ drivers/scsi/jazz_esp.c          |  3 +--
+ drivers/scsi/mac_esp.c           |  3 +--
+ drivers/scsi/scsi.c              |  4 ++--
+ drivers/scsi/sun3x_esp.c         |  3 +--
+ drivers/scsi/sun_esp.c           |  3 +--
+ drivers/scsi/ufs/ufshcd-pci.c    |  1 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c |  1 +
+ drivers/scsi/ufs/ufshcd.c        |  1 -
+ drivers/usb/storage/usb.c        |  8 +++++---
+ drivers/usb/storage/usb.h        |  7 +++++--
+ include/scsi/scsi_host.h         |  1 +
+ 15 files changed, 41 insertions(+), 25 deletions(-)
+
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: linux-usb@vger.kernel.org
+Cc: usb-storage@lists.one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
+-- 
+1.9.1
+
