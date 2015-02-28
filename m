@@ -1,113 +1,98 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH 3/9] target: Update SPC/SBC emulation for sess_prot_type
-Date: Sat, 28 Feb 2015 10:36:00 +0000
-Message-ID: <1425119766-11878-4-git-send-email-nab@daterainc.com>
+Subject: [PATCH 1/9] target: Convert DIF emulation to use cmd->prot_type
+Date: Sat, 28 Feb 2015 10:35:58 +0000
+Message-ID: <1425119766-11878-2-git-send-email-nab@daterainc.com>
 References: <1425119766-11878-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:42287 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbbB1LKC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 06:10:02 -0500
-Received: by mail-ob0-f181.google.com with SMTP id vb8so23204620obc.12
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2015 03:10:01 -0800 (PST)
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33349 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbbB1LJ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 06:09:58 -0500
+Received: by mail-ob0-f173.google.com with SMTP id uy5so23343948obc.4
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2015 03:09:57 -0800 (PST)
 In-Reply-To: <1425119766-11878-1-git-send-email-nab@daterainc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Martin Petersen <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Christoph Hellwig <hch@lst.de>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates standard INQUIRY, INQUIRY EVPD=0x86, READ_CAPACITY_16
-and control mode pages to use se_sess->sess_prot_type when determing which
-type of T10-PI related feature bits can be exposed.
+This patch changes existing DIF emulation to check the command descriptor's
+prot_type, instead of what the backend device is exposing in pi_prot_type.
 
-This is required for fabric sessions supporting T10-PI metadata to
-backend devices that don't have protection enabled.
+Since this value is already set in sbc_check_prot(), go ahead and use it to
+allow protected fabrics to function with unprotected devices.
 
 Cc: Martin Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Doug Gilbert <dgilbert@interlog.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_sbc.c | 13 +++++++++++--
- drivers/target/target_core_spc.c | 14 +++++++++-----
- 2 files changed, 20 insertions(+), 7 deletions(-)
+ drivers/target/target_core_sbc.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 5b3564a..68373c9 100644
+index 9a2f9d3..95a7a74 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -93,6 +93,8 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+@@ -1167,7 +1167,7 @@ sbc_dif_generate(struct se_cmd *cmd)
+ 			sdt = paddr + offset;
+ 			sdt->guard_tag = cpu_to_be16(crc_t10dif(daddr + j,
+ 						dev->dev_attrib.block_size));
+-			if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
++			if (cmd->prot_type == TARGET_DIF_TYPE1_PROT)
+ 				sdt->ref_tag = cpu_to_be32(sector & 0xffffffff);
+ 			sdt->app_tag = 0;
+ 
+@@ -1186,9 +1186,10 @@ sbc_dif_generate(struct se_cmd *cmd)
+ }
+ 
+ static sense_reason_t
+-sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
++sbc_dif_v1_verify(struct se_cmd *cmd, struct se_dif_v1_tuple *sdt,
+ 		  const void *p, sector_t sector, unsigned int ei_lba)
  {
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_session *sess = cmd->se_sess;
-+	int pi_prot_type = dev->dev_attrib.pi_prot_type;
-+
- 	unsigned char *rbuf;
- 	unsigned char buf[32];
- 	unsigned long long blocks = dev->transport->get_blocks(dev);
-@@ -114,8 +116,15 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
- 	 * Set P_TYPE and PROT_EN bits for DIF support
- 	 */
- 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
--		if (dev->dev_attrib.pi_prot_type)
--			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
-+		/*
-+		 * Only override a device's pi_prot_type if no T10-PI is
-+		 * available, and sess_prot_type has been explicitly enabled.
-+		 */
-+		if (!pi_prot_type)
-+			pi_prot_type = sess->sess_prot_type;
-+
-+		if (pi_prot_type)
-+			buf[12] = (pi_prot_type - 1) << 1 | 0x1;
++	struct se_device *dev = cmd->se_dev;
+ 	int block_size = dev->dev_attrib.block_size;
+ 	__be16 csum;
+ 
+@@ -1201,7 +1202,7 @@ sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
+ 		return TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED;
  	}
  
- 	if (dev->transport->get_lbppbe)
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 460e931..5b6a0af 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -103,10 +103,12 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
- 		buf[5] |= 0x8;
- 	/*
- 	 * Set Protection (PROTECT) bit when DIF has been enabled on the
--	 * device, and the transport supports VERIFY + PASS.
-+	 * device, and the fabric supports VERIFY + PASS.  Also report
-+	 * PROTECT=1 if sess_prot_type has been configured to allow T10-PI
-+	 * to unprotected devices.
- 	 */
- 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
--		if (dev->dev_attrib.pi_prot_type)
-+		if (dev->dev_attrib.pi_prot_type || cmd->se_sess->sess_prot_type)
- 			buf[5] |= 0x1;
+-	if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT &&
++	if (cmd->prot_type == TARGET_DIF_TYPE1_PROT &&
+ 	    be32_to_cpu(sdt->ref_tag) != (sector & 0xffffffff)) {
+ 		pr_err("DIFv1 Type 1 reference failed on sector: %llu tag: 0x%08x"
+ 		       " sector MSB: 0x%08x\n", (unsigned long long)sector,
+@@ -1209,7 +1210,7 @@ sbc_dif_v1_verify(struct se_device *dev, struct se_dif_v1_tuple *sdt,
+ 		return TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED;
  	}
  
-@@ -480,9 +482,11 @@ spc_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
- 	 * only for TYPE3 protection.
- 	 */
- 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
--		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
-+		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT ||
-+		    cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE1_PROT)
- 			buf[4] = 0x5;
--		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
-+		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT ||
-+			cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE3_PROT)
- 			buf[4] = 0x4;
- 	}
+-	if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE2_PROT &&
++	if (cmd->prot_type == TARGET_DIF_TYPE2_PROT &&
+ 	    be32_to_cpu(sdt->ref_tag) != ei_lba) {
+ 		pr_err("DIFv1 Type 2 reference failed on sector: %llu tag: 0x%08x"
+ 		       " ei_lba: 0x%08x\n", (unsigned long long)sector,
+@@ -1293,7 +1294,7 @@ sbc_dif_verify_write(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 				 (unsigned long long)sector, sdt->guard_tag,
+ 				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
  
-@@ -874,7 +878,7 @@ static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
- 	 * TAG field.
- 	 */
- 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
--		if (dev->dev_attrib.pi_prot_type)
-+		if (dev->dev_attrib.pi_prot_type || sess->sess_prot_type)
- 			p[5] |= 0x80;
- 	}
+-			rc = sbc_dif_v1_verify(dev, sdt, daddr + j, sector,
++			rc = sbc_dif_v1_verify(cmd, sdt, daddr + j, sector,
+ 					       ei_lba);
+ 			if (rc) {
+ 				kunmap_atomic(paddr);
+@@ -1354,7 +1355,7 @@ __sbc_dif_verify_read(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 				continue;
+ 			}
  
+-			rc = sbc_dif_v1_verify(dev, sdt, daddr + j, sector,
++			rc = sbc_dif_v1_verify(cmd, sdt, daddr + j, sector,
+ 					       ei_lba);
+ 			if (rc) {
+ 				kunmap_atomic(paddr);
 -- 
 1.9.1
 
