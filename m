@@ -1,104 +1,212 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v5 1/4] scsi: add ability to adjust module reference for scsi host
-Date: Sat, 28 Feb 2015 23:16:54 +0900
-Message-ID: <1425133017-7216-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v5 4/4] scsi: esp_scsi: adjust module reference for scsi host
+Date: Sat, 28 Feb 2015 23:16:57 +0900
+Message-ID: <1425133017-7216-5-git-send-email-akinobu.mita@gmail.com>
 References: <1425133017-7216-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:33172 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366AbbB1OR2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 09:17:28 -0500
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:39949 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588AbbB1ORl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Feb 2015 09:17:41 -0500
+Received: by paceu11 with SMTP id eu11so30310650pac.7
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Feb 2015 06:17:41 -0800 (PST)
 In-Reply-To: <1425133017-7216-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-While accessing a scsi_device, the use count of the underlying LLDD module
-is incremented.  The module reference is retrieved through .module field of
-struct scsi_host_template.
+While accessing a scsi device on host adapter supported by sub driver for
+the ESP chip (mac_esp, am53c974, sun_esp, jazz_esp, sun3x_esp), the module
+reference count is not incremented.  Because these drivers allocate scsi
+hosts with scsi_esp_template defined in ESP SCSI driver core module.  So
+these drivers always can be unloaded.
 
-This mapping between scsi_device and underlying LLDD module works well
-except ufs, unusual usb storage drivers, and sub drivers for esp_scsi.
-These drivers consist with core driver and actual LLDDs, and
-scsi_host_template is defined in the core driver.  So the actual LLDDs can
-be unloaded even if the scsi_device is being accessed.
-
-This adds .module field in struct Scsi_Host and let the module reference
-be retrieved though it instead of struct scsi_host_template.  This allows
-the actual LLDDs adjust module reference.
+This fixes it by passing correct module reference to newly introduced
+scsi_esp_host_alloc() so that .module field in struct Scsi_Host can be
+adjusted.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
+Acked-by: David S. Miller <davem@davemloft.net>
+Acked-by: Hannes Reinecke <hare@suse.de>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: linux-usb@vger.kernel.org
-Cc: usb-storage@lists.one-eyed-alien.net
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org
 ---
-Change from v3
-- Rebased to the 4.0-rc1
+No change from v3
 
- drivers/scsi/hosts.c     | 1 +
- drivers/scsi/scsi.c      | 4 ++--
- include/scsi/scsi_host.h | 1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/am53c974.c  |  3 +--
+ drivers/scsi/esp_scsi.c  | 16 +++++++++++++---
+ drivers/scsi/esp_scsi.h  | 11 +++++++----
+ drivers/scsi/jazz_esp.c  |  3 +--
+ drivers/scsi/mac_esp.c   |  3 +--
+ drivers/scsi/sun3x_esp.c |  3 +--
+ drivers/scsi/sun_esp.c   |  3 +--
+ 7 files changed, 25 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 8bb173e..21f1442 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -411,6 +411,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	 */
- 	shost->max_cmd_len = 12;
- 	shost->hostt = sht;
-+	shost->module = sht->module;
- 	shost->this_id = sht->this_id;
- 	shost->can_queue = sht->can_queue;
- 	shost->sg_tablesize = sht->sg_tablesize;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index c9c3b57..0d89344 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -981,7 +981,7 @@ int scsi_device_get(struct scsi_device *sdev)
- 		return -ENXIO;
- 	/* We can fail try_module_get if we're doing SCSI operations
- 	 * from module exit (like cache flush) */
--	__module_get(sdev->host->hostt->module);
-+	__module_get(sdev->host->module);
- 
- 	return 0;
- }
-@@ -997,7 +997,7 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
+diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
+index a6f5ee8..3b53f01 100644
+--- a/drivers/scsi/am53c974.c
++++ b/drivers/scsi/am53c974.c
+@@ -400,7 +400,6 @@ static void dc390_check_eeprom(struct esp *esp)
+ static int pci_esp_probe_one(struct pci_dev *pdev,
+ 			      const struct pci_device_id *id)
  {
--	module_put(sdev->host->hostt->module);
-+	module_put(sdev->host->module);
- 	put_device(&sdev->sdev_gendev);
- }
- EXPORT_SYMBOL(scsi_device_put);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index e113c75..8742bfd 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -620,6 +620,7 @@ struct Scsi_Host {
- 	 */
- 	unsigned short max_cmd_len;
+-	struct scsi_host_template *hostt = &scsi_esp_template;
+ 	int err = -ENODEV;
+ 	struct Scsi_Host *shost;
+ 	struct esp *esp;
+@@ -417,7 +416,7 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
+ 		goto fail_disable_device;
+ 	}
  
-+	struct module *module;
- 	int this_id;
- 	int can_queue;
- 	short cmd_per_lun;
+-	shost = scsi_host_alloc(hostt, sizeof(struct esp));
++	shost = scsi_esp_host_alloc(sizeof(struct esp));
+ 	if (!shost) {
+ 		dev_printk(KERN_INFO, &pdev->dev,
+ 			   "failed to allocate scsi host\n");
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 065b25d..4484c90 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2675,8 +2675,7 @@ static const char *esp_info(struct Scsi_Host *host)
+ 	return "esp";
+ }
+ 
+-struct scsi_host_template scsi_esp_template = {
+-	.module			= THIS_MODULE,
++static struct scsi_host_template scsi_esp_template = {
+ 	.name			= "esp",
+ 	.info			= esp_info,
+ 	.queuecommand		= esp_queuecommand,
+@@ -2696,7 +2695,18 @@ struct scsi_host_template scsi_esp_template = {
+ 	.skip_settle_delay	= 1,
+ 	.use_blk_tags		= 1,
+ };
+-EXPORT_SYMBOL(scsi_esp_template);
++
++struct Scsi_Host *__scsi_esp_host_alloc(int privsize, struct module *owner)
++{
++	struct Scsi_Host *shost;
++
++	shost = scsi_host_alloc(&scsi_esp_template, privsize);
++	if (shost)
++		shost->module = owner;
++
++	return shost;
++}
++EXPORT_SYMBOL(__scsi_esp_host_alloc);
+ 
+ static void esp_get_signalling(struct Scsi_Host *host)
+ {
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 84dcbe4..9309e08 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -544,9 +544,8 @@ struct esp {
+ 
+ /* A front-end driver for the ESP chip should do the following in
+  * it's device probe routine:
+- * 1) Allocate the host and private area using scsi_host_alloc()
+- *    with size 'sizeof(struct esp)'.  The first argument to
+- *    scsi_host_alloc() should be &scsi_esp_template.
++ * 1) Allocate the host and private area using scsi_esp_host_alloc()
++ *    with size 'sizeof(struct esp)'.
+  * 2) Set host->max_id as appropriate.
+  * 3) Set esp->host to the scsi_host itself, and esp->dev
+  *    to the device object pointer.
+@@ -573,7 +572,11 @@ struct esp {
+  * 13) Check scsi_esp_register() return value, release all resources
+  *     if an error was returned.
+  */
+-extern struct scsi_host_template scsi_esp_template;
++extern struct Scsi_Host *__scsi_esp_host_alloc(int privsize,
++						struct module *owner);
++#define scsi_esp_host_alloc(privsize)	\
++	__scsi_esp_host_alloc(privsize, THIS_MODULE)
++
+ extern int scsi_esp_register(struct esp *, struct device *);
+ 
+ extern void scsi_esp_unregister(struct esp *);
+diff --git a/drivers/scsi/jazz_esp.c b/drivers/scsi/jazz_esp.c
+index 9aaa74e..9c268f7 100644
+--- a/drivers/scsi/jazz_esp.c
++++ b/drivers/scsi/jazz_esp.c
+@@ -131,13 +131,12 @@ static const struct esp_driver_ops jazz_esp_ops = {
+ 
+ static int esp_jazz_probe(struct platform_device *dev)
+ {
+-	struct scsi_host_template *tpnt = &scsi_esp_template;
+ 	struct Scsi_Host *host;
+ 	struct esp *esp;
+ 	struct resource *res;
+ 	int err;
+ 
+-	host = scsi_host_alloc(tpnt, sizeof(struct esp));
++	host = scsi_esp_host_alloc(sizeof(struct esp));
+ 
+ 	err = -ENOMEM;
+ 	if (!host)
+diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
+index 14c0334..ad4ad71 100644
+--- a/drivers/scsi/mac_esp.c
++++ b/drivers/scsi/mac_esp.c
+@@ -483,7 +483,6 @@ static struct esp_driver_ops mac_esp_ops = {
+ 
+ static int esp_mac_probe(struct platform_device *dev)
+ {
+-	struct scsi_host_template *tpnt = &scsi_esp_template;
+ 	struct Scsi_Host *host;
+ 	struct esp *esp;
+ 	int err;
+@@ -495,7 +494,7 @@ static int esp_mac_probe(struct platform_device *dev)
+ 	if (dev->id > 1)
+ 		return -ENODEV;
+ 
+-	host = scsi_host_alloc(tpnt, sizeof(struct esp));
++	host = scsi_esp_host_alloc(sizeof(struct esp));
+ 
+ 	err = -ENOMEM;
+ 	if (!host)
+diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
+index e26e81d..adb4368 100644
+--- a/drivers/scsi/sun3x_esp.c
++++ b/drivers/scsi/sun3x_esp.c
+@@ -196,13 +196,12 @@ static const struct esp_driver_ops sun3x_esp_ops = {
+ 
+ static int esp_sun3x_probe(struct platform_device *dev)
+ {
+-	struct scsi_host_template *tpnt = &scsi_esp_template;
+ 	struct Scsi_Host *host;
+ 	struct esp *esp;
+ 	struct resource *res;
+ 	int err = -ENOMEM;
+ 
+-	host = scsi_host_alloc(tpnt, sizeof(struct esp));
++	host = scsi_esp_host_alloc(sizeof(struct esp));
+ 	if (!host)
+ 		goto fail;
+ 
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index 7b6d4c2..1449bea 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -489,12 +489,11 @@ static const struct esp_driver_ops sbus_esp_ops = {
+ static int esp_sbus_probe_one(struct platform_device *op,
+ 			      struct platform_device *espdma, int hme)
+ {
+-	struct scsi_host_template *tpnt = &scsi_esp_template;
+ 	struct Scsi_Host *host;
+ 	struct esp *esp;
+ 	int err;
+ 
+-	host = scsi_host_alloc(tpnt, sizeof(struct esp));
++	host = scsi_esp_host_alloc(sizeof(struct esp));
+ 
+ 	err = -ENOMEM;
+ 	if (!host)
 -- 
 1.9.1
 
