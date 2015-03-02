@@ -1,72 +1,62 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [scsi 2/2] scsi_debug: add UFS WLUNs
-Date: Sun,  1 Mar 2015 23:25:39 +0200
-Message-ID: <1425245139-16555-2-git-send-email-tomas.winkler@intel.com>
-References: <1425245139-16555-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53043 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbbCAV0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Mar 2015 16:26:35 -0500
-In-Reply-To: <1425245139-16555-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Sun, 01 Mar 2015 22:59:34 -0800
+Message-ID: <1425279574.13530.53.camel@haakon3.risingtidesystems.com>
+References: <54B63F74.2040702@sandisk.com>
+	 <20150115090829.GA14154@infradead.org> <54B7E70C.8020304@sandisk.com>
+	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
+	 <54E7112F.2080901@sandisk.com>
+	 <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
+	 <54ED8B38.10904@sandisk.com>
+	 <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
+	 <54F1ADAF.90808@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <54F1ADAF.90808@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley\"" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Douglas Gilbert <dgilbert@interlog.com>
 
-Add ufs wluns: ufs, boot, and rpmb
-enabled by boolean ufs module parameter.
+On Sat, 2015-02-28 at 12:59 +0100, Bart Van Assche wrote:
+> On 02/27/15 22:58, Nicholas A. Bellinger wrote:
+> > Looking at how your attempting to drive creation + removal of struct
+> > config_group from within kernel code here:
+> > 
+> > target: Add target port registration API
+> > https://github.com/bvanassche/linux/commit/dbb8bf32db3428ede6ecc688ede1e5e01fc59d88
+> > 
+> > is the exactly the wrong approach to take.
+> > 
+> > The creation and deletion of struct config_group must be driven by
+> > user-space, and by user-space only.  No exceptions will be made.
+> 
+> There exists an approach that preserves the ABI of both SCST and LIO,
+> namely:
+> * Add empty transport_register_wwn() and transport_unregister_wwn()
+>   functions in the LIO core.
+> * Add calls to these functions at the appropriate place in the FC
+>   and SRP target drivers.
+> * In the SCST implementation of the unified target driver API, route
+>   calls to transport_register_wwn() and transport_unregister_wwn() to
+>   scst_register_target() and scst_unregister_target() respectively.
+> 
 
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/scsi/scsi_debug.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+NAK.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 5d1bb12adc43..73557df003c2 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -144,6 +144,7 @@ static const char *scsi_debug_version_date = "20141022";
- #define DEF_WRITESAME_LENGTH 0xFFFF
- #define DEF_STRICT 0
- #define DELAY_OVERRIDDEN -9999
-+#define DEF_UFS 0
- 
- /* bit mask values for scsi_debug_opts */
- #define SCSI_DEBUG_OPT_NOISE   1
-@@ -556,6 +557,7 @@ static bool scsi_debug_removable = DEF_REMOVABLE;
- static bool scsi_debug_clustering;
- static bool scsi_debug_host_lock = DEF_HOST_LOCK;
- static bool scsi_debug_strict = DEF_STRICT;
-+static bool scsi_debug_ufs = DEF_UFS;
- static bool sdebug_any_injecting_opt;
- 
- static atomic_t sdebug_cmnd_count;
-@@ -4192,6 +4194,7 @@ module_param_named(vpd_use_hostno, scsi_debug_vpd_use_hostno, int,
- 		   S_IRUGO | S_IWUSR);
- module_param_named(write_same_length, scsi_debug_write_same_length, int,
- 		   S_IRUGO | S_IWUSR);
-+module_param_named(ufs, scsi_debug_ufs, bool, S_IRUGO | S_IWUSR);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -5426,6 +5429,15 @@ static int sdebug_driver_probe(struct device * dev)
- 	/* REPORT LUNS */
- 	sdebug_register_w_lun(0x01);
- 
-+	if (scsi_debug_ufs) {
-+		/* boot */
-+		sdebug_register_w_lun(0x30);
-+		/* rpmb */
-+		sdebug_register_w_lun(0x44);
-+		/* UFS */
-+		sdebug_register_w_lun(0x50);
-+	}
-+
- 	hpnt->max_lun = sdebug_max_luns();
- 
- 	host_prot = 0;
--- 
-1.9.3
+I'll not consider any hooks in upstream target code, and certainly not
+driver hooks for a control-plane approach unanimously rejected by both
+configfs and sysfs maintainers in 2008 and 2010.
 
+The whole point of target_core_fabric_configfs.c is to transparently
+reference count fabric driver data structures populated underneath
+/sys/kernel/config/target/$FABRIC/, who's design also has the added
+bonus of providing module reference counting to drivers 'for free'.
+
+So until you're prepared to evolve on this issue and stop pretending as
+if the future didn't already happen, this type of discussion at LSF is a
+waste of time.
+
+--nab
