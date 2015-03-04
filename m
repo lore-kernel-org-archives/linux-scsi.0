@@ -1,70 +1,48 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 2/2] bnx2fc: bnx2fc_io.c: match wait_for_completion_timeout return type
-Date: Wed,  4 Mar 2015 09:27:17 -0500
-Message-ID: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: crash in pscsi_get_device_type
+Date: Wed, 4 Mar 2015 16:00:04 +0100
+Message-ID: <20150304150004.GA22266@aepfle.de>
+References: <20150226092604.GA1119@aepfle.de>
+ <1425037939.30824.89.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:27516 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758601AbbCDPAH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 10:00:07 -0500
+Content-Disposition: inline
+In-Reply-To: <1425037939.30824.89.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-return type of wait_for_completion_timeout is unsigned long not int. An
-appropriately named variable of type unsigned long is added and the
-assignments fixed up.
+On Fri, Feb 27, Nicholas A. Bellinger wrote:
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+> On Thu, 2015-02-26 at 10:26 +0100, Olaf Hering wrote:
 
-The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
-CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
-CONFIG_SCSI_BNX2X_FCOE=m
+> > [  145.661468] IP: [<ffffffffa024f17b>] pscsi_get_device_type+0xb/0x20 [target_core_pscsi]
+> Looks like a PSCSI specific NULL pointer dereference when reading the
+> dev_type attribute if a backend device was not able to be successfully
+> configured -> enabled.
+> 
+> Here's a quick patch to address this case.  Please confirm on your end.
 
-Patch is against 4.0-rc2 (localversion-next is -next-20150304)
+Unfortunately I can not reproduce it anymore. Maybe it depends on the .config?
 
- drivers/scsi/bnx2fc/bnx2fc_io.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Olaf
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 9ecca85..77f8c1e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -703,6 +703,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 	struct fcp_cmnd *fcp_cmnd;
- 	int task_idx, index;
- 	int rc = SUCCESS;
-+	unsigned long time_left;
- 	u16 xid;
- 	u32 sid, did;
- 	unsigned long start = jiffies;
-@@ -810,7 +811,7 @@ retry_tmf:
- 	bnx2fc_ring_doorbell(tgt);
- 	spin_unlock_bh(&tgt->tgt_lock);
- 
--	rc = wait_for_completion_timeout(&io_req->tm_done,
-+	time_left = wait_for_completion_timeout(&io_req->tm_done,
- 					 BNX2FC_TM_TIMEOUT * HZ);
- 	spin_lock_bh(&tgt->tgt_lock);
- 
-@@ -824,17 +825,17 @@ retry_tmf:
- 		io_req->wait_for_comp = 1;
- 		bnx2fc_initiate_cleanup(io_req);
- 		spin_unlock_bh(&tgt->tgt_lock);
--		rc = wait_for_completion_timeout(&io_req->tm_done,
-+		time_left = wait_for_completion_timeout(&io_req->tm_done,
- 						 BNX2FC_FW_TIMEOUT);
- 		spin_lock_bh(&tgt->tgt_lock);
- 		io_req->wait_for_comp = 0;
--		if (!rc)
-+		if (!time_left)
- 			kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	}
- 
- 	spin_unlock_bh(&tgt->tgt_lock);
- 
--	if (!rc) {
-+	if (!time_left) {
- 		BNX2FC_TGT_DBG(tgt, "task mgmt command failed...\n");
- 		rc = FAILED;
- 	} else {
--- 
-1.7.10.4
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 1045dcd..f6c954c 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -1121,7 +1121,7 @@ static u32 pscsi_get_device_type(struct se_device *dev)
+>         struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
+>         struct scsi_device *sd = pdv->pdv_sd;
+>  
+> -       return sd->type;
+> +       return (sd) ? sd->type : TYPE_NO_LUN;
+>  }
+>  
+>  static sector_t pscsi_get_blocks(struct se_device *dev)
