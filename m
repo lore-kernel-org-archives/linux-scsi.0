@@ -1,107 +1,78 @@
-From: Yann Droneaud <ydroneaud-RlY5vtjFyJ3QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH, resend] IB/srp: Add 64-bit LUN support
-Date: Wed, 04 Mar 2015 14:16:22 +0100
-Message-ID: <1425474982.3069.21.camel@opteya.com>
-References: <54F6D7ED.3080606@sandisk.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v4 4/4] scsi: ufs: inject errors to verify error handling
+Date: Wed, 4 Mar 2015 22:50:52 +0900
+Message-ID: <CAC5umyhjW7=oA_92SfPQu6gOzU9Qm-0EqgOGtGtVDwM9Kiz1OA@mail.gmail.com>
+References: <1425308203-20695-1-git-send-email-gbroner@codeaurora.org>
+	<1425308203-20695-5-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <54F6D7ED.3080606-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Nathan Fontenot <nfont-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1425308203-20695-5-git-send-email-gbroner@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Gilad Broner <gbroner@codeaurora.org>
+Cc: Jej B <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Ingo Molnar <mingo@kernel.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Davidlohr Bueso <davidlohr@hp.com>, Andi Kleen <ak@linux.intel.com>, Alexei Starovoitov <ast@plumgrid.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Al Viro <viro@zeniv.linux.org.uk>, Dan Streetman <ddstreet@ieee.or>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+2015-03-02 23:56 GMT+09:00 Gilad Broner <gbroner@codeaurora.org>:
+> From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>
+> Use fault-injection framework to simulate error conditions
+> in the controller and verify error handling mechanisms
+> implemented in UFS host controller driver.
+>
+> This is used only during development and hence
+> guarded by CONFIG_UFS_FAULT_INJECTION debug config option.
 
-Le mercredi 04 mars 2015 =C3=A0 11:01 +0100, Bart Van Assche a =C3=A9cr=
-it :
-> The SCSI standard defines 64-bit values for LUNs. Large arrays
-> employing large or hierarchical LUN numbers become more and more
-> common. So update the SRP initiator to use 64-bit LUN numbers.
-> See also Hannes Reinecke, commit 9cb78c16f5da ("scsi: use 64-bit LUNs=
-"),
-> June 2014.
->=20
+This feature looks useful, but I have a couple of comments and
+question.
 
-Thanks for the added description.
+> +static bool inject_cmd_hang_tr(struct ufs_hba *hba)
+> +{
+> +       int tag;
+> +
+> +       tag = find_first_bit(&hba->outstanding_reqs, hba->nutrs);
+> +       if (tag == hba->nutrs)
+> +               return 0;
+> +
+> +       __clear_bit(tag, &hba->outstanding_reqs);
+> +       hba->lrb[tag].cmd = NULL;
+> +       __clear_bit(tag, &hba->lrb_in_use);
 
-> The largest LUN number that has been tested is 0xd2003fff00000000.
->=20
-> Checked the following structure sizes with gdb:
-> * sizeof(struct srp_cmd) =3D 48
-> * sizeof(struct srp_tsk_mgmt) =3D 48
-> * sizeof(struct srp_aer_req) =3D 36
->=20
-> The ibmvscsi changes have been compile tested only on a PPC system.
->=20
-> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-> Reviewed-by: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-> Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-> Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
-> Cc: Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> Cc: Nathan Fontenot <nfont-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> Cc: Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> ---
->  drivers/infiniband/ulp/srp/ib_srp.c | 12 ++++++------
->  drivers/scsi/ibmvscsi/ibmvscsi.c    |  6 +++---
->  include/scsi/srp.h                  |  7 ++++---
->  3 files changed, 13 insertions(+), 12 deletions(-)
->=20
-> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband=
-/ulp/srp/ib_srp.c
-> index a0e24a8..e427454 100644
-> --- a/drivers/infiniband/ulp/srp/ib_srp.c
-> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> @@ -3146,7 +3146,7 @@ static ssize_t srp_create_target(struct device =
-*dev,
->  	target_host->transportt  =3D ib_srp_transport_template;
->  	target_host->max_channel =3D 0;
->  	target_host->max_id      =3D 1;
-> -	target_host->max_lun     =3D SRP_MAX_LUN;
-> +	target_host->max_lun     =3D -1LL;
+hba->lrb_in_use is a bitmap set by test_and_set_bit_lock().  So
+this should be cleared by clear_bit_unlock().
 
-I guess you can remove SRP_MAX_LUN from
-drivers/infiniband/ulp/srp/ib_srp.h too.
+And as soon as the bit corresponds to this slot in hba->lrb_in_use is
+cleared, this slot could be reused.  But if the request corresponds
+to the slot is not completed yet, it could sacrifice the new request,
+too.  So should we only inject into the commands which have been
+completed like this?
 
->  	target_host->max_cmd_len =3D sizeof ((struct srp_cmd *) (void *) 0L=
-)->cdb;
-> =20
->  	target =3D host_to_target(target_host);
+        tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+        completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
+        tag = find_first_bit(&completed_reqs, hba->nutrs);
+        ...
 
-> diff --git a/include/scsi/srp.h b/include/scsi/srp.h
-> index 1ae84db..5be834d 100644
-> --- a/include/scsi/srp.h
-> +++ b/include/scsi/srp.h
-> @@ -42,6 +42,7 @@
->   */
-> =20
->  #include <linux/types.h>
-> +#include <scsi/scsi.h>
-> =20
->  enum {
->  	SRP_LOGIN_REQ	=3D 0x00,
+Or clear the corresponding bit in REG_UTP_TASK_REQ_LIST_CLEAR, just
+like what inject_fatal_err_tr() does?
 
-@@ -54,7 +54,6 @@ enum {
-        SRP_DLID_REDIRECT       =3D 2,
-        SRP_STALE_CONN          =3D 3,
-=20
--       SRP_MAX_LUN             =3D 512,
-        SRP_DEF_SG_TABLESIZE    =3D 12,
-=20
-        SRP_DEFAULT_QUEUE_SIZE  =3D 1 << 6,
+> +
+> +       /* command hang injected */
+> +       return 1;
+> +}
+> +
+> +static int inject_cmd_hang_tm(struct ufs_hba *hba)
+> +{
+> +       int tag;
+> +
+> +       tag = find_first_bit(&hba->outstanding_tasks, hba->nutmrs);
+> +       if (tag == hba->nutmrs)
+> +               return 0;
+> +
+> +       __clear_bit(tag, &hba->outstanding_tasks);
+> +       __clear_bit(tag, &hba->tm_slots_in_use);
+> +
+> +       /* command hang injected */
+> +       return 1;
+> +}
 
-
-Regards.
-
---=20
-Yann Droneaud
-OPTEYA
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The same goes for hba->tm_slots_in_use.
