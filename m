@@ -1,48 +1,107 @@
-From: Tapasweni Pathak <tapaswenipathak@gmail.com>
-Subject: [PATCH] drivers: scsi: ufs: Fix possible null derefrence
-Date: Wed, 4 Mar 2015 18:19:48 +0530
-Message-ID: <20150304124948.GA3288@kt-Inspiron-3542>
+From: Yann Droneaud <ydroneaud-RlY5vtjFyJ3QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH, resend] IB/srp: Add 64-bit LUN support
+Date: Wed, 04 Mar 2015 14:16:22 +0100
+Message-ID: <1425474982.3069.21.camel@opteya.com>
+References: <54F6D7ED.3080606@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: tapaswenipathak@gmail.com, julia.lawall@lip6.fr
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54F6D7ED.3080606-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Nathan Fontenot <nfont-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Check for null before being dereferenced to avoid a invalid null
-dereference.
+Hi,
 
-Found using Coccinelle.
+Le mercredi 04 mars 2015 =C3=A0 11:01 +0100, Bart Van Assche a =C3=A9cr=
+it :
+> The SCSI standard defines 64-bit values for LUNs. Large arrays
+> employing large or hierarchical LUN numbers become more and more
+> common. So update the SRP initiator to use 64-bit LUN numbers.
+> See also Hannes Reinecke, commit 9cb78c16f5da ("scsi: use 64-bit LUNs=
+"),
+> June 2014.
+>=20
 
-Signed-off-by: Tapasweni Pathak <tapaswenipathak@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- drivers/scsi/ufs/ufshcd.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Thanks for the added description.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5d60a86..c54e64f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4268,12 +4268,15 @@ static int ufshcd_config_vreg(struct device *dev,
- 		struct ufs_vreg *vreg, bool on)
- {
- 	int ret = 0;
--	struct regulator *reg = vreg->reg;
--	const char *name = vreg->name;
-+	struct regulator *reg;
-+	const char *name;
- 	int min_uV, uA_load;
+> The largest LUN number that has been tested is 0xd2003fff00000000.
+>=20
+> Checked the following structure sizes with gdb:
+> * sizeof(struct srp_cmd) =3D 48
+> * sizeof(struct srp_tsk_mgmt) =3D 48
+> * sizeof(struct srp_aer_req) =3D 36
+>=20
+> The ibmvscsi changes have been compile tested only on a PPC system.
+>=20
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Reviewed-by: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+> Cc: Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+> Cc: Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>
+> Cc: Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> Cc: Nathan Fontenot <nfont-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> Cc: Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+> ---
+>  drivers/infiniband/ulp/srp/ib_srp.c | 12 ++++++------
+>  drivers/scsi/ibmvscsi/ibmvscsi.c    |  6 +++---
+>  include/scsi/srp.h                  |  7 ++++---
+>  3 files changed, 13 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband=
+/ulp/srp/ib_srp.c
+> index a0e24a8..e427454 100644
+> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+> @@ -3146,7 +3146,7 @@ static ssize_t srp_create_target(struct device =
+*dev,
+>  	target_host->transportt  =3D ib_srp_transport_template;
+>  	target_host->max_channel =3D 0;
+>  	target_host->max_id      =3D 1;
+> -	target_host->max_lun     =3D SRP_MAX_LUN;
+> +	target_host->max_lun     =3D -1LL;
 
- 	BUG_ON(!vreg);
+I guess you can remove SRP_MAX_LUN from
+drivers/infiniband/ulp/srp/ib_srp.h too.
 
-+	reg = vreg->reg;
-+	name = vreg->name;
-+
- 	if (regulator_count_voltages(reg) > 0) {
- 		min_uV = on ? vreg->min_uV : 0;
- 		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+>  	target_host->max_cmd_len =3D sizeof ((struct srp_cmd *) (void *) 0L=
+)->cdb;
+> =20
+>  	target =3D host_to_target(target_host);
+
+> diff --git a/include/scsi/srp.h b/include/scsi/srp.h
+> index 1ae84db..5be834d 100644
+> --- a/include/scsi/srp.h
+> +++ b/include/scsi/srp.h
+> @@ -42,6 +42,7 @@
+>   */
+> =20
+>  #include <linux/types.h>
+> +#include <scsi/scsi.h>
+> =20
+>  enum {
+>  	SRP_LOGIN_REQ	=3D 0x00,
+
+@@ -54,7 +54,6 @@ enum {
+        SRP_DLID_REDIRECT       =3D 2,
+        SRP_STALE_CONN          =3D 3,
+=20
+-       SRP_MAX_LUN             =3D 512,
+        SRP_DEF_SG_TABLESIZE    =3D 12,
+=20
+        SRP_DEFAULT_QUEUE_SIZE  =3D 1 << 6,
+
+
+Regards.
+
+--=20
+Yann Droneaud
+OPTEYA
+
+
 --
-1.7.9.5
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
