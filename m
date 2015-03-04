@@ -1,65 +1,52 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: noise in target_core_register_fabric
-Date: Wed, 4 Mar 2015 16:46:20 +0100
-Message-ID: <20150304154620.GA32023@aepfle.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH, resend] IB/srp: Add 64-bit LUN support
+Date: Wed, 4 Mar 2015 16:54:08 +0100
+Message-ID: <54F72AA0.1070903@sandisk.com>
+References: <54F6D7ED.3080606@sandisk.com>
+ <1425474982.3069.21.camel@opteya.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0060.outbound.protection.outlook.com ([157.56.110.60]:44696
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932807AbbCDPyQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Mar 2015 10:54:16 -0500
+In-Reply-To: <1425474982.3069.21.camel@opteya.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yann Droneaud <ydroneaud@opteya.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Brian King <brking@linux.vnet.ibm.com>, Nathan Fontenot <nfont@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-rdma <linux-rdma@vger.kernel.org>
 
-Is there a need to fill dmesg with noise like shown below whenever
-targetcli-3.0 runs a command? I think the pr_err calls in those functions
-should be converted to pr_debug.
+On 03/04/15 14:16, Yann Droneaud wrote:
+> Le mercredi 04 mars 2015 =C3=A0 11:01 +0100, Bart Van Assche a =C3=A9=
+crit :
+>> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniban=
+d/ulp/srp/ib_srp.c
+>> index a0e24a8..e427454 100644
+>> --- a/drivers/infiniband/ulp/srp/ib_srp.c
+>> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
+>> @@ -3146,7 +3146,7 @@ static ssize_t srp_create_target(struct device=
+ *dev,
+>>  	target_host->transportt  =3D ib_srp_transport_template;
+>>  	target_host->max_channel =3D 0;
+>>  	target_host->max_id      =3D 1;
+>> -	target_host->max_lun     =3D SRP_MAX_LUN;
+>> +	target_host->max_lun     =3D -1LL;
+>=20
+> I guess you can remove SRP_MAX_LUN from
+> drivers/infiniband/ulp/srp/ib_srp.h too.
 
-Olaf
+Hello Yann,
 
-.....
-[ 1240.045518] target_core_register_fabric() trying autoload for fc
-[ 1240.045520] target_core_get_fabric() failed for fc
-[ 1240.045926] target_core_register_fabric() trying autoload for usb_gadget
-[ 1240.045928] target_core_get_fabric() failed for usb_gadget
-[ 1240.046236] target_core_register_fabric() trying autoload for vhost
-[ 1240.046238] target_core_get_fabric() failed for vhost
-[ 1240.062569] target_core_register_fabric() trying autoload for srpt
-[ 1240.062571] target_core_get_fabric() failed for srpt
-[ 1240.069610] target_core_register_fabric() trying autoload for qla2xxx
-[ 1240.069613] target_core_get_fabric() failed for qla2xxx
-[ 1240.076049] target_core_register_fabric() trying autoload for fc
-[ 1240.076051] target_core_get_fabric() failed for fc
-[ 1240.076465] target_core_register_fabric() trying autoload for usb_gadget
-[ 1240.076467] target_core_get_fabric() failed for usb_gadget
-[ 1240.076770] target_core_register_fabric() trying autoload for vhost
-[ 1240.076772] target_core_get_fabric() failed for vhost
-[ 1240.088177] target_core_register_fabric() trying autoload for srpt
-[ 1240.088179] target_core_get_fabric() failed for srpt
-[ 1240.097338] target_core_register_fabric() trying autoload for qla2xxx
-[ 1240.097340] target_core_get_fabric() failed for qla2xxx
-[ 1240.104335] target_core_register_fabric() trying autoload for fc
-[ 1240.104338] target_core_get_fabric() failed for fc
-[ 1240.104801] target_core_register_fabric() trying autoload for usb_gadget
-[ 1240.104803] target_core_get_fabric() failed for usb_gadget
-[ 1240.105182] target_core_register_fabric() trying autoload for vhost
-[ 1240.105184] target_core_get_fabric() failed for vhost
-[ 1240.237564] target_core_register_fabric() trying autoload for srpt
-[ 1240.237567] target_core_get_fabric() failed for srpt
-[ 1240.246394] target_core_register_fabric() trying autoload for qla2xxx
-[ 1240.246396] target_core_get_fabric() failed for qla2xxx
-[ 1240.252862] target_core_register_fabric() trying autoload for fc
-[ 1240.252864] target_core_get_fabric() failed for fc
-[ 1240.253303] target_core_register_fabric() trying autoload for usb_gadget
-[ 1240.253305] target_core_get_fabric() failed for usb_gadget
-[ 1240.253597] target_core_register_fabric() trying autoload for vhost
-[ 1240.253599] target_core_get_fabric() failed for vhost
-[ 1240.270028] target_core_register_fabric() trying autoload for srpt
-[ 1240.270030] target_core_get_fabric() failed for srpt
-[ 1240.277044] target_core_register_fabric() trying autoload for qla2xxx
-[ 1240.277046] target_core_get_fabric() failed for qla2xxx
-[ 1240.283666] target_core_register_fabric() trying autoload for fc
-[ 1240.283669] target_core_get_fabric() failed for fc
-[ 1240.284102] target_core_register_fabric() trying autoload for usb_gadget
-[ 1240.284104] target_core_get_fabric() failed for usb_gadget
-....
+That sounds like a good idea to me. I will update this patch accordingl=
+y.
+
+Bart.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
