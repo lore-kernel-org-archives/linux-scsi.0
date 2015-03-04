@@ -1,20 +1,51 @@
 From: Praveen Murali <pmurali@logicube.com>
-Subject: [libsas] Kernel Crash in smp_execute_task
-Date: Wed, 4 Mar 2015 21:42:49 +0000
-Message-ID: <154a8ccd0622409b84859abb1c3259f3@EX01.lg.local>
+Subject: RE: [libsas] Kernel Crash in smp_execute_task
+Date: Wed, 4 Mar 2015 23:29:28 +0000
+Message-ID: <68a5e8f0ce4f4630bafe5f3505334f3e@EX01.lg.local>
+References: <154a8ccd0622409b84859abb1c3259f3@EX01.lg.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c12o142.mxlogic.net ([208.65.145.75]:45788 "EHLO
-	p02c12o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbbCDVua convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 16:50:30 -0500
+Received: from p01c12o148.mxlogic.net ([208.65.145.71]:43134 "EHLO
+	p01c12o148.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811AbbCDX2v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 18:28:51 -0500
+In-Reply-To: <154a8ccd0622409b84859abb1c3259f3@EX01.lg.local>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 Cc: "JBottomley@Parallels.com" <JBottomley@Parallels.com>
+
+On second thoughts, should we even let smp commands/requests thru for sas end devices (dev->dev_type == SAS_END_DEV) ? if so, wont the following patch more sense? (also, in my last mail the kernel logs were all messed up; sorry dint realize that when I sent the mail. Trying to fix it here)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 58e6183..a44019a 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -72,6 +72,14 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
+        struct sas_internal *i =
+                to_sas_internal(dev->port->ha->core.shost->transportt);
+ 
++       /* can we send smp commands to a device? */
++       if (dev->dev_type == SAS_END_DEV) {
++                       printk("%s: can we send a smp request to a device?\n",
++                                  __func__);
++                       res = -ECOMM;
++                       goto out;
++       }
++
+        mutex_lock(&dev->ex_dev.cmd_mutex);
+        for (retry = 0; retry < 3; retry++) {
+                if (test_bit(SAS_DEV_GONE, &dev->state)) {
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Praveen Murali
+Sent: Wednesday, March 04, 2015 1:43 PM
+To: linux-scsi@vger.kernel.org; dan.j.williams@intel.com
+Cc: JBottomley@Parallels.com
+Subject: [libsas] Kernel Crash in smp_execute_task
 
 Hi Dan,
   I am experiencing a crash in smp_execute_task when it calls mutex_lock with 15K SAS drives HP Model EH0146FAWJB (Seagate model ST9146852SS) connected to a Marvell 88SE9485 SAS/SATA 6Gb/s controller; kernel version is 3.4.87. The crash happens as soon as I connect this drive; crash dump is included in the mail. 
@@ -25,7 +56,7 @@ This mutex lock was introduced in the commit 89d3cf6ac3cdc4f15a82709f8c78ed169a9
 Thanks for your time!
 Praveen 
 
---------------------------Begin Change in sas_expander.c----------------------------------- 
+--------------------------Begin Change in sas_expander.c-----------------------------------
  diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
 index 58e6183..505ada2 100644
 --- a/drivers/scsi/libsas/sas_expander.c
@@ -53,46 +84,42 @@ index 58e6183..505ada2 100644
 --------------------------End Change in sas_expander.c-----------------------------------
 
 --------------------------------------Begin Kernel log after change-------------------------------
-[  132.667582] sas: phy-1:0 added to port-1:0, phy_mask:0x1 (5000c5001cb4c151)
-[  132.667595] drivers/scsi/mvsas/mv_sas.c 1225:set wide port phy map 1
-[  132.687496] sas: DOING DISCOVERY on port 0, pid:5
-[  132.687509] sas: DONE DISCOVERY on port 0, pid:5, result:0
+[  132.667582] sas: phy-1:0 added to port-1:0, phy_mask:0x1 (5000c5001cb4c151) [  132.667595] drivers/scsi/mvsas/mv_sas.c 1225:set wide port phy map 1 [  132.687496] sas: DOING DISCOVERY on port 0, pid:5 [  132.687509] sas: DONE DISCOVERY on port 0, pid:5, result:0
 [  133.001934] scsi 1:0:0:0: Direct-Access     HP       EH0146FAWJB      HPDD PQ: 0 ANSI: 5
-[  133.010371] ssw_validate_device: Not a SATA device; skip
+[  133.010371] ssw_validate_device: Not a SATA device; skip 
 [  133.010638] sd 1:0:0:0: [sdb] Spinning up disk...
-[  133.034290] sd 0:0:0:0: Attached scsi generic sg0 type 0
-[  133.044469] sd 1:0:0:0: Attached scsi generic sg1 type 0
+[  133.034290] sd 0:0:0:0: Attached scsi generic sg0 type 0 
+[  133.044469] sd 1:0:0:0: Attached scsi generic sg1 type 0 
 [  134.012041] .
-[  134.668084] sas: broadcast received: 0
-[  134.672977] sas: REVALIDATING DOMAIN on port 0, pid:5
-[  134.672984] sas_ex_revalidate_domain: calling sas_find_bcast_dev 1
-[  134.672991] sas_find_bcast_dev: calling sas_get_ex_change_count
-[  134.673129] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2
-[  134.673258] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2
-[  134.673385] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2
-[  134.673394] sas_find_bcast_dev: done
-[  134.673400] sas_ex_revalidate_domain: done
-[  134.673407] sas: done REVALIDATING DOMAIN on port 0, pid:5, res 0xffffffba
-[  135.016018] ....ready
-[  138.470597] sd 1:0:0:0: [sdb] READ CAPACITY(16) failed
-[  138.476212] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  134.668084] sas: broadcast received: 0 
+[  134.672977] sas: REVALIDATING DOMAIN on port 0, pid:5 
+[  134.672984] sas_ex_revalidate_domain: calling sas_find_bcast_dev 1 
+[  134.672991] sas_find_bcast_dev: calling sas_get_ex_change_count 
+[  134.673129] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2 
+[  134.673258] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2 
+[  134.673385] sas: smp_execute_task: task to dev 5000c5001cb4c151 response: 0x0 status 0x2 
+[  134.673394] sas_find_bcast_dev: done [  134.673400] sas_ex_revalidate_domain: done 
+[  134.673407] sas: done REVALIDATING DOMAIN on port 0, pid:5, res 0xffffffba 
+[  135.016018] ....ready [  138.470597] sd 1:0:0:0: [sdb] READ CAPACITY(16) failed 
+[  138.476212] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK 
 [  138.488301] sd 1:0:0:0: [sdb] Sense not available.
-[  138.495033] sd 1:0:0:0: [sdb] READ CAPACITY failed
-[  138.501825] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  138.495033] sd 1:0:0:0: [sdb] READ CAPACITY failed 
+[  138.501825] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK 
 [  138.516376] sd 1:0:0:0: [sdb] Sense not available.
-[  138.524333] sd 1:0:0:0: [sdb] Write Protect is off
-[  138.532360] sd 1:0:0:0: [sdb] Mode Sense: 00 00 00 00
-[  138.532393] sd 1:0:0:0: [sdb] Asking for cache data failed
-[  138.540642] sd 1:0:0:0: [sdb] Assuming drive cache: write through
-[  138.550085] sd 1:0:0:0: [sdb] READ CAPACITY(16) failed
-[  138.558551] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  138.524333] sd 1:0:0:0: [sdb] Write Protect is off 
+[  138.532360] sd 1:0:0:0: [sdb] Mode Sense: 00 00 00 00 
+[  138.532393] sd 1:0:0:0: [sdb] Asking for cache data failed 
+[  138.540642] sd 1:0:0:0: [sdb] Assuming drive cache: write through 
+[  138.550085] sd 1:0:0:0: [sdb] READ CAPACITY(16) failed 
+[  138.558551] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK 
 [  138.575243] sd 1:0:0:0: [sdb] Sense not available.
-[  138.583697] sd 1:0:0:0: [sdb] READ CAPACITY failed
-[  138.592104] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  138.583697] sd 1:0:0:0: [sdb] READ CAPACITY failed 
+[  138.592104] sd 1:0:0:0: [sdb]  Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK 
 [  138.609371] sd 1:0:0:0: [sdb] Sense not available.
-[  138.618292] sd 1:0:0:0: [sdb] Asking for cache data failed
+[  138.618292] sd 1:0:0:0: [sdb] Asking for cache data failed 
 [  138.627172] sd 1:0:0:0: [sdb] Assuming drive cache: write through
-[  138.636053] sd 1:0:0:0: [sdb] Attached SCSI disk
+[  138.636053] sd 1:0:0:0: [sdb] Attached SCSI disk 
+
 --------------------------------------End Kernel log after change-------------------------------
 
 --------------------------------------Begin Kernel crash dump-------------------------------
@@ -148,3 +175,5 @@ index 58e6183..505ada2 100644
 [  368.805886] CR2: 0000000000000000
 [  368.805899] ---[ end trace b720682065d8f4cc ]---
 --------------------------------------End Kernel crash dump-------------------------------
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
