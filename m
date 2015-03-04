@@ -1,10 +1,8 @@
 From: Nicholas Mc Guire <hofrat@osadl.org>
 Subject: [PATCH 2/2] bnx2fc: bnx2fc_io.c: match wait_for_completion_timeout return type
-Date: Wed,  4 Mar 2015 09:27:18 -0500
-Message-ID: <1425479238-11519-2-git-send-email-hofrat@osadl.org>
-References: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
+Date: Wed,  4 Mar 2015 09:27:17 -0500
+Message-ID: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
@@ -17,7 +15,7 @@ assignments fixed up.
 Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
 
-The was only complie tested with x86_64_defconfig + SCSI_LOWLEVEL
+The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
 CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
 CONFIG_SCSI_BNX2X_FCOE=m
 
