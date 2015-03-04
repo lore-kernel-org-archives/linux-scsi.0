@@ -1,78 +1,57 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v4 4/4] scsi: ufs: inject errors to verify error handling
-Date: Wed, 4 Mar 2015 22:50:52 +0900
-Message-ID: <CAC5umyhjW7=oA_92SfPQu6gOzU9Qm-0EqgOGtGtVDwM9Kiz1OA@mail.gmail.com>
-References: <1425308203-20695-1-git-send-email-gbroner@codeaurora.org>
-	<1425308203-20695-5-git-send-email-gbroner@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1425308203-20695-5-git-send-email-gbroner@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: Jej B <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Ingo Molnar <mingo@kernel.org>, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Davidlohr Bueso <davidlohr@hp.com>, Andi Kleen <ak@linux.intel.com>, Alexei Starovoitov <ast@plumgrid.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Al Viro <viro@zeniv.linux.org.uk>, Dan Streetman <ddstreet@ieee.or>
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH 1/2] bnx2fc: bnx2fc_fcoe.c: match wait_for_completion_timeout return type
+Date: Wed,  4 Mar 2015 09:26:56 -0500
+Message-ID: <1425479216-11485-1-git-send-email-hofrat@osadl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.osadl.org ([62.245.132.105]:33541 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932461AbbCDObT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Mar 2015 09:31:19 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 
-2015-03-02 23:56 GMT+09:00 Gilad Broner <gbroner@codeaurora.org>:
-> From: Sujit Reddy Thumma <sthumma@codeaurora.org>
->
-> Use fault-injection framework to simulate error conditions
-> in the controller and verify error handling mechanisms
-> implemented in UFS host controller driver.
->
-> This is used only during development and hence
-> guarded by CONFIG_UFS_FAULT_INJECTION debug config option.
+return type of wait_for_completion_timeout is unsigned long not int. rc
+is appropriately renamed, changed to type unsigned long and the
+assignments fixed up.
 
-This feature looks useful, but I have a couple of comments and
-question.
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-> +static bool inject_cmd_hang_tr(struct ufs_hba *hba)
-> +{
-> +       int tag;
-> +
-> +       tag = find_first_bit(&hba->outstanding_reqs, hba->nutrs);
-> +       if (tag == hba->nutrs)
-> +               return 0;
-> +
-> +       __clear_bit(tag, &hba->outstanding_reqs);
-> +       hba->lrb[tag].cmd = NULL;
-> +       __clear_bit(tag, &hba->lrb_in_use);
+The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
+CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
+CONFIG_SCSI_BNX2X_FCOE=m
 
-hba->lrb_in_use is a bitmap set by test_and_set_bit_lock().  So
-this should be cleared by clear_bit_unlock().
+Patch is against 4.0-rc2 (localversion-next is -next-20150304)
 
-And as soon as the bit corresponds to this slot in hba->lrb_in_use is
-cleared, this slot could be reused.  But if the request corresponds
-to the slot is not completed yet, it could sacrifice the new request,
-too.  So should we only inject into the commands which have been
-completed like this?
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-        tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-        completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
-        tag = find_first_bit(&completed_reqs, hba->nutrs);
-        ...
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 98d06d1..0082b5c 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -635,7 +635,7 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
+ 	struct bnx2fc_interface *interface = port->priv;
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 	struct fcoe_statistics_params *fw_stats;
+-	int rc = 0;
++	unsigned long time_left;
+ 
+ 	fw_stats = (struct fcoe_statistics_params *)hba->stats_buffer;
+ 	if (!fw_stats)
+@@ -646,8 +646,8 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
+ 	init_completion(&hba->stat_req_done);
+ 	if (bnx2fc_send_stat_req(hba))
+ 		return bnx2fc_stats;
+-	rc = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
+-	if (!rc) {
++	time_left = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
++	if (!time_left) {
+ 		BNX2FC_HBA_DBG(lport, "FW stat req timed out\n");
+ 		return bnx2fc_stats;
+ 	}
+-- 
+1.7.10.4
 
-Or clear the corresponding bit in REG_UTP_TASK_REQ_LIST_CLEAR, just
-like what inject_fatal_err_tr() does?
-
-> +
-> +       /* command hang injected */
-> +       return 1;
-> +}
-> +
-> +static int inject_cmd_hang_tm(struct ufs_hba *hba)
-> +{
-> +       int tag;
-> +
-> +       tag = find_first_bit(&hba->outstanding_tasks, hba->nutmrs);
-> +       if (tag == hba->nutmrs)
-> +               return 0;
-> +
-> +       __clear_bit(tag, &hba->outstanding_tasks);
-> +       __clear_bit(tag, &hba->tm_slots_in_use);
-> +
-> +       /* command hang injected */
-> +       return 1;
-> +}
-
-The same goes for hba->tm_slots_in_use.
