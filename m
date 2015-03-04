@@ -1,57 +1,72 @@
 From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 1/2] bnx2fc: bnx2fc_fcoe.c: match wait_for_completion_timeout return type
-Date: Wed,  4 Mar 2015 09:26:56 -0500
-Message-ID: <1425479216-11485-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:33541 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932461AbbCDObT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Mar 2015 09:31:19 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 2/2] bnx2fc: bnx2fc_io.c: match wait_for_completion_timeout return type
+Date: Wed,  4 Mar 2015 09:27:18 -0500
+Message-ID: <1425479238-11519-2-git-send-email-hofrat@osadl.org>
+References: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+List-Id: linux-scsi@vger.kernel.org
 
-return type of wait_for_completion_timeout is unsigned long not int. rc
-is appropriately renamed, changed to type unsigned long and the
+return type of wait_for_completion_timeout is unsigned long not int. An
+appropriately named variable of type unsigned long is added and the
 assignments fixed up.
 
 Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
 
-The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
+The was only complie tested with x86_64_defconfig + SCSI_LOWLEVEL
 CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
 CONFIG_SCSI_BNX2X_FCOE=m
 
 Patch is against 4.0-rc2 (localversion-next is -next-20150304)
 
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 98d06d1..0082b5c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -635,7 +635,7 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
- 	struct bnx2fc_interface *interface = port->priv;
- 	struct bnx2fc_hba *hba = interface->hba;
- 	struct fcoe_statistics_params *fw_stats;
--	int rc = 0;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 9ecca85..77f8c1e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -703,6 +703,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 	struct fcp_cmnd *fcp_cmnd;
+ 	int task_idx, index;
+ 	int rc = SUCCESS;
 +	unsigned long time_left;
+ 	u16 xid;
+ 	u32 sid, did;
+ 	unsigned long start = jiffies;
+@@ -810,7 +811,7 @@ retry_tmf:
+ 	bnx2fc_ring_doorbell(tgt);
+ 	spin_unlock_bh(&tgt->tgt_lock);
  
- 	fw_stats = (struct fcoe_statistics_params *)hba->stats_buffer;
- 	if (!fw_stats)
-@@ -646,8 +646,8 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
- 	init_completion(&hba->stat_req_done);
- 	if (bnx2fc_send_stat_req(hba))
- 		return bnx2fc_stats;
--	rc = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
--	if (!rc) {
-+	time_left = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
-+	if (!time_left) {
- 		BNX2FC_HBA_DBG(lport, "FW stat req timed out\n");
- 		return bnx2fc_stats;
+-	rc = wait_for_completion_timeout(&io_req->tm_done,
++	time_left = wait_for_completion_timeout(&io_req->tm_done,
+ 					 BNX2FC_TM_TIMEOUT * HZ);
+ 	spin_lock_bh(&tgt->tgt_lock);
+ 
+@@ -824,17 +825,17 @@ retry_tmf:
+ 		io_req->wait_for_comp = 1;
+ 		bnx2fc_initiate_cleanup(io_req);
+ 		spin_unlock_bh(&tgt->tgt_lock);
+-		rc = wait_for_completion_timeout(&io_req->tm_done,
++		time_left = wait_for_completion_timeout(&io_req->tm_done,
+ 						 BNX2FC_FW_TIMEOUT);
+ 		spin_lock_bh(&tgt->tgt_lock);
+ 		io_req->wait_for_comp = 0;
+-		if (!rc)
++		if (!time_left)
+ 			kref_put(&io_req->refcount, bnx2fc_cmd_release);
  	}
+ 
+ 	spin_unlock_bh(&tgt->tgt_lock);
+ 
+-	if (!rc) {
++	if (!time_left) {
+ 		BNX2FC_TGT_DBG(tgt, "task mgmt command failed...\n");
+ 		rc = FAILED;
+ 	} else {
 -- 
 1.7.10.4
-
