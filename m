@@ -1,48 +1,65 @@
 From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: crash in pscsi_get_device_type
-Date: Wed, 4 Mar 2015 16:00:04 +0100
-Message-ID: <20150304150004.GA22266@aepfle.de>
-References: <20150226092604.GA1119@aepfle.de>
- <1425037939.30824.89.camel@haakon3.risingtidesystems.com>
+Subject: noise in target_core_register_fabric
+Date: Wed, 4 Mar 2015 16:46:20 +0100
+Message-ID: <20150304154620.GA32023@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:27516 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758601AbbCDPAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 10:00:07 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1425037939.30824.89.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 27, Nicholas A. Bellinger wrote:
-
-> On Thu, 2015-02-26 at 10:26 +0100, Olaf Hering wrote:
-
-> > [  145.661468] IP: [<ffffffffa024f17b>] pscsi_get_device_type+0xb/0x20 [target_core_pscsi]
-> Looks like a PSCSI specific NULL pointer dereference when reading the
-> dev_type attribute if a backend device was not able to be successfully
-> configured -> enabled.
-> 
-> Here's a quick patch to address this case.  Please confirm on your end.
-
-Unfortunately I can not reproduce it anymore. Maybe it depends on the .config?
+Is there a need to fill dmesg with noise like shown below whenever
+targetcli-3.0 runs a command? I think the pr_err calls in those functions
+should be converted to pr_debug.
 
 Olaf
 
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> index 1045dcd..f6c954c 100644
-> --- a/drivers/target/target_core_pscsi.c
-> +++ b/drivers/target/target_core_pscsi.c
-> @@ -1121,7 +1121,7 @@ static u32 pscsi_get_device_type(struct se_device *dev)
->         struct pscsi_dev_virt *pdv = PSCSI_DEV(dev);
->         struct scsi_device *sd = pdv->pdv_sd;
->  
-> -       return sd->type;
-> +       return (sd) ? sd->type : TYPE_NO_LUN;
->  }
->  
->  static sector_t pscsi_get_blocks(struct se_device *dev)
+.....
+[ 1240.045518] target_core_register_fabric() trying autoload for fc
+[ 1240.045520] target_core_get_fabric() failed for fc
+[ 1240.045926] target_core_register_fabric() trying autoload for usb_gadget
+[ 1240.045928] target_core_get_fabric() failed for usb_gadget
+[ 1240.046236] target_core_register_fabric() trying autoload for vhost
+[ 1240.046238] target_core_get_fabric() failed for vhost
+[ 1240.062569] target_core_register_fabric() trying autoload for srpt
+[ 1240.062571] target_core_get_fabric() failed for srpt
+[ 1240.069610] target_core_register_fabric() trying autoload for qla2xxx
+[ 1240.069613] target_core_get_fabric() failed for qla2xxx
+[ 1240.076049] target_core_register_fabric() trying autoload for fc
+[ 1240.076051] target_core_get_fabric() failed for fc
+[ 1240.076465] target_core_register_fabric() trying autoload for usb_gadget
+[ 1240.076467] target_core_get_fabric() failed for usb_gadget
+[ 1240.076770] target_core_register_fabric() trying autoload for vhost
+[ 1240.076772] target_core_get_fabric() failed for vhost
+[ 1240.088177] target_core_register_fabric() trying autoload for srpt
+[ 1240.088179] target_core_get_fabric() failed for srpt
+[ 1240.097338] target_core_register_fabric() trying autoload for qla2xxx
+[ 1240.097340] target_core_get_fabric() failed for qla2xxx
+[ 1240.104335] target_core_register_fabric() trying autoload for fc
+[ 1240.104338] target_core_get_fabric() failed for fc
+[ 1240.104801] target_core_register_fabric() trying autoload for usb_gadget
+[ 1240.104803] target_core_get_fabric() failed for usb_gadget
+[ 1240.105182] target_core_register_fabric() trying autoload for vhost
+[ 1240.105184] target_core_get_fabric() failed for vhost
+[ 1240.237564] target_core_register_fabric() trying autoload for srpt
+[ 1240.237567] target_core_get_fabric() failed for srpt
+[ 1240.246394] target_core_register_fabric() trying autoload for qla2xxx
+[ 1240.246396] target_core_get_fabric() failed for qla2xxx
+[ 1240.252862] target_core_register_fabric() trying autoload for fc
+[ 1240.252864] target_core_get_fabric() failed for fc
+[ 1240.253303] target_core_register_fabric() trying autoload for usb_gadget
+[ 1240.253305] target_core_get_fabric() failed for usb_gadget
+[ 1240.253597] target_core_register_fabric() trying autoload for vhost
+[ 1240.253599] target_core_get_fabric() failed for vhost
+[ 1240.270028] target_core_register_fabric() trying autoload for srpt
+[ 1240.270030] target_core_get_fabric() failed for srpt
+[ 1240.277044] target_core_register_fabric() trying autoload for qla2xxx
+[ 1240.277046] target_core_get_fabric() failed for qla2xxx
+[ 1240.283666] target_core_register_fabric() trying autoload for fc
+[ 1240.283669] target_core_get_fabric() failed for fc
+[ 1240.284102] target_core_register_fabric() trying autoload for usb_gadget
+[ 1240.284104] target_core_get_fabric() failed for usb_gadget
+....
