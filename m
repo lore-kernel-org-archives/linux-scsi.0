@@ -1,63 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [TOPIC] scsi-queue tree past and future
-Date: Thu, 05 Mar 2015 06:48:08 -0800
-Message-ID: <1425566888.2169.17.camel@HansenPartnership.com>
-References: <20150305133118.GA16575@lst.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH for kernel 4.1] Split SCSI header files
+Date: Thu, 5 Mar 2015 15:58:47 +0100
+Message-ID: <54F86F27.3000505@sandisk.com>
+References: <54ED8A71.3050701@sandisk.com> <20150305142635.GA17795@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60879 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751438AbbCEOsL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 09:48:11 -0500
-In-Reply-To: <20150305133118.GA16575@lst.de>
+Received: from mail-bl2on0068.outbound.protection.outlook.com ([65.55.169.68]:19264
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751060AbbCEO64 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2015 09:58:56 -0500
+In-Reply-To: <20150305142635.GA17795@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: lsf@lists.linux-foundation.org, lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2015-03-05 at 14:31 +0100, Christoph Hellwig wrote:
-> For about 8 month I've merged almost every scsi commit through the
-> scsi-queue staging tree, and it seems to have worked out well enough.
+On 03/05/15 15:26, Christoph Hellwig wrote:
+> In general this looks fine, but:
 > 
-> I've been too busy for the next cycle, so 4.1 will probably have to live
-> without it.  I'd like to get feedback on how the tree worked for contributors
-> and driver maintainers, and brainstorm how to move forward with it, preferably
-> some form of real team maintainance that avoids single points of failure.
+>  - why do you need a separate scsi_lun.h?
+>  - I'd really prefer to only have the protocol defintion here,
+>    not prototypes for helpers like scsi_device_type, int_to_scsilun
+>    and scsilun_to_int.  The target code should not depend on the
+>    initiator for helpers.  In the long run we should either duplicate
+>    them, or have a library used by the initiator and target.
 
-I'd like to thank Christoph for doing this, it's been an enormous help.
+Hello Christoph,
 
-Here's what we'll do for 4.1: I need all the current Maintainers to
-collect the patches and reviews in their area and send them to the list
-as a series.  We'll be adhering to the guidelines Christoph laid down
-for inclusion:
+Thanks for the review. Whether scsi_lun.h is separate or not is not
+important to me. The only reason I had proposed to create a separate
+header file for struct scsi_lun is because some other header files only
+need the definition of that structure and not any other definition that
+is present in the proposed scsi_proto.h header file.
 
- - the patch needs at least two positive reviews (non-author signoff,
-   reviewed-by or acked-by tags).   In practice this means it had at
-   least one and I added another one.
-   As an exception I also take trivial and important fixes if they
-   only have a Tested-by: instead of a second review.
- - the patch has no negative review on the mailing list
- - the patch applies cleanly
- - the patch compiles (drivers for architectures I can't test excluded)
- - for core the core branch: the patch survives a full xfstests run
+Creating a library of functions that are shared by initiator and target
+makes sense to me. Not only the LUN translation functions but also
+functions like scsi_command_size() are useful for both SCSI initiator
+and SCSI target code. If anyone has a suggestion for a good name for
+such a library that would be welcome. Unfortunately there is already a
+source file with the name scsi_lib.c in the kernel tree so using the
+name scsi_lib.h might be confusing.
 
-For the last requirement, the 0 day kernel test project will be checking
-this.  That means negative reports from the 0 day project on a patch
-will be grounds for removal.
-
-I'll try to curate the patches in areas without maintainers (like the
-core).  Remember, in all cases, you get an email from my automation
-infrastructure when a patch is added (or removed) from any of the SCSI
-trees, so if you haven't seen the email, the patch isn't in the tree.
-
-You can also see the state of the git trees here:
-
-http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/
-
-with the misc branch being for 4.1 and the fixes branch being for 4.0-rc
-
-James
-
-
+Bart.
