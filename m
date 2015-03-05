@@ -1,65 +1,33 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
-Date: Thu, 5 Mar 2015 05:33:13 -0800
-Message-ID: <20150305133313.GA25602@infradead.org>
-References: <1422882086-1863-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 01/43] hpsa: add masked physical devices into h->dev[]
+ array
+Date: Thu, 5 Mar 2015 05:34:56 -0800
+Message-ID: <20150305133456.GA27960@infradead.org>
+References: <20150221221553.21954.32599.stgit@brunhilda>
+ <20150221221735.21954.24837.stgit@brunhilda>
+ <20150223201442.GA11037@infradead.org>
+ <07F70BBF6832E34FA1C923241E8833AB38D5D96E@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50708 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:51253 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716AbbCENdO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 08:33:14 -0500
+	with ESMTP id S1751873AbbCENe7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 08:34:59 -0500
 Content-Disposition: inline
-In-Reply-To: <1422882086-1863-1-git-send-email-hch@lst.de>
+In-Reply-To: <07F70BBF6832E34FA1C923241E8833AB38D5D96E@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Paolo Bonzini <pbonzini@redhat.com>, Fam Zheng <famz@redhat.com>
+To: brace <brace@pmcs.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Scott Teel <Scott.Teel@pmcs.com>, Kevin Barnett <Kevin.Barnett@pmcs.com>, "james.bottomley@parallels.com" <james.bottomley@parallels.com>, Justin Lindley <Justin.Lindley@pmcs.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Any chance to get reviews for this series?  Also we should at least
-expedite this first patch into 4.0-rc as it fixes scanning races
-in virtio_scsi.
+On Thu, Feb 26, 2015 at 03:17:38PM +0000, brace wrote:
+> Thanks, I corrected the code. Also, I asked Webb about setting up the queue
+> Depth in slave_alloc. His reply was " We needed to get tagging set up during allocation so that we could use it in the lead-up to configuration, which is why it was done in hpsa_slave_alloc(); and, given that the code there was then already messing about with queue depth, it made sense to also deal with the rest of it there."
+> 
+> But given your next comment, perhaps I need to clean this up more?
 
-On Mon, Feb 02, 2015 at 02:01:24PM +0100, Christoph Hellwig wrote:
-> Lock the device embedded in the scsi_device to protect against
-> concurrent calls to ->remove.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Alan Stern <stern@rowland.harvard.edu>
-> ---
->  drivers/scsi/scsi_scan.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 983aed1..523faee 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1593,16 +1593,15 @@ EXPORT_SYMBOL(scsi_add_device);
->  
->  void scsi_rescan_device(struct device *dev)
->  {
-> -	if (!dev->driver)
-> -		return;
-> -
-> -	if (try_module_get(dev->driver->owner)) {
-> +	device_lock(dev);
-> +	if (dev->driver && try_module_get(dev->driver->owner)) {
->  		struct scsi_driver *drv = to_scsi_driver(dev->driver);
->  
->  		if (drv->rescan)
->  			drv->rescan(dev);
->  		module_put(dev->driver->owner);
->  	}
-> +	device_unlock(dev);
->  }
->  EXPORT_SYMBOL(scsi_rescan_device);
->  
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+I think so.  In older kernel we indeed had horrible APIs that mixed
+setting up tagging with the queue depth, but this has all been sorted
+out, so setting the queue depth in slave_alloc should not be nessecary
+now.
