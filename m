@@ -1,59 +1,79 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvfc: Fix a locking imbalance
-Date: Thu, 05 Mar 2015 07:35:50 -0600
-Message-ID: <54F85BB6.7030504@linux.vnet.ibm.com>
-References: <54F6D85E.5060906@sandisk.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 3/3] scsi: proper state checking and module refcount handling
+ in scsi_device_get
+Date: Thu, 05 Mar 2015 14:36:20 +0100
+Message-ID: <54F85BD4.200@redhat.com>
+References: <1422882086-1863-1-git-send-email-hch@lst.de> <1422882086-1863-3-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:37236 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751873AbbCENf5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2015 08:35:57 -0500
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 5 Mar 2015 08:35:56 -0500
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id D0D12C90046
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Mar 2015 08:27:04 -0500 (EST)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t25DZsEl15270056
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Mar 2015 13:35:54 GMT
-Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t25DZrII019860
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Mar 2015 08:35:54 -0500
-In-Reply-To: <54F6D85E.5060906@sandisk.com>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:34447 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbbCENg1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 08:36:27 -0500
+Received: by lbiv13 with SMTP id v13so32667420lbi.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Mar 2015 05:36:26 -0800 (PST)
+In-Reply-To: <1422882086-1863-3-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jbottomley@parallels.com>
-Cc: Nathan Fontenot <nfont@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
-On 03/04/2015 04:03 AM, Bart Van Assche wrote:
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index 057d277..b46257a 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4722,6 +4722,8 @@ static void ibmvfc_rport_add_thread(struct work_struct *work)
->  					tgt_dbg(tgt, "Setting rport roles\n");
->  					fc_remote_port_rolechg(rport, tgt->ids.roles);
->  					put_device(&rport->dev);
-> +				} else {
-> +					spin_unlock_irqrestore(vhost->host->host_lock, flags);
->  				}
+
+
+On 02/02/2015 14:01, Christoph Hellwig wrote:
+> This effectively reverts commits 85b6c7 ("[SCSI] sd: fix cache flushing on
+> module removal (and individual device removal)" and dc4515ea ("scsi: always
+> increment reference count").
 > 
->  				kref_put(&tgt->kref, ibmvfc_release_tgt);
+> We now never call scsi_device_get from the shutdown path, and the fact
+> that we started grabbing reference there in commit 85b6c7 turned out
+> turned out to create more problems than it solves, and required
+> workarounds for workarounds for workarounds. Move back to properly checking
+> the device state and carefully handle module refcounting.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/scsi.c | 20 +++++++++++++-------
+>  1 file changed, 13 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 9b38299..9b7fd0b 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -979,18 +979,24 @@ EXPORT_SYMBOL(scsi_report_opcode);
+>   * Description: Gets a reference to the scsi_device and increments the use count
+>   * of the underlying LLDD module.  You must hold host_lock of the
+>   * parent Scsi_Host or already have a reference when calling this.
+> + *
+> + * This will fail if a device is deleted or cancelled, or when the LLD module
+> + * is in the process of being unloaded.
+>   */
+>  int scsi_device_get(struct scsi_device *sdev)
+>  {
+> -	if (sdev->sdev_state == SDEV_DEL)
+> -		return -ENXIO;
+> +	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
+> +		goto fail;
+>  	if (!get_device(&sdev->sdev_gendev))
+> -		return -ENXIO;
+> -	/* We can fail try_module_get if we're doing SCSI operations
+> -	 * from module exit (like cache flush) */
+> -	__module_get(sdev->host->hostt->module);
+> -
+> +		goto fail;
+> +	if (!try_module_get(sdev->host->hostt->module))
+> +		goto fail_put_device;
+>  	return 0;
+> +
+> +fail_put_device:
+> +	put_device(&sdev->sdev_gendev);
+> +fail:
+> +	return -ENXIO;
+>  }
+>  EXPORT_SYMBOL(scsi_device_get);
+>  
 > 
 
-Nice catch. Thanks.
-
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
-
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
