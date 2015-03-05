@@ -1,50 +1,68 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: [PATCH 3.4.106] SCSI: libsas: no expander revalidation for
- SAS_END_DEV
-Date: Thu, 5 Mar 2015 18:57:34 +0000
-Message-ID: <3e3458d5d8c64018bd4b16bd2128403f@EX01.lg.local>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: iSCSI bug
+Date: Thu, 05 Mar 2015 11:22:41 -0800
+Message-ID: <1425583361.5860.12.camel@haakon3.risingtidesystems.com>
+References: <D5289E78-CABB-4E26-A28B-7F0F04EFFEAD@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p02c11o142.mxlogic.net ([208.65.144.75]:42985 "EHLO
-	p02c11o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518AbbCETKn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 14:10:43 -0500
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43314 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449AbbCETWo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 14:22:44 -0500
+In-Reply-To: <D5289E78-CABB-4E26-A28B-7F0F04EFFEAD@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
+To: Edgaras =?UTF-8?Q?Luko=C5=A1evi=C4=8Dius?= <edgaras.lukosevicius@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-VGhlIGtlcm5lbCBjcmFzaGVkIGluIG11dGV4X2xvY2sgY2FsbGVkIGZyb20gc21wX2V4ZWN1dGVf
-dGFzay4gVGhlIHJlYXNvbg0KaXMgdGhhdCB0aGUgbXV0ZXggaXMgaW5pdGlhbGl6ZWQgb25seSBm
-b3IgZGV2aWNlcyB3aXRoIHR5cGUgRURHRV9ERVYgb3INCkZBTk9VVF9ERVYsIGJ1dCBpbiBzb21l
-IGNhc2VzIHNtcF9leGVjdXRlX3Rhc2sgZ2V0cyBjYWxsZWQgaW4gdGhlIGV4cGFuZGVyDQpyZXZh
-bGlkYXRpb24gY29udGV4dCBmb3IgZW5kIGRldmljZXMgdG9vLiBFeHBhbmRlciByZXZhbGlkYXRp
-b24gc2hvdWxkIG5vdA0KYmUgcGVyZm9ybWVkIGZvciBub24tZXhwYW5kZXIgZGV2aWNlcyBzaW5j
-ZSB0aGV5IGFyZSBkaXNjb3ZlcmVkIHZpYSB0aGVpcg0KSURFTlRJRlkgZnJhbWVzIGFuZCBwcm9i
-aW5nIGZvciBleHBhbmRlciBjYXBhYmlsaXRpZXMgaXMgbm90IHJlcXVpcmVkLg0KDQpTaWduZWQt
-b2ZmLWJ5OiBQcmF2ZWVuIE11cmFsaSA8cG11cmFsaUBsb2dpY3ViZS5jb20+DQotLS0NCiBkcml2
-ZXJzL3Njc2kvbGlic2FzL3Nhc19kaXNjb3Zlci5jIHwgNiArKysrLS0NCiAxIGZpbGUgY2hhbmdl
-ZCwgNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9zY3NpL2xpYnNhcy9zYXNfZGlzY292ZXIuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2Rp
-c2NvdmVyLmMNCmluZGV4IDYyOWEwODYuLjMzM2E0MDAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Nj
-c2kvbGlic2FzL3Nhc19kaXNjb3Zlci5jDQorKysgYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19k
-aXNjb3Zlci5jDQpAQCAtNDQ1LDYgKzQ0NSw3IEBAIHN0YXRpYyB2b2lkIHNhc19yZXZhbGlkYXRl
-X2RvbWFpbihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogCWludCByZXMgPSAwOw0KIAlzdHJ1
-Y3Qgc2FzX2Rpc2NvdmVyeV9ldmVudCAqZXYgPSB0b19zYXNfZGlzY292ZXJ5X2V2ZW50KHdvcmsp
-Ow0KIAlzdHJ1Y3QgYXNkX3Nhc19wb3J0ICpwb3J0ID0gZXYtPnBvcnQ7DQorCXN0cnVjdCBkb21h
-aW5fZGV2aWNlICpkZGV2ID0gcG9ydC0+cG9ydF9kZXY7DQogCXN0cnVjdCBzYXNfaGFfc3RydWN0
-ICpoYSA9IHBvcnQtPmhhOw0KIA0KIAkvKiBwcmV2ZW50IHJldmFsaWRhdGlvbiBmcm9tIGZpbmRp
-bmcgc2F0YSBsaW5rcyBpbiByZWNvdmVyeSAqLw0KQEAgLTQ2MCw4ICs0NjEsOSBAQCBzdGF0aWMg
-dm9pZCBzYXNfcmV2YWxpZGF0ZV9kb21haW4oc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KIAlT
-QVNfRFBSSU5USygiUkVWQUxJREFUSU5HIERPTUFJTiBvbiBwb3J0ICVkLCBwaWQ6JWRcbiIsIHBv
-cnQtPmlkLA0KIAkJICAgIHRhc2tfcGlkX25yKGN1cnJlbnQpKTsNCiANCi0JaWYgKHBvcnQtPnBv
-cnRfZGV2KQ0KLQkJcmVzID0gc2FzX2V4X3JldmFsaWRhdGVfZG9tYWluKHBvcnQtPnBvcnRfZGV2
-KTsNCisJLyogcGVyZm9ybSBleHBhbmRlciByZXZhbGlkYXRpb24gZm9yIHNhcyBleHBhbmRlciBk
-ZXZpY2VzICovDQorCWlmIChkZGV2ICYmIChkZGV2LT5kZXZfdHlwZSA9PSBFREdFX0RFViB8fCBk
-ZGV2LT5kZXZfdHlwZSA9PSBGQU5PVVRfREVWKSkNCisJCXJlcyA9IHNhc19leF9yZXZhbGlkYXRl
-X2RvbWFpbihkZGV2KTsNCiANCiAJU0FTX0RQUklOVEsoImRvbmUgUkVWQUxJREFUSU5HIERPTUFJ
-TiBvbiBwb3J0ICVkLCBwaWQ6JWQsIHJlcyAweCV4XG4iLA0KIAkJICAgIHBvcnQtPmlkLCB0YXNr
-X3BpZF9ucihjdXJyZW50KSwgcmVzKTsNCi0tIA0KMi4xLjQNCg0K
+Hi Edgaras,
+
+Adding target-devel CC.
+
+On Thu, 2015-03-05 at 17:56 +0200, Edgaras Luko=C5=A1evi=C4=8Dius wrote=
+:
+> Hello,
+>=20
+> we have a problem. iscsi connection is dropping constantly. After ena=
+bling iscsi debug following message popped up after iscsi connection go=
+t lost:
+>=20
+> # Kernel
+> 3.18.6-1.el7.elrepo.x86_64
+>=20
+> Message from syslogd@storage-1 at Mar  5 15:55:12 ...
+>  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [iscsi_=
+trx:11958]
+>=20
+> Message from syslogd@storage-1 at Mar  5 15:55:40 ...
+>  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
+trx:11958]
+>=20
+> Message from syslogd@storage-1 at Mar  5 15:56:08 ...
+>  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
+trx:11958]
+>=20
+> Message from syslogd@storage-1 at Mar  5 15:56:48 ...
+>  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
+trx:11958]
+>=20
+>=20
+> P.S.
+>=20
+> Kernel 3.19 acts same I just don=E2=80=99t have debug messages for it=
+=2E --
+
+Please send along the dmesg output of your system so we can have a look
+at the specific soft lockup stack back-traces.
+
+Thanks,
+
+--nab
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
