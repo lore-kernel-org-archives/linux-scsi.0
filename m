@@ -1,69 +1,60 @@
-From: Praveen Murali <pmurali@logicube.com>
-Subject: RE: [libsas] Kernel Crash in smp_execute_task
-Date: Thu, 5 Mar 2015 01:43:47 +0000
-Message-ID: <70067e980ec54db0be05106c7f8abeee@EX01.lg.local>
-References: <154a8ccd0622409b84859abb1c3259f3@EX01.lg.local>
-	 <68a5e8f0ce4f4630bafe5f3505334f3e@EX01.lg.local>
-	,<1425514713.7581.46.camel@HansenPartnership.com>
-	 <6e045e99401a48139dea1d4f4c745e2b@EX01.lg.local>
- <1425517492.7581.55.camel@HansenPartnership.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: crash in pscsi_get_device_type
+Date: Wed, 04 Mar 2015 19:56:53 -0800
+Message-ID: <1425527813.925.7.camel@haakon3.risingtidesystems.com>
+References: <20150226092604.GA1119@aepfle.de>
+	 <1425037939.30824.89.camel@haakon3.risingtidesystems.com>
+	 <20150304150004.GA22266@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p01c12o141.mxlogic.net ([208.65.145.64]:38765 "EHLO
-	p01c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644AbbCEBoE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 20:44:04 -0500
-In-Reply-To: <1425517492.7581.55.camel@HansenPartnership.com>
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48380 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbbCED4y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 22:56:54 -0500
+In-Reply-To: <20150304150004.GA22266@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
-aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBXZWRu
-ZXNkYXksIE1hcmNoIDA0LCAyMDE1IDU6MDUgUE0NCj4gVG86IFByYXZlZW4gTXVyYWxpDQo+IENj
-OiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tDQo+
-IFN1YmplY3Q6IFJlOiBbbGlic2FzXSBLZXJuZWwgQ3Jhc2ggaW4gc21wX2V4ZWN1dGVfdGFzaw0K
-PiANCj4gT24gVGh1LCAyMDE1LTAzLTA1IGF0IDAwOjQ0ICswMDAwLCBQcmF2ZWVuIE11cmFsaSB3
-cm90ZToNCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+ID4g
-RnJvbTogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAu
-Y29tPg0KPiA+IFNlbnQ6IFdlZG5lc2RheSwgTWFyY2ggNCwgMjAxNSA0OjE4IFBNDQo+ID4gVG86
-IFByYXZlZW4gTXVyYWxpDQo+ID4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBkYW4u
-ai53aWxsaWFtc0BpbnRlbC5jb20NCj4gPiBTdWJqZWN0OiBSZTogW2xpYnNhc10gS2VybmVsIENy
-YXNoIGluIHNtcF9leGVjdXRlX3Rhc2sNCj4gPg0KPiA+IE9uIFdlZCwgMjAxNS0wMy0wNCBhdCAy
-MzoyOSArMDAwMCwgUHJhdmVlbiBNdXJhbGkgd3JvdGU6DQo+ID4gPj4gT24gc2Vjb25kIHRob3Vn
-aHRzLCBzaG91bGQgd2UgZXZlbiBsZXQgc21wIGNvbW1hbmRzL3JlcXVlc3RzIHRocnUgZm9yDQo+
-ID4gPj4gc2FzIGVuZCBkZXZpY2VzIChkZXYtPmRldl90eXBlID09IFNBU19FTkRfREVWKSA/IGlm
-IHNvLCB3b250IHRoZQ0KPiA+ID4+IGZvbGxvd2luZyBwYXRjaCBtb3JlIHNlbnNlPyAoYWxzbywg
-aW4gbXkgbGFzdCBtYWlsIHRoZSBrZXJuZWwgbG9ncw0KPiA+ID4+IHdlcmUgYWxsIG1lc3NlZCB1
-cDsgc29ycnkgZGludCByZWFsaXplIHRoYXQgd2hlbiBJIHNlbnQgdGhlIG1haWwuDQo+ID4gPj4g
-VHJ5aW5nIHRvIGZpeCBpdCBoZXJlKQ0KPiA+DQo+ID4gPkkgdGhpbmsgdGhlIGJ1ZyBpcyBkZWVw
-ZXIgdGhhbiB0aGlzOiB3ZSBzaG91bGRuJ3QgYmUgdHJ5aW5nIGV4cGFuZGVyDQo+ID4gPnJldmFs
-aWRhdGlvbiBvbiBub24tZXhwYW5kZXIgZGV2aWNlcy4gIElmIHRoZSBkZXZpY2UgY2hhbmdlcyBm
-cm9tIGVuZCB0bw0KPiA+ID5leHBhbmRlciB2aWEgaG90cGx1Zywgd2UnbGwgc2VlIHRoZSByZW1v
-dmUgYW5kIGFkZCAodmlhIHRoZSBpZGVudGlmeQ0KPiA+ID5mcmFtZSkgc28gdGhlIGRldmljZSB0
-eXBlIHNob3VsZCBiZSBjb3JyZWN0IGJ5IHRoZSB0aW1lIHdlIGRvIHRoZQ0KPiA+ID5yZXZhbGlk
-YXRpb24uDQo+ID4NCj4gPiA+RG9lcyB0aGlzIGZpeCB0aGUgcHJvYmxlbT8NCj4gPg0KPiA+IFll
-cywgdGhhdCBmaXhlcyB0aGUgaXNzdWUuIFNvIGlmIG15IHVuZGVyc3RhbmRpbmcgaXMgY29ycmVj
-dCwgd2hhdCB5b3UNCj4gPiBhcmUgc2F5aW5nIGlzIHdlIG5lZWQgdG8gZG8gc29tZXRoaW5nIGxp
-a2UNCj4gW3RoZSBwYXRjaF0NCj4gPiBpbnN0ZWFkIG9mIHB1dHRpbmcgdGhlIGV4Y2x1c2lvbiBp
-biBzbXBfZXhlY3V0ZV90YXNrOyBpcyB0aGF0IHJpZ2h0Pw0KPiANCj4gUmlnaHQuICBUaGVyZSdz
-IG1vcmUgdGhhbiBqdXN0IHRoZSBTTVAgcHJvYmxlbSB0aGF0IHdpbGwgaGFwcGVuIGlmIHlvdQ0K
-PiB0cnkgdG8gZGlzY292ZXIgYW4gZW5kIGRldmljZSBhcyBhbiBleHBhbmRlci4gIFRoZSBleHBh
-bmRlciBkaXNjb3ZlcnkNCj4gcm91dGluZXMgYXJlIGdvaW5nIHRvIHRyeSB0byBjYXN0IHRvIGEg
-bm9uLWV4aXN0ZW50IGV4cGFuZGVyIGRldmljZSBhbmQNCj4gZG8gYWxsIHNvcnRzIG9mIHVuZm9y
-dHVuYXRlIHRoaW5ncyB3aXRoIHdoYXQgaXQgdGhpbmtzIGFyZSBhIGxpc3Qgb2YNCj4gZXhwYW5k
-ZXIgcGh5cy4gIEVmZmVjdGl2ZWx5IHJldmFsaWRhdGlvbiBvbmx5IG5lZWRzIHRvIHByb2JlIGV4
-cGFuZGVycw0KPiBiZWNhdXNlIGFsbCB0aGUgb3RoZXIgZGV2aWNlcyB3ZXJlIGZ1bGx5IGRpc2Nv
-dmVyZWQgdmlhIHRoZSBJREVOVElGWQ0KPiBmcmFtZXMgdGhleSBhbHJlYWR5IHNlbnQuICBUaGUg
-Y29kZSBpcyBzbGlnaGx5IG9ic2N1cmUgYW5kIGl0IGRvZXMgbG9vaw0KPiBsaWtlIHRoZSBpbnRl
-bnQgd2FzIHRvIGNhbGwgc2FzX2V4X2Rpc2NvdmVyIHdpdGggYW55IGRldmljZSB0eXBlIHNpbmNl
-DQo+IFNNUCB0byBhIGRldmljZSB0aGF0IGRvZXNuJ3QgaGF2ZSBhbiBTTVAgcG9ydCB3aWxsIGp1
-c3QgZmFpbC4gIEhvd2V2ZXIsDQo+IGl0J3Mgc2FmZXIganVzdCBub3QgdG8gZG8gaXQgYmVjYXVz
-ZSBoYWxmIHRoZSBjb2RlIGFzc3VtZXMgdGhhdCBhbnkNCj4gZGV2aWNlIHBhc3NlZCBpbnRvIHRo
-ZSBzYXNfZXhfLi4gcm91dGluZXMgY2FuIGJlIHRyZWF0ZWQgYXMgYW4gZXhwYW5kZXIuDQoNClRo
-YXQgbWFrZXMgc2Vuc2UuIEkgdGVzdGVkIHRoZSBjaGFuZ2UgYW5kIGl0IGxvb2tzIGdvb2QuIERv
-IHlvdSB3YW50IG1lIHRvIHNlbmQgdGhlIHBhdGNoPyANCg==
+On Wed, 2015-03-04 at 16:00 +0100, Olaf Hering wrote:
+> On Fri, Feb 27, Nicholas A. Bellinger wrote:
+> 
+> > On Thu, 2015-02-26 at 10:26 +0100, Olaf Hering wrote:
+> 
+> > > [  145.661468] IP: [<ffffffffa024f17b>] pscsi_get_device_type+0xb/0x20 [target_core_pscsi]
+> > Looks like a PSCSI specific NULL pointer dereference when reading the
+> > dev_type attribute if a backend device was not able to be successfully
+> > configured -> enabled.
+> > 
+> > Here's a quick patch to address this case.  Please confirm on your end.
+> 
+> Unfortunately I can not reproduce it anymore. Maybe it depends on the .config?
+> 
+
+So the way to reproduce is to read the scsi_lu/dev_type configfs
+attribute when a PSCSI backend device has not yet been configured ->
+enabled.  Eg:
+
+root@scsi-mq:/usr/src/target-pending.git# modprobe target_core_mod
+root@scsi-mq:/usr/src/target-pending.git# mkdir -p /sys/kernel/config/target/core/pscsi_0/foo/
+root@scsi-mq:/usr/src/target-pending.git# cat /sys/kernel/config/target/core/pscsi_0/foo/statistics/scsi_lu/dev_type 
+Killed
+
+I've confirmed the previous patch addresses this case, which now returns
+TYPE_NO_LUN. (0x7f)
+
+root@scsi-mq:/usr/src/target-pending.git# modprobe target_core_mod
+root@scsi-mq:/usr/src/target-pending.git# mkdir -p /sys/kernel/config/target/core/pscsi_0/foo
+root@scsi-mq:/usr/src/target-pending.git# cat /sys/kernel/config/target/core/pscsi_0/foo/statistics/scsi_lu/dev_type 
+127
+
+Queuing up this patch to target-pending/master now, and including a CC'
+to stable as well.
+
+Thank you,
+
+--nab
+
