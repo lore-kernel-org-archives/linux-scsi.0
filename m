@@ -1,68 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: iSCSI bug
-Date: Thu, 05 Mar 2015 11:22:41 -0800
-Message-ID: <1425583361.5860.12.camel@haakon3.risingtidesystems.com>
-References: <D5289E78-CABB-4E26-A28B-7F0F04EFFEAD@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: use dedicated storage for scsi_debug LUNs
+Date: Thu, 05 Mar 2015 16:22:43 -0500
+Message-ID: <54F8C923.5010202@interlog.com>
+References: <20150305153338.GA16293@aepfle.de>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43314 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbbCETWo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 14:22:44 -0500
-In-Reply-To: <D5289E78-CABB-4E26-A28B-7F0F04EFFEAD@gmail.com>
+Received: from smtp.infotech.no ([82.134.31.41]:59697 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750888AbbCEVXG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Mar 2015 16:23:06 -0500
+In-Reply-To: <20150305153338.GA16293@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Edgaras =?UTF-8?Q?Luko=C5=A1evi=C4=8Dius?= <edgaras.lukosevicius@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+To: Olaf Hering <olaf@aepfle.de>, Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Edgaras,
+On 15-03-05 10:33 AM, Olaf Hering wrote:
+> I'm using scsi_debug to implement and test tools for xen-scsiback. Today
+> I discovered that each LUN uses the very same storage, as described in
+> the docs. What would it take to optionally use dedicated storage for
+> each LUN?
+>
+> This is how I load scsi_debug:
+> modprobe scsi_debug add_host=4 dev_size_mb=4 max_luns=4 num_parts=4 num_tgts=4 vpd_use_hostno=1
 
-Adding target-devel CC.
+Olaf,
+Just having a quick look: the fake_storep, dif_storep and
+map_storep heaps would need to be per LU; IOWs placed in
+struct sdebug_dev_info. Also atomic_rw would need to be
+placed in that structure.
 
-On Thu, 2015-03-05 at 17:56 +0200, Edgaras Luko=C5=A1evi=C4=8Dius wrote=
-:
-> Hello,
->=20
-> we have a problem. iscsi connection is dropping constantly. After ena=
-bling iscsi debug following message popped up after iscsi connection go=
-t lost:
->=20
-> # Kernel
-> 3.18.6-1.el7.elrepo.x86_64
->=20
-> Message from syslogd@storage-1 at Mar  5 15:55:12 ...
->  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 23s! [iscsi_=
-trx:11958]
->=20
-> Message from syslogd@storage-1 at Mar  5 15:55:40 ...
->  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
-trx:11958]
->=20
-> Message from syslogd@storage-1 at Mar  5 15:56:08 ...
->  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
-trx:11958]
->=20
-> Message from syslogd@storage-1 at Mar  5 15:56:48 ...
->  kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [iscsi_=
-trx:11958]
->=20
->=20
-> P.S.
->=20
-> Kernel 3.19 acts same I just don=E2=80=99t have debug messages for it=
-=2E --
+To be backward compatible to what the scsi_debug driver
+does now (i.e. shares storage) accessor functions might
+be employed to hide whether the global or per LU instance
+is being handled.
 
-Please send along the dmesg output of your system so we can have a look
-at the specific soft lockup stack back-traces.
+Handling the inevitable ENOMEM errors might be a bit tricky
+especially since extra LUs and hosts can be added dynamically
+via sysfs.
 
-Thanks,
 
---nab
+So it is possible. The stock answer has typically been that
+you should probably be using the target subsystem for that.
+Thoughts?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Gilbert
+
