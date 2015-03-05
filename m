@@ -1,30 +1,50 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Thu, 05 Mar 2015 10:38:40 -0800
-Message-ID: <54F8A2B0.70202@redhat.com>
-References: <54B7E70C.8020304@sandisk.com> <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com> <54E7112F.2080901@sandisk.com> <1424476807.1477.52.camel@haakon3.risingtidesystems.com> <54ED8B38.10904@sandisk.com> <1425074315.30923.74.camel@haakon3.risingtidesystems.com> <54F1ADAF.90808@sandisk.com> <1425279574.13530.53.camel@haakon3.risingtidesystems.com> <54F6DD3B.4030207@sandisk.com> <20150305132337.GA32341@infradead.org> <54F87F17.30207@sandisk.com>
+From: Praveen Murali <pmurali@logicube.com>
+Subject: [PATCH 3.4.106] SCSI: libsas: no expander revalidation for
+ SAS_END_DEV
+Date: Thu, 5 Mar 2015 18:57:34 +0000
+Message-ID: <3e3458d5d8c64018bd4b16bd2128403f@EX01.lg.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54F87F17.30207@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p02c11o142.mxlogic.net ([208.65.144.75]:42985 "EHLO
+	p02c11o142.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbbCETKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2015 14:10:43 -0500
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 
-On 03/05/2015 08:06 AM, Bart Van Assche wrote:
-
-> If we would do what Nic proposed - modify SCST such that it uses
-> configfs instead of sysfs - then that would result in the removal of at
-> least one SCST feature that is important to its users, namely automatic
-> population of the configuration filesystem with hardware target port
-> information. Apparently Nic does not want to convert LIO from configfs
-> to sysfs.
-
-Clearly configfs is here to stay, but is there anything that says LIO 
-couldn't have both? Besides the issue at hand, there are some other bits 
-of useful info in LIO that aren't available because of configfs' 
-limitations, but that would be possible via sysfs.
-
--- Andy
+VGhlIGtlcm5lbCBjcmFzaGVkIGluIG11dGV4X2xvY2sgY2FsbGVkIGZyb20gc21wX2V4ZWN1dGVf
+dGFzay4gVGhlIHJlYXNvbg0KaXMgdGhhdCB0aGUgbXV0ZXggaXMgaW5pdGlhbGl6ZWQgb25seSBm
+b3IgZGV2aWNlcyB3aXRoIHR5cGUgRURHRV9ERVYgb3INCkZBTk9VVF9ERVYsIGJ1dCBpbiBzb21l
+IGNhc2VzIHNtcF9leGVjdXRlX3Rhc2sgZ2V0cyBjYWxsZWQgaW4gdGhlIGV4cGFuZGVyDQpyZXZh
+bGlkYXRpb24gY29udGV4dCBmb3IgZW5kIGRldmljZXMgdG9vLiBFeHBhbmRlciByZXZhbGlkYXRp
+b24gc2hvdWxkIG5vdA0KYmUgcGVyZm9ybWVkIGZvciBub24tZXhwYW5kZXIgZGV2aWNlcyBzaW5j
+ZSB0aGV5IGFyZSBkaXNjb3ZlcmVkIHZpYSB0aGVpcg0KSURFTlRJRlkgZnJhbWVzIGFuZCBwcm9i
+aW5nIGZvciBleHBhbmRlciBjYXBhYmlsaXRpZXMgaXMgbm90IHJlcXVpcmVkLg0KDQpTaWduZWQt
+b2ZmLWJ5OiBQcmF2ZWVuIE11cmFsaSA8cG11cmFsaUBsb2dpY3ViZS5jb20+DQotLS0NCiBkcml2
+ZXJzL3Njc2kvbGlic2FzL3Nhc19kaXNjb3Zlci5jIHwgNiArKysrLS0NCiAxIGZpbGUgY2hhbmdl
+ZCwgNCBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL2xpYnNhcy9zYXNfZGlzY292ZXIuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2Rp
+c2NvdmVyLmMNCmluZGV4IDYyOWEwODYuLjMzM2E0MDAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Nj
+c2kvbGlic2FzL3Nhc19kaXNjb3Zlci5jDQorKysgYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19k
+aXNjb3Zlci5jDQpAQCAtNDQ1LDYgKzQ0NSw3IEBAIHN0YXRpYyB2b2lkIHNhc19yZXZhbGlkYXRl
+X2RvbWFpbihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogCWludCByZXMgPSAwOw0KIAlzdHJ1
+Y3Qgc2FzX2Rpc2NvdmVyeV9ldmVudCAqZXYgPSB0b19zYXNfZGlzY292ZXJ5X2V2ZW50KHdvcmsp
+Ow0KIAlzdHJ1Y3QgYXNkX3Nhc19wb3J0ICpwb3J0ID0gZXYtPnBvcnQ7DQorCXN0cnVjdCBkb21h
+aW5fZGV2aWNlICpkZGV2ID0gcG9ydC0+cG9ydF9kZXY7DQogCXN0cnVjdCBzYXNfaGFfc3RydWN0
+ICpoYSA9IHBvcnQtPmhhOw0KIA0KIAkvKiBwcmV2ZW50IHJldmFsaWRhdGlvbiBmcm9tIGZpbmRp
+bmcgc2F0YSBsaW5rcyBpbiByZWNvdmVyeSAqLw0KQEAgLTQ2MCw4ICs0NjEsOSBAQCBzdGF0aWMg
+dm9pZCBzYXNfcmV2YWxpZGF0ZV9kb21haW4oc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KIAlT
+QVNfRFBSSU5USygiUkVWQUxJREFUSU5HIERPTUFJTiBvbiBwb3J0ICVkLCBwaWQ6JWRcbiIsIHBv
+cnQtPmlkLA0KIAkJICAgIHRhc2tfcGlkX25yKGN1cnJlbnQpKTsNCiANCi0JaWYgKHBvcnQtPnBv
+cnRfZGV2KQ0KLQkJcmVzID0gc2FzX2V4X3JldmFsaWRhdGVfZG9tYWluKHBvcnQtPnBvcnRfZGV2
+KTsNCisJLyogcGVyZm9ybSBleHBhbmRlciByZXZhbGlkYXRpb24gZm9yIHNhcyBleHBhbmRlciBk
+ZXZpY2VzICovDQorCWlmIChkZGV2ICYmIChkZGV2LT5kZXZfdHlwZSA9PSBFREdFX0RFViB8fCBk
+ZGV2LT5kZXZfdHlwZSA9PSBGQU5PVVRfREVWKSkNCisJCXJlcyA9IHNhc19leF9yZXZhbGlkYXRl
+X2RvbWFpbihkZGV2KTsNCiANCiAJU0FTX0RQUklOVEsoImRvbmUgUkVWQUxJREFUSU5HIERPTUFJ
+TiBvbiBwb3J0ICVkLCBwaWQ6JWQsIHJlcyAweCV4XG4iLA0KIAkJICAgIHBvcnQtPmlkLCB0YXNr
+X3BpZF9ucihjdXJyZW50KSwgcmVzKTsNCi0tIA0KMi4xLjQNCg0K
