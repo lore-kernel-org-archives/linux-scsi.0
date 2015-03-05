@@ -1,65 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [libsas] Kernel Crash in smp_execute_task
-Date: Wed, 04 Mar 2015 17:04:52 -0800
-Message-ID: <1425517492.7581.55.camel@HansenPartnership.com>
+From: Praveen Murali <pmurali@logicube.com>
+Subject: RE: [libsas] Kernel Crash in smp_execute_task
+Date: Thu, 5 Mar 2015 01:43:47 +0000
+Message-ID: <70067e980ec54db0be05106c7f8abeee@EX01.lg.local>
 References: <154a8ccd0622409b84859abb1c3259f3@EX01.lg.local>
 	 <68a5e8f0ce4f4630bafe5f3505334f3e@EX01.lg.local>
 	,<1425514713.7581.46.camel@HansenPartnership.com>
 	 <6e045e99401a48139dea1d4f4c745e2b@EX01.lg.local>
+ <1425517492.7581.55.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58567 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751258AbbCEBEy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 20:04:54 -0500
-In-Reply-To: <6e045e99401a48139dea1d4f4c745e2b@EX01.lg.local>
+Received: from p01c12o141.mxlogic.net ([208.65.145.64]:38765 "EHLO
+	p01c12o141.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644AbbCEBoE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2015 20:44:04 -0500
+In-Reply-To: <1425517492.7581.55.camel@HansenPartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Praveen Murali <pmurali@logicube.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 
-On Thu, 2015-03-05 at 00:44 +0000, Praveen Murali wrote:
-> ________________________________________
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Sent: Wednesday, March 4, 2015 4:18 PM
-> To: Praveen Murali
-> Cc: linux-scsi@vger.kernel.org; dan.j.williams@intel.com
-> Subject: Re: [libsas] Kernel Crash in smp_execute_task
-> 
-> On Wed, 2015-03-04 at 23:29 +0000, Praveen Murali wrote:
-> >> On second thoughts, should we even let smp commands/requests thru for
-> >> sas end devices (dev->dev_type == SAS_END_DEV) ? if so, wont the
-> >> following patch more sense? (also, in my last mail the kernel logs
-> >> were all messed up; sorry dint realize that when I sent the mail.
-> >> Trying to fix it here)
-> 
-> >I think the bug is deeper than this: we shouldn't be trying expander
-> >revalidation on non-expander devices.  If the device changes from end to
-> >expander via hotplug, we'll see the remove and add (via the identify
-> >frame) so the device type should be correct by the time we do the
-> >revalidation.
-> 
-> >Does this fix the problem?
-> 
-> Yes, that fixes the issue. So if my understanding is correct, what you
-> are saying is we need to do something like
-[the patch]
-> instead of putting the exclusion in smp_execute_task; is that right?
-
-Right.  There's more than just the SMP problem that will happen if you
-try to discover an end device as an expander.  The expander discovery
-routines are going to try to cast to a non-existent expander device and
-do all sorts of unfortunate things with what it thinks are a list of
-expander phys.  Effectively revalidation only needs to probe expanders
-because all the other devices were fully discovered via the IDENTIFY
-frames they already sent.  The code is slighly obscure and it does look
-like the intent was to call sas_ex_discover with any device type since
-SMP to a device that doesn't have an SMP port will just fail.  However,
-it's safer just not to do it because half the code assumes that any
-device passed into the sas_ex_.. routines can be treated as an expander.
-
-James
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBXZWRu
+ZXNkYXksIE1hcmNoIDA0LCAyMDE1IDU6MDUgUE0NCj4gVG86IFByYXZlZW4gTXVyYWxpDQo+IENj
+OiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tDQo+
+IFN1YmplY3Q6IFJlOiBbbGlic2FzXSBLZXJuZWwgQ3Jhc2ggaW4gc21wX2V4ZWN1dGVfdGFzaw0K
+PiANCj4gT24gVGh1LCAyMDE1LTAzLTA1IGF0IDAwOjQ0ICswMDAwLCBQcmF2ZWVuIE11cmFsaSB3
+cm90ZToNCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+ID4g
+RnJvbTogSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAu
+Y29tPg0KPiA+IFNlbnQ6IFdlZG5lc2RheSwgTWFyY2ggNCwgMjAxNSA0OjE4IFBNDQo+ID4gVG86
+IFByYXZlZW4gTXVyYWxpDQo+ID4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBkYW4u
+ai53aWxsaWFtc0BpbnRlbC5jb20NCj4gPiBTdWJqZWN0OiBSZTogW2xpYnNhc10gS2VybmVsIENy
+YXNoIGluIHNtcF9leGVjdXRlX3Rhc2sNCj4gPg0KPiA+IE9uIFdlZCwgMjAxNS0wMy0wNCBhdCAy
+MzoyOSArMDAwMCwgUHJhdmVlbiBNdXJhbGkgd3JvdGU6DQo+ID4gPj4gT24gc2Vjb25kIHRob3Vn
+aHRzLCBzaG91bGQgd2UgZXZlbiBsZXQgc21wIGNvbW1hbmRzL3JlcXVlc3RzIHRocnUgZm9yDQo+
+ID4gPj4gc2FzIGVuZCBkZXZpY2VzIChkZXYtPmRldl90eXBlID09IFNBU19FTkRfREVWKSA/IGlm
+IHNvLCB3b250IHRoZQ0KPiA+ID4+IGZvbGxvd2luZyBwYXRjaCBtb3JlIHNlbnNlPyAoYWxzbywg
+aW4gbXkgbGFzdCBtYWlsIHRoZSBrZXJuZWwgbG9ncw0KPiA+ID4+IHdlcmUgYWxsIG1lc3NlZCB1
+cDsgc29ycnkgZGludCByZWFsaXplIHRoYXQgd2hlbiBJIHNlbnQgdGhlIG1haWwuDQo+ID4gPj4g
+VHJ5aW5nIHRvIGZpeCBpdCBoZXJlKQ0KPiA+DQo+ID4gPkkgdGhpbmsgdGhlIGJ1ZyBpcyBkZWVw
+ZXIgdGhhbiB0aGlzOiB3ZSBzaG91bGRuJ3QgYmUgdHJ5aW5nIGV4cGFuZGVyDQo+ID4gPnJldmFs
+aWRhdGlvbiBvbiBub24tZXhwYW5kZXIgZGV2aWNlcy4gIElmIHRoZSBkZXZpY2UgY2hhbmdlcyBm
+cm9tIGVuZCB0bw0KPiA+ID5leHBhbmRlciB2aWEgaG90cGx1Zywgd2UnbGwgc2VlIHRoZSByZW1v
+dmUgYW5kIGFkZCAodmlhIHRoZSBpZGVudGlmeQ0KPiA+ID5mcmFtZSkgc28gdGhlIGRldmljZSB0
+eXBlIHNob3VsZCBiZSBjb3JyZWN0IGJ5IHRoZSB0aW1lIHdlIGRvIHRoZQ0KPiA+ID5yZXZhbGlk
+YXRpb24uDQo+ID4NCj4gPiA+RG9lcyB0aGlzIGZpeCB0aGUgcHJvYmxlbT8NCj4gPg0KPiA+IFll
+cywgdGhhdCBmaXhlcyB0aGUgaXNzdWUuIFNvIGlmIG15IHVuZGVyc3RhbmRpbmcgaXMgY29ycmVj
+dCwgd2hhdCB5b3UNCj4gPiBhcmUgc2F5aW5nIGlzIHdlIG5lZWQgdG8gZG8gc29tZXRoaW5nIGxp
+a2UNCj4gW3RoZSBwYXRjaF0NCj4gPiBpbnN0ZWFkIG9mIHB1dHRpbmcgdGhlIGV4Y2x1c2lvbiBp
+biBzbXBfZXhlY3V0ZV90YXNrOyBpcyB0aGF0IHJpZ2h0Pw0KPiANCj4gUmlnaHQuICBUaGVyZSdz
+IG1vcmUgdGhhbiBqdXN0IHRoZSBTTVAgcHJvYmxlbSB0aGF0IHdpbGwgaGFwcGVuIGlmIHlvdQ0K
+PiB0cnkgdG8gZGlzY292ZXIgYW4gZW5kIGRldmljZSBhcyBhbiBleHBhbmRlci4gIFRoZSBleHBh
+bmRlciBkaXNjb3ZlcnkNCj4gcm91dGluZXMgYXJlIGdvaW5nIHRvIHRyeSB0byBjYXN0IHRvIGEg
+bm9uLWV4aXN0ZW50IGV4cGFuZGVyIGRldmljZSBhbmQNCj4gZG8gYWxsIHNvcnRzIG9mIHVuZm9y
+dHVuYXRlIHRoaW5ncyB3aXRoIHdoYXQgaXQgdGhpbmtzIGFyZSBhIGxpc3Qgb2YNCj4gZXhwYW5k
+ZXIgcGh5cy4gIEVmZmVjdGl2ZWx5IHJldmFsaWRhdGlvbiBvbmx5IG5lZWRzIHRvIHByb2JlIGV4
+cGFuZGVycw0KPiBiZWNhdXNlIGFsbCB0aGUgb3RoZXIgZGV2aWNlcyB3ZXJlIGZ1bGx5IGRpc2Nv
+dmVyZWQgdmlhIHRoZSBJREVOVElGWQ0KPiBmcmFtZXMgdGhleSBhbHJlYWR5IHNlbnQuICBUaGUg
+Y29kZSBpcyBzbGlnaGx5IG9ic2N1cmUgYW5kIGl0IGRvZXMgbG9vaw0KPiBsaWtlIHRoZSBpbnRl
+bnQgd2FzIHRvIGNhbGwgc2FzX2V4X2Rpc2NvdmVyIHdpdGggYW55IGRldmljZSB0eXBlIHNpbmNl
+DQo+IFNNUCB0byBhIGRldmljZSB0aGF0IGRvZXNuJ3QgaGF2ZSBhbiBTTVAgcG9ydCB3aWxsIGp1
+c3QgZmFpbC4gIEhvd2V2ZXIsDQo+IGl0J3Mgc2FmZXIganVzdCBub3QgdG8gZG8gaXQgYmVjYXVz
+ZSBoYWxmIHRoZSBjb2RlIGFzc3VtZXMgdGhhdCBhbnkNCj4gZGV2aWNlIHBhc3NlZCBpbnRvIHRo
+ZSBzYXNfZXhfLi4gcm91dGluZXMgY2FuIGJlIHRyZWF0ZWQgYXMgYW4gZXhwYW5kZXIuDQoNClRo
+YXQgbWFrZXMgc2Vuc2UuIEkgdGVzdGVkIHRoZSBjaGFuZ2UgYW5kIGl0IGxvb2tzIGdvb2QuIERv
+IHlvdSB3YW50IG1lIHRvIHNlbmQgdGhlIHBhdGNoPyANCg==
