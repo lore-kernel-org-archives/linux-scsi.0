@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 35/41] hpsa: create workqueue after the driver is ready
- for use
-Date: Fri, 06 Mar 2015 17:48:52 -0600
-Message-ID: <20150306234852.29973.13058.stgit@brunhilda>
+Subject: [PATCH v2 39/41] hpsa: propagate the error code in
+ hpsa_kdump_soft_reset
+Date: Fri, 06 Mar 2015 17:49:13 -0600
+Message-ID: <20150306234913.29973.66270.stgit@brunhilda>
 References: <20150306233504.29973.41322.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:37773 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932286AbbCFXuV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:50:21 -0500
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:41141 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275AbbCFXum (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:50:42 -0500
 In-Reply-To: <20150306233504.29973.41322.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,165 +20,47 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-Don't create the resubmit workqueue in hpsa_init_one until everything else
-is ready to use, so everything can be freed in reverse order of when they
-were allocated without risking freeing things while workqueue items are
-still active.
-
-Destroy the workqueue in the right order in
-hpsa_undo_allocations_after_kdump_soft_reset too.
+If hpsa_wait_for_board_state fails, hpsa_kdump_soft_reset
+should propagate its return value (e.g., -ENODEV) rather
+than just returning -1.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   60 ++++++++++++++++++++++++++-------------------------
- 1 file changed, 31 insertions(+), 29 deletions(-)
+ drivers/scsi/hpsa.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b514d0c..2fb03c9 100644
+index 9d6f95c..11581b4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -7719,30 +7719,18 @@ reinit_after_soft_reset:
- 	atomic_set(&h->passthru_cmds_avail, HPSA_MAX_CONCURRENT_PASSTHRUS);
- 	atomic_set(&h->abort_cmds_available, HPSA_CMDS_RESERVED_FOR_ABORTS);
+@@ -7485,19 +7485,22 @@ static int hpsa_request_irqs(struct ctlr_info *h,
  
--	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
--	if (!h->rescan_ctlr_wq) {
--		rc = -ENOMEM;
--		goto clean1;
--	}
--
--	h->resubmit_wq = hpsa_create_controller_wq(h, "resubmit");
--	if (!h->resubmit_wq) {
--		rc = -ENOMEM;
--		goto clean1;	/* aer/h */
--	}
--
- 	/* Allocate and clear per-cpu variable lockup_detected */
- 	h->lockup_detected = alloc_percpu(u32);
- 	if (!h->lockup_detected) {
- 		dev_err(&h->pdev->dev, "Failed to allocate lockup detector\n");
- 		rc = -ENOMEM;
--		goto clean1;	/* wq/aer/h */
-+		goto clean1;	/* aer/h */
- 	}
- 	set_lockup_detected_for_all_cpus(h, 0);
+ static int hpsa_kdump_soft_reset(struct ctlr_info *h)
+ {
++	int rc;
+ 	hpsa_send_host_reset(h, RAID_CTLR_LUNID, HPSA_RESET_TYPE_CONTROLLER);
  
- 	rc = hpsa_pci_init(h);
- 	if (rc)
--		goto clean2;	/* lockup, wq/aer/h */
-+		goto clean2;	/* lockup, aer/h */
- 
- 	sprintf(h->devname, HPSA "%d", number_of_controllers);
- 	h->ctlr = number_of_controllers;
-@@ -7758,7 +7746,7 @@ reinit_after_soft_reset:
- 			dac = 0;
- 		} else {
- 			dev_err(&pdev->dev, "no suitable DMA available\n");
--			goto clean3;	/* pci, lockup, wq/aer/h */
-+			goto clean3;	/* pci, lockup, aer/h */
- 		}
+ 	dev_info(&h->pdev->dev, "Waiting for board to soft reset.\n");
+-	if (hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_NOT_READY)) {
++	rc = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_NOT_READY);
++	if (rc) {
+ 		dev_warn(&h->pdev->dev, "Soft reset had no effect.\n");
+-		return -1;
++		return rc;
  	}
  
-@@ -7767,16 +7755,16 @@ reinit_after_soft_reset:
+ 	dev_info(&h->pdev->dev, "Board reset, awaiting READY status.\n");
+-	if (hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY)) {
++	rc = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY);
++	if (rc) {
+ 		dev_warn(&h->pdev->dev, "Board failed to become ready "
+ 			"after soft reset.\n");
+-		return -1;
++		return rc;
+ 	}
  
- 	rc = hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx);
- 	if (rc)
--		goto clean3;	/* pci, lockup, wq/aer/h */
-+		goto clean3;	/* pci, lockup, aer/h */
- 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
- 	       h->devname, pdev->device,
- 	       h->intr[h->intr_mode], dac ? "" : " not");
- 	rc = hpsa_alloc_cmd_pool(h);
- 	if (rc)
--		goto clean4;	/* irq, pci, lockup, wq/aer/h */
-+		goto clean4;	/* irq, pci, lockup, aer/h */
- 	rc = hpsa_alloc_sg_chain_blocks(h);
- 	if (rc)
--		goto clean5;	/* cmd, irq, pci, lockup, wq/aer/h */
-+		goto clean5;	/* cmd, irq, pci, lockup, aer/h */
- 	init_waitqueue_head(&h->scan_wait_queue);
- 	init_waitqueue_head(&h->abort_cmd_wait_queue);
- 	init_waitqueue_head(&h->abort_sync_wait_queue);
-@@ -7789,7 +7777,20 @@ reinit_after_soft_reset:
- 	spin_lock_init(&h->devlock);
- 	rc = hpsa_put_ctlr_into_performant_mode(h);
- 	if (rc)
--		goto clean6;	/* sg, cmd, irq, pci, lockup, wq/aer/h */
-+		goto clean6;	/* sg, cmd, irq, pci, lockup, aer/h */
-+
-+	/* create the resubmit workqueue */
-+	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
-+	if (!h->rescan_ctlr_wq) {
-+		rc = -ENOMEM;
-+		goto clean7;
-+	}
-+
-+	h->resubmit_wq = hpsa_create_controller_wq(h, "resubmit");
-+	if (!h->resubmit_wq) {
-+		rc = -ENOMEM;
-+		goto clean7;	/* aer/h */
-+	}
- 
- 	/*
- 	 * At this point, the controller is ready to take commands.
-@@ -7831,7 +7832,7 @@ reinit_after_soft_reset:
- 		rc = hpsa_kdump_soft_reset(h);
- 		if (rc)
- 			/* Neither hard nor soft reset worked, we're hosed. */
--			goto clean7;
-+			goto clean8;
- 
- 		dev_info(&h->pdev->dev, "Board READY.\n");
- 		dev_info(&h->pdev->dev,
-@@ -7868,7 +7869,7 @@ reinit_after_soft_reset:
- 	hpsa_hba_inquiry(h);
- 	rc = hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
- 	if (rc)
--		goto clean7;
-+		goto clean8; /* wq, perf, sg, cmd, irq, pci, lockup, aer/h */
- 
- 	/* Monitor the controller for firmware lockups */
- 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
-@@ -7880,19 +7881,20 @@ reinit_after_soft_reset:
- 				h->heartbeat_sample_interval);
  	return 0;
- 
--clean7: /* perf, sg, cmd, irq, pci, lockup, wq/aer/h */
-+clean8: /* perf, sg, cmd, irq, pci, lockup, aer/h */
- 	kfree(h->hba_inquiry_data);
-+clean7: /* perf, sg, cmd, irq, pci, lockup, aer/h */
- 	hpsa_free_performant_mode(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
- clean6: /* sg, cmd, irq, pci, lockup, wq/aer/h */
- 	hpsa_free_sg_chain_blocks(h);
--clean5: /* cmd, irq, pci, lockup, wq/aer/h */
-+clean5: /* cmd, irq, pci, lockup, aer/h */
- 	hpsa_free_cmd_pool(h);
--clean4: /* irq, pci, lockup, wq/aer/h */
-+clean4: /* irq, pci, lockup, aer/h */
- 	hpsa_free_irqs(h);
--clean3: /* pci, lockup, wq/aer/h */
-+clean3: /* pci, lockup, aer/h */
- 	hpsa_free_pci_init(h);
--clean2: /* lockup, wq/aer/h */
-+clean2: /* lockup, aer/h */
- 	if (h->lockup_detected) {
- 		free_percpu(h->lockup_detected);
- 		h->lockup_detected = NULL;
-@@ -7991,9 +7993,9 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 
- 	hpsa_free_device_info(h);		/* scan */
- 
--	hpsa_unregister_scsi(h);			/* init_one "8" */
--	kfree(h->hba_inquiry_data);			/* init_one "8" */
--	h->hba_inquiry_data = NULL;			/* init_one "8" */
-+	hpsa_unregister_scsi(h);			/* init_one 9 */
-+	kfree(h->hba_inquiry_data);			/* init_one 9 */
-+	h->hba_inquiry_data = NULL;			/* init_one 9 */
- 	hpsa_free_performant_mode(h);			/* init_one 7 */
- 	hpsa_free_sg_chain_blocks(h);			/* init_one 6 */
- 	hpsa_free_cmd_pool(h);				/* init_one 5 */
 
