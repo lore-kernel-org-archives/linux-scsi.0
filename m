@@ -1,94 +1,88 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 13/41] hpsa: print accurate SSD Smart Path Enabled status
-Date: Fri, 06 Mar 2015 17:46:56 -0600
-Message-ID: <20150306234656.29973.12367.stgit@brunhilda>
+Subject: [PATCH v2 14/41] hpsa: use ioaccel2 path to submit IOs to physical
+ drives in HBA mode.
+Date: Fri, 06 Mar 2015 17:47:02 -0600
+Message-ID: <20150306234702.29973.64852.stgit@brunhilda>
 References: <20150306233504.29973.41322.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:50504 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088AbbCFXs1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:48:27 -0500
-Received: from g1t5424.austin.hp.com (g1t5424.austin.hp.com [15.216.225.54])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id C172666E3D
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2015 23:48:26 +0000 (UTC)
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:40755 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbbCFXsb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:48:31 -0500
 In-Reply-To: <20150306233504.29973.41322.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Robert Elliott <elliott@hp.com>
+From: Joe Handzik <joseph.t.handzik@hp.com>
 
-offload_enabled changes are deferred until after the
-added/updated prints occur, so the values are incorrect.
-
-defer printing SSD Smart Path Enabled status information until the
-information is correct
+use ioaccel2 path to submit I/O to physical drives in HBA mode
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-Signed-off-by: Robert Elliott <elliott@hp.com>
+Signed-off-by: Joe Handzik <joseph.t.handzik@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c |   10 +++++++++-
+ drivers/scsi/hpsa.h |    1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index f6c7a96..a218b0e 100644
+index a218b0e..85c4c8a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1090,12 +1090,12 @@ lun_assigned:
- 
- 	h->dev[n] = device;
- 	h->ndevices++;
--	device->offload_to_be_enabled = device->offload_enabled;
--	device->offload_enabled = 0;
- 	added[*nadded] = device;
- 	(*nadded)++;
- 	hpsa_show_dev_msg(HPSA_INFO, h, device,
- 		device->expose_state & HPSA_SCSI_ADD ? "added" : "masked");
-+	device->offload_to_be_enabled = device->offload_enabled;
-+	device->offload_enabled = 0;
- 	return 0;
- }
- 
-@@ -1103,6 +1103,7 @@ lun_assigned:
- static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
- 	int entry, struct hpsa_scsi_dev_t *new_entry)
- {
-+	int offload_enabled;
- 	/* assumes h->devlock is held */
- 	BUG_ON(entry < 0 || entry >= HPSA_MAX_DEVICES);
- 
-@@ -1135,7 +1136,10 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
- 	if (!new_entry->offload_enabled)
- 		h->dev[entry]->offload_enabled = 0;
- 
-+	offload_enabled = h->dev[entry]->offload_enabled;
-+	h->dev[entry]->offload_enabled = h->dev[entry]->offload_to_be_enabled;
- 	hpsa_show_dev_msg(HPSA_INFO, h, h->dev[entry], "updated");
-+	h->dev[entry]->offload_enabled = offload_enabled;
- }
- 
- /* Replace an entry from h->dev[] array. */
-@@ -1158,12 +1162,12 @@ static void hpsa_scsi_replace_entry(struct ctlr_info *h, int hostno,
- 		new_entry->lun = h->dev[entry]->lun;
+@@ -1123,6 +1123,11 @@ static void hpsa_scsi_update_entry(struct ctlr_info *h, int hostno,
+ 		h->dev[entry]->raid_map = new_entry->raid_map;
+ 		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
  	}
++	if (new_entry->hba_ioaccel_enabled) {
++		h->dev[entry]->ioaccel_handle = new_entry->ioaccel_handle;
++		wmb(); /* set ioaccel_handle *before* hba_ioaccel_enabled */
++	}
++	h->dev[entry]->hba_ioaccel_enabled = new_entry->hba_ioaccel_enabled;
+ 	h->dev[entry]->offload_config = new_entry->offload_config;
+ 	h->dev[entry]->offload_to_mirror = new_entry->offload_to_mirror;
+ 	h->dev[entry]->queue_depth = new_entry->queue_depth;
+@@ -3042,6 +3047,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		this_device->offload_config = 0;
+ 		this_device->offload_enabled = 0;
+ 		this_device->offload_to_be_enabled = 0;
++		this_device->hba_ioaccel_enabled = 0;
+ 		this_device->volume_offline = 0;
+ 		this_device->queue_depth = h->nr_cmds;
+ 	}
+@@ -3330,6 +3336,8 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
+ 		(struct ext_report_lun_entry *) lunaddrbytes;
  
--	new_entry->offload_to_be_enabled = new_entry->offload_enabled;
--	new_entry->offload_enabled = 0;
- 	h->dev[entry] = new_entry;
- 	added[*nadded] = new_entry;
- 	(*nadded)++;
- 	hpsa_show_dev_msg(HPSA_INFO, h, new_entry, "replaced");
-+	new_entry->offload_to_be_enabled = new_entry->offload_enabled;
-+	new_entry->offload_enabled = 0;
- }
- 
- /* Remove an entry from h->dev[] array. */
+ 	dev->ioaccel_handle = rle->ioaccel_handle;
++	if (PHYS_IOACCEL(lunaddrbytes) && dev->ioaccel_handle)
++		dev->hba_ioaccel_enabled = 1;
+ 	memset(id_phys, 0, sizeof(*id_phys));
+ 	rc = hpsa_bmic_id_physical_device(h, lunaddrbytes,
+ 			GET_BMIC_DRIVE_NUMBER(lunaddrbytes), id_phys,
+@@ -4431,7 +4439,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+-	} else if (dev->ioaccel_handle) {
++	} else if (dev->hba_ioaccel_enabled) {
+ 		hpsa_cmd_init(h, c->cmdindex, c);
+ 		c->cmd_type = CMD_SCSI;
+ 		c->scsi_cmd = cmd;
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index df2468c..87a70b5 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -55,6 +55,7 @@ struct hpsa_scsi_dev_t {
+ 	int offload_config;		/* I/O accel RAID offload configured */
+ 	int offload_enabled;		/* I/O accel RAID offload enabled */
+ 	int offload_to_be_enabled;
++	int hba_ioaccel_enabled;
+ 	int offload_to_mirror;		/* Send next I/O accelerator RAID
+ 					 * offload request to mirror drive
+ 					 */
 
