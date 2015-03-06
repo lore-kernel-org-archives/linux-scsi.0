@@ -1,51 +1,87 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: use dedicated storage for scsi_debug LUNs
-Date: Thu, 05 Mar 2015 16:22:43 -0500
-Message-ID: <54F8C923.5010202@interlog.com>
-References: <20150305153338.GA16293@aepfle.de>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:59697 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750888AbbCEVXG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Mar 2015 16:23:06 -0500
-In-Reply-To: <20150305153338.GA16293@aepfle.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Thu, 5 Mar 2015 18:01:52 -0600
+Message-ID: <201503060001.t2601qPJ021326@wind.enjellic.com>
+References: <nab@linux-iscsi.org>
+Reply-To: greg@enjellic.com
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+       "Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers" (Mar  1, 10:59pm)
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>, Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
 
-On 15-03-05 10:33 AM, Olaf Hering wrote:
-> I'm using scsi_debug to implement and test tools for xen-scsiback. Today
-> I discovered that each LUN uses the very same storage, as described in
-> the docs. What would it take to optionally use dedicated storage for
-> each LUN?
+On Mar 1, 10:59pm, "Nicholas A. Bellinger" wrote:
+} Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target driv
+
+Hi, I hope the week is progressing well for everyone.
+
+> On Sat, 2015-02-28 at 12:59 +0100, Bart Van Assche wrote:
+> > On 02/27/15 22:58, Nicholas A. Bellinger wrote:
+> > > Looking at how your attempting to drive creation + removal of struct
+> > > config_group from within kernel code here:
+> > > 
+> > > target: Add target port registration API
+> > > https://github.com/bvanassche/linux/commit/dbb8bf32db3428ede6ecc688ede1e5e01fc59d88
+> > > 
+> > > is the exactly the wrong approach to take.
+> > > 
+> > > The creation and deletion of struct config_group must be driven by
+> > > user-space, and by user-space only.  No exceptions will be made.
+> > 
+> > There exists an approach that preserves the ABI of both SCST and LIO,
+> > namely:
+> > * Add empty transport_register_wwn() and transport_unregister_wwn()
+> >   functions in the LIO core.
+> > * Add calls to these functions at the appropriate place in the FC
+> >   and SRP target drivers.
+> > * In the SCST implementation of the unified target driver API, route
+> >   calls to transport_register_wwn() and transport_unregister_wwn() to
+> >   scst_register_target() and scst_unregister_target() respectively.
+> > 
+
+> NAK.
 >
-> This is how I load scsi_debug:
-> modprobe scsi_debug add_host=4 dev_size_mb=4 max_luns=4 num_parts=4 num_tgts=4 vpd_use_hostno=1
+> I'll not consider any hooks in upstream target code, and certainly
+> not driver hooks for a control-plane approach unanimously rejected
+> by both configfs and sysfs maintainers in 2008 and 2010.
+>
+> The whole point of target_core_fabric_configfs.c is to transparently
+> reference count fabric driver data structures populated underneath
+> /sys/kernel/config/target/$FABRIC/, who's design also has the added
+> bonus of providing module reference counting to drivers 'for free'.
+>
+> So until you're prepared to evolve on this issue and stop pretending
+> as if the future didn't already happen, this type of discussion at
+> LSF is a waste of time.
 
-Olaf,
-Just having a quick look: the fake_storep, dif_storep and
-map_storep heaps would need to be per LU; IOWs placed in
-struct sdebug_dev_info. Also atomic_rw would need to be
-placed in that structure.
+So, in this spirit of collaborative and collegial exchange, which I
+see that Christoph has called for, I have a question for those who
+posess familiarity with the LIO control plane design.
 
-To be backward compatible to what the scsi_debug driver
-does now (i.e. shares storage) accessor functions might
-be employed to hide whether the global or per LU instance
-is being handled.
+In this parousia of total user-space configuration, not necessarily a
+bad thing, what would be the target fabric presentation of a storage
+target server which has one Qlogic 8242 card and one Qlogic 8362 card
+in it?
 
-Handling the inevitable ENOMEM errors might be a bit tricky
-especially since extra LUs and hosts can be added dynamically
-via sysfs.
+> --nab
 
+Best wishes for a pleasant remainder of the week to everyone.
 
-So it is possible. The stock answer has typically been that
-you should probably be using the target subsystem for that.
-Thoughts?
+Greg
 
-Doug Gilbert
+}-- End of excerpt from "Nicholas A. Bellinger"
 
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"Man, despite his artistic pretensions, his sophistication and many
+ accomplishments, owes the fact of his existence to a six-inch layer of
+ topsoil and the fact that it rains."
+                                -- Anonymous writer on perspective.
+                                   GAUSSIAN quote.
