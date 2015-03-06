@@ -1,71 +1,96 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Fri, 06 Mar 2015 15:10:43 -0800
-Message-ID: <1425683443.28579.31.camel@haakon3.risingtidesystems.com>
-References: <54B7E70C.8020304@sandisk.com>
-	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>
-	 <54E7112F.2080901@sandisk.com>
-	 <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
-	 <54ED8B38.10904@sandisk.com>
-	 <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
-	 <54F1ADAF.90808@sandisk.com>
-	 <1425279574.13530.53.camel@haakon3.risingtidesystems.com>
-	 <54F6DD3B.4030207@sandisk.com> <20150305132337.GA32341@infradead.org>
-	 <54F87F17.30207@sandisk.com> <54F8A2B0.70202@redhat.com>
-	 <54F9565A.2080103@sandisk.com>
+From: Don Brace <don.brace@pmcs.com>
+Subject: [PATCH v2 00/41] hpsa updates
+Date: Fri, 06 Mar 2015 17:45:47 -0600
+Message-ID: <20150306233504.29973.41322.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <54F9565A.2080103@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:50488 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752638AbbCFXrS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:47:18 -0500
+Received: from g9t5008.houston.hp.com (g9t5008.houston.hp.com [15.240.92.66])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 1D356653A3
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2015 23:47:18 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2015-03-06 at 08:25 +0100, Bart Van Assche wrote:
-> On 03/05/15 19:39, Andy Grover wrote:
-> > On 03/05/2015 08:06 AM, Bart Van Assche wrote:
-> >> If we would do what Nic proposed - modify SCST such that it uses
-> >> configfs instead of sysfs - then that would result in the removal of at
-> >> least one SCST feature that is important to its users, namely automatic
-> >> population of the configuration filesystem with hardware target port
-> >> information. Apparently Nic does not want to convert LIO from configfs
-> >> to sysfs.
-> > 
-> > Clearly configfs is here to stay, but is there anything that says LIO 
-> > couldn't have both? Besides the issue at hand, there are some other bits 
-> > of useful info in LIO that aren't available because of configfs' 
-> > limitations, but that would be possible via sysfs.
-> 
-> (resending my reply since apparently my previous e-mail didn't make it
-> to the lists)
-> 
-> Hello Andy,
-> 
-> Let's have a look at FC HBAs. Most FC HBAs have a PCIe connector and
-> support NPIV. If an NPIV WWN is configured then that WWN is passed from
-> user space to the kernel. The PCIe specification supports hot-plugging.
-> Although I'm not sure there exist FC HBAs that support hot-plugging,
-> upon hot removal of a PCIe HBA the kernel is notified of this and must
-> remove all NPIV WWNs from the filesystem that is used to configure the
-> SCSI target subsystem. Since it is not allowed to remove configfs
-> directories from inside the kernel I think NPIV is an example of a use
-> case that cannot be handled properly when using configfs for configuring
-> a SCSI target subsystem, even when combined in some way with sysfs.
+These patches are based on Linus's tree
 
-Not exactly.  configfs in this context works similar to hotplug remove
-of a FC HBA in initiator mode (or a USB drive even) with a mounted
-filesystem on one of the LUNs.
+The changes are:
+ - make function names consistent
+ - refactor functions
+ - cleanup driver messages
+ - cleanup error handling
+ - clean up abort management
+ - enhance sense data reporting
+ - enhance ioaccel command support
+ - add in block layer tag support
+ - clean up resets
 
-That is, a kobject reference is obtained on Scsi_Host->shost_gendev at
-/sys/kernel/config/target/qla2xxx_npiv/$NPIV_WWPN/ creation time,
-preventing the final device_release() from being called until the last
-reference is dropped via rmdir ../target/qla2xxx_npiv/$NPIV_WWPN/.
+---
 
-The practical method is to use a udev script called at hotplug remove
-time (similar to USB) to drop the NPIV configfs groups associated with
-device(s) being removed, allowing the underlying kernel data structures
-to be released.
+Don Brace (1):
+      hpsa: change driver version
 
---nab
+Joe Handzik (3):
+      hpsa: use ioaccel2 path to submit IOs to physical drives in HBA mode.
+      hpsa: Get queue depth from identify physical bmic for physical disks.
+      hpsa: add more ioaccel2 error handling, including underrun statuses.
+
+Robert Elliott (18):
+      hpsa: make function names consistent
+      hpsa: print accurate SSD Smart Path Enabled status
+      hpsa: break hpsa_free_irqs_and_disable_msix into two functions
+      hpsa: clean up error handling
+      hpsa: refactor freeing of resources into more logical functions
+      hpsa: do not check cmd_alloc return value - it cannnot return NULL
+      hpsa: correct return values from driver functions.
+      hpsa: clean up driver init
+      hpsa: clean up some error reporting output in abort handler
+      hpsa: do not print ioaccel2 warning messages about unusual completions.
+      hpsa: call pci_release_regions after pci_disable_device
+      hpsa: skip free_irq calls if irqs are not allocated
+      hpsa: cleanup for init_one step 2 in kdump
+      hpsa: fix try_soft_reset error handling
+      hpsa: create workqueue after the driver is ready for use
+      hpsa: add interrupt number to /proc/interrupts interrupt name
+      hpsa: use scsi host_no as hpsa controller number
+      hpsa: propagate the error code in hpsa_kdump_soft_reset
+
+Stephen Cameron (9):
+      hpsa: add masked physical devices into h->dev[] array
+      hpsa: clean up aborts
+      hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
+      hpsa: hpsa decode sense data for io and tmf
+      hpsa: allow lockup detected to be viewed via sysfs
+      hpsa: factor out hpsa_init_cmd function
+      hpsa: do not ignore return value of hpsa_register_scsi
+      hpsa: try resubmitting down raid path on task set full
+      hpsa: add support sending aborts to physical devices via the ioaccel2 path
+
+Webb Scales (10):
+      hpsa: clean up host, channel, target, lun prints
+      hpsa: rework controller command submission
+      hpsa: factor out hpsa_ioaccel_submit function
+      hpsa: add ioaccel sg chaining for the ioaccel2 path
+      hpsa: use helper routines for finishing commands
+      hpsa: don't return abort request until target is complete
+      hpsa: refactor and rework support for sending TEST_UNIT_READY
+      hpsa: performance tweak for hpsa_scatter_gather()
+      hpsa: use block layer tag for command allocation
+      hpsa: cleanup reset
+
+
+ drivers/scsi/hpsa.c     | 2797 ++++++++++++++++++++++++++++++++++-------------
+ drivers/scsi/hpsa.h     |   19 
+ drivers/scsi/hpsa_cmd.h |   34 +
+ 3 files changed, 2048 insertions(+), 802 deletions(-)
+
+--
+Signature
