@@ -1,16 +1,22 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v2 27/41] hpsa: use helper routines for finishing commands
-Date: Fri, 06 Mar 2015 17:48:10 -0600
-Message-ID: <20150306234809.29973.71526.stgit@brunhilda>
+Subject: [PATCH v2 29/41] hpsa: refactor and rework support for sending
+ TEST_UNIT_READY
+Date: Fri, 06 Mar 2015 17:48:20 -0600
+Message-ID: <20150306234820.29973.33442.stgit@brunhilda>
 References: <20150306233504.29973.41322.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:40297 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732AbbCFXtj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:49:39 -0500
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:50529 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932228AbbCFXtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2015 18:49:52 -0500
+Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 3FBA466E4E
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2015 23:49:52 +0000 (UTC)
 In-Reply-To: <20150306233504.29973.41322.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,182 +25,184 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Webb Scales <webbnh@hp.com>
 
-cleanup command completions
+Factor out the code which sends the TEST_UNIT_READY from
+wait_for_device_to_become_ready() into its own function.
+
+Move the code which waits for the TEST_UNIT_READY from
+wait_for_device_to_become_ready() into its own function.
+
+If a logical drive has failed, resetting it will ensure
+outstanding commands are completed, but polling it with
+TURs after the reset will not work because the TURs will
+never report good status.  So successful TUR should not
+be a condition of success for the device reset error
+handler.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Webb Scales <webbnh@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   78 ++++++++++++++++++++-------------------------------
- 1 file changed, 31 insertions(+), 47 deletions(-)
+ drivers/scsi/hpsa.c |  117 ++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 87 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5fe6a46..02847c0 100644
+index ebf2b59..b91fe35 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2013,6 +2013,19 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
- 	return retry;	/* retry on raid path? */
+@@ -4825,51 +4825,108 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ 	return -ENOMEM;
  }
  
-+static void hpsa_cmd_free_and_done(struct ctlr_info *h,
-+		struct CommandList *c, struct scsi_cmnd *cmd)
+-static int wait_for_device_to_become_ready(struct ctlr_info *h,
+-	unsigned char lunaddr[])
++/*
++ * Send a TEST_UNIT_READY command to the specified LUN using the specified
++ * reply queue; returns zero if the unit is ready, and non-zero otherwise.
++ */
++static int hpsa_send_test_unit_ready(struct ctlr_info *h,
++				struct CommandList *c, unsigned char lunaddr[],
++				int reply_queue)
 +{
-+	cmd_free(h, c);
-+	cmd->scsi_done(cmd);
-+}
++	int rc;
 +
-+static void hpsa_retry_cmd(struct ctlr_info *h, struct CommandList *c)
-+{
-+	INIT_WORK(&c->work, hpsa_command_resubmit_worker);
-+	queue_work_on(raw_smp_processor_id(), h->resubmit_wq, &c->work);
-+}
++	/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
++	(void) fill_cmd(c, TEST_UNIT_READY, h,
++			NULL, 0, 0, lunaddr, TYPE_CMD);
++	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
++	if (rc)
++		return rc;
++	/* no unmap needed here because no data xfer. */
 +
- static void process_ioaccel2_completion(struct ctlr_info *h,
- 		struct CommandList *c, struct scsi_cmnd *cmd,
- 		struct hpsa_scsi_dev_t *dev)
-@@ -2021,13 +2034,11 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 
- 	/* check for good status */
- 	if (likely(c2->error_data.serv_response == 0 &&
--			c2->error_data.status == 0)) {
--		cmd_free(h, c);
--		cmd->scsi_done(cmd);
--		return;
--	}
-+			c2->error_data.status == 0))
-+		return hpsa_cmd_free_and_done(h, c, cmd);
- 
--	/* Any RAID offload error results in retry which will use
++	/* Check if the unit is already ready. */
++	if (c->err_info->CommandStatus == CMD_SUCCESS)
++		return 0;
++
 +	/*
-+	 * Any RAID offload error results in retry which will use
- 	 * the normal I/O path so the controller can handle whatever's
- 	 * wrong.
- 	 */
-@@ -2037,19 +2048,14 @@ static void process_ioaccel2_completion(struct ctlr_info *h,
- 		if (c2->error_data.status ==
- 			IOACCEL2_STATUS_SR_IOACCEL_DISABLED)
- 			dev->offload_enabled = 0;
--		goto retry_cmd;
++	 * The first command sent after reset will receive "unit attention" to
++	 * indicate that the LUN has been reset...this is actually what we're
++	 * looking for (but, success is good too).
++	 */
++	if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
++		c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
++			(c->err_info->SenseInfo[2] == NO_SENSE ||
++			 c->err_info->SenseInfo[2] == UNIT_ATTENTION))
++		return 0;
 +
-+		return hpsa_retry_cmd(h, c);
- 	}
- 
- 	if (handle_ioaccel_mode2_error(h, c, cmd, c2))
--		goto retry_cmd;
--
--	cmd_free(h, c);
--	cmd->scsi_done(cmd);
--	return;
-+		return hpsa_retry_cmd(h, c);
- 
--retry_cmd:
--	INIT_WORK(&c->work, hpsa_command_resubmit_worker);
--	queue_work_on(raw_smp_processor_id(), h->resubmit_wq, &c->work);
-+	return hpsa_cmd_free_and_done(h, c, cmd);
- }
- 
- /* Returns 0 on success, < 0 otherwise. */
-@@ -2122,22 +2128,15 @@ static void complete_scsi_command(struct CommandList *cp)
- 	if (unlikely(ei->CommandStatus == CMD_CTLR_LOCKUP)) {
- 		/* DID_NO_CONNECT will prevent a retry */
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd_free(h, cp);
--		cmd->scsi_done(cmd);
--		return;
-+		return hpsa_cmd_free_and_done(h, cp, cmd);
- 	}
- 
- 	if (cp->cmd_type == CMD_IOACCEL2)
- 		return process_ioaccel2_completion(h, cp, cmd, dev);
- 
- 	scsi_set_resid(cmd, ei->ResidualCnt);
--	if (ei->CommandStatus == 0) {
--		if (cp->cmd_type == CMD_IOACCEL1)
--			atomic_dec(&cp->phys_disk->ioaccel_cmds_out);
--		cmd_free(h, cp);
--		cmd->scsi_done(cmd);
--		return;
--	}
-+	if (ei->CommandStatus == 0)
-+		return hpsa_cmd_free_and_done(h, cp, cmd);
- 
- 	/* For I/O accelerator commands, copy over some fields to the normal
- 	 * CISS header used below for error handling.
-@@ -2159,10 +2158,7 @@ static void complete_scsi_command(struct CommandList *cp)
- 		if (is_logical_dev_addr_mode(dev->scsi3addr)) {
- 			if (ei->CommandStatus == CMD_IOACCEL_DISABLED)
- 				dev->offload_enabled = 0;
--			INIT_WORK(&cp->work, hpsa_command_resubmit_worker);
--			queue_work_on(raw_smp_processor_id(),
--					h->resubmit_wq, &cp->work);
--			return;
-+			return hpsa_retry_cmd(h, cp);
- 		}
- 	}
- 
-@@ -2293,8 +2289,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 		dev_warn(&h->pdev->dev, "cp %p returned unknown status %x\n",
- 				cp, ei->CommandStatus);
- 	}
--	cmd_free(h, cp);
--	cmd->scsi_done(cmd);
++	return 1;
++}
 +
-+	return hpsa_cmd_free_and_done(h, cp, cmd);
- }
- 
- static void hpsa_pci_unmap(struct pci_dev *pdev,
-@@ -4547,16 +4543,13 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
++/*
++ * Wait for a TEST_UNIT_READY command to complete, retrying as necessary;
++ * returns zero when the unit is ready, and non-zero when giving up.
++ */
++static int hpsa_wait_for_test_unit_ready(struct ctlr_info *h,
++				struct CommandList *c,
++				unsigned char lunaddr[], int reply_queue)
  {
- 	struct scsi_cmnd *cmd;
- 	struct hpsa_scsi_dev_t *dev;
--	struct CommandList *c =
--			container_of(work, struct CommandList, work);
-+	struct CommandList *c = container_of(work, struct CommandList, work);
- 
- 	cmd = c->scsi_cmd;
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd_free(c->h, c);
--		cmd->scsi_done(cmd);
--		return;
-+		return hpsa_cmd_free_and_done(c->h, c, cmd);
- 	}
- 	if (c->cmd_type == CMD_IOACCEL2) {
- 		struct ctlr_info *h = c->h;
-@@ -4575,12 +4568,7 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 				 * then get SCSI_MLQUEUE_HOST_BUSY.
- 				 */
- 				cmd->result = DID_IMM_RETRY << 16;
--				cmd->scsi_done(cmd);
--				cmd_free(h, c);	/* FIX-ME:  on merge, change
--						 * to cmd_tagged_free() and
--						 * ultimately to
--						 * hpsa_cmd_free_and_done(). */
--				return;
-+				return hpsa_cmd_free_and_done(h, c, cmd);
- 			}
- 			/* else, fall thru and resubmit down CISS path */
- 		}
-@@ -4644,9 +4632,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		if (rc == 0)
- 			return 0;
- 		if (rc == SCSI_MLQUEUE_HOST_BUSY) {
--			cmd_free(h, c);	/* FIX-ME:  on merge, change to
--					 * cmd_tagged_free(), and ultimately
--					 * to hpsa_cmd_resolve_and_free(). */
-+			cmd_free(h, c);
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		}
- 	}
-@@ -7766,8 +7752,6 @@ static void hpsa_flush_cache(struct ctlr_info *h)
- 	struct CommandList *c;
  	int rc;
+ 	int count = 0;
+ 	int waittime = 1; /* seconds */
+-	struct CommandList *c;
+-
+-	c = cmd_alloc(h);
  
--	/* Don't bother trying to flush the cache if locked up */
--	/* FIXME not necessary if do_simple_cmd does the check */
- 	if (unlikely(lockup_detected(h)))
- 		return;
- 	flush_buf = kzalloc(4, GFP_KERNEL);
+ 	/* Send test unit ready until device ready, or give up. */
+-	while (count < HPSA_TUR_RETRY_LIMIT) {
++	for (count = 0; count < HPSA_TUR_RETRY_LIMIT; count++) {
+ 
+-		/* Wait for a bit.  do this first, because if we send
++		/*
++		 * Wait for a bit.  do this first, because if we send
+ 		 * the TUR right away, the reset will just abort it.
+ 		 */
+ 		msleep(1000 * waittime);
+-		count++;
+-		rc = 0; /* Device ready. */
++
++		rc = hpsa_send_test_unit_ready(h, c, lunaddr, reply_queue);
++		if (!rc)
++			break;
+ 
+ 		/* Increase wait time with each try, up to a point. */
+ 		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
+-			waittime = waittime * 2;
++			waittime *= 2;
+ 
+-		/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
+-		(void) fill_cmd(c, TEST_UNIT_READY, h,
+-				NULL, 0, 0, lunaddr, TYPE_CMD);
+-		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
+-						NO_TIMEOUT);
+-		if (rc)
+-			goto do_it_again;
+-		/* no unmap needed here because no data xfer. */
++		dev_warn(&h->pdev->dev,
++			 "waiting %d secs for device to become ready.\n",
++			 waittime);
++	}
+ 
+-		if (c->err_info->CommandStatus == CMD_SUCCESS)
+-			break;
++	return rc;
++}
+ 
+-		if (c->err_info->CommandStatus == CMD_TARGET_STATUS &&
+-			c->err_info->ScsiStatus == SAM_STAT_CHECK_CONDITION &&
+-			(c->err_info->SenseInfo[2] == NO_SENSE ||
+-			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
++static int wait_for_device_to_become_ready(struct ctlr_info *h,
++					   unsigned char lunaddr[],
++					   int reply_queue)
++{
++	int first_queue;
++	int last_queue;
++	int rq;
++	int rc = 0;
++	struct CommandList *c;
++
++	c = cmd_alloc(h);
++
++	/*
++	 * If no specific reply queue was requested, then send the TUR
++	 * repeatedly, requesting a reply on each reply queue; otherwise execute
++	 * the loop exactly once using only the specified queue.
++	 */
++	if (reply_queue == DEFAULT_REPLY_QUEUE) {
++		first_queue = 0;
++		last_queue = h->nreply_queues - 1;
++	} else {
++		first_queue = reply_queue;
++		last_queue = reply_queue;
++	}
++
++	for (rq = first_queue; rq <= last_queue; rq++) {
++		rc = hpsa_wait_for_test_unit_ready(h, c, lunaddr, rq);
++		if (rc)
+ 			break;
+-do_it_again:
+-		dev_warn(&h->pdev->dev, "waiting %d secs "
+-			"for device to become ready.\n", waittime);
+-		rc = 1; /* device not ready. */
+ 	}
+ 
+ 	if (rc)
+@@ -4938,7 +4995,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	/* send a reset to the SCSI LUN which the command was sent to */
+ 	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+ 			     DEFAULT_REPLY_QUEUE);
+-	if (rc == 0 && wait_for_device_to_become_ready(h, dev->scsi3addr) == 0)
++	if (rc == 0)
+ 		return SUCCESS;
+ 
+ 	dev_warn(&h->pdev->dev,
+@@ -5134,7 +5191,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 	}
+ 
+ 	/* wait for device to recover */
+-	if (wait_for_device_to_become_ready(h, psa) != 0) {
++	if (wait_for_device_to_become_ready(h, psa, reply_queue) != 0) {
+ 		dev_warn(&h->pdev->dev,
+ 			"Reset as abort: Failed: Device never recovered from reset: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+ 			psa[0], psa[1], psa[2], psa[3],
 
