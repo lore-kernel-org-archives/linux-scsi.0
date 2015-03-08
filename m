@@ -1,59 +1,46 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 16/41] hpsa: break hpsa_free_irqs_and_disable_msix
- into two functions
-Date: Sun, 8 Mar 2015 08:42:13 -0700
-Message-ID: <20150308154213.GD17534@infradead.org>
-References: <20150306233504.29973.41322.stgit@brunhilda>
- <20150306234712.29973.63719.stgit@brunhilda>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Sun, 8 Mar 2015 09:09:20 -0700
+Message-ID: <20150308160920.GA27635@infradead.org>
+References: <54BCD00D.4080603@sandisk.com>
+ <54E7112F.2080901@sandisk.com>
+ <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
+ <54ED8B38.10904@sandisk.com>
+ <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
+ <54F1ADAF.90808@sandisk.com>
+ <1425279574.13530.53.camel@haakon3.risingtidesystems.com>
+ <54F6DD3B.4030207@sandisk.com>
+ <20150305132337.GA32341@infradead.org>
+ <54F87F17.30207@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:35155 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:37490 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847AbbCHPmN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2015 11:42:13 -0400
+	with ESMTP id S1752418AbbCHQJY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2015 12:09:24 -0400
 Content-Disposition: inline
-In-Reply-To: <20150306234712.29973.63719.stgit@brunhilda>
+In-Reply-To: <54F87F17.30207@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>
-Cc: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Fri, Mar 06, 2015 at 05:47:12PM -0600, Don Brace wrote:
-> From: Robert Elliott <elliott@hp.com>
-> 
-> replace calls to hpsa_free_irqs_and_disable_msix with
-> hpsa_free_irqs and hpsa_disable_interrupt_mode
-> 
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Robert Elliott <elliott@hp.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
->  drivers/scsi/hpsa.c |   37 ++++++++++++++++++++-----------------
->  1 file changed, 20 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 229366b..177a38f 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6405,10 +6405,22 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
->  	return -1;
->  }
->  
-> +static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
-> +{
-> +#ifdef CONFIG_PCI_MSI
-> +	if (h->msix_vector) {
-> +		if (h->pdev->msix_enabled)
-> +			pci_disable_msix(h->pdev);
-> +	} else if (h->msi_vector) {
-> +		if (h->pdev->msi_enabled)
-> +			pci_disable_msi(h->pdev);
-> +	}
-> +#endif /* CONFIG_PCI_MSI */
-> +}
+On Thu, Mar 05, 2015 at 05:06:47PM +0100, Bart Van Assche wrote:
+> If we would do what Nic proposed - modify SCST such that it uses
+> configfs instead of sysfs - then that would result in the removal of at
+> least one SCST feature that is important to its users, namely automatic
+> population of the configuration filesystem with hardware target port
+> information. Apparently Nic does not want to convert LIO from configfs
+> to sysfs. The reason I proposed to add empty transport_register_wwn()
+> and transport_unregister_wwn() functions in the LIO core is because this
+> allows LIO to keep using configfs and does not require to remove
+> features from SCST.
 
-No need for the ifdef, both pci_disable_msix and pci_disable_msi
-are provided as empty stubs for the !CONFIG_PCI_MSI case.
-
+I see your point, but I don't think it matters at this time.  If we had
+all the core and driver code unified and the only thing preventing us
+from going from two widely ued kernel targets to one was adding the
+sysfs interface that would be an easy puill to swallow.  But there is a
+lot of work to make that happen.  Just adding a stub that isn't used in
+tree to support out of tree modules really isn't something we do, so
+I have no problem with a plain outright rejection of it.
