@@ -1,46 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Sun, 8 Mar 2015 09:09:20 -0700
-Message-ID: <20150308160920.GA27635@infradead.org>
-References: <54BCD00D.4080603@sandisk.com>
- <54E7112F.2080901@sandisk.com>
- <1424476807.1477.52.camel@haakon3.risingtidesystems.com>
- <54ED8B38.10904@sandisk.com>
- <1425074315.30923.74.camel@haakon3.risingtidesystems.com>
- <54F1ADAF.90808@sandisk.com>
- <1425279574.13530.53.camel@haakon3.risingtidesystems.com>
- <54F6DD3B.4030207@sandisk.com>
- <20150305132337.GA32341@infradead.org>
- <54F87F17.30207@sandisk.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH for kernel 4.1] Split SCSI header files
+Date: Sun, 8 Mar 2015 17:12:06 +0100
+Message-ID: <20150308161206.GA24616@lst.de>
+References: <54ED8A71.3050701@sandisk.com> <20150305142635.GA17795@lst.de> <54F86F27.3000505@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37490 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbbCHQJY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2015 12:09:24 -0400
+Received: from verein.lst.de ([213.95.11.211]:45401 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752418AbbCHQML (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Mar 2015 12:12:11 -0400
 Content-Disposition: inline
-In-Reply-To: <54F87F17.30207@sandisk.com>
+In-Reply-To: <54F86F27.3000505@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <jbottomley@parallels.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Mar 05, 2015 at 05:06:47PM +0100, Bart Van Assche wrote:
-> If we would do what Nic proposed - modify SCST such that it uses
-> configfs instead of sysfs - then that would result in the removal of at
-> least one SCST feature that is important to its users, namely automatic
-> population of the configuration filesystem with hardware target port
-> information. Apparently Nic does not want to convert LIO from configfs
-> to sysfs. The reason I proposed to add empty transport_register_wwn()
-> and transport_unregister_wwn() functions in the LIO core is because this
-> allows LIO to keep using configfs and does not require to remove
-> features from SCST.
+On Thu, Mar 05, 2015 at 03:58:47PM +0100, Bart Van Assche wrote:
+> Thanks for the review. Whether scsi_lun.h is separate or not is not
+> important to me. The only reason I had proposed to create a separate
+> header file for struct scsi_lun is because some other header files only
+> need the definition of that structure and not any other definition that
+> is present in the proposed scsi_proto.h header file.
 
-I see your point, but I don't think it matters at this time.  If we had
-all the core and driver code unified and the only thing preventing us
-from going from two widely ued kernel targets to one was adding the
-sysfs interface that would be an easy puill to swallow.  But there is a
-lot of work to make that happen.  Just adding a stub that isn't used in
-tree to support out of tree modules really isn't something we do, so
-I have no problem with a plain outright rejection of it.
+Given how small and simple scsi_proto.h is that doesn't seem worth it to me.
+
+> Creating a library of functions that are shared by initiator and target
+> makes sense to me. Not only the LUN translation functions but also
+> functions like scsi_command_size() are useful for both SCSI initiator
+> and SCSI target code. If anyone has a suggestion for a good name for
+> such a library that would be welcome. Unfortunately there is already a
+> source file with the name scsi_lib.c in the kernel tree so using the
+> name scsi_lib.h might be confusing.
+
+scsi_common might be a good name for both the module and the header file.
