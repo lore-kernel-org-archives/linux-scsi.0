@@ -1,41 +1,78 @@
-From: "Chentao (Boby)" <boby.chen@huawei.com>
-Subject: Re: [PATCH v2] xen-scsiback: use DRV_PFX in the pr macros and DPRINTK
-Date: Mon, 9 Mar 2015 21:59:46 +0800
-Message-ID: <54FDA752.90302@huawei.com>
-References: <1425493951-41801-1-git-send-email-boby.chen@huawei.com>	 <1425486739.2712.12.camel@perches.com> <54F97456.2070102@huawei.com> <1425646243.12017.28.camel@perches.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 2/2] bnx2fc: bnx2fc_io.c: match wait_for_completion_timeout
+ return type
+Date: Mon, 9 Mar 2015 09:54:50 -0400
+Message-ID: <alpine.OSX.2.00.1503090954290.364@administrators-macbook-pro.local>
+References: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425646243.12017.28.camel@perches.com>
+In-Reply-To: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: jgross@suse.com, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wu.wubin@huawei.com, rudy.zhangmin@huawei.com
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
+On Wed, 4 Mar 2015, Nicholas Mc Guire wrote:
 
-On 2015/3/6 20:50, Joe Perches wrote:
-> On Fri, 2015-03-06 at 17:33 +0800, Chentao (Boby) wrote:
->> #ifdef pr_fmt
->> #undef pr_fmt
->> #endif
->> #define pr_fmt(fmt) "xen-pvscsi: " fmt
+> return type of wait_for_completion_timeout is unsigned long not int. An
+> appropriately named variable of type unsigned long is added and the
+> assignments fixed up.
 >
-> No, just use add
-> #define pr_fmt(fmt) "xen-pvscsi: " fmt
-> before the first #include.
-> The #ifdef/#undef/#endif isn't necessary.
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
 >
->> Then replace all DPRINTK with pr_debug.
+> The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
+> CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
+> CONFIG_SCSI_BNX2X_FCOE=m
 >
-> Yes on this one.
+> Patch is against 4.0-rc2 (localversion-next is -next-20150304)
 >
-
-Thanks very much, Joe.
-
+> drivers/scsi/bnx2fc/bnx2fc_io.c |    9 +++++----
+> 1 file changed, 5 insertions(+), 4 deletions(-)
 >
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 9ecca85..77f8c1e 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -703,6 +703,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+> 	struct fcp_cmnd *fcp_cmnd;
+> 	int task_idx, index;
+> 	int rc = SUCCESS;
+> +	unsigned long time_left;
+> 	u16 xid;
+> 	u32 sid, did;
+> 	unsigned long start = jiffies;
+> @@ -810,7 +811,7 @@ retry_tmf:
+> 	bnx2fc_ring_doorbell(tgt);
+> 	spin_unlock_bh(&tgt->tgt_lock);
 >
+> -	rc = wait_for_completion_timeout(&io_req->tm_done,
+> +	time_left = wait_for_completion_timeout(&io_req->tm_done,
+> 					 BNX2FC_TM_TIMEOUT * HZ);
+> 	spin_lock_bh(&tgt->tgt_lock);
 >
-> .
+> @@ -824,17 +825,17 @@ retry_tmf:
+> 		io_req->wait_for_comp = 1;
+> 		bnx2fc_initiate_cleanup(io_req);
+> 		spin_unlock_bh(&tgt->tgt_lock);
+> -		rc = wait_for_completion_timeout(&io_req->tm_done,
+> +		time_left = wait_for_completion_timeout(&io_req->tm_done,
+> 						 BNX2FC_FW_TIMEOUT);
+> 		spin_lock_bh(&tgt->tgt_lock);
+> 		io_req->wait_for_comp = 0;
+> -		if (!rc)
+> +		if (!time_left)
+> 			kref_put(&io_req->refcount, bnx2fc_cmd_release);
+> 	}
+>
+> 	spin_unlock_bh(&tgt->tgt_lock);
+>
+> -	if (!rc) {
+> +	if (!time_left) {
+> 		BNX2FC_TGT_DBG(tgt, "task mgmt command failed...\n");
+> 		rc = FAILED;
+> 	} else {
 >
