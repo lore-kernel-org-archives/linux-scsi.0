@@ -1,49 +1,43 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] aic94xx: match wait_for_completion_timeout return type
-Date: Mon,  9 Mar 2015 03:45:44 -0400
-Message-ID: <1425887144-8109-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 0/3] NCR5380 patches from mailing list
+Date: Mon, 9 Mar 2015 16:48:09 +1100
+Message-ID: <cover.1425880089.git.fthain@telegraphics.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:44143 "EHLO
+	kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054AbbCIIBv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2015 04:01:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-return type of wait_for_completion_timeout is unsigned long not int. As
-leftover is used exclusively for wait_for_completion_timeout its type is
-simply changed to unsigned long.
+As requested by James, these are the NCR5380 patches that were reviewed
+on the linux-scsi mailing list.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+I've changed my acked-by tags to signed-off-by tags. git am and
+git format-patch helpfully moved the email From: headers to the
+message bodies, but not the Date: headers, and it chucked out the
+recipient headers found in the email submissions and everything
+after the "---" cut lines, which might make further review
+more difficult...
 
-This was only compile tested for x86_64_defconfig +
-CONFIG_SCSI_LOWLEVEL=y, CONFIG_SCSI_AIC94XX=m
+Geert Uytterhoeven (1):
+  g_NCR5380: Kill compiler warning if builtin
 
-Patch is against 4.0-rc2 linux-next (localversion-next is -next-20150306)
+Nicholas Mc Guire (1):
+  ncr5380: Harmonize jiffies conversion with msecs_to_jiffies
 
- drivers/scsi/aic94xx/aic94xx_tmf.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Wolfram Sang (1):
+  ncr5380: Drop owner assignment from platform_drivers
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index d4c35df..161b536 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -343,7 +343,7 @@ static void asd_tmf_tasklet_complete(struct asd_ascb *ascb,
- static int asd_clear_nexus(struct sas_task *task)
- {
- 	int res = TMF_RESP_FUNC_FAILED;
--	int leftover;
-+	unsigned long leftover;
- 	struct asd_ascb *tascb = task->lldd_task;
- 	DECLARE_COMPLETION_ONSTACK(completion);
- 	unsigned long flags;
-@@ -410,7 +410,7 @@ int asd_abort_task(struct sas_task *task)
- 	unsigned long flags;
- 	struct asd_ascb *ascb = NULL;
- 	struct scb *scb;
--	int leftover;
-+	unsigned long leftover;
- 	DECLARE_TCS(tcs);
- 	DECLARE_COMPLETION_ONSTACK(completion);
- 	DECLARE_COMPLETION_ONSTACK(tascb_completion);
+ drivers/scsi/NCR5380.c       | 10 +++++-----
+ drivers/scsi/atari_NCR5380.c |  2 +-
+ drivers/scsi/atari_scsi.c    |  1 -
+ drivers/scsi/g_NCR5380.c     |  8 ++++----
+ drivers/scsi/mac_scsi.c      |  1 -
+ drivers/scsi/sun3_scsi.c     |  1 -
+ 6 files changed, 10 insertions(+), 13 deletions(-)
+
 -- 
-1.7.10.4
+2.0.5
