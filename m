@@ -1,96 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 01/21] lpfc: Fix the iteration count to match the 30 sec
- comment
-Date: Mon, 09 Mar 2015 10:10:00 -0400
-Message-ID: <1425910200.2283.16.camel@HansenPartnership.com>
-References: <1423164184.7917.25.camel@myfc17>
-	 <1425746650.2969.3.camel@HansenPartnership.com>
-	 <54FDA92C.3040407@emulex.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
+Date: Mon, 09 Mar 2015 09:51:57 -0700
+Message-ID: <54FDCFAD.8000503@redhat.com>
+References: <54B7E70C.8020304@sandisk.com>	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>	 <54E7112F.2080901@sandisk.com>	 <1424476807.1477.52.camel@haakon3.risingtidesystems.com>	 <54ED8B38.10904@sandisk.com>	 <1425074315.30923.74.camel@haakon3.risingtidesystems.com>	 <54F1ADAF.90808@sandisk.com>	 <1425279574.13530.53.camel@haakon3.risingtidesystems.com>	 <54F6DD3B.4030207@sandisk.com> <20150305132337.GA32341@infradead.org>	 <54F87F17.30207@sandisk.com> <54F8A2B0.70202@redhat.com>	 <54F9565A.2080103@sandisk.com> <54F9FCEB.3080806@redhat.com> <1425709556.15055.42.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57392 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754034AbbCIOKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2015 10:10:04 -0400
-In-Reply-To: <54FDA92C.3040407@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1425709556.15055.42.camel@haakon3.risingtidesystems.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2015-03-09 at 10:07 -0400, James Smart wrote:
-> Yes,   I'll correct this.
+On 03/06/2015 10:25 PM, Nicholas A. Bellinger wrote:
 
-Great, thanks!
+>>   That's what I was getting at above: configfs works great for
+>> exactly what we're using it for, but there are other things sysfs does
+>> better so we may want to use both.
 
->  Trying to make Christoph happy by using git to 
-> format all the patches.
+> Just posted a small series for allowing fabric drivers to expose
+> this using a new 'dynamic_session' TPG attribute, so that user-space
+> can optionally perform dynamic -> explicit se_node_acl conversion.
+<snip>
+> However, given iSCSI IQNs are on average ~64 bytes (max 224 bytes),
+> that is still enough for listing 64 (or 18 worst case) sessions
+> created by dynamically generated se_node_acls .
 
-We're all happy you're using git to format the patches ... it's just a
-minor addition to your commit log to give me the information in the form
-I need.
+Nick thanks for implementing the support for listing dynamic ACLs via 
+configfs. This will come in handy, ACK. I'll follow up separately on the 
+broader use-both-sysfs-and-configfs question I had.
 
-Thanks,
-
-James
-
-> -- james
-> 
-> 
-> 
-> On 3/7/2015 11:44 AM, James Bottomley wrote:
-> > On Thu, 2015-02-05 at 14:23 -0500, James Smart wrote:
-> >> ---
-> > Could you put the signoffs (and any changelog) above here, please.  You
-> > seem to be using git to generate the patches, so if you just put them in
-> > the git change log the right thing will happen.  If you don't do this,
-> > all your patches have to be hand edited to apply them, which is a royal
-> > pain for a maintainer.
-> >
-> >>   drivers/scsi/lpfc/lpfc_init.c | 2 +-
-> >>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> >> index 0b2c53a..2b5b910 100644
-> >> --- a/drivers/scsi/lpfc/lpfc_init.c
-> >> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> >> @@ -7953,7 +7953,7 @@ wait:
-> >>   		 * up to 30 seconds. If the port doesn't respond, treat
-> >>   		 * it as an error.
-> >>   		 */
-> >> -		for (rdy_chk = 0; rdy_chk < 3000; rdy_chk++) {
-> >> +		for (rdy_chk = 0; rdy_chk < 1500; rdy_chk++) {
-> >>   			if (lpfc_readl(phba->sli4_hba.u.if_type2.
-> >>   				STATUSregaddr, &reg_data.word0)) {
-> >>   				rc = -ENODEV;
-> >> -- 
-> >> 1.7.11.7
-> >>
-> >> Signed-off-by: James Smart <james.smart@emulex.com>
-> >> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-> > I'm not quite understanding this signoff chain.  It reads like Dick
-> > Kennedy is the author, in which case the patch needs a From: <him> at
-> > the top to make this clear.  If it's jointly authored, then
-> > traditionally he'd still be the first signoff because the series of
-> > signoffs represents the transmission chain and you send the patch, so
-> > you should be last signoff.
-> >
-> > James
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
-
+Regards -- Andy
