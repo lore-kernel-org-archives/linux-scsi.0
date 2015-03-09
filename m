@@ -1,27 +1,44 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: disabling mpt2sas interrupts on per reply_q basis and blk-iopoll
-Date: Mon, 9 Mar 2015 20:36:35 +0000
-Message-ID: <1425933395.163029.82.camel@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] sym53c416: Fix nasty memory corruption
+Date: Mon,  9 Mar 2015 23:36:48 +0100
+Message-ID: <1425940608-882-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52445 "EHLO mga14.intel.com"
+Received: from ns.gsystem.sk ([62.176.172.50]:53518 "EHLO gsystem.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753043AbbCIUgk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Mar 2015 16:36:40 -0400
-Content-Language: en-US
-Content-ID: <56EF4C3DD0D1E94BB3C4FAAACD56B044@intel.com>
+	id S1751205AbbCIWhD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Mar 2015 18:37:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Kernel development list <linux-kernel@vger.kernel.org>
 
-SSd2ZSBiZWVuIHBsYXlpbmcgYXJvdW5kIHdpdGggYWRkaW5nIGJsay1pb3BvbGwgc3VwcG9ydCBp
-biB0aGUgbXB0MnNhcw0KZHJpdmVyLiBUaGUgcHJvYmxlbSBJIHJhbiBpbnRvIGlzIHRoYXQgSSBu
-ZWVkIGEgd2F5IHRvIG1hc2sgaW50ZXJydXB0cw0KcGVyIHJlcGx5X3EgaW5zdGVhZCBvZiB0aGUg
-Z2xvYmFsIHBlciBjb250cm9sbGVyIGludGVycnVwdCBtYXNrLiBEb2VzDQphbnlvbmUga25vdyBp
-ZiB0aGF0IGlzIHBvc3NpYmxlIGFuZCBob3cgdG8gZG8gdGhhdD8gSSBkb24ndCB0aGluayBpdCdz
-DQpwb3NzaWJsZSB0byBzdXBwb3J0IGJsay1pb3BvbGwgcHJvcGVybHkgd2l0aCB0aGUgMToxIG9m
-IHJlcGx5X3EgcGVyIENQVQ0Kb3RoZXJ3aXNlLiBNYXliZSBvbmUgb2YgdGhlIExTSSBndXlzIGlz
-IHdhdGNoaW5nIHRoZSBtYWlsaW5nIGxpc3QgYW5kDQpjYW4gcmVzcG9uZCB0byBteSBxdWVzdGlv
-bj8gOikgVGhhbmtzIQ0K
+In sym53c416_read(), the chip can (and does sometimes) return more bytes in
+the FIFO than we want to read. This causes buffer overflow, resulting in nasty
+memory and data corruption and oopses. I couldn't even read filesystem's root
+directory properly (and a simple dd with 1M blocksize crashed the system)
+without this patch.
+
+Add a check to make sure we never read more bytes than required.
+sym53c416_write() already contains similar check.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/scsi/sym53c416.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/sym53c416.c b/drivers/scsi/sym53c416.c
+index 0b7819f..76e9715 100644
+--- a/drivers/scsi/sym53c416.c
++++ b/drivers/scsi/sym53c416.c
+@@ -253,6 +253,8 @@ static __inline__ unsigned int sym53c416_read(int base, unsigned char *buffer, u
+ 	while(len && timeout)
+ 	{
+ 		bytes_left = inb(base + PIO_FIFO_CNT); /* Number of bytes in the PIO FIFO */
++		if (bytes_left > len)
++			bytes_left = len;
+ 		if(fastpio && bytes_left > 3)
+ 		{
+ 			insl(base + PIO_FIFO_1, buffer, bytes_left >> 2);
+-- 
+Ondrej Zary
+
