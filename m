@@ -1,62 +1,41 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 1/2] bnx2fc: bnx2fc_fcoe.c: match wait_for_completion_timeout
- return type
-Date: Mon, 9 Mar 2015 09:54:11 -0400
-Message-ID: <alpine.OSX.2.00.1503090953450.364@administrators-macbook-pro.local>
-References: <1425479216-11485-1-git-send-email-hofrat@osadl.org>
+From: "Chentao (Boby)" <boby.chen@huawei.com>
+Subject: Re: [PATCH v2] xen-scsiback: use DRV_PFX in the pr macros and DPRINTK
+Date: Mon, 9 Mar 2015 21:59:46 +0800
+Message-ID: <54FDA752.90302@huawei.com>
+References: <1425493951-41801-1-git-send-email-boby.chen@huawei.com>	 <1425486739.2712.12.camel@perches.com> <54F97456.2070102@huawei.com> <1425646243.12017.28.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425479216-11485-1-git-send-email-hofrat@osadl.org>
+In-Reply-To: <1425646243.12017.28.camel@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: jgross@suse.com, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wu.wubin@huawei.com, rudy.zhangmin@huawei.com
 List-Id: linux-scsi@vger.kernel.org
 
-Looks ok.
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-On Wed, 4 Mar 2015, Nicholas Mc Guire wrote:
+On 2015/3/6 20:50, Joe Perches wrote:
+> On Fri, 2015-03-06 at 17:33 +0800, Chentao (Boby) wrote:
+>> #ifdef pr_fmt
+>> #undef pr_fmt
+>> #endif
+>> #define pr_fmt(fmt) "xen-pvscsi: " fmt
+>
+> No, just use add
+> #define pr_fmt(fmt) "xen-pvscsi: " fmt
+> before the first #include.
+> The #ifdef/#undef/#endif isn't necessary.
+>
+>> Then replace all DPRINTK with pr_debug.
+>
+> Yes on this one.
+>
 
-> return type of wait_for_completion_timeout is unsigned long not int. rc
-> is appropriately renamed, changed to type unsigned long and the
-> assignments fixed up.
+Thanks very much, Joe.
+
 >
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> ---
 >
-> The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
-> CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
-> CONFIG_SCSI_BNX2X_FCOE=m
 >
-> Patch is against 4.0-rc2 (localversion-next is -next-20150304)
->
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    6 +++---
-> 1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 98d06d1..0082b5c 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -635,7 +635,7 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
-> 	struct bnx2fc_interface *interface = port->priv;
-> 	struct bnx2fc_hba *hba = interface->hba;
-> 	struct fcoe_statistics_params *fw_stats;
-> -	int rc = 0;
-> +	unsigned long time_left;
->
-> 	fw_stats = (struct fcoe_statistics_params *)hba->stats_buffer;
-> 	if (!fw_stats)
-> @@ -646,8 +646,8 @@ static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
-> 	init_completion(&hba->stat_req_done);
-> 	if (bnx2fc_send_stat_req(hba))
-> 		return bnx2fc_stats;
-> -	rc = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
-> -	if (!rc) {
-> +	time_left = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
-> +	if (!time_left) {
-> 		BNX2FC_HBA_DBG(lport, "FW stat req timed out\n");
-> 		return bnx2fc_stats;
-> 	}
+> .
 >
