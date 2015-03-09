@@ -1,34 +1,44 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] Unifying the LIO and SCST target drivers
-Date: Mon, 09 Mar 2015 09:51:57 -0700
-Message-ID: <54FDCFAD.8000503@redhat.com>
-References: <54B7E70C.8020304@sandisk.com>	 <20150119092153.GA8666@infradead.org> <54BCD00D.4080603@sandisk.com>	 <54E7112F.2080901@sandisk.com>	 <1424476807.1477.52.camel@haakon3.risingtidesystems.com>	 <54ED8B38.10904@sandisk.com>	 <1425074315.30923.74.camel@haakon3.risingtidesystems.com>	 <54F1ADAF.90808@sandisk.com>	 <1425279574.13530.53.camel@haakon3.risingtidesystems.com>	 <54F6DD3B.4030207@sandisk.com> <20150305132337.GA32341@infradead.org>	 <54F87F17.30207@sandisk.com> <54F8A2B0.70202@redhat.com>	 <54F9565A.2080103@sandisk.com> <54F9FCEB.3080806@redhat.com> <1425709556.15055.42.camel@haakon3.risingtidesystems.com>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH 0/5] Rename regulator_set_optimum_mode
+Date: Mon, 9 Mar 2015 18:33:19 +0000
+Message-ID: <20150309183319.GX28806@sirena.org.uk>
+References: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1425709556.15055.42.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, "Dr. Greg Wettstein" <greg@wind.enjellic.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="KISHs/FnjYvFOG5B"
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1423712131-23795-1-git-send-email-bjorn.andersson@sonymobile.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Felipe Balbi <balbi@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Liam Girdwood <lgirdwood@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-arm-msm@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/06/2015 10:25 PM, Nicholas A. Bellinger wrote:
 
->>   That's what I was getting at above: configfs works great for
->> exactly what we're using it for, but there are other things sysfs does
->> better so we may want to use both.
+--KISHs/FnjYvFOG5B
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> Just posted a small series for allowing fabric drivers to expose
-> this using a new 'dynamic_session' TPG attribute, so that user-space
-> can optionally perform dynamic -> explicit se_node_acl conversion.
-<snip>
-> However, given iSCSI IQNs are on average ~64 bytes (max 224 bytes),
-> that is still enough for listing 64 (or 18 worst case) sessions
-> created by dynamically generated se_node_acls .
+On Wed, Feb 11, 2015 at 07:35:26PM -0800, Bjorn Andersson wrote:
+> Changing the name of the regulator_set_optimum_mode() to
+> regulator_set_load() better reflects that the API is doing.
 
-Nick thanks for implementing the support for listing dynamic ACLs via 
-configfs. This will come in handy, ACK. I'll follow up separately on the 
-broader use-both-sysfs-and-configfs question I had.
+Applied all, thanks.
 
-Regards -- Andy
+--KISHs/FnjYvFOG5B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJU/eduAAoJECTWi3JdVIfQjvkH/3mqcGHt5uJfgH8ibYfrGV9w
+UkPWVq/AXq49+q7a7JDJUmnp+hTSUFIfEj8sClnv7WbPSo9ZjiXrYbTgaSj2qy1A
+kb/4p4SbHQ/UB33KwP0KGzrZUYPURGEVSeDUf7RU6xx/H9FlN80lKlSWf+Tkf+We
+rAmre98IplNOFtFNCS7VycBcjDoau89n8J0so0LvXsF/O1OBgp1OBB1ONsHBouki
+fWAsjBq5GyGywxSjA029seyYFkU0BibYjPe8QliRvw7CEoQGnCwPIAIolVLUZqEZ
+/EOMOkZCJnFogTz0a41cS7qDxhaKL49BV54JqCjHUnaqfN2nXn5RrQ91AznlySA=
+=dQhH
+-----END PGP SIGNATURE-----
+
+--KISHs/FnjYvFOG5B--
