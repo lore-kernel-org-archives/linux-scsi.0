@@ -1,78 +1,74 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 2/2] bnx2fc: bnx2fc_io.c: match wait_for_completion_timeout
- return type
-Date: Mon, 9 Mar 2015 09:54:50 -0400
-Message-ID: <alpine.OSX.2.00.1503090954290.364@administrators-macbook-pro.local>
-References: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 01/21] lpfc: Fix the iteration count to match the 30 sec
+ comment
+Date: Mon, 9 Mar 2015 10:07:40 -0400
+Message-ID: <54FDA92C.3040407@emulex.com>
+References: <1423164184.7917.25.camel@myfc17> <1425746650.2969.3.camel@HansenPartnership.com>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="US-ASCII"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425479238-11519-1-git-send-email-hofrat@osadl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cmexedge1.emulex.com ([138.239.224.99]:18028 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514AbbCIOIM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2015 10:08:12 -0400
+In-Reply-To: <1425746650.2969.3.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Yes,   I'll correct this. Trying to make Christoph happy by using git to 
+format all the patches.
 
-On Wed, 4 Mar 2015, Nicholas Mc Guire wrote:
+-- james
 
-> return type of wait_for_completion_timeout is unsigned long not int. An
-> appropriately named variable of type unsigned long is added and the
-> assignments fixed up.
+
+
+On 3/7/2015 11:44 AM, James Bottomley wrote:
+> On Thu, 2015-02-05 at 14:23 -0500, James Smart wrote:
+>> ---
+> Could you put the signoffs (and any changelog) above here, please.  You
+> seem to be using git to generate the patches, so if you just put them in
+> the git change log the right thing will happen.  If you don't do this,
+> all your patches have to be hand edited to apply them, which is a royal
+> pain for a maintainer.
 >
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> ---
+>>   drivers/scsi/lpfc/lpfc_init.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+>> index 0b2c53a..2b5b910 100644
+>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>> @@ -7953,7 +7953,7 @@ wait:
+>>   		 * up to 30 seconds. If the port doesn't respond, treat
+>>   		 * it as an error.
+>>   		 */
+>> -		for (rdy_chk = 0; rdy_chk < 3000; rdy_chk++) {
+>> +		for (rdy_chk = 0; rdy_chk < 1500; rdy_chk++) {
+>>   			if (lpfc_readl(phba->sli4_hba.u.if_type2.
+>>   				STATUSregaddr, &reg_data.word0)) {
+>>   				rc = -ENODEV;
+>> -- 
+>> 1.7.11.7
+>>
+>> Signed-off-by: James Smart <james.smart@emulex.com>
+>> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+> I'm not quite understanding this signoff chain.  It reads like Dick
+> Kennedy is the author, in which case the patch needs a From: <him> at
+> the top to make this clear.  If it's jointly authored, then
+> traditionally he'd still be the first signoff because the series of
+> signoffs represents the transmission chain and you send the patch, so
+> you should be last signoff.
 >
-> The was only compile tested with x86_64_defconfig + SCSI_LOWLEVEL
-> CONFIG_SCSI_FC_ATTRS=m, CONFIG_LIBFC=m, CONFIG_LIBFCOE=m,
-> CONFIG_SCSI_BNX2X_FCOE=m
+> James
 >
-> Patch is against 4.0-rc2 (localversion-next is -next-20150304)
 >
-> drivers/scsi/bnx2fc/bnx2fc_io.c |    9 +++++----
-> 1 file changed, 5 insertions(+), 4 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> index 9ecca85..77f8c1e 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-> @@ -703,6 +703,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
-> 	struct fcp_cmnd *fcp_cmnd;
-> 	int task_idx, index;
-> 	int rc = SUCCESS;
-> +	unsigned long time_left;
-> 	u16 xid;
-> 	u32 sid, did;
-> 	unsigned long start = jiffies;
-> @@ -810,7 +811,7 @@ retry_tmf:
-> 	bnx2fc_ring_doorbell(tgt);
-> 	spin_unlock_bh(&tgt->tgt_lock);
->
-> -	rc = wait_for_completion_timeout(&io_req->tm_done,
-> +	time_left = wait_for_completion_timeout(&io_req->tm_done,
-> 					 BNX2FC_TM_TIMEOUT * HZ);
-> 	spin_lock_bh(&tgt->tgt_lock);
->
-> @@ -824,17 +825,17 @@ retry_tmf:
-> 		io_req->wait_for_comp = 1;
-> 		bnx2fc_initiate_cleanup(io_req);
-> 		spin_unlock_bh(&tgt->tgt_lock);
-> -		rc = wait_for_completion_timeout(&io_req->tm_done,
-> +		time_left = wait_for_completion_timeout(&io_req->tm_done,
-> 						 BNX2FC_FW_TIMEOUT);
-> 		spin_lock_bh(&tgt->tgt_lock);
-> 		io_req->wait_for_comp = 0;
-> -		if (!rc)
-> +		if (!time_left)
-> 			kref_put(&io_req->refcount, bnx2fc_cmd_release);
-> 	}
->
-> 	spin_unlock_bh(&tgt->tgt_lock);
->
-> -	if (!rc) {
-> +	if (!time_left) {
-> 		BNX2FC_TGT_DBG(tgt, "task mgmt command failed...\n");
-> 		rc = FAILED;
-> 	} else {
->
+
