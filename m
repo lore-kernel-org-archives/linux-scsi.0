@@ -1,41 +1,41 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] storvsc: use KBUILD_MODNAME to fill .proc_name
-Date: Tue, 10 Mar 2015 16:27:20 +0100
-Message-ID: <1426001240-31686-1-git-send-email-olaf@aepfle.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
+Date: Tue, 10 Mar 2015 12:20:05 -0400
+Message-ID: <54FF19B5.9030104@suse.de>
+References: <1422882086-1863-1-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.160]:35889 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbbCJP1b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2015 11:27:31 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:53207 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932137AbbCJQUJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Mar 2015 12:20:09 -0400
+In-Reply-To: <1422882086-1863-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
-Cc: linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, Olaf Hering <olaf@aepfle.de>
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>
 
-Since the previous patch ead3700d893654d440edcb66fb3767a0c0db54cf ("storvsc:
-use cmd_size to allocate per-command data") fills .proc_name now anyway give it
-a usable content for v4.0. Old mkinitrd in SLES makes use of this variable to
-find the required storage driver.
+On 02/02/2015 08:01 AM, Christoph Hellwig wrote:
+> Lock the device embedded in the scsi_device to protect against
+> concurrent calls to ->remove.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
----
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-This should go into v4.0 because ead3700d893654d440edcb66fb3767a0c0db54cf is in v4.0-rc1.
+Cheers,
 
-
- drivers/scsi/storvsc_drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index efc6e44..458e3d4 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1642,7 +1642,7 @@ static struct scsi_host_template scsi_driver = {
- 	.bios_param =		storvsc_get_chs,
- 	.queuecommand =		storvsc_queuecommand,
- 	.eh_host_reset_handler =	storvsc_host_reset_handler,
--	.proc_name =		"storvsc_host",
-+	.proc_name =		KBUILD_MODNAME,
- 	.eh_timed_out =		storvsc_eh_timed_out,
- 	.slave_configure =	storvsc_device_configure,
- 	.cmd_per_lun =		255,
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
