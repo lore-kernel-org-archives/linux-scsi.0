@@ -1,32 +1,41 @@
 From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] SCSI:STORVSC Use SCSI layer to allocate memory for
- per-command device request data
-Date: Tue, 10 Mar 2015 15:53:59 +0100
-Message-ID: <20150310145359.GA16383@aepfle.de>
-References: <1419912309-13518-1-git-send-email-hch@lst.de>
- <20150310114233.GA30423@gmail.com>
- <20150310133036.GA5026@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150310133036.GA5026@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, longli@microsoft.com
+Subject: [PATCH] storvsc: use KBUILD_MODNAME to fill .proc_name
+Date: Tue, 10 Mar 2015 16:27:20 +0100
+Message-ID: <1426001240-31686-1-git-send-email-olaf@aepfle.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.160]:35889 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbbCJP1b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2015 11:27:31 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
+Cc: linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, Olaf Hering <olaf@aepfle.de>
 
-On Tue, Mar 10, Christoph Hellwig wrote:
+Since the previous patch ead3700d893654d440edcb66fb3767a0c0db54cf ("storvsc:
+use cmd_size to allocate per-command data") fills .proc_name now anyway give it
+a usable content for v4.0. Old mkinitrd in SLES makes use of this variable to
+find the required storage driver.
 
-> On Tue, Mar 10, 2015 at 12:42:33PM +0100, Olaf Hering wrote:
-> > It would be nice to change .proc_name to KBUILD_MODNAME before v4.0 is
-> > released. We carry a patch which adds this field. Of cource we can just
-> > change the patch, but if code gets touched upstream anyway...
-> 
-> Please send a patch.  Would be nice if you had sent it long go insted of just
-> including it in a vendor tree..
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+---
 
-I was told .procname was dead, but since the patch adds it anyway it
-should have a content thats in use (by us).
+This should go into v4.0 because ead3700d893654d440edcb66fb3767a0c0db54cf is in v4.0-rc1.
 
-Olaf
+
+ drivers/scsi/storvsc_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index efc6e44..458e3d4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1642,7 +1642,7 @@ static struct scsi_host_template scsi_driver = {
+ 	.bios_param =		storvsc_get_chs,
+ 	.queuecommand =		storvsc_queuecommand,
+ 	.eh_host_reset_handler =	storvsc_host_reset_handler,
+-	.proc_name =		"storvsc_host",
++	.proc_name =		KBUILD_MODNAME,
+ 	.eh_timed_out =		storvsc_eh_timed_out,
+ 	.slave_configure =	storvsc_device_configure,
+ 	.cmd_per_lun =		255,
