@@ -1,61 +1,39 @@
-From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH] drivers: scsi: ufs: Fix possible null derefrence
-Date: Tue, 10 Mar 2015 10:28:44 -0000
-Message-ID: <77622d9c87fdc6e7af6fd862da67a81c.squirrel@www.codeaurora.org>
-References: <20150304124948.GA3288@kt-Inspiron-3542>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: [PATCH] SCSI:STORVSC Use SCSI layer to allocate memory for
+ per-command device request data
+Date: Tue, 10 Mar 2015 12:42:33 +0100
+Message-ID: <20150310114233.GA30423@gmail.com>
+References: <1419912309-13518-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150304124948.GA3288@kt-Inspiron-3542>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: vinholikatti@gmail.com, jbottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tapaswenipathak@gmail.com, julia.lawall@lip6.fr
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:35408 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbbCJLmf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Mar 2015 07:42:35 -0400
+Content-Disposition: inline
+In-Reply-To: <1419912309-13518-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: kys@microsoft.com, haiyangz@microsoft.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, longli@microsoft.com
 
-> Check for null before being dereferenced to avoid a invalid null
-> dereference.
->
-> Found using Coccinelle.
->
-> Signed-off-by: Tapasweni Pathak <tapaswenipathak@gmail.com>
-> Acked-by: Julia Lawall <julia.lawall@lip6.fr>
-> ---
->  drivers/scsi/ufs/ufshcd.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 5d60a86..c54e64f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4268,12 +4268,15 @@ static int ufshcd_config_vreg(struct device *dev,
->  		struct ufs_vreg *vreg, bool on)
->  {
->  	int ret = 0;
-> -	struct regulator *reg = vreg->reg;
-> -	const char *name = vreg->name;
-> +	struct regulator *reg;
-> +	const char *name;
->  	int min_uV, uA_load;
->
->  	BUG_ON(!vreg);
+On Mon, Dec 29, Christoph Hellwig wrote:
+
+> +++ b/drivers/scsi/storvsc_drv.c
+
+>  static struct scsi_host_template scsi_driver = {
+>  	.module	=		THIS_MODULE,
+>  	.name =			"storvsc_host_t",
+> +	.cmd_size =             sizeof(struct storvsc_cmd_request),
+>  	.bios_param =		storvsc_get_chs,
+>  	.queuecommand =		storvsc_queuecommand,
+>  	.eh_host_reset_handler =	storvsc_host_reset_handler,
+> +	.proc_name =		"storvsc_host",
+
+It would be nice to change .proc_name to KBUILD_MODNAME before v4.0 is
+released. We carry a patch which adds this field. Of cource we can just
+change the patch, but if code gets touched upstream anyway...
 
 
-Please add to the patch fix for another instance of this  in
-ufshcd_config_vreg_load():
-
-static int ufshcd_config_vreg_load(struct device *dev,
-    struct ufs_vreg *vreg, int ua)
-{
-	int ret = 0;
-	struct regulator *reg = vreg->reg;
-	const char *name = vreg->name;
-
-	BUG_ON(!vreg);
-
-
-Gilad.
-
--- 
-Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Olaf
