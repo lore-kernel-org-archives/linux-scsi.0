@@ -1,120 +1,39 @@
-From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-Subject: Re: [PATCH v2 1/9] snic: snic module infrastructure
-Date: Thu, 12 Mar 2015 01:56:37 +0000
-Message-ID: <D126F018.1B707%nmusini@cisco.com>
-References: <1426093299-4511-1-git-send-email-nmusini@cisco.com>
- <1426093299-4511-2-git-send-email-nmusini@cisco.com>
- <CAGRGNgWQ2TndGCgpkBrGveKPDpnExMdZc86ysE_2CLgiTMSUeQ@mail.gmail.com>
- <C243A617-47A8-4568-A8ED-2E343812ADA9@cisco.com>
- <CAGRGNgUbUmru+X8chhtwFZCsZQ-FKES2-ZcJz_D62X+tsOhgEQ@mail.gmail.com>
+From: Scott Wood <scottwood@freescale.com>
+Subject: [PATCH 17/22] esp_scsi: %pF is only for function pointers
+Date: Wed, 11 Mar 2015 22:13:52 -0500
+Message-ID: <1426130037-17956-17-git-send-email-scottwood@freescale.com>
+References: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-2.cisco.com ([173.37.142.89]:57808 "EHLO
-	alln-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043AbbCLB4j convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2015 21:56:39 -0400
-In-Reply-To: <CAGRGNgUbUmru+X8chhtwFZCsZQ-FKES2-ZcJz_D62X+tsOhgEQ@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <13C288942E6ACC4BA82E4A1FFC2B28D1@emea.cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: trivial@kernel.org, linux-kernel@vger.kernel.org
+Cc: Scott Wood <scottwood@freescale.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Julian Calby,
+Use %pS for actual addresses, otherwise you'll get bad output
+on arches like ppc64 where %pF expects a function descriptor.
 
-  Sure, thanks.
+Signed-off-by: Scott Wood <scottwood@freescale.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/esp_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks
-Narsimhulu
-
-On 12/03/15 7:13 am, "Julian Calaby" <julian.calaby@gmail.com> wrote:
-
->Hi simha,
->
->On Thu, Mar 12, 2015 at 12:37 PM, Narsimhulu Musini (nmusini)
-><nmusini@cisco.com> wrote:
->> Hi,
->>
->>   Thanks for pointing the change log location. Do you suggest to
->>resubmit the entire patch series with v2. If you find some time, Could
->>you please review the patch.
->
->Firstly, please don't top post (i.e. post above the reply) and please
->don't take discussions off list. (always reply-to-all)
->
->I can almost guarantee that you'll get more comments, so wait for
->other people to review it first.
->
->I don't know the SCSI code well enough to do a useful technical
->review, so I only review for basic style issues.
->
->Thanks,
->
->Julian Calaby
->
->
->> Thanks
->> simha
->>
->>
->> On 12-Mar-2015, at 6:24 am, Julian Calaby <julian.calaby@gmail.com>
->>wrote:
->>
->>> Hi,
->>>
->>> On Thu, Mar 12, 2015 at 4:01 AM, Narsimhulu Musini <nmusini@cisco.com>
->>>wrote:
->>>> snic_main.c contains module load and unload, global driver context,
->>>> PCI Registration, PCI probe and remove, SCSI ML registration
->>>>functionality.
->>>>
->>>> snic.h contains snic structure definition, snic global context, and
->>>> prototypes.
->>>>
->>>> snic_os.h contains OS specific interfaces.
->>>>
->>>> snic_attrs.c contains device attributes to list snic state, link
->>>>state,
->>>> and driver version under /sys/class/scsi_host/host<id>/
->>>>
->>>> v2
->>>> Added Compile time macro for debugfs dependent functionality.
->>>
->>> Your changelog should be below the "---" and before the diffstat.
->>>
->>>> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
->>>> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
->>>> ---
->>>
->>> I.e. here.
->>>
->>>> drivers/scsi/snic/snic.h       |  421 +++++++++++++++++
->>>> drivers/scsi/snic/snic_attrs.c |   80 ++++
->>>> drivers/scsi/snic/snic_main.c  | 1022
->>>>++++++++++++++++++++++++++++++++++++++++
->>>> drivers/scsi/snic/snic_os.h    |   81 ++++
->>>> 4 files changed, 1604 insertions(+)
->>>> create mode 100644 drivers/scsi/snic/snic.h
->>>> create mode 100644 drivers/scsi/snic/snic_attrs.c
->>>> create mode 100644 drivers/scsi/snic/snic_main.c
->>>> create mode 100644 drivers/scsi/snic/snic_os.h
->>>
->>> Thanks,
->>>
->>> --
->>> Julian Calaby
->>>
->>> Email: julian.calaby@gmail.com
->>> Profile: http://www.google.com/profiles/julian.calaby/
->>
->
->
->
->-- 
->Julian Calaby
->
->Email: julian.calaby@gmail.com
->Profile: http://www.google.com/profiles/julian.calaby/
-
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 065b25d..dba5f10 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -1034,7 +1034,7 @@ static int esp_check_spur_intr(struct esp *esp)
+ 
+ static void esp_schedule_reset(struct esp *esp)
+ {
+-	esp_log_reset("esp_schedule_reset() from %pf\n",
++	esp_log_reset("esp_schedule_reset() from %ps\n",
+ 		      __builtin_return_address(0));
+ 	esp->flags |= ESP_FLAG_RESETTING;
+ 	esp_event(esp, ESP_EVENT_RESET);
+-- 
+2.1.0
