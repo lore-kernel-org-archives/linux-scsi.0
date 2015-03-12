@@ -1,54 +1,49 @@
-From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v6 1/3] scsi: ufs: add ioctl interface for query request
-Date: Thu, 12 Mar 2015 15:27:46 -0000
-Message-ID: <061dedf8cc074e798b8eca4871a080fa.squirrel@codeaurora.org>
-References: <1426163262-22014-1-git-send-email-gbroner@codeaurora.org>
-    <1426163262-22014-2-git-send-email-gbroner@codeaurora.org>
-    <CAC5umyiry3OEJGeZ2=U21v7gAjsC7XHZVyiZN8UgQusX2KmvpQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Gilad Broner <gbroner@codeaurora.org>
+Subject: [PATCH v7 0/3] Add ioctl and debug utilities to UFS driver
+Date: Thu, 12 Mar 2015 17:54:31 +0200
+Message-ID: <1426175674-23077-1-git-send-email-gbroner@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAC5umyiry3OEJGeZ2=U21v7gAjsC7XHZVyiZN8UgQusX2KmvpQ@mail.gmail.com>
 Sender: linux-arm-msm-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Gilad Broner <gbroner@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, "open list:ABI/API" <linux-api@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
->> +       if (!buffer) {
->> +               dev_err(hba->dev, "%s: User buffer is NULL!\n",
->> __func__);
->> +               return -EINVAL;
->> +       }
->> +
->
-> Should we remove this check or move it into ufshcd_query_ioctl()?
-> For example, BLKFLS ioctl without argument is correct usage, but
-> it always triggers this message. (blkdev_ioctl -> __blkdev_driver_ioctl
-> -> sd_ioctl -> scsi_ioctl -> ufshcd_ioctl)
+Changes from V6:
+Moved NULL user argument check from ufshcd_ioctl to ufshcd_query_ioctl.
+Add comment in include/scsi/scsi.h to note 0x5388 is in use.
 
-You're right, I'll move the check to ufshcd_query_ioctl().
+*** BLURB HERE ***
 
->  +++ b/include/uapi/scsi/ufs/ioctl.h
->> @@ -0,0 +1,57 @@
->> +#ifndef UAPI_UFS_IOCTL_H_
->> +#define UAPI_UFS_IOCTL_H_
->> +
->> +#include <linux/types.h>
->> +
->> +/*
->> + *  IOCTL opcode for ufs queries has the following opcode after
->> + *  SCSI_IOCTL_GET_PCI
->> + */
->> +#define UFS_IOCTL_QUERY                        0x5388
->
-> Should we also need some comments near SCSI_IOCTL_GET_PCI in
-> include/scsi/scsi.h in order to avoid someone trying to define
-> the same ioctl code in the future?
->
-Indeed - I will add a comment.
+Dolev Raviv (1):
+  scsi: ufs: add ioctl interface for query request
 
-Gilad.
+Gilad Broner (1):
+  scsi: ufs: add trace events and dump prints for debug
+
+Lee Susman (1):
+  scsi: ufs: add debugfs for ufs
+
+ drivers/scsi/ufs/Makefile      |   1 +
+ drivers/scsi/ufs/ufs-debugfs.c | 902 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-debugfs.h |  38 ++
+ drivers/scsi/ufs/ufs-qcom.c    |  53 +++
+ drivers/scsi/ufs/ufs.h         |  53 +--
+ drivers/scsi/ufs/ufshcd.c      | 964 +++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h      | 110 +++++
+ drivers/scsi/ufs/ufshci.h      |   3 +
+ include/scsi/scsi.h            |   1 +
+ include/trace/events/ufs.h     | 213 +++++++++
+ include/uapi/scsi/Kbuild       |   1 +
+ include/uapi/scsi/ufs/Kbuild   |   3 +
+ include/uapi/scsi/ufs/ioctl.h  |  57 +++
+ include/uapi/scsi/ufs/ufs.h    |  66 +++
+ 14 files changed, 2375 insertions(+), 90 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
+ create mode 100644 include/trace/events/ufs.h
+ create mode 100644 include/uapi/scsi/ufs/Kbuild
+ create mode 100644 include/uapi/scsi/ufs/ioctl.h
+ create mode 100644 include/uapi/scsi/ufs/ufs.h
 
 -- 
 Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
