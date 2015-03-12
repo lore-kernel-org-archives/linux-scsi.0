@@ -1,39 +1,35 @@
-From: Scott Wood <scottwood@freescale.com>
-Subject: [PATCH 17/22] esp_scsi: %pF is only for function pointers
-Date: Wed, 11 Mar 2015 22:13:52 -0500
-Message-ID: <1426130037-17956-17-git-send-email-scottwood@freescale.com>
-References: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 1/7] blk-mq: fix use of incorrect goto label in blk_mq_init_queue error path
+Date: Wed, 11 Mar 2015 23:56:36 -0400
+Message-ID: <1426132602-34331-2-git-send-email-snitzer@redhat.com>
+References: <1426132602-34331-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
+In-Reply-To: <1426132602-34331-1-git-send-email-snitzer@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: trivial@kernel.org, linux-kernel@vger.kernel.org
-Cc: Scott Wood <scottwood@freescale.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Use %pS for actual addresses, otherwise you'll get bad output
-on arches like ppc64 where %pF expects a function descriptor.
+If percpu_ref_init() fails the 'err_hctxs' label should be used instead
+of 'err_map'.
 
-Signed-off-by: Scott Wood <scottwood@freescale.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/scsi/esp_scsi.c | 2 +-
+ block/blk-mq.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 065b25d..dba5f10 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -1034,7 +1034,7 @@ static int esp_check_spur_intr(struct esp *esp)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4f4bea2..459840c 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1938,7 +1938,7 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
+ 	 */
+ 	if (percpu_ref_init(&q->mq_usage_counter, blk_mq_usage_counter_release,
+ 			    PERCPU_REF_INIT_ATOMIC, GFP_KERNEL))
+-		goto err_map;
++		goto err_hctxs;
  
- static void esp_schedule_reset(struct esp *esp)
- {
--	esp_log_reset("esp_schedule_reset() from %pf\n",
-+	esp_log_reset("esp_schedule_reset() from %ps\n",
- 		      __builtin_return_address(0));
- 	esp->flags |= ESP_FLAG_RESETTING;
- 	esp_event(esp, ESP_EVENT_RESET);
+ 	setup_timer(&q->timeout, blk_mq_rq_timer, (unsigned long) q);
+ 	blk_queue_rq_timeout(q, 30000);
 -- 
-2.1.0
+1.9.5 (Apple Git-50.3)
