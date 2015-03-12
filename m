@@ -1,26 +1,46 @@
-From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v5 3/3] scsi: ufs: add trace events and dump prints for
- debug
-Date: Thu, 12 Mar 2015 12:28:58 -0000
-Message-ID: <e5512089069a6b6f41288806512badb2.squirrel@codeaurora.org>
-References: <1425988035-966-1-git-send-email-gbroner@codeaurora.org>
-    <1425988035-966-4-git-send-email-gbroner@codeaurora.org>
-    <20150310104357.0165cab6@gandalf.local.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150310104357.0165cab6@gandalf.local.home>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Gilad Broner <gbroner@codeaurora.org>, james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Ingo Molnar <mingo@redhat.com>
+From: Gilad Broner <gbroner@codeaurora.org>
+Subject: [PATCH v6 0/3] Add ioctl and debug utilities to UFS driver
+Date: Thu, 12 Mar 2015 14:27:38 +0200
+Message-ID: <1426163262-22014-1-git-send-email-gbroner@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> This and the auto_bkops_state is pretty much the same. Can't you use
-> the same TP_printk() and just have a DECLARE_EVENT_CLASS? The trace
-> point name is printed with the event to see different events.
+Changes from V5:
+Created a common trace event class for driver state changes instead
+of individual trace events definitions.
 
-I agree. will upload the fix in next patchset.
+Dolev Raviv (1):
+  scsi: ufs: add ioctl interface for query request
+
+Gilad Broner (1):
+  scsi: ufs: add trace events and dump prints for debug
+
+Lee Susman (1):
+  scsi: ufs: add debugfs for ufs
+
+ drivers/scsi/ufs/Makefile      |   1 +
+ drivers/scsi/ufs/ufs-debugfs.c | 902 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-debugfs.h |  38 ++
+ drivers/scsi/ufs/ufs-qcom.c    |  53 +++
+ drivers/scsi/ufs/ufs.h         |  53 +--
+ drivers/scsi/ufs/ufshcd.c      | 963 +++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h      | 110 +++++
+ drivers/scsi/ufs/ufshci.h      |   3 +
+ include/trace/events/ufs.h     | 213 +++++++++
+ include/uapi/scsi/Kbuild       |   1 +
+ include/uapi/scsi/ufs/Kbuild   |   3 +
+ include/uapi/scsi/ufs/ioctl.h  |  57 +++
+ include/uapi/scsi/ufs/ufs.h    |  66 +++
+ 13 files changed, 2373 insertions(+), 90 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
+ create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
+ create mode 100644 include/trace/events/ufs.h
+ create mode 100644 include/uapi/scsi/ufs/Kbuild
+ create mode 100644 include/uapi/scsi/ufs/ioctl.h
+ create mode 100644 include/uapi/scsi/ufs/ufs.h
 
 -- 
 Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
