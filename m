@@ -1,125 +1,56 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH 2/7 v2] blk-mq: add blk_mq_init_allocated_queue and export
- blk_mq_register_disk
-Date: Thu, 12 Mar 2015 10:29:21 -0400
-Message-ID: <20150312142921.GB3159@redhat.com>
-References: <1426132602-34331-1-git-send-email-snitzer@redhat.com>
- <1426132602-34331-3-git-send-email-snitzer@redhat.com>
+From: "Gilad Broner" <gbroner@codeaurora.org>
+Subject: Re: [PATCH v6 1/3] scsi: ufs: add ioctl interface for query request
+Date: Thu, 12 Mar 2015 15:27:46 -0000
+Message-ID: <061dedf8cc074e798b8eca4871a080fa.squirrel@codeaurora.org>
+References: <1426163262-22014-1-git-send-email-gbroner@codeaurora.org>
+    <1426163262-22014-2-git-send-email-gbroner@codeaurora.org>
+    <CAC5umyiry3OEJGeZ2=U21v7gAjsC7XHZVyiZN8UgQusX2KmvpQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1426132602-34331-3-git-send-email-snitzer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Ming Lei <ming.lei@canonical.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CAC5umyiry3OEJGeZ2=U21v7gAjsC7XHZVyiZN8UgQusX2KmvpQ@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Gilad Broner <gbroner@codeaurora.org>, Jej B <james.bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-arm-msm@vger.kernel.org, Santosh Y <santoshsy@gmail.com>, linux-scsi-owner@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, Dolev Raviv <draviv@codeaurora.org>, Noa Rubens <noag@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, "open list:ABI/API" <linux-api@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add a variant of blk_mq_init_queue that allows a previously allocated
-queue to be initialized.  blk_mq_init_allocated_queue models
-blk_init_allocated_queue -- which was also created for DM's use.
+>> +       if (!buffer) {
+>> +               dev_err(hba->dev, "%s: User buffer is NULL!\n",
+>> __func__);
+>> +               return -EINVAL;
+>> +       }
+>> +
+>
+> Should we remove this check or move it into ufshcd_query_ioctl()?
+> For example, BLKFLS ioctl without argument is correct usage, but
+> it always triggers this message. (blkdev_ioctl -> __blkdev_driver_ioctl
+> -> sd_ioctl -> scsi_ioctl -> ufshcd_ioctl)
 
-DM's approach to device creation requires a placeholder request_queue be
-allocated for use with alloc_dev() but the decision about what type of
-request_queue will be ultimately created is deferred until all component
-devices referenced in the DM table are processed to determine the table
-type (request-based, blk-mq request-based, or bio-based).
+You're right, I'll move the check to ufshcd_query_ioctl().
 
-Also, because of DM's late finalization of the request_queue type
-the call to blk_mq_register_disk() doesn't happen during alloc_dev().
-Must export blk_mq_register_disk() so that DM can backfill the 'mq' dir
-once the blk-mq queue is fully allocated.
+>  +++ b/include/uapi/scsi/ufs/ioctl.h
+>> @@ -0,0 +1,57 @@
+>> +#ifndef UAPI_UFS_IOCTL_H_
+>> +#define UAPI_UFS_IOCTL_H_
+>> +
+>> +#include <linux/types.h>
+>> +
+>> +/*
+>> + *  IOCTL opcode for ufs queries has the following opcode after
+>> + *  SCSI_IOCTL_GET_PCI
+>> + */
+>> +#define UFS_IOCTL_QUERY                        0x5388
+>
+> Should we also need some comments near SCSI_IOCTL_GET_PCI in
+> include/scsi/scsi.h in order to avoid someone trying to define
+> the same ioctl code in the future?
+>
+Indeed - I will add a comment.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Reviewed-by: Ming Lei <ming.lei@canonical.com>
----
- block/blk-mq-sysfs.c   |  1 +
- block/blk-mq.c         | 24 +++++++++++++++++++-----
- include/linux/blk-mq.h |  2 ++
- 3 files changed, 22 insertions(+), 5 deletions(-)
+Gilad.
 
-diff --git a/block/blk-mq-sysfs.c b/block/blk-mq-sysfs.c
-index 1630a20..b79685e 100644
---- a/block/blk-mq-sysfs.c
-+++ b/block/blk-mq-sysfs.c
-@@ -436,6 +436,7 @@ int blk_mq_register_disk(struct gendisk *disk)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(blk_mq_register_disk);
- 
- void blk_mq_sysfs_unregister(struct request_queue *q)
- {
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 0a877d2..1cab7831 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1891,9 +1891,25 @@ void blk_mq_release(struct request_queue *q)
- 
- struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
- {
-+	struct request_queue *uninit_q, *q;
-+
-+	uninit_q = blk_alloc_queue_node(GFP_KERNEL, set->numa_node);
-+	if (!uninit_q)
-+		return ERR_PTR(-ENOMEM);
-+
-+	q = blk_mq_init_allocated_queue(set, uninit_q);
-+	if (IS_ERR(q))
-+		blk_cleanup_queue(uninit_q);
-+
-+	return q;
-+}
-+EXPORT_SYMBOL(blk_mq_init_queue);
-+
-+struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
-+						  struct request_queue *q)
-+{
- 	struct blk_mq_hw_ctx **hctxs;
- 	struct blk_mq_ctx __percpu *ctx;
--	struct request_queue *q;
- 	unsigned int *map;
- 	int i;
- 
-@@ -1981,7 +1997,7 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
- 	blk_mq_init_cpu_queues(q, set->nr_hw_queues);
- 
- 	if (blk_mq_init_hw_queues(q, set))
--		goto err_hw;
-+		goto err_hctxs;
- 
- 	mutex_lock(&all_q_mutex);
- 	list_add_tail(&q->all_q_node, &all_q_list);
-@@ -1993,8 +2009,6 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
- 
- 	return q;
- 
--err_hw:
--	blk_cleanup_queue(q);
- err_hctxs:
- 	kfree(map);
- 	for (i = 0; i < set->nr_hw_queues; i++) {
-@@ -2009,7 +2023,7 @@ err_percpu:
- 	free_percpu(ctx);
- 	return ERR_PTR(-ENOMEM);
- }
--EXPORT_SYMBOL(blk_mq_init_queue);
-+EXPORT_SYMBOL(blk_mq_init_allocated_queue);
- 
- void blk_mq_free_queue(struct request_queue *q)
- {
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 7aec861..9a75c88 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -164,6 +164,8 @@ enum {
- 		<< BLK_MQ_F_ALLOC_POLICY_START_BIT)
- 
- struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *);
-+struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
-+						  struct request_queue *q);
- void blk_mq_finish_init(struct request_queue *q);
- int blk_mq_register_disk(struct gendisk *);
- void blk_mq_unregister_disk(struct gendisk *);
 -- 
-1.9.5 (Apple Git-50.3)
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
