@@ -1,188 +1,148 @@
 From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH ] tcm_qla2xxx  Add SCSI command jammer/discard capabilty
- to the tcm_qla2xxx module
-Date: Thu, 12 Mar 2015 19:55:49 -0400 (EDT)
-Message-ID: <2044107702.15900790.1426204549814.JavaMail.zimbra@redhat.com>
-References: <588344732.13485469.1425769450275.JavaMail.zimbra@redhat.com> <1069288785.13490592.1425785175883.JavaMail.zimbra@redhat.com> <504EB66DAC8D234EB8E8560985C2D7AD46DBC279@avmb2.qlogic.org>
+Subject: Re: [PATCH ] qla2xxx  Add SCSI command jammer/discard capabilty to
+ the qla2xxx target module - revision3
+Date: Thu, 12 Mar 2015 22:13:57 -0400 (EDT)
+Message-ID: <470996009.15920557.1426212837794.JavaMail.zimbra@redhat.com>
+References: <1069288785.13490592.1425785175883.JavaMail.zimbra@redhat.com> <54FC03FA.6000005@sandisk.com> <629323685.13531146.1425829095558.JavaMail.zimbra@redhat.com> <5EE87F5E6631894E80EB1A63198F964D042063ED@SACMBXIP03.sdcorp.global.sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:49713 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbbCLXz5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2015 19:55:57 -0400
-In-Reply-To: <504EB66DAC8D234EB8E8560985C2D7AD46DBC279@avmb2.qlogic.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:44303 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632AbbCMCOK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2015 22:14:10 -0400
+In-Reply-To: <5EE87F5E6631894E80EB1A63198F964D042063ED@SACMBXIP03.sdcorp.global.sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Quinn Tran <quinn.tran@qlogic.com>
-Cc: Andy Grover <agrover@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, nab@daterainc.com, Laurence Oberman <oberman.l@gmail.com>, Bart Van Assche <bart.vanassche@sandisk.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, Quinn Tran <quinn.tran@qlogic.com>
+Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, nab@daterainc.com, Laurence Oberman <oberman.l@gmail.com>
 
-Hello Quinn Tran
+Hello Bart, Quinn Tran
 
-Thank you for the feedback. There is a revision2 of this patch I sent as a follow on to Bart that is much cleaner but its still exposed to the memory leaks.
-The newer version has a single jam_host parameter as suggested by Bart and the messaging removed. Have a look for it.
-Bart also suggested moving the discard to a higher layer in his most recent response to allow other transports to benefit as well.
+Thanks for the feedback.
 
-I have used this a lot but and its been extremely useful, but never used it for extended periods and specifically to test servers connected via F/C to to the LIO host.
-I was concerned that we had a dangling allocation after discard but never saw the leak show up significantly in my testing. 
-Mostly because my test servers are in error recovery and waiting on timeouts.
-Where I placed the discard seemed to be the safest pace for my particular use case. 
-I did use other options like zeroing the cdb and passing the command on to avoid the dangling allocation, to force lots of underruns on the host during testing.
+Revision3
+Moved the discard to the __qlt_do_work code to prevent the memory leak, this cleans up the allocations.
+I will look at seeing how best this can be done for the other transports, or in the core but for me the most useful case has been F/C.
+I wanted to get feedback so far, and suggest that we should start with this as the initial jamming patch as its the least risky change for now.
+I did test this and ran the same set of tests I normally use this error injection for and it looks good.
 
-Let me revisit my most recent version and take care of the memory leak exposure and look into your other suggestions.
-I will reply in that latest thread with a new version.
 
-Many Thanks for the consideration
+Patch notes
+-----------
+I use target LIO for all my storage array test targets and customer problem resolution here at Red Hat.
+This patch resulted from a requirement to mimic behaviour of an expensive hardware jammer for a customer.
+I have used this for some time with good success to simulate and reproduce latency and slow drain fabric issues and
+for testing and validating error handling behaviour in the Emulex, Qlogic and other F/C drivers.
+While the jammer is enabled SCSI commands are discarded for the selected host and this allows all the multipath error recovery and other
+LLD driver error recovery and timeout code to be debugged and tested.
 
-Laurence
+Works by checking new parameter jam_host if its >= 0 and matches vha->host_no , jamming is enabled when jam_host >=0
+If parameter set to -1 (default) no jamming is enabled.
+I decided to share the patch, in the hope it may be useful for others but I do understand this is a special use case.
+
+Tested by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+
+diff -Nurp a/Documentation/scsi/qla2xxx.txt b/Documentation/scsi/qla2xxx.txt
+--- a/Documentation/scsi/qla2xxx.txt	1969-12-31 19:00:00.000000000 -0500
++++ b/Documentation/scsi/qla2xxx.txt	2015-03-12 21:42:49.828788582 -0400
+@@ -0,0 +1,34 @@
++qla2xxx target mode parameters
++------------------------------
++parm:           qlini_mode:Determines when initiator mode will be enabled. Possible values: "exclusive" - initiator mode will be enabled on load, disabled on enabling target mode and then on disabling target mode enabled back; "disabled" - initiator mode will never be enabled; "enabled" (default) - initiator mode will always stay enabled. (charp)
++
++Enables qla2xxx target mode by setting to disabled on module load
++
++There is now a new module parameter added to the qla2xxx module
++parm:           jam_host:Host to jam >=0 Enable jammer (int)
++
++Use this parameter to control the discarding of SCSI commands to a selected host.
++This may be useful for testing error handling and simulating slow drain and other
++fabric issues.
++
++Any value >=0 that matches a fc_host # will discard the commands for that host.
++Reset back to -1 to stop the jamming.
++
++Enable host 6 to be jammed
++echo 6 > /sys/module/qla2xxx/parameters/jam_host
++
++Disable jamming on host 6
++echo -1 > /sys/module/qla2xxx/parameters/jam_host
++
++Usage example script:
++
++#!/bin/bash
++sleep_time=120  ### Time to jam for
++echo 6 >  /sys/module/qla2xxx/parameters/jam_host
++host=`cat /sys/module/qla2xxx/parameters/jam_host`
++echo "We start to discard commands on SCSI host $host"
++logger "Jammer started"
++sleep $sleep_time
++echo -1 >  /sys/module/qla2xxx/parameters/jam_host
++echo "We stopped the jammer"
++logger "Jammer stopped"
+
+diff -Nurp a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+--- a/drivers/scsi/qla2xxx/qla_target.c	2015-03-12 21:44:04.691314527 -0400
++++ b/drivers/scsi/qla2xxx/qla_target.c	2015-03-12 21:52:27.551557133 -0400
+@@ -59,6 +59,11 @@ MODULE_PARM_DESC(qlini_mode,
+ 
+ int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
+ 
++int jam_host = -1;
++module_param(jam_host, int, 0644);
++MODULE_PARM_DESC(jam_host, "Host to jam >=0 Enable jammer");
++
++
+ static int temp_sam_status = SAM_STAT_BUSY;
+ 
+ /*
+@@ -3264,6 +3269,11 @@ static void __qlt_do_work(struct qla_tgt
+ 	cmd->cmd_flags |= BIT_1;
+ 	if (tgt->tgt_stop)
+ 		goto out_term;
++	/*
++	* If jam_host >=0, goto out_term discarding command for matching host
++	*/
++	if (unlikely(vha->host_no == jam_host))
++		goto out_term;
+ 
+ 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
+ 	cmd->tag = atio->u.isp24.exchange_addr;
+
 
 Laurence Oberman
 Red Hat Global Support Service
 SEG Team
 
 ----- Original Message -----
-From: "Quinn Tran" <quinn.tran@qlogic.com>
-To: "Laurence Oberman" <loberman@redhat.com>, "Andy Grover" <agrover@redhat.com>, "linux-scsi" <linux-scsi@vger.kernel.org>, nab@daterainc.com
-Cc: "Laurence Oberman" <oberman.l@gmail.com>
-Sent: Thursday, March 12, 2015 6:07:08 PM
-Subject: Re: [PATCH ] tcm_qla2xxx  Add SCSI command jammer/discard capabilty to the tcm_qla2xxx module
+From: "Bart Van Assche" <Bart.VanAssche@sandisk.com>
+To: "Laurence Oberman" <loberman@redhat.com>
+Cc: "Andy Grover" <agrover@redhat.com>, linux-scsi@vger.kernel.org, nab@daterainc.com, "Laurence Oberman" <oberman.l@gmail.com>
+Sent: Thursday, March 12, 2015 9:13:28 AM
+Subject: Re: [PATCH ] tcm_qla2xxx  Add SCSI command jammer/discard capabilty to the tcm_qla2xxx module - revision2
 
-This idea definitely help flush out additional interaction issues between
-fabric drivers and TCM.
+On 03/08/2015 11:38 AM, Laurence Oberman wrote:
+> Here is revision2
+>
+> I added unlikely and removed messaging control as it not necessary and adds overhead.
+>
+> I use target LIO for all my storage array test targets and customer problem resolution here at Red Hat.
+> This patch resulted from a requirement to mimic behaviour of an expensive hardware jammer for a customer.
+> I have used this for some time with good success to simulate and reproduce latency and slow drain fabric issues and
+> for testing and validating error handling behaviour in the Emulex, Qlogic and other F/C drivers.
+>
+> Works by checking new parameter jam_host if its >= 0 and matches vha->host_no , jamming is enabled when jam_host >=0
+> If parameter set to -1 (default) no jamming is enabled.
+> I decided to share the patch, in the hope it may be useful for others but I do understand this is a special use case.
 
-However, the current spot where the error injection is placed will cause
-memory leak.  The error injection tries to drop the command before
-submission to TCM.  TCM & QLA drivers will loose track of this command.
-The test will be short live if enough memory have been leaked.  May be the
-command should be drop before mem allocation.
+Hello Laurence,
 
-In addition, it would nice if the other spots can be included such as:
-queue_status(), queue_data_in, aborted_task(), queue_tm_rsp() &
-target_submit_tmr().
+Thanks for reworking this patch quickly. This patch looks fine to me. 
+The only remaining concern I have is that I'm wondering what the best 
+place would be to add this functionality - the qla2xxx driver or the LIO 
+core ?
 
-If the intend is to test all adapters, then the error injection need to be
-move higher up into TCM driver.
-
-
-Regards,
-Quinn Tran
-
-
-
-
-On 3/7/15, 8:26 PM, "Laurence Oberman" <loberman@redhat.com> wrote:
-
->Hello
->
->I use target LIO for all my storage array test targets and customer
->problem resolution here at Red Hat.
->This patch resulted from a requirement to mimic behaviour of an expensive
->hardware jammer for a customer.
->I have used this for some time with good success to simulate and
->reproduce latency and slow drain fabric issues and
->for testing and validating error handling behaviour in the Emulex, Qlogic
->and other F/C drivers.
->
->Works by checking jammer_flag==1 and host # and discards SCSI command,
->controlled using echo to sys parameter.
->
->I decided to share the patch, in the hope it may be useful for others but
->I do understand this is a special use case.
->If this is useful and Nab wants to include it I will create a proper
->documentation patch as well.
->
->filename:       
->/lib/modules/3.17.7-200.jammer.fc20.x86_64/kernel/drivers/scsi/qla2xxx/tcm
->_qla2xxx.ko
->license:        GPL
->description:    TCM QLA2XXX series NPIV enabled fabric driver
->depends:        target_core_mod,qla2xxx,scsi_transport_fc
->intree:         Y
->vermagic:       3.17.7-200.jammer.fc20.x86_64 SMP mod_unload
->parm:           jammer_flag:Set to 1: Enable jammer (int)
->parm:           host_flag:host number to match on (int)
->
->
->Enable host 6 to be jammed
->echo 6 > /sys/module/tcm_qla2xxx/parameters/host_flag
->
->Usage example script:
->
->#!/bin/bash
->host=`cat /sys/module/tcm_qla2xxx/parameters/host_flag`
->sleep_time=120  ### Time to jam for
->echo "We start to discard commands on SCSI host $host"
->logger "Jammer started"
->echo 1 >  /sys/module/tcm_qla2xxx/parameters/jammer_flag
->sleep $sleep_time
->echo 0 >  /sys/module/tcm_qla2xxx/parameters/jammer_flag
->echo "We stopped the jammer"
->logger "Jammer stopped"
->
->This Patch diff against 3.19.1
->
->Tested by: Laurence Oberman <loberman@redhat.com>
->Signed-off-by: Laurence Oberman <loberman@redhat.com>
->
->diff -Nurp a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
->--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2015-03-07 18:35:15.246737589
->-0500
->+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c	2015-03-07 18:35:40.168599630
->-0500
->@@ -50,6 +50,14 @@
-> #include "qla_target.h"
-> #include "tcm_qla2xxx.h"
-> 
->+int message_flag=0;
->+int jammer_flag = 0;
->+module_param(jammer_flag, int,0644);
->+MODULE_PARM_DESC(jammer_flag, "If set to 1: Enable jammer");
->+int host_flag=0;
->+module_param(host_flag, int,0644);
->+MODULE_PARM_DESC(host_flag, "host number to match on");
->+
-> static struct workqueue_struct *tcm_qla2xxx_free_wq;
-> static struct workqueue_struct *tcm_qla2xxx_cmd_wq;
-> 
->@@ -570,6 +578,22 @@ static int tcm_qla2xxx_handle_cmd(scsi_q
-> 		pr_err("Unable to locate active struct se_session\n");
-> 		return -EINVAL;
-> 	}
->+	
->+ 	// Control messaging here
->+	message_flag += jammer_flag;
->+	if(message_flag == 1)
->+		printk("tcm_qla2xx:SCSI Jammer enabled on host %d\n",host_flag);
->+	if((jammer_flag == 0) && (message_flag >=0)) {
->+		printk("tcm_qla2xx:SCSI Jammer stopped, %d SCSI commands discarded for
->host %d\n",message_flag,host_flag);
->+		message_flag=-1;
->+	}
->+		
->+	if ((vha->host_no == host_flag) && (jammer_flag == 1))
->+	{
->+		// return, and don't run target_submit_cmd, effectively discarding
->command
->+		return 0;
->+	}
->+
-> 
-> 	return target_submit_cmd(se_cmd, se_sess, cdb, &cmd->sense_buffer[0],
-> 				cmd->unpacked_lun, data_length, fcp_task_attr,
->@@ -2165,6 +2189,7 @@ static void tcm_qla2xxx_deregister_confi
-> static int __init tcm_qla2xxx_init(void)
-> {
-> 	int ret;
->+	jammer_flag = 0;
-> 
-> 	ret = tcm_qla2xxx_register_configfs();
-> 	if (ret < 0)
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Bart.
