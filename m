@@ -1,60 +1,68 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] hpsa: cleanup bitops usage
-Date: Sat, 14 Mar 2015 10:12:53 +0900
-Message-ID: <1426295577-10836-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Don Brace <don.brace@pmcs.com>, iss_storagedev@hp.com, storagedev@pmcs.com, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.0-rc3
+Date: Sat, 14 Mar 2015 14:18:35 -0400
+Message-ID: <1426357115.2180.57.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45487 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751260AbbCNSSi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Mar 2015 14:18:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Remove unnecessary adjustment for bit number and address of bitmask,
-and use BITS_TO_LONGS macro to calculate bitmap size.  This change
-just simplifies the code a bit.
+This is a simple fix for a domain revalidation crash which has recently
+turned up in the libsas code (applies to mvsas, isc and aic94xx).
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Don Brace <don.brace@pmcs.com>
-Cc: iss_storagedev@hp.com
-Cc: storagedev@pmcs.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+James Bottomley (1):
+      libsas: Fix Kernel Crash in smp_execute_task
+
+And the diffstat:
+
+ drivers/scsi/libsas/sas_discover.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/hpsa.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a1cfbd3..73a282b 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4697,8 +4697,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 			offset = (i + 1) % h->nr_cmds;
- 			continue;
- 		}
--		set_bit(i & (BITS_PER_LONG - 1),
--			h->cmd_pool_bits + (i / BITS_PER_LONG));
-+		set_bit(i, h->cmd_pool_bits);
- 		break; /* it's ours now. */
- 	}
- 	h->last_allocation = i; /* benignly racy */
-@@ -4729,8 +4728,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
- 		int i;
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 62b58d3..60de662 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -500,6 +500,7 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 	struct sas_discovery_event *ev = to_sas_discovery_event(work);
+ 	struct asd_sas_port *port = ev->port;
+ 	struct sas_ha_struct *ha = port->ha;
++	struct domain_device *ddev = port->port_dev;
  
- 		i = c - h->cmd_pool;
--		clear_bit(i & (BITS_PER_LONG - 1),
--			  h->cmd_pool_bits + (i / BITS_PER_LONG));
-+		clear_bit(i, h->cmd_pool_bits);
- 	}
- }
+ 	/* prevent revalidation from finding sata links in recovery */
+ 	mutex_lock(&ha->disco_mutex);
+@@ -514,8 +515,9 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 	SAS_DPRINTK("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
+ 		    task_pid_nr(current));
  
-@@ -6410,8 +6408,7 @@ out_disable:
+-	if (port->port_dev)
+-		res = sas_ex_revalidate_domain(port->port_dev);
++	if (ddev && (ddev->dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
++		     ddev->dev_type == SAS_EDGE_EXPANDER_DEVICE))
++		res = sas_ex_revalidate_domain(ddev);
  
- static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
- {
--	h->cmd_pool_bits = kzalloc(
--		DIV_ROUND_UP(h->nr_cmds, BITS_PER_LONG) *
-+	h->cmd_pool_bits = kcalloc(BITS_TO_LONGS(h->nr_cmds),
- 		sizeof(unsigned long), GFP_KERNEL);
- 	h->cmd_pool = pci_alloc_consistent(h->pdev,
- 		    h->nr_cmds * sizeof(*h->cmd_pool),
--- 
-1.9.1
+ 	SAS_DPRINTK("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
+ 		    port->id, task_pid_nr(current), res);
+
+
+
