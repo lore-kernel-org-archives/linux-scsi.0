@@ -1,36 +1,28 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/7] aacraid driver updates
-Date: Mon, 16 Mar 2015 08:49:27 -0400
-Message-ID: <1426510167.2254.1.camel@HansenPartnership.com>
-References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-	 <B539A9786201A44A91E34268415A2B1AB7F40789@BBYEXM01.pmc-sierra.internal>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [Xen-devel] [PATCH v4] xen-scsiback: define a pr_fmt macro with
+ xen-pvscsi
+Date: Mon, 16 Mar 2015 14:48:11 +0000
+Message-ID: <5506ED2B.7000603@citrix.com>
+References: <1426020558-32311-1-git-send-email-boby.chen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51027 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751875AbbCPMta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Mar 2015 08:49:30 -0400
-In-Reply-To: <B539A9786201A44A91E34268415A2B1AB7F40789@BBYEXM01.pmc-sierra.internal>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1426020558-32311-1-git-send-email-boby.chen@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tao Chen <boby.chen@huawei.com>, jgross@suse.com, konrad.wilk@oracle.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, rudy.zhangmin@huawei.com, wu.wubin@huawei.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-On Mon, 2015-03-16 at 11:24 +0000, Mahesh Rajashekhara wrote:
-> Hi James,
+On 10/03/15 20:49, Tao Chen wrote:
+> Add the {xen-pvscsi: } prefix in pr_fmt and remove DPRINTK, then
+> replace all DPRINTK with pr_debug.
 > 
-> Can you please let me know the status of this patch set which I
-> submitted sometime back.
+> Also fixed up some comments just as eliminate redundant whitespace
+> and format the code.
+> 
+> These will make the code easier to read.
 
-We're following this:
+Applied to devel/for-linus-4.1, thanks.
 
-http://marc.info/?l=linux-scsi&m=142556689315114
-
-So you need a review.
-
-James
-
-
+David
