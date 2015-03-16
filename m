@@ -1,40 +1,50 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
-Date: Mon, 16 Mar 2015 18:29:01 +0100
-Message-ID: <550712DD.6060402@redhat.com>
-References: <1422882086-1863-1-git-send-email-hch@lst.de> <20150305133313.GA25602@infradead.org> <54F85C27.1040108@redhat.com>
+From: "Mr chin sang" <sangchin54@gmail.com>
+Subject: Bitte mein guter Freund
+Date: Mon, 16 Mar 2015 22:25:32 +0900
+Message-ID: <bb6b407e0ab408c3e6832503985b1138.squirrel__43384.7701097422$1426527980$gmane$org@157.7.114.150>
+Reply-To: chinsang17@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:36597 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbbCPR3H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2015 13:29:07 -0400
-Received: by wgra20 with SMTP id a20so45813396wgr.3
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2015 10:29:05 -0700 (PDT)
-In-Reply-To: <54F85C27.1040108@redhat.com>
+Received: from v157-7-114-150.z1d14.static.cnode.jp ([157.7.114.150]:46153
+	"EHLO mail.vps.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751223AbbCPRps (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2015 13:45:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Fam Zheng <famz@redhat.com>
 
 
 
-On 05/03/2015 14:37, Paolo Bonzini wrote:
-> 
-> 
-> On 05/03/2015 14:33, Christoph Hellwig wrote:
->> Any chance to get reviews for this series?  Also we should at least
->> expedite this first patch into 4.0-rc as it fixes scanning races
->> in virtio_scsi.
-> 
-> I reviewed 1 and 3, but I'm not really qualified for patch 2.
 
-Christoph,
+Bitte mein guter Freund
 
-any news about these patches?
 
-Thanks,
+         Ich bin mit diesem Medium, um Sie =FCber die Transaktion zur A=
+bgabe
+von $ 21500000 (Einundzwanzig Millionen f=FCnfhunderttausend Euro)
+in meiner Bank in China, Sie als Empf=E4nger zu informieren. Es
+wird zu 100% sicher, dass der Finanzvorstand des verstorbenen
+Kunden.
 
-Paolo
+
+
+         Bitte auf meine private E-Mail kontaktieren unter f=FCr Fragen=
+ und
+weitere Informationen.
+
+
+
+         Mit freundlichen Gr=FC=DFen,
+
+
+
+         sang Chin
+
+         e-mail: chinsang17@gmail.com
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
