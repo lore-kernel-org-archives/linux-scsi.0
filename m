@@ -1,42 +1,47 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH RESEND] scsi: qla4xxx: drop duplicate init_completion
-Date: Mon, 16 Mar 2015 11:07:58 -0400
-Message-ID: <1426518478-7813-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] uas: Add US_FL_NO_ATA_1X for Initio Corporation controllers / devices
+Date: Mon, 16 Mar 2015 15:18:13 +0100
+Message-ID: <1426515493-21216-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The double call to init_completion(&ha->disable_acb_comp); is unnecessary.
-Checking drivers/scsi/qla4xxx/ql4_def.h it seems that struct scsi_qla_host
-only is defining these four struct completions - thus this seems to be a
-typo only. Thus the duplicate call is simply dropped.
+A new uas compatible controller has shown up in some people's devices from
+the manufacturer Initio Corporation, this controller needs the US_FL_NO_ATA_1X
+quirk to work properly with uas, so add it to the uas quirks table.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Reported-and-tested-by: Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.16
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
+ drivers/usb/storage/unusual_uas.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Originally posted as http://lkml.org/lkml/2014/12/23/355
-
-Patch was only compile-tested with x86_64_defconfig + CONFIG_SCSI_LOWLEVEL=y,
-CONFIG_SCSI_QLA_ISCSI=m
-
-Patch is against 4.0-rc3 (localversion-next is -next-20150316
-
- drivers/scsi/qla4xxx/ql4_os.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6d25879..2723bd9 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -8669,7 +8669,6 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	mutex_init(&ha->mbox_sem);
- 	mutex_init(&ha->chap_sem);
- 	init_completion(&ha->mbx_intr_comp);
--	init_completion(&ha->disable_acb_comp);
- 	init_completion(&ha->idc_comp);
- 	init_completion(&ha->link_up_comp);
- 	init_completion(&ha->disable_acb_comp);
+diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unusual_uas.h
+index 8257042..c85ea53 100644
+--- a/drivers/usb/storage/unusual_uas.h
++++ b/drivers/usb/storage/unusual_uas.h
+@@ -113,6 +113,13 @@ UNUSUAL_DEV(0x0bc2, 0xab2a, 0x0000, 0x9999,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_ATA_1X),
+ 
++/* Reported-by: Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> */
++UNUSUAL_DEV(0x13fd, 0x3940, 0x0000, 0x9999,
++		"Initio Corporation",
++		"",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_NO_ATA_1X),
++
+ /* Reported-by: Tom Arild Naess <tanaess-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> */
+ UNUSUAL_DEV(0x152d, 0x0539, 0x0000, 0x9999,
+ 		"JMicron",
 -- 
-1.7.10.4
+2.3.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
