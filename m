@@ -1,68 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.0-rc3
-Date: Sat, 14 Mar 2015 14:18:35 -0400
-Message-ID: <1426357115.2180.57.camel@HansenPartnership.com>
+From: Vladimir Romanov <blueboar2@gmail.com>
+Subject: Patch for /drivers/scsi/fnic/vnic_dev.c file
+Date: Mon, 16 Mar 2015 09:22:10 +0500
+Message-ID: <CAKx5OMZJUz+amr75A0v-oG6nycnasBqXNzNE9zHyUowJN-xatA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45487 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751260AbbCNSSi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Mar 2015 14:18:38 -0400
+Received: from mail-yh0-f43.google.com ([209.85.213.43]:36707 "EHLO
+	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbbCPEWN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2015 00:22:13 -0400
+Received: by yhjf44 with SMTP id f44so13622906yhj.3
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Mar 2015 21:22:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-This is a simple fix for a domain revalidation crash which has recently
-turned up in the libsas code (applies to mvsas, isc and aic94xx).
+I am programmer from Kurgan, Russia, and this is my first attempt to
+send some patch to linux kernel. Please review it, and if it is
+acceptable, please commit it.
 
-The patch is available here:
+If there is some error, please, tell me, how i can solve it.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -500,9 +500,8 @@
+     err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
+     if (err)
+         printk(KERN_ERR
+-            "Can't add addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+-            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+-            err);
++            "Can't add addr [%pM], %d\n",
++            addr, err);
+ }
 
-The short changelog is:
+ void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+@@ -518,9 +517,8 @@
+     err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
+     if (err)
+         printk(KERN_ERR
+-            "Can't del addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+-            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+-            err);
++            "Can't del addr [%pM], %d\n",
++            addr, err);
+ }
 
-James Bottomley (1):
-      libsas: Fix Kernel Crash in smp_execute_task
-
-And the diffstat:
-
- drivers/scsi/libsas/sas_discover.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 62b58d3..60de662 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -500,6 +500,7 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	struct sas_discovery_event *ev = to_sas_discovery_event(work);
- 	struct asd_sas_port *port = ev->port;
- 	struct sas_ha_struct *ha = port->ha;
-+	struct domain_device *ddev = port->port_dev;
- 
- 	/* prevent revalidation from finding sata links in recovery */
- 	mutex_lock(&ha->disco_mutex);
-@@ -514,8 +515,9 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	SAS_DPRINTK("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
- 		    task_pid_nr(current));
- 
--	if (port->port_dev)
--		res = sas_ex_revalidate_domain(port->port_dev);
-+	if (ddev && (ddev->dev_type == SAS_FANOUT_EXPANDER_DEVICE ||
-+		     ddev->dev_type == SAS_EDGE_EXPANDER_DEVICE))
-+		res = sas_ex_revalidate_domain(ddev);
- 
- 	SAS_DPRINTK("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
- 		    port->id, task_pid_nr(current), res);
-
-
-
+ int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
