@@ -1,141 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [ANNOUNCE] xfs: Supporting Host Aware SMR Drives
-Date: Mon, 16 Mar 2015 11:28:53 -0400
-Message-ID: <1426519733.4000.11.camel@HansenPartnership.com>
-References: <20150316060020.GB28557@dastard>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 1/3] scsi: serialize ->rescan against ->remove
+Date: Mon, 16 Mar 2015 18:29:01 +0100
+Message-ID: <550712DD.6060402@redhat.com>
+References: <1422882086-1863-1-git-send-email-hch@lst.de> <20150305133313.GA25602@infradead.org> <54F85C27.1040108@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51875 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934355AbbCPP25 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Mar 2015 11:28:57 -0400
-In-Reply-To: <20150316060020.GB28557@dastard>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:36597 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbbCPR3H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2015 13:29:07 -0400
+Received: by wgra20 with SMTP id a20so45813396wgr.3
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2015 10:29:05 -0700 (PDT)
+In-Reply-To: <54F85C27.1040108@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, James Bottomley <jbottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Fam Zheng <famz@redhat.com>
 
-[cc to linux-scsi added since this seems relevant]
-On Mon, 2015-03-16 at 17:00 +1100, Dave Chinner wrote:
-> Hi Folks,
+
+
+On 05/03/2015 14:37, Paolo Bonzini wrote:
 > 
-> As I told many people at Vault last week, I wrote a document
-> outlining how we should modify the on-disk structures of XFS to
-> support host aware SMR drives on the (long) plane flights to Boston.
 > 
-> TL;DR: not a lot of change to the XFS kernel code is required, no
-> specific SMR awareness is needed by the kernel code.  Only
-> relatively minor tweaks to the on-disk format will be needed and
-> most of the userspace changes are relatively straight forward, too.
+> On 05/03/2015 14:33, Christoph Hellwig wrote:
+>> Any chance to get reviews for this series?  Also we should at least
+>> expedite this first patch into 4.0-rc as it fixes scanning races
+>> in virtio_scsi.
 > 
-> The source for that document can be found in this git tree here:
-> 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation
-> 
-> in the file design/xfs-smr-structure.asciidoc. Alternatively,
-> pull it straight from cgit:
-> 
-> https://git.kernel.org/cgit/fs/xfs/xfs-documentation.git/tree/design/xfs-smr-structure.asciidoc
-> 
-> Or there is a pdf version built from the current TOT on the xfs.org
-> wiki here:
-> 
-> http://xfs.org/index.php/Host_Aware_SMR_architecture
-> 
-> Happy reading!
+> I reviewed 1 and 3, but I'm not really qualified for patch 2.
 
-I don't think it would have caused too much heartache to post the entire
-doc to the list, but anyway
+Christoph,
 
-The first is a meta question: What happened to the idea of separating
-the fs block allocator from filesystems?  It looks like a lot of the
-updates could be duplicated into other filesystems, so it might be a
-very opportune time to think about this.
+any news about these patches?
 
+Thanks,
 
-> == Data zones
-> 
-> What we need is a mechanism for tracking the location of zones (i.e. start LBA),
-> free space/write pointers within each zone, and some way of keeping track of
-> that information across mounts. If we assign a real time bitmap/summary inode
-> pair to each zone, we have a method of tracking free space in the zone. We can
-> use the existing bitmap allocator with a small tweak (sequentially ascending,
-> packed extent allocation only) to ensure that newly written blocks are allocated
-> in a sane manner.
-> 
-> We're going to need userspace to be able to see the contents of these inodes;
-> read only access wil be needed to analyse the contents of the zone, so we're
-> going to need a special directory to expose this information. It would be useful
-> to have a ".zones" directory hanging off the root directory that contains all
-> the zone allocation inodes so userspace can simply open them.
-
-The ZBC standard is being constructed.  However, all revisions agree
-that the drive is perfectly capable of tracking the zone pointers (and
-even the zone status).  Rather than having you duplicate the information
-within the XFS metadata, surely it's better with us to come up with some
-block way of reading it from the disk (and caching it for faster
-access)?
-
-
-> == Quantification of Random Write Zone Capacity
-> 
-> A basic guideline is that for 4k blocks and zones of 256MB, we'll need 8kB of
-> bitmap space and two inodes, so call it 10kB per 256MB zone. That's 40MB per TB
-> for free space bitmaps. We'll want to suport at least 1 million inodes per TB,
-> so that's another 512MB per TB, plus another 256MB per TB for directory
-> structures. There's other bits and pieces of metadata as well (attribute space,
-> internal freespace btrees, reverse map btrees, etc.
-> 
-> So, at minimum we will probably need at least 2GB of random write space per TB
-> of SMR zone data space. Plus a couple of GB for the journal if we want the easy
-> option. For those drive vendors out there that are listening and want good
-> performance, replace the CMR region with a SSD....
-
-This seems to be a place where standards work is still needed.  Right at
-the moment for Host Managed, the physical layout of the drives makes it
-reasonably simple to convert edge zones from SMR to CMR and vice versa
-at the expense of changing capacity.  It really sounds like we need a
-simple, programmatic way of doing this.  The question I'd have is: are
-you happy with just telling manufacturers ahead of time how much CMR
-space you need and hoping they comply, or should we push for a standards
-way of flipping end zones to CMR?
-
-
-> === Crash recovery
-> 
-> Write pointer location is undefined after power failure. It could be at an old
-> location, the current location or anywhere in between. The only guarantee that
-> we have is that if we flushed the cache (i.e. fsync'd a file) then they will at
-> least be in a position at or past the location of the fsync.
-> 
-> Hence before a filesystem runs journal recovery, all it's zone allocation write
-> pointers need to be set to what the drive thinks they are, and all of the zone
-> allocation beyond the write pointer need to be cleared. We could do this during
-> log recovery in kernel, but that means we need full ZBC awareness in log
-> recovery to iterate and query all the zones.
-
-If you just use a cached zone pointer provided by block, this should
-never be a problem because you'd always know where the drive thought the
-pointer was.
-
-
-> === RAID on SMR....
-> 
-> How does RAID work with SMR, and exactly what does that look like to
-> the filesystem?
-> 
-> How does libzbc work with RAID given it is implemented through the scsi ioctl
-> interface?
-
-Probably need to cc dm-devel here.  However, I think we're all agreed
-this is RAID across multiple devices, rather than within a single
-device?  In which case we just need a way of ensuring identical zoning
-on the raided devices and what you get is either a standard zone (for
-mirror) or a larger zone (for hamming etc).
-
-James
-
-
+Paolo
