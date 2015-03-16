@@ -1,49 +1,36 @@
-From: =?utf-8?Q?Peter_M=C3=BCnster?= <pmlists@free.fr>
-Subject: avoid disk spinup at system resume
-Date: Mon, 16 Mar 2015 13:28:21 +0100
-Message-ID: <871tkpunx6.fsf@free.fr>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/7] aacraid driver updates
+Date: Mon, 16 Mar 2015 08:49:27 -0400
+Message-ID: <1426510167.2254.1.camel@HansenPartnership.com>
+References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	 <B539A9786201A44A91E34268415A2B1AB7F40789@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:42312 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbbCPMaE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Mar 2015 08:30:04 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1YXU9i-0005r0-Vu
-	for linux-scsi@vger.kernel.org; Mon, 16 Mar 2015 13:30:03 +0100
-Received: from arennes-651-1-149-36.w2-2.abo.wanadoo.fr ([2.2.212.36])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2015 13:30:02 +0100
-Received: from pmlists by arennes-651-1-149-36.w2-2.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2015 13:30:02 +0100
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51027 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751875AbbCPMta (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Mar 2015 08:49:30 -0400
+In-Reply-To: <B539A9786201A44A91E34268415A2B1AB7F40789@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-Hi,
+On Mon, 2015-03-16 at 11:24 +0000, Mahesh Rajashekhara wrote:
+> Hi James,
+> 
+> Can you please let me know the status of this patch set which I
+> submitted sometime back.
 
-My SATA disk (sdb) spins up at every system resume. How could I avoid
-that please?
+We're following this:
 
-Some details:
+http://marc.info/?l=linux-scsi&m=142556689315114
 
-- sdb not mounted
-- echo 0 >/sys/block/sdb/device/scsi_disk/2:0:0:0/manage_start_stop
-- hdparm -C /dev/sdb :   "drive state is:  standby"
-- s2ram
-- after wake up:         "drive state is:  active/idle"
-- kernel message at wakeup: "sd 2:0:0:0: [sdb] Synchronizing SCSI cache"
-- when doing "echo scsi remove-single-device 2 0 0 0 >/proc/scsi/scsi"
-  before s2ram, sdb keeps sleeping after resume
+So you need a review.
 
-I need the disk only about once per week. I use s2ram several times per
-day, and I prefer that sdb keeps sleeping.
+James
 
-TIA for any hints,
--- 
-           Peter
 
