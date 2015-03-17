@@ -1,19 +1,19 @@
 From: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Subject: RE: [PATCH 1/7] aacraid: AIF support for SES device add/remove
-Date: Tue, 17 Mar 2015 07:05:58 +0000
-Message-ID: <13272BDD18A5F44CB23C497D29A37252A648A006@BBYEXM01.pmc-sierra.internal>
+Subject: RE: [PATCH 7/7] aacraid: AIF raw device remove support
+Date: Tue, 17 Mar 2015 07:07:11 +0000
+Message-ID: <13272BDD18A5F44CB23C497D29A37252A648A04C@BBYEXM01.pmc-sierra.internal>
 References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1425458313-1956-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <1425458313-1956-8-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35469 "EHLO
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35472 "EHLO
 	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751867AbbCQHeM convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1752008AbbCQHeM convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 17 Mar 2015 03:34:12 -0400
-In-Reply-To: <1425458313-1956-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+In-Reply-To: <1425458313-1956-8-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,58 +24,76 @@ Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
 
 -----Original Message-----
 From: Mahesh Rajashekhara 
-Sent: Wednesday, March 04, 2015 2:08 PM
+Sent: Wednesday, March 04, 2015 2:09 PM
 To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
 Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rajinikanth Pandurangan; Rich Bono; Mahesh Rajashekhara
-Subject: [PATCH 1/7] aacraid: AIF support for SES device add/remove
+Subject: [PATCH 7/7] aacraid: AIF raw device remove support
 
-Add new AIF support for SES device add/remove
+Add AIF raw device remove support
 
 Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 ---
- drivers/scsi/aacraid/aacraid.h |    2 ++
- drivers/scsi/aacraid/commsup.c |    8 ++++++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |    3 +++
+ drivers/scsi/aacraid/commsup.c |   32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index eaaf870..284db39 100644
+index 74a0440..5aaa9a6 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1951,6 +1951,8 @@ extern struct aac_common aac_config;
- #define			AifEnEnclosureManagement 13	/* EM_DRIVE_* */
- #define				EM_DRIVE_INSERTION	31
- #define				EM_DRIVE_REMOVAL	32
-+#define			EM_SES_DRIVE_INSERTION	33
-+#define			EM_SES_DRIVE_REMOVAL	26
- #define			AifEnBatteryEvent	14	/* Change in Battery State */
- #define			AifEnAddContainer	15	/* A new array was created */
- #define			AifEnDeleteContainer	16	/* A container was deleted */
+@@ -2061,6 +2061,9 @@ extern struct aac_common aac_config;
+ /* PMC NEW COMM: Request the event data */
+ #define		AifReqEvent		200
+ 
++/* RAW device deleted */
++#define		AifRawDeviceRemove	203
++
+ /*
+  *	Adapter Initiated FIB command structures. Start with the adapter
+  *	initiated FIBs that really come from the adapter, and get responded
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index cab190a..090ba68 100644
+index 0555023..8bb9ee4 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -1044,6 +1044,8 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
- 			switch (le32_to_cpu(((__le32 *)aifcmd->data)[3])) {
- 			case EM_DRIVE_INSERTION:
- 			case EM_DRIVE_REMOVAL:
-+			case EM_SES_DRIVE_INSERTION:
-+			case EM_SES_DRIVE_REMOVAL:
- 				container = le32_to_cpu(
- 					((__le32 *)aifcmd->data)[2]);
- 				if ((container >> 28)) {
-@@ -1069,8 +1071,10 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
- 				}
- 				channel = aac_phys_to_logical(channel);
- 				device_config_needed =
--				  (((__le32 *)aifcmd->data)[3]
--				    == cpu_to_le32(EM_DRIVE_INSERTION)) ?
-+				  ((((__le32 *)aifcmd->data)[3]
-+				    == cpu_to_le32(EM_DRIVE_INSERTION)) ||
-+				    (((__le32 *)aifcmd->data)[3]
-+				    == cpu_to_le32(EM_SES_DRIVE_INSERTION))) ?
- 				  ADD : DELETE;
- 				break;
- 			}
+@@ -884,6 +884,38 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
+ 	switch (le32_to_cpu(aifcmd->command)) {
+ 	case AifCmdDriverNotify:
+ 		switch (le32_to_cpu(((__le32 *)aifcmd->data)[0])) {
++		case AifRawDeviceRemove:
++			container = le32_to_cpu(((__le32 *)aifcmd->data)[1]);
++			if ((container >> 28)) {
++				container = (u32)-1;
++				break;
++			}
++			channel = (container >> 24) & 0xF;
++			if (channel >= dev->maximum_num_channels) {
++				container = (u32)-1;
++				break;
++			}
++			id = container & 0xFFFF;
++			if (id >= dev->maximum_num_physicals) {
++				container = (u32)-1;
++				break;
++			}
++			lun = (container >> 16) & 0xFF;
++			container = (u32)-1;
++			channel = aac_phys_to_logical(channel);
++			device_config_needed =
++			  (((__le32 *)aifcmd->data)[0] ==
++			    cpu_to_le32(AifRawDeviceRemove)) ? DELETE : ADD;
++
++			if (device_config_needed == ADD) {
++				device = scsi_device_lookup(dev->scsi_host_ptr, channel, id, lun);
++				if (device) {
++					scsi_remove_device(device);
++					scsi_device_put(device);
++				}
++			}
++			break;
++
+ 		/*
+ 		 *	Morph or Expand complete
+ 		 */
 -- 
 1.7.7.3
 
