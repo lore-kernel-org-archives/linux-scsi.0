@@ -1,70 +1,81 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfs: Supporting Host Aware SMR Drives
-Date: Tue, 17 Mar 2015 17:06:01 +1100
-Message-ID: <20150317060601.GA10105@dastard>
-References: <20150316060020.GB28557@dastard>
-	<1426519733.4000.11.camel@HansenPartnership.com>
-	<20150316203207.GD28557@dastard>
-	<CAB-428kqj2KChEGmjqSXLhM4TMM-dsgK7LzkQXxgp5En4jBVRg@mail.gmail.com>
+From: Murthy Bhat <Murthy.Bhat@pmcs.com>
+Subject: RE: [PATCH 1/7] aacraid: AIF support for SES device add/remove
+Date: Tue, 17 Mar 2015 07:05:58 +0000
+Message-ID: <13272BDD18A5F44CB23C497D29A37252A648A006@BBYEXM01.pmc-sierra.internal>
+References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <1425458313-1956-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <CAB-428kqj2KChEGmjqSXLhM4TMM-dsgK7LzkQXxgp5En4jBVRg@mail.gmail.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Alireza Haghdoost <haghdoost@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:35469 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751867AbbCQHeM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Mar 2015 03:34:12 -0400
+In-Reply-To: <1425458313-1956-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "aacraid@pmc-sierra.com" <aacraid@pmc-sierra.com>, Harry Yang <Harry.Yang@pmcs.com>, Achim Leubner <Achim.Leubner@pmcs.com>, Rajinikanth Pandurangan <Rajinikanth.Pandurangan@pmcs.com>, Rich Bono <Rich.Bono@pmcs.com>
 
-On Mon, Mar 16, 2015 at 08:12:16PM -0500, Alireza Haghdoost wrote:
-> On Mon, Mar 16, 2015 at 3:32 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Mar 16, 2015 at 11:28:53AM -0400, James Bottomley wrote:
-> >> Probably need to cc dm-devel here.  However, I think we're all agreed
-> >> this is RAID across multiple devices, rather than within a single
-> >> device?  In which case we just need a way of ensuring identical zoning
-> >> on the raided devices and what you get is either a standard zone (for
-> >> mirror) or a larger zone (for hamming etc).
-> >
-> > Any sort of RAID is a bloody hard problem, hence the fact that I'm
-> > designing a solution for a filesystem on top of an entire bare
-> > drive. I'm not trying to solve every use case in the world, just the
-> > one where the drive manufactures think SMR will be mostly used: the
-> > back end of "never delete" distributed storage environments....
-> > We can't wait for years for infrastructure layers to catch up in the
-> > brave new world of shipping SMR drives. We may not like them, but we
-> > have to make stuff work. I'm not trying to solve every problem - I'm
-> > just tryin gto address the biggest use case I see for SMR devices
-> > and it just so happens that XFS is already used pervasively in that
-> > same use case, mostly within the same "no raid, fs per entire
-> > device" constraints as I've documented for this proposal...
-> 
-> I am confused what kind of application you are referring to for this
-> "back end, no raid, fs per entire device". Are you gonna rely on the
-> application to do replication for disk failure protection ?
+Reviewed-by: Murthy Bhat <Murthy.Bhat@pmcs.com>
 
-Exactly. Think distributed storage such as Ceph and gluster where
-the data redundancy and failure recovery algorithms are in layers
-*above* the local filesystem, not in the storage below the fs.  The
-"no raid, fs per device" model is already a very common back end
-storage configuration for such deployments.
+-----Original Message-----
+From: Mahesh Rajashekhara 
+Sent: Wednesday, March 04, 2015 2:08 PM
+To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rajinikanth Pandurangan; Rich Bono; Mahesh Rajashekhara
+Subject: [PATCH 1/7] aacraid: AIF support for SES device add/remove
 
-Cheers,
+Add new AIF support for SES device add/remove
 
-Dave.
+Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+---
+ drivers/scsi/aacraid/aacraid.h |    2 ++
+ drivers/scsi/aacraid/commsup.c |    8 ++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index eaaf870..284db39 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1951,6 +1951,8 @@ extern struct aac_common aac_config;
+ #define			AifEnEnclosureManagement 13	/* EM_DRIVE_* */
+ #define				EM_DRIVE_INSERTION	31
+ #define				EM_DRIVE_REMOVAL	32
++#define			EM_SES_DRIVE_INSERTION	33
++#define			EM_SES_DRIVE_REMOVAL	26
+ #define			AifEnBatteryEvent	14	/* Change in Battery State */
+ #define			AifEnAddContainer	15	/* A new array was created */
+ #define			AifEnDeleteContainer	16	/* A container was deleted */
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index cab190a..090ba68 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1044,6 +1044,8 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
+ 			switch (le32_to_cpu(((__le32 *)aifcmd->data)[3])) {
+ 			case EM_DRIVE_INSERTION:
+ 			case EM_DRIVE_REMOVAL:
++			case EM_SES_DRIVE_INSERTION:
++			case EM_SES_DRIVE_REMOVAL:
+ 				container = le32_to_cpu(
+ 					((__le32 *)aifcmd->data)[2]);
+ 				if ((container >> 28)) {
+@@ -1069,8 +1071,10 @@ static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
+ 				}
+ 				channel = aac_phys_to_logical(channel);
+ 				device_config_needed =
+-				  (((__le32 *)aifcmd->data)[3]
+-				    == cpu_to_le32(EM_DRIVE_INSERTION)) ?
++				  ((((__le32 *)aifcmd->data)[3]
++				    == cpu_to_le32(EM_DRIVE_INSERTION)) ||
++				    (((__le32 *)aifcmd->data)[3]
++				    == cpu_to_le32(EM_SES_DRIVE_INSERTION))) ?
+ 				  ADD : DELETE;
+ 				break;
+ 			}
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.3
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
