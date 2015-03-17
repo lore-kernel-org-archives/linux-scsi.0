@@ -1,192 +1,95 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v3 09/42] hpsa: factor out hpsa_init_cmd function
-Date: Tue, 17 Mar 2015 15:03:13 -0500
-Message-ID: <20150317200313.19856.45915.stgit@brunhilda>
+Subject: [PATCH v3 08/42] hpsa: make function names consistent
+Date: Tue, 17 Mar 2015 15:03:08 -0500
+Message-ID: <20150317200308.19856.8386.stgit@brunhilda>
 References: <20150317200139.19856.87982.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:54180 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932141AbbCQUEw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:04:52 -0400
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:42125 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932116AbbCQUEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:04:48 -0400
+Received: from g9t5009.houston.hp.com (g9t5009.houston.hp.com [15.240.92.67])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id E7CD2642BB
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2015 20:04:47 +0000 (UTC)
 In-Reply-To: <20150317200139.19856.87982.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.com, brace@pmcs.com
 Cc: linux-scsi@vger.kernel.org
 
-From: Stephen Cameron <stephenmcameron@gmail.com>
+From: Robert Elliott <elliott@hp.com>
 
-Factor out hpsa_cmd_init from cmd_alloc().  We also need
-this for resubmitting commands down the default RAID path
-when they have returned from the ioaccel paths with errors.
-
-In particular, reinitialize the cmd_type and busaddr fields as these
-will not be correct for submitting down the RAID stack path
-after ioaccel command completion.
-
-This saves time when submitting commands.
+make function names more consistent and meaningful
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c     |   77 ++++++++++++++++++++++++++++++++---------------
- drivers/scsi/hpsa_cmd.h |    2 +
- 2 files changed, 53 insertions(+), 26 deletions(-)
+ drivers/scsi/hpsa.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9a13525..d57fa4b 100644
+index f84d63f..9a13525 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -4317,7 +4317,6 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
- 	/* Fill in the request block... */
+@@ -6817,7 +6817,7 @@ out_disable:
+ 	return rc;
+ }
  
- 	c->Request.Timeout = 0;
--	memset(c->Request.CDB, 0, sizeof(c->Request.CDB));
- 	BUG_ON(cmd->cmd_len > sizeof(c->Request.CDB));
- 	c->Request.CDBLen = cmd->cmd_len;
- 	memcpy(c->Request.CDB, cmd->cmnd, cmd->cmd_len);
-@@ -4368,6 +4367,48 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
+-static int hpsa_allocate_cmd_pool(struct ctlr_info *h)
++static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
+ {
+ 	h->cmd_pool_bits = kzalloc(
+ 		DIV_ROUND_UP(h->nr_cmds, BITS_PER_LONG) *
+@@ -7347,7 +7347,7 @@ reinit_after_soft_reset:
+ 	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
+ 	       h->devname, pdev->device,
+ 	       h->intr[h->intr_mode], dac ? "" : " not");
+-	rc = hpsa_allocate_cmd_pool(h);
++	rc = hpsa_alloc_cmd_pool(h);
+ 	if (rc)
+ 		goto clean2_and_free_irqs;
+ 	if (hpsa_allocate_sg_chain_blocks(h))
+@@ -7794,7 +7794,8 @@ static int hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
  	return 0;
  }
  
-+static void hpsa_cmd_init(struct ctlr_info *h, int index,
-+				struct CommandList *c)
-+{
-+	dma_addr_t cmd_dma_handle, err_dma_handle;
-+
-+	/* Zero out all of commandlist except the last field, refcount */
-+	memset(c, 0, offsetof(struct CommandList, refcount));
-+	c->Header.tag = cpu_to_le64((u64) (index << DIRECT_LOOKUP_SHIFT));
-+	cmd_dma_handle = h->cmd_pool_dhandle + index * sizeof(*c);
-+	c->err_info = h->errinfo_pool + index;
-+	memset(c->err_info, 0, sizeof(*c->err_info));
-+	err_dma_handle = h->errinfo_pool_dhandle
-+	    + index * sizeof(*c->err_info);
-+	c->cmdindex = index;
-+	c->busaddr = (u32) cmd_dma_handle;
-+	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
-+	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
-+	c->h = h;
-+}
-+
-+static void hpsa_preinitialize_commands(struct ctlr_info *h)
-+{
-+	int i;
-+
-+	for (i = 0; i < h->nr_cmds; i++) {
-+		struct CommandList *c = h->cmd_pool + i;
-+
-+		hpsa_cmd_init(h, i, c);
-+		atomic_set(&c->refcount, 0);
-+	}
-+}
-+
-+static inline void hpsa_cmd_partial_init(struct ctlr_info *h, int index,
-+				struct CommandList *c)
-+{
-+	dma_addr_t cmd_dma_handle = h->cmd_pool_dhandle + index * sizeof(*c);
-+
-+	memset(c->Request.CDB, 0, sizeof(c->Request.CDB));
-+	memset(c->err_info, 0, sizeof(*c->err_info));
-+	c->busaddr = (u32) cmd_dma_handle;
-+}
-+
- static void hpsa_command_resubmit_worker(struct work_struct *work)
+-static int hpsa_alloc_ioaccel_cmd_and_bft(struct ctlr_info *h)
++/* Allocate ioaccel1 mode command blocks and block fetch table */
++static int hpsa_alloc_ioaccel1_cmd_and_bft(struct ctlr_info *h)
  {
- 	struct scsi_cmnd *cmd;
-@@ -4382,6 +4423,7 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 		cmd->scsi_done(cmd);
- 		return;
- 	}
-+	hpsa_cmd_partial_init(c->h, c->cmdindex, c);
- 	if (hpsa_ciss_submit(c->h, c, cmd, dev->scsi3addr)) {
- 		/*
- 		 * If we get here, it means dma mapping failed. Try
-@@ -4438,10 +4480,11 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		h->acciopath_status)) {
- 
- 		cmd->host_scribble = (unsigned char *) c;
--		c->cmd_type = CMD_SCSI;
--		c->scsi_cmd = cmd;
- 
- 		if (dev->offload_enabled) {
-+			hpsa_cmd_init(h, c->cmdindex, c);
-+			c->cmd_type = CMD_SCSI;
-+			c->scsi_cmd = cmd;
- 			rc = hpsa_scsi_ioaccel_raid_map(h, c);
- 			if (rc == 0)
- 				return 0; /* Sent on ioaccel path */
-@@ -4450,6 +4493,9 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 				return SCSI_MLQUEUE_HOST_BUSY;
- 			}
- 		} else if (dev->ioaccel_handle) {
-+			hpsa_cmd_init(h, c->cmdindex, c);
-+			c->cmd_type = CMD_SCSI;
-+			c->scsi_cmd = cmd;
- 			rc = hpsa_scsi_ioaccel_direct_map(h, c);
- 			if (rc == 0)
- 				return 0; /* Sent on direct map path */
-@@ -5061,10 +5107,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- static struct CommandList *cmd_alloc(struct ctlr_info *h)
- {
- 	struct CommandList *c;
--	int i;
--	union u64bit temp64;
--	dma_addr_t cmd_dma_handle, err_dma_handle;
--	int refcount;
-+	int refcount, i;
- 	unsigned long offset;
- 
- 	/*
-@@ -5098,24 +5141,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 		break; /* it's ours now. */
- 	}
- 	h->last_allocation = i; /* benignly racy */
--
--	/* Zero out all of commandlist except the last field, refcount */
--	memset(c, 0, offsetof(struct CommandList, refcount));
--	c->Header.tag = cpu_to_le64((u64) (i << DIRECT_LOOKUP_SHIFT));
--	cmd_dma_handle = h->cmd_pool_dhandle + i * sizeof(*c);
--	c->err_info = h->errinfo_pool + i;
--	memset(c->err_info, 0, sizeof(*c->err_info));
--	err_dma_handle = h->errinfo_pool_dhandle
--	    + i * sizeof(*c->err_info);
--
--	c->cmdindex = i;
--
--	c->busaddr = (u32) cmd_dma_handle;
--	temp64.val = (u64) err_dma_handle;
--	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
--	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
--
--	c->h = h;
-+	hpsa_cmd_partial_init(h, i, c);
- 	return c;
+ 	h->ioaccel_maxsg =
+ 		readl(&(h->cfgtable->io_accel_max_embedded_sg_count));
+@@ -7833,7 +7834,8 @@ clean_up:
+ 	return 1;
  }
  
-@@ -6834,6 +6860,7 @@ static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
- 		dev_err(&h->pdev->dev, "out of memory in %s", __func__);
- 		goto clean_up;
- 	}
-+	hpsa_preinitialize_commands(h);
- 	return 0;
- clean_up:
- 	hpsa_free_cmd_pool(h);
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index f6ca5fa..0efb6f2b 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -438,7 +438,7 @@ struct CommandList {
- 	 * not used.
- 	 */
- 	struct hpsa_scsi_dev_t *phys_disk;
--	atomic_t refcount; /* Must be last to avoid memset in cmd_alloc */
-+	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
- } __aligned(COMMANDLIST_ALIGNMENT);
+-static int ioaccel2_alloc_cmds_and_bft(struct ctlr_info *h)
++/* Allocate ioaccel2 mode command blocks and block fetch table */
++static int hpsa_alloc_ioaccel2_cmd_and_bft(struct ctlr_info *h)
+ {
+ 	/* Allocate ioaccel2 mode command blocks and block fetch table */
  
- /* Max S/G elements in I/O accelerator command */
+@@ -7888,13 +7890,13 @@ static void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 	if (trans_support & CFGTBL_Trans_io_accel1) {
+ 		transMethod |= CFGTBL_Trans_io_accel1 |
+ 				CFGTBL_Trans_enable_directed_msix;
+-		if (hpsa_alloc_ioaccel_cmd_and_bft(h))
++		if (hpsa_alloc_ioaccel1_cmd_and_bft(h))
+ 			goto clean_up;
+ 	} else {
+ 		if (trans_support & CFGTBL_Trans_io_accel2) {
+ 				transMethod |= CFGTBL_Trans_io_accel2 |
+ 				CFGTBL_Trans_enable_directed_msix;
+-		if (ioaccel2_alloc_cmds_and_bft(h))
++		if (hpsa_alloc_ioaccel2_cmd_and_bft(h))
+ 			goto clean_up;
+ 		}
+ 	}
 
