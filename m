@@ -1,22 +1,17 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v3 21/42] hpsa: do not check cmd_alloc return value - it
- cannnot return NULL
-Date: Tue, 17 Mar 2015 15:04:18 -0500
-Message-ID: <20150317200418.19856.73159.stgit@brunhilda>
+Subject: [PATCH v3 24/42] hpsa: clean up some error reporting output in
+ abort handler
+Date: Tue, 17 Mar 2015 15:04:34 -0500
+Message-ID: <20150317200433.19856.69579.stgit@brunhilda>
 References: <20150317200139.19856.87982.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:42512 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932268AbbCQUGG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:06:06 -0400
-Received: from g9t5008.houston.hp.com (g9t5008.houston.hp.com [15.240.92.66])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id A14F460F26
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2015 20:05:57 +0000 (UTC)
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:54819 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932288AbbCQUGN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:06:13 -0400
 In-Reply-To: <20150317200139.19856.87982.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,234 +20,81 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-cmd_alloc can no longer return NULL, so don't check for NULL any more
-(which is unreachable code).
+report more useful information on aborts
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   77 ++++++++++-----------------------------------------
- 1 file changed, 15 insertions(+), 62 deletions(-)
+ drivers/scsi/hpsa.c |   29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ba89375a..886e928 100644
+index f980b89..7ab34f8 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2504,11 +2504,6 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+@@ -5140,10 +5140,10 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 		return FAILED;
  
- 	c = cmd_alloc(h);
+ 	memset(msg, 0, sizeof(msg));
+-	ml += sprintf(msg+ml, "scsi %d:%d:%d:%llu %s",
++	ml += sprintf(msg+ml, "scsi %d:%d:%d:%llu %s %p",
+ 		h->scsi_host->host_no, sc->device->channel,
+ 		sc->device->id, sc->device->lun,
+-		"Aborting command");
++		"Aborting command", sc);
  
--	if (c == NULL) {
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -ENOMEM;
--	}
--
- 	if (fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize,
- 			page, scsi3addr, TYPE_CMD)) {
- 		rc = -1;
-@@ -2537,11 +2532,6 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
- 	struct ErrorInfo *ei;
- 
- 	c = cmd_alloc(h);
--	if (c == NULL) {			/* trouble... */
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -ENOMEM;
--	}
--
- 	if (fill_cmd(c, BMIC_SENSE_CONTROLLER_PARAMETERS, h, buf, bufsize,
- 			page, scsi3addr, TYPE_CMD)) {
- 		rc = -1;
-@@ -2559,7 +2549,7 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
- out:
- 	cmd_free(h, c);
- 	return rc;
--	}
-+}
- 
- static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 	u8 reset_type, int reply_queue)
-@@ -2570,10 +2560,6 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 
- 	c = cmd_alloc(h);
- 
--	if (c == NULL) {			/* trouble... */
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -ENOMEM;
--	}
- 
- 	/* fill_cmd can't fail here, no data buffer to map. */
- 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
-@@ -2701,10 +2687,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
- 	struct ErrorInfo *ei;
- 
- 	c = cmd_alloc(h);
--	if (c == NULL) {
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -ENOMEM;
--	}
+ 	/* Find the device of the command to be aborted */
+ 	dev = sc->device->hostdata;
+@@ -5177,12 +5177,12 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	ml += sprintf(msg+ml, "Tag:0x%08x:%08x ", tagupper, taglower);
+ 	as  = abort->scsi_cmd;
+ 	if (as != NULL)
+-		ml += sprintf(msg+ml, "Command:0x%x SN:0x%lx ",
+-			as->cmnd[0], as->serial_number);
+-	dev_dbg(&h->pdev->dev, "%s\n", msg);
+-	dev_warn(&h->pdev->dev, "scsi %d:%d:%d:%d %s\n",
+-		h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+-		"Aborting command");
++		ml += sprintf(msg+ml,
++			"CDBLen: %d CDB: 0x%02x%02x... SN: 0x%lx ",
++			as->cmd_len, as->cmnd[0], as->cmnd[1],
++			as->serial_number);
++	dev_warn(&h->pdev->dev, "%s BEING SENT\n", msg);
 +
- 	if (fill_cmd(c, HPSA_GET_RAID_MAP, h, &this_device->raid_map,
- 			sizeof(this_device->raid_map), 0,
- 			scsi3addr, TYPE_CMD)) {
-@@ -2877,10 +2860,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	struct ErrorInfo *ei;
- 
- 	c = cmd_alloc(h);
--	if (c == NULL) {			/* trouble... */
--		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -1;
--	}
-+
- 	/* address the controller */
- 	memset(scsi3addr, 0, sizeof(scsi3addr));
- 	if (fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
-@@ -2995,8 +2975,7 @@ static int hpsa_volume_offline(struct ctlr_info *h,
- #define ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ 0x02
- 
- 	c = cmd_alloc(h);
--	if (!c)
--		return 0;
-+
- 	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
- 	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
- 	if (rc) {
-@@ -3070,8 +3049,7 @@ static int hpsa_device_supports_aborts(struct ctlr_info *h,
- 		return 1;
- 
- 	c = cmd_alloc(h);
--	if (!c)
--		return -ENOMEM;
-+
- 	(void) fill_cmd(c, HPSA_ABORT_MSG, h, &tag, 0, 0, scsi3addr, TYPE_MSG);
- 	(void) hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
- 	/* no unmap needed here because no data xfer. */
-@@ -4642,10 +4620,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 		return 0;
- 	}
- 	c = cmd_alloc(h);
--	if (c == NULL) {			/* trouble... */
--		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return SCSI_MLQUEUE_HOST_BUSY;
--	}
-+
- 	if (unlikely(lockup_detected(h))) {
- 		cmd->result = DID_NO_CONNECT << 16;
- 		cmd_free(h, c);
-@@ -4806,11 +4781,6 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 	struct CommandList *c;
- 
- 	c = cmd_alloc(h);
--	if (!c) {
--		dev_warn(&h->pdev->dev, "out of memory in "
--			"wait_for_device_to_become_ready.\n");
--		return IO_ERROR;
--	}
- 
- 	/* Send test unit ready until device ready, or give up. */
- 	while (count < HPSA_TUR_RETRY_LIMIT) {
-@@ -4973,10 +4943,6 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
- 	__le32 tagupper, taglower;
- 
- 	c = cmd_alloc(h);
--	if (c == NULL) {	/* trouble... */
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		return -ENOMEM;
--	}
- 
- 	/* fill_cmd can't fail here, no buffer to map */
- 	(void) fill_cmd(c, HPSA_ABORT_MSG, h, &abort->Header.tag,
-@@ -5267,6 +5233,8 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
-  * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
-  * which ones are free or in use.  Lock must be held when calling this.
-  * cmd_free() is the complement.
-+ * This function never gives up and returns NULL.  If it hangs,
-+ * another thread must call cmd_free() to free some tags.
-  */
- 
- static struct CommandList *cmd_alloc(struct ctlr_info *h)
-@@ -5500,10 +5468,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		}
- 	}
- 	c = cmd_alloc(h);
--	if (c == NULL) {
--		rc = -ENOMEM;
--		goto out_kfree;
--	}
-+
- 	/* Fill in the command type */
- 	c->cmd_type = CMD_IOCTL_PEND;
- 	/* Fill in Command Header */
-@@ -5637,10 +5602,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		sg_used++;
- 	}
- 	c = cmd_alloc(h);
--	if (c == NULL) {
--		status = -ENOMEM;
--		goto cleanup1;
--	}
-+
- 	c->cmd_type = CMD_IOCTL_PEND;
- 	c->Header.ReplyQueue = 0;
- 	c->Header.SGList = (u8) sg_used;
-@@ -5756,14 +5718,13 @@ static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
- 	}
- }
- 
--static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
-+static void hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 				u8 reset_type)
- {
- 	struct CommandList *c;
- 
- 	c = cmd_alloc(h);
--	if (!c)
--		return -ENOMEM;
-+
- 	/* fill_cmd can't fail here, no data buffer to map */
- 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
- 		RAID_CTLR_LUNID, TYPE_MSG);
-@@ -5774,7 +5735,7 @@ static int hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 	 * the command either.  This is the last command we will send before
- 	 * re-initializing everything, so it doesn't matter and won't leak.
+ 	/*
+ 	 * Command is in flight, or possibly already completed
+ 	 * by the firmware (but not to the scsi mid layer) but we can't
+@@ -5190,7 +5190,8 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
  	 */
--	return 0;
-+	return;
- }
- 
- static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
-@@ -7174,11 +7135,7 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 
- static int hpsa_kdump_soft_reset(struct ctlr_info *h)
- {
--	if (hpsa_send_host_reset(h, RAID_CTLR_LUNID,
--		HPSA_RESET_TYPE_CONTROLLER)) {
--		dev_warn(&h->pdev->dev, "Resetting array controller failed.\n");
--		return -EIO;
--	}
-+	hpsa_send_host_reset(h, RAID_CTLR_LUNID, HPSA_RESET_TYPE_CONTROLLER);
- 
- 	dev_info(&h->pdev->dev, "Waiting for board to soft reset.\n");
- 	if (hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_NOT_READY)) {
-@@ -7683,10 +7640,7 @@ static void hpsa_flush_cache(struct ctlr_info *h)
- 		return;
- 
- 	c = cmd_alloc(h);
--	if (!c) {
--		dev_warn(&h->pdev->dev, "cmd_alloc returned NULL!\n");
--		goto out_of_memory;
--	}
-+
- 	if (fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
- 		RAID_CTLR_LUNID, TYPE_CMD)) {
- 		goto out;
-@@ -7700,7 +7654,6 @@ out:
+ 	if (wait_for_available_abort_cmd(h)) {
  		dev_warn(&h->pdev->dev,
- 			"error flushing cache on controller\n");
- 	cmd_free(h, c);
--out_of_memory:
- 	kfree(flush_buf);
- }
+-			"Timed out waiting for an abort command to become available.\n");
++			"%s FAILED, timeout waiting for an abort command to become available.\n",
++			msg);
+ 		cmd_free(h, abort);
+ 		return FAILED;
+ 	}
+@@ -5198,16 +5199,14 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+ 	atomic_inc(&h->abort_cmds_available);
+ 	wake_up_all(&h->abort_cmd_wait_queue);
+ 	if (rc != 0) {
+-		dev_warn(&h->pdev->dev, "scsi %d:%d:%d:%d %s\n",
+-			h->scsi_host->host_no,
+-			dev->bus, dev->target, dev->lun,
+-			"FAILED to abort command");
++		dev_warn(&h->pdev->dev, "%s SENT, FAILED\n", msg);
+ 		cmd_free(h, abort);
+ 		return FAILED;
+ 	}
+-	dev_info(&h->pdev->dev, "%s REQUEST SUCCEEDED.\n", msg);
++	dev_info(&h->pdev->dev, "%s SENT, SUCCESS\n", msg);
  
+-	/* If the abort(s) above completed and actually aborted the
++	/*
++	 * If the abort(s) above completed and actually aborted the
+ 	 * command, then the command to be aborted should already be
+ 	 * completed.  If not, wait around a bit more to see if they
+ 	 * manage to complete normally.
 
