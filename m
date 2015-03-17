@@ -1,17 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v3 36/42] hpsa: add interrupt number to /proc/interrupts
- interrupt name
-Date: Tue, 17 Mar 2015 15:06:46 -0500
-Message-ID: <20150317200646.19856.58624.stgit@brunhilda>
+Subject: [PATCH v3 38/42] hpsa: use scsi host_no as hpsa controller number
+Date: Tue, 17 Mar 2015 15:06:56 -0500
+Message-ID: <20150317200656.19856.53171.stgit@brunhilda>
 References: <20150317200139.19856.87982.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:39342 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134AbbCQUIZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:08:25 -0400
+Received: from g4t3425.houston.hp.com ([15.201.208.53]:60474 "EHLO
+	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932448AbbCQUIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:08:35 -0400
 In-Reply-To: <20150317200139.19856.87982.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,83 +19,293 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-Add the interrupt number to the interrupt names that
-appear in /proc/interrupts, so they are unique
-
-Also, delete the IRQ and DAC prints.  Other parts of the kernel
-already print the IRQ assignments, and dual-address-cycle support
-has not been interesting since the parallel PCI bus went from
-32 to 64 bits wide.
+Rather than numbering the hpsa controllers with an
+incrementing 0..n value (e.g., that shows up in
+/proc/interrupts), use the scsi midlayer
+host_no (e.g. matching /sys/class/scsi_host/hostNN).
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |   20 ++++++++++++++------
- drivers/scsi/hpsa.h |    1 +
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.c |  134 ++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 74 insertions(+), 60 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 0057236..34c178c 100644
+index 4e34a62..511b7ab 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -7337,8 +7337,9 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 	if (h->intr_mode == PERF_MODE_INT && h->msix_vector > 0) {
- 		/* If performant mode and MSI-X, use multiple reply queues */
- 		for (i = 0; i < h->msix_vector; i++) {
-+			sprintf(h->intrname[i], "%s-msix%d", h->devname, i);
- 			rc = request_irq(h->intr[i], msixhandler,
--					0, h->devname,
-+					0, h->intrname[i],
- 					&h->q[i]);
- 			if (rc) {
- 				int j;
-@@ -7359,12 +7360,22 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 	} else {
- 		/* Use single reply pool */
- 		if (h->msix_vector > 0 || h->msi_vector) {
-+			if (h->msix_vector)
-+				sprintf(h->intrname[h->intr_mode],
-+					"%s-msix", h->devname);
-+			else
-+				sprintf(h->intrname[h->intr_mode],
-+					"%s-msi", h->devname);
- 			rc = request_irq(h->intr[h->intr_mode],
--				msixhandler, 0, h->devname,
-+				msixhandler, 0,
-+				h->intrname[h->intr_mode],
- 				&h->q[h->intr_mode]);
+@@ -324,32 +324,35 @@ static int check_for_unit_attention(struct ctlr_info *h,
+ 	switch (asc) {
+ 	case STATE_CHANGED:
+ 		dev_warn(&h->pdev->dev,
+-			HPSA "%d: a state change detected, command retried\n",
+-			h->ctlr);
++			"%s: a state change detected, command retried\n",
++			h->devname);
+ 		break;
+ 	case LUN_FAILED:
+ 		dev_warn(&h->pdev->dev,
+-			HPSA "%d: LUN failure detected\n", h->ctlr);
++			"%s: LUN failure detected\n", h->devname);
+ 		break;
+ 	case REPORT_LUNS_CHANGED:
+ 		dev_warn(&h->pdev->dev,
+-			HPSA "%d: report LUN data changed\n", h->ctlr);
++			"%s: report LUN data changed\n", h->devname);
+ 	/*
+ 	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the external
+ 	 * target (array) devices.
+ 	 */
+ 		break;
+ 	case POWER_OR_RESET:
+-		dev_warn(&h->pdev->dev, HPSA "%d: a power on "
+-			"or device reset detected\n", h->ctlr);
++		dev_warn(&h->pdev->dev,
++			"%s: a power on or device reset detected\n",
++			h->devname);
+ 		break;
+ 	case UNIT_ATTENTION_CLEARED:
+-		dev_warn(&h->pdev->dev, HPSA "%d: unit attention "
+-		    "cleared by another initiator\n", h->ctlr);
++		dev_warn(&h->pdev->dev,
++			"%s: unit attention cleared by another initiator\n",
++			h->devname);
+ 		break;
+ 	default:
+-		dev_warn(&h->pdev->dev, HPSA "%d: unknown "
+-			"unit attention detected\n", h->ctlr);
++		dev_warn(&h->pdev->dev,
++			"%s: unknown unit attention detected\n",
++			h->devname);
+ 		break;
+ 	}
+ 	return 1;
+@@ -4799,22 +4802,16 @@ static int hpsa_scan_finished(struct Scsi_Host *sh,
+ 	return finished;
+ }
+ 
+-static void hpsa_unregister_scsi(struct ctlr_info *h)
+-{
+-	/* we are being forcibly unloaded, and may not refuse. */
+-	scsi_remove_host(h->scsi_host);
+-	scsi_host_put(h->scsi_host);
+-	h->scsi_host = NULL;
+-}
+-
+-static int hpsa_register_scsi(struct ctlr_info *h)
++static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+ {
+ 	struct Scsi_Host *sh;
+ 	int error;
+ 
+ 	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
+-	if (sh == NULL)
+-		goto fail;
++	if (sh == NULL) {
++		dev_err(&h->pdev->dev, "scsi_host_alloc failed\n");
++		return -ENOMEM;
++	}
+ 
+ 	sh->io_port = 0;
+ 	sh->n_io_port = 0;
+@@ -4826,7 +4823,6 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ 	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
+ 	sh->cmd_per_lun = sh->can_queue;
+ 	sh->sg_tablesize = h->maxsgentries;
+-	h->scsi_host = sh;
+ 	sh->hostdata[0] = (unsigned long) h;
+ 	sh->irq = h->intr[h->intr_mode];
+ 	sh->unique_id = sh->irq;
+@@ -4835,24 +4831,24 @@ static int hpsa_register_scsi(struct ctlr_info *h)
+ 		dev_err(&h->pdev->dev,
+ 			"%s: scsi_init_shared_tag_map failed for controller %d\n",
+ 			__func__, h->ctlr);
+-		goto fail_host_put;
+-	}
+-	error = scsi_add_host(sh, &h->pdev->dev);
+-	if (error) {
+-		dev_err(&h->pdev->dev, "%s: scsi_add_host failed for controller %d\n",
+-			__func__, h->ctlr);
+-		goto fail_host_put;
++			scsi_host_put(sh);
++			return error;
+ 	}
+-	scsi_scan_host(sh);
++	h->scsi_host = sh;
+ 	return 0;
++}
+ 
+- fail_host_put:
+-	scsi_host_put(sh);
+-	return error;
+- fail:
+-	dev_err(&h->pdev->dev, "%s: scsi_host_alloc"
+-		" failed for controller %d\n", __func__, h->ctlr);
+-	return -ENOMEM;
++static int hpsa_scsi_add_host(struct ctlr_info *h)
++{
++	int rv;
++
++	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
++	if (rv) {
++		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
++		return rv;
++	}
++	scsi_scan_host(h->scsi_host);
++	return 0;
+ }
+ 
+ /*
+@@ -7525,7 +7521,9 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	hpsa_free_sg_chain_blocks(h);		/* init_one 6 */
+ 	hpsa_free_cmd_pool(h);			/* init_one 5 */
+ 	hpsa_free_irqs(h);			/* init_one 4 */
+-	hpsa_free_pci_init(h);			/* init_one 3 */
++	scsi_host_put(h->scsi_host);		/* init_one 3 */
++	h->scsi_host = NULL;			/* init_one 3 */
++	hpsa_free_pci_init(h);			/* init_one 2_5 */
+ 	free_percpu(h->lockup_detected);	/* init_one 2 */
+ 	h->lockup_detected = NULL;		/* init_one 2 */
+ 	if (h->resubmit_wq) {
+@@ -7829,9 +7827,15 @@ reinit_after_soft_reset:
+ 
+ 	rc = hpsa_pci_init(h);
+ 	if (rc)
+-		goto clean2;	/* lockup, aer/h */
++		goto clean2;	/* lu, aer/h */
++
++	/* relies on h-> settings made by hpsa_pci_init, including
++	 * interrupt_mode h->intr */
++	rc = hpsa_scsi_host_alloc(h);
++	if (rc)
++		goto clean2_5;	/* pci, lu, aer/h */
+ 
+-	sprintf(h->devname, HPSA "%d", number_of_controllers);
++	sprintf(h->devname, HPSA "%d", h->scsi_host->host_no);
+ 	h->ctlr = number_of_controllers;
+ 	number_of_controllers++;
+ 
+@@ -7845,7 +7849,7 @@ reinit_after_soft_reset:
+ 			dac = 0;
  		} else {
-+			sprintf(h->intrname[h->intr_mode],
-+				"%s-intx", h->devname);
- 			rc = request_irq(h->intr[h->intr_mode],
--				intxhandler, IRQF_SHARED, h->devname,
-+				intxhandler, IRQF_SHARED,
-+				h->intrname[h->intr_mode],
- 				&h->q[h->intr_mode]);
+ 			dev_err(&pdev->dev, "no suitable DMA available\n");
+-			goto clean3;	/* pci, lockup, aer/h */
++			goto clean3;	/* shost, pci, lu, aer/h */
  		}
- 		irq_set_affinity_hint(h->intr[h->intr_mode], NULL);
-@@ -7751,9 +7762,6 @@ reinit_after_soft_reset:
+ 	}
+ 
+@@ -7854,13 +7858,13 @@ reinit_after_soft_reset:
+ 
  	rc = hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx);
  	if (rc)
- 		goto clean3;	/* pci, lockup, aer/h */
--	dev_info(&pdev->dev, "%s: <0x%x> at IRQ %d%s using DAC\n",
--	       h->devname, pdev->device,
--	       h->intr[h->intr_mode], dac ? "" : " not");
+-		goto clean3;	/* pci, lockup, aer/h */
++		goto clean3;	/* shost, pci, lu, aer/h */
  	rc = hpsa_alloc_cmd_pool(h);
  	if (rc)
- 		goto clean4;	/* irq, pci, lockup, aer/h */
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 7cb8586..3ec8934 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -220,6 +220,7 @@ struct ctlr_info {
- 	int remove_in_progress;
- 	/* Address of h->q[x] is passed to intr handler to know which queue */
- 	u8 q[MAX_REPLY_QUEUES];
-+	char intrname[MAX_REPLY_QUEUES][16];	/* "hpsa0-msix00" names */
- 	u32 TMFSupportFlags; /* cache what task mgmt funcs are supported. */
- #define HPSATMF_BITS_SUPPORTED  (1 << 0)
- #define HPSATMF_PHYS_LUN_RESET  (1 << 1)
+-		goto clean4;	/* irq, pci, lockup, aer/h */
++		goto clean4;	/* irq, shost, pci, lu, aer/h */
+ 	rc = hpsa_alloc_sg_chain_blocks(h);
+ 	if (rc)
+-		goto clean5;	/* cmd, irq, pci, lockup, aer/h */
++		goto clean5;	/* cmd, irq, shost, pci, lu, aer/h */
+ 	init_waitqueue_head(&h->scan_wait_queue);
+ 	init_waitqueue_head(&h->abort_cmd_wait_queue);
+ 	init_waitqueue_head(&h->abort_sync_wait_queue);
+@@ -7869,11 +7873,16 @@ reinit_after_soft_reset:
+ 	pci_set_drvdata(pdev, h);
+ 	h->ndevices = 0;
+ 	h->hba_mode_enabled = 0;
+-	h->scsi_host = NULL;
++
+ 	spin_lock_init(&h->devlock);
+ 	rc = hpsa_put_ctlr_into_performant_mode(h);
+ 	if (rc)
+-		goto clean6;	/* sg, cmd, irq, pci, lockup, aer/h */
++		goto clean6; /* sg, cmd, irq, shost, pci, lu, aer/h */
++
++	/* hook into SCSI subsystem */
++	rc = hpsa_scsi_add_host(h);
++	if (rc)
++		goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 
+ 	/* create the resubmit workqueue */
+ 	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
+@@ -7928,7 +7937,7 @@ reinit_after_soft_reset:
+ 		rc = hpsa_kdump_soft_reset(h);
+ 		if (rc)
+ 			/* Neither hard nor soft reset worked, we're hosed. */
+-			goto clean8;
++			goto clean9;
+ 
+ 		dev_info(&h->pdev->dev, "Board READY.\n");
+ 		dev_info(&h->pdev->dev,
+@@ -7963,9 +7972,6 @@ reinit_after_soft_reset:
+ 	h->access.set_intr_mask(h, HPSA_INTR_ON);
+ 
+ 	hpsa_hba_inquiry(h);
+-	rc = hpsa_register_scsi(h);	/* hook ourselves into SCSI subsystem */
+-	if (rc)
+-		goto clean8; /* wq, perf, sg, cmd, irq, pci, lockup, aer/h */
+ 
+ 	/* Monitor the controller for firmware lockups */
+ 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -7977,20 +7983,23 @@ reinit_after_soft_reset:
+ 				h->heartbeat_sample_interval);
+ 	return 0;
+ 
+-clean8: /* perf, sg, cmd, irq, pci, lockup, aer/h */
++clean9: /* wq, sh, perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	kfree(h->hba_inquiry_data);
+-clean7: /* perf, sg, cmd, irq, pci, lockup, aer/h */
++clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ clean6: /* sg, cmd, irq, pci, lockup, wq/aer/h */
+ 	hpsa_free_sg_chain_blocks(h);
+-clean5: /* cmd, irq, pci, lockup, aer/h */
++clean5: /* cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_cmd_pool(h);
+-clean4: /* irq, pci, lockup, aer/h */
++clean4: /* irq, shost, pci, lu, aer/h */
+ 	hpsa_free_irqs(h);
+-clean3: /* pci, lockup, aer/h */
++clean3: /* shost, pci, lu, aer/h */
++	scsi_host_put(h->scsi_host);
++	h->scsi_host = NULL;
++clean2_5: /* pci, lu, aer/h */
+ 	hpsa_free_pci_init(h);
+-clean2: /* lockup, aer/h */
++clean2: /* lu, aer/h */
+ 	if (h->lockup_detected) {
+ 		free_percpu(h->lockup_detected);
+ 		h->lockup_detected = NULL;
+@@ -8089,17 +8098,22 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 
+ 	hpsa_free_device_info(h);		/* scan */
+ 
+-	hpsa_unregister_scsi(h);			/* init_one 9 */
+-	kfree(h->hba_inquiry_data);			/* init_one 9 */
+-	h->hba_inquiry_data = NULL;			/* init_one 9 */
++	kfree(h->hba_inquiry_data);			/* init_one 10 */
++	h->hba_inquiry_data = NULL;			/* init_one 10 */
++	if (h->scsi_host)
++		scsi_remove_host(h->scsi_host);		/* init_one 8 */
++	hpsa_free_ioaccel2_sg_chain_blocks(h);
+ 	hpsa_free_performant_mode(h);			/* init_one 7 */
+ 	hpsa_free_sg_chain_blocks(h);			/* init_one 6 */
+ 	hpsa_free_cmd_pool(h);				/* init_one 5 */
+ 
+ 	/* hpsa_free_irqs already called via hpsa_shutdown init_one 4 */
+ 
++	scsi_host_put(h->scsi_host);			/* init_one 3 */
++	h->scsi_host = NULL;				/* init_one 3 */
++
+ 	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
+-	hpsa_free_pci_init(h);				/* init_one 3 */
++	hpsa_free_pci_init(h);				/* init_one 2.5 */
+ 
+ 	free_percpu(h->lockup_detected);		/* init_one 2 */
+ 	h->lockup_detected = NULL;			/* init_one 2 */
 
