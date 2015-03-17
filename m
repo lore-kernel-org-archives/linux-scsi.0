@@ -1,21 +1,16 @@
 From: Don Brace <don.brace@pmcs.com>
-Subject: [PATCH v3 32/42] hpsa: skip free_irq calls if irqs are not allocated
-Date: Tue, 17 Mar 2015 15:05:16 -0500
-Message-ID: <20150317200516.19856.97942.stgit@brunhilda>
+Subject: [PATCH v3 33/42] hpsa: cleanup for init_one step 2 in kdump
+Date: Tue, 17 Mar 2015 15:05:21 -0500
+Message-ID: <20150317200521.19856.35779.stgit@brunhilda>
 References: <20150317200139.19856.87982.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:42563 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932355AbbCQUG4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:06:56 -0400
-Received: from g9t5008.houston.hp.com (g9t5008.houston.hp.com [15.240.92.66])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id F3E5964340
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2015 20:06:55 +0000 (UTC)
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:38637 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932355AbbCQUHB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Mar 2015 16:07:01 -0400
 In-Reply-To: <20150317200139.19856.87982.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,36 +19,38 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Robert Elliott <elliott@hp.com>
 
-If try_soft_reset fails to re-allocate irqs, the error exit
-starts with free_irq calls, which generate kernel WARN
-messages since they were already freed a few lines earlier.
-
-Jump to the next exit label to skip the free_irq calls.
+In hpsa_undo_allocations_after_kdump_soft_reset,
+the things allocated in hpsa_init_one step 2 -
+h->resubmit_wq and h->lockup_detected  need to
+be freed, in the right order.
 
 Reviewed-by: Scott Teel <scott.teel@pmcs.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
 Signed-off-by: Robert Elliott <elliott@hp.com>
 Signed-off-by: Don Brace <don.brace@pmcs.com>
 ---
- drivers/scsi/hpsa.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 33aca38..f26e6bc 100644
+index f26e6bc..0afc48b 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -7799,7 +7799,12 @@ reinit_after_soft_reset:
- 		if (rc) {
- 			dev_warn(&h->pdev->dev,
- 				"Failed to request_irq after soft reset.\n");
--			goto clean4;
-+			/*
-+			 * clean4 starts with free_irqs, but that was just
-+			 * done. Then, request_irqs_failed, so there is
-+			 * nothing to free. So, goto the next label.
-+			 */
-+			goto clean3;
- 		}
+@@ -7422,6 +7422,16 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	hpsa_free_cmd_pool(h);			/* init_one 5 */
+ 	hpsa_free_irqs(h);			/* init_one 4 */
+ 	hpsa_free_pci_init(h);			/* init_one 3 */
++	free_percpu(h->lockup_detected);	/* init_one 2 */
++	h->lockup_detected = NULL;		/* init_one 2 */
++	if (h->resubmit_wq) {
++		destroy_workqueue(h->resubmit_wq);	/* init_one 1 */
++		h->resubmit_wq = NULL;
++	}
++	if (h->rescan_ctlr_wq) {
++		destroy_workqueue(h->rescan_ctlr_wq);
++		h->rescan_ctlr_wq = NULL;
++	}
+ 	kfree(h);				/* init_one 1 */
+ }
  
- 		rc = hpsa_kdump_soft_reset(h);
 
