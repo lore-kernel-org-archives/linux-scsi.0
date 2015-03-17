@@ -1,40 +1,70 @@
-From: "Qatar Foundation" <qatarfund@qf.org.qa>
-Subject: =?utf-8?b?4oKsOTUwLDAwMC4wMCBFVVJP?=
-Date: Tue, 17 Mar 2015 05:02:06 +0200
-Message-ID: <20150317030244.1E40A1E027EA@mail.ipb.ac.id>
-Reply-To: qf.qa234@gmail.com
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfs: Supporting Host Aware SMR Drives
+Date: Tue, 17 Mar 2015 17:06:01 +1100
+Message-ID: <20150317060601.GA10105@dastard>
+References: <20150316060020.GB28557@dastard>
+	<1426519733.4000.11.camel@HansenPartnership.com>
+	<20150316203207.GD28557@dastard>
+	<CAB-428kqj2KChEGmjqSXLhM4TMM-dsgK7LzkQXxgp5En4jBVRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.124.205.225] ([202.124.205.225]:55907 "EHLO
-	relay.ipb.ac.id" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751198AbbCQDTC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2015 23:19:02 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <CAB-428kqj2KChEGmjqSXLhM4TMM-dsgK7LzkQXxgp5En4jBVRg@mail.gmail.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Alireza Haghdoost <haghdoost@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <qatarfund@qf.org.qa>
 
-Liebe Beg=C3=BCnstigte,
+On Mon, Mar 16, 2015 at 08:12:16PM -0500, Alireza Haghdoost wrote:
+> On Mon, Mar 16, 2015 at 3:32 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Mar 16, 2015 at 11:28:53AM -0400, James Bottomley wrote:
+> >> Probably need to cc dm-devel here.  However, I think we're all agreed
+> >> this is RAID across multiple devices, rather than within a single
+> >> device?  In which case we just need a way of ensuring identical zoning
+> >> on the raided devices and what you get is either a standard zone (for
+> >> mirror) or a larger zone (for hamming etc).
+> >
+> > Any sort of RAID is a bloody hard problem, hence the fact that I'm
+> > designing a solution for a filesystem on top of an entire bare
+> > drive. I'm not trying to solve every use case in the world, just the
+> > one where the drive manufactures think SMR will be mostly used: the
+> > back end of "never delete" distributed storage environments....
+> > We can't wait for years for infrastructure layers to catch up in the
+> > brave new world of shipping SMR drives. We may not like them, but we
+> > have to make stuff work. I'm not trying to solve every problem - I'm
+> > just tryin gto address the biggest use case I see for SMR devices
+> > and it just so happens that XFS is already used pervasively in that
+> > same use case, mostly within the same "no raid, fs per entire
+> > device" constraints as I've documented for this proposal...
+> 
+> I am confused what kind of application you are referring to for this
+> "back end, no raid, fs per entire device". Are you gonna rely on the
+> application to do replication for disk failure protection ?
 
-Sie wurden ausgew=C3=A4hlt, um =E2=82=AC 950.000,00 EURO als Charity-Sp=
-enden / Hilfe der Qatar Foundation erhalten. Antworten zur=C3=BCck f=C3=
-=BCr weitere Informationen.
+Exactly. Think distributed storage such as Ceph and gluster where
+the data redundancy and failure recovery algorithms are in layers
+*above* the local filesystem, not in the storage below the fs.  The
+"no raid, fs per device" model is already a very common back end
+storage configuration for such deployments.
 
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Ingenieur Saad Al Muhannadi.
-Antwort auf: qf.qa234@gmail.com
-Pr=C3=A4sident der Qatar Foundation.
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-
----
-This email has been checked for viruses by Avast antivirus software.
-http://www.avast.com
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
