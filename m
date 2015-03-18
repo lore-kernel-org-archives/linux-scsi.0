@@ -1,51 +1,60 @@
-From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
-Subject: Suggestions for testing SAS cables via sg3_utils
-Date: Wed, 18 Mar 2015 12:25:03 -0700
-Message-ID: <5509D10F.2020601@aeoncomputing.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Suggestions for testing SAS cables via sg3_utils
+Date: Wed, 18 Mar 2015 16:14:01 -0400
+Message-ID: <5509DC89.9030506@interlog.com>
+References: <5509D10F.2020601@aeoncomputing.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:35369 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932823AbbCRTZE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2015 15:25:04 -0400
-Received: by obcjt1 with SMTP id jt1so19594163obc.2
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2015 12:25:04 -0700 (PDT)
-Received: from cloudberry-sbg.corp.aeoncomputing.com ([12.226.163.194])
-        by mx.google.com with ESMTPSA id h4sm11613230obr.18.2015.03.18.12.25.03
-        for <linux-scsi@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Mar 2015 12:25:03 -0700 (PDT)
+Received: from smtp.infotech.no ([82.134.31.41]:44288 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755197AbbCRUOZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Mar 2015 16:14:25 -0400
+In-Reply-To: <5509D10F.2020601@aeoncomputing.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Johnson <jeff.johnson@aeoncomputing.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Greetings,
+On 15-03-18 03:25 PM, Jeff Johnson wrote:
+> Greetings,
+>
+> Does anyone have an effective way of testing SAS cabling in a Linux
+> environment without using a block storage device?
+>
+> Something like reading/writing to a buffer in an expander (LSI). Something
+> that could stress all four lanes of a multilane cable. Like a SAS equivalent of
+> a floodping between a SAS initiator and a SAS expander to stress the cable.
 
-Does anyone have an effective way of testing SAS cabling in a Linux
-environment without using a block storage device?
+Jeff,
+For SAS targets you could use sg_senddiag (sg3_utils)
+to put one or more phys in test/training mode. In
+the sg3_utils examples directory there are some
+templates (e.g. sdiag_sas_p0_cjtpat.txt). [See
+spl4r02.pdf section 9.2.9.2]
 
-Something like reading/writing to a buffer in an expander (LSI). Something
-that could stress all four lanes of a multilane cable. Like a SAS 
-equivalent of a floodping between a SAS initiator and a SAS expander to 
-stress the cable.
+For expander phys you might use smp_phy_test to put one
+or more in test/training mode. I'm not aware of a SCSI
+loopback test in which the remote end is an expander ***.
+[See spl4r02.pdf section 9.4.3.29]
 
-Thanks,
+On a 4 wide cable between a HBA and an expander with a
+SAS disk beyond you might put 3 of those expander phys in
+training mode then to to use READ BUFFER on the echo buffer
+in the disk. The SCSI command should squeeze through on
+the remaining path. Then rotate which phy is the "clear"
+path.
 
---Jeff
+My guess is initiator phys can also be put in training mode.
+If so that would involve some LLD specific action.
 
--- 
-------------------------------
-Jeff Johnson
-Co-Founder
-Aeon Computing
+Doug Gilbert
 
-jeff dot johnson at aeoncomputing.com
-www.aeoncomputing.com
-t: 858-412-3810 x1001
 
-4170 Morena Boulevard, Suite D - San Diego, CA 92117
+*** checked two LSI expanders (one SAS-2, the other SAS-3)
+     and they don't support the SCSI READ BUFFER command on
+     the SES target that is connected to a virtual expander
+     phy. Might be useful if they did.
 
-High-performance Computing / Lustre Filesystems / Scale-out Storage
 
