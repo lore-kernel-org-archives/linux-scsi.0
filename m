@@ -1,22 +1,22 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/7] aacraid: performance improvement changes
-Date: Wed, 18 Mar 2015 12:27:12 +0100
-Message-ID: <55096110.6010606@suse.de>
-References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1425458313-1956-7-git-send-email-Mahesh.Rajashekhara@pmcs.com> <307F48E420013C4E85C75C93E532197AB8092057@BBYEXM01.pmc-sierra.internal>
+Subject: Re: [PATCH 7/7] aacraid: AIF raw device remove support
+Date: Wed, 18 Mar 2015 12:29:20 +0100
+Message-ID: <55096190.50609@suse.de>
+References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1425458313-1956-8-git-send-email-Mahesh.Rajashekhara@pmcs.com> <307F48E420013C4E85C75C93E532197AB809206B@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43648 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:43907 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755461AbbCRL1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Mar 2015 07:27:14 -0400
-In-Reply-To: <307F48E420013C4E85C75C93E532197AB8092057@BBYEXM01.pmc-sierra.internal>
+	id S1754850AbbCRL3W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Mar 2015 07:29:22 -0400
+In-Reply-To: <307F48E420013C4E85C75C93E532197AB809206B@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Achim Leubner <Achim.Leubner@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 03/17/2015 04:27 PM, Achim Leubner wrote:
+On 03/17/2015 04:28 PM, Achim Leubner wrote:
 > Reviewed-by: Achim Leubner <Achim.Leubner@pmcs.com>
 >=20
 >=20
@@ -26,12 +26,17 @@ On 03/17/2015 04:27 PM, Achim Leubner wrote:
 > To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
 > Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rajinikanth Pa=
 ndurangan; Rich Bono; Mahesh Rajashekhara
-> Subject: [PATCH 6/7] aacraid: performance improvement changes
+> Subject: [PATCH 7/7] aacraid: AIF raw device remove support
 >=20
-> Add performance improvement changes.
+> Add AIF raw device remove support
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+But please split off the unrelated patches from the VPD support one.
+And I would recommend to split off the version increase into a
+separate one, too, to be applied at the end.
+Otherwise it'll be hard to track which patches belong to which version.
 
 Cheers,
 
