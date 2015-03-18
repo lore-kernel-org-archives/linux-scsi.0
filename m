@@ -1,17 +1,17 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/7] aacraid: MSI-x support
-Date: Wed, 18 Mar 2015 12:18:44 +0100
-Message-ID: <55095F14.8070102@suse.de>
-References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1425458313-1956-5-git-send-email-Mahesh.Rajashekhara@pmcs.com> <307F48E420013C4E85C75C93E532197AB8092042@BBYEXM01.pmc-sierra.internal>
+Subject: Re: [PATCH 5/7] aacraid: vpd page code 0x83 support
+Date: Wed, 18 Mar 2015 12:26:01 +0100
+Message-ID: <550960C9.4090804@suse.de>
+References: <1425458313-1956-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1425458313-1956-6-git-send-email-Mahesh.Rajashekhara@pmcs.com> <307F48E420013C4E85C75C93E532197AB809204C@BBYEXM01.pmc-sierra.internal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43332 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:43601 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755520AbbCRLSr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Mar 2015 07:18:47 -0400
-In-Reply-To: <307F48E420013C4E85C75C93E532197AB8092042@BBYEXM01.pmc-sierra.internal>
+	id S1755603AbbCRL0D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Mar 2015 07:26:03 -0400
+In-Reply-To: <307F48E420013C4E85C75C93E532197AB809204C@BBYEXM01.pmc-sierra.internal>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Achim Leubner <Achim.Leubner@pmcs.com>, Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
@@ -26,376 +26,557 @@ On 03/17/2015 04:27 PM, Achim Leubner wrote:
 > To: JBottomley@Parallels.com; linux-scsi@vger.kernel.org
 > Cc: aacraid@pmc-sierra.com; Harry Yang; Achim Leubner; Rajinikanth Pa=
 ndurangan; Rich Bono; Mahesh Rajashekhara
-> Subject: [PATCH 4/7] aacraid: MSI-x support
+> Subject: [PATCH 5/7] aacraid: vpd page code 0x83 support
 >=20
-> Add MSI-x interrupt mode support.
+> Add vpd page code 0x83 support
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 > ---
->  drivers/scsi/aacraid/aachba.c   |    6 +-
->  drivers/scsi/aacraid/aacraid.h  |   79 ++++++++-
->  drivers/scsi/aacraid/comminit.c |   86 +++++++++-
->  drivers/scsi/aacraid/commsup.c  |   19 ++-
->  drivers/scsi/aacraid/dpcsup.c   |    9 +-
->  drivers/scsi/aacraid/linit.c    |   18 ++-
->  drivers/scsi/aacraid/src.c      |  365 +++++++++++++++++++++++++++++=
-----------
->  7 files changed, 473 insertions(+), 109 deletions(-)
+>  drivers/scsi/aacraid/aachba.c   |  154 +++++++++++++++++++++++++++++=
++++++++---
+>  drivers/scsi/aacraid/aacraid.h  |    4 +
+>  drivers/scsi/aacraid/comminit.c |    8 ++-
+>  drivers/scsi/aacraid/commsup.c  |   12 +---
+>  drivers/scsi/aacraid/linit.c    |   20 +----
+>  drivers/scsi/aacraid/src.c      |   34 +++++++--
+>  6 files changed, 185 insertions(+), 47 deletions(-)
 >=20
 > diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aac=
-hba.c index 0819644..eb524e6 100644
+hba.c index eb524e6..3e4e0c8 100644
 > --- a/drivers/scsi/aacraid/aachba.c
 > +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -473,7 +473,7 @@ static void get_container_name_callback(void *con=
-text, struct fib * fibptr)
->  	if ((le32_to_cpu(get_name_reply->status) =3D=3D CT_OK)
->  	 && (get_name_reply->data[0] !=3D '\0')) {
->  		char *sp =3D get_name_reply->data;
-> -		sp[sizeof(((struct aac_get_name_resp *)NULL)->data)-1] =3D '\0';
-> +		sp[sizeof(((struct aac_get_name_resp *)NULL)->data)] =3D '\0';
->  		while (*sp =3D=3D ' ')
->  			++sp;
->  		if (*sp) {
-> @@ -613,7 +613,9 @@ static void _aac_probe_container1(void * context,=
- struct fib * fibptr)
->  	int status;
-> =20
->  	dresp =3D (struct aac_mount *) fib_data(fibptr);
-> -	dresp->mnt[0].capacityhigh =3D 0;
-> +	if (!(fibptr->dev->supplement_adapter_info.SupportedOptions2 &
-> +	    AAC_OPTION_VARIABLE_BLOCK_SIZE))
-> +		dresp->mnt[0].capacityhigh =3D 0;
->  	if ((le32_to_cpu(dresp->status) !=3D ST_OK) ||
->  	    (le32_to_cpu(dresp->mnt[0].vol) !=3D CT_NONE)) {
->  		_aac_probe_container2(context, fibptr); diff --git a/drivers/scsi/=
-aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h index 93579f3..c162a=
-65 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -6,11 +6,61 @@
->  #define nblank(x) _nblank(x)[0]
-> =20
->  #include <linux/interrupt.h>
-> +#include <linux/pci.h>
-> =20
->  /*------------------------------------------------------------------=
-------------
->   *              D E F I N E S
->   *------------------------------------------------------------------=
-----------*/
-> =20
-> +#define AAC_MAX_MSIX		32	/* vectors */
-> +#define AAC_PCI_MSI_ENABLE	0x8000
-> +
-> +enum {
-> +	AAC_ENABLE_INTERRUPT	=3D 0x0,
-> +	AAC_DISABLE_INTERRUPT,
-> +	AAC_ENABLE_MSIX,
-> +	AAC_DISABLE_MSIX,
-> +	AAC_CLEAR_AIF_BIT,
-> +	AAC_CLEAR_SYNC_BIT,
-> +	AAC_ENABLE_INTX
-> +};
-> +
-> +#define AAC_INT_MODE_INTX		(1<<0)
-> +#define AAC_INT_MODE_MSI		(1<<1)
-> +#define AAC_INT_MODE_AIF		(1<<2)
-> +#define AAC_INT_MODE_SYNC		(1<<3)
-> +
-> +#define AAC_INT_ENABLE_TYPE1_INTX	0xfffffffb
-> +#define AAC_INT_ENABLE_TYPE1_MSIX	0xfffffffa
-> +#define AAC_INT_DISABLE_ALL		0xffffffff
-> +
-> +/* Bit definitions in IOA->Host Interrupt Register */
-> +#define PMC_TRANSITION_TO_OPERATIONAL	(0x80000000 >> 0)
-> +#define PMC_IOARCB_TRANSFER_FAILED	(0x80000000 >> 3)
-> +#define PMC_IOA_UNIT_CHECK		(0x80000000 >> 4)
-> +#define PMC_NO_HOST_RRQ_FOR_CMD_RESPONSE (0x80000000 >> 5)
-> +#define PMC_CRITICAL_IOA_OP_IN_PROGRESS	(0x80000000 >> 6)
-> +#define PMC_IOARRIN_LOST		(0x80000000 >> 27)
-> +#define PMC_SYSTEM_BUS_MMIO_ERROR	(0x80000000 >> 28)
-> +#define PMC_IOA_PROCESSOR_IN_ERROR_STATE (0x80000000 >> 29)
-> +#define PMC_HOST_RRQ_VALID		(0x80000000 >> 30)
-> +#define PMC_OPERATIONAL_STATUS		(0x80000000 >> 0)
-> +#define PMC_ALLOW_MSIX_VECTOR0		(0x80000000 >> 31)
-> +
-How positively curious.
-Typically you define a git mask by shifting _left_, not right.
-
-> +#define PMC_IOA_ERROR_INTERRUPTS	(PMC_IOARCB_TRANSFER_FAILED | \
-> +					 PMC_IOA_UNIT_CHECK | \
-> +					 PMC_NO_HOST_RRQ_FOR_CMD_RESPONSE | \
-> +					 PMC_IOARRIN_LOST | \
-> +					 PMC_SYSTEM_BUS_MMIO_ERROR | \
-> +					 PMC_IOA_PROCESSOR_IN_ERROR_STATE)
-> +
-> +#define PMC_ALL_INTERRUPT_BITS		(PMC_IOA_ERROR_INTERRUPTS | \
-> +					 PMC_HOST_RRQ_VALID | \
-> +					 PMC_TRANSITION_TO_OPERATIONAL | \
-> +					 PMC_ALLOW_MSIX_VECTOR0)
-> +#define	PMC_GLOBAL_INT_BIT2		0x00000004
-> +#define	PMC_GLOBAL_INT_BIT0		0x00000001
-> +
->  #ifndef AAC_DRIVER_BUILD
->  # define AAC_DRIVER_BUILD 30300
->  # define AAC_DRIVER_BRANCH "-ms"
-> @@ -36,6 +86,7 @@
->  #define CONTAINER_TO_ID(cont)		(cont)
->  #define CONTAINER_TO_LUN(cont)		(0)
-> =20
-> +#define PMC_DEVICE_S6	0x28b
->  #define PMC_DEVICE_S7	0x28c
->  #define PMC_DEVICE_S8	0x28d
->  #define PMC_DEVICE_S9	0x28f
-> @@ -434,7 +485,7 @@ enum fib_xfer_state {  struct aac_init  {
->  	__le32	InitStructRevision;
-> -	__le32	MiniPortRevision;
-> +	__le32	NoOfMSIXVectors;
->  	__le32	fsrev;
->  	__le32	CommHeaderAddress;
->  	__le32	FastIoCommAreaAddress;
-> @@ -755,7 +806,8 @@ struct rkt_registers {
-> =20
->  struct src_mu_registers {
->  				/*	PCI*| Name */
-> -	__le32	reserved0[8];	/*	00h | Reserved */
-> +	__le32	reserved0[6];	/*	00h | Reserved */
-> +	__le32	IOAR[2];	/*	18h | IOA->host interrupt register */
->  	__le32	IDR;		/*	20h | Inbound Doorbell Register */
->  	__le32	IISR;		/*	24h | Inbound Int. Status Register */
->  	__le32	reserved1[3];	/*	28h | Reserved */
-> @@ -767,17 +819,18 @@ struct src_mu_registers {
->  	__le32	OMR;		/*	bch | Outbound Message Register */
->  	__le32	IQ_L;		/*  c0h | Inbound Queue (Low address) */
->  	__le32	IQ_H;		/*  c4h | Inbound Queue (High address) */
-> +	__le32	ODR_MSI;	/*  c8h | MSI register for sync./AIF */
+> @@ -163,6 +163,45 @@ struct inquiry_data {
+>  	u8 inqd_prl[4];	/* Product Revision Level */
 >  };
 > =20
->  struct src_registers {
-> -	struct src_mu_registers MUnit;	/* 00h - c7h */
-> +	struct src_mu_registers MUnit;	/* 00h - cbh */
->  	union {
->  		struct {
-> -			__le32 reserved1[130790];	/* c8h - 7fc5fh */
-> +			__le32 reserved1[130789];	/* cch - 7fc5fh */
->  			struct src_inbound IndexRegs;	/* 7fc60h */
->  		} tupelo;
->  		struct {
-> -			__le32 reserved1[974];		/* c8h - fffh */
-> +			__le32 reserved1[973];		/* cch - fffh */
->  			struct src_inbound IndexRegs;	/* 1000h */
->  		} denali;
->  	} u;
-> @@ -1028,6 +1081,11 @@ struct aac_bus_info_response {
->  #define AAC_OPT_NEW_COMM_TYPE3		cpu_to_le32(1<<30)
->  #define AAC_OPT_NEW_COMM_TYPE4		cpu_to_le32(1<<31)
+> +/* Added for VPD 0x83 */
+> +typedef struct {
+> +	u8 CodeSet:4;	/* VPD_CODE_SET */
+> +	u8 Reserved:4;
+> +	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
+> +	u8 Reserved2:4;
+> +	u8 Reserved3;
+> +	u8 IdentifierLength;
+> +	u8 VendId[8];
+> +	u8 ProductId[16];
+> +	u8 SerialNumber[8];	/* SN in ASCII */
+> +} TVPD_ID_Descriptor_Type_1;
+> +
+> +typedef struct {
+> +	u8 CodeSet:4;	/* VPD_CODE_SET */
+> +	u8 Reserved:4;
+> +	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
+> +	u8 Reserved2:4;
+> +	u8 Reserved3;
+> +	u8 IdentifierLength;
+> +	struct TEU64Id {
+> +		u32 Serial;
+> +		 /* The serial number supposed to be 40 bits,
+> +		  * bit we only support 32, so make the last byte zero. */
+> +		u8 Reserved;
+> +		u8 VendId[3];
+> +	} EU64Id;
+> +} TVPD_ID_Descriptor_Type_2;
+> +
+> +typedef struct {
+> +	u8 DeviceType:5;
+> +	u8 DeviceTypeQualifier:3;
+> +	u8 PageCode;
+> +	u8 Reserved;
+> +	u8 PageLength;
+> +	TVPD_ID_Descriptor_Type_1 IdDescriptorType1;
+> +	TVPD_ID_Descriptor_Type_2 IdDescriptorType2; } TVPD_Page83;
+> +
+>  /*
+>   *              M O D U L E   G L O B A L S
+>   */
+> @@ -420,6 +459,9 @@ int aac_get_containers(struct aac_dev *dev)
+>  	if (status >=3D 0) {
+>  		dresp =3D (struct aac_get_container_count_resp *)fib_data(fibptr);
+>  		maximum_num_containers =3D le32_to_cpu(dresp->ContainerSwitchEntri=
+es);
+> +		if (fibptr->dev->supplement_adapter_info.SupportedOptions2 &
+> +		    AAC_OPTION_SUPPORTED_240_VOLUMES)
+> +			maximum_num_containers =3D le32_to_cpu(dresp->MaxSimpleVolumes);
+>  		aac_fib_complete(fibptr);
+>  	}
+>  	/* FIB should be freed only after getting the response from the F/W=
+ */ @@ -889,14 +931,81 @@ static void get_container_serial_callback(voi=
+d *context, struct fib * fibptr)
+
+Garbled patch?
+
+>  	get_serial_reply =3D (struct aac_get_serial_resp *) fib_data(fibptr=
+);
+>  	/* Failure is irrelevant, using default value instead */
+>  	if (le32_to_cpu(get_serial_reply->status) =3D=3D CT_OK) {
+> -		char sp[13];
+> -		/* EVPD bit set */
+> -		sp[0] =3D INQD_PDT_DA;
+> -		sp[1] =3D scsicmd->cmnd[2];
+> -		sp[2] =3D 0;
+> -		sp[3] =3D snprintf(sp+4, sizeof(sp)-4, "%08X",
+> -		  le32_to_cpu(get_serial_reply->uid));
+> -		scsi_sg_copy_from_buffer(scsicmd, sp, sizeof(sp));
+> +		/*Check to see if it's for VPD 0x83 or 0x80 */
+> +		if (scsicmd->cmnd[2] =3D=3D 0x83) {
+> +			/* vpd page 0x83 - Device Identification Page */
+> +			int i;
+> +			TVPD_Page83 VPDPage83Data;
+> +
+> +			memset(((u8 *)&VPDPage83Data), 0,
+> +			       sizeof(VPDPage83Data));
+> +
+> +			/* DIRECT_ACCESS_DEVIC */
+> +			VPDPage83Data.DeviceType =3D 0;
+> +			/* DEVICE_CONNECTED */
+> +			VPDPage83Data.DeviceTypeQualifier =3D 0;
+> +			/* VPD_DEVICE_IDENTIFIERS */
+> +			VPDPage83Data.PageCode =3D 0x83;
+> +			VPDPage83Data.Reserved =3D 0;
+> +			VPDPage83Data.PageLength =3D sizeof(VPDPage83Data.IdDescriptorTyp=
+e1) +
+> +				sizeof(VPDPage83Data.IdDescriptorType2);
+> +
+> +			/* T10 Vendor Identifier Field Format */
+> +			/* VpdCodeSetAscii */
+> +			VPDPage83Data.IdDescriptorType1.CodeSet =3D 2;
+> +			/* VpdIdentifierTypeVendorId */
+> +			VPDPage83Data.IdDescriptorType1.IdentifierType =3D 1;
+> +			VPDPage83Data.IdDescriptorType1.IdentifierLength =3D=20
+> +sizeof(VPDPage83Data.IdDescriptorType1) - 4;
+> +
+Wrong indentation.
+
+> +			/* "ADAPTEC " for adaptec */
+> +			memcpy(VPDPage83Data.IdDescriptorType1.VendId, "ADAPTEC ",
+> +				sizeof(VPDPage83Data.IdDescriptorType1.VendId));
+> +			memcpy(VPDPage83Data.IdDescriptorType1.ProductId, "ARRAY         =
+  ",
+> +				sizeof(VPDPage83Data.IdDescriptorType1.ProductId));
+> +
+> +			/* Convert to ascii based serial number.
+> +			 * The LSB is the the end.
+> +			 */
+> +			for (i =3D 0; i < 8; i++) {
+> +				u8 temp =3D (u8)((get_serial_reply->uid >> ((7 - i) * 4)) & 0xF)=
+;
+> +				if (temp  > 0x9) {
+> +					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =3D 'A' + (temp=
+ - 0xA);
+> +				} else {
+> +					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =3D '0' + temp;
+> +				}
+> +			}
+> +
+> +			/* EUI-64 Vendor Identifier Field Format,
+> +			 * 24 bits for VendId and 40 bits for SN.
+> +			 */
+> +			/* VpdCodeSetBinary */
+> +			VPDPage83Data.IdDescriptorType2.CodeSet =3D 1;
+> +			/* VpdIdentifierTypeEUI64 */
+> +			VPDPage83Data.IdDescriptorType2.IdentifierType =3D 2;
+> +			VPDPage83Data.IdDescriptorType2.IdentifierLength =3D=20
+> +sizeof(VPDPage83Data.IdDescriptorType2) - 4;
+> +
+Same here.
+> +			/* 0x0000055 for IBM, 0x0000D0 for Adaptec */
+
+Do you ever use the IBM Vendor ID?
+If not, why do you mention it here?
+
+> +			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[0] =3D 0xD0;
+> +			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[1] =3D 0;
+> +			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[2] =3D 0;
+> +
+> +			VPDPage83Data.IdDescriptorType2.EU64Id.Serial =3D get_serial_repl=
+y->uid;
+> +			VPDPage83Data.IdDescriptorType2.EU64Id.Reserved =3D 0;
+> +
+> +			/* Move the inquiry data to the response buffer. */
+> +			scsi_sg_copy_from_buffer(scsicmd, &VPDPage83Data,
+> +						 sizeof(VPDPage83Data));
+> +		} else {
+> +			/* It must be for VPD 0x80 */
+> +			char sp[13];
+> +			/* EVPD bit set */
+> +			sp[0] =3D INQD_PDT_DA;
+> +			sp[1] =3D scsicmd->cmnd[2];
+> +			sp[2] =3D 0;
+> +			sp[3] =3D snprintf(sp+4, sizeof(sp)-4, "%08X",
+> +				le32_to_cpu(get_serial_reply->uid));
+> +			scsi_sg_copy_from_buffer(scsicmd, sp, sizeof(sp));
+> +		}
+>  	}
 > =20
-> +/* MSIX context */
-> +struct aac_msix_ctx {
-> +	int		vector_no;
-> +	struct aac_dev	*dev;
-> +};
+>  	scsicmd->result =3D DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT=
+_GOOD; @@ -2302,9 +2411,10 @@ int aac_scsi_cmd(struct scsi_cmnd * scsic=
+md)
+>  			  INQD_PDT_PROC : INQD_PDT_DA;
+>  			if (scsicmd->cmnd[2] =3D=3D 0) {
+>  				/* supported vital product data pages */
+> -				arr[3] =3D 2;
+> +				arr[3] =3D 3;
+>  				arr[4] =3D 0x0;
+>  				arr[5] =3D 0x80;
+> +				arr[6] =3D 0x83;
+>  				arr[1] =3D scsicmd->cmnd[2];
+>  				scsi_sg_copy_from_buffer(scsicmd, &inq_data,
+>  							 sizeof(inq_data));
+> @@ -2323,6 +2433,16 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+>  				/* SLES 10 SP1 special */
+Gods. Are we still in there?
+I guess it's time to remove that, at least the comment ...
+
+>  				scsicmd->result =3D DID_OK << 16 |
+>  				  COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
+> +			} else if (scsicmd->cmnd[2] =3D=3D 0x83) {
+> +				/* vpd page 0x83 - Device Identification Page */
+> +				char *sno =3D (char *)&inq_data;
+> +				sno[3] =3D setinqserial(dev, &sno[4],
+> +						      scmd_id(scsicmd));
+> +				if (aac_wwn !=3D 2)
+> +					return aac_get_container_serial(
+> +						scsicmd);
+> +				scsicmd->result =3D DID_OK << 16 |
+> +				  COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
+>  			} else {
+>  				/* vpd page not implemented */
+>  				scsicmd->result =3D DID_OK << 16 |
+> @@ -2468,6 +2588,15 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+>  			mpd.bd.block_length[0] =3D (fsa_dev_ptr[cid].block_size >> 16) & =
+0xff;
+>  			mpd.bd.block_length[1] =3D (fsa_dev_ptr[cid].block_size >> 8) &  =
+0xff;
+>  			mpd.bd.block_length[2] =3D fsa_dev_ptr[cid].block_size  & 0xff;
+> +
+> +			mpd.mpc_buf[0] =3D scsicmd->cmnd[2];
+> +			if (scsicmd->cmnd[2] =3D=3D 0x1C) {
+> +				mpd.mpc_buf[1] =3D 0xa;	/* page length */
+> +				mpd.hd.data_length =3D 23;	/* Mode data length */
+> +			} else {
+> +				mpd.hd.data_length =3D 15;	/* Mode data length */
+> +			}
+> +
+>  			if (capacity > 0xffffff) {
+>  				mpd.bd.block_count[0] =3D 0xff;
+>  				mpd.bd.block_count[1] =3D 0xff;
+> @@ -2486,9 +2615,12 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+>  			mpd.mpc_buf[2] =3D ((aac_cache & 6) =3D=3D 2)
+>  				? 0 : 0x04; /* WCE */
+>  			mode_buf_length =3D sizeof(mpd);
+> -			if (mode_buf_length > scsicmd->cmnd[4])
+> -				mode_buf_length =3D scsicmd->cmnd[4];
+>  		}
+> +
+> +		if (mode_buf_length > scsicmd->cmnd[4])
+> +			mode_buf_length =3D scsicmd->cmnd[4];
+> +		else
+> +			mode_buf_length =3D sizeof(mpd);
+>  		scsi_sg_copy_from_buffer(scsicmd, (char *)&mpd, mode_buf_length);
+>  		scsicmd->result =3D DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STA=
+T_GOOD;
+>  		scsicmd->scsi_done(scsicmd);
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aa=
+craid.h index c162a65..a37762e 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -1015,6 +1015,7 @@ struct aac_supplement_adapter_info
+>  #define AAC_OPTION_POWER_MANAGEMENT	cpu_to_le32(0x00000004)
+>  #define AAC_OPTION_DOORBELL_RESET	cpu_to_le32(0x00004000)
+>  #define AAC_OPTION_VARIABLE_BLOCK_SIZE	cpu_to_le32(0x00040000) /* 4K=
+B sector size */
+> +#define AAC_OPTION_SUPPORTED_240_VOLUMES	cpu_to_le32(0x10000000)
+>  #define AAC_SIS_VERSION_V3	3
+>  #define AAC_SIS_SLOT_UNKNOWN	0xFF
 > =20
->  struct aac_dev
->  {
-> @@ -1083,8 +1141,9 @@ struct aac_dev
->  						 * if AAC_COMM_MESSAGE_TYPE1 */
-> =20
->  	dma_addr_t		host_rrq_pa;	/* phys. address */
-> -	u32			host_rrq_idx;	/* index into rrq buffer */
-> -
-> +	u32			host_rrq_idx[AAC_MAX_MSIX];	/* index into rrq buffer */
-> +	atomic_t		rrq_outstanding[AAC_MAX_MSIX];
-> +	u32			fibs_pushed_no;
->  	struct pci_dev		*pdev;		/* Our PCI interface */
->  	void *			printfbuf;	/* pointer to buffer used for printf's from the=
- adapter */
->  	void *			comm_addr;	/* Base address of Comm area */
-> @@ -1153,6 +1212,11 @@ struct aac_dev
+> @@ -1212,11 +1213,13 @@ struct aac_dev
 >  	int			sync_mode;
 >  	struct fib		*sync_fib;
 >  	struct list_head	sync_fib_list;
-> +	u32			max_msix;	/* max. MSI-X vectors */
-> +	u32			vector_cap;	/* MSI-X vector capab.*/
-> +	int			msi_enabled;	/* MSI/MSI-X enabled */
-> +	struct msix_entry	msixentry[AAC_MAX_MSIX];
-> +	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+> +	u32			doorbell_mask;	/* from GET_ADAPTER_PROP */
+>  	u32			max_msix;	/* max. MSI-X vectors */
+>  	u32			vector_cap;	/* MSI-X vector capab.*/
+>  	int			msi_enabled;	/* MSI/MSI-X enabled */
+>  	struct msix_entry	msixentry[AAC_MAX_MSIX];
+>  	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+> +	u8			adapter_shutdown;
 >  };
 > =20
 >  #define aac_adapter_interrupt(dev) \
-> @@ -2035,6 +2099,7 @@ void aac_consumer_free(struct aac_dev * dev, st=
-ruct aac_queue * q, u32 qnum);  int aac_fib_complete(struct fib * conte=
-xt);  #define fib_data(fibctx) ((void *)(fibctx)->hw_fib_va->data)  str=
-uct aac_dev *aac_init_adapter(struct aac_dev *dev);
-> +void aac_src_access_devreg(struct aac_dev *dev, int mode);
->  int aac_get_config_status(struct aac_dev *dev, int commit_flag);  in=
-t aac_get_containers(struct aac_dev *dev);  int aac_scsi_cmd(struct scs=
-i_cmnd *cmd); diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/sc=
-si/aacraid/comminit.c index 177b094..29c35c8 100644
+> @@ -1749,6 +1752,7 @@ struct aac_get_container_count_resp {
+>  	__le32		MaxContainers;
+>  	__le32		ContainerSwitchEntries;
+>  	__le32		MaxPartitions;
+> +	__le32		MaxSimpleVolumes;
+>  };
+> =20
+> =20
+What exactly has this to do with VPD page support?
+Please split if off into a separate patch.
+
+> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/c=
+omminit.c index 29c35c8..c3e13ae 100644
 > --- a/drivers/scsi/aacraid/comminit.c
 > +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -43,6 +43,8 @@
-> =20
->  #include "aacraid.h"
-> =20
-> +static void aac_define_int_mode(struct aac_dev *dev);
-> +
->  struct aac_common aac_config =3D {
->  	.irq_mod =3D 1
->  };
-> @@ -91,7 +93,7 @@ static int aac_alloc_comm(struct aac_dev *dev, void=
- **commaddr, unsigned long co
->  	init->InitStructRevision =3D cpu_to_le32(ADAPTER_INIT_STRUCT_REVISI=
-ON);
->  	if (dev->max_fib_size !=3D sizeof(struct hw_fib))
->  		init->InitStructRevision =3D cpu_to_le32(ADAPTER_INIT_STRUCT_REVIS=
-ION_4);
-> -	init->MiniPortRevision =3D cpu_to_le32(Sa_MINIPORT_REVISION);
-> +	init->NoOfMSIXVectors =3D cpu_to_le32(Sa_MINIPORT_REVISION);
->  	init->fsrev =3D cpu_to_le32(dev->fsrev);
-> =20
->  	/*
-Now that you switched the field definition from 'MiniPortRevision'
-to 'NoOfMSIXVectors', shouldn't you rather introduce a
-'Sa_MSIXVECTORS' here instead of using the old definitions?
-
-> @@ -140,7 +142,7 @@ static int aac_alloc_comm(struct aac_dev *dev, vo=
-id **commaddr, unsigned long co
->  			INITFLAGS_NEW_COMM_TYPE2_SUPPORTED | INITFLAGS_FAST_JBOD_SUPPORTE=
-D);
->  		init->HostRRQ_AddrHigh =3D cpu_to_le32((u32)((u64)dev->host_rrq_pa=
- >> 32));
->  		init->HostRRQ_AddrLow =3D cpu_to_le32((u32)(dev->host_rrq_pa & 0xf=
-fffffff));
-> -		init->MiniPortRevision =3D cpu_to_le32(0L);		/* number of MSI-X */
-> +		init->NoOfMSIXVectors =3D cpu_to_le32(dev->max_msix);	/* number of=
- MSI-X */
->  		dprintk((KERN_WARNING"aacraid: New Comm Interface type2 enabled\n"=
-));
->  	}
-> =20
-> @@ -228,6 +230,11 @@ int aac_send_shutdown(struct aac_dev * dev)
+> @@ -53,7 +53,7 @@ static int aac_alloc_comm(struct aac_dev *dev, void=
+ **commaddr, unsigned long co  {
+>  	unsigned char *base;
+>  	unsigned long size, align;
+> -	const unsigned long fibsize =3D 4096;
+> +	const unsigned long fibsize =3D dev->max_fib_size;
+>  	const unsigned long printfbufsiz =3D 256;
+>  	unsigned long host_rrq_size =3D 0;
+>  	struct aac_init *init;
+> @@ -230,6 +230,7 @@ int aac_send_shutdown(struct aac_dev * dev)
 >  	/* FIB should be freed only after getting the response from the F/W=
  */
 >  	if (status !=3D -ERESTARTSYS)
 >  		aac_fib_free(fibctx);
-> +	if ((dev->pdev->device =3D=3D PMC_DEVICE_S7 ||
-> +	     dev->pdev->device =3D=3D PMC_DEVICE_S8 ||
-> +	     dev->pdev->device =3D=3D PMC_DEVICE_S9) &&
-> +	     dev->msi_enabled)
-> +		aac_src_access_devreg(dev, AAC_ENABLE_INTX);
->  	return status;
->  }
+> +	dev->adapter_shutdown =3D 1;
+>  	if ((dev->pdev->device =3D=3D PMC_DEVICE_S7 ||
+>  	     dev->pdev->device =3D=3D PMC_DEVICE_S8 ||
+>  	     dev->pdev->device =3D=3D PMC_DEVICE_S9) && @@ -357,8 +358,9 @@=
+ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+>  	dev->raw_io_interface =3D dev->raw_io_64 =3D 0;
 > =20
-> @@ -388,6 +395,8 @@ struct aac_dev *aac_init_adapter(struct aac_dev *=
+>  	if ((!aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES,
+> -		0, 0, 0, 0, 0, 0, status+0, status+1, status+2, NULL, NULL)) &&
+> +		0, 0, 0, 0, 0, 0, status+0, status+1, status+2, status+3, NULL)) &=
+&
+>  	 		(status[0] =3D=3D 0x00000001)) {
+> +		dev->doorbell_mask =3D status[3];
+>  		if (status[1] & le32_to_cpu(AAC_OPT_NEW_COMM_64))
+>  			dev->raw_io_64 =3D 1;
+>  		dev->sync_mode =3D aac_sync_mode;
+> @@ -397,6 +399,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *=
 dev)
->  			}
->  		}
 >  	}
-> +	dev->max_msix =3D 0;
-> +	dev->msi_enabled =3D 0;
+>  	dev->max_msix =3D 0;
+>  	dev->msi_enabled =3D 0;
+> +	dev->adapter_shutdown =3D 0;
 >  	if ((!aac_adapter_sync_cmd(dev, GET_COMM_PREFERRED_SETTINGS,
 >  	  0, 0, 0, 0, 0, 0,
->  	  status+0, status+1, status+2, status+3, status+4)) @@ -461,6 +470=
-,11 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
->  	if (host->can_queue > AAC_NUM_IO_FIB)
->  		host->can_queue =3D AAC_NUM_IO_FIB;
+>  	  status+0, status+1, status+2, status+3, status+4)) @@ -508,6 +511=
+,7 @@ static void aac_define_int_mode(struct aac_dev *dev)
 > =20
-> +	if (dev->pdev->device =3D=3D PMC_DEVICE_S6 ||
-> +	    dev->pdev->device =3D=3D PMC_DEVICE_S7 ||
-> +	    dev->pdev->device =3D=3D PMC_DEVICE_S8 ||
-> +	    dev->pdev->device =3D=3D PMC_DEVICE_S9)
-> +		aac_define_int_mode(dev);
+>  	int i, msi_count;
+> =20
+> +	msi_count =3D i =3D 0;
+>  	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
+>  	if (dev->max_msix =3D=3D 0 ||
+>  	    dev->pdev->device =3D=3D PMC_DEVICE_S6 || diff --git a/drivers/=
+scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c index 83c5d3f..=
+2bed445 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -208,14 +208,11 @@ struct fib *aac_fib_alloc(struct aac_dev *dev)
+> =20
+>  void aac_fib_free(struct fib *fibptr)
+>  {
+> -	unsigned long flags, flagsv;
+> +	unsigned long flags;
+> =20
+> -	spin_lock_irqsave(&fibptr->event_lock, flagsv);
+>  	if (fibptr->done =3D=3D 2) {
+> -		spin_unlock_irqrestore(&fibptr->event_lock, flagsv);
+>  		return;
+>  	}
+> -	spin_unlock_irqrestore(&fibptr->event_lock, flagsv);
+> =20
+>  	spin_lock_irqsave(&fibptr->dev->fib_lock, flags);
+>  	if (unlikely(fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)) @@ -775,7=
+ +772,6 @@ int aac_fib_adapter_complete(struct fib *fibptr, unsigned sh=
+ort size)
+> =20
+>  int aac_fib_complete(struct fib *fibptr)  {
+> -	unsigned long flags;
+>  	struct hw_fib * hw_fib =3D fibptr->hw_fib_va;
+> =20
 >  	/*
->  	 *	Ok now init the communication subsystem
+> @@ -798,12 +794,6 @@ int aac_fib_complete(struct fib *fibptr)
+>  	 *	command is complete that we had sent to the adapter and this
+>  	 *	cdb could be reused.
 >  	 */
-> @@ -489,4 +503,70 @@ struct aac_dev *aac_init_adapter(struct aac_dev =
-*dev)
->  	return dev;
->  }
+> -	spin_lock_irqsave(&fibptr->event_lock, flags);
+> -	if (fibptr->done =3D=3D 2) {
+> -		spin_unlock_irqrestore(&fibptr->event_lock, flags);
+> -		return 0;
+> -	}
+> -	spin_unlock_irqrestore(&fibptr->event_lock, flags);
 > =20
-> -   =20
-> +static void aac_define_int_mode(struct aac_dev *dev) {
+>  	if((hw_fib->header.XferState & cpu_to_le32(SentFromHost)) &&
+>  		(hw_fib->header.XferState & cpu_to_le32(AdapterProcessed))) diff -=
+-git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c inde=
+x 7813a9b..4c5ba9e 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -56,7 +56,7 @@
+> =20
+>  #include "aacraid.h"
+> =20
+> -#define AAC_DRIVER_VERSION		"1.2-0"
+> +#define AAC_DRIVER_VERSION		"1.2-1"
+>  #ifndef AAC_DRIVER_BRANCH
+>  #define AAC_DRIVER_BRANCH		""
+>  #endif
+> @@ -65,7 +65,7 @@
+>  #ifdef AAC_DRIVER_BUILD
+>  #define _str(x) #x
+>  #define str(x) _str(x)
+> -#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION "[" str(AAC_DRIVE=
+R_BUILD) "]" AAC_DRIVER_BRANCH
+> +#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION "." str(AAC_DRIVE=
+R_BUILD) "" AAC_DRIVER_BRANCH
+>  #else
+>  #define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION AAC_DRIVER_BRANCH
+>  #endif
+> @@ -253,19 +253,7 @@ static struct aac_driver_ident aac_drivers[] =3D=
+ {
+> =20
+>  static int aac_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(=
+struct scsi_cmnd *))  {
+> -	struct Scsi_Host *host =3D cmd->device->host;
+> -	struct aac_dev *dev =3D (struct aac_dev *)host->hostdata;
+> -	u32 count =3D 0;
+>  	cmd->scsi_done =3D done;
+> -	for (; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+> -		struct fib * fib =3D &dev->fibs[count];
+> -		struct scsi_cmnd * command;
+> -		if (fib->hw_fib_va->header.XferState &&
+> -		    ((command =3D fib->callback_data)) &&
+> -		    (command =3D=3D cmd) &&
+> -		    (cmd->SCp.phase =3D=3D AAC_OWNER_FIRMWARE))
+> -			return 0; /* Already owned by Adapter */
+> -	}
+>  	cmd->SCp.phase =3D AAC_OWNER_LOWLEVEL;
+>  	return (aac_scsi_cmd(cmd) ? FAILED : 0);  } @@ -713,7 +701,9 @@ sta=
+tic long aac_cfg_ioctl(struct file *file,
+>  		unsigned int cmd, unsigned long arg)
+>  {
+>  	int ret;
+> -	if (!capable(CAP_SYS_RAWIO))
+> +	struct aac_dev *aac;
+> +	aac =3D (struct aac_dev *)file->private_data;
+> +	if (!capable(CAP_SYS_RAWIO) || aac->adapter_shutdown)
+>  		return -EPERM;
+>  	mutex_lock(&aac_mutex);
+>  	ret =3D aac_do_ioctl(file->private_data, cmd, (void __user *)arg); =
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c in=
+dex c010248..82ff025 100644
+> --- a/drivers/scsi/aacraid/src.c
+> +++ b/drivers/scsi/aacraid/src.c
+> @@ -200,6 +200,7 @@ static int src_sync_cmd(struct aac_dev *dev, u32 =
+command,
+>  	u32 *status, u32 * r1, u32 * r2, u32 * r3, u32 * r4)  {
+>  	unsigned long start;
+> +	unsigned long delay;
+>  	int ok;
+> =20
+>  	/*
+> @@ -240,10 +241,15 @@ static int src_sync_cmd(struct aac_dev *dev, u3=
+2 command,
+>  		ok =3D 0;
+>  		start =3D jiffies;
+> =20
+> -		/*
+> -		 *	Wait up to 5 minutes
+> -		 */
+> -		while (time_before(jiffies, start+300*HZ)) {
+> +		if (command =3D=3D IOP_RESET_ALWAYS) {
+> +			/* Wait up to 10 sec */
+> +			delay =3D 10*HZ;
+> +		} else {
+> +			/* Wait up to 5 minutes */
+> +			delay =3D 300*HZ;
+> +		}
+> +		while (time_before(jiffies, start+delay)) {
 > +
-> +	int i, msi_count;
-> +
-> +	/* max. vectors from GET_COMM_PREFERRED_SETTINGS */
-> +	if (dev->max_msix =3D=3D 0 ||
-> +	    dev->pdev->device =3D=3D PMC_DEVICE_S6 ||
-> +	    dev->sync_mode) {
-> +		dev->max_msix =3D 1;
-> +		dev->vector_cap =3D dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FI=
-B;
-> +		return;
-> +	}
-> +
-> +	msi_count =3D min(dev->max_msix,
-> +		(unsigned int)num_online_cpus());
-> +
-> +	dev->max_msix =3D msi_count;
-> +
-> +	if (msi_count > AAC_MAX_MSIX)
-> +		msi_count =3D AAC_MAX_MSIX;
-> +
-> +	for (i =3D 0; i < msi_count; i++)
-> +		dev->msixentry[i].entry =3D i;
-> +
-> +	if (msi_count > 1 && pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX=
-))=20
-> +{
-> +
-Braces should be at the same line as the condition.
-
-> +		i =3D pci_enable_msix(dev->pdev, dev->msixentry, msi_count);
-> +		 /* Check how many MSIX vectors are allocated */
-> +		if (i >=3D 0) {
-> +			dev->msi_enabled =3D 1;
-> +			if (i) {
-> +				msi_count =3D i;
-> +				if (pci_enable_msix(dev->pdev, dev->msixentry, msi_count)) {
-> +					dev->msi_enabled =3D 0;
-> +					printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\=
-n",
-> +							dev->name, dev->id, i);
-> +				}
+>  			udelay(5);	/* Delay 5 microseconds to let Mon960 get info. */
+>  			/*
+>  			 *	Mon960 will set doorbell0 bit when it has completed the comman=
+d.
+> @@ -562,10 +568,16 @@ static int aac_src_restart_adapter(struct aac_d=
+ev *dev, int bled)
+>  		if (bled)
+>  			printk(KERN_ERR "%s%d: adapter kernel panic'd %x.\n",
+>  				dev->name, dev->id, bled);
+> +		dev->a_ops.adapter_enable_int =3D aac_src_disable_interrupt;
+>  		bled =3D aac_adapter_sync_cmd(dev, IOP_RESET_ALWAYS,
+>  			0, 0, 0, 0, 0, 0, &var, &reset_mask, NULL, NULL, NULL);
+> -			if (bled || (var !=3D 0x00000001))
+> +			if ((bled || (var !=3D 0x00000001)) && !dev->doorbell_mask)
+>  				return -EINVAL;
+> +			else if (dev->doorbell_mask) {
+> +				reset_mask =3D dev->doorbell_mask;
+> +				bled =3D 0;
+> +				var =3D 0x00000001;
 > +			}
+> =20
+>  		if ((dev->pdev->device =3D=3D PMC_DEVICE_S7 ||
+>  		    dev->pdev->device =3D=3D PMC_DEVICE_S8 || @@ -575,10 +587,13 @=
+@ static int aac_src_restart_adapter(struct aac_dev *dev, int bled)
+>  			msleep(5000); /* Delay 5 seconds */
+>  		}
+> =20
+> -		if (dev->supplement_adapter_info.SupportedOptions2 &
+> -			AAC_OPTION_DOORBELL_RESET) {
+> +		if (!bled && (dev->supplement_adapter_info.SupportedOptions2 &
+> +			AAC_OPTION_DOORBELL_RESET)) {
+>  			src_writel(dev, MUnit.IDR, reset_mask);
+>  			ssleep(45);
 > +		} else {
-> +			dev->msi_enabled =3D 0;
-> +			printk(KERN_ERR "%s%d: MSIX not supported!! Will try MSI 0x%x.\n"=
-,
-> +					dev->name, dev->id, i);
-> +		}
-> +	}
-> +
-> +	if (!dev->msi_enabled) {
-> +		msi_count =3D 1;
-> +		i =3D !pci_enable_msi(dev->pdev);
-> +
-
-Yikes. Please don't do that; use (!i) in the condition instead.
-
-> +		if (i) {
-> +			dev->msi_enabled =3D 1;
-> +			dev->msi =3D 1;
-> +		} else {
-> +			printk(KERN_ERR "%s%d: MSI not supported!! Will try INTx 0x%x.\n"=
-,
-> +					dev->name, dev->id, i);
-> +		}
-> +	}
-> +
-> +	if (!dev->msi_enabled)
-> +		dev->max_msix =3D msi_count =3D 1;
-> +	else {
-> +		if (dev->max_msix > msi_count)
-> +			dev->max_msix =3D msi_count;
-> +	}
-> +	dev->vector_cap =3D (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FI=
-B) /=20
-> +msi_count; }
-Closing braces should be on an individual line.
-
-Also here: please remember to run checkpatch before submitting.
+> +			src_writel(dev, MUnit.IDR, 0x100);
+> +			ssleep(45);
+>  		}
+>  	}
+> =20
+> @@ -600,7 +615,6 @@ int aac_src_select_comm(struct aac_dev *dev, int =
+comm)  {
+>  	switch (comm) {
+>  	case AAC_COMM_MESSAGE:
+> -		dev->a_ops.adapter_enable_int =3D aac_src_enable_interrupt_message=
+;
+>  		dev->a_ops.adapter_intr =3D aac_src_intr_message;
+>  		dev->a_ops.adapter_deliver =3D aac_src_deliver_message;
+>  		break;
+> @@ -698,6 +712,7 @@ int aac_src_init(struct aac_dev *dev)
+>  	 */
+>  	dev->a_ops.adapter_interrupt =3D aac_src_interrupt_adapter;
+>  	dev->a_ops.adapter_disable_int =3D aac_src_disable_interrupt;
+> +	dev->a_ops.adapter_enable_int =3D aac_src_disable_interrupt;
+>  	dev->a_ops.adapter_notify =3D aac_src_notify_adapter;
+>  	dev->a_ops.adapter_sync_cmd =3D src_sync_cmd;
+>  	dev->a_ops.adapter_check_health =3D aac_src_check_health; @@ -735,6=
+ +750,7 @@ int aac_src_init(struct aac_dev *dev)
+>  	dev->dbg_base =3D pci_resource_start(dev->pdev, 2);
+>  	dev->dbg_base_mapped =3D dev->regs.src.bar1;
+>  	dev->dbg_size =3D AAC_MIN_SRC_BAR1_SIZE;
+> +	dev->a_ops.adapter_enable_int =3D aac_src_enable_interrupt_message;
+> =20
+>  	aac_adapter_enable_int(dev);
+> =20
+> @@ -861,6 +877,7 @@ int aac_srcv_init(struct aac_dev *dev)
+>  	 */
+>  	dev->a_ops.adapter_interrupt =3D aac_src_interrupt_adapter;
+>  	dev->a_ops.adapter_disable_int =3D aac_src_disable_interrupt;
+> +	dev->a_ops.adapter_enable_int =3D aac_src_disable_interrupt;
+>  	dev->a_ops.adapter_notify =3D aac_src_notify_adapter;
+>  	dev->a_ops.adapter_sync_cmd =3D src_sync_cmd;
+>  	dev->a_ops.adapter_check_health =3D aac_src_check_health; @@ -913,6=
+ +930,7 @@ int aac_srcv_init(struct aac_dev *dev)
+>  	dev->dbg_base =3D dev->base_start;
+>  	dev->dbg_base_mapped =3D dev->base;
+>  	dev->dbg_size =3D dev->base_size;
+> +	dev->a_ops.adapter_enable_int =3D aac_src_enable_interrupt_message;
+> =20
+>  	aac_adapter_enable_int(dev);
+> =20
+> --
+> 1.7.7.3
+>=20
+Please split off the unrelated bits into a separate patch. Otherwise
+tracking and regression testing becomes really hard.
 
 Cheers,
 
