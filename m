@@ -1,58 +1,38 @@
-From: "Dov Levenglick" <dovl@codeaurora.org>
-Subject: Re: [PATCH v7 3/3] scsi: ufs: add trace events and dump prints for
- debug
-Date: Wed, 18 Mar 2015 13:20:49 -0000
-Message-ID: <3a376180355468208318b10f7516cec8.squirrel@www.codeaurora.org>
-References: <1426175700-23152-1-git-send-email-gbroner@codeaurora.org>
-    <1426175700-23152-4-git-send-email-gbroner@codeaurora.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: OOPS: unplugging western digital passport drive
+Date: Wed, 18 Mar 2015 10:22:28 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1503181013070.1497-100000@iolanthe.rowland.org>
+References: <5508D6B0.3010806@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1426175700-23152-4-git-send-email-gbroner@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Gilad Broner <gbroner@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:50713 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933931AbbCROW3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2015 10:22:29 -0400
+In-Reply-To: <5508D6B0.3010806@stratus.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: =?UTF-8?B?U3RhbmlzxYJhdyBQaXR1Y2hh?= <viraptor@gmail.com>, linux-scsi@vger.kernel.org
 
-> Add trace events to driver to allow monitoring and profilig
-> of activities such as PM suspend/resume, hibernate enter/exit,
-> clock gating and clock scaling up/down.
-> In addition, add UFS host controller register dumps to provide
-> detailed information in case of errors to assist in analysis
-> of issues.
->
-> Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
-> Signed-off-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufs-qcom.c |  53 +++++
->  drivers/scsi/ufs/ufshcd.c   | 511
-> +++++++++++++++++++++++++++++++++++++++++---
->  drivers/scsi/ufs/ufshcd.h   |  49 ++++-
->  drivers/scsi/ufs/ufshci.h   |   1 +
->  include/trace/events/ufs.h  | 213 ++++++++++++++++++
->  5 files changed, 790 insertions(+), 37 deletions(-)
->  create mode 100644 include/trace/events/ufs.h
->
+On Tue, 17 Mar 2015, Joe Lawrence wrote:
 
-[removed ~1500 lines of code]
-Reviewed-by: Dov Levenglick <dovl@codeaurora.org>
+> On 03/11/2015 12:25 AM, Stanis=C5=82aw Pitucha wrote:
+> > Hi linux-scsi,
+> > I've got another case of reproducible crash when unplugging western
+> > digital passport drives. This was mentioned before in
+> > http://www.spinics.net/lists/linux-scsi/msg82603.html
 
+Like it says in that thread, the problem is somehow related to the ses
+driver.  If you remove or blacklist that driver, there won't be any
+more crashes.
 
-> --
-> Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Alan Stern
 
-
-QUALCOMM ISRAEL, on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
