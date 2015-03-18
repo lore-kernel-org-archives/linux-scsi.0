@@ -1,45 +1,56 @@
 From: "Dov Levenglick" <dovl@codeaurora.org>
-Subject: Re: [PATCH v7 1/3] scsi: ufs: add ioctl interface for query request
-Date: Wed, 18 Mar 2015 13:17:49 -0000
-Message-ID: <d69712a63e353d1c085e0a05e78d965b.squirrel@www.codeaurora.org>
+Subject: Re: [PATCH v7 2/3] scsi: ufs: add debugfs for ufs
+Date: Wed, 18 Mar 2015 13:19:05 -0000
+Message-ID: <36562299c4ed69265f622db26afb976a.squirrel@www.codeaurora.org>
 References: <1426175700-23152-1-git-send-email-gbroner@codeaurora.org>
-    <1426175700-23152-2-git-send-email-gbroner@codeaurora.org>
+    <1426175700-23152-3-git-send-email-gbroner@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1426175700-23152-2-git-send-email-gbroner@codeaurora.org>
+In-Reply-To: <1426175700-23152-3-git-send-email-gbroner@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Gilad Broner <gbroner@codeaurora.org>
-Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Noa Rubens <noag@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, "open list:ABI/API" <linux-api@vger.kernel.org>
+Cc: james.bottomley@hansenpartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org, ygardi@codeaurora.org, draviv@codeaurora.org, Lee Susman <lsusman@codeaurora.org>, Raviv Shvili <rshvili@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> From: Dolev Raviv <draviv@codeaurora.org>
+> From: Lee Susman <lsusman@codeaurora.org>
 >
-> This patch exposes the ioctl interface for UFS driver via SCSI device
-> ioctl interface. As of now UFS driver would provide the ioctl for query
-> interface to connected UFS device.
+> Adding debugfs capability for ufshcd.
 >
+> debugfs attributes introduced in this patch:
+>  - View driver/controller runtime data
+>  - Command tag statistics for performance analisis
+>  - Dump device descriptor info
+>  - Track recoverable errors statistics during runtime
+>  - Change UFS power mode during runtime
+>      entry a string in the format 'GGLLMM' where:
+>          G - selected gear
+>          L - number of lanes
+>          M - power mode
+>              (1=fast mode, 2=slow mode, 4=fast-auto mode,
+>               5=slow-auto mode)
+>      First letter is for RX, second is for TX.
+>  - Get/set DME attributes
+>
+> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
 > Signed-off-by: Dolev Raviv <draviv@codeaurora.org>
-> Signed-off-by: Noa Rubens <noag@codeaurora.org>
-> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
 > Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+> Signed-off-by: Raviv Shvili <rshvili@codeaurora.org>
+> Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 > ---
->  drivers/scsi/ufs/ufs.h        |  53 ++--------
->  drivers/scsi/ufs/ufshcd.c     | 226
-> +++++++++++++++++++++++++++++++++++++++++-
->  include/scsi/scsi.h           |   1 +
->  include/uapi/scsi/Kbuild      |   1 +
->  include/uapi/scsi/ufs/Kbuild  |   3 +
->  include/uapi/scsi/ufs/ioctl.h |  57 +++++++++++
->  include/uapi/scsi/ufs/ufs.h   |  66 ++++++++++++
->  7 files changed, 363 insertions(+), 44 deletions(-)
->  create mode 100644 include/uapi/scsi/ufs/Kbuild
->  create mode 100644 include/uapi/scsi/ufs/ioctl.h
->  create mode 100644 include/uapi/scsi/ufs/ufs.h
+>  drivers/scsi/ufs/Makefile      |   1 +
+>  drivers/scsi/ufs/ufs-debugfs.c | 902
+> +++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-debugfs.h |  38 ++
+>  drivers/scsi/ufs/ufshcd.c      | 229 ++++++++++-
+>  drivers/scsi/ufs/ufshcd.h      |  65 +++
+>  drivers/scsi/ufs/ufshci.h      |   2 +
+>  6 files changed, 1225 insertions(+), 12 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
 >
 
-[ removed ~530 lines of code]
+[removed ~1600 lines of code]
 Reviewed-by: Dov Levenglick <dovl@codeaurora.org>
 
 > --
