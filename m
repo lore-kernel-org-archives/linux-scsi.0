@@ -1,32 +1,37 @@
-From: Adrian Palmer <adrian.palmer@seagate.com>
-Subject: SMRFFS - EXT4, and a few stack changes
-Date: Thu, 19 Mar 2015 09:59:06 -0600
-Message-ID: <CAKdFiL4A0yQBL63XbtG_Dvm_eGB11GDqbDQJRQVC91_HDzrKvQ@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 95101] scsi/mpt2sas: setpci reset results in kernel oops
+Date: Thu, 19 Mar 2015 17:33:56 +0000
+Message-ID: <bug-95101-11613-IjqRa8Dy8T@https.bugzilla.kernel.org/>
+References: <bug-95101-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, ext4 development <linux-ext4@vger.kernel.org>, fstests@vger.kernel.org, linux-raid@ver.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48186 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313AbbCSReD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Mar 2015 13:34:03 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 3DFCC2050B
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2015 17:34:02 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id D5D16204FC
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2015 17:33:56 +0000 (UTC)
+In-Reply-To: <bug-95101-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi all;
+https://bugzilla.kernel.org/show_bug.cgi?id=95101
 
-As some have been asking, I've posted some proof-of-concept code at
-(https://github.com/Seagate/SMR_FS-EXT4).
+Nagarajkumar N <nagarajkumar.narayanan@seagate.com> changed:
 
-Let me know any feedback.  We're in the process of planning out the
-schedule moving forward.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |linux-scsi@vger.kernel.org,
+                   |                            |nagarajkumar.narayanan@seag
+                   |                            |ate.com
 
-I'm spamming everyone because of the extent of the changes we've touched.
-
-I'm also copying the RAID list because I want to start a discussion
-about planning RAID solutions on SMR.
-
-
-
-Adrian Palmer
-Firmware Engineer II
-R&D Firmware
-Seagate, Longmont Colorado
-720-684-1307
-adrian.palmer@seagate.com
+-- 
+You are receiving this mail because:
+You are on the CC list for the bug.
