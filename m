@@ -1,69 +1,40 @@
-From: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
-Subject: Re: [PATCH] scsi: fnic: use kernel's '%pM' format option to print
- MAC
-Date: Thu, 19 Mar 2015 21:50:53 -0500
-Message-ID: <550B8B0D.6010901@opengridcomputing.com>
-References: <1398782723-13433-1-git-send-email-andriy.shevchenko@linux.intel.com> <1426787642.14897.375.camel@linux.intel.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: Re: use dedicated storage for scsi_debug LUNs
+Date: Fri, 20 Mar 2015 13:07:31 +0100
+Message-ID: <20150320120731.GA11391@aepfle.de>
+References: <20150305153338.GA16293@aepfle.de>
+ <54F8C923.5010202@interlog.com>
+ <20150306091128.GA30096@aepfle.de>
+ <yq1wq2ucnwt.fsf@sermon.lab.mkp.net>
+ <20150306150647.GA21639@aepfle.de>
+ <yq1oao6cfhu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1426787642.14897.375.camel-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Hiral Patel <hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.218]:58398 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbbCTMHd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2015 08:07:33 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1oao6cfhu.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-Hi Andy,
+On Fri, Mar 06, Martin K. Petersen wrote:
 
-On 3/19/15 12:54 PM, Andy Shevchenko wrote:
-> On Tue, 2014-04-29 at 17:45 +0300, Andy Shevchenko wrote:
->> Instead of supplying each byte through stack let's use %pM specifier.
-> Anyone to comment or apply this patch?
->
->> Signed-off-by: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
->> Cc: Tom Tucker <tom-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
->> Cc: Steve Wise <swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org>
->> Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> ---
->>   drivers/scsi/fnic/vnic_dev.c | 10 ++--------
->>   1 file changed, 2 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
->> index 9795d6f..ba69d61 100644
->> --- a/drivers/scsi/fnic/vnic_dev.c
->> +++ b/drivers/scsi/fnic/vnic_dev.c
->> @@ -499,10 +499,7 @@ void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr)
->>   
->>   	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
->>   	if (err)
->> -		printk(KERN_ERR
->> -			"Can't add addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
->> -			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
->> -			err);
->> +		pr_err("Can't add addr [%pM], %d\n", addr, err);
+> >>>>> "Olaf" == Olaf Hering <olaf@aepfle.de> writes:
+> Olaf> Does that target code offer what scsi_debug offers, a bunch of
+> Olaf> stuff listable with 'lsscsi'? The latter can be passed to
+> Olaf> backstores/pscsi.
+> Yes.
 
-This looks completely reasonable to me.
+Indeed, with /backstores/fileio/ and /loopback/.
 
-Tom
->>   }
->>   
->>   void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
->> @@ -517,10 +514,7 @@ void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
->>   
->>   	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
->>   	if (err)
->> -		printk(KERN_ERR
->> -			"Can't del addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
->> -			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
->> -			err);
->> +		pr_err("Can't del addr [%pM], %d\n", addr, err);
->>   }
->>   
->>   int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
->
+It would be nice if one could specify a fixed identifier for each fileio
+during creation. Right now the symlinks in /dev/disk/by-*/* are all
+random. Its not easily possible to map file_or_dev=$file to the
+resulting SCSI device.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Olaf
