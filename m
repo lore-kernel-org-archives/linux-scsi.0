@@ -1,161 +1,83 @@
-From: Christian Hesse <list@eworm.de>
-Subject: Re: iSCSI regression with linux 3.9 and 4.0
-Date: Fri, 20 Mar 2015 16:24:41 +0100
-Message-ID: <20150320162441.684366b6@leda.localdomain>
-References: <20150320135742.63df219b@leda.localdomain>
-	<1426859486.19806.30.camel@localhost.localdomain>
-	<20150320153104.086f3b46@leda.localdomain>
-	<1426863883.19806.65.camel@localhost.localdomain>
+From: Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: sd: add a capacity_override attribute
+Date: Fri, 20 Mar 2015 11:33:51 -0400
+Message-ID: <1426865631.19806.77.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.1503201108560.1618-100000@iolanthe.rowland.org>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/I1Y9k/DLmm93suhgJX/euDZ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.mylinuxtime.de ([148.251.109.235]:36392 "EHLO
-	mx.mylinuxtime.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795AbbCTPY4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2015 11:24:56 -0400
-In-Reply-To: <1426863883.19806.65.camel@localhost.localdomain>
+Received: from mx1.redhat.com ([209.132.183.28]:36486 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750870AbbCTPd5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Mar 2015 11:33:57 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1503201108560.1618-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ewan Milne <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
---Sig_/I1Y9k/DLmm93suhgJX/euDZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, 2015-03-20 at 11:19 -0400, Alan Stern wrote:
+> On Fri, 20 Mar 2015, Ewan Milne wrote:
+> 
+> > On Tue, 2015-03-17 at 14:08 -0400, Alan Stern wrote:
+> > > This patch provides a sysfs interface allowing users to override the
+> > > capacity of a SCSI disk.  This will help in situations where a buggy
+> > > USB-SATA adapter fails to support READ CAPACITY(16) and reports only
+> > > the low 32 bits of the capacity in its READ CAPACITY(10) reply.  For
+> > > an example, see this thread:
+> > > 
+> > > 	http://marc.info/?l=linux-scsi&m=140908235510961&w=2
+> > > 
+> > > The interface is awkward because it requires the user to tell the
+> > > system to re-read the disk's partition table afterward, but at least
+> > > it provides a way to handle deficient hardware.
+> > 
+> > I think that it is confusing that writing into the capacity_override
+> > sysfs node does not get immediately reflected in the gendisk structure.
+> > Would it hurt to call sd_revalidate_disk() after the value is changed
+> > in capacity_override_store()?
+> 
+> It wouldn't hurt, but it wouldn't help much either.
+> 
+> sd_revalidate_disk() might cause the new size to show up in the
+> gendisk structure, but it would not cause the partition table to be
+> parsed again.  That's the real reason for doing this -- when a drive
+> seems to have fewer blocks than it really does, partitions that extend
+> beyond the "end" of the drive are rejected.
 
-Ewan Milne <emilne@redhat.com> on Fri, 2015/03/20 11:04:
-> On Fri, 2015-03-20 at 15:31 +0100, Christian Hesse wrote:
-> > Ewan Milne <emilne@redhat.com> on Fri, 2015/03/20 09:51:
-> > > On Fri, 2015-03-20 at 13:57 +0100, Christian Hesse wrote:
-> > > > Hello everybody!
-> > > >=20
-> > > > I reported this issue at LKML [0] but received no answer. Hopefully
-> > > > linux-scsi is a better place...
-> > > >=20
-> > > > Beginning with linux 3.19 I see an iSCSI regressen. This works
-> > > > perfectly with linux 3.18.x (tested with 3.18.6) and before. Effect=
-ed
-> > > > kernels I tested are 3.19.0, 3.19.2 and 4.0rc4.r199.gb314aca.
-> > > >=20
-> > > > The logs tell the story:
-> > > >=20
-> > > > [snip log]
-> > > >=20
-> > > > [0] https://lkml.org/lkml/2015/2/19/91
-> > >=20
-> > > Sense key 0x5 ASC/ASCQ 0x24 0x00 is ILLEGAL REQUEST, INVALID FIELD IN
-> > > CDB.  The CDB was 2A 00 34 5B 07 FF 00 2F 88 00, which is a WRITE_10
-> > > to LBA 878381055 with a length of 12168 blocks (a little less than 6M=
-B).
-> > > It looks like this is within the reported capacity of the device, and
-> > > there are no other bits set in the CDB.
-> > >=20
-> > > Looks like you could get this error if RWWP (reject without write
-> > > protection) is set in the control mode page.  I don't see any messages
-> > > about the protection type, though.  What does sysfs report?
-> >=20
-> > Is that what you are interested in?
-> >=20
-> > # cat protection_mode protection_type=20
-> > none
-> > 0
-> >=20
-> > In case it matters: The iSCSI device is LUKS encrypted, that is why dev=
-ice
-> > mapper shows up.
-> >=20
-> > I removed the discard option from filesystem's default mount option, but
-> > that brings no difference except the message is not printed.
->=20
-> It is most likely the device that is returning the error, there is a
-> place in the iSCSI Initiator that generates an ILLEGAL REQUEST sense,
-> but it is not the same ASC/ASCQ.
->=20
-> There was this change:
->=20
-> commit bcdb247c6b6a1f3e72b9b787b73f47dd509d17ec
-> Author: Martin K. Petersen <martin.petersen@oracle.com>
-> Date:   Tue Jun 3 18:45:51 2014 -0400
->=20
->     sd: Limit transfer length
->    =20
->     Until now the per-command transfer length has exclusively been gated =
-by
->     the max_sectors parameter in the scsi_host template. Given that the s=
-ize
->     of this parameter has been bumped to an unsigned int we have to be
->     careful not to exceed the target device's capabilities.
->    =20
->     If the if the device specifies a Maximum Transfer Length in the Block
->     Limits VPD we'll use that value. Otherwise we'll use 0xffffffff for
->     devices that have use_16_for_rw set and 0xffff for the rest. We then
->     combine the chosen disk limit with max_sectors in the host template. =
-The
->     smaller of the two will be used to set the max_hw_sectors queue limit.
->    =20
->     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->     Reviewed-by: Ewan D. Milne <emilne@redhat.com>
->     Signed-off-by: Christoph Hellwig <hch@lst.de>
->=20
-> What is the value of max_sectors_kb and queue_max_sectors_kb in sysfs
-> for the device?  Is it different than what is reported on 3.18?
+OK, I see.
 
-I found 'max_sectors_kb' which is inside in directory called 'queue'. Is th=
-at
-the value you asked for?
+> 
+> > The thing is, if someone overrides the capacity but does not do anything
+> > right away to revalidate the disk, it could change at some arbitrary
+> > time in the future when the revalidation happens for some other reason.
+> 
+> That's why the documentation says that users must force the system to 
+> re-read the partition table after writing the sysfs attribute.  In my 
+> tests, doing that caused a revalidation.
+> 
+> Are you saying that could have been a coincidence?  It's possible -- I 
+> don't understand the design of the block layer.
 
-for 4.0 git:
+No, I think that re-reading the partition table will revalidate.  What I
+was concerned about is some unsuspecting user writing to the
+capacity_override sysfs node, observing that it didn't seem to do
+anything, and being surprised when it changed later.  (I've seen some
+issues with multipath, for example, which will stop using a path if the
+capacity changes.)  I guess it's a "principle of least surprise" thing.
 
-# cat max_sectors_kb
-32767
+Having said that, if this is what is needed to make the devices work...
 
-for 3.18.6:
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-# cat max_sectors_kb
-512
+> 
+> Alan Stern
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> Does your target support the Block Limits VPD (page B0)?  (i.e. can
-> you run "sg_inq /dev/sda -p bl" from the sg3_utils package?)
 
-This does not differ for different kernels. I think this is expected.
-
-# sg_inq /dev/sdb -p bl
-VPD INQUIRY: Block limits page (SBC)
-  Maximum compare and write length: 1 blocks
-  Optimal transfer length granularity: 1 blocks
-  Maximum transfer length: 4294967295 blocks
-  Optimal transfer length: 4294967295 blocks
-  Maximum prefetch, xdread, xdwrite transfer length: 0 blocks
-  Maximum unmap LBA count: 8388607
-  Maximum unmap block descriptor count: 1
-  Optimal unmap granularity: 16383
-  Unmap granularity alignment valid: 0
-  Unmap granularity alignment: 0
-  Maximum write same length: 0xffffffff blocks
-  Maximum atomic transfer length: 0
-  Atomic alignment: 0
-  Atomic transfer length granularity: 0
---=20
-main(a){char*c=3D/*    Schoene Gruesse                         */"B?IJj;MEH"
-"CX:;",b;for(a/*    Chris           get my mail address:    */=3D0;b=3Dc[a+=
-+];)
-putchar(b-1/(/*               gcc -o sig sig.c && ./sig    */b/42*2-3)*42);}
-
---Sig_/I1Y9k/DLmm93suhgJX/euDZ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJVDDu5AAoJEIlFIdfMgPR2anoH/2k17bzUZwBbDsTgWpwXrxvQ
-2LJvTzqajvRQmldHd36iXr3KX+5kSst6DPb9xlmo4NH6qNlWlSEN4ln3pSQXcmpe
-DVdqZqmrGZf8oVtqSfbme1D/1wlDt5e0AT8Ii6kVMnVkvgZ7pvus4r3ksyA+BzOY
-OgeScYGGOjnkJy6c2rISB7iZztkCSz/T53jkH7c2t6KXuo1L6cCqz23+7b2R5Oc9
-X71m1JO3qBdLkPlKry4DXkK3ZUCn8G53FrAZZ/Qb/LYOCXdjK0cVUDEfaSjPbY5V
-vYqbvNiAAAT2laHmoEkbiFv98B5DnV9E7Xz4LERCd+ajVWEucogkxmtjiTgmzFo=
-=wmV3
------END PGP SIGNATURE-----
-
---Sig_/I1Y9k/DLmm93suhgJX/euDZ--
