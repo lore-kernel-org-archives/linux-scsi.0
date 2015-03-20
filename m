@@ -1,62 +1,32 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 15/15] iscsi-target: don't export static symbol
-Date: Fri, 20 Mar 2015 11:42:12 -0700
-Message-ID: <1426876932.16687.5.camel@haakon3.risingtidesystems.com>
-References: <1426092997-30605-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1426092997-30605-16-git-send-email-Julia.Lawall@lip6.fr>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: iSCSI regression with linux 3.9 and 4.0
+Date: Fri, 20 Mar 2015 14:02:10 -0500
+Message-ID: <550C6EB2.50304@cs.wisc.edu>
+References: <20150320135742.63df219b@leda.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1426092997-30605-16-git-send-email-Julia.Lawall@lip6.fr>
-Sender: target-devel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56832 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751154AbbCTTCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Mar 2015 15:02:25 -0400
+In-Reply-To: <20150320135742.63df219b@leda.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christian Hesse <list@eworm.de>, linux-scsi@vger.kernel.org
 
-On Wed, 2015-03-11 at 17:56 +0100, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
+On 03/20/2015 07:57 AM, Christian Hesse wrote:
+> Hello everybody!
 > 
-> The semantic patch that fixes this problem is as follows:
-> (http://coccinelle.lip6.fr/)
+> I reported this issue at LKML [0] but received no answer. Hopefully
+> linux-scsi is a better place...
 > 
-> // <smpl>
-> @r@
-> type T;
-> identifier f;
-> @@
-> 
-> static T f (...) { ... }
-> 
-> @@
-> identifier r.f;
-> declarer name EXPORT_SYMBOL;
-> @@
-> 
-> -EXPORT_SYMBOL(f);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
->  drivers/target/iscsi/iscsi_target.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff -u -p a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -2155,7 +2155,6 @@ reject:
->  	cmd->text_in_ptr = NULL;
->  	return iscsit_reject_cmd(cmd, ISCSI_REASON_PROTOCOL_ERROR, buf);
->  }
-> -EXPORT_SYMBOL(iscsit_handle_text_cmd);
->  
->  int iscsit_logout_closesession(struct iscsi_cmd *cmd, struct iscsi_conn *conn)
->  {
+> Beginning with linux 3.19 I see an iSCSI regressen. This works perfectly with
+> linux 3.18.x (tested with 3.18.6) and before. Effected kernels I tested are
+> 3.19.0, 3.19.2 and 4.0rc4.r199.gb314aca.
 > 
 
-Applied to target-pending/for-next.
+Could you take a wrireshark/tcpdump trace when running 3.18 and 3.19? We
+can then see what bits are different and narrow down the patch/change.
 
-Thanks Julia!
-
---nab
