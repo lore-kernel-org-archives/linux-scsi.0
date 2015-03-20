@@ -1,94 +1,83 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: sd: add a capacity_override attribute
-Date: Fri, 20 Mar 2015 12:32:07 -0400
-Message-ID: <1426869127.19806.83.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.1503201201180.1618-100000@iolanthe.rowland.org>
-Reply-To: emilne@redhat.com
+From: Christian Hesse <list@eworm.de>
+Subject: Re: iSCSI regression with linux 3.9 and 4.0
+Date: Fri, 20 Mar 2015 18:59:01 +0100
+Message-ID: <20150320185901.0283191c@leda.localdomain>
+References: <20150320135742.63df219b@leda.localdomain>
+	<1426859486.19806.30.camel@localhost.localdomain>
+	<20150320153104.086f3b46@leda.localdomain>
+	<1426863883.19806.65.camel@localhost.localdomain>
+	<20150320162441.684366b6@leda.localdomain>
+	<1426866365.19806.81.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/A5_/StMr3aj_iobsbJSPCVi"; protocol="application/pgp-signature"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50310 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751568AbbCTQcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Mar 2015 12:32:12 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1503201201180.1618-100000@iolanthe.rowland.org>
+Received: from mx.mylinuxtime.de ([148.251.109.235]:53249 "EHLO
+	mx.mylinuxtime.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbCTR7S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2015 13:59:18 -0400
+In-Reply-To: <1426866365.19806.81.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Ewan Milne <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2015-03-20 at 12:03 -0400, Alan Stern wrote:
-> On Fri, 20 Mar 2015, Ewan Milne wrote:
-> 
-> > On Fri, 2015-03-20 at 11:19 -0400, Alan Stern wrote:
-> > > On Fri, 20 Mar 2015, Ewan Milne wrote:
-> > > 
-> > > > On Tue, 2015-03-17 at 14:08 -0400, Alan Stern wrote:
-> > > > > This patch provides a sysfs interface allowing users to override the
-> > > > > capacity of a SCSI disk.  This will help in situations where a buggy
-> > > > > USB-SATA adapter fails to support READ CAPACITY(16) and reports only
-> > > > > the low 32 bits of the capacity in its READ CAPACITY(10) reply.  For
-> > > > > an example, see this thread:
-> > > > > 
-> > > > > 	http://marc.info/?l=linux-scsi&m=140908235510961&w=2
-> > > > > 
-> > > > > The interface is awkward because it requires the user to tell the
-> > > > > system to re-read the disk's partition table afterward, but at least
-> > > > > it provides a way to handle deficient hardware.
-> > > > 
-> > > > I think that it is confusing that writing into the capacity_override
-> > > > sysfs node does not get immediately reflected in the gendisk structure.
-> > > > Would it hurt to call sd_revalidate_disk() after the value is changed
-> > > > in capacity_override_store()?
-> > > 
-> > > It wouldn't hurt, but it wouldn't help much either.
-> > > 
-> > > sd_revalidate_disk() might cause the new size to show up in the
-> > > gendisk structure, but it would not cause the partition table to be
-> > > parsed again.  That's the real reason for doing this -- when a drive
-> > > seems to have fewer blocks than it really does, partitions that extend
-> > > beyond the "end" of the drive are rejected.
-> > 
-> > OK, I see.
-> > 
-> > > 
-> > > > The thing is, if someone overrides the capacity but does not do anything
-> > > > right away to revalidate the disk, it could change at some arbitrary
-> > > > time in the future when the revalidation happens for some other reason.
-> > > 
-> > > That's why the documentation says that users must force the system to 
-> > > re-read the partition table after writing the sysfs attribute.  In my 
-> > > tests, doing that caused a revalidation.
-> > > 
-> > > Are you saying that could have been a coincidence?  It's possible -- I 
-> > > don't understand the design of the block layer.
-> > 
-> > No, I think that re-reading the partition table will revalidate.  What I
-> > was concerned about is some unsuspecting user writing to the
-> > capacity_override sysfs node, observing that it didn't seem to do
-> > anything, and being surprised when it changed later.  (I've seen some
-> > issues with multipath, for example, which will stop using a path if the
-> > capacity changes.)  I guess it's a "principle of least surprise" thing.
-> > 
-> > Having said that, if this is what is needed to make the devices work...
-> > 
-> > Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> 
-> Thanks.  I don't _mind_ adding an sd_revalidate_disk() call if you 
-> think it will improve the patch.  What's your suggestion?
-> 
+--Sig_/A5_/StMr3aj_iobsbJSPCVi
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-If that does not cause the partition table to be updated, then it
-doesn't solve your problem, so I'd leave it the way it is, for now.
+Ewan Milne <emilne@redhat.com> on Fri, 2015/03/20 11:46:
+> On Fri, 2015-03-20 at 16:24 +0100, Christian Hesse wrote:
+> > I found 'max_sectors_kb' which is inside in directory called 'queue'. Is
+> > that the value you asked for?
+> >=20
+> > for 4.0 git:
+> >=20
+> > # cat max_sectors_kb
+> > 32767
+>=20
+> If you change max_sectors_kb to a lower value (e.g. 512) can you get the
+> device to work?
 
--Ewan
+I will check that on monday. Sitting behind a slow dial up connection right
+now...
+=20
+> There is a max_hw_sectors_kb value but you can't change it.  Is it
+> 32768 also for 4.0?
 
-> Alan Stern
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# cat max_hw_sectors_kb
+32767
 
+It's 3276*7*, not 32768.
 
+> Your device reports a maximum transfer length of 2^32-1 blocks but
+> I suspect that it might not be actually able to do that.  I don't see
+> what else would be causing the error.  Maybe there is a transport
+> limitation that is getting in the way?
+
+What kind of transport limitation can that be? Network MTU and friends shou=
+ld
+no be an issue, no?
+--=20
+main(a){char*c=3D/*    Schoene Gruesse                         */"B?IJj;MEH"
+"CX:;",b;for(a/*    Chris           get my mail address:    */=3D0;b=3Dc[a+=
++];)
+putchar(b-1/(/*               gcc -o sig sig.c && ./sig    */b/42*2-3)*42);}
+
+--Sig_/A5_/StMr3aj_iobsbJSPCVi
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJVDF/lAAoJEIlFIdfMgPR2IcQH/RxjWwhz3fvVmjAPmMyAoOeI
+1cTXOokdO/naYni/VE5AfQ+Wuis7qrJEWZHI5al2H/7A0s3gtB288lt5vrxhd9y9
+U3COTC9fBC8zpobmnZm9eUuAOCcum8u8ni0IqyCktNmVBNkHoiNo0NQgIc439hz5
+wX2cAmPsvOYO0hm1yqekJ+J9SiXEqMcLK5ihMA7NAp68qtxPQLIARyQVCVgtqhH1
+sH7rSzqJQ7jRyh0I4YDfPKi2uMs0yDIWaODN8F4THFjXiTzy6M8Hd2GxllUhQu+g
+4pb7Cl6/40QPr9VXqk+32Q47f1oHh2I0Gl1mfe3ZUE4l/gk+GK3VhOUaoz06sTA=
+=XoXC
+-----END PGP SIGNATURE-----
+
+--Sig_/A5_/StMr3aj_iobsbJSPCVi--
