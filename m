@@ -1,113 +1,84 @@
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v1 16/47] fusion: use __arch_phys_wc_add()
-Date: Fri, 20 Mar 2015 16:18:06 -0700
-Message-ID: <1426893517-2511-17-git-send-email-mcgrof@do-not-panic.com>
-References: <1426893517-2511-1-git-send-email-mcgrof@do-not-panic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34712 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbbCTX4K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2015 19:56:10 -0400
-In-Reply-To: <1426893517-2511-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.0-rc5
+Date: Fri, 20 Mar 2015 21:15:15 -0700
+Message-ID: <1426911315.9176.39.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: luto@amacapital.net, mingo@redhat.com, tglx@linutronix.de, hpa@zytor.com, jgross@suse.com, JBeulich@suse.com, bp@suse.de, suresh.b.siddha@intel.com, venkatesh.pallipadi@intel.com, airlied@redhat.com
-Cc: linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, "Luis R. Rodriguez" <mcgrof@suse.com>, Ingo Molnar <mingo@elte.hu>, Daniel Vetter <daniel.vetter@ffwll.ch>, Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>, Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>, Sreekanth Reddy <sreekanth.reddy@avagotech.com>, Abhijit Mahajan <abhijit.mahajan@avagotech.com>, Antonino Daplas <adaplas@gmail.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Hi Linus,
 
-If and when this gets enabled the driver should address
-using ioremap_wc() on the same area, that could require
-a bit of work as it would mean a split with two ioremap'd
-areas. Annotate this.
+Here are current target-pending fixes for v4.0-rc5 code that have made
+their way into the queue over the last weeks.
 
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>
-Cc: Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@avagotech.com>
-Cc: Praveen Krishnamoorthy <praveen.krishnamoorthy@avagotech.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Cc: Abhijit Mahajan <abhijit.mahajan@avagotech.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: MPT-FusionLinux.pdl@avagotech.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/message/fusion/mptbase.c | 19 ++++---------------
- drivers/message/fusion/mptbase.h |  2 +-
- 2 files changed, 5 insertions(+), 16 deletions(-)
+Please go ahead and pull from:
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 187f836..c7b1a55 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -59,10 +59,6 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>		/* needed for in_interrupt() proto */
- #include <linux/dma-mapping.h>
--#include <asm/io.h>
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
- #include <linux/kthread.h>
- #include <scsi/scsi_host.h>
- 
-@@ -2820,11 +2816,8 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
- 	pci_disable_device(ioc->pcidev);
- 	pci_release_selected_regions(ioc->pcidev, ioc->bars);
- 
--#if defined(CONFIG_MTRR) && 0
--	if (ioc->mtrr_reg > 0) {
--		mtrr_del(ioc->mtrr_reg, 0, 0);
--		dprintk(ioc, printk(MYIOC_s_INFO_FMT "MTRR region de-registered\n", ioc->name));
--	}
-+#if 0
-+	__arch_phys_wc_del(ioc->wc_cookie);
- #endif
- 
- 	/*  Zap the adapter lookup ptr!  */
-@@ -4512,17 +4505,13 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
- 
- 		ioc->req_frames_low_dma = (u32) (alloc_dma & 0xFFFFFFFF);
- 
--#if defined(CONFIG_MTRR) && 0
-+#if 0
- 		/*
- 		 *  Enable Write Combining MTRR for IOC's memory region.
- 		 *  (at least as much as we can; "size and base must be
- 		 *  multiples of 4 kiB"
- 		 */
--		ioc->mtrr_reg = mtrr_add(ioc->req_frames_dma,
--					 sz,
--					 MTRR_TYPE_WRCOMB, 1);
--		dprintk(ioc, printk(MYIOC_s_DEBUG_FMT "MTRR region registered (base:size=%08x:%x)\n",
--				ioc->name, ioc->req_frames_dma, sz));
-+		ioc->wc_cookie = arch_phys_wc_add(ioc->req_frames_dma, sz);
- #endif
- 
- 		for (i = 0; i < ioc->req_depth; i++) {
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index 8f14090..f0bff11 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -671,7 +671,7 @@ typedef struct _MPT_ADAPTER
- 	u8			*HostPageBuffer; /* SAS - host page buffer support */
- 	u32			HostPageBuffer_sz;
- 	dma_addr_t		HostPageBuffer_dma;
--	int			 mtrr_reg;
-+	int			wc_cookie;
- 	struct pci_dev		*pcidev;	/* struct pci_dev pointer */
- 	int			bars;		/* bitmask of BAR's that must be configured */
- 	int			msi_enable;
--- 
-2.3.2.209.gd67f9d5.dirty
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
+The fixes this round include:
+
+  - Fix long-standing iser-target logout bug related to early conn_logout_comp
+    completion, resulting in iscsi_conn use-after-tree OOpsen.  (Sagi + nab)
+
+  - Fix long-standing tcm_fc bug in ft_invl_hw_context() failure handing
+    for DDP hw offload.  (DanC)
+
+  - Fix incorrect use of unprotected __transport_register_session() in
+    tcm_qla2xxx + other single local se_node_acl fabrics.  (Bart)
+
+  - Fix reference leak in target_submit_cmd() -> target_get_sess_cmd() for
+    ack_kref=1 failure path.  (Bart)
+
+  - Fix pSCSI backend ->get_device_type() statistics OOPs with un-configured
+    device.  (Olaf + nab)
+
+  - Fix virtual LUN=0 target_configure_device failure OOPs at modprobe time.
+    (Claudio + nab)
+
+  - Fix FUA write false positive failure regression in v4.0-rc1 code.
+    (Christophe Vu-Brugier + HCH)
+
+Thank you,
+
+--nab
+
+Bart Van Assche (3):
+  tcm_qla2xxx: Fix incorrect use of __transport_register_session
+  loop/usb/vhost-scsi/xen-scsiback: Fix use of
+    __transport_register_session
+  target: Fix reference leak in target_get_sess_cmd() error path
+
+Christophe Vu-Brugier (1):
+  target: do not reject FUA CDBs when write cache is enabled but
+    emulate_write_cache is 0
+
+Dan Carpenter (1):
+  tcm_fc: missing curly braces in ft_invl_hw_context()
+
+Nicholas Bellinger (5):
+  target: Disallow changing of WRITE cache/FUA attrs after export
+  Revert "iscsi-target: Avoid IN_LOGOUT failure case for iser-target"
+  iscsi-target: Avoid early conn_logout_comp for iser connections
+  target/pscsi: Fix NULL pointer dereference in get_device_type
+  target: Fix virtual LUN=0 target_configure_device failure OOPs
+
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c         |  2 +-
+ drivers/target/iscsi/iscsi_target.c        | 14 +++++++++----
+ drivers/target/iscsi/iscsi_target_erl0.c   |  4 +---
+ drivers/target/loopback/tcm_loop.c         |  7 ++-----
+ drivers/target/target_core_device.c        | 32 +++++++++++++++++++++++++++---
+ drivers/target/target_core_pscsi.c         |  2 +-
+ drivers/target/target_core_sbc.c           |  3 +--
+ drivers/target/target_core_spc.c           | 19 +++---------------
+ drivers/target/target_core_transport.c     |  4 ++++
+ drivers/target/tcm_fc/tfc_io.c             |  3 ++-
+ drivers/usb/gadget/legacy/tcm_usb_gadget.c |  5 ++---
+ drivers/vhost/scsi.c                       |  5 ++---
+ drivers/xen/xen-scsiback.c                 |  7 ++-----
+ include/target/target_core_backend.h       |  1 +
+ 14 files changed, 61 insertions(+), 47 deletions(-)
