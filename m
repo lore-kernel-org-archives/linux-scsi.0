@@ -1,84 +1,94 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.0-rc5
-Date: Fri, 20 Mar 2015 21:15:15 -0700
-Message-ID: <1426911315.9176.39.camel@haakon3.risingtidesystems.com>
+From: Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>
+Subject: RE: [Scst-devel] scst qla2xxx.ko  VS kernel qla2xxx.ko
+Date: Fri, 20 Mar 2015 22:59:30 -0700 (PDT)
+Message-ID: <13fade5e-79b7-492e-ac16-28e2f8e2b8b7@default>
+References: <Suresh> <Babu> <Kandukuru> <<suresh.babu.kandukuru@oracle.com>>
+ <"Re:> <[Scst-devel]> <scst> <qla2xxx.ko> <VS> <kernel> <qla2xxx.ko"> <(Mar>
+ <13,> <4:18am)> <<201503202005.t2KK5qSs019140@wind.enjellic.com>>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25797 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977AbbCUF7w convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Mar 2015 01:59:52 -0400
+In-Reply-To: <<201503202005.t2KK5qSs019140@wind.enjellic.com>>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: greg@enjellic.com, Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, scst-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-Hi Linus,
+Greg . Thank you very much for the detailed mail . I will mail you and the list for any further quires to the list . Thanks.
 
-Here are current target-pending fixes for v4.0-rc5 code that have made
-their way into the queue over the last weeks.
+/Suresh 
 
-Please go ahead and pull from:
+-----Original Message-----
+From: Dr. Greg Wettstein [mailto:greg@wind.enjellic.com] 
+Sent: Saturday, March 21, 2015 1:36 AM
+To: Suresh Babu Kandukuru; Bart Van Assche; scst-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [Scst-devel] scst qla2xxx.ko VS kernel qla2xxx.ko
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+On Mar 13,  4:18am, Suresh Babu Kandukuru wrote:
+} Subject: Re: [Scst-devel] scst qla2xxx.ko  VS kernel qla2xxx.ko
 
-The fixes this round include:
+Hi, I hope the week is closing out well for everyone.
 
-  - Fix long-standing iser-target logout bug related to early conn_logout_comp
-    completion, resulting in iscsi_conn use-after-tree OOpsen.  (Sagi + nab)
+> Thanks Bart . We have tested with 2.2.0 and 3.0.1 
+> (scst-svn-6135-branches-3.0.x ) ., loaded all the scst ko files along 
+> with qla2xxx_scst.ko qla2x00t.ko . Still this did not any FC ports in 
+> /sys/class/fc_hosts/.. .  The QLOGIC HBA we are using is "QLogic 
+> QLE8362 - 7101674, Sun Storage 16Gb FC PCIe Universal HBA, QLogic. " . 
+> Does the scst qla2xxx_scst.ko driver supports this ?. what we are 
+> missing here ?. Any pointers are helpful . Thanks
 
-  - Fix long-standing tcm_fc bug in ft_invl_hw_context() failure handing
-    for DDP hw offload.  (DanC)
+We have had the opportunity to architect, build, maintain and debug complex converged data and storage networks.  The switches on these networks are a million dollars apiece and there are multiple switches in multiple data-centers.
 
-  - Fix incorrect use of unprotected __transport_register_session() in
-    tcm_qla2xxx + other single local se_node_acl fabrics.  (Bart)
+The storage, running at about one-half petabyte levels, is all SCST based and we use Qlogic HBA's and CNA's on both the initiators and targets.  Given the somewhat colorful history with respect to Qlogic target driver support we had to roll up our sleeves and write an interface driver which allows SCST to run on top of the Qlogic target driver in stock Linux kernels.
 
-  - Fix reference leak in target_submit_cmd() -> target_get_sess_cmd() for
-    ack_kref=1 failure path.  (Bart)
+I just put an integrated patchset which includes SCST 3.0.0, our target interface driver and a few patches to the in-kernel target driver we carry to make all of this work correctly and address various regressions in the stock target driver.  You can grab the patchset from the following URL:
 
-  - Fix pSCSI backend ->get_device_type() statistics OOPs with un-configured
-    device.  (Olaf + nab)
+ftp://ftp.enjellic.com/pub/scst/sqa-1.2_scst-3.0.0_3.10.67.patch.gz
 
-  - Fix virtual LUN=0 target_configure_device failure OOPs at modprobe time.
-    (Claudio + nab)
+All of the storage targets are direct FCOE attachments using Qlogic
+8362 CNA's.  The above patchset is what we are currently using in production and it has been validated over hundreds and hundreds of terrabytes of I/O, which includes exposure to some rather rigorous fabric and TMF event processing situations.  We have also tracked down some rather elusive switch based FCOE transport issues with this codebase.
 
-  - Fix FUA write false positive failure regression in v4.0-rc1 code.
-    (Christophe Vu-Brugier + HCH)
+Obviously your mileage may vary.
 
-Thank you,
+If you drop the above patch onto a 3.10 kernel source tree and build a kernel with the appropriate configuration options it should work with whatever cards are supported by the stock Linux kernel.  One of the patches which is included sets the card to QLA2XXX_INI_MODE_EXCLUSIVE which causes the card to come up 'target capable' by default which mirrors the behavior of the SCST supplied Qlogic target driver.
 
---nab
+In your note you indicate your card is a 'QLogic QLE8362 - 7101674, Sun Storage 16Gb FC PCIe Universal HBA' which I assume is probably an OEM rebranded card.  The 8362 is actually a Converged Network Adapter
+(CNA) rather then an HBA.  The 2672 is the 'fibre-channel' HBA version of the card.  The stock Qlogic cards are dual-personality cards which allows their operational mode, ie 16 GBPS FC or 10 GBPS ethernet, to be selected through the BIOS setup utilities.
 
-Bart Van Assche (3):
-  tcm_qla2xxx: Fix incorrect use of __transport_register_session
-  loop/usb/vhost-scsi/xen-scsiback: Fix use of
-    __transport_register_session
-  target: Fix reference leak in target_get_sess_cmd() error path
+Given your e-mail address, I'm sure you've jumped through all these hoops but one obviously wants to have the card setup with the right personality and correct optics for your physical transport layer.
 
-Christophe Vu-Brugier (1):
-  target: do not reject FUA CDBs when write cache is enabled but
-    emulate_write_cache is 0
+You also probably want to make sure you have both your HBA/CNA and motherboard up to the most recent versions of their respective firmware.  There are issues particularly with Intel S2600 motherboards and these cards which requires updated firmware on both sides.
 
-Dan Carpenter (1):
-  tcm_fc: missing curly braces in ft_invl_hw_context()
+If the card is detected and found to be target capable by the stock Linux kernel Qlogic driver you will find the available target PWWN's in the following directory:
 
-Nicholas Bellinger (5):
-  target: Disallow changing of WRITE cache/FUA attrs after export
-  Revert "iscsi-target: Avoid IN_LOGOUT failure case for iser-target"
-  iscsi-target: Avoid early conn_logout_comp for iser connections
-  target/pscsi: Fix NULL pointer dereference in get_device_type
-  target: Fix virtual LUN=0 target_configure_device failure OOPs
+/sys/kernel/scst_tgt/targets/sqatgt
 
- drivers/scsi/qla2xxx/tcm_qla2xxx.c         |  2 +-
- drivers/target/iscsi/iscsi_target.c        | 14 +++++++++----
- drivers/target/iscsi/iscsi_target_erl0.c   |  4 +---
- drivers/target/loopback/tcm_loop.c         |  7 ++-----
- drivers/target/target_core_device.c        | 32 +++++++++++++++++++++++++++---
- drivers/target/target_core_pscsi.c         |  2 +-
- drivers/target/target_core_sbc.c           |  3 +--
- drivers/target/target_core_spc.c           | 19 +++---------------
- drivers/target/target_core_transport.c     |  4 ++++
- drivers/target/tcm_fc/tfc_io.c             |  3 ++-
- drivers/usb/gadget/legacy/tcm_usb_gadget.c |  5 ++---
- drivers/vhost/scsi.c                       |  5 ++---
- drivers/xen/xen-scsiback.c                 |  7 ++-----
- include/target/target_core_backend.h       |  1 +
- 14 files changed, 61 insertions(+), 47 deletions(-)
+If there are none present there is the possibility that the card has been modified in firmware to prohibit target mode or has a modified PCI id which is causing problems for the driver probe logic.  If that is the case the card isn't going to be a candidate for use in target mode.  We tend to recommend that people buy straight Qlogic branded cards to avoid these sorts of issues.
+
+Just as an FYI/CYA there are session management issues/bugs in the Qlogic target driver, regardless of breed; SCST, Qlogic SCST or kernel.  These can show up during asynchronous fabric processing events, particularly if you are aggressive in placing the card and fabric under duress.
+
+We are in the process of upgrading our patchset to 3.0.1 which will include a number of additional fixes to the in-kernel Qlogic target driver.  I will shoot a note off to the list when it is available if you or others find this stuff useful.
+
+I hope the above is helpful.
+
+Good luck with your project.
+
+Greg
+
+}-- End of excerpt from Suresh Babu Kandukuru
+
+As always,
+Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
+4206 N. 19th Ave.           Specializing in information infra-structure
+Fargo, ND  58102            development.
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@enjellic.com
+------------------------------------------------------------------------------
+"If you plugged up your nose and mouth right before you sneezed, would  the sneeze go out your ears or would your head explode?  Either way I'm  afraid to try."
+                                -- Nick Kean
