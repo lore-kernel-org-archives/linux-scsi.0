@@ -1,78 +1,126 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH 3/3] iser-target: Handle special case for logout during
- connection failure
-Date: Sun, 22 Mar 2015 18:06:48 +0200
-Message-ID: <550EE898.70209@dev.mellanox.co.il>
-References: <1426918564-22581-1-git-send-email-nab@daterainc.com> <1426918564-22581-4-git-send-email-nab@daterainc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1426918564-22581-4-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Slava Shwartsman <valyushash@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
+Date: Sun, 22 Mar 2015 17:31:31 +0100
+Message-ID: <1427041891-2694-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.de, JBottomley@parallels.com
+Cc: joe@perches.com, Elliott@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/21/2015 8:16 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->
-> This patch adds special case handling during ISCSI_OP_LOGIN_RSP ib_wr
-> failure, where isert_cq_comp_err() is responsible for calling the
-> remaining isert_response_completion() -> isert_do_control_comp() ->
-> iscsit_logout_post_handler() to drop the last iscsi_conn reference.
->
-> It fixes a bug where iscsit_logout_post_handler() would not be called
-> if the outgoing ISCSI_OP_LOGIN_RSP failed during iscsi_conn ib_wr
-> descriptor cleanup.
->
-> Reported-by: Sagi Grimberg <sagig@mellanox.com>
-> Reported-by: Slava Shwartsman <valyushash@gmail.com>
-> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> ---
->   drivers/infiniband/ulp/isert/ib_isert.c | 16 +++++++++++++---
->   1 file changed, 13 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-> index 075b19c..ff0d436 100644
-> --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> @@ -1996,10 +1996,20 @@ isert_cq_comp_err(struct isert_conn *isert_conn, struct ib_wc *wc)
->
->   		desc = (struct iser_tx_desc *)(uintptr_t)wc->wr_id;
->   		isert_cmd = desc->isert_cmd;
-> -		if (!isert_cmd)
-> +		if (!isert_cmd) {
->   			isert_unmap_tx_desc(desc, ib_dev);
-> -		else
-> -			isert_completion_put(desc, isert_cmd, ib_dev, true);
-> +		} else {
-> +			struct isert_device *device = isert_conn->conn_device;
-> +			struct iscsi_conn *conn = isert_conn->conn;
-> +			struct iscsi_cmd *cmd = isert_cmd->iscsi_cmd;
-> +
-> +			if (cmd->i_state == ISTATE_SEND_LOGOUTRSP &&
-> +			    conn->conn_state == TARG_CONN_STATE_IN_LOGOUT)
-> +				isert_response_completion(desc, isert_cmd, isert_conn,
-> +							  device->ib_device);
-> +			else
-> +				isert_completion_put(desc, isert_cmd, ib_dev, true);
-> +		}
->   	} else {
->   		isert_conn->post_recv_buf_count--;
->   		if (!isert_conn->post_recv_buf_count)
->
+This replaces kmalloc + memset by a call to kzalloc
+(or kcalloc when appropriate, which zeroes memory too)
 
-Hey Nic,
+This also fixes one checkpatch.pl issue in the process.
 
-Not sure if calling a full logout handler for error completion makes the
-most sense here. if this is an error completion it means we are
-either in session teardown or just about to start it. So simply
-completing conn_logout_comp might be sufficient.
+This improvement was suggested by "make coccicheck"
 
-Anyways it might make sense to actually see this type of race happening
-before adding this code.
+Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c |  3 +--
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |  3 +--
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 10 ++++------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |  3 +--
+ 4 files changed, 7 insertions(+), 12 deletions(-)
 
-I think this is better off as a standalone patch.
-
-Sagi.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 97f2accd3dbb..109e2c99e6c1 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -10437,14 +10437,13 @@ ahd_handle_en_lun(struct ahd_softc *ahd, struct cam_sim *sim, union ccb *ccb)
+ 				return;
+ 			}
+ 		}
+-		lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
++		lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+ 		if (lstate == NULL) {
+ 			xpt_print_path(ccb->ccb_h.path);
+ 			printk("Couldn't allocate lstate\n");
+ 			ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+ 			return;
+ 		}
+-		memset(lstate, 0, sizeof(*lstate));
+ 		status = xpt_create_path(&lstate->path, /*periph*/NULL,
+ 					 xpt_path_path_id(ccb->ccb_h.path),
+ 					 xpt_path_target_id(ccb->ccb_h.path),
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index d5c7b193d8d3..ce96a0be3282 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1326,10 +1326,9 @@ int
+ ahd_platform_alloc(struct ahd_softc *ahd, void *platform_arg)
+ {
+ 	ahd->platform_data =
+-	    kmalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
++	    kzalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
+ 	if (ahd->platform_data == NULL)
+ 		return (ENOMEM);
+-	memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
+ 	ahd->platform_data->irq = AHD_LINUX_NOIRQ;
+ 	ahd_lockinit(ahd);
+ 	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 10172a3af1b9..2d1c86b9d7c9 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -4464,10 +4464,9 @@ ahc_softc_init(struct ahc_softc *ahc)
+ 	ahc->pause = ahc->unpause | PAUSE; 
+ 	/* XXX The shared scb data stuff should be deprecated */
+ 	if (ahc->scb_data == NULL) {
+-		ahc->scb_data = kmalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
++		ahc->scb_data = kzalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
+ 		if (ahc->scb_data == NULL)
+ 			return (ENOMEM);
+-		memset(ahc->scb_data, 0, sizeof(*ahc->scb_data));
+ 	}
+ 
+ 	return (0);
+@@ -4780,10 +4779,10 @@ ahc_init_scbdata(struct ahc_softc *ahc)
+ 	SLIST_INIT(&scb_data->sg_maps);
+ 
+ 	/* Allocate SCB resources */
+-	scb_data->scbarray = kmalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
++	scb_data->scbarray = kcalloc(AHC_SCB_MAX_ALLOC, sizeof(struct scb),
++				GFP_ATOMIC);
+ 	if (scb_data->scbarray == NULL)
+ 		return (ENOMEM);
+-	memset(scb_data->scbarray, 0, sizeof(struct scb) * AHC_SCB_MAX_ALLOC);
+ 
+ 	/* Determine the number of hardware SCBs and initialize them */
+ 
+@@ -7558,14 +7557,13 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 				return;
+ 			}
+ 		}
+-		lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
++		lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+ 		if (lstate == NULL) {
+ 			xpt_print_path(ccb->ccb_h.path);
+ 			printk("Couldn't allocate lstate\n");
+ 			ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+ 			return;
+ 		}
+-		memset(lstate, 0, sizeof(*lstate));
+ 		status = xpt_create_path(&lstate->path, /*periph*/NULL,
+ 					 xpt_path_path_id(ccb->ccb_h.path),
+ 					 xpt_path_target_id(ccb->ccb_h.path),
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 88360116dbcb..a2f2c774cd6b 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1214,10 +1214,9 @@ ahc_platform_alloc(struct ahc_softc *ahc, void *platform_arg)
+ {
+ 
+ 	ahc->platform_data =
+-	    kmalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
++	    kzalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
+ 	if (ahc->platform_data == NULL)
+ 		return (ENOMEM);
+-	memset(ahc->platform_data, 0, sizeof(struct ahc_platform_data));
+ 	ahc->platform_data->irq = AHC_LINUX_NOIRQ;
+ 	ahc_lockinit(ahc);
+ 	ahc->seltime = (aic7xxx_seltime & 0x3) << 4;
+-- 
+2.1.0
