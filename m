@@ -1,59 +1,36 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH RESEND 4/7] scsi: storvsc: Retrieve information about the
- capability of the target
-Date: Mon, 23 Mar 2015 14:06:38 -0700
-Message-ID: <1427144801-11920-4-git-send-email-kys@microsoft.com>
+Subject: [PATCH RESEND 1/7] scsi: storvsc: Increase the ring buffer size
+Date: Mon, 23 Mar 2015 14:06:35 -0700
+Message-ID: <1427144801-11920-1-git-send-email-kys@microsoft.com>
 References: <1427144760-11875-1-git-send-email-kys@microsoft.com>
- <1427144801-11920-1-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1427144801-11920-1-git-send-email-kys@microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1427144760-11875-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The storage protocol informs the guest of the I/O capabilities of the storage
-stack. Retrieve this information and use it in the guest.
+Increase the default ring buffer size as this can significantly
+improve performance especially on high latency storage back-ends.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Reviewed-by: Long Li <longli@microsoft.com>
 ---
- drivers/scsi/storvsc_drv.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/storvsc_drv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index be8f12e..5c13eec 100644
+index efc6e44..27fe850 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -377,6 +377,10 @@ struct storvsc_device {
- 	unsigned char path_id;
- 	unsigned char target_id;
+@@ -308,7 +308,7 @@ enum storvsc_request_type {
+  * This is the end of Protocol specific defines.
+  */
  
-+	/*
-+	 * Max I/O, the device can support.
-+	 */
-+	u32   max_transfer_bytes;
- 	/* Used for vsc/vsp channel reset process */
- 	struct storvsc_cmd_request init_request;
- 	struct storvsc_cmd_request reset_request;
-@@ -974,6 +978,8 @@ static int storvsc_channel_init(struct hv_device *device)
- 		    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
- 			process_sub_channels = true;
- 	}
-+	stor_device->max_transfer_bytes =
-+		vstor_packet->storage_channel_properties.max_transfer_bytes;
+-static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
++static int storvsc_ringbuffer_size = (256 * PAGE_SIZE);
  
- 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
- 	vstor_packet->operation = VSTOR_OPERATION_END_INITIALIZATION;
+ module_param(storvsc_ringbuffer_size, int, S_IRUGO);
+ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
 -- 
 1.7.4.1
