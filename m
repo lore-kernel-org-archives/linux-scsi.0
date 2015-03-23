@@ -1,38 +1,38 @@
-From: Skipton Financial =?utf-8?Q?Services=C2=AE?=
-	<canalanonimo@caramuru.com>
-Subject: laina
-Date: Mon, 23 Mar 2015 11:40:28 -0300 (BRT)
-Message-ID: <1597598257.1423299.1427121628386.JavaMail.root__6118.95058905265$1427122267$gmane$org@caramuru.com>
-Reply-To: Skipton Financial =?utf-8?Q?Services=C2=AE?=
-		<tru-skipton_service@hotmail.com>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: BUG: SCSI aic7xxx driver and AMD IOMMU
+Date: Mon, 23 Mar 2015 16:03:04 +0100
+Message-ID: <20150323150304.GQ4441@8bytes.org>
+References: <54E1FFFA.1060403@compro.net>
+ <54F60D33.8090401@compro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.caramuru.com ([200.242.128.247]:28205 "EHLO
-	mx1.caramuru.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbbCWOuo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2015 10:50:44 -0400
+Received: from 8bytes.org ([81.169.241.247]:35473 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752653AbbCWPDG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Mar 2015 11:03:06 -0400
+Content-Disposition: inline
+In-Reply-To: <54F60D33.8090401@compro.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Hounschell <markh@compro.net>
+Cc: "linux-scsi@vger.kernel.org >> SCSI development list" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
 
-CgpoeXbDpMOkIHDDpGl2w6TDpAoKTsOkbcOkIG92YXQgU2tpcHRvbiBGaW5hbmNpYWwgU2Vydmlj
-ZXMsIHTDpG7DpMOkbiB0YXJqb2FtbWUgbGFpbm9qYSBrb3JvbGxhIDMlLCBtZWlkw6RuIHR5eXBw
-aW5lbiBsYWluYSBvdmF0OiAtIHlyaXR5c3RlbiBsYWlub2phLCBzaXPDpGlzacOkIGxhaW5vamEg
-eWtzaXR5aXNoZW5raWzDtmlsbGUgbGFpbmF0IGphIHBlcmhlIGxhaW5vamEuIEpvcyBvbGV0IGtp
-aW5ub3N0dW51dCBtZWlkw6RuIExhaW5hIHRhcmpvdXMgVMOkeXTDpCBhbGxhIG9sZXZhIGxvbWFr
-ZS4KCkxhaW5hbm90dGFqaWVuIHTDpHlkZWxsaW5lbiBuaW1pOgpNw6TDpHLDpCB0YXJ2aXRhYW4g
-TGFpbmE6CkxhaW5hbiB0YXJrb2l0dXM6CkxhaW5hIEtlc3RvOgpQdWhlbGluOgpzdWt1cHVvbGk6
-CgpPZG90YW1tZSBub3BlYWEgdmFzdGF1c3RhLCBqb3MgdGFydml0c2V0IHRhbG91ZGVsbGlzdGEg
-dHVrZWEuCgogICAgICAgRS1tYWlsOiB0cnUtc2tpcHRvbl9zZXJ2aWNlQGhvdG1haWwuY29tCiAg
-ICAgICAgICAgICAgIHNraXB0b25maW5fc2VydmljZXNAaG90bWFpbC5jb20KICAgICAgCiAgICAg
-ICBLaWl0b3MsCiAgICAgICBUb3RldXRhIHJhaG9pdHVzdGFycGVldCBvbiB0YXZvaXR0ZWVtbWUh
-CiAgICAgICBSZWJlY2NhIGFsbHNvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCkFzIGluZm9ybWHDp8O1ZXMgZXhpc3RlbnRlcyBuZXNz
-YSBtZW5zYWdlbSBlIG5vcyBhcnF1aXZvcwphbmV4YWRvcyBzw6NvIHBhcmEgdXNvIHJlc3RyaXRv
-LCBzZW5kbyBzZXUgc2lnaWxvIHByb3RlZ2lkbwpwb3IgbGVpLiBDYXNvIG7Do28gc2VqYSBkZXN0
-aW5hdMOhcmlvLCBzYWliYSBxdWUgbGVpdHVyYSwKZGl2dWxnYcOnw6NvIG91IGPDs3BpYSBzw6Nv
-IHByb2liaWRhcy4gRmF2b3IgYXBhZ2FyIGFzCmluZm9ybWHDp8O1ZXMgZSBub3RpZmljYXIgbyBy
-ZW1ldGVudGUuIE8gdXNvIGltcHLDs3ByaW8Kc2Vyw6EgdHJhdGFkbyBjb25mb3JtZSBhcyBub3Jt
-YXMgZGEgZW1wcmVzYQplIGEgbGVnaXNsYcOnw6NvIGVtIHZpZ29yLgo=
+Hi Mark,
+
+On Tue, Mar 03, 2015 at 02:36:19PM -0500, Mark Hounschell wrote:
+> It looks like this problem is NOT a bug with the SCSI aic7xxx driver
+> after all. I can duplicate this BUG very easily with other hardware.
+> Simply removing a driver module  (whether it its self, has actually
+> used any of the DMA API or not) that is sitting on the same pci bus
+> as a card that is actually using DMA will cause this. And that card
+> that is in use and using DMA will no longer function. It "looks and
+> feels" like unloading a module causes the IOMMU to improperly unmap
+> valid mappings.
+
+You are right, I looked into the code and found the problem. I'll post a
+fix for testing this week.
+
+
+	Joerg
 
