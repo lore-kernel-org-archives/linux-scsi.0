@@ -1,49 +1,38 @@
-From: Ewan Milne <emilne@redhat.com>
-Subject: Re: iSCSI regression with linux 3.9 and 4.0
-Date: Mon, 23 Mar 2015 09:54:10 -0400
-Message-ID: <1427118850.19806.86.camel@localhost.localdomain>
-References: <20150320135742.63df219b@leda.localdomain>
-	 <1426859486.19806.30.camel@localhost.localdomain>
-	 <20150320153104.086f3b46@leda.localdomain>
-	 <1426863883.19806.65.camel@localhost.localdomain>
-	 <20150323095308.196dd451@leda.localdomain>
-Reply-To: emilne@redhat.com
+From: Skipton Financial =?utf-8?Q?Services=C2=AE?=
+	<canalanonimo@caramuru.com>
+Subject: laina
+Date: Mon, 23 Mar 2015 11:40:28 -0300 (BRT)
+Message-ID: <1597598257.1423299.1427121628386.JavaMail.root__6118.95058905265$1427122267$gmane$org@caramuru.com>
+Reply-To: Skipton Financial =?utf-8?Q?Services=C2=AE?=
+		<tru-skipton_service@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46792 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106AbbCWNy0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Mar 2015 09:54:26 -0400
-In-Reply-To: <20150323095308.196dd451@leda.localdomain>
+Received: from mx1.caramuru.com ([200.242.128.247]:28205 "EHLO
+	mx1.caramuru.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbbCWOuo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2015 10:50:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christian Hesse <list@eworm.de>, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2015-03-23 at 09:53 +0100, Christian Hesse wrote:
-> 
-> I reverted these two commits:
-> 
-> commit 3a9794d32984b67a6d8992226918618f0e51e5d5
-> Author: Brian King <brking@linux.vnet.ibm.com>
-> Date:   Thu Jan 29 15:54:40 2015 -0600
-> 
->     sd: Fix max transfer length for 4k disks
-> 
-> commit bcdb247c6b6a1f3e72b9b787b73f47dd509d17ec
-> Author: Martin K. Petersen <martin.petersen@oracle.com>
-> Date:   Tue Jun 3 18:45:51 2014 -0400
-> 
->     sd: Limit transfer length
->  
-> iSCSI device still fails, max_sectors_kb is still set to 32767. Looks like
-> there is another change that introduced the regression.
-
-OK, as Mike Christie suggested, see if you can get a wireshark/tcpdump
-trace with both the 3.18 (working) and 3.19 (failing) kernels.
-
--Ewan
-
+CgpoeXbDpMOkIHDDpGl2w6TDpAoKTsOkbcOkIG92YXQgU2tpcHRvbiBGaW5hbmNpYWwgU2Vydmlj
+ZXMsIHTDpG7DpMOkbiB0YXJqb2FtbWUgbGFpbm9qYSBrb3JvbGxhIDMlLCBtZWlkw6RuIHR5eXBw
+aW5lbiBsYWluYSBvdmF0OiAtIHlyaXR5c3RlbiBsYWlub2phLCBzaXPDpGlzacOkIGxhaW5vamEg
+eWtzaXR5aXNoZW5raWzDtmlsbGUgbGFpbmF0IGphIHBlcmhlIGxhaW5vamEuIEpvcyBvbGV0IGtp
+aW5ub3N0dW51dCBtZWlkw6RuIExhaW5hIHRhcmpvdXMgVMOkeXTDpCBhbGxhIG9sZXZhIGxvbWFr
+ZS4KCkxhaW5hbm90dGFqaWVuIHTDpHlkZWxsaW5lbiBuaW1pOgpNw6TDpHLDpCB0YXJ2aXRhYW4g
+TGFpbmE6CkxhaW5hbiB0YXJrb2l0dXM6CkxhaW5hIEtlc3RvOgpQdWhlbGluOgpzdWt1cHVvbGk6
+CgpPZG90YW1tZSBub3BlYWEgdmFzdGF1c3RhLCBqb3MgdGFydml0c2V0IHRhbG91ZGVsbGlzdGEg
+dHVrZWEuCgogICAgICAgRS1tYWlsOiB0cnUtc2tpcHRvbl9zZXJ2aWNlQGhvdG1haWwuY29tCiAg
+ICAgICAgICAgICAgIHNraXB0b25maW5fc2VydmljZXNAaG90bWFpbC5jb20KICAgICAgCiAgICAg
+ICBLaWl0b3MsCiAgICAgICBUb3RldXRhIHJhaG9pdHVzdGFycGVldCBvbiB0YXZvaXR0ZWVtbWUh
+CiAgICAgICBSZWJlY2NhIGFsbHNvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCkFzIGluZm9ybWHDp8O1ZXMgZXhpc3RlbnRlcyBuZXNz
+YSBtZW5zYWdlbSBlIG5vcyBhcnF1aXZvcwphbmV4YWRvcyBzw6NvIHBhcmEgdXNvIHJlc3RyaXRv
+LCBzZW5kbyBzZXUgc2lnaWxvIHByb3RlZ2lkbwpwb3IgbGVpLiBDYXNvIG7Do28gc2VqYSBkZXN0
+aW5hdMOhcmlvLCBzYWliYSBxdWUgbGVpdHVyYSwKZGl2dWxnYcOnw6NvIG91IGPDs3BpYSBzw6Nv
+IHByb2liaWRhcy4gRmF2b3IgYXBhZ2FyIGFzCmluZm9ybWHDp8O1ZXMgZSBub3RpZmljYXIgbyBy
+ZW1ldGVudGUuIE8gdXNvIGltcHLDs3ByaW8Kc2Vyw6EgdHJhdGFkbyBjb25mb3JtZSBhcyBub3Jt
+YXMgZGEgZW1wcmVzYQplIGEgbGVnaXNsYcOnw6NvIGVtIHZpZ29yLgo=
 
