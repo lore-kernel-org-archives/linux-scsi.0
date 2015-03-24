@@ -1,133 +1,114 @@
-From: Venkatesh Srinivas <venkateshs@google.com>
-Subject: Re: [PATCH RESEND 2/7] scsi: storvsc: Size the queue depth based on
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH RESEND 2/7] scsi: storvsc: Size the queue depth based on
  the ringbuffer size
-Date: Mon, 23 Mar 2015 17:23:00 -0700
-Message-ID: <CAHdzE-891eczDgPM98ihzer97Y21wX1+AsqN121y5u1yNTxmGg@mail.gmail.com>
+Date: Tue, 24 Mar 2015 01:49:46 +0000
+Message-ID: <BN1PR0301MB07077F394C7EAB9BBAE50D14A00A0@BN1PR0301MB0707.namprd03.prod.outlook.com>
 References: <1427144760-11875-1-git-send-email-kys@microsoft.com>
 	<1427144801-11920-1-git-send-email-kys@microsoft.com>
 	<1427144801-11920-2-git-send-email-kys@microsoft.com>
+ <CAHdzE-891eczDgPM98ihzer97Y21wX1+AsqN121y5u1yNTxmGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427144801-11920-2-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, Linux Kernel Developers List <linux-kernel@vger.kernel.org>, devel@linuxdriverproject.org, ohering@suse.com, "James E.J. Bottomley" <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn1on0136.outbound.protection.outlook.com ([157.56.110.136]:17574
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752064AbbCXBtt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Mar 2015 21:49:49 -0400
+In-Reply-To: <CAHdzE-891eczDgPM98ihzer97Y21wX1+AsqN121y5u1yNTxmGg@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Venkatesh Srinivas <venkateshs@google.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Linux Kernel Developers List <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>
 
-On Mon, Mar 23, 2015 at 2:06 PM, K. Y. Srinivasan <kys@microsoft.com> wrote:
-> Size the queue depth based on the ringbuffer size. Also accomodate for the
-> fact that we could have multiple channels (ringbuffers) per adaptor.
->
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Reviewed-by: Long Li <longli@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c |   27 ++++++++++++++++-----------
->  1 files changed, 16 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 27fe850..5a12897 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -309,10 +309,15 @@ enum storvsc_request_type {
->   */
->
->  static int storvsc_ringbuffer_size = (256 * PAGE_SIZE);
-> +static u32 max_outstanding_req_per_channel;
-> +
-> +static int storvsc_vcpus_per_sub_channel = 4;
->
->  module_param(storvsc_ringbuffer_size, int, S_IRUGO);
->  MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
->
-> +module_param(storvsc_vcpus_per_sub_channel, int, S_IRUGO);
-> +MODULE_PARM_DESC(vcpus_per_sub_channel, "Ratio of VCPUs to subchannels");
->  /*
->   * Timeout in seconds for all devices managed by this driver.
->   */
-> @@ -320,7 +325,6 @@ static int storvsc_timeout = 180;
->
->  static int msft_blist_flags = BLIST_TRY_VPD_PAGES;
->
-> -#define STORVSC_MAX_IO_REQUESTS                                200
->
->  static void storvsc_on_channel_callback(void *context);
->
-> @@ -1376,7 +1380,6 @@ static int storvsc_do_io(struct hv_device *device,
->
->  static int storvsc_device_configure(struct scsi_device *sdevice)
->  {
-> -       scsi_change_queue_depth(sdevice, STORVSC_MAX_IO_REQUESTS);
->
->         blk_queue_max_segment_size(sdevice->request_queue, PAGE_SIZE);
->
-> @@ -1646,7 +1649,6 @@ static struct scsi_host_template scsi_driver = {
->         .eh_timed_out =         storvsc_eh_timed_out,
->         .slave_configure =      storvsc_device_configure,
->         .cmd_per_lun =          255,
-> -       .can_queue =            STORVSC_MAX_IO_REQUESTS*STORVSC_MAX_TARGETS,
->         .this_id =              -1,
->         /* no use setting to 0 since ll_blk_rw reset it to 1 */
->         /* currently 32 */
-> @@ -1686,6 +1688,7 @@ static int storvsc_probe(struct hv_device *device,
->                         const struct hv_vmbus_device_id *dev_id)
->  {
->         int ret;
-> +       int num_cpus = num_online_cpus();
->         struct Scsi_Host *host;
->         struct hv_host_device *host_dev;
->         bool dev_is_ide = ((dev_id->driver_data == IDE_GUID) ? true : false);
-> @@ -1694,6 +1697,7 @@ static int storvsc_probe(struct hv_device *device,
->         int max_luns_per_target;
->         int max_targets;
->         int max_channels;
-> +       int max_sub_channels = 0;
->
->         /*
->          * Based on the windows host we are running on,
-> @@ -1719,12 +1723,18 @@ static int storvsc_probe(struct hv_device *device,
->                 max_luns_per_target = STORVSC_MAX_LUNS_PER_TARGET;
->                 max_targets = STORVSC_MAX_TARGETS;
->                 max_channels = STORVSC_MAX_CHANNELS;
-> +               /*
-> +                * On Windows8 and above, we support sub-channels for storage.
-> +                * The number of sub-channels offerred is based on the number of
-> +                * VCPUs in the guest.
-> +                */
-> +               max_sub_channels = (num_cpus / storvsc_vcpus_per_sub_channel);
->                 break;
->         }
->
-> -       if (dev_id->driver_data == SFC_GUID)
-> -               scsi_driver.can_queue = (STORVSC_MAX_IO_REQUESTS *
-> -                                        STORVSC_FC_MAX_TARGETS);
-> +       scsi_driver.can_queue = (max_outstanding_req_per_channel *
-> +                                max_sub_channels + 1);
-> +
-
-If num_online_cpus() returned 1 - 3, can_queue will be set to 1 I
-think. Is that desired?
-
->         host = scsi_host_alloc(&scsi_driver,
->                                sizeof(struct hv_host_device));
->         if (!host)
-> @@ -1837,7 +1847,6 @@ static struct hv_driver storvsc_drv = {
->
->  static int __init storvsc_drv_init(void)
->  {
-> -       u32 max_outstanding_req_per_channel;
->
->         /*
->          * Divide the ring buffer data size (which is 1 page less
-> @@ -1852,10 +1861,6 @@ static int __init storvsc_drv_init(void)
->                 vmscsi_size_delta,
->                 sizeof(u64)));
->
-> -       if (max_outstanding_req_per_channel <
-> -           STORVSC_MAX_IO_REQUESTS)
-> -               return -EINVAL;
-> -
->         return vmbus_driver_register(&storvsc_drv);
->  }
-
--- vs;
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVmVua2F0ZXNoIFNyaW5p
+dmFzIFttYWlsdG86dmVua2F0ZXNoc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBNb25kYXksIE1hcmNo
+IDIzLCAyMDE1IDU6MjMgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4NCj4gQ2M6IGdyZWdraEBsaW51
+eGZvdW5kYXRpb24ub3JnOyBMaW51eCBLZXJuZWwgRGV2ZWxvcGVycyBMaXN0Ow0KPiBkZXZlbEBs
+aW51eGRyaXZlcnByb2plY3Qub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBKYW1lcyBFLkouIEJvdHRv
+bWxleTsNCj4gQ2hyaXN0b3BoIEhlbGx3aWc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBh
+cHdAY2Fub25pY2FsLmNvbTsNCj4gdmt1em5ldHNAcmVkaGF0LmNvbTsgamFzb3dhbmdAcmVkaGF0
+LmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFJFU0VORCAyLzddIHNjc2k6IHN0b3J2c2M6IFNp
+emUgdGhlIHF1ZXVlIGRlcHRoIGJhc2VkDQo+IG9uIHRoZSByaW5nYnVmZmVyIHNpemUNCj4gDQo+
+IE9uIE1vbiwgTWFyIDIzLCAyMDE1IGF0IDI6MDYgUE0sIEsuIFkuIFNyaW5pdmFzYW4gPGt5c0Bt
+aWNyb3NvZnQuY29tPg0KPiB3cm90ZToNCj4gPiBTaXplIHRoZSBxdWV1ZSBkZXB0aCBiYXNlZCBv
+biB0aGUgcmluZ2J1ZmZlciBzaXplLiBBbHNvIGFjY29tb2RhdGUgZm9yDQo+IHRoZQ0KPiA+IGZh
+Y3QgdGhhdCB3ZSBjb3VsZCBoYXZlIG11bHRpcGxlIGNoYW5uZWxzIChyaW5nYnVmZmVycykgcGVy
+IGFkYXB0b3IuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLLiBZLiBTcmluaXZhc2FuIDxreXNA
+bWljcm9zb2Z0LmNvbT4NCj4gPiBSZXZpZXdlZC1ieTogTG9uZyBMaSA8bG9uZ2xpQG1pY3Jvc29m
+dC5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jIHwgICAyNyAr
+KysrKysrKysrKysrKysrLS0tLS0tLS0tLS0NCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxNiBpbnNl
+cnRpb25zKCspLCAxMSBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvc3RvcnZzY19kcnYuYyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gaW5k
+ZXggMjdmZTg1MC4uNWExMjg5NyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvc3RvcnZz
+Y19kcnYuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9zdG9ydnNjX2Rydi5jDQo+ID4gQEAgLTMw
+OSwxMCArMzA5LDE1IEBAIGVudW0gc3RvcnZzY19yZXF1ZXN0X3R5cGUgew0KPiA+ICAgKi8NCj4g
+Pg0KPiA+ICBzdGF0aWMgaW50IHN0b3J2c2NfcmluZ2J1ZmZlcl9zaXplID0gKDI1NiAqIFBBR0Vf
+U0laRSk7DQo+ID4gK3N0YXRpYyB1MzIgbWF4X291dHN0YW5kaW5nX3JlcV9wZXJfY2hhbm5lbDsN
+Cj4gPiArDQo+ID4gK3N0YXRpYyBpbnQgc3RvcnZzY192Y3B1c19wZXJfc3ViX2NoYW5uZWwgPSA0
+Ow0KPiA+DQo+ID4gIG1vZHVsZV9wYXJhbShzdG9ydnNjX3JpbmdidWZmZXJfc2l6ZSwgaW50LCBT
+X0lSVUdPKTsNCj4gPiAgTU9EVUxFX1BBUk1fREVTQyhzdG9ydnNjX3JpbmdidWZmZXJfc2l6ZSwg
+IlJpbmcgYnVmZmVyIHNpemUNCj4gKGJ5dGVzKSIpOw0KPiA+DQo+ID4gK21vZHVsZV9wYXJhbShz
+dG9ydnNjX3ZjcHVzX3Blcl9zdWJfY2hhbm5lbCwgaW50LCBTX0lSVUdPKTsNCj4gPiArTU9EVUxF
+X1BBUk1fREVTQyh2Y3B1c19wZXJfc3ViX2NoYW5uZWwsICJSYXRpbyBvZiBWQ1BVcyB0bw0KPiBz
+dWJjaGFubmVscyIpOw0KPiA+ICAvKg0KPiA+ICAgKiBUaW1lb3V0IGluIHNlY29uZHMgZm9yIGFs
+bCBkZXZpY2VzIG1hbmFnZWQgYnkgdGhpcyBkcml2ZXIuDQo+ID4gICAqLw0KPiA+IEBAIC0zMjAs
+NyArMzI1LDYgQEAgc3RhdGljIGludCBzdG9ydnNjX3RpbWVvdXQgPSAxODA7DQo+ID4NCj4gPiAg
+c3RhdGljIGludCBtc2Z0X2JsaXN0X2ZsYWdzID0gQkxJU1RfVFJZX1ZQRF9QQUdFUzsNCj4gPg0K
+PiA+IC0jZGVmaW5lIFNUT1JWU0NfTUFYX0lPX1JFUVVFU1RTICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAyMDANCj4gPg0KPiA+ICBzdGF0aWMgdm9pZCBzdG9ydnNjX29uX2NoYW5uZWxf
+Y2FsbGJhY2sodm9pZCAqY29udGV4dCk7DQo+ID4NCj4gPiBAQCAtMTM3Niw3ICsxMzgwLDYgQEAg
+c3RhdGljIGludCBzdG9ydnNjX2RvX2lvKHN0cnVjdCBodl9kZXZpY2UgKmRldmljZSwNCj4gPg0K
+PiA+ICBzdGF0aWMgaW50IHN0b3J2c2NfZGV2aWNlX2NvbmZpZ3VyZShzdHJ1Y3Qgc2NzaV9kZXZp
+Y2UgKnNkZXZpY2UpDQo+ID4gIHsNCj4gPiAtICAgICAgIHNjc2lfY2hhbmdlX3F1ZXVlX2RlcHRo
+KHNkZXZpY2UsIFNUT1JWU0NfTUFYX0lPX1JFUVVFU1RTKTsNCj4gPg0KPiA+ICAgICAgICAgYmxr
+X3F1ZXVlX21heF9zZWdtZW50X3NpemUoc2RldmljZS0+cmVxdWVzdF9xdWV1ZSwNCj4gUEFHRV9T
+SVpFKTsNCj4gPg0KPiA+IEBAIC0xNjQ2LDcgKzE2NDksNiBAQCBzdGF0aWMgc3RydWN0IHNjc2lf
+aG9zdF90ZW1wbGF0ZSBzY3NpX2RyaXZlciA9IHsNCj4gPiAgICAgICAgIC5laF90aW1lZF9vdXQg
+PSAgICAgICAgIHN0b3J2c2NfZWhfdGltZWRfb3V0LA0KPiA+ICAgICAgICAgLnNsYXZlX2NvbmZp
+Z3VyZSA9ICAgICAgc3RvcnZzY19kZXZpY2VfY29uZmlndXJlLA0KPiA+ICAgICAgICAgLmNtZF9w
+ZXJfbHVuID0gICAgICAgICAgMjU1LA0KPiA+IC0gICAgICAgLmNhbl9xdWV1ZSA9DQo+IFNUT1JW
+U0NfTUFYX0lPX1JFUVVFU1RTKlNUT1JWU0NfTUFYX1RBUkdFVFMsDQo+ID4gICAgICAgICAudGhp
+c19pZCA9ICAgICAgICAgICAgICAtMSwNCj4gPiAgICAgICAgIC8qIG5vIHVzZSBzZXR0aW5nIHRv
+IDAgc2luY2UgbGxfYmxrX3J3IHJlc2V0IGl0IHRvIDEgKi8NCj4gPiAgICAgICAgIC8qIGN1cnJl
+bnRseSAzMiAqLw0KPiA+IEBAIC0xNjg2LDYgKzE2ODgsNyBAQCBzdGF0aWMgaW50IHN0b3J2c2Nf
+cHJvYmUoc3RydWN0IGh2X2RldmljZSAqZGV2aWNlLA0KPiA+ICAgICAgICAgICAgICAgICAgICAg
+ICAgIGNvbnN0IHN0cnVjdCBodl92bWJ1c19kZXZpY2VfaWQgKmRldl9pZCkNCj4gPiAgew0KPiA+
+ICAgICAgICAgaW50IHJldDsNCj4gPiArICAgICAgIGludCBudW1fY3B1cyA9IG51bV9vbmxpbmVf
+Y3B1cygpOw0KPiA+ICAgICAgICAgc3RydWN0IFNjc2lfSG9zdCAqaG9zdDsNCj4gPiAgICAgICAg
+IHN0cnVjdCBodl9ob3N0X2RldmljZSAqaG9zdF9kZXY7DQo+ID4gICAgICAgICBib29sIGRldl9p
+c19pZGUgPSAoKGRldl9pZC0+ZHJpdmVyX2RhdGEgPT0gSURFX0dVSUQpID8gdHJ1ZSA6IGZhbHNl
+KTsNCj4gPiBAQCAtMTY5NCw2ICsxNjk3LDcgQEAgc3RhdGljIGludCBzdG9ydnNjX3Byb2JlKHN0
+cnVjdCBodl9kZXZpY2UgKmRldmljZSwNCj4gPiAgICAgICAgIGludCBtYXhfbHVuc19wZXJfdGFy
+Z2V0Ow0KPiA+ICAgICAgICAgaW50IG1heF90YXJnZXRzOw0KPiA+ICAgICAgICAgaW50IG1heF9j
+aGFubmVsczsNCj4gPiArICAgICAgIGludCBtYXhfc3ViX2NoYW5uZWxzID0gMDsNCj4gPg0KPiA+
+ICAgICAgICAgLyoNCj4gPiAgICAgICAgICAqIEJhc2VkIG9uIHRoZSB3aW5kb3dzIGhvc3Qgd2Ug
+YXJlIHJ1bm5pbmcgb24sDQo+ID4gQEAgLTE3MTksMTIgKzE3MjMsMTggQEAgc3RhdGljIGludCBz
+dG9ydnNjX3Byb2JlKHN0cnVjdCBodl9kZXZpY2UNCj4gKmRldmljZSwNCj4gPiAgICAgICAgICAg
+ICAgICAgbWF4X2x1bnNfcGVyX3RhcmdldCA9IFNUT1JWU0NfTUFYX0xVTlNfUEVSX1RBUkdFVDsN
+Cj4gPiAgICAgICAgICAgICAgICAgbWF4X3RhcmdldHMgPSBTVE9SVlNDX01BWF9UQVJHRVRTOw0K
+PiA+ICAgICAgICAgICAgICAgICBtYXhfY2hhbm5lbHMgPSBTVE9SVlNDX01BWF9DSEFOTkVMUzsN
+Cj4gPiArICAgICAgICAgICAgICAgLyoNCj4gPiArICAgICAgICAgICAgICAgICogT24gV2luZG93
+czggYW5kIGFib3ZlLCB3ZSBzdXBwb3J0IHN1Yi1jaGFubmVscyBmb3Igc3RvcmFnZS4NCj4gPiAr
+ICAgICAgICAgICAgICAgICogVGhlIG51bWJlciBvZiBzdWItY2hhbm5lbHMgb2ZmZXJyZWQgaXMg
+YmFzZWQgb24gdGhlIG51bWJlcg0KPiBvZg0KPiA+ICsgICAgICAgICAgICAgICAgKiBWQ1BVcyBp
+biB0aGUgZ3Vlc3QuDQo+ID4gKyAgICAgICAgICAgICAgICAqLw0KPiA+ICsgICAgICAgICAgICAg
+ICBtYXhfc3ViX2NoYW5uZWxzID0gKG51bV9jcHVzIC8NCj4gc3RvcnZzY192Y3B1c19wZXJfc3Vi
+X2NoYW5uZWwpOw0KPiA+ICAgICAgICAgICAgICAgICBicmVhazsNCj4gPiAgICAgICAgIH0NCj4g
+Pg0KPiA+IC0gICAgICAgaWYgKGRldl9pZC0+ZHJpdmVyX2RhdGEgPT0gU0ZDX0dVSUQpDQo+ID4g
+LSAgICAgICAgICAgICAgIHNjc2lfZHJpdmVyLmNhbl9xdWV1ZSA9IChTVE9SVlNDX01BWF9JT19S
+RVFVRVNUUyAqDQo+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBT
+VE9SVlNDX0ZDX01BWF9UQVJHRVRTKTsNCj4gPiArICAgICAgIHNjc2lfZHJpdmVyLmNhbl9xdWV1
+ZSA9IChtYXhfb3V0c3RhbmRpbmdfcmVxX3Blcl9jaGFubmVsICoNCj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBtYXhfc3ViX2NoYW5uZWxzICsgMSk7DQo+ID4gKw0KPiANCj4g
+SWYgbnVtX29ubGluZV9jcHVzKCkgcmV0dXJuZWQgMSAtIDMsIGNhbl9xdWV1ZSB3aWxsIGJlIHNl
+dCB0byAxIEkNCj4gdGhpbmsuIElzIHRoYXQgZGVzaXJlZD8NCg0KY2FuXyBxdWV1ZSB3aWxsIGJl
+IHNldCAgbWF4X291dHN0YW5kaW5nX3JlcV9wZXJfY2hhbm5lbCBpbg0KdGhpcyBjYXNlLiBUaGF0
+IGlzIHdoYXQgaXMgZXhwZWN0ZWQuIFdlIHdpbGwgYWx3YXlzIGhhdmUgdGhlIHByaW1hcnkgY2hh
+bm5lbDsNCkFkZGl0aW9uYWxseSwgaWYgdGhlIGd1ZXN0IGhhcyBtb3JlIHRoYW4gNCBWQ1BVcywg
+dGhlIGhvc3Qgd2lsbCBvZmZlcg0KQWRkaXRpb25hbCBzdWJjaGFubmVscyBmb3IgZWFjaCA0IFZD
+UHVzIGluIHRoZSBndWVzdC4gU28gZm9yIGxlc3MgdGhhbg0KNCBWQ1B1cyBpbiB0aGUgZ3Vlc3Qs
+IHdlIHdpbGwgb25seSBoYXZlIHRoZSBwcmltYXJ5IGNoYW5uZWwuDQoNCg0KUmVnYXJkcywNCg0K
+Sy4gWQ0K
