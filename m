@@ -1,72 +1,46 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 6/7] scsi: storvsc: Don't assume that the scatterlist is
- not chained
-Date: Tue, 24 Mar 2015 16:29:42 +0000
-Message-ID: <BN1PR0301MB0707EDA27C3C7D79463F34F7A00A0@BN1PR0301MB0707.namprd03.prod.outlook.com>
-References: <1427144760-11875-1-git-send-email-kys@microsoft.com>
- <1427144801-11920-1-git-send-email-kys@microsoft.com>
- <1427144801-11920-6-git-send-email-kys@microsoft.com>
- <20150324085607.GA1849@aepfle.de>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH 1/3] iscsi-target: Convert iscsi_thread_set usage to kthread.h
+Date: Tue, 24 Mar 2015 18:37:52 +0200
+Message-ID: <551192E0.509@dev.mellanox.co.il>
+References: <1426918564-22581-1-git-send-email-nab@daterainc.com> <1426918564-22581-2-git-send-email-nab@daterainc.com> <55100547.2090208@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <20150324085607.GA1849@aepfle.de>
-Content-Language: en-US
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Olaf Hering <olaf@aepfle.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <55100547.2090208@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, Slava Shwartsman <valyushash@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On 3/23/2015 2:21 PM, Sagi Grimberg wrote:
+> On 3/21/2015 8:16 AM, Nicholas A. Bellinger wrote:
+>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>
+>> This patch converts iscsi-target code to use modern kthread.h API
+>> callers for creating RX/TX threads for each new iscsi_conn descriptor,
+>> and releasing associated RX/TX threads during connection shutdown.
+>>
+>> This is done using iscsit_start_kthreads() -> kthread_run() to start
+>> new kthreads from within iscsi_post_login_handler(), and invoking
+>> kthread_stop() from existing iscsit_close_connection() code.
+>>
+>> Also, convert iscsit_logout_post_handler_closesession() code to use
+>> cmpxchg when determing when iscsit_cause_connection_reinstatement()
+>> needs to sleep waiting for completion.
+>
+> I'll run some tests with this.
 
+Hi Nic,
 
-> -----Original Message-----
-> From: Olaf Hering [mailto:olaf@aepfle.de]
-> Sent: Tuesday, March 24, 2015 1:56 AM
-> To: KY Srinivasan
-> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; jbottomley@parallels.com;
-> hch@infradead.org; linux-scsi@vger.kernel.org; apw@canonical.com;
-> vkuznets@redhat.com; jasowang@redhat.com
-> Subject: Re: [PATCH 6/7] scsi: storvsc: Don't assume that the scatterlist is not
-> chained
-> 
-> On Mon, Mar 23, K. Y. Srinivasan wrote:
-> 
-> > @@ -653,32 +640,39 @@ static unsigned int
-> copy_from_bounce_buffer(struct scatterlist *orig_sgl,
-> >  	unsigned long bounce_addr = 0;
-> >  	unsigned long dest_addr = 0;
-> >  	unsigned long flags;
-> > +	struct scatterlist *cur_dest_sgl;
-> > +	struct scatterlist *cur_src_sgl;
-> >
-> >  	local_irq_save(flags);
-> > -
-> > +	cur_dest_sgl = orig_sgl;
-> > +	cur_src_sgl = bounce_sgl;
-> >  	for (i = 0; i < orig_sgl_count; i++) {
-> > -		dest_addr = sg_kmap_atomic(orig_sgl,i) + orig_sgl[i].offset;
-> > +		dest_addr = (unsigned long)
-> > +				kmap_atomic(sg_page(cur_dest_sgl)) +
-> > +				cur_dest_sgl->offset;
-> >  		dest = dest_addr;
-> >  		destlen = orig_sgl[i].length;
-> > +		destlen = cur_dest_sgl->length;
-> 
-> Double assignment.
+I can report that this series (minus patch 3/3 and along with some
+patches I'll send out soon) seems to resolve the list corruption issue
+I've seen.
 
-Thanks Olaf; I will fix this and resubmit.
+Overall the patches look good to me so feel free to include
+patches 1+2 with:
 
-K. Y
+Tested-by: Sagi Grimberg <sagig@mellanox.com>
 
-> 
-> Olaf
+Thanks!
+Sagi.
