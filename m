@@ -1,171 +1,72 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH 1/3] cxgb4: add cxgb4_fcoe.h and macro definitions for FCoE
-Date: Tue, 24 Mar 2015 19:14:45 +0530
-Message-ID: <53b7c0b7beb85b5f20755d50293f4818476a8659.1427199268.git.varun@chelsio.com>
-References: <cover.1427199268.git.varun@chelsio.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:2712 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752179AbbCXNqM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Mar 2015 09:46:12 -0400
-In-Reply-To: <cover.1427199268.git.varun@chelsio.com>
-In-Reply-To: <cover.1427199268.git.varun@chelsio.com>
-References: <cover.1427199268.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 6/7] scsi: storvsc: Don't assume that the scatterlist is
+ not chained
+Date: Tue, 24 Mar 2015 16:29:42 +0000
+Message-ID: <BN1PR0301MB0707EDA27C3C7D79463F34F7A00A0@BN1PR0301MB0707.namprd03.prod.outlook.com>
+References: <1427144760-11875-1-git-send-email-kys@microsoft.com>
+ <1427144801-11920-1-git-send-email-kys@microsoft.com>
+ <1427144801-11920-6-git-send-email-kys@microsoft.com>
+ <20150324085607.GA1849@aepfle.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20150324085607.GA1849@aepfle.de>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jasowang@redhat.com" <jasowang@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jbottomley@parallels.com" <jbottomley@parallels.com>, "hch@infradead.org" <hch@infradead.org>, "apw@canonical.com" <apw@canonical.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net, JBottomley@parallels.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, praveenm@chelsio.com, varun@chelsio.com
 
-This patch adds new header file cxgb4_fcoe.h and defines new
-macros for FCoE support in cxgb4 driver.
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |    7 +++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h |   57 +++++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/t4_msg.h     |   25 ++++++++++
- 3 files changed, 89 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index 4555634..bf46ca9 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -387,6 +387,10 @@ struct sge_rspq;
- 
- #include "cxgb4_dcb.h"
- 
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+#include "cxgb4_fcoe.h"
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
-+
- struct port_info {
- 	struct adapter *adapter;
- 	u16    viid;
-@@ -406,6 +410,9 @@ struct port_info {
- #ifdef CONFIG_CHELSIO_T4_DCB
- 	struct port_dcb_info dcb;     /* Data Center Bridging support */
- #endif
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+	struct cxgb_fcoe fcoe;
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
- };
- 
- struct dentry;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h
-new file mode 100644
-index 0000000..bf9258a
---- /dev/null
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.h
-@@ -0,0 +1,57 @@
-+/*
-+ * This file is part of the Chelsio T4 Ethernet driver for Linux.
-+ *
-+ * Copyright (c) 2015 Chelsio Communications, Inc. All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#ifndef __CXGB4_FCOE_H__
-+#define __CXGB4_FCOE_H__
-+
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+
-+#define CXGB_FCOE_TXPKT_CSUM_START	28
-+#define CXGB_FCOE_TXPKT_CSUM_END	8
-+
-+/* fcoe flags */
-+enum {
-+	CXGB_FCOE_ENABLED     = (1 << 0),
-+};
-+
-+struct cxgb_fcoe {
-+	u8	flags;
-+};
-+
-+int cxgb_fcoe_enable(struct net_device *);
-+int cxgb_fcoe_disable(struct net_device *);
-+bool cxgb_fcoe_sof_eof_supported(struct adapter *, struct sk_buff *);
-+
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
-+#endif /* __CXGB4_FCOE_H__ */
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-index 0fb975e..30a2f56 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_msg.h
-@@ -794,6 +794,14 @@ struct cpl_rx_pkt {
- 	__be16 err_vec;
- };
- 
-+#define RXF_PSH_S    20
-+#define RXF_PSH_V(x) ((x) << RXF_PSH_S)
-+#define RXF_PSH_F    RXF_PSH_V(1U)
-+
-+#define RXF_SYN_S    21
-+#define RXF_SYN_V(x) ((x) << RXF_SYN_S)
-+#define RXF_SYN_F    RXF_SYN_V(1U)
-+
- #define RXF_UDP_S    22
- #define RXF_UDP_V(x) ((x) << RXF_UDP_S)
- #define RXF_UDP_F    RXF_UDP_V(1U)
-@@ -810,6 +818,18 @@ struct cpl_rx_pkt {
- #define RXF_IP6_V(x) ((x) << RXF_IP6_S)
- #define RXF_IP6_F    RXF_IP6_V(1U)
- 
-+#define RXF_SYN_COOKIE_S    26
-+#define RXF_SYN_COOKIE_V(x) ((x) << RXF_SYN_COOKIE_S)
-+#define RXF_SYN_COOKIE_F    RXF_SYN_COOKIE_V(1U)
-+
-+#define RXF_FCOE_S    26
-+#define RXF_FCOE_V(x) ((x) << RXF_FCOE_S)
-+#define RXF_FCOE_F    RXF_FCOE_V(1U)
-+
-+#define RXF_LRO_S    27
-+#define RXF_LRO_V(x) ((x) << RXF_LRO_S)
-+#define RXF_LRO_F    RXF_LRO_V(1U)
-+
- /* rx_pkt.l2info fields */
- #define RX_ETHHDR_LEN_S    0
- #define RX_ETHHDR_LEN_M    0x1F
-@@ -846,6 +866,11 @@ struct cpl_rx_pkt {
- #define RX_IPHDR_LEN_V(x) ((x) << RX_IPHDR_LEN_S)
- #define RX_IPHDR_LEN_G(x) (((x) >> RX_IPHDR_LEN_S) & RX_IPHDR_LEN_M)
- 
-+/* rx_pkt.err_vec fields */
-+#define RXERR_CSUM_S    13
-+#define RXERR_CSUM_V(x) ((x) << RXERR_CSUM_S)
-+#define RXERR_CSUM_F    RXERR_CSUM_V(1U)
-+
- struct cpl_trace_pkt {
- 	u8 opcode;
- 	u8 intf;
--- 
-1.7.1
+> -----Original Message-----
+> From: Olaf Hering [mailto:olaf@aepfle.de]
+> Sent: Tuesday, March 24, 2015 1:56 AM
+> To: KY Srinivasan
+> Cc: gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; jbottomley@parallels.com;
+> hch@infradead.org; linux-scsi@vger.kernel.org; apw@canonical.com;
+> vkuznets@redhat.com; jasowang@redhat.com
+> Subject: Re: [PATCH 6/7] scsi: storvsc: Don't assume that the scatterlist is not
+> chained
+> 
+> On Mon, Mar 23, K. Y. Srinivasan wrote:
+> 
+> > @@ -653,32 +640,39 @@ static unsigned int
+> copy_from_bounce_buffer(struct scatterlist *orig_sgl,
+> >  	unsigned long bounce_addr = 0;
+> >  	unsigned long dest_addr = 0;
+> >  	unsigned long flags;
+> > +	struct scatterlist *cur_dest_sgl;
+> > +	struct scatterlist *cur_src_sgl;
+> >
+> >  	local_irq_save(flags);
+> > -
+> > +	cur_dest_sgl = orig_sgl;
+> > +	cur_src_sgl = bounce_sgl;
+> >  	for (i = 0; i < orig_sgl_count; i++) {
+> > -		dest_addr = sg_kmap_atomic(orig_sgl,i) + orig_sgl[i].offset;
+> > +		dest_addr = (unsigned long)
+> > +				kmap_atomic(sg_page(cur_dest_sgl)) +
+> > +				cur_dest_sgl->offset;
+> >  		dest = dest_addr;
+> >  		destlen = orig_sgl[i].length;
+> > +		destlen = cur_dest_sgl->length;
+> 
+> Double assignment.
 
+Thanks Olaf; I will fix this and resubmit.
+
+K. Y
+
+> 
+> Olaf
