@@ -1,28 +1,41 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/3] FCoE support in cxgb4 driver
-Date: Tue, 24 Mar 2015 15:26:27 -0400 (EDT)
-Message-ID: <20150324.152627.354543247307854229.davem@davemloft.net>
-References: <cover.1427199268.git.varun@chelsio.com>
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: Re: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
+Date: Tue, 24 Mar 2015 13:46:08 -0700
+Message-ID: <5511CD10.6040709@free-electrons.com>
+References: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net> <1427041891-2694-1-git-send-email-michael.opdenacker@free-electrons.com> <550FB9BE.5010801@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38778 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116AbbCXT0b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2015 15:26:31 -0400
-In-Reply-To: <cover.1427199268.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <550FB9BE.5010801@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, JBottomley@parallels.com
+Cc: joe@perches.com, Elliott@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: varun@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, JBottomley@parallels.com, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, praveenm@chelsio.com
 
-From: Varun Prakash <varun@chelsio.com>
-Date: Tue, 24 Mar 2015 19:14:44 +0530
+Hi,
 
-> This patch series enables FCoE support in cxgb4 driver, it enables
-> FCOE_CRC and FCOE_MTU net device features.
-> 
-> This series is created against net-next tree.
+On 03/22/2015 11:59 PM, Hannes Reinecke wrote:
+> On 03/22/2015 05:31 PM, Michael Opdenacker wrote:
+>> This replaces kmalloc + memset by a call to kzalloc
+>> (or kcalloc when appropriate, which zeroes memory too)
+>>
+>> This also fixes one checkpatch.pl issue in the process.
+>>
+>> This improvement was suggested by "make coccicheck"
+>>
+>> Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Series applied, thank you.
+I'm sending a version that reverts the use of kcalloc() instead of
+kzalloc(). For reasons I don't understand, I didn't see the end of
+Robert Elliott's comment that the use of kcalloc() could prevent the
+compiler from detecting an overflow.
+
+Michael.
+
+-- 
+Michael Opdenacker, CEO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
++33 484 258 098
