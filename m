@@ -1,47 +1,34 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH 6/7] scsi: storvsc: Don't assume that the scatterlist is
- not chained
-Date: Tue, 24 Mar 2015 09:56:07 +0100
-Message-ID: <20150324085607.GA1849@aepfle.de>
-References: <1427144760-11875-1-git-send-email-kys@microsoft.com>
- <1427144801-11920-1-git-send-email-kys@microsoft.com>
- <1427144801-11920-6-git-send-email-kys@microsoft.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH 0/3] Fix return code for ioctl( BLKRRPART ) if device is down
+Date: Tue, 24 Mar 2015 18:16:12 +0800
+Message-ID: <1427192175-23802-1-git-send-email-famz@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.216]:32212 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbbCXI4m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2015 04:56:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1427144801-11920-6-git-send-email-kys@microsoft.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45736 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708AbbCXKQY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Mar 2015 06:16:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org, apw@canonical.com, vkuznets@redhat.com, jasowang@redhat.com
+To: linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, famz@redhat.com
 
-On Mon, Mar 23, K. Y. Srinivasan wrote:
+If issued right after link down, "blockdev --rereadpt" will be stuck for a
+while and then return normally. Although the underlying capacity and partition
+table are not correctly updated. And it means that userspace can't detect the
+error at all.
 
-> @@ -653,32 +640,39 @@ static unsigned int copy_from_bounce_buffer(struct scatterlist *orig_sgl,
->  	unsigned long bounce_addr = 0;
->  	unsigned long dest_addr = 0;
->  	unsigned long flags;
-> +	struct scatterlist *cur_dest_sgl;
-> +	struct scatterlist *cur_src_sgl;
->  
->  	local_irq_save(flags);
-> -
-> +	cur_dest_sgl = orig_sgl;
-> +	cur_src_sgl = bounce_sgl;
->  	for (i = 0; i < orig_sgl_count; i++) {
-> -		dest_addr = sg_kmap_atomic(orig_sgl,i) + orig_sgl[i].offset;
-> +		dest_addr = (unsigned long)
-> +				kmap_atomic(sg_page(cur_dest_sgl)) +
-> +				cur_dest_sgl->offset;
->  		dest = dest_addr;
->  		destlen = orig_sgl[i].length;
-> +		destlen = cur_dest_sgl->length;
+Fix this by propargating the error of "read capacity" command through the
+stack, so that the ioctl could fail with -EIO.
 
-Double assignment.
+Fam Zheng (3):
+  block: Return error in rescan_partitions if revalidating disk failed
+  sd: Return error in sd_revalidate_disk if read capacity failed
+  sd: Return -EIO if read capacity failed
 
-Olaf
+ block/partition-generic.c |  6 +++---
+ drivers/scsi/sd.c         | 22 +++++++++++++---------
+ 2 files changed, 16 insertions(+), 12 deletions(-)
+
+-- 
+1.9.3
+
