@@ -1,74 +1,55 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
-Date: Tue, 24 Mar 2015 23:16:09 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A8416C5@G9W0745.americas.hpqcorp.net>
-References: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net>
-	 <1427041891-2694-1-git-send-email-michael.opdenacker@free-electrons.com>
-	 <550FB9BE.5010801@suse.de> <5511CD10.6040709@free-electrons.com>
- <1427230622.12126.13.camel@perches.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 1/9] snic: snic module infrastructure
+Date: Wed, 25 Mar 2015 11:05:44 +0100
+Message-ID: <55128878.80404@suse.de>
+References: <1426093299-4511-1-git-send-email-nmusini@cisco.com> <1426093299-4511-2-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427230622.12126.13.camel@perches.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>, Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Cc: Hannes Reinecke <hare@suse.de>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:42605 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750819AbbCYKFq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Mar 2015 06:05:46 -0400
+In-Reply-To: <1426093299-4511-2-git-send-email-nmusini@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Narsimhulu Musini <nmusini@cisco.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
+On 03/11/2015 06:01 PM, Narsimhulu Musini wrote:
+> snic_main.c contains module load and unload, global driver context,
+> PCI Registration, PCI probe and remove, SCSI ML registration function=
+ality.
+>=20
+> snic.h contains snic structure definition, snic global context, and
+> prototypes.
+>=20
+> snic_os.h contains OS specific interfaces.
+>=20
+> snic_attrs.c contains device attributes to list snic state, link stat=
+e,
+> and driver version under /sys/class/scsi_host/host<id>/
+>=20
+> v2
+> Added Compile time macro for debugfs dependent functionality.
+>=20
+> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
+> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-> -----Original Message-----
-> From: Joe Perches [mailto:joe@perches.com]
-> Sent: Tuesday, March 24, 2015 3:57 PM
-> To: Michael Opdenacker
-> Cc: Hannes Reinecke; JBottomley@parallels.com; Elliott, Robert (Server
-> Storage); linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
-> 
-> On Tue, 2015-03-24 at 13:46 -0700, Michael Opdenacker wrote:
-...
-> > On 03/22/2015 11:59 PM, Hannes Reinecke wrote:
-> > > On 03/22/2015 05:31 PM, Michael Opdenacker wrote:
-> > >> This replaces kmalloc + memset by a call to kzalloc
-> > >> (or kcalloc when appropriate, which zeroes memory too)
-> > >>
-...
-> > I'm sending a version that reverts the use of kcalloc() instead of
-> > kzalloc(). For reasons I don't understand, I didn't see the end of
-> > Robert Elliott's comment that the use of kcalloc() could prevent the
-> > compiler from detecting an overflow.
-> 
-> I'm confused.  I don't see that comment either, but
-> the entire point of kcalloc is to prevent overflows
-> by returning NULL when an overflow might occur.
+Cheers,
 
-It was a reply to the original post on 2014-10-16, not the resend
-this month. 
-
->From http://permalink.gmane.org/gmane.linux.kernel/1808168:
-
-kcalloc is helpful when one of the values is a variable that 
-might cause the multiply to overflow during runtime.  Here, 
-two constants are being multiplied together, which can
-be done and checked by the compiler at compile time.  
-
-Since kcalloc and kmalloc_array are both static inline 
-functions:
-static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
-{
-        if (size != 0 && n > SIZE_MAX / size)
-                return NULL;
-        return __kmalloc(n * size, flags);
-}
-static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
-{
-        return kmalloc_array(n, size, flags | __GFP_ZERO);
-}
-
-a compiler that detects an overflow will probably just reduce
-that to an inlined "return NULL."
-	
-BUILD_BUG_ON could be used to trigger a compile-time error,
-instead of building a kernel that returns a run-time error.
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
