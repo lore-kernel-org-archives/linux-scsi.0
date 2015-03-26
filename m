@@ -1,82 +1,124 @@
-From: Mark Hounschell <markh-n2QNKt385d+sTnJN9+BGXg@public.gmane.org>
-Subject: Re: BUG: SCSI aic7xxx driver and AMD IOMMU
-Date: Thu, 26 Mar 2015 13:09:45 -0400
-Message-ID: <55143D59.40005@compro.net>
-References: <54E1FFFA.1060403@compro.net> <54F60D33.8090401@compro.net>
-	<20150323150304.GQ4441@8bytes.org> <5511513D.6090106@compro.net>
-	<20150325135937.GR4441@8bytes.org>
-	<20150325151332.GT4441@8bytes.org> <5512E412.9040807@compro.net>
-	<20150326124559.GV4441@8bytes.org> <55141E87.8040506@compro.net>
-	<20150326155248.GW4441@8bytes.org>
-Reply-To: markh-n2QNKt385d+sTnJN9+BGXg@public.gmane.org
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+Subject: RE: Scsi Error handling query
+Date: Fri, 27 Mar 2015 00:13:02 +0530
+Message-ID: <bc74695bc632f3cda3ccec360eb6e0ae@mail.gmail.com>
+References: <5d00e10b067fd4d0fb82ecdec18dd325@mail.gmail.com> <55142C6D.1060205@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20150326155248.GW4441-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>
-Cc: iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org >> SCSI development list" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:35353 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbbCZSnF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2015 14:43:05 -0400
+Received: by lbcgn8 with SMTP id gn8so47605908lbc.2
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2015 11:43:03 -0700 (PDT)
+In-Reply-To: <55142C6D.1060205@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On 03/26/2015 11:52 AM, Joerg Roedel wrote:
-> Hi Mark,
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Thursday, March 26, 2015 9:28 PM
+> To: Kashyap Desai; linux-scsi@vger.kernel.org
+> Subject: Re: Scsi Error handling query
 >
-> On Thu, Mar 26, 2015 at 10:58:15AM -0400, Mark Hounschell wrote:
->> Sorry but CMA was still badly broken. I have a patch below that works.
+> On 03/26/2015 02:38 PM, Kashyap Desai wrote:
+> > Hi Hannes,
+> >
+> > I was going through one of the slide posted at below link.
+> >
+> > http://events.linuxfoundation.org/sites/events/files/slides/SCSI-EH=
+=2Epd
+> > f
+> >
+> > Slide #59 has below data. I was trying to correlate with latest
+> > upstream code, but do not understand few things. Does Linux handle
+> > blocking I/O to the device and target before it actually start lega=
+cy EH
+> recovery ?
 >
-> In which way is it broken? What happens when you try to allocate memory
-> with dma_alloc_coherent?
+> Yes. This is handled by 'scsi_eh_scmd_add()', which adds the command =
+to
+> the
+> internal 'eh_entry' list and starts recovery once all remaining
+> outstanding
+> commands are completed.
+
+Thanks Hannes..! Scsi_eh_scmd_add() move shost state to recovery, so it
+means  blocking further IO to the Host and not really a limited to
+Device/Target for which command was timed out. Right ?
+I understood that, new improvement of scsi error handling will allow IO=
+s to
+the other Devices attached to the host except the IO belongs to specifi=
+c
+target.
+
+Also, one more thing to clarify... In presentation, term "task set abor=
+ts"
+was used. Does this mean task set abort is handled as traversing comple=
+te
+list of timed out command and sending individual TASK ABORT ?
+
 >
-
-I got Oops on both the alloc and free and I had to hit the reset button.
-
->> I've tested it with small (no CMA) and large (with CMA) dma's using
->> dma_alloc_coherent. The patch below is just the "git diff" from your
->> cloned tree piped to a file then copied into this email. If you require
->> an official patch I can send one. Just let me know.
+> > Also, how does linux scsi stack achieve task set abort ?
+> >
+> Currently we don't :-)
+> The presentation was a roadmap about future EH updates.
 >
-> The main differences I can spot are that you change the order (first
-> CMA, then buddy) and you manually align the input size. I can see the
-> reason for the later, but why does CMA need to be tried first?
+> > Proposed SCSI EH strategy
+> > =E2=80=A2 Send command aborts after timeout
+> > =E2=80=A2 EH Recovery starts:
+> > =E2=80=92 Block I/O to the device
+> >        =E2=80=92 Issue 'Task Set Abort'
+> > =E2=80=92 Block I/O to the target
+> >        =E2=80=92 Issue I_T Nexus Reset
+> >        =E2=80=92 Complete outstanding command on success =E2=80=92 =
+Engage current EH
+> > strategy
+> >        =E2=80=92 LUN Reset, Target Reset etc
+> >
+> The current plans for EH updates are:
 >
-
-I believe that is how dma_alloc_coherent works. If  CMA is present it 
-uses it. Even for small allocations. If not present then it does the 
-best it can. That patch was derived by looking at the Intel iommu driver 
-works properly. Maybe you should take a look at that.
-
->> Also, in my opinion, this CMA thing is clearly a BUG not a feature
->> request. The AMD iommu clearly breaks CMA. I feel what ever fix
->> you are happy with should be back ported to stable.
+> - Convert eh_host_reset_handler() to take Scsi_Host as argument
+>   - Convert EH host reset to do a host rescan after try_host_reset()
+>     succeeded
+>   - Terminate failed scmds prior to calling try_host_reset()
+>   =3D> with that we should be able to instantiate a quick failover
+>      when running under multipathing, as then I/Os will be returned
+>      prior to the host reset (which is know to take quite a long
+>      time)
 >
-> It is not a BUG, the interface definition for dma_alloc_coherent does
-> not specify that it can allocate infinite amounts of memory. So this
-> patch does not qualify for stable.
+> - Convert the remaining eh_XXX_reset_handler() to take the
+>   appropriate structure as argument.
+>   This will require some work, as some EH handler implementation
+>   re-use the command tag (or even the actual command) for sending
+>   TMFs.
 >
+> - Implementing a 'transport reset' EH function; to be called
+>   after the current EH LUN Reset
 >
-
-I don't care what the "the interface definition for dma_alloc_coherent" 
-says. If it does not describe it's use with CMA, it is outdated. Maybe 
-the "interface definition for dma_alloc_coherent" was done before CMA 
-was implemented.
-
-Maybe you should be looking at CMA Documentation.  Unfortunately there 
-does not yet seem to be any in the Documentation dir. Probably because 
-CMA is supposed to be transparent to the DMA API. You know, one should 
-not need to details about it, etc...
-
-It is a BUG. To access CMA you use dma_alloc_coherent. You have 
-completely highjacked that function.  You have broken CMA. PERIOD. That 
-is a BUG.
-
-Regards
-Mark
+> - Investigating the possibilty for an asynchronous 'task set abort',
+>   and make the 'transport reset' EH function asynchronous, too.
+>
+> I've got a patchset for the first step, but the others still require =
+some
+> work ...
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke		               zSeries & Storage
+> hare@suse.de			               +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton=
+ HRB 21284
+> (AG
+> N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
