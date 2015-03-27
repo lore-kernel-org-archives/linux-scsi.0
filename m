@@ -1,24 +1,24 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [V2 PATCH 05/11] aacraid: vpd page code 0x83 support
-Date: Fri, 27 Mar 2015 11:18:31 +0100
-Message-ID: <55152E77.5090607@suse.de>
-References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-6-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Subject: Re: [V2 PATCH 06/11] aacraid: 240 simple volume support
+Date: Fri, 27 Mar 2015 11:19:01 +0100
+Message-ID: <55152E95.5030707@suse.de>
+References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-7-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42600 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42630 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752427AbbC0KSd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2015 06:18:33 -0400
-In-Reply-To: <1427380892-1978-6-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	id S1752426AbbC0KTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2015 06:19:03 -0400
+In-Reply-To: <1427380892-1978-7-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Achim.Leubner@pmcs.com
 
 On 03/26/2015 03:41 PM, Mahesh Rajashekhara wrote:
-> Add vpd page code 0x83 support
+> Add 240 simple volume support
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
