@@ -1,93 +1,107 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] am53c974: Fix crash during modprobe
-Date: Fri, 27 Mar 2015 08:57:39 +0100
-Message-ID: <1427443059.2250.6.camel@HansenPartnership.com>
-References: <1427441343-122454-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [RFC 00/22] target: se_node_acl LUN list RCU conversion
+Date: Fri, 27 Mar 2015 08:04:50 +0000
+Message-ID: <1427443512-8925-1-git-send-email-nab@daterainc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43796 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753007AbbC0H5o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2015 03:57:44 -0400
-In-Reply-To: <1427441343-122454-1-git-send-email-hare@suse.de>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:36312 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbbC0IF7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2015 04:05:59 -0400
+Received: by obbld8 with SMTP id ld8so13547760obb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2015 01:05:58 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Fri, 2015-03-27 at 08:29 +0100, Hannes Reinecke wrote:
-> On systems with shared interrupts the interrupt routine might
-> be called as soon as the interrupt is enabled.
-> As this might happen before pci_set_drvdata() is called the
-> system would crash.
-> 
-> Reported-by: Andreas Brogle <anbro@ok.de>
-> Tested-by: Andreas Brogle <anbro@ok.de>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/am53c974.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/am53c974.c b/drivers/scsi/am53c974.c
-> index a6f5ee8..3a35502 100644
-> --- a/drivers/scsi/am53c974.c
-> +++ b/drivers/scsi/am53c974.c
-> @@ -144,6 +144,9 @@ static int pci_esp_irq_pending(struct esp *esp)
->  {
->  	struct pci_esp_priv *pep = pci_esp_get_priv(esp);
->  
-> +	if (!pep)
-> +		return 0;
-> +
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Surely this is superfluous now you've done
+Hi Hannes, HCH, & Sagi,
 
->  	pep->dma_status = pci_esp_read8(esp, ESP_DMA_STATUS);
->  	esp_dma_log("dma intr dreg[%02x]\n", pep->dma_status);
->  
-> @@ -476,6 +479,8 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
->  		goto fail_unmap_regs;
->  	}
->  
-> +	pci_set_drvdata(pdev, pep);
-> +
+Here is an initial pass at the conversion of se_node_acl->device_list[]
+to use RCU protected pointers for se_lun fast-path lookup code.
 
-This?  How can the pep ever be NULL in the interrupt?
+The big advantage with RCU is that transport_lookup_cmd_lun() can now
+run completely lock-less using existing per-cpu se_lun->lun_ref logic.
 
-James
+Currently the new se_node_acl->lun_entry_hlist is still using an array
+of pointers allocated at se_node_acl creation time.  The next step on
+my end is to convert the entries to mempool allocation + rcu_head ->
+call_rcu() asynchronous release.  Beyond that, RCU hlist support for
+both NodeACL MappedLUN and TPG LUN tables is the final goal.
 
+Some of the more interesting conversions so far are in target_core_pr.c
+code for PROUT operations that lookup remote I_T LUNs and take configfs
+dependencies.  This includes a new se_dev_entry->pr_ref to handle the
+REGISTER w/ I_PORT descriptors + REGISTER_AND_MOVE special cases.
 
->  	err = request_irq(pdev->irq, scsi_esp_intr, IRQF_SHARED,
->  			  DRV_MODULE_NAME, esp);
->  	if (err < 0) {
-> @@ -496,8 +501,6 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
->  	/* Assume 40MHz clock */
->  	esp->cfreq = 40000000;
->  
-> -	pci_set_drvdata(pdev, pep);
-> -
->  	err = scsi_esp_register(esp, &pdev->dev);
->  	if (err)
->  		goto fail_free_irq;
-> @@ -507,6 +510,7 @@ static int pci_esp_probe_one(struct pci_dev *pdev,
->  fail_free_irq:
->  	free_irq(pdev->irq, esp);
->  fail_unmap_command_block:
-> +	pci_set_drvdata(pdev, NULL);
->  	pci_free_consistent(pdev, 16, esp->command_block,
->  			    esp->command_block_dma);
->  fail_unmap_regs:
-> @@ -530,6 +534,7 @@ static void pci_esp_remove_one(struct pci_dev *pdev)
->  
->  	scsi_esp_unregister(esp);
->  	free_irq(pdev->irq, esp);
-> +	pci_set_drvdata(pdev, NULL);
->  	pci_free_consistent(pdev, 16, esp->command_block,
->  			    esp->command_block_dma);
->  	pci_iounmap(pdev, esp->regs);
+The series is broken up for review, and also includes a struct mutex
+conversion of existing se_node_acl and se_portal_group LUN locks to
+simplify a number of existing codepaths.
 
+There are still a number of outstanding FIXMEs to address, and at this
+point the series is stable enough to function with CONFIG_PROVE_RCU=y.
+However, it still needs alot more testing with active I/O shutdown and
+complex PR use cases.
 
+Along with other cleanups, the target_* prefix rename discussed at LSF
+is also included at the series end.
+
+Please have a look.
+
+--nab
+
+Nicholas Bellinger (22):
+  target: Convert transport_lookup_*_lun to RCU reader
+  target: Convert enable/disable ->device_list to RCU updater
+  target/device: Convert se_node_acl->device_list access to RCU reader
+  target/configfs: Convert mappedlun link/unlink to RCU reader
+  target/configfs: Convert SCSI MIB attrs to RCU reader
+  target/spc: Convert REPORT_LUN + MODE_SENSE to RCU reader
+  target/pscsi: Convert MODE_SENSE special case to RCU reader
+  target/pr: Convert se_dev_entry to percpu-refcount for RCU
+  target/pr: Convert registration check to RCU pointer
+  target/pr: Change alloc_registration to avoid pr_reg_tg_pt_lun
+  target: Convert UNIT_ATTENTION logic to RCU reader
+  target: Convert se_tpg->tpg_lun_lock to ->tpg_lun_mutex
+  target: Convert se_tpg->acl_node_lock to ->acl_node_mutex
+  target: Convert se_node_acl->lun_entry_lock to ->lun_entry_mutex
+  target: Convert core_tpg_deregister to use list splice
+  target: Drop se_lun->lun_acl_list
+  target: Drop core_tpg_clear_object_luns
+  target: Rename TPG initiator_node_acl to target_* prefix
+  target: Rename TPG register/deregister to target_* prefix
+  target: Rename LUN lookup/add/remove to target_* prefix
+  target: Rename se_node_acl->lun_entry_hlist to target_* prefix
+  target: Rename se_port/se_device export to target_* prefix
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c        |  15 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c           |  22 +-
+ drivers/target/iscsi/iscsi_target.c          |  10 +-
+ drivers/target/iscsi/iscsi_target_configfs.c |  17 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |   4 +-
+ drivers/target/iscsi/iscsi_target_tpg.c      |  12 +-
+ drivers/target/loopback/tcm_loop.c           |  14 +-
+ drivers/target/sbp/sbp_target.c              |  34 ++-
+ drivers/target/target_core_configfs.c        |   6 +-
+ drivers/target/target_core_device.c          | 295 ++++++++++++++-------------
+ drivers/target/target_core_fabric_configfs.c |  29 +--
+ drivers/target/target_core_internal.h        |  24 +--
+ drivers/target/target_core_pr.c              | 213 +++++++++++--------
+ drivers/target/target_core_pscsi.c           |  14 +-
+ drivers/target/target_core_spc.c             |  28 ++-
+ drivers/target/target_core_stat.c            | 168 +++++++--------
+ drivers/target/target_core_tpg.c             | 244 ++++++++++------------
+ drivers/target/target_core_transport.c       |  24 +--
+ drivers/target/target_core_ua.c              |  35 ++--
+ drivers/target/tcm_fc/tfc_conf.c             |  16 +-
+ drivers/usb/gadget/legacy/tcm_usb_gadget.c   |  22 +-
+ drivers/vhost/scsi.c                         |  18 +-
+ drivers/xen/xen-scsiback.c                   |   8 +-
+ include/target/target_core_base.h            |  23 +--
+ include/target/target_core_fabric.h          |  21 +-
+ 25 files changed, 678 insertions(+), 638 deletions(-)
+
+-- 
+1.9.1
 
