@@ -1,190 +1,102 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [RFC 03/22] target/device: Convert se_node_acl->device_list access to RCU reader
-Date: Fri, 27 Mar 2015 08:04:53 +0000
-Message-ID: <1427443512-8925-4-git-send-email-nab@daterainc.com>
+Subject: [RFC 04/22] target/configfs: Convert mappedlun link/unlink to RCU reader
+Date: Fri, 27 Mar 2015 08:04:54 +0000
+Message-ID: <1427443512-8925-5-git-send-email-nab@daterainc.com>
 References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33629 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172AbbC0IGG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2015 04:06:06 -0400
+Received: by oifl3 with SMTP id l3so70046342oif.0
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2015 01:06:06 -0700 (PDT)
 In-Reply-To: <1427443512-8925-1-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts various target_core_device.c to RCU reader path
-to extract deve->mapped_lun before rcu_read_unlock() ahead of invoking
-core_disable_device_list_for_node() to trigger subsequent RCU updater
-code.
+This patch converts fabric independent configfs link/unlink to use
+RCU read path macros for se_node_acl->lun_entry_hlist[] access.
 
-It includes core_free_device_list_for_node(), core_clear_lun_from_tpg(),
-core_clear_initiator_node_from_tpg(), and core_update_device_list_access()
-updates.
+Also, update show_write_protect attribute access as well.
 
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Sagi Grimberg <sagig@mellanox.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c | 52 +++++++++++++++++++------------------
- drivers/target/target_core_tpg.c    | 22 ++++++++--------
- 2 files changed, 38 insertions(+), 36 deletions(-)
+ drivers/target/target_core_fabric_configfs.c | 29 ++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 9385e16..1053a2d 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -257,32 +257,33 @@ int core_free_device_list_for_node(
- {
- 	struct se_dev_entry *deve;
- 	struct se_lun *lun;
--	u32 i;
-+	u32 i, mapped_lun;
- 
--	if (!nacl->device_list)
-+	if (!nacl->lun_entry_hlist)
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 0c3f901..86ad50d 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -111,8 +111,8 @@ static int target_fabric_mappedlun_link(
+ 	 * which be will write protected (READ-ONLY) when
+ 	 * tpg_1/attrib/demo_mode_write_protect=1
+ 	 */
+-	spin_lock_irq(&lacl->se_lun_nacl->device_list_lock);
+-	deve = lacl->se_lun_nacl->device_list[lacl->mapped_lun];
++	rcu_read_lock();
++	deve = rcu_dereference(lacl->se_lun_nacl->lun_entry_hlist[lacl->mapped_lun]);
+ 	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
+ 		lun_access = deve->lun_flags;
+ 	else
+@@ -120,7 +120,7 @@ static int target_fabric_mappedlun_link(
+ 			(se_tpg->se_tpg_tfo->tpg_check_prod_mode_write_protect(
+ 				se_tpg)) ? TRANSPORT_LUNFLAGS_READ_ONLY :
+ 					   TRANSPORT_LUNFLAGS_READ_WRITE;
+-	spin_unlock_irq(&lacl->se_lun_nacl->device_list_lock);
++	rcu_read_unlock();
+ 	/*
+ 	 * Determine the actual mapped LUN value user wants..
+ 	 *
+@@ -141,14 +141,18 @@ static int target_fabric_mappedlun_unlink(
+ 	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
+ 			struct se_lun_acl, se_lun_group);
+ 	struct se_node_acl *nacl = lacl->se_lun_nacl;
+-	struct se_dev_entry *deve = nacl->device_list[lacl->mapped_lun];
++	struct se_dev_entry *deve;
+ 	struct se_portal_group *se_tpg;
+ 	/*
+ 	 * Determine if the underlying MappedLUN has already been released..
+ 	 */
+-	if (!deve->se_lun)
++	rcu_read_lock();
++	deve = rcu_dereference(nacl->lun_entry_hlist[lacl->mapped_lun]);
++	if (!deve || !deve->se_lun) {
++		rcu_read_lock();
  		return 0;
- 
--	spin_lock_irq(&nacl->device_list_lock);
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
-+		rcu_read_lock();
-+		deve = rcu_dereference(nacl->lun_entry_hlist[i]);
- 
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)) {
-+			rcu_read_unlock();
- 			continue;
 -
-+		}
- 		if (!deve->se_lun) {
- 			pr_err("%s device entries device pointer is"
- 				" NULL, but Initiator has access.\n",
- 				tpg->se_tpg_tfo->get_fabric_name());
-+			rcu_read_unlock();
- 			continue;
- 		}
- 		lun = deve->se_lun;
-+		mapped_lun = deve->mapped_lun;
-+		rcu_read_unlock();
++	}
++	rcu_read_unlock();
+ 	lun = container_of(to_config_group(lun_ci), struct se_lun, lun_group);
+ 	se_tpg = lun->lun_sep->sep_tpg;
  
--		spin_unlock_irq(&nacl->device_list_lock);
--		core_disable_device_list_for_node(lun, NULL, deve->mapped_lun,
--			TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
--		spin_lock_irq(&nacl->device_list_lock);
-+		core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
- 
- 	array_free(nacl->lun_entry_hlist, TRANSPORT_MAX_LUNS_PER_TPG);
- 	nacl->lun_entry_hlist = NULL;
-@@ -297,8 +298,8 @@ void core_update_device_list_access(
- {
+@@ -171,12 +175,13 @@ static ssize_t target_fabric_mappedlun_show_write_protect(
  	struct se_dev_entry *deve;
+ 	ssize_t len;
  
--	spin_lock_irq(&nacl->device_list_lock);
--	deve = nacl->device_list[mapped_lun];
-+	spin_lock_irq(&nacl->lun_entry_lock);
-+	deve = rcu_dereference(nacl->lun_entry_hlist[mapped_lun]);
- 	if (lun_access & TRANSPORT_LUNFLAGS_READ_WRITE) {
- 		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_ONLY;
- 		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_WRITE;
-@@ -306,7 +307,9 @@ void core_update_device_list_access(
- 		deve->lun_flags &= ~TRANSPORT_LUNFLAGS_READ_WRITE;
- 		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
-+	spin_unlock_irq(&nacl->lun_entry_lock);
-+
-+	synchronize_rcu();
+-	spin_lock_irq(&se_nacl->device_list_lock);
+-	deve = se_nacl->device_list[lacl->mapped_lun];
+-	len = sprintf(page, "%d\n",
+-			(deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) ?
+-			1 : 0);
+-	spin_unlock_irq(&se_nacl->device_list_lock);
++	rcu_read_lock();
++	deve = rcu_dereference(se_nacl->lun_entry_hlist[lacl->mapped_lun]);
++	if (deve) {
++		len = sprintf(page, "%d\n",
++			(deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) ? 1 : 0);
++	}
++	rcu_read_unlock();
+ 
+ 	return len;
  }
- 
- /*      core_enable_device_list_for_node():
-@@ -442,26 +445,25 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- {
- 	struct se_node_acl *nacl;
- 	struct se_dev_entry *deve;
--	u32 i;
-+	u32 i, mapped_lun;
- 
- 	spin_lock_irq(&tpg->acl_node_lock);
- 	list_for_each_entry(nacl, &tpg->acl_node_list, acl_list) {
- 		spin_unlock_irq(&tpg->acl_node_lock);
- 
--		spin_lock_irq(&nacl->device_list_lock);
- 		for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--			deve = nacl->device_list[i];
--			if (lun != deve->se_lun)
-+			rcu_read_lock();
-+			deve = rcu_dereference(nacl->lun_entry_hlist[i]);
-+			if (!deve || lun != deve->se_lun) {
-+				rcu_read_unlock();
- 				continue;
--			spin_unlock_irq(&nacl->device_list_lock);
--
--			core_disable_device_list_for_node(lun, NULL,
--				deve->mapped_lun, TRANSPORT_LUNFLAGS_NO_ACCESS,
--				nacl, tpg);
-+			}
-+			mapped_lun = deve->mapped_lun;
-+			rcu_read_unlock();
- 
--			spin_lock_irq(&nacl->device_list_lock);
-+			core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
- 		}
--		spin_unlock_irq(&nacl->device_list_lock);
- 
- 		spin_lock_irq(&tpg->acl_node_lock);
- 	}
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index b2fdba5..15a683b 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -55,32 +55,32 @@ static void core_clear_initiator_node_from_tpg(
- 	struct se_node_acl *nacl,
- 	struct se_portal_group *tpg)
- {
--	int i;
- 	struct se_dev_entry *deve;
- 	struct se_lun *lun;
-+	u32 i, mapped_lun;
- 
--	spin_lock_irq(&nacl->device_list_lock);
- 	for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
--		deve = nacl->device_list[i];
-+		rcu_read_lock();
-+		deve = rcu_dereference(nacl->lun_entry_hlist[i]);
- 
--		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS))
-+		if (!(deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)) {
-+			rcu_read_unlock();
- 			continue;
--
-+		}
- 		if (!deve->se_lun) {
- 			pr_err("%s device entries device pointer is"
- 				" NULL, but Initiator has access.\n",
- 				tpg->se_tpg_tfo->get_fabric_name());
-+			rcu_read_unlock();
- 			continue;
- 		}
--
- 		lun = deve->se_lun;
--		spin_unlock_irq(&nacl->device_list_lock);
--		core_disable_device_list_for_node(lun, NULL, deve->mapped_lun,
--			TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
-+		mapped_lun = deve->mapped_lun;
-+		rcu_read_unlock();
- 
--		spin_lock_irq(&nacl->device_list_lock);
-+		core_disable_device_list_for_node(lun, NULL, mapped_lun,
-+					TRANSPORT_LUNFLAGS_NO_ACCESS, nacl, tpg);
- 	}
--	spin_unlock_irq(&nacl->device_list_lock);
- }
- 
- /*	__core_tpg_get_initiator_node_acl():
 -- 
 1.9.1
+
