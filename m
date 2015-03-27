@@ -1,24 +1,28 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [V2 PATCH 01/11] aacraid: AIF support for SES device add/remove
-Date: Fri, 27 Mar 2015 11:12:38 +0100
-Message-ID: <55152D16.5060004@suse.de>
-References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Subject: Re: [V2 PATCH 02/11] aacraid: IOCTL pass-through command fix
+Date: Fri, 27 Mar 2015 11:13:09 +0100
+Message-ID: <55152D35.8080502@suse.de>
+References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-3-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42053 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42104 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752210AbbC0KMl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2015 06:12:41 -0400
-In-Reply-To: <1427380892-1978-2-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	id S1752312AbbC0KNL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2015 06:13:11 -0400
+In-Reply-To: <1427380892-1978-3-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Achim.Leubner@pmcs.com
 
 On 03/26/2015 03:41 PM, Mahesh Rajashekhara wrote:
-> Add new AIF support for SES device add/remove
+> The Linux aacriad driver fails to detect the case of SG list count=3D=
+0 on IOCTL pass-through command and cause intermittent fault.
+> The result is the Linux aacriad driver send down IOCTL pass-through c=
+ommand with one not initialized SG list to firmware when receiving SG l=
+ist count =3D0 on pass-through command.
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
