@@ -1,1162 +1,865 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [PATCH net-next 2/3] cxgb4: add DDP support for FCoE target
-Date: Fri, 27 Mar 2015 20:29:38 +0530
-Message-ID: <b78b2891ffc7b0958de6dab8f76f7b5c1bc5f011.1427467737.git.varun@chelsio.com>
-References: <cover.1427467737.git.varun@chelsio.com>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <cover.1427467737.git.varun@chelsio.com>
-In-Reply-To: <cover.1427467737.git.varun@chelsio.com>
-References: <cover.1427467737.git.varun@chelsio.com>
-Sender: netdev-owner@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: davem@davemloft.net, leedom@chelsio.com, anish@chelsio.com, hariprasad@chelsio.com, praveenm@chelsio.com, varun@chelsio.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH v3 03/42] hpsa: rework controller command submission
+Date: Fri, 27 Mar 2015 16:11:14 +0100
+Message-ID: <55157312.4080500@redhat.com>
+References: <20150317200139.19856.87982.stgit@brunhilda> <20150317200241.19856.46521.stgit@brunhilda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43207 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752581AbbC0PLW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2015 11:11:22 -0400
+In-Reply-To: <20150317200241.19856.46521.stgit@brunhilda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
+Cc: linux-scsi@vger.kernel.org
 
-This patch adds code for ndo_fcoe_ddp_target and
-ndo_fcoe_ddp_done.
+On 03/17/2015 09:02 PM, Don Brace wrote:
+> From: Webb Scales <webb.scales@hp.com>
+>
+> Allow driver initiated commands to have a timeout.  It does not
+> yet try to do anything with timeouts on such commands.
+>
+> We are sending a reset in order to get rid of a command we want to abort.
+> If we make it return on the same reply queue as the command we want to abort,
+> the completion of the aborted command will not race with the completion of
+> the reset command.
+>
+> Rename hpsa_scsi_do_simple_cmd_core() to hpsa_scsi_do_simple_cmd(), since
+> this function is the interface for issuing commands to the controller and
+> not the "core" of that implementation.  Add a parameter to it which allows
+> the caller to specify the reply queue to be used.  Modify existing callers
+> to specify the default reply queue.
+>
+> Rename __hpsa_scsi_do_simple_cmd_core() to hpsa_scsi_do_simple_cmd_core(),
+> since this routine is the "core" implementation of the "do simple command"
+> function and there is no longer any other function with a similar name.
+> Modify the existing callers of this routine (other than
+> hpsa_scsi_do_simple_cmd()) to instead call hpsa_scsi_do_simple_cmd(), since
+> it will now accept the reply_queue paramenter, and it provides a controller
+> lock-up check.  (Also, tweak two related message strings to make them
+> distinct from each other.)
+>
+> Submitting a command to a locked up controller always results in a timeout,
+> so check for controller lock-up before submitting.
+>
+> This is to enable fixing a race between command completions and
+> abort completions on different reply queues in a subsequent patch.
+> We want to be able to specify which reply queue an abort completion
+> should occur on so that it cannot race the completion of the command
+> it is trying to abort.
+>
+> The following race was possible in theory:
+>
+>   1. Abort command is sent to hardware.
+>   2. Command to be aborted simultaneously completes on another
+>      reply queue.
+>   3. Hardware receives abort command, decides command has already
+>      completed and indicates this to the driver via another different
+>      reply queue.
+>   4. driver processes abort completion finds that the hardware does not know
+>      about the command, concludes that therefore the command cannot complete,
+>      returns SUCCESS indicating to the mid-layer that the scsi_cmnd may be
+>      re-used.
+>   5. Command from step 2 is processed and completed back to scsi mid
+>      layer (after we already promised that would never happen.)
+>
+> Fix by forcing aborts to complete on the same reply queue as the command
+> they are aborting.
+>
+> Piggybacking device rescanning functionality onto the lockup
+> detection thread is not a good idea because if the controller
+> locks up during device rescanning, then the thread could get
+> stuck, then the lockup isn't detected.  Use separate work
+> queues for device rescanning and lockup detection.
+>
+> Detect controller lockup in abort handler.
+>
+> After a lockup is detected, return DO_NO_CONNECT which results in immediate
+> termination of commands rather than DID_ERR which results in retries.
+>
+> Modify detect_controller_lockup() to return the result, to remove the need for a separate check.
+>
+> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
+> Signed-off-by: Webb Scales <webbnh@hp.com>
+> Signed-off-by: Don Brace <don.brace@pmcs.com>
+> ---
+>  drivers/scsi/hpsa.c     |  326 ++++++++++++++++++++++++++++++++++++-----------
+>  drivers/scsi/hpsa_cmd.h |    5 +
+>  2 files changed, 254 insertions(+), 77 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 9b88726..488f81b 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -253,6 +253,8 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
+>  	struct CommandList *c, u32 ioaccel_handle, u8 *cdb, int cdb_len,
+>  	u8 *scsi3addr, struct hpsa_scsi_dev_t *phys_disk);
+>  static void hpsa_command_resubmit_worker(struct work_struct *work);
+> +static u32 lockup_detected(struct ctlr_info *h);
+> +static int detect_controller_lockup(struct ctlr_info *h);
+>  
+>  static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+>  {
+> @@ -748,30 +750,43 @@ static inline u32 next_command(struct ctlr_info *h, u8 q)
+>   * a separate special register for submitting commands.
+>   */
+>  
+> -/* set_performant_mode: Modify the tag for cciss performant
+> +/*
+> + * set_performant_mode: Modify the tag for cciss performant
+>   * set bit 0 for pull model, bits 3-1 for block fetch
+>   * register number
+>   */
+> -static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
+> +#define DEFAULT_REPLY_QUEUE (-1)
+> +static void set_performant_mode(struct ctlr_info *h, struct CommandList *c,
+> +					int reply_queue)
+>  {
+>  	if (likely(h->transMethod & CFGTBL_Trans_Performant)) {
+>  		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+> -		if (likely(h->msix_vector > 0))
+> +		if (unlikely(!h->msix_vector))
+> +			return;
+> +		if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+>  			c->Header.ReplyQueue =
+>  				raw_smp_processor_id() % h->nreply_queues;
+> +		else
+> +			c->Header.ReplyQueue = reply_queue % h->nreply_queues;
+>  	}
+>  }
+>  
+>  static void set_ioaccel1_performant_mode(struct ctlr_info *h,
+> -						struct CommandList *c)
+> +						struct CommandList *c,
+> +						int reply_queue)
+>  {
+>  	struct io_accel1_cmd *cp = &h->ioaccel_cmd_pool[c->cmdindex];
+>  
+> -	/* Tell the controller to post the reply to the queue for this
+> +	/*
+> +	 * Tell the controller to post the reply to the queue for this
+>  	 * processor.  This seems to give the best I/O throughput.
+>  	 */
+> -	cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
+> -	/* Set the bits in the address sent down to include:
+> +	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> +		cp->ReplyQueue = smp_processor_id() % h->nreply_queues;
+> +	else
+> +		cp->ReplyQueue = reply_queue % h->nreply_queues;
+> +	/*
+> +	 * Set the bits in the address sent down to include:
+>  	 *  - performant mode bit (bit 0)
+>  	 *  - pull count (bits 1-3)
+>  	 *  - command type (bits 4-6)
+> @@ -781,15 +796,21 @@ static void set_ioaccel1_performant_mode(struct ctlr_info *h,
+>  }
+>  
+>  static void set_ioaccel2_performant_mode(struct ctlr_info *h,
+> -						struct CommandList *c)
+> +						struct CommandList *c,
+> +						int reply_queue)
+>  {
+>  	struct io_accel2_cmd *cp = &h->ioaccel2_cmd_pool[c->cmdindex];
+>  
+> -	/* Tell the controller to post the reply to the queue for this
+> +	/*
+> +	 * Tell the controller to post the reply to the queue for this
+>  	 * processor.  This seems to give the best I/O throughput.
+>  	 */
+> -	cp->reply_queue = smp_processor_id() % h->nreply_queues;
+> -	/* Set the bits in the address sent down to include:
+> +	if (likely(reply_queue == DEFAULT_REPLY_QUEUE))
+> +		cp->reply_queue = smp_processor_id() % h->nreply_queues;
+> +	else
+> +		cp->reply_queue = reply_queue % h->nreply_queues;
+> +	/*
+> +	 * Set the bits in the address sent down to include:
+>  	 *  - performant mode bit not used in ioaccel mode 2
+>  	 *  - pull count (bits 0-3)
+>  	 *  - command type isn't needed for ioaccel2
+> @@ -826,26 +847,32 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
+>  		h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+>  }
+>  
+> -static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+> -	struct CommandList *c)
+> +static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
+> +	struct CommandList *c, int reply_queue)
+>  {
+>  	dial_down_lockup_detection_during_fw_flash(h, c);
+>  	atomic_inc(&h->commands_outstanding);
+>  	switch (c->cmd_type) {
+>  	case CMD_IOACCEL1:
+> -		set_ioaccel1_performant_mode(h, c);
+> +		set_ioaccel1_performant_mode(h, c, reply_queue);
+>  		writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+>  		break;
+>  	case CMD_IOACCEL2:
+> -		set_ioaccel2_performant_mode(h, c);
+> +		set_ioaccel2_performant_mode(h, c, reply_queue);
+>  		writel(c->busaddr, h->vaddr + IOACCEL2_INBOUND_POSTQ_32);
+>  		break;
+>  	default:
+> -		set_performant_mode(h, c);
+> +		set_performant_mode(h, c, reply_queue);
+>  		h->access.submit_command(h, c);
+>  	}
+>  }
+>  
+> +static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+> +					struct CommandList *c)
+> +{
+> +	__enqueue_cmd_and_start_io(h, c, DEFAULT_REPLY_QUEUE);
+> +}
+> +
+>  static inline int is_hba_lunid(unsigned char scsi3addr[])
+>  {
+>  	return memcmp(scsi3addr, RAID_CTLR_LUNID, 8) == 0;
+> @@ -1877,6 +1904,19 @@ static void complete_scsi_command(struct CommandList *cp)
+>  	if (cp->cmd_type == CMD_IOACCEL2 || cp->cmd_type == CMD_IOACCEL1)
+>  		atomic_dec(&cp->phys_disk->ioaccel_cmds_out);
+>  
+> +	/*
+> +	 * We check for lockup status here as it may be set for
+> +	 * CMD_SCSI, CMD_IOACCEL1 and CMD_IOACCEL2 commands by
+> +	 * fail_all_oustanding_cmds()
+> +	 */
+> +	if (unlikely(ei->CommandStatus == CMD_CTLR_LOCKUP)) {
+> +		/* DID_NO_CONNECT will prevent a retry */
+> +		cmd->result = DID_NO_CONNECT << 16;
+> +		cmd_free(h, cp);
+> +		cmd->scsi_done(cmd);
+> +		return;
+> +	}
+> +
+>  	if (cp->cmd_type == CMD_IOACCEL2)
+>  		return process_ioaccel2_completion(h, cp, cmd, dev);
+>  
+> @@ -2091,14 +2131,36 @@ static int hpsa_map_one(struct pci_dev *pdev,
+>  	return 0;
+>  }
+>  
+> -static inline void hpsa_scsi_do_simple_cmd_core(struct ctlr_info *h,
+> -	struct CommandList *c)
+> +#define NO_TIMEOUT ((unsigned long) -1)
+> +#define DEFAULT_TIMEOUT 30000 /* milliseconds */
+> +static int hpsa_scsi_do_simple_cmd_core(struct ctlr_info *h,
+> +	struct CommandList *c, int reply_queue, unsigned long timeout_msecs)
+>  {
+>  	DECLARE_COMPLETION_ONSTACK(wait);
+>  
+>  	c->waiting = &wait;
+> -	enqueue_cmd_and_start_io(h, c);
+> -	wait_for_completion(&wait);
+> +	__enqueue_cmd_and_start_io(h, c, reply_queue);
+> +	if (timeout_msecs == NO_TIMEOUT) {
+> +		/* TODO: get rid of this no-timeout thing */
+> +		wait_for_completion_io(&wait);
+> +		return IO_OK;
+> +	}
+> +	if (!wait_for_completion_io_timeout(&wait,
+> +					msecs_to_jiffies(timeout_msecs))) {
+> +		dev_warn(&h->pdev->dev, "Command timed out.\n");
+> +		return -ETIMEDOUT;
+> +	}
+> +	return IO_OK;
+> +}
+> +
+> +static int hpsa_scsi_do_simple_cmd(struct ctlr_info *h, struct CommandList *c,
+> +				   int reply_queue, unsigned long timeout_msecs)
+> +{
+> +	if (unlikely(lockup_detected(h))) {
+> +		c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
+> +		return IO_OK;
+> +	}
+> +	return hpsa_scsi_do_simple_cmd_core(h, c, reply_queue, timeout_msecs);
+>  }
+>  
+>  static u32 lockup_detected(struct ctlr_info *h)
+> @@ -2113,25 +2175,19 @@ static u32 lockup_detected(struct ctlr_info *h)
+>  	return rc;
+>  }
+>  
+> -static void hpsa_scsi_do_simple_cmd_core_if_no_lockup(struct ctlr_info *h,
+> -	struct CommandList *c)
+> -{
+> -	/* If controller lockup detected, fake a hardware error. */
+> -	if (unlikely(lockup_detected(h)))
+> -		c->err_info->CommandStatus = CMD_HARDWARE_ERR;
+> -	else
+> -		hpsa_scsi_do_simple_cmd_core(h, c);
+> -}
+> -
+>  #define MAX_DRIVER_CMD_RETRIES 25
+> -static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+> -	struct CommandList *c, int data_direction)
+> +static int hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+> +	struct CommandList *c, int data_direction, unsigned long timeout_msecs)
+>  {
+>  	int backoff_time = 10, retry_count = 0;
+> +	int rc;
+>  
+>  	do {
+>  		memset(c->err_info, 0, sizeof(*c->err_info));
+> -		hpsa_scsi_do_simple_cmd_core(h, c);
+> +		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
+> +						  timeout_msecs);
+> +		if (rc)
+> +			break;
+>  		retry_count++;
+>  		if (retry_count > 3) {
+>  			msleep(backoff_time);
+> @@ -2142,6 +2198,9 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+>  			check_for_busy(h, c)) &&
+>  			retry_count <= MAX_DRIVER_CMD_RETRIES);
+>  	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
+> +	if (retry_count > MAX_DRIVER_CMD_RETRIES)
+> +		rc = -EIO;
+> +	return rc;
+>  }
+>  
+>  static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
+> @@ -2218,6 +2277,9 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
+>  	case CMD_UNABORTABLE:
+>  		hpsa_print_cmd(h, "unabortable", cp);
+>  		break;
+> +	case CMD_CTLR_LOCKUP:
+> +		hpsa_print_cmd(h, "controller lockup detected", cp);
+> +		break;
+>  	default:
+>  		hpsa_print_cmd(h, "unknown status", cp);
+>  		dev_warn(d, "Unknown command status %x\n",
+> @@ -2245,7 +2307,10 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+>  		rc = -1;
+>  		goto out;
+>  	}
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+> +			PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+> +	if (rc)
+> +		goto out;
+>  	ei = c->err_info;
+>  	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+>  		hpsa_scsi_interpret_error(h, c);
+> @@ -2275,7 +2340,10 @@ static int hpsa_bmic_ctrl_mode_sense(struct ctlr_info *h,
+>  		rc = -1;
+>  		goto out;
+>  	}
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+> +					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+> +	if (rc)
+> +		goto out;
+>  	ei = c->err_info;
+>  	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+>  		hpsa_scsi_interpret_error(h, c);
+> @@ -2287,7 +2355,7 @@ out:
+>  	}
+>  
+>  static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+> -	u8 reset_type)
+> +	u8 reset_type, int reply_queue)
+>  {
+>  	int rc = IO_OK;
+>  	struct CommandList *c;
+> @@ -2304,7 +2372,11 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+>  	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
+>  			scsi3addr, TYPE_MSG);
+>  	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to LUN reset */
+> -	hpsa_scsi_do_simple_cmd_core(h, c);
+> +	rc = hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
+> +	if (rc) {
+> +		dev_warn(&h->pdev->dev, "Failed to send reset command\n");
+> +		goto out;
+> +	}
+>  	/* no unmap needed here because no data xfer. */
+>  
+>  	ei = c->err_info;
+> @@ -2312,6 +2384,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr,
+>  		hpsa_scsi_interpret_error(h, c);
+>  		rc = -1;
+>  	}
+> +out:
+>  	cmd_free(h, c);
+>  	return rc;
+>  }
+> @@ -2429,15 +2502,18 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+>  			sizeof(this_device->raid_map), 0,
+>  			scsi3addr, TYPE_CMD)) {
+>  		dev_warn(&h->pdev->dev, "Out of memory in hpsa_get_raid_map()\n");
+> -		cmd_free(h, c);
+> -		return -ENOMEM;
+> +		rc = -ENOMEM;
+> +		goto out;
+>  	}
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+> +					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+> +	if (rc)
+> +		goto out;
+>  	ei = c->err_info;
+>  	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+>  		hpsa_scsi_interpret_error(h, c);
+> -		cmd_free(h, c);
+> -		return -1;
+> +		rc = -1;
+> +		goto out;
+>  	}
+>  	cmd_free(h, c);
+>  
+> @@ -2449,6 +2525,9 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
+>  	}
+>  	hpsa_debug_map_buff(h, rc, &this_device->raid_map);
+>  	return rc;
+> +out:
+> +	cmd_free(h, c);
+> +	return rc;
+>  }
+>  
+>  static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
+> @@ -2468,7 +2547,8 @@ static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
+>  	c->Request.CDB[2] = bmic_device_index & 0xff;
+>  	c->Request.CDB[9] = (bmic_device_index >> 8) & 0xff;
+>  
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+> +	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE,
+> +						NO_TIMEOUT);
+>  	ei = c->err_info;
+>  	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
+>  		hpsa_scsi_interpret_error(h, c);
+> @@ -2603,7 +2683,10 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+>  	}
+>  	if (extended_response)
+>  		c->Request.CDB[1] = extended_response;
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_FROMDEVICE);
+> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+> +					PCI_DMA_FROMDEVICE, NO_TIMEOUT);
+> +	if (rc)
+> +		goto out;
+>  	ei = c->err_info;
+>  	if (ei->CommandStatus != 0 &&
+>  	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
+> @@ -2696,7 +2779,7 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+>  {
+>  	struct CommandList *c;
+>  	unsigned char *sense, sense_key, asc, ascq;
+> -	int ldstat = 0;
+> +	int rc, ldstat = 0;
+>  	u16 cmd_status;
+>  	u8 scsi_status;
+>  #define ASC_LUN_NOT_READY 0x04
+> @@ -2707,7 +2790,11 @@ static int hpsa_volume_offline(struct ctlr_info *h,
+>  	if (!c)
+>  		return 0;
+>  	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
+> -	hpsa_scsi_do_simple_cmd_core(h, c);
+> +	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
+> +	if (rc) {
+> +		cmd_free(h, c);
+> +		return 0;
+> +	}
+>  	sense = c->err_info->SenseInfo;
+>  	sense_key = sense[2];
+>  	asc = sense[12];
+> @@ -4040,7 +4127,11 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+>  						dev->phys_disk[map_index]);
+>  }
+>  
+> -/* Submit commands down the "normal" RAID stack path */
+> +/*
+> + * Submit commands down the "normal" RAID stack path
+> + * All callers to hpsa_ciss_submit must check lockup_detected
+> + * beforehand, before (opt.) and after calling cmd_alloc
+> + */
+>  static int hpsa_ciss_submit(struct ctlr_info *h,
+>  	struct CommandList *c, struct scsi_cmnd *cmd,
+>  	unsigned char scsi3addr[])
+> @@ -4151,7 +4242,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+>  	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+>  
+>  	if (unlikely(lockup_detected(h))) {
+> -		cmd->result = DID_ERROR << 16;
+> +		cmd->result = DID_NO_CONNECT << 16;
+>  		cmd->scsi_done(cmd);
+>  		return 0;
+>  	}
+> @@ -4161,7 +4252,7 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+>  		return SCSI_MLQUEUE_HOST_BUSY;
+>  	}
+>  	if (unlikely(lockup_detected(h))) {
+> -		cmd->result = DID_ERROR << 16;
+> +		cmd->result = DID_NO_CONNECT << 16;
+>  		cmd_free(h, c);
+>  		cmd->scsi_done(cmd);
+>  		return 0;
+> @@ -4356,7 +4447,10 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+>  		/* Send the Test Unit Ready, fill_cmd can't fail, no mapping */
+>  		(void) fill_cmd(c, TEST_UNIT_READY, h,
+>  				NULL, 0, 0, lunaddr, TYPE_CMD);
+> -		hpsa_scsi_do_simple_cmd_core(h, c);
+> +		rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
+> +						NO_TIMEOUT);
+> +		if (rc)
+> +			goto do_it_again;
+>  		/* no unmap needed here because no data xfer. */
+>  
+>  		if (c->err_info->CommandStatus == CMD_SUCCESS)
+> @@ -4367,7 +4461,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+>  			(c->err_info->SenseInfo[2] == NO_SENSE ||
+>  			c->err_info->SenseInfo[2] == UNIT_ATTENTION))
+>  			break;
+> -
+> +do_it_again:
+>  		dev_warn(&h->pdev->dev, "waiting %d secs "
+>  			"for device to become ready.\n", waittime);
+>  		rc = 1; /* device not ready. */
+> @@ -4405,13 +4499,46 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
+>  			"device lookup failed.\n");
+>  		return FAILED;
+>  	}
+> -	dev_warn(&h->pdev->dev, "resetting device %d:%d:%d:%d\n",
+> -		h->scsi_host->host_no, dev->bus, dev->target, dev->lun);
+> +
+> +	/* if controller locked up, we can guarantee command won't complete */
+> +	if (lockup_detected(h)) {
+> +		dev_warn(&h->pdev->dev,
+> +			"scsi %d:%d:%d:%d RESET FAILED, lockup detected\n",
+> +			h->scsi_host->host_no, dev->bus, dev->target,
+> +			dev->lun);
+> +		return FAILED;
+> +	}
+> +
+> +	/* this reset request might be the result of a lockup; check */
+> +	if (detect_controller_lockup(h)) {
+> +		dev_warn(&h->pdev->dev,
+> +			 "scsi %d:%d:%d:%d RESET FAILED, new lockup detected\n",
+> +			 h->scsi_host->host_no, dev->bus, dev->target,
+> +			 dev->lun);
+> +		return FAILED;
+> +	}
+> +
+> +	dev_warn(&h->pdev->dev,
+> +		"scsi %d:%d:%d:%d: %s %.8s %.16s resetting RAID-%s SSDSmartPathCap%c En%c Exp=%d\n",
+> +		h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+> +		scsi_device_type(dev->devtype),
+> +		dev->vendor,
+> +		dev->model,
+> +		dev->raid_level > RAID_UNKNOWN ?
+> +			"RAID-?" : raid_label[dev->raid_level],
+> +		dev->offload_config ? '+' : '-',
+> +		dev->offload_enabled ? '+' : '-',
+> +		dev->expose_state);
+> +
+>  	/* send a reset to the SCSI LUN which the command was sent to */
+> -	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN);
+> +	rc = hpsa_send_reset(h, dev->scsi3addr, HPSA_RESET_TYPE_LUN,
+> +			     DEFAULT_REPLY_QUEUE);
+>  	if (rc == 0 && wait_for_device_to_become_ready(h, dev->scsi3addr) == 0)
+>  		return SUCCESS;
+>  
+> +	dev_warn(&h->pdev->dev,
+> +		"scsi %d:%d:%d:%d reset failed\n",
+> +		h->scsi_host->host_no, dev->bus, dev->target, dev->lun);
+>  	return FAILED;
+>  }
+>  
+> @@ -4456,7 +4583,7 @@ static void hpsa_get_tag(struct ctlr_info *h,
+>  }
+>  
+>  static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+> -	struct CommandList *abort, int swizzle)
+> +	struct CommandList *abort, int swizzle, int reply_queue)
+>  {
+>  	int rc = IO_OK;
+>  	struct CommandList *c;
+> @@ -4474,9 +4601,9 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+>  		0, 0, scsi3addr, TYPE_MSG);
+>  	if (swizzle)
+>  		swizzle_abort_tag(&c->Request.CDB[4]);
+> -	hpsa_scsi_do_simple_cmd_core(h, c);
+> +	(void) hpsa_scsi_do_simple_cmd(h, c, reply_queue, NO_TIMEOUT);
+>  	hpsa_get_tag(h, abort, &taglower, &tagupper);
+> -	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd_core completed.\n",
+> +	dev_dbg(&h->pdev->dev, "%s: Tag:0x%08x:%08x: do_simple_cmd(abort) completed.\n",
+>  		__func__, tagupper, taglower);
+>  	/* no unmap needed here because no data xfer. */
+>  
+> @@ -4508,7 +4635,7 @@ static int hpsa_send_abort(struct ctlr_info *h, unsigned char *scsi3addr,
+>   */
+>  
+>  static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+> -	unsigned char *scsi3addr, struct CommandList *abort)
+> +	unsigned char *scsi3addr, struct CommandList *abort, int reply_queue)
+>  {
+>  	int rc = IO_OK;
+>  	struct scsi_cmnd *scmd; /* scsi command within request being aborted */
+> @@ -4551,7 +4678,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+>  			"Reset as abort: Resetting physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+>  			psa[0], psa[1], psa[2], psa[3],
+>  			psa[4], psa[5], psa[6], psa[7]);
+> -	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET);
+> +	rc = hpsa_send_reset(h, psa, HPSA_RESET_TYPE_TARGET, reply_queue);
+>  	if (rc != 0) {
+>  		dev_warn(&h->pdev->dev,
+>  			"Reset as abort: Failed on physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+> @@ -4585,7 +4712,7 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+>   * make this true someday become false.
+>   */
+>  static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+> -	unsigned char *scsi3addr, struct CommandList *abort)
+> +	unsigned char *scsi3addr, struct CommandList *abort, int reply_queue)
+>  {
+>  	/* ioccelerator mode 2 commands should be aborted via the
+>  	 * accelerated path, since RAID path is unaware of these commands,
+> @@ -4593,10 +4720,20 @@ static int hpsa_send_abort_both_ways(struct ctlr_info *h,
+>  	 * Change abort to physical device reset.
+>  	 */
+>  	if (abort->cmd_type == CMD_IOACCEL2)
+> -		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr, abort);
+> +		return hpsa_send_reset_as_abort_ioaccel2(h, scsi3addr,
+> +							abort, reply_queue);
+> +
+> +	return hpsa_send_abort(h, scsi3addr, abort, 0, reply_queue) &&
+> +			hpsa_send_abort(h, scsi3addr, abort, 1, reply_queue);
+> +}
+>  
+> -	return hpsa_send_abort(h, scsi3addr, abort, 0) &&
+> -			hpsa_send_abort(h, scsi3addr, abort, 1);
+> +/* Find out which reply queue a command was meant to return on */
+> +static int hpsa_extract_reply_queue(struct ctlr_info *h,
+> +					struct CommandList *c)
+> +{
+> +	if (c->cmd_type == CMD_IOACCEL2)
+> +		return h->ioaccel2_cmd_pool[c->cmdindex].reply_queue;
+> +	return c->Header.ReplyQueue;
+>  }
+>  
+>  /* Send an abort for the specified command.
+> @@ -4614,7 +4751,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  	char msg[256];		/* For debug messaging. */
+>  	int ml = 0;
+>  	__le32 tagupper, taglower;
+> -	int refcount;
+> +	int refcount, reply_queue;
+>  
+>  	/* Find the controller of the command to be aborted */
+>  	h = sdev_to_hba(sc->device);
+> @@ -4622,8 +4759,23 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  			"ABORT REQUEST FAILED, Controller lookup failed.\n"))
+>  		return FAILED;
+>  
+> -	if (lockup_detected(h))
+> +	/* If controller locked up, we can guarantee command won't complete */
+> +	if (lockup_detected(h)) {
+> +		dev_warn(&h->pdev->dev,
+> +			"scsi %d:%d:%d:%llu scmd %p ABORT FAILED, lockup detected\n",
+> +			h->scsi_host->host_no, sc->device->channel,
+> +			sc->device->id, sc->device->lun, sc);
+>  		return FAILED;
+> +	}
+> +
+> +	/* This is a good time to check if controller lockup has occurred */
+> +	if (detect_controller_lockup(h)) {
+> +		dev_warn(&h->pdev->dev,
+> +			 "scsi %d:%d:%d:%llu scmd %p ABORT FAILED, new lockup detected\n",
+> +			 h->scsi_host->host_no, sc->device->channel,
+> +			 sc->device->id, sc->device->lun, sc);
+> +		return FAILED;
+> +	}
+>  
+>  	/* Check that controller supports some kind of task abort */
+>  	if (!(HPSATMF_PHYS_TASK_ABORT & h->TMFSupportFlags) &&
+> @@ -4656,6 +4808,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  		return SUCCESS;
+>  	}
+>  	hpsa_get_tag(h, abort, &taglower, &tagupper);
+> +	reply_queue = hpsa_extract_reply_queue(h, abort);
+>  	ml += sprintf(msg+ml, "Tag:0x%08x:%08x ", tagupper, taglower);
+>  	as  = abort->scsi_cmd;
+>  	if (as != NULL)
+> @@ -4670,7 +4823,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
+>  	 * by the firmware (but not to the scsi mid layer) but we can't
+>  	 * distinguish which.  Send the abort down.
+>  	 */
+> -	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort);
+> +	rc = hpsa_send_abort_both_ways(h, dev->scsi3addr, abort, reply_queue);
+>  	if (rc != 0) {
+>  		dev_warn(&h->pdev->dev, "scsi %d:%d:%d:%d %s\n",
+>  			h->scsi_host->host_no,
+> @@ -4995,7 +5148,9 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+>  		c->SG[0].Len = cpu_to_le32(iocommand.buf_size);
+>  		c->SG[0].Ext = cpu_to_le32(HPSA_SG_LAST); /* not chaining */
+>  	}
+> -	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
+> +	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
+> +	if (rc)
+> +		rc = -EIO;
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |    1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c |  605 +++++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   39 ++-
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  328 ++++++++++++-
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |    1 +
- 5 files changed, 968 insertions(+), 6 deletions(-)
+We just pretend here that an error path exist, with NO_TIMEOUT the function can't fail,
+but if it could we might end up copying some random data from kernel to user space.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index bf46ca9..50f5436 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -242,6 +242,7 @@ struct tp_params {
- 	 * places we store their offsets here, or a -1 if the field isn't
- 	 * present.
- 	 */
-+	int fcoe_shift;
- 	int vlan_shift;
- 	int vnic_shift;
- 	int port_shift;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c
-index 062d3c0..ece2789 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_fcoe.c
-@@ -34,8 +34,10 @@
- 
- #ifdef CONFIG_CHELSIO_T4_FCOE
- 
-+#include <linux/if_vlan.h>
- #include <scsi/fc/fc_fs.h>
- #include <scsi/libfcoe.h>
-+#include "t4_msg.h"
- #include "cxgb4.h"
- 
- bool cxgb_fcoe_sof_eof_supported(struct adapter *adap, struct sk_buff *skb)
-@@ -59,6 +61,530 @@ bool cxgb_fcoe_sof_eof_supported(struct adapter *adap, struct sk_buff *skb)
- 	return 1;
- }
- 
-+static inline struct cxgb_fcoe_ddp *
-+cxgb_fcoe_lookup_ddp(struct port_info *pi, unsigned int tid)
-+{
-+	struct adapter *adap = pi->adapter;
-+	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp;
-+	u16 xid;
-+
-+	if (tid >= adap->tids.ntids) {
-+		dev_err(adap->pdev_dev, "tid %x out of bounds\n", tid);
-+		return NULL;
-+	}
-+
-+	xid = adap->vres.tid2xid[tid];
-+
-+	if (xid >= CXGB_FCOE_MAX_XCHGS_PORT) {
-+		dev_err(adap->pdev_dev, "xid %x out of bounds, tid:%x\n",
-+			xid, tid);
-+		return NULL;
-+	}
-+
-+	ddp = &fcoe->ddp[xid];
-+
-+	if ((fcoe->flags & CXGB_FCOE_ENABLED) && (ddp->tid == tid) && ddp->sgl)
-+		return ddp;
-+
-+	return NULL;
-+}
-+
-+static inline struct sk_buff *
-+cxgb_fcoe_init_skb(struct adapter *adapter, u16 xid, struct port_info *pi,
-+		   struct cxgb_fcoe_ddp *ddp, struct cpl_fcoe_hdr *cfcoe_hdr,
-+		   struct sge_eth_rxq *rxq)
-+{
-+	struct sk_buff *skb;
-+	struct ethhdr *eh;
-+	struct fcoe_crc_eof *cp;
-+	struct fc_frame_header *fh;
-+	unsigned int hlen;		/* fcoe header length */
-+	unsigned int tlen;		/* fcoe trailer length */
-+	unsigned int elen;		/* eth header excluding vlan */
-+	unsigned int fclen;		/* fc header len */
-+	u8 rctl;
-+	struct fcoe_hdr *hp;
-+
-+	elen = sizeof(struct ethhdr);
-+	hlen = sizeof(struct fcoe_hdr);
-+	fclen = sizeof(struct fc_frame_header);
-+	tlen = sizeof(struct fcoe_crc_eof);
-+
-+	skb = dev_alloc_skb(elen + hlen + fclen + tlen);
-+	if (!skb)
-+		return NULL;
-+
-+	rctl = FCOE_FCHDR_RCTL_G(be32_to_cpu(cfcoe_hdr->rctl_fctl));
-+
-+	skb->ip_summed = CHECKSUM_UNNECESSARY;
-+	skb->protocol = htons(ETH_P_FCOE);
-+	skb->dev = adapter->port[pi->port_id];
-+
-+	eh = (struct ethhdr *)skb_put(skb, elen);
-+	ether_addr_copy(eh->h_source, ddp->h_dest);
-+	ether_addr_copy(eh->h_dest, ddp->h_source);
-+	eh->h_proto = htons(ETH_P_FCOE);
-+
-+	hp = (struct fcoe_hdr *)skb_put(skb, hlen);
-+	memset(hp, 0, sizeof(*hp));
-+	if (FC_FCOE_VER)
-+		FC_FCOE_ENCAPS_VER(hp, FC_FCOE_VER);
-+	hp->fcoe_sof = cfcoe_hdr->sof;
-+
-+	fh = (struct fc_frame_header *)skb_put(skb, fclen);
-+	fh->fh_r_ctl = rctl;
-+	memcpy(fh->fh_d_id, &ddp->h_source[3], 3);
-+	memcpy(fh->fh_s_id, ddp->d_id, 3);
-+
-+	fh->fh_cs_ctl = cfcoe_hdr->cs_ctl;
-+	fh->fh_type = cfcoe_hdr->type;
-+	memcpy(fh->fh_f_ctl, ((char *)&cfcoe_hdr->rctl_fctl) + 1, 3);
-+	fh->fh_seq_id = cfcoe_hdr->seq_id;
-+	fh->fh_df_ctl = cfcoe_hdr->df_ctl;
-+	fh->fh_seq_cnt = cfcoe_hdr->seq_cnt;
-+	fh->fh_ox_id = cfcoe_hdr->oxid;
-+	fh->fh_rx_id = htons(xid);
-+	fh->fh_parm_offset = cfcoe_hdr->param;
-+
-+	cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
-+
-+	memset(cp, 0, sizeof(*cp));
-+	cp->fcoe_eof = cfcoe_hdr->eof;
-+
-+	skb_reset_mac_header(skb);
-+	skb_set_network_header(skb, sizeof(*eh));
-+	__skb_pull(skb, sizeof(*eh));
-+	skb_record_rx_queue(skb, rxq->rspq.idx);
-+
-+	return skb;
-+}
-+
-+static inline void
-+cxgb_fcoe_cpl_fcoe_hdr(struct port_info *pi, struct sge_rspq *q,
-+		       struct cpl_fcoe_hdr *cfcoe_hdr)
-+{
-+	struct adapter *adap = pi->adapter;
-+	struct sk_buff *skb;
-+	struct cxgb_fcoe_ddp *ddp;
-+	struct sge_eth_rxq *rxq = container_of(q, struct sge_eth_rxq, rspq);
-+	unsigned int tid = GET_TID(cfcoe_hdr);
-+	u32 fctl;
-+
-+	ddp = cxgb_fcoe_lookup_ddp(pi, tid);
-+	if (!ddp)
-+		return;
-+
-+	if (ddp->flags & CXGB_FCOE_DDP_ERROR)
-+		return;
-+
-+	fctl = G_FCOE_FCHDR_FCTL(be32_to_cpu(cfcoe_hdr->rctl_fctl));
-+
-+	ddp->ddp_len += ntohs(cfcoe_hdr->len);
-+
-+	/* Send skb only on transfer of sequence initiative (last frame) */
-+	if ((fctl & (FC_FC_SEQ_INIT | FC_FC_END_SEQ)) !=
-+					(FC_FC_SEQ_INIT | FC_FC_END_SEQ))
-+		return;
-+
-+	/* Synth a skb */
-+	skb = cxgb_fcoe_init_skb(adap, ddp->xid, pi, ddp, cfcoe_hdr, rxq);
-+	if (unlikely(!skb)) {
-+		ddp->flags |= CXGB_FCOE_DDP_ERROR;
-+		return;
-+	}
-+
-+	if (ddp->vlan_tci)
-+		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), ddp->vlan_tci);
-+
-+	netif_receive_skb(skb);
-+}
-+
-+static void cxgb_fcoe_cpl_rx_fcoe_ddp(struct port_info *pi,
-+				      struct cpl_rx_fcoe_ddp *cfcoe_ddp)
-+{
-+	struct adapter *adap = pi->adapter;
-+	struct cxgb_fcoe_ddp *ddp;
-+	unsigned int tid = GET_TID(cfcoe_ddp);
-+
-+	ddp = cxgb_fcoe_lookup_ddp(pi, tid);
-+	if (!ddp)
-+		return;
-+
-+	dev_warn(adap->pdev_dev, "DDP Error, xid:%x tid:%x report:%x"
-+		 " vld:%x\n", ddp->xid, tid,
-+		 be32_to_cpu(cfcoe_ddp->ddp_report),
-+		 be32_to_cpu(cfcoe_ddp->ddpvld));
-+
-+	ddp->flags |= CXGB_FCOE_DDP_ERROR;
-+}
-+
-+int cxgb_fcoe_rx_handler(struct sge_rspq *q, const __be64 *rsp)
-+{
-+	struct port_info *pi = netdev_priv(q->netdev);
-+
-+	switch (*(u8 *)rsp) {
-+	case CPL_FCOE_HDR:
-+		cxgb_fcoe_cpl_fcoe_hdr(pi, q,
-+				       (struct cpl_fcoe_hdr *)&rsp[1]);
-+		break;
-+	case CPL_RX_FCOE_DDP:
-+		cxgb_fcoe_cpl_rx_fcoe_ddp(pi,
-+					  (struct cpl_rx_fcoe_ddp *)&rsp[1]);
-+		break;
-+	case CPL_FCOE_DATA:
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+/**
-+ * cxgb_fcoe_alloc_ppods - Allocate page pods
-+ * @adap: adapter
-+ * @n: number of page pods to allocate
-+ *
-+ * Returns -1 on failure or the page pod tag
-+ */
-+static inline int
-+cxgb_fcoe_alloc_ppods(struct adapter *adap, unsigned int n)
-+{
-+	unsigned int i, j;
-+	struct cxgb4_virt_res *vres = &adap->vres;
-+
-+	if (unlikely(!vres->ppod_map))
-+		return -1;
-+
-+	spin_lock_bh(&vres->ppod_map_lock);
-+
-+	/* Look for n consecutive available page pods.
-+	 * Make sure to guard from scanning beyond the table.
-+	 */
-+	for (i = 0; i + n - 1 < vres->fcoe_nppods; ) {
-+		for (j = 0; j < n; ++j)		/* scan ppod_map[i..i+n-1] */
-+			if (vres->ppod_map[i + j]) {
-+				i = i + j + 1;
-+				goto next;
-+			}
-+
-+		memset(&vres->ppod_map[i], 1, n);   /* allocate range */
-+		spin_unlock_bh(&vres->ppod_map_lock);
-+		return i;
-+next:
-+		continue;
-+	}
-+
-+	spin_unlock_bh(&vres->ppod_map_lock);
-+	return -1;
-+}
-+
-+void
-+cxgb_fcoe_free_ppods(struct adapter *adap, unsigned int tag, unsigned int n)
-+{
-+	struct cxgb4_virt_res *vres = &adap->vres;
-+
-+	spin_lock_bh(&vres->ppod_map_lock);
-+	memset(&vres->ppod_map[tag], 0, n);
-+	spin_unlock_bh(&vres->ppod_map_lock);
-+}
-+
-+static inline void cxgb_fcoe_clear_ddp(struct cxgb_fcoe_ddp *ddp)
-+{
-+	ddp->sgl = NULL;
-+	ddp->sgc = 0;
-+	ddp->first_pg_off = 0;
-+	ddp->nppods = 0;
-+	ddp->ppod_tag = 0;
-+	ddp->xfer_len = 0;
-+	ddp->ddp_len = 0;
-+	ddp->npages = 0;
-+	ddp->flags = 0;
-+}
-+
-+void cxgb_fcoe_cpl_act_open_rpl(struct adapter *adap, unsigned int atid,
-+				unsigned int tid, unsigned int status)
-+{
-+	u16 xid = CXGB_FCOE_GET_XID(atid);
-+	u8 port_id = CXGB_FCOE_GET_PORTID(atid);
-+	struct port_info *pi = adap2pinfo(adap, port_id);
-+	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp = &fcoe->ddp[xid];
-+
-+	if ((status == CPL_ERR_NONE) &&
-+	    (tid < adap->tids.ntids)) {
-+		ddp->tid = tid;
-+		ddp->flags |= CXGB_FCOE_DDP_TID_VALID;
-+		adap->vres.tid2xid[tid] = xid;
-+	} else
-+		dev_err(adap->pdev_dev, "tid allocation failed xid 0x%x status 0x%x\n",
-+			xid, status);
-+
-+	complete(fcoe->cmpl);
-+}
-+
-+static int cxgb_fcoe_alloc_tid(struct port_info *pi, u16 xid)
-+{
-+	struct adapter *adap = pi->adapter;
-+	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp = &fcoe->ddp[xid];
-+	struct tp_params *tp = &adap->params.tp;
-+	struct cpl_t5_act_open_req *req;
-+	struct sk_buff *skb;
-+	unsigned int qid_atid = xid;
-+
-+	skb = alloc_skb(sizeof(*req), GFP_KERNEL);
-+	if (!skb)
-+		return 1;
-+
-+	qid_atid |= BIT(CXGB_FCOE_ATID);
-+	qid_atid |= (pi->port_id << CXGB_FCOE_SHIFT_PORTID);
-+	qid_atid |= (adap->sge.fw_evtq.abs_id << 14);
-+
-+	req = (struct cpl_t5_act_open_req *)__skb_put(skb, sizeof(*req));
-+	memset(req, 0, sizeof(*req));
-+
-+	INIT_TP_WR(req, 0);
-+	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_ACT_OPEN_REQ, qid_atid));
-+
-+	req->peer_port = cpu_to_be16(xid);
-+	req->opt0 = cpu_to_be64(ULP_MODE_V(ULP_MODE_FCOE) |
-+			NON_OFFLOAD_F | NO_CONG_F | TX_CHAN_V(pi->tx_chan) |
-+			RCV_BUFSIZ_V(RCV_BUFSIZ_M) | L2T_IDX_V(0));
-+
-+	req->params = cpu_to_be64(FILTER_TUPLE_V(
-+				(pi->port_id << tp->port_shift) |
-+				(1 << tp->fcoe_shift)) | AOPEN_FCOEMASK_F);
-+
-+	if (t4_mgmt_tx(adap, skb) == NET_XMIT_DROP)
-+		return 1;
-+
-+	wait_for_completion(fcoe->cmpl);
-+
-+	reinit_completion(fcoe->cmpl);
-+
-+	if (!(ddp->flags & CXGB_FCOE_DDP_TID_VALID))
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static void cxgb_fcoe_free_tid(struct port_info *pi, u16 xid)
-+{
-+	struct adapter *adap = pi->adapter;
-+	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp = &fcoe->ddp[xid];
-+	struct cpl_tid_release *req;
-+	struct sk_buff *skb;
-+	unsigned int len = ALIGN(sizeof(*req), 16);
-+
-+	skb = alloc_skb(len, GFP_KERNEL);
-+	if (!skb)
-+		return;
-+
-+	req = (struct cpl_tid_release *)__skb_put(skb, len);
-+	memset(req, 0, len);
-+
-+	INIT_TP_WR(req, 0);
-+	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_TID_RELEASE, ddp->tid));
-+
-+	t4_mgmt_tx(adap, skb);
-+}
-+
-+static void cxgb_fcoe_free_ddp(struct port_info *pi, u16 xid)
-+{
-+	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp;
-+	u16 i;
-+
-+	for (i = 0; i < xid; i++) {
-+		ddp = &fcoe->ddp[i];
-+		kfree(ddp->ppod_gl);
-+		cxgb_fcoe_free_tid(pi, i);
-+	}
-+}
-+
-+/* Return the # of page pods needed to accommodate a # of pages.
-+ */
-+static inline unsigned int pages2ppods(unsigned int pages)
-+{
-+	return (pages + PPOD_PAGES - 1) / PPOD_PAGES +
-+			CXGB_FCOE_NUM_SENTINEL_PPODS;
-+}
-+
-+/**
-+ * cxgb_fcoe_ddp_setup - setup ddp in target mode
-+ * @netdev: net device
-+ * @xid: exchange id
-+ * @sgl: scatterlist
-+ * @sgc: number of scatterlist elements
-+ *
-+ * Returns 1 on success or 0 on failure.
-+ */
-+int cxgb_fcoe_ddp_setup(struct net_device *netdev, u16 xid,
-+			struct scatterlist *sgl, unsigned int sgc)
-+{
-+	struct port_info *pi;
-+	struct adapter *adap;
-+	struct cxgb_fcoe *fcoe;
-+	struct cxgb_fcoe_ddp *ddp;
-+	struct scatterlist *sg;
-+	unsigned int nsge, i, j, len, lastsize, nppods;
-+	static const unsigned int bufflen = PAGE_SIZE;
-+	unsigned int firstoff = 0;
-+	unsigned int thisoff = 0;
-+	unsigned int thislen = 0;
-+	unsigned int totlen = 0;
-+	int tag;
-+	dma_addr_t addr;
-+
-+	if (!netdev || !sgl)
-+		return 0;
-+
-+	pi = netdev_priv(netdev);
-+	adap = pi->adapter;
-+
-+	if (xid >= CXGB_FCOE_MAX_XCHGS_PORT) {
-+		dev_warn(adap->pdev_dev, "xid=0x%x out-of-range\n", xid);
-+		return 0;
-+	}
-+
-+	fcoe = &pi->fcoe;
-+	ddp = &fcoe->ddp[xid];
-+	if (ddp->sgl) {
-+		dev_err(adap->pdev_dev, "xid 0x%x w/ non-null sgl%p nents=%d\n",
-+			xid, ddp->sgl, ddp->sgc);
-+		return 0;
-+	}
-+
-+	cxgb_fcoe_clear_ddp(ddp);
-+
-+	nsge = pci_map_sg(adap->pdev, sgl, sgc, DMA_FROM_DEVICE);
-+	if (nsge == 0) {
-+		dev_err(adap->pdev_dev, "xid 0x%x DMA map error\n", xid);
-+		return 0;
-+	}
-+
-+	j = 0;
-+	for_each_sg(sgl, sg, nsge, i) {
-+		addr = sg_dma_address(sg);
-+		len = sg_dma_len(sg);
-+		totlen += len;
-+		while (len) {
-+			/* max number of pages allowed in one DDP transfer */
-+			if (j >= CXGB_FCOE_MAX_PAGE_CNT) {
-+				dev_err(adap->pdev_dev,
-+					"xid=%x:%d,%d,%d:addr=%llx "
-+					"not enough descriptors\n",
-+					xid, i, j, nsge, (u64)addr);
-+				goto out_noddp;
-+			}
-+
-+			/* get the offset of length of current buffer */
-+			thisoff = addr & ((dma_addr_t)bufflen - 1);
-+			thislen = min((bufflen - thisoff), len);
-+
-+			/* all but the 1st buffer (j == 0)
-+			 * must be aligned on bufflen
-+			 */
-+			if ((j != 0) && (thisoff))
-+				goto out_noddp;
-+			/* all but the last buffer
-+			 * ((i == (nsge - 1)) && (thislen == len))
-+			 * must end at bufflen
-+			 */
-+			if (((i != (nsge - 1)) || (thislen != len)) &&
-+			    ((thislen + thisoff) != bufflen))
-+				goto out_noddp;
-+
-+			ddp->ppod_gl[j] = (dma_addr_t)(addr - thisoff);
-+
-+			/* only the first buffer may have none-zero offset */
-+			if (j == 0)
-+				firstoff = thisoff;
-+			len -= thislen;
-+			addr += thislen;
-+			j++;
-+		}
-+	}
-+	/* only the last buffer may have non-full bufflen */
-+	lastsize = thisoff + thislen;
-+
-+	nppods = pages2ppods(j);
-+	tag = cxgb_fcoe_alloc_ppods(adap, nppods);
-+	if (tag < 0) {
-+		dev_err(adap->pdev_dev, "Failed to allocate %d ppods"
-+					" xid:0x%x\n", nppods, xid);
-+		goto out_noddp;
-+	}
-+
-+	/* Should be offset by TOE's ppods */
-+	tag += adap->vres.toe_nppods;
-+
-+	ddp->sgl = sgl;
-+	ddp->sgc = sgc;
-+	ddp->xfer_len = totlen;
-+	ddp->first_pg_off = firstoff;
-+	ddp->nppods = nppods;
-+	ddp->npages = j;
-+	ddp->ppod_tag = tag;
-+
-+	return 1;
-+
-+out_noddp:
-+	pci_unmap_sg(adap->pdev, sgl, sgc, DMA_FROM_DEVICE);
-+	return 0;
-+}
-+
-+/**
-+ * cxgb_fcoe_ddp_done - complete DDP
-+ * @netdev: net device
-+ * @xid: exchange id
-+ *
-+ * Returns length of data directly placed in bytes.
-+ */
-+int cxgb_fcoe_ddp_done(struct net_device *netdev, u16 xid)
-+{
-+	struct port_info *pi;
-+	struct adapter *adap;
-+	struct cxgb_fcoe *fcoe;
-+	struct cxgb_fcoe_ddp *ddp;
-+	int len = 0;
-+
-+	if (!netdev)
-+		return 0;
-+
-+	pi = netdev_priv(netdev);
-+	adap = pi->adapter;
-+
-+	if (xid >= CXGB_FCOE_MAX_XCHGS_PORT) {
-+		dev_warn(adap->pdev_dev, "ddp_done: xid%x out-of-range\n", xid);
-+		return 0;
-+	}
-+
-+	fcoe = &pi->fcoe;
-+	ddp = &fcoe->ddp[xid];
-+	if (!ddp->sgl) {
-+		dev_err(adap->pdev_dev, "ddp_done: xid %x with null sgl\n",
-+			xid);
-+		return 0;
-+	}
-+
-+	if (!(ddp->flags & CXGB_FCOE_DDP_ERROR))
-+		len = ddp->ddp_len;
-+
-+	cxgb_fcoe_free_ppods(adap, ddp->ppod_tag - adap->vres.toe_nppods,
-+			     ddp->nppods);
-+
-+	if (ddp->sgl)
-+		pci_unmap_sg(adap->pdev, ddp->sgl, ddp->sgc, DMA_FROM_DEVICE);
-+
-+	cxgb_fcoe_clear_ddp(ddp);
-+
-+	return len;
-+}
-+
- /**
-  * cxgb_fcoe_enable - enable FCoE offload features
-  * @netdev: net device
-@@ -70,6 +596,10 @@ int cxgb_fcoe_enable(struct net_device *netdev)
- 	struct port_info *pi = netdev_priv(netdev);
- 	struct adapter *adap = pi->adapter;
- 	struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct tp_params *tp = &adap->params.tp;
-+	struct cxgb_fcoe_ddp *ddp;
-+	struct completion cmpl;
-+	u16 xid;
- 
- 	if (is_t4(adap->params.chip))
- 		return -EINVAL;
-@@ -77,12 +607,51 @@ int cxgb_fcoe_enable(struct net_device *netdev)
- 	if (!(adap->flags & FULL_INIT_DONE))
- 		return -EINVAL;
- 
-+	if (adap->tids.natids > 8192)
-+		return -EINVAL;
-+
-+	if ((tp->port_shift < 0) || (tp->fcoe_shift < 0))
-+		return -EINVAL;
-+
-+	if (!adap->vres.ppod_map || !adap->vres.tid2xid) {
-+		dev_warn(adap->pdev_dev, "FCoE Offload resources "
-+			 " unavailable\n");
-+		return -EINVAL;
-+	}
-+
- 	dev_info(adap->pdev_dev, "Enabling FCoE offload features\n");
- 
-+	init_completion(&cmpl);
-+	fcoe->cmpl = &cmpl;
-+	memset(fcoe->ddp, 0, sizeof(*ddp) * CXGB_FCOE_MAX_XCHGS_PORT);
-+
-+	for (xid = 0; xid < CXGB_FCOE_MAX_XCHGS_PORT; xid++) {
-+		ddp = &fcoe->ddp[xid];
-+		ddp->xid = xid;
-+		ddp->ppod_gl = kzalloc(CXGB_FCOE_MAX_PAGE_CNT *
-+							sizeof(dma_addr_t),
-+							GFP_KERNEL);
-+		if (!ddp->ppod_gl) {
-+			dev_warn(adap->pdev_dev, "Unable to allocate "
-+				 "pagepod gatherlists xid 0x%x\n", xid);
-+			cxgb_fcoe_free_ddp(pi, xid);
-+			return -EINVAL;
-+		}
-+
-+		if (cxgb_fcoe_alloc_tid(pi, xid)) {
-+			dev_warn(adap->pdev_dev, "Unable to allocate "
-+				 "tid xid 0x%x\n", xid);
-+			kfree(ddp->ppod_gl);
-+			cxgb_fcoe_free_ddp(pi, xid);
-+			return -EINVAL;
-+		}
-+	}
-+
- 	netdev->features |= NETIF_F_FCOE_CRC;
- 	netdev->vlan_features |= NETIF_F_FCOE_CRC;
- 	netdev->features |= NETIF_F_FCOE_MTU;
- 	netdev->vlan_features |= NETIF_F_FCOE_MTU;
-+	netdev->fcoe_ddp_xid = CXGB_FCOE_MAX_XCHGS_PORT - 1;
- 
- 	netdev_features_change(netdev);
- 
-@@ -114,9 +683,45 @@ int cxgb_fcoe_disable(struct net_device *netdev)
- 	netdev->vlan_features &= ~NETIF_F_FCOE_CRC;
- 	netdev->features &= ~NETIF_F_FCOE_MTU;
- 	netdev->vlan_features &= ~NETIF_F_FCOE_MTU;
-+	netdev->fcoe_ddp_xid = 0;
- 
- 	netdev_features_change(netdev);
- 
-+	cxgb_fcoe_free_ddp(pi, CXGB_FCOE_MAX_XCHGS_PORT);
-+
- 	return 0;
- }
-+
-+void cxgb_fcoe_init_ddp(struct adapter *adap)
-+{
-+	u32 tot_ppods = adap->vres.ddp.size / CXGB_FCOE_PPOD_SIZE;
-+	u32 fcoe_ddp_size, fcoe_ddp_start;
-+
-+	adap->vres.fcoe_nppods = tot_ppods / 2;
-+	adap->vres.toe_nppods = tot_ppods - adap->vres.fcoe_nppods;
-+
-+	adap->vres.ddp.size = adap->vres.toe_nppods * CXGB_FCOE_PPOD_SIZE;
-+	fcoe_ddp_size = adap->vres.fcoe_nppods * CXGB_FCOE_PPOD_SIZE;
-+	fcoe_ddp_start = adap->vres.ddp.start + adap->vres.ddp.size;
-+
-+	dev_info(adap->pdev_dev, "TOE ddp start:0x%x size:%d"
-+		 " nppods:%d\n", adap->vres.ddp.start,
-+		 adap->vres.ddp.size, adap->vres.toe_nppods);
-+	dev_info(adap->pdev_dev, "FCoE ddp start:0x%x size:%d"
-+		 " nppods:%d tids:%d\n",
-+		 fcoe_ddp_start, fcoe_ddp_size,
-+		 adap->vres.fcoe_nppods, adap->tids.ntids);
-+
-+	spin_lock_init(&adap->vres.ppod_map_lock);
-+
-+	adap->vres.ppod_map = kzalloc(adap->vres.fcoe_nppods, GFP_KERNEL);
-+	adap->vres.tid2xid = kcalloc(adap->tids.ntids, sizeof(u16),
-+				GFP_KERNEL);
-+}
-+
-+void cxgb_fcoe_exit_ddp(struct adapter *adap)
-+{
-+	kfree(adap->vres.ppod_map);
-+	kfree(adap->vres.tid2xid);
-+}
- #endif /* CONFIG_CHELSIO_T4_FCOE */
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index e40e283..d235d3b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -552,6 +552,23 @@ static void clear_filter(struct adapter *adap, struct filter_entry *f)
- 	memset(f, 0, sizeof(*f));
- }
- 
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+static void hash_filter_rpl(struct adapter *adap,
-+			    const struct cpl_act_open_rpl *rpl)
-+{
-+	unsigned int tid = GET_TID(rpl);
-+	unsigned int ftid = TID_TID_G(AOPEN_ATID_G(ntohl(rpl->atid_status)));
-+	unsigned int status  = AOPEN_STATUS_G(ntohl(rpl->atid_status));
-+
-+	/* ATID is 14 bit value [0..13], MAX_ATIDS is 8192
-+	 * ATID needs max 13 bits [0..12], using 13th bit in
-+	 * ATID for FCoE CPL_ACT_OPEN_REQ.
-+	 */
-+	if (ftid & BIT(CXGB_FCOE_ATID))
-+		cxgb_fcoe_cpl_act_open_rpl(adap, ftid, tid, status);
-+}
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
-+
- /* Handle a filter write/deletion reply.
-  */
- static void filter_rpl(struct adapter *adap, const struct cpl_set_tcb_rpl *rpl)
-@@ -669,7 +686,15 @@ static int fwevtq_handler(struct sge_rspq *q, const __be64 *rsp,
- 		const struct cpl_set_tcb_rpl *p = (void *)rsp;
- 
- 		filter_rpl(q->adap, p);
--	} else
-+	}
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+	else if (opcode == CPL_ACT_OPEN_RPL) {
-+		const struct cpl_act_open_rpl *p = (void *)rsp;
-+
-+		hash_filter_rpl(q->adap, p);
-+	}
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
-+	else
- 		dev_err(q->adap->pdev_dev,
- 			"unexpected CPL %#x on FW event queue\n", opcode);
- out:
-@@ -4585,6 +4610,8 @@ static const struct net_device_ops cxgb4_netdev_ops = {
- #ifdef CONFIG_CHELSIO_T4_FCOE
- 	.ndo_fcoe_enable      = cxgb_fcoe_enable,
- 	.ndo_fcoe_disable     = cxgb_fcoe_disable,
-+	.ndo_fcoe_ddp_target  = cxgb_fcoe_ddp_setup,
-+	.ndo_fcoe_ddp_done    = cxgb_fcoe_ddp_done,
- #endif /* CONFIG_CHELSIO_T4_FCOE */
- #ifdef CONFIG_NET_RX_BUSY_POLL
- 	.ndo_busy_poll        = cxgb_busy_poll,
-@@ -5393,6 +5420,10 @@ static int adap_init0(struct adapter *adap)
- 		adap->vres.ddp.start = val[3];
- 		adap->vres.ddp.size = val[4] - val[3] + 1;
- 		adap->params.ofldq_wr_cred = val[5];
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+		if (ntohs(caps_cmd.fcoecaps) & FW_CAPS_CONFIG_POFCOE_TARGET)
-+			cxgb_fcoe_init_ddp(adap);
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
- 
- 		adap->params.offload = 1;
- 	}
-@@ -5509,6 +5540,9 @@ static int adap_init0(struct adapter *adap)
- bye:
- 	if (ret != -ETIMEDOUT && ret != -EIO)
- 		t4_fw_bye(adap, adap->mbox);
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+	cxgb_fcoe_exit_ddp(adap);
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
- 	return ret;
- }
- 
-@@ -6294,6 +6328,9 @@ static void remove_one(struct pci_dev *pdev)
- 		iounmap(adapter->regs);
- 		if (!is_t4(adapter->params.chip))
- 			iounmap(adapter->bar2);
-+#ifdef CONFIG_CHELSIO_T4_FCOE
-+		cxgb_fcoe_exit_ddp(adapter);
-+#endif /* CONFIG_CHELSIO_T4_FCOE */
- 		pci_disable_pcie_error_reporting(pdev);
- 		if ((adapter->flags & DEV_ENABLED)) {
- 			pci_disable_device(pdev);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index c46e7a9..069b8c7 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -48,6 +48,8 @@
- #endif /* CONFIG_NET_RX_BUSY_POLL */
- #ifdef CONFIG_CHELSIO_T4_FCOE
- #include <scsi/fc/fc_fcoe.h>
-+#include <scsi/libfcoe.h>
-+#include "t4_tcb.h"
- #endif /* CONFIG_CHELSIO_T4_FCOE */
- #include "cxgb4.h"
- #include "t4_regs.h"
-@@ -1048,11 +1050,260 @@ static inline void txq_advance(struct sge_txq *q, unsigned int n)
- }
- 
- #ifdef CONFIG_CHELSIO_T4_FCOE
-+
-+#define CXGB_FCOE_NUM_IMM_PPODS		4
-+
-+#define CXGB_FCOE_NUM_IMM_PPOD_BYTES	\
-+	(CXGB_FCOE_NUM_IMM_PPODS * CXGB_FCOE_PPOD_SIZE)
-+
-+#define WR_LEN_MAX_PPODS	\
-+	(sizeof(struct ulp_mem_io) + \
-+	sizeof(struct ulptx_idata) + \
-+	CXGB_FCOE_NUM_IMM_PPOD_BYTES)
-+
-+#define WR_CRED_MAX_PPODS	(DIV_ROUND_UP(WR_LEN_MAX_PPODS, IDXSIZE_UNIT_X))
-+
-+#define WR_LEN_SET_TCBS \
-+	(sizeof(struct fw_pofcoe_ulptx_wr) + \
-+	 (5 * ALIGN(sizeof(struct cpl_set_tcb_field), 16)))
-+
-+#define WR_LEN16_SET_TCBS DIV_ROUND_UP(WR_LEN_SET_TCBS, 16)
-+
-+#define WR_NDESC_SET_TCBS DIV_ROUND_UP(WR_LEN_SET_TCBS, IDXSIZE_UNIT_X)
-+
-+static inline int calc_ddp_credits(struct sk_buff *skb, unsigned int nppods)
-+{
-+	unsigned int n_full = (nppods / CXGB_FCOE_NUM_IMM_PPODS);
-+	int credits = n_full * WR_CRED_MAX_PPODS;
-+	unsigned int last_ppod_len = (nppods % CXGB_FCOE_NUM_IMM_PPODS) *
-+					CXGB_FCOE_PPOD_SIZE;
-+	unsigned int last_len;
-+	unsigned int flits;
-+
-+	if (last_ppod_len) {
-+		last_len = sizeof(struct ulp_mem_io) +
-+				sizeof(struct ulptx_idata) + last_ppod_len;
-+		credits += DIV_ROUND_UP(last_len, IDXSIZE_UNIT_X);
-+	}
-+
-+	credits += WR_NDESC_SET_TCBS;
-+
-+	flits = calc_tx_flits(skb);
-+	credits += flits_to_desc(flits);
-+
-+	return credits;
-+}
-+
-+static inline void
-+cxgb_fcoe_set_tcb_field(struct cpl_set_tcb_field *req, unsigned int tid,
-+			unsigned int word, u64 mask, u64 val)
-+{
-+	struct ulp_txpkt *txpkt = (struct ulp_txpkt *)req;
-+	struct ulptx_idata *sc = (struct ulptx_idata *)(txpkt + 1);
-+
-+	txpkt->cmd_dest = htonl(ULPTX_CMD_V(ULP_TX_PKT) | ULP_TXPKT_DEST_V(0));
-+	txpkt->len = htonl((tid << 8) | DIV_ROUND_UP(sizeof(*req), 16));
-+	sc->cmd_more = htonl(ULPTX_CMD_V(ULP_TX_SC_IMM));
-+	sc->len = htonl(sizeof(*req) - sizeof(struct work_request_hdr));
-+	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_SET_TCB_FIELD, tid));
-+	req->reply_ctrl = htons(NO_REPLY_V(1) | REPLY_CHAN_V(0) |
-+				QUEUENO_V(0));
-+	req->word_cookie = htons(TCB_WORD(word) | TCB_COOKIE_V(0));
-+	req->mask = cpu_to_be64(mask);
-+	req->val = cpu_to_be64(val);
-+	sc = (struct ulptx_idata *)(req + 1);
-+	sc->cmd_more = htonl(ULPTX_CMD_V(ULP_TX_SC_NOOP));
-+	sc->len = htonl(0);
-+}
-+
-+static inline void
-+cxgb_fcoe_set_tcbs(struct adapter *adap, const struct port_info *pi,
-+		   struct sge_eth_txq *q,
-+		   struct cxgb_fcoe_ddp *ddp, u16 iqid)
-+{
-+	struct cpl_set_tcb_field *req;
-+	struct fw_pofcoe_ulptx_wr *wr;
-+	u8 buf[WR_LEN_SET_TCBS] = {0};
-+	u8 *end, *wrp = (u8 *)&q->q.desc[q->q.pidx];
-+	unsigned int len = ALIGN(sizeof(struct cpl_set_tcb_field), 16);
-+
-+	end = wrp + WR_LEN_SET_TCBS;
-+	wr = (struct fw_pofcoe_ulptx_wr *)
-+		((u8 *)end > (u8 *)q->q.stat ? buf : wrp);
-+
-+	wr->op_pkd = htonl(FW_WR_OP_V(FW_POFCOE_ULPTX_WR));
-+	wr->equiq_to_len16 = htonl(FW_WR_LEN16_V(WR_LEN16_SET_TCBS));
-+
-+	req = (struct cpl_set_tcb_field *)(wr + 1);
-+	cxgb_fcoe_set_tcb_field(req, ddp->tid, TCB_RX_DDP_BUF0_TAG_W,
-+				TCB_RX_DDP_BUF0_TAG_V(TCB_RX_DDP_BUF0_TAG_M),
-+				TCB_RX_DDP_BUF0_TAG_V(
-+					PPOD_TAG_V(ddp->ppod_tag)));
-+
-+	req = (struct cpl_set_tcb_field *)((u8 *)req + len);
-+	cxgb_fcoe_set_tcb_field(req, ddp->tid, TCB_RX_DDP_BUF0_OFFSET_W,
-+				TCB_RX_DDP_BUF0_OFFSET_V(
-+					TCB_RX_DDP_BUF0_OFFSET_M) |
-+				TCB_RX_DDP_BUF0_LEN_V(TCB_RX_DDP_BUF0_LEN_M),
-+				TCB_RX_DDP_BUF0_OFFSET_V(0) |
-+				TCB_RX_DDP_BUF0_LEN_V(ddp->xfer_len));
-+
-+	req = (struct cpl_set_tcb_field *)((u8 *)req + len);
-+	cxgb_fcoe_set_tcb_field(req, ddp->tid, TCB_T_STATE_W,
-+				TCB_T_STATE_V(TCB_T_STATE_M) |
-+				TCB_RSS_INFO_V(TCB_RSS_INFO_M),
-+				TCB_T_STATE_V(0x4) |
-+				TCB_RSS_INFO_V(iqid));
-+
-+	req = (struct cpl_set_tcb_field *)((u8 *)req + len);
-+	cxgb_fcoe_set_tcb_field(req, ddp->tid, TCB_T_FLAGS_W,
-+				TF_NON_OFFLOAD_V(1), 0);
-+
-+	req = (struct cpl_set_tcb_field *)((u8 *)req + len);
-+	cxgb_fcoe_set_tcb_field(req, ddp->tid, TCB_RX_DDP_FLAGS_W,
-+				TF_DDP_BUF_INF_V(1) |
-+				TF_DDP_INDICATE_OUT_V(1) |
-+				TF_DDP_BUF0_INDICATE_V(1) |
-+				TF_DDP_BUF0_VALID_V(1) |
-+				TF_DDP_OFF_V(1),
-+				TF_DDP_BUF_INF_V(1) |
-+				TF_DDP_INDICATE_OUT_V(1) |
-+				TF_DDP_BUF0_INDICATE_V(1) |
-+				TF_DDP_BUF0_VALID_V(1) |
-+				TF_DDP_OFF_V(0));
-+
-+	if (unlikely((u8 *)end > (u8 *)q->q.stat)) {
-+		unsigned int part0 = (u8 *)q->q.stat - (u8 *)wrp, part1;
-+
-+		if (likely(part0))
-+			memcpy(wrp, buf, part0);
-+		part1 = (u8 *)end - (u8 *)q->q.stat;
-+		memcpy(q->q.desc, (u8 *)buf + part0, part1);
-+		end = (void *)q->q.desc + part1;
-+	}
-+
-+	if ((uintptr_t)end & 8)		/* 0-pad to multiple of 16 */
-+		*(u64 *)end = 0;
-+
-+	/* Post this WR */
-+	txq_advance(&q->q, WR_NDESC_SET_TCBS);
-+	ring_tx_db(adap, &q->q, WR_NDESC_SET_TCBS);
-+}
-+
-+static inline void
-+cxgb_setup_ppods(struct adapter *adap, const struct port_info *pi,
-+		 struct sge_eth_txq *q, struct cxgb_fcoe_ddp *ddp)
-+{
-+	unsigned int i, j, pidx;
-+	struct pagepod *p;
-+	u8 *wrp = (u8 *)&q->q.desc[q->q.pidx];
-+	struct fw_pofcoe_ulptx_wr *mwr;
-+	struct ulp_mem_io *wr;
-+	struct ulptx_idata *sc;
-+	unsigned int tid = ddp->tid;
-+	unsigned int color = 0;
-+	unsigned int nppods = ddp->nppods;
-+	unsigned int tag = ddp->ppod_tag;
-+	unsigned int maxoff = ddp->xfer_len;
-+	unsigned int pg_off = ddp->first_pg_off;
-+	unsigned int ppod_addr = tag * CXGB_FCOE_PPOD_SIZE +
-+					adap->vres.ddp.start;
-+	unsigned int len, podchunk, ndesc;
-+	u8 buf[WR_LEN_MAX_PPODS];
-+	u8 *end, *to;
-+	__be32 cmd = htonl(ULPTX_CMD_V(ULP_TX_MEM_WRITE));
-+
-+	if (is_t4(adap->params.chip))
-+		cmd |= htonl(ULP_MEMIO_ORDER_V(1));
-+	else
-+		cmd |= htonl(T5_ULP_MEMIO_IMM_V(1));
-+
-+	for (i = 0; i < nppods; ppod_addr += podchunk) {
-+		unsigned int ppodout = 0;
-+
-+		podchunk = ((nppods - i) >= CXGB_FCOE_NUM_IMM_PPODS) ?
-+				CXGB_FCOE_NUM_IMM_PPODS : (nppods - i);
-+		podchunk *= CXGB_FCOE_PPOD_SIZE;
-+
-+		len = roundup(sizeof(*wr) + sizeof(*sc) + podchunk, 16);
-+		end = wrp + len;
-+		to = (u8 *)end > (u8 *)q->q.stat ? buf : wrp;
-+
-+		mwr = (struct fw_pofcoe_ulptx_wr *)to;
-+		mwr->op_pkd = htonl(FW_WR_OP_V(FW_POFCOE_ULPTX_WR));
-+		mwr->equiq_to_len16 = htonl(FW_WR_LEN16_V(
-+						DIV_ROUND_UP(len, 16)));
-+		wr = (struct ulp_mem_io *)to;
-+		wr->cmd = cmd;
-+		wr->dlen = htonl(ULP_MEMIO_DATA_LEN_V(podchunk / 32));
-+		wr->len16 = htonl((ddp->tid << 8) |
-+					DIV_ROUND_UP(len - sizeof(wr->wr), 16));
-+		wr->lock_addr = htonl(ULP_MEMIO_ADDR_V(ppod_addr >> 5));
-+		sc = (struct ulptx_idata *)(wr + 1);
-+		sc->cmd_more = htonl(ULPTX_CMD_V(ULP_TX_SC_IMM));
-+		sc->len = htonl(podchunk);
-+		p = (struct pagepod *)(sc + 1);
-+
-+		do {
-+			pidx = 4 * i;
-+			if (likely(i < nppods - CXGB_FCOE_NUM_SENTINEL_PPODS)) {
-+				p->vld_tid_pgsz_tag_color =
-+					cpu_to_be64(PPOD_VALID_F |
-+							PPOD_TID_V(tid) |
-+							PPOD_TAG_V(tag) |
-+							PPOD_COLOR_V(color));
-+				p->len_offset = cpu_to_be64(PPOD_LEN_V(maxoff) |
-+							PPOD_OFST_V(pg_off));
-+				p->rsvd = 0;
-+				for (j = 0; j < 5; ++j, ++pidx)
-+					p->addr[j] = pidx < ddp->npages ?
-+					    cpu_to_be64(ddp->ppod_gl[pidx]) : 0;
-+			} else {
-+				/* mark sentinel page pods invalid */
-+				p->vld_tid_pgsz_tag_color = 0;
-+			}
-+			p++;
-+			ppodout += CXGB_FCOE_PPOD_SIZE;
-+			i++;
-+
-+		} while (ppodout < podchunk);
-+
-+		if (unlikely((u8 *)end > (u8 *)q->q.stat)) {
-+			unsigned int part0 = (u8 *)q->q.stat - (u8 *)wrp, part1;
-+
-+			if (likely(part0))
-+				memcpy(wrp, buf, part0);
-+			part1 = (u8 *)end - (u8 *)q->q.stat;
-+			memcpy(q->q.desc, (u8 *)buf + part0, part1);
-+			end = (void *)q->q.desc + part1;
-+		}
-+
-+		if ((uintptr_t)end & 8)		/* 0-pad to multiple of 16 */
-+			*(u64 *)end = 0;
-+
-+		/* Post this WR */
-+		ndesc = DIV_ROUND_UP(len, IDXSIZE_UNIT_X);
-+		txq_advance(&q->q, ndesc);
-+		ring_tx_db(adap, &q->q, ndesc);
-+
-+		wrp = (u8 *)&q->q.desc[q->q.pidx];
-+	} /* for all pagepod chunks */
-+}
-+
- static inline int
--cxgb_fcoe_offload(struct sk_buff *skb, struct adapter *adap,
--		  const struct port_info *pi, u64 *cntrl)
-+cxgb_fcoe_offload(struct sk_buff *skb, struct net_device *dev,
-+		  struct adapter *adap, const struct port_info *pi,
-+		  struct sge_eth_txq *q, u64 *cntrl)
- {
- 	const struct cxgb_fcoe *fcoe = &pi->fcoe;
-+	struct cxgb_fcoe_ddp *ddp;
-+	struct ethhdr *eh;
-+	struct fc_frame_header *fh;
-+	struct sge_eth_rxq *rxq;
-+	unsigned int ndesc;
-+	int qidx, credits;
-+	u16 xid, vlan_tci = 0;
-+	u32 fctl;
- 
- 	if (!(fcoe->flags & CXGB_FCOE_ENABLED))
- 		return 0;
-@@ -1075,6 +1326,64 @@ cxgb_fcoe_offload(struct sk_buff *skb, struct adapter *adap,
- 		     TXPKT_CSUM_START(CXGB_FCOE_TXPKT_CSUM_START) |
- 		     TXPKT_CSUM_END(CXGB_FCOE_TXPKT_CSUM_END) |
- 		     TXPKT_CSUM_LOC(CXGB_FCOE_TXPKT_CSUM_END);
-+
-+	if (skb_vlan_tag_present(skb)) {
-+		vlan_tci = skb_vlan_tag_get(skb);
-+		vlan_tci |= ((skb->priority & 0x7) << VLAN_PRIO_SHIFT);
-+	}
-+
-+	fh = (struct fc_frame_header *)(skb_transport_header(skb));
-+
-+	/* Program DDP for XFER_RDY frames only */
-+	if (fh->fh_r_ctl != FC_RCTL_DD_DATA_DESC)
-+		return 0;
-+
-+	fctl = ntoh24(fh->fh_f_ctl);
-+	if (!(fctl & FC_FC_EX_CTX))
-+		return 0;
-+
-+	xid = be16_to_cpu(fh->fh_rx_id);
-+
-+	if (xid >= CXGB_FCOE_MAX_XCHGS_PORT)
-+		return 0;
-+
-+	ddp = (struct cxgb_fcoe_ddp *)&fcoe->ddp[xid];
-+
-+	/* Upper layer may not have requested for ddp_setup */
-+	if (!ddp->sgl)
-+		return 0;
-+
-+	eh = (struct ethhdr *)skb_mac_header(skb);
-+	/* Save d_id, smac, dmac, vlan */
-+	ether_addr_copy(ddp->h_source, eh->h_source);
-+	ether_addr_copy(ddp->h_dest, eh->h_dest);
-+	memcpy(ddp->d_id, fh->fh_d_id, 3);
-+	ddp->vlan_tci = vlan_tci;
-+
-+	/* program ppods on the card. They should already have been
-+	 * allocated in cxgb_fcoe_ddp_setup
-+	 */
-+
-+	/* Calculate number credits required for ddp */
-+	ndesc = calc_ddp_credits(skb, ddp->nppods);
-+
-+	credits = txq_avail(&q->q) - ndesc;
-+
-+	if (unlikely(credits < 0))
-+		return -EBUSY;
-+
-+	/* Get an associated iqid */
-+	qidx = skb_get_queue_mapping(skb);
-+	rxq = &adap->sge.ethrxq[qidx + pi->first_qset];
-+
-+	cxgb_fcoe_set_tcbs(adap, pi, q, ddp, rxq->rspq.abs_id);
-+
-+	cxgb_setup_ppods(adap, pi, q, ddp);
-+
-+	dev->trans_start = jiffies;
-+
-+	reclaim_completed_tx(adap, &q->q, true);
-+
- 	return 0;
- }
- #endif /* CONFIG_CHELSIO_T4_FCOE */
-@@ -1123,9 +1432,16 @@ out_free:	dev_kfree_skb_any(skb);
- 	cntrl = TXPKT_L4CSUM_DIS | TXPKT_IPCSUM_DIS;
- 
- #ifdef CONFIG_CHELSIO_T4_FCOE
--	err = cxgb_fcoe_offload(skb, adap, pi, &cntrl);
--	if (unlikely(err == -ENOTSUPP))
--		goto out_free;
-+	err = cxgb_fcoe_offload(skb, dev, adap, pi, q, &cntrl);
-+	if (unlikely(err == -EBUSY)) {
-+		eth_txq_stop(q);
-+		dev_err(adap->pdev_dev,
-+			"%s: (fcoe) Tx ring %u full while queue awake!\n",
-+			dev->name, qidx);
-+		return NETDEV_TX_BUSY;
-+	} else if (unlikely(err == -ENOTSUPP)) {
-+			goto out_free;
-+	}
- #endif /* CONFIG_CHELSIO_T4_FCOE */
- 
- 	flits = calc_tx_flits(skb);
-@@ -1810,6 +2126,8 @@ int t4_ethrx_handler(struct sge_rspq *q, const __be64 *rsp,
- 			    CPL_TRACE_PKT : CPL_TRACE_PKT_T5;
- #ifdef CONFIG_CHELSIO_T4_FCOE
- 	struct port_info *pi;
-+	if (cxgb_fcoe_rx_handler(q, rsp))
-+		return 0;
- #endif
- 
- 	if (unlikely(*(u8 *)rsp == cpl_trace_pkt))
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-index afbe168..3b8898a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-@@ -4522,6 +4522,7 @@ int t4_init_tp_params(struct adapter *adap)
- 	 * shift positions of several elements of the Compressed Filter Tuple
- 	 * for this adapter which we need frequently ...
- 	 */
-+	adap->params.tp.fcoe_shift = t4_filter_field_shift(adap, FCOE_F);
- 	adap->params.tp.vlan_shift = t4_filter_field_shift(adap, VLAN_F);
- 	adap->params.tp.vnic_shift = t4_filter_field_shift(adap, VNIC_ID_F);
- 	adap->params.tp.port_shift = t4_filter_field_shift(adap, PORT_F);
--- 
-1.7.1
+>  	if (iocommand.buf_size > 0)
+>  		hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_BIDIRECTIONAL);
+>  	check_ioctl_unit_attention(h, c);
+> @@ -5125,7 +5280,11 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+>  		}
+>  		c->SG[--i].Ext = cpu_to_le32(HPSA_SG_LAST);
+>  	}
+> -	hpsa_scsi_do_simple_cmd_core_if_no_lockup(h, c);
+> +	status = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT);
+> +	if (status) {
+> +		status = -EIO;
+> +		goto cleanup0;
+
+Similar here, by goto cleanup0; we miss a call to hpsa_pci_unmap.
+Nothing from that is an issue because  hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE, NO_TIMEOUT)
+can't fail, but it is  a prepared trap for a future change with a real timeout.
+
+As it is now it is not a real issue, when it's fixed in next driver update it's fine
+for me.
+
+Tomas
+
+> +	}
+>  	if (sg_used)
+>  		hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
+>  	check_ioctl_unit_attention(h, c);
+> @@ -6272,6 +6431,8 @@ static int hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+>  	 * as we enter this code.)
+>  	 */
+>  	for (i = 0; i < MAX_MODE_CHANGE_WAIT; i++) {
+> +		if (h->remove_in_progress)
+> +			goto done;
+>  		spin_lock_irqsave(&h->lock, flags);
+>  		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
+>  		spin_unlock_irqrestore(&h->lock, flags);
+> @@ -6667,17 +6828,21 @@ static void fail_all_outstanding_cmds(struct ctlr_info *h)
+>  {
+>  	int i, refcount;
+>  	struct CommandList *c;
+> +	int failcount = 0;
+>  
+>  	flush_workqueue(h->resubmit_wq); /* ensure all cmds are fully built */
+>  	for (i = 0; i < h->nr_cmds; i++) {
+>  		c = h->cmd_pool + i;
+>  		refcount = atomic_inc_return(&c->refcount);
+>  		if (refcount > 1) {
+> -			c->err_info->CommandStatus = CMD_HARDWARE_ERR;
+> +			c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
+>  			finish_cmd(c);
+> +			failcount++;
+>  		}
+>  		cmd_free(h, c);
+>  	}
+> +	dev_warn(&h->pdev->dev,
+> +		"failed %d commands in fail_all\n", failcount);
+>  }
+>  
+>  static void set_lockup_detected_for_all_cpus(struct ctlr_info *h, u32 value)
+> @@ -6705,18 +6870,19 @@ static void controller_lockup_detected(struct ctlr_info *h)
+>  	if (!lockup_detected) {
+>  		/* no heartbeat, but controller gave us a zero. */
+>  		dev_warn(&h->pdev->dev,
+> -			"lockup detected but scratchpad register is zero\n");
+> +			"lockup detected after %d but scratchpad register is zero\n",
+> +			h->heartbeat_sample_interval / HZ);
+>  		lockup_detected = 0xffffffff;
+>  	}
+>  	set_lockup_detected_for_all_cpus(h, lockup_detected);
+>  	spin_unlock_irqrestore(&h->lock, flags);
+> -	dev_warn(&h->pdev->dev, "Controller lockup detected: 0x%08x\n",
+> -			lockup_detected);
+> +	dev_warn(&h->pdev->dev, "Controller lockup detected: 0x%08x after %d\n",
+> +			lockup_detected, h->heartbeat_sample_interval / HZ);
+>  	pci_disable_device(h->pdev);
+>  	fail_all_outstanding_cmds(h);
+>  }
+>  
+> -static void detect_controller_lockup(struct ctlr_info *h)
+> +static int detect_controller_lockup(struct ctlr_info *h)
+>  {
+>  	u64 now;
+>  	u32 heartbeat;
+> @@ -6726,7 +6892,7 @@ static void detect_controller_lockup(struct ctlr_info *h)
+>  	/* If we've received an interrupt recently, we're ok. */
+>  	if (time_after64(h->last_intr_timestamp +
+>  				(h->heartbeat_sample_interval), now))
+> -		return;
+> +		return false;
+>  
+>  	/*
+>  	 * If we've already checked the heartbeat recently, we're ok.
+> @@ -6735,7 +6901,7 @@ static void detect_controller_lockup(struct ctlr_info *h)
+>  	 */
+>  	if (time_after64(h->last_heartbeat_timestamp +
+>  				(h->heartbeat_sample_interval), now))
+> -		return;
+> +		return false;
+>  
+>  	/* If heartbeat has not changed since we last looked, we're not ok. */
+>  	spin_lock_irqsave(&h->lock, flags);
+> @@ -6743,12 +6909,13 @@ static void detect_controller_lockup(struct ctlr_info *h)
+>  	spin_unlock_irqrestore(&h->lock, flags);
+>  	if (h->last_heartbeat == heartbeat) {
+>  		controller_lockup_detected(h);
+> -		return;
+> +		return true;
+>  	}
+>  
+>  	/* We're ok. */
+>  	h->last_heartbeat = heartbeat;
+>  	h->last_heartbeat_timestamp = now;
+> +	return false;
+>  }
+>  
+>  static void hpsa_ack_ctlr_events(struct ctlr_info *h)
+> @@ -7092,8 +7259,10 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+>  {
+>  	char *flush_buf;
+>  	struct CommandList *c;
+> +	int rc;
+>  
+>  	/* Don't bother trying to flush the cache if locked up */
+> +	/* FIXME not necessary if do_simple_cmd does the check */
+>  	if (unlikely(lockup_detected(h)))
+>  		return;
+>  	flush_buf = kzalloc(4, GFP_KERNEL);
+> @@ -7109,7 +7278,10 @@ static void hpsa_flush_cache(struct ctlr_info *h)
+>  		RAID_CTLR_LUNID, TYPE_CMD)) {
+>  		goto out;
+>  	}
+> -	hpsa_scsi_do_simple_cmd_with_retry(h, c, PCI_DMA_TODEVICE);
+> +	rc = hpsa_scsi_do_simple_cmd_with_retry(h, c,
+> +					PCI_DMA_TODEVICE, NO_TIMEOUT);
+> +	if (rc)
+> +		goto out;
+>  	if (c->err_info->CommandStatus != 0)
+>  out:
+>  		dev_warn(&h->pdev->dev,
+> diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+> index 76d5499..f52c847 100644
+> --- a/drivers/scsi/hpsa_cmd.h
+> +++ b/drivers/scsi/hpsa_cmd.h
+> @@ -43,6 +43,11 @@
+>  #define CMD_TIMEOUT             0x000B
+>  #define CMD_UNABORTABLE		0x000C
+>  #define CMD_IOACCEL_DISABLED	0x000E
+> +#define CMD_CTLR_LOCKUP		0xffff
+> +/* Note: CMD_CTLR_LOCKUP is not a value defined by the CISS spec
+> + * it is a value defined by the driver that commands can be marked
+> + * with when a controller lockup has been detected by the driver
+> + */
+>  
+>  
+>  /* Unit Attentions ASC's as defined for the MSA2012sa */
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
