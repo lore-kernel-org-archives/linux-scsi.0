@@ -1,64 +1,126 @@
 From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: Re: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
-Date: Thu, 26 Mar 2015 17:38:17 -0700
-Message-ID: <5514A679.5030005@free-electrons.com>
-References: <94D0CD8314A33A4D9D801C0FE68B40295930E577@G4W3296.americas.hpqcorp.net>	 <1427041891-2694-1-git-send-email-michael.opdenacker@free-electrons.com>	 <550FB9BE.5010801@suse.de> <5511CD10.6040709@free-electrons.com> <1427230622.12126.13.camel@perches.com> <94D0CD8314A33A4D9D801C0FE68B40295A8416C5@G9W0745.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:58106 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752524AbbC0AiX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2015 20:38:23 -0400
-In-Reply-To: <94D0CD8314A33A4D9D801C0FE68B40295A8416C5@G9W0745.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH] [RESEND] aic7xxx: replace kmalloc/memset by kzalloc
+Date: Thu, 26 Mar 2015 17:51:46 -0700
+Message-ID: <1427417506-22589-1-git-send-email-michael.opdenacker@free-electrons.com>
+References: <5514A679.5030005@free-electrons.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5514A679.5030005@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hare@suse.de, JBottomley@parallels.com, Elliott@hp.com, joe@perches.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Joe Perches <joe@perches.com>
-Cc: Hannes Reinecke <hare@suse.de>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 03/24/2015 04:16 PM, Elliott, Robert (Server Storage) wrote:
->
-> It was a reply to the original post on 2014-10-16, not the resend
-> this month. 
->
-> From http://permalink.gmane.org/gmane.linux.kernel/1808168:
->
-> kcalloc is helpful when one of the values is a variable that 
-> might cause the multiply to overflow during runtime.  Here, 
-> two constants are being multiplied together, which can
-> be done and checked by the compiler at compile time.  
->
-> Since kcalloc and kmalloc_array are both static inline 
-> functions:
-> static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
-> {
->         if (size != 0 && n > SIZE_MAX / size)
->                 return NULL;
->         return __kmalloc(n * size, flags);
-> }
-> static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
-> {
->         return kmalloc_array(n, size, flags | __GFP_ZERO);
-> }
->
-> a compiler that detects an overflow will probably just reduce
-> that to an inlined "return NULL."
-> 	
-> BUILD_BUG_ON could be used to trigger a compile-time error,
-> instead of building a kernel that returns a run-time error.
+This replaces kmalloc + memset by a call to kzalloc
 
-Ok, I hope we agree to get back to kzalloc() for which the compiler
-won't miss size_t overflows.
+This also fixes one checkpatch.pl issue in the process.
 
-Thanks for the reviews!
+This improvement was suggested by "make coccicheck"
 
-Michael.
+Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/aic7xxx/aic79xx_core.c |  3 +--
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |  3 +--
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 10 ++++------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |  3 +--
+ 4 files changed, 7 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 97f2accd3dbb..109e2c99e6c1 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -10437,14 +10437,13 @@ ahd_handle_en_lun(struct ahd_softc *ahd, struct cam_sim *sim, union ccb *ccb)
+ 				return;
+ 			}
+ 		}
+-		lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
++		lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+ 		if (lstate == NULL) {
+ 			xpt_print_path(ccb->ccb_h.path);
+ 			printk("Couldn't allocate lstate\n");
+ 			ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+ 			return;
+ 		}
+-		memset(lstate, 0, sizeof(*lstate));
+ 		status = xpt_create_path(&lstate->path, /*periph*/NULL,
+ 					 xpt_path_path_id(ccb->ccb_h.path),
+ 					 xpt_path_target_id(ccb->ccb_h.path),
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index d5c7b193d8d3..ce96a0be3282 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1326,10 +1326,9 @@ int
+ ahd_platform_alloc(struct ahd_softc *ahd, void *platform_arg)
+ {
+ 	ahd->platform_data =
+-	    kmalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
++	    kzalloc(sizeof(struct ahd_platform_data), GFP_ATOMIC);
+ 	if (ahd->platform_data == NULL)
+ 		return (ENOMEM);
+-	memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
+ 	ahd->platform_data->irq = AHD_LINUX_NOIRQ;
+ 	ahd_lockinit(ahd);
+ 	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 10172a3af1b9..c4829d84b335 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -4464,10 +4464,9 @@ ahc_softc_init(struct ahc_softc *ahc)
+ 	ahc->pause = ahc->unpause | PAUSE; 
+ 	/* XXX The shared scb data stuff should be deprecated */
+ 	if (ahc->scb_data == NULL) {
+-		ahc->scb_data = kmalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
++		ahc->scb_data = kzalloc(sizeof(*ahc->scb_data), GFP_ATOMIC);
+ 		if (ahc->scb_data == NULL)
+ 			return (ENOMEM);
+-		memset(ahc->scb_data, 0, sizeof(*ahc->scb_data));
+ 	}
+ 
+ 	return (0);
+@@ -4780,10 +4779,10 @@ ahc_init_scbdata(struct ahc_softc *ahc)
+ 	SLIST_INIT(&scb_data->sg_maps);
+ 
+ 	/* Allocate SCB resources */
+-	scb_data->scbarray = kmalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC, GFP_ATOMIC);
++	scb_data->scbarray = kzalloc(sizeof(struct scb) * AHC_SCB_MAX_ALLOC,
++				GFP_ATOMIC);
+ 	if (scb_data->scbarray == NULL)
+ 		return (ENOMEM);
+-	memset(scb_data->scbarray, 0, sizeof(struct scb) * AHC_SCB_MAX_ALLOC);
+ 
+ 	/* Determine the number of hardware SCBs and initialize them */
+ 
+@@ -7558,14 +7557,13 @@ ahc_handle_en_lun(struct ahc_softc *ahc, struct cam_sim *sim, union ccb *ccb)
+ 				return;
+ 			}
+ 		}
+-		lstate = kmalloc(sizeof(*lstate), GFP_ATOMIC);
++		lstate = kzalloc(sizeof(*lstate), GFP_ATOMIC);
+ 		if (lstate == NULL) {
+ 			xpt_print_path(ccb->ccb_h.path);
+ 			printk("Couldn't allocate lstate\n");
+ 			ccb->ccb_h.status = CAM_RESRC_UNAVAIL;
+ 			return;
+ 		}
+-		memset(lstate, 0, sizeof(*lstate));
+ 		status = xpt_create_path(&lstate->path, /*periph*/NULL,
+ 					 xpt_path_path_id(ccb->ccb_h.path),
+ 					 xpt_path_target_id(ccb->ccb_h.path),
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 88360116dbcb..a2f2c774cd6b 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1214,10 +1214,9 @@ ahc_platform_alloc(struct ahc_softc *ahc, void *platform_arg)
+ {
+ 
+ 	ahc->platform_data =
+-	    kmalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
++	    kzalloc(sizeof(struct ahc_platform_data), GFP_ATOMIC);
+ 	if (ahc->platform_data == NULL)
+ 		return (ENOMEM);
+-	memset(ahc->platform_data, 0, sizeof(struct ahc_platform_data));
+ 	ahc->platform_data->irq = AHC_LINUX_NOIRQ;
+ 	ahc_lockinit(ahc);
+ 	ahc->seltime = (aic7xxx_seltime & 0x3) << 4;
 -- 
-Michael Opdenacker, CEO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-+33 484 258 098
-
-
+2.1.0
