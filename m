@@ -1,65 +1,206 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: Re: [PATCH 6/6] ipr: Driver version 2.6.1
-Date: Fri, 27 Mar 2015 12:50:57 -0400
-Message-ID: <20150327125057.Horde.zThkUhny5rrrfDfjzc4uuA6@ltc.linux.ibm.com>
-References: <201503261624.t2QGO0AY014263@d01av01.pok.ibm.com>
+From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Subject: RE: [V2 PATCH 04/11] aacraid: MSI-x support
+Date: Fri, 27 Mar 2015 17:03:03 +0000
+Message-ID: <B539A9786201A44A91E34268415A2B1AB7F4AAF0@BBYEXM01.pmc-sierra.internal>
+References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	<1427380892-1978-5-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <874mp6zi0r.fsf@sauron.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e19.ny.us.ibm.com ([129.33.205.209]:44444 "EHLO
-	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422AbbC0QvC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2015 12:51:02 -0400
-Received: from /spool/local
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
-	Fri, 27 Mar 2015 12:51:01 -0400
-Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 94B4138C8026
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2015 12:50:59 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2RGox6C28901534
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2015 16:50:59 GMT
-Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2RGowwl022883
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2015 12:50:58 -0400
-In-Reply-To: <201503261624.t2QGO0AY014263@d01av01.pok.ibm.com>
-Content-Disposition: inline
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:43922 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754683AbbC0RDH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2015 13:03:07 -0400
+In-Reply-To: <874mp6zi0r.fsf@sauron.fritz.box>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@hansenpartnership.com, hch@lst.de, linux-scsi@vger.kernel.org, kreling@linux.vnet.ibm.com, krisman@linux.vnet.ibm.com
+To: Johannes Thumshirn <morbidrsa@gmail.com>
+Cc: "hare@suse.de" <hare@suse.de>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Achim Leubner <Achim.Leubner@pmcs.com>
 
-Reviewed-by: Wen Xiong<wenxiong@linux.vnet.ibm.com>
+msi_enabled field is used in per Adapter structure (struct aac_dev). If the driver uses MSIx or MSI interrupt mode, this will be set.
+
+Before posting the commands (for each and every command requests) to the Adapter and vector number assignments, this will be checked.
 
 Thanks,
-Wendy
+Mahesh
 
-Quoting Brian King <brking@linux.vnet.ibm.com>:
 
-> Bump driver version.
+-----Original Message-----
+From: Johannes Thumshirn [mailto:morbidrsa@gmail.com] 
+Sent: Friday, March 27, 2015 6:59 PM
+To: Mahesh Rajashekhara
+Cc: hare@suse.de; JBottomley@Parallels.com; linux-scsi@vger.kernel.org; Achim Leubner
+Subject: Re: [V2 PATCH 04/11] aacraid: MSI-x support
+
+Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com> writes:
+
+> Add MSI-x interrupt mode support.
 >
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 > ---
+>  drivers/scsi/aacraid/aacraid.h  |   80 ++++++++-
+>  drivers/scsi/aacraid/comminit.c |   95 +++++++++-
+>  drivers/scsi/aacraid/commsup.c  |   20 ++-
+>  drivers/scsi/aacraid/dpcsup.c   |    9 +-
+>  drivers/scsi/aacraid/linit.c    |   20 ++-
+>  drivers/scsi/aacraid/src.c      |  388 ++++++++++++++++++++++++++++++---------
+>  6 files changed, 505 insertions(+), 107 deletions(-)
 >
->  drivers/scsi/ipr.h |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff -puN drivers/scsi/ipr.h~ipr_version_2_6_1 drivers/scsi/ipr.h
-> --- linux/drivers/scsi/ipr.h~ipr_version_2_6_1	2015-03-12  
-> 16:27:14.235168394 -0500
-> +++ linux-bjking1/drivers/scsi/ipr.h	2015-03-12 16:27:38.294920049 -0500
-> @@ -39,8 +39,8 @@
->  /*
->   * Literals
->   */
-> -#define IPR_DRIVER_VERSION "2.6.0"
-> -#define IPR_DRIVER_DATE "(November 16, 2012)"
-> +#define IPR_DRIVER_VERSION "2.6.1"
-> +#define IPR_DRIVER_DATE "(March 12, 2015)"
->
->  /*
->   * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
-> _
+> diff --git a/drivers/scsi/aacraid/aacraid.h 
+> b/drivers/scsi/aacraid/aacraid.h index 9e38b20..015c341 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -6,11 +6,61 @@
+>  #define nblank(x) _nblank(x)[0]
+>  
+>  #include <linux/interrupt.h>
+> +#include <linux/pci.h>
+>  
+>  /*------------------------------------------------------------------------------
+>   *              D E F I N E S
+>   
+> *---------------------------------------------------------------------
+> -------*/
+>  
+> +#define AAC_MAX_MSIX		32	/* vectors */
+> +#define AAC_PCI_MSI_ENABLE	0x8000
+> +
+> +enum {
+> +	AAC_ENABLE_INTERRUPT	= 0x0,
+> +	AAC_DISABLE_INTERRUPT,
+> +	AAC_ENABLE_MSIX,
+> +	AAC_DISABLE_MSIX,
+> +	AAC_CLEAR_AIF_BIT,
+> +	AAC_CLEAR_SYNC_BIT,
+> +	AAC_ENABLE_INTX
+> +};
+> +
+> +#define AAC_INT_MODE_INTX		(1<<0)
+> +#define AAC_INT_MODE_MSI		(1<<1)
+> +#define AAC_INT_MODE_AIF		(1<<2)
+> +#define AAC_INT_MODE_SYNC		(1<<3)
+> +
+> +#define AAC_INT_ENABLE_TYPE1_INTX	0xfffffffb
+> +#define AAC_INT_ENABLE_TYPE1_MSIX	0xfffffffa
+> +#define AAC_INT_DISABLE_ALL		0xffffffff
+> +
+> +/* Bit definitions in IOA->Host Interrupt Register */
+> +#define PMC_TRANSITION_TO_OPERATIONAL	(1<<31)
+> +#define PMC_IOARCB_TRANSFER_FAILED	(1<<28)
+> +#define PMC_IOA_UNIT_CHECK		(1<<27)
+> +#define PMC_NO_HOST_RRQ_FOR_CMD_RESPONSE (1<<26)
+> +#define PMC_CRITICAL_IOA_OP_IN_PROGRESS	(1<<25)
+> +#define PMC_IOARRIN_LOST		(1<<4)
+> +#define PMC_SYSTEM_BUS_MMIO_ERROR	(1<<3)
+> +#define PMC_IOA_PROCESSOR_IN_ERROR_STATE (1<<2)
+> +#define PMC_HOST_RRQ_VALID		(1<<1)
+> +#define PMC_OPERATIONAL_STATUS		(1<<31)
+> +#define PMC_ALLOW_MSIX_VECTOR0		(1<<0)
+> +
+> +#define PMC_IOA_ERROR_INTERRUPTS	(PMC_IOARCB_TRANSFER_FAILED | \
+> +					 PMC_IOA_UNIT_CHECK | \
+> +					 PMC_NO_HOST_RRQ_FOR_CMD_RESPONSE | \
+> +					 PMC_IOARRIN_LOST | \
+> +					 PMC_SYSTEM_BUS_MMIO_ERROR | \
+> +					 PMC_IOA_PROCESSOR_IN_ERROR_STATE)
+> +
+> +#define PMC_ALL_INTERRUPT_BITS		(PMC_IOA_ERROR_INTERRUPTS | \
+> +					 PMC_HOST_RRQ_VALID | \
+> +					 PMC_TRANSITION_TO_OPERATIONAL | \
+> +					 PMC_ALLOW_MSIX_VECTOR0)
+> +#define	PMC_GLOBAL_INT_BIT2		0x00000004
+> +#define	PMC_GLOBAL_INT_BIT0		0x00000001
+> +
+>  #ifndef AAC_DRIVER_BUILD
+>  # define AAC_DRIVER_BUILD 30300
+>  # define AAC_DRIVER_BRANCH "-ms"
+> @@ -36,6 +86,7 @@
+>  #define CONTAINER_TO_ID(cont)		(cont)
+>  #define CONTAINER_TO_LUN(cont)		(0)
+>  
+> +#define PMC_DEVICE_S6	0x28b
+>  #define PMC_DEVICE_S7	0x28c
+>  #define PMC_DEVICE_S8	0x28d
+>  #define PMC_DEVICE_S9	0x28f
+> @@ -434,7 +485,7 @@ enum fib_xfer_state {  struct aac_init  {
+>  	__le32	InitStructRevision;
+> -	__le32	MiniPortRevision;
+> +	__le32	Sa_MSIXVectors;
+>  	__le32	fsrev;
+>  	__le32	CommHeaderAddress;
+>  	__le32	FastIoCommAreaAddress;
+> @@ -755,7 +806,8 @@ struct rkt_registers {
+>  
+>  struct src_mu_registers {
+>  				/*	PCI*| Name */
+> -	__le32	reserved0[8];	/*	00h | Reserved */
+> +	__le32	reserved0[6];	/*	00h | Reserved */
+> +	__le32	IOAR[2];	/*	18h | IOA->host interrupt register */
+>  	__le32	IDR;		/*	20h | Inbound Doorbell Register */
+>  	__le32	IISR;		/*	24h | Inbound Int. Status Register */
+>  	__le32	reserved1[3];	/*	28h | Reserved */
+> @@ -767,17 +819,18 @@ struct src_mu_registers {
+>  	__le32	OMR;		/*	bch | Outbound Message Register */
+>  	__le32	IQ_L;		/*  c0h | Inbound Queue (Low address) */
+>  	__le32	IQ_H;		/*  c4h | Inbound Queue (High address) */
+> +	__le32	ODR_MSI;	/*  c8h | MSI register for sync./AIF */
+>  };
+>  
+>  struct src_registers {
+> -	struct src_mu_registers MUnit;	/* 00h - c7h */
+> +	struct src_mu_registers MUnit;	/* 00h - cbh */
+>  	union {
+>  		struct {
+> -			__le32 reserved1[130790];	/* c8h - 7fc5fh */
+> +			__le32 reserved1[130789];	/* cch - 7fc5fh */
+>  			struct src_inbound IndexRegs;	/* 7fc60h */
+>  		} tupelo;
+>  		struct {
+> -			__le32 reserved1[974];		/* c8h - fffh */
+> +			__le32 reserved1[973];		/* cch - fffh */
+>  			struct src_inbound IndexRegs;	/* 1000h */
+>  		} denali;
+>  	} u;
+> @@ -1029,6 +1082,11 @@ struct aac_bus_info_response {
+>  #define AAC_OPT_NEW_COMM_TYPE3		cpu_to_le32(1<<30)
+>  #define AAC_OPT_NEW_COMM_TYPE4		cpu_to_le32(1<<31)
+>  
+> +/* MSIX context */
+> +struct aac_msix_ctx {
+> +	int		vector_no;
+> +	struct aac_dev	*dev;
+> +};
+>  
+>  struct aac_dev
+>  {
+> @@ -1084,8 +1142,10 @@ struct aac_dev
+>  						 * if AAC_COMM_MESSAGE_TYPE1 */
+>  
+>  	dma_addr_t		host_rrq_pa;	/* phys. address */
+> -	u32			host_rrq_idx;	/* index into rrq buffer */
+> -
+> +	/* index into rrq buffer */
+> +	u32			host_rrq_idx[AAC_MAX_MSIX];
+> +	atomic_t		rrq_outstanding[AAC_MAX_MSIX];
+> +	u32			fibs_pushed_no;
+>  	struct pci_dev		*pdev;		/* Our PCI interface */
+>  	void *			printfbuf;	/* pointer to buffer used for printf's from the adapter */
+>  	void *			comm_addr;	/* Base address of Comm area */
+> @@ -1154,6 +1214,11 @@ struct aac_dev
+>  	int			sync_mode;
+>  	struct fib		*sync_fib;
+>  	struct list_head	sync_fib_list;
+> +	u32			max_msix;	/* max. MSI-X vectors */
+> +	u32			vector_cap;	/* MSI-X vector capab.*/
+> +	int			msi_enabled;	/* MSI/MSI-X enabled */
 
+Is there a specific reason why you're not using the msi_enabled / msix_enabled field of struct pci_dev, or even calling
+pci_dev_msi_enabled() instead of duplicating it here?
+
+Thanks,
+        Johannes
 
