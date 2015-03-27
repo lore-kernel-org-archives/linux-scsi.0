@@ -1,24 +1,24 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [V2 PATCH 09/11] aacraid: performance improvement changes
-Date: Fri, 27 Mar 2015 11:22:25 +0100
-Message-ID: <55152F61.9010009@suse.de>
-References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+Subject: Re: [V2 PATCH 10/11] aacraid: AIF raw device remove support
+Date: Fri, 27 Mar 2015 11:22:51 +0100
+Message-ID: <55152F7B.8030509@suse.de>
+References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com> <1427380892-1978-11-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42799 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:42834 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018AbbC0KW1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Mar 2015 06:22:27 -0400
-In-Reply-To: <1427380892-1978-10-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+	id S1751189AbbC0KWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Mar 2015 06:22:52 -0400
+In-Reply-To: <1427380892-1978-11-git-send-email-Mahesh.Rajashekhara@pmcs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org
 Cc: Achim.Leubner@pmcs.com
 
 On 03/26/2015 03:41 PM, Mahesh Rajashekhara wrote:
-> Add performance improvement changes.
+> Add AIF raw device remove support
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
