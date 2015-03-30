@@ -1,52 +1,74 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 00/22] target: se_node_acl LUN list RCU conversion
-Date: Mon, 30 Mar 2015 05:08:23 -0700
-Message-ID: <20150330120823.GA20193@infradead.org>
-References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 11/16] scsi_dh_alua: multipath failover fails with error
+ 15
+Date: Mon, 30 Mar 2015 14:30:04 +0200
+Message-ID: <551941CC.8010908@sandisk.com>
+References: <1391160600-19652-1-git-send-email-hare@suse.de>
+ <1391160600-19652-12-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50494 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbbC3MIY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2015 08:08:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1427443512-8925-1-git-send-email-nab@daterainc.com>
+Received: from mail-bl2on0068.outbound.protection.outlook.com ([65.55.169.68]:31040
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752478AbbC3MaP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2015 08:30:15 -0400
+In-Reply-To: <1391160600-19652-12-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@daterainc.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
+Cc: Sean Stewart <sean.stewart@netapp.com>, Martin George <marting@netapp.com>, linux-scsi@vger.kernel.org
 
-I went through this in detail, and the odd patch split that splits
-one change up into muliple patches, but then also mixes up other
-changes makes it hard to read.
+On 01/31/14 10:29, Hannes Reinecke wrote:
+> When a path is already optimized multipath failover will fail
+> with the message
+> Could not failover device X:Y: Handler scsi_dh_alua Error 15
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index a1c69bb..8ea35a9 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -851,6 +851,8 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>  		return SCSI_DH_RETRY;
+>  	}
+>  	switch (pg->state) {
+> +	case TPGS_STATE_OPTIMIZED:
+> +		return SCSI_DH_OK;
+>  	case TPGS_STATE_NONOPTIMIZED:
+>  		if ((pg->flags & ALUA_OPTIMIZE_STPG) &&
+>  		    (!pg->pref) &&
+> @@ -865,10 +867,11 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>  		break;
+>  	case TPGS_STATE_TRANSITIONING:
+>  		return SCSI_DH_RETRY;
+> -		break;
+>  	default:
+> +		sdev_printk(KERN_INFO, sdev,
+> +			    "%s: stpg failed, unhandled TPGS state %d",
+> +			    ALUA_DH_NAME, pg->state);
+>  		return SCSI_DH_NOSYS;
+> -		break;
+>  	}
+>  	/* Set state to transitioning */
+>  	pg->state = TPGS_STATE_TRANSITIONING;
 
-So I started rebasing the tree to understand it moving your various
-cleanups to the front of the series.  Of coure while reading through
-it the number of cleanups grew, so there are a few more now.
+(replying to an e-mail of last year)
 
-Based on that I don't think this series will work very well, RCU works
-when replacing strutures in a lookup data structure, but not when
-changing the content of it, so the new locking scheme doesn't work
-very well, as the device_list array is static, it's just the content
-that changes.
+Hello Hannes,
 
-Fortunately there is the old patch from Andy to make the se_dev_entry
-dynamically allocated, which comes in useful here.  With that we might
-only change the rdonly flag on a live dev entry, or assign an ACL when
-it previously was NULL, something that RCU can handle nicely.
+Our Q.A. team started to run into the issue that is fixed by this patch.
+Do you have the time to resend this patch series or would you rather
+prefer that I split out this patch, test it and post it with a "Cc:
+stable" tag ?
 
-I've pushed a git tree to
+Thanks,
 
-	git://git.infradead.org/users/hch/scsi.git target-rcu-hch
+Bart.
 
-Gitweb:
 
-	http://git.infradead.org/users/hch/scsi.git/shortlog/refs/heads/target-rcu-hch
-
-that implements this scheme.  Note that I dropped the percpu refcount
-changes - the reference is only taken in the SCSI3-PR slow path, and the
-percpu refcount API is extremly cumbersome.
-
-This survives I/O testing nicely, but I couldn't find a good test suite
-for the control path.
