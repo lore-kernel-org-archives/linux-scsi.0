@@ -1,45 +1,43 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 15/20] [SCSI] mpt3sas: Return host busy error status to SML when DMA mapping of scatter gather list fails for a SCSI command
-Date: Mon, 30 Mar 2015 19:25:18 +0530
-Message-ID: <1427723723-12676-16-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 20/20] [SCSI] mpt3sas : Bump mpt3sas driver version to 9.100.00.00
+Date: Mon, 30 Mar 2015 19:25:23 +0530
+Message-ID: <1427723723-12676-21-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34895 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbbC3N5V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2015 09:57:21 -0400
+Received: by patj18 with SMTP id j18so11994478pat.2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2015 06:57:21 -0700 (PDT)
 In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
-List-Id: linux-scsi@vger.kernel.org
 
-scsi_dma_map API will return a negative value (i.e. -ENOMEM) if DMA mapping of sg lists fails and zero if the sg list in the SCSI cmd is NULL. But drivers doesn't handled sg list DMA mapping failure case properly.
-
-So, Updated the code to return host busy error status to SCSI MID Layer (SML), when DMA mapping of scatter gather list fails for a SCSI command. So that SML will retry this SCSI cmd after some time.
+Bump mpt3sas driver version to 9.100.00.00
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 267e489..0b26c8d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1345,7 +1345,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
- 
- 	sg_scmd = scsi_sglist(scmd);
- 	sges_left = scsi_dma_map(scmd);
--	if (!sges_left) {
-+	if (!sges_left < 0) {
- 		sdev_printk(KERN_ERR, scmd->device,
- 			"pci_map_sg failed: request for %d bytes!\n",
- 			scsi_bufflen(scmd));
-@@ -1414,7 +1414,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
-  fill_in_last_segment:
- 
- 	/* fill the last segment */
--	while (sges_left) {
-+	while (sges_left > 0) {
- 		if (sges_left == 1)
- 			_base_add_sg_single_ieee(sg_local,
- 			    simple_sgl_flags_last, 0, sg_dma_len(sg_scmd),
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 1fd1e7f..706f0a5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -71,8 +71,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"06.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		6
++#define MPT3SAS_DRIVER_VERSION		"09.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		9
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 2.0.2
+
