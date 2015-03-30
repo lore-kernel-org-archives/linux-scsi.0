@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 13/20] [SCSI] mpt3sas: MPI 2.5 Rev K (2.5.6) specifications
-Date: Mon, 30 Mar 2015 19:25:16 +0530
-Message-ID: <1427723723-12676-14-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 18/20] [SCSI] mpt3sas: Call dma_mapping_error() API after mapping an address with dma_map_single() API
+Date: Mon, 30 Mar 2015 19:25:21 +0530
+Message-ID: <1427723723-12676-19-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,97 +10,34 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Below are the new changes to MPI 2.5 Rev K(2.5.6) specification and 2.00.35 header files
-1) Added a minimum size requirement for target mode command buffers.
-2) Added MinMSIxIndex and MaxMSIxIndex fields to CommandBufferPostBase Request.
-3) For BIOS Page 1, added SSUTimeout field, and added Product Name String Format bits to the BiosOptions field
+Added dma_mapping_error() API after mapping an address with dma_map_single() API. Otherwise when CONFIG_DMA_API_DEBUG is enabled in the kernel, then it complains about mpt3sas driver not calling dma_mapping_error after mapping an address with dma_map_single
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 17 ++++++++++++++---
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index c2d127c..ec27ad2 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                 scatter/gather formats.
-  * Creation Date:  June 21, 2006
-  *
-- * mpi2.h Version:  02.00.34
-+ * mpi2.h Version:  02.00.35
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -91,6 +91,7 @@
-  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
-+ * 06-13-14  02.00.35  Bumped MPI2_HEADER_VERSION_UNIT.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -124,7 +125,7 @@
- #define MPI2_VERSION_02_05                  (0x0205)
- 
- /*Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x22)
-+#define MPI2_HEADER_VERSION_UNIT            (0x23)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 66f2cc1..c337a85 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Configuration messages and pages
-  * Creation Date:  November 10, 2006
-  *
-- *   mpi2_cnfg.h Version:  02.00.28
-+ *   mpi2_cnfg.h Version:  02.00.29
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -177,6 +177,8 @@
-  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-  * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
-  *		       MPI2_CONFIG_PAGE_BIOS_1.
-+ * 06-13-14  02.00.29  Added SSUTimeout field to MPI2_CONFIG_PAGE_BIOS_1, and
-+ *		       more defines for the BiosOptions field..
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -1324,7 +1326,9 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
- 	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
- 	U32                     BiosOptions;                /*0x04 */
- 	U32                     IOCSettings;                /*0x08 */
--	U32                     Reserved1;                  /*0x0C */
-+	U8                      SSUTimeout;                 /*0x0C */
-+	U8                      Reserved1;                  /*0x0D */
-+	U16                     Reserved2;                  /*0x0E */
- 	U32                     DeviceSettings;             /*0x10 */
- 	U16                     NumberOfDevices;            /*0x14 */
- 	U16                     UEFIVersion;                /*0x16 */
-@@ -1336,9 +1340,16 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
- 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
- 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
- 
--#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
-+#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x07)
- 
- /*values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_MASK                         (0x00003800)
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_PBDHL                        (0x00000000)
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_ENCSLOSURE                   (0x00000800)
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_LWWID                        (0x00001000)
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_PSENS                        (0x00001800)
-+#define MPI2_BIOSPAGE1_OPTIONS_PNS_ESPHY                        (0x00002000)
-+
- #define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		    (0x00000400)
- 
- #define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 1695f0f..52bfc78 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -1960,7 +1960,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	} else {
+ 		dma_addr_out = pci_map_single(ioc->pdev, bio_data(req->bio),
+ 		    blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
+-		if (!dma_addr_out) {
++		if (pci_dma_mapping_error(ioc->pdev, dma_addr_out)) {
+ 			pr_info(MPT3SAS_FMT "%s(): DMA Addr out = NULL\n",
+ 			    ioc->name, __func__);
+ 			rc = -ENOMEM;
+@@ -1982,7 +1982,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	} else {
+ 		dma_addr_in =  pci_map_single(ioc->pdev, bio_data(rsp->bio),
+ 		    blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
+-		if (!dma_addr_in) {
++		if (pci_dma_mapping_error(ioc->pdev, dma_addr_in)) {
+ 			pr_info(MPT3SAS_FMT "%s(): DMA Addr in = NULL\n",
+ 			    ioc->name, __func__);
+ 			rc = -ENOMEM;
 -- 
 2.0.2
