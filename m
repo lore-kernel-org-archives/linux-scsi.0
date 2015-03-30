@@ -1,80 +1,72 @@
 From: "Nicholas A. Bellinger" <nab@daterainc.com>
-Subject: [PATCH-v2 12/15] vhost/scsi: Add fabric_prot_type attribute support
-Date: Mon, 30 Mar 2015 03:28:21 +0000
-Message-ID: <1427686104-14231-13-git-send-email-nab@daterainc.com>
+Subject: [PATCH-v2 11/15] loopback: Add fabric_prot_type attribute support
+Date: Mon, 30 Mar 2015 03:28:20 +0000
+Message-ID: <1427686104-14231-12-git-send-email-nab@daterainc.com>
 References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:36829 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbbC3D3j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Mar 2015 23:29:39 -0400
-Received: by oicf142 with SMTP id f142so107798049oic.3
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Mar 2015 20:29:38 -0700 (PDT)
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1427686104-14231-1-git-send-email-nab@daterainc.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>, "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates vhost-scsi to add a new fabric_prot_type TPG
-attribute, used for controlling LLD level protection into LIO when
-the backend device does not support T10-PI.
+This patch updates loopback to add a new fabric_prot_type TPG attribute,
+used for controlling LLD level protection into LIO when the backend
+device does not support T10-PI.
 
-This is required for vhost-scsi to enable WRITE_STRIP + READ_INSERT
-operations using software emulation + crct10dif instruction offload.
+Also, go ahead and set DIN_PASS + DOUT_PASS so target-core knows that
+it will be doing any WRITE_STRIP and READ_INSERT operations.
 
-It's disabled by default and controls which se_sesion->sess_prot_type
-are set at vhost_scsi_make_nexus() session registration time.
-
-Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Martin Petersen <martin.petersen@oracle.com>
 Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/vhost/scsi.c | 52 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 51 insertions(+), 1 deletion(-)
+ drivers/target/loopback/tcm_loop.c | 54 ++++++++++++++++++++++++++++++++++++--
+ drivers/target/loopback/tcm_loop.h |  1 +
+ 2 files changed, 53 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 8d4f3f1..27ed964 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -131,6 +131,8 @@ struct vhost_scsi_tpg {
- 	int tv_tpg_port_count;
- 	/* Used for vhost_scsi device reference to tpg_nexus, protected by tv_tpg_mutex */
- 	int tv_tpg_vhost_count;
-+	/* Used for enabling T10-PI with legacy devices */
-+	int tv_fabric_prot_type;
- 	/* list for vhost_scsi_list */
- 	struct list_head tv_tpg_list;
- 	/* Used to protect access for tpg_nexus */
-@@ -431,6 +433,14 @@ vhost_scsi_parse_pr_out_transport_id(struct se_portal_group *se_tpg,
- 			port_nexus_ptr);
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index f4618e7..797c731 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -697,6 +697,13 @@ static int tcm_loop_check_prod_mode_write_protect(struct se_portal_group *se_tpg
+ 	return 0;
  }
  
-+static int vhost_scsi_check_prot_fabric_only(struct se_portal_group *se_tpg)
++static int tcm_loop_check_prot_fabric_only(struct se_portal_group *se_tpg)
 +{
-+	struct vhost_scsi_tpg *tpg = container_of(se_tpg,
-+				struct vhost_scsi_tpg, se_tpg);
-+
-+	return tpg->tv_fabric_prot_type;
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg, struct tcm_loop_tpg,
++						   tl_se_tpg);
++	return tl_tpg->tl_fabric_prot_type;
 +}
 +
- static struct se_node_acl *
- vhost_scsi_alloc_fabric_acl(struct se_portal_group *se_tpg)
+ static struct se_node_acl *tcm_loop_tpg_alloc_fabric_acl(
+ 	struct se_portal_group *se_tpg)
  {
-@@ -1878,6 +1888,45 @@ static void vhost_scsi_free_cmd_map_res(struct vhost_scsi_nexus *nexus,
- 	}
- }
+@@ -912,6 +919,46 @@ static void tcm_loop_port_unlink(
  
-+static ssize_t vhost_scsi_tpg_attrib_store_fabric_prot_type(
+ /* End items for tcm_loop_port_cit */
+ 
++static ssize_t tcm_loop_tpg_attrib_show_fabric_prot_type(
++	struct se_portal_group *se_tpg,
++	char *page)
++{
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg, struct tcm_loop_tpg,
++						   tl_se_tpg);
++
++	return sprintf(page, "%d\n", tl_tpg->tl_fabric_prot_type);
++}
++
++static ssize_t tcm_loop_tpg_attrib_store_fabric_prot_type(
 +	struct se_portal_group *se_tpg,
 +	const char *page,
 +	size_t count)
 +{
-+	struct vhost_scsi_tpg *tpg = container_of(se_tpg,
-+				struct vhost_scsi_tpg, se_tpg);
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg, struct tcm_loop_tpg,
++						   tl_se_tpg);
 +	unsigned long val;
 +	int ret = kstrtoul(page, 0, &val);
 +
@@ -83,50 +75,63 @@ index 8d4f3f1..27ed964 100644
 +		return ret;
 +	}
 +	if (val != 0 && val != 1 && val != 3) {
-+		pr_err("Invalid vhost_scsi fabric_prot_type: %lu\n", val);
++		pr_err("Invalid qla2xxx fabric_prot_type: %lu\n", val);
 +		return -EINVAL;
 +	}
-+	tpg->tv_fabric_prot_type = val;
++	tl_tpg->tl_fabric_prot_type = val;
 +
 +	return count;
 +}
 +
-+static ssize_t vhost_scsi_tpg_attrib_show_fabric_prot_type(
-+	struct se_portal_group *se_tpg,
-+	char *page)
-+{
-+	struct vhost_scsi_tpg *tpg = container_of(se_tpg,
-+				struct vhost_scsi_tpg, se_tpg);
++TF_TPG_ATTRIB_ATTR(tcm_loop, fabric_prot_type, S_IRUGO | S_IWUSR);
 +
-+	return sprintf(page, "%d\n", tpg->tv_fabric_prot_type);
-+}
-+TF_TPG_ATTRIB_ATTR(vhost_scsi, fabric_prot_type, S_IRUGO | S_IWUSR);
-+
-+static struct configfs_attribute *vhost_scsi_tpg_attrib_attrs[] = {
-+	&vhost_scsi_tpg_attrib_fabric_prot_type.attr,
++static struct configfs_attribute *tcm_loop_tpg_attrib_attrs[] = {
++	&tcm_loop_tpg_attrib_fabric_prot_type.attr,
 +	NULL,
 +};
 +
- static int vhost_scsi_make_nexus(struct vhost_scsi_tpg *tpg,
- 				const char *name)
- {
-@@ -2290,6 +2339,7 @@ static struct target_core_fabric_ops vhost_scsi_ops = {
- 	.tpg_check_demo_mode_cache	= vhost_scsi_check_true,
- 	.tpg_check_demo_mode_write_protect = vhost_scsi_check_false,
- 	.tpg_check_prod_mode_write_protect = vhost_scsi_check_false,
-+	.tpg_check_prot_fabric_only	= vhost_scsi_check_prot_fabric_only,
- 	.tpg_alloc_fabric_acl		= vhost_scsi_alloc_fabric_acl,
- 	.tpg_release_fabric_acl		= vhost_scsi_release_fabric_acl,
- 	.tpg_get_inst_index		= vhost_scsi_tpg_get_inst_index,
-@@ -2348,7 +2398,7 @@ static int vhost_scsi_register_configfs(void)
+ /* Start items for tcm_loop_nexus_cit */
+ 
+ static int tcm_loop_make_nexus(
+@@ -937,7 +984,8 @@ static int tcm_loop_make_nexus(
+ 	/*
+ 	 * Initialize the struct se_session pointer
  	 */
- 	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = vhost_scsi_wwn_attrs;
- 	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = vhost_scsi_tpg_attrs;
+-	tl_nexus->se_sess = transport_init_session(TARGET_PROT_ALL);
++	tl_nexus->se_sess = transport_init_session(
++				TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS);
+ 	if (IS_ERR(tl_nexus->se_sess)) {
+ 		ret = PTR_ERR(tl_nexus->se_sess);
+ 		goto out;
+@@ -1377,6 +1425,8 @@ static int tcm_loop_register_configfs(void)
+ 					&tcm_loop_check_demo_mode_write_protect;
+ 	fabric->tf_ops.tpg_check_prod_mode_write_protect =
+ 					&tcm_loop_check_prod_mode_write_protect;
++	fabric->tf_ops.tpg_check_prot_fabric_only =
++					&tcm_loop_check_prot_fabric_only;
+ 	/*
+ 	 * The TCM loopback fabric module runs in demo-mode to a local
+ 	 * virtual SCSI device, so fabric dependent initator ACLs are
+@@ -1429,7 +1479,7 @@ static int tcm_loop_register_configfs(void)
+ 	 */
+ 	fabric->tf_cit_tmpl.tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
+ 	fabric->tf_cit_tmpl.tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
 -	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = NULL;
-+	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = vhost_scsi_tpg_attrib_attrs;
++	fabric->tf_cit_tmpl.tfc_tpg_attrib_cit.ct_attrs = tcm_loop_tpg_attrib_attrs;
  	fabric->tf_cit_tmpl.tfc_tpg_param_cit.ct_attrs = NULL;
  	fabric->tf_cit_tmpl.tfc_tpg_np_base_cit.ct_attrs = NULL;
- 	fabric->tf_cit_tmpl.tfc_tpg_nacl_base_cit.ct_attrs = NULL;
+ 	/*
+diff --git a/drivers/target/loopback/tcm_loop.h b/drivers/target/loopback/tcm_loop.h
+index 6ae49f2..1e72ff7 100644
+--- a/drivers/target/loopback/tcm_loop.h
++++ b/drivers/target/loopback/tcm_loop.h
+@@ -43,6 +43,7 @@ struct tcm_loop_nacl {
+ struct tcm_loop_tpg {
+ 	unsigned short tl_tpgt;
+ 	unsigned short tl_transport_status;
++	enum target_prot_type tl_fabric_prot_type;
+ 	atomic_t tl_tpg_port_count;
+ 	struct se_portal_group tl_se_tpg;
+ 	struct tcm_loop_hba *tl_hba;
 -- 
 1.9.1
-
