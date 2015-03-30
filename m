@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 18/20] [SCSI] mpt3sas: Call dma_mapping_error() API after mapping an address with dma_map_single() API
-Date: Mon, 30 Mar 2015 19:25:21 +0530
-Message-ID: <1427723723-12676-19-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 15/20] [SCSI] mpt3sas: Return host busy error status to SML when DMA mapping of scatter gather list fails for a SCSI command
+Date: Mon, 30 Mar 2015 19:25:18 +0530
+Message-ID: <1427723723-12676-16-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,34 +10,36 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Added dma_mapping_error() API after mapping an address with dma_map_single() API. Otherwise when CONFIG_DMA_API_DEBUG is enabled in the kernel, then it complains about mpt3sas driver not calling dma_mapping_error after mapping an address with dma_map_single
+scsi_dma_map API will return a negative value (i.e. -ENOMEM) if DMA mapping of sg lists fails and zero if the sg list in the SCSI cmd is NULL. But drivers doesn't handled sg list DMA mapping failure case properly.
+
+So, Updated the code to return host busy error status to SCSI MID Layer (SML), when DMA mapping of scatter gather list fails for a SCSI command. So that SML will retry this SCSI cmd after some time.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 1695f0f..52bfc78 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -1960,7 +1960,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	} else {
- 		dma_addr_out = pci_map_single(ioc->pdev, bio_data(req->bio),
- 		    blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
--		if (!dma_addr_out) {
-+		if (pci_dma_mapping_error(ioc->pdev, dma_addr_out)) {
- 			pr_info(MPT3SAS_FMT "%s(): DMA Addr out = NULL\n",
- 			    ioc->name, __func__);
- 			rc = -ENOMEM;
-@@ -1982,7 +1982,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	} else {
- 		dma_addr_in =  pci_map_single(ioc->pdev, bio_data(rsp->bio),
- 		    blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
--		if (!dma_addr_in) {
-+		if (pci_dma_mapping_error(ioc->pdev, dma_addr_in)) {
- 			pr_info(MPT3SAS_FMT "%s(): DMA Addr in = NULL\n",
- 			    ioc->name, __func__);
- 			rc = -ENOMEM;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 267e489..0b26c8d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1345,7 +1345,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	sg_scmd = scsi_sglist(scmd);
+ 	sges_left = scsi_dma_map(scmd);
+-	if (!sges_left) {
++	if (!sges_left < 0) {
+ 		sdev_printk(KERN_ERR, scmd->device,
+ 			"pci_map_sg failed: request for %d bytes!\n",
+ 			scsi_bufflen(scmd));
+@@ -1414,7 +1414,7 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+  fill_in_last_segment:
+ 
+ 	/* fill the last segment */
+-	while (sges_left) {
++	while (sges_left > 0) {
+ 		if (sges_left == 1)
+ 			_base_add_sg_single_ieee(sg_local,
+ 			    simple_sgl_flags_last, 0, sg_dma_len(sg_scmd),
 -- 
 2.0.2
