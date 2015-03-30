@@ -1,20 +1,20 @@
 From: Murthy Bhat <Murthy.Bhat@pmcs.com>
-Subject: RE: [V2 PATCH 10/11] aacraid: AIF raw device remove support
-Date: Mon, 30 Mar 2015 10:16:16 +0000
-Message-ID: <13272BDD18A5F44CB23C497D29A37252A64903C5@BBYEXM01.pmc-sierra.internal>
+Subject: RE: [V2 PATCH 11/11] aacraid: driver version change
+Date: Mon, 30 Mar 2015 10:16:30 +0000
+Message-ID: <13272BDD18A5F44CB23C497D29A37252A64903D2@BBYEXM01.pmc-sierra.internal>
 References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <1427380892-1978-11-git-send-email-Mahesh.Rajashekhara@pmcs.com>
- <55152F7B.8030509@suse.de>
+ <1427380892-1978-12-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+ <55152F8E.5070005@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57508 "EHLO
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:57511 "EHLO
 	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751998AbbC3KQS convert rfc822-to-8bit
+	by vger.kernel.org with ESMTP id S1751998AbbC3KQb convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Mar 2015 06:16:18 -0400
-In-Reply-To: <55152F7B.8030509@suse.de>
+	Mon, 30 Mar 2015 06:16:31 -0400
+In-Reply-To: <55152F8E.5070005@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -30,10 +30,10 @@ Sent: Friday, March 27, 2015 3:53 PM
 To: Mahesh Rajashekhara; JBottomley@Parallels.com; linux-scsi@vger.kern=
 el.org
 Cc: Achim Leubner
-Subject: Re: [V2 PATCH 10/11] aacraid: AIF raw device remove support
+Subject: Re: [V2 PATCH 11/11] aacraid: driver version change
 
 On 03/26/2015 03:41 PM, Mahesh Rajashekhara wrote:
-> Add AIF raw device remove support
+> Add driver version and build change
 >=20
 > Signed-off-by: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
 
