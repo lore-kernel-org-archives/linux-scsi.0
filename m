@@ -1,7 +1,7 @@
 From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 09/20] [SCSI] mpt3sas: MPI 2.5 Rev J (2.5.5) specification and 2.00.34 header files
-Date: Mon, 30 Mar 2015 19:25:12 +0530
-Message-ID: <1427723723-12676-10-git-send-email-Sreekanth.Reddy@avagotech.com>
+Subject: [PATCH 17/20] [SCSI] mpt3sas: Use alloc_ordered_workqueue() API instead of create_singlethread_workqueue() API
+Date: Mon, 30 Mar 2015 19:25:20 +0530
+Message-ID: <1427723723-12676-18-git-send-email-Sreekanth.Reddy@avagotech.com>
 References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
@@ -10,117 +10,31 @@ To: jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Following is the change set,
-
-1. Added more defines for the BiosOptions field of MPI2_CONFIG_PAGE_BIOS_1.
-2. Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC definition.
+Created a thread using alloc_ordered_workqueue() API in order to process the works from firmware Work-queue sequentially instead of create_singlethread_workqueue() API.
 
 Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2.h      |  5 +++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 14 ++++++++++++--
- drivers/scsi/mpt3sas/mpi/mpi2_tool.h |  4 +++-
- 3 files changed, 18 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index d730c5c..c2d127c 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                 scatter/gather formats.
-  * Creation Date:  June 21, 2006
-  *
-- * mpi2.h Version:  02.00.33
-+ * mpi2.h Version:  02.00.34
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -90,6 +90,7 @@
-  * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
-+ * 01-08-14  02.00.34  Bumped MPI2_HEADER_VERSION_UNIT
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -123,7 +124,7 @@
- #define MPI2_VERSION_02_05                  (0x0205)
- 
- /*Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x21)
-+#define MPI2_HEADER_VERSION_UNIT            (0x22)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 62dfbf6..66f2cc1 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Configuration messages and pages
-  * Creation Date:  November 10, 2006
-  *
-- *   mpi2_cnfg.h Version:  02.00.27
-+ *   mpi2_cnfg.h Version:  02.00.28
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -175,6 +175,8 @@
-  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-  *		       Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
-  *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ * 01-08-14  02.00.28  Added more defines for the BiosOptions field of
-+ *		       MPI2_CONFIG_PAGE_BIOS_1.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -1334,9 +1336,17 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_1 {
- 	*PTR_MPI2_CONFIG_PAGE_BIOS_1,
- 	Mpi2BiosPage1_t, *pMpi2BiosPage1_t;
- 
--#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x05)
-+#define MPI2_BIOSPAGE1_PAGEVERSION                      (0x06)
- 
- /*values for BIOS Page 1 BiosOptions field */
-+#define MPI2_BIOSPAGE1_OPTIONS_X86_DISABLE_BIOS		    (0x00000400)
-+
-+#define MPI2_BIOSPAGE1_OPTIONS_MASK_REGISTRATION_UEFI_BSD	(0x00000300)
-+#define MPI2_BIOSPAGE1_OPTIONS_USE_BIT0_REGISTRATION_UEFI_BSD	(0x00000000)
-+#define MPI2_BIOSPAGE1_OPTIONS_FULL_REGISTRATION_UEFI_BSD	(0x00000100)
-+#define MPI2_BIOSPAGE1_OPTIONS_ADAPTER_REGISTRATION_UEFI_BSD	(0x00000200)
-+#define MPI2_BIOSPAGE1_OPTIONS_DISABLE_REGISTRATION_UEFI_BSD	(0x00000300)
-+
- #define MPI2_BIOSPAGE1_OPTIONS_MASK_OEM_ID                  (0x000000F0)
- #define MPI2_BIOSPAGE1_OPTIONS_LSI_OEM_ID                   (0x00000000)
- 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-index 904910d..1629e5b 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_tool.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI diagnostic tool structures and definitions
-  * Creation Date:  March 26, 2007
-  *
-- *   mpi2_tool.h Version:  02.00.11
-+ *   mpi2_tool.h Version:  02.00.12
-  *
-  * Version History
-  * ---------------
-@@ -33,6 +33,7 @@
-  * 07-26-12  02.00.10  Modified MPI2_TOOLBOX_DIAGNOSTIC_CLI_REQUEST so that
-  *                     it uses MPI Chain SGE as well as MPI Simple SGE.
-  * 08-19-13  02.00.11  Added MPI2_TOOLBOX_TEXT_DISPLAY_TOOL and related info.
-+ * 01-08-14  02.00.12  Added MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -100,6 +101,7 @@ typedef struct _MPI2_TOOLBOX_CLEAN_REQUEST {
- #define MPI2_TOOLBOX_CLEAN_OTHER_PERSIST_PAGES      (0x20000000)
- #define MPI2_TOOLBOX_CLEAN_FW_CURRENT               (0x10000000)
- #define MPI2_TOOLBOX_CLEAN_FW_BACKUP                (0x08000000)
-+#define MPI2_TOOLBOX_CLEAN_BIT26_PRODUCT_SPECIFIC   (0x04000000)
- #define MPI2_TOOLBOX_CLEAN_MEGARAID                 (0x02000000)
- #define MPI2_TOOLBOX_CLEAN_INITIALIZATION           (0x01000000)
- #define MPI2_TOOLBOX_CLEAN_FLASH                    (0x00000004)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 55f39f6..0070f78 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -8070,8 +8070,13 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* event thread */
+ 	snprintf(ioc->firmware_event_name, sizeof(ioc->firmware_event_name),
+ 	    "fw_event%d", ioc->id);
+-	ioc->firmware_event_thread = create_singlethread_workqueue(
++#if defined(alloc_ordered_workqueue)
++	ioc->firmware_event_thread = alloc_ordered_workqueue(
++		ioc->firmware_event_name, WQ_MEM_RECLAIM);
++#else
++		ioc->firmware_event_thread = create_singlethread_workqueue(
+ 	    ioc->firmware_event_name);
++#endif
+ 	if (!ioc->firmware_event_thread) {
+ 		pr_err(MPT3SAS_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
 -- 
 2.0.2
