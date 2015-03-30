@@ -1,36 +1,33 @@
 From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH-v2 02/15] target: Add protected fabric + unprotected device
- support
-Date: Mon, 30 Mar 2015 10:51:36 +0300
-Message-ID: <55190088.6040301@dev.mellanox.co.il>
-References: <1427686104-14231-1-git-send-email-nab@daterainc.com> <1427686104-14231-3-git-send-email-nab@daterainc.com>
+Subject: Re: [PATCH-v2 03/15] target: Update SPC/SBC emulation for sess_prot_type
+Date: Mon, 30 Mar 2015 10:53:24 +0300
+Message-ID: <551900F4.2040203@dev.mellanox.co.il>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com> <1427686104-14231-4-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1427686104-14231-3-git-send-email-nab@daterainc.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:38259 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627AbbC3Hxa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2015 03:53:30 -0400
+Received: by wibgn9 with SMTP id gn9so116231652wib.1
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2015 00:53:28 -0700 (PDT)
+In-Reply-To: <1427686104-14231-4-git-send-email-nab@daterainc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 >
-> This patch adds a new target_core_fabric_ops callback for allowing fabric
-> drivers to expose a TPG attribute for signaling when a T10-PI protected
-> fabric wants to function with an un-protected device without T10-PI.
+> This patch updates standard INQUIRY, INQUIRY EVPD=0x86, READ_CAPACITY_16
+> and control mode pages to use se_sess->sess_prot_type when determing which
+> type of T10-PI related feature bits can be exposed.
 >
-> This specifically is to allow LIO to perform WRITE_STRIP + READ_INSERT
-> operations when functioning with non T10-PI enabled devices, seperate
-> from any available hw offloads the fabric supports.
->
-> This is done using a new se_sess->sess_prot_type that is set at fabric
-> session creation time based upon the TPG attribute.  It currently cannot
-> be changed for individual sessions after initial creation.
->
-> Also, update existing target_core_sbc.c code to honor sess_prot_type when
-> setting up cmd->prot_op + cmd->prot_type assignments.
+> This is required for fabric sessions supporting T10-PI metadata to
+> backend devices that don't have protection enabled.
 >
 > Cc: Martin Petersen <martin.petersen@oracle.com>
 > Cc: Sagi Grimberg <sagig@mellanox.com>
@@ -38,173 +35,83 @@ On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
 > Cc: Doug Gilbert <dgilbert@interlog.com>
 > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 > ---
->   drivers/target/target_core_sbc.c       | 44 +++++++++++++++++++++++++---------
->   drivers/target/target_core_transport.c |  8 +++++++
->   include/target/target_core_base.h      |  1 +
->   include/target/target_core_fabric.h    |  8 +++++++
->   4 files changed, 50 insertions(+), 11 deletions(-)
+>   drivers/target/target_core_sbc.c | 13 +++++++++++--
+>   drivers/target/target_core_spc.c | 14 +++++++++-----
+>   2 files changed, 20 insertions(+), 7 deletions(-)
 >
 > diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-> index 95a7a74..5b3564a 100644
+> index 5b3564a..68373c9 100644
 > --- a/drivers/target/target_core_sbc.c
 > +++ b/drivers/target/target_core_sbc.c
-> @@ -581,12 +581,13 @@ sbc_compare_and_write(struct se_cmd *cmd)
->   }
->
->   static int
-> -sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
-> +sbc_set_prot_op_checks(u8 protect, bool fabric_prot, enum target_prot_type prot_type,
->   		       bool is_write, struct se_cmd *cmd)
+> @@ -93,6 +93,8 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
 >   {
->   	if (is_write) {
-> -		cmd->prot_op = protect ? TARGET_PROT_DOUT_PASS :
-> -					 TARGET_PROT_DOUT_INSERT;
-> +		cmd->prot_op = fabric_prot ? TARGET_PROT_DOUT_STRIP :
-> +			       protect ? TARGET_PROT_DOUT_PASS :
-> +			       TARGET_PROT_DOUT_INSERT;
-
-In this case, if the protect=1 and fabric_prot=1 we will strip won't we?
-I think that the protect condition should come first.
-
->   		switch (protect) {
->   		case 0x0:
->   		case 0x3:
-> @@ -610,8 +611,9 @@ sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
->   			return -EINVAL;
->   		}
->   	} else {
-> -		cmd->prot_op = protect ? TARGET_PROT_DIN_PASS :
-> -					 TARGET_PROT_DIN_STRIP;
-> +		cmd->prot_op = fabric_prot ? TARGET_PROT_DIN_INSERT :
-> +			       protect ? TARGET_PROT_DIN_PASS :
-> +			       TARGET_PROT_DIN_STRIP;
-
-Same here.
-
->   		switch (protect) {
->   		case 0x0:
->   		case 0x1:
-> @@ -644,11 +646,15 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   	       u32 sectors, bool is_write)
->   {
->   	u8 protect = cdb[1] >> 5;
-> +	int sp_ops = cmd->se_sess->sup_prot_ops;
+>   	struct se_device *dev = cmd->se_dev;
+>   	struct se_session *sess = cmd->se_sess;
 > +	int pi_prot_type = dev->dev_attrib.pi_prot_type;
-> +	bool fabric_prot = false;
->
->   	if (!cmd->t_prot_sg || !cmd->t_prot_nents) {
-> -		if (protect && !dev->dev_attrib.pi_prot_type) {
-> -			pr_err("CDB contains protect bit, but device does not"
-> -			       " advertise PROTECT=1 feature bit\n");
-> +		if (protect &&
-> +		    !dev->dev_attrib.pi_prot_type && !cmd->se_sess->sess_prot_type) {
-> +			pr_err("CDB contains protect bit, but device + fabric does"
-> +			       " not advertise PROTECT=1 feature bit\n");
-
-Can you place unlikely on these conditions?
-
->   			return TCM_INVALID_CDB_FIELD;
->   		}
->   		if (cmd->prot_pto)
-> @@ -669,15 +675,28 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb,
->   		cmd->reftag_seed = cmd->t_task_lba;
->   		break;
->   	case TARGET_DIF_TYPE0_PROT:
-> +		/*
-> +		 * See if the fabric supports T10-PI, and the session has been
-> +		 * configured to allow export PROTECT=1 feature bit with backend
-> +		 * devices that don't support T10-PI.
-> +		 */
-> +		fabric_prot = is_write ?
-> +			      (sp_ops & (TARGET_PROT_DOUT_PASS | TARGET_PROT_DOUT_STRIP)) :
-
-Shouldn't this be converted to bool using !!()?
-
-
-> +			      (sp_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DIN_INSERT));
 > +
-> +		if (fabric_prot && cmd->se_sess->sess_prot_type) {
-> +			pi_prot_type = cmd->se_sess->sess_prot_type;
-> +			break;
-> +		}
-> +		/* Fallthrough */
->   	default:
->   		return TCM_NO_SENSE;
+>   	unsigned char *rbuf;
+>   	unsigned char buf[32];
+>   	unsigned long long blocks = dev->transport->get_blocks(dev);
+> @@ -114,8 +116,15 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+>   	 * Set P_TYPE and PROT_EN bits for DIF support
+>   	 */
+>   	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+> -		if (dev->dev_attrib.pi_prot_type)
+> -			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
+> +		/*
+> +		 * Only override a device's pi_prot_type if no T10-PI is
+> +		 * available, and sess_prot_type has been explicitly enabled.
+> +		 */
+> +		if (!pi_prot_type)
+> +			pi_prot_type = sess->sess_prot_type;
+> +
+> +		if (pi_prot_type)
+> +			buf[12] = (pi_prot_type - 1) << 1 | 0x1;
 >   	}
 >
-> -	if (sbc_set_prot_op_checks(protect, dev->dev_attrib.pi_prot_type,
-> -				   is_write, cmd))
-> +	if (sbc_set_prot_op_checks(protect, fabric_prot, pi_prot_type, is_write, cmd))
->   		return TCM_INVALID_CDB_FIELD;
->
-> -	cmd->prot_type = dev->dev_attrib.pi_prot_type;
-> +	cmd->prot_type = pi_prot_type;
->   	cmd->prot_length = dev->prot_length * sectors;
->
->   	/**
-> @@ -1231,6 +1250,9 @@ sbc_dif_copy_prot(struct se_cmd *cmd, unsigned int sectors, bool read,
->   	unsigned int i, len, left;
->   	unsigned int offset = sg_off;
->
-> +	if (!sg)
-> +		return;
-> +
->   	left = sectors * dev->prot_length;
->
->   	for_each_sg(cmd->t_prot_sg, psg, cmd->t_prot_nents, i) {
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 4a00ed5..aef989e 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -322,11 +322,19 @@ void __transport_register_session(
->   	struct se_session *se_sess,
->   	void *fabric_sess_ptr)
->   {
-> +	struct target_core_fabric_ops *tfo = se_tpg->se_tpg_tfo;
->   	unsigned char buf[PR_REG_ISID_LEN];
->
->   	se_sess->se_tpg = se_tpg;
->   	se_sess->fabric_sess_ptr = fabric_sess_ptr;
+>   	if (dev->transport->get_lbppbe)
+> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> index f310aac..9ec6459 100644
+> --- a/drivers/target/target_core_spc.c
+> +++ b/drivers/target/target_core_spc.c
+> @@ -103,10 +103,12 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+>   		buf[5] |= 0x8;
 >   	/*
-> +	 * Determine if fabric allows for T10-PI feature bits to be exposed
-> +	 * to initiators for device backends with !dev->dev_attrib.pi_prot_type
-> +	 */
-> +	if (tfo->tpg_check_prot_fabric_only)
-> +		se_sess->sess_prot_type = tfo->tpg_check_prot_fabric_only(se_tpg);
-> +
-> +	/*
->   	 * Used by struct se_node_acl's under ConfigFS to locate active se_session-t
->   	 *
->   	 * Only set for struct se_session's that will actually be moving I/O.
-> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-> index 672150b..fe25a78 100644
-> --- a/include/target/target_core_base.h
-> +++ b/include/target/target_core_base.h
-> @@ -616,6 +616,7 @@ struct se_session {
->   	unsigned		sess_tearing_down:1;
->   	u64			sess_bin_isid;
->   	enum target_prot_op	sup_prot_ops;
-> +	enum target_prot_type	sess_prot_type;
->   	struct se_node_acl	*se_node_acl;
->   	struct se_portal_group *se_tpg;
->   	void			*fabric_sess_ptr;
-> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-> index 2f4a250..c93cfdf 100644
-> --- a/include/target/target_core_fabric.h
-> +++ b/include/target/target_core_fabric.h
-> @@ -27,6 +27,14 @@ struct target_core_fabric_ops {
->   	 * inquiry response
+>   	 * Set Protection (PROTECT) bit when DIF has been enabled on the
+> -	 * device, and the transport supports VERIFY + PASS.
+> +	 * device, and the fabric supports VERIFY + PASS.  Also report
+> +	 * PROTECT=1 if sess_prot_type has been configured to allow T10-PI
+> +	 * to unprotected devices.
 >   	 */
->   	int (*tpg_check_demo_mode_login_only)(struct se_portal_group *);
-> +	/*
-> +	 * Optionally used as a configfs tunable to determine when
-> +	 * target-core should signal the PROTECT=1 feature bit for
-> +	 * backends that don't support T10-PI, so that either fabric
-> +	 * HW offload or target-core emulation performs the associated
-> +	 * WRITE_STRIP and READ_INSERT operations.
-> +	 */
-> +	int (*tpg_check_prot_fabric_only)(struct se_portal_group *);
->   	struct se_node_acl *(*tpg_alloc_fabric_acl)(
->   					struct se_portal_group *);
->   	void (*tpg_release_fabric_acl)(struct se_portal_group *,
+>   	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+> -		if (dev->dev_attrib.pi_prot_type)
+> +		if (dev->dev_attrib.pi_prot_type || cmd->se_sess->sess_prot_type)
+>   			buf[5] |= 0x1;
+>   	}
 >
+> @@ -480,9 +482,11 @@ spc_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
+>   	 * only for TYPE3 protection.
+>   	 */
+>   	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+> -		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
+> +		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT ||
+> +		    cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE1_PROT)
+>   			buf[4] = 0x5;
+> -		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
+> +		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT ||
+> +			cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE3_PROT)
+>   			buf[4] = 0x4;
+>   	}
+>
+> @@ -874,7 +878,7 @@ static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+>   	 * TAG field.
+>   	 */
+>   	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+> -		if (dev->dev_attrib.pi_prot_type)
+> +		if (dev->dev_attrib.pi_prot_type || sess->sess_prot_type)
+>   			p[5] |= 0x80;
+>   	}
+>
+>
+
+Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
