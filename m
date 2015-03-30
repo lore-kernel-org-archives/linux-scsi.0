@@ -1,189 +1,166 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: [PATCH 05/20] [SCSI] mpt3sas: MPI 2.5 Rev I (2.5.4) specifications.
-Date: Mon, 30 Mar 2015 19:25:08 +0530
-Message-ID: <1427723723-12676-6-git-send-email-Sreekanth.Reddy@avagotech.com>
-References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Resend: [PATCH ] qla2xxx  Add SCSI command jammer/discard capabilty
+ to the qla2xxx target module - revision3
+Date: Mon, 30 Mar 2015 10:36:27 -0400 (EDT)
+Message-ID: <1031303023.4832565.1427726187331.JavaMail.zimbra@redhat.com>
+References: <1069288785.13490592.1425785175883.JavaMail.zimbra@redhat.com> <54FC03FA.6000005@sandisk.com> <629323685.13531146.1425829095558.JavaMail.zimbra@redhat.com> <5EE87F5E6631894E80EB1A63198F964D042063ED@SACMBXIP03.sdcorp.global.sandisk.com> <470996009.15920557.1426212837794.JavaMail.zimbra@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:36590 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbbC3N4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2015 09:56:06 -0400
-Received: by pdcp1 with SMTP id p1so84923884pdc.3
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2015 06:56:05 -0700 (PDT)
-In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:48711 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbbC3Oge (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2015 10:36:34 -0400
+In-Reply-To: <470996009.15920557.1426212837794.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, Quinn Tran <quinn.tran@qlogic.com>
+Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, nab@daterainc.com, Laurence Oberman <oberman.l@gmail.com>
 
-Update MPI 2.5 Release: MPI 2.5 Rev I (2.5.4) specification and 2.00.33 header files
+Hello Bart, Quinn Tran,
 
-Below is the change set from the MPI specification for I Rev
+I have been using this jammer facility since I posted the below updated patch with no memory leaks and no issues.
+Is there any interest to take this patch in, its certainly been critical for me in some of the error recovery testing I have been doing.
 
-1) Added Base Enclosure Level bit to the Flags field of Manufacturing Page 7.
-2) Updated description of the MaxTargetPortConnectTime field of SAS IO Unit Page 1.
-3) Added EnclosureLevel and ConnectorName fields to SAS Device Page 0. Also, added EnclosureLevel and ConnectorName Valid bit to the Flags field.
-4) Added EnclosureLevel field to SAS Enclosure Page 0. Also, added EnclosureLevel Valid bit to the Flags field.
-5) Added value for BIOS image to HashImageType.
+Thanks
 
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>
----
- drivers/scsi/mpt3sas/mpi/mpi2.h      |  6 ++++--
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h | 27 +++++++++++++++++++++------
- drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  |  4 +++-
- 3 files changed, 28 insertions(+), 9 deletions(-)
+Laurence Oberman
+Red Hat Global Support Service
+SEG Team
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index c34c115..d730c5c 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                 scatter/gather formats.
-  * Creation Date:  June 21, 2006
-  *
-- * mpi2.h Version:  02.00.31
-+ * mpi2.h Version:  02.00.33
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -88,6 +88,8 @@
-  *                     Added MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET.
-  * 04-09-13  02.00.30  Bumped MPI2_HEADER_VERSION_UNIT.
-  * 04-17-13  02.00.31  Bumped MPI2_HEADER_VERSION_UNIT.
-+ * 08-19-13  02.00.32  Bumped MPI2_HEADER_VERSION_UNIT.
-+ * 12-05-13  02.00.33  Bumped MPI2_HEADER_VERSION_UNIT.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -121,7 +123,7 @@
- #define MPI2_VERSION_02_05                  (0x0205)
- 
- /*Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x1F)
-+#define MPI2_HEADER_VERSION_UNIT            (0x21)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index e261a31..62dfbf6 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI Configuration messages and pages
-  * Creation Date:  November 10, 2006
-  *
-- *   mpi2_cnfg.h Version:  02.00.26
-+ *   mpi2_cnfg.h Version:  02.00.27
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -165,6 +165,16 @@
-  *                     match the specification.
-  * 08-19-13  02.00.26  Added reserved words to MPI2_CONFIG_PAGE_IO_UNIT_7 for
-  *			future use.
-+ * 12-05-13  02.00.27  Added MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL for
-+ *		       MPI2_CONFIG_PAGE_MAN_7.
-+ *		       Added EnclosureLevel and ConnectorName fields to
-+ *		       MPI2_CONFIG_PAGE_SAS_DEV_0.
-+ *		       Added MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID for
-+ *		       MPI2_CONFIG_PAGE_SAS_DEV_0.
-+ *		       Added EnclosureLevel field to
-+ *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-+ *		       Added MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID for
-+ *		       MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -724,6 +734,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7 {
- #define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
- 
- /*defines for the Flags field */
-+#define MPI2_MANPAGE7_FLAG_BASE_ENCLOSURE_LEVEL         (0x00000008)
- #define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
- #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
- 
-@@ -2633,9 +2644,9 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
- 	U8
- 		ControlGroup;           /*0x2E */
- 	U8
--		Reserved1;              /*0x2F */
-+		EnclosureLevel;		/*0x2F */
- 	U32
--		Reserved2;              /*0x30 */
-+		ConnectorName[4];	/*0x30 */
- 	U32
- 		Reserved3;              /*0x34 */
- } MPI2_CONFIG_PAGE_SAS_DEV_0,
-@@ -2643,7 +2654,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
- 	Mpi2SasDevicePage0_t,
- 	*pMpi2SasDevicePage0_t;
- 
--#define MPI2_SASDEVICE0_PAGEVERSION         (0x08)
-+#define MPI2_SASDEVICE0_PAGEVERSION         (0x09)
- 
- /*values for SAS Device Page 0 AccessStatus field */
- #define MPI2_SAS_DEVICE0_ASTATUS_NO_ERRORS                  (0x00)
-@@ -2683,6 +2694,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0 {
- #define MPI2_SAS_DEVICE0_FLAGS_SATA_NCQ_SUPPORTED           (0x0020)
- #define MPI2_SAS_DEVICE0_FLAGS_SATA_FUA_SUPPORTED           (0x0010)
- #define MPI2_SAS_DEVICE0_FLAGS_PORT_SELECTOR_ATTACH         (0x0008)
-+#define MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID             (0x0002)
- #define MPI2_SAS_DEVICE0_FLAGS_DEVICE_PRESENT               (0x0001)
- 
- 
-@@ -3019,8 +3031,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
- 		NumSlots;                   /*0x18 */
- 	U16
- 		StartSlot;                  /*0x1A */
--	U16
-+	U8
- 		Reserved2;                  /*0x1C */
-+	U8
-+		EnclosureLevel;		    /*0x1D */
- 	U16
- 		SEPDevHandle;               /*0x1E */
- 	U32
-@@ -3031,9 +3045,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0 {
- 	*PTR_MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0,
- 	Mpi2SasEnclosurePage0_t, *pMpi2SasEnclosurePage0_t;
- 
--#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x03)
-+#define MPI2_SASENCLOSURE0_PAGEVERSION      (0x04)
- 
- /*values for SAS Enclosure Page 0 Flags field */
-+#define MPI2_SAS_ENCLS0_FLAGS_ENCL_LEVEL_VALID      (0x0010)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_MASK              (0x000F)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_UNKNOWN           (0x0000)
- #define MPI2_SAS_ENCLS0_FLAGS_MNG_IOC_SES           (0x0001)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-index 4908309..d7598cc 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *         Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  * Creation Date:  October 11, 2006
-  *
-- * mpi2_ioc.h Version:  02.00.23
-+ * mpi2_ioc.h Version:  02.00.24
-  *
-  * NOTE: Names (typedefs, defines, etc.) beginning with an MPI25 or Mpi25
-  *       prefix are for use only on MPI v2.5 products, and must not be used
-@@ -132,6 +132,7 @@
-  *			Added MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE.
-  *			Added MPI2_FW_DOWNLOAD_ITYPE_PUBLIC_KEY.
-  *			Added Encrypted Hash Extended Image.
-+ * 12-05-13  02.00.24  Added MPI25_HASH_IMAGE_TYPE_BIOS.
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -1598,6 +1599,7 @@ Mpi25EncryptedHashEntry_t, *pMpi25EncryptedHashEntry_t;
- /* values for HashImageType */
- #define MPI25_HASH_IMAGE_TYPE_UNUSED		(0x00)
- #define MPI25_HASH_IMAGE_TYPE_FIRMWARE		(0x01)
-+#define MPI25_HASH_IMAGE_TYPE_BIOS              (0x02)
- 
- /* values for HashAlgorithm */
- #define MPI25_HASH_ALGORITHM_UNUSED		(0x00)
--- 
-2.0.2
+----- Original Message -----
+From: "Laurence Oberman" <loberman@redhat.com>
+To: "Bart Van Assche" <Bart.VanAssche@sandisk.com>, "Quinn Tran" <quinn.tran@qlogic.com>
+Cc: "Andy Grover" <agrover@redhat.com>, linux-scsi@vger.kernel.org, nab@daterainc.com, "Laurence Oberman" <oberman.l@gmail.com>
+Sent: Thursday, March 12, 2015 10:13:57 PM
+Subject: Re: [PATCH ] qla2xxx  Add SCSI command jammer/discard capabilty to the qla2xxx target module - revision3
 
+Hello Bart, Quinn Tran
+
+Thanks for the feedback.
+
+Revision3
+Moved the discard to the __qlt_do_work code to prevent the memory leak, this cleans up the allocations.
+I will look at seeing how best this can be done for the other transports, or in the core but for me the most useful case has been F/C.
+I wanted to get feedback so far, and suggest that we should start with this as the initial jamming patch as its the least risky change for now.
+I did test this and ran the same set of tests I normally use this error injection for and it looks good.
+
+
+Patch notes
+-----------
+I use target LIO for all my storage array test targets and customer problem resolution here at Red Hat.
+This patch resulted from a requirement to mimic behaviour of an expensive hardware jammer for a customer.
+I have used this for some time with good success to simulate and reproduce latency and slow drain fabric issues and
+for testing and validating error handling behaviour in the Emulex, Qlogic and other F/C drivers.
+While the jammer is enabled SCSI commands are discarded for the selected host and this allows all the multipath error recovery and other
+LLD driver error recovery and timeout code to be debugged and tested.
+
+Works by checking new parameter jam_host if its >= 0 and matches vha->host_no , jamming is enabled when jam_host >=0
+If parameter set to -1 (default) no jamming is enabled.
+I decided to share the patch, in the hope it may be useful for others but I do understand this is a special use case.
+
+Tested by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+
+diff -Nurp a/Documentation/scsi/qla2xxx.txt b/Documentation/scsi/qla2xxx.txt
+--- a/Documentation/scsi/qla2xxx.txt	1969-12-31 19:00:00.000000000 -0500
++++ b/Documentation/scsi/qla2xxx.txt	2015-03-12 21:42:49.828788582 -0400
+@@ -0,0 +1,34 @@
++qla2xxx target mode parameters
++------------------------------
++parm:           qlini_mode:Determines when initiator mode will be enabled. Possible values: "exclusive" - initiator mode will be enabled on load, disabled on enabling target mode and then on disabling target mode enabled back; "disabled" - initiator mode will never be enabled; "enabled" (default) - initiator mode will always stay enabled. (charp)
++
++Enables qla2xxx target mode by setting to disabled on module load
++
++There is now a new module parameter added to the qla2xxx module
++parm:           jam_host:Host to jam >=0 Enable jammer (int)
++
++Use this parameter to control the discarding of SCSI commands to a selected host.
++This may be useful for testing error handling and simulating slow drain and other
++fabric issues.
++
++Any value >=0 that matches a fc_host # will discard the commands for that host.
++Reset back to -1 to stop the jamming.
++
++Enable host 6 to be jammed
++echo 6 > /sys/module/qla2xxx/parameters/jam_host
++
++Disable jamming on host 6
++echo -1 > /sys/module/qla2xxx/parameters/jam_host
++
++Usage example script:
++
++#!/bin/bash
++sleep_time=120  ### Time to jam for
++echo 6 >  /sys/module/qla2xxx/parameters/jam_host
++host=`cat /sys/module/qla2xxx/parameters/jam_host`
++echo "We start to discard commands on SCSI host $host"
++logger "Jammer started"
++sleep $sleep_time
++echo -1 >  /sys/module/qla2xxx/parameters/jam_host
++echo "We stopped the jammer"
++logger "Jammer stopped"
+
+diff -Nurp a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+--- a/drivers/scsi/qla2xxx/qla_target.c	2015-03-12 21:44:04.691314527 -0400
++++ b/drivers/scsi/qla2xxx/qla_target.c	2015-03-12 21:52:27.551557133 -0400
+@@ -59,6 +59,11 @@ MODULE_PARM_DESC(qlini_mode,
+ 
+ int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
+ 
++int jam_host = -1;
++module_param(jam_host, int, 0644);
++MODULE_PARM_DESC(jam_host, "Host to jam >=0 Enable jammer");
++
++
+ static int temp_sam_status = SAM_STAT_BUSY;
+ 
+ /*
+@@ -3264,6 +3269,11 @@ static void __qlt_do_work(struct qla_tgt
+ 	cmd->cmd_flags |= BIT_1;
+ 	if (tgt->tgt_stop)
+ 		goto out_term;
++	/*
++	* If jam_host >=0, goto out_term discarding command for matching host
++	*/
++	if (unlikely(vha->host_no == jam_host))
++		goto out_term;
+ 
+ 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
+ 	cmd->tag = atio->u.isp24.exchange_addr;
+
+
+Laurence Oberman
+Red Hat Global Support Service
+SEG Team
+
+----- Original Message -----
+From: "Bart Van Assche" <Bart.VanAssche@sandisk.com>
+To: "Laurence Oberman" <loberman@redhat.com>
+Cc: "Andy Grover" <agrover@redhat.com>, linux-scsi@vger.kernel.org, nab@daterainc.com, "Laurence Oberman" <oberman.l@gmail.com>
+Sent: Thursday, March 12, 2015 9:13:28 AM
+Subject: Re: [PATCH ] tcm_qla2xxx  Add SCSI command jammer/discard capabilty to the tcm_qla2xxx module - revision2
+
+On 03/08/2015 11:38 AM, Laurence Oberman wrote:
+> Here is revision2
+>
+> I added unlikely and removed messaging control as it not necessary and adds overhead.
+>
+> I use target LIO for all my storage array test targets and customer problem resolution here at Red Hat.
+> This patch resulted from a requirement to mimic behaviour of an expensive hardware jammer for a customer.
+> I have used this for some time with good success to simulate and reproduce latency and slow drain fabric issues and
+> for testing and validating error handling behaviour in the Emulex, Qlogic and other F/C drivers.
+>
+> Works by checking new parameter jam_host if its >= 0 and matches vha->host_no , jamming is enabled when jam_host >=0
+> If parameter set to -1 (default) no jamming is enabled.
+> I decided to share the patch, in the hope it may be useful for others but I do understand this is a special use case.
+
+Hello Laurence,
+
+Thanks for reworking this patch quickly. This patch looks fine to me. 
+The only remaining concern I have is that I'm wondering what the best 
+place would be to add this functionality - the qla2xxx driver or the LIO 
+core ?
+
+Bart.
