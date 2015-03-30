@@ -1,73 +1,106 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 61/86] scsi/qla1280: use uapi/linux/pci_ids.h directly
-Date: Sun, 29 Mar 2015 17:52:20 +0300
-Message-ID: <1427640740.25464.40.camel@HansenPartnership.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
-	 <1427635734-24786-62-git-send-email-mst@redhat.com>
-	 <1427637816.25464.27.camel@HansenPartnership.com>
-	 <20150329162830-mutt-send-email-mst@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51643 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752596AbbC2OwZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Mar 2015 10:52:25 -0400
-In-Reply-To: <20150329162830-mutt-send-email-mst@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@daterainc.com>
+Subject: [PATCH-v2 03/15] target: Update SPC/SBC emulation for sess_prot_type
+Date: Mon, 30 Mar 2015 03:28:12 +0000
+Message-ID: <1427686104-14231-4-git-send-email-nab@daterainc.com>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1427686104-14231-1-git-send-email-nab@daterainc.com>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Michael Reed <mdr@sgi.com>, linux-scsi@vger.kernel.org
 
-On Sun, 2015-03-29 at 16:36 +0200, Michael S. Tsirkin wrote:
-> On Sun, Mar 29, 2015 at 05:03:36PM +0300, James Bottomley wrote:
-> > On Sun, 2015-03-29 at 15:42 +0200, Michael S. Tsirkin wrote:
-> > > Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
-> > > use the new header directly so we can drop
-> > > the wrapper in include/linux/pci_ids.h.
-> > > 
-> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > ---
-> > >  drivers/scsi/qla1280.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-> > > index c68a66e..b2ada21 100644
-> > > --- a/drivers/scsi/qla1280.c
-> > > +++ b/drivers/scsi/qla1280.c
-> > > @@ -348,7 +348,7 @@
-> > >  #include <linux/pci.h>
-> > >  #include <linux/proc_fs.h>
-> > >  #include <linux/stat.h>
-> > > -#include <linux/pci_ids.h>
-> > > +#include <uapi/linux/pci_ids.h>
-> > 
-> > This is bogus, isn't it?  There's a -Iuapi somewhere in the kernel
-> > compile line so the original include is still valid.  Zorro does this:
-> > zorro_ids.h is exclusively in uapi but the include is still
-> > 
-> > #include <linux/zorro_ids.h>
-> > 
-> > James
-> > 
-> 
-> 
-> Hmm, that's true. I didn't know.  A bunch of files pull in headers from uapi
-> explicitly, so I assumed it's a good idea.  Do you think it's better to include
-> uapi files using short linux/<x>.h, or the full uapi/linux/<x>.h?  Linux has a
-> mix of both.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-I prefer the short linux/<x>.h because it's then up to the build system
-where they come from (we use the same scheme for asm-generic).  If we
-hard code uapi/linux/<x>.h they will be wrong again when we have a new
-API split.
+This patch updates standard INQUIRY, INQUIRY EVPD=0x86, READ_CAPACITY_16
+and control mode pages to use se_sess->sess_prot_type when determing which
+type of T10-PI related feature bits can be exposed.
 
-However, I'd say the rule I'd adhere to is that if nothing needs doing
-(i.e. whether they include linux/<x>.h or uapi/linux/<x>.h) then do
-nothing.  It saves churning lots of files for no reason.
+This is required for fabric sessions supporting T10-PI metadata to
+backend devices that don't have protection enabled.
 
-James
+Cc: Martin Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagig@mellanox.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_sbc.c | 13 +++++++++++--
+ drivers/target/target_core_spc.c | 14 +++++++++-----
+ 2 files changed, 20 insertions(+), 7 deletions(-)
 
-
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 5b3564a..68373c9 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -93,6 +93,8 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
++	int pi_prot_type = dev->dev_attrib.pi_prot_type;
++
+ 	unsigned char *rbuf;
+ 	unsigned char buf[32];
+ 	unsigned long long blocks = dev->transport->get_blocks(dev);
+@@ -114,8 +116,15 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 	 * Set P_TYPE and PROT_EN bits for DIF support
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
+-			buf[12] = (dev->dev_attrib.pi_prot_type - 1) << 1 | 0x1;
++		/*
++		 * Only override a device's pi_prot_type if no T10-PI is
++		 * available, and sess_prot_type has been explicitly enabled.
++		 */
++		if (!pi_prot_type)
++			pi_prot_type = sess->sess_prot_type;
++
++		if (pi_prot_type)
++			buf[12] = (pi_prot_type - 1) << 1 | 0x1;
+ 	}
+ 
+ 	if (dev->transport->get_lbppbe)
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index f310aac..9ec6459 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -103,10 +103,12 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 		buf[5] |= 0x8;
+ 	/*
+ 	 * Set Protection (PROTECT) bit when DIF has been enabled on the
+-	 * device, and the transport supports VERIFY + PASS.
++	 * device, and the fabric supports VERIFY + PASS.  Also report
++	 * PROTECT=1 if sess_prot_type has been configured to allow T10-PI
++	 * to unprotected devices.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
++		if (dev->dev_attrib.pi_prot_type || cmd->se_sess->sess_prot_type)
+ 			buf[5] |= 0x1;
+ 	}
+ 
+@@ -480,9 +482,11 @@ spc_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
+ 	 * only for TYPE3 protection.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT)
++		if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE1_PROT ||
++		    cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE1_PROT)
+ 			buf[4] = 0x5;
+-		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT)
++		else if (dev->dev_attrib.pi_prot_type == TARGET_DIF_TYPE3_PROT ||
++			cmd->se_sess->sess_prot_type == TARGET_DIF_TYPE3_PROT)
+ 			buf[4] = 0x4;
+ 	}
+ 
+@@ -874,7 +878,7 @@ static int spc_modesense_control(struct se_cmd *cmd, u8 pc, u8 *p)
+ 	 * TAG field.
+ 	 */
+ 	if (sess->sup_prot_ops & (TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS)) {
+-		if (dev->dev_attrib.pi_prot_type)
++		if (dev->dev_attrib.pi_prot_type || sess->sess_prot_type)
+ 			p[5] |= 0x80;
+ 	}
+ 
+-- 
+1.9.1
