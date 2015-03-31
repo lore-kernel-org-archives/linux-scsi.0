@@ -1,30 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 00/22] target: se_node_acl LUN list RCU conversion
-Date: Tue, 31 Mar 2015 02:23:23 -0700
-Message-ID: <20150331092323.GA9964@infradead.org>
-References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
- <20150330120823.GA20193@infradead.org>
- <5519A0F4.4020102@redhat.com>
- <20150330192130.GA27541@infradead.org>
- <5519A59B.7060903@redhat.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 3/3] libata: support host-aware ZAC devices
+Date: Tue, 31 Mar 2015 13:56:34 +0100
+Message-ID: <20150331135634.047af7b8@lxorguk.ukuu.org.uk>
+References: <1427791963-90832-1-git-send-email-hare@suse.de>
+	<1427791963-90832-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60033 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbbCaJXZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2015 05:23:25 -0400
-Content-Disposition: inline
-In-Reply-To: <5519A59B.7060903@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1427791963-90832-4-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, Mar 30, 2015 at 12:35:55PM -0700, Andy Grover wrote:
-> So what's next? Were you going to do the LUNs too? In addition to +perf and
-> less mem usage, going down this path also leads to >256 LUNs per tpg.
+On Tue, 31 Mar 2015 10:52:43 +0200
+Hannes Reinecke <hare@suse.de> wrote:
 
-This just started as a rework of Nic' series, so I'd like to avoid scope
-creep.  I think applying the same dynamic allocation + rcu scheme should
-work fine for the LUNs, too.
+> Byte 69 bits 0:1 in the IDENTIFY DEVICE data are proposed
+> to indicate a host-aware ZAC device.
+> And whenever we detect a ZAC-compatible device we should
+> be displaying the zoned block characteristics VPD page.
+
+I don't think this belongs upstream as is - because this is a "proposed"
+- it might change and then we have Linux boxes in the field randomly
+misinterpreting bits if instead other bits are used or the definition
+changes.
+
+Until it's officially in the spec there ought IMHO to be a boot option to
+enable the test.
+
+Alan
