@@ -1,78 +1,197 @@
 From: Daniel Kreling <kreling@linux.vnet.ibm.com>
-Subject: Re: [PATCH 6/6] ipr: Driver version 2.6.1
-Date: Tue, 31 Mar 2015 10:52:22 -0300
-Message-ID: <551AA696.7020900@linux.vnet.ibm.com>
-References: <201503261624.t2QGO0AY014263@d01av01.pok.ibm.com>
+Subject: Re: [PATCH 5/6] ipr: AF DASD raw mode implementation in ipr driver
+Date: Tue, 31 Mar 2015 10:54:57 -0300
+Message-ID: <551AA731.8000200@linux.vnet.ibm.com>
+References: <201503261623.t2QGNxP3021634@d03av04.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:40282 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384AbbCaNw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2015 09:52:29 -0400
+Received: from e19.ny.us.ibm.com ([129.33.205.209]:34505 "EHLO
+	e19.ny.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754529AbbCaNzE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2015 09:55:04 -0400
 Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-scsi@vger.kernel.org> from <kreling@linux.vnet.ibm.com>;
-	Tue, 31 Mar 2015 07:52:28 -0600
-Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 9AFFE1FF0026
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 07:43:37 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2VDodWC20512938
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 06:50:39 -0700
-Received: from d03av01.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2VDqOuc031233
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 07:52:26 -0600
-In-Reply-To: <201503261624.t2QGO0AY014263@d01av01.pok.ibm.com>
+	Tue, 31 Mar 2015 09:55:02 -0400
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 778A06E8040
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 09:46:50 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2VDt0Hq29098130
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 13:55:00 GMT
+Received: from d01av01.pok.ibm.com (localhost [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2VDsx07010065
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 09:55:00 -0400
+In-Reply-To: <201503261623.t2QGNxP3021634@d03av04.boulder.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Brian King <brking@linux.vnet.ibm.com>, James.Bottomley@HansenPartnership.com
 Cc: hch@lst.de, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, krisman@linux.vnet.ibm.com
 
-Bump driver version.
+This patch implements raw mode support for AF DASD in ipr driver
+which allows for tools to send commands directly to physical
+devices which are members of RAID arrays when enabled in the firmware.
 
+Signed-off-by: Wen Xiong
 Signed-off-by: Brian King
 Reviewed-by: Daniel Kreling
 ---
 
-  drivers/scsi/ipr.h |    4 ++--
-  1 file changed, 2 insertions(+), 2 deletions(-)
+  drivers/scsi/ipr.c |   85 
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  drivers/scsi/ipr.h |    3 +
+  2 files changed, 88 insertions(+)
 
+diff -puN drivers/scsi/ipr.c~ipr_sispipe drivers/scsi/ipr.c
+--- linux/drivers/scsi/ipr.c~ipr_sispipe	2015-03-26 10:53:55.540578199 -0500
++++ linux-bjking1/drivers/scsi/ipr.c	2015-03-26 10:57:00.570080498 -0500
+@@ -498,6 +498,10 @@ struct ipr_error_table_t ipr_error_table
+  	"4061: Multipath redundancy level got better"},
+  	{0x066B9200, 0, IPR_DEFAULT_LOG_LEVEL,
+  	"4060: Multipath redundancy level got worse"},
++	{0x06808100, 0, IPR_DEFAULT_LOG_LEVEL,
++	"9083: Device raw mode enabled"},
++	{0x06808200, 0, IPR_DEFAULT_LOG_LEVEL,
++	"9084: Device raw mode disabled"},
+  	{0x07270000, 0, 0,
+  	"Failure due to other device"},
+  	{0x07278000, 0, IPR_DEFAULT_LOG_LEVEL,
+@@ -4496,11 +4500,83 @@ static struct device_attribute ipr_resou
+  	.show = ipr_show_resource_type
+  };
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++/**
++ * ipr_show_raw_mode - Show the adapter's raw mode
++ * @dev:	class device struct
++ * @buf:	buffer
++ *
++ * Return value:
++ * 	number of bytes printed to buffer
++ **/
++static ssize_t ipr_show_raw_mode(struct device *dev,
++				 struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
++	struct ipr_resource_entry *res;
++	unsigned long lock_flags = 0;
++	ssize_t len;
++
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	res = (struct ipr_resource_entry *)sdev->hostdata;
++	if (res)
++		len = snprintf(buf, PAGE_SIZE, "%d\n", res->raw_mode);
++	else
++		len = -ENXIO;
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	return len;
++}
++
++/**
++ * ipr_store_raw_mode - Change the adapter's raw mode
++ * @dev:	class device struct
++ * @buf:	buffer
++ *
++ * Return value:
++ * 	number of bytes printed to buffer
++ **/
++static ssize_t ipr_store_raw_mode(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
++	struct ipr_resource_entry *res;
++	unsigned long lock_flags = 0;
++	ssize_t len;
++
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	res = (struct ipr_resource_entry *)sdev->hostdata;
++	if (res) {
++		if (ioa_cfg->sis64 && ipr_is_af_dasd_device(res)) {
++			res->raw_mode = simple_strtoul(buf, NULL, 10);
++			len = strlen(buf);
++			if (res->sdev)
++				sdev_printk(KERN_INFO, res->sdev, "raw mode is %s\n",
++					res->raw_mode ? "enabled" : "disabled");
++		} else
++			len = -EINVAL;
++	} else
++		len = -ENXIO;
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	return len;
++}
++
++static struct device_attribute ipr_raw_mode_attr = {
++	.attr = {
++		.name =		"raw_mode",
++		.mode =		S_IRUGO | S_IWUSR,
++	},
++	.show = ipr_show_raw_mode,
++	.store = ipr_store_raw_mode
++};
++
+  static struct device_attribute *ipr_dev_attrs[] = {
+  	&ipr_adapter_handle_attr,
+  	&ipr_resource_path_attr,
+  	&ipr_device_id_attr,
+  	&ipr_resource_type_attr,
++	&ipr_raw_mode_attr,
+  	NULL,
+  };
 
-diff -puN drivers/scsi/ipr.h~ipr_version_2_6_1 drivers/scsi/ipr.h
+@@ -6152,6 +6228,13 @@ static void ipr_erp_start(struct ipr_ioa
+  		break;
+  	case IPR_IOASC_NR_INIT_CMD_REQUIRED:
+  		break;
++	case IPR_IOASC_IR_NON_OPTIMIZED:
++		if (res->raw_mode){
++			res->raw_mode = 0;
++			scsi_cmd->result |= (DID_IMM_RETRY << 16);
++		} else
++			scsi_cmd->result |= (DID_ERROR << 16);
++		break;
+  	default:
+  		if (IPR_IOASC_SENSE_KEY(ioasc) > RECOVERED_ERROR)
+  			scsi_cmd->result |= (DID_ERROR << 16);
+@@ -6291,6 +6374,8 @@ static int ipr_queuecommand(struct Scsi_
+  	    (!ipr_is_gscsi(res) || scsi_cmd->cmnd[0] == IPR_QUERY_RSRC_STATE)) {
+  		ioarcb->cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
+  	}
++	if (res->raw_mode && ipr_is_af_dasd_device(res))
++		ioarcb->cmd_pkt.request_type = IPR_RQTYPE_PIPE;
 
---- linux/drivers/scsi/ipr.h~ipr_version_2_6_1	2015-03-12=20
-16:27:14.235168394 -0500
+  	if (ioa_cfg->sis64)
+  		rc = ipr_build_ioadl64(ioa_cfg, ipr_cmd);
+diff -puN drivers/scsi/ipr.h~ipr_sispipe drivers/scsi/ipr.h
+--- linux/drivers/scsi/ipr.h~ipr_sispipe	2015-03-26 10:53:58.572559060 -0500
++++ linux-bjking1/drivers/scsi/ipr.h	2015-03-26 10:54:19.108429114 -0500
+@@ -138,6 +138,7 @@
+  #define IPR_IOASC_BUS_WAS_RESET			0x06290000
+  #define IPR_IOASC_BUS_WAS_RESET_BY_OTHER		0x06298000
+  #define IPR_IOASC_ABORTED_CMD_TERM_BY_HOST	0x0B5A0000
++#define IPR_IOASC_IR_NON_OPTIMIZED		0x05258200
 
-+++ linux-bjking1/drivers/scsi/ipr.h	2015-03-12 16:27:38.294920049 -050=
-0
+  #define IPR_FIRST_DRIVER_IOASC			0x10000000
+  #define IPR_IOASC_IOA_WAS_RESET			0x10000001
+@@ -521,6 +522,7 @@ struct ipr_cmd_pkt {
+  #define IPR_RQTYPE_IOACMD		0x01
+  #define IPR_RQTYPE_HCAM			0x02
+  #define IPR_RQTYPE_ATA_PASSTHRU	0x04
++#define IPR_RQTYPE_PIPE			0x05
 
-@@ -39,5 +39,5 @@
+  	u8 reserved2;
 
-/*
-=B7*=B7Literals
-=B7*/
--#define=B7IPR_DRIVER_VERSION=B7"2.6.0"
--#define=B7IPR_DRIVER_DATE=B7"(November=B716,=B72012)"
-+#define=B7IPR_DRIVER_VERSION=B7"2.6.1"
-+#define=B7IPR_DRIVER_DATE=B7"(March=B712,=B72015)"
+@@ -1274,6 +1276,7 @@ struct ipr_resource_entry {
+  	u8 del_from_ml:1;
+  	u8 resetting_device:1;
+  	u8 reset_occurred:1;
++	u8 raw_mode:1;
 
-  /*
-   * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstandin=
-g
+  	u32 bus;		/* AKA channel */
+  	u32 target;		/* AKA id */
 _
 
 
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
