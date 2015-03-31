@@ -1,42 +1,118 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 00/25] treewide: Use bool function return values of
- true/false not 1/0
-Date: Mon, 30 Mar 2015 17:14:48 -0700
-Message-ID: <1427760888.14276.37.camel@perches.com>
-References: <cover.1427759009.git.joe@perches.com>
-	 <5519E53B.5040504@schaufler-ca.com>
+From: wenxiong@linux.vnet.ibm.com
+Subject: Re: [PATCH RESUBMIT] Enclosure: fix WARN ON when doing dlpar
+ removing an adapter in dual patch devices
+Date: Mon, 30 Mar 2015 20:28:47 -0400
+Message-ID: <20150330202847.Horde.PYpAb4tX-yK6l4jH6FbvSg1@ltc.linux.ibm.com>
+References: <1426717101-26910-1-git-send-email-wenxiong@linux.vnet.ibm.com>
+ <1426719376.2307.36.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <5519E53B.5040504@schaufler-ca.com>
-Sender: owner-linux-mm@kvack.org
-To: Casey Schaufler <casey@schaufler-ca.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, kvm@vger.kernel.org, linux-omap@vger.kernel.org, kvm-ppc@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ide@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net, linux-mm@kvack.org, linux-pm@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, patches@opensource.wolfsonmicro.com, linux-hexagon@vger.kernel.org, linux-ia64@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:39243 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753879AbbCaA2v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Mar 2015 20:28:51 -0400
+Received: from /spool/local
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <wenxiong@linux.vnet.ibm.com>;
+	Mon, 30 Mar 2015 20:28:50 -0400
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id D75C9C90041
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2015 20:19:57 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2V0Sm1x26870006
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2015 00:28:48 GMT
+Received: from d01av04.pok.ibm.com (localhost [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2V0SlL2010166
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2015 20:28:48 -0400
+In-Reply-To: <1426719376.2307.36.camel@HansenPartnership.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, wenxiong@us.ibm.com
 
-On Mon, 2015-03-30 at 17:07 -0700, Casey Schaufler wrote:
-> On 3/30/2015 4:45 PM, Joe Perches wrote:
-> > Joe Perches (25):
-> >   arm: Use bool function return values of true/false not 1/0
+Hi James,
 
-[etc...]
+Thanks for your patch! I got a chance to test your patch today and it works.
 
-> Why, and why these in particular?
+Thanks,
+Wendy
 
-bool functions are probably better returning
-bool values instead of 1 and 0.
+Quoting James Bottomley <James.Bottomley@hansenpartnership.com>:
 
-Especially when the functions intermix returning
-returning 1/0 and true/false.
+> On Wed, 2015-03-18 at 17:18 -0500, wenxiong@linux.vnet.ibm.com wrote:
+>> From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+>>
+>> Hi James,
+>>
+>> Our test teams still see lots of these errors in error log when  
+>> dlpar removing
+>> the adapter in dual configuration. So I re-submit the patch.
+>
+> OK so in this case you have two struct devices for one bay (one for each
+> path).  The links are screwed up because a bay only points at one device
+> (although each device points to an enclosure).
+>
+> We have a check, so the enclosure backlink points to the first device it
+> encountered.
+>
+> The scope for cockups in this situation is huge (like if the device the
+> enclosure points to gets removed
+>
+>> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+>> index 38552a3..0d20e19 100644
+>> --- a/drivers/misc/enclosure.c
+>> +++ b/drivers/misc/enclosure.c
+>> @@ -209,6 +209,9 @@ static void enclosure_remove_links(struct  
+>> enclosure_component *cdev)
+>>  	if (!cdev->dev->kobj.sd)
+>>  		return;
+>>
+>> +	if (!cdev->cdev.kobj.sd)
+>> +		return;
+>> +
+>>  	enclosure_link_name(cdev, name);
+>>  	sysfs_remove_link(&cdev->dev->kobj, name);
+>>  	sysfs_remove_link(&cdev->cdev.kobj, "device");
+>
+> This doesn't look right: for this to work it means you have to have a
+> dev with a kernfs link but a cdev without one.  We probably still need
+> to remove the dangling dev link.
+>
+> Does this work?  It should remove either link if they exist.
+>
+> James
+>
+> ---
+>
+> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+> index 38552a3..65fed71 100644
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -202,16 +202,17 @@ static void enclosure_remove_links(struct  
+> enclosure_component *cdev)
+>  {
+>  	char name[ENCLOSURE_NAME_SIZE];
+>
+> +	enclosure_link_name(cdev, name);
+> +
+>  	/*
+>  	 * In odd circumstances, like multipath devices, something else may
+>  	 * already have removed the links, so check for this condition first.
+>  	 */
+> -	if (!cdev->dev->kobj.sd)
+> -		return;
+> +	if (cdev->dev->kobj.sd)
+> +		sysfs_remove_link(&cdev->dev->kobj, name);
+>
+> -	enclosure_link_name(cdev, name);
+> -	sysfs_remove_link(&cdev->dev->kobj, name);
+> -	sysfs_remove_link(&cdev->cdev.kobj, "device");
+> +	if (cdev->cdev.kobj.sd)
+> +		sysfs_remove_link(&cdev->cdev.kobj, "device");
+>  }
+>
+>  static int enclosure_add_links(struct enclosure_component *cdev)
 
-(there are only a couple of those though)
 
-These are all the remaining instances in the
-kernel tree.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
