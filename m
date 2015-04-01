@@ -1,8 +1,8 @@
-From: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
 Subject: Re: [PATCH v1] ata: ahci_xgene: Add AHCI Support for second
  generation of APM X-Gene SoC
-Date: Wed, 1 Apr 2015 18:07:33 +0100
-Message-ID: <20150401170733.GB10578@leverpostej>
+Date: Wed, 1 Apr 2015 18:30:30 +0100
+Message-ID: <20150401173029.GF24899@n2100.arm.linux.org.uk>
 References: <1427899682-10912-1-git-send-email-stripathi@apm.com>
  <1427899682-10912-2-git-send-email-stripathi@apm.com>
  <20150401161336.GS9974@htj.duckdns.org>
@@ -11,20 +11,19 @@ References: <1427899682-10912-1-git-send-email-stripathi@apm.com>
  <20150401170032.GC28616@e104818-lin.cambridge.arm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150401170032.GC28616-M2fw3Uu6cmfZROr8t4l/smS4ubULX0JqMm0uRHvK7Nw@public.gmane.org>
-Content-Language: en-US
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Catalin Marinas <Catalin.Marinas-5wv7dgnIgG8@public.gmane.org>
-Cc: Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>, "arnd-r2nGTMty4D4@public.gmane.org" <arnd-r2nGTMty4D4@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "patches-qTEPVZfXA3Y@public.gmane.org" <patches-qTEPVZfXA3Y@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org" <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <20150401170032.GC28616@e104818-lin.cambridge.arm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, mlangsdo@redhat.com, Suman Tripathi <stripathi@apm.com>, arnd@arndb.de, linux-scsi@vger.kernel.org, jcm@redhat.com, patches@apm.com, linux-ide@vger.kernel.org, olof@lixom.net, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Wed, Apr 01, 2015 at 06:00:33PM +0100, Catalin Marinas wrote:
 > On Wed, Apr 01, 2015 at 05:39:56PM +0100, Russell King - ARM Linux wrote:
 > > On Wed, Apr 01, 2015 at 12:31:16PM -0400, Tejun Heo wrote:
 > > > On Wed, Apr 01, 2015 at 12:13:36PM -0400, Tejun Heo wrote:
-> > > > > Signed-off-by : Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+> > > > > Signed-off-by : Suman Tripathi <stripathi@apm.com>
 > > > > 
 > > > > Applied to libata/for-4.1 w/ minor edit.
 > > > 
@@ -43,26 +42,18 @@ On Wed, Apr 01, 2015 at 06:00:33PM +0100, Catalin Marinas wrote:
 > 
 > First search result leads here:
 > 
-> https://www.mail-archive.com/devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg67774.html
-> 
+> https://www.mail-archive.com/devicetree@vger.kernel.org/msg67774.html
+
+Thanks.
+
 > The driver in general should not be ARM specific, though it runs on an
 > ARMv8 platform. But looking at the patch it has some errata workarounds
 > triggered based on the CPU id (MIDR). That looks dodgy as it doesn't
 > even check the full ID, only the variant part.
-> 
-> But if they don't have any other way of identifying the hardware
-> version (ideally some SoC or device identification), the driver should
-> at least be made dependent on ARM64. Looking at the Kconfig entries,
-> PHY_XGENE depends on (ARM64 || COMPILE_TEST). The COMPILE_TEST part
-> should be dropped (I would still prefer a different way to handle this
-> than checking MIDR but I'm not familiar with the hardware).
 
-We should just add a new compatible string for the new revision of the
-AHCI controller. Given the errata we're avoiding apply to the AHCI
-controller and not the CPU, looking at the CPU ID is nonsense.
+Okay, it's not ARM but an ARM64 driver, so that's your territory, not
+mine. :)
 
-Mark.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
+according to speedtest.net.
