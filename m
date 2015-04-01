@@ -1,141 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 15/15] iscsi/iser-target: Add fabric_prot_type
- attribute support
-Date: Tue, 31 Mar 2015 23:27:56 -0700
-Message-ID: <1427869676.9176.221.camel@haakon3.risingtidesystems.com>
-References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
-	 <1427686104-14231-16-git-send-email-nab@daterainc.com>
-	 <55190542.1080002@dev.mellanox.co.il>
+Subject: Re: [RFC 00/22] target: se_node_acl LUN list RCU conversion
+Date: Tue, 31 Mar 2015 23:51:56 -0700
+Message-ID: <1427871116.9176.240.camel@haakon3.risingtidesystems.com>
+References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
+	 <20150330120823.GA20193@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <55190542.1080002@dev.mellanox.co.il>
+In-Reply-To: <20150330120823.GA20193@infradead.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2015-03-30 at 11:11 +0300, Sagi Grimberg wrote:
-> On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >
-> > This patch updates iscsi/iser-target to add a new fabric_prot_type
-> > TPG attribute for iser-target, used for controlling LLD level
-> > protection into LIO when the backend device does not support T10-PI.
-> >
-> > This is required for ib_isert to enable WRITE_STRIP + READ_INSERT
-> > hardware offloads.
-> >
-> > It's disabled by default and controls which se_sesion->sess_prot_type
-> > are set at iscsi_target_locate_portal() session registration time.
-> >
-> > Cc: Sagi Grimberg <sagig@mellanox.com>
-> > Cc: Martin Petersen <martin.petersen@oracle.com>
-> > Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >   drivers/target/iscsi/iscsi_target_configfs.c | 22 ++++++++++++++++++++++
-> >   drivers/target/iscsi/iscsi_target_tpg.c      | 19 +++++++++++++++++++
-> >   drivers/target/iscsi/iscsi_target_tpg.h      |  1 +
-> >   include/target/iscsi/iscsi_target_core.h     |  2 ++
-> >   4 files changed, 44 insertions(+)
-> >
-> > diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-> > index 95a67f6..9cb5ab4 100644
-> > --- a/drivers/target/iscsi/iscsi_target_configfs.c
-> > +++ b/drivers/target/iscsi/iscsi_target_configfs.c
-> > @@ -1052,6 +1052,11 @@ TPG_ATTR(default_erl, S_IRUGO | S_IWUSR);
-> >    */
-> >   DEF_TPG_ATTRIB(t10_pi);
-> >   TPG_ATTR(t10_pi, S_IRUGO | S_IWUSR);
-> > +/*
-> > + * Define iscsi_tpg_attrib_s_fabric_prot_type
-> > + */
-> > +DEF_TPG_ATTRIB(fabric_prot_type);
-> > +TPG_ATTR(fabric_prot_type, S_IRUGO | S_IWUSR);
-> >
-> >   static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
-> >   	&iscsi_tpg_attrib_authentication.attr,
-> > @@ -1065,6 +1070,7 @@ static struct configfs_attribute *lio_target_tpg_attrib_attrs[] = {
-> >   	&iscsi_tpg_attrib_demo_mode_discovery.attr,
-> >   	&iscsi_tpg_attrib_default_erl.attr,
-> >   	&iscsi_tpg_attrib_t10_pi.attr,
-> > +	&iscsi_tpg_attrib_fabric_prot_type.attr,
-> >   	NULL,
-> >   };
-> >
-> > @@ -1882,6 +1888,20 @@ static int lio_tpg_check_prod_mode_write_protect(
-> >   	return tpg->tpg_attrib.prod_mode_write_protect;
-> >   }
-> >
-> > +static int lio_tpg_check_prot_fabric_only(
-> > +	struct se_portal_group *se_tpg)
-> > +{
-> > +	struct iscsi_portal_group *tpg = se_tpg->se_tpg_fabric_ptr;
-> > +	/*
-> > +	 * Only report fabric_prot_type if t10_pi has also been enabled
-> > +	 * for incoming ib_isert sessions.
-> > +	 */
-> > +	if (!tpg->tpg_attrib.t10_pi)
-> > +		return 0;
-> > +
-> > +	return tpg->tpg_attrib.fabric_prot_type;
-> > +}
-> > +
-> >   static void lio_tpg_release_fabric_acl(
-> >   	struct se_portal_group *se_tpg,
-> >   	struct se_node_acl *se_acl)
-> > @@ -1997,6 +2017,8 @@ int iscsi_target_register_configfs(void)
-> >   				&lio_tpg_check_demo_mode_write_protect;
-> >   	fabric->tf_ops.tpg_check_prod_mode_write_protect =
-> >   				&lio_tpg_check_prod_mode_write_protect;
-> > +	fabric->tf_ops.tpg_check_prot_fabric_only =
-> > +				&lio_tpg_check_prot_fabric_only;
-> >   	fabric->tf_ops.tpg_alloc_fabric_acl = &lio_tpg_alloc_fabric_acl;
-> >   	fabric->tf_ops.tpg_release_fabric_acl = &lio_tpg_release_fabric_acl;
-> >   	fabric->tf_ops.tpg_get_inst_index = &lio_tpg_get_inst_index;
-> > diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-> > index bdd127c..3076e6f 100644
-> > --- a/drivers/target/iscsi/iscsi_target_tpg.c
-> > +++ b/drivers/target/iscsi/iscsi_target_tpg.c
-> > @@ -228,6 +228,7 @@ static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *tpg)
-> >   	a->demo_mode_discovery = TA_DEMO_MODE_DISCOVERY;
-> >   	a->default_erl = TA_DEFAULT_ERL;
-> >   	a->t10_pi = TA_DEFAULT_T10_PI;
-> > +	a->fabric_prot_type = TA_DEFAULT_FABRIC_PROT_TYPE;
-> >   }
-> >
-> >   int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_portal_group *tpg)
-> > @@ -878,3 +879,21 @@ int iscsit_ta_t10_pi(
-> >
-> >   	return 0;
-> >   }
-> > +
-> > +int iscsit_ta_fabric_prot_type(
-> > +	struct iscsi_portal_group *tpg,
-> > +	u32 prot_type)
-> > +{
-> > +	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
-> > +
-> > +	if ((prot_type != 0) && (prot_type != 1) && (prot_type != 3)) {
-> > +		pr_err("Illegal value for fabric_prot_type: %u\n", prot_type);
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	a->fabric_prot_type = prot_type;
-> > +	pr_debug("iSCSI_TPG[%hu] - T10 Fabric Protection Type: %u\n",
-> > +		 tpg->tpgt, prot_type);
+On Mon, 2015-03-30 at 05:08 -0700, Christoph Hellwig wrote:
+> I went through this in detail, and the odd patch split that splits
+> one change up into muliple patches, but then also mixes up other
+> changes makes it hard to read.
 > 
-> I wander what will happen if this is modified on the fly with active
-> sessions, LUNs, IO...
+
+Thanks for having a look.  Will fix up patch ordering for -v2.
+
+> So I started rebasing the tree to understand it moving your various
+> cleanups to the front of the series.  Of coure while reading through
+> it the number of cleanups grew, so there are a few more now.
 > 
-> Should we restrict this to be modified only offline (no active
-> sessions)?
 
-Absolutely.
+;)
 
-The tpg_check_prot_fabric_only() assignment of sess->sess_prot_type
-is restricted to session creation time in __transport_register_session()
-code, and changing of the value does not effect existing sessions.
+> Based on that I don't think this series will work very well, RCU works
+> when replacing strutures in a lookup data structure, but not when
+> changing the content of it, so the new locking scheme doesn't work
+> very well, as the device_list array is static, it's just the content
+> that changes.
+> 
 
---nab
+The initial series was primarily to get some feedback on the non trivial
+PR cases.
+
+Since last week, enable/disable device_list code has been converted to
+use mempool + call_rcu() and performs the RCU pointer swap in
+se_node_acl->lun_entry_hlist[] under se_node_acl->lun_entry_mutex.
+
+There are a few more target_core_pr.c pieces that need to be updated to
+handle NULL se_node_acl->lun_entry_hlist[] pointers, along with proper
+rcu_dereference_protected() and rcu_access_pointer() notations for
+se_dev_entry pointer access outside of RCU read lock.
+
+>From there, it should be an straight-forward conversion to rcu hlist for
+se_node_acl->lun_entry_list[] and se_portal_group->tpg_lun_list[] to
+support dynamic LUN layouts.
+
+> Fortunately there is the old patch from Andy to make the se_dev_entry
+> dynamically allocated, which comes in useful here.  With that we might
+> only change the rdonly flag on a live dev entry, or assign an ACL when
+> it previously was NULL, something that RCU can handle nicely.
+> 
+> I've pushed a git tree to
+> 
+> 	git://git.infradead.org/users/hch/scsi.git target-rcu-hch
+> 
+> Gitweb:
+> 
+> 	http://git.infradead.org/users/hch/scsi.git/shortlog/refs/heads/target-rcu-hch
+> 
+> that implements this scheme.  Note that I dropped the percpu refcount
+> changes - the reference is only taken in the SCSI3-PR slow path, and the
+> percpu refcount API is extremly cumbersome.
+> 
+
+Well, there still needs to be some manner of reference counting on
+se_dev_entry once rcu_read_lock() is released for the REGISTER w/ I_PORT
+and REGISTER_AND_MOVE cases with a non-local I_T_L se_dev_entry
+reference.
+
+Otherwise, an RCU update can occur from below the reader unless the PR
+special cases are allowed to drop pointer reference + invoke struct
+completion before call_rcu() is dispatched to release memory.
+
+> This survives I/O testing nicely, but I couldn't find a good test suite
+> for the control path.
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
