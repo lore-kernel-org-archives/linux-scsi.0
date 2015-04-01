@@ -1,46 +1,79 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 00/22] target: se_node_acl LUN list RCU conversion
-Date: Wed, 1 Apr 2015 00:04:00 -0700
-Message-ID: <20150401070400.GA3431@infradead.org>
-References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
- <20150330120823.GA20193@infradead.org>
- <1427871116.9176.240.camel@haakon3.risingtidesystems.com>
+From: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Subject: Re: [PATCH-v2 02/15] target: Add protected fabric + unprotected device
+ support
+Date: Wed, 01 Apr 2015 12:04:56 +0300
+Message-ID: <551BB4B8.8050603@dev.mellanox.co.il>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com>	 <1427686104-14231-3-git-send-email-nab@daterainc.com>	 <55190088.6040301@dev.mellanox.co.il> <1427867366.9176.196.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1427871116.9176.240.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <1427867366.9176.196.camel@haakon3.risingtidesystems.com>
 Sender: target-devel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Mar 31, 2015 at 11:51:56PM -0700, Nicholas A. Bellinger wrote:
-> Since last week, enable/disable device_list code has been converted to
-> use mempool + call_rcu() and performs the RCU pointer swap in
-> se_node_acl->lun_entry_hlist[] under se_node_acl->lun_entry_mutex.
+On 4/1/2015 8:49 AM, Nicholas A. Bellinger wrote:
+> On Mon, 2015-03-30 at 10:51 +0300, Sagi Grimberg wrote:
+>> On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
+>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>>>
+>>> This patch adds a new target_core_fabric_ops callback for allowing fabric
+>>> drivers to expose a TPG attribute for signaling when a T10-PI protected
+>>> fabric wants to function with an un-protected device without T10-PI.
+>>>
+>>> This specifically is to allow LIO to perform WRITE_STRIP + READ_INSERT
+>>> operations when functioning with non T10-PI enabled devices, seperate
+>>> from any available hw offloads the fabric supports.
+>>>
+>>> This is done using a new se_sess->sess_prot_type that is set at fabric
+>>> session creation time based upon the TPG attribute.  It currently cannot
+>>> be changed for individual sessions after initial creation.
+>>>
+>>> Also, update existing target_core_sbc.c code to honor sess_prot_type when
+>>> setting up cmd->prot_op + cmd->prot_type assignments.
+>>>
+>>> Cc: Martin Petersen <martin.petersen@oracle.com>
+>>> Cc: Sagi Grimberg <sagig@mellanox.com>
+>>> Cc: Christoph Hellwig <hch@lst.de>
+>>> Cc: Doug Gilbert <dgilbert@interlog.com>
+>>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+>>> ---
+>>>    drivers/target/target_core_sbc.c       | 44 +++++++++++++++++++++++++---------
+>>>    drivers/target/target_core_transport.c |  8 +++++++
+>>>    include/target/target_core_base.h      |  1 +
+>>>    include/target/target_core_fabric.h    |  8 +++++++
+>>>    4 files changed, 50 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+>>> index 95a7a74..5b3564a 100644
+>>> --- a/drivers/target/target_core_sbc.c
+>>> +++ b/drivers/target/target_core_sbc.c
+>>> @@ -581,12 +581,13 @@ sbc_compare_and_write(struct se_cmd *cmd)
+>>>    }
+>>>
+>>>    static int
+>>> -sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
+>>> +sbc_set_prot_op_checks(u8 protect, bool fabric_prot, enum target_prot_type prot_type,
+>>>    		       bool is_write, struct se_cmd *cmd)
+>>>    {
+>>>    	if (is_write) {
+>>> -		cmd->prot_op = protect ? TARGET_PROT_DOUT_PASS :
+>>> -					 TARGET_PROT_DOUT_INSERT;
+>>> +		cmd->prot_op = fabric_prot ? TARGET_PROT_DOUT_STRIP :
+>>> +			       protect ? TARGET_PROT_DOUT_PASS :
+>>> +			       TARGET_PROT_DOUT_INSERT;
+>>
+>> In this case, if the protect=1 and fabric_prot=1 we will strip won't we?
+>> I think that the protect condition should come first.
+>>
+>
+> Mmm, not sure I follow..
+>
+> sbc_check_prot() is only ever passing fabric_prot=1 when se_cmd prot
+> SGLs are present and se_dev does not accept PI, regardless of protect.
+>
 
-Why use a mempool there?  Please take a look at my branch, it's much
-simpler and logical than the old version.
-
-> There are a few more target_core_pr.c pieces that need to be updated to
-> handle NULL se_node_acl->lun_entry_hlist[] pointers, along with proper
-> rcu_dereference_protected() and rcu_access_pointer() notations for
-> se_dev_entry pointer access outside of RCU read lock.
-
-In my branch I've been over all the places to make sure they handle
-the NULL case.
-
-> > that implements this scheme.  Note that I dropped the percpu refcount
-> > changes - the reference is only taken in the SCSI3-PR slow path, and the
-> > percpu refcount API is extremly cumbersome.
-> > 
-> 
-> Well, there still needs to be some manner of reference counting on
-> se_dev_entry once rcu_read_lock() is released for the REGISTER w/ I_PORT
-> and REGISTER_AND_MOVE cases with a non-local I_T_L se_dev_entry
-> reference.
-
-The refcount is still there in the good old atomic_t-based version,
-which is perfectl fine for the PRIN and PROUT subcommands which aren't
-the I/O fast path.
+It's a little confusing that fabric_prot is set if the backend device
+does not support PI.
