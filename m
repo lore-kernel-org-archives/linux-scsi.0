@@ -1,79 +1,42 @@
-From: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Subject: Re: [PATCH-v2 02/15] target: Add protected fabric + unprotected device
- support
-Date: Wed, 01 Apr 2015 12:04:56 +0300
-Message-ID: <551BB4B8.8050603@dev.mellanox.co.il>
-References: <1427686104-14231-1-git-send-email-nab@daterainc.com>	 <1427686104-14231-3-git-send-email-nab@daterainc.com>	 <55190088.6040301@dev.mellanox.co.il> <1427867366.9176.196.camel@haakon3.risingtidesystems.com>
+From: James Bottomley <jbottomley@odin.com>
+Subject: [PATCH] change SCSI Maintainer email
+Date: Wed, 1 Apr 2015 09:09:36 +0000
+Message-ID: <1427879445.3559.31.camel@Odin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1427867366.9176.196.camel@haakon3.risingtidesystems.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([199.115.105.18]:41028 "EHLO
+	mx2.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbDAJKt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2015 05:10:49 -0400
+Received: from mail.parallels.com ([199.115.105.252])
+	by mx2.parallels.com with esmtps (TLSv1:AES128-SHA:128)
+	(Exim 4.85)
+	(envelope-from <jbottomley@odin.com>)
+	id 1YdEfg-0001Cv-5H
+	for linux-scsi@vger.kernel.org; Wed, 01 Apr 2015 02:10:48 -0700
+Content-Language: en-US
+Content-ID: <6E0DF036113BE04CBDCFE6365B10B14C@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 4/1/2015 8:49 AM, Nicholas A. Bellinger wrote:
-> On Mon, 2015-03-30 at 10:51 +0300, Sagi Grimberg wrote:
->> On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
->>> From: Nicholas Bellinger <nab@linux-iscsi.org>
->>>
->>> This patch adds a new target_core_fabric_ops callback for allowing fabric
->>> drivers to expose a TPG attribute for signaling when a T10-PI protected
->>> fabric wants to function with an un-protected device without T10-PI.
->>>
->>> This specifically is to allow LIO to perform WRITE_STRIP + READ_INSERT
->>> operations when functioning with non T10-PI enabled devices, seperate
->>> from any available hw offloads the fabric supports.
->>>
->>> This is done using a new se_sess->sess_prot_type that is set at fabric
->>> session creation time based upon the TPG attribute.  It currently cannot
->>> be changed for individual sessions after initial creation.
->>>
->>> Also, update existing target_core_sbc.c code to honor sess_prot_type when
->>> setting up cmd->prot_op + cmd->prot_type assignments.
->>>
->>> Cc: Martin Petersen <martin.petersen@oracle.com>
->>> Cc: Sagi Grimberg <sagig@mellanox.com>
->>> Cc: Christoph Hellwig <hch@lst.de>
->>> Cc: Doug Gilbert <dgilbert@interlog.com>
->>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
->>> ---
->>>    drivers/target/target_core_sbc.c       | 44 +++++++++++++++++++++++++---------
->>>    drivers/target/target_core_transport.c |  8 +++++++
->>>    include/target/target_core_base.h      |  1 +
->>>    include/target/target_core_fabric.h    |  8 +++++++
->>>    4 files changed, 50 insertions(+), 11 deletions(-)
->>>
->>> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
->>> index 95a7a74..5b3564a 100644
->>> --- a/drivers/target/target_core_sbc.c
->>> +++ b/drivers/target/target_core_sbc.c
->>> @@ -581,12 +581,13 @@ sbc_compare_and_write(struct se_cmd *cmd)
->>>    }
->>>
->>>    static int
->>> -sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
->>> +sbc_set_prot_op_checks(u8 protect, bool fabric_prot, enum target_prot_type prot_type,
->>>    		       bool is_write, struct se_cmd *cmd)
->>>    {
->>>    	if (is_write) {
->>> -		cmd->prot_op = protect ? TARGET_PROT_DOUT_PASS :
->>> -					 TARGET_PROT_DOUT_INSERT;
->>> +		cmd->prot_op = fabric_prot ? TARGET_PROT_DOUT_STRIP :
->>> +			       protect ? TARGET_PROT_DOUT_PASS :
->>> +			       TARGET_PROT_DOUT_INSERT;
->>
->> In this case, if the protect=1 and fabric_prot=1 we will strip won't we?
->> I think that the protect condition should come first.
->>
->
-> Mmm, not sure I follow..
->
-> sbc_check_prot() is only ever passing fabric_prot=1 when se_cmd prot
-> SGLs are present and se_dev does not accept PI, regardless of protect.
->
-
-It's a little confusing that fabric_prot is set if the backend device
-does not support PI.
+V2UndmUgcmVjZW50bHkgc3VmZmVyZWQgYSByZWJyYW5kaW5nIGFuZCB0aGUgU2VydmljZSBQcm92
+aWRlciBoYWxmIG9mDQpQYXJhbGxlbHMgaGFzIGJlY29tZSBPZGluLiAgVGhpcyBtZWFucyBteSBl
+bWFpbCBoYXMgY2hhbmdlZCBzbyB1cGRhdGUNCnRoZSBNQUlOVEFJTkVSUyBmaWxlIChhbmQgdGlk
+eSB1cCB0aGUgcG9pbnRlcnMgdG8gb3VyIGdpdCB0cmVlcyB0byBiZQ0KY29ycmVjdCkuDQoNClNp
+Z25lZC1vZmYtYnk6IEphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxleUBPZGluLmNvbT4NCg0KLS0t
+DQoNCmRpZmYgLS1naXQgYS9NQUlOVEFJTkVSUyBiL01BSU5UQUlORVJTDQppbmRleCBlYWY5OTk2
+Li5jYjYyNTc2IDEwMDY0NA0KLS0tIGEvTUFJTlRBSU5FUlMNCisrKyBiL01BSU5UQUlORVJTDQpA
+QCAtODU4NSwxMSArODU4NSw5IEBAIEY6CWRyaXZlcnMvc2NzaS9zZy5jDQogRjoJaW5jbHVkZS9z
+Y3NpL3NnLmgNCiANCiBTQ1NJIFNVQlNZU1RFTQ0KLU06CSJKYW1lcyBFLkouIEJvdHRvbWxleSIg
+PEpCb3R0b21sZXlAcGFyYWxsZWxzLmNvbT4NCitNOgkiSmFtZXMgRS5KLiBCb3R0b21sZXkiIDxK
+Qm90dG9tbGV5QG9kaW4uY29tPg0KIEw6CWxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQotVDoJ
+Z2l0IGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9qZWpiL3Nj
+c2ktbWlzYy0yLjYuZ2l0DQotVDoJZ2l0IGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGlu
+dXgva2VybmVsL2dpdC9qZWpiL3Njc2ktcmMtZml4ZXMtMi42LmdpdA0KLVQ6CWdpdCBnaXQ6Ly9n
+aXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvamVqYi9zY3NpLXBlbmRpbmct
+Mi42LmdpdA0KK1Q6CWdpdCBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5l
+bC9naXQvamVqYi9zY3NpLmdpdA0KIFM6CU1haW50YWluZWQNCiBGOglkcml2ZXJzL3Njc2kvDQog
+RjoJaW5jbHVkZS9zY3NpLw0KDQo=
