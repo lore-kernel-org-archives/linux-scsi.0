@@ -1,54 +1,91 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v1] ata: ahci_xgene: Add AHCI Support for second
- generation of APM X-Gene SoC
-Date: Wed, 1 Apr 2015 19:28:11 +0100
-Message-ID: <20150401182811.GD10578@leverpostej>
-References: <1427899682-10912-1-git-send-email-stripathi@apm.com>
- <1427899682-10912-2-git-send-email-stripathi@apm.com>
- <20150401161336.GS9974@htj.duckdns.org>
- <20150401163116.GT9974@htj.duckdns.org>
- <20150401163956.GE24899@n2100.arm.linux.org.uk>
- <20150401170032.GC28616@e104818-lin.cambridge.arm.com>
- <20150401173029.GF24899@n2100.arm.linux.org.uk>
- <20150401181819.GD28616@e104818-lin.cambridge.arm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 02/15] target: Add protected fabric + unprotected
+ device support
+Date: Wed, 01 Apr 2015 21:40:02 -0700
+Message-ID: <1427949602.9176.253.camel@haakon3.risingtidesystems.com>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
+	 <1427686104-14231-3-git-send-email-nab@daterainc.com>
+	 <55190088.6040301@dev.mellanox.co.il>
+	 <1427867366.9176.196.camel@haakon3.risingtidesystems.com>
+	 <551BB4B8.8050603@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38754 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752540AbbDAS2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Apr 2015 14:28:17 -0400
-Content-Disposition: inline
-In-Reply-To: <20150401181819.GD28616@e104818-lin.cambridge.arm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <551BB4B8.8050603@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Christoph Hellwig <hch@lst.de>, Doug Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "mlangsdo@redhat.com" <mlangsdo@redhat.com>, Suman Tripathi <stripathi@apm.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "patches@apm.com" <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-On Wed, Apr 01, 2015 at 07:18:19PM +0100, Catalin Marinas wrote:
-> On Wed, Apr 01, 2015 at 06:30:30PM +0100, Russell King - ARM Linux wrote:
-> > On Wed, Apr 01, 2015 at 06:00:33PM +0100, Catalin Marinas wrote:
-> > > The driver in general should not be ARM specific, though it runs on an
-> > > ARMv8 platform. But looking at the patch it has some errata workarounds
-> > > triggered based on the CPU id (MIDR). That looks dodgy as it doesn't
-> > > even check the full ID, only the variant part.
-> > 
-> > Okay, it's not ARM but an ARM64 driver, so that's your territory, not
-> > mine. :)
+On Wed, 2015-04-01 at 12:04 +0300, Sagi Grimberg wrote:
+> On 4/1/2015 8:49 AM, Nicholas A. Bellinger wrote:
+> > On Mon, 2015-03-30 at 10:51 +0300, Sagi Grimberg wrote:
+> >> On 3/30/2015 6:28 AM, Nicholas A. Bellinger wrote:
+> >>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >>>
+> >>> This patch adds a new target_core_fabric_ops callback for allowing fabric
+> >>> drivers to expose a TPG attribute for signaling when a T10-PI protected
+> >>> fabric wants to function with an un-protected device without T10-PI.
+> >>>
+> >>> This specifically is to allow LIO to perform WRITE_STRIP + READ_INSERT
+> >>> operations when functioning with non T10-PI enabled devices, seperate
+> >>> from any available hw offloads the fabric supports.
+> >>>
+> >>> This is done using a new se_sess->sess_prot_type that is set at fabric
+> >>> session creation time based upon the TPG attribute.  It currently cannot
+> >>> be changed for individual sessions after initial creation.
+> >>>
+> >>> Also, update existing target_core_sbc.c code to honor sess_prot_type when
+> >>> setting up cmd->prot_op + cmd->prot_type assignments.
+> >>>
+> >>> Cc: Martin Petersen <martin.petersen@oracle.com>
+> >>> Cc: Sagi Grimberg <sagig@mellanox.com>
+> >>> Cc: Christoph Hellwig <hch@lst.de>
+> >>> Cc: Doug Gilbert <dgilbert@interlog.com>
+> >>> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> >>> ---
+> >>>    drivers/target/target_core_sbc.c       | 44 +++++++++++++++++++++++++---------
+> >>>    drivers/target/target_core_transport.c |  8 +++++++
+> >>>    include/target/target_core_base.h      |  1 +
+> >>>    include/target/target_core_fabric.h    |  8 +++++++
+> >>>    4 files changed, 50 insertions(+), 11 deletions(-)
+> >>>
+> >>> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> >>> index 95a7a74..5b3564a 100644
+> >>> --- a/drivers/target/target_core_sbc.c
+> >>> +++ b/drivers/target/target_core_sbc.c
+> >>> @@ -581,12 +581,13 @@ sbc_compare_and_write(struct se_cmd *cmd)
+> >>>    }
+> >>>
+> >>>    static int
+> >>> -sbc_set_prot_op_checks(u8 protect, enum target_prot_type prot_type,
+> >>> +sbc_set_prot_op_checks(u8 protect, bool fabric_prot, enum target_prot_type prot_type,
+> >>>    		       bool is_write, struct se_cmd *cmd)
+> >>>    {
+> >>>    	if (is_write) {
+> >>> -		cmd->prot_op = protect ? TARGET_PROT_DOUT_PASS :
+> >>> -					 TARGET_PROT_DOUT_INSERT;
+> >>> +		cmd->prot_op = fabric_prot ? TARGET_PROT_DOUT_STRIP :
+> >>> +			       protect ? TARGET_PROT_DOUT_PASS :
+> >>> +			       TARGET_PROT_DOUT_INSERT;
+> >>
+> >> In this case, if the protect=1 and fabric_prot=1 we will strip won't we?
+> >> I think that the protect condition should come first.
+> >>
+> >
+> > Mmm, not sure I follow..
+> >
+> > sbc_check_prot() is only ever passing fabric_prot=1 when se_cmd prot
+> > SGLs are present and se_dev does not accept PI, regardless of protect.
+> >
 > 
-> Well, feel free to enter this territory ;).
-> 
-> Anyway, what I meant is that such driver should not rely on CPU
-> identification at all, especially since it does not require some
-> specific CPU features but it tries to guess which SoC revision it is and
-> which device (not CPU) bugs have been fixed. Better if they follow Mark
-> R's idea to pass such information in DT for the device.
-> 
-> So maybe the revert is not too bad an idea.
+> It's a little confusing that fabric_prot is set if the backend device
+> does not support PI.
 
-The revert is completely sane.
+Well, it's supposed to signal that fabric supports PI, but the backend
+device does not.
 
-FWIW, NAK to the original patch using the MIDR, or any other patch which
-uses the MIDR for device (not CPU) errata workarounds.
+Seems like a reasonable name to me..  Any ideas for a better one..?  ;)
 
-Mark.
+--nab
