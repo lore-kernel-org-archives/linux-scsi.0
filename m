@@ -1,21 +1,21 @@
 From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-Subject: Re: [PATCH v2 5/9] snic:add SCSI handling, AEN, and fwreset handling
-Date: Thu, 2 Apr 2015 08:06:43 +0000
-Message-ID: <D142F38C.1D3C8%nmusini@cisco.com>
+Subject: Re: [PATCH v2 6/9] snic:Add low level queuing interfaces
+Date: Thu, 2 Apr 2015 08:13:50 +0000
+Message-ID: <D142F680.1D3FD%nmusini@cisco.com>
 References: <1426093299-4511-1-git-send-email-nmusini@cisco.com>
- <1426093299-4511-6-git-send-email-nmusini@cisco.com>
- <55129590.4000608@suse.de>
+ <1426093299-4511-7-git-send-email-nmusini@cisco.com>
+ <55129874.1010604@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-8.cisco.com ([173.37.86.79]:48059 "EHLO
-	rcdn-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752801AbbDBIGs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2015 04:06:48 -0400
-In-Reply-To: <55129590.4000608@suse.de>
+Received: from alln-iport-8.cisco.com ([173.37.142.95]:43407 "EHLO
+	alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbbDBIN4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2015 04:13:56 -0400
+In-Reply-To: <55129874.1010604@suse.de>
 Content-Language: en-US
-Content-ID: <9AE402375D1172448D6823EF87E171C1@emea.cisco.com>
+Content-ID: <D26E6D52BB77CD44BDEFACA8D4D62B3F@emea.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
@@ -23,42 +23,316 @@ Cc: "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
 
 Hi Hannes,
 
-  Thank you for reviewing the patch. Please find responses inline.
+Thank you for reviewing the patch. Please find responses inline.
 I will incorporate the comments and suggestions in next patch submittal=
 =2E
 
 
-
-On 25/03/15 4:31 pm, "Hannes Reinecke" <hare@suse.de> wrote:
+On 25/03/15 4:43 pm, "Hannes Reinecke" <hare@suse.de> wrote:
 
 >Hi Narsimhulu,
 >
 >On 03/11/2015 06:01 PM, Narsimhulu Musini wrote:
->> snic_scsi.c contains scsi handling, includes queuing io, abort, lun
->>reset,
->> and host reset. Also it handles asynchronous event notifications fro=
-m
->>FW.
+>> These files contain low level queueing interfaces includes
+>> hardware queues, and management of hardware features.
 >>=20
 >> v2
->> Changed queuecommand to lock-free version.
->> Converted custom error codes to standard error codes.
+>> driver supports x86-64 arch, so removed cpu_to_XX API to maintain
+>>consistency.
 >>=20
 >> Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 >> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 >> ---
->>  drivers/scsi/snic/snic_scsi.c | 2631
->>+++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 2631 insertions(+)
->>  create mode 100644 drivers/scsi/snic/snic_scsi.c
+>Please find some comments below.
+>
+>>  drivers/scsi/snic/cq_desc.h       |  77 ++++
+>>  drivers/scsi/snic/cq_enet_desc.h  |  38 ++
+>>  drivers/scsi/snic/vnic_cq.c       |  86 ++++
+>>  drivers/scsi/snic/vnic_cq.h       | 120 +++++
+>>  drivers/scsi/snic/vnic_cq_fw.h    |  62 +++
+>>  drivers/scsi/snic/vnic_dev.c      | 895
+>>++++++++++++++++++++++++++++++++++++++
+>>  drivers/scsi/snic/vnic_dev.h      | 165 +++++++
+>>  drivers/scsi/snic/vnic_devcmd.h   | 393 +++++++++++++++++
+>>  drivers/scsi/snic/vnic_intr.c     |  59 +++
+>>  drivers/scsi/snic/vnic_intr.h     | 127 ++++++
+>>  drives/scsi/snic/vnic_resource.h |  68 +++
+>>  drivers/scsi/snic/vnic_snic.h     |  54 +++
+>>  drivers/scsi/snic/vnic_stats.h    |  68 +++
+>>  drivers/scsi/snic/vnic_wq.c       | 236 ++++++++++
+>>  drivers/scsi/snic/vnic_wq.h       | 187 ++++++++
+>>  drivers/scsi/snic/wq_enet_desc.h  |  96 ++++
+>>  16 files changed, 2731 insertions(+)
+>>  create mode 100644 drivers/scsi/snic/cq_desc.h
+>>  create mode 100644 drivers/scsi/snic/cq_enet_desc.h
+>>  create mode 100644 drivers/scsi/snic/vnic_cq.c
+>>  create mode 100644 drivers/scsi/snic/vnic_cq.h
+>>  create mode 100644 drivers/scsi/snic/vnic_cq_fw.h
+>>  create mode 100644 drivers/scsi/snic/vnic_dev.c
+>>  create mode 100644 drivers/scsi/snic/vnic_dev.h
+>>  create mode 100644 drivers/scsi/snic/vnic_devcmd.h
+>>  create mode 100644 drivers/scsi/snic/vnic_intr.c
+>>  create mode 100644 drivers/scsi/snic/vnic_intr.h
+>>  create mode 100644 drivers/scsi/snic/vnic_resource.h
+>>  create mode 100644 drivers/scsi/snic/vnic_snic.h
+>>  create mode 100644 drivers/scsi/snic/vnic_stats.h
+>>  create mode 100644 drivers/scsi/snic/vnic_wq.c
+>>  create mode 100644 drivers/scsi/snic/vnic_wq.h
+>>  create mode 100644 drivers/scsi/snic/wq_enet_desc.h
 >>=20
->> diff --git a/drivers/scsi/snic/snic_scsi.c
->>b/drivers/scsi/snic/snic_scsi.c
+>> diff --git a/drivers/scsi/snic/cq_desc.h b/drivers/scsi/snic/cq_desc=
+=2Eh
 >> new file mode 100644
->> index 0000000..f82ff02
+>> index 0000000..a529056
 >> --- /dev/null
->> +++ b/drivers/scsi/snic/snic_scsi.c
->> @@ -0,0 +1,2631 @@
+>> +++ b/drivers/scsi/snic/cq_desc.h
+>> @@ -0,0 +1,77 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public Lcense as published=
+ by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRNGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDE=
+RS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _CQ_DESC_H_
+>> +#define _CQ_DESC_H_
+>> +
+>> +/*
+>> + * Completion queue descriptor types
+>> + */
+>> +enum cq_desc_types {
+>> +	CQ_DESC_TYPE_WQ_ENET =3D 0,
+>> +	CQ_DESC_TYPE_DESC_COPY =3D 1,
+>> +	CQ_DESC_TYPE_WQ_EXCH =3D 2,
+>> +	CQ_DESC_TYPE_RQ_ENET =3D 3,
+>> +	CQ_DESC_TYPE_RQ_FCP =3D 4,
+>> +};
+>> +
+>> +/* Completion queue descriptor: 16B
+>> + *
+>> + * All completion queues have this basic layout.  The
+>> + * type_specific area is unique for each completion
+>> + * queue type.
+>> + */
+>> +struct cq_desc {
+>> +	__le16 completed_index;
+>> +	__le16 q_number;
+>> +	u8 type_specific[11];
+>> +	u8 type_color;
+>> +};
+>> +
+>> +#define CQ_DESC_TYPE_BITS        4
+>> +#define CQ_DESC_TYPE_MASK        ((1 << CQ_DESC_TYPE_BITS) - 1)
+>> +#define CQ_DESC_COLOR_MASK       1
+>> +#define CQ_DESC_COLOR_SHIFT      7
+>> +#define CQ_DESC_Q_NUM_BITS       10
+>> +#define CQ_DESC_Q_NUM_MASK       ((1 << CQ_DESC_Q_NUM_BITS) - 1)
+>> +#define CQ_DESC_COMP_NDX_BITS    12
+>> +#define CQ_DESC_COMP_NDX_MASK    ((1 << CQ_DESC_COMP_NDX_BITS) - 1)
+>> +
+>> +static inline void cq_desc_dec(const struct cq_desc *desc_arg,
+>> +	u8 *type, u8 *color, u16 *q_number, u16 *completed_index)
+>> +{
+>> +	const struct cq_desc *desc =3D desc_arg;
+>> +	const u8 type_color =3D desc->type_color;
+>> +
+>> +	*color =3D (type_color >> CQ_DESC_COLOR_SHIFT) & CQ_DESC_COLOR_MAS=
+K;
+>> +
+>> +	/*
+>> +	 * Make sure color bit is read from desc *before* other fields
+>> +	 * are read from desc.  Hardware guarantees color bit is last
+>> +	 * bit (byte) written.  Adding the rmb() prevents the compiler
+>> +	 * and/or CPU from reordering the reads which would potentially
+>> +	 * result in reading stale values.
+>> +	 */
+>> +	rmb();
+>> +
+>> +	*type =3D type_color & CQ_DESC_TYPE_MASK;
+>> +	*q_number =3D le16_to_cpu(desc->q_number) & CQ_DESC_Q_NUM_MASK;
+>> +	*completed_index =3D le16_to_cpu(desc->completed_index) &
+>> +		CQ_DESC_COMP_NDX_MASK;
+>> +}
+>> +
+>> +#endif /* _CQ_DESC_H_ */
+>> diff --git a/drivers/scsi/snic/cq_enet_desc.h
+>>b/drivers/scsi/snic/cq_enet_desc.h
+>> new file mode 100644
+>> index 0000000..0a1be2e
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/cq_enet_desc.h
+>> @@ -0,0 +1,38 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * t under the terms of the GNU General Public License as published=
+ by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _CQ_ENET_DESC_H_
+>> +#define _CQ_ENET_DESC_H_
+>> +
+>> +#include "cq_desc.h"
+>> +
+>> +/* Ethernet completion queue descriptor: 16B */
+>> +struct cq_enet_wq_desc {
+>> +	__le16 completed_index;
+>> +	__le16 q_number;
+>> +	u8 reserved[11];
+>> +	u8 type_color;
+>> +};
+>> +
+>> +static inline void cq_enet_wq_desc_dec(struct cq_enet_wq_desc *desc=
+,
+>> +	u8 *type, u8 *color, u16 *q_number, u16 *completed_index)
+>> +{
+>> +	cq_desc_dec((struct cq_desc *)desc, type,
+>> +		color, q_number, completed_index);
+>> +}
+>> +
+>> +#endif /* _CQ_ENET_DESC_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_cq.c b/drivers/scsi/snic/vnic_cq=
+=2Ec
+>> new file mode 100644
+>> index 0000000..88d4537
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_cq.c
+>> @@ -0,0 +1,86 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF O IN
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#include <linux/errno.h>
+>> +#include <linux/types.h>
+>> +#include <linux/pci.h>
+>> +#include "vnic_dev.h"
+>> +#include "vnic_cq.h"
+>> +
+>> +void vnic_cq_free(struct vnic_cq *cq)
+>> +{
+>> +	vnic_dev_free_desc_ring(cq->vdev, &cq->ring);
+>> +
+>> +	cq->ctrl =3D NULL;
+>> +}
+>> +
+>> +int vnic_cq_alloc(struct vnic_dev *vdev, struct vnic_cq *cq, unsign=
+ed
+>>int index,
+>> +	unsigned int desc_count, unsigned int desc_size)
+>> +{
+>> +	int err;
+>> +
+>> +	cq->index =3D index;
+>> +	cq->vdev =3D vdev;
+>> +
+>> +	cq->ctrl =3D vnic_dev_get_res(vdev, RES_TYPE_CQ, index);
+>> +	if (!cq->ctrl) {
+>> +		pr_err("Failed to hook CQ[%d] resource\n", index);
+>> +
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	err =3D vnic_dev_alloc_desc_ring(vdev, &cq->ring, desc_count,
+>>desc_size);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_cq_init(struct vnic_cq *cq, unsigned int flow_control_ena=
+ble,
+>> +	unsigned int color_enable, unsigned int cq_head, unsigned int cq_t=
+ail,
+>> +	unsigned int cq_tail_color, unsigned int interrupt_enable,
+>> +	unsigned int cq_entry_enable, unsigned int cq_message_enable,
+>> +	unsigned int interrupt_offset, u64 cq_message_addr)
+>> +{
+>> +	u64 paddr;
+>> +
+>> +	paddr =3D (u64)cq->ring.base_addr | VNIC_PADDR_TARGET;
+>> +	writeq(paddr, &cq->ctrl->ring_base);
+>> +	iowrite32(cq->ring.desc_count, &cq->ctrl->ring_size);
+>> +	iowrite32(flow_control_enable, &cq->ctrl->flow_control_enable);
+>> +	iowrite32(color_enable, &cq->ctrl->color_enable);
+>> +	iowrite32(cq_head, &cq->ctrl->cq_head);
+>> +	iowrite32(cq_tail, &cq->ctrl->cq_tail);
+>> +	iowrite32(cq_tail_color, &cq->ctrl->cq_tail_color);
+>> +	iowrite32(interrupt_enable, &cq->ctrl->interrupt_enable);
+>> +	iowrite32(cq_entry_enable, &cq->ctrl->cq_entry_enable);
+>> +	iowrite32(cq_message_enable, &cq->ctrl->cq_message_enable);
+>> +	iowrite32(interrupt_offset, &cq->ctrl->interrupt_offset);
+>> +	writeq(cq_message_addr, &cq->ctrl->cq_message_addr);
+>> +}
+>> +
+>> +void vnic_cq_clean(struct vnic_cq *cq)
+>> +{
+>> +	cq->to_clean =3D 0;
+>> +	cq->last_color =3D 0;
+>> +
+>> +	iowrite32(0, &cq->ctrl->cq_head);
+>> +	iowrite32(0, &cq->ctrl->cq_tail);
+>> +	iowrite32(1, &cq->ctrl->cq_tail_color);
+>> +
+>> +	vnic_dev_clear_desc_ring(&cq->ring);
+>> +}
+>> diff --git a/drivers/scsi/snic/vnic_cq.h b/drivers/scsi/snic/vnic_cq=
+=2Eh
+>> new file mode 100644
+>> index 0000000..fb2dc61
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_cq.h
+>> @@ -0,0 +1,120 @@
 >> +/*
 >> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 >> + *
@@ -82,1143 +356,2570 @@ N
 >> + * SOFTWARE.
 >> + */
 >> +
->> +#include <linux/mempool.h>
+>> +#ifndef _VNIC_CQ_H_
+>> +#define _VNIC_CQ_H_
+>> +
+>> +#include "cq_desc.h"
+>> +#include "vnic_dev.h"
+>> +
+>> +/*
+>>  * These defines avoid symbol clash between fnic and enic (Cisco 10G
+>>Eth
+>> + * Driver) when both are built with CONFIG options =3Dy
+>> + */
+>> +#define vnic_cq_service snic_cq_service
+>> +#define vnic_cq_free snic_cq_free
+>> +#define vnic_cq_alloc snic_cq_alloc
+>> +#define vic_cq_init snic_cq_init
+>> +#define vnic_cq_clean snic_cq_clean
+>> +
+>> +/* Completion queue control */
+>> +struct vnic_cq_ctrl {
+>> +	u64 ring_base;			/* 0x00 *
+>> +	u32 ring_size;			/* 0x08 */
+>> +	u32 pad0;
+>> +	u32 flow_control_enable;	/* 0x10 */
+>> +	u32 pad1;
+>> +	u32 color_enable;		/* 0x18 */
+>> +	u32 pad2;
+>> +	u32 cq_head;			/* 0x20 */
+>> +	u32 pad3;
+>> +	u32 cq_tail;			/* 0x28 */
+>> +	u32 pad4;
+>> +	u32 cq_tail_color;		/* 0x30 */
+>> +	u32 pad5;
+>> +	u32 interrupt_enable;		/* 0x38 */
+>> +	u32 pad6;
+>> +	u32 cq_entry_enable;		/* 0x40 */
+>> +	u32 pad7;
+>> +	u32 cq_message_enable;		/* 0x48 */
+>> +	u32 pad8;
+>> +	u32 interrupt_offset;		/* 0x50 */
+>> +	u32 pad9;
+>> +	u64 cq_message_addr;		/* 0x58 */
+>> +	u32 pad10;
+>> +};
+>That really looks like a 64bit structure read in as 32bit values ...
+>If so please use 64bit values here ...
+The structure members are aligned to hardware data, I would prefer to k=
+eep
+it same.
+
+>
+>> +
+>> +struct vnic_cq {
+>> +	unsigned int index;
+>> +	struct vnic_dev *vdev;
+>> +	struct vnic_cq_ctrl __iomem *ctrl;	/* memory-mapped */
+>> +	struct vnic_dev_ring ring;
+>> +	unsigned int to_clean;
+>> +	unsigned int last_color;
+>> +};
+>> +
+>> +static inline unsigned int vnic_cq_service(struct vnic_cq *cq,
+>> +	unsigned int work_to_do,
+>> +	int (*q_service)(struct vnic_dev *vdev, struct cq_desc *cq_desc,
+>> +	u8 type, u16 q_number, u16 completed_index, void *opaque),
+>> +	void *opaque)
+>> +{
+>> +	struct cq_desc *cq_desc;
+>> +	unsigned int work_done =3D 0;
+>> +	u16 q_number, completed_index;
+>> +	u8 type, color;
+>> +
+>> +	cq_desc =3D (struct cq_desc *)((u8 *)cq->ring.descs +
+>> +		cq->ring.desc_size * cq->to_clean);
+>> +	cq_desc_dec(cq_desc, &type, &color,
+>> +		&q_number, &completed_index);
+>> +
+>> +	while (color !=3D cq->last_color) {
+>> +
+>> +		if ((*q_service)(cq->vdev, cq_desc, type,
+>> +			q_number, completed_index, opaque))
+>> +			break;
+>> +
+>> +		cq->to_clean++;
+>> +		if (cq->to_clean =3D=3D cq->ring.desc_count) {
+>> +			cq->to_clean =3D 0;
+>> +			cq->last_color =3D cq->last_color ? 0 : 1;
+>> +		}
+>> +
+>> +		cq_desc =3D (struct cq_desc *)((u8 *)cq->ring.descs +
+>> +			cq->ring.desc_size * cq->toclean);
+>> +		cq_desc_dec(cq_desc, &type, &color,
+>> +			&q_number, &completed_index);
+>> +
+>> +		work_done++;
+>> +		if (work_done >=3D work_to_do)
+>> +			break;
+>> +	}
+>> +
+>> +	return work_done;
+>> +}
+>> +
+>> +void vnic_cq_free(struct vnic_cq *cq);
+>> +int vnic_cq_alloc(struct vnic_dev *vdev, struct vnic_cq *cq, unsign=
+ed
+>>int index,
+>> +	unsigned int desc_count, unsigned int desc_size);
+>> +void vnic_cq_init(struct vnic_cq *cq, unsigned int flow_control_ena=
+ble,
+>> +	unsigned int color_enable, unsigned int cq_head, unsigned int cq_t=
+ail,
+>> +	unsigned int cq_tail_color, unsigned int interrupt_enable,
+>> +	unsigned int cq_entry_enable, unsigned int message_enable,
+>> +	unsigned int interrupt_offset, u64 message_addr);
+>> +void vnic_cq_clean(struct vnic_cq *cq);
+>> +#endif /* _VNIC_CQ_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_cq_fw.h
+>>b/drivers/scsi/snic/vnic_cq_fw.h
+>> new file mode 100644
+>> index 0000000..c2d1bbd
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_cq_fw.h
+>> @@ -0,0 +1,62 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_CQ_FW_H_
+>> +#define _VNIC_CQ_FW_H_
+>> +
+>> +#include "snic_fwint.h"
+>> +
+>> +static inline unsigned int
+>> +vnic_cq_fw_service(struct vnic_cq *cq,
+>> +		   int (*q_service)(struct vnic_dev *vdev,
+>> +				    unsigned int index,
+>> +				    struct snic_fw_req *desc),
+>> +		   unsigned int work_to_do)
+>> +
+>> +{
+>> +	struct snic_fw_req *desc;
+>> +	unsigned int work_done =3D 0;
+>> +	u8 color;
+>> +
+>> +	desc =3D (struct snic_fw_req *)((u8 *)cq->ring.descs +
+>> +		cq->ring.desc_size * cq->to_clean);
+>> +	snic_color_dec(desc, &color);
+>> +
+>> +	while (color !=3D cq->last_color) {
+>> +
+>> +		if ((*q_service)(cq->vdev, cq->index, desc))
+>> +			break;
+>> +
+>> +		cq->to_clean++;
+>> +		if (cq->to_clean =3D=3D cq->ring.desc_count) {
+>> +			cq->to_clean =3D 0;
+>> +			cq->last_color =3D cq->last_color ? 0 : 1;
+>> +		}
+>> +
+>> +		desc =3D (struct snic_fw_req *)((u8 *)cq->ring.descs +
+>> +			cq->ring.desc_size * cq->to_clean);
+>> +		snic_color_dec(desc, &color);
+>> +
+>> +		work_done++;
+>> +		if (work_done >=3D work_to_do)
+>> +			break;
+>> +	}
+>> +
+>> +	return work_done;
+>> +}
+>> +
+>> +#endif /* _VNIC_CQ_FW_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_d=
+ev.c
+>> new file mode 100644
+>> index 0000000..72363dc
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_dev.c
+>> @@ -0,0 +1,895 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#include <linux/kernel.h>
 >> +#include <linux/errno.h>
->> +#include <linux/init.h>
->> +#include <linux/workqueue.h>
+>> +#include <linux/types.h>
 >> +#include <linux/pci.h>
->> +#include <linux/spinlock.h>
 >> +#include <linux/delay.h>
->> +#include <linux/gfp.h>
->> +#include <scsi/scsi.h>
->> +#include <scsi/scsi_host.h>
->> +#include <scsi/scsi_device.h>
->> +#include <scsi/scsi_cmnd.h>
->> +#include <scsi/scsi_tcq.h>
->> +#include <scsi/scsi_dbg.h>
+>> +#include <linux/if_ether.h>
+>> +#include <linux/slab.h>
+>> +#include "vnic_resource.h"
+>> +#include "vnic_devcmd.h"
+>> +#include "vnic_dev.h"
+>> +#inclde "vnic_stats.h"
+>> +#include "vnic_wq.h"
 >> +
->> +#include "snic_io.h"
->> +#include "snic.h"
->> +#include "snic_os.h"
+>> +#define SNIC_DVCMD_TMO	10000	/* Devcmd Timeout value */
 >> +
->> +const char *snic_state_str[] =3D {
->> +	[SNIC_INIT]	=3D "SNIC_INIT",
->> +	[SNIC_ERROR]	=3D "SNIC_ERROR",
->> +	[SNIC_ONLINE]	=3D "SNIC_ONLINE",
->> +	[SNIC_OFFLINE]	=3D "SNIC_OFFLINE",
->> +	[SNIC_FWRESET]	=3D "SNIC_FWRESET",
+>> +struct devcmd2_controller {
+>> +	struct vnic_wq_ctrl __iomem *wq_ctrl;
+>> +	struct vnic_dev_ring results_ring;
+>> +	struct vnic_wq wq;
+>> +	struct vnic_devcmd2 *cmd_ring;
+>> +	struct devcmd2_result *result;
+>> +	u16 next_result;
+>> +	u16 result_size;
+>> +	int color;
 >> +};
 >> +
->> +static const char * const snic_req_state_str[] =3D {
->> +	[SNIC_IOREQ_NOT_INITED]	=3D "SNIC_IOREQ_NOT_INITED",
->> +	[SNIC_IOREQ_PENDING]	=3D "SNIC_IOREQ_PENDING",
->> +	[SNIC_IOREQ_ABTS_PENDING] =3D "SNIC_IOREQ_ABTS_PENDING",
->> +	[SNIC_IOREQ_ABTS_COMPLETE] =3D "SNIC_IOREQ_ABTS_COMPELTE",
->> +	[SNIC_IOREQ_LR_PENDING]	=3D "SNIC_IOREQ_LR_PENDING",
->> +	[SNIC_IOREQ_LR_COMPLETE] =3D "SNIC_IOREQ_LR_COMPELTE",
->> +	[SNIC_IOREQ_COMPLETE]	=3D "SNIC_IOREQ_CMD_COMPELTE",
+>> +struct vnic_res {
+>> +	void __iomem *vaddr;
+>> +	unsigned int count;
 >> +};
 >> +
->> +/* snic cmd status strings */
->> +static const char * const snic_io_status_str[] =3D {
->> +	[SNIC_STAT_IO_SUCCESS]	=3D "SNIC_STAT_IO_SUCCESS", /* 0x0 */
->> +	[SNIC_STAT_INVALID_HDR] =3D "SNIC_STAT_INVALID_HDR",
->> +	[SNIC_STAT_OUT_OF_RES]	=3D "SNIC_STAT_OUT_OF_RES",
->> +	[SNIC_STAT_INVALID_PARM] =3D "SNIC_STAT_INVALID_PARM",
->> +	[SNIC_STAT_REQ_NOT_SUP]	=3D "SNIC_STAT_REQ_NOT_SUP",
->> +	[SNIC_STAT_IO_NOT_FOUND] =3D "SNIC_STAT_IO_NOT_FOUND",
->> +	[SNIC_STAT_ABORTED]	=3D "SNIC_STAT_ABORTED",
->> +	[SNIC_STAT_TIMEOUT]	=3D "SNIC_STAT_TIMEOUT",
->> +	[SNIC_STAT_SGL_INVALID] =3D "SNIC_STAT_SGL_INVALID",
->> +	[SNIC_STAT_DATA_CNT_MISMATCH] =3D "SNIC_STAT_DATA_CNT_MISMATCH",
->> +	[SNIC_STAT_FW_ERR]	=3D "SNIC_STAT_FW_ERR",
->> +	[SNIC_STAT_ITMF_REJECT] =3D "SNIC_STAT_ITMF_REJECT",
->> +	[SNIC_STAT_ITMF_FAIL]	=3D "SNIC_STAT_ITMF_FAIL",
->> +	[SNIC_STAT_ITMF_INCORRECT_LUN] =3D "SNIC_STAT_ITMF_INCORRECT_LUN",
->> +	[SNIC_STAT_CMND_REJECT] =3D "SNIC_STAT_CMND_REJECT",
->> +	[SNIC_STAT_DEV_OFFLINE] =3D "SNIC_STAT_DEV_OFFLINE",
->> +	[SNIC_STAT_NO_BOOTLUN]	=3D "SNIC_STAT_NO_BOOTLUN",
->> +	[SNIC_STAT_SCSI_ERR]	=3D "SNIC_STAT_SCSI_ERR",
->> +	[SNIC_STAT_NOT_READY]	=3D "SNIC_STAT_NOT_READY",
->> +	[SNIC_STAT_FATAL_ERROR]	=3D "SNIC_STAT_FATAL_ERROR",
+>> +struct vnic_dev {
+>> +	void *priv;
+>> +	struct pci_dev *pdev;
+>> +	struct vnic_res res[RES_TYPE_MAX];
+>> +	enum vnic_dev_intr_mode intr_mode;
+>> +	struct vnic_devcmd __iomem *devcmd;
+>> +	struct vnic_devcmd_notify *notify;
+>> +	struct vnic_devcmd_notify notify_copy;
+>> +	dma_addr_t notify_pa;
+>> +	u32 *linkstatus;
+>> +	dma_addr_t linkstatus_pa;
+>> +	struct vnic_stats *stats;
+>> +	dma_addr_t stats_pa;
+>> +	struct vnic_devcmd_fw_info *fw_info;
+>> +	dma_addr_t fw_info_pa;
+>> +	u64 args[VNIC_DEVCMD_NARGS];
+>> +	struct devcmd2_controller *devcmd2;
+>> +
+>> +	int (*devcmd_rtn)(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
+>> +			  int wait);
 >> +};
 >> +
->> +static void snic_scsi_cleanup(struct snic *, int);
+>> +#define VNIC_MAX_RES_HDR_SIZE \
+>> +	(sizeof(struct vnic_resource_header) + \
+>> +	sizeof(struct vnic_resource) * RES_TYPE_MAX)
+>> +#define NIC_RES_STRIDE	128
 >> +
->> +const char *
->> +snic_state_to_str(unsigned int state)
+>> +void *vnic_dev_priv(struct vnic_dev *vdev)
 >> +{
->> +	if (state >=3D ARRAY_SIZE(snic_state_str) || !snic_state_str[state=
-])
->> +		return "Unknown";
->> +
->> +	return snic_state_str[state];
+>> +	return vdev->priv;
 >> +}
 >> +
->> +static const char *
->> +snic_io_status_to_str(unsigned int state)
+>> +static int vnic_dev_discover_res(struct vnic_dev *vdev,
+>> +	struct vnic_dev_bar *bar, unsigned int num_bars)
 >> +{
->> +	if ((state >=3D ARRAY_SIZE(snic_io_status_str)) ||
->> +	     (!snic_io_status_str[state]))
->> +		return "Unknown";
+>> +	struct vnic_resource_header __iomem *rh;
+>> +	struct vnic_resource __iomem *r;
+>> +	u8 type;
 >> +
->> +	return snic_io_status_str[state];
+>> +	if (num_bars =3D=3D 0)
+>> +		return -EINVAL;
+>> +
+>> +	if (bar->len < VNIC_MAX_RES_HDR_SIZE) {
+>> +		pr_err("vNIC BAR0 res hdr length error\n");
+>> +
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	rh =3D bar->vaddr;
+>> +	if (!rh) {
+>> +		pr_err("vNIC BAR0 res hdr not mem-mapped\n");
+>> +
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (ioread32(&rh->magic) !=3D VNIC_RES_MAGIC ||
+>> +	    ioread32(&rh->version) !=3D VNIC_RES_VERSION) {
+>> +		pr_err("vNIC BAR0 res magic/version error exp (%lx/%lx) curr
+>>(%x/%x)\n",
+>> +			VNIC_RES_MAGIC, VNIC_RES_VERSION,
+>> +			ioread32(&rh->magic), ioread32(&rh->version));
+>> +
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	r =3D (struct vnic_resource __iomem *)(rh + 1);
+>> +
+>> +	while ((type =3D ioread8(&r->type)) !=3D RES_TYPE_EOL) {
+>> +
+>> +		u8 bar_num =3D ioread8(&r->bar);
+>> +		u32 bar_offset =3D ioread32(&r->bar_offset);
+>> +		u32 count =3D ioread32(&r->count);
+>> +		u32 len;
+>> +
+>> +		r++;
+>> +
+>> +		if (bar_num >=3D num_bars)
+>> +			continue;
+>> +
+>> +		if (!bar[bar_num].len || !bar[bar_num].vaddr)
+>> +			continue;
+>> +
+>> +		switch (type) {
+>> +		case RES_TYPE_WQ:
+>> +		case RES_TYPE_RQ:
+>> +		case RES_TYPE_CQ:
+>> +		case RES_TYPE_INTR_CTRL:
+>> +			/* each count is stride bytes long */
+>> +			len =3D count * VNIC_RES_STRIDE;
+>> +			if (len + bar_offset > bar->len) {
+>> +				pr_err("vNIC BAR0 resource %d out-of-bounds, offset 0x%x + size
+>>0x%x > bar len 0x%lx\n",
+>> +					type, bar_offset,
+>> +					len,
+>> +					bar->len);
+>> +
+>> +				return -EINVAL;
+>> +			}
+>> +			break;
+>> +
+>> +		case RES_TYPE_INTR_PBA_LEGACY:
+>> +		case RES_TYPE_DEVCMD:
+>> +		case RES_TYPE_DEVCMD2:
+>> +			len =3D count;
+>> +			break;
+>> +
+>> +		default:
+>> +			continue;
+>> +		}
+>> +
+>> +		vdev->res[type].count =3D count;
+>> +		vdev->res[type].vaddr =3D (char __iomem *)bar->vaddr + bar_offset=
+;
+>> +	}
+>> +
+>> +	return 0;
 >> +}
 >> +
->> +static const char *
->> +snic_ioreq_state_to_str(unsigned int state)
+>> +unsigned int vnic_dev_get_res_count(struct vnic_dev *vdev,
+>> +	enum vnic_res_type type)
 >> +{
->> +	if (state >=3D ARRAY_SIZE(snic_req_state_str) ||
->> +			!snic_req_state_str[state])
->> +		return "Unknown";
->> +
->> +	return snic_req_state_str[state];
+>> +	return vdev->res[type].count;
 >> +}
 >> +
->> +static inline spinlock_t *
->> +snic_io_lock_hash(struct snic *snic, struct scsi_cmnd *sc)
+>> +void __iomem *vnic_dev_get_res(struct vnic_dev *vdev, enum
+>>vnic_res_type type,
+>> +	unsigned int index)
 >> +{
->> +	u32 hash =3D snic_cmd_tag(sc) & (SNIC_IO_LOCKS - 1);
+>> +	if (!vdev->res[type].vaddr)
+>> +		return NULL;
 >> +
->> +	return &snic->io_req_lock[hash];
+>> +	switch (type) {
+>> +	case RES_TYPE_WQ:
+>> +	case RES_TYPE_RQ:
+>> +	case RES_TYPE_CQ:
+>> +	case RES_TYPE_INTR_CTRL:
+>> +		return (char __iomem *)vdev->res[type].vaddr +
+>> +					index * VNIC_RES_STRIDE;
+>> +
+>> +	default:
+>> +		return (char __iomem *)vdev->res[type].vaddr;
+>> +	}
 >> +}
 >> +
->> +static inline spinlock_t *
->> +snic_io_lock_tag(struct snic *snic, int tag)
+>> +unsigned int vnic_dev_desc_ring_size(struct vnic_dev_ring *ring,
+>> +				     unsigned int desc_count,
+>> +				     unsigned int desc_size)
 >> +{
->> +	return &snic->io_req_lock[tag & (SNIC_IO_LOCKS - 1)];
+>> +	/* The base address of the desc rings must be 512 byte aligned.
+>> +	 * Descriptor count is aligned to groups of 32 descriptors.  A
+>> +	 * count of 0 means the maximum 4096 descriptors.  Descriptor
+>> +	 * size is aligned to 16 bytes.
+>> +	 */
+>> +
+>> +	unsigned int count_align =3D 32;
+>> +	unsigned int desc_align =3D 16;
+>> +
+>> +	ring->base_align =3D 512;
+>> +
+>> +	if (desc_count =3D=3D 0)
+>> +		desc_count =3D 4096;
+>> +
+>> +	ring->desc_count =3D ALIGN(desc_count, count_align);
+>> +
+>> +	ring->desc_size =3D ALIGN(desc_size, desc_align);
+>> +
+>> +	ring->size =3D ring->desc_count * ring->desc_size;
+>> +	ring->size_unaligned =3D ring->size + ring->base_align;
+>> +
+>> +	return ring->size_unaligned;
 >> +}
 >> +
->> +/* snic_release_req_buf : Releases snic_req_info */
->> +static void
->> +snic_release_req_buf(struct snic *snic,
->> +		   struct snic_req_info *rqi,
->> +		   struct scsi_cmnd *sc)
+>> +void vnic_dev_clear_desc_ring(struct vnic_dev_ring *ring)
 >> +{
->> +	struct snic_host_req *req =3D rqi_to_req(rqi);
+>> +	memset(ring->descs, 0, ring->size);
+>> +}
 >> +
->> +	/* Freeing cmd without marking completion, not okay */
->> +	SNIC_BUG_ON(!((CMD_STATE(sc) =3D=3D SNIC_IOREQ_COMPLETE) ||
->> +		      (CMD_STATE(sc) =3D=3D SNIC_IOREQ_ABTS_COMPLETE) ||
->> +		      (CMD_FLAGS(sc) & SNIC_DEV_RST_NOTSUP) ||
->> +		      (CMD_FLAGS(sc) & SNIC_IO_INTERNAL_TERM_ISSUED) ||
->> +		      (CMD_FLAGS(sc) & SNIC_DEV_RST_TERM_ISSUED) ||
->> +		      (CMD_FLAGS(sc) & SNIC_SCSI_CLEANUP) ||
->> +		      (CMD_STATE(sc) =3D=3D SNIC_IOREQ_LR_COMPLETE)));
->> +
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "Rel_req:sc %p:tag %x:rqi %p:ioreq %p:abt %p:dr %p: state
->>%s:flags 0x%x\n",
->> +		      sc, snic_cmd_tag(sc), rqi, rqi->req, rqi->abort_req,
->> +		      rqi->dr_req, snic_ioreq_state_to_str(CMD_STATE(sc)),
->> +		      CMD_FLAGS(sc));
->> +
->> +	if (req->u.icmnd.sense_addr)
->> +		pci_unmap_single(snic->pdev,
->> +				 req->u.icmnd.sense_addr,
->> +				 SCSI_SENSE_BUFFERSIZE,
->> +				 PCI_DMA_FROMDEVICE);
->> +
->> +	scsi_dma_unmap(sc);
->> +
->> +	snic_req_free(snic, rqi);
->> +} /* end of snic_release_req_buf */
->> +
->> +/*
->> + * snic_queue_icmnd_req : Queues snic_icmnd request
->> + */
->> +static int
->> +snic_queue_icmnd_req(struct snic *snic,
->> +		     struct snic_req_info *rqi,
->> +		     struct scsi_cmnd *sc,
->> +		     int sg_cnt)
+>> +int vnic_dev_alloc_desc_ring(struct vnic_dev *vdev, struct
+>>vnic_dev_ring *ring,
+>> +	unsigned int desc_count, unsigned int desc_size)
 >> +{
->> +	struct scatterlist *sg;
->> +	struct snic_sg_desc *sgd;
->> +	dma_addr_t pa =3D 0;
->> +	struct scsi_lun lun;
->> +	int flags =3D 0;
->> +	int ret =3D 0;
+>> +	vnic_dev_desc_ring_size(ring, desc_count, desc_size);
+>> +
+>> +	ring->descs_unaligned =3D pci_alloc_consistent(vdev->pdev,
+>> +		ring->size_unaligned,
+>> +		&ring->base_addr_unaligned);
+>> +
+>> +	if (!ring->descs_unaligned) {
+>> +		pr_err("Failed to allocate ring (size=3D%d), aborting\n",
+>> +			(int)ring->size);
+>> +
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	ring->base_addr =3D ALIGN(ring->base_addr_unaligned,
+>> +		ring->base_align);
+>> +	ring->descs =3D (u8 *)ring->descs_unaligned +
+>> +		(ring->base_addr - ring->base_addr_unaligned);
+>> +
+>> +	vnic_dev_clear_desc_ring(ring);
+>> +
+>> +	ring->desc_avail =3D ring->desc_count - 1;
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_dev_free_desc_ring(struct vnic_dev *vdev, struct
+>>vnic_dev_ring *ring)
+>> +{
+>> +	if (ring->descs) {
+>> +		pci_free_consistent(vdev->pdev,
+>> +			ring->size_unaligned,
+>> +			ring->descs_unaligned,
+>> +			ring->base_addr_unaligned);
+>> +		ring->descs =3D NULL;
+>> +	}
+>> +}
+>> +
+>> +static int _vnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_c=
+md
+>>cmd,
+>> +	int wait)
+>> +{
+>> +	struct devcmd2_controller *dc2c =3D vdev->devcmd2;
+>> +	struct devcmd2_result *result =3D dc2c->result + dc2c->next_result=
+;
 >> +	unsigned int i;
+>> +	int delay;
+>> +	int err;
+>> +	u32 posted;
+>> +	u32 new_posted;
 >> +
->> +	if (sg_cnt) {
->> +		flags =3D SNIC_ICMND_ESGL;
->> +		sgd =3D (struct snic_sg_desc *) req_to_sgl(rqi->req);
+>> +	posted =3D ioread32(&dc2c->wq_ctrl->posted_index);
 >> +
->> +		for_each_sg(scsi_sglist(sc), sg, sg_cnt, i) {
->> +			sgd->addr =3D cpu_to_le64(sg_dma_address(sg));
->> +			sgd->len =3D cpu_to_le32(sg_dma_len(sg));
->> +			sgd->_resvd =3D 0;
->> +			sgd++;
->> +		}
+>> +	if (posted =3D=3D 0xFFFFFFFF) { /* check for hardware gone  */
+>> +		/* Hardware surprise removal: return error */
+>> +		return -ENODEV;
 >> +	}
 >> +
->> +	pa =3D pci_map_single(snic->pdev,
->> +			    sc->sense_buffer,
->> +			    SCSI_SENSE_BUFFERSIZE,
->> +			    PCI_DMA_FROMDEVICE);
+>> +	new_posted =3D (posted + 1) % DEVCMD2_RING_SIZE;
+>> +	dc2c->cmd_ring[posted].cmd =3D cmd;
+>> +	dc2c->cmd_ring[posted].flags =3D 0;
 >> +
->> +	if (pci_dma_mapping_error(snic->pdev, pa)) {
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "QIcmnd:PCI Map Failed for sns buf %p tag %x\n",
->> +			      sc->sense_buffer, snic_cmd_tag(sc));
->> +		ret =3D -ENOMEM;
+>> +	if ((_CMD_FLAGS(cmd) & _CMD_FLAGS_NOWAIT))
+>> +		dc2c->cmd_ring[posted].flags |=3D DEVCMD2_FNORESULT;
 >> +
->> +		return ret;
+>> +	if (_CMD_DIR(cmd) & _CMD_DIR_WRITE) {
+>> +		for (i =3D 0; i < VNIC_DEVCMD_NARGS; i++)
+>> +			dc2c->cmd_ring[posted].args[i] =3D vdev->args[i];
 >> +	}
+>> +	/* Adding write memory barrier prevents compiler and/or CPU
+>> +	 * reordering, thus avoiding descriptor posting before
+>> +	 * descriptor is initialized. Otherwise, hardware can read
+>> +	 * stale descriptor fields.
+>> +	 */
+>> +	wmb();
+>> +	iowrite32(new_posted, &dc2c->wq_ctrl->posted_index);
 >> +
->> +	int_to_scsilun(sc->device->lun, &lun);
->> +	if (sc->sc_data_direction =3D=3D DMA_FROM_DEVICE)
->> +		flags |=3D SNIC_ICMND_RD;
->> +	if (sc->sc_data_direction =3D=3D DMA_TO_DEVICE)
->> +		flags |=3D SNIC_ICMND_WR;
->> +
->> +	/* Initialize icmnd */
->> +	snic_icmnd_init(rqi->req,
->> +			snic_cmd_tag(sc),
->> +			snic->config.hid, /* hid */
->> +			(u64)rqi,
->> +			flags, /* command flags */
->> +			rqi->tgt_id,
->> +			lun.scsi_lun,
->> +			sc->cmnd,
->> +			sc->cmd_len,
->> +			scsi_bufflen(sc),
->> +			sg_cnt,
->> +			(u64)req_to_sgl(rqi->req),
->> +			pa, /* sense buffer pa */
->> +			SCSI_SENSE_BUFFERSIZE);
->> +
->> +	ret =3D snic_queue_wq_desc(snic, rqi->req, rqi->req_len);
->> +	if (ret)
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "QIcmnd: Queuing Icmnd Failed. ret =3D %d\n",
->> +			      ret);
->> +
->> +	return ret;
->> +} /* end of snic_queue_icmnd_req */
->> +
->> +/*
->> + * snic_issue_scsi_req : Prepares IO request and Issues to FW.
->> + */
->> +static int
->> +snic_issue_scsi_req(struct snic *snic,
->> +		      struct snic_tgt *tgt,
->> +		      struct scsi_cmnd *sc)
->> +{
->> +	struct snic_req_info *rqi =3D NULL;
->> +	int sg_cnt =3D 0;
->> +	int ret =3D 0;
->> +	u32 tag =3D snic_cmd_tag(sc);
->> +	u64 cmd_trc =3D 0, cmd_st_flags =3D 0;
->> +	spinlock_t *io_lock =3D NULL;
->> +	unsigned long flags;
->> +
->> +	CMD_STATE(sc) =3D SNIC_IOREQ_NOT_INITED;
->> +	CMD_FLAGS(sc) =3D SNIC_NO_FLAGS;
->> +	sg_cnt =3D scsi_dma_map(sc);
->> +	if (sg_cnt < 0) {
->> +		SNIC_TRC((u16)snic->shost->host_no, tag, (u64)sc, 0,
->> +			 sc->cmnd[0], sg_cnt, CMD_STATE(sc));
->> +
->> +		SNIC_HOST_ERR(snic->shost, "issue_sc:Failed to map SG List.\n");
->> +		ret =3D -ENOMEM;
->> +
->> +		goto issue_sc_end;
->> +	}
->> +
->> +	rqi =3D snic_req_init(snic, sg_cnt);
->> +	if (!rqi) {
->> +		scsi_dma_unmap(sc);
->> +		ret =3D -ENOMEM;
->> +
->> +		goto issue_sc_end;
->> +	}
->> +
->> +	rqi->tgt_id =3D tgt->id;
->> +	rqi->sc =3D sc;
->> +
->> +	CMD_STATE(sc) =3D SNIC_IOREQ_PENDING;
->> +	CMD_SP(sc) =3D (char *) rqi;
->> +	cmd_trc =3D SNIC_TRC_CMD(sc);
->> +	CMD_FLAGS(sc) |=3D (SNIC_IO_INITIALIZED | SNIC_IO_ISSUED);
->> +	cmd_st_flags =3D SNIC_TRC_CMD_STATE_FLAGS(sc);
->> +	io_lock =3D snic_io_lock_hash(snic, sc);
->> +
->> +	/* create wq desc and enqueue it */
->> +	ret =3D snic_queue_icmnd_req(snic, rqi, sc, sg_cnt);
->> +	if (ret) {
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "issue_sc: icmnd qing Failed for sc %p, err %d\n",
->> +			      sc, ret);
->> +
->> +		spin_lock_irqsave(io_lock, flags);
->> +		rqi =3D (struct snic_req_info *) CMD_SP(sc);
->> +		CMD_SP(sc) =3D NULL;
->> +		CMD_STATE(sc) =3D SNIC_IOREQ_COMPLETE;
->> +		CMD_FLAGS(sc) &=3D ~SNIC_IO_ISSUED; /* turn off the flag */
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +
->> +		if (rqi)
->> +			snic_release_req_buf(snic, rqi, sc);
->> +
->> +		SNIC_TRC(snic->shost->host_no, tag, (u64)sc, 0, 0, 0,
->> +			 SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +	} else {
->> +		u32 io_sz =3D scsi_bufflen(sc) >> 9;
->> +		u32 qtime =3D jiffies - rqi->start_time;
->> +		struct snic_io_stats *iostats =3D &snic->s_stats.io;
->> +
->> +		if (io_sz > atomic64_read(&iostats->max_io_sz))
->> +			atomic64_set(&iostats->max_io_sz, io_sz);
->> +
->> +		if (qtime > atomic64_read(&iostats->max_qtime))
->> +			atomic64_set(&iostats->max_qtime, qtime);
->> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "issue_sc:sc %p, tag %d queued to WQ.\n",
->> +			      sc, tag);
->> +
->> +		SNIC_TRC(snic->shost->host_no, tag, (u64)sc, (u64)rqi, sg_cnt,
->> +			 cmd_trc, cmd_st_flags);
->> +	}
->> +
->> +issue_sc_end:
->> +
->> +	return ret;
->> +} /* end of snic_issue_scsi_req */
->> +
->> +
->> +/*
->> + * snic_queuecommand
->> + * Routine to send a scsi cdb to LLD
->> + * Called with host_lock held and interrupts disabled
->> + */
->> +int
->> +snic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
->> +{
->> +	struct snic_tgt *tgt =3D NULL;
->> +	struct snic *snic =3D shost_priv(shost);
->> +	int ret;
->> +
->> +	tgt =3D starget_to_tgt(scsi_target(sc->device));
->> +	ret =3D snic_tgt_chkready(tgt);
->> +	if (ret) {
->> +		SNIC_HOST_ERR(shost, "Tgt %p id %d Not Ready.\n", tgt, tgt->id);
->> +		atomic64_inc(&snic->s_stats.misc.tgt_not_rdy);
->> +		sc->result =3D ret;
->> +		sc->scsi_done(sc);
->> +
+>> +	if (dc2c->cmd_ring[posted].flags & DEVCMD2_FNORESULT)
 >> +		return 0;
->> +	}
 >> +
->> +	if (snic_get_state(snic) !=3D SNIC_ONLINE) {
->> +		SNIC_HOST_ERR(shost, "snic state is %s\n",
->> +			      snic_state_str[snic_get_state(snic)]);
+>> +	for (delay =3D 0; delay < wait; delay++) {
+>> +		udelay(100);
+>> +		if (result->color =3D=3D dc2c->color) {
+>> +			dc2c->next_result++;
+>> +			if (dc2c->next_result =3D=3D dc2c->result_size) {
+>> +				dc2c->next_result =3D 0;
+>> +				dc2c->color =3D dc2c->color ? 0 : 1;
+>> +			}
+>> +			if (result->error) {
+>> +				err =3D (int) result->error;
+>> +				if (err !=3D ERR_ECMDUNKNOWN ||
+>> +				    cmd !=3D CMD_CAPABILITY)
+>> +					pr_err("Error %d devcmd %d\n",
+>> +						err, _CMD_N(cmd));
 >> +
->> +		return SCSI_MLQUEUE_HOST_BUSY;
->> +	}
->> +	atomic_inc(&snic->ios_inflight);
+>> +				return err;
+>> +			}
+>> +			if (_CMD_DIR(cmd) & _CMD_DIR_READ) {
+>> +				/*
+>> +				 * Adding the rmb() prevents the compiler
+>> +				 * and/or CPU from reordering the reads which
+>> +				 * would potentially result in reading stale
+>> +				 * values.
+>> +				 */
+>> +				rmb();
+>> +				for (i =3D 0; i < VNIC_DEVCMD_NARGS; i++)
+>> +					vdev->args[i] =3D result->results[i];
+>> +			}
 >> +
->> +	SNIC_SCSI_DBG(shost, "sc %p Tag %d (sc %0x) lun %lld in snic_qcmd\=
-n",
->> +		      sc, snic_cmd_tag(sc), sc->cmnd[0], sc->device->lun);
->> +
->> +#ifdef SNIC_DEBUG
->> +	scsi_print_command(sc);
->> +#endif
->> +
->> +	ret =3D snic_issue_scsi_req(snic, tgt, sc);
->> +	if (ret) {
->> +		SNIC_HOST_ERR(shost, "Failed to Q, Scsi Req w/ err %d.\n", ret);
->> +		ret =3D SCSI_MLQUEUE_HOST_BUSY;
->> +	} else
->> +		snic_stats_update_active_ios(&snic->s_stats);
->> +
->> +	atomic_dec(&snic->ios_inflight);
->> +
->> +	return ret;
->> +} /* end of snic_queuecommand */
->> +
->> +/*
->> + * snic_process_abts_pending_state:
->> + * caller should hold IO lock
->> + */
->> +static void
->> +snic_proc_tmreq_pending_state(struct snic *snic,
->> +			      struct scsi_cmnd *sc,
->> +			      u8 cmpl_status)
->> +{
->> +	int state =3D CMD_STATE(sc);
->> +
->> +	if (state =3D=3D SNIC_IOREQ_ABTS_PENDING)
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_ABTS_PENDING;
->> +	else if (state =3D=3D SNIC_IOREQ_LR_PENDING)
->> +		CMD_FLAGS(sc) |=3D SNIC_DEV_RST_PENDING;
->> +	else
->> +		SNIC_BUG_ON(1);
->> +
->> +	switch (cmpl_status) {
->> +	case SNIC_STAT_IO_SUCCESS:
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_DONE;
->> +		break;
->> +
->> +	case SNIC_STAT_ABORTED:
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_ABORTED;
->> +		break;
->> +
->> +	default:
->> +		SNIC_BUG_ON(1);
->> +	}
->> +}
->> +
->> +/*
->> + * snic_process_io_failed_state:
->> + * Processes IO's error states
->> + */
->> +static void
->> +snic_process_io_failed_state(struct snic *snic,
->> +			     struct snic_icmnd_cmpl *icmnd_cmpl,
->> +			     struct scsi_cmnd *sc,
->> +			     u8 cmpl_stat)
->> +{
->> +	int res =3D 0;
->> +
->> +	switch (cmpl_stat) {
->> +	case SNIC_STAT_TIMEOUT:		/* Req was timedout */
->> +		atomic64_inc(&snic->s_stats.misc.io_tmo);
->> +		res =3D DID_TIME_OUT;
->> +		break;
->> +
->> +	case SNIC_STAT_ABORTED:		/* Req was aborted */
->> +		atomic64_inc(&snic->s_stats.misc.io_aborted);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_DATA_CNT_MISMATCH:/* Recv/Sent more/less data than =
-exp
->>*/
->> +		atomic64_inc(&snic->s_stats.misc.data_cnt_mismat);
->> +		scsi_set_resid(sc, icmnd_cmpl->resid);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_OUT_OF_RES: /* Out of resources to complete request=
- */
->> +		atomic64_inc(&snic->s_stats.fw.out_of_res);
->> +		res =3D DID_REQUEUE;
->> +		break;
->> +
->> +	case SNIC_STAT_IO_NOT_FOUND:	/* Requested I/O was not found */
->> +		atomic64_inc(&snic->s_stats.io.io_not_found);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_SGL_INVALID:	/* Req was aborted to due to sgl error=
-*/
->> +		atomic64_inc(&snic->s_stats.misc.sgl_inval);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_FW_ERR:		/* Req terminated due to FW Error */
->> +		atomic64_inc(&snic->s_stats.fw.io_errs);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_SCSI_ERR:	/* FW hits SCSI Error */
->> +		atomic64_inc(&snic->s_stats.fw.scsi_errs);
->> +		res =3D DID_ERROR;
->> +		break;
->> +
->> +	case SNIC_STAT_INVALID_HDR:	/* Hdr contains invalid data */
->> +	case SNIC_STAT_INVALID_PARM:	/* Some param in req is invalid */
->> +	case SNIC_STAT_REQ_NOT_SUP:	/* Req type is not supported */
->> +	case SNIC_STAT_CMND_REJECT:	/* Req rejected */
->> +	case SNIC_STAT_DEV_OFFLINE:	/* Device offline */
->> +	case SNIC_STAT_NOT_READY:	/* XPT yet to initialize */
->> +	case SNIC_STAT_FATAL_ERROR:	/* XPT Error */
->> +	default:
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "Invalid Hdr/Param or Req Not Supported or Cmnd Rejected o=
-r
->>Device Offline. or Unknown\n");
->> +		res =3D DID_ERROR;
->> +		break;
->> +	}
->> +
->> +	SNIC_HOST_ERR(snic->shost, "fw returns failed status %s flags 0x%x=
-\n",
->> +		      snic_io_status_to_str(cmpl_stat), CMD_FLAGS(sc));
->> +
->> +	/* Set sc->result */
->> +	sc->result =3D (res << 16) | icmnd_cmpl->scsi_status;
->> +} /* end of snic_process_io_failed_state */
->> +
->> +/*
->> + * snic_tmreq_pending : is task management in progress.
->> + */
->> +static int
->> +snic_tmreq_pending(struct scsi_cmnd *sc)
->> +{
->> +	int state =3D CMD_STATE(sc);
->> +
->> +	return ((state =3D=3D SNIC_IOREQ_ABTS_PENDING) ||
->> +			(state =3D=3D SNIC_IOREQ_LR_PENDING));
->> +}
->> +
->> +/*
->> + * snic_process_icmnd_cmpl_status:
->> + * Caller should hold io_lock
->> + */
->> +static int
->> +snic_process_icmnd_cmpl_status(struct snic *snic,
->> +			       struct snic_icmnd_cmpl *icmnd_cmpl,
->> +			       u8 cmpl_stat,
->> +			       struct scsi_cmnd *sc)
->> +{
->> +	u8 scsi_stat =3D icmnd_cmpl->scsi_status;
->> +	u64 xfer_len =3D 0;
->> +	int ret =3D 0;
->> +
->> +	/* Mark the IO as complete */
->> +	CMD_STATE(sc) =3D SNIC_IOREQ_COMPLETE;
->> +
->> +	if (likely(cmpl_stat =3D=3D SNIC_STAT_IO_SUCCESS)) {
->> +		sc->result =3D (DID_OK << 16) | scsi_stat;
->> +
->> +		xfer_len =3D scsi_bufflen(sc);
->> +
->> +		/* Update SCSI Cmd with resid value */
->> +		scsi_set_resid(sc, icmnd_cmpl->resid);
->> +
->> +		if (icmnd_cmpl->flags & SNIC_ICMND_CMPL_UNDR_RUN) {
->> +			xfer_len -=3D icmnd_cmpl->resid;
->> +			atomic64_inc(&snic->s_stats.misc.io_under_run);
+>> +			return 0;
 >> +		}
->> +
->> +		if (icmnd_cmpl->scsi_status =3D=3D SAM_STAT_TASK_SET_FULL)
->> +			atomic64_inc(&snic->s_stats.misc.qfull);
->> +
->> +		ret =3D 0;
->> +	} else {
->> +		snic_process_io_failed_state(snic, icmnd_cmpl, sc, cmpl_stat);
->> +		atomic64_inc(&snic->s_stats.io.fail);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "icmnd_cmpl: IO Failed : Hdr Status %s flags 0x%x\n",
->> +			      snic_io_status_to_str(cmpl_stat), CMD_FLAGS(sc));
->> +		ret =3D 1;
 >> +	}
 >> +
->> +	return ret;
->> +} /* end of snic_process_icmnd_cmpl_status */
+>> +	pr_err("Timed out devcmd %d\n", _CMD_N(cmd));
 >> +
+>> +	return -ETIMEDOUT;
+>> +}
 >> +
->> +/*
->> + * snic_icmnd_cmpl_handler
->> + * Routine to handle icmnd completions
->> + */
->> +static void
->> +snic_icmnd_cmpl_handler(struct snic *snic, struct snic_fw_req *fwre=
-q)
+>> +static int vnic_dev_init_devcmd2(struct vnic_dev *vdev)
 >> +{
->> +	u8 typ, hdr_stat;
->> +	u32 cmnd_id, hid;
->> +	u64 ctx;
->> +	struct scsi_cmnd *sc =3D NULL;
->> +	struct snic_icmnd_cmpl *icmnd_cmpl =3D NULL;
->> +	struct snic_host_req *req =3D NULL;
->> +	struct snic_req_info *rqi =3D NULL;
->> +	unsigned long flags, start_time;
->> +	spinlock_t *io_lock;
->> +	u8 sc_stat =3D 0;
+>> +	struct devcmd2_controller *dc2c =3D NULL;
+>> +	unsigned int fetch_idx;
+>> +	int ret;
+>> +	void __iomem *p;
 >> +
->> +	snic_io_hdr_dec(&fwreq->hdr, &typ, &hdr_stat, &cmnd_id, &hid, &ctx=
-);
->> +	icmnd_cmpl =3D &fwreq->u.icmnd_cmpl;
->> +	sc_stat =3D icmnd_cmpl->scsi_status;
+>> +	if (vdev->devcmd2)
+>> +		return 0;
 >> +
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "Icmnd_cmpl: type =3D %x, hdr_stat =3D %x, cmnd_id =3D %x, =
-hid =3D
->>%x,i ctx =3D %llx\n",
->> +		      typ, hdr_stat, cmnd_id, hid, ctx);
+>> +	p =3D vnic_dev_get_res(vdev, RES_TYPE_DEVCMD2, 0);
+>> +	if (!p)
+>> +		return -ENODEV;
 >> +
->> +	if (cmnd_id >=3D snic->max_tag_id) {
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "Icmnd_cmpl:Tag Error:Out of Range Tag %d, hdr status =3D =
-%s\n",
->> +			      cmnd_id, snic_io_status_to_str(hdr_stat));
->> +		return;
+>> +	dc2c =3D kzalloc(sizeof(*dc2c), GFP_ATOMIC);
+>> +	if (!dc2c)
+>> +		return -ENOMEM;
+>> +
+>> +	vdev->devcmd2 =3D dc2c;
+>> +
+>> +	dc2c->color =3D 1;
+>> +	dc2c->result_size =3D DEVCMD2_RING_SIZE;
+>> +
+>> +	ret  =3D vnic_wq_devcmd2_alloc(vdev,
+>> +				     &dc2c->wq,
+>> +				     DEVCMD2_RING_SIZE,
+>> +				     DEVCMD2_DESC_SIZE);
+>> +	if (ret)
+>> +		goto err_free_devcmd2;
+>> +
+>> +	fetch_idx =3D ioread32(&dc2c->wq.ctrl->fetch_index);
+>> +	if (fetch_idx =3D=3D 0xFFFFFFFF) { /* check for hardware gone  */
+>> +		/* Hardware surprise removal: reset fetch_index */
+>> +		fetch_idx =3D 0;
 >> +	}
->> +
->> +	sc =3D scsi_host_find_tag(snic->shost, cmnd_id);
->> +	WARN_ON_ONCE(!sc);
->> +
->> +	if (!sc) {
->> +		atomic64_inc(&snic->s_stats.io.sc_null);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "Icmnd_cmpl: Scsi Cmnd Not found, sc =3D NULL Hdr Status =3D=
- %s
->>tag =3D 0x%x fwreq =3D 0x%p\n",
->> +			      snic_io_status_to_str(hdr_stat),
->> +			      cmnd_id,
->> +			      fwreq);
->> +
->> +		SNIC_TRC(snic->shost->host_no, cmnd_id, 0,
->> +			 ((u64)hdr_stat << 16 |
->> +			  (u64)sc_stat << 8 | (u64)icmnd_cmpl->flags),
->> +			 fwreq, icmnd_cmpl->resid, ctx);
->> +
->> +		return;
->> +	}
->> +
->> +
->> +#ifdef SNIC_DEBUG
->> +	scsi_print_result(sc);
->> +#endif
->> +
->> +	io_lock =3D snic_io_lock_hash(snic, sc);
->> +
->> +	spin_lock_irqsave(io_lock, flags);
->> +	rqi =3D (struct snic_req_info *) CMD_SP(sc);
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "Icmnd_cmpl:lun %lld sc %p cmd %xtag %d flags %xrqi %p\n",
->> +		      sc->device->lun, sc, sc->cmnd[0], snic_cmd_tag(sc),
->> +		      CMD_FLAGS(sc), rqi);
->> +
->> +	SNIC_BUG_ON(rqi !=3D (struct snic_req_info *)ctx);
->> +	WARN_ON_ONCE(req);
->
->Now that is curious.
->'ctx' already points to the 'snic_req_info', so why do we need to
->have this double lookup here?
->'scsi_host_find_tag' above already will tell us if the command is
->valid; the tag map is managed by the driver, after all, so the
->driver will guarantee that a busy tag will not be reused.
->
->Why can't we do away with the 'CMD_SP' reference and get the
->scsi command via tag lookup?
->That would simplify the code by quite a bit ...
-
-Yes, tag look up is more preferred way. The additional lookup is added =
-to
-catch driver and firmware synchronisation issues if there are any.
-
->
->> +	if (!rqi) {
->> +		atomic64_inc(&snic->s_stats.io.req_null);
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_REQ_NULL;
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "Icmnd_cmpl:Host Req Not Found(null), Hdr Status %s, Tag
->>0x%x, sc 0x%p flags 0x%x\n",
->> +			      snic_io_status_to_str(hdr_stat),
->> +			      cmnd_id, sc, CMD_FLAGS(sc));
->> +		return;
->> +	}
->> +
->> +	rqi =3D (struct snic_req_info *) ctx;
->> +	start_time =3D rqi->start_time;
->> +
->> +	/* firmware completed the io */
->> +	rqi->io_cmpl =3D 1;
 >> +
 >> +	/*
->> +	 * if SCSI-ML has already issued abort on this command,
->> +	 * ignore completion of the IO. The abts path will clean it up
+>> +	 * Don't change fetch_index ever and
+>> +	 * set posted_index same as fetch_index
+>> +	 * when setting up the WQ for devcmd2.
 >> +	 */
->> +	if (unlikely(snic_tmreq_pending(sc))) {
->> +		snic_proc_tmreq_pending_state(snic, sc, hdr_stat);
->> +		spin_unlock_irqrestore(io_lock, flags);
+>> +	vnic_wq_init_start(&dc2c->wq, 0, fetch_idx, fetch_idx, 0, 0);
+>> +	vnic_wq_enable(&dc2c->wq);
+>> +	ret =3D vnic_dev_alloc_desc_ring(vdev,
+>> +				       &dc2c->results_ring,
+>> +				       DEVCMD2_RING_SIZE,
+>> +				       DEVCMD2_DESC_SIZE);
+>> +	if (ret)
+>> +		goto err_free_wq;
 >> +
->> +		snic_stats_update_io_cmpl(&snic->s_stats);
+>> +	dc2c->result =3D (struct devcmd2_result *) dc2c->results_ring.desc=
+s;
+>> +	dc2c->cmd_ring =3D (struct vnic_devcmd2 *) dc2c->wq.ring.descs;
+>> +	dc2c->wq_ctrl =3D dc2c->wq.ctrl;
+>> +	vdev->args[0] =3D (u64) dc2c->results_ring.base_addr |
+>>VNIC_PADDR_TARGET;
+>> +	vdev->args[1] =3D DEVCMD2_RING_SIZE;
 >> +
->> +		/* Expected value is SNIC_STAT_ABORTED */
->> +		if (likely(hdr_stat =3D=3D SNIC_STAT_ABORTED))
->> +			return;
+>> +	ret =3D _vnic_dev_cmd2(vdev, CMD_INITIALIZE_DEVCMD2, SNIC_DVCMD_TM=
+O);
+>> +	if (ret < 0)
+>> +		goto err_free_desc_ring;
 >> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "icmnd_cmpl:TM Req Pending(%s), Hdr Status %s sc 0x%p scsi
->>status %x resid %d flags 0x%x\n",
->> +			      snic_ioreq_state_to_str(CMD_STATE(sc)),
->> +			      snic_io_status_to_str(hdr_stat),
->> +			      sc, sc_stat, icmnd_cmpl->resid, CMD_FLAGS(sc));
->> +
->> +		SNIC_TRC(snic->shost->host_no, cmnd_id, sc,
->> +			 jiffies_to_msecs(jiffies - start_time), fwreq,
->> +			 SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +
->> +		return;
->> +	}
->> +
->> +	if (snic_process_icmnd_cmpl_status(snic, icmnd_cmpl, hdr_stat, sc)=
-) {
->> +#ifdef SNIC_DEBUG
->> +		scsi_print_command(sc);
->> +#endif
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "icmnd_cmpl:IO Failed, sc 0x%p Tag %d Cmd %x Hdr Status %s
->>flags 0x%x\n",
->> +			      sc, sc->cmnd[0], cmnd_id,
->> +			      snic_io_status_to_str(hdr_stat), CMD_FLAGS(sc));
->> +	}
->> +
->> +	/* Break link with the SCSI Command */
->> +	CMD_SP(sc) =3D NULL;
->> +	CMD_FLAGS(sc) |=3D SNIC_IO_DONE;
->> +
->
->And then we wouldn't have to modify the CMD_SP() here ...
->
->> +	spin_unlock_irqrestore(io_lock, flags);
->> +
->> +	/* For now, consider only successful IO. */
->> +	snic_calc_io_process_time(snic, rqi);
->> +
->> +	snic_release_req_buf(snic, rqi, sc);
->> +
->> +	SNIC_TRC(snic->shost->host_no, cmnd_id, (u64)sc,
->> +		 jiffies_to_msecs(jiffies - start_time), (u64)fwreq,
->> +		 SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +
->> +
->> +	if (sc->scsi_done)
->> +		sc->scsi_done(sc);
->> +
->> +	snic_stats_update_io_cmpl(&snic->s_stats);
->> +} /* end of snic_icmnd_cmpl_handler */
->> +
->> +static void
->> +snic_proc_dr_cmpl_locked(struct snic *snic,
->> +			 struct snic_fw_req *fwreq,
->> +			 u8 cmpl_stat,
->> +			 u32 cmnd_id,
->> +			 struct scsi_cmnd *sc)
->> +{
->> +	struct snic_req_info *rqi =3D (struct snic_req_info *) CMD_SP(sc);
->> +	u32 start_time =3D rqi->start_time;
->> +
->> +	CMD_LR_STATUS(sc) =3D cmpl_stat;
->> +
->> +	SNIC_SCSI_DBG(snic->shost, "itmf_cmpl: Cmd State =3D %s\n",
->> +		      snic_ioreq_state_to_str(CMD_STATE(sc)));
->> +
->> +	if (CMD_STATE(sc) =3D=3D SNIC_IOREQ_ABTS_PENDING) {
->> +		CMD_FLAGS(sc) |=3D SNIC_DEV_RST_ABTS_PENDING;
->> +
->> +		SNIC_TRC(snic->shost->host_no, cmnd_id, sc,
->> +			 jiffies_to_msecs(jiffies - start_time),
->> +			 fwreq, 0, SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "itmf_cmpl: Terminate Pending Dev Reset Cmpl Recvd.id %x,
->>status %s flags 0x%x\n",
->> +			      (int)(cmnd_id & SNIC_TAG_MASK),
->> +			      snic_io_status_to_str(cmpl_stat),
->> +			      CMD_FLAGS(sc));
->> +
->> +		return;
->> +	}
->> +
->> +
->> +	if (CMD_FLAGS(sc) & SNIC_DEV_RST_TIMEDOUT) {
->> +		SNIC_TRC(snic->shost->host_no, cmnd_id, sc,
->> +			 jiffies_to_msecs(jiffies - start_time),
->> +			 fwreq, 0, SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "itmf_cmpl:Dev Reset Completion Received after timeout. id=
- %d
->>cmpl status %s flags 0x%x\n",
->> +			      (int)(cmnd_id & SNIC_TAG_MASK),
->> +			      snic_io_status_to_str(cmpl_stat),
->> +			      CMD_FLAGS(sc));
->> +
->> +		return;
->> +	}
->> +
->> +	CMD_STATE(sc) =3D SNIC_IOREQ_LR_COMPLETE;
->> +	CMD_FLAGS(sc) |=3D SNIC_DEV_RST_DONE;
->> +
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "itmf_cmpl:Dev Reset Cmpl Recvd id %d cmpl status %s flags
->>0x%x\n",
->> +		      (int)(cmnd_id & SNIC_TAG_MASK),
->> +		      snic_io_status_to_str(cmpl_stat),
->> +		      CMD_FLAGS(sc));
->> +
->> +	if (rqi->dr_done)
->> +		complete(rqi->dr_done);
->> +} /* end of snic_proc_dr_cmpl_locked */
->> +
->> +/*
->> + * snic_update_abort_stats : Updates abort stats based on completio=
-n
->>status.
->> + */
->> +static void
->> +snic_update_abort_stats(struct snic *snic, u8 cmpl_stat)
->> +{
->> +	struct snic_abort_stats *abt_stats =3D &snic->s_stats.abts;
->> +
->> +	SNIC_SCSI_DBG(snic->shost, "Updating Abort stats.\n");
->> +
->> +	switch (cmpl_stat) {
->> +	case  SNIC_STAT_IO_SUCCESS:
->> +		break;
->> +
->> +	case SNIC_STAT_TIMEOUT:
->> +		atomic64_inc(&abt_stats->fw_tmo);
->> +		break;
->> +
->> +	case SNIC_STAT_IO_NOT_FOUND:
->> +		atomic64_inc(&abt_stats->io_not_found);
->> +		break;
->> +
->> +	default:
->> +		atomic64_inc(&abt_stats->fail);
->> +		break;
->> +	}
->> +}
->> +
->> +static int
->> +snic_process_itmf_cmpl(struct snic *snic,
->> +		       struct snic_fw_req *fwreq,
->> +		       u32 cmnd_id,
->> +		       u8 cmpl_stat,
->> +		       struct scsi_cmnd *sc)
->> +{
->> +	struct snic_req_info *rqi =3D NULL;
->> +	u32 tm_tags =3D 0;
->> +	spinlock_t *io_lock =3D NULL;
->> +	unsigned long flags;
->> +	u32 start_time =3D 0;
->> +	int ret =3D 0;
->> +
->> +	io_lock =3D snic_io_lock_hash(snic, sc);
->> +	spin_lock_irqsave(io_lock, flags);
->> +	rqi =3D (struct snic_req_info *) CMD_SP(sc);
->> +	WARN_ON_ONCE(!rqi);
->> +
->> +	if (!rqi) {
->> +		atomic64_inc(&snic->s_stats.io.req_null);
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_ABTS_TERM_REQ_NULL;
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "itmf_cmpl: rqi is null,Hdr stat =3D %s Tag =3D 0x%x sc =3D=
- 0x%p
->>flags 0x%x\n",
->> +			      snic_io_status_to_str(cmpl_stat), cmnd_id, sc,
->> +			      CMD_FLAGS(sc));
->> +
->> +		return ret;
->> +	}
->> +
->> +	/* Extract task management flags */
->> +	tm_tags =3D cmnd_id & ~(SNIC_TAG_MASK);
->> +
->> +	start_time =3D rqi->start_time;
->> +	cmnd_id &=3D (SNIC_TAG_MASK);
->> +
->> +	switch (tm_tags) {
->> +	case SNIC_TAG_ABORT:
->> +		/* Abort only issued on cmd */
->> +		snic_update_abort_stats(snic, cmpl_stat);
->> +
->> +		if (CMD_STATE(sc) !=3D SNIC_IOREQ_ABTS_PENDING) {
->> +			/* This is a late completion. Ignore it. */
->> +			ret =3D -1;
->> +			spin_unlock_irqrestore(io_lock, flags);
->> +			break;
->> +		}
->> +
->> +		CMD_STATE(sc) =3D SNIC_IOREQ_ABTS_COMPLETE;
->> +		CMD_ABTS_STATUS(sc) =3D cmpl_stat;
->> +		CMD_FLAGS(sc) |=3D SNIC_IO_ABTS_TERM_DONE;
->> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "itmf_cmpl:Abort Cmpl Recvd.Tag 0x%x Status %s flags 0x%x\=
-n",
->> +			      cmnd_id,
->> +			      snic_io_status_to_str(cmpl_stat),
->> +			      CMD_FLAGS(sc));
->> +
->> +		/*
->> +		 * If scsi_eh thread is blocked waiting for abts complete,
->> +		 * signal completion to it. IO will be cleaned in the thread,
->> +		 * else clean it in this context.
->> +		 */
->> +		if (rqi->abts_done) {
->> +			complete(rqi->abts_done);
->> +			spin_unlock_irqrestore(io_lock, flags);
->> +
->> +			break; /* jump out */
->> +		}
->> +
->> +		CMD_SP(sc) =3D NULL;
->> +		sc->result =3D (DID_ERROR << 16);
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "itmf_cmpl: Completing IO. sc %p flags 0x%x\n",
->> +			      sc, CMD_FLAGS(sc));
->> +
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +
->> +		snic_release_req_buf(snic, rqi, sc);
->> +
->> +		if (sc->scsi_done) {
->> +			SNIC_TRC(snic->shost->host_no, cmnd_id, sc,
->> +				 jiffies_to_msecs(jiffies - start_time),
->> +				 fwreq,
->> +				 SNIC_TRC_CMD(sc),
->> +				 SNIC_TRC_CMD_STATE_FLAGS(sc));
->> +
->> +			sc->scsi_done(sc);
->> +		}
->> +
->> +		break;
->> +
->> +	case SNIC_TAG_DEV_RST:
->> +	case SNIC_TAG_DEV_RST | SNIC_TAG_IOCTL_DEV_RST:
->> +		snic_proc_dr_cmpl_locked(snic, fwreq, cmpl_stat, cmnd_id, sc);
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +		ret =3D 0;
->> +
->> +		break;
->> +
->> +	case SNIC_TAG_ABORT | SNIC_TAG_DEV_RST:
->> +		/* Abort and terminate completion of device reset req */
->> +
->> +		CMD_STATE(sc) =3D SNIC_IOREQ_ABTS_COMPLETE;
->> +		CMD_ABTS_STATUS(sc) =3D cmpl_stat;
->> +		CMD_FLAGS(sc) |=3D SNIC_DEV_RST_DONE;
->> +
->> +		SNIC_SCSI_DBG(snic->shost,
->> +			      "itmf_cmpl:dev reset abts cmpl recvd. id %d status %s flag=
-s
->>0x%x\n",
->> +			      cmnd_id, snic_io_status_to_str(cmpl_stat),
->> +			      CMD_FLAGS(sc));
->> +
->> +		if (rqi->abts_done)
->> +			complete(rqi->abts_done);
->> +
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +
->> +		break;
->> +
->> +	default:
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "itmf_cmpl: Unknown TM tag bit 0x%x\n", tm_tags);
->> +
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "itmf_cmpl:Unexpected itmf io stat %s Tag =3D 0x%x flags
->>0x%x\n",
->> +			      snic_ioreq_state_to_str(CMD_STATE(sc)),
->> +			      cmnd_id,
->> +			      CMD_FLAGS(sc));
->> +		ret =3D -1;
->> +		SNIC_BUG_ON(1);
->> +
->> +		break;
->> +	}
+>> +	vdev->devcmd_rtn =3D &_vnic_dev_cmd2;
+>> +	pr_info("DEVCMD2 Initialized.\n");
 >> +
 >> +	return ret;
->> +} /* end of snic_process_itmf_cmpl_status */
 >> +
->> +/*
->> + * snic_itmf_cmpl_handler.
->> + * Routine to handle itmf completions.
->> + */
->> +static void
->> +snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq=
-)
+>> +err_free_desc_ring:
+>> +	vnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+>> +
+>> +err_free_wq:
+>> +	vnic_wq_disable(&dc2c->wq);
+>> +	vnic_wq_free(&dc2c->wq);
+>> +
+>> +err_free_devcmd2:
+>> +	kfree(dc2c);
+>> +	vdev->devcmd2 =3D NULL;
+>> +
+>> +	return ret;
+>> +} /* end of vnic_dev_init_devcmd2 */
+>> +
+>> +static void vnic_dev_deinit_devcmd2(struct vnic_dev *vdev)
 >> +{
->> +	struct scsi_cmnd  *sc =3D NULL;
->> +	struct snic_req_info *rqi =3D NULL;
->> +	struct snic_itmf_cmpl *itmf_cmpl =3D NULL;
->> +	u64 ctx;
->> +	u32 cmnd_id;
->> +	u32 hid;
->> +	u8 typ;
->> +	u8 hdr_stat;
+>> +	struct devcmd2_controller *dc2c =3D vdev->devcmd2;
 >> +
->> +	snic_io_hdr_dec(&fwreq->hdr, &typ, &hdr_stat, &cmnd_id, &hid, &ctx=
-);
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "Itmf_cmpl: %s: type =3D %x, hdr_stat =3D %x, cmnd_id =3D %=
-x, hid =3D
->>%x,ctx =3D %llx\n",
->> +		      __func__, typ, hdr_stat, cmnd_id, hid, ctx);
+>> +	vdev->devcmd2 =3D NULL;
+>> +	vdev->devcmd_rtn =3D NULL;
 >> +
->> +	itmf_cmpl =3D &fwreq->u.itmf_cmpl;
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "Itmf_cmpl: nterm %u , flags 0x%x\n",
->> +		      itmf_cmpl->nterminated, itmf_cmpl->flags);
->> +
->> +	/* spl case, dev reset issued through ioctl */
->> +	if (cmnd_id & SNIC_TAG_IOCTL_DEV_RST) {
->> +		rqi =3D (struct snic_req_info *) ctx;
->> +		sc =3D rqi->sc;
->> +
->> +		goto ioctl_dev_rst;
->> +	}
->> +
->> +	if ((cmnd_id & SNIC_TAG_MASK) >=3D snic->max_tag_id) {
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "Itmf_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
->> +			      cmnd_id, snic_io_status_to_str(hdr_stat));
->> +		SNIC_BUG_ON(1);
->> +
->> +		return;
->> +	}
->> +
->> +	sc =3D scsi_host_find_tag(snic->shost, cmnd_id & SNIC_TAG_MASK);
->> +	WARN_ON_ONCE(!sc);
->> +
->Same issue here.
->Why can't you rely on the tag to get the command?
->Then you wouldn't have to to the triple indirection
->
->rqi->sc->rpi
->
->_and_ you would be insulated against command timeouts, where
->'sc' might become invalid ...
-Yes, all the time driver relies on tag to get scsi command. But there a=
-re
-few instances, where scsi command is not associated with a tag. For
-example lun reset or host reset are issued through ioctl. In the
-exceptional case, where scsi command is not associated with a valid tag=
-,
-then driver uses this triple redirection. It is common code to handle
-tagged and untagged commands.
-
->
->> +ioctl_dev_rst:
->> +	if (!sc) {
->> +		atomic64_inc(&snic->s_stats.io.sc_null);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "Itmf_cmpl: sc is NULL - Hdr Stat %s Tag 0x%x\n",
->> +			      snic_io_status_to_str(hdr_stat), cmnd_id);
->> +
->> +		return;
->> +	}
->> +
->> +	snic_process_itmf_cmpl(snic, fwreq, cmnd_id, hdr_stat, sc);
->> +} /* end of snic_itmf_cmpl_handler */
->> +
->> +
->> +
->> +static void
->> +snic_hba_reset_scsi_cleanup(struct snic *snic, struct scsi_cmnd *sc=
-)
->> +{
->> +	struct snic_stats *st =3D &snic->s_stats;
->> +	long act_ios =3D 0, act_fwreqs =3D 0;
->> +
->> +	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
->> +	snic_scsi_cleanup(snic, snic_cmd_tag(sc));
->> +
->> +	/* Update stats on pending IOs */
->> +	act_ios =3D atomic64_read(&st->io.active);
->> +	atomic64_add(act_ios, &st->io.compl);
->> +	atomic64_sub(act_ios, &st->io.active);
->> +
->> +	act_fwreqs =3D atomic64_read(&st->fw.actv_reqs);
->> +	atomic64_sub(act_fwreqs, &st->fw.actv_reqs);
+>> +	vnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+>> +	vnic_wq_disable(&dc2c->wq);
+>> +	vnic_wq_free(&dc2c->wq);
+>> +	kfree(dc2c);
 >> +}
 >> +
->> +/*
->> + * snic_hba_reset_cmpl_handler :
->> + *
->> + * Notes :
->> + * 1. Cleanup all the scsi cmds, release all snic specific cmds
->> + * 2. Issue Report Targets in case of SAN targets
->> + */
->> +static int
->> +snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req=20
->>*fwreq)
+>> +int vnic_dev_cmd(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
+>> +	u64 *a0, u64 *a1, int wait)
 >> +{
->> +	u64 ctx;
->> +	u32 cmnd_id;
->> +	u32 hid;
->> +	u8 typ;
->> +	u8 hdr_stat;
->> +	struct scsi_cmnd *sc =3D NULL;
->> +	struct snic_req_info *rqi =3D NULL;
->> +	spinlock_t *io_lock =3D NULL;
->> +	unsigned long flags, gflags;
->> +	int ret =3D 0;
+>> +	int err;
 >> +
->> +	SNIC_HOST_INFO(snic->shost,
->> +		       "reset_cmpl:HBA Reset Completion received.\n");
+>> +	memset(vdev->args, 0, sizeof(vdev->args));
+>> +	vdev->args[0] =3D *a0;
+>> +	vdev->args[1] =3D *a1;
 >> +
->> +	snic_io_hdr_dec(&fwreq->hdr, &typ, &hdr_stat, &cmnd_id, &hid, &ctx=
-);
->> +	SNIC_SCSI_DBG(snic->shost,
->> +		      "reset_cmpl: type =3D %x, hdr_stat =3D %x, cmnd_id =3D %x, =
-hid =3D %x,=20
->>ctx =3D %llx\n",
->> +		      typ, hdr_stat, cmnd_id, hid, ctx);
+>> +	err =3D (*vdev->devcmd_rtn)(vdev, cmd, wait);
 >> +
->> +	/* spl case, host reset issued through ioctl */
->> +	if (cmnd_id =3D=3D SCSI_NO_TAG) {
->> +		rqi =3D (struct snic_req_info *) ctx;
->> +		sc =3D rqi->sc;
+>> +	*a0 =3D vdev->args[0];
+>> +	*a1 =3D vdev->args[1];
 >> +
->> +		goto ioctl_hba_rst;
+>> +	return  err;
+>> +}
+>> +
+>> +int vnic_dev_fw_info(struct vnic_dev *vdev,
+>> +	struct vnic_devcmd_fw_info **fw_info)
+>> +{
+>> +	u64 a0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err =3D 0;
+>> +
+>> +	if (!vdev->fw_info) {
+>> +		vdev->fw_info =3D pci_alloc_consistent(vdev->pdev,
+>> +			sizeof(struct vnic_devcmd_fw_info),
+>> +			&vdev->fw_info_pa);
+>> +		if (!vdev->fw_info)
+>> +			return -ENOMEM;
+>> +
+>> +		a0 =3D vdev->fw_info_pa;
+>> +
+>> +		/* only get fw_info once and cache it */
+>> +		err =3D vnic_dev_cmd(vdev, CMD_MCPU_FW_INFO, &a0, &a1, wait);
 >> +	}
 >> +
->> +	if (cmnd_id >=3D snic->max_tag_id) {
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
->> +			      cmnd_id, snic_io_status_to_str(hdr_stat));
->> +		SNIC_BUG_ON(1);
+>> +	*fw_info =3D vdev->fw_info;
 >> +
->> +		return 1;
+>> +	return err;
+>> +}
+>> +
+>> +int vnic_dev_spec(struct vnic_dev *vdev, unsigned int offset, unsig=
+ned
+>>int size,
+>> +	void *value)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +
+>> +	a0 =3D offset;
+>> +	a1 =3D size;
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_DEV_SPEC, &a0, &a1, wait);
+>> +
+>> +	switch (size) {
+>> +	case 1:
+>> +		*(u8 *)value =3D (u8)a0;
+>> +		break;
+>> +	case 2:
+>> +		*(u16 *)value =3D (u16)a0;
+>> +		break;
+>> +	case 4:
+>> +		*(u32 *)value =3D (u32)a0;
+>> +		break;
+>> +	case 8:
+>> +		*(u64 *)value =3D a0;
+>> +		break;
+>> +	default:
+>> +		BUG();
+>> +		break;
 >> +	}
 >> +
->> +	sc =3D scsi_host_find_tag(snic->shost, cmnd_id);
->> +ioctl_hba_rst:
->> +	if (!sc) {
->> +		atomic64_inc(&snic->s_stats.io.sc_null);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "reset_cmpl: sc is NULL - Hdr Stat %s Tag 0x%x\n",
->> +			      snic_io_status_to_str(hdr_stat), cmnd_id);
->> +		ret =3D 1;
+>> +	return err;
+>> +}
 >> +
->> +		return ret;
+>> +int vnic_dev_stats_clear(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_STATS_CLEAR, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_stats_dump(struct vnic_dev *vdev, struct vnic_stats
+>>**stats)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	if (!vdev->stats) {
+>> +		vdev->stats =3D pci_alloc_consistent(vdev->pdev,
+>> +			sizeof(struct vnic_stats), &vdev->stats_pa);
+>> +		if (!vdev->stats)
+>> +			return -ENOMEM;
 >> +	}
 >> +
->> +	io_lock =3D snic_io_lock_hash(snic, sc);
->> +	spin_lock_irqsave(io_lock, flags);
+>> +	*stats =3D vdev->stats;
+>> +	a0 =3D vdev->stats_pa;
+>> +	a1 =3D sizeof(struct vnic_stats);
 >> +
->> +	if (!snic->remove_wait) {
->> +		spin_unlock_irqrestore(io_lock, flags);
->> +		SNIC_HOST_ERR(snic->shost,
->> +			      "reset_cmpl:host reset completed after timout\n");
->> +		ret =3D 1;
+>> +	return vnic_dev_cmd(vdev, CMD_STATS_DUMP, &a0, &a1, wait);
+>> +}
 >> +
->> +		return ret;
->> +	}
+>> +int vnic_dev_close(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
 >> +
->> +	rqi =3D (struct snic_req_info *) CMD_SP(sc);
->> +	WARN_ON_ONCE(!rqi);
+>> +	return vnic_dev_cmd(vdev, CMD_CLOSE, &a0, &a1, wait);
+>> +}
 >> +
->See above.
->
->If possible I would avoid keeping direct references to the scsi
->command in the firmware request structure; the scsi command might
->timeout while the firmware request is in flight, leaving the
->firmware request with a stale pointer.
->I would rather use the tag in the firmware request and use
->the tag lookup to get to the command.
- You are correct. But there are few instances, where scsi command is no=
+>> +int vnic_dev_enable(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_ENABLE, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_enable_wait(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err =3D 0;
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_ENABLE_WAIT, &a0, &a1, wait);
+>> +	if (err =3D=3D ERR_ECMDUNKNOWN)
+>> +		return vnic_dev_cmd(vdev, CMD_ENABLE, &a0, &a1, wait);
+>> +
+>> +	return err;
+>> +}
+>> +
+>> +int vnic_dev_disable(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_DISABLE, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_open(struct vnic_dev *vdev, int arg)
+>> +{
+>> +	u64 a0 =3D (u32)arg, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_OPEN, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_open_done(struct vnic_dev *vdev, int *done)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +
+>> +	*done =3D 0;
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_OPEN_STATUS, &a0, &a1, wait);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	*done =3D (a0 =3D=3D 0);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +int vnic_dev_soft_reset(struct vnic_dev *vdev, int arg)
+>> +{
+>> +	u64 a0 =3D (u32)arg, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_SOFT_RESET, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_soft_reset_done(struct vnic_dev *vdev, int *done)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +
+>> +	*done =3D 0;
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_SOFT_RESET_STATUS, &a0, &a1, wait);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	*done =3D (a0 =3D=3D 0);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +int vnic_dev_hang_notify(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_HANG_NOTIFY, &a0, &a1, wait);
+>> +}
+>> +
+>> +int vnic_dev_mac_addr(struct vnic_dev *vdev, u8 *mac_addr)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err, i;
+>> +
+>> +	for (i =3D 0; i < ETH_ALEN; i++)
+>> +		mac_addr[i] =3D 0;
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_MAC_ADDR, &a0, &a1, wait);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	for (i =3D 0; i < ETH_ALEN; i++)
+>> +		mac_addr[i] =3D ((u8 *)&a0)[i];
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_dev_packet_filter(struct vnic_dev *vdev, int directed, in=
 t=20
-associated with a tag. For example lun reset or host reset are issued=20
-through ioctl. In the exceptional case, where scsi command is not=20
-associated with a valid tag, driver accesses the scsi command directly.
+>>multicast,
+>> +	int broadcast, int promisc, int allmulti)
+>> +{
+>> +	u64 a0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +
+>> +	a0 =3D (directed ? CMD_PFILTER_DIRECTED : 0) |
+>> +	     (multicast ? CMD_PFILTER_MULTICAST : 0) |
+>> +	     (broadcast ? CMD_PFILTER_BROADCAST : 0) |
+>> +	     (promisc ? CMD_PFILTER_PROMISCUOUS : 0) |
+>> +	     (allmulti ? CMD_PFILTER_ALL_MULTICAST : 0);
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_PACKET_FILTER, &a0, &a1, wait);
+>> +	if (err)
+>> +		pr_err("Can't set packet filter\n");
+>> +}
+>> +
+>> +void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +	int i;
+>> +
+>> +	for (i =3D 0; i < ETH_ALEN; i++)
+>> +		((u8 *)&a0)[i] =3D addr[i];
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
+>> +	if (err)
+>> +		pr_err("Can't add addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+>> +			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+>> +			err);
+>> +}
+>> +
+>> +void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+>> +{
+>> +	u64 a0 =3D 0, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int err;
+>> +	int i;
+>> +
+>> +	for (i =3D 0; i < ETH_ALEN; i++)
+>> +		((u8 *)&a0)[i] =3D addr[i];
+>> +
+>> +	err =3D vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
+>> +	if (err)
+>> +		pr_err("Can't del addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+>> +			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+>> +			err);
+>> +}
+>> +
+>> +int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	if (!vdev->notify) {
+>> +		vdev->notify =3D pci_alloc_consistent(vdev->pdev,
+>> +			sizeof(struct vnic_devcmd_notify),
+>> +			&vdev->notify_pa);
+>> +		if (!vdev->notify)
+>> +			return -ENOMEM;
+>> +	}
+>> +
+>> +	a0 =3D vdev->notify_pa;
+>> +	a1 =3D ((u64)intr << 32) & 0x0000ffff00000000ULL;
+>> +	a1 +=3D sizeof(struct vnic_devcmd_notify);
+>> +
+>Please use a define here instead of a magic number.
+Sure, I will define macro for it.
+>
+>> +	return vnic_dev_cmd(vdev, CMD_NOTIFY, &a0, &a1, wait);
+>> +}
+>> +
+>> +void vnic_dev_notify_unset(struct vnic_dev *vdev)
+>> +{
+>> +	u64 a0, a1;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	a0 =3D 0;  /* paddr =3D 0 to unset notify buffer */
+>> +	a1 =3D 0x0000ffff00000000ULL; /* intr num =3D -1 to unreg for intr=
+ */
+>Same here.
+Sure, I will define macro for it.
+
+>
+>> +	a1 +=3D sizeof(struct vnic_devcmd_notify);
+>> +
+>> +	vnic_dev_cmd(vdev, CMD_NOTIFY, &a0, &a1, wait);
+>> +}
+>> +
+>> +static int vnic_dev_notify_ready(struct vnic_dev *vdev)
+>> +{
+>> +	u32 *words;
+>> +	unsigned int nwords =3D sizeof(struct vnic_devcmd_notify) / 4;
+>> +	unsigned int i;
+>> +	u32 csum;
+>> +
+>> +	if (!vdev->notify)
+>> +		return 0;
+>> +
+>> +	do {
+>> +		csum =3D 0;
+>> +		memcpy(&vdev->notify_copy, vdev->notify,
+>> +			sizeof(struct vnic_devcmd_notify));
+>> +		words =3D (u32 *)&vdev->notify_copy;
+>> +		for (i =3D 1; i < nwords; i++)
+>> +			csum +=3D words[i];
+>> +	} while (csum !=3D words[0]);
+>> +
+>> +	return 1;
+>> +}
+>> +
+>> +int vnic_dev_init(struct vnic_dev *vdev, int arg)
+>> +{
+>> +	u64 a0 =3D (u32)arg, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +
+>> +	return vnic_dev_cmd(vdev, CMD_INIT, &a0, &a1, wait);
+>> +}
+>> +
+>> +u16 vnic_dev_set_default_vlan(struct vnic_dev *vdev, u16=20
+>>new_default_vlan)
+>> +{
+>> +	u64 a0 =3D new_default_vlan, a1 =3D 0;
+>> +	int wait =3D SNIC_DVCMD_TMO;
+>> +	int old_vlan =3D 0;
+>> +
+>> +	old_vlan =3D vnic_dev_cmd(vdev, CMD_SET_DEFAULT_VLAN, &a0, &a1, wa=
+it);
+>> +
+>> +	return (u16)old_vlan;
+>> +}
+>> +
+>> +int vnic_dev_link_status(struct vnic_dev *vdev)
+>> +{
+>> +	if (vdev->linkstatus)
+>> +		return *vdev->linkstatus;
+>> +
+>> +	if (!vnic_dev_notify_ready(vdev))
+>> +		return 0;
+>> +
+>> +	return vdev->notify_copy.link_state;
+>> +}
+>> +
+>> +u32 vnic_dev_port_speed(struct vnic_dev *vdev)
+>> +{
+>> +	if (!vnic_dev_notify_ready(vdev))
+>> +		return 0;
+>> +
+>> +	return vdev->notify_copy.port_speed;
+>> +}
+>> +
+>> +u32 vnic_dev_msg_lvl(struct vnic_dev *vdev)
+>> +{
+>> +	if (!vnic_dev_notify_ready(vdev))
+>> +		return 0;
+>> +
+>> +	return vdev->notify_copy.msglvl;
+>> +}
+>> +
+>> +u32 vnic_dev_mtu(struct vnic_dev *vdev)
+>> +{
+>> +	if (!vnic_dev_notify_ready(vdev))
+>> +		return 0;
+>> +
+>> +	return vdev->notify_copy.mtu;
+>> +}
+>> +
+>> +u32 vnic_dev_link_down_cnt(struct vnic_dev *vdev)
+>> +{
+>> +	if (!vnic_dev_notify_ready(vdev))
+>> +		return 0;
+>> +
+>> +	return vdev->notify_copy.link_down_cnt;
+>> +}
+>> +
+>> +void vnic_dev_set_intr_mode(struct vnic_dev *vdev,
+>> +	enum vnic_dev_intr_mode intr_mode)
+>> +{
+>> +	vdev->intr_mode =3D intr_mode;
+>> +}
+>> +
+>> +enum vnic_dev_intr_mode vnic_dev_get_intr_mode(
+>> +	struct vnic_dev *vdev)
+>> +{
+>> +	return vdev->intr_mode;
+>> +}
+>> +
+>> +void vnic_dev_unregister(struct vnic_dev *vdev)
+>> +{
+>> +	if (vdev) {
+>> +		if (vdev->notify)
+>> +			pci_free_consistent(vdev->pdev,
+>> +				sizeof(struct vnic_devcmd_notify),
+>> +				vdev->notify,
+>> +				vdev->notify_pa);
+>> +		if (vdev->linkstatus)
+>> +			pci_free_consistent(vdev->pdev,
+>> +				sizeof(u32),
+>> +				vdev->linkstatus,
+>> +				vdev->linkstatus_pa);
+>> +		if (vdev->stats)
+>> +			pci_free_consistent(vdev->pdev,
+>> +				sizeof(struct vnic_stats),
+>> +				vdev->stats, vdev->stats_pa);
+>> +		if (vdev->fw_info)
+>> +			pci_free_consistent(vdev->pdev,
+>> +				sizeof(struct vnic_devcmd_fw_info),
+>> +				vdev->fw_info, vdev->fw_info_pa);
+>> +		if (vdev->devcmd2)
+>> +			vnic_dev_deinit_devcmd2(vdev);
+>> +		kfree(vdev);
+>> +	}
+>> +}
+>> +
+>> +struct vnic_dev *vnic_dev_alloc_discover(struct vnic_dev *vdev,
+>> +					 void *priv,
+>> +					 struct pci_dev *pdev,
+>> +					 struct vnic_dev_bar *bar,
+>> +					 unsigned int num_bars)
+>> +{
+>> +	if (!vdev) {
+>> +		vdev =3D kzalloc(sizeof(struct vnic_dev), GFP_ATOMIC);
+>> +		if (!vdev)
+>> +			return NULL;
+>> +	}
+>> +
+>> +	vdev->priv =3D priv;
+>> +	vdev->pdev =3D pdev;
+>> +
+>> +	if (vnic_dev_discover_res(vdev, bar, num_bars))
+>> +		goto err_out;
+>> +
+>> +	return vdev;
+>> +
+>> +err_out:
+>> +	vnic_dev_unregister(vdev);
+>> +
+>> +	return NULL;
+>> +} /* end of vnic_dev_alloc_discover */
+>> +
+>> +/*
+>> + * fallback option is left to keep the interface common for other=20
+>>vnics.
+>> + */
+>> +int vnic_dev_cmd_init(struct vnic_dev *vdev, int fallback)
+>> +{
+>> +	int err =3D -ENODEV;
+>> +	void __iomem *p;
+>> +
+>> +	p =3D vnic_dev_get_res(vdev, RES_TYPE_DEVCMD2, 0);
+>> +	if (p)
+>> +		err =3D vnic_dev_init_devcmd2(vdev);
+>> +	else
+>> +		pr_err("DEVCMD2 resource not found.\n");
+>> +
+>> +	return err;
+>> +} /* end of vnic_dev_cmd_init */
+>> diff --git a/drivers/scsi/snic/vnic_dev.h b/drivers/scsi/snic/vnic_d=
+ev.h
+>> new file mode 100644
+>> index 0000000..502bce5
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_dev.h
+>> @@ -0,0 +1,165 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_DEV_H_
+>> +#define _VNIC_DEV_H_
+>> +
+>> +#include "vnic_resource.h"
+>> +#include "vnic_devcmd.h"
+>> +
+>> +/*
+>> + * These defines avoid symbol clash between fnic and enic (Cisco 10=
+G=20
+>>Eth
+>> + * Driver) when both are built with CONFIG options =3Dy
+>> + */
+>> +#define vnic_dev_priv snic_dev_priv
+>> +#define vnic_dev_get_res_count snic_dev_get_res_count
+>> +#define vnic_dev_get_res snic_dev_get_res
+>> +#define vnic_dev_desc_ring_size snic_dev_desc_ring_siz
+>> +#define vnic_dev_clear_desc_ring snic_dev_clear_desc_ring
+>> +#define vnic_dev_alloc_desc_ring snic_dev_alloc_desc_ring
+>> +#define vnic_dev_free_desc_ring snic_dev_free_desc_ring
+>> +#define vnic_dev_cmd snic_dev_cmd
+>> +#define vnic_dev_fw_info snic_dev_fw_info
+>> +#define vnic_dev_spec snic_dev_spec
+>> +#define vnic_dev_stats_clear snic_dev_stats_clear
+>> +#define vnic_dev_stats_dump snic_dev_stats_dump
+>> +#define vnic_dev_hang_notify snic_dev_hang_notify
+>> +#define vnic_dev_packet_filter snic_dev_packet_filter
+>> +#define vnic_dev_add_addr snic_dev_add_addr
+>> +#define vnic_dev_del_addr snic_dev_del_addr
+>> +#define vnic_dev_mac_addr snic_dev_mac_addr
+>> +#define vnic_dev_notify_set snic_dev_notify_set
+>> +#define vnic_dev_notify_unset snic_dev_notify_unset
+>> +#define vnic_dev_link_status snic_dev_link_status
+>> +#define vnic_dev_port_speed snic_dev_port_speed
+>> +#define vnic_dev_msg_lvl snic_dev_msg_lvl
+>> +#define vnic_dev_mtu snic_dev_mtu
+>> +#define vnic_dev_link_down_cnt snic_dev_link_down_cnt
+>> +#define vnic_dev_close snic_dev_close
+>> +#define vnic_dev_enable snic_dev_enable
+>> +#define vnic_dev_enable_wait snic_dev_enable_wait
+>> +#define vnic_dev_disable snic_dev_disable
+>> +#define vnic_dev_open snic_dev_open
+>> +#define vnic_dev_open_done snic_dev_open_done
+>> +#define vnic_dev_init snic_dev_init
+>> +#define vnic_dev_soft_reset snic_dev_soft_reset
+>> +#define vnic_dev_soft_reset_done snic_dev_soft_reset_done
+>> +#define vnic_dev_set_intr_mode snic_dev_set_intr_mode
+>> +#define vnic_dev_get_intr_mode snic_dev_get_intr_mode
+>> +#define vnic_dev_unregister snic_dev_unregister
+>> +
+>> +#ifndef VNIC_PADDR_TARGET
+>> +#define VNIC_PADDR_TARGET	0x0000000000000000ULL
+>> +#endif
+>> +
+>> +#ifndef readq
+>> +static inline u64 readq(void __iomem *reg)
+>> +{
+>> +	return ((u64)readl(reg + 0x4UL) << 32) | (u64)readl(reg);
+>> +}
+>> +
+>> +static inline void writeq(u64 val, void __iomem *reg)
+>> +{
+>> +	writel(val & 0xffffffff, reg);
+>> +	writel(val >> 32, reg + 0x4UL);
+>> +}
+>Please use 'lower_32_bits' and 'upper_32_bits' here.
+Sure, I will use the API
+
+>
+>> +#endif
+>> +
+>> +enum vnic_dev_intr_mode {
+>> +	VNIC_DEV_INTR_MODE_UNKNOWN,
+>> +	VNIC_DEV_INTR_MODE_INTX,
+>> +	VNIC_DEV_INTR_MODE_MSI,
+>> +	VNIC_DEV_INTR_MODE_MSIX,
+>> +};
+>> +
+>> +struct vnic_dev_bar {
+>> +	void __iomem *vaddr;
+>> +	dma_addr_t bus_addr;
+>> +	unsigned long len;
+>> +};
+>> +
+>> +struct vnic_dev_ring {
+>> +	void *descs;
+>> +	size_t size;
+>> +	dma_addr_t base_addr;
+>> +	size_t base_align;
+>> +	void *descs_unaligned;
+>> +	size_t size_unaligned;
+>> +	dma_addr_t base_addr_unaligned;
+>> +	unsigned int desc_size;
+>> +	unsigned int desc_count;
+>> +	unsigned int desc_avail;
+>> +};
+>> +
+>> +struct vnic_dev;
+>> +struct vnic_stats;
+>> +
+>> +void *vnic_dev_priv(struct vnic_dev *vdev);
+>> +unsigned int vnic_dev_get_res_count(struct vnic_dev *vdev,
+>> +				    enum vnic_res_type type);
+>> +void __iomem *vnic_dev_get_res(struct vnic_dev *vdev, enum=20
+>>vnic_res_type type,
+>> +			       unsigned int index);
+>> +unsigned int vnic_dev_desc_ring_size(struct vnic_dev_ring *ring,
+>> +				     unsigned int desc_count,
+>> +				     unsigned int desc_size);
+>> +void vnic_dev_clear_desc_ring(struct vnic_dev_ring *ring);
+>> +int vnic_dev_alloc_desc_ring(struct vnic_dev *vdev, struct=20
+>>vnic_dev_ring *ring,
+>> +			     unsigned int desc_count, unsigned int desc_size);
+>> +void vnic_dev_free_desc_ring(struct vnic_dev *vdev,
+>> +			     struct vnic_dev_ring *ring);
+>> +int vnic_dev_cmd(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
+>> +		 u64 *a0, u64 *a1, int wait);
+>> +int vnic_dev_fw_info(struct vnic_dev *vdev,
+>> +		     struct vnic_devcmd_fw_info **fw_info);
+>> +int vnic_dev_spec(struct vnic_dev *vdev, unsigned int offset,
+>> +		  unsigned int size, void *value);
+>> +int vnic_dev_stats_clear(struct vnic_dev *vdev);
+>> +int vnic_dev_stats_dump(struct vnic_dev *vdev, struct vnic_stats=20
+>>**stats);
+>> +int vnic_dev_hang_notify(struct vnic_dev *vdev);
+>> +void vnic_dev_packet_filter(struct vnic_dev *vdev, int directed, in=
+t=20
+>>multicast,
+>> +			    int broadcast, int promisc, int allmulti);
+>> +void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr);
+>> +void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr);
+>> +int vnic_dev_mac_addr(struct vnic_dev *vdev, u8 *mac_addr);
+>> +int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr);
+>> +void vnic_dev_notify_unset(struct vnic_dev *vdev);
+>> +int vnic_dev_link_status(struct vnic_dev *vdev);
+>> +u32 vnic_dev_port_speed(struct vnic_dev *vdev);
+>> +u32 vnic_dev_msg_lvl(struct vnic_dev *vdev);
+>> +u32 vnic_dev_mtu(struct vnic_dev *vdev);
+>> +u32 vnic_dev_link_down_cnt(struct vnic_dev *vdev);
+>> +int vnic_dev_close(struct vnic_dev *vdev);
+>> +int vnic_dev_enable(struct vnic_dev *vdev);
+>> +int vnic_dev_enable_wait(struct vnic_dev *vdev);
+>> +int vnic_dev_disable(struct vnic_dev *vdev);
+>> +int vnic_dev_open(struct vnic_dev *vdev, int arg);
+>> +int vnic_dev_open_done(struct vnic_dev *vdev, int *done);
+>> +int vnic_dev_init(struct vnic_dev *vdev, int arg);
+>> +u16 vnic_dev_set_default_vlan(struct vnic_dev *vdev,
+>> +				u16 new_default_vlan);
+>> +struct vnic_dev *vnic_dev_alloc_discover(struct vnic_dev *vdev,
+>> +					 void *priv, struct pci_dev *pdev,
+>> +					 struct vnic_dev_bar *bar,
+>> +					 unsigned int num_bars);
+>> +int vnic_dev_soft_reset(struct vnic_dev *vdev, int arg);
+>> +int vnic_dev_soft_reset_done(struct vnic_dev *vdev, int *done);
+>> +void vnic_dev_set_intr_mode(struct vnic_dev *vdev,
+>> +			    enum vnic_dev_intr_mode intr_mode);
+>> +enum vnic_dev_intr_mode vnic_dev_get_intr_mode(struct vnic_dev *vde=
+v);
+>> +void vnic_dev_unregister(struct vnic_dev *vdev);
+>> +int vnic_dev_cmd_init(struct vnic_dev *vdev, int fallback);
+>> +#endif /* _VNIC_DEV_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_devcmd.h=20
+>>b/drivers/scsi/snic/vnic_devcmd.h
+>> new file mode 100644
+>> index 0000000..627fe04
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_devcmd.h
+>> @@ -0,0 +1,393 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_DEVCMD_H_
+>> +#define _VNIC_DEVCMD_H_
+>> +
+>> +#define _CMD_NBITS      14
+>> +#define _CMD_VTYPEBITS	10
+>> +#define _CMD_FLAGSBITS  6
+>> +#define _CMD_DIRBITS	2
+>> +
+>> +#define _CMD_NMASK      ((1 << _CMD_NBITS)-1)
+>> +#define _CMD_VTYPEMASK  ((1 << _CMD_VTYPEBITS)-1)
+>> +#define _CMD_FLAGSMASK  ((1 << _CMD_FLAGSBITS)-1)
+>> +#define _CMD_DIRMASK    ((1 << _CMD_DIRBITS)-1)
+>> +
+>> +#define _CMD_NSHIFT     0
+>> +#define _CMD_VTYPESHIFT (_CMD_NSHIFT+_CMD_NBITS)
+>> +#define _CMD_FLAGSSHIFT (_CMD_VTYPESHIFT+_CMD_VTYPEBITS)
+>> +#define _CMD_DIRSHIFT   (_CMD_FLAGSSHIFT+_CMD_FLAGSBITS)
+>> +
+>> +/*
+>> + * Direction bits (from host perspective).
+>> + */
+>> +#define _CMD_DIR_NONE   0U
+>> +#define _CMD_DIR_WRITE  1U
+>> +#define _CMD_DIR_READ   2U
+>> +#define _CMD_DIR_RW     (_CMD_DIR_WRITE | _CMD_DIR_READ)
+>> +
+>> +/*
+>> + * Flag bits.
+>> + */
+>> +#define _CMD_FLAGS_NONE 0U
+>> +#define _CMD_FLAGS_NOWAIT 1U
+>> +
+>> +/*
+>> + * vNIC type bits.
+>> + */
+>> +#define _CMD_VTYPE_NONE  0U
+>> +#define _CMD_VTYPE_ENET  1U
+>> +#define _CMD_VTYPE_FC    2U
+>> +#define _CMD_VTYPE_SCSI  4U
+>> +#define _CMD_VTYPE_ALL   (_CMD_VTYPE_ENET | _CMD_VTYPE_FC |=20
+>>_CMD_VTYPE_SCSI)
+>> +
+>> +/*
+>> + * Used to create cmds..
+>> +*/
+>> +#define _CMDCF(dir, flags, vtype, nr)  \
+>> +	(((dir)   << _CMD_DIRSHIFT) | \
+>> +	((flags) << _CMD_FLAGSSHIFT) | \
+>> +	((vtype) << _CMD_VTYPESHIFT) | \
+>> +	((nr)    << _CMD_NSHIFT))
+>> +#define _CMDC(dir, vtype, nr)    _CMDCF(dir, 0, vtype, nr)
+>> +#define _CMDCNW(dir, vtype, nr)  _CMDCF(dir, _CMD_FLAGS_NOWAIT, vty=
+pe,=20
+>>nr)
+>> +
+>> +/*
+>> + * Used to decode cmds..
+>> +*/
+>> +#define _CMD_DIR(cmd)            (((cmd) >> _CMD_DIRSHIFT) &=20
+>>_CMD_DIRMASK)
+>> +#define _CMD_FLAGS(cmd)          (((cmd) >> _CMD_FLAGSSHIFT) &=20
+>>_CMD_FLAGSMASK)
+>> +#define _CMD_VTYPE(cmd)          (((cmd) >> _CMD_VTYPESHIFT) &=20
+>>_CMD_VTYPEMASK)
+>> +#define _CMD_N(cmd)              (((cmd) >> _CMD_NSHIFT) & _CMD_NMA=
+SK)
+>> +
+>> +enum vnic_devcmd_cmd {
+>> +	CMD_NONE                =3D _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_NONE, =
+0),
+>> +
+>> +	/* mcpu fw info in mem: (u64)a0=3Dpaddr to struct vnic_devcmd_fw_i=
+nfo */
+>> +	CMD_MCPU_FW_INFO        =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, =
+1),
+>> +
+>> +	/* dev-specific block member:
+>> +	 *    in: (u16)a0=3Doffset,(u8)a1=3Dsize
+>> +	 *    out: a0=3Dvalue */
+>> +	CMD_DEV_SPEC            =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 2),
+>> +
+>> +	/* stats clear */
+>> +	CMD_STATS_CLEAR         =3D _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL,=
+ 3),
+>> +
+>> +	/* stats dump in mem: (u64)a0=3Dpaddr to stats area,
+>> +	 *                    (u16)a1=3Dsizeof stats area */
+>> +	CMD_STATS_DUMP          =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, =
+4),
+>> +
+>> +	/* set Rx packet filter: (u32)a0=3Dfilters (see CMD_PFILTER_*) */
+>> +	CMD_PACKET_FILTER       =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL=
+, 7),
+>> +
+>> +	/* hang detection notification */
+>> +	CMD_HANG_NOTIFY         =3D _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 8=
+),
+>> +
+>> +	/* MAC address in (u48)a0 */
+>> +	CMD_MAC_ADDR            =3D _CMDC(_CMD_DIR_READ,
+>> +					_CMD_VTYPE_ENET | _CMD_VTYPE_FC, 9),
+>> +
+>> +	/* disable/enable promisc mode: (u8)a0=3D0/1 */
+>> +/***** XXX DEPRECATED *****/
+>> +	CMD_PROMISC_MODE        =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENE=
+T,=20
+>>10),
+>> +
+>> +	/* disable/enable all-multi mode: (u8)a0=3D0/1 */
+>> +/***** XXX DEPRECATED *****/
+>A new driver and already deprecated?
+>Odd.
+>Maybe it should be removed altogether?
+Sure, I will remove it.
+>
+>> +	CMD_ALLMULTI_MODE       =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENE=
+T,=20
+>>11),
+>> +
+>> +	/* add addr from (u48)a0 */
+>> +	CMD_ADDR_ADD            =3D _CMDCNW(_CMD_DIR_WRITE,
+>> +					_CMD_VTYPE_ENET | _CMD_VTYPE_FC, 12),
+>> +
+>> +	/* del addr from (u48)a0 */
+>> +	CMD_ADDR_DEL            =3D _CMDCNW(_CMD_DIR_WRITE,
+>> +					_CMD_VTYPE_ENET | _CMD_VTYPE_FC, 13),
+>> +
+>> +	/* add VLAN id in (u16)a0 */
+>> +	CMD_VLAN_ADD            =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENE=
+T,=20
+>>14),
+>> +
+>> +	/* del VLAN id in (u16)a0 */
+>> +	CMD_VLAN_DEL            =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENE=
+T,=20
+>>15),
+>> +
+>> +	/* nic_cfg in (u32)a0 */
+>> +	CMD_NIC_CFG             =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL=
+, 16),
+>> +
+>> +	/* union vnic_rss_key in mem: (u64)a0=3Dpaddr, (u16)a1=3Dlen */
+>> +	CMD_RSS_KEY             =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ENET,=
+ 17),
+>> +
+>> +	/* union vnic_rss_cpu in mem: (u64)a0=3Dpaddr, (u16)a1=3Dlen */
+>> +	CMD_RSS_CPU             =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ENET,=
+ 18),
+>> +
+>> +	/* initiate softreset */
+>> +	CMD_SOFT_RESET          =3D _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL,=
+ 19),
+>> +
+>> +	/* softreset status:
+>> +	 *    out: a0=3D0 reset complete, a0=3D1 reset in progress */
+>> +	CMD_SOFT_RESET_STATUS   =3D _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 2=
+0),
+>> +
+>> +	/* set struct vnic_devcmd_notify buffer in mem:
+>> +	 * in:
+>> +	 *   (u64)a0=3Dpaddr to notify (set paddr=3D0 to unset)
+>> +	 *   (u32)a1 & 0x00000000ffffffff=3Dsizeof(struct vnic_devcmd_noti=
+fy)
+>> +	 *   (u16)a1 & 0x0000ffff00000000=3Dintr num (-1 for no intr)
+>> +	 * out:
+>> +	 *   (u32)a1 =3D effective size
+>> +	 */
+>> +	CMD_NOTIFY              =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 21)=
+,
+>> +
+>> +	/* UNDI API: (u64)a0=3Dpaddr to s_PXENV_UNDI_ struct,
+>> +	 *           (u8)a1=3DPXENV_UNDI_xxx */
+>> +	CMD_UNDI                =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ENET,=
+ 22),
+>> +
+>> +	/* initiate open sequence (u32)a0=3Dflags (see CMD_OPENF_*) */
+>> +	CMD_OPEN		=3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 23),
+>> +
+>> +	/* open status:
+>> +	 *    out: a0=3D0 open complete, a0=3D1 open in progress */
+>> +	CMD_OPEN_STATUS		=3D _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 24),
+>> +
+>> +	/* close vnic */
+>> +	CMD_CLOSE		=3D _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 25),
+>> +
+>> +	/* initialize virtual link: (u32)a0=3Dflags (see CMD_INITF_*) */
+>> +	CMD_INIT		=3D _CMDCNW(_CMD_DIR_READ, _CMD_VTYPE_ALL, 26),
+>> +
+>> +	/* variant of CMD_INIT, with provisioning info
+>> +	 *     (u64)a0=3Dpaddr of vnic_devcmd_provinfo
+>> +	 *     (u32)a1=3Dsizeof provision info */
+>> +	CMD_INIT_PROV_INFO	=3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ENET, 27),
+>> +
+>> +	/* enable virtual link */
+>> +	CMD_ENABLE		=3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 28),
+>> +
+>> +	/* enable virtual link, waiting variant. */
+>> +	CMD_ENABLE_WAIT		=3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 28),
+>> +
+>> +	/* disable virtual link */
+>> +	CMD_DISABLE		=3D _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 29),
+>> +
+>> +	/* stats dump all vnics on uplink in mem: (u64)a0=3Dpaddr (u32)a1=3D=
+uif */
+>> +	CMD_STATS_DUMP_ALL	=3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 30),
+>> +
+>> +	/* init status:
+>> +	 *    out: a0=3D0 init complete, a0=3D1 init in progress
+>> +	 *         if a0=3D0, a1=3Derrno */
+>> +	CMD_INIT_STATUS		=3D _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 31),
+>> +
+>> +	/* INT13 API: (u64)a0=3Dpaddr to vnic_int13_params struct
+>> +	 *            (u8)a1=3DINT13_CMD_xxx */
+>> +	CMD_INT13               =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_FC, 3=
+2),
+>> +
+>> +	/* logical uplink enable/disable: (u64)a0: 0/1=3Ddisable/enable */
+>> +	CMD_LOGICAL_UPLINK      =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENE=
+T,=20
+>>33),
+>> +
+>> +	/* undo initialize of virtual link */
+>> +	CMD_DEINIT		=3D _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 34),
+>> +
+>> +	/* check fw capability of a cmd:
+>> +	 * in:  (u32)a0=3Dcmd
+>> +	 * out: (u32)a0=3Derrno, 0:valid cmd, a1=3Dsupported VNIC_STF_* bi=
+ts */
+>> +	CMD_CAPABILITY      =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 36),
+>> +
+>> +	/* persistent binding info
+>> +	 * in:  (u64)a0=3Dpaddr of arg
+>> +	 *      (u32)a1=3DCMD_PERBI_XXX */
+>> +	CMD_PERBI       =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_FC, 37),
+>> +
+>> +	/* Interrupt Assert Register functionality
+>> +	 * in: (u16)a0=3Dinterrupt number to assert
+>> +	 */
+>> +	CMD_IAR         =3D _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 38),
+>> +
+>> +	/* initiate hangreset, like softreset after hang detected */
+>> +	CMD_HANG_RESET      =3D _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 39),
+>> +
+>> +	/* hangreset status:
+>> +	 *    out: a0=3D0 reset complete, a0=3D1 reset in progress */
+>> +	CMD_HANG_RESET_STATUS   =3D _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 4=
+0),
+>> +
+>> +	/*
+>> +	 * Set hw ingress packet vlan rewrite mode:
+>> +	 * in:  (u32)a0=3Dnew vlan rewrite mode
+>> +	 * out: (u32)a0=3Dold vlan rewrite mode */
+>> +	CMD_IG_VLAN_REWRITE_MODE =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ENET, 4=
+1),
+>> +
+>> +	/*
+>> +	 * in:  (u16)a0=3Dbdf of target vnic
+>> +	 *      (u32)a1=3Dcmd to proxy
+>> +	 *      a2-a15=3Dargs to cmd in a1
+>> +	 * out: (u32)a0=3Dstatus of proxied cmd
+>> +	 *      a1-a15=3Dout args of proxied cmd */
+>> +	CMD_PROXY_BY_BDF =3D  _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 42),
+>> +
+>> +	/*
+>> +	 * As for BY_BDF except a0 is index of hvnlink subordinate vnic
+>> +	 * or SR-IOV virtual vnic
+>> +	 */
+>> +	CMD_PROXY_BY_INDEX =3D    _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 43),
+>> +
+>> +	/*
+>> +	 * For HPP toggle:
+>> +	 * adapter-info-get
+>> +	 * in:  (u64)a0=3Dphsical address of buffer passed in from caller.
+>> +	 *      (u16)a1=3Dsize of buffer specified in a0.
+>> +	 * out: (u64)a0=3Dphsical address of buffer passed in from caller.
+>> +	 *      (u16)a1=3Dactual bytes from VIF-CONFIG-INFO TLV, or
+>> +	 *              0 if no VIF-CONFIG-INFO TLV was ever received. */
+>> +	CMD_CONFIG_INFO_GET =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 44),
+>> +
+>> +	/*
+>> +	 * INT13 API: (u64)a0=3Dpaddr to vnic_int13_params struct
+>> +	 *            (u32)a1=3DINT13_CMD_xxx
+>> +	 */
+>> +	CMD_INT13_ALL =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 45),
+>> +
+>> +	/*
+>> +	 * Set default vlan:
+>> +	 * in: (u16)a0=3Dnew default vlan
+>> +	 *     (u16)a1=3Dzero for overriding vlan with param a0,
+>> +	 *             non-zero for resetting vlan to the default
+>> +	 * out: (u16)a0=3Dold default vlan
+>> +	 */
+>> +	CMD_SET_DEFAULT_VLAN =3D _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 46),
+>> +
+>> +	/*
+>> +	 * Initialization for the devcmd2 interface.
+>> +	 * in: (u64) a0=3Dhost result buffer physical address
+>> +	 * in: (u16) a1=3Dnumber of entries in result buffer
+>> +	 */
+>> +	CMD_INITIALIZE_DEVCMD2 =3D _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 5=
+7)
+>> +};
+>> +
+>> +/* flags for CMD_OPEN */
+>> +#define CMD_OPENF_OPROM		0x1	/* open coming from option rom */
+>> +
+>> +/* flags for CMD_INIT */
+>> +#define CMD_INITF_DEFAULT_MAC	0x1	/* init with default mac addr */
+>> +
+>> +/* flags for CMD_PACKET_FILTER */
+>> +#define CMD_PFILTER_DIRECTED		0x01
+>> +#define CMD_PFILTER_MULTICAST		0x02
+>> +#define CMD_PFILTER_BROADCAST		0x04
+>> +#define CMD_PFILTER_PROMISCUOUS		0x08
+>> +#define CMD_PFILTER_ALL_MULTICAST	0x10
+>> +
+>> +enum vnic_devcmd_status {
+>> +	STAT_NONE =3D 0,
+>> +	STAT_BUSY =3D 1 << 0,	/* cmd in progress */
+>> +	STAT_ERROR =3D 1 << 1,	/* last cmd caused error (code in a0) */
+>> +};
+>> +
+>> +enum vnic_devcmd_error {
+>> +	ERR_SUCCESS =3D 0,
+>> +	ERR_EINVAL =3D 1,
+>> +	ERR_EFAULT =3D 2,
+>> +	ERR_EPERM =3D 3,
+>> +	ERR_EBUSY =3D 4,
+>> +	ERR_ECMDUNKNOWN =3D 5,
+>> +	ERR_EBADSTATE =3D 6,
+>> +	ERR_ENOMEM =3D 7,
+>> +	ERR_ETIMEDOUT =3D 8,
+>> +	ERR_ELINKDOWN =3D 9,
+>> +};
+>> +
+>> +struct vnic_devcmd_fw_info {
+>> +	char fw_version[32];
+>> +	char fw_build[32];
+>> +	char hw_version[32];
+>> +	char hw_serial_number[32];
+>> +};
+>> +
+>> +struct vnic_devcmd_notify {
+>> +	u32 csum;		/* checksum over following words */
+>> +
+>> +	u32 link_state;		/* link up =3D=3D 1 */
+>> +	u32 port_speed;		/* effective port speed (rate limit) */
+>> +	u32 mtu;		/* MTU */
+>> +	u32 msglvl;		/* requested driver msg lvl */
+>> +	u32 uif;		/* uplink interface */
+>> +	u32 status;		/* status bits (see VNIC_STF_*) */
+>> +	u32 error;		/* error code (see ERR_*) for first ERR */
+>> +	u32 link_down_cnt;	/* running count of link down transitions */
+>> +};
+>> +#define VNIC_STF_FATAL_ERR	0x0001	/* fatal fw error */
+>> +
+>> +struct vnic_devcmd_provinfo {
+>> +	u8 oui[3];
+>> +	u8 type;
+>> +	u8 data[0];
+>> +};
+>> +
+>> +/*
+>> + * Writing cmd register causes STAT_BUSY to get set in status regis=
+ter.
+>> + * When cmd completes, STAT_BUSY will be cleared.
+>> + *
+>> + * If cmd completed successfully STAT_ERROR will be clear
+>> + * and args registers contain cmd-specific results.
+>> + *
+>> + * If cmd error, STAT_ERROR will be set and args[0] contains error=20
+>>code.
+>> + *
+>> + * status register is read-only.  While STAT_BUSY is set,
+>> + * all other register contents are read-only.
+>> + */
+>> +
+>> +/* Make sizeof(vnic_devcmd) a power-of-2 for I/O BAR. */
+>> +#define VNIC_DEVCMD_NARGS 15
+>> +struct vnic_devcmd {
+>> +	u32 status;			/* RO */
+>> +	u32 cmd;			/* RW */
+>> +	u64 args[VNIC_DEVCMD_NARGS];	/* RW cmd args (little-endian) */
+>> +};
+>> +
+>> +
+>> +/*
+>> + * Version 2 of the interface.
+>> + *
+>> + * Some things are carried over, notably the vnic_devcmd_cmd enum.
+>> + */
+>> +
+>> +/*
+>> + * Flags for vnic_devcmd2.flags
+>> + */
+>> +
+>> +#define DEVCMD2_FNORESULT       0x1     /* Don't copy result to hos=
+t */
+>> +
+>> +#define VNIC_DEVCMD2_NARGS      VNIC_DEVCMD_NARGS
+>> +struct vnic_devcmd2 {
+>> +	u16 pad;
+>> +	u16 flags;
+>> +	u32 cmd;                /* same command #defines as original */
+>> +	u64 args[VNIC_DEVCMD2_NARGS];
+>> +};
+>> +
+>> +#define VNIC_DEVCMD2_NRESULTS   VNIC_DEVCMD_NARGS
+>> +struct devcmd2_result {
+>> +	u64 results[VNIC_DEVCMD2_NRESULTS];
+>> +	u32 pad;
+>> +	u16 completed_index;    /* into copy WQ */
+>> +	u8  error;              /* same error codes as original */
+>> +	u8  color;              /* 0 or 1 as with completion queues */
+>> +};
+>> +
+>> +#define DEVCMD2_RING_SIZE   32
+>> +#define DEVCMD2_DESC_SIZE   128
+>> +
+>> +#define DEVCMD2_RESULTS_SIZE_MAX   ((1 << 16) - 1)
+>> +
+>> +#endif /* _VNIC_DEVCMD_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_intr.c=20
+>>b/drivers/scsi/snic/vnic_intr.c
+>> new file mode 100644
+>> index 0000000..fbbfd90
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_intr.c
+>> @@ -0,0 +1,59 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#include <linux/kernel.h>
+>> +#include <linux/errno.h>
+>> +#include <linux/types.h>
+>> +#include <linux/pci.h>
+>> +#include <linux/delay.h>
+>> +#include "vnic_dev.h"
+>> +#include "vnic_intr.h"
+>> +
+>> +void vnic_intr_free(struct vnic_intr *intr)
+>> +{
+>> +	intr->ctrl =3D NULL;
+>> +}
+>> +
+>> +int vnic_intr_alloc(struct vnic_dev *vdev, struct vnic_intr *intr,
+>> +	unsigned int index)
+>> +{
+>> +	intr->index =3D index;
+>> +	intr->vdev =3D vdev;
+>> +
+>> +	intr->ctrl =3D vnic_dev_get_res(vdev, RES_TYPE_INTR_CTRL, index);
+>> +	if (!intr->ctrl) {
+>> +		pr_err("Failed to hook INTR[%d].ctrl resource\n",
+>> +			index);
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_intr_init(struct vnic_intr *intr, unsigned int=20
+>>coalescing_timer,
+>> +	unsigned int coalescing_type, unsigned int mask_on_assertion)
+>> +{
+>> +	iowrite32(coalescing_timer, &intr->ctrl->coalescing_timer);
+>> +	iowrite32(coalescing_type, &intr->ctrl->coalescing_type);
+>> +	iowrite32(mask_on_assertion, &intr->ctrl->mask_on_assertion);
+>> +	iowrite32(0, &intr->ctrl->int_credits);
+>> +}
+>> +
+>> +void vnic_intr_clean(struct vnic_intr *intr)
+>> +{
+>> +	iowrite32(0, &intr->ctrl->int_credits);
+>> +}
+>> diff --git a/drivers/scsi/snic/vnic_intr.h=20
+>>b/drivers/scsi/snic/vnic_intr.h
+>> new file mode 100644
+>> index 0000000..25da8d2
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_intr.h
+>> @@ -0,0 +1,127 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_INTR_H_
+>> +#define _VNIC_INTR_H_
+>> +
+>> +#include <linux/pci.h>
+>> +#include "vnic_dev.h"
+>> +
+>> +/*
+>> + * These defines avoid symbol clash between fnic and enic (Cisco 10=
+G=20
+>>Eth
+>> + * Driver) when both are built with CONFIG options =3Dy
+>> + */
+>> +#define vnic_intr_unmask snic_intr_unmask
+>> +#define vnic_intr_mask snic_intr_mask
+>> +#define vnic_intr_return_credits snic_intr_return_credits
+>> +#define vnic_intr_credits snic_intr_credits
+>> +#define vnic_intr_return_all_credits snic_intr_return_all_credits
+>> +#define vnic_intr_legacy_pba snic_intr_legacy_pba
+>> +#define vnic_intr_free snic_intr_free
+>> +#define vnic_intr_alloc snic_intr_alloc
+>> +#define vnic_intr_init snic_intr_init
+>> +#define vnic_intr_clean snic_intr_clean
+>> +
+>> +#define VNIC_INTR_TIMER_MAX		0xffff
+>> +
+>> +#define VNIC_INTR_TIMER_TYPE_ABS	0
+>> +#define VNIC_INTR_TIMER_TYPE_QUIET	1
+>> +
+>> +/* Interrupt control */
+>> +struct vnic_intr_ctrl {
+>> +	u32 coalescing_timer;		/* 0x00 */
+>> +	u32 pad0;
+>> +	u32 coalescing_value;		/* 0x08 */
+>> +	u32 pad1;
+>> +	u32 coalescing_type;		/* 0x10 */
+>> +	u32 pad2;
+>> +	u32 mask_on_assertion;		/* 0x18 */
+>> +	u32 pad3;
+>> +	u32 mask;			/* 0x20 */
+>> +	u32 pad4;
+>> +	u32 int_credits;		/* 0x28 */
+>> +	u32 pad5;
+>> +	u32 int_credit_return;		/* 0x30 */
+>> +	u32 pad6;
+>> +};
+>Again, one of those curious structures which _look_ like 64bit
+>values ...
+The structure members are aligned to hardware data, I would prefer to k=
+eep=20
+it same.
+
+>
+>> +
+>> +struct vnic_intr {
+>> +	unsigned int index;
+>> +	struct vnic_dev *vdev;
+>> +	struct vnic_intr_ctrl __iomem *ctrl;	/* memory-mapped */
+>> +};
+>> +
+>> +static inline void
+>> +vnic_intr_unmask(struct vnic_intr *intr)
+>> +{
+>> +	iowrite32(0, &intr->ctrl->mask);
+>> +}
+>> +
+>> +static inline void
+>> +vnic_intr_mask(struct vnic_intr *intr)
+>> +{
+>> +	iowrite32(1, &intr->ctrl->mask);
+>> +}
+>> +
+>> +static inline void
+>> +vnic_intr_return_credits(struct vnic_intr *intr,
+>> +			 unsigned int credits,
+>> +			 int unmask,
+>> +			 int reset_timer)
+>> +{
+>> +#define VNIC_INTR_UNMASK_SHIFT		16
+>> +#define VNIC_INTR_RESET_TIMER_SHIFT	17
+>> +
+>> +	u32 int_credit_return =3D (credits & 0xffff) |
+>> +		(unmask ? (1 << VNIC_INTR_UNMASK_SHIFT) : 0) |
+>> +		(reset_timer ? (1 << VNIC_INTR_RESET_TIMER_SHIFT) : 0);
+>> +
+>> +	iowrite32(int_credit_return, &intr->ctrl->int_credit_return);
+>> +}
+>> +
+>> +static inline unsigned int
+>> +vnic_intr_credits(struct vnic_intr *intr)
+>> +{
+>> +	return ioread32(&intr->ctrl->int_credits);
+>> +}
+>> +
+>> +static inline void
+>> +vnic_intr_return_all_credits(struct vnic_intr *intr)
+>> +{
+>> +	unsigned int credits =3D vnic_intr_credits(intr);
+>> +	int unmask =3D 1;
+>> +	int reset_timer =3D 1;
+>> +
+>> +	vnic_intr_return_credits(intr, credits, unmask, reset_timer);
+>> +}
+>> +
+>> +static inline u32
+>> +vnic_intr_legacy_pba(u32 __iomem *legacy_pba)
+>> +{
+>> +	/* read PBA without clearing */
+>> +	return ioread32(legacy_pba);
+>> +}
+>> +
+>> +void vnic_intr_free(struct vnic_intr *);
+>> +int vnic_intr_alloc(struct vnic_dev *, struct vnic_intr *, unsigned=
+=20
+>>int);
+>> +void vnic_intr_init(struct vnic_intr *intr,
+>> +		    unsigned int coalescing_timer,
+>> +		    unsigned int coalescing_type,
+>> +		    unsigned int mask_on_assertion);
+>> +void vnic_intr_clean(struct vnic_intr *);
+>> +
+>> +#endif /* _VNIC_INTR_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_resource.h=20
+>>b/drivers/scsi/snic/vnic_resource.h
+>> new file mode 100644
+>> index 0000000..9713d68
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_resource.h
+>> @@ -0,0 +1,68 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_RESOURCE_H_
+>> +#define _VNIC_RESOURCE_H_
+>> +
+>> +#define VNIC_RES_MAGIC		0x766E6963L	/* 'vnic' */
+>> +#define VNIC_RES_VERSION	0x00000000L
+>> +
+>> +/* vNIC resource types */
+>> +enum vnic_res_type {
+>> +	RES_TYPE_EOL,			/* End-of-list */
+>> +	RES_TYPE_WQ,			/* Work queues */
+>> +	RES_TYPE_RQ,			/* Receive queues */
+>> +	RES_TYPE_CQ,			/* Completion queues */
+>> +	RES_TYPE_RSVD1,
+>> +	RES_TYPE_NIC_CFG,		/* Enet NIC config registers */
+>> +	RES_TYPE_RSVD2,
+>> +	RES_TYPE_RSVD3,
+>> +	RES_TYPE_RSVD4,
+>> +	RES_TYPE_RSVD5,
+>> +	RES_TYPE_INTR_CTRL,		/* Interrupt ctrl table */
+>> +	RES_TYPE_INTR_TABLE,		/* MSI/MSI-X Interrupt table */
+>> +	RES_TYPE_INTR_PBA,		/* MSI/MSI-X PBA table */
+>> +	RES_TYPE_INTR_PBA_LEGACY,	/* Legacy intr status */
+>> +	RES_TYPE_RSVD6,
+>> +	RES_TYPE_RSVD7,
+>> +	RES_TYPE_DEVCMD,		/* Device command region */
+>> +	RES_TYPE_PASS_THRU_PAGE,	/* Pass-thru page */
+>> +	RES_TYPE_SUBVNIC,		/* subvnic resource type */
+>> +	RES_TYPE_MQ_WQ,			/* MQ Work queues */
+>> +	RES_TYPE_MQ_RQ,			/* MQ Receive queues */
+>> +	RES_TYPE_MQ_CQ,			/* MQ Completion queues */
+>> +	RES_TYPE_DEPRECATED1,		/* Old version of devcmd 2 */
+>> +	RES_TYPE_DEPRECATED2,		/* Old version of devcmd 2 */
+>> +	RES_TYPE_DEVCMD2,		/* Device control region */
+>> +
+>> +	RES_TYPE_MAX,			/* Count of resource types */
+>> +};
+>> +
+>> +struct vnic_resource_header {
+>> +	u32 magic;
+>> +	u32 version;
+>> +};
+>> +
+>> +struct vnic_resource {
+>> +	u8 type;
+>> +	u8 bar;
+>> +	u8 pad[2];
+>> +	u32 bar_offset;
+>> +	u32 count;
+>> +};
+>> +
+>> +#endif /* _VNIC_RESOURCE_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_snic.h=20
+>>b/drivers/scsi/snic/vnic_snic.h
+>> new file mode 100644
+>> index 0000000..514d39f
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_snic.h
+>> @@ -0,0 +1,54 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_SNIC_H_
+>> +#define _VNIC_SNIC_H_
+>> +
+>> +#define VNIC_SNIC_WQ_DESCS_MIN              64
+>> +#define VNIC_SNIC_WQ_DESCS_MAX              1024
+>> +
+>> +#define VNIC_SNIC_MAXDATAFIELDSIZE_MIN      256
+>> +#define VNIC_SNIC_MAXDATAFIELDSIZE_MAX      2112
+>> +
+>> +#define VNIC_SNIC_IO_THROTTLE_COUNT_MIN     1
+>> +#define VNIC_SNIC_IO_THROTTLE_COUNT_MAX     1024
+>> +
+>> +#define VNIC_SNIC_PORT_DOWN_TIMEOUT_MIN     0
+>> +#define VNIC_SNIC_PORT_DOWN_TIMEOUT_MAX     240000
+>> +
+>> +#define VNIC_SNIC_PORT_DOWN_IO_RETRIES_MIN  0
+>> +#define VNIC_SNIC_PORT_DOWN_IO_RETRIES_MAX  255
+>> +
+>> +#define VNIC_SNIC_LUNS_PER_TARGET_MIN       1
+>> +#define VNIC_SNIC_LUNS_PER_TARGET_MAX       1024
+>> +
+>> +/* Device-specific region: scsi configuration */
+>> +struct vnic_snic_config {
+>> +	u32 flags;
+>> +	u32 wq_enet_desc_count;
+>> +	u32 io_throttle_count;
+>> +	u32 port_down_timeout;
+>> +	u32 port_down_io_retries;
+>> +	u32 luns_per_tgt;
+>> +	u16 maxdatafieldsize;
+>> +	u16 intr_timer;
+>> +	u8 intr_timer_type;
+>> +	u8 _resvd2;
+>> +	u8 xpt_type;
+>> +	u8 hid;
+>> +};
+>> +#endif /* _VNIC_SNIC_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_stats.h=20
+>>b/drivers/scsi/snic/vnic_stats.h
+>> new file mode 100644
+>> index 0000000..370a37c
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_stats.h
+>> @@ -0,0 +1,68 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_STATS_H_
+>> +#define _VNIC_STATS_H_
+>> +
+>> +/* Tx statistics */
+>> +struct vnic_tx_stats {
+>> +	u64 tx_frames_ok;
+>> +	u64 tx_unicast_frames_ok;
+>> +	u64 tx_multicast_frames_ok;
+>> +	u64 tx_broadcast_frames_ok;
+>> +	u64 tx_bytes_ok;
+>> +	u64 tx_unicast_bytes_ok;
+>> +	u64 tx_multicast_bytes_ok;
+>> +	u64 tx_broadcast_bytes_ok;
+>> +	u64 tx_drops;
+>> +	u64 tx_errors;
+>> +	u64 tx_tso;
+>> +	u64 rsvd[16];
+>> +};
+>> +
+>> +/* Rx statistics */
+>> +struct vnic_rx_stats {
+>> +	u64 rx_frames_ok;
+>> +	u64 rx_frames_total;
+>> +	u64 rx_unicast_frames_ok;
+>> +	u64 rx_multicast_frames_ok;
+>> +	u64 rx_broadcast_frames_ok;
+>> +	u64 rx_bytes_ok;
+>> +	u64 rx_unicast_bytes_ok;
+>> +	u64 rx_multicast_bytes_ok;
+>> +	u64 rx_broadcast_bytes_ok;
+>> +	u64 rx_drop;
+>> +	u64 rx_no_bufs;
+>> +	u64 rx_errors;
+>> +	u64 rx_rss;
+>> +	u64 rx_crc_errors;
+>> +	u64 rx_frames_64;
+>> +	u64 rx_frames_127;
+>> +	u64 rx_frames_255;
+>> +	u64 rx_frames_511;
+>> +	u64 rx_frames_1023;
+>> +	u64 rx_frames_1518;
+>> +	u64 rx_frames_to_max;
+>> +	u64 rsvd[16];
+>> +};
+>> +
+>> +struct vnic_stats {
+>> +	struct vnic_tx_stats tx;
+>> +	struct vnic_rx_stats rx;
+>> +};
+>> +
+>> +#endif /* _VNIC_STATS_H_ */
+>> diff --git a/drivers/scsi/snic/vnic_wq.c b/drivers/scsi/snic/vnic_wq=
+=2Ec
+>> new file mode 100644
+>> index 0000000..b323c10
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_wq.c
+>> @@ -0,0 +1,236 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#include <linux/errno.h>
+>> +#include <linux/types.h>
+>> +#include <linux/pci.h>
+>> +#include <linux/delay.h>
+>> +#include <linux/slab.h>
+>> +#include "vnic_dev.h"
+>> +#include "vnic_wq.h"
+>> +
+>> +static inline int vnic_wq_get_ctrl(struct vnic_dev *vdev, struct=20
+>>vnic_wq *wq,
+>> +	unsigned int index, enum vnic_res_type res_type)
+>> +{
+>> +	wq->ctrl =3D vnic_dev_get_res(vdev, res_type, index);
+>> +	if (!wq->ctrl)
+>> +		return -EINVAL;
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static inline int vnic_wq_alloc_ring(struct vnic_dev *vdev, struct=20
+>>vnic_wq *wq,
+>> +	unsigned int index, unsigned int desc_count, unsigned int desc_siz=
+e)
+>> +{
+>> +	return vnic_dev_alloc_desc_ring(vdev, &wq->ring, desc_count,=20
+>>desc_size);
+>> +}
+>> +
+>> +static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
+>> +{
+>> +	struct vnic_wq_buf *buf;
+>> +	unsigned int i, j, count =3D wq->ring.desc_count;
+>> +	unsigned int blks =3D VNIC_WQ_BUF_BLKS_NEEDED(count);
+>> +
+>> +	for (i =3D 0; i < blks; i++) {
+>> +		wq->bufs[i] =3D kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
+>> +		if (!wq->bufs[i]) {
+>> +			pr_err("Failed to alloc wq_bufs\n");
+>> +
+>> +			return -ENOMEM;
+>> +		}
+>> +	}
+>> +
+>> +	for (i =3D 0; i < blks; i++) {
+>> +		buf =3D wq->bufs[i];
+>> +		for (j =3D 0; j < VNIC_WQ_BUF_DFLT_BLK_ENTRIES; j++) {
+>> +			buf->index =3D i * VNIC_WQ_BUF_DFLT_BLK_ENTRIES + j;
+>> +			buf->desc =3D (u8 *)wq->ring.descs +
+>> +				wq->ring.desc_size * buf->index;
+>> +			if (buf->index + 1 =3D=3D count) {
+>> +				buf->next =3D wq->bufs[0];
+>> +				break;
+>> +			} else if (j + 1 =3D=3D VNIC_WQ_BUF_DFLT_BLK_ENTRIES) {
+>> +				buf->next =3D wq->bufs[i + 1];
+>> +			} else {
+>> +				buf->next =3D buf + 1;
+>> +				buf++;
+>> +			}
+>> +		}
+>> +	}
+>> +
+>> +	wq->to_use =3D wq->to_clean =3D wq->bufs[0];
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_wq_free(struct vnic_wq *wq)
+>> +{
+>> +	struct vnic_dev *vdev;
+>> +	unsigned int i;
+>> +
+>> +	vdev =3D wq->vdev;
+>> +
+>> +	vnic_dev_free_desc_ring(vdev, &wq->ring);
+>> +
+>> +	for (i =3D 0; i < VNIC_WQ_BUF_BLKS_MAX; i++) {
+>> +		kfree(wq->bufs[i]);
+>> +		wq->bufs[i] =3D NULL;
+>> +	}
+>> +
+>> +	wq->ctrl =3D NULL;
+>> +
+>> +}
+>> +
+>> +int vnic_wq_devcmd2_alloc(struct vnic_dev *vdev, struct vnic_wq *wq=
+,
+>> +	unsigned int desc_count, unsigned int desc_size)
+>> +{
+>> +	int err;
+>> +
+>> +	wq->index =3D 0;
+>> +	wq->vdev =3D vdev;
+>> +
+>> +	err =3D vnic_wq_get_ctrl(vdev, wq, 0, RES_TYPE_DEVCMD2);
+>> +	if (err) {
+>> +		pr_err("Failed to get devcmd2 resource\n");
+>> +
+>> +		return err;
+>> +	}
+>> +
+>> +	vnic_wq_disable(wq);
+>> +
+>> +	err =3D vnic_wq_alloc_ring(vdev, wq, 0, desc_count, desc_size);
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +int vnic_wq_alloc(struct vnic_dev *vdev, struct vnic_wq *wq, unsign=
+ed=20
+>>int index,
+>> +	unsigned int desc_count, unsigned int desc_size)
+>> +{
+>> +	int err;
+>> +
+>> +	wq->index =3D index;
+>> +	wq->vdev =3D vdev;
+>> +
+>> +	err =3D vnic_wq_get_ctrl(vdev, wq, index, RES_TYPE_WQ);
+>> +	if (err) {
+>> +		pr_err("Failed to hook WQ[%d] resource\n", index);
+>> +
+>> +		return err;
+>> +	}
+>> +
+>> +	vnic_wq_disable(wq);
+>> +
+>> +	err =3D vnic_wq_alloc_ring(vdev, wq, index, desc_count, desc_size)=
+;
+>> +	if (err)
+>> +		return err;
+>> +
+>> +	err =3D vnic_wq_alloc_bufs(wq);
+>> +	if (err) {
+>> +		vnic_wq_free(wq);
+>> +
+>> +		return err;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void vnic_wq_init_start(struct vnic_wq *wq, unsigned int cq_index,
+>> +	unsigned int fetch_index, unsigned int posted_index,
+>> +	unsigned int error_interrupt_enable,
+>> +	unsigned int error_interrupt_offset)
+>> +{
+>> +	u64 paddr;
+>> +	unsigned int count =3D wq->ring.desc_count;
+>> +
+>> +	paddr =3D (u64)wq->ring.base_addr | VNIC_PADDR_TARGET;
+>> +	writeq(paddr, &wq->ctrl->ring_base);
+>> +	iowrite32(count, &wq->ctrl->ring_size);
+>> +	iowrite32(fetch_index, &wq->ctrl->fetch_index);
+>> +	iowrite32(posted_index, &wq->ctrl->posted_index);
+>> +	iowrite32(cq_index, &wq->ctrl->cq_index);
+>> +	iowrite32(error_interrupt_enable, &wq->ctrl->error_interrupt_enabl=
+e);
+>> +	iowrite32(error_interrupt_offset, &wq->ctrl->error_interrupt_offse=
+t);
+>> +	iowrite32(0, &wq->ctrl->error_status);
+>> +
+>> +	wq->to_use =3D wq->to_clean =3D
+>> +		&wq->bufs[fetch_index / VNIC_WQ_BUF_BLK_ENTRIES(count)]
+>> +			[fetch_index % VNIC_WQ_BUF_BLK_ENTRIES(count)];
+>> +}
+>> +
+>> +void vnic_wq_init(struct vnic_wq *wq, unsigned int cq_index,
+>> +	unsigned int error_interrupt_enable,
+>> +	unsigned int error_interrupt_offset)
+>> +{
+>> +	vnic_wq_init_start(wq, cq_index, 0, 0, error_interrupt_enable,
+>> +			   error_interrupt_offset);
+>> +}
+>> +
+>> +unsigned int vnic_wq_error_status(struct vnic_wq *wq)
+>> +{
+>> +	return ioread32(&wq->ctrl->error_status);
+>> +}
+>> +
+>> +void vnic_wq_enable(struct vnic_wq *wq)
+>> +{
+>> +	iowrite32(1, &wq->ctrl->enable);
+>> +}
+>> +
+>> +int vnic_wq_disable(struct vnic_wq *wq)
+>> +{
+>> +	unsigned int wait;
+>> +
+>> +	iowrite32(0, &wq->ctrl->enable);
+>> +
+>> +	/* Wait for HW to ACK disable request */
+>> +	for (wait =3D 0; wait < 100; wait++) {
+>> +		if (!(ioread32(&wq->ctrl->running)))
+>> +			return 0;
+>> +		udelay(1);
+>> +	}
+>> +
+>> +	pr_err("Failed to disable WQ[%d]\n", wq->index);
+>> +
+>> +	return -ETIMEDOUT;
+>> +}
+>> +
+>> +void vnic_wq_clean(struct vnic_wq *wq,
+>> +	void (*buf_clean)(struct vnic_wq *wq, struct vnic_wq_buf *buf))
+>> +{
+>> +	struct vnic_wq_buf *buf;
+>> +
+>> +	BUG_ON(ioread32(&wq->ctrl->enable));
+>> +
+>> +	buf =3D wq->to_clean;
+>> +
+>> +	while (vnic_wq_desc_used(wq) > 0) {
+>> +
+>> +		(*buf_clean)(wq, buf);
+>> +
+>> +		buf =3D wq->to_clean =3D buf->next;
+>> +		wq->ring.desc_avail++;
+>> +	}
+>> +
+>> +	wq->to_use =3D wq->to_clean =3D wq->bufs[0];
+>> +
+>> +	iowrite32(0, &wq->ctrl->fetch_index);
+>> +	iowrite32(0, &wq->ctrl->posted_index);
+>> +	iowrite32(0, &wq->ctrl->error_status);
+>> +
+>> +	vnic_dev_clear_desc_ring(&wq->ring);
+>> +}
+>> diff --git a/drivers/scsi/snic/vnic_wq.h b/drivers/scsi/snic/vnic_wq=
+=2Eh
+>> new file mode 100644
+>> index 0000000..843e9fd
+>> --- /dev/null
+>> +++ b/drivers/scsi/snic/vnic_wq.h
+>> @@ -0,0 +1,187 @@
+>> +/*
+>> + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
+>> + *
+>> + * This program is free software; you may redistribute it and/or mo=
+dify
+>> + * it under the terms of the GNU General Public License as publishe=
+d by
+>> + * the Free Software Foundation; version 2 of the License.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+>> + * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES =
+OF
+>> + * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+>> + * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLD=
+ERS
+>> + * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN =
+AN
+>> + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR I=
+N
+>> + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+>> + * SOFTWARE.
+>> + */
+>> +
+>> +#ifndef _VNIC_WQ_H_
+>> +#define _VNIC_WQ_H_
+>> +
+>> +#include <linux/pci.h>
+>> +#include "vnic_dev.h"
+>> +#include "vnic_cq.h"
+>> +
+>> +/*
+>> + * These defines avoid symbol clash between fnic and enic (Cisco 10=
+G=20
+>>Eth
+>> + * Driver) when both are built with CONFIG options =3Dy
+>> + */
+>> +#define vnic_wq_desc_avail snic_wq_desc_avail
+>> +#define vnic_wq_desc_used snic_wq_desc_used
+>> +#define vnic_wq_next_desc fni_cwq_next_desc
+>> +#define vnic_wq_post snic_wq_post
+>> +#define vnic_wq_service snic_wq_service
+>> +#define vnic_wq_free snic_wq_free
+>> +#define vnic_wq_alloc snic_wq_alloc
+>> +#define vnic_wq_init snic_wq_init
+>> +#define vnic_wq_error_status snic_wq_error_status
+>> +#define vnic_wq_enable snic_wq_enable
+>> +#define vnic_wq_disable snic_wq_disable
+>> +#define vnic_wq_clean snic_wq_clean
+>> +
+>> +/* Work queue control */
+>> +struct vnic_wq_ctrl {
+>> +	u64 ring_base;			/* 0x00 */
+>> +	u32 ring_size;			/* 0x08 */
+>> +	u32 pad0;
+>> +	u32 posted_index;		/* 0x10 */
+>> +	u32 pad1;
+>> +	u32 cq_index;			/* 0x18 */
+>> +	u32 pad2;
+>> +	u32 enable;			/* 0x20 */
+>> +	u32 pad3;
+>> +	u32 running;			/* 0x28 */
+>> +	u32 pad4;
+>> +	u32 fetch_index;		/* 0x30 */
+>> +	u32 pad5;
+>> +	u32 dca_value;			/* 0x38 */
+>> +	u32 pad6;
+>> +	u32 error_interrupt_enable;	/* 0x40 */
+>> +	u32 pad7;
+>> +	u32 error_interrupt_offset;	/* 0x48 */
+>> +	u32 pad8;
+>> +	u32 error_status;		/* 0x50 */
+>> +	u32 pad9;
+>> +};
+>Same here ...
+The structure members are aligned to hardware data, I would prefer to k=
+eep=20
+it same.
 
 >
 >Cheers,
