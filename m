@@ -1,72 +1,41 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Concerns about "mpt2sas: Added Reply Descriptor Post Queue
- (RDPQ) Array support"
-Date: Thu, 02 Apr 2015 16:39:41 +1100
-Message-ID: <1427953181.20500.230.camel@kernel.crashing.org>
-References: <1424408500.27448.25.camel@kernel.crashing.org>
-	 <1424408769.27448.28.camel@kernel.crashing.org>
-	 <1424409761.27448.32.camel@kernel.crashing.org>
-	 <1424411110.16222.5.camel@HansenPartnership.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 95101] scsi/mpt2sas: setpci reset results in kernel oops
+Date: Thu, 02 Apr 2015 05:58:32 +0000
+Message-ID: <bug-95101-11613-qqWgiduLlT@https.bugzilla.kernel.org/>
+References: <bug-95101-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1424411110.16222.5.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39852 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751541AbbDBF6h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Apr 2015 01:58:37 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C95E42038D
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2015 05:58:35 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 30C8920351
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2015 05:58:33 +0000 (UTC)
+In-Reply-To: <bug-95101-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2015-02-19 at 21:45 -0800, James Bottomley wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=95101
 
-> Ben, this is legal by design.  It was specifically designed for the
-> aic79xx SCSI card, but can be used for a variety of other reasons.  The
-> aic79xx hardware problem was that the DMA engine could address the whole
-> of memory (it had two address modes, a 39 bit one and a 64 bit one) but
-> the script engine that runs the mailboxes only had a 32 bit activation
-> register (the activating write points at the physical address of the
-> script to begin executing).  This meant that the scripts that run in
-> memory had to be in the first 4GB of physical memory, hence the split
-> mask.  The DMA mask specifies that the card can transfer from anywhere
-> in physical memory, but the consistent_dma_mask says that the consistent
-> allocation used to get scripts memory must come from the lower 4GB.
+--- Comment #2 from Nagarajkumar N <nagarajkumar.narayanan@seagate.com> ---
+Created attachment 172971
+  --> https://bugzilla.kernel.org/attachment.cgi?id=172971&action=edit
+mpt2sas pci resource removal synchronization patch
 
-So looking at that again...
+The attached patch need to applied on latest linux main git branch on
+scsi/mpt2sas
+The patch provides syncrhonization between cli, brm status show and pci
+resource removal path through mutex lock and spinlock protection on linked list
+of controllers (multiple warpdrive cards are used) on controller resource
+removal and addition
 
-This is interesting ... basically any driver using a different mask has
-been broken on powerpc for basically ever. The whole concept was poorly
-designed, for example,  the set_consistent_mask isn't a dma_map_ops
-unlike everything else.
-
-In some cases, what we want is convey a base+offset information to
-drivers but we can't do that.
-
-This stuff cannot work with setups like a lot of our iommus where we
-have a remapped region at the bottom of the DMA address space and a
-bypass (direct map) region high up.
-
-Basically, we can fix it, at least for most platforms, but it will be
-hard, invasive, *and* will need to go to stable. Grmbl.
-
-We'll have to replace our "direct" DMA ops (which just apply an offset)
-which we use for devices that set a 64-bit mask on platform that support
-a bypass window, with some smart-ass hybrid variant that selectively
-shoot stuff up to the bypass window or down via the iommu remapped based
-on the applicable mask for a given operation.
-
-It would be nice if we could come up with a way to inform the driver
-that we support that sort of "bypass" region with an offset. That would
-allow drivers that have that 64-bit base + 32-bit offset scheme to work
-much more efficiently for us. The driver could configure the base to be
-our "bypass window offset", and we could use ZONE_DMA32 for consistent
-DMAs.
-
-It would also help us with things like some GPUs that can only do 40-bit
-DMA (which won't allow them to reach our bypass region normally) but do
-have a way to configure the generated top bits of all DMA addresses in
-some fixed register.
-
-Any idea what such an interface might look like ?
-
-Cheers,
-Ben.
+-- 
+You are receiving this mail because:
+You are on the CC list for the bug.
