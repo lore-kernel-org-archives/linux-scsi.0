@@ -1,60 +1,54 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v3 05/42] hpsa: decrement h->commands_outstanding in fail_all_outstanding_cmds
-Date: Thu, 02 Apr 2015 15:33:48 +0200
-Message-ID: <551D453C.1030205@redhat.com>
-References: <20150317200139.19856.87982.stgit@brunhilda> <20150317200252.19856.96524.stgit@brunhilda>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH] scsi_transport_fc: Add support for 25Gbit speed
+Date: Thu, 2 Apr 2015 15:50:52 -0400
+Message-ID: <1428004252.6933.1.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41538 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753303AbbDBNeS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Apr 2015 09:34:18 -0400
-In-Reply-To: <20150317200252.19856.96524.stgit@brunhilda>
+Received: from cmexedge2.emulex.com ([138.239.224.100]:28253 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbbDBTvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2015 15:51:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@pmcs.com>, scott.teel@pmcs.com, Kevin.Barnett@pmcs.com, james.bottomley@parallels.com, hch@infradead.org, Justin.Lindley@pmcs.combrace@pmcs.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 03/17/2015 09:02 PM, Don Brace wrote:
-> From: Stephen Cameron <stephenmcameron@gmail.com>
->
-> make tracking of outstanding commands more robust
->
-> Reviewed-by: Scott Teel <scott.teel@pmcs.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@pmcs.com>
-> Signed-off-by: Don Brace <don.brace@pmcs.com>
-> ---
->  drivers/scsi/hpsa.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index fe860a6..3a06812 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -6945,7 +6945,7 @@ static void fail_all_outstanding_cmds(struct ctlr_info *h)
->  		if (refcount > 1) {
->  			c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
->  			finish_cmd(c);
-> -			failcount++;
+Add FC transport support for 25Gbit speed
 
-The failcount should stay untouched.
+Signed-off-by: James Smart <james.smart@emulex.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 1 +
+ include/scsi/scsi_transport_fc.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-What is the status of this series is it already accepted or makes reviewing still sense?
-Christopher has commented on 2/41 + 6/41 in the previous V2, has this been answered/resolved?
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 5d6f348..24eaaf6 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -265,6 +265,7 @@ static const struct {
+ 	{ FC_PORTSPEED_40GBIT,		"40 Gbit" },
+ 	{ FC_PORTSPEED_50GBIT,		"50 Gbit" },
+ 	{ FC_PORTSPEED_100GBIT,		"100 Gbit" },
++	{ FC_PORTSPEED_25GBIT,		"25 Gbit" },
+ 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
+ };
+ fc_bitfield_name_search(port_speed, fc_port_speed_names)
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 007a0bc..784bc2c 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -135,6 +135,7 @@ enum fc_vport_state {
+ #define FC_PORTSPEED_40GBIT		0x100
+ #define FC_PORTSPEED_50GBIT		0x200
+ #define FC_PORTSPEED_100GBIT		0x400
++#define FC_PORTSPEED_25GBIT		0x800
+ #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
+ 
+ /*
+-- 
+1.7.11.7
 
-Thanks,
-Tomas
 
-
-> +			atomic_dec(&h->commands_outstanding);
->  		}
->  		cmd_free(h, c);
->  	}
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
