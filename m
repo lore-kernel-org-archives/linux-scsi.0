@@ -1,54 +1,20 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH] scsi_transport_fc: Add support for 25Gbit speed
-Date: Thu, 2 Apr 2015 15:50:52 -0400
-Message-ID: <1428004252.6933.1.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
+From: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+Subject: Re: [PATCH v2] IB/srp: Add 64-bit LUN support
+Date: Thu, 2 Apr 2015 13:03:20 -0700
+Message-ID: <CAL1RGDWg6Ls-Z+NQJYr6w18ieeAzdwC1tJp3FpZSbrKjNQz+yg@mail.gmail.com>
+References: <54F72BA6.1060300@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:28253 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbbDBTvj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2015 15:51:39 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54F72BA6.1060300-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Sagi Grimberg <sagig-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Sebastian Parschauer <sebastian.riemer-EIkl63zCoXaH+58JC4qpiA@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Nathan Fontenot <nfont-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Add FC transport support for 25Gbit speed
-
-Signed-off-by: James Smart <james.smart@emulex.com>
----
- drivers/scsi/scsi_transport_fc.c | 1 +
- include/scsi/scsi_transport_fc.h | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 5d6f348..24eaaf6 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -265,6 +265,7 @@ static const struct {
- 	{ FC_PORTSPEED_40GBIT,		"40 Gbit" },
- 	{ FC_PORTSPEED_50GBIT,		"50 Gbit" },
- 	{ FC_PORTSPEED_100GBIT,		"100 Gbit" },
-+	{ FC_PORTSPEED_25GBIT,		"25 Gbit" },
- 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
- };
- fc_bitfield_name_search(port_speed, fc_port_speed_names)
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 007a0bc..784bc2c 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -135,6 +135,7 @@ enum fc_vport_state {
- #define FC_PORTSPEED_40GBIT		0x100
- #define FC_PORTSPEED_50GBIT		0x200
- #define FC_PORTSPEED_100GBIT		0x400
-+#define FC_PORTSPEED_25GBIT		0x800
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
- 
- /*
--- 
-1.7.11.7
-
-
-
+Thanks, applied at last.  I'm assuming the vscsi changes are OK since
+they look mechanical and we haven't heard anything from IBM people.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
