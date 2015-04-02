@@ -1,82 +1,96 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/9] snic: snic module infrastructure
-Date: Thu, 2 Apr 2015 02:21:58 -0700
-Message-ID: <20150402092158.GA6794@infradead.org>
-References: <1427965488-12073-1-git-send-email-nmusini@cisco.com>
- <1427965488-12073-2-git-send-email-nmusini@cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] hpsa: dont meddle with hw which isn't ours (cciss)
+Date: Thu,  2 Apr 2015 15:25:54 +0200
+Message-ID: <1427981154-27659-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48227 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbbDBJWA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2015 05:22:00 -0400
-Content-Disposition: inline
-In-Reply-To: <1427965488-12073-2-git-send-email-nmusini@cisco.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47774 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbbDBNZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Apr 2015 09:25:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Narsimhulu Musini <nmusini@cisco.com>
-Cc: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, hare@suse.de, Sesidhar Baddela <sebaddel@cisco.com>
+To: linux-scsi@vger.kernel.org
+Cc: don.brace@pmcs.com, scott.teel@pmcs.com, Justin.Lindley@pmcs.com, Kevin.Barnett@pmcs.com
 
-> +/*
-> + * Usage of the scsi_cmnd scratchpad.
-> + * These fields are locked by the hashed req_lock.
-> + */
-> +#define CMD_SP(Cmnd)		((Cmnd)->SCp.ptr)
-> +#define CMD_STATE(Cmnd)		((Cmnd)->SCp.phase)
-> +#define CMD_ABTS_STATUS(Cmnd)	((Cmnd)->SCp.Message)
-> +#define CMD_LR_STATUS(Cmnd)	((Cmnd)->SCp.have_data_in)
-> +#define CMD_TAG(Cmnd)		((Cmnd)->SCp.sent_command)
-> +#define CMD_FLAGS(Cmnd)		((Cmnd)->SCp.Status)
+The hpsa driver touches the hardware before checking the pci-id table.
+This way, especially in kdump, it may confuse the proper driver (cciss).
 
-Please don't abuse ->SCp for new drivers.  Declare your own structure
-and set .cmd_size in the host template to it's size, then access it
-using scsi_cmd_priv().  That should also avoid the need for the mempool
-that the driver currently creates.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/hpsa.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-> +static int
-> +snic_slave_alloc(struct scsi_device *sdev)
-> +{
-> +	u32 qdepth = 0, max_ios = 0;
-> +	struct snic_tgt *tgt = starget_to_tgt(scsi_target(sdev));
-> +
-> +	if (!tgt || snic_tgt_chkready(tgt))
-> +		return -ENXIO;
-> +
-> +	max_ios = snic_max_qdepth;
-> +	max_ios = snic_max_qdepth;
-> +	qdepth = min_t(u32, max_ios, SNIC_MAX_QUEUE_DEPTH);
-> +	scsi_change_queue_depth(sdev, qdepth);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index bddb33d30f..c33a077636 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -6737,7 +6737,7 @@ static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
+ /* This does a hard reset of the controller using PCI power management
+  * states or the using the doorbell register.
+  */
+-static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
++static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
+ {
+ 	u64 cfg_offset;
+ 	u32 cfg_base_addr;
+@@ -6748,7 +6748,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	int rc;
+ 	struct CfgTable __iomem *cfgtable;
+ 	u32 use_doorbell;
+-	u32 board_id;
+ 	u16 command_register;
+ 
+ 	/* For controllers as old as the P600, this is very nearly
+@@ -6764,11 +6763,6 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	 * using the doorbell register.
+ 	 */
+ 
+-	rc = hpsa_lookup_board_id(pdev, &board_id);
+-	if (rc < 0) {
+-		dev_warn(&pdev->dev, "Board ID not found\n");
+-		return rc;
+-	}
+ 	if (!ctlr_is_resettable(board_id)) {
+ 		dev_warn(&pdev->dev, "Controller not resettable\n");
+ 		return -ENODEV;
+@@ -7413,7 +7407,7 @@ static void hpsa_hba_inquiry(struct ctlr_info *h)
+ 	}
+ }
+ 
+-static int hpsa_init_reset_devices(struct pci_dev *pdev)
++static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
+ {
+ 	int rc, i;
+ 	void __iomem *vaddr;
+@@ -7449,7 +7443,7 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev)
+ 	iounmap(vaddr);
+ 
+ 	/* Reset the controller with a PCI power-cycle or via doorbell */
+-	rc = hpsa_kdump_hard_reset_controller(pdev);
++	rc = hpsa_kdump_hard_reset_controller(pdev, board_id);
+ 
+ 	/* -ENOTSUPP here means we cannot reset the controller
+ 	 * but it's already (and still) up and running in
+@@ -7927,11 +7921,18 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct ctlr_info *h;
+ 	int try_soft_reset = 0;
+ 	unsigned long flags;
++	u32 board_id;
+ 
+ 	if (number_of_controllers == 0)
+ 		printk(KERN_INFO DRIVER_NAME "\n");
+ 
+-	rc = hpsa_init_reset_devices(pdev);
++	rc = hpsa_lookup_board_id(pdev, &board_id);
++	if (rc < 0) {
++		dev_warn(&pdev->dev, "Board ID not found\n");
++		return rc;
++	}
++
++	rc = hpsa_init_reset_devices(pdev, board_id);
+ 	if (rc) {
+ 		if (rc != -ENOTSUPP)
+ 			return rc;
+-- 
+1.9.3
 
-Plase set the queue_depth in ->slave_configure like all other drivers.
-
-> +	.cmd_per_lun = 3,
-
-why so low?
-
-> +
-> +#ifndef PCI_VENDOR_ID_CISCO
-> +#define PCI_VENDOR_ID_CISCO     0x1137
-> +#endif
-
-Just use the numeric value directly.
-
-> +
-> +#define SNIC_OS_TYPE	SNIC_OS_LINUX
-> +#define snic_cmd_tag(sc)	(((struct scsi_cmnd *) sc)->request->tag)
-> +
-> +extern struct device_attribute *snic_attrs[];
-> +
-> +static inline struct kmem_cache *
-> +snic_cache_create(const char *cache_name, const int sz)
-> +{
-> +	void *cp;
-> +
-> +	cp = kmem_cache_create(cache_name, sz, SNIC_SG_DESC_ALIGN,
-> +			       SLAB_HWCACHE_ALIGN, NULL);
-> +
-> +	return (struct kmem_cache *) cp;
-> +}
-
-Please remove all the wrappers in the snic_os.h file and use the Linux
-APIs directly.
