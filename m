@@ -1,124 +1,89 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 06/21] lpfc: Fix host reset escalation killing all IOs.
-Date: Fri, 3 Apr 2015 17:11:29 -0400
-Message-ID: <1428095489.6933.34.camel@myfc17>
+Subject: [PATCH 07/21] lpfc: Fix setting of EQ (interrupt) delay Multiplier
+Date: Fri, 3 Apr 2015 17:11:38 -0400
+Message-ID: <1428095498.6933.35.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:1266 "EHLO
+Received: from cmexedge2.emulex.com ([138.239.224.100]:1273 "EHLO
 	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbbDCVLx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:11:53 -0400
+	with ESMTP id S1752429AbbDCVMC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:12:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix host reset escalation killing all IOs.
-
-SLI-3 adapters will use a new host template. The template differs
-from SLI-4 adapters in that it does not have an eh_host_reset_handler.
-
-Lpfc has traditionally never had a host_reset. The host reset
-handler was added when we ran into a stuck hardware condition on a
-SLI-4 adapter. The host_reset will reset and reinit the pci function,
-clearing the hardware condition.
-
-Unfortunately, the host reset handler uses attach/detach code paths,
-which makes scsi_add_host() and scsi_remove_host() calls. Meaning, a
-host_reset will completely remove the scsi_host from the system. As a
-new call to scsi_add_host() is made, the shost# changes, which results
-in completely new scsi_devices and device names. All the older scsi
-devices on the old shost# are now orphaned and unrecoverable.
-
-We realize we need to re-implement the host_reset_handler so the scsi_host
-stays registered across the host_reset, but that will be a rather
-lengthy effort. In the short term, we had an immediate need to restore
-the SLI-3 devices to their working behavior, with the easiest path being
-to remove their host_reset handler.
+Fix setting of EQ (interrupt) delay Multiplier
 
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_crtn.h |  1 +
- drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++---
- drivers/scsi/lpfc/lpfc_scsi.c | 25 +++++++++++++++++++++++++
- 3 files changed, 34 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 8 ++++++++
+ drivers/scsi/lpfc/lpfc_sli.c  | 9 +++------
+ drivers/scsi/lpfc/lpfc_sli4.h | 2 +-
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 00665a5..665c88c 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -354,6 +354,7 @@ void lpfc_free_sysfs_attr(struct lpfc_vport *);
- extern struct device_attribute *lpfc_hba_attrs[];
- extern struct device_attribute *lpfc_vport_attrs[];
- extern struct scsi_host_template lpfc_template;
-+extern struct scsi_host_template lpfc_template_s3;
- extern struct scsi_host_template lpfc_vport_template;
- extern struct fc_function_template lpfc_transport_functions;
- extern struct fc_function_template lpfc_vport_transport_functions;
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 4ba91af..74672e0 100644
+index 74672e0..e01619c 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3257,12 +3257,17 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	struct Scsi_Host  *shost;
- 	int error = 0;
- 
--	if (dev != &phba->pcidev->dev)
-+	if (dev != &phba->pcidev->dev) {
- 		shost = scsi_host_alloc(&lpfc_vport_template,
- 					sizeof(struct lpfc_vport));
--	else
--		shost = scsi_host_alloc(&lpfc_template,
-+	} else {
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			shost = scsi_host_alloc(&lpfc_template,
- 					sizeof(struct lpfc_vport));
-+		else
-+			shost = scsi_host_alloc(&lpfc_template_s3,
-+					sizeof(struct lpfc_vport));
-+	}
- 	if (!shost)
- 		goto out;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 4f9222e..f623299 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5857,6 +5857,31 @@ lpfc_disable_oas_lun(struct lpfc_hba *phba, struct lpfc_name *vport_wwpn,
- 	return false;
- }
- 
-+struct scsi_host_template lpfc_template_s3 = {
-+	.module			= THIS_MODULE,
-+	.name			= LPFC_DRIVER_NAME,
-+	.info			= lpfc_info,
-+	.queuecommand		= lpfc_queuecommand,
-+	.eh_abort_handler	= lpfc_abort_handler,
-+	.eh_device_reset_handler = lpfc_device_reset_handler,
-+	.eh_target_reset_handler = lpfc_target_reset_handler,
-+	.eh_bus_reset_handler	= lpfc_bus_reset_handler,
-+	.slave_alloc		= lpfc_slave_alloc,
-+	.slave_configure	= lpfc_slave_configure,
-+	.slave_destroy		= lpfc_slave_destroy,
-+	.scan_finished		= lpfc_scan_finished,
-+	.this_id		= -1,
-+	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
-+	.cmd_per_lun		= LPFC_CMD_PER_LUN,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.shost_attrs		= lpfc_hba_attrs,
-+	.max_sectors		= 0xFFFF,
-+	.vendor_id		= LPFC_NL_VENDOR_ID,
-+	.change_queue_depth	= scsi_change_queue_depth,
-+	.use_blk_tags		= 1,
-+	.track_queue_depth	= 1,
-+};
+@@ -7721,6 +7721,14 @@ lpfc_sli4_queue_setup(struct lpfc_hba *phba)
+ 			goto out_destroy_els_rq;
+ 		}
+ 	}
 +
- struct scsi_host_template lpfc_template = {
- 	.module			= THIS_MODULE,
- 	.name			= LPFC_DRIVER_NAME,
++	/*
++	 * Configure EQ delay multipier for interrupt coalescing using
++	 * MODIFY_EQ_DELAY for all EQs created, LPFC_MAX_EQ_DELAY at a time.
++	 */
++	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_io_channel;
++			fcp_eqidx += LPFC_MAX_EQ_DELAY)
++		lpfc_modify_fcp_eq_delay(phba, fcp_eqidx);
+ 	return 0;
+ 
+ out_destroy_els_rq:
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 207a43d..303b231 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -12842,7 +12842,7 @@ lpfc_dual_chute_pci_bar_map(struct lpfc_hba *phba, uint16_t pci_barset)
+  * fails this function will return -ENXIO.
+  **/
+ int
+-lpfc_modify_fcp_eq_delay(struct lpfc_hba *phba, uint16_t startq)
++lpfc_modify_fcp_eq_delay(struct lpfc_hba *phba, uint32_t startq)
+ {
+ 	struct lpfc_mbx_modify_eq_delay *eq_delay;
+ 	LPFC_MBOXQ_t *mbox;
+@@ -12959,11 +12959,8 @@ lpfc_eq_create(struct lpfc_hba *phba, struct lpfc_queue *eq, uint32_t imax)
+ 	bf_set(lpfc_eq_context_size, &eq_create->u.request.context,
+ 	       LPFC_EQE_SIZE);
+ 	bf_set(lpfc_eq_context_valid, &eq_create->u.request.context, 1);
+-	/* Calculate delay multiper from maximum interrupt per second */
+-	if (imax > LPFC_DMULT_CONST)
+-		dmult = 0;
+-	else
+-		dmult = LPFC_DMULT_CONST/imax - 1;
++	/* don't setup delay multiplier using EQ_CREATE */
++	dmult = 0;
+ 	bf_set(lpfc_eq_context_delay_multi, &eq_create->u.request.context,
+ 	       dmult);
+ 	switch (eq->entry_count) {
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 22ceb2b..935b8eb 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -671,7 +671,7 @@ struct lpfc_queue *lpfc_sli4_queue_alloc(struct lpfc_hba *, uint32_t,
+ 			uint32_t);
+ void lpfc_sli4_queue_free(struct lpfc_queue *);
+ int lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint32_t);
+-int lpfc_modify_fcp_eq_delay(struct lpfc_hba *, uint16_t);
++int lpfc_modify_fcp_eq_delay(struct lpfc_hba *, uint32_t);
+ int lpfc_cq_create(struct lpfc_hba *, struct lpfc_queue *,
+ 			struct lpfc_queue *, uint32_t, uint32_t);
+ int32_t lpfc_mq_create(struct lpfc_hba *, struct lpfc_queue *,
 -- 
 1.7.11.7
 
