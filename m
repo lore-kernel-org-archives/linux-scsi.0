@@ -1,36 +1,84 @@
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: LPC2015: File and Storage Systems uconf
-Date: Fri, 3 Apr 2015 11:28:25 -0700
-Message-ID: <20150403182825.GA11030@birch.djwong.org>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 00/21] lpfc: V2: Update lpfc version to driver version
+ 10.5.0.0
+Date: Fri, 3 Apr 2015 17:09:59 -0400
+Message-ID: <1428095399.6933.28.camel@myfc17>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40621 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbbDCS2l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 14:28:41 -0400
-Content-Disposition: inline
+Received: from cmexedge2.emulex.com ([138.239.224.100]:1241 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751032AbbDCVKt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:10:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi everyone,
+This patch set updates the lpfc driver to revision 10.5.0.0
 
-Linux Plumbers is coming up in just four months!  I would like for there to be
-a file & storage miniconf at this year's LPC, so I've started assembling a plan
-for what we might discuss.  As a starting point, I've filled the planning page
-with the topics that didn't achieve any sort of resolution at LSF/MM:
+The patches were cut against Christoph's scsi-queue.git,
+branch "drivers-for-3.20".
 
-http://wiki.linuxplumbersconf.org/2015:file_and_storage_systems
+The patches have been recut with the signed-by's reordered and comments added on
+some patches. Patch 9 and 10 have minor 1 line changes per comments from first posting.
 
-There are undoubtedly things that I missed in my initial list, and it would be
-very helpful to figure out who's going.
+-- james s
 
-If you'd like to visit Seattle in mid-August (I promise it probably won't be
-raining!) and/or have a topic that you'd like to talk about that I missed,
-I'd appreciate it if you wrote it into the wiki page.
 
-Thanks,
 
---Darrick
+James Smart (21):
+  Fix the iteration count to match the 30 sec comment in the routine
+    lpfc_pci_function_reset
+  Add Lancer Temperature Event support to the lpfc driver
+  Add new mbx cmd recognition
+  Fix to handle PLOGI when already logged in
+  Linux lpfc driver doesn't re-establish the link after a cable pull on
+    LPe12002
+  Fix host reset escalation killing all IOs.
+  Fix setting of EQ (interrupt) delay Multiplier
+  Add support for reporting option_rom_version on newer adapters
+  Parse the new 20G, 25G and 40G link speeds in the lpfc driver
+  Fix provide host name and OS name in RSNN-NN FC-GS command
+  Fix FDMI Fabric support in driver for Brocade
+  Fix null ndlp dereference in target_reset_handler
+  Initiator sends wrong BBCredit value for either FLOGI or FLOGI_ACC
+  Fix premature release of rpi bit in bitmask
+  Implement support for wire-only DIF devices
+  Fix internal loopback failure.
+  Fix OS crash when running loopback test in applications
+  Fix crash in device reset handler.
+  Fix for lun discovery issue with saturn adapter.
+  Update copyright to 2015
+  Update version  to 10.5.0.0 for upstream patch set
+
+ drivers/scsi/lpfc/lpfc.h           |  46 ++-
+ drivers/scsi/lpfc/lpfc_attr.c      |  90 ++++-
+ drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
+ drivers/scsi/lpfc/lpfc_bsg.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   7 +-
+ drivers/scsi/lpfc/lpfc_ct.c        | 738 ++++++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_debugfs.c   |   2 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  19 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  77 +++-
+ drivers/scsi/lpfc/lpfc_hw.h        | 208 +++++------
+ drivers/scsi/lpfc/lpfc_hw4.h       |   8 +-
+ drivers/scsi/lpfc/lpfc_init.c      | 288 +++++++++++----
+ drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  29 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      | 493 ++++++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_scsi.h      |   9 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 108 ++++--
+ drivers/scsi/lpfc/lpfc_sli.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |   4 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   6 +-
+ 20 files changed, 1631 insertions(+), 517 deletions(-)
+
+-- 
+1.7.11.7
+
+
+
+
+
