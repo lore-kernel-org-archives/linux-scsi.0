@@ -1,103 +1,313 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 19/21] lpfc: Fix for lun discovery issue with saturn adapter.
-Date: Fri, 3 Apr 2015 17:13:28 -0400
-Message-ID: <1428095608.6933.48.camel@myfc17>
+Subject: [PATCH 20/21] lpfc: Update copyright to 2015
+Date: Fri, 3 Apr 2015 17:13:37 -0400
+Message-ID: <1428095617.6933.49.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:56259 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbbDCVNv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:13:51 -0400
+Received: from cmexedge2.emulex.com ([138.239.224.100]:1317 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632AbbDCVOA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:14:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix for lun discovery issue with saturn adapter.
-
-FCP_CMD payload was not always properly initialized on SLI-3 devices.
+Update copyright to 2015
 
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 41 ++++++++++++++++++++---------------------
- 1 file changed, 20 insertions(+), 21 deletions(-)
+ drivers/scsi/lpfc/lpfc.h           | 2 +-
+ drivers/scsi/lpfc/lpfc_attr.c      | 2 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       | 2 +-
+ drivers/scsi/lpfc/lpfc_bsg.h       | 2 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      | 2 +-
+ drivers/scsi/lpfc/lpfc_ct.c        | 2 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c   | 2 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 2 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 2 +-
+ drivers/scsi/lpfc/lpfc_hw.h        | 2 +-
+ drivers/scsi/lpfc/lpfc_hw4.h       | 2 +-
+ drivers/scsi/lpfc/lpfc_init.c      | 2 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      | 2 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      | 2 +-
+ drivers/scsi/lpfc/lpfc_scsi.h      | 2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 2 +-
+ drivers/scsi/lpfc/lpfc_sli.h       | 2 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      | 2 +-
+ drivers/scsi/lpfc/lpfc_version.h   | 4 ++--
+ 20 files changed, 21 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index e192c2d..5c77dcf 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 891e2d1..b9b9d56 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index a056666..b705068 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2009-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2009-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
+index 7f26a9b..e557bcd 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.h
++++ b/drivers/scsi/lpfc/lpfc_bsg.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2010-2014 Emulex.  All rights reserved.                *
++ * Copyright (C) 2010-2015 Emulex.  All rights reserved.                *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index a7b4fc7..d14db91 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index e3b8f0e..8e56e6f 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 5633e7d..513edcb 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2007-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2007-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 1003b5b..851e8ef 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 17da14e..b9cd1ad 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index a74bbf0..37beb9d 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 0b4c5afd6..1813c45 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2009-2014 Emulex.  All rights reserved.                *
++ * Copyright (C) 2009-2015 Emulex.  All rights reserved.                *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 3d154518..f6e5ef9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index 702283e..66f5fc4 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 3d93363..4cb9882 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1,7 +1,7 @@
+  /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index fbdc39c..e900902 100644
+index e900902..0161580 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -1134,6 +1134,25 @@ lpfc_release_scsi_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb)
- }
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
+index bb9a455..904093d 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.h
++++ b/drivers/scsi/lpfc/lpfc_scsi.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1f9ef2a..164ca88 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index e8f9381..7fe99ff 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 935b8eb..6eca3b8 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2009-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2009-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index 89413ad..9285a6d 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+@@ -30,4 +30,4 @@
  
- /**
-+ * lpfc_fcpcmd_to_iocb - copy the fcp_cmd data into the IOCB
-+ * @data: A pointer to the immediate command data portion of the IOCB.
-+ * @fcp_cmnd: The FCP Command that is provided by the SCSI layer.
-+ *
-+ * The routine copies the entire FCP command from @fcp_cmnd to @data while
-+ * byte swapping the data to big endian format for transmission on the wire.
-+ **/
-+static void
-+lpfc_fcpcmd_to_iocb(uint8_t *data, struct fcp_cmnd *fcp_cmnd)
-+{
-+	int i, j;
-+
-+	for (i = 0, j = 0; i < sizeof(struct fcp_cmnd);
-+	     i += sizeof(uint32_t), j++) {
-+		((uint32_t *)data)[j] = cpu_to_be32(((uint32_t *)fcp_cmnd)[j]);
-+	}
-+}
-+
-+/**
-  * lpfc_scsi_prep_dma_buf_s3 - DMA mapping for scsi buffer to SLI3 IF spec
-  * @phba: The Hba for which this call is being executed.
-  * @lpfc_cmd: The scsi buffer which is going to be mapped.
-@@ -1268,6 +1287,7 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 	 * we need to set word 4 of IOCB here
- 	 */
- 	iocb_cmd->un.fcpi.fcpi_parm = scsi_bufflen(scsi_cmnd);
-+	lpfc_fcpcmd_to_iocb(iocb_cmd->unsli3.fcp_ext.icd, fcp_cmnd);
- 	return 0;
- }
- 
-@@ -4177,24 +4197,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- }
- 
- /**
-- * lpfc_fcpcmd_to_iocb - copy the fcp_cmd data into the IOCB
-- * @data: A pointer to the immediate command data portion of the IOCB.
-- * @fcp_cmnd: The FCP Command that is provided by the SCSI layer.
-- *
-- * The routine copies the entire FCP command from @fcp_cmnd to @data while
-- * byte swapping the data to big endian format for transmission on the wire.
-- **/
--static void
--lpfc_fcpcmd_to_iocb(uint8_t *data, struct fcp_cmnd *fcp_cmnd)
--{
--	int i, j;
--	for (i = 0, j = 0; i < sizeof(struct fcp_cmnd);
--	     i += sizeof(uint32_t), j++) {
--		((uint32_t *)data)[j] = cpu_to_be32(((uint32_t *)fcp_cmnd)[j]);
--	}
--}
--
--/**
-  * lpfc_scsi_prep_cmnd - Wrapper func for convert scsi cmnd to FCP info unit
-  * @vport: The virtual port for which this call is being executed.
-  * @lpfc_cmd: The scsi command which needs to send.
-@@ -4277,9 +4279,6 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
- 		fcp_cmnd->fcpCntl3 = 0;
- 		phba->fc4ControlRequests++;
- 	}
--	if (phba->sli_rev == 3 &&
--	    !(phba->sli3_options & LPFC_SLI3_BG_ENABLED))
--		lpfc_fcpcmd_to_iocb(iocb_cmd->unsli3.fcp_ext.icd, fcp_cmnd);
- 	/*
- 	 * Finish initializing those IOCB fields that are independent
- 	 * of the scsi_cmnd request_buffer
+ #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
+ 		LPFC_DRIVER_VERSION
+-#define LPFC_COPYRIGHT "Copyright(c) 2004-2014 Emulex.  All rights reserved."
++#define LPFC_COPYRIGHT "Copyright(c) 2004-2015 Emulex.  All rights reserved."
 -- 
 1.7.11.7
 
