@@ -1,83 +1,44 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 00/21] lpfc: V2: Update lpfc version to driver version
- 10.5.0.0
-Date: Fri, 3 Apr 2015 17:09:59 -0400
-Message-ID: <1428095399.6933.28.camel@myfc17>
+Subject: [PATCH 01/21] lpfc: Fix the iteration count to match the 30 sec
+ comment in the routine lpfc_pci_function_reset
+Date: Fri, 3 Apr 2015 17:10:21 -0400
+Message-ID: <1428095421.6933.29.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:1241 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbbDCVKt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:10:49 -0400
+Received: from cmexedge1.emulex.com ([138.239.224.99]:56218 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbbDCVLK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:11:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch set updates the lpfc driver to revision 10.5.0.0
+Fix the iteration count to match the 30 sec comment in the routine lpfc_pci_function_reset
 
-The patches were cut against Christoph's scsi-queue.git,
-branch "drivers-for-3.20".
+Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+Signed-off-by: James Smart <james.smart@emulex.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The patches have been recut with the signed-by's reordered and comments added on
-some patches. Patch 9 and 10 have minor 1 line changes per comments from first posting.
-
--- james s
-
-
-
-James Smart (21):
-  Fix the iteration count to match the 30 sec comment in the routine
-    lpfc_pci_function_reset
-  Add Lancer Temperature Event support to the lpfc driver
-  Add new mbx cmd recognition
-  Fix to handle PLOGI when already logged in
-  Linux lpfc driver doesn't re-establish the link after a cable pull on
-    LPe12002
-  Fix host reset escalation killing all IOs.
-  Fix setting of EQ (interrupt) delay Multiplier
-  Add support for reporting option_rom_version on newer adapters
-  Parse the new 20G, 25G and 40G link speeds in the lpfc driver
-  Fix provide host name and OS name in RSNN-NN FC-GS command
-  Fix FDMI Fabric support in driver for Brocade
-  Fix null ndlp dereference in target_reset_handler
-  Initiator sends wrong BBCredit value for either FLOGI or FLOGI_ACC
-  Fix premature release of rpi bit in bitmask
-  Implement support for wire-only DIF devices
-  Fix internal loopback failure.
-  Fix OS crash when running loopback test in applications
-  Fix crash in device reset handler.
-  Fix for lun discovery issue with saturn adapter.
-  Update copyright to 2015
-  Update version  to 10.5.0.0 for upstream patch set
-
- drivers/scsi/lpfc/lpfc.h           |  46 ++-
- drivers/scsi/lpfc/lpfc_attr.c      |  90 ++++-
- drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
- drivers/scsi/lpfc/lpfc_bsg.h       |   3 +-
- drivers/scsi/lpfc/lpfc_crtn.h      |   7 +-
- drivers/scsi/lpfc/lpfc_ct.c        | 738 ++++++++++++++++++++++++++++---------
- drivers/scsi/lpfc/lpfc_debugfs.c   |   2 +-
- drivers/scsi/lpfc/lpfc_els.c       |  19 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  77 +++-
- drivers/scsi/lpfc/lpfc_hw.h        | 208 +++++------
- drivers/scsi/lpfc/lpfc_hw4.h       |   8 +-
- drivers/scsi/lpfc/lpfc_init.c      | 288 +++++++++++----
- drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  29 +-
- drivers/scsi/lpfc/lpfc_scsi.c      | 493 ++++++++++++++++++++++---
- drivers/scsi/lpfc/lpfc_scsi.h      |   9 +-
- drivers/scsi/lpfc/lpfc_sli.c       | 108 ++++--
- drivers/scsi/lpfc/lpfc_sli.h       |   3 +-
- drivers/scsi/lpfc/lpfc_sli4.h      |   4 +-
- drivers/scsi/lpfc/lpfc_version.h   |   6 +-
- 20 files changed, 1631 insertions(+), 517 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0b2c53a..2b5b910 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7953,7 +7953,7 @@ wait:
+ 		 * up to 30 seconds. If the port doesn't respond, treat
+ 		 * it as an error.
+ 		 */
+-		for (rdy_chk = 0; rdy_chk < 3000; rdy_chk++) {
++		for (rdy_chk = 0; rdy_chk < 1500; rdy_chk++) {
+ 			if (lpfc_readl(phba->sli4_hba.u.if_type2.
+ 				STATUSregaddr, &reg_data.word0)) {
+ 				rc = -ENODEV;
 -- 
 1.7.11.7
-
 
 
 
