@@ -1,45 +1,80 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 16/21] lpfc: Fix internal loopback failure.
-Date: Fri, 3 Apr 2015 17:13:07 -0400
-Message-ID: <1428095587.6933.45.camel@myfc17>
+Subject: [PATCH 17/21] lpfc: Fix OS crash when running loopback test in
+ applications
+Date: Fri, 3 Apr 2015 17:13:14 -0400
+Message-ID: <1428095594.6933.46.camel@myfc17>
 Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge2.emulex.com ([138.239.224.100]:1310 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110AbbDCVNb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:13:31 -0400
+Received: from cmexedge1.emulex.com ([138.239.224.99]:56258 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753062AbbDCVNi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:13:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix internal loopback failure.
+Fix OS crash when running loopback test in applications
 
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_bsg.c |  1 +
+ drivers/scsi/lpfc/lpfc_sli.c | 12 ++++++++----
+ drivers/scsi/lpfc/lpfc_sli.h |  1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index ba5da26..1003b5b 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3337,7 +3337,11 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		/* FLOGI retry policy */
- 		retry = 1;
- 		/* retry FLOGI forever */
--		maxretry = 0;
-+		if (phba->link_flag != LS_LOOPBACK_MODE)
-+			maxretry = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 6b4cf31..a056666 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -3194,6 +3194,7 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg_job *job)
+ 		cmd->unsli3.rcvsli3.ox_id = 0xffff;
+ 	}
+ 	cmdiocbq->iocb_flag |= LPFC_IO_LIBDFC;
++	cmdiocbq->iocb_flag |= LPFC_IO_LOOPBACK;
+ 	cmdiocbq->vport = phba->pport;
+ 	cmdiocbq->iocb_cmpl = NULL;
+ 	iocb_stat = lpfc_sli_issue_iocb_wait(phba, LPFC_ELS_RING, cmdiocbq,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 066428b..1f9ef2a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -918,12 +918,16 @@ __lpfc_sli_get_sglq(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq)
+ 		lpfc_cmd = (struct lpfc_scsi_buf *) piocbq->context1;
+ 		ndlp = lpfc_cmd->rdata->pnode;
+ 	} else  if ((piocbq->iocb.ulpCommand == CMD_GEN_REQUEST64_CR) &&
+-			!(piocbq->iocb_flag & LPFC_IO_LIBDFC))
++			!(piocbq->iocb_flag & LPFC_IO_LIBDFC)) {
+ 		ndlp = piocbq->context_un.ndlp;
+-	else  if (piocbq->iocb_flag & LPFC_IO_LIBDFC)
+-		ndlp = piocbq->context_un.ndlp;
+-	else
++	} else  if (piocbq->iocb_flag & LPFC_IO_LIBDFC) {
++		if (piocbq->iocb_flag & LPFC_IO_LOOPBACK)
++			ndlp = NULL;
 +		else
-+			maxretry = 2;
-+
- 		if (cmdiocb->retry >= 100)
- 			delay = 5000;
- 		else if (cmdiocb->retry >= 32)
++			ndlp = piocbq->context_un.ndlp;
++	} else {
+ 		ndlp = piocbq->context1;
++	}
+ 
+ 	list_remove_head(lpfc_sgl_list, sglq, struct lpfc_sglq, list);
+ 	start_sglq = sglq;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index 4a01452..e8f9381 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -80,6 +80,7 @@ struct lpfc_iocbq {
+ 
+ #define LPFC_IO_OAS		0x10000 /* OAS FCP IO */
+ #define LPFC_IO_FOF		0x20000 /* FOF FCP IO */
++#define LPFC_IO_LOOPBACK	0x40000 /* Loopback IO */
+ 
+ 	uint32_t drvrTimeout;	/* driver timeout in seconds */
+ 	uint32_t fcp_wqidx;	/* index to FCP work queue */
 -- 
 1.7.11.7
 
