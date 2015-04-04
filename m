@@ -1,45 +1,119 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 21/21] lpfc: Update version  to 10.5.0.0 for upstream patch
- set
-Date: Fri, 3 Apr 2015 17:13:43 -0400
-Message-ID: <1428095623.6933.50.camel@myfc17>
-Reply-To: <james.smart@emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:56263 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbbDCVOG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2015 17:14:06 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH 1/2] target/rd: reduce code duplication in rd_execute_rw()
+Date: Sat,  4 Apr 2015 21:24:27 +0900
+Message-ID: <1428150268-30260-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Asias He <asias@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Update version  to 10.5.0.0 for upstream patch set
+Factor out code duplication in rd_execute_rw() into a helper function
+rd_do_prot_rw().  This change is required to minimize the forthcoming
+fix in rd_do_prot_rw().
 
-Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
-Signed-off-by: James Smart <james.smart@emulex.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Asias He <asias@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_rd.c | 66 ++++++++++++++++++++---------------------
+ 1 file changed, 32 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index 9285a6d..c37bb9f 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 98e83ac..4d614c9 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -382,6 +382,36 @@ static struct rd_dev_sg_table *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
+ 	return NULL;
+ }
  
--#define LPFC_DRIVER_VERSION "10.4.8000.0."
-+#define LPFC_DRIVER_VERSION "10.5.0.0."
- #define LPFC_DRIVER_NAME		"lpfc"
++static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_write)
++{
++	struct se_device *se_dev = cmd->se_dev;
++	struct rd_dev *dev = RD_DEV(se_dev);
++	struct rd_dev_sg_table *prot_table;
++	struct scatterlist *prot_sg;
++	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
++	u32 prot_offset, prot_page;
++	u64 tmp;
++	sense_reason_t rc;
++	sense_reason_t (*dif_verify)(struct se_cmd *, sector_t, unsigned int,
++			unsigned int, struct scatterlist *, int) =
++		is_write ?  sbc_dif_verify_write : sbc_dif_verify_read;
++
++	tmp = cmd->t_task_lba * se_dev->prot_length;
++	prot_offset = do_div(tmp, PAGE_SIZE);
++	prot_page = tmp;
++
++	prot_table = rd_get_prot_table(dev, prot_page);
++	if (!prot_table)
++		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++	prot_sg = &prot_table->sg_table[prot_page -
++					prot_table->page_start_offset];
++
++	rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg, prot_offset);
++
++	return rc;
++}
++
+ static sense_reason_t
+ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	      enum dma_data_direction data_direction)
+@@ -420,23 +450,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 			cmd->t_task_lba, rd_size, rd_page, rd_offset);
  
- /* Used for SLI 2/3 */
+ 	if (cmd->prot_type && data_direction == DMA_TO_DEVICE) {
+-		struct rd_dev_sg_table *prot_table;
+-		struct scatterlist *prot_sg;
+-		u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+-		u32 prot_offset, prot_page;
+-
+-		tmp = cmd->t_task_lba * se_dev->prot_length;
+-		prot_offset = do_div(tmp, PAGE_SIZE);
+-		prot_page = tmp;
+-
+-		prot_table = rd_get_prot_table(dev, prot_page);
+-		if (!prot_table)
+-			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-
+-		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
+-
+-		rc = sbc_dif_verify_write(cmd, cmd->t_task_lba, sectors, 0,
+-					  prot_sg, prot_offset);
++		rc = rd_do_prot_rw(cmd, true);
+ 		if (rc)
+ 			return rc;
+ 	}
+@@ -503,23 +517,7 @@ rd_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	sg_miter_stop(&m);
+ 
+ 	if (cmd->prot_type && data_direction == DMA_FROM_DEVICE) {
+-		struct rd_dev_sg_table *prot_table;
+-		struct scatterlist *prot_sg;
+-		u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+-		u32 prot_offset, prot_page;
+-
+-		tmp = cmd->t_task_lba * se_dev->prot_length;
+-		prot_offset = do_div(tmp, PAGE_SIZE);
+-		prot_page = tmp;
+-
+-		prot_table = rd_get_prot_table(dev, prot_page);
+-		if (!prot_table)
+-			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-
+-		prot_sg = &prot_table->sg_table[prot_page - prot_table->page_start_offset];
+-
+-		rc = sbc_dif_verify_read(cmd, cmd->t_task_lba, sectors, 0,
+-					 prot_sg, prot_offset);
++		rc = rd_do_prot_rw(cmd, false);
+ 		if (rc)
+ 			return rc;
+ 	}
 -- 
-1.7.11.7
-
-
-
-
+1.9.1
