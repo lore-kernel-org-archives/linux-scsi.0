@@ -1,37 +1,21 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 15/21] lpfc: Implement support for wire-only DIF devices
-Date: Sun, 5 Apr 2015 09:06:13 -0700
-Message-ID: <20150405160613.GA8622@infradead.org>
-References: <1428095580.6933.44.camel@myfc17>
+Subject: Re: [PATCH 00/20] mpt3sas: driver update
+Date: Sun, 5 Apr 2015 09:09:05 -0700
+Message-ID: <20150405160905.GA15216@infradead.org>
+References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45523 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbbDEQGN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2015 12:06:13 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1428095580.6933.44.camel@myfc17>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, JBottomley@Parallels.com, Sathya.Prakash@avagotech.com, kashyap.desai@avagotech.com, linux-kernel@vger.kernel.org, thenzl@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, Apr 03, 2015 at 05:13:00PM -0400, James Smart wrote:
-> Implement support for wire-only DIF devices
-> 
-> This patch adds the ability to support auto-enablement of wire-only DIF
-> (DIF is generated on TX to target, stripped on RX; OS unaware DIF in use)
-> for a select set of devices. Currently, there is only 1 device vendor
-> supported: 3PARdata. When the feature is enabled, Inquiry commands are
-> trapped, the vendor matched, and DIF enablement checked. In 3Par's case,
-> there's a vendor specific check to see if the LUN supports DIF.
-> If supported, DIF will be enabled on a per-lun basis.  The driver will
-> trap READS/WRITEs from the OS, check for LUN DIF enablement, and if set,
-> turns on write-only DIF.
+This seems to be missing the corresponding mpt2 updates.  Nak to
+anything that gets these drivers further out of sync.
 
-NAK. We do support proper DIF, and anyone who wants it should enable
-the real thing.
-
-And even if we would want to support a hack like this we'd do it
-genericly an not in a driver.
+Btw, I still need a second ACK for
+http://www.spinics.net/lists/linux-scsi/msg82027.html
+as well, so we can start getting rid of this duplication mess.
