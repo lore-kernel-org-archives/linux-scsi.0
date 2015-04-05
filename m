@@ -1,102 +1,35 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 2/2] target/rd: Don't pass imcomplete scatterlist entries to sbc_dif_verify_*
-Date: Sun,  5 Apr 2015 23:59:39 +0900
-Message-ID: <1428245979-5432-2-git-send-email-akinobu.mita@gmail.com>
-References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/7] scsi: add scsi-mq helpers to retrieve pdu and
+	check started state
+Date: Sun, 5 Apr 2015 17:39:12 +0200
+Message-ID: <20150405153912.GA28173@lst.de>
+References: <1428076703-31014-1-git-send-email-axboe@fb.com> <1428076703-31014-4-git-send-email-axboe@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:45849 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992AbbDEPjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Apr 2015 11:39:15 -0400
+Content-Disposition: inline
+In-Reply-To: <1428076703-31014-4-git-send-email-axboe@fb.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 
-The scatterlist for protection information which is passed to
-sbc_dif_verify_read() or sbc_dif_verify_write() requires that
-neighboring scatterlist entries are contiguous or chained so that they
-can be iterated by sg_next().
+On Fri, Apr 03, 2015 at 09:58:19AM -0600, Jens Axboe wrote:
+> +static inline void *scsi_mq_scmd_to_pdu(struct scsi_cmnd *scmd)
+> +{
+> +	return blk_mq_rq_to_pdu(scmd->request) + sizeof(*scmd);
+> +}
 
-However, the protection information for RD-MCP backends could be located
-in the multiple scatterlist arrays when the ramdisk space is too large.
-So if the read/write request straddles this boundary, sbc_dif_verify_read()
-or sbc_dif_verify_write() can't iterate all scatterlist entries.
+We've already got scsi_cmd_priv to cover this.
 
-This fixes it by allocating temporary scatterlist if it is needed.
+> +static inline bool scsi_mq_scmd_started(struct scsi_cmnd *scmd)
+> +{
+> +	return blk_mq_request_started(scmd->request);
+> +}
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
-* No change from v1
-
- drivers/target/target_core_rd.c | 39 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 35 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index ac5e8d2..6e25eaa 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -390,11 +390,12 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct rd_dev *dev = RD_DEV(se_dev);
- 	struct rd_dev_sg_table *prot_table;
-+	bool need_to_release = false;
- 	struct scatterlist *prot_sg;
- 	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
--	u32 prot_offset, prot_page;
-+	u32 prot_offset, prot_page, prot_npages;
- 	u64 tmp;
--	sense_reason_t rc;
-+	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	tmp = cmd->t_task_lba * se_dev->prot_length;
- 	prot_offset = do_div(tmp, PAGE_SIZE);
-@@ -404,10 +405,40 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
- 	if (!prot_table)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	prot_sg = &prot_table->sg_table[prot_page -
--					prot_table->page_start_offset];
-+	prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
-+				   PAGE_SIZE);
-+
-+	/* prot pages straddles multiple scatterlist tables */
-+	if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
-+		int i;
-+
-+		prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
-+		if (!prot_sg)
-+			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-+
-+		need_to_release = true;
-+		sg_init_table(prot_sg, prot_npages);
-+
-+		for (i = 0; i < prot_npages; i++) {
-+			if (prot_page + i > prot_table->page_end_offset) {
-+				prot_table = rd_get_prot_table(dev,
-+								prot_page + i);
-+				if (!prot_table)
-+					goto out;
-+				sg_unmark_end(&prot_sg[i - 1]);
-+			}
-+			prot_sg[i] = prot_table->sg_table[prot_page + i -
-+						prot_table->page_start_offset];
-+		}
-+	} else {
-+		prot_sg = &prot_table->sg_table[prot_page -
-+						prot_table->page_start_offset];
-+	}
- 
- 	rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg, prot_offset);
-+out:
-+	if (need_to_release)
-+		kfree(prot_sg);
- 
- 	return rc;
- }
--- 
-1.9.1
+I don't really think we want to expose this functionality, but more
+on that in my reply to the mpt2 patch.
