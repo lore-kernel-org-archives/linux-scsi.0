@@ -1,64 +1,67 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 5/16] ufs: fix error return code
-Date: Sun,  5 Apr 2015 14:06:25 +0200
-Message-ID: <1428235596-4757-6-git-send-email-Julia.Lawall@lip6.fr>
-References: <1428235596-4757-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <1428235596-4757-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 1/2] target/rd: reduce code duplication in rd_execute_rw()
+Date: Sun, 5 Apr 2015 21:40:17 +0900
+Message-ID: <CAC5umyjZVWPggx4ST9tLz6et2_L+=n=mz7GHXqOgjQ9hCQXyfg@mail.gmail.com>
+References: <1428150268-30260-1-git-send-email-akinobu.mita@gmail.com>
+	<552107E3.4000504@dev.mellanox.co.il>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <552107E3.4000504@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, Asias He <asias@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Return a negative error code on failure.
+2015-04-05 19:01 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
+> On 4/4/2015 3:24 PM, Akinobu Mita wrote:
+>>
+>> Factor out code duplication in rd_execute_rw() into a helper function
+>> rd_do_prot_rw().  This change is required to minimize the forthcoming
+>> fix in rd_do_prot_rw().
+>>
+>> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Cc: Asias He <asias@redhat.com>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>> Cc: target-devel@vger.kernel.org
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>>   drivers/target/target_core_rd.c | 66
+>> ++++++++++++++++++++---------------------
+>>   1 file changed, 32 insertions(+), 34 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_rd.c
+>> b/drivers/target/target_core_rd.c
+>> index 98e83ac..4d614c9 100644
+>> --- a/drivers/target/target_core_rd.c
+>> +++ b/drivers/target/target_core_rd.c
+>> @@ -382,6 +382,36 @@ static struct rd_dev_sg_table
+>> *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
+>>         return NULL;
+>>   }
+>>
+>> +static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, bool is_write)
+>> +{
+>> +       struct se_device *se_dev = cmd->se_dev;
+>> +       struct rd_dev *dev = RD_DEV(se_dev);
+>> +       struct rd_dev_sg_table *prot_table;
+>> +       struct scatterlist *prot_sg;
+>> +       u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+>> +       u32 prot_offset, prot_page;
+>> +       u64 tmp;
+>> +       sense_reason_t rc;
+>> +       sense_reason_t (*dif_verify)(struct se_cmd *, sector_t, unsigned
+>> int,
+>> +                       unsigned int, struct scatterlist *, int) =
+>> +               is_write ?  sbc_dif_verify_write : sbc_dif_verify_read;
+>
+>
+> Hi Akinobu,
+>
+> I think it would make more sense to pass the dif_verify() function
+> pointer instead of is_write (only used for that anyway).
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-identifier ret; expression e1,e2;
-@@
-(
-if (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
-// </smpl>
-
-This patch also changes the subsequent dev_err call to use err rather
-than recomputing PTR_ERR(hba->devfreq).  The format of the error value
-is changed from %ld to %d to reflect the type or err.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/scsi/ufs/ufshcd.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2aa85e3..8b802d1 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5506,8 +5506,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		hba->devfreq = devfreq_add_device(dev, &ufs_devfreq_profile,
- 						   "simple_ondemand", NULL);
- 		if (IS_ERR(hba->devfreq)) {
--			dev_err(hba->dev, "Unable to register with devfreq %ld\n",
--					PTR_ERR(hba->devfreq));
-+			err = PTR_ERR(hba->devfreq);
-+			dev_err(hba->dev, "Unable to register with devfreq %d\n",
-+					err);
- 			goto out_remove_scsi_host;
- 		}
- 		/* Suspend devfreq until the UFS device is detected */
-
+Make sense.  I'll update this series with that change.
