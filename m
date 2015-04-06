@@ -1,69 +1,90 @@
-From: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Subject: RE: [V2 PATCH 00/11] aacraid driver updates
-Date: Mon, 6 Apr 2015 11:02:58 +0000
-Message-ID: <B539A9786201A44A91E34268415A2B1AB7F4DF79@BBYEXM01.pmc-sierra.internal>
-References: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH v2 1/2] target/rd: reduce code duplication in rd_execute_rw()
+Date: Mon, 6 Apr 2015 20:16:41 +0900
+Message-ID: <CAC5umyhG0oinXnsyqXwNc1cqWU3ixHLwB8jbQt=Vt2x=cC3Kyg@mail.gmail.com>
+References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
+	<55223908.6080607@dev.mellanox.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:55980 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751141AbbDFLDD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Apr 2015 07:03:03 -0400
-In-Reply-To: <1427380892-1978-1-git-send-email-Mahesh.Rajashekhara@pmcs.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <55223908.6080607@dev.mellanox.co.il>
+Sender: target-devel-owner@vger.kernel.org
+To: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "JBottomley@Parallels.com" <JBottomley@Parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Achim Leubner <Achim.Leubner@pmcs.com>
 
-Hi James,
+2015-04-06 16:43 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
+> On 4/5/2015 5:59 PM, Akinobu Mita wrote:
+>>
+>> Factor out code duplication in rd_execute_rw() into a helper function
+>> rd_do_prot_rw().  This change is required to minimize the forthcoming
+>> fix in rd_do_prot_rw().
+>>
+>> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+>> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+>> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+>> Cc: target-devel@vger.kernel.org
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>> * v2
+>> - Pass dif_verify() function pointer to helper function instead of
+>> is_write,
+>>    suggested by Sagi Grimberg.
+>>
+>>   drivers/target/target_core_rd.c | 66
+>> ++++++++++++++++++++---------------------
+>>   1 file changed, 32 insertions(+), 34 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_rd.c
+>> b/drivers/target/target_core_rd.c
+>> index 98e83ac..ac5e8d2 100644
+>> --- a/drivers/target/target_core_rd.c
+>> +++ b/drivers/target/target_core_rd.c
+>> @@ -382,6 +382,36 @@ static struct rd_dev_sg_table
+>> *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
+>>         return NULL;
+>>   }
+>>
+>> +typedef sense_reason_t (*dif_verify)(struct se_cmd *, sector_t, unsigned
+>> int,
+>> +                                    unsigned int, struct scatterlist *,
+>> int);
+>> +
+>> +static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify
+>> dif_verify)
+>> +{
+>> +       struct se_device *se_dev = cmd->se_dev;
+>> +       struct rd_dev *dev = RD_DEV(se_dev);
+>> +       struct rd_dev_sg_table *prot_table;
+>> +       struct scatterlist *prot_sg;
+>> +       u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+>> +       u32 prot_offset, prot_page;
+>> +       u64 tmp;
+>> +       sense_reason_t rc;
+>> +
+>> +       tmp = cmd->t_task_lba * se_dev->prot_length;
+>> +       prot_offset = do_div(tmp, PAGE_SIZE);
+>> +       prot_page = tmp;
+>> +
+>> +       prot_table = rd_get_prot_table(dev, prot_page);
+>> +       if (!prot_table)
+>> +               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+>> +
+>> +       prot_sg = &prot_table->sg_table[prot_page -
+>> +                                       prot_table->page_start_offset];
+>> +
+>> +       rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg,
+>> prot_offset);
+>> +
+>> +       return rc;
+>
+>
+> Nit, Given there is no action on the returned rc, this can be reduced to:
+>         return dif_verify();
 
-Can you please let me know the status of this patch set.
-
-This V2 patch set was reviewed by Hannes and Murthy.
-
-Thanks,
-Mahesh  
-
------Original Message-----
-From: Mahesh Rajashekhara 
-Sent: Thursday, March 26, 2015 8:11 PM
-To: hare@suse.de; JBottomley@Parallels.com; linux-scsi@vger.kernel.org
-Cc: Achim Leubner; Mahesh Rajashekhara
-Subject: [V2 PATCH 00/11] aacraid driver updates
-
-This patch set includes some important bug fixes and new feature supports.
-
-V2:
-Separated unrelated patches from the VPD support one Fixed indentation issues Separated version increase and applied at the end
-
-Mahesh Rajashekhara (11):
-  aacraid: AIF support for SES device add/remove
-  aacraid: IOCTL pass-through command fix
-  aacraid: 4KB sector support
-  aacraid: MSI-x support
-  aacraid: vpd page code 0x83 support
-  aacraid: 240 simple volume support
-  aacraid: IOP RESET command handling changes
-  aacraid: IOCTL fix
-  aacraid: performance improvement changes
-  aacraid: AIF raw device remove support
-  aacraid: driver version change
-
- drivers/scsi/aacraid/aachba.c   |  410 +++++++++++++++++++++++++++++++------
- drivers/scsi/aacraid/aacraid.h  |  106 +++++++++-
- drivers/scsi/aacraid/commctrl.c |   10 +-
- drivers/scsi/aacraid/comminit.c |  106 +++++++++-
- drivers/scsi/aacraid/commsup.c  |   96 +++++++--
- drivers/scsi/aacraid/dpcsup.c   |   13 +-
- drivers/scsi/aacraid/linit.c    |   61 ++++--
- drivers/scsi/aacraid/rx.c       |   14 +-
- drivers/scsi/aacraid/src.c      |  438 +++++++++++++++++++++++++++++---------
- 9 files changed, 1012 insertions(+), 242 deletions(-)
-
---
-1.7.7.3
-
+You are right,  but the patch 2/2 inserts the lines to release
+temporary prot_sg before return statement, so assignment and return
+statements will be both required in the end.
