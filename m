@@ -1,90 +1,76 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v2 1/2] target/rd: reduce code duplication in rd_execute_rw()
-Date: Mon, 6 Apr 2015 20:16:41 +0900
-Message-ID: <CAC5umyhG0oinXnsyqXwNc1cqWU3ixHLwB8jbQt=Vt2x=cC3Kyg@mail.gmail.com>
-References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
-	<55223908.6080607@dev.mellanox.co.il>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi_debug: fix prevent_allow+verify regressions
+Date: Mon, 06 Apr 2015 11:05:41 -0400
+Message-ID: <5522A0C5.9030804@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <55223908.6080607@dev.mellanox.co.il>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagig@dev.mellanox.co.il>
-Cc: target-devel@vger.kernel.org, Nicholas Bellinger <nab@linux-iscsi.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------060601020804080505090706"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:42544 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753102AbbDFPGK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Apr 2015 11:06:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>, jbottomley@odin.com
+Cc: util-linux@vger.kernel.org, sweet_f_a@gmx.de
 
-2015-04-06 16:43 GMT+09:00 Sagi Grimberg <sagig@dev.mellanox.co.il>:
-> On 4/5/2015 5:59 PM, Akinobu Mita wrote:
->>
->> Factor out code duplication in rd_execute_rw() into a helper function
->> rd_do_prot_rw().  This change is required to minimize the forthcoming
->> fix in rd_do_prot_rw().
->>
->> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
->> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
->> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
->> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
->> Cc: target-devel@vger.kernel.org
->> Cc: linux-scsi@vger.kernel.org
->> ---
->> * v2
->> - Pass dif_verify() function pointer to helper function instead of
->> is_write,
->>    suggested by Sagi Grimberg.
->>
->>   drivers/target/target_core_rd.c | 66
->> ++++++++++++++++++++---------------------
->>   1 file changed, 32 insertions(+), 34 deletions(-)
->>
->> diff --git a/drivers/target/target_core_rd.c
->> b/drivers/target/target_core_rd.c
->> index 98e83ac..ac5e8d2 100644
->> --- a/drivers/target/target_core_rd.c
->> +++ b/drivers/target/target_core_rd.c
->> @@ -382,6 +382,36 @@ static struct rd_dev_sg_table
->> *rd_get_prot_table(struct rd_dev *rd_dev, u32 page
->>         return NULL;
->>   }
->>
->> +typedef sense_reason_t (*dif_verify)(struct se_cmd *, sector_t, unsigned
->> int,
->> +                                    unsigned int, struct scatterlist *,
->> int);
->> +
->> +static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify
->> dif_verify)
->> +{
->> +       struct se_device *se_dev = cmd->se_dev;
->> +       struct rd_dev *dev = RD_DEV(se_dev);
->> +       struct rd_dev_sg_table *prot_table;
->> +       struct scatterlist *prot_sg;
->> +       u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
->> +       u32 prot_offset, prot_page;
->> +       u64 tmp;
->> +       sense_reason_t rc;
->> +
->> +       tmp = cmd->t_task_lba * se_dev->prot_length;
->> +       prot_offset = do_div(tmp, PAGE_SIZE);
->> +       prot_page = tmp;
->> +
->> +       prot_table = rd_get_prot_table(dev, prot_page);
->> +       if (!prot_table)
->> +               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->> +
->> +       prot_sg = &prot_table->sg_table[prot_page -
->> +                                       prot_table->page_start_offset];
->> +
->> +       rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg,
->> prot_offset);
->> +
->> +       return rc;
->
->
-> Nit, Given there is no action on the returned rc, this can be reduced to:
->         return dif_verify();
+This is a multi-part message in MIME format.
+--------------060601020804080505090706
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-You are right,  but the patch 2/2 inserts the lines to release
-temporary prot_sg before return statement, so assignment and return
-statements will be both required in the end.
+Ruediger Meier observed a regression with the PREVENT ALLOW
+MEDIUM REMOVAL command in lk 3.19:
+   http://www.spinics.net/lists/util-linux-ng/msg11448.html
+
+Inspection indicated the same regression with VERIFY(10).
+
+The patch is against lk 3.19.3 and also works with lk 4.0.0-rc6.
+With this patch both commands are accepted and do nothing.
+VERIFY(10) could be implemented since it shares logic with
+COMPARE AND WRITE which is implemented; however that would
+be an enhancement.
+
+ChangeLog:
+   - fix the lk 3.19 regression so that the PREVENT ALLOW
+     MEDIUM REMOVAL command is supported once again
+   - same fix for VERIFY(10)
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+--------------060601020804080505090706
+Content-Type: text/x-patch;
+ name="sdebug319regr1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sdebug319regr1.patch"
+
+--- a/drivers/scsi/scsi_debug.c	2015-02-11 17:47:09.276206425 -0500
++++ b/drivers/scsi/scsi_debug.c	2015-04-03 22:42:36.343971372 -0400
+@@ -455,8 +455,9 @@ static const struct opcode_info_t opcode
+ 	     0} },
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* MAINT OUT */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+-	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* VERIFY */
+-	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
++	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_DIRECT_IO, NULL, NULL, /* VERIFY(10) */
++	    {10,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc7,
++	     0, 0, 0, 0, 0, 0} },
+ 	{1, 0x7f, 0x9, F_SA_HIGH | F_D_IN | FF_DIRECT_IO, resp_read_dt0,
+ 	    vl_iarr, {32,  0xc7, 0, 0, 0, 0, 0x1f, 0x18, 0x0, 0x9, 0xfe, 0,
+ 		      0xff, 0xff, 0xff, 0xff} },/* VARIABLE LENGTH, READ(32) */
+@@ -467,8 +468,8 @@ static const struct opcode_info_t opcode
+ 	    {10,  0x13, 0xff, 0xff, 0, 0, 0, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0,
+ 	     0} },
+ /* 20 */
+-	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ALLOW REMOVAL */
+-	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
++	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
++	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0x1, 0, 0, resp_start_stop, NULL, /* REWIND ?? */
+ 	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
+
+--------------060601020804080505090706--
