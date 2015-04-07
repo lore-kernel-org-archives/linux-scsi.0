@@ -1,34 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/5] megaraid_sas : Code optimization and refactoring
-Date: Tue, 07 Apr 2015 19:14:35 -0400
-Message-ID: <yq11tjvil9g.fsf@sermon.lab.mkp.net>
-References: <201503271156.t2RBum1Y032249@palmhbs0.lsi.com>
+Subject: Re: [PATCH-v2 01/15] target: Convert DIF emulation to use cmd->prot_type
+Date: Tue, 07 Apr 2015 19:22:52 -0400
+Message-ID: <yq1wq1nh6b7.fsf@sermon.lab.mkp.net>
+References: <1427686104-14231-1-git-send-email-nab@daterainc.com>
+	<1427686104-14231-2-git-send-email-nab@daterainc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21193 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754692AbbDGXPY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2015 19:15:24 -0400
-In-Reply-To: <201503271156.t2RBum1Y032249@palmhbs0.lsi.com> (Sumit Saxena's
-	message of "Fri, 27 Mar 2015 17:25:17 +0530")
+Received: from aserp1040.oracle.com ([141.146.126.69]:28991 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932210AbbDGXXL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2015 19:23:11 -0400
+In-Reply-To: <1427686104-14231-2-git-send-email-nab@daterainc.com> (Nicholas
+	A. Bellinger's message of "Mon, 30 Mar 2015 03:28:10 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit.Saxena@avagotech.com
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, martin.petersen@oracle.com, hch@infradead.org, jbottomley@parallels.com, kashyap.desai@avagotech.com
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sagi Grimberg <sagig@mellanox.com>, Quinn Tran <quinn.tran@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
 
->>>>> "Sumit" ==   <Sumit.Saxena@avagotech.com> writes:
+>>>>> "nab" == Nicholas A Bellinger <nab@daterainc.com> writes:
 
-Sumit> This patch has code optimization and refactoring in below areas-
-Sumit> 1) Created separate functions for sysPD IOs and non Read Write
-Sumit> LDIOs.  2) Added function for refiring MFI commands in controller
-Sumit> reset path.  3) Enabling interrupt immediately after adapter's
-Sumit> initialization.  4) Added function for setting up IRQs.  5)
-Sumit> Modified few prints for better logging.  6) Modified few macros
-Sumit> not to pass unused parameters.  7) Move internal commands and
-Sumit> SCSI commands reservation in adapter's sepcific functions.
+nab> This patch changes existing DIF emulation to check the command
+nab> descriptor's prot_type, instead of what the backend device is
+nab> exposing in pi_prot_type.
 
-This needs to be 7 patches and not 1.
+nab> Since this value is already set in sbc_check_prot(), go ahead and
+nab> use it to allow protected fabrics to function with unprotected
+nab> devices.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
