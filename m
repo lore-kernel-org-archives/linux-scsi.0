@@ -1,41 +1,46 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 6/7] mpt2sas: store scsi io tracker data in the scsi
-	command / request
-Date: Tue, 7 Apr 2015 18:18:23 +0200
-Message-ID: <20150407161823.GA19547@lst.de>
-References: <1428076703-31014-1-git-send-email-axboe@fb.com> <1428076703-31014-7-git-send-email-axboe@fb.com> <20150405160359.GD28173@lst.de> <55240223.4070205@kernel.dk>
+From: Jens Axboe <axboe@fb.com>
+Subject: [PATCH RFC v2] mpt2/mpt3sas lock reduction for scsi-mq
+Date: Tue, 7 Apr 2015 11:18:34 -0600
+Message-ID: <1428427120-20971-1-git-send-email-axboe@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59039 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753228AbbDGQS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Apr 2015 12:18:26 -0400
-Content-Disposition: inline
-In-Reply-To: <55240223.4070205@kernel.dk>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:8909 "EHLO
+	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753989AbbDGRSt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2015 13:18:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: hch@lst.de
 
-On Tue, Apr 07, 2015 at 10:13:23AM -0600, Jens Axboe wrote:
->> The mq case will also work for the !mq case when you call
->> scsi_host_find_tag and scsi_cmd_priv.   In general all the mq-specific
->> codepathes you add should become the default and only one, even if this
->> requires a lit bit of additional core work.
->
-> For the core code, I definitely agree. But for this case, in scsi-mq mode, 
-> we know that tag == smid - 1. That's not the case if we are not using 
-> scsi-mq.
+Hi,
 
-It is if you use the old block tagging code with host-wide tags.
-I guess you'll need to tell mpt2 and mpt3 to use that firs, though.
+This is v2 of the series. Generally addressed Christoph's review comments,
+but more specifically, changes since v1:
 
-> In general, it'd be great if we could "convert" drivers and not have to 
-> support both scsi-mq and legacy mode. Then I could just rip the old code.
+- Kill the MPI2_FUNCTION_SCSI_TASK_MGMT support, which in turn
+  enabled me to drop the SCSI/blk iter patches and the smid work-around
+  for scsi-mq in mpt2/3 for bumping to hpr for NULL command.
+- Made init/exit_command() work (sort of) on non scsi-mq. Drivers
+  will have to set request_index related information separately
+  still for non scsi-mq, since we don't have a reliable one
+- Use scsi_cmd_priv() instead of adding a new helper.
+- Make scsi_find_tag() only return in-progress IO for scsi-mq. This is
+  simiar to the ->special check for non-mq.
+- Ensure that mpt3sas is in sync with the mpt2sas changes.
 
-Well, the whole point is that you should be able to write a driver like
-your mq version and it should just work. Even better would be if we
-could get rid of the old case entirely for scsi, but for that we need
-a I/O scheduler for blk-mq first :)
+ drivers/scsi/mpt2sas/mpt2sas_base.c  |  187 ++++++++++++++++++++++++-----------
+ drivers/scsi/mpt2sas/mpt2sas_base.h  |    3 
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c   |  126 +----------------------
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |   87 ++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  173 +++++++++++++++++++++++---------
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |    2 
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  130 +-----------------------
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   69 ++++++++++--
+ drivers/scsi/scsi.c                  |    9 +
+ drivers/scsi/scsi_lib.c              |   16 ++
+ include/scsi/scsi_host.h             |    6 -
+ include/scsi/scsi_tcq.h              |   11 +-
+ 12 files changed, 448 insertions(+), 371 deletions(-)
 
