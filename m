@@ -1,44 +1,35 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v2] Split SCSI header files
-Date: Tue, 7 Apr 2015 11:11:21 +0200
-Message-ID: <55239F39.4050605@sandisk.com>
-References: <55217B00.6030706@sandisk.com> <20150406150842.GA23569@lst.de>
+Subject: [PATCH v3] Split SCSI header files
+Date: Tue, 7 Apr 2015 14:32:21 +0200
+Message-ID: <5523CE55.3090401@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2on0062.outbound.protection.outlook.com ([207.46.100.62]:24570
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0081.outbound.protection.outlook.com ([157.56.110.81]:29280
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751410AbbDGJL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Apr 2015 05:11:28 -0400
-In-Reply-To: <20150406150842.GA23569@lst.de>
+	id S1753018AbbDGMc2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Apr 2015 08:32:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@odin.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@odin.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-On 04/06/15 17:08, Christoph Hellwig wrote:
-> On Sun, Apr 05, 2015 at 08:12:16PM +0200, Bart Van Assche wrote:
->> Move the
->> functions that are used by both subsystems into <scsi/scsi_lib.h>.
->> Rename drivers/scsi/scsi_lib.c into scsi_ini_lib.c. This change
->> will allow to modify the SCSI target code such that the initiator
->> SCSI header files are no longer included. Note: the SCSI target
->> driver patch is available for review at
->
-> I don't really like renaming the file that has most of the initiator side
-> SCSI code that way.  If we really have to rename it in some way I'd suggest
-> just merging it into scsi.c as we call forth and back between the two all
-> the time.
->
-> Maybe we can use scsi_common.c/h/.ko to avoid these moves, although I'd
-> prefer to just duplicate this tiny amount of code.
+Move the constants and functions that are used by both initiator and 
+target code to new header files such that the target code does no longer 
+have to include initiator header files.
 
-Hello Christoph,
+Changes in v3 of this series compared to v2:
+- Renamed scsi_lib.h into scsi_common.h.
+- Added a patch for replacing MAX_COMMAND_SIZE with BLK_MAX_CDB.
+- Added a patch that minimizes the include directives in target code.
 
-Sorry but duplicating code is not really something that makes me 
-enthusiast ... But I will address all your other comments, including 
-using the names scsi_common.c/.h.
+Changes in v2 of this series compared to v1:
+- Dropped the scsi_lun.h header file and introduced scsi_lib.h.
 
-Bart.
+The patches in this series are:
+0001-Split-SCSI-header-files.patch
+0002-Replace-MAX_COMMAND_SIZE-with-BLK_MAX_CDB.patch
+0003-target-Correct-a-comment.patch
+0004-target-Minimize-SCSI-header-include-directives.patch
