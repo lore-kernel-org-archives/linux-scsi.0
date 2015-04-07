@@ -1,43 +1,57 @@
-From: "Gilad Broner" <gbroner@codeaurora.org>
-Subject: Re: [PATCH v1 2/2] scsi: ufs: add support to allow non standard
- behaviours (quirks)
-Date: Tue, 7 Apr 2015 07:53:16 -0000
-Message-ID: <08233ba82c96ccf7d66e06f238f67282.squirrel@www.codeaurora.org>
-References: <1427812635-16617-1-git-send-email-ygardi@codeaurora.org>
-    <1427812635-16617-3-git-send-email-ygardi@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1427812635-16617-3-git-send-email-ygardi@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, hch@infradead.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, santoshsy@gmail.com, linux-scsi-owner@vger.kernel.org, ygardi@codeaurora.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jbottomley@parallels.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] libsas: Fixup transport protocol definition in sas_get_ata_info()
+Date: Tue,  7 Apr 2015 10:45:07 +0200
+Message-ID: <1428396307-87607-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:50385 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752771AbbDGIpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Apr 2015 04:45:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
+'tproto' specifies the transport protocol, not the device type.
+So use the correct definitions here.
 
-> Some implementation of UFS host controller HW might have some non-standard
-> behaviours (quirks) when compared to behaviour specified by UFSHCI
-> specification. This patch add support to allow specifying all such quirks
-> to standard UFS host controller driver so standard driver takes them into
-> account.
->
-> In this change a UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS is introduced,
-> where a minimum delay of 1ms is required before DME commands for
-> stability purposes.
->
-> Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
->
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 22 +++++++++++++++++-----
->  drivers/scsi/ufs/ufs-qcom.h | 18 ++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c   | 35 +++++++++++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h   |  9 +++++++++
->  4 files changed, 79 insertions(+), 5 deletions(-)
->
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/libsas/sas_ata.c | 2 +-
+ drivers/scsi/sd.c             | 7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
-
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 9c706d8..83b182a 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -279,7 +279,7 @@ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy)
+ 	if (phy->attached_tproto & SAS_PROTOCOL_STP)
+ 		dev->tproto = phy->attached_tproto;
+ 	if (phy->attached_sata_dev)
+-		dev->tproto |= SAS_SATA_DEV;
++		dev->tproto |= SAS_PROTOCOL_SATA;
+ 
+ 	if (phy->attached_dev_type == SAS_SATA_PENDING)
+ 		dev->dev_type = SAS_SATA_PENDING;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ec512b8..19e6154 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2127,6 +2127,13 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 				 * give it one more chance */
+ 				if (--reset_retries > 0)
+ 					continue;
++			if (sense_valid &&
++			    sshdr.sense_key == UNIT_ATTENTION &&
++			    sshdr.asc == 0x29 && sshdr.ascq == 0x00)
++				/* Device reset might occur several times,
++				 * give it one more chance */
++				if (--reset_retries > 0)
++					continue;
+ 		}
+ 		retries--;
+ 
 -- 
-Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+1.8.5.2
+
