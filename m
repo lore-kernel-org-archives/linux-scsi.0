@@ -1,53 +1,42 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH v3 03/20] lpfc: Add new mbx cmd recognition
-Date: Tue, 7 Apr 2015 15:07:10 -0400
-Message-ID: <55242ade.s+NFGJaDFr8+jLhf%james.smart@emulex.com>
+Subject: [PATCH v3 01/20] lpfc: Fix the iteration count to match the 30
+ sec comment in the routine lpfc_pci_function_reset
+Date: Tue, 7 Apr 2015 15:07:08 -0400
+Message-ID: <55242adc.Tdw62/xLybtZCxVb%james.smart@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from cmexedge1.emulex.com ([138.239.224.99]:33630 "EHLO
 	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753437AbbDGTIP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2015 15:08:15 -0400
+	with ESMTP id S1753423AbbDGTIN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2015 15:08:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Add new mbx cmd recognition
+Fix the iteration count to match the 30 sec comment in the routine lpfc_pci_function_reset
 
 Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 1 +
- drivers/scsi/lpfc/lpfc_bsg.h | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index a7bf359..6b4cf31 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -4179,6 +4179,7 @@ lpfc_bsg_handle_sli_cfg_mbox(struct lpfc_hba *phba, struct fc_bsg_job *job,
- 			switch (opcode) {
- 			case COMN_OPCODE_GET_CNTL_ADDL_ATTRIBUTES:
- 			case COMN_OPCODE_GET_CNTL_ATTRIBUTES:
-+			case COMN_OPCODE_GET_PROFILE_CONFIG:
- 				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 						"3106 Handled SLI_CONFIG "
- 						"subsys_comn, opcode:x%x\n",
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
-index 928ef60..7f26a9b 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.h
-+++ b/drivers/scsi/lpfc/lpfc_bsg.h
-@@ -246,6 +246,7 @@ struct lpfc_sli_config_emb1_subsys {
- #define lpfc_emb1_subcmnd_subsys_WORD	word6
- /* Subsystem COMN (0x01) OpCodes */
- #define SLI_CONFIG_SUBSYS_COMN		0x01
-+#define COMN_OPCODE_GET_PROFILE_CONFIG	0xA4
- #define COMN_OPCODE_READ_OBJECT		0xAB
- #define COMN_OPCODE_WRITE_OBJECT	0xAC
- #define COMN_OPCODE_READ_OBJECT_LIST	0xAD
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0b2c53a..2b5b910 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7953,7 +7953,7 @@ wait:
+ 		 * up to 30 seconds. If the port doesn't respond, treat
+ 		 * it as an error.
+ 		 */
+-		for (rdy_chk = 0; rdy_chk < 3000; rdy_chk++) {
++		for (rdy_chk = 0; rdy_chk < 1500; rdy_chk++) {
+ 			if (lpfc_readl(phba->sli4_hba.u.if_type2.
+ 				STATUSregaddr, &reg_data.word0)) {
+ 				rc = -ENODEV;
 -- 
 1.7.11.7
 
