@@ -1,55 +1,75 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 01/14] parport: return value of attach and
- parport_register_driver
-Date: Wed, 8 Apr 2015 15:27:37 +0300
-Message-ID: <20150408122737.GK10964@mwanda>
-References: <1428492040-5581-1-git-send-email-sudipm.mukherjee@gmail.com>
- <1428492040-5581-2-git-send-email-sudipm.mukherjee@gmail.com>
- <20150408113832.GH10964@mwanda> <20150408115010.GA11153@sudip-PC>
+From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH 02/14] ALSA: portman2x4: return proper error values from
+ attach
+Date: Wed, 08 Apr 2015 16:32:57 +0300
+Message-ID: <55252E09.2060600@cogentembedded.com>
+References: <1428492040-5581-1-git-send-email-sudipm.mukherjee@gmail.com> <1428492040-5581-3-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20150408115010.GA11153@sudip-PC>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: devel@driverdev.osuosl.org, Rodolfo Giometti <giometti@enneenne.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Wolfram Sang <wsa@the-dreams.de>, Takashi Iwai <tiwai@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-spi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Jaroslav Kysela <perex@perex.cz>, Mark Brown <broonie@kernel.org>, linux-i2c@vger.kernel.org, Willy Tarreau <willy@meta-x.org>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, Jean Delvare <jdelvare@suse.de>
+Return-path: <linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1428492040-5581-3-git-send-email-sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sudip Mukherjee <sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jean Delvare <jdelvare-l3A5Bk7waGM@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, Rodolfo Giometti <giometti-AVVDYK/kqiJWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Willy Tarreau <willy-859RlTSWH48dnm+yROfE0A@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 08, 2015 at 05:20:10PM +0530, Sudip Mukherjee wrote:
-> On Wed, Apr 08, 2015 at 02:38:32PM +0300, Dan Carpenter wrote:
-> > 1) We can't apply this patch on its own so this way of breaking up the
-> > patches doesn't work.
-> yes, if the first patch is reverted for any reason all the others need
-> to be reverted also. so then everything in one single patch?
+Hello.
 
-The problem is that patch 1/1 breaks the build.  The rule is that we
-should be able to apply part of a patch series and nothing breaks.  If
-we apply the patch series out of order than things break that's our
-problem, yes.  But if we apply only 1/1 and it breaks, that's a problem
-with the series.
+On 4/8/2015 2:20 PM, Sudip Mukherjee wrote:
 
-> > 
-> > 2) I was thinking that all the ->attach() calls would have to succeed or
-> > we would bail.  Having some of them succeed and some fail doesn't seem
-> > like it will simplify the driver code very much.  But I can also see
-> > your point.  Hm...
+> now that we are monitoring the return value from attach, make the
 
-My other issue with this patch series which is related to #2 is that
-it's not clear that anyone is checking the return value and doing
-correct things with it.
+    So you've first changed the method prototype and follow up with the 
+changes to the actual implementations? That's backward. I'm afraid such 
+changes can't be done piecemeal.
 
-Hopefully, when we use the attach_ret() approach then it will be more
-clear if/how the return value is useful.
+> required changes to return proper value from its attach function.
 
-regards,
-dan carpenter
+> Signed-off-by: Sudip Mukherjee <sudip-ofJRbWXBVFamYgehrs7/Lw@public.gmane.org>
+> ---
+>   sound/drivers/portman2x4.c | 15 ++++++++++-----
+>   1 file changed, 10 insertions(+), 5 deletions(-)
+
+> diff --git a/sound/drivers/portman2x4.c b/sound/drivers/portman2x4.c
+> index 464385a..866adbb 100644
+> --- a/sound/drivers/portman2x4.c
+> +++ b/sound/drivers/portman2x4.c
+> @@ -672,32 +672,37 @@ static int snd_portman_probe_port(struct parport *p)
+>   	return res ? -EIO : 0;
+>   }
+>
+> -static void snd_portman_attach(struct parport *p)
+> +static int snd_portman_attach(struct parport *p)
+>   {
+>   	struct platform_device *device;
+> +	int ret;
+>
+>   	device = platform_device_alloc(PLATFORM_DRIVER, device_count);
+>   	if (!device)
+> -		return;
+> +		return -ENOMEM;
+>
+>   	/* Temporary assignment to forward the parport */
+>   	platform_set_drvdata(device, p);
+>
+> -	if (platform_device_add(device) < 0) {
+> +	ret = platform_device_add(device);
+> +
+
+    I don't think empty line is needed here.
+
+> +	if (ret < 0) {
+>   		platform_device_put(device);
+> -		return;
+> +		return ret;
+>   	}
+>
+[...]
+
+WBR, Sergei
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-spi" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
