@@ -1,33 +1,69 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: smp_processor_id warning in megasas driver on 3.19.3
-Date: Wed, 8 Apr 2015 18:55:36 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A879C87@G4W3202.americas.hpqcorp.net>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: smp_processor_id warning in megasas driver on 3.19.3
+Date: Wed, 8 Apr 2015 12:14:32 -0700
+Message-ID: <CALCETrU2E3=mrf4MYTKs5GgKzjkQCHsF00bwi8U3BfKbk4SBmg@mail.gmail.com>
 References: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
- <1428517069.2224.36.camel@HansenPartnership.com>
- <CALCETrUbOrUnu8zp_yfQj_vG7EZeo7rSw8XJXcmhNxD-gQRxRw@mail.gmail.com>
+ <20150408185138.GA32580@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:47878 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177AbbDHS4u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 14:56:50 -0400
-In-Reply-To: <CALCETrUbOrUnu8zp_yfQj_vG7EZeo7rSw8XJXcmhNxD-gQRxRw@mail.gmail.com>
-Content-Language: en-US
+Received: from mail-la0-f48.google.com ([209.85.215.48]:34109 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbbDHTOy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 15:14:54 -0400
+Received: by laat2 with SMTP id t2so66410350laa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2015 12:14:52 -0700 (PDT)
+In-Reply-To: <20150408185138.GA32580@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "megaraidlinux.pdl@avagotech.com" <megaraidlinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, megaraidlinux.pdl@avagotech.com, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEFuZHkgTHV0b21pcnNraQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmls
-IDgsIDIwMTUgMToyNyBQTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5DQo+IENjOiBLYXNoeWFwIERl
-c2FpOyBTdW1pdCBTYXhlbmE7IFVkYXkgTGluZ2FsYTsNCj4gbWVnYXJhaWRsaW51eC5wZGxAYXZh
-Z290ZWNoLmNvbTsgTGludXggU0NTSSBMaXN0DQo+IFN1YmplY3Q6IFJlOiBzbXBfcHJvY2Vzc29y
-X2lkIHdhcm5pbmcgaW4gbWVnYXNhcyBkcml2ZXIgb24gMy4xOS4zDQo+IA0KLi4uDQo+IFdvdWxk
-IHJhd19zbXBfcHJvY2Vzc29yX2lkIGJlIGEgZ29vZCBjb21wcm9taXNlPyAgSSdtIHRlc3Rpbmcg
-YSBwYXRjaA0KPiByaWdodCBub3cgYW5kLCBpZiBpdCB3b3JrcywgSSBjYW4gc2VuZCBpdCBhbmQg
-Y2Mgc3RhYmxlLg0KPiANCj4gLS1BbmR5DQoNClRoYXQncyB3aGF0IGhwc2EgdXNlcy4NCg0KLS0t
-DQpSb2JlcnQgRWxsaW90dCwgSFAgU2VydmVyIFN0b3JhZ2UNCg0K
+On Wed, Apr 8, 2015 at 11:51 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Apr 08, 2015 at 10:59:36AM -0700, Andy Lutomirski wrote:
+>> This is a regression somewhere between 3.15 and 3.19.3.  Let me know
+>> if more diagnostics would be helpful.
+>
+> Try this patch:
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 675b5e7..5a0800d 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+>                         fp_possible = io_info.fpOkForIo;
+>         }
+>
+> -       /* Use smp_processor_id() for now until cmd->request->cpu is CPU
+> +       /* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
+>            id by default, not CPU group id, otherwise all MSI-X queues won't
+>            be utilized */
+>         cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+> -               smp_processor_id() % instance->msix_vectors : 0;
+> +               raw_smp_processor_id() % instance->msix_vectors : 0;
+>
+>         if (fp_possible) {
+>                 megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+> @@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+>                         << MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+>                 cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
+>                 cmd->request_desc->SCSIIO.MSIxIndex =
+> -                       instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
+> +                       instance->msix_vectors ?
+> +                               raw_smp_processor_id() %
+> +                                       instance->msix_vectors :
+> +                               0;
+>                 os_timeout_value = scmd->request->timeout / HZ;
+>
+>                 if (instance->secure_jbod_support &&
+
+I wrote an effectively identical patch (differed in whitespace and
+formatting), and it seems to work.
+
+Tested-by: Andy Lutomirski <luto@kernel.org>
+
+--Andy
+
+-- 
+Andy Lutomirski
+AMA Capital Management, LLC
