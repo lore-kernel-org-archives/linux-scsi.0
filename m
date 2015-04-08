@@ -1,48 +1,57 @@
-From: Help Desk <info@helpdesk.org>
-Subject: Scheduled Maintenance & Upgrade
-Date: Wed, 08 Apr 2015 05:51:38 +0800
-Message-ID: <0NMG00DZ7I2HO990@mta3.msg.onenet.net>
-Reply-To: help.desk.team.0014@tech-center.com
-Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta3.msg.onenet.net ([164.58.240.52]:39933 "EHLO
-	mta3.msg.onenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994AbbDHJ0A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 05:26:00 -0400
-Received: from localhost ([164.58.240.91])
- by mta3.msg.onenet.net (Oracle Communications Messaging Server 7u4-23.01
- (7.0.4.23.0) 64bit (built Aug 10 2011))
- with ESMTP id <0NMG00DDRI2T0AC0@mta3.msg.onenet.net> for
- linux-scsi@vger.kernel.org; Tue, 07 Apr 2015 16:52:06 -0500 (CDT)
-Content-description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sudip Mukherjee <sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 00/14] parport: check success of attach call
+Date: Wed,  8 Apr 2015 16:50:26 +0530
+Message-ID: <1428492040-5581-1-git-send-email-sudipm.mukherjee@gmail.com>
+Return-path: <linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jean Delvare <jdelvare-l3A5Bk7waGM@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, Rodolfo Giometti <giometti-AVVDYK/kqiJWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Willy Tarreau <willy-859RlTSWH48dnm+yROfE0A@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Sudip Mukherjee <sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <info@helpdesk.org>
 
-Help Desk
-
-
-Scheduled Maintenance & Upgrade
-
-Your account is in the process of being upgraded to a newest  
-Windows-based servers and an enhanced online email interface inline with internet infrastructure Maintenance. The new servers will provide better anti-spam and anti-virus functions, along with IMAP Support for mobile devices to enhance your usage.
-
-To ensure that your account is not disrupted but active during and after this upgrade, you are required to kindly confirm your account by stating the details below:
-
-* Domain\user name: 
-* Password: 
-
-This will prompt the upgrade of your account.
-
-Failure to acknowledge the receipt of this notification, might result to a temporary deactivation of your account from our database. Your account shall remain active upon your confirmation of your login details.
-
-We do apologize for any inconveniences caused.
-
-Sincerely,
-
-Customer Care Team
+Currently we are not checking if attach has succeeded or not. Also
+parport_register_driver() always return 0 even if attach fails.
+But in many places where attach has been used, it can fail.
+So, modified the parport code to check the return value of attach and
+accordingly return either 0 or error code from parport_register_driver.
 
 
-(c) Copyright 2015, All Rights Reserved.
+Sudip Mukherjee (14):
+  parport: return value of attach and parport_register_driver
+  ALSA: portman2x4: return proper error values from attach
+  ALSA: mts64: return proper error values from attach
+  staging: panel: return proper error values from attach
+  spi: lm70llp: return proper error values from attach
+  spi: butterfly: return proper error values from attach
+  [SCSI] ppa: return proper error values from attach
+  [SCSI] imm: return proper error values from attach
+  pps: return proper error values from attach
+  pps: return proper error values from attach
+  net: plip: return proper error values from attach
+  i2c-parport: return proper error values from attach
+  ppdev: return proper error values from attach
+  char: lp: return proper error values from attach
+
+ drivers/char/lp.c                        | 16 +++++++++++-----
+ drivers/char/ppdev.c                     | 10 +++++++---
+ drivers/i2c/busses/i2c-parport.c         |  7 ++++---
+ drivers/net/plip/plip.c                  | 16 ++++++++++------
+ drivers/parport/share.c                  | 20 +++++++++++++++-----
+ drivers/pps/clients/pps_parport.c        |  7 ++++---
+ drivers/pps/generators/pps_gen_parport.c |  9 +++++----
+ drivers/scsi/imm.c                       |  4 ++--
+ drivers/scsi/ppa.c                       |  4 ++--
+ drivers/spi/spi-butterfly.c              |  7 ++++---
+ drivers/spi/spi-lm70llp.c                |  7 ++++---
+ drivers/staging/panel/panel.c            | 11 ++++++-----
+ include/linux/parport.h                  |  2 +-
+ sound/drivers/mts64.c                    | 13 ++++++++-----
+ sound/drivers/portman2x4.c               | 15 ++++++++++-----
+ 15 files changed, 93 insertions(+), 55 deletions(-)
+
+-- 
+1.8.1.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-spi" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
