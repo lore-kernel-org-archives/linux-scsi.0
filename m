@@ -1,55 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: smp_processor_id warning in megasas driver on 3.19.3
-Date: Wed, 8 Apr 2015 11:51:38 -0700
-Message-ID: <20150408185138.GA32580@infradead.org>
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+Subject: RE: smp_processor_id warning in megasas driver on 3.19.3
+Date: Wed, 8 Apr 2015 18:55:36 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B40295A879C87@G4W3202.americas.hpqcorp.net>
 References: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
+ <1428517069.2224.36.camel@HansenPartnership.com>
+ <CALCETrUbOrUnu8zp_yfQj_vG7EZeo7rSw8XJXcmhNxD-gQRxRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:47187 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753450AbbDHSvl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 14:51:41 -0400
-Content-Disposition: inline
-In-Reply-To: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:47878 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177AbbDHS4u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 14:56:50 -0400
+In-Reply-To: <CALCETrUbOrUnu8zp_yfQj_vG7EZeo7rSw8XJXcmhNxD-gQRxRw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, megaraidlinux.pdl@avagotech.com, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: Andy Lutomirski <luto@amacapital.net>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "megaraidlinux.pdl@avagotech.com" <megaraidlinux.pdl@avagotech.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, "Don Brace (PMC)" <Don.Brace@pmcs.com>
 
-On Wed, Apr 08, 2015 at 10:59:36AM -0700, Andy Lutomirski wrote:
-> This is a regression somewhere between 3.15 and 3.19.3.  Let me know
-> if more diagnostics would be helpful.
-
-Try this patch:
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 675b5e7..5a0800d 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 			fp_possible = io_info.fpOkForIo;
- 	}
- 
--	/* Use smp_processor_id() for now until cmd->request->cpu is CPU
-+	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
- 	   id by default, not CPU group id, otherwise all MSI-X queues won't
- 	   be utilized */
- 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
--		smp_processor_id() % instance->msix_vectors : 0;
-+		raw_smp_processor_id() % instance->msix_vectors : 0;
- 
- 	if (fp_possible) {
- 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
-@@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
- 			<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
- 		cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
- 		cmd->request_desc->SCSIIO.MSIxIndex =
--			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
-+			instance->msix_vectors ?
-+				raw_smp_processor_id() %
-+					instance->msix_vectors :
-+				0;
- 		os_timeout_value = scmd->request->timeout / HZ;
- 
- 		if (instance->secure_jbod_support &&
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIEFuZHkgTHV0b21pcnNraQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmls
+IDgsIDIwMTUgMToyNyBQTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5DQo+IENjOiBLYXNoeWFwIERl
+c2FpOyBTdW1pdCBTYXhlbmE7IFVkYXkgTGluZ2FsYTsNCj4gbWVnYXJhaWRsaW51eC5wZGxAYXZh
+Z290ZWNoLmNvbTsgTGludXggU0NTSSBMaXN0DQo+IFN1YmplY3Q6IFJlOiBzbXBfcHJvY2Vzc29y
+X2lkIHdhcm5pbmcgaW4gbWVnYXNhcyBkcml2ZXIgb24gMy4xOS4zDQo+IA0KLi4uDQo+IFdvdWxk
+IHJhd19zbXBfcHJvY2Vzc29yX2lkIGJlIGEgZ29vZCBjb21wcm9taXNlPyAgSSdtIHRlc3Rpbmcg
+YSBwYXRjaA0KPiByaWdodCBub3cgYW5kLCBpZiBpdCB3b3JrcywgSSBjYW4gc2VuZCBpdCBhbmQg
+Y2Mgc3RhYmxlLg0KPiANCj4gLS1BbmR5DQoNClRoYXQncyB3aGF0IGhwc2EgdXNlcy4NCg0KLS0t
+DQpSb2JlcnQgRWxsaW90dCwgSFAgU2VydmVyIFN0b3JhZ2UNCg0K
