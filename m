@@ -1,107 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 2/2] target/rd: Don't pass imcomplete scatterlist
- entries to sbc_dif_verify_*
-Date: Tue, 07 Apr 2015 22:13:59 -0700
-Message-ID: <1428470039.18203.29.camel@haakon3.risingtidesystems.com>
-References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
-	 <1428245979-5432-2-git-send-email-akinobu.mita@gmail.com>
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+Subject: Re: [PATCH 00/20] mpt3sas: driver update
+Date: Wed, 8 Apr 2015 11:13:04 +0530
+Message-ID: <CAK=zhgqRR5f-QJLT18xLWOnBXVeoE2if5rEbskXyDN3H7LSWjg@mail.gmail.com>
+References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+	<20150405160905.GA15216@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1428245979-5432-2-git-send-email-akinobu.mita@gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:35338 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbbDHFnF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 01:43:05 -0400
+Received: by widdi4 with SMTP id di4so41667028wid.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2015 22:43:04 -0700 (PDT)
+In-Reply-To: <20150405160905.GA15216@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "jejb@kernel.org" <jejb@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>
 
-On Sun, 2015-04-05 at 23:59 +0900, Akinobu Mita wrote:
-> The scatterlist for protection information which is passed to
-> sbc_dif_verify_read() or sbc_dif_verify_write() requires that
-> neighboring scatterlist entries are contiguous or chained so that they
-> can be iterated by sg_next().
-> 
-> However, the protection information for RD-MCP backends could be located
-> in the multiple scatterlist arrays when the ramdisk space is too large.
-> So if the read/write request straddles this boundary, sbc_dif_verify_read()
-> or sbc_dif_verify_write() can't iterate all scatterlist entries.
-> 
-> This fixes it by allocating temporary scatterlist if it is needed.
-> 
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: target-devel@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-> ---
-> * No change from v1
-> 
->  drivers/target/target_core_rd.c | 39 +++++++++++++++++++++++++++++++++++----
->  1 file changed, 35 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-> index ac5e8d2..6e25eaa 100644
-> --- a/drivers/target/target_core_rd.c
-> +++ b/drivers/target/target_core_rd.c
-> @@ -390,11 +390,12 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
->  	struct se_device *se_dev = cmd->se_dev;
->  	struct rd_dev *dev = RD_DEV(se_dev);
->  	struct rd_dev_sg_table *prot_table;
-> +	bool need_to_release = false;
->  	struct scatterlist *prot_sg;
->  	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
-> -	u32 prot_offset, prot_page;
-> +	u32 prot_offset, prot_page, prot_npages;
->  	u64 tmp;
-> -	sense_reason_t rc;
-> +	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->  
->  	tmp = cmd->t_task_lba * se_dev->prot_length;
->  	prot_offset = do_div(tmp, PAGE_SIZE);
-> @@ -404,10 +405,40 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
->  	if (!prot_table)
->  		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
->  
-> -	prot_sg = &prot_table->sg_table[prot_page -
-> -					prot_table->page_start_offset];
-> +	prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
-> +				   PAGE_SIZE);
-> +
-> +	/* prot pages straddles multiple scatterlist tables */
-> +	if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
-> +		int i;
-> +
-> +		prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
-> +		if (!prot_sg)
-> +			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> +
-> +		need_to_release = true;
-> +		sg_init_table(prot_sg, prot_npages);
-> +
-> +		for (i = 0; i < prot_npages; i++) {
-> +			if (prot_page + i > prot_table->page_end_offset) {
-> +				prot_table = rd_get_prot_table(dev,
-> +								prot_page + i);
-> +				if (!prot_table)
-> +					goto out;
-> +				sg_unmark_end(&prot_sg[i - 1]);
-> +			}
-> +			prot_sg[i] = prot_table->sg_table[prot_page + i -
-> +						prot_table->page_start_offset];
-> +		}
-> +	} else {
-> +		prot_sg = &prot_table->sg_table[prot_page -
-> +						prot_table->page_start_offset];
-> +	}
->  
+Hi Chris,
 
-Mmm, how about just explicitly doing sg_link() at prot_table scatterlist
-creation time instead..?
+There are no corresponding mpt2sas driver's patches, The last phase
+for mpt2sas drivers is Phase20 and this phase driver is already exits
+in the upstream kernel. Also mpt2sas driver is completely in maintains
+mode and there won't be any new features.
 
-That would save the extra allocation above, and AFAICT make for simpler
-code.
+Whereas mpt3sas is at its initial baseline with a healthy road map
+ahead and also we are planning to use same mpt3sas driver for next
+upcoming Avago IT HBA's. So merging mpt2sas driver with mpt3sas driver
+may break mpt2sas driver functionality in future, also it will be over
+head of the maintainer to always check for the backward compatibility
+of merged driver with the mpt2sas driver.
 
---nab
+Regards,
+Sreekanth
+
+On Sun, Apr 5, 2015 at 9:39 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> This seems to be missing the corresponding mpt2 updates.  Nak to
+> anything that gets these drivers further out of sync.
+>
+> Btw, I still need a second ACK for
+> http://www.spinics.net/lists/linux-scsi/msg82027.html
+> as well, so we can start getting rid of this duplication mess.
