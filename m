@@ -1,44 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Fix COMPARE_AND_WRITE with SG_TO_MEM_NOALLOC
- handling
-Date: Wed, 08 Apr 2015 11:34:53 -0700
-Message-ID: <1428518093.15139.1.camel@haakon3.risingtidesystems.com>
-References: <1428449682-387-1-git-send-email-nab@daterainc.com>
-	 <20150408163331.GA3447@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: smp_processor_id warning in megasas driver on 3.19.3
+Date: Wed, 8 Apr 2015 11:51:38 -0700
+Message-ID: <20150408185138.GA32580@infradead.org>
+References: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20150408163331.GA3447@lst.de>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:47187 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450AbbDHSvl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 14:51:41 -0400
+Content-Disposition: inline
+In-Reply-To: <CALCETrXUZ=qbQmaEdiKAn+HgU7Vmx3arwGF_zyYJwTShqGcx_A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, megaraidlinux.pdl@avagotech.com, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Wed, 2015-04-08 at 18:33 +0200, Christoph Hellwig wrote:
-> This fixes the crash that I saw, but the Compare and Write testcast
-> in the scsi testsuite still fails..
+On Wed, Apr 08, 2015 at 10:59:36AM -0700, Andy Lutomirski wrote:
+> This is a regression somewhere between 3.15 and 3.19.3.  Let me know
+> if more diagnostics would be helpful.
 
-I'm not seeing this on my end:
+Try this patch:
 
-root@scsi-mq:/usr/src/libiscsi.git# ./test-tool/iscsi-test-cu --test LINUX.CompareAndWrite /dev/sg0 --dataloss
-    [SKIPPED] REPORT_SUPPORTED_OPCODES is not implemented.
-
-
-
-     CUnit - A Unit testing framework for C - Version 2.1-0
-     http://cunit.sourceforge.net/
-
-
-Suite: CompareAndWrite
-  Test: Simple ... passed
-  Test: DpoFua ...     [SKIPPED] REPORT_SUPPORTED_OPCODES is not implemented.
-    REPORT_SUPPORTED_OPCODES not implemented. Skipping this part of the test
-passed
-  Test: Miscompare ... passed
-
---Run Summary: Type      Total     Ran  Passed  Failed
-               suites        1       1     n/a       0
-               tests         3       3       3       0
-               asserts    2048    2048    2048       0
-Tests completed with return value: 0
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 675b5e7..5a0800d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1584,11 +1584,11 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			fp_possible = io_info.fpOkForIo;
+ 	}
+ 
+-	/* Use smp_processor_id() for now until cmd->request->cpu is CPU
++	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
+ 	   id by default, not CPU group id, otherwise all MSI-X queues won't
+ 	   be utilized */
+ 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+-		smp_processor_id() % instance->msix_vectors : 0;
++		raw_smp_processor_id() % instance->msix_vectors : 0;
+ 
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+@@ -1693,7 +1693,10 @@ megasas_build_dcdb_fusion(struct megasas_instance *instance,
+ 			<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 		cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+-			instance->msix_vectors ? smp_processor_id() % instance->msix_vectors : 0;
++			instance->msix_vectors ?
++				raw_smp_processor_id() %
++					instance->msix_vectors :
++				0;
+ 		os_timeout_value = scmd->request->timeout / HZ;
+ 
+ 		if (instance->secure_jbod_support &&
