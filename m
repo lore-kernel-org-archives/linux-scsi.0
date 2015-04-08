@@ -1,45 +1,47 @@
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-Subject: Re: [PATCH 00/20] mpt3sas: driver update
-Date: Wed, 8 Apr 2015 11:13:04 +0530
-Message-ID: <CAK=zhgqRR5f-QJLT18xLWOnBXVeoE2if5rEbskXyDN3H7LSWjg@mail.gmail.com>
-References: <1427723723-12676-1-git-send-email-Sreekanth.Reddy@avagotech.com>
-	<20150405160905.GA15216@infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 00/22] target: se_node_acl LUN list RCU conversion
+Date: Tue, 07 Apr 2015 23:31:49 -0700
+Message-ID: <1428474709.18203.60.camel@haakon3.risingtidesystems.com>
+References: <1427443512-8925-1-git-send-email-nab@daterainc.com>
+	 <20150330120823.GA20193@infradead.org>
+	 <1427871116.9176.240.camel@haakon3.risingtidesystems.com>
+	 <20150401070400.GA3431@infradead.org>
+	 <1427953047.9176.292.camel@haakon3.risingtidesystems.com>
+	 <20150402085607.GA31017@infradead.org>
+	 <1428008230.26668.20.camel@haakon3.risingtidesystems.com>
+	 <20150407061711.GA11081@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35338 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbbDHFnF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2015 01:43:05 -0400
-Received: by widdi4 with SMTP id di4so41667028wid.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2015 22:43:04 -0700 (PDT)
-In-Reply-To: <20150405160905.GA15216@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20150407061711.GA11081@infradead.org>
+Sender: target-devel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "jejb@kernel.org" <jejb@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sathya Prakash <Sathya.Prakash@avagotech.com>, Kashyap Desai <kashyap.desai@avagotech.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagig@mellanox.com>, Andy Grover <agrover@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Hi Chris,
+On Mon, 2015-04-06 at 23:17 -0700, Christoph Hellwig wrote:
+> On Thu, Apr 02, 2015 at 01:57:10PM -0700, Nicholas A. Bellinger wrote:
+> > > mempools are for I/O path that make guaranteed progress.  While the
+> > > callers of core_enable_device_list_for_node are in the control path,
+> > > and not in a very deep callstack, fairly shallow below the configfs
+> > > interface.  This is not a use case for mempools, as there is no need
+> > > to guarantee progress in deep I/O callstacks.
+> > > 
+> > 
+> > I was more concerned about the creation of se_dev_entry for dynamically
+> > generated se_node_acl in the login path.
+> > 
+> > Having to back out everything upon se_dev_entry allocation failure is
+> > annoying.
+> 
+> But unless you specificly pre-create the number of entries that
+> core_dev_add_lun may create that's the only way to handle it.  mempool
+> rely on the fact the objects get freed to the mempool again to make
+> forward progress, which isn't the case for a lon-lived se_dev_entry
+> allocation.
+> --
 
-There are no corresponding mpt2sas driver's patches, The last phase
-for mpt2sas drivers is Phase20 and this phase driver is already exits
-in the upstream kernel. Also mpt2sas driver is completely in maintains
-mode and there won't be any new features.
+Point taken.  Dropping the extra mempool_t usage for this case.
 
-Whereas mpt3sas is at its initial baseline with a healthy road map
-ahead and also we are planning to use same mpt3sas driver for next
-upcoming Avago IT HBA's. So merging mpt2sas driver with mpt3sas driver
-may break mpt2sas driver functionality in future, also it will be over
-head of the maintainer to always check for the backward compatibility
-of merged driver with the mpt2sas driver.
-
-Regards,
-Sreekanth
-
-On Sun, Apr 5, 2015 at 9:39 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> This seems to be missing the corresponding mpt2 updates.  Nak to
-> anything that gets these drivers further out of sync.
->
-> Btw, I still need a second ACK for
-> http://www.spinics.net/lists/linux-scsi/msg82027.html
-> as well, so we can start getting rid of this duplication mess.
+--nab
