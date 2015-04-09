@@ -1,225 +1,66 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 09/14] qla2xxx: Add debugging info for MBX timeout.
-Date: Thu, 9 Apr 2015 15:00:03 -0400
-Message-ID: <1428606008-14976-10-git-send-email-himanshu.madhani@qlogic.com>
-References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 00/14] qla2xxx: Patches for scsi "misc" branch.
+Date: Thu, 9 Apr 2015 14:59:54 -0400
+Message-ID: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:61646 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:52087 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933181AbbDITla (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 15:41:30 -0400
-In-Reply-To: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
+	by vger.kernel.org with ESMTP id S933363AbbDITlh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 15:41:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c  |    4 +-
- drivers/scsi/qla2xxx/qla_def.h  |    2 +
- drivers/scsi/qla2xxx/qla_init.c |   68 +++++++++++++++++++++++++++++++++------
- drivers/scsi/qla2xxx/qla_mbx.c  |   16 ++++++++-
- 4 files changed, 77 insertions(+), 13 deletions(-)
+Hi James,
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 5774c53..b06b6b5 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -11,9 +11,9 @@
-  * ----------------------------------------------------------------------
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x017d       | 0x0144,0x0146	|
-+ * | Module Init and Probe        |       0x017f       | 0x0146         |
-  * |                              |                    | 0x015b-0x0160	|
-- * |                              |                    | 0x016e-0x0170	|
-+ * |                              |                    | 0x016e-0x0170  |
-  * | Mailbox commands             |       0x118d       | 0x1115-0x1116	|
-  * |                              |                    | 0x111a-0x111b  |
-  * | Device Discovery             |       0x2016       | 0x2020-0x2022, |
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index cdaf52e..222d70a 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3300,6 +3300,8 @@ struct qla_hw_data {
- #define RISC_RDY_AFT_RESET	3
- #define RISC_SRAM_DUMP_CMPL	4
- #define RISC_EXT_MEM_DUMP_CMPL	5
-+#define ISP_MBX_RDY		6
-+#define ISP_SOFT_RESET_CMPL	7
- 	int		fw_dump_reading;
- 	int		prev_minidump_failed;
- 	dma_addr_t	eft_dma;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index cb294e5..22ea00eb 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1121,7 +1121,7 @@ qla81xx_reset_mpi(scsi_qla_host_t *vha)
-  *
-  * Returns 0 on success.
-  */
--static inline void
-+static inline int
- qla24xx_reset_risc(scsi_qla_host_t *vha)
- {
- 	unsigned long flags = 0;
-@@ -1130,6 +1130,7 @@ qla24xx_reset_risc(scsi_qla_host_t *vha)
- 	uint32_t cnt, d2;
- 	uint16_t wd;
- 	static int abts_cnt; /* ISP abort retry counts */
-+	int rval = QLA_SUCCESS;
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
-@@ -1142,26 +1143,57 @@ qla24xx_reset_risc(scsi_qla_host_t *vha)
- 		udelay(10);
- 	}
- 
-+	if (!(RD_REG_DWORD(&reg->ctrl_status) & CSRX_DMA_ACTIVE))
-+		set_bit(DMA_SHUTDOWN_CMPL, &ha->fw_dump_cap_flags);
-+
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x017e,
-+	    "HCCR: 0x%x, Control Status %x, DMA active status:0x%x\n",
-+	    RD_REG_DWORD(&reg->hccr),
-+	    RD_REG_DWORD(&reg->ctrl_status),
-+	    (RD_REG_DWORD(&reg->ctrl_status) & CSRX_DMA_ACTIVE));
-+
- 	WRT_REG_DWORD(&reg->ctrl_status,
- 	    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
- 	pci_read_config_word(ha->pdev, PCI_COMMAND, &wd);
- 
- 	udelay(100);
-+
- 	/* Wait for firmware to complete NVRAM accesses. */
- 	d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
--	for (cnt = 10000 ; cnt && d2; cnt--) {
--		udelay(5);
--		d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
-+	for (cnt = 10000; RD_REG_WORD(&reg->mailbox0) != 0 &&
-+	    rval == QLA_SUCCESS; cnt--) {
- 		barrier();
-+		if (cnt)
-+			udelay(5);
-+		else
-+			rval = QLA_FUNCTION_TIMEOUT;
- 	}
- 
-+	if (rval == QLA_SUCCESS)
-+		set_bit(ISP_MBX_RDY, &ha->fw_dump_cap_flags);
-+
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x017f,
-+	    "HCCR: 0x%x, MailBox0 Status 0x%x\n",
-+	    RD_REG_DWORD(&reg->hccr),
-+	    RD_REG_DWORD(&reg->mailbox0));
-+
- 	/* Wait for soft-reset to complete. */
- 	d2 = RD_REG_DWORD(&reg->ctrl_status);
--	for (cnt = 6000000 ; cnt && (d2 & CSRX_ISP_SOFT_RESET); cnt--) {
--		udelay(5);
--		d2 = RD_REG_DWORD(&reg->ctrl_status);
-+	for (cnt = 0; cnt < 6000000; cnt++) {
- 		barrier();
-+		if ((RD_REG_DWORD(&reg->ctrl_status) &
-+		    CSRX_ISP_SOFT_RESET) == 0)
-+			break;
-+
-+		udelay(5);
- 	}
-+	if (!(RD_REG_DWORD(&reg->ctrl_status) & CSRX_ISP_SOFT_RESET))
-+		set_bit(ISP_SOFT_RESET_CMPL, &ha->fw_dump_cap_flags);
-+
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x015d,
-+	    "HCCR: 0x%x, Soft Reset status: 0x%x\n",
-+	    RD_REG_DWORD(&reg->hccr),
-+	    RD_REG_DWORD(&reg->ctrl_status));
- 
- 	/* If required, do an MPI FW reset now */
- 	if (test_and_clear_bit(MPI_RESET_NEEDED, &vha->dpc_flags)) {
-@@ -1190,16 +1222,32 @@ qla24xx_reset_risc(scsi_qla_host_t *vha)
- 	RD_REG_DWORD(&reg->hccr);
- 
- 	d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
--	for (cnt = 6000000 ; cnt && d2; cnt--) {
--		udelay(5);
--		d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
-+	for (cnt = 6000000; RD_REG_WORD(&reg->mailbox0) != 0 &&
-+	    rval == QLA_SUCCESS; cnt--) {
- 		barrier();
-+		if (cnt)
-+			udelay(5);
-+		else
-+			rval = QLA_FUNCTION_TIMEOUT;
- 	}
-+	if (rval == QLA_SUCCESS)
-+		set_bit(RISC_RDY_AFT_RESET, &ha->fw_dump_cap_flags);
-+
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x015e,
-+	    "Host Risc 0x%x, mailbox0 0x%x\n",
-+	    RD_REG_DWORD(&reg->hccr),
-+	     RD_REG_WORD(&reg->mailbox0));
- 
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
-+	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x015f,
-+	    "Driver in %s mode\n",
-+	    IS_NOPOLLING_TYPE(ha) ? "Interrupt" : "Polling");
-+
- 	if (IS_NOPOLLING_TYPE(ha))
- 		ha->isp_ops->enable_intrs(ha);
-+
-+	return rval;
- }
- 
- static void
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index fe7b87d..02b1c1c 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -33,7 +33,7 @@
- static int
- qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- {
--	int		rval;
-+	int		rval, i;
- 	unsigned long    flags = 0;
- 	device_reg_t *reg;
- 	uint8_t		abort_active;
-@@ -43,10 +43,12 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 	uint16_t __iomem *optr;
- 	uint32_t	cnt;
- 	uint32_t	mboxes;
-+	uint16_t __iomem *mbx_reg;
- 	unsigned long	wait_time;
- 	struct qla_hw_data *ha = vha->hw;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
-+
- 	ql_dbg(ql_dbg_mbx, vha, 0x1000, "Entered %s.\n", __func__);
- 
- 	if (ha->pdev->error_state > pci_channel_io_frozen) {
-@@ -376,6 +378,18 @@ mbx_done:
- 		ql_dbg(ql_dbg_disc, base_vha, 0x1020,
- 		    "**** Failed mbx[0]=%x, mb[1]=%x, mb[2]=%x, mb[3]=%x, cmd=%x ****.\n",
- 		    mcp->mb[0], mcp->mb[1], mcp->mb[2], mcp->mb[3], command);
-+
-+		ql_dbg(ql_dbg_disc, vha, 0x1115,
-+		    "host status: 0x%x, flags:0x%lx, intr ctrl reg:0x%x, intr status:0x%x\n",
-+		    RD_REG_DWORD(&reg->isp24.host_status),
-+		    ha->fw_dump_cap_flags,
-+		    RD_REG_DWORD(&reg->isp24.ictrl),
-+		    RD_REG_DWORD(&reg->isp24.istatus));
-+
-+		mbx_reg = &reg->isp24.mailbox0;
-+		for (i = 0; i < 6; i++)
-+			ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0x1116,
-+			    "mbox[%d] 0x%04x\n", i, RD_REG_WORD(mbx_reg++));
- 	} else {
- 		ql_dbg(ql_dbg_mbx, base_vha, 0x1021, "Done %s.\n", __func__);
- 	}
+Please apply the following patches to the scsi tree at your earliest
+convenience for inclusion in the next mainline merge window.
+
+Thanks,
+Himanshu
+
+Andrew Vasquez (1):
+  qla2xxx: Add serdes read/write support for ISP27XX
+
+Chad Dupuis (1):
+  qla2xxx: Increase the wait time for firmware to be ready for P3P.
+
+Himanshu Madhani (8):
+  qla2xxx: Fix warnings reported by static checker.
+  qla2xxx: Fix crash due to wrong casting of reg for ISP27XX.
+  qla2xxx: Add message for sucessful FW dump collected for ISP27XX.
+  qla2xxx: Add udev notification to save fw dump for ISP27XX
+  qla2xxx: Add debugging info for MBX timeout.
+  qla2xxx: Disable Interrupt handshake for ISP27XX.
+  qla2xxx: Prevent multiple firmware dump collection for ISP27XX.
+  qla2xxx: Update driver version to 8.07.00.18-k
+
+Nigel Kirkland (1):
+  qla2xxx: Fix beacon blink for ISP27XX.
+
+Sawan Chandak (3):
+  qla2xxx: Add support to load firmware from file for ISP 26XX/27XX.
+  qla2xxx: Fix virtual port configuration, when switch port is
+    disabled/enabled.
+  qla2xxx: Restore physical port WWPN only, when port down detected for
+    FA-WWPN port.
+
+ drivers/scsi/qla2xxx/Kconfig       |    3 +
+ drivers/scsi/qla2xxx/qla_dbg.c     |    6 +-
+ drivers/scsi/qla2xxx/qla_def.h     |   16 +++++---
+ drivers/scsi/qla2xxx/qla_init.c    |   75 ++++++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_isr.c     |   17 +++++++-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   31 ++++++++++++--
+ drivers/scsi/qla2xxx/qla_mid.c     |   22 +++++++----
+ drivers/scsi/qla2xxx/qla_os.c      |    3 +
+ drivers/scsi/qla2xxx/qla_sup.c     |   11 +++--
+ drivers/scsi/qla2xxx/qla_tmpl.c    |   15 +++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 11 files changed, 158 insertions(+), 43 deletions(-)
+
 -- 
 1.7.7
 
