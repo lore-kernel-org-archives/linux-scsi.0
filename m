@@ -1,86 +1,38 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: Re: [PATCH 12/14] i2c-parport: return proper error values from
- attach
-Date: Thu, 9 Apr 2015 11:33:42 +0200
-Message-ID: <20150409113342.5621af83@endymion.delvare>
-References: <1428492040-5581-1-git-send-email-sudipm.mukherjee@gmail.com>
-	<1428492040-5581-13-git-send-email-sudipm.mukherjee@gmail.com>
-	<20150409071307.GA1166@katana>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_transport_fc: Add support for 25Gbit speed
+Date: Thu, 09 Apr 2015 11:54:06 +0200
+Message-ID: <55264C3E.7080004@suse.de>
+References: <1428004252.6933.1.camel@myfc17>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34436 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:35472 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933682AbbDIJds (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Apr 2015 05:33:48 -0400
-In-Reply-To: <20150409071307.GA1166@katana>
+	id S1754976AbbDIJyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Apr 2015 05:54:08 -0400
+In-Reply-To: <1428004252.6933.1.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Rodolfo Giometti <giometti@enneenne.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Mark Brown <broonie@kernel.org>, Willy Tarreau <willy@meta-x.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-spi@vger.kernel.org, devel@driverdev.osuosl.org, alsa-devel@alsa-project.org
+To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
-On Thu, 9 Apr 2015 09:13:07 +0200, Wolfram Sang wrote:
-> On Wed, Apr 08, 2015 at 04:50:38PM +0530, Sudip Mukherjee wrote:
-> > now that we are monitoring the return value from attach, make the
-> > required changes to return proper value from its attach function.
-> > 
-> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> > ---
-> >  drivers/i2c/busses/i2c-parport.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/i2c/busses/i2c-parport.c b/drivers/i2c/busses/i2c-parport.c
-> > index a1fac5a..761a775 100644
-> > --- a/drivers/i2c/busses/i2c-parport.c
-> > +++ b/drivers/i2c/busses/i2c-parport.c
-> > @@ -160,14 +160,14 @@ static void i2c_parport_irq(void *data)
-> >  			"SMBus alert received but no ARA client!\n");
-> >  }
-> >  
-> > -static void i2c_parport_attach(struct parport *port)
-> > +static int i2c_parport_attach(struct parport *port)
-> >  {
-> >  	struct i2c_par *adapter;
-> >  
-> >  	adapter = kzalloc(sizeof(struct i2c_par), GFP_KERNEL);
-> >  	if (adapter == NULL) {
-> >  		printk(KERN_ERR "i2c-parport: Failed to kzalloc\n");
-> > -		return;
-> > +		return -ENOMEM;
-> 
-> ENOMEM does not need printout. Please remove printk while we are here.
-> 
-> >  
-> >  	pr_debug("i2c-parport: attaching to %s\n", port->name);
-> > @@ -230,13 +230,14 @@ static void i2c_parport_attach(struct parport *port)
-> >  	mutex_lock(&adapter_list_lock);
-> >  	list_add_tail(&adapter->node, &adapter_list);
-> >  	mutex_unlock(&adapter_list_lock);
-> > -	return;
-> > +	return 0;
-> >  
-> >   err_unregister:
-> >  	parport_release(adapter->pdev);
-> >  	parport_unregister_device(adapter->pdev);
-> >   err_free:
-> >  	kfree(adapter);
-> > +	return -ENODEV;
-> 
-> Ideally, we would return different -Esomething for each failing case. We
-> can leave that for someone who is acutally using the driver. However, I
-> wonder if ENODEV is a proper catch-all case because the driver core will
-> not report failures.
+On 04/02/2015 09:50 PM, James Smart wrote:
+> Add FC transport support for 25Gbit speed
+>=20
+> Signed-off-by: James Smart <james.smart@emulex.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-It doesn't really matter that the error codes are different, it matters
-that they are meaningful. As much as possible you should pass error
-codes from the lower layers. parport_claim_or_block() and
-i2c_bit_add_bus() return proper error codes so you should record and
-transmit them. Only parport_register_device() does not, so you have to
-craft one and -ENODEV seems appropriate to me.
+Cheers,
 
-Note: I can test this driver.
-
--- 
-Jean Delvare
-SUSE L3 Support
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
