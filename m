@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: [PATCH 05/14] qla2xxx: Add support to load firmware from file for ISP 26XX/27XX.
-Date: Thu, 9 Apr 2015 14:59:59 -0400
-Message-ID: <1428606008-14976-6-git-send-email-himanshu.madhani@qlogic.com>
+Subject: [PATCH 12/14] qla2xxx: Fix virtual port configuration, when switch port is disabled/enabled.
+Date: Thu, 9 Apr 2015 15:00:06 -0400
+Message-ID: <1428606008-14976-13-git-send-email-himanshu.madhani@qlogic.com>
 References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:12955 "EHLO
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:2462 "EHLO
 	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933177AbbDITl3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 15:41:29 -0400
+	by vger.kernel.org with ESMTP id S933177AbbDITlb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 15:41:31 -0400
 In-Reply-To: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,38 +18,90 @@ Cc: hch@lst.de, giridhar.malavali@qlogic.com, himanshu.madhani@qlogic.com, andre
 
 From: Sawan Chandak <sawan.chandak@qlogic.com>
 
+On some vendor switches, when switch port is toggled (down /up),
+then in some condition driver tries to configure virtual port,
+before FW is actually in ready state to process any commands on wire.
+At this time, configuring virtual port can fail. Add fix in driver
+to make driver wait, for FW to be ready state before
+
 Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 ---
- drivers/scsi/qla2xxx/Kconfig  |    3 +++
- drivers/scsi/qla2xxx/qla_os.c |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    1 +
+ drivers/scsi/qla2xxx/qla_isr.c |    2 ++
+ drivers/scsi/qla2xxx/qla_mid.c |   22 ++++++++++++++--------
+ 3 files changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
-index 113e6c9..33f60c9 100644
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -18,6 +18,9 @@ config SCSI_QLA_FC
- 	2322, 6322        ql2322_fw.bin
- 	24xx, 54xx        ql2400_fw.bin
- 	25xx              ql2500_fw.bin
-+	2031              ql2600_fw.bin
-+	8031              ql8300_fw.bin
-+	27xx              ql2700_fw.bin
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 9a8aa11..e86201d 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3590,6 +3590,7 @@ typedef struct scsi_qla_host {
+ #define VP_BIND_NEEDED		2
+ #define VP_DELETE_NEEDED	3
+ #define VP_SCR_NEEDED		4	/* State Change Request registration */
++#define VP_CONFIG_OK		5	/* Flag to cfg VP, if FW is ready */
+ 	atomic_t 		vp_state;
+ #define VP_OFFLINE		0
+ #define VP_ACTIVE		1
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a04a1b1..72dfbc1 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -763,6 +763,7 @@ skip_rio:
+ 				memcpy(vha->port_name, wwpn, WWN_SIZE);
+ 			}
  
- 	Upon request, the driver caches the firmware image until
- 	the driver is unloaded.
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index cce1cbc..e4851f8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5834,3 +5834,6 @@ MODULE_FIRMWARE(FW_FILE_ISP2300);
- MODULE_FIRMWARE(FW_FILE_ISP2322);
- MODULE_FIRMWARE(FW_FILE_ISP24XX);
- MODULE_FIRMWARE(FW_FILE_ISP25XX);
-+MODULE_FIRMWARE(FW_FILE_ISP2031);
-+MODULE_FIRMWARE(FW_FILE_ISP8031);
-+MODULE_FIRMWARE(FW_FILE_ISP27XX);
++			clear_bit(VP_CONFIG_OK, &vha->vp_flags);
+ 			vha->device_flags |= DFLG_NO_CABLE;
+ 			qla2x00_mark_all_devices_lost(vha, 1);
+ 		}
+@@ -947,6 +948,7 @@ skip_rio:
+ 
+ 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
++		set_bit(VP_CONFIG_OK, &vha->vp_flags);
+ 
+ 		qlt_async_event(mb[0], vha, mb);
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 5c2e031..8f458ef 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -306,19 +306,25 @@ qla2x00_vp_abort_isp(scsi_qla_host_t *vha)
+ static int
+ qla2x00_do_dpc_vp(scsi_qla_host_t *vha)
+ {
++	struct qla_hw_data *ha = vha->hw;
++	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
++
+ 	ql_dbg(ql_dbg_dpc + ql_dbg_verbose, vha, 0x4012,
+ 	    "Entering %s vp_flags: 0x%lx.\n", __func__, vha->vp_flags);
+ 
+ 	qla2x00_do_work(vha);
+ 
+-	if (test_and_clear_bit(VP_IDX_ACQUIRED, &vha->vp_flags)) {
+-		/* VP acquired. complete port configuration */
+-		ql_dbg(ql_dbg_dpc, vha, 0x4014,
+-		    "Configure VP scheduled.\n");
+-		qla24xx_configure_vp(vha);
+-		ql_dbg(ql_dbg_dpc, vha, 0x4015,
+-		    "Configure VP end.\n");
+-		return 0;
++	/* Check if Fw is ready to configure VP first */
++	if (test_bit(VP_CONFIG_OK, &base_vha->vp_flags)) {
++		if (test_and_clear_bit(VP_IDX_ACQUIRED, &vha->vp_flags)) {
++			/* VP acquired. complete port configuration */
++			ql_dbg(ql_dbg_dpc, vha, 0x4014,
++			    "Configure VP scheduled.\n");
++			qla24xx_configure_vp(vha);
++			ql_dbg(ql_dbg_dpc, vha, 0x4015,
++			    "Configure VP end.\n");
++			return 0;
++		}
+ 	}
+ 
+ 	if (test_bit(FCPORT_UPDATE_NEEDED, &vha->dpc_flags)) {
 -- 
 1.7.7
 
