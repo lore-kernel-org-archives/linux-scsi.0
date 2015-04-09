@@ -1,130 +1,99 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v2 2/2] target/rd: Don't pass imcomplete scatterlist
- entries to sbc_dif_verify_*
-Date: Wed, 08 Apr 2015 23:41:01 -0700
-Message-ID: <1428561661.25972.13.camel@haakon3.risingtidesystems.com>
-References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
-	 <1428245979-5432-2-git-send-email-akinobu.mita@gmail.com>
-	 <1428470039.18203.29.camel@haakon3.risingtidesystems.com>
-	 <CAC5umyh7HrDZekc6uhM_jvybyL3mYzG=1DaHDHngOPLM4CuvSw@mail.gmail.com>
+From: Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>
+Subject: Re: [PATCH 12/14] i2c-parport: return proper error values from attach
+Date: Thu, 9 Apr 2015 09:13:07 +0200
+Message-ID: <20150409071307.GA1166@katana>
+References: <1428492040-5581-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <1428492040-5581-13-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:56666 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbbDIGlD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 02:41:03 -0400
-In-Reply-To: <CAC5umyh7HrDZekc6uhM_jvybyL3mYzG=1DaHDHngOPLM4CuvSw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Nq2Wo0NMKNjxTN9z"
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1428492040-5581-13-git-send-email-sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sudip Mukherjee <sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jean Delvare <jdelvare-l3A5Bk7waGM@public.gmane.org>, Rodolfo Giometti <giometti-AVVDYK/kqiJWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Willy Tarreau <willy-859RlTSWH48dnm+yROfE0A@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2015-04-08 at 23:25 +0900, Akinobu Mita wrote:
-> 2015-04-08 14:13 GMT+09:00 Nicholas A. Bellinger <nab@linux-iscsi.org>:
-> > On Sun, 2015-04-05 at 23:59 +0900, Akinobu Mita wrote:
-> >> The scatterlist for protection information which is passed to
-> >> sbc_dif_verify_read() or sbc_dif_verify_write() requires that
-> >> neighboring scatterlist entries are contiguous or chained so that they
-> >> can be iterated by sg_next().
-> >>
-> >> However, the protection information for RD-MCP backends could be located
-> >> in the multiple scatterlist arrays when the ramdisk space is too large.
-> >> So if the read/write request straddles this boundary, sbc_dif_verify_read()
-> >> or sbc_dif_verify_write() can't iterate all scatterlist entries.
-> >>
-> >> This fixes it by allocating temporary scatterlist if it is needed.
-> >>
-> >> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> >> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> >> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
-> >> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> >> Cc: Christoph Hellwig <hch@lst.de>
-> >> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> >> Cc: target-devel@vger.kernel.org
-> >> Cc: linux-scsi@vger.kernel.org
-> >> ---
-> >> * No change from v1
-> >>
-> >>  drivers/target/target_core_rd.c | 39 +++++++++++++++++++++++++++++++++++----
-> >>  1 file changed, 35 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-> >> index ac5e8d2..6e25eaa 100644
-> >> --- a/drivers/target/target_core_rd.c
-> >> +++ b/drivers/target/target_core_rd.c
-> >> @@ -390,11 +390,12 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
-> >>       struct se_device *se_dev = cmd->se_dev;
-> >>       struct rd_dev *dev = RD_DEV(se_dev);
-> >>       struct rd_dev_sg_table *prot_table;
-> >> +     bool need_to_release = false;
-> >>       struct scatterlist *prot_sg;
-> >>       u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
-> >> -     u32 prot_offset, prot_page;
-> >> +     u32 prot_offset, prot_page, prot_npages;
-> >>       u64 tmp;
-> >> -     sense_reason_t rc;
-> >> +     sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> >>
-> >>       tmp = cmd->t_task_lba * se_dev->prot_length;
-> >>       prot_offset = do_div(tmp, PAGE_SIZE);
-> >> @@ -404,10 +405,40 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
-> >>       if (!prot_table)
-> >>               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> >>
-> >> -     prot_sg = &prot_table->sg_table[prot_page -
-> >> -                                     prot_table->page_start_offset];
-> >> +     prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
-> >> +                                PAGE_SIZE);
-> >> +
-> >> +     /* prot pages straddles multiple scatterlist tables */
-> >> +     if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
-> >> +             int i;
-> >> +
-> >> +             prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
-> >> +             if (!prot_sg)
-> >> +                     return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> >> +
-> >> +             need_to_release = true;
-> >> +             sg_init_table(prot_sg, prot_npages);
-> >> +
-> >> +             for (i = 0; i < prot_npages; i++) {
-> >> +                     if (prot_page + i > prot_table->page_end_offset) {
-> >> +                             prot_table = rd_get_prot_table(dev,
-> >> +                                                             prot_page + i);
-> >> +                             if (!prot_table)
-> >> +                                     goto out;
-> >> +                             sg_unmark_end(&prot_sg[i - 1]);
-> >> +                     }
-> >> +                     prot_sg[i] = prot_table->sg_table[prot_page + i -
-> >> +                                             prot_table->page_start_offset];
-> >> +             }
-> >> +     } else {
-> >> +             prot_sg = &prot_table->sg_table[prot_page -
-> >> +                                             prot_table->page_start_offset];
-> >> +     }
-> >>
-> >
-> > Mmm, how about just explicitly doing sg_link() at prot_table scatterlist
-> > creation time instead..?
-> 
-> Yeap, that would be an optimal solution.  But some architectures don't
-> support sg chaining (i.e. !CONFIG_ARCH_HAS_SG_CHAIN).
-> 
-> > That would save the extra allocation above, and AFAICT make for simpler
-> > code.
-> 
-> Do you prefer fixing it conditionally with using #ifdef ? (i.e.
-> sg chaining at creating time if CONFIG_ARCH_HAS_SG_CHAIN is defined,
-> otherwise do the extra allocation above) If so, I'll resubmit the
-> patch with such changes.
 
-Yes please.
+--Nq2Wo0NMKNjxTN9z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It would be nice to use sg_link() for the typical case when available,
-as long as the #idefs aren't too ugly and limited to target_core_rd.c
-code.
+On Wed, Apr 08, 2015 at 04:50:38PM +0530, Sudip Mukherjee wrote:
+> now that we are monitoring the return value from attach, make the
+> required changes to return proper value from its attach function.
+>=20
+> Signed-off-by: Sudip Mukherjee <sudip-ofJRbWXBVFamYgehrs7/Lw@public.gmane.org>
+> ---
+>  drivers/i2c/busses/i2c-parport.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/i2c/busses/i2c-parport.c b/drivers/i2c/busses/i2c-pa=
+rport.c
+> index a1fac5a..761a775 100644
+> --- a/drivers/i2c/busses/i2c-parport.c
+> +++ b/drivers/i2c/busses/i2c-parport.c
+> @@ -160,14 +160,14 @@ static void i2c_parport_irq(void *data)
+>  			"SMBus alert received but no ARA client!\n");
+>  }
+> =20
+> -static void i2c_parport_attach(struct parport *port)
+> +static int i2c_parport_attach(struct parport *port)
+>  {
+>  	struct i2c_par *adapter;
+> =20
+>  	adapter =3D kzalloc(sizeof(struct i2c_par), GFP_KERNEL);
+>  	if (adapter =3D=3D NULL) {
+>  		printk(KERN_ERR "i2c-parport: Failed to kzalloc\n");
+> -		return;
+> +		return -ENOMEM;
 
---nab
+ENOMEM does not need printout. Please remove printk while we are here.
 
+> =20
+>  	pr_debug("i2c-parport: attaching to %s\n", port->name);
+> @@ -230,13 +230,14 @@ static void i2c_parport_attach(struct parport *port)
+>  	mutex_lock(&adapter_list_lock);
+>  	list_add_tail(&adapter->node, &adapter_list);
+>  	mutex_unlock(&adapter_list_lock);
+> -	return;
+> +	return 0;
+> =20
+>   err_unregister:
+>  	parport_release(adapter->pdev);
+>  	parport_unregister_device(adapter->pdev);
+>   err_free:
+>  	kfree(adapter);
+> +	return -ENODEV;
+
+Ideally, we would return different -Esomething for each failing case. We
+can leave that for someone who is acutally using the driver. However, I
+wonder if ENODEV is a proper catch-all case because the driver core will
+not report failures.
+
+
+--Nq2Wo0NMKNjxTN9z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJVJiaDAAoJEBQN5MwUoCm2iRwP/ijI5Z76EKO0xyEKIMZmx0kU
+Q/gdzLbAVd+ifa+aJub2Lv9xyEa4MssHm0yn4982Dmt1jTxT0QTkPoSAhmxUmkpP
+5DGvJH3Yp+DCawSy6+RPCsujtmoQPz8xNLjaHMCx7V8kBz2BTIKiUeDeQu574zr/
+Nv7R9q77W9ZUHFP+1ui8RwZylYnX/frwI1Xgli71dY3xuo7eh/6UntTRCVeRIw+h
+rsIurGoC78AfxW3FSzxSPVxSuK/upAmwgB5ECRo7l5itaKmATW4KFLBdp0wl1Myt
+jhL1HjQRH4BcFpiFDxAlemcmWQXeIpnimVsMRk9alLIEJlnfivVPTR2sh38cHYTV
+Bm0kasy34LwJZsTnGImdCYACKbzv4mKDSXt+Kzc+iHxgsmf8PzZ2yTXJxAJd8+l8
+AMVMXMRVoW7oXGzAkLTZaRZvFlfPhUgfVCo8/P33PHcyJ6BRzKeXK+XXs9UgUkt/
+/u5N3pk4Wy47/JZSQlB8EZVW+x5ODBUVXFkMh7rPmgm19p5CwXqizC2wXXgdPQlv
+A/QtciA8ZAwGdkO5qa+mVcPGhoH77WGN5CQIZxITvCyy7phRLUK9zWv2vLpTpv3h
+7MTzn5Oldf5OATEeO9ygiUXgnb6/szYNI94W/rKC2oGaGfSN6XKltyGVkciSTllI
+y4uJB1rGeX8LLg+hAzjd
+=2iEF
+-----END PGP SIGNATURE-----
+
+--Nq2Wo0NMKNjxTN9z--
