@@ -1,52 +1,51 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 15/21] lpfc: Implement support for wire-only DIF devices
-Date: Thu, 9 Apr 2015 16:58:52 -0400
-Message-ID: <5526E80C.5090807@emulex.com>
-References: <1428095580.6933.44.camel@myfc17> <20150405160613.GA8622@infradead.org>
-Reply-To: <james.smart@emulex.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 5/6] ipr: AF DASD raw mode implementation in ipr driver
+Date: Thu, 09 Apr 2015 14:17:39 -0700
+Message-ID: <1428614259.2448.3.camel@HansenPartnership.com>
+References: <201503261623.t2QGNxP3021634@d03av04.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmexedge1.emulex.com ([138.239.224.99]:55767 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756066AbbDIU7T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 16:59:19 -0400
-In-Reply-To: <20150405160613.GA8622@infradead.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57911 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756124AbbDIVRl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 17:17:41 -0400
+In-Reply-To: <201503261623.t2QGNxP3021634@d03av04.boulder.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: hch@lst.de, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com, kreling@linux.vnet.ibm.com, krisman@linux.vnet.ibm.com
 
-fyi - in the v3  of the lpfc 10.5.0.0 patches I just posted, I pulled 
-the patch.  We will see what to do with it. We may come back with a set 
-of generic midlayer patches.
+On Thu, 2015-03-26 at 11:23 -0500, Brian King wrote:
+> From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+> 
+> This patch implements raw mode support for AF DASD in ipr driver
+> which allows for tools to send commands directly to physical
+> devices which are members of RAID arrays when enabled in the firmware.
+> 
+> Signed-off-by: Wen Xiong<wenxiong@linux.vnet.ibm.com>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+> 
+>  drivers/scsi/ipr.c |   85 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ipr.h |    3 +
+>  2 files changed, 88 insertions(+)
+> 
+> diff -puN drivers/scsi/ipr.c~ipr_sispipe drivers/scsi/ipr.c
+> --- linux/drivers/scsi/ipr.c~ipr_sispipe	2015-03-26 10:53:55.540578199 -0500
+> +++ linux-bjking1/drivers/scsi/ipr.c	2015-03-26 10:57:00.570080498 -0500
+[...]
+> @@ -6152,6 +6228,13 @@ static void ipr_erp_start(struct ipr_ioa
+>  		break;
+>  	case IPR_IOASC_NR_INIT_CMD_REQUIRED:
+>  		break;
+> +	case IPR_IOASC_IR_NON_OPTIMIZED:
+> +		if (res->raw_mode){
 
--- james s
+Missing space here ... checkpatch would have picked this up; please use
+it.
 
+James
 
-On 4/5/2015 12:06 PM, Christoph Hellwig wrote:
-> On Fri, Apr 03, 2015 at 05:13:00PM -0400, James Smart wrote:
->> Implement support for wire-only DIF devices
->>
->> This patch adds the ability to support auto-enablement of wire-only DIF
->> (DIF is generated on TX to target, stripped on RX; OS unaware DIF in use)
->> for a select set of devices. Currently, there is only 1 device vendor
->> supported: 3PARdata. When the feature is enabled, Inquiry commands are
->> trapped, the vendor matched, and DIF enablement checked. In 3Par's case,
->> there's a vendor specific check to see if the LUN supports DIF.
->> If supported, DIF will be enabled on a per-lun basis.  The driver will
->> trap READS/WRITEs from the OS, check for LUN DIF enablement, and if set,
->> turns on write-only DIF.
-> NAK. We do support proper DIF, and anyone who wants it should enable
-> the real thing.
->
-> And even if we would want to support a hack like this we'd do it
-> genericly an not in a driver.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
 
