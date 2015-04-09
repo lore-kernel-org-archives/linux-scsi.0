@@ -1,53 +1,71 @@
 From: Narsimhulu Musini <nmusini@cisco.com>
-Subject: [PATCH v4 2/9] snic:Add interrupt, resource firmware interfaces
-Date: Thu,  9 Apr 2015 04:49:42 -0700
-Message-ID: <1428580189-22785-3-git-send-email-nmusini@cisco.com>
+Subject: [PATCH v4 6/9] snic:Add low level queuing interfaces
+Date: Thu,  9 Apr 2015 04:49:46 -0700
+Message-ID: <1428580189-22785-7-git-send-email-nmusini@cisco.com>
 References: <1428580189-22785-1-git-send-email-nmusini@cisco.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcdn-iport-4.cisco.com ([173.37.86.75]:39880 "EHLO
-	rcdn-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755555AbbDILxK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 07:53:10 -0400
+Received: from rcdn-iport-9.cisco.com ([173.37.86.80]:43848 "EHLO
+	rcdn-iport-9.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932675AbbDILxQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 07:53:16 -0400
 In-Reply-To: <1428580189-22785-1-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@Parallels.com, linux-scsi@vger.kernel.org, hare@suse.de, hch@infradead.org
 Cc: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
 
-snic_fwint.h contains firmware interface structures.
-
-snic_res.h contains firmware request initialization
-
-snic_res.c contains retrieval of resource configuration, and allocation,
-and initialization of HW Queues.
-
-snic_isr.c contains interrupt request, release, and handling
+These files contain low level queueing interfaces includes
+hardware queues, and management of hardware features.
 
 Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 ---
-* v4
-- Updated comment on future changes when hardware supports multiple queues.
-
 * v3
-- Cleaned up unused structure definitions and functions.
+- Cleaned up unused functions.
 
- drivers/scsi/snic/snic_fwint.h | 525 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/snic/snic_isr.c   | 209 ++++++++++++++++
- drivers/scsi/snic/snic_res.c   | 297 +++++++++++++++++++++++
- drivers/scsi/snic/snic_res.h   |  96 ++++++++
- 4 files changed, 1127 insertions(+)
- create mode 100644 drivers/scsi/snic/snic_fwint.h
- create mode 100644 drivers/scsi/snic/snic_isr.c
- create mode 100644 drivers/scsi/snic/snic_res.c
- create mode 100644 drivers/scsi/snic/snic_res.h
+* v2
+- driver supports x86-64 arch, so removed cpu_to_XX API to maintain consistency.
 
-diff --git a/drivers/scsi/snic/snic_fwint.h b/drivers/scsi/snic/snic_fwint.h
+ drivers/scsi/snic/cq_desc.h       |  76 ++++
+ drivers/scsi/snic/cq_enet_desc.h  |  38 ++
+ drivers/scsi/snic/vnic_cq.c       |  86 +++++
+ drivers/scsi/snic/vnic_cq.h       | 120 ++++++
+ drivers/scsi/snic/vnic_cq_fw.h    |  62 ++++
+ drivers/scsi/snic/vnic_dev.c      | 749 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/snic/vnic_dev.h      | 140 +++++++
+ drivers/scsi/snic/vnic_devcmd.h   | 270 ++++++++++++++
+ drivers/scsi/snic/vnic_intr.c     |  59 +++
+ drivers/scsi/snic/vnic_intr.h     | 119 ++++++
+ drivers/scsi/snic/vnic_resource.h |  68 ++++
+ drivers/scsi/snic/vnic_snic.h     |  54 +++
+ drivers/scsi/snic/vnic_stats.h    |  68 ++++
+ drivers/scsi/snic/vnic_wq.c       | 236 ++++++++++++
+ drivers/scsi/snic/vnic_wq.h       | 187 ++++++++++
+ drivers/scsi/snic/wq_enet_desc.h  |  91 +++++
+ 16 files changed, 2423 insertions(+)
+ create mode 100644 drivers/scsi/snic/cq_desc.h
+ create mode 100644 drivers/scsi/snic/cq_enet_desc.h
+ create mode 100644 drivers/scsi/snic/vnic_cq.c
+ create mode 100644 drivers/scsi/snic/vnic_cq.h
+ create mode 100644 drivers/scsi/snic/vnic_cq_fw.h
+ create mode 100644 drivers/scsi/snic/vnic_dev.c
+ create mode 100644 drivers/scsi/snic/vnic_dev.h
+ create mode 100644 drivers/scsi/snic/vnic_devcmd.h
+ create mode 100644 drivers/scsi/snic/vnic_intr.c
+ create mode 100644 drivers/scsi/snic/vnic_intr.h
+ create mode 100644 drivers/scsi/snic/vnic_resource.h
+ create mode 100644 drivers/scsi/snic/vnic_snic.h
+ create mode 100644 drivers/scsi/snic/vnic_stats.h
+ create mode 100644 drivers/scsi/snic/vnic_wq.c
+ create mode 100644 drivers/scsi/snic/vnic_wq.h
+ create mode 100644 drivers/scsi/snic/wq_enet_desc.h
+
+diff --git a/drivers/scsi/snic/cq_desc.h b/drivers/scsi/snic/cq_desc.h
 new file mode 100644
-index 0000000..1142e52
+index 0000000..630edfa
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_fwint.h
-@@ -0,0 +1,525 @@
++++ b/drivers/scsi/snic/cq_desc.h
+@@ -0,0 +1,76 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -65,520 +83,71 @@ index 0000000..1142e52
 + * SOFTWARE.
 + */
 +
-+#ifndef __SNIC_FWINT_H
-+#define __SNIC_FWINT_H
-+
-+#define SNIC_CDB_LEN	32	/* SCSI CDB size 32, can be used for 16 bytes */
-+#define LUN_ADDR_LEN	8
++#ifndef _CQ_DESC_H_
++#define _CQ_DESC_H_
 +
 +/*
-+ * Command entry type
++ * Completion queue descriptor types
 + */
-+enum snic_io_type {
-+	/*
-+	 * Initiator request types
-+	 */
-+	SNIC_REQ_REPORT_TGTS = 0x2,	/* Report Targets */
-+	SNIC_REQ_ICMND,			/* Initiator command for SCSI IO */
-+	SNIC_REQ_ITMF,			/* Initiator command for Task Mgmt */
-+	SNIC_REQ_HBA_RESET,		/* SNIC Reset */
-+	SNIC_REQ_EXCH_VER,		/* Exchange Version Information */
-+	SNIC_REQ_TGT_INFO,		/* Backend/Target Information */
-+	SNIC_REQ_BOOT_LUNS,
-+
-+	/*
-+	 * Response type
-+	 */
-+	SNIC_RSP_REPORT_TGTS_CMPL = 0x12,/* Report Targets Completion */
-+	SNIC_RSP_ICMND_CMPL,		/* SCSI IO Completion */
-+	SNIC_RSP_ITMF_CMPL,		/* Task Management Completion */
-+	SNIC_RSP_HBA_RESET_CMPL,	/* SNIC Reset Completion */
-+	SNIC_RSP_EXCH_VER_CMPL,		/* Exchange Version Completion*/
-+	SNIC_RSP_BOOT_LUNS_CMPL,
-+
-+	/*
-+	 * Misc Request types
-+	 */
-+	SNIC_MSG_ACK = 0x80,		/* Ack: snic_notify_msg */
-+	SNIC_MSG_ASYNC_EVNOTIFY,	/* Asynchronous Event Notification */
-+}; /* end of enum snic_io_type */
-+
-+
-+/*
-+ * Header status codes from firmware
-+ */
-+enum snic_io_status {
-+	SNIC_STAT_IO_SUCCESS = 0,	/* request was successful */
-+
-+	/*
-+	 * If a request to the fw is rejected, the original request header
-+	 * will be returned with the status set to one of the following:
-+	 */
-+	SNIC_STAT_INVALID_HDR,	/* header contains invalid data */
-+	SNIC_STAT_OUT_OF_RES,	/* out of resources to complete request */
-+	SNIC_STAT_INVALID_PARM,	/* some parameter in request is not valid */
-+	SNIC_STAT_REQ_NOT_SUP,	/* req type is not supported */
-+	SNIC_STAT_IO_NOT_FOUND,	/* requested IO was not found */
-+
-+	/*
-+	 * Once a request is processed, the fw will usually return
-+	 * a cmpl message type. In cases where errors occurred,
-+	 * the header status would be filled in with one of the following:
-+	 */
-+	SNIC_STAT_ABORTED,		/* req was aborted */
-+	SNIC_STAT_TIMEOUT,		/* req was timed out */
-+	SNIC_STAT_SGL_INVALID,		/* req was aborted due to sgl error */
-+	SNIC_STAT_DATA_CNT_MISMATCH,	/*recv/sent more/less data than expec */
-+	SNIC_STAT_FW_ERR,		/* req was terminated due to fw error */
-+	SNIC_STAT_ITMF_REJECT,		/* itmf req was rejected by target */
-+	SNIC_STAT_ITMF_FAIL,		/* itmf req was failed */
-+	SNIC_STAT_ITMF_INCORRECT_LUN,	/* itmf req has incorrect LUN id*/
-+	SNIC_STAT_CMND_REJECT,		/* req was invalid and rejected */
-+	SNIC_STAT_DEV_OFFLINE,		/* req sent to offline device */
-+	SNIC_STAT_NO_BOOTLUN,
-+	SNIC_STAT_SCSI_ERR,		/* SCSI error returned by Target. */
-+	SNIC_STAT_NOT_READY,		/* sNIC Subsystem is not ready */
-+	SNIC_STAT_FATAL_ERROR,		/* sNIC is in unrecoverable state */
-+}; /* end of enum snic_io_status */
-+
-+/*
-+ * snic_io_hdr : host <--> firmare
-+ *
-+ * for any other message that will be queued to firmware should
-+ *  have the following request header
-+ */
-+struct snic_io_hdr {
-+	u32	hid;
-+	u32	cmnd_id;	/* tag here */
-+	u64	init_ctx;	/* initiator context */
-+	u8	type;		/* request/response type */
-+	u8	status;		/* header status entry */
-+	u8	protocol;	/* Protocol specific, may needed for RoCE*/
-+	u8	flags;
-+	u16	sg_cnt;
-+	u16	resvd;
++enum cq_desc_types {
++	CQ_DESC_TYPE_WQ_ENET = 0,
++	CQ_DESC_TYPE_DESC_COPY = 1,
++	CQ_DESC_TYPE_WQ_EXCH = 2,
++	CQ_DESC_TYPE_RQ_ENET = 3,
++	CQ_DESC_TYPE_RQ_FCP = 4,
 +};
 +
-+/* auxillary funciton for encoding the snic_io_hdr */
-+static inline void
-+snic_io_hdr_enc(struct snic_io_hdr *hdr, u8 typ, u8 status, u32 id, u32 hid,
-+		u16 sg_cnt, u64 ctx)
++/* Completion queue descriptor: 16B
++ *
++ * All completion queues have this basic layout.  The
++ * type_specific area is unique for each completion
++ * queue type.
++ */
++struct cq_desc {
++	u16 completed_index;
++	u16 q_number;
++	u8 type_specific[11];
++	u8 type_color;
++};
++
++#define CQ_DESC_TYPE_BITS        4
++#define CQ_DESC_TYPE_MASK        ((1 << CQ_DESC_TYPE_BITS) - 1)
++#define CQ_DESC_COLOR_MASK       1
++#define CQ_DESC_COLOR_SHIFT      7
++#define CQ_DESC_Q_NUM_BITS       10
++#define CQ_DESC_Q_NUM_MASK       ((1 << CQ_DESC_Q_NUM_BITS) - 1)
++#define CQ_DESC_COMP_NDX_BITS    12
++#define CQ_DESC_COMP_NDX_MASK    ((1 << CQ_DESC_COMP_NDX_BITS) - 1)
++
++static inline void cq_desc_dec(const struct cq_desc *desc_arg,
++	u8 *type, u8 *color, u16 *q_number, u16 *completed_index)
 +{
-+	hdr->type = typ;
-+	hdr->status = status;
-+	hdr->protocol = 0;
-+	hdr->hid = hid;
-+	hdr->cmnd_id = id;
-+	hdr->sg_cnt = sg_cnt;
-+	hdr->init_ctx = ctx;
-+	hdr->flags = 0;
-+}
++	const struct cq_desc *desc = desc_arg;
++	const u8 type_color = desc->type_color;
 +
-+/* auxillary funciton for decoding the snic_io_hdr */
-+static inline void
-+snic_io_hdr_dec(struct snic_io_hdr *hdr, u8 *typ, u8 *stat, u32 *cmnd_id,
-+		u32 *hid, u64 *ctx)
-+{
-+	*typ = hdr->type;
-+	*stat = hdr->status;
-+	*hid = hdr->hid;
-+	*cmnd_id = hdr->cmnd_id;
-+	*ctx = hdr->init_ctx;
-+}
++	*color = (type_color >> CQ_DESC_COLOR_SHIFT) & CQ_DESC_COLOR_MASK;
 +
-+/*
-+ * snic_host_info: host -> firmware
-+ *
-+ * Used for sending host information to firmware, and request fw version
-+ */
-+struct snic_exch_ver_req {
-+	u32	drvr_ver;	/* for debugging, when fw dump captured */
-+	u32	os_type;	/* for OS specific features */
-+};
-+
-+/*
-+ * os_type flags
-+ * Bit 0-7 : OS information
-+ * Bit 8-31: Feature/Capability Information
-+ */
-+#define SNIC_OS_LINUX	0x1
-+#define SNIC_OS_WIN	0x2
-+#define SNIC_OS_ESX	0x3
-+
-+/*
-+ * HBA Capabilities
-+ * Bit 1: Reserved.
-+ * Bit 2: Dynamic Discovery of LUNs.
-+ * Bit 3: Async event notifications on on tgt online/offline events.
-+ * Bit 4: IO timeout support in FW.
-+ * Bit 5-31: Reserved.
-+ */
-+#define SNIC_HBA_CAP_DDL	0x02	/* Supports Dynamic Discovery of LUNs */
-+#define SNIC_HBA_CAP_AEN	0x04	/* Supports Async Event Noitifcation */
-+#define SNIC_HBA_CAP_TMO	0x08	/* Supports IO timeout in FW */
-+
-+/*
-+ * snic_exch_ver_rsp : firmware -> host
-+ *
-+ * Used by firmware to send response to version request
-+ */
-+struct snic_exch_ver_rsp {
-+	u32	version;
-+	u32	hid;
-+	u32	max_concur_ios;		/* max concurrent ios */
-+	u32	max_sgs_per_cmd;	/* max sgls per IO */
-+	u32	max_io_sz;		/* max io size supported */
-+	u32	hba_cap;		/* hba capabilities */
-+	u32	max_tgts;		/* max tgts supported */
-+	u16	io_timeout;		/* FW extended timeout */
-+	u16	rsvd;
-+};
-+
-+
-+/*
-+ * snic_report_tgts : host -> firmware request
-+ *
-+ * Used by the host to request list of targets
-+ */
-+struct snic_report_tgts {
-+	u16	sg_cnt;
-+	u16	flags;		/* specific flags from fw */
-+	u8	_resvd[4];
-+	u64	sg_addr;	/* Points to SGL */
-+	u64	sense_addr;
-+};
-+
-+enum snic_type {
-+	SNIC_NONE = 0x0,
-+	SNIC_DAS,
-+	SNIC_SAN,
-+};
-+
-+
-+/* Report Target Response */
-+enum snic_tgt_type {
-+	SNIC_TGT_NONE = 0x0,
-+	SNIC_TGT_DAS,	/* DAS Target */
-+	SNIC_TGT_SAN,	/* SAN Target */
-+};
-+
-+/* target id format */
-+struct snic_tgt_id {
-+	u32	tgt_id;		/* target id */
-+	u16	tgt_type;	/* tgt type */
-+	u16	vnic_id;	/* corresponding vnic id */
-+};
-+
-+/*
-+ * snic_report_tgts_cmpl : firmware -> host response
-+ *
-+ * Used by firmware to send response to Report Targets request
-+ */
-+struct snic_report_tgts_cmpl {
-+	u32	tgt_cnt;	/* Number of Targets accessible */
-+	u32	_resvd;
-+};
-+
-+/*
-+ * Command flags
-+ *
-+ * Bit 0: Read flags
-+ * Bit 1: Write flag
-+ * Bit 2: ESGL - sg/esg array contains extended sg
-+ *	  ESGE - is a host buffer contains sg elements
-+ * Bit 3-4: Task Attributes
-+ *		00b - simple
-+ *		01b - head of queue
-+ *		10b - ordered
-+ * Bit 5-7: Priority - future use
-+ * Bit 8-15: Reserved
-+ */
-+
-+#define SNIC_ICMND_WR		0x01	/* write command */
-+#define SNIC_ICMND_RD		0x02	/* read command */
-+#define SNIC_ICMND_ESGL		0x04	/* SGE/ESGE array contains valid data*/
-+
-+/*
-+ * Priority/Task Attribute settings
-+ */
-+#define SNIC_ICMND_TSK_SHIFT		2	/* task attr starts at bit 2 */
-+#define SNIC_ICMND_TSK_MASK(x)		((x>>SNIC_ICMND_TSK_SHIFT) & ~(0xffff))
-+#define SNIC_ICMND_TSK_SIMPLE		0	/* simple task attr */
-+#define SNIC_ICMND_TSK_HEAD_OF_QUEUE	1	/* head of qeuue task attr */
-+#define SNIC_ICMND_TSK_ORDERED		2	/* ordered task attr */
-+
-+#define SNIC_ICMND_PRI_SHIFT		5	/* prio val starts at bit 5 */
-+
-+/*
-+ * snic_icmnd : host-> firmware request
-+ *
-+ * used for sending out an initiator SCSI 16/32-byte command
-+ */
-+struct snic_icmnd {
-+	u16	sg_cnt;		/* Number of SG Elements */
-+	u16	flags;		/* flags */
-+	u32	sense_len;	/* Sense buffer length */
-+	u64	tgt_id;		/* Destination Target ID */
-+	u64	lun_id;		/* Destination LUN ID */
-+	u8	cdb_len;
-+	u8	_resvd;
-+	u16	time_out;	/* ms time for Res allocations fw to handle io*/
-+	u32	data_len;	/* Total number of bytes to be transferred */
-+	u8	cdb[SNIC_CDB_LEN];
-+	u64	sg_addr;	/* Points to SG List */
-+	u64	sense_addr;	/* Sense buffer address */
-+};
-+
-+
-+/* Response flags */
-+/* Bit 0: Under run
-+ * Bit 1: Over Run
-+ * Bit 2-7: Reserved
-+ */
-+#define SNIC_ICMND_CMPL_UNDR_RUN	0x01	/* resid under and valid */
-+#define SNIC_ICMND_CMPL_OVER_RUN	0x02	/* resid over and valid */
-+
-+/*
-+ * snic_icmnd_cmpl: firmware -> host response
-+ *
-+ * Used for sending the host a response to an icmnd (initiator command)
-+ */
-+struct snic_icmnd_cmpl {
-+	u8	scsi_status;	/* value as per SAM */
-+	u8	flags;
-+	u16	sense_len;	/* Sense Length */
-+	u32	resid;		/* Residue : # bytes under or over run */
-+};
-+
-+/*
-+ * snic_itmf: host->firmware request
-+ *
-+ * used for requesting the firmware to abort a request and/or send out
-+ * a task management function
-+ *
-+ * the req_id field is valid in case of abort task and clear task
-+ */
-+struct snic_itmf {
-+	u8	tm_type;	/* SCSI Task Management request */
-+	u8	resvd;
-+	u16	flags;		/* flags */
-+	u32	req_id;		/* Command id of snic req to be aborted */
-+	u64	tgt_id;		/* Target ID */
-+	u64	lun_id;		/* Destination LUN ID */
-+	u16	timeout;	/* in sec */
-+};
-+
-+/*
-+ * Task Management Request
-+ */
-+enum snic_itmf_tm_type {
-+	SNIC_ITMF_ABTS_TASK = 0x01,	/* Abort Task */
-+	SNIC_ITMF_ABTS_TASK_SET,	/* Abort Task Set */
-+	SNIC_ITMF_CLR_TASK,		/* Clear Task */
-+	SNIC_ITMF_CLR_TASKSET,		/* Clear Task Set */
-+	SNIC_ITMF_LUN_RESET,		/* Lun Reset */
-+	SNIC_ITMF_ABTS_TASK_TERM,	/* Supported for SAN Targets */
-+};
-+
-+/*
-+ * snic_itmf_cmpl: firmware -> host resposne
-+ *
-+ * used for sending the host a response for a itmf request
-+ */
-+struct snic_itmf_cmpl {
-+	u32	nterminated;	/* # IOs terminated as a result of tmf */
-+	u8	flags;		/* flags */
-+	u8	_resvd[3];
-+};
-+
-+/*
-+ * itmfl_cmpl flags
-+ * Bit 0 : 1 - Num terminated field valid
-+ * Bit 1 - 7 : Reserved
-+ */
-+#define SNIC_NUM_TERM_VALID	0x01	/* Number of IOs terminated */
-+
-+/*
-+ * snic_hba_reset: host -> firmware request
-+ *
-+ * used for requesting firmware to reset snic
-+ */
-+struct snic_hba_reset {
-+	u16	flags;		/* flags */
-+	u8	_resvd[6];
-+};
-+
-+/*
-+ * snic_hba_reset_cmpl: firmware -> host response
-+ *
-+ * Used by firmware to respond to the host's hba reset request
-+ */
-+struct snic_hba_reset_cmpl {
-+	u8	flags;		/* flags : more info needs to be added*/
-+	u8	_resvd[7];
-+};
-+
-+/*
-+ * snic_notify_msg: firmware -> host response
-+ *
-+ * Used by firmware to notify host of the last work queue entry received
-+ */
-+struct snic_notify_msg {
-+	u32	wqe_num;	/* wq entry number */
-+	u8	flags;		/* flags, macros */
-+	u8	_resvd[4];
-+};
-+
-+
-+#define SNIC_EVDATA_LEN		24	/* in bytes */
-+/* snic_async_evnotify: firmware -> host notification
-+ *
-+ * Used by firmware to notify the host about configuration/state changes
-+ */
-+struct snic_async_evnotify {
-+	u8	FLS_EVENT_DESC;		/* TODO: ?? */
-+	u8	vnic;			/* vnic id */
-+	u8	_resvd[2];
-+	u32	ev_id;			/* Event ID */
-+	u8	ev_data[SNIC_EVDATA_LEN]; /* Event Data */
-+	u8	_resvd2[4];
-+};
-+
-+/* async event flags */
-+enum snic_ev_type {
-+	SNIC_EV_TGT_OFFLINE = 0x01, /* Target Offline, PL contains TGT ID */
-+	SNIC_EV_TGT_ONLINE,	/* Target Online, PL contains TGT ID */
-+	SNIC_EV_LUN_OFFLINE,	/* LUN Offline, PL contains LUN ID */
-+	SNIC_EV_LUN_ONLINE,	/* LUN Online, PL contains LUN ID */
-+	SNIC_EV_CONF_CHG,	/* Dev Config/Attr Change Event */
-+	SNIC_EV_TGT_ADDED,	/* TODO:Target Added, PL contains ?? */
-+	SNIC_EV_TGT_DELTD,	/* Target Del'd, PL contains TGT ID */
-+	SNIC_EV_LUN_ADDED,	/* TODO:LUN Added, PL contains ?? */
-+	SNIC_EV_LUN_DELTD,	/* LUN Del'd, PL cont. TGT & LUN ID */
-+
-+	SNIC_EV_DISC_CMPL = 0x10, /* Discovery Completed Event */
-+};
-+
-+
-+#define SNIC_HOST_REQ_LEN	128	/*Exp length of host req, wq desc sz*/
-+/* Payload 88 bytes = 128 - 24 - 16 */
-+#define SNIC_HOST_REQ_PAYLOAD	((int)(SNIC_HOST_REQ_LEN -		\
-+					sizeof(struct snic_io_hdr) -	\
-+					(2 * sizeof(u64))))
-+
-+/*
-+ * snic_host_req: host -> firmware request
-+ *
-+ * Basic structure for all snic requests that are sent from the host to
-+ * firmware. They are 128 bytes in size.
-+ */
-+struct snic_host_req {
-+	u64	ctrl_data[2];	/*16 bytes - Control Data */
-+	struct snic_io_hdr hdr;
-+	union {
-+		/*
-+		 * Entry specific space, last byte contains color
-+		 */
-+		u8	buf[SNIC_HOST_REQ_PAYLOAD];
-+
-+		/*
-+		 * Exchange firmware version
-+		 */
-+		struct snic_exch_ver_req	exch_ver;
-+
-+		/* report targets */
-+		struct snic_report_tgts		rpt_tgts;
-+
-+		/* io request */
-+		struct snic_icmnd		icmnd;
-+
-+		/* task management request */
-+		struct snic_itmf		itmf;
-+
-+		/* hba reset */
-+		struct snic_hba_reset		reset;
-+	} u;
-+}; /* end of snic_host_req structure */
-+
-+
-+#define SNIC_FW_REQ_LEN		64 /* Expected length of fw req */
-+struct snic_fw_req {
-+	struct snic_io_hdr hdr;
-+	union {
-+		/*
-+		 * Entry specific space, last byte contains color
-+		 */
-+		u8	buf[SNIC_FW_REQ_LEN - sizeof(struct snic_io_hdr)];
-+
-+		/* Exchange Version Response */
-+		struct snic_exch_ver_rsp	exch_ver_cmpl;
-+
-+		/* Report Targets Response */
-+		struct snic_report_tgts_cmpl	rpt_tgts_cmpl;
-+
-+		/* scsi response */
-+		struct snic_icmnd_cmpl		icmnd_cmpl;
-+
-+		/* task management response */
-+		struct snic_itmf_cmpl		itmf_cmpl;
-+
-+		/* hba reset response */
-+		struct snic_hba_reset_cmpl	reset_cmpl;
-+
-+		/* notify message */
-+		struct snic_notify_msg		ack;
-+
-+		/* async notification event */
-+		struct snic_async_evnotify	async_ev;
-+
-+	} u;
-+}; /* end of snic_fw_req structure */
-+
-+/*
-+ * Auxillary macro to verify specific snic req/cmpl structures
-+ * to ensure that it will be aligned to 64 bit, and not using
-+ * color bit field
-+ */
-+#define VERIFY_REQ_SZ(x)
-+#define VERIFY_CMPL_SZ(x)
-+
-+/*
-+ * Access routines to encode and decode the color bit, which is the most
-+ * significant bit of the structure.
-+ */
-+static inline void
-+snic_color_enc(struct snic_fw_req *req, u8 color)
-+{
-+	u8 *c = ((u8 *) req) + sizeof(struct snic_fw_req) - 1;
-+
-+	if (color)
-+		*c |= 0x80;
-+	else
-+		*c &= ~0x80;
-+}
-+
-+static inline void
-+snic_color_dec(struct snic_fw_req *req, u8 *color)
-+{
-+	u8 *c = ((u8 *) req) + sizeof(struct snic_fw_req) - 1;
-+
-+	*color = *c >> 7;
-+
-+	/* Make sure color bit is read from desc *before* other fields
-+	 * are read from desc. Hardware guarantees color bit is last
-+	 * bit (byte) written. Adding the rmb() prevents the compiler
++	/*
++	 * Make sure color bit is read from desc *before* other fields
++	 * are read from desc.  Hardware guarantees color bit is last
++	 * bit (byte) written.  Adding the rmb() prevents the compiler
 +	 * and/or CPU from reordering the reads which would potentially
 +	 * result in reading stale values.
 +	 */
 +	rmb();
++
++	*type = type_color & CQ_DESC_TYPE_MASK;
++	*q_number = desc->q_number & CQ_DESC_Q_NUM_MASK;
++	*completed_index = desc->completed_index & CQ_DESC_COMP_NDX_MASK;
 +}
-+#endif /* end of __SNIC_FWINT_H */
-diff --git a/drivers/scsi/snic/snic_isr.c b/drivers/scsi/snic/snic_isr.c
++
++#endif /* _CQ_DESC_H_ */
+diff --git a/drivers/scsi/snic/cq_enet_desc.h b/drivers/scsi/snic/cq_enet_desc.h
 new file mode 100644
-index 0000000..5d5cb0c
+index 0000000..99ecd20
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_isr.c
-@@ -0,0 +1,209 @@
++++ b/drivers/scsi/snic/cq_enet_desc.h
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -594,206 +163,35 @@ index 0000000..5d5cb0c
 + * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 + * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 + * SOFTWARE.
-+ * [Insert appropriate license here when releasing outside of Cisco]
-+ *
 + */
 +
-+#include <linux/string.h>
-+#include <linux/errno.h>
-+#include <linux/pci.h>
-+#include <linux/interrupt.h>
++#ifndef _CQ_ENET_DESC_H_
++#define _CQ_ENET_DESC_H_
 +
-+#include "vnic_dev.h"
-+#include "vnic_intr.h"
-+#include "vnic_stats.h"
-+#include "snic_io.h"
-+#include "snic.h"
++#include "cq_desc.h"
 +
++/* Ethernet completion queue descriptor: 16B */
++struct cq_enet_wq_desc {
++	u16 completed_index;
++	u16 q_number;
++	u8 reserved[11];
++	u8 type_color;
++};
 +
-+/*
-+ * snic_isr_msix_wq : MSIx ISR for work queue.
-+ */
-+
-+static irqreturn_t
-+snic_isr_msix_wq(int irq, void *data)
++static inline void cq_enet_wq_desc_dec(struct cq_enet_wq_desc *desc,
++	u8 *type, u8 *color, u16 *q_number, u16 *completed_index)
 +{
-+	struct snic *snic = data;
-+	unsigned long wq_work_done = 0;
-+
-+	snic->s_stats.misc.last_isr_time = jiffies;
-+	atomic64_inc(&snic->s_stats.misc.isr_cnt);
-+
-+	wq_work_done = snic_wq_cmpl_handler(snic, -1);
-+	vnic_intr_return_credits(&snic->intr[SNIC_MSIX_WQ],
-+				 wq_work_done,
-+				 1 /* unmask intr */,
-+				 1 /* reset intr timer */);
-+
-+	return IRQ_HANDLED;
-+} /* end of snic_isr_msix_wq */
-+
-+static irqreturn_t
-+snic_isr_msix_io_cmpl(int irq, void *data)
-+{
-+	struct snic *snic = data;
-+	unsigned long iocmpl_work_done = 0;
-+
-+	snic->s_stats.misc.last_isr_time = jiffies;
-+	atomic64_inc(&snic->s_stats.misc.isr_cnt);
-+
-+	iocmpl_work_done = snic_fwcq_cmpl_handler(snic, -1);
-+	vnic_intr_return_credits(&snic->intr[SNIC_MSIX_IO_CMPL],
-+				 iocmpl_work_done,
-+				 1 /* unmask intr */,
-+				 1 /* reset intr timer */);
-+
-+	return IRQ_HANDLED;
-+} /* end of snic_isr_msix_io_cmpl */
-+
-+static irqreturn_t
-+snic_isr_msix_err_notify(int irq, void *data)
-+{
-+	struct snic *snic = data;
-+
-+	snic->s_stats.misc.last_isr_time = jiffies;
-+	atomic64_inc(&snic->s_stats.misc.isr_cnt);
-+
-+	vnic_intr_return_all_credits(&snic->intr[SNIC_MSIX_ERR_NOTIFY]);
-+	snic_log_q_error(snic);
-+
-+	/*Handling link events */
-+	snic_handle_link_event(snic);
-+
-+	return IRQ_HANDLED;
-+} /* end of snic_isr_msix_err_notify */
-+
-+
-+void
-+snic_free_intr(struct snic *snic)
-+{
-+	int i;
-+
-+	/* ONLY interrupt mode MSIX is supported */
-+	for (i = 0; i < ARRAY_SIZE(snic->msix); i++) {
-+		if (snic->msix[i].requested) {
-+			free_irq(snic->msix_entry[i].vector,
-+				 snic->msix[i].devid);
-+		}
-+	}
-+} /* end of snic_free_intr */
-+
-+int
-+snic_request_intr(struct snic *snic)
-+{
-+	int ret = 0, i;
-+
-+#ifdef SNIC_DEBUG
-+	enum vnic_dev_intr_mode intr_mode;
-+
-+	intr_mode = vnic_dev_get_intr_mode(snic->vdev);
-+	SNIC_BUG_ON(intr_mode != VNIC_DEV_INTR_MODE_MSIX);
-+#endif
-+
-+	/*
-+	 * Currently HW supports single WQ and CQ. So passing devid as snic.
-+	 * When hardware supports multiple WQs and CQs, one idea is
-+	 * to pass devid as corresponding WQ or CQ ptr and retrieve snic
-+	 * from queue ptr.
-+	 * Except for err_notify, which is always one.
-+	 */
-+	sprintf(snic->msix[SNIC_MSIX_WQ].devname,
-+		"%.11s-scsi-wq",
-+		snic->name);
-+	snic->msix[SNIC_MSIX_WQ].isr = snic_isr_msix_wq;
-+	snic->msix[SNIC_MSIX_WQ].devid = snic;
-+
-+	sprintf(snic->msix[SNIC_MSIX_IO_CMPL].devname,
-+		"%.11s-io-cmpl",
-+		snic->name);
-+	snic->msix[SNIC_MSIX_IO_CMPL].isr = snic_isr_msix_io_cmpl;
-+	snic->msix[SNIC_MSIX_IO_CMPL].devid = snic;
-+
-+	sprintf(snic->msix[SNIC_MSIX_ERR_NOTIFY].devname,
-+		"%.11s-err-notify",
-+		snic->name);
-+	snic->msix[SNIC_MSIX_ERR_NOTIFY].isr = snic_isr_msix_err_notify;
-+	snic->msix[SNIC_MSIX_ERR_NOTIFY].devid = snic;
-+
-+	for (i = 0; i < ARRAY_SIZE(snic->msix); i++) {
-+		ret = request_irq(snic->msix_entry[i].vector,
-+				  snic->msix[i].isr,
-+				  0,
-+				  snic->msix[i].devname,
-+				  snic->msix[i].devid);
-+		if (ret) {
-+			SNIC_HOST_ERR(snic->shost,
-+				      "MSI-X: requrest_irq(%d) failed %d\n",
-+				      i,
-+				      ret);
-+			snic_free_intr(snic);
-+			break;
-+		}
-+		snic->msix[i].requested = 1;
-+	}
-+
-+	return ret;
-+} /* end of snic_requrest_intr */
-+
-+int
-+snic_set_intr_mode(struct snic *snic)
-+{
-+	unsigned int n = ARRAY_SIZE(snic->wq);
-+	unsigned int m = SNIC_CQ_IO_CMPL_MAX;
-+	unsigned int i;
-+
-+	/*
-+	 * We need n WQs, m CQs, and n+m+1 INTRs
-+	 * (last INTR is used for WQ/CQ errors and notification area
-+	 */
-+
-+	BUILD_BUG_ON((ARRAY_SIZE(snic->wq) + SNIC_CQ_IO_CMPL_MAX) >
-+			ARRAY_SIZE(snic->intr));
-+	SNIC_BUG_ON(ARRAY_SIZE(snic->msix_entry) < (n + m + 1));
-+
-+	for (i = 0; i < (n + m + 1); i++)
-+		snic->msix_entry[i].entry = i;
-+
-+	if (snic->wq_count >= n && snic->cq_count >= (n + m)) {
-+		if (!pci_enable_msix(snic->pdev,
-+				     snic->msix_entry,
-+				     (n + m + 1))) {
-+			snic->wq_count = n;
-+			snic->cq_count = n + m;
-+			snic->intr_count = n + m + 1;
-+			snic->err_intr_offset = SNIC_MSIX_ERR_NOTIFY;
-+
-+			SNIC_ISR_DBG(snic->shost,
-+				     "Using MSI-X Interrupts\n");
-+			vnic_dev_set_intr_mode(snic->vdev,
-+						VNIC_DEV_INTR_MODE_MSIX);
-+
-+			return 0;
-+		}
-+	}
-+
-+	vnic_dev_set_intr_mode(snic->vdev, VNIC_DEV_INTR_MODE_UNKNOWN);
-+
-+	return -EINVAL;
-+} /* end of snic_set_intr_mode */
-+
-+void
-+snic_clear_intr_mode(struct snic *snic)
-+{
-+	pci_disable_msix(snic->pdev);
-+
-+	vnic_dev_set_intr_mode(snic->vdev, VNIC_DEV_INTR_MODE_INTX);
++	cq_desc_dec((struct cq_desc *)desc, type,
++		color, q_number, completed_index);
 +}
-diff --git a/drivers/scsi/snic/snic_res.c b/drivers/scsi/snic/snic_res.c
++
++#endif /* _CQ_ENET_DESC_H_ */
+diff --git a/drivers/scsi/snic/vnic_cq.c b/drivers/scsi/snic/vnic_cq.c
 new file mode 100644
-index 0000000..4b2e4b1
+index 0000000..88d4537
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_res.c
-@@ -0,0 +1,297 @@
++++ b/drivers/scsi/snic/vnic_cq.c
+@@ -0,0 +1,86 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -814,289 +212,78 @@ index 0000000..4b2e4b1
 +#include <linux/errno.h>
 +#include <linux/types.h>
 +#include <linux/pci.h>
-+
-+#include "wq_enet_desc.h"
-+#include "cq_enet_desc.h"
-+#include "vnic_resource.h"
 +#include "vnic_dev.h"
-+#include "vnic_wq.h"
 +#include "vnic_cq.h"
-+#include "vnic_intr.h"
-+#include "vnic_stats.h"
-+#include "snic.h"
 +
-+int
-+snic_get_vnic_config(struct snic *snic)
++void vnic_cq_free(struct vnic_cq *cq)
 +{
-+	struct vnic_snic_config *c = &snic->config;
-+	int ret;
++	vnic_dev_free_desc_ring(cq->vdev, &cq->ring);
 +
-+#define GET_CONFIG(m) \
-+	do { \
-+		ret = vnic_dev_spec(snic->vdev, \
-+				    offsetof(struct vnic_snic_config, m), \
-+				    sizeof(c->m), \
-+				    &c->m); \
-+		if (ret) { \
-+			SNIC_HOST_ERR(snic->shost, \
-+				      "Error getting %s, %d\n", #m, ret); \
-+			return ret; \
-+		} \
-+	} while (0)
++	cq->ctrl = NULL;
++}
 +
-+	GET_CONFIG(wq_enet_desc_count);
-+	GET_CONFIG(maxdatafieldsize);
-+	GET_CONFIG(intr_timer);
-+	GET_CONFIG(intr_timer_type);
-+	GET_CONFIG(flags);
-+	GET_CONFIG(io_throttle_count);
-+	GET_CONFIG(port_down_timeout);
-+	GET_CONFIG(port_down_io_retries);
-+	GET_CONFIG(luns_per_tgt);
-+	GET_CONFIG(xpt_type);
-+	GET_CONFIG(hid);
++int vnic_cq_alloc(struct vnic_dev *vdev, struct vnic_cq *cq, unsigned int index,
++	unsigned int desc_count, unsigned int desc_size)
++{
++	int err;
 +
-+	c->wq_enet_desc_count = min_t(u32,
-+				      VNIC_SNIC_WQ_DESCS_MAX,
-+				      max_t(u32,
-+					    VNIC_SNIC_WQ_DESCS_MIN,
-+					    c->wq_enet_desc_count));
++	cq->index = index;
++	cq->vdev = vdev;
 +
-+	c->wq_enet_desc_count = ALIGN(c->wq_enet_desc_count, 16);
++	cq->ctrl = vnic_dev_get_res(vdev, RES_TYPE_CQ, index);
++	if (!cq->ctrl) {
++		pr_err("Failed to hook CQ[%d] resource\n", index);
 +
-+	c->maxdatafieldsize = min_t(u32,
-+				    VNIC_SNIC_MAXDATAFIELDSIZE_MAX,
-+				    max_t(u32,
-+					  VNIC_SNIC_MAXDATAFIELDSIZE_MIN,
-+					  c->maxdatafieldsize));
++		return -EINVAL;
++	}
 +
-+	c->io_throttle_count = min_t(u32,
-+				     VNIC_SNIC_IO_THROTTLE_COUNT_MAX,
-+				     max_t(u32,
-+					   VNIC_SNIC_IO_THROTTLE_COUNT_MIN,
-+					   c->io_throttle_count));
-+
-+	c->port_down_timeout = min_t(u32,
-+				     VNIC_SNIC_PORT_DOWN_TIMEOUT_MAX,
-+				     c->port_down_timeout);
-+
-+	c->port_down_io_retries = min_t(u32,
-+				     VNIC_SNIC_PORT_DOWN_IO_RETRIES_MAX,
-+				     c->port_down_io_retries);
-+
-+	c->luns_per_tgt = min_t(u32,
-+				VNIC_SNIC_LUNS_PER_TARGET_MAX,
-+				max_t(u32,
-+				      VNIC_SNIC_LUNS_PER_TARGET_MIN,
-+				      c->luns_per_tgt));
-+
-+	c->intr_timer = min_t(u32, VNIC_INTR_TIMER_MAX, c->intr_timer);
-+
-+	SNIC_INFO("vNIC resources wq %d\n", c->wq_enet_desc_count);
-+	SNIC_INFO("vNIC mtu %d intr timer %d\n",
-+		  c->maxdatafieldsize,
-+		  c->intr_timer);
-+
-+	SNIC_INFO("vNIC flags 0x%x luns per tgt %d\n",
-+		  c->flags,
-+		  c->luns_per_tgt);
-+
-+	SNIC_INFO("vNIC io throttle count %d\n", c->io_throttle_count);
-+	SNIC_INFO("vNIC port down timeout %d port down io retries %d\n",
-+		  c->port_down_timeout,
-+		  c->port_down_io_retries);
-+
-+	SNIC_INFO("vNIC back end type = %d\n", c->xpt_type);
-+	SNIC_INFO("vNIC hid = %d\n", c->hid);
++	err = vnic_dev_alloc_desc_ring(vdev, &cq->ring, desc_count, desc_size);
++	if (err)
++		return err;
 +
 +	return 0;
 +}
 +
-+void
-+snic_get_res_counts(struct snic *snic)
++void vnic_cq_init(struct vnic_cq *cq, unsigned int flow_control_enable,
++	unsigned int color_enable, unsigned int cq_head, unsigned int cq_tail,
++	unsigned int cq_tail_color, unsigned int interrupt_enable,
++	unsigned int cq_entry_enable, unsigned int cq_message_enable,
++	unsigned int interrupt_offset, u64 cq_message_addr)
 +{
-+	snic->wq_count = vnic_dev_get_res_count(snic->vdev, RES_TYPE_WQ);
-+	SNIC_BUG_ON(snic->wq_count == 0);
-+	snic->cq_count = vnic_dev_get_res_count(snic->vdev, RES_TYPE_CQ);
-+	SNIC_BUG_ON(snic->cq_count == 0);
-+	snic->intr_count = vnic_dev_get_res_count(snic->vdev,
-+						  RES_TYPE_INTR_CTRL);
-+	SNIC_BUG_ON(snic->intr_count == 0);
++	u64 paddr;
++
++	paddr = (u64)cq->ring.base_addr | VNIC_PADDR_TARGET;
++	writeq(paddr, &cq->ctrl->ring_base);
++	iowrite32(cq->ring.desc_count, &cq->ctrl->ring_size);
++	iowrite32(flow_control_enable, &cq->ctrl->flow_control_enable);
++	iowrite32(color_enable, &cq->ctrl->color_enable);
++	iowrite32(cq_head, &cq->ctrl->cq_head);
++	iowrite32(cq_tail, &cq->ctrl->cq_tail);
++	iowrite32(cq_tail_color, &cq->ctrl->cq_tail_color);
++	iowrite32(interrupt_enable, &cq->ctrl->interrupt_enable);
++	iowrite32(cq_entry_enable, &cq->ctrl->cq_entry_enable);
++	iowrite32(cq_message_enable, &cq->ctrl->cq_message_enable);
++	iowrite32(interrupt_offset, &cq->ctrl->interrupt_offset);
++	writeq(cq_message_addr, &cq->ctrl->cq_message_addr);
 +}
 +
-+void
-+snic_free_vnic_res(struct snic *snic)
++void vnic_cq_clean(struct vnic_cq *cq)
 +{
-+	unsigned int i;
++	cq->to_clean = 0;
++	cq->last_color = 0;
 +
-+	for (i = 0; i < snic->wq_count; i++)
-+		vnic_wq_free(&snic->wq[i]);
++	iowrite32(0, &cq->ctrl->cq_head);
++	iowrite32(0, &cq->ctrl->cq_tail);
++	iowrite32(1, &cq->ctrl->cq_tail_color);
 +
-+	for (i = 0; i < snic->cq_count; i++)
-+		vnic_cq_free(&snic->cq[i]);
-+
-+	for (i = 0; i < snic->intr_count; i++)
-+		vnic_intr_free(&snic->intr[i]);
++	vnic_dev_clear_desc_ring(&cq->ring);
 +}
-+
-+int
-+snic_alloc_vnic_res(struct snic *snic)
-+{
-+	enum vnic_dev_intr_mode intr_mode;
-+	unsigned int mask_on_assertion;
-+	unsigned int intr_offset;
-+	unsigned int err_intr_enable;
-+	unsigned int err_intr_offset;
-+	unsigned int i;
-+	int ret;
-+
-+	intr_mode = vnic_dev_get_intr_mode(snic->vdev);
-+
-+	SNIC_INFO("vNIC interrupt mode: %s\n",
-+		  ((intr_mode == VNIC_DEV_INTR_MODE_INTX) ?
-+		   "Legacy PCI INTx" :
-+		   ((intr_mode == VNIC_DEV_INTR_MODE_MSI) ?
-+		    "MSI" :
-+		    ((intr_mode == VNIC_DEV_INTR_MODE_MSIX) ?
-+		     "MSI-X" : "Unknown"))));
-+
-+	/* only MSI-X is supported */
-+	SNIC_BUG_ON(intr_mode != VNIC_DEV_INTR_MODE_MSIX);
-+
-+	SNIC_INFO("wq %d cq %d intr %d\n", snic->wq_count,
-+		  snic->cq_count,
-+		  snic->intr_count);
-+
-+
-+	/* Allocate WQs used for SCSI IOs */
-+	for (i = 0; i < snic->wq_count; i++) {
-+		ret = vnic_wq_alloc(snic->vdev,
-+				    &snic->wq[i],
-+				    i,
-+				    snic->config.wq_enet_desc_count,
-+				    sizeof(struct wq_enet_desc));
-+		if (ret)
-+			goto error_cleanup;
-+	}
-+
-+	/* CQ for each WQ */
-+	for (i = 0; i < snic->wq_count; i++) {
-+		ret = vnic_cq_alloc(snic->vdev,
-+				    &snic->cq[i],
-+				    i,
-+				    snic->config.wq_enet_desc_count,
-+				    sizeof(struct cq_enet_wq_desc));
-+		if (ret)
-+			goto error_cleanup;
-+	}
-+
-+#ifdef SNIC_DEBUG
-+	SNIC_BUG_ON(snic->cq_count != 2 * snic->wq_count);
-+#endif
-+	/* CQ for FW TO host */
-+	for (i = snic->wq_count; i < snic->cq_count; i++) {
-+		ret = vnic_cq_alloc(snic->vdev,
-+				    &snic->cq[i],
-+				    i,
-+				    (snic->config.wq_enet_desc_count * 3),
-+				    sizeof(struct snic_fw_req));
-+		if (ret)
-+			goto error_cleanup;
-+	}
-+
-+	for (i = 0; i < snic->intr_count; i++) {
-+		ret = vnic_intr_alloc(snic->vdev, &snic->intr[i], i);
-+		if (ret)
-+			goto error_cleanup;
-+	}
-+
-+	/*
-+	 * Init WQ Resources.
-+	 * WQ[0 to n] points to CQ[0 to n-1]
-+	 * firmware to host comm points to CQ[n to m+1]
-+	 */
-+	err_intr_enable = 1;
-+	err_intr_offset = snic->err_intr_offset;
-+
-+	for (i = 0; i < snic->wq_count; i++) {
-+		vnic_wq_init(&snic->wq[i],
-+			     i,
-+			     err_intr_enable,
-+			     err_intr_offset);
-+	}
-+
-+	for (i = 0; i < snic->cq_count; i++) {
-+		intr_offset = i;
-+
-+		vnic_cq_init(&snic->cq[i],
-+			     0 /* flow_control_enable */,
-+			     1 /* color_enable */,
-+			     0 /* cq_head */,
-+			     0 /* cq_tail */,
-+			     1 /* cq_tail_color */,
-+			     1 /* interrupt_enable */,
-+			     1 /* cq_entry_enable */,
-+			     0 /* cq_message_enable */,
-+			     intr_offset,
-+			     0 /* cq_message_addr */);
-+	}
-+
-+	/*
-+	 * Init INTR resources
-+	 * Assumption : snic is always in MSI-X mode
-+	 */
-+	SNIC_BUG_ON(intr_mode != VNIC_DEV_INTR_MODE_MSIX);
-+	mask_on_assertion = 1;
-+
-+	for (i = 0; i < snic->intr_count; i++) {
-+		vnic_intr_init(&snic->intr[i],
-+				snic->config.intr_timer,
-+				snic->config.intr_timer_type,
-+				mask_on_assertion);
-+	}
-+
-+	/* init the stats memory by making the first call here */
-+	ret = vnic_dev_stats_dump(snic->vdev, &snic->stats);
-+	if (ret) {
-+		SNIC_HOST_ERR(snic->shost,
-+			      "vnic_dev_stats_dump failed - x%x\n",
-+			      ret);
-+		goto error_cleanup;
-+	}
-+
-+	/* Clear LIF stats */
-+	vnic_dev_stats_clear(snic->vdev);
-+	ret = 0;
-+
-+	return ret;
-+
-+error_cleanup:
-+	snic_free_vnic_res(snic);
-+
-+	return ret;
-+}
-+
-+void
-+snic_log_q_error(struct snic *snic)
-+{
-+	unsigned int i;
-+	u32 err_status;
-+
-+	for (i = 0; i < snic->wq_count; i++) {
-+		err_status = ioread32(&snic->wq[i].ctrl->error_status);
-+		if (err_status)
-+			SNIC_HOST_ERR(snic->shost,
-+				      "WQ[%d] error status %d\n",
-+				      i,
-+				      err_status);
-+	}
-+} /* end of snic_log_q_error */
-diff --git a/drivers/scsi/snic/snic_res.h b/drivers/scsi/snic/snic_res.h
+diff --git a/drivers/scsi/snic/vnic_cq.h b/drivers/scsi/snic/vnic_cq.h
 new file mode 100644
-index 0000000..f8f4e29
+index 0000000..fb2dc61
 --- /dev/null
-+++ b/drivers/scsi/snic/snic_res.h
-@@ -0,0 +1,96 @@
++++ b/drivers/scsi/snic/vnic_cq.h
+@@ -0,0 +1,120 @@
 +/*
 + * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
 + *
@@ -1114,85 +301,2284 @@ index 0000000..f8f4e29
 + * SOFTWARE.
 + */
 +
-+#ifndef __SNIC_RES_H
-+#define __SNIC_RES_H
++#ifndef _VNIC_CQ_H_
++#define _VNIC_CQ_H_
 +
-+#include "snic_io.h"
-+#include "wq_enet_desc.h"
-+#include "vnic_wq.h"
++#include "cq_desc.h"
++#include "vnic_dev.h"
++
++/*
++ * These defines avoid symbol clash between fnic and enic (Cisco 10G Eth
++ * Driver) when both are built with CONFIG options =y
++ */
++#define vnic_cq_service snic_cq_service
++#define vnic_cq_free snic_cq_free
++#define vnic_cq_alloc snic_cq_alloc
++#define vnic_cq_init snic_cq_init
++#define vnic_cq_clean snic_cq_clean
++
++/* Completion queue control */
++struct vnic_cq_ctrl {
++	u64 ring_base;			/* 0x00 */
++	u32 ring_size;			/* 0x08 */
++	u32 pad0;
++	u32 flow_control_enable;	/* 0x10 */
++	u32 pad1;
++	u32 color_enable;		/* 0x18 */
++	u32 pad2;
++	u32 cq_head;			/* 0x20 */
++	u32 pad3;
++	u32 cq_tail;			/* 0x28 */
++	u32 pad4;
++	u32 cq_tail_color;		/* 0x30 */
++	u32 pad5;
++	u32 interrupt_enable;		/* 0x38 */
++	u32 pad6;
++	u32 cq_entry_enable;		/* 0x40 */
++	u32 pad7;
++	u32 cq_message_enable;		/* 0x48 */
++	u32 pad8;
++	u32 interrupt_offset;		/* 0x50 */
++	u32 pad9;
++	u64 cq_message_addr;		/* 0x58 */
++	u32 pad10;
++};
++
++struct vnic_cq {
++	unsigned int index;
++	struct vnic_dev *vdev;
++	struct vnic_cq_ctrl __iomem *ctrl;	/* memory-mapped */
++	struct vnic_dev_ring ring;
++	unsigned int to_clean;
++	unsigned int last_color;
++};
++
++static inline unsigned int vnic_cq_service(struct vnic_cq *cq,
++	unsigned int work_to_do,
++	int (*q_service)(struct vnic_dev *vdev, struct cq_desc *cq_desc,
++	u8 type, u16 q_number, u16 completed_index, void *opaque),
++	void *opaque)
++{
++	struct cq_desc *cq_desc;
++	unsigned int work_done = 0;
++	u16 q_number, completed_index;
++	u8 type, color;
++
++	cq_desc = (struct cq_desc *)((u8 *)cq->ring.descs +
++		cq->ring.desc_size * cq->to_clean);
++	cq_desc_dec(cq_desc, &type, &color,
++		&q_number, &completed_index);
++
++	while (color != cq->last_color) {
++
++		if ((*q_service)(cq->vdev, cq_desc, type,
++			q_number, completed_index, opaque))
++			break;
++
++		cq->to_clean++;
++		if (cq->to_clean == cq->ring.desc_count) {
++			cq->to_clean = 0;
++			cq->last_color = cq->last_color ? 0 : 1;
++		}
++
++		cq_desc = (struct cq_desc *)((u8 *)cq->ring.descs +
++			cq->ring.desc_size * cq->to_clean);
++		cq_desc_dec(cq_desc, &type, &color,
++			&q_number, &completed_index);
++
++		work_done++;
++		if (work_done >= work_to_do)
++			break;
++	}
++
++	return work_done;
++}
++
++void vnic_cq_free(struct vnic_cq *cq);
++int vnic_cq_alloc(struct vnic_dev *vdev, struct vnic_cq *cq, unsigned int index,
++	unsigned int desc_count, unsigned int desc_size);
++void vnic_cq_init(struct vnic_cq *cq, unsigned int flow_control_enable,
++	unsigned int color_enable, unsigned int cq_head, unsigned int cq_tail,
++	unsigned int cq_tail_color, unsigned int interrupt_enable,
++	unsigned int cq_entry_enable, unsigned int message_enable,
++	unsigned int interrupt_offset, u64 message_addr);
++void vnic_cq_clean(struct vnic_cq *cq);
++#endif /* _VNIC_CQ_H_ */
+diff --git a/drivers/scsi/snic/vnic_cq_fw.h b/drivers/scsi/snic/vnic_cq_fw.h
+new file mode 100644
+index 0000000..c2d1bbd
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_cq_fw.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_CQ_FW_H_
++#define _VNIC_CQ_FW_H_
++
 +#include "snic_fwint.h"
-+#include "vnic_cq_fw.h"
++
++static inline unsigned int
++vnic_cq_fw_service(struct vnic_cq *cq,
++		   int (*q_service)(struct vnic_dev *vdev,
++				    unsigned int index,
++				    struct snic_fw_req *desc),
++		   unsigned int work_to_do)
++
++{
++	struct snic_fw_req *desc;
++	unsigned int work_done = 0;
++	u8 color;
++
++	desc = (struct snic_fw_req *)((u8 *)cq->ring.descs +
++		cq->ring.desc_size * cq->to_clean);
++	snic_color_dec(desc, &color);
++
++	while (color != cq->last_color) {
++
++		if ((*q_service)(cq->vdev, cq->index, desc))
++			break;
++
++		cq->to_clean++;
++		if (cq->to_clean == cq->ring.desc_count) {
++			cq->to_clean = 0;
++			cq->last_color = cq->last_color ? 0 : 1;
++		}
++
++		desc = (struct snic_fw_req *)((u8 *)cq->ring.descs +
++			cq->ring.desc_size * cq->to_clean);
++		snic_color_dec(desc, &color);
++
++		work_done++;
++		if (work_done >= work_to_do)
++			break;
++	}
++
++	return work_done;
++}
++
++#endif /* _VNIC_CQ_FW_H_ */
+diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
+new file mode 100644
+index 0000000..68c63d5
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_dev.c
+@@ -0,0 +1,749 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <linux/kernel.h>
++#include <linux/errno.h>
++#include <linux/types.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/if_ether.h>
++#include <linux/slab.h>
++#include "vnic_resource.h"
++#include "vnic_devcmd.h"
++#include "vnic_dev.h"
++#include "vnic_stats.h"
++#include "vnic_wq.h"
++
++#define VNIC_DVCMD_TMO	10000	/* Devcmd Timeout value */
++#define VNIC_NOTIFY_INTR_MASK 0x0000ffff00000000ULL
++
++struct devcmd2_controller {
++	struct vnic_wq_ctrl __iomem *wq_ctrl;
++	struct vnic_dev_ring results_ring;
++	struct vnic_wq wq;
++	struct vnic_devcmd2 *cmd_ring;
++	struct devcmd2_result *result;
++	u16 next_result;
++	u16 result_size;
++	int color;
++};
++
++struct vnic_res {
++	void __iomem *vaddr;
++	unsigned int count;
++};
++
++struct vnic_dev {
++	void *priv;
++	struct pci_dev *pdev;
++	struct vnic_res res[RES_TYPE_MAX];
++	enum vnic_dev_intr_mode intr_mode;
++	struct vnic_devcmd __iomem *devcmd;
++	struct vnic_devcmd_notify *notify;
++	struct vnic_devcmd_notify notify_copy;
++	dma_addr_t notify_pa;
++	u32 *linkstatus;
++	dma_addr_t linkstatus_pa;
++	struct vnic_stats *stats;
++	dma_addr_t stats_pa;
++	struct vnic_devcmd_fw_info *fw_info;
++	dma_addr_t fw_info_pa;
++	u64 args[VNIC_DEVCMD_NARGS];
++	struct devcmd2_controller *devcmd2;
++
++	int (*devcmd_rtn)(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
++			  int wait);
++};
++
++#define VNIC_MAX_RES_HDR_SIZE \
++	(sizeof(struct vnic_resource_header) + \
++	sizeof(struct vnic_resource) * RES_TYPE_MAX)
++#define VNIC_RES_STRIDE	128
++
++void *vnic_dev_priv(struct vnic_dev *vdev)
++{
++	return vdev->priv;
++}
++
++static int vnic_dev_discover_res(struct vnic_dev *vdev,
++	struct vnic_dev_bar *bar, unsigned int num_bars)
++{
++	struct vnic_resource_header __iomem *rh;
++	struct vnic_resource __iomem *r;
++	u8 type;
++
++	if (num_bars == 0)
++		return -EINVAL;
++
++	if (bar->len < VNIC_MAX_RES_HDR_SIZE) {
++		pr_err("vNIC BAR0 res hdr length error\n");
++
++		return -EINVAL;
++	}
++
++	rh = bar->vaddr;
++	if (!rh) {
++		pr_err("vNIC BAR0 res hdr not mem-mapped\n");
++
++		return -EINVAL;
++	}
++
++	if (ioread32(&rh->magic) != VNIC_RES_MAGIC ||
++	    ioread32(&rh->version) != VNIC_RES_VERSION) {
++		pr_err("vNIC BAR0 res magic/version error exp (%lx/%lx) curr (%x/%x)\n",
++			VNIC_RES_MAGIC, VNIC_RES_VERSION,
++			ioread32(&rh->magic), ioread32(&rh->version));
++
++		return -EINVAL;
++	}
++
++	r = (struct vnic_resource __iomem *)(rh + 1);
++
++	while ((type = ioread8(&r->type)) != RES_TYPE_EOL) {
++
++		u8 bar_num = ioread8(&r->bar);
++		u32 bar_offset = ioread32(&r->bar_offset);
++		u32 count = ioread32(&r->count);
++		u32 len;
++
++		r++;
++
++		if (bar_num >= num_bars)
++			continue;
++
++		if (!bar[bar_num].len || !bar[bar_num].vaddr)
++			continue;
++
++		switch (type) {
++		case RES_TYPE_WQ:
++		case RES_TYPE_RQ:
++		case RES_TYPE_CQ:
++		case RES_TYPE_INTR_CTRL:
++			/* each count is stride bytes long */
++			len = count * VNIC_RES_STRIDE;
++			if (len + bar_offset > bar->len) {
++				pr_err("vNIC BAR0 resource %d out-of-bounds, offset 0x%x + size 0x%x > bar len 0x%lx\n",
++					type, bar_offset,
++					len,
++					bar->len);
++
++				return -EINVAL;
++			}
++			break;
++
++		case RES_TYPE_INTR_PBA_LEGACY:
++		case RES_TYPE_DEVCMD:
++		case RES_TYPE_DEVCMD2:
++			len = count;
++			break;
++
++		default:
++			continue;
++		}
++
++		vdev->res[type].count = count;
++		vdev->res[type].vaddr = (char __iomem *)bar->vaddr + bar_offset;
++	}
++
++	return 0;
++}
++
++unsigned int vnic_dev_get_res_count(struct vnic_dev *vdev,
++	enum vnic_res_type type)
++{
++	return vdev->res[type].count;
++}
++
++void __iomem *vnic_dev_get_res(struct vnic_dev *vdev, enum vnic_res_type type,
++	unsigned int index)
++{
++	if (!vdev->res[type].vaddr)
++		return NULL;
++
++	switch (type) {
++	case RES_TYPE_WQ:
++	case RES_TYPE_RQ:
++	case RES_TYPE_CQ:
++	case RES_TYPE_INTR_CTRL:
++		return (char __iomem *)vdev->res[type].vaddr +
++					index * VNIC_RES_STRIDE;
++
++	default:
++		return (char __iomem *)vdev->res[type].vaddr;
++	}
++}
++
++unsigned int vnic_dev_desc_ring_size(struct vnic_dev_ring *ring,
++				     unsigned int desc_count,
++				     unsigned int desc_size)
++{
++	/* The base address of the desc rings must be 512 byte aligned.
++	 * Descriptor count is aligned to groups of 32 descriptors.  A
++	 * count of 0 means the maximum 4096 descriptors.  Descriptor
++	 * size is aligned to 16 bytes.
++	 */
++
++	unsigned int count_align = 32;
++	unsigned int desc_align = 16;
++
++	ring->base_align = 512;
++
++	if (desc_count == 0)
++		desc_count = 4096;
++
++	ring->desc_count = ALIGN(desc_count, count_align);
++
++	ring->desc_size = ALIGN(desc_size, desc_align);
++
++	ring->size = ring->desc_count * ring->desc_size;
++	ring->size_unaligned = ring->size + ring->base_align;
++
++	return ring->size_unaligned;
++}
++
++void vnic_dev_clear_desc_ring(struct vnic_dev_ring *ring)
++{
++	memset(ring->descs, 0, ring->size);
++}
++
++int vnic_dev_alloc_desc_ring(struct vnic_dev *vdev, struct vnic_dev_ring *ring,
++	unsigned int desc_count, unsigned int desc_size)
++{
++	vnic_dev_desc_ring_size(ring, desc_count, desc_size);
++
++	ring->descs_unaligned = pci_alloc_consistent(vdev->pdev,
++		ring->size_unaligned,
++		&ring->base_addr_unaligned);
++
++	if (!ring->descs_unaligned) {
++		pr_err("Failed to allocate ring (size=%d), aborting\n",
++			(int)ring->size);
++
++		return -ENOMEM;
++	}
++
++	ring->base_addr = ALIGN(ring->base_addr_unaligned,
++		ring->base_align);
++	ring->descs = (u8 *)ring->descs_unaligned +
++		(ring->base_addr - ring->base_addr_unaligned);
++
++	vnic_dev_clear_desc_ring(ring);
++
++	ring->desc_avail = ring->desc_count - 1;
++
++	return 0;
++}
++
++void vnic_dev_free_desc_ring(struct vnic_dev *vdev, struct vnic_dev_ring *ring)
++{
++	if (ring->descs) {
++		pci_free_consistent(vdev->pdev,
++			ring->size_unaligned,
++			ring->descs_unaligned,
++			ring->base_addr_unaligned);
++		ring->descs = NULL;
++	}
++}
++
++static int _vnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
++	int wait)
++{
++	struct devcmd2_controller *dc2c = vdev->devcmd2;
++	struct devcmd2_result *result = dc2c->result + dc2c->next_result;
++	unsigned int i;
++	int delay;
++	int err;
++	u32 posted;
++	u32 new_posted;
++
++	posted = ioread32(&dc2c->wq_ctrl->posted_index);
++
++	if (posted == 0xFFFFFFFF) { /* check for hardware gone  */
++		/* Hardware surprise removal: return error */
++		return -ENODEV;
++	}
++
++	new_posted = (posted + 1) % DEVCMD2_RING_SIZE;
++	dc2c->cmd_ring[posted].cmd = cmd;
++	dc2c->cmd_ring[posted].flags = 0;
++
++	if ((_CMD_FLAGS(cmd) & _CMD_FLAGS_NOWAIT))
++		dc2c->cmd_ring[posted].flags |= DEVCMD2_FNORESULT;
++
++	if (_CMD_DIR(cmd) & _CMD_DIR_WRITE) {
++		for (i = 0; i < VNIC_DEVCMD_NARGS; i++)
++			dc2c->cmd_ring[posted].args[i] = vdev->args[i];
++	}
++	/* Adding write memory barrier prevents compiler and/or CPU
++	 * reordering, thus avoiding descriptor posting before
++	 * descriptor is initialized. Otherwise, hardware can read
++	 * stale descriptor fields.
++	 */
++	wmb();
++	iowrite32(new_posted, &dc2c->wq_ctrl->posted_index);
++
++	if (dc2c->cmd_ring[posted].flags & DEVCMD2_FNORESULT)
++		return 0;
++
++	for (delay = 0; delay < wait; delay++) {
++		udelay(100);
++		if (result->color == dc2c->color) {
++			dc2c->next_result++;
++			if (dc2c->next_result == dc2c->result_size) {
++				dc2c->next_result = 0;
++				dc2c->color = dc2c->color ? 0 : 1;
++			}
++			if (result->error) {
++				err = (int) result->error;
++				if (err != ERR_ECMDUNKNOWN ||
++				    cmd != CMD_CAPABILITY)
++					pr_err("Error %d devcmd %d\n",
++						err, _CMD_N(cmd));
++
++				return err;
++			}
++			if (_CMD_DIR(cmd) & _CMD_DIR_READ) {
++				/*
++				 * Adding the rmb() prevents the compiler
++				 * and/or CPU from reordering the reads which
++				 * would potentially result in reading stale
++				 * values.
++				 */
++				rmb();
++				for (i = 0; i < VNIC_DEVCMD_NARGS; i++)
++					vdev->args[i] = result->results[i];
++			}
++
++			return 0;
++		}
++	}
++
++	pr_err("Timed out devcmd %d\n", _CMD_N(cmd));
++
++	return -ETIMEDOUT;
++}
++
++static int vnic_dev_init_devcmd2(struct vnic_dev *vdev)
++{
++	struct devcmd2_controller *dc2c = NULL;
++	unsigned int fetch_idx;
++	int ret;
++	void __iomem *p;
++
++	if (vdev->devcmd2)
++		return 0;
++
++	p = vnic_dev_get_res(vdev, RES_TYPE_DEVCMD2, 0);
++	if (!p)
++		return -ENODEV;
++
++	dc2c = kzalloc(sizeof(*dc2c), GFP_ATOMIC);
++	if (!dc2c)
++		return -ENOMEM;
++
++	vdev->devcmd2 = dc2c;
++
++	dc2c->color = 1;
++	dc2c->result_size = DEVCMD2_RING_SIZE;
++
++	ret  = vnic_wq_devcmd2_alloc(vdev,
++				     &dc2c->wq,
++				     DEVCMD2_RING_SIZE,
++				     DEVCMD2_DESC_SIZE);
++	if (ret)
++		goto err_free_devcmd2;
++
++	fetch_idx = ioread32(&dc2c->wq.ctrl->fetch_index);
++	if (fetch_idx == 0xFFFFFFFF) { /* check for hardware gone  */
++		/* Hardware surprise removal: reset fetch_index */
++		fetch_idx = 0;
++	}
++
++	/*
++	 * Don't change fetch_index ever and
++	 * set posted_index same as fetch_index
++	 * when setting up the WQ for devcmd2.
++	 */
++	vnic_wq_init_start(&dc2c->wq, 0, fetch_idx, fetch_idx, 0, 0);
++	vnic_wq_enable(&dc2c->wq);
++	ret = vnic_dev_alloc_desc_ring(vdev,
++				       &dc2c->results_ring,
++				       DEVCMD2_RING_SIZE,
++				       DEVCMD2_DESC_SIZE);
++	if (ret)
++		goto err_free_wq;
++
++	dc2c->result = (struct devcmd2_result *) dc2c->results_ring.descs;
++	dc2c->cmd_ring = (struct vnic_devcmd2 *) dc2c->wq.ring.descs;
++	dc2c->wq_ctrl = dc2c->wq.ctrl;
++	vdev->args[0] = (u64) dc2c->results_ring.base_addr | VNIC_PADDR_TARGET;
++	vdev->args[1] = DEVCMD2_RING_SIZE;
++
++	ret = _vnic_dev_cmd2(vdev, CMD_INITIALIZE_DEVCMD2, VNIC_DVCMD_TMO);
++	if (ret < 0)
++		goto err_free_desc_ring;
++
++	vdev->devcmd_rtn = &_vnic_dev_cmd2;
++	pr_info("DEVCMD2 Initialized.\n");
++
++	return ret;
++
++err_free_desc_ring:
++	vnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
++
++err_free_wq:
++	vnic_wq_disable(&dc2c->wq);
++	vnic_wq_free(&dc2c->wq);
++
++err_free_devcmd2:
++	kfree(dc2c);
++	vdev->devcmd2 = NULL;
++
++	return ret;
++} /* end of vnic_dev_init_devcmd2 */
++
++static void vnic_dev_deinit_devcmd2(struct vnic_dev *vdev)
++{
++	struct devcmd2_controller *dc2c = vdev->devcmd2;
++
++	vdev->devcmd2 = NULL;
++	vdev->devcmd_rtn = NULL;
++
++	vnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
++	vnic_wq_disable(&dc2c->wq);
++	vnic_wq_free(&dc2c->wq);
++	kfree(dc2c);
++}
++
++int vnic_dev_cmd(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
++	u64 *a0, u64 *a1, int wait)
++{
++	int err;
++
++	memset(vdev->args, 0, sizeof(vdev->args));
++	vdev->args[0] = *a0;
++	vdev->args[1] = *a1;
++
++	err = (*vdev->devcmd_rtn)(vdev, cmd, wait);
++
++	*a0 = vdev->args[0];
++	*a1 = vdev->args[1];
++
++	return  err;
++}
++
++int vnic_dev_fw_info(struct vnic_dev *vdev,
++	struct vnic_devcmd_fw_info **fw_info)
++{
++	u64 a0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++	int err = 0;
++
++	if (!vdev->fw_info) {
++		vdev->fw_info = pci_alloc_consistent(vdev->pdev,
++			sizeof(struct vnic_devcmd_fw_info),
++			&vdev->fw_info_pa);
++		if (!vdev->fw_info)
++			return -ENOMEM;
++
++		a0 = vdev->fw_info_pa;
++
++		/* only get fw_info once and cache it */
++		err = vnic_dev_cmd(vdev, CMD_MCPU_FW_INFO, &a0, &a1, wait);
++	}
++
++	*fw_info = vdev->fw_info;
++
++	return err;
++}
++
++int vnic_dev_spec(struct vnic_dev *vdev, unsigned int offset, unsigned int size,
++	void *value)
++{
++	u64 a0, a1;
++	int wait = VNIC_DVCMD_TMO;
++	int err;
++
++	a0 = offset;
++	a1 = size;
++
++	err = vnic_dev_cmd(vdev, CMD_DEV_SPEC, &a0, &a1, wait);
++
++	switch (size) {
++	case 1:
++		*(u8 *)value = (u8)a0;
++		break;
++	case 2:
++		*(u16 *)value = (u16)a0;
++		break;
++	case 4:
++		*(u32 *)value = (u32)a0;
++		break;
++	case 8:
++		*(u64 *)value = a0;
++		break;
++	default:
++		BUG();
++		break;
++	}
++
++	return err;
++}
++
++int vnic_dev_stats_clear(struct vnic_dev *vdev)
++{
++	u64 a0 = 0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++
++	return vnic_dev_cmd(vdev, CMD_STATS_CLEAR, &a0, &a1, wait);
++}
++
++int vnic_dev_stats_dump(struct vnic_dev *vdev, struct vnic_stats **stats)
++{
++	u64 a0, a1;
++	int wait = VNIC_DVCMD_TMO;
++
++	if (!vdev->stats) {
++		vdev->stats = pci_alloc_consistent(vdev->pdev,
++			sizeof(struct vnic_stats), &vdev->stats_pa);
++		if (!vdev->stats)
++			return -ENOMEM;
++	}
++
++	*stats = vdev->stats;
++	a0 = vdev->stats_pa;
++	a1 = sizeof(struct vnic_stats);
++
++	return vnic_dev_cmd(vdev, CMD_STATS_DUMP, &a0, &a1, wait);
++}
++
++int vnic_dev_close(struct vnic_dev *vdev)
++{
++	u64 a0 = 0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++
++	return vnic_dev_cmd(vdev, CMD_CLOSE, &a0, &a1, wait);
++}
++
++int vnic_dev_enable_wait(struct vnic_dev *vdev)
++{
++	u64 a0 = 0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++	int err = 0;
++
++	err = vnic_dev_cmd(vdev, CMD_ENABLE_WAIT, &a0, &a1, wait);
++	if (err == ERR_ECMDUNKNOWN)
++		return vnic_dev_cmd(vdev, CMD_ENABLE, &a0, &a1, wait);
++
++	return err;
++}
++
++int vnic_dev_disable(struct vnic_dev *vdev)
++{
++	u64 a0 = 0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++
++	return vnic_dev_cmd(vdev, CMD_DISABLE, &a0, &a1, wait);
++}
++
++int vnic_dev_open(struct vnic_dev *vdev, int arg)
++{
++	u64 a0 = (u32)arg, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++
++	return vnic_dev_cmd(vdev, CMD_OPEN, &a0, &a1, wait);
++}
++
++int vnic_dev_open_done(struct vnic_dev *vdev, int *done)
++{
++	u64 a0 = 0, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++	int err;
++
++	*done = 0;
++
++	err = vnic_dev_cmd(vdev, CMD_OPEN_STATUS, &a0, &a1, wait);
++	if (err)
++		return err;
++
++	*done = (a0 == 0);
++
++	return 0;
++}
++
++int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
++{
++	u64 a0, a1;
++	int wait = VNIC_DVCMD_TMO;
++
++	if (!vdev->notify) {
++		vdev->notify = pci_alloc_consistent(vdev->pdev,
++			sizeof(struct vnic_devcmd_notify),
++			&vdev->notify_pa);
++		if (!vdev->notify)
++			return -ENOMEM;
++	}
++
++	a0 = vdev->notify_pa;
++	a1 = ((u64)intr << 32) & VNIC_NOTIFY_INTR_MASK;
++	a1 += sizeof(struct vnic_devcmd_notify);
++
++	return vnic_dev_cmd(vdev, CMD_NOTIFY, &a0, &a1, wait);
++}
++
++void vnic_dev_notify_unset(struct vnic_dev *vdev)
++{
++	u64 a0, a1;
++	int wait = VNIC_DVCMD_TMO;
++
++	a0 = 0;  /* paddr = 0 to unset notify buffer */
++	a1 = VNIC_NOTIFY_INTR_MASK; /* intr num = -1 to unreg for intr */
++	a1 += sizeof(struct vnic_devcmd_notify);
++
++	vnic_dev_cmd(vdev, CMD_NOTIFY, &a0, &a1, wait);
++}
++
++static int vnic_dev_notify_ready(struct vnic_dev *vdev)
++{
++	u32 *words;
++	unsigned int nwords = sizeof(struct vnic_devcmd_notify) / 4;
++	unsigned int i;
++	u32 csum;
++
++	if (!vdev->notify)
++		return 0;
++
++	do {
++		csum = 0;
++		memcpy(&vdev->notify_copy, vdev->notify,
++			sizeof(struct vnic_devcmd_notify));
++		words = (u32 *)&vdev->notify_copy;
++		for (i = 1; i < nwords; i++)
++			csum += words[i];
++	} while (csum != words[0]);
++
++	return 1;
++}
++
++int vnic_dev_init(struct vnic_dev *vdev, int arg)
++{
++	u64 a0 = (u32)arg, a1 = 0;
++	int wait = VNIC_DVCMD_TMO;
++
++	return vnic_dev_cmd(vdev, CMD_INIT, &a0, &a1, wait);
++}
++
++int vnic_dev_link_status(struct vnic_dev *vdev)
++{
++	if (vdev->linkstatus)
++		return *vdev->linkstatus;
++
++	if (!vnic_dev_notify_ready(vdev))
++		return 0;
++
++	return vdev->notify_copy.link_state;
++}
++
++u32 vnic_dev_link_down_cnt(struct vnic_dev *vdev)
++{
++	if (!vnic_dev_notify_ready(vdev))
++		return 0;
++
++	return vdev->notify_copy.link_down_cnt;
++}
++
++void vnic_dev_set_intr_mode(struct vnic_dev *vdev,
++	enum vnic_dev_intr_mode intr_mode)
++{
++	vdev->intr_mode = intr_mode;
++}
++
++enum vnic_dev_intr_mode vnic_dev_get_intr_mode(
++	struct vnic_dev *vdev)
++{
++	return vdev->intr_mode;
++}
++
++void vnic_dev_unregister(struct vnic_dev *vdev)
++{
++	if (vdev) {
++		if (vdev->notify)
++			pci_free_consistent(vdev->pdev,
++				sizeof(struct vnic_devcmd_notify),
++				vdev->notify,
++				vdev->notify_pa);
++		if (vdev->linkstatus)
++			pci_free_consistent(vdev->pdev,
++				sizeof(u32),
++				vdev->linkstatus,
++				vdev->linkstatus_pa);
++		if (vdev->stats)
++			pci_free_consistent(vdev->pdev,
++				sizeof(struct vnic_stats),
++				vdev->stats, vdev->stats_pa);
++		if (vdev->fw_info)
++			pci_free_consistent(vdev->pdev,
++				sizeof(struct vnic_devcmd_fw_info),
++				vdev->fw_info, vdev->fw_info_pa);
++		if (vdev->devcmd2)
++			vnic_dev_deinit_devcmd2(vdev);
++		kfree(vdev);
++	}
++}
++
++struct vnic_dev *vnic_dev_alloc_discover(struct vnic_dev *vdev,
++					 void *priv,
++					 struct pci_dev *pdev,
++					 struct vnic_dev_bar *bar,
++					 unsigned int num_bars)
++{
++	if (!vdev) {
++		vdev = kzalloc(sizeof(struct vnic_dev), GFP_ATOMIC);
++		if (!vdev)
++			return NULL;
++	}
++
++	vdev->priv = priv;
++	vdev->pdev = pdev;
++
++	if (vnic_dev_discover_res(vdev, bar, num_bars))
++		goto err_out;
++
++	return vdev;
++
++err_out:
++	vnic_dev_unregister(vdev);
++
++	return NULL;
++} /* end of vnic_dev_alloc_discover */
++
++/*
++ * fallback option is left to keep the interface common for other vnics.
++ */
++int vnic_dev_cmd_init(struct vnic_dev *vdev, int fallback)
++{
++	int err = -ENODEV;
++	void __iomem *p;
++
++	p = vnic_dev_get_res(vdev, RES_TYPE_DEVCMD2, 0);
++	if (p)
++		err = vnic_dev_init_devcmd2(vdev);
++	else
++		pr_err("DEVCMD2 resource not found.\n");
++
++	return err;
++} /* end of vnic_dev_cmd_init */
+diff --git a/drivers/scsi/snic/vnic_dev.h b/drivers/scsi/snic/vnic_dev.h
+new file mode 100644
+index 0000000..19f3e76
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_dev.h
+@@ -0,0 +1,140 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_DEV_H_
++#define _VNIC_DEV_H_
++
++#include "vnic_resource.h"
++#include "vnic_devcmd.h"
++
++/*
++ * These defines avoid symbol clash between fnic and enic (Cisco 10G Eth
++ * Driver) when both are built with CONFIG options =y
++ */
++#define vnic_dev_priv snic_dev_priv
++#define vnic_dev_get_res_count snic_dev_get_res_count
++#define vnic_dev_get_res snic_dev_get_res
++#define vnic_dev_desc_ring_size snic_dev_desc_ring_siz
++#define vnic_dev_clear_desc_ring snic_dev_clear_desc_ring
++#define vnic_dev_alloc_desc_ring snic_dev_alloc_desc_ring
++#define vnic_dev_free_desc_ring snic_dev_free_desc_ring
++#define vnic_dev_cmd snic_dev_cmd
++#define vnic_dev_fw_info snic_dev_fw_info
++#define vnic_dev_spec snic_dev_spec
++#define vnic_dev_stats_clear snic_dev_stats_clear
++#define vnic_dev_stats_dump snic_dev_stats_dump
++#define vnic_dev_notify_set snic_dev_notify_set
++#define vnic_dev_notify_unset snic_dev_notify_unset
++#define vnic_dev_link_status snic_dev_link_status
++#define vnic_dev_link_down_cnt snic_dev_link_down_cnt
++#define vnic_dev_close snic_dev_close
++#define vnic_dev_enable_wait snic_dev_enable_wait
++#define vnic_dev_disable snic_dev_disable
++#define vnic_dev_open snic_dev_open
++#define vnic_dev_open_done snic_dev_open_done
++#define vnic_dev_init snic_dev_init
++#define vnic_dev_set_intr_mode snic_dev_set_intr_mode
++#define vnic_dev_get_intr_mode snic_dev_get_intr_mode
++#define vnic_dev_unregister snic_dev_unregister
++
++#ifndef VNIC_PADDR_TARGET
++#define VNIC_PADDR_TARGET	0x0000000000000000ULL
++#endif
++
++#ifndef readq
++static inline u64 readq(void __iomem *reg)
++{
++	return ((u64)readl(reg + 0x4UL) << 32) | (u64)readl(reg);
++}
++
++static inline void writeq(u64 val, void __iomem *reg)
++{
++	writel(lower_32_bits(val), reg);
++	writel(upper_32_bits(val), reg + 0x4UL);
++}
++#endif
++
++enum vnic_dev_intr_mode {
++	VNIC_DEV_INTR_MODE_UNKNOWN,
++	VNIC_DEV_INTR_MODE_INTX,
++	VNIC_DEV_INTR_MODE_MSI,
++	VNIC_DEV_INTR_MODE_MSIX,
++};
++
++struct vnic_dev_bar {
++	void __iomem *vaddr;
++	dma_addr_t bus_addr;
++	unsigned long len;
++};
++
++struct vnic_dev_ring {
++	void *descs;
++	size_t size;
++	dma_addr_t base_addr;
++	size_t base_align;
++	void *descs_unaligned;
++	size_t size_unaligned;
++	dma_addr_t base_addr_unaligned;
++	unsigned int desc_size;
++	unsigned int desc_count;
++	unsigned int desc_avail;
++};
++
++struct vnic_dev;
++struct vnic_stats;
++
++void *vnic_dev_priv(struct vnic_dev *vdev);
++unsigned int vnic_dev_get_res_count(struct vnic_dev *vdev,
++				    enum vnic_res_type type);
++void __iomem *vnic_dev_get_res(struct vnic_dev *vdev, enum vnic_res_type type,
++			       unsigned int index);
++unsigned int vnic_dev_desc_ring_size(struct vnic_dev_ring *ring,
++				     unsigned int desc_count,
++				     unsigned int desc_size);
++void vnic_dev_clear_desc_ring(struct vnic_dev_ring *ring);
++int vnic_dev_alloc_desc_ring(struct vnic_dev *vdev, struct vnic_dev_ring *ring,
++			     unsigned int desc_count, unsigned int desc_size);
++void vnic_dev_free_desc_ring(struct vnic_dev *vdev,
++			     struct vnic_dev_ring *ring);
++int vnic_dev_cmd(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
++		 u64 *a0, u64 *a1, int wait);
++int vnic_dev_fw_info(struct vnic_dev *vdev,
++		     struct vnic_devcmd_fw_info **fw_info);
++int vnic_dev_spec(struct vnic_dev *vdev, unsigned int offset,
++		  unsigned int size, void *value);
++int vnic_dev_stats_clear(struct vnic_dev *vdev);
++int vnic_dev_stats_dump(struct vnic_dev *vdev, struct vnic_stats **stats);
++int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr);
++void vnic_dev_notify_unset(struct vnic_dev *vdev);
++int vnic_dev_link_status(struct vnic_dev *vdev);
++u32 vnic_dev_link_down_cnt(struct vnic_dev *vdev);
++int vnic_dev_close(struct vnic_dev *vdev);
++int vnic_dev_enable_wait(struct vnic_dev *vdev);
++int vnic_dev_disable(struct vnic_dev *vdev);
++int vnic_dev_open(struct vnic_dev *vdev, int arg);
++int vnic_dev_open_done(struct vnic_dev *vdev, int *done);
++int vnic_dev_init(struct vnic_dev *vdev, int arg);
++struct vnic_dev *vnic_dev_alloc_discover(struct vnic_dev *vdev,
++					 void *priv, struct pci_dev *pdev,
++					 struct vnic_dev_bar *bar,
++					 unsigned int num_bars);
++void vnic_dev_set_intr_mode(struct vnic_dev *vdev,
++			    enum vnic_dev_intr_mode intr_mode);
++enum vnic_dev_intr_mode vnic_dev_get_intr_mode(struct vnic_dev *vdev);
++void vnic_dev_unregister(struct vnic_dev *vdev);
++int vnic_dev_cmd_init(struct vnic_dev *vdev, int fallback);
++#endif /* _VNIC_DEV_H_ */
+diff --git a/drivers/scsi/snic/vnic_devcmd.h b/drivers/scsi/snic/vnic_devcmd.h
+new file mode 100644
+index 0000000..d81b4f0
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_devcmd.h
+@@ -0,0 +1,270 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_DEVCMD_H_
++#define _VNIC_DEVCMD_H_
++
++#define _CMD_NBITS      14
++#define _CMD_VTYPEBITS	10
++#define _CMD_FLAGSBITS  6
++#define _CMD_DIRBITS	2
++
++#define _CMD_NMASK      ((1 << _CMD_NBITS)-1)
++#define _CMD_VTYPEMASK  ((1 << _CMD_VTYPEBITS)-1)
++#define _CMD_FLAGSMASK  ((1 << _CMD_FLAGSBITS)-1)
++#define _CMD_DIRMASK    ((1 << _CMD_DIRBITS)-1)
++
++#define _CMD_NSHIFT     0
++#define _CMD_VTYPESHIFT (_CMD_NSHIFT+_CMD_NBITS)
++#define _CMD_FLAGSSHIFT (_CMD_VTYPESHIFT+_CMD_VTYPEBITS)
++#define _CMD_DIRSHIFT   (_CMD_FLAGSSHIFT+_CMD_FLAGSBITS)
++
++/*
++ * Direction bits (from host perspective).
++ */
++#define _CMD_DIR_NONE   0U
++#define _CMD_DIR_WRITE  1U
++#define _CMD_DIR_READ   2U
++#define _CMD_DIR_RW     (_CMD_DIR_WRITE | _CMD_DIR_READ)
++
++/*
++ * Flag bits.
++ */
++#define _CMD_FLAGS_NONE 0U
++#define _CMD_FLAGS_NOWAIT 1U
++
++/*
++ * vNIC type bits.
++ */
++#define _CMD_VTYPE_NONE  0U
++#define _CMD_VTYPE_ENET  1U
++#define _CMD_VTYPE_FC    2U
++#define _CMD_VTYPE_SCSI  4U
++#define _CMD_VTYPE_ALL   (_CMD_VTYPE_ENET | _CMD_VTYPE_FC | _CMD_VTYPE_SCSI)
++
++/*
++ * Used to create cmds..
++*/
++#define _CMDCF(dir, flags, vtype, nr)  \
++	(((dir)   << _CMD_DIRSHIFT) | \
++	((flags) << _CMD_FLAGSSHIFT) | \
++	((vtype) << _CMD_VTYPESHIFT) | \
++	((nr)    << _CMD_NSHIFT))
++#define _CMDC(dir, vtype, nr)    _CMDCF(dir, 0, vtype, nr)
++#define _CMDCNW(dir, vtype, nr)  _CMDCF(dir, _CMD_FLAGS_NOWAIT, vtype, nr)
++
++/*
++ * Used to decode cmds..
++*/
++#define _CMD_DIR(cmd)            (((cmd) >> _CMD_DIRSHIFT) & _CMD_DIRMASK)
++#define _CMD_FLAGS(cmd)          (((cmd) >> _CMD_FLAGSSHIFT) & _CMD_FLAGSMASK)
++#define _CMD_VTYPE(cmd)          (((cmd) >> _CMD_VTYPESHIFT) & _CMD_VTYPEMASK)
++#define _CMD_N(cmd)              (((cmd) >> _CMD_NSHIFT) & _CMD_NMASK)
++
++enum vnic_devcmd_cmd {
++	CMD_NONE                = _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_NONE, 0),
++
++	/* mcpu fw info in mem: (u64)a0=paddr to struct vnic_devcmd_fw_info */
++	CMD_MCPU_FW_INFO        = _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 1),
++
++	/* dev-specific block member:
++	 *    in: (u16)a0=offset,(u8)a1=size
++	 *    out: a0=value */
++	CMD_DEV_SPEC            = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 2),
++
++	/* stats clear */
++	CMD_STATS_CLEAR         = _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 3),
++
++	/* stats dump in mem: (u64)a0=paddr to stats area,
++	 *                    (u16)a1=sizeof stats area */
++	CMD_STATS_DUMP          = _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 4),
++
++	/* nic_cfg in (u32)a0 */
++	CMD_NIC_CFG             = _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 16),
++
++	/* set struct vnic_devcmd_notify buffer in mem:
++	 * in:
++	 *   (u64)a0=paddr to notify (set paddr=0 to unset)
++	 *   (u32)a1 & 0x00000000ffffffff=sizeof(struct vnic_devcmd_notify)
++	 *   (u16)a1 & 0x0000ffff00000000=intr num (-1 for no intr)
++	 * out:
++	 *   (u32)a1 = effective size
++	 */
++	CMD_NOTIFY              = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 21),
++
++	/* initiate open sequence (u32)a0=flags (see CMD_OPENF_*) */
++	CMD_OPEN		= _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 23),
++
++	/* open status:
++	 *    out: a0=0 open complete, a0=1 open in progress */
++	CMD_OPEN_STATUS		= _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 24),
++
++	/* close vnic */
++	CMD_CLOSE		= _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 25),
++
++	/* initialize virtual link: (u32)a0=flags (see CMD_INITF_*) */
++	CMD_INIT		= _CMDCNW(_CMD_DIR_READ, _CMD_VTYPE_ALL, 26),
++
++	/* enable virtual link */
++	CMD_ENABLE		= _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 28),
++
++	/* enable virtual link, waiting variant. */
++	CMD_ENABLE_WAIT		= _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 28),
++
++	/* disable virtual link */
++	CMD_DISABLE		= _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 29),
++
++	/* stats dump all vnics on uplink in mem: (u64)a0=paddr (u32)a1=uif */
++	CMD_STATS_DUMP_ALL	= _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 30),
++
++	/* init status:
++	 *    out: a0=0 init complete, a0=1 init in progress
++	 *         if a0=0, a1=errno */
++	CMD_INIT_STATUS		= _CMDC(_CMD_DIR_READ, _CMD_VTYPE_ALL, 31),
++
++	/* undo initialize of virtual link */
++	CMD_DEINIT		= _CMDCNW(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 34),
++
++	/* check fw capability of a cmd:
++	 * in:  (u32)a0=cmd
++	 * out: (u32)a0=errno, 0:valid cmd, a1=supported VNIC_STF_* bits */
++	CMD_CAPABILITY      = _CMDC(_CMD_DIR_RW, _CMD_VTYPE_ALL, 36),
++
++	/*
++	 * Initialization for the devcmd2 interface.
++	 * in: (u64) a0=host result buffer physical address
++	 * in: (u16) a1=number of entries in result buffer
++	 */
++	CMD_INITIALIZE_DEVCMD2 = _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 57)
++};
++
++/* flags for CMD_OPEN */
++#define CMD_OPENF_OPROM		0x1	/* open coming from option rom */
++
++/* flags for CMD_INIT */
++#define CMD_INITF_DEFAULT_MAC	0x1	/* init with default mac addr */
++
++/* flags for CMD_PACKET_FILTER */
++#define CMD_PFILTER_DIRECTED		0x01
++#define CMD_PFILTER_MULTICAST		0x02
++#define CMD_PFILTER_BROADCAST		0x04
++#define CMD_PFILTER_PROMISCUOUS		0x08
++#define CMD_PFILTER_ALL_MULTICAST	0x10
++
++enum vnic_devcmd_status {
++	STAT_NONE = 0,
++	STAT_BUSY = 1 << 0,	/* cmd in progress */
++	STAT_ERROR = 1 << 1,	/* last cmd caused error (code in a0) */
++};
++
++enum vnic_devcmd_error {
++	ERR_SUCCESS = 0,
++	ERR_EINVAL = 1,
++	ERR_EFAULT = 2,
++	ERR_EPERM = 3,
++	ERR_EBUSY = 4,
++	ERR_ECMDUNKNOWN = 5,
++	ERR_EBADSTATE = 6,
++	ERR_ENOMEM = 7,
++	ERR_ETIMEDOUT = 8,
++	ERR_ELINKDOWN = 9,
++};
++
++struct vnic_devcmd_fw_info {
++	char fw_version[32];
++	char fw_build[32];
++	char hw_version[32];
++	char hw_serial_number[32];
++};
++
++struct vnic_devcmd_notify {
++	u32 csum;		/* checksum over following words */
++
++	u32 link_state;		/* link up == 1 */
++	u32 port_speed;		/* effective port speed (rate limit) */
++	u32 mtu;		/* MTU */
++	u32 msglvl;		/* requested driver msg lvl */
++	u32 uif;		/* uplink interface */
++	u32 status;		/* status bits (see VNIC_STF_*) */
++	u32 error;		/* error code (see ERR_*) for first ERR */
++	u32 link_down_cnt;	/* running count of link down transitions */
++};
++#define VNIC_STF_FATAL_ERR	0x0001	/* fatal fw error */
++
++struct vnic_devcmd_provinfo {
++	u8 oui[3];
++	u8 type;
++	u8 data[0];
++};
++
++/*
++ * Writing cmd register causes STAT_BUSY to get set in status register.
++ * When cmd completes, STAT_BUSY will be cleared.
++ *
++ * If cmd completed successfully STAT_ERROR will be clear
++ * and args registers contain cmd-specific results.
++ *
++ * If cmd error, STAT_ERROR will be set and args[0] contains error code.
++ *
++ * status register is read-only.  While STAT_BUSY is set,
++ * all other register contents are read-only.
++ */
++
++/* Make sizeof(vnic_devcmd) a power-of-2 for I/O BAR. */
++#define VNIC_DEVCMD_NARGS 15
++struct vnic_devcmd {
++	u32 status;			/* RO */
++	u32 cmd;			/* RW */
++	u64 args[VNIC_DEVCMD_NARGS];	/* RW cmd args (little-endian) */
++};
++
++
++/*
++ * Version 2 of the interface.
++ *
++ * Some things are carried over, notably the vnic_devcmd_cmd enum.
++ */
++
++/*
++ * Flags for vnic_devcmd2.flags
++ */
++
++#define DEVCMD2_FNORESULT       0x1     /* Don't copy result to host */
++
++#define VNIC_DEVCMD2_NARGS      VNIC_DEVCMD_NARGS
++struct vnic_devcmd2 {
++	u16 pad;
++	u16 flags;
++	u32 cmd;                /* same command #defines as original */
++	u64 args[VNIC_DEVCMD2_NARGS];
++};
++
++#define VNIC_DEVCMD2_NRESULTS   VNIC_DEVCMD_NARGS
++struct devcmd2_result {
++	u64 results[VNIC_DEVCMD2_NRESULTS];
++	u32 pad;
++	u16 completed_index;    /* into copy WQ */
++	u8  error;              /* same error codes as original */
++	u8  color;              /* 0 or 1 as with completion queues */
++};
++
++#define DEVCMD2_RING_SIZE   32
++#define DEVCMD2_DESC_SIZE   128
++
++#define DEVCMD2_RESULTS_SIZE_MAX   ((1 << 16) - 1)
++
++#endif /* _VNIC_DEVCMD_H_ */
+diff --git a/drivers/scsi/snic/vnic_intr.c b/drivers/scsi/snic/vnic_intr.c
+new file mode 100644
+index 0000000..fbbfd90
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_intr.c
+@@ -0,0 +1,59 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <linux/kernel.h>
++#include <linux/errno.h>
++#include <linux/types.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include "vnic_dev.h"
++#include "vnic_intr.h"
++
++void vnic_intr_free(struct vnic_intr *intr)
++{
++	intr->ctrl = NULL;
++}
++
++int vnic_intr_alloc(struct vnic_dev *vdev, struct vnic_intr *intr,
++	unsigned int index)
++{
++	intr->index = index;
++	intr->vdev = vdev;
++
++	intr->ctrl = vnic_dev_get_res(vdev, RES_TYPE_INTR_CTRL, index);
++	if (!intr->ctrl) {
++		pr_err("Failed to hook INTR[%d].ctrl resource\n",
++			index);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++void vnic_intr_init(struct vnic_intr *intr, unsigned int coalescing_timer,
++	unsigned int coalescing_type, unsigned int mask_on_assertion)
++{
++	iowrite32(coalescing_timer, &intr->ctrl->coalescing_timer);
++	iowrite32(coalescing_type, &intr->ctrl->coalescing_type);
++	iowrite32(mask_on_assertion, &intr->ctrl->mask_on_assertion);
++	iowrite32(0, &intr->ctrl->int_credits);
++}
++
++void vnic_intr_clean(struct vnic_intr *intr)
++{
++	iowrite32(0, &intr->ctrl->int_credits);
++}
+diff --git a/drivers/scsi/snic/vnic_intr.h b/drivers/scsi/snic/vnic_intr.h
+new file mode 100644
+index 0000000..1712db6
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_intr.h
+@@ -0,0 +1,119 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_INTR_H_
++#define _VNIC_INTR_H_
++
++#include <linux/pci.h>
++#include "vnic_dev.h"
++
++/*
++ * These defines avoid symbol clash between fnic and enic (Cisco 10G Eth
++ * Driver) when both are built with CONFIG options =y
++ */
++#define vnic_intr_unmask snic_intr_unmask
++#define vnic_intr_mask snic_intr_mask
++#define vnic_intr_return_credits snic_intr_return_credits
++#define vnic_intr_credits snic_intr_credits
++#define vnic_intr_return_all_credits snic_intr_return_all_credits
++#define vnic_intr_free snic_intr_free
++#define vnic_intr_alloc snic_intr_alloc
++#define vnic_intr_init snic_intr_init
++#define vnic_intr_clean snic_intr_clean
++
++#define VNIC_INTR_TIMER_MAX		0xffff
++
++#define VNIC_INTR_TIMER_TYPE_ABS	0
++#define VNIC_INTR_TIMER_TYPE_QUIET	1
++
++/* Interrupt control */
++struct vnic_intr_ctrl {
++	u32 coalescing_timer;		/* 0x00 */
++	u32 pad0;
++	u32 coalescing_value;		/* 0x08 */
++	u32 pad1;
++	u32 coalescing_type;		/* 0x10 */
++	u32 pad2;
++	u32 mask_on_assertion;		/* 0x18 */
++	u32 pad3;
++	u32 mask;			/* 0x20 */
++	u32 pad4;
++	u32 int_credits;		/* 0x28 */
++	u32 pad5;
++	u32 int_credit_return;		/* 0x30 */
++	u32 pad6;
++};
++
++struct vnic_intr {
++	unsigned int index;
++	struct vnic_dev *vdev;
++	struct vnic_intr_ctrl __iomem *ctrl;	/* memory-mapped */
++};
 +
 +static inline void
-+snic_icmnd_init(struct snic_host_req *req, u32 cmnd_id, u32 host_id, u64 ctx,
-+		u16 flags, u64 tgt_id, u8 *lun, u8 *scsi_cdb, u8 cdb_len,
-+		u32 data_len, u16 sg_cnt, u64 sgl_addr, u64 sns_addr_pa,
-+		u32 sense_len)
++vnic_intr_unmask(struct vnic_intr *intr)
 +{
-+	snic_io_hdr_enc(&req->hdr, SNIC_REQ_ICMND, 0, cmnd_id, host_id, sg_cnt,
-+			ctx);
-+
-+	req->u.icmnd.flags = flags;
-+	req->u.icmnd.tgt_id = tgt_id;
-+	memcpy(&req->u.icmnd.lun_id, lun, LUN_ADDR_LEN);
-+	req->u.icmnd.cdb_len = cdb_len;
-+	memset(req->u.icmnd.cdb, 0, SNIC_CDB_LEN);
-+	memcpy(req->u.icmnd.cdb, scsi_cdb, cdb_len);
-+	req->u.icmnd.data_len = data_len;
-+	req->u.icmnd.sg_addr = sgl_addr;
-+	req->u.icmnd.sense_len = sense_len;
-+	req->u.icmnd.sense_addr = sns_addr_pa;
++	iowrite32(0, &intr->ctrl->mask);
 +}
 +
 +static inline void
-+snic_itmf_init(struct snic_host_req *req, u32 cmnd_id, u32 host_id, u64 ctx,
-+	       u16 flags, u32 req_id, u64 tgt_id, u8 *lun, u8 tm_type)
++vnic_intr_mask(struct vnic_intr *intr)
 +{
-+	snic_io_hdr_enc(&req->hdr, SNIC_REQ_ITMF, 0, cmnd_id, host_id, 0, ctx);
-+
-+	req->u.itmf.tm_type = tm_type;
-+	req->u.itmf.flags = flags;
-+	req->u.itmf.req_id = req_id; /* valid only in abort, clear task */
-+	req->u.itmf.tgt_id = tgt_id;
-+	memcpy(&req->u.itmf.lun_id, lun, LUN_ADDR_LEN);
++	iowrite32(1, &intr->ctrl->mask);
 +}
 +
 +static inline void
-+snic_queue_wq_eth_desc(struct vnic_wq *wq,
-+		       void *os_buf,
-+		       dma_addr_t dma_addr,
-+		       unsigned int len,
-+		       int vlan_tag_insert,
-+		       unsigned int vlan_tag,
-+		       int cq_entry)
++vnic_intr_return_credits(struct vnic_intr *intr,
++			 unsigned int credits,
++			 int unmask,
++			 int reset_timer)
 +{
-+	struct wq_enet_desc *desc = vnic_wq_next_desc(wq);
++#define VNIC_INTR_UNMASK_SHIFT		16
++#define VNIC_INTR_RESET_TIMER_SHIFT	17
 +
-+	wq_enet_desc_enc(desc,
-+			(u64)dma_addr | VNIC_PADDR_TARGET,
-+			(u16)len,
-+			0, /* mss_or_csum_offset */
-+			0, /* fc_eof */
-+			0, /* offload mode */
-+			1, /* eop */
-+			(u8)cq_entry,
-+			0, /* fcoe_encap */
-+			(u8)vlan_tag_insert,
-+			(u16)vlan_tag,
-+			0 /* loopback */);
++	u32 int_credit_return = (credits & 0xffff) |
++		(unmask ? (1 << VNIC_INTR_UNMASK_SHIFT) : 0) |
++		(reset_timer ? (1 << VNIC_INTR_RESET_TIMER_SHIFT) : 0);
 +
-+	vnic_wq_post(wq, os_buf, dma_addr, len, 1, 1);
++	iowrite32(int_credit_return, &intr->ctrl->int_credit_return);
 +}
 +
-+struct snic;
++static inline unsigned int
++vnic_intr_credits(struct vnic_intr *intr)
++{
++	return ioread32(&intr->ctrl->int_credits);
++}
 +
-+int snic_get_vnic_config(struct snic *);
-+int snic_alloc_vnic_res(struct snic *);
-+void snic_free_vnic_res(struct snic *);
-+void snic_get_res_counts(struct snic *);
-+void snic_log_q_error(struct snic *);
-+int snic_get_vnic_resources_size(struct snic *);
-+#endif /* __SNIC_RES_H */
++static inline void
++vnic_intr_return_all_credits(struct vnic_intr *intr)
++{
++	unsigned int credits = vnic_intr_credits(intr);
++	int unmask = 1;
++	int reset_timer = 1;
++
++	vnic_intr_return_credits(intr, credits, unmask, reset_timer);
++}
++
++void vnic_intr_free(struct vnic_intr *);
++int vnic_intr_alloc(struct vnic_dev *, struct vnic_intr *, unsigned int);
++void vnic_intr_init(struct vnic_intr *intr,
++		    unsigned int coalescing_timer,
++		    unsigned int coalescing_type,
++		    unsigned int mask_on_assertion);
++void vnic_intr_clean(struct vnic_intr *);
++
++#endif /* _VNIC_INTR_H_ */
+diff --git a/drivers/scsi/snic/vnic_resource.h b/drivers/scsi/snic/vnic_resource.h
+new file mode 100644
+index 0000000..9713d68
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_resource.h
+@@ -0,0 +1,68 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_RESOURCE_H_
++#define _VNIC_RESOURCE_H_
++
++#define VNIC_RES_MAGIC		0x766E6963L	/* 'vnic' */
++#define VNIC_RES_VERSION	0x00000000L
++
++/* vNIC resource types */
++enum vnic_res_type {
++	RES_TYPE_EOL,			/* End-of-list */
++	RES_TYPE_WQ,			/* Work queues */
++	RES_TYPE_RQ,			/* Receive queues */
++	RES_TYPE_CQ,			/* Completion queues */
++	RES_TYPE_RSVD1,
++	RES_TYPE_NIC_CFG,		/* Enet NIC config registers */
++	RES_TYPE_RSVD2,
++	RES_TYPE_RSVD3,
++	RES_TYPE_RSVD4,
++	RES_TYPE_RSVD5,
++	RES_TYPE_INTR_CTRL,		/* Interrupt ctrl table */
++	RES_TYPE_INTR_TABLE,		/* MSI/MSI-X Interrupt table */
++	RES_TYPE_INTR_PBA,		/* MSI/MSI-X PBA table */
++	RES_TYPE_INTR_PBA_LEGACY,	/* Legacy intr status */
++	RES_TYPE_RSVD6,
++	RES_TYPE_RSVD7,
++	RES_TYPE_DEVCMD,		/* Device command region */
++	RES_TYPE_PASS_THRU_PAGE,	/* Pass-thru page */
++	RES_TYPE_SUBVNIC,		/* subvnic resource type */
++	RES_TYPE_MQ_WQ,			/* MQ Work queues */
++	RES_TYPE_MQ_RQ,			/* MQ Receive queues */
++	RES_TYPE_MQ_CQ,			/* MQ Completion queues */
++	RES_TYPE_DEPRECATED1,		/* Old version of devcmd 2 */
++	RES_TYPE_DEPRECATED2,		/* Old version of devcmd 2 */
++	RES_TYPE_DEVCMD2,		/* Device control region */
++
++	RES_TYPE_MAX,			/* Count of resource types */
++};
++
++struct vnic_resource_header {
++	u32 magic;
++	u32 version;
++};
++
++struct vnic_resource {
++	u8 type;
++	u8 bar;
++	u8 pad[2];
++	u32 bar_offset;
++	u32 count;
++};
++
++#endif /* _VNIC_RESOURCE_H_ */
+diff --git a/drivers/scsi/snic/vnic_snic.h b/drivers/scsi/snic/vnic_snic.h
+new file mode 100644
+index 0000000..514d39f
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_snic.h
+@@ -0,0 +1,54 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_SNIC_H_
++#define _VNIC_SNIC_H_
++
++#define VNIC_SNIC_WQ_DESCS_MIN              64
++#define VNIC_SNIC_WQ_DESCS_MAX              1024
++
++#define VNIC_SNIC_MAXDATAFIELDSIZE_MIN      256
++#define VNIC_SNIC_MAXDATAFIELDSIZE_MAX      2112
++
++#define VNIC_SNIC_IO_THROTTLE_COUNT_MIN     1
++#define VNIC_SNIC_IO_THROTTLE_COUNT_MAX     1024
++
++#define VNIC_SNIC_PORT_DOWN_TIMEOUT_MIN     0
++#define VNIC_SNIC_PORT_DOWN_TIMEOUT_MAX     240000
++
++#define VNIC_SNIC_PORT_DOWN_IO_RETRIES_MIN  0
++#define VNIC_SNIC_PORT_DOWN_IO_RETRIES_MAX  255
++
++#define VNIC_SNIC_LUNS_PER_TARGET_MIN       1
++#define VNIC_SNIC_LUNS_PER_TARGET_MAX       1024
++
++/* Device-specific region: scsi configuration */
++struct vnic_snic_config {
++	u32 flags;
++	u32 wq_enet_desc_count;
++	u32 io_throttle_count;
++	u32 port_down_timeout;
++	u32 port_down_io_retries;
++	u32 luns_per_tgt;
++	u16 maxdatafieldsize;
++	u16 intr_timer;
++	u8 intr_timer_type;
++	u8 _resvd2;
++	u8 xpt_type;
++	u8 hid;
++};
++#endif /* _VNIC_SNIC_H_ */
+diff --git a/drivers/scsi/snic/vnic_stats.h b/drivers/scsi/snic/vnic_stats.h
+new file mode 100644
+index 0000000..370a37c
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_stats.h
+@@ -0,0 +1,68 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_STATS_H_
++#define _VNIC_STATS_H_
++
++/* Tx statistics */
++struct vnic_tx_stats {
++	u64 tx_frames_ok;
++	u64 tx_unicast_frames_ok;
++	u64 tx_multicast_frames_ok;
++	u64 tx_broadcast_frames_ok;
++	u64 tx_bytes_ok;
++	u64 tx_unicast_bytes_ok;
++	u64 tx_multicast_bytes_ok;
++	u64 tx_broadcast_bytes_ok;
++	u64 tx_drops;
++	u64 tx_errors;
++	u64 tx_tso;
++	u64 rsvd[16];
++};
++
++/* Rx statistics */
++struct vnic_rx_stats {
++	u64 rx_frames_ok;
++	u64 rx_frames_total;
++	u64 rx_unicast_frames_ok;
++	u64 rx_multicast_frames_ok;
++	u64 rx_broadcast_frames_ok;
++	u64 rx_bytes_ok;
++	u64 rx_unicast_bytes_ok;
++	u64 rx_multicast_bytes_ok;
++	u64 rx_broadcast_bytes_ok;
++	u64 rx_drop;
++	u64 rx_no_bufs;
++	u64 rx_errors;
++	u64 rx_rss;
++	u64 rx_crc_errors;
++	u64 rx_frames_64;
++	u64 rx_frames_127;
++	u64 rx_frames_255;
++	u64 rx_frames_511;
++	u64 rx_frames_1023;
++	u64 rx_frames_1518;
++	u64 rx_frames_to_max;
++	u64 rsvd[16];
++};
++
++struct vnic_stats {
++	struct vnic_tx_stats tx;
++	struct vnic_rx_stats rx;
++};
++
++#endif /* _VNIC_STATS_H_ */
+diff --git a/drivers/scsi/snic/vnic_wq.c b/drivers/scsi/snic/vnic_wq.c
+new file mode 100644
+index 0000000..b323c10
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_wq.c
+@@ -0,0 +1,236 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#include <linux/errno.h>
++#include <linux/types.h>
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include <linux/slab.h>
++#include "vnic_dev.h"
++#include "vnic_wq.h"
++
++static inline int vnic_wq_get_ctrl(struct vnic_dev *vdev, struct vnic_wq *wq,
++	unsigned int index, enum vnic_res_type res_type)
++{
++	wq->ctrl = vnic_dev_get_res(vdev, res_type, index);
++	if (!wq->ctrl)
++		return -EINVAL;
++
++	return 0;
++}
++
++static inline int vnic_wq_alloc_ring(struct vnic_dev *vdev, struct vnic_wq *wq,
++	unsigned int index, unsigned int desc_count, unsigned int desc_size)
++{
++	return vnic_dev_alloc_desc_ring(vdev, &wq->ring, desc_count, desc_size);
++}
++
++static int vnic_wq_alloc_bufs(struct vnic_wq *wq)
++{
++	struct vnic_wq_buf *buf;
++	unsigned int i, j, count = wq->ring.desc_count;
++	unsigned int blks = VNIC_WQ_BUF_BLKS_NEEDED(count);
++
++	for (i = 0; i < blks; i++) {
++		wq->bufs[i] = kzalloc(VNIC_WQ_BUF_BLK_SZ, GFP_ATOMIC);
++		if (!wq->bufs[i]) {
++			pr_err("Failed to alloc wq_bufs\n");
++
++			return -ENOMEM;
++		}
++	}
++
++	for (i = 0; i < blks; i++) {
++		buf = wq->bufs[i];
++		for (j = 0; j < VNIC_WQ_BUF_DFLT_BLK_ENTRIES; j++) {
++			buf->index = i * VNIC_WQ_BUF_DFLT_BLK_ENTRIES + j;
++			buf->desc = (u8 *)wq->ring.descs +
++				wq->ring.desc_size * buf->index;
++			if (buf->index + 1 == count) {
++				buf->next = wq->bufs[0];
++				break;
++			} else if (j + 1 == VNIC_WQ_BUF_DFLT_BLK_ENTRIES) {
++				buf->next = wq->bufs[i + 1];
++			} else {
++				buf->next = buf + 1;
++				buf++;
++			}
++		}
++	}
++
++	wq->to_use = wq->to_clean = wq->bufs[0];
++
++	return 0;
++}
++
++void vnic_wq_free(struct vnic_wq *wq)
++{
++	struct vnic_dev *vdev;
++	unsigned int i;
++
++	vdev = wq->vdev;
++
++	vnic_dev_free_desc_ring(vdev, &wq->ring);
++
++	for (i = 0; i < VNIC_WQ_BUF_BLKS_MAX; i++) {
++		kfree(wq->bufs[i]);
++		wq->bufs[i] = NULL;
++	}
++
++	wq->ctrl = NULL;
++
++}
++
++int vnic_wq_devcmd2_alloc(struct vnic_dev *vdev, struct vnic_wq *wq,
++	unsigned int desc_count, unsigned int desc_size)
++{
++	int err;
++
++	wq->index = 0;
++	wq->vdev = vdev;
++
++	err = vnic_wq_get_ctrl(vdev, wq, 0, RES_TYPE_DEVCMD2);
++	if (err) {
++		pr_err("Failed to get devcmd2 resource\n");
++
++		return err;
++	}
++
++	vnic_wq_disable(wq);
++
++	err = vnic_wq_alloc_ring(vdev, wq, 0, desc_count, desc_size);
++	if (err)
++		return err;
++
++	return 0;
++}
++
++int vnic_wq_alloc(struct vnic_dev *vdev, struct vnic_wq *wq, unsigned int index,
++	unsigned int desc_count, unsigned int desc_size)
++{
++	int err;
++
++	wq->index = index;
++	wq->vdev = vdev;
++
++	err = vnic_wq_get_ctrl(vdev, wq, index, RES_TYPE_WQ);
++	if (err) {
++		pr_err("Failed to hook WQ[%d] resource\n", index);
++
++		return err;
++	}
++
++	vnic_wq_disable(wq);
++
++	err = vnic_wq_alloc_ring(vdev, wq, index, desc_count, desc_size);
++	if (err)
++		return err;
++
++	err = vnic_wq_alloc_bufs(wq);
++	if (err) {
++		vnic_wq_free(wq);
++
++		return err;
++	}
++
++	return 0;
++}
++
++void vnic_wq_init_start(struct vnic_wq *wq, unsigned int cq_index,
++	unsigned int fetch_index, unsigned int posted_index,
++	unsigned int error_interrupt_enable,
++	unsigned int error_interrupt_offset)
++{
++	u64 paddr;
++	unsigned int count = wq->ring.desc_count;
++
++	paddr = (u64)wq->ring.base_addr | VNIC_PADDR_TARGET;
++	writeq(paddr, &wq->ctrl->ring_base);
++	iowrite32(count, &wq->ctrl->ring_size);
++	iowrite32(fetch_index, &wq->ctrl->fetch_index);
++	iowrite32(posted_index, &wq->ctrl->posted_index);
++	iowrite32(cq_index, &wq->ctrl->cq_index);
++	iowrite32(error_interrupt_enable, &wq->ctrl->error_interrupt_enable);
++	iowrite32(error_interrupt_offset, &wq->ctrl->error_interrupt_offset);
++	iowrite32(0, &wq->ctrl->error_status);
++
++	wq->to_use = wq->to_clean =
++		&wq->bufs[fetch_index / VNIC_WQ_BUF_BLK_ENTRIES(count)]
++			[fetch_index % VNIC_WQ_BUF_BLK_ENTRIES(count)];
++}
++
++void vnic_wq_init(struct vnic_wq *wq, unsigned int cq_index,
++	unsigned int error_interrupt_enable,
++	unsigned int error_interrupt_offset)
++{
++	vnic_wq_init_start(wq, cq_index, 0, 0, error_interrupt_enable,
++			   error_interrupt_offset);
++}
++
++unsigned int vnic_wq_error_status(struct vnic_wq *wq)
++{
++	return ioread32(&wq->ctrl->error_status);
++}
++
++void vnic_wq_enable(struct vnic_wq *wq)
++{
++	iowrite32(1, &wq->ctrl->enable);
++}
++
++int vnic_wq_disable(struct vnic_wq *wq)
++{
++	unsigned int wait;
++
++	iowrite32(0, &wq->ctrl->enable);
++
++	/* Wait for HW to ACK disable request */
++	for (wait = 0; wait < 100; wait++) {
++		if (!(ioread32(&wq->ctrl->running)))
++			return 0;
++		udelay(1);
++	}
++
++	pr_err("Failed to disable WQ[%d]\n", wq->index);
++
++	return -ETIMEDOUT;
++}
++
++void vnic_wq_clean(struct vnic_wq *wq,
++	void (*buf_clean)(struct vnic_wq *wq, struct vnic_wq_buf *buf))
++{
++	struct vnic_wq_buf *buf;
++
++	BUG_ON(ioread32(&wq->ctrl->enable));
++
++	buf = wq->to_clean;
++
++	while (vnic_wq_desc_used(wq) > 0) {
++
++		(*buf_clean)(wq, buf);
++
++		buf = wq->to_clean = buf->next;
++		wq->ring.desc_avail++;
++	}
++
++	wq->to_use = wq->to_clean = wq->bufs[0];
++
++	iowrite32(0, &wq->ctrl->fetch_index);
++	iowrite32(0, &wq->ctrl->posted_index);
++	iowrite32(0, &wq->ctrl->error_status);
++
++	vnic_dev_clear_desc_ring(&wq->ring);
++}
+diff --git a/drivers/scsi/snic/vnic_wq.h b/drivers/scsi/snic/vnic_wq.h
+new file mode 100644
+index 0000000..843e9fd
+--- /dev/null
++++ b/drivers/scsi/snic/vnic_wq.h
+@@ -0,0 +1,187 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _VNIC_WQ_H_
++#define _VNIC_WQ_H_
++
++#include <linux/pci.h>
++#include "vnic_dev.h"
++#include "vnic_cq.h"
++
++/*
++ * These defines avoid symbol clash between fnic and enic (Cisco 10G Eth
++ * Driver) when both are built with CONFIG options =y
++ */
++#define vnic_wq_desc_avail snic_wq_desc_avail
++#define vnic_wq_desc_used snic_wq_desc_used
++#define vnic_wq_next_desc fni_cwq_next_desc
++#define vnic_wq_post snic_wq_post
++#define vnic_wq_service snic_wq_service
++#define vnic_wq_free snic_wq_free
++#define vnic_wq_alloc snic_wq_alloc
++#define vnic_wq_init snic_wq_init
++#define vnic_wq_error_status snic_wq_error_status
++#define vnic_wq_enable snic_wq_enable
++#define vnic_wq_disable snic_wq_disable
++#define vnic_wq_clean snic_wq_clean
++
++/* Work queue control */
++struct vnic_wq_ctrl {
++	u64 ring_base;			/* 0x00 */
++	u32 ring_size;			/* 0x08 */
++	u32 pad0;
++	u32 posted_index;		/* 0x10 */
++	u32 pad1;
++	u32 cq_index;			/* 0x18 */
++	u32 pad2;
++	u32 enable;			/* 0x20 */
++	u32 pad3;
++	u32 running;			/* 0x28 */
++	u32 pad4;
++	u32 fetch_index;		/* 0x30 */
++	u32 pad5;
++	u32 dca_value;			/* 0x38 */
++	u32 pad6;
++	u32 error_interrupt_enable;	/* 0x40 */
++	u32 pad7;
++	u32 error_interrupt_offset;	/* 0x48 */
++	u32 pad8;
++	u32 error_status;		/* 0x50 */
++	u32 pad9;
++};
++
++struct vnic_wq_buf {
++	struct vnic_wq_buf *next;
++	dma_addr_t dma_addr;
++	void *os_buf;
++	unsigned int len;
++	unsigned int index;
++	int sop;
++	void *desc;
++};
++
++/* Break the vnic_wq_buf allocations into blocks of 64 entries */
++#define VNIC_WQ_BUF_MIN_BLK_ENTRIES 32
++#define VNIC_WQ_BUF_DFLT_BLK_ENTRIES 64
++#define VNIC_WQ_BUF_BLK_ENTRIES(entries) \
++	((unsigned int)(entries < VNIC_WQ_BUF_DFLT_BLK_ENTRIES) ? \
++		VNIC_WQ_BUF_MIN_BLK_ENTRIES : VNIC_WQ_BUF_DFLT_BLK_ENTRIES)
++#define VNIC_WQ_BUF_BLK_SZ \
++	(VNIC_WQ_BUF_DFLT_BLK_ENTRIES * sizeof(struct vnic_wq_buf))
++#define VNIC_WQ_BUF_BLKS_NEEDED(entries) \
++	DIV_ROUND_UP(entries, VNIC_WQ_BUF_DFLT_BLK_ENTRIES)
++#define VNIC_WQ_BUF_BLKS_NEEDED(entries) \
++	DIV_ROUND_UP(entries, VNIC_WQ_BUF_DFLT_BLK_ENTRIES)
++#define VNIC_WQ_BUF_BLKS_MAX VNIC_WQ_BUF_BLKS_NEEDED(4096)
++
++struct vnic_wq {
++	unsigned int index;
++	struct vnic_dev *vdev;
++	struct vnic_wq_ctrl __iomem *ctrl;	/* memory-mapped */
++	struct vnic_dev_ring ring;
++	struct vnic_wq_buf *bufs[VNIC_WQ_BUF_BLKS_MAX];
++	struct vnic_wq_buf *to_use;
++	struct vnic_wq_buf *to_clean;
++	unsigned int pkts_outstanding;
++};
++
++static inline unsigned int vnic_wq_desc_avail(struct vnic_wq *wq)
++{
++	/* how many does SW own? */
++	return wq->ring.desc_avail;
++}
++
++static inline unsigned int vnic_wq_desc_used(struct vnic_wq *wq)
++{
++	/* how many does HW own? */
++	return wq->ring.desc_count - wq->ring.desc_avail - 1;
++}
++
++static inline void *vnic_wq_next_desc(struct vnic_wq *wq)
++{
++	return wq->to_use->desc;
++}
++
++static inline void vnic_wq_post(struct vnic_wq *wq,
++	void *os_buf, dma_addr_t dma_addr,
++	unsigned int len, int sop, int eop)
++{
++	struct vnic_wq_buf *buf = wq->to_use;
++
++	buf->sop = sop;
++	buf->os_buf = eop ? os_buf : NULL;
++	buf->dma_addr = dma_addr;
++	buf->len = len;
++
++	buf = buf->next;
++	if (eop) {
++		/* Adding write memory barrier prevents compiler and/or CPU
++		 * reordering, thus avoiding descriptor posting before
++		 * descriptor is initialized. Otherwise, hardware can read
++		 * stale descriptor fields.
++		 */
++		wmb();
++		iowrite32(buf->index, &wq->ctrl->posted_index);
++	}
++	wq->to_use = buf;
++
++	wq->ring.desc_avail--;
++}
++
++static inline void vnic_wq_service(struct vnic_wq *wq,
++	struct cq_desc *cq_desc, u16 completed_index,
++	void (*buf_service)(struct vnic_wq *wq,
++	struct cq_desc *cq_desc, struct vnic_wq_buf *buf, void *opaque),
++	void *opaque)
++{
++	struct vnic_wq_buf *buf;
++
++	buf = wq->to_clean;
++	while (1) {
++
++		(*buf_service)(wq, cq_desc, buf, opaque);
++
++		wq->ring.desc_avail++;
++
++		wq->to_clean = buf->next;
++
++		if (buf->index == completed_index)
++			break;
++
++		buf = wq->to_clean;
++	}
++}
++
++void vnic_wq_free(struct vnic_wq *wq);
++int vnic_wq_alloc(struct vnic_dev *vdev, struct vnic_wq *wq, unsigned int index,
++	unsigned int desc_count, unsigned int desc_size);
++int vnic_wq_devcmd2_alloc(struct vnic_dev *vdev, struct vnic_wq *wq,
++		unsigned int desc_count, unsigned int desc_size);
++void vnic_wq_init_start(struct vnic_wq *wq, unsigned int cq_index,
++		unsigned int fetch_index, unsigned int post_index,
++		unsigned int error_interrupt_enable,
++		unsigned int error_interrupt_offset);
++
++void vnic_wq_init(struct vnic_wq *wq, unsigned int cq_index,
++	unsigned int error_interrupt_enable,
++	unsigned int error_interrupt_offset);
++unsigned int vnic_wq_error_status(struct vnic_wq *wq);
++void vnic_wq_enable(struct vnic_wq *wq);
++int vnic_wq_disable(struct vnic_wq *wq);
++void vnic_wq_clean(struct vnic_wq *wq,
++	void (*buf_clean)(struct vnic_wq *wq, struct vnic_wq_buf *buf));
++#endif /* _VNIC_WQ_H_ */
+diff --git a/drivers/scsi/snic/wq_enet_desc.h b/drivers/scsi/snic/wq_enet_desc.h
+new file mode 100644
+index 0000000..2caaf82
+--- /dev/null
++++ b/drivers/scsi/snic/wq_enet_desc.h
+@@ -0,0 +1,91 @@
++/*
++ * Copyright 2014 Cisco Systems, Inc.  All rights reserved.
++ *
++ * This program is free software; you may redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
++ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
++ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++#ifndef _WQ_ENET_DESC_H_
++#define _WQ_ENET_DESC_H_
++
++/* Ethernet work queue descriptor: 16B */
++struct wq_enet_desc {
++	u64 address;
++	u16 length;
++	u16 mss_loopback;
++	u16 header_length_flags;
++	u16 vlan_tag;
++};
++
++#define WQ_ENET_ADDR_BITS		64
++#define WQ_ENET_LEN_BITS		14
++#define WQ_ENET_LEN_MASK		((1 << WQ_ENET_LEN_BITS) - 1)
++#define WQ_ENET_MSS_BITS		14
++#define WQ_ENET_MSS_MASK		((1 << WQ_ENET_MSS_BITS) - 1)
++#define WQ_ENET_MSS_SHIFT		2
++#define WQ_ENET_LOOPBACK_SHIFT		1
++#define WQ_ENET_HDRLEN_BITS		10
++#define WQ_ENET_HDRLEN_MASK		((1 << WQ_ENET_HDRLEN_BITS) - 1)
++#define WQ_ENET_FLAGS_OM_BITS		2
++#define WQ_ENET_FLAGS_OM_MASK		((1 << WQ_ENET_FLAGS_OM_BITS) - 1)
++#define WQ_ENET_FLAGS_EOP_SHIFT		12
++#define WQ_ENET_FLAGS_CQ_ENTRY_SHIFT	13
++#define WQ_ENET_FLAGS_FCOE_ENCAP_SHIFT	14
++#define WQ_ENET_FLAGS_VLAN_TAG_INSERT_SHIFT	15
++
++#define WQ_ENET_OFFLOAD_MODE_CSUM	0
++#define WQ_ENET_OFFLOAD_MODE_RESERVED	1
++#define WQ_ENET_OFFLOAD_MODE_CSUM_L4	2
++#define WQ_ENET_OFFLOAD_MODE_TSO	3
++
++static inline void wq_enet_desc_enc(struct wq_enet_desc *desc,
++	u64 address, u16 length, u16 mss, u16 header_length,
++	u8 offload_mode, u8 eop, u8 cq_entry, u8 fcoe_encap,
++	u8 vlan_tag_insert, u16 vlan_tag, u8 loopback)
++{
++	desc->address = address;
++	desc->length = length & WQ_ENET_LEN_MASK;
++	desc->mss_loopback = (mss & WQ_ENET_MSS_MASK) <<
++		WQ_ENET_MSS_SHIFT | (loopback & 1) << WQ_ENET_LOOPBACK_SHIFT;
++	desc->header_length_flags = (header_length & WQ_ENET_HDRLEN_MASK) |
++		(offload_mode & WQ_ENET_FLAGS_OM_MASK) << WQ_ENET_HDRLEN_BITS |
++		(eop & 1) << WQ_ENET_FLAGS_EOP_SHIFT |
++		(cq_entry & 1) << WQ_ENET_FLAGS_CQ_ENTRY_SHIFT |
++		(fcoe_encap & 1) << WQ_ENET_FLAGS_FCOE_ENCAP_SHIFT |
++		(vlan_tag_insert & 1) << WQ_ENET_FLAGS_VLAN_TAG_INSERT_SHIFT;
++	desc->vlan_tag = vlan_tag;
++}
++
++static inline void wq_enet_desc_dec(struct wq_enet_desc *desc,
++	u64 *address, u16 *length, u16 *mss, u16 *header_length,
++	u8 *offload_mode, u8 *eop, u8 *cq_entry, u8 *fcoe_encap,
++	u8 *vlan_tag_insert, u16 *vlan_tag, u8 *loopback)
++{
++	*address = desc->address;
++	*length = desc->length & WQ_ENET_LEN_MASK;
++	*mss = (desc->mss_loopback >> WQ_ENET_MSS_SHIFT) & WQ_ENET_MSS_MASK;
++	*loopback = (u8)((desc->mss_loopback >> WQ_ENET_LOOPBACK_SHIFT) & 1);
++	*header_length = desc->header_length_flags & WQ_ENET_HDRLEN_MASK;
++	*offload_mode = (u8)((desc->header_length_flags >>
++		WQ_ENET_HDRLEN_BITS) & WQ_ENET_FLAGS_OM_MASK);
++	*eop = (u8)((desc->header_length_flags >> WQ_ENET_FLAGS_EOP_SHIFT) & 1);
++	*cq_entry = (u8)((desc->header_length_flags >>
++		WQ_ENET_FLAGS_CQ_ENTRY_SHIFT) & 1);
++	*fcoe_encap = (u8)((desc->header_length_flags >>
++		WQ_ENET_FLAGS_FCOE_ENCAP_SHIFT) & 1);
++	*vlan_tag_insert = (u8)((desc->header_length_flags >>
++		WQ_ENET_FLAGS_VLAN_TAG_INSERT_SHIFT) & 1);
++	*vlan_tag = desc->vlan_tag;
++}
++
++#endif /* _WQ_ENET_DESC_H_ */
 -- 
 1.8.5.4
 
