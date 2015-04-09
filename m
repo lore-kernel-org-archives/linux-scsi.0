@@ -1,85 +1,130 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2][v2] blk-plug: don't flush nested plug lists
-Date: Thu, 9 Apr 2015 10:54:23 +1000
-Message-ID: <20150409005423.GD13731@dastard>
-References: <1428347694-17704-1-git-send-email-jmoyer@redhat.com>
- <1428347694-17704-2-git-send-email-jmoyer@redhat.com>
- <x49wq1nrcoe.fsf_-_@segfault.boston.devel.redhat.com>
- <20150408230203.GG15810@dastard>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 2/2] target/rd: Don't pass imcomplete scatterlist
+ entries to sbc_dif_verify_*
+Date: Wed, 08 Apr 2015 23:41:01 -0700
+Message-ID: <1428561661.25972.13.camel@haakon3.risingtidesystems.com>
+References: <1428245979-5432-1-git-send-email-akinobu.mita@gmail.com>
+	 <1428245979-5432-2-git-send-email-akinobu.mita@gmail.com>
+	 <1428470039.18203.29.camel@haakon3.risingtidesystems.com>
+	 <CAC5umyh7HrDZekc6uhM_jvybyL3mYzG=1DaHDHngOPLM4CuvSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150408230203.GG15810@dastard>
-Sender: target-devel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, xen-devel@lists.xenproject.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56666 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937AbbDIGlD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 02:41:03 -0400
+In-Reply-To: <CAC5umyh7HrDZekc6uhM_jvybyL3mYzG=1DaHDHngOPLM4CuvSw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: target-devel@vger.kernel.org, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-[ Sending again with a trimmed CC list to just the lists. Jeff - cc
-lists that large get blocked by mailing lists... ]
+On Wed, 2015-04-08 at 23:25 +0900, Akinobu Mita wrote:
+> 2015-04-08 14:13 GMT+09:00 Nicholas A. Bellinger <nab@linux-iscsi.org>:
+> > On Sun, 2015-04-05 at 23:59 +0900, Akinobu Mita wrote:
+> >> The scatterlist for protection information which is passed to
+> >> sbc_dif_verify_read() or sbc_dif_verify_write() requires that
+> >> neighboring scatterlist entries are contiguous or chained so that they
+> >> can be iterated by sg_next().
+> >>
+> >> However, the protection information for RD-MCP backends could be located
+> >> in the multiple scatterlist arrays when the ramdisk space is too large.
+> >> So if the read/write request straddles this boundary, sbc_dif_verify_read()
+> >> or sbc_dif_verify_write() can't iterate all scatterlist entries.
+> >>
+> >> This fixes it by allocating temporary scatterlist if it is needed.
+> >>
+> >> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> >> Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> >> Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+> >> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> >> Cc: Christoph Hellwig <hch@lst.de>
+> >> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+> >> Cc: target-devel@vger.kernel.org
+> >> Cc: linux-scsi@vger.kernel.org
+> >> ---
+> >> * No change from v1
+> >>
+> >>  drivers/target/target_core_rd.c | 39 +++++++++++++++++++++++++++++++++++----
+> >>  1 file changed, 35 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+> >> index ac5e8d2..6e25eaa 100644
+> >> --- a/drivers/target/target_core_rd.c
+> >> +++ b/drivers/target/target_core_rd.c
+> >> @@ -390,11 +390,12 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
+> >>       struct se_device *se_dev = cmd->se_dev;
+> >>       struct rd_dev *dev = RD_DEV(se_dev);
+> >>       struct rd_dev_sg_table *prot_table;
+> >> +     bool need_to_release = false;
+> >>       struct scatterlist *prot_sg;
+> >>       u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+> >> -     u32 prot_offset, prot_page;
+> >> +     u32 prot_offset, prot_page, prot_npages;
+> >>       u64 tmp;
+> >> -     sense_reason_t rc;
+> >> +     sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> >>
+> >>       tmp = cmd->t_task_lba * se_dev->prot_length;
+> >>       prot_offset = do_div(tmp, PAGE_SIZE);
+> >> @@ -404,10 +405,40 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
+> >>       if (!prot_table)
+> >>               return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> >>
+> >> -     prot_sg = &prot_table->sg_table[prot_page -
+> >> -                                     prot_table->page_start_offset];
+> >> +     prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
+> >> +                                PAGE_SIZE);
+> >> +
+> >> +     /* prot pages straddles multiple scatterlist tables */
+> >> +     if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
+> >> +             int i;
+> >> +
+> >> +             prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
+> >> +             if (!prot_sg)
+> >> +                     return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> >> +
+> >> +             need_to_release = true;
+> >> +             sg_init_table(prot_sg, prot_npages);
+> >> +
+> >> +             for (i = 0; i < prot_npages; i++) {
+> >> +                     if (prot_page + i > prot_table->page_end_offset) {
+> >> +                             prot_table = rd_get_prot_table(dev,
+> >> +                                                             prot_page + i);
+> >> +                             if (!prot_table)
+> >> +                                     goto out;
+> >> +                             sg_unmark_end(&prot_sg[i - 1]);
+> >> +                     }
+> >> +                     prot_sg[i] = prot_table->sg_table[prot_page + i -
+> >> +                                             prot_table->page_start_offset];
+> >> +             }
+> >> +     } else {
+> >> +             prot_sg = &prot_table->sg_table[prot_page -
+> >> +                                             prot_table->page_start_offset];
+> >> +     }
+> >>
+> >
+> > Mmm, how about just explicitly doing sg_link() at prot_table scatterlist
+> > creation time instead..?
+> 
+> Yeap, that would be an optimal solution.  But some architectures don't
+> support sg chaining (i.e. !CONFIG_ARCH_HAS_SG_CHAIN).
+> 
+> > That would save the extra allocation above, and AFAICT make for simpler
+> > code.
+> 
+> Do you prefer fixing it conditionally with using #ifdef ? (i.e.
+> sg chaining at creating time if CONFIG_ARCH_HAS_SG_CHAIN is defined,
+> otherwise do the extra allocation above) If so, I'll resubmit the
+> patch with such changes.
 
-On Tue, Apr 07, 2015 at 02:55:13PM -0400, Jeff Moyer wrote:
-> The way the on-stack plugging currently works, each nesting level
-> flushes its own list of I/Os.  This can be less than optimal (read
-> awful) for certain workloads.  For example, consider an application
-> that issues asynchronous O_DIRECT I/Os.  It can send down a bunch of
-> I/Os together in a single io_submit call, only to have each of them
-> dispatched individually down in the bowels of the dirct I/O code.
-> The reason is that there are blk_plug-s instantiated both at the upper
-> call site in do_io_submit and down in do_direct_IO.  The latter will
-> submit as little as 1 I/O at a time (if you have a small enough I/O
-> size) instead of performing the batching that the plugging
-> infrastructure is supposed to provide.
+Yes please.
 
-I'm wondering what impact this will have on filesystem metadata IO
-that needs to be issued immediately. e.g. we are doing writeback, so
-there is a high level plug in place and we need to page in btree
-blocks to do extent allocation. We do readahead at this point,
-but it looks like this change will prevent the readahead from being
-issued by the unplug in xfs_buf_iosubmit().
+It would be nice to use sg_link() for the typical case when available,
+as long as the #idefs aren't too ugly and limited to target_core_rd.c
+code.
 
-So while I can see how this can make your single microbenchmark
-better (because it's only doing concurrent direct IO to the block
-device and hence there are no dependencies between individual IOs),
-I have significant reservations that it's actually a win for
-filesystem-based workloads where we need direct control of flushing
-to minimise IO latency due to IO dependencies...
+--nab
 
-Patches like this one:
-
-https://lkml.org/lkml/2015/3/20/442
-
-show similar real-world workload improvements to your patchset by
-being smarter about using high level plugging to enable cross-file
-merging of IO, but it still relies on the lower layers of plugging
-to resolve latency bubbles caused by IO dependencies in the
-filesystems.
-
-> NOTE TO SUBSYSTEM MAINTAINERS: Before this patch, blk_finish_plug
-> would always flush the plug list.  After this patch, this is only the
-> case for the outer-most plug.  If you require the plug list to be
-> flushed, you should be calling blk_flush_plug(current).  Btrfs and dm
-> maintainers should take a close look at this patch and ensure they get
-> the right behavior in the end.
-
-IOWs, you are saying we need to change all our current unplugs to
-blk_flush_plug(current) to *try* to maintain the same behaviour as
-we currently have? I say *try*, because no instead of just flushing
-the readahead IO on the plug, we'll also flush all the queued data
-writeback IO onthe high level plug. We don't actually want to do
-that; we only want to submit the readahead and not the bulk IO that
-will delay the latency sensitive dependent IOs....
-
-If that is the case, shouldn't you actually be trying to fix the
-specific plugging problem you've identified (i.e. do_direct_IO() is
-flushing far too frequently) rather than making a sweeping
-generalisation that the IO stack plugging infrastructure
-needs fundamental change?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
