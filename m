@@ -1,68 +1,52 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: ufs: add ioctl interface for query request
-Date: Thu, 9 Apr 2015 23:17:55 +0300
-Message-ID: <20150409201755.GA9651@mwanda>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 15/21] lpfc: Implement support for wire-only DIF devices
+Date: Thu, 9 Apr 2015 16:58:52 -0400
+Message-ID: <5526E80C.5090807@emulex.com>
+References: <1428095580.6933.44.camel@myfc17> <20150405160613.GA8622@infradead.org>
+Reply-To: <james.smart@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35518 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933332AbbDIUSL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 16:18:11 -0400
-Content-Disposition: inline
+Received: from cmexedge1.emulex.com ([138.239.224.99]:55767 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756066AbbDIU7T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2015 16:59:19 -0400
+In-Reply-To: <20150405160613.GA8622@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: draviv@codeaurora.org
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hello Dolev Raviv,
+fyi - in the v3  of the lpfc 10.5.0.0 patches I just posted, I pulled 
+the patch.  We will see what to do with it. We may come back with a set 
+of generic midlayer patches.
 
-The patch 4aca8e8975db: "ufs: add ioctl interface for query request"
-from Mar 12, 2015, leads to the following Smatch warning:
+-- james s
 
-	drivers/scsi/ufs/ufshcd.c:4386 ufshcd_query_ioctl()
-	warn: maybe return -EFAULT instead of the bytes remaining?
 
-drivers/scsi/ufs/ufshcd.c
-  4364          /* copy to user */
-  4365          err = copy_to_user(buffer, ioctl_data,
-  4366                          sizeof(struct ufs_ioctl_query_data));
-  4367          if (err)
-  4368                  dev_err(hba->dev, "%s: Failed copying back to user.\n",
-  4369                          __func__);
+On 4/5/2015 12:06 PM, Christoph Hellwig wrote:
+> On Fri, Apr 03, 2015 at 05:13:00PM -0400, James Smart wrote:
+>> Implement support for wire-only DIF devices
+>>
+>> This patch adds the ability to support auto-enablement of wire-only DIF
+>> (DIF is generated on TX to target, stripped on RX; OS unaware DIF in use)
+>> for a select set of devices. Currently, there is only 1 device vendor
+>> supported: 3PARdata. When the feature is enabled, Inquiry commands are
+>> trapped, the vendor matched, and DIF enablement checked. In 3Par's case,
+>> there's a vendor specific check to see if the LUN supports DIF.
+>> If supported, DIF will be enabled on a per-lun basis.  The driver will
+>> trap READS/WRITEs from the OS, check for LUN DIF enablement, and if set,
+>> turns on write-only DIF.
+> NAK. We do support proper DIF, and anyone who wants it should enable
+> the real thing.
+>
+> And even if we would want to support a hack like this we'd do it
+> genericly an not in a driver.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-copy_to/from_user() returns the number of bytes not copied and not an
-error code.  Printing these error messages in the ioctl means the user
-can trigger a DoS by filling up /var/log/messages.  They make the code
-uglier.  We should stop here if the copy fails and goto out_release_mem
-otherwise we might end up returning success by mistake.
-
-The normal way to do it is:
-
-	if (copy_to_user(buffer, ioctl_data,
-			 sizeof(struct ufs_ioctl_query_data))) {
-		err = -EFAULT;
-		goto out_release_mem;
-	}
-
-  4370          err = copy_to_user(buffer + sizeof(struct ufs_ioctl_query_data),
-  4371                          data_ptr, ioctl_data->buf_size);
-  4372          if (err)
-  4373                  dev_err(hba->dev, "%s: err %d copying back to user.\n",
-  4374                                  __func__, err);
-  4375          goto out_release_mem;
-  4376  
-  4377  out_einval:
-  4378          dev_err(hba->dev,
-  4379                  "%s: illegal ufs query ioctl data, opcode 0x%x, idn 0x%x\n",
-  4380                  __func__, ioctl_data->opcode, (unsigned int)ioctl_data->idn);
-  4381          err = -EINVAL;
-  4382  out_release_mem:
-  4383          kfree(ioctl_data);
-  4384          kfree(desc);
-  4385  out:
-  4386          return err;
-  4387  }
-
-regards,
-dan carpenter
