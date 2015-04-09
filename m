@@ -1,32 +1,27 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 8/9] snic:Add event tracing to capture IO events.
-Date: Thu, 09 Apr 2015 15:24:34 +0200
-Message-ID: <55267D92.5040106@suse.de>
-References: <1428580189-22785-1-git-send-email-nmusini@cisco.com> <1428580189-22785-9-git-send-email-nmusini@cisco.com>
+Subject: Re: [PATCH v4 9/9] snic:Add Makefile, patch Kconfig, MAINTAINERS
+Date: Thu, 09 Apr 2015 15:25:09 +0200
+Message-ID: <55267DB5.5060704@suse.de>
+References: <1428580189-22785-1-git-send-email-nmusini@cisco.com> <1428580189-22785-10-git-send-email-nmusini@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49093 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:49124 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752871AbbDINYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Apr 2015 09:24:35 -0400
-In-Reply-To: <1428580189-22785-9-git-send-email-nmusini@cisco.com>
+	id S1755038AbbDINZL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Apr 2015 09:25:11 -0400
+In-Reply-To: <1428580189-22785-10-git-send-email-nmusini@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Narsimhulu Musini <nmusini@cisco.com>, JBottomley@Parallels.com, linux-scsi@vger.kernel.org, hch@infradead.org
 Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
 On 04/09/2015 01:49 PM, Narsimhulu Musini wrote:
-> snic_trc.h contains global trace structure definitions for snic drive=
-r
+> Kconfig for kbuild
+> Makefile to build snic module
 >=20
-> snic_trc.c adds tracing functionality to capture various IO events.
-> It maintains global trace buffer to maintain recent history of IO eve=
-nts.
-> It helps to understand the sequence of events prior to particular IO =
-event,
-> or hung, panic, etc,.
+> Updated MAINTAINERS file
 >=20
 > Signed-off-by: Narsimhulu Musini <nmusini@cisco.com>
 > Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
