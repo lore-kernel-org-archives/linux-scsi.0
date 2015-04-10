@@ -1,24 +1,28 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/21] lpfc: Add support for reporting option_rom_version
- on newer adapters
-Date: Fri, 10 Apr 2015 08:11:53 +0200
-Message-ID: <552769A9.4090301@suse.de>
-References: <1428095506.6933.36.camel@myfc17>
+Subject: Re: [PATCH 09/21] lpfc: Parse the new 20G, 25G and 40G link speeds
+ in the lpfc driver
+Date: Fri, 10 Apr 2015 08:12:39 +0200
+Message-ID: <552769D7.9000507@suse.de>
+References: <1428095514.6933.37.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59275 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59286 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088AbbDJGLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:11:55 -0400
-In-Reply-To: <1428095506.6933.36.camel@myfc17>
+	id S1752088AbbDJGMv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:12:51 -0400
+In-Reply-To: <1428095514.6933.37.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
 On 04/03/2015 11:11 PM, James Smart wrote:
-> Add support for reporting option_rom_version on newer adapters
+> Parse the new 20G, 25G and 40G link speeds in the lpfc driver
+>=20
+> This patch is dependent upon the following patch to the FC transport
+> which adds the 25G speed:
+>    http://www.spinics.net/lists/linux-scsi/msg83840.html
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
