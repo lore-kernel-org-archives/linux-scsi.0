@@ -1,23 +1,24 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/21] lpfc: Fix setting of EQ (interrupt) delay Multiplier
-Date: Fri, 10 Apr 2015 08:11:28 +0200
-Message-ID: <55276990.3060307@suse.de>
-References: <1428095498.6933.35.camel@myfc17>
+Subject: Re: [PATCH 08/21] lpfc: Add support for reporting option_rom_version
+ on newer adapters
+Date: Fri, 10 Apr 2015 08:11:53 +0200
+Message-ID: <552769A9.4090301@suse.de>
+References: <1428095506.6933.36.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59267 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59275 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088AbbDJGL3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:11:29 -0400
-In-Reply-To: <1428095498.6933.35.camel@myfc17>
+	id S1752088AbbDJGLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:11:55 -0400
+In-Reply-To: <1428095506.6933.36.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
 On 04/03/2015 11:11 PM, James Smart wrote:
-> Fix setting of EQ (interrupt) delay Multiplier
+> Add support for reporting option_rom_version on newer adapters
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
