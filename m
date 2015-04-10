@@ -1,31 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 06/14] qla2xxx: Add message for sucessful FW dump collected
- for ISP27XX.
-Date: Fri, 10 Apr 2015 08:33:46 +0200
-Message-ID: <55276ECA.7020100@suse.de>
-References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com> <1428606008-14976-7-git-send-email-himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH 05/14] qla2xxx: Add support to load firmware from file
+ for ISP 26XX/27XX.
+Date: Fri, 10 Apr 2015 08:33:16 +0200
+Message-ID: <55276EAC.3080800@suse.de>
+References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com> <1428606008-14976-6-git-send-email-himanshu.madhani@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60341 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:60274 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932182AbbDJGds (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:33:48 -0400
-In-Reply-To: <1428606008-14976-7-git-send-email-himanshu.madhani@qlogic.com>
+	id S932086AbbDJGdS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:33:18 -0400
+In-Reply-To: <1428606008-14976-6-git-send-email-himanshu.madhani@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com
 Cc: hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 04/09/2015 09:00 PM, Himanshu Madhani wrote:
-> o Added message indicating firmware dump was sucessfully collected
->   for ISP27XX.
-> o Improve logging to help debug firmware dump process for ISP27XX.
+On 04/09/2015 08:59 PM, Himanshu Madhani wrote:
+> From: Sawan Chandak <sawan.chandak@qlogic.com>
 >=20
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Signed-off-by: Sawan Chandak <sawan.chandak@qlogic.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
 > ---
+Please send the firmware for inclusion into linux-firmware.
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
