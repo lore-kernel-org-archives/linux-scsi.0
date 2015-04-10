@@ -1,23 +1,23 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 11/21] lpfc: Fix FDMI Fabric support in driver for Brocade
-Date: Fri, 10 Apr 2015 08:15:37 +0200
-Message-ID: <55276A89.80107@suse.de>
-References: <1428095529.6933.39.camel@myfc17>
+Subject: Re: [PATCH 12/21] lpfc: Fix null ndlp dereference in target_reset_handler
+Date: Fri, 10 Apr 2015 08:16:23 +0200
+Message-ID: <55276AB7.7000407@suse.de>
+References: <1428095536.6933.40.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59394 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59464 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753834AbbDJGPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:15:41 -0400
-In-Reply-To: <1428095529.6933.39.camel@myfc17>
+	id S1753615AbbDJGQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:16:25 -0400
+In-Reply-To: <1428095536.6933.40.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
 On 04/03/2015 11:12 PM, James Smart wrote:
-> Fix FDMI Fabric support in driver for Brocade
+> Fix null ndlp dereference in target_reset_handler
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
