@@ -1,31 +1,34 @@
-From: "Mrs. Zhang Xiao" <egonzalez@reacciun.ve>
-Subject: Re.
-Date: Fri, 10 Apr 2015 15:24:10 +0800
-Message-ID: <20150410072428.D26D222338F__16033.6670968265$1428652530$gmane$org@smtpa.reacciun.ve>
-Reply-To: 2069650583@qq.com
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [PATCH scsi] aacraid: aac_src_intr_message() can be static
+Date: Fri, 10 Apr 2015 16:53:38 +0800
+Message-ID: <20150410085338.GA3332@snb>
+References: <201504101622.qu6odppW%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpa.reacciun.ve ([150.188.4.63]:39646 "EHLO smtpa.reacciun.ve"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755237AbbDJHzC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2015 03:55:02 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201504101622.qu6odppW%fengguang.wu@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
+Cc: kbuild-all@01.org, James Bottomley <JBottomley@Odin.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <egonzalez@reacciun.ve>
 
-Dear,
 
-I seek for your sincerity and trust in a deal which involved a total sum of 60,000,000.00 United states dollars. I need to know you and know your location. This really matter to the success of this deal.If interested respond to me for more details. 
-
-Yours Sincerely.
-Mrs. Zhang Xiao (Accounts book Keeper)
-Angang Steel Company Limited
-396 Nan Zhong Hua Lu, Tie Dong District Anshan, Liaoning 114021, China.
-
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
-This email is free from viruses and malware because avast! Antivirus protection is active.
-http://www.avast.com
+ src.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 50f181f..79a3ed1 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -46,7 +46,7 @@
+ 
+ static int aac_src_get_sync_status(struct aac_dev *dev);
+ 
+-irqreturn_t aac_src_intr_message(int irq, void *dev_id)
++static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
+ {
+ 	struct aac_msix_ctx *ctx;
+ 	struct aac_dev *dev;
