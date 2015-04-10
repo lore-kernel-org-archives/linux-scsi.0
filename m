@@ -1,52 +1,42 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 02/14] qla2xxx: Fix crash due to wrong casting of reg
- for ISP27XX.
-Date: Fri, 10 Apr 2015 07:59:45 +0200
-Message-ID: <552766D1.1040902@sandisk.com>
-References: <1428606008-14976-1-git-send-email-himanshu.madhani@qlogic.com>
- <1428606008-14976-3-git-send-email-himanshu.madhani@qlogic.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/21] lpfc: Fix the iteration count to match the 30 sec
+ comment in the routine lpfc_pci_function_reset
+Date: Fri, 10 Apr 2015 08:04:24 +0200
+Message-ID: <552767E8.1010406@suse.de>
+References: <1428095421.6933.29.camel@myfc17>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn1on0075.outbound.protection.outlook.com ([157.56.110.75]:32200
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753945AbbDJF7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 01:59:52 -0400
-In-Reply-To: <1428606008-14976-3-git-send-email-himanshu.madhani@qlogic.com>
+Received: from cantor2.suse.de ([195.135.220.15]:58860 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752100AbbDJGE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:04:27 -0400
+In-Reply-To: <1428095421.6933.29.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@qlogic.com>, jbottomley@parallels.com
-Cc: hch@lst.de, giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
-On 04/09/15 20:59, Himanshu Madhani wrote:
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@qlogic.com>
+On 04/03/2015 11:10 PM, James Smart wrote:
+> Fix the iteration count to match the 30 sec comment in the routine lp=
+fc_pci_function_reset
+>=20
+> Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
+> Signed-off-by: James Smart <james.smart@emulex.com>
 > ---
->   drivers/scsi/qla2xxx/qla_tmpl.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-> index a8c0c73..7a92f60 100644
-> --- a/drivers/scsi/qla2xxx/qla_tmpl.c
-> +++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-> @@ -190,7 +190,7 @@ static inline void
->   qla27xx_write_reg(__iomem struct device_reg_24xx *reg,
->   	uint offset, uint32_t data, void *buf)
->   {
-> -	__iomem void *window = reg + offset;
-> +	__iomem void *window = (void *)reg + offset;
->
->   	if (buf) {
->   		WRT_REG_DWORD(window, data);
->
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Hello Himanshu,
+Cheers,
 
-The above patch introduces a new sparse warning since an __iomem 
-annotation is missing from the cast. Had you noticed that I had already 
-posted a fix for this crash in January that does not introduce a new 
-sparse warning ? See also http://thread.gmane.org/gmane.linux.scsi/98426.
-
-Bart.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
