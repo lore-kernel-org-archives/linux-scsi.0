@@ -1,25 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/21] lpfc: Initiator sends wrong BBCredit value for
- either FLOGI or FLOGI_ACC
-Date: Fri, 10 Apr 2015 08:16:48 +0200
-Message-ID: <55276AD0.3080602@suse.de>
-References: <1428095543.6933.41.camel@myfc17>
+Subject: Re: [PATCH 14/21] lpfc: Fix premature release of rpi bit in bitmask
+Date: Fri, 10 Apr 2015 08:18:35 +0200
+Message-ID: <55276B3B.7000806@suse.de>
+References: <1428095550.6933.42.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59489 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59563 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754034AbbDJGQu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:16:50 -0400
-In-Reply-To: <1428095543.6933.41.camel@myfc17>
+	id S1752097AbbDJGSh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:18:37 -0400
+In-Reply-To: <1428095550.6933.42.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
 On 04/03/2015 11:12 PM, James Smart wrote:
+> Fix premature release of rpi bit in bitmask
 >=20
-> Initiator sends wrong BBCredit value for either FLOGI or FLOGI_ACC
+> Currently, the driver plays off the fact that older sli4 adapters hav=
+e a
+> different rpi access pattern that allowed for the rpi reference to be
+> released earlier in the teardown sequence, allowing the driver to rec=
+ycle
+> the rpi value sooner. Newer sli4 adapters have a different access pat=
+tern that
+> requires us to wait for a later mailbox completion. This changes the =
+put
+> call location on the newer sli4 adapters.
+>=20
+> Symptoms of the error are "0110 ELS" and the "0372 iotag" errors.
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
