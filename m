@@ -1,47 +1,38 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [scsi:misc 24/67] drivers/scsi/aacraid/src.c:49:13: sparse: symbol
- 'aac_src_intr_message' was not declared. Should it be static?
-Date: Fri, 10 Apr 2015 16:53:38 +0800
-Message-ID: <201504101622.qu6odppW%fengguang.wu@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v3 37/42] hpsa: use block layer tag for command
+ allocation
+Date: Fri, 10 Apr 2015 08:13:43 -0700
+Message-ID: <1428678823.2178.5.camel@HansenPartnership.com>
+References: <20150317200139.19856.87982.stgit@brunhilda>
+	 <20150317200651.19856.77450.stgit@brunhilda> <55104616.2070303@redhat.com>
+	 <07F70BBF6832E34FA1C923241E8833AB486892F9@BBYEXM01.pmc-sierra.internal>
+	 <5512FF8E.9010702@hp.com> <5513FFDD.6090809@redhat.com>
+	 <551419DE.5040801@hp.com> <55142178.0@redhat.com> <55142331.8060304@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh.Rajashekhara@pmcs.com>
-Cc: kbuild-all@01.org, James Bottomley <JBottomley@Odin.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:32801 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932925AbbDJPNp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 11:13:45 -0400
+In-Reply-To: <55142331.8060304@hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Webb Scales <webbnh@hp.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, "Brace, Don" <don.brace@pmcs.com>, "Teel, Scott Stacy" <Scott.Teel@pmcs.com>, kevin.barnett@pmcs.com, james.bottomley@parallels.com, Christoph Hellwig <hch@infradead.org>, "Lindley, Justin" <justin.lindley@pmcs.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-head:   eef77801b56b098cd7e1daf8a03854dd203a051c
-commit: 495c021767bd78c998a46cf8cdd7a4ebf3a9cfd1 [24/67] aacraid: MSI-x support
-reproduce:
-  # apt-get install sparse
-  git checkout 495c021767bd78c998a46cf8cdd7a4ebf3a9cfd1
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
+On Thu, 2015-03-26 at 11:18 -0400, Webb Scales wrote:
+> At this point, I've turned this work over to Don; I presume he'll want 
+> to address the bitmask search. I'll leave it up to him to decide what to 
+> do about the refcount.
+
+Is there an update on this?  Firstly the delay is going to cause you to
+miss the merge window (assuming it opens on Sunday) and secondly
+reviewers can get demotivated if you apparently don't address their
+concerns.
+
+James
 
 
-sparse warnings: (new ones prefixed by >>)
-
->> drivers/scsi/aacraid/src.c:49:13: sparse: symbol 'aac_src_intr_message' was not declared. Should it be static?
->> drivers/scsi/aacraid/src.c:452:55: sparse: restricted __le16 degrades to integer
-   drivers/scsi/aacraid/src.c:487:57: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/aacraid/src.c:487:57:    expected restricted __le32 [usertype] SenderFibAddress
-   drivers/scsi/aacraid/src.c:487:57:    got unsigned int [unsigned] [usertype] <noident>
-   drivers/scsi/aacraid/src.c:499:31: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/aacraid/src.c:499:31:    expected unsigned int [unsigned] [usertype] Handle
-   drivers/scsi/aacraid/src.c:499:31:    got restricted __le32 [usertype] <noident>
-   drivers/scsi/aacraid/src.c:500:36: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/aacraid/src.c:500:36:    expected unsigned long long [unsigned] [usertype] HostAddress
-   drivers/scsi/aacraid/src.c:500:36:    got restricted __le64 [usertype] <noident>
-   drivers/scsi/aacraid/src.c:501:29: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/aacraid/src.c:501:29:    expected unsigned int [unsigned] [usertype] Size
-   drivers/scsi/aacraid/src.c:501:29:    got restricted __le32 [usertype] <noident>
-   drivers/scsi/aacraid/src.c:611:5: sparse: symbol 'aac_src_select_comm' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
