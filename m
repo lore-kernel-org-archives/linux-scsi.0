@@ -1,24 +1,23 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 17/21] lpfc: Fix OS crash when running loopback test in
- applications
-Date: Fri, 10 Apr 2015 08:20:01 +0200
-Message-ID: <55276B91.6020307@suse.de>
-References: <1428095594.6933.46.camel@myfc17>
+Subject: Re: [PATCH 18/21] lpfc: Fix crash in device reset handler.
+Date: Fri, 10 Apr 2015 08:20:35 +0200
+Message-ID: <55276BB3.3090206@suse.de>
+References: <1428095601.6933.47.camel@myfc17>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59665 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:59677 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751300AbbDJGUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 02:20:03 -0400
-In-Reply-To: <1428095594.6933.46.camel@myfc17>
+	id S1751924AbbDJGUh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Apr 2015 02:20:37 -0400
+In-Reply-To: <1428095601.6933.47.camel@myfc17>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.smart@emulex.com, linux-scsi@vger.kernel.org
 
 On 04/03/2015 11:13 PM, James Smart wrote:
-> Fix OS crash when running loopback test in applications
+> Fix crash in device reset handler.
 >=20
 > Signed-off-by: Dick Kennedy <dick.kennedy@emulex.com>
 > Signed-off-by: James Smart <james.smart@emulex.com>
