@@ -1,59 +1,31 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] block: don't overwrite max_sectors if user has set it
-Date: Fri, 10 Apr 2015 02:08:40 -0500
-Message-ID: <1428649720-14316-1-git-send-email-michaelc@cs.wisc.edu>
+From: "Mrs. Zhang Xiao" <egonzalez@reacciun.ve>
+Subject: Re.
+Date: Fri, 10 Apr 2015 15:24:10 +0800
+Message-ID: <20150410072428.D26D222338F__16033.6670968265$1428652530$gmane$org@smtpa.reacciun.ve>
+Reply-To: 2069650583@qq.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45366 "EHLO sabe.cs.wisc.edu"
+Received: from smtpa.reacciun.ve ([150.188.4.63]:39646 "EHLO smtpa.reacciun.ve"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182AbbDJHI6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Apr 2015 03:08:58 -0400
+	id S1755237AbbDJHzC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2015 03:55:02 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, axboe@fb.com
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Recipients <egonzalez@reacciun.ve>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Dear,
 
-If the user has set max_sectors in sysfs, but the disk is revalidated
-due to it being removable or having write protections and it being
-opened, or dm/md claiming it, or something like a scsi rescan, etc,
-then we are overwriting the user specified max_sectors value. This patch
-only has us set the max_sectors if the new max_hw_sectors is smaller
-or if the user has not changed max_sectors.
+I seek for your sincerity and trust in a deal which involved a total sum of 60,000,000.00 United states dollars. I need to know you and know your location. This really matter to the success of this deal.If interested respond to me for more details. 
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Yours Sincerely.
+Mrs. Zhang Xiao (Accounts book Keeper)
+Angang Steel Company Limited
+396 Nan Zhong Hua Lu, Tie Dong District Anshan, Liaoning 114021, China.
+
 ---
- block/blk-settings.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 12600bf..d6c7b0c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -248,6 +248,10 @@ EXPORT_SYMBOL(blk_queue_bounce_limit);
-  *    filesystem type requests.  This value can be overridden on a
-  *    per-device basis in /sys/block/<device>/queue/max_sectors_kb.
-  *    The soft limit can not exceed max_hw_sectors.
-+ *
-+ *    If this is called as a result of a revalidation then we will only
-+ *    override the user specified max_sectors if the new max_hw_sectors is
-+ *    smaller.
-  **/
- void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_sectors)
- {
-@@ -257,7 +261,11 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
- 		       __func__, max_hw_sectors);
- 	}
- 
--	limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
-+	if (limits->max_sectors == limits->max_hw_sectors ||
-+	    max_hw_sectors < limits->max_sectors)
-+		limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
-+	else
-+		limits->max_hw_sectors = max_hw_sectors;
- }
- EXPORT_SYMBOL(blk_limits_max_hw_sectors);
- 
--- 
-1.8.3.1
+This email is free from viruses and malware because avast! Antivirus protection is active.
+http://www.avast.com
 
