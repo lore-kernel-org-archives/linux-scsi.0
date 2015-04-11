@@ -1,71 +1,150 @@
-From: nick <xerofoify@gmail.com>
-Subject: Re: [f2fs-dev] [PATCH 2/2][v2] blk-plug: don't flush nested plug
- lists
-Date: Sat, 11 Apr 2015 00:11:54 -0400
-Message-ID: <55289F0A.1040309@gmail.com>
-References: <1428347694-17704-1-git-send-email-jmoyer@redhat.com>	<1428347694-17704-2-git-send-email-jmoyer@redhat.com>	<x49wq1nrcoe.fsf_-_@segfault.boston.devel.redhat.com>	<20150408230203.GG15810@dastard> <x498udzlkkx.fsf@segfault.boston.devel.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <x498udzlkkx.fsf@segfault.boston.devel.redhat.com>
-Sender: owner-linux-aio@kvack.org
-To: Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, linux-aio@kvack.org, Miklos Szeredi <mszeredi@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Ming Lei <ming.lei@canonical.com>, Trond Myklebust <trond.myklebust@primarydata.com>, Jianyu Zhan <nasa4836@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Chris Mason <clm@fb.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, Mark Rustad <mark.d.rustad@intel.com>, Christoph Hellwig <hch@lst.de>, Alasdair Kergon <agk@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-scsi@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, linux-raid@vger.kernel.org, cluster-devel@redhat.com, Mel Gorman <mgorman@suse.>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH -next v3] target/rd: Don't pass imcomplete scatterlist entries to sbc_dif_verify_*
+Date: Sat, 11 Apr 2015 13:17:31 +0900
+Message-ID: <1428725851-9275-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>, Sagi Grimberg <sagig@dev.mellanox.co.il>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+The scatterlist for protection information which is passed to
+sbc_dif_verify_read() or sbc_dif_verify_write() requires that
+neighboring scatterlist entries are contiguous or chained so that they
+can be iterated by sg_next().
 
+However, the protection information for RD-MCP backends could be located
+in the multiple scatterlist arrays when the ramdisk space is too large.
+So if the read/write request straddles this boundary, sbc_dif_verify_read()
+or sbc_dif_verify_write() can't iterate all scatterlist entries.
 
-On 2015-04-10 05:50 PM, Jeff Moyer wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-> 
->> On Tue, Apr 07, 2015 at 02:55:13PM -0400, Jeff Moyer wrote:
->>> The way the on-stack plugging currently works, each nesting level
->>> flushes its own list of I/Os.  This can be less than optimal (read
->>> awful) for certain workloads.  For example, consider an application
->>> that issues asynchronous O_DIRECT I/Os.  It can send down a bunch of
->>> I/Os together in a single io_submit call, only to have each of them
->>> dispatched individually down in the bowels of the dirct I/O code.
->>> The reason is that there are blk_plug-s instantiated both at the upper
->>> call site in do_io_submit and down in do_direct_IO.  The latter will
->>> submit as little as 1 I/O at a time (if you have a small enough I/O
->>> size) instead of performing the batching that the plugging
->>> infrastructure is supposed to provide.
->>
->> I'm wondering what impact this will have on filesystem metadata IO
->> that needs to be issued immediately. e.g. we are doing writeback, so
->> there is a high level plug in place and we need to page in btree
->> blocks to do extent allocation. We do readahead at this point,
->> but it looks like this change will prevent the readahead from being
->> issued by the unplug in xfs_buf_iosubmit().
-> 
-> I'm not ignoring you, Dave, I'm just doing some more investigation and
-> testing.  It's taking longer than I had hoped.
-> 
-> -Jeff
-> 
-Jeff,
-Would you mind sending your test reports to the list so we can see what workloads
-and tests your running your patch under. This is due to me and the others perhaps
-being able to give input into the other major benchmarks or workloads we need to
-test too in order to see if there are any regressions with your patch.
-Thanks,
-Nick
+This problem can be fixed by chaining protection information scatterlist
+at creation time.  For the architectures which don't support sg chaining
+(i.e. !CONFIG_ARCH_HAS_SG_CHAIN), fix it by allocating temporary
+scatterlist if needed.
 
-> ------------------------------------------------------------------------------
-> BPM Camp - Free Virtual Workshop May 6th at 10am PDT/1PM EDT
-> Develop your own process in accordance with the BPMN 2 standard
-> Learn Process modeling best practices with Bonita BPM through live exercises
-> http://www.bonitasoft.com/be-part-of-it/events/bpm-camp-virtual- event?utm_
-> source=Sourceforge_BPM_Camp_5_6_15&utm_medium=email&utm_campaign=VA_SF
-> _______________________________________________
-> Linux-f2fs-devel mailing list
-> Linux-f2fs-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel
-> 
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Sagi Grimberg <sagig@dev.mellanox.co.il>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+* v3
+- Fix it by chaining protection information scatterlist at creation time
+  if CONFIG_ARCH_HAS_SG_CHAIN is defined.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+ drivers/target/target_core_rd.c | 67 +++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 64 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index ac5e8d2..b4e6de0 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -139,10 +139,22 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
+ 	unsigned char *p;
+ 
+ 	while (total_sg_needed) {
++		unsigned int chain_entry = 0;
++
+ 		sg_per_table = (total_sg_needed > max_sg_per_table) ?
+ 			max_sg_per_table : total_sg_needed;
+ 
+-		sg = kzalloc(sg_per_table * sizeof(struct scatterlist),
++#ifdef CONFIG_ARCH_HAS_SG_CHAIN
++
++		/*
++		 * Reserve extra element for chain entry
++		 */
++		if (sg_per_table < total_sg_needed)
++			chain_entry = 1;
++
++#endif /* CONFIG_ARCH_HAS_SG_CHAIN */
++
++		sg = kcalloc(sg_per_table + chain_entry, sizeof(*sg),
+ 				GFP_KERNEL);
+ 		if (!sg) {
+ 			pr_err("Unable to allocate scatterlist array"
+@@ -150,7 +162,16 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
+ 			return -ENOMEM;
+ 		}
+ 
+-		sg_init_table(sg, sg_per_table);
++		sg_init_table(sg, sg_per_table + chain_entry);
++
++#ifdef CONFIG_ARCH_HAS_SG_CHAIN
++
++		if (i > 0) {
++			sg_chain(sg_table[i - 1].sg_table,
++				 max_sg_per_table + 1, sg);
++		}
++
++#endif /* CONFIG_ARCH_HAS_SG_CHAIN */
+ 
+ 		sg_table[i].sg_table = sg;
+ 		sg_table[i].rd_sg_count = sg_per_table;
+@@ -390,11 +411,13 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
+ 	struct se_device *se_dev = cmd->se_dev;
+ 	struct rd_dev *dev = RD_DEV(se_dev);
+ 	struct rd_dev_sg_table *prot_table;
++	bool need_to_release = false;
+ 	struct scatterlist *prot_sg;
+ 	u32 sectors = cmd->data_length / se_dev->dev_attrib.block_size;
+ 	u32 prot_offset, prot_page;
++	u32 prot_npages __maybe_unused;
+ 	u64 tmp;
+-	sense_reason_t rc;
++	sense_reason_t rc = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+ 	tmp = cmd->t_task_lba * se_dev->prot_length;
+ 	prot_offset = do_div(tmp, PAGE_SIZE);
+@@ -407,7 +430,45 @@ static sense_reason_t rd_do_prot_rw(struct se_cmd *cmd, dif_verify dif_verify)
+ 	prot_sg = &prot_table->sg_table[prot_page -
+ 					prot_table->page_start_offset];
+ 
++#ifndef CONFIG_ARCH_HAS_SG_CHAIN
++
++	prot_npages = DIV_ROUND_UP(prot_offset + sectors * se_dev->prot_length,
++				   PAGE_SIZE);
++
++	/*
++	 * Allocate temporaly contiguous scatterlist entries if prot pages
++	 * straddles multiple scatterlist tables.
++	 */
++	if (prot_table->page_end_offset < prot_page + prot_npages - 1) {
++		int i;
++
++		prot_sg = kcalloc(prot_npages, sizeof(*prot_sg), GFP_KERNEL);
++		if (!prot_sg)
++			return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++
++		need_to_release = true;
++		sg_init_table(prot_sg, prot_npages);
++
++		for (i = 0; i < prot_npages; i++) {
++			if (prot_page + i > prot_table->page_end_offset) {
++				prot_table = rd_get_prot_table(dev,
++								prot_page + i);
++				if (!prot_table) {
++					kfree(prot_sg);
++					return rc;
++				}
++				sg_unmark_end(&prot_sg[i - 1]);
++			}
++			prot_sg[i] = prot_table->sg_table[prot_page + i -
++						prot_table->page_start_offset];
++		}
++	}
++
++#endif /* !CONFIG_ARCH_HAS_SG_CHAIN */
++
+ 	rc = dif_verify(cmd, cmd->t_task_lba, sectors, 0, prot_sg, prot_offset);
++	if (need_to_release)
++		kfree(prot_sg);
+ 
+ 	return rc;
+ }
+-- 
+1.9.1
